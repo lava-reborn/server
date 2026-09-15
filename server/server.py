@@ -172,9 +172,7 @@ class Session:
         self.close()
 
     def close(self):
-        if self.arrival:
-            self.arrival.cancel()
-            self.arrival = None
+        self.cancel_travel()
         self.writer.close()
 
     # --- character -------------------------------------------------------
@@ -250,13 +248,22 @@ class Session:
             # client offers no separate command for it.
             if self.at_settlement():
                 self.on_map = False
+                self.cancel_travel()
                 self.enter_location()
             else:
                 self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
         else:
             self.on_map = True
             self.gx, self.gy = GLOBAL_X, GLOBAL_Y
+            self.cancel_travel()
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
+
+    def cancel_travel(self):
+        """Drop any leg in flight, so the position stops extrapolating."""
+        if self.arrival:
+            self.arrival.cancel()
+            self.arrival = None
+        self.leg = None
 
     def at_settlement(self):
         x, y = self.current_pos()
@@ -310,11 +317,9 @@ class Session:
         self.gx, self.gy = tx, ty
         # zero speed is how the client is told to stop; it has no other signal
         self.send("userMove", id=0, dx=self.gx, dy=self.gy, vx=0, vy=0, t=0)
-        # Arriving back on the settlement drops the player straight into it,
-        # which is what the original did and saves a second keypress.
-        if self.at_settlement():
-            self.on_map = False
-            self.enter_location()
+        # Deliberately no automatic entry here. Settlements occupy a whole
+        # cell, so any short hop near one landed inside it and the map became
+        # impossible to stay on. Going in is the button's job.
 
     def cmd_getInfo(self, p):
         who = int(p.get("id", 0))

@@ -173,12 +173,20 @@ try:
     check("stopped on arrival", "vx=0;vy=0;" in got[0], True)
     check("moved one cell west", "dx=5969;" in got[0], True)
 
-    # Coming back onto the settlement's own cell drops the player into it.
+    # Coming back onto the settlement must NOT pull the player in: a cell is
+    # wide enough that any short hop near one would land inside it, and the
+    # map would be impossible to stay on.
     c.send("moveTo;dy=0;dx=100;")
     c.frames()
     got = c.frames(wait=6)
     names = [f.split(";")[0] for f in got]
-    check("returning enters the location", names, ["userMove", "lcall"])
+    check("returning does not enter by itself", names, ["userMove"])
+
+    # The button does it, and only while standing on the settlement.
+    c.send("chWorld;")
+    got = c.frames()
+    check("button enters from the settlement",
+          [f.split(";")[0] for f in got], ["cmdAck", "lcall"])
 
     c.send("logout;")
 finally:
