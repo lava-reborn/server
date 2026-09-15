@@ -384,8 +384,10 @@ class Session:
             self.cmd_goto(text.split()[1:])
             return
         if text.startswith("/where"):
-            self.say("%s (%s), клетка карты %d,%d"
-                     % (self.loc.title, self.loc.file,
+            # Everything needed to report a cell that opens the wrong place:
+            # the title as drawn, the file behind it, and the cell itself.
+            self.say("%s — %s [%s] — клетка %d,%d"
+                     % (self.loc.title, self.loc.file, self.loc.fn,
                         round(self.gx), round(self.gy)))
             return
         # Ordinary talk comes back to the sender, which is how the client

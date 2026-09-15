@@ -121,6 +121,11 @@ class Location:
         attrs = dict(re.findall(r'(\w+)="([^"]*)"',
                                 re.search(r"<location([^>]*)>", txt).group(1)))
         self.title = attrs.get("title", "")
+        # The name the location was built under. It carries the region it
+        # belongs to -- WH_Gold_Traders_old against DN_Gold_Traders_old -- and
+        # marks the scratch files, which is what data/build_settlements.py
+        # needs to tell identically titled places apart.
+        self.fn = attrs.get("fn", "")
         self.width = int(attrs["width"])
         self.height = int(attrs["height"])
         self.war = int(attrs.get("war", 0))

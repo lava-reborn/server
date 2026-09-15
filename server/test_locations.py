@@ -71,7 +71,24 @@ check("every one offers somewhere to stand", without_entry, [])
 
 # --- the map ---------------------------------------------------------------
 cells = world.settlements()
-check("settlements recovered", len(cells) >= 80, True)
+check("settlements recovered", len(cells) >= 60, True)
+
+# One file, one place. A title reused up and down the map used to pin the
+# same location to cells hundreds apart, and at most one of those could be
+# where it stood. Neighbouring cells are allowed: a settlement may be wider
+# than one cell.
+claims = {}
+for cell, loc_id in cells.items():
+    claims.setdefault(loc_id, []).append(cell)
+scattered = {i: cs for i, cs in claims.items()
+             if max(abs(a[0] - b[0]) + abs(a[1] - b[1])
+                    for a in cs for b in cs) > 3}
+check("no location claimed from two ends of the map", scattered, {})
+
+# Scratch files were never anywhere. KB_TESTCLAN_Block_Post is titled
+# "Кладбище", generic enough that it had claimed six scattered cells.
+check("no scratch file ended up on the map",
+      [i for i in claims if "test" in world.location(i).fn.lower()], [])
 check("the black market is where it was played",
       world.location_at(5970, 1730), 102)
 check("and Dongola's is its own", world.location_at(5879, 2012), 103)
