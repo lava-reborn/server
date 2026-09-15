@@ -13,7 +13,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PORT = 19776
 ENC = "cp1251"
 
-env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1")
+# This test walks the character-creation path, so it needs the empty
+# roster; the server otherwise ships a ready character and auto-enters.
+env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
+           LAVA_NEWCHAR="1")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 

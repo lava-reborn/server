@@ -141,6 +141,14 @@ class Handler(BaseHTTPRequestHandler):
     def _dispatch(self, body=b""):
         parts = urlparse(self.path)
         path = posixpath.normpath(parts.path)
+        if path.rstrip("/") == "/exe/lavaclient/loaduser":
+            # Session.getHashHostPort() splits the reply on ":" then " ".
+            # Real Flash asks for this with GET, because LoadVars.sendAndLoad
+            # downgrades to GET when the outgoing object carries no variables,
+            # while Ruffle issues the POST the call actually requested. Accept
+            # both.
+            self._send("data=%s:%s devhash" % (GAME_HOST, GAME_PORT))
+            return
         if path in ("/", "/index.html"):
             self._send(INDEX.format(host=GAME_HOST, port=GAME_PORT),
                        "text/html; charset=utf-8")
@@ -168,10 +176,6 @@ class Handler(BaseHTTPRequestHandler):
         # everything else must be served exactly as it would be over GET.
         length = int(self.headers.get("Content-Length") or 0)
         body = self.rfile.read(length) if length else b""
-        if urlparse(self.path).path.rstrip("/") == "/exe/lavaclient/loaduser":
-            # Session.getHashHostPort() splits on ":" then " "
-            self._send("data=%s:%s devhash" % (GAME_HOST, GAME_PORT))
-            return
         self._dispatch(body)
 
 
