@@ -388,11 +388,14 @@ try:
     check("on the channel it was asked in", "group=4;" in got[1], True)
     check("and names the file behind the cell", "static/183.xml" in got[1], True)
 
-    # Ordinary chat is NOT echoed: Chat.delivery prints the line the player
-    # typed itself when the acknowledgement says res=0, so an echo on top
-    # showed every message twice.
+    # Ordinary chat is only acknowledged: Chat.delivery prints the sender's
+    # own line the moment cmdAck;res=0 lands, so an echo would show it twice.
+    # Alone in the location, nobody else is there to receive it either.
     c.send("userMsg;entry=@привет@;group=0;")
-    check("chat is acknowledged and not echoed", c.frames(), ["cmdAck;res=0;"])
+    got = c.frames()
+    check("chat is acknowledged and not echoed",
+          [f.split(";")[0] for f in got], ["cmdAck"])
+    check("and accepted", got[0], "cmdAck;res=0;")
 
     c.send("logout;")
 finally:
