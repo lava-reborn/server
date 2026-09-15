@@ -1,5 +1,2 @@
-__pycache__/
-*.pyc
-recon/notes/patch_*.py
 logs/
 tools/

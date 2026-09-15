@@ -22,6 +22,7 @@ from protocol import FrameReader, decode, frame, Str
 HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
 PORT = int(os.environ.get("LAVA_PORT", "9775"))
 POLICY_PORT = 843
+NEW_CHAR = os.environ.get("LAVA_NEWCHAR") == "1"
 
 # "Вади Хальфа: жилой квартал", chosen because it is one of the 168 locations
 # with war="0": no combat mode, so action points are not consumed by walking.
@@ -58,9 +59,12 @@ class Session:
         self.peer = peer
         self.hash = None
         self.logged_in = False
-        # No storage yet: every login starts with an empty roster, so the
-        # client goes straight to character creation.
-        self.characters = []
+        # With a character already on the account and can_create=0, the client
+        # selects slot 0 by itself and walks straight into the world, which
+        # makes every test run reproducible without clicking through creation.
+        # LAVA_NEWCHAR=1 starts with an empty roster and shows that screen.
+        self.characters = [] if NEW_CHAR else [
+            {"name": "polestvr", "sex": 0, "res": 1}]
         self.active = None
         self.pos = START_POS
 
@@ -116,7 +120,11 @@ class Session:
         for i, pers in enumerate(self.characters):
             self.send("persInfo", num=i, name=Str(pers["name"]),
                       sex=pers["sex"], death=0, res=pers["res"])
-        self.send("accountInfo", nPers=len(self.characters), can_create=1)
+        # can_create must be falsy for the auto-select path: PersGenerator
+        # opens the creation screen whenever it is truthy, regardless of how
+        # many characters the account already has.
+        self.send("accountInfo", nPers=len(self.characters),
+                  can_create=1 if not self.characters else 0)
 
     def cmd_logout(self, p):
         self.writer.close()
