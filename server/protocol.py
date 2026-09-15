@@ -32,6 +32,26 @@ class BigUInt(str):
     """Force x-prefixed big-unsigned encoding (kept as text, per client)."""
 
 
+class Repeated(list):
+    """Every value of a key that occurred more than once in one frame.
+
+    CSMessage.addProp(name, value, duplicateName) writes the original name
+    to the wire and uses duplicateName only as the propList key, so a mail
+    with three attachments goes out as "sndml;item=x..;item=x..;item=x..;"
+    and a bulk delete as "rmvml;id=x..;id=x..;". A plain dict kept only the
+    last one. A key seen once decodes exactly as before; the marker class is
+    what tells a repeated scalar apart from a value that was a |list| itself.
+    """
+
+
+def every(params, key):
+    """All values sent under a key, as a list, however many times it came."""
+    if key not in params:
+        return []
+    v = params[key]
+    return list(v) if isinstance(v, Repeated) else [v]
+
+
 # --- escaping (lol.server.XMLString) -------------------------------------
 # Verbatim from the client's escape table. Note the oddity: a double quote
 # maps to %5C, the percent-encoding of a BACKSLASH, not %22. Reproducing the
@@ -128,6 +148,16 @@ def _dec_list(src, i):
     return [float(p) if "." in p else int(p) for p in parts], end + 1
 
 
+def _put(params, key, value):
+    """Store a decoded value; a key seen again collects into a Repeated."""
+    if key not in params:
+        params[key] = value
+    elif isinstance(params[key], Repeated):
+        params[key].append(value)
+    else:
+        params[key] = Repeated([params[key], value])
+
+
 def decode(src):
     """Parse a frame body into (name, params dict)."""
     if isinstance(src, bytes):
@@ -150,23 +180,25 @@ def decode(src):
         c = src[j]
         if c == "@":
             end = src.index("@;", j + 1)
-            params[key] = unescape(src[j + 1:end])
+            _put(params, key, unescape(src[j + 1:end]))
             i = end + 2
         elif c in "Hh":
             end = src.index(";", j)
-            params[key] = int(src[j + 1:end], 16)
+            _put(params, key, int(src[j + 1:end], 16))
             i = end + 1
         elif c == "x":
             end = src.index(";", j)
-            params[key] = BigUInt(src[j + 1:end])
+            _put(params, key, BigUInt(src[j + 1:end]))
             i = end + 1
         elif c == "|":
-            params[key], end = _dec_list(src, j)
+            value, end = _dec_list(src, j)
+            _put(params, key, value)
             i = end + 1
         else:
             end = src.index(";", j)
             raw = src[j:end]
-            params[key] = float(raw) if ("." in raw or "e" in raw.lower()) else int(raw)
+            _put(params, key,
+                 float(raw) if ("." in raw or "e" in raw.lower()) else int(raw))
             i = end + 1
     return name, params
 

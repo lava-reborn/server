@@ -2,7 +2,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from protocol import (decode, encode, frame, FrameReader, Str, Hex,
-                      BigUInt, escape, unescape)
+                      BigUInt, Repeated, every, escape, unescape)
 
 fails = []
 
@@ -83,6 +83,30 @@ NICK = "va@sya"
 F_AT = encode("userMsg", to=Str(NICK))
 check("at escaped on wire", F_AT, "userMsg;to=@va%40sya@;")
 check("at survives roundtrip", decode(F_AT), ("userMsg", {"to": NICK}))
+
+# --- repeated keys, per CSMessage.addProp(name, value, duplicateName) ---
+# The client writes the original name for every duplicate: a mail with
+# attachments is "sndml;item=..;item=..;", a bulk delete "rmvml;id=..;id=..;".
+# Every value has to survive, and a key sent once must decode as before.
+_, mail = decode("sndml;item=x1a111c00;item=x2b111c00;item=x3c111c00;"
+                 "body=@hi@;type=0;subj=@s@;to=@Vasya@;")
+check("repeats keep every value", mail["item"],
+      ["1a111c00", "2b111c00", "3c111c00"])
+check("repeats are marked", isinstance(mail["item"], Repeated), True)
+check("keys around the repeat are untouched",
+      (mail["body"], mail["type"], mail["subj"], mail["to"]),
+      ("hi", 0, "s", "Vasya"))
+check("two repeats", decode("rmvml;id=x1;id=x2;"), ("rmvml", {"id": ["1", "2"]}))
+single = decode("rmvml;id=x1;")[1]
+check("a single key is still a scalar", single, {"id": "1"})
+check("and not marked", isinstance(single["id"], Repeated), False)
+check("a |list| value is not mistaken for a repeat",
+      isinstance(decode("moveTo;path=|1|2|;")[1]["path"], Repeated), False)
+check("every: absent", every(single, "item"), [])
+check("every: single", every(single, "id"), ["1"])
+check("every: repeated", every(mail, "item"), ["1a111c00", "2b111c00", "3c111c00"])
+check("every: a list value stays one value",
+      every(decode("moveTo;path=|1|2|;")[1], "path"), [[1, 2]])
 
 print()
 if fails:
