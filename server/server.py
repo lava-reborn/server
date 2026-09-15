@@ -27,6 +27,19 @@ PORT = int(os.environ.get("LAVA_PORT", "9775"))
 POLICY_PORT = 843
 STORE = accounts.Store()
 
+# Commands whose sender registers a cmdAck handler, gathered from the client:
+# mail, clans, party, auction, battlegrounds, item sessions, quests, map marks
+# and chat all do. Anything here has to be answered, implemented or not.
+EXPECTS_ACK = {
+    "chkml", "getml", "sndml", "rmvml", "uldml",
+    "p_op", "admit", "apply", "head", "gg_info", "c_ga",
+    "ah_create", "ah_op", "ah_search", "bg_op",
+    "ss_move", "ss_use", "ss_heap_c", "ss_create", "ss_upd",
+    "on_conv", "q_st", "q_co", "q_ca",
+    "insMark", "updMark", "rmMark",
+    "userMsg", "resurrect", "actPlayer", "newPers", "lenter", "chWorld",
+}
+
 # "Черный рынок Вади-Хальфы": peaceful (war="0", so walking costs no action
 # points) and already populated in its own XML with 21 traders, an upgrader,
 # a lessor and several commoners.
@@ -122,6 +135,11 @@ class Session:
         fn = getattr(self, "cmd_" + cmd, None)
         if not fn:
             log.warning("  ??    unimplemented command %r", cmd)
+            # Commands that register a handler must be answered even when the
+            # feature does not exist yet. A refusal keeps the queue in step; a
+            # silence shifts every later reply onto the wrong handler.
+            if cmd in EXPECTS_ACK:
+                self.send("cmdAck", res=3)
             return
         try:
             fn(params)
@@ -485,6 +503,23 @@ class Session:
         # missing answer wedges the whole quest pipeline.
         self.send("q_list", q_id=[], q_types=[])
 
+    def cmd_chkml(self, p):
+        """Mail. The client asks the moment it lands in a location.
+
+        mode 0 is the inbox, 1 the outbox, 255 the tariffs. All three expect an
+        acknowledgement first, then the listing itself.
+        """
+        mode = int(p.get("mode", 0))
+        self.send("cmdAck", res=0)
+        if mode == 255:
+            # Eight prices and eight delivery times, in the order the client
+            # reads them: ordinary, express, clan, express clan, then the same
+            # four again as the charge per kilogram of attachments.
+            self.send("svml", data=[10, 100, 20, 200, 5, 50, 15, 150],
+                      time=[3600, 600, 3600, 600, 3600, 600, 3600, 600])
+        else:
+            self.send("lsml", id=[], date=[], name=[], flag=[], subj=[])
+
     def cmd_q_status(self, p):
         self.send("q_status", type=int(p.get("q_type", 0)), status=0,
                   name=0, q_type=0)
@@ -499,6 +534,12 @@ class Session:
         path = p.get("path")
         if not path:
             return
+        # Location.movePlayer registers a cmdAck handler for every single step
+        # it asks for. Leaving those unanswered does not stall movement, since
+        # that handler is empty, but the queue is strictly ordered: each later
+        # reply is then handed to a stale mover instead of the command that
+        # earned it, and things like opening a shop quietly stop working.
+        self.send("cmdAck", res=0)
         self.pos = int(path[-1])
         self.send("userMove", id=0, path=[int(c) for c in path])
 
