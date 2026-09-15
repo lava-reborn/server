@@ -114,6 +114,23 @@ check("the black market is where it was played",
 check("and Dongola's is its own", world.location_at(5879, 2012), 103)
 check("naming them apart needed the region, not the name alone",
       world.location(102).title != world.location(103).title, True)
+# A settlement usually ships twice, peaceful and war, as one background drawn
+# from one library; war decides whether walking costs action points and whether
+# players may shoot each other. File names gave nothing away -- the pair is
+# spelled Night_, NY_ or not marked at all -- so the two are recognised as one
+# place by their art, and the map leads into the peaceful one.
+check("the docks open peacefully", world.location_at(5965, 1728), 41)
+check("and that is the calm file", world.location(41).war, 0)
+check("its war twin exists and is not the one chosen",
+      world.location(677).war, 1)
+check("both draw the same place",
+      world.location(41).file != world.location(677).file, True)
+
+# The station needed the words compared as a set: the map writes
+# "Вокзал Вади-Хальфы", the file is titled "Вади Хальфа: вокзал".
+check("the station is found despite the word order",
+      world.location_at(5967, 1727), 37)
+
 # An unnamed cell must still answer, or the map has holes in it.
 check("an unnamed cell still leads somewhere",
       world.location_at(6100, 1900), world.pack(6100, 1900))

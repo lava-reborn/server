@@ -112,6 +112,14 @@ try:
     check('creature and item ids do not collide',
           len(have), len(ids))
     # 3. real client assets must come through
+    # Fifteen files under res/ have a space in the name, and the client asks
+    # for them percent-escaped. Serving them meant decoding the path first:
+    # without that, the Wadi Halfa docks loaded with no artwork at all and
+    # showed as a black field, with only a 404 in the log to say why.
+    spaced = get("/res/locations/libs/Vadihalfa%20port.swf")
+    check("a name with a space is decoded", spaced[:3], b"CWS")
+    check("and served whole", len(spaced) > 1000000, True)
+
     swf = get("/res/main.swf")
     check("main.swf served", swf[:3], b"CWS")
     check("main.swf size", len(swf), 1749720)

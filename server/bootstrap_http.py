@@ -26,7 +26,7 @@ import names
 import items
 import world
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 # one source of truth for where the client's files are
 RES_ROOT = world.RES
@@ -135,7 +135,10 @@ class Handler(BaseHTTPRequestHandler):
         """Serve a file straight out of the client's own res/ tree."""
         rel = path[len("/res/"):].replace("/", os.sep)
         full = os.path.normpath(os.path.join(RES_ROOT, rel))
-        if not full.startswith(os.path.normpath(RES_ROOT)):
+        # Compare with a separator on the end, or a sibling directory whose
+        # name merely starts with the root's would pass for being inside it.
+        root = os.path.normpath(RES_ROOT) + os.sep
+        if not (full + os.sep).startswith(root):
             self._send("forbidden", code=403)
             return
         if not os.path.isfile(full):
@@ -223,7 +226,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def _dispatch(self, body=b""):
         parts = urlparse(self.path)
-        path = posixpath.normpath(parts.path)
+        # Percent-decode before touching the filesystem. Fifteen files under
+        # res/ have a space in the name -- "Vadihalfa port.swf" is the art
+        # library of the Wadi Halfa docks -- and the client asks for them
+        # correctly escaped. Without this the location loads with no artwork
+        # at all and shows as a black field, with only a 404 in the log to
+        # say so.
+        path = posixpath.normpath(unquote(parts.path))
         if path.rstrip("/") == "/exe/lavaclient/loaduser":
             # Fills the host and port fields on the client's own login screen,
             # which parses the reply with getHashHostPort. No digest belongs

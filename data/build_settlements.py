@@ -91,14 +91,15 @@ def static_meta():
         if not m:
             continue
         attrs = dict(re.findall(r'(\w+)="([^"]*)"', m.group(1)))
-        out[int(fn[:-4])] = (norm(attrs.get("title", "")), attrs.get("fn", ""))
+        out[int(fn[:-4])] = dict(
+            title=norm(attrs.get("title", "")),
+            fn=attrs.get("fn", ""),
+            # Background and library together identify the place itself: two
+            # files drawing the same art from the same library are one place.
+            place=(attrs.get("bg", ""), attrs.get("library", "")),
+            war=int(attrs.get("war", 0) or 0))
     return out
 
-
-# The same place at a different time of day or year is a separate file. The
-# map draws one cell, so where a plain file and its night or New Year dressing
-# share a title, the plain one is what stands there.
-VARIANT = {"night", "ny", "xmas", "winter", "halloween"}
 
 # How much of a word to keep when comparing. The two sources decline
 # differently and order differently -- the map says "Вокзал Вади-Хальфы" where
@@ -113,7 +114,14 @@ def stems(title):
 
 
 def tokens(fn):
-    return {w.lower() for w in re.split(r"[^A-Za-z]+", fn) if len(w) > 1}
+    """Words of a file name, with w folded into v.
+
+    Cyrillic В was transliterated both ways by whoever named the files, so the
+    same settlement is Vadihalfa3 in one and NY_Wadihalfa_port_old in another.
+    Left alone, those two never look like the same region.
+    """
+    return {w.lower().replace("w", "v")
+            for w in re.split(r"[^A-Za-z]+", fn) if len(w) > 1}
 
 
 def is_test(fn):
@@ -127,9 +135,23 @@ def is_test(fn):
     return any("test" in w for w in tokens(fn))
 
 
-def is_variant(fn):
-    """A night or holiday dressing of a place that also exists plainly."""
-    return bool(tokens(fn) & VARIANT)
+def collapse(hits, meta):
+    """Fold candidates that are one place with two sets of rules.
+
+    A settlement usually ships twice: Vadihalfa3 and Night_WH_Rail are the
+    same background drawn from the same library, differing only in war, which
+    decides whether walking costs action points and whether players may shoot
+    each other. The names gave nothing away -- fn spells the pair Night_, NY_
+    or nothing at all -- but the background and library say it outright.
+
+    Where every candidate is the same place, the peaceful file is the one the
+    map leads into. Where they are not, nothing is folded and the caller is
+    left with a genuine ambiguity.
+    """
+    if len({meta[i]["place"] for i in hits}) != 1:
+        return hits
+    calm = [i for i in hits if not meta[i]["war"]]
+    return calm or hits
 
 
 def tooltips():
@@ -150,21 +172,21 @@ def verified():
 
 def main():
     meta = static_meta()
-    tl = {i: t for i, (t, _fn) in meta.items()}
+    tl = {i: m["title"] for i, m in meta.items()}
 
     # Scratch files were never anywhere, and one of them, KB_TESTCLAN_Block_Post,
     # is titled "Кладбище" -- a title generic enough that it was claiming six
     # cells scattered across the whole map.
-    usable = {i for i, (_t, fn) in meta.items() if not is_test(fn)}
+    usable = {i for i, m in meta.items() if not is_test(m["fn"])}
 
     freq = collections.Counter()
     for i in usable:
-        freq.update(tokens(meta[i][1]))
+        freq.update(tokens(meta[i]["fn"]))
     rare = {w for w, n in freq.items() if n <= RARE}
 
     def marks(i):
         """The words in a file name that say which region it belongs to."""
-        return tokens(meta[i][1]) & rare
+        return tokens(meta[i]["fn"]) & rare
 
     by_title = collections.defaultdict(list)
     by_stem = collections.defaultdict(list)
@@ -173,27 +195,23 @@ def main():
             by_title[tl[i]].append(i)
             by_stem[stems(tl[i])].append(i)
 
-    def plainest(hits):
-        """Drop the night and holiday copies while a plain one is on offer."""
-        plain = [i for i in hits if not is_variant(meta[i][1])]
-        return plain or hits
-
     def candidates(head):
-        """Files this tooltip could name, tried from strictest rule to loosest.
+        """Files this tooltip could name.
 
-        Each rule only ever returns what it matched; nothing is merged, so a
-        looser rule never widens what a stricter one already decided.
+        Three ways of reading the same name, taken together: the title as
+        written, the same words in another order or case, and the shortening
+        the map likes -- "Чёрный рынок" for "Черный рынок Вади-Хальфы". They
+        are unioned rather than tried in turn, because the docks match one way
+        as "Вади Хальфа: Причал" and another as "Причал", and those two files
+        are the same place. Collapsing settles that; a name that really does
+        belong to several places stays ambiguous and is dropped later.
         """
-        exact = by_title.get(head)
-        if exact:
-            return plainest(exact)
-        same_words = by_stem.get(stems(head))
-        if same_words:
-            return plainest(same_words)
-        # The map shortens: "Чёрный рынок" for "Черный рынок Вади-Хальфы".
-        return plainest([i for i in usable
-                         if tl[i] not in GENERIC and (tl[i].startswith(head)
-                                                      or head.startswith(tl[i]))])
+        hits = set(by_title.get(head, ()))
+        hits |= set(by_stem.get(stems(head), ()))
+        hits |= {i for i in usable
+                 if tl[i] not in GENERIC and (tl[i].startswith(head)
+                                              or head.startswith(tl[i]))}
+        return collapse(sorted(hits), meta)
 
     table, pending, skipped = {}, [], collections.Counter()
     for x, y, raw in tooltips():
