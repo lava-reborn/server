@@ -71,14 +71,25 @@ def main():
                            for s in sides if s in "ab"},
         }
     out = os.path.join(HERE, "exits_sides.json")
+    # Half a million exit cells: one per line would run to ten megabytes, so
+    # each location's cell map goes on a single line. Still plain JSON.
     with io.open(out, "w", encoding="utf-8", newline="\n") as fh:
-        json.dump({"_": "loc_id -> {cell: side}; side W/N/E/S = map edge, "
-                        "a/b = door into an interior; cell = gy*width+gx as "
-                        "in server/world.py. Built by data/build_exits_sides.py "
-                        "from outzones of res/locations/static.",
-                   "locations": locations, "summary": summary},
-                  fh, ensure_ascii=False, indent=1, sort_keys=True)
-        fh.write("\n")
+        fh.write('{\n "_": %s,\n' % json.dumps(
+            "loc_id -> {cell: side}; side W/N/E/S = map edge, a/b = door "
+            "into an interior; cell = gy*width+gx as in server/world.py. "
+            "Built by data/build_exits_sides.py from outzones of "
+            "res/locations/static.", ensure_ascii=False))
+        fh.write(' "locations": {\n')
+        keys = sorted(locations, key=int)
+        for n, k in enumerate(keys):
+            cells = dict(sorted(locations[k].items(), key=lambda kv: int(kv[0])))
+            fh.write('  "%s": %s%s\n' % (
+                k, json.dumps(cells, separators=(",", ":")),
+                "," if n < len(keys) - 1 else ""))
+        fh.write(' },\n "summary": ')
+        fh.write(json.dumps(summary, ensure_ascii=False, indent=1,
+                            sort_keys=True).replace("\n", "\n "))
+        fh.write("\n}\n")
     with_sides = sum(1 for c in locations.values() if c)
     print("locations: %d, with outzones: %d" % (len(locations), with_sides))
     counts = {}
