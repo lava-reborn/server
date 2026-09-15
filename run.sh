@@ -18,6 +18,16 @@ RUFFLE_WSL="$REPO_WSL/tools/ruffle/ruffle.exe"
 RES_WSL="/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res"
 GAME_PORT=9775
 HTTP_PORT=8080
+# main.swf declares a 950x650 stage and sets Stage.scaleMode to
+# "noScale" in its first frame. In a larger window it therefore draws
+# at that exact size in a corner while SceneShifter lays the UI out
+# against the window size, which pulls the interface apart. Forcing
+# show-all pins the reported stage to 950x650, where every centring
+# offset in SceneShifter.setMCSize works out to zero, and lets Ruffle
+# scale the whole picture up to the window.
+STAGE_W=950
+STAGE_H=650
+ZOOM=${LAVA_ZOOM:-15}   # tenths of the stage size; 15 means 1.5x
 
 if grep -qi microsoft /proc/version 2>/dev/null; then IN_WSL=1; else IN_WSL=0; fi
 
@@ -66,7 +76,8 @@ start_servers() {
   # that the HTTP port answers would pass against a leftover server.
   local ok=1
   for _ in $(seq 1 20); do
-    if ! port_free "$GAME_PORT" && ! port_free "$HTTP_PORT"        && [ "$(in_wsl "pgrep -c -f '$PATTERN'" 2>/dev/null | tr -d '')" = "2" ]; then
+    if ! port_free "$GAME_PORT" && ! port_free "$HTTP_PORT"        && [ "$(in_wsl "pgrep -c -f '$PATTERN'" 2>/dev/null | tr -d '
+')" = "2" ]; then
       ok=0; break
     fi
     sleep 0.5
@@ -92,11 +103,15 @@ start_player() {
   echo "starting Ruffle..."
   # logged=1 is what sends the client down the loaduser path, where it takes
   # our host, port and hash, instead of the official domain that is now dead.
+  local w=$(( STAGE_W * ZOOM / 10 ))
+  local h=$(( STAGE_H * ZOOM / 10 ))
+  echo "window      : ${w}x${h}  (stage ${STAGE_W}x${STAGE_H})"
   "$exe" \
     --tcp-connections allow \
     --socket-allow "127.0.0.1:$GAME_PORT" \
     --base "http://127.0.0.1:$HTTP_PORT/res/" \
-    --width 1024 --height 700 \
+    --scale show-all --force-scale --letterbox on \
+    --width "$w" --height "$h" \
     -Plogged=1 -Psession=dev -Pvversion=1 \
     -Pvar_host=127.0.0.1 -Pvar_port=$GAME_PORT -Pvar_login=dev \
     "http://127.0.0.1:$HTTP_PORT/res/main.swf"
