@@ -1,0 +1,3 @@
+interface lol.server.ISCDispatcher
+{
+}

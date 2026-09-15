@@ -1,0 +1,55 @@
+actPlayer                    
+admit                        post,perm,char
+admit                        post,perm,char
+ah_create                    g_buyout,g_bid,a_buyout,a_bid,time,obj,target
+ah_op                        amount,obj,type,target
+ah_search                    s_mode,sort,max_g,min_g,max_a,min_a,max_lvl,min_lvl,subcat,cat,name,page,target
+apply                        action,number
+bg_op                        op,ts,type
+c_ga                         gold
+chWorld                      to
+chkml                        mode
+e_get_di                     type,mobi_id
+e_get_si                     type
+getInfo                      lvl,id,type
+getml                        id
+gg_info                      det
+head                         reg,soc
+hello                        minor,major
+insMark                      info,title,dy,dx
+lenter                       accept
+login                        hash
+logout                       
+moveTo                       dy,dx
+moveTo                       path
+moveTo                       trg
+newPers                      res,sex,name
+on_conv                      mob,op
+on_conv                      p2,p1,mob,op
+p_op                         id,op
+q_ca                         q_id
+q_co                         obj_idx,mob,q_id
+q_di                         q_id
+q_list                       
+q_si                         q_type
+q_st                         mob,q_idx
+q_status                     q_type
+resurrect                    res_type
+rmMark                       id
+rmvml                        id
+rp_get_info                  
+selPers                      num
+sndml                        gold,afro,item,body,type,subj,to
+ss_create                    target,s_type
+ss_get                       target,slot
+ss_get_di                    target,obj
+ss_get_s_si                  type
+ss_get_si                    type
+ss_heap_c                    num,trg,obj
+ss_move                      obj,to,from
+ss_upd                       param,obj,s_status
+ss_use                       target,obj,type
+ts_get_si                    type
+uldml                        id
+updMark                      info,title,id
+userMsg                      entry,group,to
