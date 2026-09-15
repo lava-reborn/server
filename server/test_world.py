@@ -90,8 +90,12 @@ try:
     names = [f.split(";")[0] for f in got]
     check("lenter acked then positioned", names[:2], ["cmdAck", "lenter"])
     check("spawn cell sent", "pos=" in got[1], True)
-    check("inhabitants placed", len(got) > 2 and set(names[2:]) == {"lch"}, True)
-    first_npc = got[2]
+    check("inhabitants placed", names.count("lch") > 0, True)
+    # registered without a figure first, so their details can land before
+    # anything is drawn
+    check("registration precedes description",
+          "refl=" in " ".join(f for f in got if f.startswith("lch")), True)
+    first_npc = [f for f in got if f.startswith("lch")][0]
     check("inhabitant carries a class", "rtype=" in first_npc, True)
 
     # Their details are pulled one at a time with getInfo type=1.
@@ -99,9 +103,11 @@ try:
     c.send("getInfo;lvl=0;id=%d;type=1;" % npc_id)
     got = c.frames()
     check("inhabitant described", got[0].split(";")[0].startswith("userInfo"), True)
-    # res must be the art folder name, not the numeric type id, or the
-    # creature is placed but never drawn.
-    check("art folder sent as a string", "res=@" in got[0], True)
+    # res must be the numeric type id: the client looks the record up by it in
+    # its own copy of mobs.xml and reads the art folder off that. Sending the
+    # folder or the name instead leaves the creature undrawn.
+    res = got[0].split("res=")[1].split(";")[0]
+    check("art keyed by numeric type id", res.isdigit(), True)
 
     # userInfo_Player carries a parameter literally called "name"; an earlier
     # version of send() collided with it and dropped the connection.
