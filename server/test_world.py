@@ -147,6 +147,19 @@ try:
           ["cmdAck", "gmap"])
     check("map position sent", "x=5968;y=1727;" in got[1], True)
 
+    # The same command goes both ways: the client's map and location screens
+    # both call changeWorld with no argument, so the direction is decided here.
+    c.send("chWorld;")
+    got = c.frames()
+    check("button toggles back into the location",
+          [f.split(";")[0] for f in got], ["cmdAck", "lcall"])
+    # and the cell the settlement occupies rides packed into g_id
+    check("map cell packed into g_id", "g_id=48891583;" in got[1], True)
+    c.send("lenter;accept=1;")
+    c.frames()
+    c.send("chWorld;")
+    c.frames()
+
     # Offsets there are hundredths of a cell. moveAck only sets a velocity, so
     # the client extrapolates and the server has to time the arrival itself and
     # confirm it with a zero-speed frame.

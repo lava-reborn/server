@@ -51,10 +51,16 @@ FIRST_NPC_ID = 100
 # Where this location sits on the global map. Those coordinates are a plain
 # grid, 5833..6305 by 1600..2110, and res/database/locations.xml labels 414 of
 # its cells, so the client draws the settlement names by itself.
-GLOBAL_X = float(os.environ.get("LAVA_GX", "5968"))
-GLOBAL_Y = float(os.environ.get("LAVA_GY", "1727"))
+GLOBAL_X = int(os.environ.get("LAVA_GX", "5968"))
+GLOBAL_Y = int(os.environ.get("LAVA_GY", "1727"))
 VIEW_RADIUS = 8
 TRAVEL_SPEED = 0.35   # cells per second
+
+# lcall carries the map cell packed into g_id, which the client unpacks with
+# LocIdToCoordinate: x in bits 13..25, y in bits 0..12, z above bit 26. Sending
+# the location's own file number there, as if the two were the same, puts the
+# settlement in the wrong place on the map.
+GEO_ID = (GLOBAL_X << 13) | GLOBAL_Y
 
 log = logging.getLogger("lava")
 
@@ -193,7 +199,7 @@ class Session:
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork.
         self.send("lcall", id=LOCATION.id, ws=LOCATION.war, ie=0,
-                  g_id=LOCATION.id)
+                  g_id=GEO_ID)
 
     def cmd_lenter(self, p):
         self.send("cmdAck", res=0)
@@ -228,19 +234,29 @@ class Session:
                  len(self.npcs), LOCATION.title)
 
     def cmd_chWorld(self, p):
-        """Leave for the global map, or drop back into the location.
+        """One command, both directions: the button is a toggle.
 
-        No "to" means the map. The client will not move a step there until the
-        server answers, and it treats the frame as authoritative, so the reply
-        carries the absolute position rather than a delta.
+        GlobalMapInterface.toLocation and LocationInterface both call
+        changeWorld with no argument, so which way the player goes is decided
+        here, from where they currently are.
         """
         self.send("cmdAck", res=0)
-        if p.get("to"):
-            self.on_map = False
-            self.enter_location()
+        if self.on_map:
+            # Standing on the settlement's own cell is what lets you in; the
+            # client offers no separate command for it.
+            if self.at_settlement():
+                self.on_map = False
+                self.enter_location()
+            else:
+                self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
         else:
             self.on_map = True
+            self.gx, self.gy = GLOBAL_X, GLOBAL_Y
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
+
+    def at_settlement(self):
+        x, y = self.current_pos()
+        return abs(x - GLOBAL_X) < 0.5 and abs(y - GLOBAL_Y) < 0.5
 
     def cmd_moveTo(self, p):
         if self.on_map:
@@ -290,7 +306,9 @@ class Session:
         self.gx, self.gy = tx, ty
         # zero speed is how the client is told to stop; it has no other signal
         self.send("userMove", id=0, dx=self.gx, dy=self.gy, vx=0, vy=0, t=0)
-        if abs(self.gx - GLOBAL_X) < 0.5 and abs(self.gy - GLOBAL_Y) < 0.5:
+        # Arriving back on the settlement drops the player straight into it,
+        # which is what the original did and saves a second keypress.
+        if self.at_settlement():
             self.on_map = False
             self.enter_location()
 
