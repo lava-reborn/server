@@ -59,7 +59,8 @@ try:
     host, port, h = get_hash_host_port(payload)
     check("parsed host", host, "127.0.0.1")
     check("parsed port", port, "9775")
-    check("parsed hash", h, "devhash")
+    # no digest here any more: the client computes its own from the password
+    check('no digest handed out', bool(h), False)
 
 
     # The client loads every XML resource with LoadVars.sendAndLoad, i.e.
@@ -106,8 +107,10 @@ try:
     except urllib.error.HTTPError as e:
         traversal_code = e.code
     check("traversal blocked", traversal_code, 404)
-    check("index has ruffle", b"RufflePlayer" in get("/"), True)
-    check("index passes logged=1", b'logged: "1"' in get("/"), True)
+    page = get("/")
+    check('landing page is the registration form',
+          b'action="/register"' in page, True)
+    check('landing page is utf-8', b'charset=utf-8' in page, True)
 finally:
     srv.terminate()
     try: srv.communicate(timeout=5)

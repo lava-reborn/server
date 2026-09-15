@@ -88,11 +88,13 @@ start_servers() {
 }
 
 start_player() {
-  # logged=1 is what sends the client down the loaduser path, where it takes
-  # our host, port and login hash, instead of the official domain that is now
-  # dead. The projector takes no flashvars on the command line, so they ride
-  # in the SWF's query string, which Flash unpacks into _root exactly the same.
-  local vars="logged=1&session=dev&vversion=1&var_host=127.0.0.1&var_port=$GAME_PORT&var_login=dev"
+  # No logged=1 here: that flag makes the client skip its own login
+  # screen and take a session straight from loaduser. Without it the
+  # player types a name and password, the client hashes them, and the
+  # game server checks the digest against a registered account.
+  # The projector takes no flashvars on the command line, so they ride
+  # in the SWF query string, which Flash unpacks into _root the same.
+  local vars="vversion=1&var_host=127.0.0.1&var_port=$GAME_PORT"
   local url="http://127.0.0.1:$HTTP_PORT/res/main.swf?$vars"
 
   if [ "$PLAYER" = "ruffle" ]; then
@@ -101,8 +103,7 @@ start_player() {
     echo "player      : Ruffle (interface will render undersized)"
     "$exe" --tcp-connections allow --socket-allow "127.0.0.1:$GAME_PORT" \
       --base "http://127.0.0.1:$HTTP_PORT/res/" --width 950 --height 650 \
-      -Plogged=1 -Psession=dev -Pvversion=1 \
-      -Pvar_host=127.0.0.1 -Pvar_port=$GAME_PORT -Pvar_login=dev \
+      -Pvversion=1 -Pvar_host=127.0.0.1 -Pvar_port=$GAME_PORT \
       "http://127.0.0.1:$HTTP_PORT/res/main.swf"
     return
   fi

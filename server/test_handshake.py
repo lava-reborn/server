@@ -1,9 +1,23 @@
 """End-to-end: replay exactly what lol.core.Session.as sends, against server.py."""
 import socket, subprocess, sys, time, os
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PORT = 19775
-env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1")
+# A throwaway database per run, with one account registered in it: the server
+# now refuses any digest it does not know, so the test has to own a real one.
+DB = os.path.join(tempfile.mkdtemp(), "test.db")
+sys.path.insert(0, HERE)
+import accounts
+accounts.DB_PATH = DB
+_store = accounts.Store(DB)
+_store.register("tester", "secret")
+_store.close()
+CRED = accounts.credential("tester", "secret")
+
+env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
+           LAVA_DB=DB)
+
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
@@ -39,7 +53,8 @@ try:
     print("  %s server answered hello (clears the 20s helloTimeout)" % ("OK " if ok else "FAIL"))
 
     # Step 5: Session.login() -> CSM_Login(hash)
-    s.sendall(b"login;hash=@deadbeefcafe@;\x00")
+    s.sendall(("login;hash=@%s@;" % CRED).encode("cp1251")
+              + b"\x00")
     r = recv_frame()
     print("  S->C", r)
     good = r.split(";")[0] == "cmdAck" and "res=0;" in r

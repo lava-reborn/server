@@ -13,7 +13,15 @@ type id. A hex cell's number is gy * width + gx.
 import os
 import re
 
-RES = os.environ.get("LAVA_RES", r"C:\Users\gmkrt\OneDrive\Desktop\LAVA\res")
+# The servers run under WSL while the client lives on the Windows drive, so
+# fall back to the mounted path whenever the configured one is unreachable.
+RES = os.environ.get("LAVA_RES") or ""
+if not os.path.isdir(RES):
+    for _candidate in (r"C:\Users\gmkrt\OneDrive\Desktop\LAVA\res",
+                       "/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res"):
+        if os.path.isdir(_candidate):
+            RES = _candidate
+            break
 
 # Entity.as: the class the client builds for an entity, taken from its
 # root_type_id in mobs.xml and sent back as rtype in lch.

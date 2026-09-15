@@ -6,6 +6,7 @@ lol/core/player/PersGenerator.as and lol/core/Master.as.
 import os
 import socket
 import subprocess
+import tempfile
 import sys
 import time
 
@@ -15,8 +16,20 @@ ENC = "cp1251"
 
 # This test walks the character-creation path, so it needs the empty
 # roster; the server otherwise ships a ready character and auto-enters.
+# A throwaway database per run, with one account registered in it: the server
+# now refuses any digest it does not know, so the test has to own a real one.
+DB = os.path.join(tempfile.mkdtemp(), "test.db")
+sys.path.insert(0, HERE)
+import accounts
+accounts.DB_PATH = DB
+_store = accounts.Store(DB)
+_store.register("tester", "secret")
+_store.close()
+CRED = accounts.credential("tester", "secret")
+
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
-           LAVA_NEWCHAR="1")
+           LAVA_DB=DB)
+
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
@@ -71,7 +84,7 @@ try:
     c = Client(connect())
 
     c.send("hello;minor=2;major=0;")
-    c.send("login;hash=@abc@;")
+    c.send("login;hash=@%s@;" % CRED)
     check("login sequence", c.names(),
           ["hello", "cmdAck", "constants", "accountInfo"])
 
