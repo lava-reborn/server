@@ -94,6 +94,23 @@ try:
     # leaves it with no strings at all, and no error either
     check('texts stub is utf-8 with BOM',
           body[:3], bytes([0xEF, 0xBB, 0xBF]))
+
+    # ?all=1 has to arrive complete, and this is not cosmetic. StringCollector
+    # is a singleton and SBase stays subscribed to its "update" event forever,
+    # answering it by re-dispatching its own onLoad, which Session turns into
+    # SceneShifter.enterScene() -- the login screen. So one string fetched
+    # after login throws the player back out. Only a cache filled up front
+    # keeps a second fetch from ever happening.
+    everything = get('/res/database/texts.xml?all=1')
+    check('all=1 is not empty', len(everything) > 100000, True)
+    sys.path.insert(0, HERE)
+    import world, items
+    ids = set(world.mob_types())
+    ids |= {items.STRING_ID_OFFSET + t for t in items.catalogue()}
+    have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
+    check('every name the server sends is preloaded', ids - have, set())
+    check('creature and item ids do not collide',
+          len(have), len(ids))
     # 3. real client assets must come through
     swf = get("/res/main.swf")
     check("main.swf served", swf[:3], b"CWS")

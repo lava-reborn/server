@@ -16,6 +16,7 @@ straight from the reply. That bypasses the hardcoded www.lava-online.ru domain
 and the game_session.php endpoint entirely.
 """
 import os
+from xml.sax.saxutils import escape
 import posixpath
 import re
 import sys
@@ -80,6 +81,26 @@ try:
         REAL_NAMES = {int(k): v for k, v in json.load(_f)["names"].items()}
 except Exception:
     REAL_NAMES = {}
+
+_ALL_STRINGS = None
+
+
+def all_strings():
+    """Every id the server can name, as one <s id> run, built once.
+
+    Creatures and items share the string space, so the item ids carry
+    items.STRING_ID_OFFSET; the wiki names win over the internal ones.
+    """
+    global _ALL_STRINGS
+    if _ALL_STRINGS is None:
+        table = dict(MOB_NAMES)
+        table.update(ITEM_NAMES)
+        table.update(REAL_NAMES)
+        _ALL_STRINGS = "".join(
+            "<s id='%d'>%s</s>" % (i, escape(n))
+            for i, n in sorted(table.items()))
+    return _ALL_STRINGS
+
 
 CTYPES = {
     ".swf": "application/x-shockwave-flash",
@@ -176,11 +197,22 @@ class Handler(BaseHTTPRequestHandler):
         Item names, quest text and NPC lines all travel as numeric string ids
         resolved through this endpoint, and the 20 MB file behind it is one of
         only two files absent from the shipped client. Until those strings are
-        recovered, echo every requested id back as its own placeholder: an item
-        whose name never arrives is never added to the inventory at all.
+        recovered, answer with the names the client's own tables and the wiki
+        can supply: an item whose name never arrives is never added to the
+        inventory at all.
+
+        The ?all=1 request must answer with every id the server will ever use,
+        and an empty reply here is not a harmless stub. StringCollector is a
+        singleton that keeps SBase subscribed to its "update" event for the
+        life of the session, and SBase answers that event by reloading the
+        location names and dispatching its own "onLoad" — which Session
+        handles with SceneShifter.enterScene(), the login screen. So any batch
+        of strings fetched after login throws the player back to the login
+        window. Filling the cache up front is what stops a second batch from
+        ever being asked for; that is also why logging in twice used to work.
         """
         if "all=1" in (query or ""):
-            self._send_xml("<data></data>")
+            self._send_xml("<data>%s</data>" % all_strings())
             return
         ids = [m.decode() for m in re.findall(rb"\d+", body or b"")]
         rows = "".join(
