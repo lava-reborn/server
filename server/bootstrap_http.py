@@ -19,6 +19,8 @@ import os
 import posixpath
 import re
 import sys
+
+import world
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
@@ -50,6 +52,13 @@ CSETTINGS = """<?xml version="1.0" encoding="windows-1251"?>
   </resource>
 </settings>
 """
+
+# The server hands out a creature's type id where a string id belongs, so the
+# stub below can answer with its internal name instead of a bare placeholder.
+try:
+    MOB_NAMES = {t: n for t, (_r, n, _a) in world.mob_types().items()}
+except Exception:
+    MOB_NAMES = {}
 
 CTYPES = {
     ".swf": "application/x-shockwave-flash",
@@ -135,7 +144,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send("<data></data>", "text/xml")
             return
         ids = [m.decode() for m in re.findall(rb"\d+", body or b"")]
-        rows = "".join('<s id="%s">#%s</s>' % (i, i) for i in ids)
+        rows = "".join('<s id="%s">%s</s>' % (i, MOB_NAMES.get(int(i), "#" + i))
+                       for i in ids)
         self._send("<data>%s</data>" % rows, "text/xml")
 
     def _dispatch(self, body=b""):

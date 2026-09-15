@@ -17,6 +17,7 @@ import asyncio
 import logging
 import os
 
+import world
 from protocol import FrameReader, decode, frame, Str
 
 HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
@@ -24,12 +25,22 @@ PORT = int(os.environ.get("LAVA_PORT", "9775"))
 POLICY_PORT = 843
 NEW_CHAR = os.environ.get("LAVA_NEWCHAR") == "1"
 
-# "Вади Хальфа: жилой квартал", chosen because it is one of the 168 locations
-# with war="0": no combat mode, so action points are not consumed by walking.
-# Cell 490 is the first entry point in its <inzones> list, at grid (42, 7) on a
-# 64-wide grid, and pos is gy * width + gx.
-START_LOC = 36
-START_POS = 490
+# "Черный рынок Вади-Хальфы": peaceful (war="0", so walking costs no action
+# points) and already populated in its own XML with 21 traders, an upgrader,
+# a lessor and several commoners.
+START_LOC = int(os.environ.get("LAVA_LOC", "102"))
+
+# The avatar id must exist in avatars/list.xml, which holds only eight, and
+# must also have a folder under res/personages or the body silently falls back
+# to a different character than the portrait. Ids 0, 3, 131 and 133 satisfy
+# both; the rest give a face that does not match the figure on screen.
+START_RES = int(os.environ.get("LAVA_RES_ID", "0"))
+
+LOCATION = world.Location(START_LOC)
+MOB_TYPES = world.mob_types()
+# Entity ids: 0 is always the player, so anything placed in the world starts
+# above that.
+FIRST_NPC_ID = 100
 
 log = logging.getLogger("lava")
 
@@ -64,9 +75,11 @@ class Session:
         # makes every test run reproducible without clicking through creation.
         # LAVA_NEWCHAR=1 starts with an empty roster and shows that screen.
         self.characters = [] if NEW_CHAR else [
-            {"name": "polestvr", "sex": 0, "res": 1}]
+            {"name": "polestvr", "sex": 0, "res": START_RES}]
         self.active = None
-        self.pos = START_POS
+        self.pos = LOCATION.entry_cell()
+        # entity id -> (cell, type_id, rtype) for everything placed
+        self.npcs = {}
 
     # --- plumbing --------------------------------------------------------
     def send(self, *_cmd, **params):
@@ -133,7 +146,7 @@ class Session:
     def cmd_newPers(self, p):
         self.characters = [{"name": p.get("name", "Noname"),
                             "sex": p.get("sex", 0),
-                            "res": p.get("res", 1)}]
+                            "res": p.get("res", START_RES)}]
         self.active = self.characters[0]
         # The client plays its intro after this, then sends actPlayer itself.
         self.send("cmdAck", res=0)
@@ -154,20 +167,40 @@ class Session:
     def enter_location(self):
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork.
-        self.send("lcall", id=START_LOC, ws=0, ie=0, g_id=START_LOC)
+        self.send("lcall", id=LOCATION.id, ws=LOCATION.war, ie=0,
+                  g_id=LOCATION.id)
 
     def cmd_lenter(self, p):
         self.send("cmdAck", res=0)
         # aspd is the action-point gain per 600ms tick, amax the ceiling.
         self.send("lenter", pos=self.pos, aspd=1, amax=20)
+        self.populate()
+
+    def populate(self):
+        """Place the location's own inhabitants, one lch frame each.
+
+        The spawn points and their type ids come straight out of the location
+        file; only behaviour was stripped. rtype tells the client which class
+        to build, and it then asks for each one's details with getInfo type=1.
+        """
+        self.npcs.clear()
+        for i, (cell, type_id) in enumerate(LOCATION.spawns):
+            root = MOB_TYPES.get(type_id, (world.MOB, "", ""))[0]
+            npc_id = FIRST_NPC_ID + i
+            self.npcs[npc_id] = (cell, type_id, root)
+            self.send("lch", newUser=npc_id, pos=cell, rtype=root)
+        log.info("  ..    placed %d inhabitants in %s",
+                 len(self.npcs), LOCATION.title)
 
     def cmd_chWorld(self, p):
         self.send("cmdAck", res=0)
 
     def cmd_getInfo(self, p):
-        if int(p.get("id", 0)) != 0:
+        who = int(p.get("id", 0))
+        if who != 0:
+            self.send_npc_info(who)
             return
-        pers = self.active or {"name": "Noname", "sex": 0, "res": 1}
+        pers = self.active or {"name": "Noname", "sex": 0, "res": START_RES}
         self.send("userInfo_Player",
                   id=0, name=Str(pers["name"]), sex=pers["sex"],
                   res=pers["res"], ail=0, ally=1, lvl=1,
@@ -175,6 +208,43 @@ class Session:
                   hl=0, pr=0,
                   afro=1000, gold=0, tr=0, tr_hours=0)
         self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
+
+    def send_npc_info(self, npc_id):
+        """Answer getInfo for one inhabitant.
+
+        name is a numeric string id, not text: the client resolves it over HTTP
+        against database/texts.xml. Passing the type id lets the stub there hand
+        back the creature's internal name instead of a placeholder.
+
+        ally must be truthy or every service this NPC offers is refused before
+        a single frame is exchanged.
+        """
+        entry = self.npcs.get(npc_id)
+        if not entry:
+            return
+        cell, type_id, root = entry
+        cmd = world.USERINFO.get(root, "userInfo")
+        art = MOB_TYPES.get(type_id, (world.MOB, "", ""))[2]
+        params = dict(id=npc_id, name=type_id, sex=0, res=Str(art),
+                      ail=0,
+                      ally=1, lvl=1, rep=[0], bg_rep=0, bg_pen=0,
+                      give_quests=[], take_quests=[], m_hello=[],
+                      can_set_home=0, can_banking=0, can_trophy=0,
+                      can_repair=0, can_trade=0)
+        if root == world.TRADER:
+            # An empty stock still opens the trade window; goods come later.
+            params.update(can_trade=1, can_repair=1, type_list=[],
+                          bg_objects=[], bg_obj_rep_req=[],
+                          pmod=1, smod=1, rmod=1)
+        elif root == world.UPGRADER:
+            params.update(in_types=[], out_types=[], costs=[])
+        elif root == world.LESSOR:
+            params.update(give_transport=[])
+        elif root == world.HEALER:
+            params.update(a_price=10)
+        elif root == world.COMMONER:
+            params.update(can_set_home=1)
+        self.send(cmd, **params)
 
     def cmd_rp_get_info(self, p):
         """Attributes, skills and specialisations, despite the name.

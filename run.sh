@@ -63,7 +63,7 @@ stop_servers() {
 start_servers() {
   stop_servers || return 1
   in_wsl "mkdir -p '$REPO_WSL/logs'
-    LAVA_HOST=0.0.0.0 LAVA_PORT=$GAME_PORT \
+    LAVA_RES='$RES_WSL' LAVA_HOST=0.0.0.0 LAVA_PORT=$GAME_PORT \
       nohup python3 '$REPO_WSL/server/server.py'         > '$REPO_WSL/logs/game.log' 2>&1 &
     LAVA_RES='$RES_WSL' LAVA_HTTP_PORT=$HTTP_PORT \
     LAVA_GAME_HOST=127.0.0.1 LAVA_GAME_PORT=$GAME_PORT \
