@@ -18,8 +18,24 @@ import tempfile
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PORT = 19777
 ENC = "utf-8"
+
+
+def free_port():
+    """A port nobody holds right now.
+
+    A fixed number collided with other suites' servers when several run at
+    once: this client then talked to a stranger's server, whose database
+    knew the same test credential, and every check lied about it.
+    """
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+
+PORT = free_port()
 
 # A throwaway database with one account and one ready character, so the
 # path is the returning player's: login, selPers, lenter.
@@ -53,6 +69,11 @@ def check(label, got, want):
 def connect(timeout=10):
     end = time.time() + timeout
     while time.time() < end:
+        # Only our own server may answer here. If it died before listening
+        # (a port taken after all), connecting would reach whoever has it.
+        if srv.poll() is not None:
+            raise SystemExit("server exited before listening:\n"
+                             + srv.communicate()[0][-1500:])
         try:
             return socket.create_connection(("127.0.0.1", PORT), 0.5)
         except OSError:
