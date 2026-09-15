@@ -20,8 +20,9 @@ import os
 import accounts
 import items
 import names
+import rooms
 import world
-from protocol import FrameReader, decode, frame, Str
+from protocol import BigUInt, FrameReader, decode, frame, Str
 
 HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
 PORT = int(os.environ.get("LAVA_PORT", "9775"))
@@ -66,9 +67,7 @@ MOB_TYPES = world.mob_types()
 def default_character():
     res, sex = AVATARS[START_AVATAR % len(AVATARS)]
     return {"name": "polestvr", "sex": sex, "res": res}
-# Entity ids: 0 is always the player, so anything placed in the world starts
-# above that.
-FIRST_NPC_ID = 100
+
 
 # The map is a plain grid, 5833..6305 by 1600..2110, and the client labels its
 # cells from res/database/locations.xml on its own. Every cell can be entered:
@@ -76,6 +75,13 @@ FIRST_NPC_ID = 100
 # rest resolve to open desert by world.location_at.
 VIEW_RADIUS = 8
 TRAVEL_SPEED = 0.35   # cells per second
+
+# Shared world state, one of each for the process: locations as rooms, the
+# map as a room, and who is online. Entity ids come from here too, so a
+# trader keeps its id between two players and between two visits.
+ROOMS = rooms.Rooms(MOB_TYPES)
+GMAP = rooms.GlobalMapRoom(VIEW_RADIUS)
+ONLINE = rooms.Directory()
 
 log = logging.getLogger("lava")
 
@@ -118,8 +124,19 @@ class Session:
         self.arrival = None
         # a leg in flight: (start time, from x, from y, vx, vy)
         self.leg = None
-        # entity id -> (cell, type_id, rtype) for everything placed
-        self.npcs = {}
+        # the Room this session stands in, from lenter until it leaves
+        self.room = None
+        self.closed = False
+
+    @property
+    def pid(self):
+        """This player's entity id as every other client knows it. Never 0:
+        that is what each client calls itself (Gamer.as:31)."""
+        return rooms.player_id(self.char_id) if self.char_id else None
+
+    @property
+    def nick(self):
+        return (self.active or default_character())["name"]
 
     # --- plumbing --------------------------------------------------------
     def send(self, *_cmd, **params):
@@ -206,11 +223,28 @@ class Session:
         self.close()
 
     def close(self):
+        # Reached twice on a logout: once from the command, once when the
+        # socket then reads EOF. The second pass must not announce a second
+        # departure to the room.
+        if self.closed:
+            return
+        self.closed = True
         self.cancel_travel()
+        # Whoever shared a room or the map with this player is told now: a
+        # dropped socket sends no logout, so this is the only place that
+        # covers every way out.
+        self.leave_room()
+        GMAP.leave(self)
+        ONLINE.remove(self)
         if self.char_id:
             STORE.save_position(self.char_id, self.loc.id, self.pos,
                                 self.gx, self.gy, self.on_map)
         self.writer.close()
+
+    def leave_room(self):
+        if self.room is not None:
+            self.room.leave(self)
+            self.room = None
 
     # --- character -------------------------------------------------------
     def cmd_newPers(self, p):
@@ -244,6 +278,13 @@ class Session:
                 self.char_id = c["id"]
                 self.restore(c)
                 break
+        else:
+            # A socket that never logged in, or names a slot it does not
+            # have, gets no lcall: the client itself only allows selPers in
+            # ENTER_STATE after a login (FilterManager.createEnterFilter),
+            # so anything else is not the client.
+            log.warning("  ??    selPers without a character, ignoring")
+            return
         self.enter_location()
 
     def restore(self, c):
@@ -273,11 +314,19 @@ class Session:
             self.pos = self.loc.entry_cell()
 
     def cmd_actPlayer(self, p):
+        if not self.char_id:
+            self.send("cmdAck", res=1)
+            return
         self.send("cmdAck", res=0)
         self.enter_location()
 
     # --- world -----------------------------------------------------------
     def enter_location(self):
+        # An lcall makes the client drop its current Location (Master.lcall
+        # builds a new LocGen), so whoever shared the old room is told now,
+        # before the new one is even loading.
+        self.leave_room()
+        ONLINE.add(self)
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork.
         self.send("lcall", id=self.loc.id, ws=self.loc.war, ie=0,
@@ -290,46 +339,22 @@ class Session:
         for one as soon as the lenter frame lands, so the acknowledgement is
         the failure path only.
         """
+        if not self.char_id:
+            # Not a player: nothing to put in a room. The refusal is the one
+            # case where lenter is acknowledged (see above).
+            self.send("cmdAck", res=1)
+            return
         # aspd is the action-point gain per 600ms tick, amax the ceiling.
         self.send("lenter", pos=self.pos, aspd=1, amax=20)
-        self.populate()
+        self.enter_room()
 
-    def populate(self):
-        """Place the location's own inhabitants, one lch frame each.
-
-        The spawn points and their type ids come straight out of the location
-        file; only behaviour was stripped. rtype tells the client which class
-        to build.
-        """
-        self.npcs.clear()
-        skipped = 0
-        for cell, type_id in self.loc.spawns:
-            # A creature the client has no record of cannot be drawn or named.
-            # res misses in its copy of mobs.xml and the art resolves to
-            # mobs/undefined.xml, and worse, the name id reaches the client
-            # unknown, which fetches a string batch and puts the login screen
-            # back on top of the game. 670 of the type ids used by locations
-            # are absent from mobs.xml, so this is not a rare corner.
-            if type_id not in MOB_TYPES or not names.known(type_id):
-                skipped += 1
-                continue
-            root = MOB_TYPES[type_id][0]
-            self.npcs[FIRST_NPC_ID + len(self.npcs)] = (cell, type_id, root)
-
-        # Three passes, and the order is what makes them visible. A positioned
-        # lch builds the figure at once, and the figure resolves its art from
-        # persType, which only userInfo supplies. Place first and it asks for
-        # mobs/undefined.xml once, never retries, and leaves a placeholder cone
-        # standing there. An lch carrying refl registers the entity without a
-        # figure, so the details can land before anything is drawn. The refl
-        # frame still has to carry pos: Location.lch ignores the whole frame
-        # unless newUser, pos and rtype are all present, refl or not.
-        for npc_id, (cell, _type, root) in self.npcs.items():
-            self.send("lch", newUser=npc_id, pos=cell, rtype=root)
-            self.send_npc_info(npc_id)
-        log.info("  ..    placed %d inhabitants in %s (%s)%s",
-                 len(self.npcs), self.loc.title, self.loc.file,
-                 ", %d unknown to the client" % skipped if skipped else "")
+    def enter_room(self):
+        """Join the location as a room: its inhabitants and other players
+        come to us, and we are announced to them. The spawn points and their
+        type ids come straight out of the location file; only behaviour was
+        stripped. See rooms.Room.snapshot_for for the frame order."""
+        self.room = ROOMS.get(self.loc.id)
+        self.room.enter(self)
 
     def cmd_chWorld(self, p):
         """One command, both directions: the button is a toggle.
@@ -345,7 +370,11 @@ class Session:
             # Leaving puts the player back on the cell the location stands on.
             self.on_map = True
             self.cancel_travel()
+            self.leave_room()
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
+            # Only after gmap: newUser is an offset from the client's own
+            # figure, which Master.gmap has just created.
+            GMAP.enter(self)
 
     def enter_cell(self):
         """Walk into whatever occupies the cell under the player.
@@ -360,6 +389,7 @@ class Session:
         self.cancel_travel()
         self.gx, self.gy = int(round(x)), int(round(y))
         self.on_map = False
+        GMAP.leave(self)
         self.go_to(world.location_at(self.gx, self.gy))
 
     def go_to(self, loc_id):
@@ -395,9 +425,15 @@ class Session:
         stripped from every shipped file. Until that graph is rebuilt by other
         means, this is how the rest of the world is reached.
         """
-        self.send("cmdAck", res=0)
-        text = (p.get("entry") or "").strip()
+        raw = p.get("entry") or ""
+        text = raw.strip()
         group = int(p.get("group", 0) or 0)
+        # A private message carries to=@Nick@ and no group at all
+        # (ChatPan.sendMessage): addressed by name, the id never travels.
+        if "group" not in p and p.get("to"):
+            self.whisper(p["to"], raw)
+            return
+        self.send("cmdAck", res=0)
         if text.startswith("/goto"):
             self.cmd_goto(text.split()[1:], group)
             return
@@ -408,11 +444,38 @@ class Session:
                      % (self.loc.title, self.loc.file, self.loc.fn or "-",
                         round(self.gx), round(self.gy)), group)
             return
-        # Ordinary talk comes back to the sender, which is how the client
-        # shows it: it prints nothing of its own when a message is typed.
-        pers = self.active or default_character()
-        self.send("userMsg", entry=Str(text), group=group,
-                  nick=Str(pers["name"]), **{"from": 0})
+        # Ordinary talk does NOT come back to the sender: Chat.delivery prints
+        # the sender's own line the moment cmdAck;res=0 lands, and an echo
+        # would show it twice. Everyone else gets the entry verbatim -- long
+        # messages arrive split with ^0^/^1^/^2L^ prefixes and the receiver
+        # reassembles them by (group, from) -- with the nick, since a
+        # listener who has never seen the sender's entity would otherwise
+        # print *** (Chat.getName).
+        if group == 0 and self.room is not None:
+            self.room.broadcast(("userMsg", dict(
+                group=0, nick=Str(self.nick), entry=Str(raw),
+                **{"from": self.pid})), exclude=self)
+        elif group == 6:
+            # The world channel: everyone online, wherever they stand.
+            for other in ONLINE:
+                if other is not self:
+                    other.send("userMsg", group=6, nick=Str(self.nick),
+                               entry=Str(raw), **{"from": self.pid})
+        else:
+            log.info("  ..    chat on channel %d goes nowhere yet", group)
+
+    def whisper(self, nick, raw):
+        """A private message. res=9 is what the client words as "the character
+        is offline, write a letter"; on res=0 it prints its own line."""
+        target = ONLINE.by_nick(nick)
+        if target is None or target is self:
+            self.send("cmdAck", res=9)
+            return
+        self.send("cmdAck", res=0)
+        # No group: Chat.userMsg treats a frame with from and no group as the
+        # private channel.
+        target.send("userMsg", nick=Str(self.nick), entry=Str(raw),
+                    **{"from": self.pid})
 
     def cmd_goto(self, args, group=0):
         """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
@@ -440,6 +503,7 @@ class Session:
             return
         self.on_map = False
         self.cancel_travel()
+        GMAP.leave(self)
         self.gx, self.gy = gx, gy
         self.go_to(loc.id)
         log.info("  ..    /goto %d -> %s", loc_id, loc.file)
@@ -484,6 +548,9 @@ class Session:
         if self.arrival:
             self.arrival.cancel()
         self.arrival = loop.call_later(dist / TRAVEL_SPEED, self.arrive, tx, ty)
+        # Whoever sees us on the map gets the new vector at once, not on the
+        # next heartbeat.
+        GMAP.moved(self)
 
     def current_pos(self):
         """Where the player is now, matching the client's own extrapolation."""
@@ -499,6 +566,7 @@ class Session:
         self.gx, self.gy = tx, ty
         # zero speed is how the client is told to stop; it has no other signal
         self.send("userMove", id=0, dx=self.gx, dy=self.gy, vx=0, vy=0, t=0)
+        GMAP.moved(self)
         # Deliberately no automatic entry here. Settlements occupy a whole
         # cell, so any short hop near one landed inside it and the map became
         # impossible to stay on. Going in is the button's job.
@@ -506,7 +574,10 @@ class Session:
     def cmd_getInfo(self, p):
         who = int(p.get("id", 0))
         if who != 0:
-            self.send_npc_info(who)
+            if rooms.is_player_id(who):
+                self.send_player_info(who)
+            else:
+                self.send_npc_info(who)
             return
         pers = self.active or default_character()
         self.send("userInfo_Player",
@@ -516,6 +587,23 @@ class Session:
                   hl=0, pr=0,
                   afro=1000, gold=0, tr=0, tr_hours=0)
         self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
+
+    def send_player_info(self, pid):
+        """Answer getInfo;type=0 about another player.
+
+        The asking client just built a Player entity for an id it saw in
+        lch;newUser or on the map, and the entity asked by itself
+        (Entity.as:38-41). Whoever it is may stand in this room or anywhere
+        on the map, so the lookup is by who is online, not by room. The
+        health bars over the figure are filled only by usrUp, so it follows
+        at once.
+        """
+        other = ONLINE.by_pid(pid)
+        if other is None or other.active is None:
+            log.info("  ..    getInfo about %d, who is not online", pid)
+            return
+        self.send("userInfo_Player", **rooms.player_info(other))
+        self.send("usrUp", **rooms.player_health(other))
 
     def send_npc_info(self, npc_id):
         """Answer getInfo for one inhabitant.
@@ -527,7 +615,7 @@ class Session:
         ally must be truthy or every service this NPC offers is refused before
         a single frame is exchanged.
         """
-        entry = self.npcs.get(npc_id)
+        entry = self.room.npc(npc_id) if self.room is not None else None
         if not entry:
             return
         cell, type_id, root = entry
@@ -613,6 +701,14 @@ class Session:
                   desc="")
 
     def cmd_ss_get(self, p):
+        target = int(p.get("target", 0) or 0)
+        if target and rooms.is_player_id(target):
+            # Another player's gear, asked for by the Player entity the
+            # client just built (Player.as:11-18, slot=3). PersEquip.ss_ack
+            # splices exactly six wear slots off the list and then two
+            # hands, so the answer is eight entries, x0 for an empty slot.
+            self.send("ss_ack", o_list=[BigUInt("0")] * 8)
+            return
         # Answer even when empty; ItemFactory pipelines these and stops
         # issuing new ones until each outstanding request comes back.
         self.send("ss_ack", o_list=[])
@@ -660,7 +756,14 @@ class Session:
         # earned it, and things like opening a shop quietly stop working.
         self.send("cmdAck", res=0)
         self.pos = int(path[-1])
-        self.send("userMove", id=0, path=[int(c) for c in path])
+        cells = [int(c) for c in path]
+        self.send("userMove", id=0, path=cells)
+        # The same walk under our real id for everyone else in the room:
+        # Location.userMove looks the walker up by id and 0 is always the
+        # viewer's own figure (Location.getWalker).
+        if self.room is not None:
+            self.room.broadcast(("userMove", dict(id=self.pid, path=cells)),
+                                exclude=self)
 
 
 async def handle_client(reader, writer):

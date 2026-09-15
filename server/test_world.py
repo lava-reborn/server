@@ -305,12 +305,14 @@ try:
     check("on the channel it was asked in", "group=4;" in got[1], True)
     check("and names the file behind the cell", "static/183.xml" in got[1], True)
 
-    # Ordinary chat still has to come back, or nothing the player types shows.
+    # Ordinary chat is only acknowledged: Chat.delivery prints the sender's
+    # own line the moment cmdAck;res=0 lands, so an echo would show it twice.
+    # Alone in the location, nobody else is there to receive it either.
     c.send("userMsg;entry=@привет@;group=0;")
     got = c.frames()
-    check("chat is echoed to the sender",
-          [f.split(";")[0] for f in got], ["cmdAck", "userMsg"])
-    check("with the text intact", "entry=@привет@;" in got[1], True)
+    check("chat is acknowledged and not echoed",
+          [f.split(";")[0] for f in got], ["cmdAck"])
+    check("and accepted", got[0], "cmdAck;res=0;")
 
     c.send("logout;")
 finally:
