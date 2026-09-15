@@ -10,6 +10,7 @@ fixed stride: 4 characters per cell for the plain lists, 5 where a per-cell
 extra byte follows, and 8 for mob spawns, whose last four characters are the
 type id. A hex cell's number is gy * width + gx.
 """
+import json
 import os
 import re
 
@@ -57,10 +58,66 @@ def _chunks(txt, tag, step):
     return [s[i:i + step] for i in range(0, len(s) - step + 1, step)]
 
 
+# A location id is not always a file number. SSEmulator.getLocDescription
+# resolves one and the server has to agree exactly, because both sides read
+# the walkability grid out of whatever file they picked: disagree, and the
+# player walks through walls the client is drawing, or into ones it is not.
+#
+#   locations/static/<id>.xml   whenever that file exists
+#   id >> 28 == 4               locations/deadloc/<(id >> 26) & 3>.xml
+#   id >> 26 == 0               open desert, gx = id >> 13, gy = id & 0x1FFF,
+#                               tile ((gx + gy) & 3) + 1 of four
+#
+# That last rule is why the whole global map is reachable without a table of
+# any kind: a cell with nothing on it packs into an id that resolves, from its
+# own coordinates, to one of four wasteland tiles.
+GEO_SHIFT = 13
+GEO_MASK = 0x1FFF
+
+
+def pack(gx, gy):
+    """Map cell to the id the client unpacks in LocIdToCoordinate."""
+    return (int(gx) << GEO_SHIFT) | (int(gy) & GEO_MASK)
+
+
+def unpack(geo):
+    return geo >> GEO_SHIFT, geo & GEO_MASK
+
+
+def is_wilderness(loc_id):
+    """True when the id is a packed map cell rather than a location file.
+
+    The two spaces overlap on paper -- a file number and a packed cell are
+    both just integers -- but not in practice: no real map column is 0, so a
+    packed cell is always far above the 1381 file numbers.
+    """
+    return not os.path.isfile(
+        os.path.join(RES, "locations", "static", "%d.xml" % loc_id))         and loc_id >> 26 == 0
+
+
+def path_for(loc_id):
+    """The file behind a location id, or None where the client draws nothing."""
+    static = os.path.join(RES, "locations", "static", "%d.xml" % loc_id)
+    if os.path.isfile(static):
+        return static
+    if loc_id >> 28 == 4:
+        return os.path.join(RES, "locations", "deadloc",
+                            "%d.xml" % ((loc_id >> 26) & 3))
+    if loc_id >> 26 == 0:
+        gx, gy = unpack(loc_id)
+        return os.path.join(RES, "locations", "desert",
+                            "%04d.xml" % (((gx + gy) & 3) + 1))
+    return None
+
+
 class Location:
     def __init__(self, loc_id):
         self.id = loc_id
-        txt = _read(os.path.join(RES, "locations", "static", "%d.xml" % loc_id))
+        path = path_for(loc_id)
+        if path is None:
+            raise KeyError("no file for location %d" % loc_id)
+        self.file = os.path.basename(os.path.dirname(path)) + "/" +             os.path.basename(path)
+        txt = _read(path)
         attrs = dict(re.findall(r'(\w+)="([^"]*)"',
                                 re.search(r"<location([^>]*)>", txt).group(1)))
         self.title = attrs.get("title", "")
@@ -94,6 +151,57 @@ class Location:
         cy = sum(c // self.width for c, _t in self.spawns) / len(self.spawns)
         return min(free, key=lambda c: (c % self.width - cx) ** 2
                                        + (c // self.width - cy) ** 2)
+
+
+_CACHE = {}
+
+
+def location(loc_id):
+    """A parsed location, kept after the first read.
+
+    There are 1381 of them and a settlement runs to tens of kilobytes, so
+    re-reading one per visit would put a disk read in the middle of every
+    entry. They never change while the server runs.
+    """
+    loc = _CACHE.get(loc_id)
+    if loc is None:
+        loc = _CACHE[loc_id] = Location(loc_id)
+    return loc
+
+
+_SETTLEMENTS = None
+
+
+def settlements():
+    """Map cell -> location id, for the cells that hold a named place.
+
+    Rebuilt by data/build_settlements.py from the client's own map tooltips
+    and location titles; see that script for what is and is not recovered.
+    """
+    global _SETTLEMENTS
+    if _SETTLEMENTS is None:
+        _SETTLEMENTS = {}
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "settlements.json"),
+                      encoding="utf-8") as fh:
+                for cell, loc_id in json.load(fh)["cells"].items():
+                    gx, gy = cell.split(",")
+                    _SETTLEMENTS[(int(gx), int(gy))] = int(loc_id)
+        except (OSError, ValueError, KeyError):
+            pass
+    return _SETTLEMENTS
+
+
+def location_at(gx, gy):
+    """Which location a map cell leads into.
+
+    Always answers: a cell with no settlement on it is open desert, and the
+    packed cell is its own location id.
+    """
+    cell = (int(round(gx)), int(round(gy)))
+    found = settlements().get(cell)
+    return pack(cell[0], cell[1]) if found is None else found
 
 
 def mob_types():

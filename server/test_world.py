@@ -240,11 +240,66 @@ try:
     names = [f.split(";")[0] for f in got]
     check("returning does not enter by itself", names, ["userMove"])
 
-    # The button does it, and only while standing on the settlement.
+    # The button does it, and it opens whatever is under the player.
     c.send("chWorld;")
     got = c.frames()
-    check("button enters from the settlement",
+    check("button enters the cell under the player",
           [f.split(";")[0] for f in got], ["cmdAck", "lcall"])
+    check("on this cell that is the settlement", "id=102;" in got[1], True)
+    c.send("lenter;accept=1;")
+    c.frames(wait=2)
+
+    # --- the wilderness ---------------------------------------------------
+    # A cell with no settlement is still somewhere to go: the client resolves
+    # it to a desert tile from the cell's own coordinates, so the map has no
+    # holes in it and no table has to exist for a cell to lead anywhere.
+    c.send("chWorld;")
+    c.frames()
+    c.send("moveTo;dy=0;dx=-100;")
+    c.frames()
+    c.frames(wait=5)
+    c.send("chWorld;")
+    got = c.frames()
+    check("an empty cell can be entered too",
+          [f.split(";")[0] for f in got], ["cmdAck", "lcall"])
+    wild = (5969 << 13) | 1730
+    check("wilderness is its own location id", "id=%d;" % wild in got[1], True)
+    check("standing on the cell it was entered from",
+          "g_id=%d;" % wild in got[1], True)
+    c.send("lenter;accept=1;")
+    got = c.frames(wait=2)
+    check("the wasteland has its own inhabitants",
+          any(f.startswith("lch") for f in got), True)
+
+    # Leaving goes back to that cell, not to wherever the session started.
+    c.send("chWorld;")
+    got = c.frames()
+    check("leaving returns to the cell walked in from",
+          "x=5969;y=1730;" in got[1], True)
+
+    # --- travel by name ---------------------------------------------------
+    # Most of the 1381 locations are interiors the map cannot reach: an
+    # outzone says only that leaving is possible here, never where to, and
+    # the destination lived in the stripped serverdata node.
+    c.send("userMsg;entry=@/goto 183@;group=0;")
+    got = c.frames()
+    check("goto is acknowledged, then opens the location",
+          [f.split(";")[0] for f in got], ["cmdAck", "lcall"])
+    check("the named location opened", "id=183;" in got[1], True)
+
+    # Ids above the wilderness range resolve to no file at all, and saying so
+    # must not cost the connection.
+    c.send("userMsg;entry=@/goto %d@;group=0;" % (1 << 26))
+    got = c.frames()
+    check("an id with no file behind it is refused, not fatal",
+          [f.split(";")[0] for f in got], ["cmdAck", "userMsg"])
+
+    # Ordinary chat still has to come back, or nothing the player types shows.
+    c.send("userMsg;entry=@привет@;group=0;")
+    got = c.frames()
+    check("chat is echoed to the sender",
+          [f.split(";")[0] for f in got], ["cmdAck", "userMsg"])
+    check("with the text intact", "entry=@привет@;" in got[1], True)
 
     c.send("logout;")
 finally:

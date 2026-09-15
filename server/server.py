@@ -40,10 +40,17 @@ EXPECTS_ACK = {
     "userMsg", "resurrect", "actPlayer", "newPers", "lenter", "chWorld",
 }
 
-# "Черный рынок Вади-Хальфы": peaceful (war="0", so walking costs no action
+# Where a new character starts, as a cell of the global map. Cell 5970x1730
+# is "Черный рынок Вади-Хальфы": peaceful (war="0", so walking costs no action
 # points) and already populated in its own XML with 21 traders, an upgrader,
 # a lessor and several commoners.
-START_LOC = int(os.environ.get("LAVA_LOC", "102"))
+GLOBAL_X = int(os.environ.get("LAVA_GX", "5970"))
+GLOBAL_Y = int(os.environ.get("LAVA_GY", "1730"))
+
+# The location follows from the cell, so the two cannot drift apart. LAVA_LOC
+# overrides it for trying a particular file out.
+START_LOC = int(os.environ.get("LAVA_LOC", "0")) or world.location_at(
+    GLOBAL_X, GLOBAL_Y)
 
 # Portrait and body come from two different fields of the same avatars/list.xml
 # row and have to be taken together: res selects the portrait, sex selects the
@@ -52,7 +59,6 @@ START_LOC = int(os.environ.get("LAVA_LOC", "102"))
 AVATARS = world.avatars()
 START_AVATAR = int(os.environ.get("LAVA_AVATAR", "0"))
 
-LOCATION = world.Location(START_LOC)
 MOB_TYPES = world.mob_types()
 
 
@@ -63,23 +69,12 @@ def default_character():
 # above that.
 FIRST_NPC_ID = 100
 
-# Where this location sits on the global map. Those coordinates are a plain
-# grid, 5833..6305 by 1600..2110, and res/database/locations.xml labels 414 of
-# its cells, so the client draws the settlement names by itself.
-# Cell 5970x1730, which the client's own map data describes as "Чёрный рынок:
-# Торговцы оружием, снаряжением и патронами | Банк | Аренда транспорта |
-# Покупка чертежей" - the weapon stalls, Аарон's bank and Шихаб's transport,
-# which is exactly who stands in location 102.
-GLOBAL_X = int(os.environ.get("LAVA_GX", "5970"))
-GLOBAL_Y = int(os.environ.get("LAVA_GY", "1730"))
+# The map is a plain grid, 5833..6305 by 1600..2110, and the client labels its
+# cells from res/database/locations.xml on its own. Every cell can be entered:
+# 86 of them hold a settlement recovered into data/settlements.json, and the
+# rest resolve to open desert by world.location_at.
 VIEW_RADIUS = 8
 TRAVEL_SPEED = 0.35   # cells per second
-
-# lcall carries the map cell packed into g_id, which the client unpacks with
-# LocIdToCoordinate: x in bits 13..25, y in bits 0..12, z above bit 26. Sending
-# the location's own file number there, as if the two were the same, puts the
-# settlement in the wrong place on the map.
-GEO_ID = (GLOBAL_X << 13) | GLOBAL_Y
 
 log = logging.getLogger("lava")
 
@@ -113,8 +108,11 @@ class Session:
         self.characters = []
         self.char_id = None
         self.active = None
-        self.pos = LOCATION.entry_cell()
+        self.loc = world.location(START_LOC)
+        self.pos = self.loc.entry_cell()
         self.on_map = False
+        # The cell the current location stands on, and where leaving returns
+        # to. Fractional only while a leg of map travel is in flight.
         self.gx, self.gy = GLOBAL_X, GLOBAL_Y
         self.arrival = None
         # a leg in flight: (start time, from x, from y, vx, vy)
@@ -209,7 +207,7 @@ class Session:
     def close(self):
         self.cancel_travel()
         if self.char_id:
-            STORE.save_position(self.char_id, LOCATION.id, self.pos,
+            STORE.save_position(self.char_id, self.loc.id, self.pos,
                                 self.gx, self.gy, self.on_map)
         self.writer.close()
 
@@ -248,12 +246,30 @@ class Session:
         self.enter_location()
 
     def restore(self, c):
-        """Put the character back where it was left."""
-        if c["loc"] is not None and c["loc"] == LOCATION.id and c["pos"]:
-            self.pos = c["pos"]
+        """Put the character back where it was left.
+
+        A saved location may no longer resolve -- the id could have come from
+        an older table, or name a file this copy of the client does not have --
+        so falling back to the starting cell has to be possible without
+        losing the character.
+        """
         if c["gx"] and c["gy"]:
             self.gx, self.gy = c["gx"], c["gy"]
         self.on_map = bool(c["on_map"])
+        if c["loc"] is not None:
+            try:
+                self.loc = world.location(c["loc"])
+            except (KeyError, OSError) as exc:
+                log.warning("  ..    location %s unreadable (%s), starting over",
+                            c["loc"], exc)
+                self.loc = world.location(START_LOC)
+                self.gx, self.gy = GLOBAL_X, GLOBAL_Y
+        # A cell saved in one location means nothing in another, and a cell
+        # outside the grid would put the player in a wall.
+        if c["pos"] and 0 <= c["pos"] < self.loc.width * self.loc.height:
+            self.pos = c["pos"]
+        else:
+            self.pos = self.loc.entry_cell()
 
     def cmd_actPlayer(self, p):
         self.send("cmdAck", res=0)
@@ -263,8 +279,8 @@ class Session:
     def enter_location(self):
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork.
-        self.send("lcall", id=LOCATION.id, ws=LOCATION.war, ie=0,
-                  g_id=GEO_ID)
+        self.send("lcall", id=self.loc.id, ws=self.loc.war, ie=0,
+                  g_id=world.pack(round(self.gx), round(self.gy)))
 
     def cmd_lenter(self, p):
         """Answer the client's "I have loaded, let me in".
@@ -285,7 +301,7 @@ class Session:
         to build.
         """
         self.npcs.clear()
-        for i, (cell, type_id) in enumerate(LOCATION.spawns):
+        for i, (cell, type_id) in enumerate(self.loc.spawns):
             root = MOB_TYPES.get(type_id, (world.MOB, "", ""))[0]
             self.npcs[FIRST_NPC_ID + i] = (cell, type_id, root)
 
@@ -300,8 +316,8 @@ class Session:
         for npc_id, (cell, _type, root) in self.npcs.items():
             self.send("lch", newUser=npc_id, pos=cell, rtype=root)
             self.send_npc_info(npc_id)
-        log.info("  ..    placed %d inhabitants in %s",
-                 len(self.npcs), LOCATION.title)
+        log.info("  ..    placed %d inhabitants in %s (%s)",
+                 len(self.npcs), self.loc.title, self.loc.file)
 
     def cmd_chWorld(self, p):
         """One command, both directions: the button is a toggle.
@@ -312,19 +328,101 @@ class Session:
         """
         self.send("cmdAck", res=0)
         if self.on_map:
-            # Standing on the settlement's own cell is what lets you in; the
-            # client offers no separate command for it.
-            if self.at_settlement():
-                self.on_map = False
-                self.cancel_travel()
-                self.enter_location()
-            else:
-                self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
+            self.enter_cell()
         else:
+            # Leaving puts the player back on the cell the location stands on.
             self.on_map = True
-            self.gx, self.gy = GLOBAL_X, GLOBAL_Y
             self.cancel_travel()
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
+
+    def enter_cell(self):
+        """Walk into whatever occupies the cell under the player.
+
+        Every cell leads somewhere, so there is nothing to refuse here: the
+        86 named cells lead into their settlement, and the rest into open
+        desert, which is its own location id. The player stops travelling and
+        the cell is rounded to a whole one, because that is the cell the map
+        has been drawing them on and the one they expect to walk into.
+        """
+        x, y = self.current_pos()
+        self.cancel_travel()
+        self.gx, self.gy = int(round(x)), int(round(y))
+        self.on_map = False
+        self.go_to(world.location_at(self.gx, self.gy))
+
+    def go_to(self, loc_id):
+        """Open a location and put the player at one of its own entry cells."""
+        self.loc = world.location(loc_id)
+        self.pos = self.loc.entry_cell()
+        self.enter_location()
+
+    # --- chat, and travel by name ----------------------------------------
+    EVENT_CHANNEL = 3          # Chat.CHAT_EVENT_CHANNEL
+
+    def say(self, text):
+        """A line from the server, on the channel the client keeps for them."""
+        self.send("userMsg", entry=Str(text), group=self.EVENT_CHANNEL,
+                  nick=Str("Сервер"), **{"from": 0})
+
+    def cmd_userMsg(self, p):
+        """Chat, and the one way into locations the map cannot reach.
+
+        /goto is ours, not the game's. The client parses nothing: whatever is
+        typed goes to the server verbatim as userMsg, so there is no original
+        command set to collide with and none was recovered.
+
+        It exists because most of the 1381 location files are interiors.
+        Players used to be sent through them from an outzone, but an outzone
+        says only that leaving is possible here, never where to: the
+        destination lived in the serverdata node, and that is the one node
+        stripped from every shipped file. Until that graph is rebuilt by other
+        means, this is how the rest of the world is reached.
+        """
+        self.send("cmdAck", res=0)
+        text = (p.get("entry") or "").strip()
+        if text.startswith("/goto"):
+            self.cmd_goto(text.split()[1:])
+            return
+        if text.startswith("/where"):
+            self.say("%s (%s), клетка карты %d,%d"
+                     % (self.loc.title, self.loc.file,
+                        round(self.gx), round(self.gy)))
+            return
+        # Ordinary talk comes back to the sender, which is how the client
+        # shows it: it prints nothing of its own when a message is typed.
+        pers = self.active or default_character()
+        self.send("userMsg", entry=Str(text), group=int(p.get("group", 0)),
+                  nick=Str(pers["name"]), **{"from": 0})
+
+    def cmd_goto(self, args):
+        """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
+        try:
+            if len(args) >= 2:
+                gx, gy = int(args[0]), int(args[1])
+                loc_id = world.location_at(gx, gy)
+            elif len(args) == 1:
+                loc_id = int(args[0])
+                # A wilderness id names its own cell; an interior does not,
+                # so the player keeps the cell they came from and leaving
+                # puts them back on it.
+                gx, gy = (world.unpack(loc_id) if world.is_wilderness(loc_id)
+                          else (self.gx, self.gy))
+            else:
+                self.say("/goto <номер локации>  или  /goto <x> <y>")
+                return
+        except ValueError:
+            self.say("Не понял. /goto <номер локации> или /goto <x> <y>")
+            return
+        try:
+            loc = world.location(loc_id)
+        except (KeyError, OSError):
+            self.say("Локации %d нет" % loc_id)
+            return
+        self.on_map = False
+        self.cancel_travel()
+        self.gx, self.gy = gx, gy
+        self.go_to(loc.id)
+        log.info("  ..    /goto %d -> %s", loc_id, loc.file)
 
     def cancel_travel(self):
         """Drop any leg in flight, so the position stops extrapolating."""
@@ -332,10 +430,6 @@ class Session:
             self.arrival.cancel()
             self.arrival = None
         self.leg = None
-
-    def at_settlement(self):
-        x, y = self.current_pos()
-        return abs(x - GLOBAL_X) < 0.5 and abs(y - GLOBAL_Y) < 0.5
 
     def cmd_moveTo(self, p):
         if self.on_map:
