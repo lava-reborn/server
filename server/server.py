@@ -380,6 +380,13 @@ class Session:
             self.on_map = True
             self.cancel_travel()
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
+            # Master.gmap builds a fresh GlobalMap every time, and its
+            # markList only comes into being in GlobalMap.marks(): dxdy is
+            # pairs of whole cells relative to the player, title and info
+            # run parallel to each other. Without this frame addMark pushes
+            # into undefined and the bookmarks panel is dead until relogin.
+            # No marks are stored yet, so the lists are empty.
+            self.send("marks", dxdy=[], title=[], info=[])
 
     def enter_cell(self):
         """Walk into whatever occupies the cell under the player.
@@ -442,11 +449,12 @@ class Session:
                      % (self.loc.title, self.loc.file, self.loc.fn or "-",
                         round(self.gx), round(self.gy)), group)
             return
-        # Ordinary talk comes back to the sender, which is how the client
-        # shows it: it prints nothing of its own when a message is typed.
-        pers = self.active or default_character()
-        self.send("userMsg", entry=Str(text), group=group,
-                  nick=Str(pers["name"]), **{"from": 0})
+        # Ordinary talk is NOT echoed to the sender. Chat.send keeps the text
+        # it typed and registers delivery() on the acknowledgement; on res=0
+        # delivery() prints that line itself as Gamer.ID, through the same
+        # newMessage() an incoming userMsg goes through. An echo on top of
+        # that showed every message twice. Once there are other players, the
+        # line goes to them and only them.
 
     def cmd_goto(self, args, group=0):
         """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
@@ -543,12 +551,18 @@ class Session:
             self.send_npc_info(who)
             return
         pers = self.active or default_character()
+        # No tr/tr_hours here until the player actually rents a transport.
+        # Gamer.userInfo hands tr straight to TransportFactory.create, which
+        # does not treat 0 as "none": it builds a TransObject(0), requests
+        # its static info with ts_get_si and the player is riding a vehicle
+        # type that does not exist. Leaving the key out leaves transport
+        # undefined, which is what the client means by walking.
         self.send("userInfo_Player",
                   id=0, name=Str(pers["name"]), sex=pers["sex"],
                   res=Str(str(pers["res"])), ail=0, ally=1, lvl=1,
                   rep=[0], bg_rep=0, bg_pen=0, clan=0,
                   hl=0, pr=0,
-                  afro=1000, gold=0, tr=0, tr_hours=0)
+                  afro=1000, gold=0)
         self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
 
     def send_npc_info(self, npc_id):

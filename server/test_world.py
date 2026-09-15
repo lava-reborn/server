@@ -131,6 +131,10 @@ try:
     check("getInfo answered", [f.split(";")[0] for f in got],
           ["userInfo_Player", "usrUp"])
     check("name survives the collision", "name=@polestvr@;" in got[0], True)
+    # Gamer.userInfo hands tr to TransportFactory.create unconditionally, and
+    # that builds a vehicle of type 0 and asks for its description. A player
+    # on foot has no tr key at all.
+    check("no transport reported without one", "tr=" in got[0], False)
 
     c.send("rp_get_info;")
     got = c.frames()
@@ -262,9 +266,13 @@ try:
     # --- the global map ---------------------------------------------------
     c.send("chWorld;")
     got = c.frames()
+    # Master.gmap builds a fresh GlobalMap each time, and its mark list only
+    # exists once GlobalMap.marks() has run, so every gmap is followed by a
+    # marks frame, empty or not.
     check("leaving for the map", [f.split(";")[0] for f in got],
-          ["cmdAck", "gmap"])
+          ["cmdAck", "gmap", "marks"])
     check("map position sent", "x=5970;y=1730;" in got[1], True)
+    check("marks initialised", got[2], "marks;dxdy=|;title=|;info=|;")
 
     # The same command goes both ways: the client's map and location screens
     # both call changeWorld with no argument, so the direction is decided here.
@@ -366,12 +374,11 @@ try:
     check("on the channel it was asked in", "group=4;" in got[1], True)
     check("and names the file behind the cell", "static/183.xml" in got[1], True)
 
-    # Ordinary chat still has to come back, or nothing the player types shows.
+    # Ordinary chat is NOT echoed: Chat.delivery prints the line the player
+    # typed itself when the acknowledgement says res=0, so an echo on top
+    # showed every message twice.
     c.send("userMsg;entry=@привет@;group=0;")
-    got = c.frames()
-    check("chat is echoed to the sender",
-          [f.split(";")[0] for f in got], ["cmdAck", "userMsg"])
-    check("with the text intact", "entry=@привет@;" in got[1], True)
+    check("chat is acknowledged and not echoed", c.frames(), ["cmdAck;res=0;"])
 
     c.send("logout;")
 finally:
