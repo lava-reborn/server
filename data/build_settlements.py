@@ -95,13 +95,41 @@ def static_meta():
     return out
 
 
+# The same place at a different time of day or year is a separate file. The
+# map draws one cell, so where a plain file and its night or New Year dressing
+# share a title, the plain one is what stands there.
+VARIANT = {"night", "ny", "xmas", "winter", "halloween"}
+
+# How much of a word to keep when comparing. The two sources decline
+# differently and order differently -- the map says "Вокзал Вади-Хальфы" where
+# the file says "Вади Хальфа: вокзал" -- so words are cut to a stem and
+# compared as a set. Equality only: a subset would start inventing matches
+# between "Старый рынок" and "Новый рынок".
+STEM = 5
+
+
+def stems(title):
+    return frozenset(w[:STEM] for w in title.split() if len(w) > 2)
+
+
 def tokens(fn):
     return {w.lower() for w in re.split(r"[^A-Za-z]+", fn) if len(w) > 1}
 
 
 def is_test(fn):
-    """Files that were scratch work, not places on any map."""
-    return "test" in tokens(fn)
+    """Files that were scratch work, not places on any map.
+
+    Matched inside a word, not as a whole one: the worst offender is spelled
+    KB_TESTCLAN_Block_Post, and being titled "Кладбище" -- a word generic
+    enough to appear all over the map -- it had claimed six scattered cells.
+    All 25 files carrying "test" anywhere in the name are of that kind.
+    """
+    return any("test" in w for w in tokens(fn))
+
+
+def is_variant(fn):
+    """A night or holiday dressing of a place that also exists plainly."""
+    return bool(tokens(fn) & VARIANT)
 
 
 def tooltips():
@@ -139,9 +167,33 @@ def main():
         return tokens(meta[i][1]) & rare
 
     by_title = collections.defaultdict(list)
+    by_stem = collections.defaultdict(list)
     for i in usable:
         if tl[i] not in GENERIC:
             by_title[tl[i]].append(i)
+            by_stem[stems(tl[i])].append(i)
+
+    def plainest(hits):
+        """Drop the night and holiday copies while a plain one is on offer."""
+        plain = [i for i in hits if not is_variant(meta[i][1])]
+        return plain or hits
+
+    def candidates(head):
+        """Files this tooltip could name, tried from strictest rule to loosest.
+
+        Each rule only ever returns what it matched; nothing is merged, so a
+        looser rule never widens what a stricter one already decided.
+        """
+        exact = by_title.get(head)
+        if exact:
+            return plainest(exact)
+        same_words = by_stem.get(stems(head))
+        if same_words:
+            return plainest(same_words)
+        # The map shortens: "Чёрный рынок" for "Черный рынок Вади-Хальфы".
+        return plainest([i for i in usable
+                         if tl[i] not in GENERIC and (tl[i].startswith(head)
+                                                      or head.startswith(tl[i]))])
 
     table, pending, skipped = {}, [], collections.Counter()
     for x, y, raw in tooltips():
@@ -150,13 +202,7 @@ def main():
         if head in GENERIC:
             skipped["открытая пустошь"] += 1
             continue
-        hits = by_title.get(head)
-        if hits is None:
-            # The map often shortens: "Чёрный рынок" for "Черный рынок
-            # Вади-Хальфы". Accept that only while it still points at one file.
-            hits = [i for i in usable
-                    if tl[i] not in GENERIC and (tl[i].startswith(head)
-                                                 or head.startswith(tl[i]))]
+        hits = candidates(head)
         if len(hits) == 1:
             table[(x, y)] = hits[0]
         elif hits:

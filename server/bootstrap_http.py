@@ -22,6 +22,7 @@ import re
 import sys
 
 import accounts
+import names
 import items
 import world
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -55,52 +56,6 @@ CSETTINGS = """<?xml version="1.0" encoding="windows-1251"?>
   </resource>
 </settings>
 """
-
-# The server hands out a creature's type id where a string id belongs, so the
-# stub below can answer with a real name. Preference order: the names recovered
-# from the community wiki, then the internal name from the client's own table,
-# then the bare id.
-try:
-    MOB_NAMES = {t: n for t, (_r, n, _a) in world.mob_types().items()}
-except Exception:
-    MOB_NAMES = {}
-
-# Items are numbered in the same string space as creatures, and the shop stays
-# blank without them: Item.stringUpdate withholds the update event until a name
-# arrives, and nothing enters a bag or a price list before that event.
-try:
-    ITEM_NAMES = {items.STRING_ID_OFFSET + t: n
-                  for t, (_root, n) in items.catalogue().items()}
-except Exception:
-    ITEM_NAMES = {}
-
-try:
-    import json
-    _here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    with open(os.path.join(_here, "data", "npc_names.json"), encoding="utf-8") as _f:
-        REAL_NAMES = {int(k): v for k, v in json.load(_f)["names"].items()}
-except Exception:
-    REAL_NAMES = {}
-
-_ALL_STRINGS = None
-
-
-def all_strings():
-    """Every id the server can name, as one <s id> run, built once.
-
-    Creatures and items share the string space, so the item ids carry
-    items.STRING_ID_OFFSET; the wiki names win over the internal ones.
-    """
-    global _ALL_STRINGS
-    if _ALL_STRINGS is None:
-        table = dict(MOB_NAMES)
-        table.update(ITEM_NAMES)
-        table.update(REAL_NAMES)
-        _ALL_STRINGS = "".join(
-            "<s id='%d'>%s</s>" % (i, escape(n))
-            for i, n in sorted(table.items()))
-    return _ALL_STRINGS
-
 
 CTYPES = {
     ".swf": "application/x-shockwave-flash",
@@ -212,14 +167,17 @@ class Handler(BaseHTTPRequestHandler):
         ever being asked for; that is also why logging in twice used to work.
         """
         if "all=1" in (query or ""):
-            self._send_xml("<data>%s</data>" % all_strings())
+            self._send_xml("<data>%s</data>" % names.document())
             return
-        ids = [m.decode() for m in re.findall(rb"\d+", body or b"")]
-        rows = "".join(
-            "<s id='%s'>%s</s>"
-            % (i, REAL_NAMES.get(int(i)) or MOB_NAMES.get(int(i))
-               or ITEM_NAMES.get(int(i), "#" + i))
-            for i in ids)
+        # Reaching this at all means an id escaped the preload, which is the
+        # fault worth knowing about: answering keeps the client moving, but
+        # the request itself has already brought the login screen back.
+        ids = [int(m) for m in re.findall(b"[0-9]+", body or b"")]
+        unknown = [i for i in ids if not names.known(i)]
+        if unknown:
+            print("  HTTP строки мимо предзагрузки: %s" % unknown[:10],
+                  flush=True)
+        rows = "".join("<s id='%d'>%s</s>" % (i, names.text(i)) for i in ids)
         self._send_xml("<data>%s</data>" % rows)
 
     def _page(self, message=""):

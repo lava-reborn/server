@@ -10,6 +10,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+import names
 import world
 
 fails = []
@@ -68,6 +69,25 @@ for i in ids:
         without_entry.append(i)
 check("every one of them parses", broken, [])
 check("every one offers somewhere to stand", without_entry, [])
+
+# Nothing the server places may carry a name the client has not been handed.
+# An unknown string id makes StringCollector fetch a batch, and a batch after
+# login puts the login screen back on top of the game -- which is exactly how
+# one wasteland creature undid the fix for it. Walking every location catches
+# that statically, instead of waiting to stumble into the one location that
+# happens to spawn it.
+mobs = world.mob_types()
+unnamed, undrawable = set(), set()
+for i in ids:
+    for _cell, type_id in world.location(i).spawns:
+        if type_id in mobs and not names.known(type_id):
+            unnamed.add(type_id)
+        elif type_id and type_id not in mobs:
+            undrawable.add(type_id)
+check("every creature the server may place is already named", unnamed, set())
+# The other 665 are the reason the filter exists: no record in mobs.xml means
+# the client resolves the art to mobs/undefined.xml and the name to nothing.
+check("and the rest are known to be unplaceable", len(undrawable) > 0, True)
 
 # --- the map ---------------------------------------------------------------
 cells = world.settlements()

@@ -19,6 +19,7 @@ import os
 
 import accounts
 import items
+import names
 import world
 from protocol import FrameReader, decode, frame, Str
 
@@ -301,9 +302,19 @@ class Session:
         to build.
         """
         self.npcs.clear()
-        for i, (cell, type_id) in enumerate(self.loc.spawns):
-            root = MOB_TYPES.get(type_id, (world.MOB, "", ""))[0]
-            self.npcs[FIRST_NPC_ID + i] = (cell, type_id, root)
+        skipped = 0
+        for cell, type_id in self.loc.spawns:
+            # A creature the client has no record of cannot be drawn or named.
+            # res misses in its copy of mobs.xml and the art resolves to
+            # mobs/undefined.xml, and worse, the name id reaches the client
+            # unknown, which fetches a string batch and puts the login screen
+            # back on top of the game. 670 of the type ids used by locations
+            # are absent from mobs.xml, so this is not a rare corner.
+            if type_id not in MOB_TYPES or not names.known(type_id):
+                skipped += 1
+                continue
+            root = MOB_TYPES[type_id][0]
+            self.npcs[FIRST_NPC_ID + len(self.npcs)] = (cell, type_id, root)
 
         # Three passes, and the order is what makes them visible. A positioned
         # lch builds the figure at once, and the figure resolves its art from
@@ -316,8 +327,9 @@ class Session:
         for npc_id, (cell, _type, root) in self.npcs.items():
             self.send("lch", newUser=npc_id, pos=cell, rtype=root)
             self.send_npc_info(npc_id)
-        log.info("  ..    placed %d inhabitants in %s (%s)",
-                 len(self.npcs), self.loc.title, self.loc.file)
+        log.info("  ..    placed %d inhabitants in %s (%s)%s",
+                 len(self.npcs), self.loc.title, self.loc.file,
+                 ", %d unknown to the client" % skipped if skipped else "")
 
     def cmd_chWorld(self, p):
         """One command, both directions: the button is a toggle.
