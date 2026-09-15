@@ -51,8 +51,12 @@ FIRST_NPC_ID = 100
 # Where this location sits on the global map. Those coordinates are a plain
 # grid, 5833..6305 by 1600..2110, and res/database/locations.xml labels 414 of
 # its cells, so the client draws the settlement names by itself.
-GLOBAL_X = int(os.environ.get("LAVA_GX", "5968"))
-GLOBAL_Y = int(os.environ.get("LAVA_GY", "1727"))
+# Cell 5970x1730, which the client's own map data describes as "Чёрный рынок:
+# Торговцы оружием, снаряжением и патронами | Банк | Аренда транспорта |
+# Покупка чертежей" - the weapon stalls, Аарон's bank and Шихаб's transport,
+# which is exactly who stands in location 102.
+GLOBAL_X = int(os.environ.get("LAVA_GX", "5970"))
+GLOBAL_Y = int(os.environ.get("LAVA_GY", "1730"))
 VIEW_RADIUS = 8
 TRAVEL_SPEED = 0.35   # cells per second
 

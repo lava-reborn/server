@@ -145,7 +145,7 @@ try:
     got = c.frames()
     check("leaving for the map", [f.split(";")[0] for f in got],
           ["cmdAck", "gmap"])
-    check("map position sent", "x=5968;y=1727;" in got[1], True)
+    check("map position sent", "x=5970;y=1730;" in got[1], True)
 
     # The same command goes both ways: the client's map and location screens
     # both call changeWorld with no argument, so the direction is decided here.
@@ -154,7 +154,7 @@ try:
     check("button toggles back into the location",
           [f.split(";")[0] for f in got], ["cmdAck", "lcall"])
     # and the cell the settlement occupies rides packed into g_id
-    check("map cell packed into g_id", "g_id=48891583;" in got[1], True)
+    check("map cell packed into g_id", "g_id=48907970;" in got[1], True)
     c.send("lenter;accept=1;")
     c.frames()
     c.send("chWorld;")
@@ -171,7 +171,7 @@ try:
     got = c.frames(wait=5)
     check("arrival confirmed", got and got[0].split(";")[0] == "userMove", True)
     check("stopped on arrival", "vx=0;vy=0;" in got[0], True)
-    check("moved one cell west", "dx=5967;" in got[0], True)
+    check("moved one cell west", "dx=5969;" in got[0], True)
 
     # Coming back onto the settlement's own cell drops the player into it.
     c.send("moveTo;dy=0;dx=100;")
