@@ -16,6 +16,7 @@ Two rules govern nearly every handler here (see PROTOCOL.md):
 import asyncio
 import logging
 import os
+import signal
 
 import accounts
 import items
@@ -27,6 +28,10 @@ HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
 PORT = int(os.environ.get("LAVA_PORT", "9775"))
 POLICY_PORT = 843
 STORE = accounts.Store()
+
+# Every connection with a Session behind it, so a stop can reach them all.
+# handle_client adds on connect and removes in its finally.
+SESSIONS = set()
 
 # Commands whose sender registers a cmdAck handler, gathered from the client:
 # mail, clans, party, auction, battlegrounds, item sessions, quests, map marks
@@ -133,6 +138,7 @@ class Session:
     def __init__(self, writer, peer):
         self.writer = writer
         self.peer = peer
+        self.closed = False
         self.hash = None
         self.logged_in = False
         self.account = None
@@ -240,11 +246,34 @@ class Session:
         self.close()
 
     def close(self):
+        """Put the character away and drop the connection.
+
+        Reached three ways -- logout, the finally in handle_client once the
+        socket is gone, and a server stop -- and usually two of them in a
+        row, so it has to be a no-op the second time: one write of the
+        position, one close of the transport.
+        """
+        if self.closed:
+            return
+        self.closed = True
         self.cancel_travel()
         if self.char_id:
             STORE.save_position(self.char_id, self.loc.id, self.pos,
                                 self.gx, self.gy, self.on_map)
         self.writer.close()
+
+    def shutdown(self):
+        """The server is going: say so, then close as on logout.
+
+        Session.shutdown in the client (Session.as:216) answers the frame
+        with an alert -- "Сервер будет остановлен через N секунд" -- and
+        asks for a restart, so the socket closing right behind it is what
+        the player has just been told to expect.
+        """
+        if self.closed:
+            return
+        self.send("shutdown", seconds=0)
+        self.close()
 
     # --- character -------------------------------------------------------
     def cmd_newPers(self, p):
@@ -766,6 +795,7 @@ async def handle_client(reader, writer):
     peer = writer.get_extra_info("peername")
     log.info("connect %s", peer)
     sess = Session(writer, peer)
+    SESSIONS.add(sess)
     fr = FrameReader()
     try:
         while True:
@@ -789,7 +819,11 @@ async def handle_client(reader, writer):
     except (ConnectionResetError, asyncio.IncompleteReadError):
         pass
     finally:
+        # A link that simply breaks lands here too, with no logout before
+        # it, and the position is written all the same; close() is what
+        # makes that safe after a logout already wrote it.
         log.info("disconnect %s", peer)
+        SESSIONS.discard(sess)
         sess.close()
 
 
@@ -814,7 +848,43 @@ async def main():
     except PermissionError:
         log.warning("no permission for port %d; policy served inline only",
                     POLICY_PORT)
-    await asyncio.gather(*(s.serve_forever() for s in servers))
+    # run.sh stop sends SIGTERM and a terminal sends SIGINT. Either one only
+    # raises the flag; the leaving is done below, on the loop, so a handler
+    # in the middle of a frame finishes it first. Without this the loop just
+    # died with every handle_client parked in read(), no finally ran, and
+    # whoever was online came back wherever they had logged out the time
+    # before.
+    loop = asyncio.get_running_loop()
+    stopping = asyncio.Event()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, stopping.set)
+    await stopping.wait()
+    await shutdown(servers)
+
+
+async def shutdown(servers):
+    """Stop listening, warn and save everyone online, then let the loop end.
+
+    Each client is told with a shutdown frame before its position is
+    written and its socket closed, and the writers are awaited so that
+    frame is actually on the wire before the process is gone.
+    """
+    log.info("shutting down, %d session(s) online", len(SESSIONS))
+    for srv in servers:
+        srv.close()
+    live = list(SESSIONS)
+    for sess in live:
+        sess.shutdown()
+    await asyncio.gather(*(sess.writer.wait_closed() for sess in live),
+                         return_exceptions=True)
+    # Every connection has been closed above, so this only waits for their
+    # handlers to notice; the timeout is a guard, not an expectation.
+    try:
+        await asyncio.wait_for(
+            asyncio.gather(*(srv.wait_closed() for srv in servers)), 5)
+    except asyncio.TimeoutError:
+        log.warning("listeners did not close in time; leaving anyway")
+    log.info("stopped")
 
 
 if __name__ == "__main__":
