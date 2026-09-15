@@ -715,16 +715,37 @@ class Session:
         the player who asked.
         """
         path = p.get("path")
-        if not path:
-            return
         # Location.movePlayer registers a cmdAck handler for every single step
         # it asks for. Leaving those unanswered does not stall movement, since
         # that handler is empty, but the queue is strictly ordered: each later
         # reply is then handed to a stale mover instead of the command that
         # earned it, and things like opening a shop quietly stop working.
+        #
+        # A refusal is not an acknowledgement with a non-zero res, it is a
+        # breakMv, and it goes INSTEAD of the cmdAck: Location.breakMv starts
+        # with skipCall("cmdAck", moveCmdAck), taking that handler off the
+        # queue itself, and then snaps the walker to pos. Sending both would
+        # hand the ack to the next command. id=0 is the player's own walker
+        # (Location.getWalker treats a falsy id as the gamer).
+        if not self.valid_path(path):
+            self.send("breakMv", id=0, pos=self.pos)
+            return
         self.send("cmdAck", res=0)
         self.pos = int(path[-1])
         self.send("userMove", id=0, path=[int(c) for c in path])
+
+    def valid_path(self, path):
+        """The structural check only: a real one is task 1.8.
+
+        Cells must exist in this location's grid. The client's own findPath
+        never produces anything else, so whatever fails here came from a
+        modified client or a desync, and either way the walker is put back
+        where the server has it.
+        """
+        if not isinstance(path, list) or not path:
+            return False
+        cells = self.loc.width * self.loc.height
+        return all(isinstance(c, int) and 0 <= c < cells for c in path)
 
 
 async def handle_client(reader, writer):

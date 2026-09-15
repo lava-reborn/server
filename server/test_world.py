@@ -160,6 +160,17 @@ try:
     check("movement acknowledged", got[0], "cmdAck;res=0;")
     check("movement echoed", got[1], "userMove;id=0;path=|490|491|492|;")
 
+    # A path the server will not take is refused with breakMv INSTEAD of an
+    # acknowledgement: Location.breakMv itself skipCalls the handler the
+    # move registered, then snaps the walker to pos. A cmdAck as well would
+    # be handed to whatever the player does next.
+    c.send("moveTo;path=|492|99999|;")
+    got = c.frames()
+    check("a bad path is refused with breakMv alone",
+          got, ["breakMv;id=0;pos=492;"])
+    c.send("moveTo;path=|;")
+    check("an empty path too", c.frames(), ["breakMv;id=0;pos=492;"])
+
     # Mail is asked for the moment a location opens, and it expects an
     # acknowledgement of its own.
     c.send("chkml;mode=0;")
