@@ -27,7 +27,13 @@ HTTP_PORT=8080
 # scale the whole picture up to the window.
 STAGE_W=950
 STAGE_H=650
-ZOOM=${LAVA_ZOOM:-15}   # tenths of the stage size; 15 means 1.5x
+# ZOOM is in tenths of the stage. 10 keeps the window at exactly the
+# stage size, which is the only setting guaranteed to line up: the
+# client lays the game scene out from Stage.width, so any mismatch
+# between the reported stage and the real window leaves the scene
+# sitting in a corner. Anything above 10 forces show-all, which pins
+# the stage to 950x650 and lets Ruffle scale the picture instead.
+ZOOM=${LAVA_ZOOM:-10}
 
 if grep -qi microsoft /proc/version 2>/dev/null; then IN_WSL=1; else IN_WSL=0; fi
 
@@ -105,12 +111,18 @@ start_player() {
   # our host, port and hash, instead of the official domain that is now dead.
   local w=$(( STAGE_W * ZOOM / 10 ))
   local h=$(( STAGE_H * ZOOM / 10 ))
-  echo "window      : ${w}x${h}  (stage ${STAGE_W}x${STAGE_H})"
+  local SCALE_FLAGS=
+  local mode='native 1:1'
+  if [ $ZOOM -ne 10 ]; then
+    SCALE_FLAGS='--scale show-all --force-scale --letterbox on'
+    mode='scaled'
+  fi
+  echo "window      : ${w}x${h}  stage ${STAGE_W}x${STAGE_H}  ($mode)"
   "$exe" \
     --tcp-connections allow \
     --socket-allow "127.0.0.1:$GAME_PORT" \
     --base "http://127.0.0.1:$HTTP_PORT/res/" \
-    --scale show-all --force-scale --letterbox on \
+    $SCALE_FLAGS \
     --width "$w" --height "$h" \
     -Plogged=1 -Psession=dev -Pvversion=1 \
     -Pvar_host=127.0.0.1 -Pvar_port=$GAME_PORT -Pvar_login=dev \
