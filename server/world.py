@@ -71,11 +71,21 @@ class Location:
         return gy * self.width + gx
 
     def entry_cell(self):
-        """First entry cell that is not also an obstacle."""
-        for c in self.entries:
-            if c not in self.obstacles:
-                return c
-        return self.entries[0] if self.entries else 0
+        """A free entry cell, preferring one near whoever lives here.
+
+        inzones usually rings the whole map, and its first cell tends to sit in
+        a far corner with nothing around it. Spawning beside the inhabitants
+        makes the location look inhabited the moment it opens.
+        """
+        free = [c for c in self.entries if c not in self.obstacles]
+        if not free:
+            return self.entries[0] if self.entries else 0
+        if not self.spawns:
+            return free[0]
+        cx = sum(c % self.width for c, _t in self.spawns) / len(self.spawns)
+        cy = sum(c // self.width for c, _t in self.spawns) / len(self.spawns)
+        return min(free, key=lambda c: (c % self.width - cx) ** 2
+                                       + (c // self.width - cy) ** 2)
 
 
 def mob_types():
@@ -92,3 +102,18 @@ def mob_types():
                          r'\s+name="([^"]*)"(?:\s+resource="([^"]*)")?', txt):
         out[int(m.group(1))] = (int(m.group(2)), m.group(3), m.group(4) or "")
     return out
+
+
+def avatars():
+    """The eight entries of avatars/list.xml as (id, sex) pairs.
+
+    The two fields are not interchangeable and both have to come from the same
+    entry. id picks the portrait, avatars/<id>_1.png. sex picks the body,
+    because PersInfo.set sex assigns persType as a side effect and the walker
+    resolves art as personages/<persType>. Mixing an id from one row with a sex
+    from another puts a different person in the corner than the one standing in
+    the location.
+    """
+    txt = _read(os.path.join(RES, "avatars", "list.xml"))
+    return [(m.group(1), int(m.group(2)))
+            for m in re.finditer(r"<a\s+id='([^']*)'\s+sex='(\d+)'", txt)]
