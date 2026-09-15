@@ -88,7 +88,10 @@ try:
     # never reach the inventory.
     code, body = post('/res/database/texts.xml', b'<data>12,34</data>')
     check('texts stub answers', code, 200)
-    check('texts stub echoes ids', b'id=' + chr(34).encode() + b'12' + chr(34).encode() in body, True)
+    check('texts stub echoes ids', b"id='12'" in body, True)
+    # the client's own XML is UTF-8 with a byte order mark; cp1251 here leaves
+    # it with no strings at all and no error
+    check('texts stub is utf-8 with BOM', body[:3], b'ï»¿')
     # 3. real client assets must come through
     swf = get("/res/main.swf")
     check("main.swf served", swf[:3], b"CWS")
