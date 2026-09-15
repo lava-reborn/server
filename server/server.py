@@ -357,11 +357,16 @@ class Session:
         self.enter_location()
 
     # --- chat, and travel by name ----------------------------------------
-    EVENT_CHANNEL = 3          # Chat.CHAT_EVENT_CHANNEL
+    def say(self, text, group=0):
+        """A line from the server, answered into the channel it was asked in.
 
-    def say(self, text):
-        """A line from the server, on the channel the client keeps for them."""
-        self.send("userMsg", entry=Str(text), group=self.EVENT_CHANNEL,
+        Not the event channel, tempting as it is. Chat.userMsg drops a message
+        for a channel that is neither open nor switched on -- the event, help,
+        world and trade channels each hang off a UserSettings flag -- and
+        drops it silently, with no error anywhere. The channel the player just
+        typed into is open by definition, and that is where they are looking.
+        """
+        self.send("userMsg", entry=Str(text), group=group,
                   nick=Str("Сервер"), **{"from": 0})
 
     def cmd_userMsg(self, p):
@@ -380,23 +385,24 @@ class Session:
         """
         self.send("cmdAck", res=0)
         text = (p.get("entry") or "").strip()
+        group = int(p.get("group", 0) or 0)
         if text.startswith("/goto"):
-            self.cmd_goto(text.split()[1:])
+            self.cmd_goto(text.split()[1:], group)
             return
         if text.startswith("/where"):
             # Everything needed to report a cell that opens the wrong place:
             # the title as drawn, the file behind it, and the cell itself.
             self.say("%s — %s [%s] — клетка %d,%d"
-                     % (self.loc.title, self.loc.file, self.loc.fn,
-                        round(self.gx), round(self.gy)))
+                     % (self.loc.title, self.loc.file, self.loc.fn or "-",
+                        round(self.gx), round(self.gy)), group)
             return
         # Ordinary talk comes back to the sender, which is how the client
         # shows it: it prints nothing of its own when a message is typed.
         pers = self.active or default_character()
-        self.send("userMsg", entry=Str(text), group=int(p.get("group", 0)),
+        self.send("userMsg", entry=Str(text), group=group,
                   nick=Str(pers["name"]), **{"from": 0})
 
-    def cmd_goto(self, args):
+    def cmd_goto(self, args, group=0):
         """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
         try:
             if len(args) >= 2:
@@ -410,15 +416,15 @@ class Session:
                 gx, gy = (world.unpack(loc_id) if world.is_wilderness(loc_id)
                           else (self.gx, self.gy))
             else:
-                self.say("/goto <номер локации>  или  /goto <x> <y>")
+                self.say("/goto <номер локации>  или  /goto <x> <y>", group)
                 return
         except ValueError:
-            self.say("Не понял. /goto <номер локации> или /goto <x> <y>")
+            self.say("Не понял. /goto <номер локации> или /goto <x> <y>", group)
             return
         try:
             loc = world.location(loc_id)
         except (KeyError, OSError):
-            self.say("Локации %d нет" % loc_id)
+            self.say("Локации %d нет" % loc_id, group)
             return
         self.on_map = False
         self.cancel_travel()

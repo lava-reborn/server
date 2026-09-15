@@ -294,6 +294,17 @@ try:
     check("an id with no file behind it is refused, not fatal",
           [f.split(";")[0] for f in got], ["cmdAck", "userMsg"])
 
+    # The answer must come back on the channel the question was asked in.
+    # Chat.userMsg drops a message for a channel that is neither open nor
+    # switched on -- event, help, world and trade each hang off a UserSettings
+    # flag -- and drops it silently. Answering on the event channel looked
+    # fine on the wire and showed the player nothing at all.
+    c.send("userMsg;entry=@/where@;group=4;")
+    got = c.frames()
+    check("where answers", [f.split(";")[0] for f in got], ["cmdAck", "userMsg"])
+    check("on the channel it was asked in", "group=4;" in got[1], True)
+    check("and names the file behind the cell", "static/183.xml" in got[1], True)
+
     # Ordinary chat still has to come back, or nothing the player types shows.
     c.send("userMsg;entry=@привет@;group=0;")
     got = c.frames()
