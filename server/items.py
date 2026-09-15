@@ -38,15 +38,31 @@ ACT_FIRE, ACT_UNLOAD, ACT_USEMODE = 16, 32, 64
 # FireArm.as:38-43
 PISTOL, SHOTGUN, ASSAULT, RIFLE, MACHINEGUN, SMG = range(6)
 
+# Ammunition, by calibre. objects.xml carries two families under root 3: the
+# bare calibre records "_9mmNato", "_762x39", "_12mm", "_762x51" (ids 1, 8, 9,
+# 23 and their _power/_med/_high variants below 500), which have no folder
+# under classes/Ammo and so draw as nothing, and the Ammo_<calibre>_<mod>
+# series from 6092 up, each with its icon. The mod suffix is the client's own
+# vocabulary (Ammo.as:18-24): KS standard, ST steel core, OT tracer. Three
+# mods per calibre are enough for a stall; the rest of the series (KS_P,
+# OT_PS, gold) waits for real numbers from the wiki.
+AMMO_9MM = [6092, 6104, 6116]        # Ammo_9mmNato_KS / _ST / _OT
+AMMO_762x39 = [6098, 6110, 6122]     # Ammo_762x39_*
+AMMO_762x51 = [6095, 6107, 6119]     # Ammo_762x51_*
+AMMO_12MM = [6096, 6108, 6120]       # Ammo_12mm_*
+
 # Stock, by the trader's own type id. The numbered series in objects.xml line
-# up with the stalls: five tiers each, exactly what a tier-one shop would hold.
+# up with the stalls: five tiers each, exactly what a tier-one shop would hold,
+# followed by the rounds those guns take. The weapons stay first: the client
+# refers to a purchase by its index in this list, and a test relies on the
+# head of the pistol stall being a firearm.
 STOCK = {
-    1200: [4380, 4381, 4382, 4383, 4384],          # wh_Pistols
-    1202: [4385, 4386, 4387, 4388, 4389],          # wh_Rifles
-    1201: [4392, 4393, 4394, 4395, 4396],          # wh_Shotguns
-    1203: [4397, 4398, 4399, 4400, 4401],          # wh_SubMachineGuns
-    1204: [6848, 6853, 6858, 6863, 6868],          # wh_wear_trd, shirts
-    1205: [6847, 6849, 6850, 6852, 6854],          # wh_set_trd, a raider set
+    1200: [4380, 4381, 4382, 4383, 4384] + AMMO_9MM,      # wh_Pistols
+    1202: [4385, 4386, 4387, 4388, 4389] + AMMO_762x51,   # wh_Rifles
+    1201: [4392, 4393, 4394, 4395, 4396] + AMMO_12MM,     # wh_Shotguns
+    1203: [4397, 4398, 4399, 4400, 4401] + AMMO_762x39,   # wh_SubMachineGuns
+    1204: [6848, 6853, 6858, 6863, 6868],                 # wh_wear_trd, shirts
+    1205: [6847, 6849, 6850, 6852, 6854],                 # wh_set_trd, a raider set
 }
 
 # Which weapon class a series belongs to, and the ammunition it accepts.
@@ -68,18 +84,30 @@ CLASS_SHAPE = {
     SMG:        dict(dmg=(14, 30), rng=12, ap=12, clip=25, modes=(1, 3, 5)),
 }
 
-# Calibres the client already knows, by their own type ids. A weapon with an
-# empty comp_array accepts nothing at all and cannot be loaded.
-AMMO_9MM, AMMO_762x39, AMMO_12MM, AMMO_762x51 = 1, 8, 9, 23
-
+# What each class chambers. This is comp_array on the wire, and the client
+# checks it itself before asking to load (FireArm.compare): a weapon with an
+# empty list accepts nothing at all and cannot be loaded.
 AMMO_FOR = {
-    PISTOL: [AMMO_9MM],
-    SMG: [AMMO_9MM],
-    SHOTGUN: [AMMO_12MM],
-    ASSAULT: [AMMO_762x39],
-    RIFLE: [AMMO_762x51],
-    MACHINEGUN: [AMMO_762x51],
+    PISTOL: AMMO_9MM,
+    SMG: AMMO_9MM,
+    SHOTGUN: AMMO_12MM,
+    ASSAULT: AMMO_762x39,
+    RIFLE: AMMO_762x51,
+    MACHINEGUN: AMMO_762x51,
 }
+
+# Rounds per trade pack, and the most one stack holds. The client divides the
+# pack price by the first to show a per-round price, and caps the "how many"
+# dialogue at the second; a purchase asks for rounds, never packs.
+AMMO_PACK = 20
+AMMO_STACK = 200
+
+# Which slot classes a hand takes: PersEquip.checkUse and the drop targets in
+# EquipInterface only ever put these three in primary/secondary. A heal item
+# goes there by the client's own hand (PersEquip.as:339-349).
+HAND_ROOTS = (FIRE_ARM, COLD_ARM, HEAL)
+HEAPABLE_ROOTS = (AMMO, TRASH)
+BREAKABLE_ROOTS = (FIRE_ARM, WEAR, COLD_ARM)
 
 SLOT_HEAD, SLOT_CAMO, SLOT_ARMOR, SLOT_BELT, SLOT_LEGS, SLOT_BOOTS = range(6)
 
@@ -124,6 +152,28 @@ def tier(name):
 
 def stock_for(trader_type):
     return STOCK.get(trader_type, [])
+
+
+def root_of(type_id):
+    """Root class of a type, or None when the client has no such type."""
+    entry = catalogue().get(type_id)
+    return entry[0] if entry else None
+
+
+def params_of(type_id):
+    """The static fields of a type as one dict, or None. What ss_si_* sends,
+    read back here for prices, weight, clip size and slot."""
+    info = static_info(type_id)
+    return info[1] if info else None
+
+
+def first_mode(fire_mods):
+    """The first fire mode that is switched on. cur_mode must name one: the
+    client reads fire_costs[cur_mode] and refuses to shoot on undefined."""
+    for i, burst in enumerate(fire_mods):
+        if burst:
+            return i
+    return 0
 
 
 def _common(type_id, name, root, price, weight):
@@ -178,7 +228,7 @@ def static_info(type_id):
             piercing=[t, t, t],
             fire_costs=[sh["ap"], sh["ap"] + 4, sh["ap"] + 8],
             fire_times=[700, 800, 900],
-            comp_array=AMMO_FOR.get(cls, [AMMO_9MM]))
+            comp_array=AMMO_FOR.get(cls, AMMO_9MM))
         return SI_COMMAND[root], p
 
     if root == WEAR:
@@ -189,9 +239,11 @@ def static_info(type_id):
         return SI_COMMAND[root], p
 
     if root == AMMO:
+        # cost is the price of one pack of sell_num rounds; the client
+        # divides, so the two have to be read together.
         p = _common(type_id, name, root, 40, 12)
-        p.update(max_count=200, sell_num=20, range_mod=1, acc_mod=1,
-                 dam_mod=1, st_mod=1, piercing=1)
+        p.update(max_count=AMMO_STACK, sell_num=AMMO_PACK, range_mod=1,
+                 acc_mod=1, dam_mod=1, st_mod=1, piercing=1)
         return SI_COMMAND[root], p
 
     if root == HEAL:
