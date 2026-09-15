@@ -18,6 +18,7 @@ import logging
 import os
 
 import accounts
+import inventory
 import items
 import names
 import world
@@ -120,6 +121,9 @@ class Session:
         self.leg = None
         # entity id -> (cell, type_id, rtype) for everything placed
         self.npcs = {}
+        # Items, slots and the open stall: inventory.py. Reads the character
+        # off this session, so it needs no update when the character changes.
+        self.inv = inventory.Inventory(self, STORE)
 
     # --- plumbing --------------------------------------------------------
     def send(self, *_cmd, **params):
@@ -207,6 +211,7 @@ class Session:
 
     def close(self):
         self.cancel_travel()
+        self.inv.close()
         if self.char_id:
             STORE.save_position(self.char_id, self.loc.id, self.pos,
                                 self.gx, self.gy, self.on_map)
@@ -230,6 +235,9 @@ class Session:
         self.characters = [dict(r) for r in STORE.characters(self.account["id"])]
         self.char_id = char_id
         self.active = next(c for c in self.characters if c["slot"] == slot)
+        # A pistol and a pack of rounds in the bag, so there is something to
+        # wear, load and sell before the first stall is found.
+        self.inv.starter_kit(char_id)
         log.info("  ..    created %r in slot %d", name, slot)
         # The client plays its intro after this, then sends actPlayer itself.
         self.send("cmdAck", res=0)
@@ -508,14 +516,36 @@ class Session:
         if who != 0:
             self.send_npc_info(who)
             return
+        self.send_player_info()
+        self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
+
+    def send_player_info(self):
+        """The player's own userInfo_Player, money included.
+
+        Sent again after every purchase and sale: afro and gold travel in no
+        other frame, and Entity.userInfo reassigns name, sex, avatar and the
+        rest on each arrival, so it is always the whole record.
+        """
         pers = self.active or default_character()
+        afro, gold = STORE.money(self.char_id) if self.char_id else (0, 0)
         self.send("userInfo_Player",
                   id=0, name=Str(pers["name"]), sex=pers["sex"],
                   res=Str(str(pers["res"])), ail=0, ally=1, lvl=1,
                   rep=[0], bg_rep=0, bg_pen=0, clan=0,
                   hl=0, pr=0,
-                  afro=1000, gold=0, tr=0, tr_hours=0)
-        self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
+                  afro=afro, gold=gold, tr=0, tr_hours=0)
+
+    def char_for_entity(self, entity_id):
+        """Which character an entity id on this client's screen belongs to.
+
+        Asked when the client wants somebody else's clothes and hands
+        (ss_get;target=<id>;slot=3) so it can draw them. None for anything
+        that is not a player -- the location's own inhabitants included --
+        and, until a room registry places other players, for everyone else
+        too: the answer is then bare hands, which is what the client draws
+        for a creature anyway.
+        """
+        return None
 
     def send_npc_info(self, npc_id):
         """Answer getInfo for one inhabitant.
@@ -602,10 +632,31 @@ class Session:
 
     def cmd_ss_create(self, p):
         """Open a session with an NPC: trade, bank, training and the rest."""
+        if int(p.get("s_type", -1) or 0) == inventory.SESSION_TRADE:
+            self.inv.open_trade(p)
+            return
         self.send("cmdAck", res=0)
 
     def cmd_ss_upd(self, p):
+        # Inside an open stall the code is buy/sell/close, and close carries
+        # no acknowledgement at all (Trade.close registers none).
+        if self.inv.ss_upd(p):
+            return
         self.send("cmdAck", res=0)
+
+    def cmd_ss_get_di(self, p):
+        # Every real instance the client meets asks for this, through the
+        # same window of five as ss_get_si; the sixth item stalls without it.
+        self.inv.ss_get_di(p)
+
+    def cmd_ss_move(self, p):
+        self.inv.ss_move(p)
+
+    def cmd_ss_use(self, p):
+        self.inv.ss_use(p)
+
+    def cmd_ss_heap_c(self, p):
+        self.inv.ss_heap_c(p)
 
     def cmd_ss_get_s_si(self, p):
         # Nothing belongs to a set yet, but the request still needs answering.
@@ -613,9 +664,9 @@ class Session:
                   desc="")
 
     def cmd_ss_get(self, p):
-        # Answer even when empty; ItemFactory pipelines these and stops
-        # issuing new ones until each outstanding request comes back.
-        self.send("ss_ack", o_list=[])
+        # Answered whatever the target: the ss_ack queue is FIFO and the
+        # client slices the list by the mask it remembers sending.
+        self.inv.ss_get(p)
 
     def cmd_q_list(self, p):
         # QuestInspector allows exactly one outstanding quest request, so a
