@@ -43,7 +43,7 @@ try:
             if not chunk:
                 raise SystemExit("connection closed")
             buf += chunk
-        return buf[:-1].decode("cp1251")
+        return buf[:-1].decode("utf-8")
 
     # Step 3: Session.sendHello() -> CSM_Hello
     s.sendall(b"hello;minor=2;major=0;\x00")
@@ -53,7 +53,7 @@ try:
     print("  %s server answered hello (clears the 20s helloTimeout)" % ("OK " if ok else "FAIL"))
 
     # Step 5: Session.login() -> CSM_Login(hash)
-    s.sendall(("login;hash=@%s@;" % CRED).encode("cp1251")
+    s.sendall(("login;hash=@%s@;" % CRED).encode("utf-8")
               + b"\x00")
     r = recv_frame()
     print("  S->C", r)

@@ -21,6 +21,7 @@ import re
 import sys
 
 import accounts
+import items
 import world
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -62,6 +63,15 @@ try:
     MOB_NAMES = {t: n for t, (_r, n, _a) in world.mob_types().items()}
 except Exception:
     MOB_NAMES = {}
+
+# Items are numbered in the same string space as creatures, and the shop stays
+# blank without them: Item.stringUpdate withholds the update event until a name
+# arrives, and nothing enters a bag or a price list before that event.
+try:
+    ITEM_NAMES = {items.STRING_ID_OFFSET + t: n
+                  for t, (_root, n) in items.catalogue().items()}
+except Exception:
+    ITEM_NAMES = {}
 
 try:
     import json
@@ -175,7 +185,8 @@ class Handler(BaseHTTPRequestHandler):
         ids = [m.decode() for m in re.findall(rb"\d+", body or b"")]
         rows = "".join(
             "<s id='%s'>%s</s>"
-            % (i, REAL_NAMES.get(int(i)) or MOB_NAMES.get(int(i), "#" + i))
+            % (i, REAL_NAMES.get(int(i)) or MOB_NAMES.get(int(i))
+               or ITEM_NAMES.get(int(i), "#" + i))
             for i in ids)
         self._send_xml("<data>%s</data>" % rows)
 

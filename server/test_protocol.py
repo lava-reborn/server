@@ -53,8 +53,8 @@ check("framing complete", fr.feed(b"or=2;\x00logout;\x00"), [b"hello;minor=2;", 
 
 # --- cyrillic / cp1251 ---
 f = frame("userMsg", entry=Str("Привет"))
-check("cp1251 frame", f.endswith(b"\x00"), True)
-check("cp1251 roundtrip", decode(f[:-1])[1]["entry"], "Привет")
+check("utf-8 frame", f.endswith(b"\x00"), True)
+check("utf-8 roundtrip", decode(f[:-1])[1]["entry"], "Привет")
 
 # --- regression: a protocol param literally named "name" (ah_search) ---
 check("param called name",

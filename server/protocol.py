@@ -8,7 +8,15 @@ Frame: "<name>;<key>=<value>;..." terminated by NUL, CP1251 on the wire.
 Value type is signalled by the first character of the value.
 """
 
-ENCODING = "cp1251"
+# Flash decodes XMLSocket traffic as UTF-8 unless System.useCodepage is on,
+# and this client only sets that inside one rarely taken branch of its login
+# screen. The convertToCP1251 helper it carries belongs to MD5rus and is
+# only about what gets hashed, not what travels. Sending cp1251 here left
+# the client parsing a Cyrillic name into rubbish: the parser advances its
+# cursor by the character length of each string it reads, so a value that
+# decodes to a different length than it was written slides every field
+# after it out of place.
+ENCODING = "utf-8"
 TERM = b"\x00"
 
 

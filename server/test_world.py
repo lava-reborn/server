@@ -12,7 +12,7 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PORT = 19776
-ENC = "cp1251"
+ENC = "utf-8"
 
 # This test walks the character-creation path, so it needs the empty
 # roster; the server otherwise ships a ready character and auto-enters.

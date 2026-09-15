@@ -114,7 +114,7 @@ class Session:
         """Send one frame. The command name is positional, because several
         commands carry a parameter literally called "name"."""
         data = frame(_cmd[0], **params)
-        log.info("  S->C  %s", data[:-1].decode("cp1251", "replace"))
+        log.info("  S->C  %s", data[:-1].decode("utf-8", "replace"))
         self.writer.write(data)
 
     def handle(self, cmd, params):

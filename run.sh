@@ -108,7 +108,11 @@ start_player() {
     return
   fi
 
+  # The debug build reports runtime errors and writes trace output to
+  # Logs/flashlog.txt, which is the only way to see a fault on the
+  # client's side of the wire.
   local exe="$ROOT/tools/flash/fp32_sa.exe"
+  [ "${LAVA_DEBUG:-0}" = "1" ] && exe="$ROOT/tools/flash/fp32_sa_debug.exe"
   if [ ! -f "$exe" ]; then
     echo "Flash projector not found at $exe"
     echo "fetch it with:"
@@ -116,7 +120,7 @@ start_player() {
     echo "    https://fpdownload.macromedia.com/pub/flashplayer/updaters/32/flashplayer_32_sa.exe"
     return 1
   fi
-  echo "player      : Flash projector 32.0.0.465"
+  echo "player      : Flash projector 32.0.0.465${LAVA_DEBUG:+ (debug)}"
   "$exe" "$url"
 }
 

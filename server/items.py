@@ -80,6 +80,12 @@ SLOT_BY_PREFIX = {
     "boots": SLOT_BOOTS,
 }
 
+# Creatures and items are numbered in separate spaces that overlap, while the
+# strings they point at share one. The real texts.xml gave each its own string
+# id; this offset keeps the stub's synthetic ones apart, so item 4380 no longer
+# answers with the name of the creature that happens to share the number.
+STRING_ID_OFFSET = 1000000
+
 _CATALOGUE = None
 _SERIES = re.compile(r"^([a-z_]+?)_(\d+)$")
 
@@ -110,7 +116,7 @@ def stock_for(trader_type):
 def _common(type_id, name, root, price, weight):
     return dict(
         type=type_id,
-        name=type_id,          # a string id; the texts endpoint resolves it
+        name=STRING_ID_OFFSET + type_id,   # string id, not the item id
         desc="",
         vis=0, weight=weight, tech_dif=1, exchang=1,
         cost=price, g_cost=0, bg_p_cost=0,
