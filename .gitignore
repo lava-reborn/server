@@ -3,3 +3,4 @@ tools/
 data/lava.db
 __pycache__/
 *.pyc
+.claude/
