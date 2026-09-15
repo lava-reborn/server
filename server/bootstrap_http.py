@@ -255,8 +255,12 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/res/database/texts.xml":
             self._texts(parts.query, body)
         elif path == "/res/hints/hints.xml":
-            # never shipped with the client; an empty document satisfies it
-            self._send("<data></data>", "text/xml")
+            # The other of the two files missing from the shipped client
+            # (texts.xml is the first). An empty document satisfies it, but
+            # written the way the client's own XML is, UTF-8 with a byte
+            # order mark, which is what _send_xml does; the cp1251 that
+            # _send produces is the same silent failure texts.xml had.
+            self._send_xml("<data/>")
         elif path.startswith("/res/"):
             self._resource(path)
         else:
