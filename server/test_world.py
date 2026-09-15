@@ -144,6 +144,13 @@ try:
     c.send("q_list;")
     check("empty inventory and quest log", c.names(), ["ss_ack", "q_list"])
 
+    # slot=32 (PersEquip.requestPublicTrophy) registers on both the ss_ack
+    # and the cmdAck queue and drops the other handler on the first answer.
+    # Answering twice would feed the second to the next command's handler.
+    c.send("ss_get;target=0;slot=32;")
+    check("public trophies answered once, with ss_ack only",
+          c.names(), ["ss_ack"])
+
     # Nothing moves until the server echoes the path back, and every step also
     # registers a handler on the client's acknowledgement queue. That queue is
     # strictly ordered, so an unanswered move hands each later reply to a stale
@@ -160,10 +167,30 @@ try:
 
     # An unimplemented command that registers a handler must still be refused,
     # not ignored, or the same desynchronisation follows.
-    c.send("ah_search;target=0;page=0;")
+    c.send("ah_op;op=0;lot=x0;")
     got = c.frames()
     check("unimplemented but acknowledged", got[0].split(";")[0], "cmdAck")
     check("and refused rather than accepted", "res=0;" in got[0], False)
+
+    # And the reverse: commands the client sends without registering anything
+    # must get no acknowledgement at all, or it lands on the next handler.
+    # Auction.search waits on ah_sresult, GlobalMap.editMark just sends.
+    c.send("ah_search;target=0;page=0;")
+    check("ah_search is not acknowledged", c.frames(), [])
+    c.send("updMark;id=0;title=@a@;info=@b@;")
+    check("updMark is not acknowledged", c.frames(), [])
+    # bg_op registers for joining (0) and leaving (2) the queue only;
+    # BattleGroundManager sends 3..7 bare.
+    c.send("bg_op;op=6;ts=1;type=1;")
+    check("bg_op info request is not acknowledged", c.frames(), [])
+    c.send("bg_op;op=2;ts=1;type=1;")
+    check("bg_op leave queue is", c.names(), ["cmdAck"])
+    # p_op op=5 asks for the party list from PartyManager.errorReport with
+    # no handler; an invite (0) registers Gamer.invitePlayer.
+    c.send("p_op;id=0;op=5;")
+    check("party list request is not acknowledged", c.frames(), [])
+    c.send("p_op;id=7;op=0;")
+    check("party invite is", c.names(), ["cmdAck"])
 
     # An unknown command must be logged, not fatal.
     c.send("no_such_command;x=1;")
@@ -197,6 +224,29 @@ try:
     # fire_mods doubles as the burst length, and at least one mode must be on.
     modes = got[0].split("fire_mods=|")[1].split("|;")[0].split("|")
     check("at least one fire mode enabled", any(m != "0" for m in modes), True)
+
+    # Buying registers Trade.transferAck; closing the shop (s_status=0) is
+    # sent from Trade.close with no handler at all. Acknowledging the close
+    # was enough to put the queue off by one for the rest of the session.
+    c.send("ss_upd;s_status=1;obj=x0;param=1;")
+    check("a purchase is acknowledged", c.names(), ["cmdAck"])
+    c.send("ss_upd;s_status=0;obj=x0;")
+    check("closing the shop is not", c.frames(), [])
+
+    # Barter uses the same command with its own numbering, and three of its
+    # values go out bare: 2 deny, 5 apply, 6 break. In a trade session the
+    # same numbers (sell, gold repair, trophy) do register, so the session
+    # type decides.
+    c.send("ss_create;s_type=2;target=105;")
+    check("barter session opens", c.names(), ["cmdAck"])
+    for status in (2, 5, 6):
+        c.send("ss_upd;s_status=%d;obj=x0;" % status)
+        check("barter s_status=%d is not acknowledged" % status,
+              c.frames(), [])
+    c.send("ss_upd;s_status=1;obj=x0;")
+    check("barter agree is", c.names(), ["cmdAck"])
+    c.send("ss_upd;s_status=0;obj=x0;")
+    check("barter close is not", c.frames(), [])
 
     # --- the global map ---------------------------------------------------
     c.send("chWorld;")

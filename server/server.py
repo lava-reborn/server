@@ -31,15 +31,45 @@ STORE = accounts.Store()
 # Commands whose sender registers a cmdAck handler, gathered from the client:
 # mail, clans, party, auction, battlegrounds, item sessions, quests, map marks
 # and chat all do. Anything here has to be answered, implemented or not.
+#
+# Not here, because the client sends them without registering anything, and
+# an answer would be consumed by whichever command comes next:
+#   ah_search  -- Auction.search waits on its own ah_sresult queue instead
+#   updMark    -- GlobalMap.editMark just sends; insMark and rmMark do register
+# Two more are in the set but only for some of their op values; see
+# expects_ack() below.
 EXPECTS_ACK = {
     "chkml", "getml", "sndml", "rmvml", "uldml",
     "p_op", "admit", "apply", "head", "gg_info", "c_ga",
-    "ah_create", "ah_op", "ah_search", "bg_op",
+    "ah_create", "ah_op", "bg_op",
     "ss_move", "ss_use", "ss_heap_c", "ss_create", "ss_upd",
     "on_conv", "q_st", "q_co", "q_ca",
-    "insMark", "updMark", "rmMark",
+    "insMark", "rmMark",
     "userMsg", "resurrect", "actPlayer", "newPers", "lenter", "chWorld",
 }
+
+
+def expects_ack(cmd, params):
+    """Whether this particular frame put a handler on the client's queue.
+
+    For most commands that is a property of the command. For two it depends
+    on the op value, because the same CSM class is sent from several places
+    in the client and only some of them call XMLCCallStack.addCall:
+
+      bg_op  BattleGroundManager registers for 0 (join queue) and 2 (leave
+             queue) only; 3/4 answer an invitation, 5/7 leave a battleground
+             and 6 asks for its info, all fire-and-forget.
+      p_op   op 5 asks for the party list and is sent from errorReport with
+             no handler; every other op (invite, kick, yes/no, leader)
+             registers one. Caveat: op 3 is also sent unregistered from the
+             auto-decline branch of PartyManager, so a player with that
+             setting on will drift by one there; nothing here can tell.
+    """
+    if cmd == "bg_op":
+        return int(params.get("op", -1)) in (0, 2)
+    if cmd == "p_op":
+        return int(params.get("op", -1)) != 5
+    return cmd in EXPECTS_ACK
 
 # Where a new character starts, as a cell of the global map. Cell 5970x1730
 # is "Черный рынок Вади-Хальфы": peaceful (war="0", so walking costs no action
@@ -120,6 +150,10 @@ class Session:
         self.leg = None
         # entity id -> (cell, type_id, rtype) for everything placed
         self.npcs = {}
+        # s_type of the open session with an NPC (StuffManager.SESSION_*:
+        # 1 trade, 2 barter, 3 bank, 4 training, 5 upgrade, 6 trophies), or
+        # None. Which ss_upd frames get acknowledged depends on it.
+        self.npc_session = None
 
     # --- plumbing --------------------------------------------------------
     def send(self, *_cmd, **params):
@@ -137,7 +171,7 @@ class Session:
             # Commands that register a handler must be answered even when the
             # feature does not exist yet. A refusal keeps the queue in step; a
             # silence shifts every later reply onto the wrong handler.
-            if cmd in EXPECTS_ACK:
+            if expects_ack(cmd, params):
                 self.send("cmdAck", res=3)
             return
         try:
@@ -602,9 +636,33 @@ class Session:
 
     def cmd_ss_create(self, p):
         """Open a session with an NPC: trade, bank, training and the rest."""
+        self.npc_session = int(p.get("s_type", 0) or 0)
         self.send("cmdAck", res=0)
 
     def cmd_ss_upd(self, p):
+        """Acknowledge only the ss_upd frames the client waits on.
+
+        s_status=0 closes the session, and every session class sends it
+        bare -- Trade, Bank, Upgrade, Training and Loot from close(), Barter
+        from close(), TrophyManager from closeSession() -- with no
+        XMLCCallStack.addCall. Answering it handed the acknowledgement to
+        whatever the player did next, so closing a shop was enough to put
+        the queue off by one for the rest of the session.
+
+        Barter has three more that go out bare: 2 deny (denyBarter and the
+        awaitingAnswer timeout), 5 apply and 6 break (readyToBarter). The
+        same numbers in a trade session are sell, gold repair and trophy
+        registration, all of which do register, so the session type has to
+        be known. Once barter proposals are relayed, a deny can also come
+        from the side that never sent ss_create; the relay will have to set
+        npc_session for it.
+        """
+        s_status = int(p.get("s_status", 0) or 0)
+        if s_status == 0:
+            self.npc_session = None
+            return
+        if self.npc_session == 2 and s_status in (2, 5, 6):
+            return
         self.send("cmdAck", res=0)
 
     def cmd_ss_get_s_si(self, p):
@@ -615,6 +673,12 @@ class Session:
     def cmd_ss_get(self, p):
         # Answer even when empty; ItemFactory pipelines these and stops
         # issuing new ones until each outstanding request comes back.
+        #
+        # slot=32 (PersEquip.requestPublicTrophy) is the one ss_get that
+        # registers on both queues, ss_ack and cmdAck, and whichever answer
+        # lands first skipCalls the other. So it gets the same single ss_ack
+        # as the rest and no cmdAck: a second answer would be consumed by the
+        # next command's handler.
         self.send("ss_ack", o_list=[])
 
     def cmd_q_list(self, p):
