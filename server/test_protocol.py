@@ -1,7 +1,8 @@
 """Codec tests derived from lol.server.SCDataParser semantics."""
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from protocol import decode, encode, frame, FrameReader, Str, Hex, BigUInt
+from protocol import (decode, encode, frame, FrameReader, Str, Hex,
+                      BigUInt, escape, unescape)
 
 fails = []
 
@@ -62,6 +63,26 @@ check("param called name",
 check("param name roundtrip",
       decode(encode("ah_search", name=Str("gun"), page=1)),
       ("ah_search", {"name": "gun", "page": 1}))
+
+# --- escaping, verbatim from lol/server/XMLString.as ---
+check("esc lt", escape("<"), "%3C")
+check("esc gt", escape(">"), "%3E")
+check("esc apos", escape(chr(39)), "%27")
+check("esc quote", escape(chr(34)), "%5C")  # client oddity, not %22
+check("esc amp", escape("&"), "%26")
+check("esc at", escape("@"), "%40")
+check("esc percent", escape("%"), "%25")
+check("esc plain", escape("Vasya"), "Vasya")
+check("unesc quote", unescape("%5C"), chr(34))
+MIXED = 'a<b>&"@%\'c'
+check("unesc roundtrip", unescape(escape(MIXED)), MIXED)
+check("escaped percent not re-decoded", unescape(escape("%3C")), "%3C")
+
+# an @ inside a nickname must not terminate the @string@ value early
+NICK = "va@sya"
+F_AT = encode("userMsg", to=Str(NICK))
+check("at escaped on wire", F_AT, "userMsg;to=@va%40sya@;")
+check("at survives roundtrip", decode(F_AT), ("userMsg", {"to": NICK}))
 
 print()
 if fails:
