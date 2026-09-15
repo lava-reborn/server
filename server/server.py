@@ -1,11 +1,17 @@
-"""Minimal LAVA Online server: handshake + command logger.
+"""Minimal LAVA Online server: login, character creation, and entering a location.
 
-Implements only what lol.core.Session.as requires to get past login:
-    C: hello;minor=2;major=0;
-    S: hello;...
-    C: login;hash=@...@;
-    S: cmdAck;res=0;
-Everything else is logged so the protocol surface can be filled in incrementally.
+Enough of the protocol to get a freshly made character standing in a location
+and walking around. Everything not implemented is logged rather than ignored,
+so the remaining surface stays visible.
+
+Two rules govern nearly every handler here (see PROTOCOL.md):
+
+  * cmdAck is a strict FIFO queue. Exactly one per command that expects one,
+    in arrival order. selPers expects none, and answering it desynchronises
+    every later reply.
+  * Requests the client pipelines (q_list, ss_get, rp_get_info) must always be
+    answered, including with empty payloads, or its request window never
+    reopens and it stalls with no error shown.
 """
 import asyncio
 import logging
@@ -16,6 +22,13 @@ from protocol import FrameReader, decode, frame, Str
 HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
 PORT = int(os.environ.get("LAVA_PORT", "9775"))
 POLICY_PORT = 843
+
+# "Вади Хальфа: жилой квартал", chosen because it is one of the 168 locations
+# with war="0": no combat mode, so action points are not consumed by walking.
+# Cell 490 is the first entry point in its <inzones> list, at grid (42, 7) on a
+# 64-wide grid, and pos is gy * width + gx.
+START_LOC = 36
+START_POS = 490
 
 log = logging.getLogger("lava")
 
@@ -29,6 +42,15 @@ POLICY = (
     b'</cross-domain-policy>\x00'
 )
 
+ATTRIBS = 5    # сила, ловкость, телосложение, восприятие, интеллект
+SKILLS = 5     # ближний бой, стрельба, медицина, промышленность, производство
+SPECS = 15
+
+
+def full_mask(n):
+    """Mask with every slot present, for the mask + dense-list encoding."""
+    return (1 << n) - 1
+
 
 class Session:
     def __init__(self, writer, peer):
@@ -39,30 +61,37 @@ class Session:
         # No storage yet: every login starts with an empty roster, so the
         # client goes straight to character creation.
         self.characters = []
+        self.active = None
+        self.pos = START_POS
 
-    def send(self, name, **params):
-        data = frame(name, **params)
+    # --- plumbing --------------------------------------------------------
+    def send(self, *_cmd, **params):
+        """Send one frame. The command name is positional, because several
+        commands carry a parameter literally called "name"."""
+        data = frame(_cmd[0], **params)
         log.info("  S->C  %s", data[:-1].decode("cp1251", "replace"))
         self.writer.write(data)
 
-    def handle(self, name, params):
-        log.info("  C->S  %s %s", name, params)
-        fn = getattr(self, "cmd_" + name, None)
-        if fn:
+    def handle(self, cmd, params):
+        log.info("  C->S  %s %s", cmd, params)
+        fn = getattr(self, "cmd_" + cmd, None)
+        if not fn:
+            log.warning("  ??    unimplemented command %r", cmd)
+            return
+        try:
             fn(params)
-        else:
-            log.warning("  ??    unimplemented command %r", name)
+        except Exception:
+            # A bug in one handler must not drop the player's connection.
+            log.exception("  !!    handler for %r failed", cmd)
 
-    # --- implemented commands ---
+    # --- session ---------------------------------------------------------
     def cmd_hello(self, p):
-        # Client ignores the params; it only needs a frame named "hello"
-        # to arrive within 20s (Session.helloTimeOutFunction).
+        # The client ignores these params; it only needs a frame named "hello"
+        # within 20s, or Session.helloTimeOutFunction drops the connection.
         self.send("hello", minor=2, major=0)
 
     def cmd_login(self, p):
         self.hash = p.get("hash")
-        # res=0 -> success; client then calls persGen.loadDescription(),
-        # which is an HTTP fetch of avatars/list.xml, not a socket command.
         self.logged_in = True
         self.send("cmdAck", res=0)
         self.send_account()
@@ -70,11 +99,10 @@ class Session:
     def send_account(self):
         """Push the account state the client waits for but never asks for.
 
-        PersGenerator.checkFullInfo only opens the character screen once the
-        avatar list has loaded AND accountInfo has arrived. Note that
-        accountInfo is ignored entirely unless can_create is truthy
-        (PersGenerator.accountInfo), so a zero there leaves the client idle
-        with no error of any kind.
+        PersGenerator.checkFullInfo opens the character screen only once the
+        avatar list has loaded AND accountInfo has arrived. accountInfo is
+        discarded outright unless can_create is truthy, so a zero there leaves
+        the client idle with no error of any kind.
         """
         self.send("constants",
                   gold_to_afro_rate=100,
@@ -88,12 +116,108 @@ class Session:
         for i, pers in enumerate(self.characters):
             self.send("persInfo", num=i, name=Str(pers["name"]),
                       sex=pers["sex"], death=0, res=pers["res"])
-        self.send("accountInfo",
-                  nPers=len(self.characters),
-                  can_create=1)
+        self.send("accountInfo", nPers=len(self.characters), can_create=1)
 
     def cmd_logout(self, p):
         self.writer.close()
+
+    # --- character -------------------------------------------------------
+    def cmd_newPers(self, p):
+        self.characters = [{"name": p.get("name", "Noname"),
+                            "sex": p.get("sex", 0),
+                            "res": p.get("res", 1)}]
+        self.active = self.characters[0]
+        # The client plays its intro after this, then sends actPlayer itself.
+        self.send("cmdAck", res=0)
+
+    def cmd_selPers(self, p):
+        # Deliberately no cmdAck: PersGenerator does not register a handler for
+        # one, so replying here would be consumed by the next command's.
+        idx = int(p.get("num", 0))
+        if idx < len(self.characters):
+            self.active = self.characters[idx]
+        self.enter_location()
+
+    def cmd_actPlayer(self, p):
+        self.send("cmdAck", res=0)
+        self.enter_location()
+
+    # --- world -----------------------------------------------------------
+    def enter_location(self):
+        # ie != 1 means the client must confirm with lenter;accept=1 once it
+        # has finished loading the location's XML and artwork.
+        self.send("lcall", id=START_LOC, ws=0, ie=0, g_id=START_LOC)
+
+    def cmd_lenter(self, p):
+        self.send("cmdAck", res=0)
+        # aspd is the action-point gain per 600ms tick, amax the ceiling.
+        self.send("lenter", pos=self.pos, aspd=1, amax=20)
+
+    def cmd_chWorld(self, p):
+        self.send("cmdAck", res=0)
+
+    def cmd_getInfo(self, p):
+        if int(p.get("id", 0)) != 0:
+            return
+        pers = self.active or {"name": "Noname", "sex": 0, "res": 1}
+        self.send("userInfo_Player",
+                  id=0, name=Str(pers["name"]), sex=pers["sex"],
+                  res=pers["res"], ail=0, ally=1, lvl=1,
+                  rep=[0], bg_rep=0, bg_pen=0, clan=0,
+                  hl=0, pr=0,
+                  afro=1000, gold=0, tr=0, tr_hours=0)
+        self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
+
+    def cmd_rp_get_info(self, p):
+        """Attributes, skills and specialisations, despite the name.
+
+        Each group is a bitmask plus a dense list holding only the slots the
+        mask sets. A specialisation with a negative value counts as not yet
+        learned.
+        """
+        self.send("rp_info",
+                  a_attribs_mask=full_mask(ATTRIBS), a_attribs=[5] * ATTRIBS,
+                  f_attribs_mask=full_mask(ATTRIBS), f_attribs=[5] * ATTRIBS,
+                  a_skills_mask=full_mask(SKILLS), a_skills=[1] * SKILLS,
+                  f_skills_mask=full_mask(SKILLS), f_skills=[1] * SKILLS,
+                  xp_skills_mask=full_mask(SKILLS), xp_skills=[1] * SKILLS,
+                  xp_max_skills_mask=full_mask(SKILLS),
+                  xp_max_skills=[100] * SKILLS,
+                  a_specs_mask=full_mask(SPECS), a_specs=[-1] * SPECS,
+                  f_specs_mask=full_mask(SPECS), f_specs=[1] * SPECS,
+                  xp_specs_mask=full_mask(SPECS), xp_specs=[1] * SPECS,
+                  xp_max_specs_mask=full_mask(SPECS),
+                  xp_max_specs=[100] * SPECS,
+                  max_specs=3,
+                  hp=100, hp_max=100, sp=100, sp_max=100,
+                  ap_max=20, max_weight=50000, armor=1, lvl=1)
+
+    def cmd_ss_get(self, p):
+        # Answer even when empty; ItemFactory pipelines these and stops
+        # issuing new ones until each outstanding request comes back.
+        self.send("ss_ack", o_list=[])
+
+    def cmd_q_list(self, p):
+        # QuestInspector allows exactly one outstanding quest request, so a
+        # missing answer wedges the whole quest pipeline.
+        self.send("q_list", q_id=[], q_types=[])
+
+    def cmd_q_status(self, p):
+        self.send("q_status", type=int(p.get("q_type", 0)), status=0,
+                  name=0, q_type=0)
+
+    def cmd_moveTo(self, p):
+        """Echo the path back; the client renders no step until we do.
+
+        Location.movePlayer only records the destination and sends the frame.
+        The walk animation starts solely from a server userMove, including for
+        the player who asked.
+        """
+        path = p.get("path")
+        if not path:
+            return
+        self.pos = int(path[-1])
+        self.send("userMove", id=0, path=[int(c) for c in path])
 
 
 async def handle_client(reader, writer):
@@ -146,7 +270,8 @@ async def main():
         log.info("policy server on %s:%d", HOST, POLICY_PORT)
         servers.append(pol)
     except PermissionError:
-        log.warning("no permission for port %d; policy served inline only", POLICY_PORT)
+        log.warning("no permission for port %d; policy served inline only",
+                    POLICY_PORT)
     await asyncio.gather(*(s.serve_forever() for s in servers))
 
 
