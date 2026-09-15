@@ -11,7 +11,21 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PORT = 19776
+def free_port():
+    """A port nobody holds right now.
+
+    Fixed ports made the verdict depend on who else was testing: with two
+    checkouts running the suites at once, the second server failed to bind
+    and the test talked to the first one's, passing or failing on code it
+    was not built from.
+    """
+    import socket
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+PORT = free_port()
 ENC = "utf-8"
 
 # This test walks the character-creation path, so it needs the empty

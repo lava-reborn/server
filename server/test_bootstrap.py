@@ -2,7 +2,21 @@
 import os, re, subprocess, sys, time, urllib.request, urllib.error
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PORT = 18080
+def free_port():
+    """A port nobody holds right now.
+
+    Fixed ports made the verdict depend on who else was testing: with two
+    checkouts running the suites at once, the second server failed to bind
+    and the test talked to the first one's, passing or failing on code it
+    was not built from.
+    """
+    import socket
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+PORT = free_port()
 BASE = "http://127.0.0.1:%d" % PORT
 env = dict(os.environ, LAVA_HTTP_PORT=str(PORT),
            LAVA_GAME_HOST="127.0.0.1", LAVA_GAME_PORT="9775")
