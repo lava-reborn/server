@@ -99,10 +99,12 @@ try:
     # ie=0 in lcall means the client confirms once its assets have loaded.
     # The location's own inhabitants follow immediately, one lch frame each.
     c.send("lenter;accept=1;")
-    got = c.frames()
+    got = c.frames(wait=2)
     names = [f.split(";")[0] for f in got]
-    check("lenter acked then positioned", names[:2], ["cmdAck", "lenter"])
-    check("spawn cell sent", "pos=" in got[1], True)
+    # No acknowledgement on success: the client cancels the one it registered
+    # as soon as the lenter frame arrives.
+    check("positioned without an ack", names[0], "lenter")
+    check("spawn cell sent", "pos=" in got[0], True)
     check("inhabitants placed", names.count("lch") > 0, True)
     # each placement is followed immediately by that inhabitant's details
     check("described alongside placement",
@@ -212,7 +214,7 @@ try:
     # and the cell the settlement occupies rides packed into g_id
     check("map cell packed into g_id", "g_id=48907970;" in got[1], True)
     c.send("lenter;accept=1;")
-    c.frames()
+    c.frames(wait=2)
     c.send("chWorld;")
     c.frames()
 
