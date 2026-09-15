@@ -91,10 +91,10 @@ try:
     check("lenter acked then positioned", names[:2], ["cmdAck", "lenter"])
     check("spawn cell sent", "pos=" in got[1], True)
     check("inhabitants placed", names.count("lch") > 0, True)
-    # registered without a figure first, so their details can land before
-    # anything is drawn
-    check("registration precedes description",
-          "refl=" in " ".join(f for f in got if f.startswith("lch")), True)
+    # each placement is followed immediately by that inhabitant's details
+    check("described alongside placement",
+          names.count("lch") == len([n for n in names if n.startswith("userInfo")]),
+          True)
     first_npc = [f for f in got if f.startswith("lch")][0]
     check("inhabitant carries a class", "rtype=" in first_npc, True)
 

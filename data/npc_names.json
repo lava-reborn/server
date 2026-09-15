@@ -1,0 +1,40 @@
+{
+  "_note": "Real names recovered from lava-online.fandom.com, matched to the client's type ids by the role each wiki page describes. The file that carried these in the live game, res/database/texts.xml, is one of the two missing from the shipped client. Wiki text is CC-BY-SA. Ids absent here fall back to the internal name.",
+  "_source": "https://lava-online.fandom.com/ru/wiki/Черный_рынок_Вади-Хальфы",
+  "names": {
+    "711": "Золотая лотерея",
+    "2424": "Аарон",
+    "1200": "Пистолеты и патроны",
+    "1201": "Дробовики и патроны",
+    "1202": "Винтовки и патроны",
+    "1203": "Пистолет-пулеметы и патроны",
+    "653": "Шихаб",
+    "1205": "Хамис",
+    "1204": "Ваккас",
+    "636": "Савин",
+    "5": "Мастер Тиль",
+    "1152": "Однопальцый",
+    "1206": "Люций",
+    "1207": "Магдалена",
+    "2279": "Точильный камень",
+    "652": "Техногик"
+  },
+  "internal": {
+    "711": "wh_lotery_g",
+    "2424": "noobia_bank",
+    "1200": "wh_Pistols",
+    "1201": "wh_Shotguns",
+    "1202": "wh_Rifles",
+    "1203": "wh_SubMachineGuns",
+    "653": "wh_Lessor",
+    "1205": "wh_set_trd",
+    "1204": "wh_wear_trd",
+    "636": "presents_trader_g",
+    "5": "Simple_Upgrader",
+    "1152": "wh_knife_trd",
+    "1206": "wh_med_battle",
+    "1207": "wh_med_simple",
+    "2279": "wh_modif_knifes",
+    "652": "wh_technogeek"
+  }
+}

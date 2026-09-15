@@ -203,11 +203,8 @@ class Session:
         # frame still has to carry pos: Location.lch ignores the whole frame
         # unless newUser, pos and rtype are all present, refl or not.
         for npc_id, (cell, _type, root) in self.npcs.items():
-            self.send("lch", newUser=npc_id, pos=cell, rtype=root, refl=1)
-        for npc_id in self.npcs:
-            self.send_npc_info(npc_id)
-        for npc_id, (cell, _type, root) in self.npcs.items():
             self.send("lch", newUser=npc_id, pos=cell, rtype=root)
+            self.send_npc_info(npc_id)
         log.info("  ..    placed %d inhabitants in %s",
                  len(self.npcs), LOCATION.title)
 
