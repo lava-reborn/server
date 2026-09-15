@@ -17,6 +17,7 @@ and the game_session.php endpoint entirely.
 """
 import os
 import posixpath
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
@@ -30,7 +31,7 @@ CSETTINGS = """<?xml version="1.0" encoding="windows-1251"?>
 <settings>
   <gamesrv host="{host}" port="{port}"/>
   <debug value="1"/>
-  <resource base="/res/">
+  <resource base="http://{host}:{http_port}/res">
     <item_icon format="swf">classes/</item_icon>
     <item_anim format="swf">classes/</item_anim>
     <avatar_list format="xml">avatars/list.xml</avatar_list>
@@ -94,7 +95,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def log_message(self, fmt, *args):
-        print("  HTTP %s" % (fmt % args))
+        print("  HTTP %s" % (fmt % args), flush=True)
 
     def do_POST(self):
         path = urlparse(self.path).path
@@ -116,7 +117,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(CROSSDOMAIN, "text/x-cross-domain-policy")
             return
         if path == "/res/xmldocs/csettings_v1.xml":
-            self._send(CSETTINGS.format(host=GAME_HOST, port=GAME_PORT), "text/xml")
+            self._send(CSETTINGS.format(host=GAME_HOST, port=GAME_PORT,
+                                        http_port=HTTP_PORT), "text/xml")
             return
         if path.startswith("/res/"):
             rel = path[len("/res/"):].replace("/", os.sep)
