@@ -16,6 +16,7 @@ Two rules govern nearly every handler here (see PROTOCOL.md):
 import asyncio
 import logging
 import os
+import signal
 
 import accounts
 import items
@@ -28,18 +29,52 @@ PORT = int(os.environ.get("LAVA_PORT", "9775"))
 POLICY_PORT = 843
 STORE = accounts.Store()
 
+# Every connection with a Session behind it, so a stop can reach them all.
+# handle_client adds on connect and removes in its finally.
+SESSIONS = set()
+
 # Commands whose sender registers a cmdAck handler, gathered from the client:
 # mail, clans, party, auction, battlegrounds, item sessions, quests, map marks
 # and chat all do. Anything here has to be answered, implemented or not.
+#
+# Not here, because the client sends them without registering anything, and
+# an answer would be consumed by whichever command comes next:
+#   ah_search  -- Auction.search waits on its own ah_sresult queue instead
+#   updMark    -- GlobalMap.editMark just sends; insMark and rmMark do register
+# Two more are in the set but only for some of their op values; see
+# expects_ack() below.
 EXPECTS_ACK = {
     "chkml", "getml", "sndml", "rmvml", "uldml",
     "p_op", "admit", "apply", "head", "gg_info", "c_ga",
-    "ah_create", "ah_op", "ah_search", "bg_op",
+    "ah_create", "ah_op", "bg_op",
     "ss_move", "ss_use", "ss_heap_c", "ss_create", "ss_upd",
     "on_conv", "q_st", "q_co", "q_ca",
-    "insMark", "updMark", "rmMark",
+    "insMark", "rmMark",
     "userMsg", "resurrect", "actPlayer", "newPers", "lenter", "chWorld",
 }
+
+
+def expects_ack(cmd, params):
+    """Whether this particular frame put a handler on the client's queue.
+
+    For most commands that is a property of the command. For two it depends
+    on the op value, because the same CSM class is sent from several places
+    in the client and only some of them call XMLCCallStack.addCall:
+
+      bg_op  BattleGroundManager registers for 0 (join queue) and 2 (leave
+             queue) only; 3/4 answer an invitation, 5/7 leave a battleground
+             and 6 asks for its info, all fire-and-forget.
+      p_op   op 5 asks for the party list and is sent from errorReport with
+             no handler; every other op (invite, kick, yes/no, leader)
+             registers one. Caveat: op 3 is also sent unregistered from the
+             auto-decline branch of PartyManager, so a player with that
+             setting on will drift by one there; nothing here can tell.
+    """
+    if cmd == "bg_op":
+        return int(params.get("op", -1)) in (0, 2)
+    if cmd == "p_op":
+        return int(params.get("op", -1)) != 5
+    return cmd in EXPECTS_ACK
 
 # Where a new character starts, as a cell of the global map. Cell 5970x1730
 # is "Черный рынок Вади-Хальфы": peaceful (war="0", so walking costs no action
@@ -103,6 +138,7 @@ class Session:
     def __init__(self, writer, peer):
         self.writer = writer
         self.peer = peer
+        self.closed = False
         self.hash = None
         self.logged_in = False
         self.account = None
@@ -120,6 +156,10 @@ class Session:
         self.leg = None
         # entity id -> (cell, type_id, rtype) for everything placed
         self.npcs = {}
+        # s_type of the open session with an NPC (StuffManager.SESSION_*:
+        # 1 trade, 2 barter, 3 bank, 4 training, 5 upgrade, 6 trophies), or
+        # None. Which ss_upd frames get acknowledged depends on it.
+        self.npc_session = None
 
     # --- plumbing --------------------------------------------------------
     def send(self, *_cmd, **params):
@@ -137,7 +177,7 @@ class Session:
             # Commands that register a handler must be answered even when the
             # feature does not exist yet. A refusal keeps the queue in step; a
             # silence shifts every later reply onto the wrong handler.
-            if cmd in EXPECTS_ACK:
+            if expects_ack(cmd, params):
                 self.send("cmdAck", res=3)
             return
         try:
@@ -206,11 +246,34 @@ class Session:
         self.close()
 
     def close(self):
+        """Put the character away and drop the connection.
+
+        Reached three ways -- logout, the finally in handle_client once the
+        socket is gone, and a server stop -- and usually two of them in a
+        row, so it has to be a no-op the second time: one write of the
+        position, one close of the transport.
+        """
+        if self.closed:
+            return
+        self.closed = True
         self.cancel_travel()
         if self.char_id:
             STORE.save_position(self.char_id, self.loc.id, self.pos,
                                 self.gx, self.gy, self.on_map)
         self.writer.close()
+
+    def shutdown(self):
+        """The server is going: say so, then close as on logout.
+
+        Session.shutdown in the client (Session.as:216) answers the frame
+        with an alert -- "Сервер будет остановлен через N секунд" -- and
+        asks for a restart, so the socket closing right behind it is what
+        the player has just been told to expect.
+        """
+        if self.closed:
+            return
+        self.send("shutdown", seconds=0)
+        self.close()
 
     # --- character -------------------------------------------------------
     def cmd_newPers(self, p):
@@ -346,6 +409,13 @@ class Session:
             self.on_map = True
             self.cancel_travel()
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
+            # Master.gmap builds a fresh GlobalMap every time, and its
+            # markList only comes into being in GlobalMap.marks(): dxdy is
+            # pairs of whole cells relative to the player, title and info
+            # run parallel to each other. Without this frame addMark pushes
+            # into undefined and the bookmarks panel is dead until relogin.
+            # No marks are stored yet, so the lists are empty.
+            self.send("marks", dxdy=[], title=[], info=[])
 
     def enter_cell(self):
         """Walk into whatever occupies the cell under the player.
@@ -408,11 +478,12 @@ class Session:
                      % (self.loc.title, self.loc.file, self.loc.fn or "-",
                         round(self.gx), round(self.gy)), group)
             return
-        # Ordinary talk comes back to the sender, which is how the client
-        # shows it: it prints nothing of its own when a message is typed.
-        pers = self.active or default_character()
-        self.send("userMsg", entry=Str(text), group=group,
-                  nick=Str(pers["name"]), **{"from": 0})
+        # Ordinary talk is NOT echoed to the sender. Chat.send keeps the text
+        # it typed and registers delivery() on the acknowledgement; on res=0
+        # delivery() prints that line itself as Gamer.ID, through the same
+        # newMessage() an incoming userMsg goes through. An echo on top of
+        # that showed every message twice. Once there are other players, the
+        # line goes to them and only them.
 
     def cmd_goto(self, args, group=0):
         """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
@@ -509,12 +580,18 @@ class Session:
             self.send_npc_info(who)
             return
         pers = self.active or default_character()
+        # No tr/tr_hours here until the player actually rents a transport.
+        # Gamer.userInfo hands tr straight to TransportFactory.create, which
+        # does not treat 0 as "none": it builds a TransObject(0), requests
+        # its static info with ts_get_si and the player is riding a vehicle
+        # type that does not exist. Leaving the key out leaves transport
+        # undefined, which is what the client means by walking.
         self.send("userInfo_Player",
                   id=0, name=Str(pers["name"]), sex=pers["sex"],
                   res=Str(str(pers["res"])), ail=0, ally=1, lvl=1,
                   rep=[0], bg_rep=0, bg_pen=0, clan=0,
                   hl=0, pr=0,
-                  afro=1000, gold=0, tr=0, tr_hours=0)
+                  afro=1000, gold=0)
         self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
 
     def send_npc_info(self, npc_id):
@@ -602,9 +679,33 @@ class Session:
 
     def cmd_ss_create(self, p):
         """Open a session with an NPC: trade, bank, training and the rest."""
+        self.npc_session = int(p.get("s_type", 0) or 0)
         self.send("cmdAck", res=0)
 
     def cmd_ss_upd(self, p):
+        """Acknowledge only the ss_upd frames the client waits on.
+
+        s_status=0 closes the session, and every session class sends it
+        bare -- Trade, Bank, Upgrade, Training and Loot from close(), Barter
+        from close(), TrophyManager from closeSession() -- with no
+        XMLCCallStack.addCall. Answering it handed the acknowledgement to
+        whatever the player did next, so closing a shop was enough to put
+        the queue off by one for the rest of the session.
+
+        Barter has three more that go out bare: 2 deny (denyBarter and the
+        awaitingAnswer timeout), 5 apply and 6 break (readyToBarter). The
+        same numbers in a trade session are sell, gold repair and trophy
+        registration, all of which do register, so the session type has to
+        be known. Once barter proposals are relayed, a deny can also come
+        from the side that never sent ss_create; the relay will have to set
+        npc_session for it.
+        """
+        s_status = int(p.get("s_status", 0) or 0)
+        if s_status == 0:
+            self.npc_session = None
+            return
+        if self.npc_session == 2 and s_status in (2, 5, 6):
+            return
         self.send("cmdAck", res=0)
 
     def cmd_ss_get_s_si(self, p):
@@ -615,6 +716,12 @@ class Session:
     def cmd_ss_get(self, p):
         # Answer even when empty; ItemFactory pipelines these and stops
         # issuing new ones until each outstanding request comes back.
+        #
+        # slot=32 (PersEquip.requestPublicTrophy) is the one ss_get that
+        # registers on both queues, ss_ack and cmdAck, and whichever answer
+        # lands first skipCalls the other. So it gets the same single ss_ack
+        # as the rest and no cmdAck: a second answer would be consumed by the
+        # next command's handler.
         self.send("ss_ack", o_list=[])
 
     def cmd_q_list(self, p):
@@ -651,22 +758,44 @@ class Session:
         the player who asked.
         """
         path = p.get("path")
-        if not path:
-            return
         # Location.movePlayer registers a cmdAck handler for every single step
         # it asks for. Leaving those unanswered does not stall movement, since
         # that handler is empty, but the queue is strictly ordered: each later
         # reply is then handed to a stale mover instead of the command that
         # earned it, and things like opening a shop quietly stop working.
+        #
+        # A refusal is not an acknowledgement with a non-zero res, it is a
+        # breakMv, and it goes INSTEAD of the cmdAck: Location.breakMv starts
+        # with skipCall("cmdAck", moveCmdAck), taking that handler off the
+        # queue itself, and then snaps the walker to pos. Sending both would
+        # hand the ack to the next command. id=0 is the player's own walker
+        # (Location.getWalker treats a falsy id as the gamer).
+        if not self.valid_path(path):
+            self.send("breakMv", id=0, pos=self.pos)
+            return
         self.send("cmdAck", res=0)
         self.pos = int(path[-1])
         self.send("userMove", id=0, path=[int(c) for c in path])
+
+    def valid_path(self, path):
+        """The structural check only: a real one is task 1.8.
+
+        Cells must exist in this location's grid. The client's own findPath
+        never produces anything else, so whatever fails here came from a
+        modified client or a desync, and either way the walker is put back
+        where the server has it.
+        """
+        if not isinstance(path, list) or not path:
+            return False
+        cells = self.loc.width * self.loc.height
+        return all(isinstance(c, int) and 0 <= c < cells for c in path)
 
 
 async def handle_client(reader, writer):
     peer = writer.get_extra_info("peername")
     log.info("connect %s", peer)
     sess = Session(writer, peer)
+    SESSIONS.add(sess)
     fr = FrameReader()
     try:
         while True:
@@ -690,7 +819,11 @@ async def handle_client(reader, writer):
     except (ConnectionResetError, asyncio.IncompleteReadError):
         pass
     finally:
+        # A link that simply breaks lands here too, with no logout before
+        # it, and the position is written all the same; close() is what
+        # makes that safe after a logout already wrote it.
         log.info("disconnect %s", peer)
+        SESSIONS.discard(sess)
         sess.close()
 
 
@@ -715,7 +848,43 @@ async def main():
     except PermissionError:
         log.warning("no permission for port %d; policy served inline only",
                     POLICY_PORT)
-    await asyncio.gather(*(s.serve_forever() for s in servers))
+    # run.sh stop sends SIGTERM and a terminal sends SIGINT. Either one only
+    # raises the flag; the leaving is done below, on the loop, so a handler
+    # in the middle of a frame finishes it first. Without this the loop just
+    # died with every handle_client parked in read(), no finally ran, and
+    # whoever was online came back wherever they had logged out the time
+    # before.
+    loop = asyncio.get_running_loop()
+    stopping = asyncio.Event()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, stopping.set)
+    await stopping.wait()
+    await shutdown(servers)
+
+
+async def shutdown(servers):
+    """Stop listening, warn and save everyone online, then let the loop end.
+
+    Each client is told with a shutdown frame before its position is
+    written and its socket closed, and the writers are awaited so that
+    frame is actually on the wire before the process is gone.
+    """
+    log.info("shutting down, %d session(s) online", len(SESSIONS))
+    for srv in servers:
+        srv.close()
+    live = list(SESSIONS)
+    for sess in live:
+        sess.shutdown()
+    await asyncio.gather(*(sess.writer.wait_closed() for sess in live),
+                         return_exceptions=True)
+    # Every connection has been closed above, so this only waits for their
+    # handlers to notice; the timeout is a guard, not an expectation.
+    try:
+        await asyncio.wait_for(
+            asyncio.gather(*(srv.wait_closed() for srv in servers)), 5)
+    except asyncio.TimeoutError:
+        log.warning("listeners did not close in time; leaving anyway")
+    log.info("stopped")
 
 
 if __name__ == "__main__":

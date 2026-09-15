@@ -101,6 +101,15 @@ try:
     # SceneShifter.enterScene() -- the login screen. So one string fetched
     # after login throws the player back out. Only a cache filled up front
     # keeps a second fetch from ever happening.
+    # hints.xml is the other file the shipped client lacks. It is asked for
+    # with LoadVars, so over POST as well, and read like the rest of the
+    # client's XML: UTF-8 with a byte order mark.
+    code, hints = post('/res/hints/hints.xml')
+    check('hints stub answers', code, 200)
+    check('hints stub is utf-8 with BOM', hints[:3], bytes([0xEF, 0xBB, 0xBF]))
+    check('hints stub is an empty document', b'<data/>' in hints, True)
+    check('hints stub over GET too', b'<data/>' in get('/res/hints/hints.xml'), True)
+
     everything = get('/res/database/texts.xml?all=1')
     check('all=1 is not empty', len(everything) > 100000, True)
     sys.path.insert(0, HERE)
