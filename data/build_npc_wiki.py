@@ -649,8 +649,14 @@ def main():
                       if c["role_ok"] and c["city_ok"] is not False
                       and c["type_id"] != cand["type_id"]]
             sure = cand["role_ok"] and cand["city_ok"] is not False
+            # Four apprentices scoring the same against six dn_modif_*
+            # commoners is a coin toss, whatever the score says.
+            tie = any(c["score"] == cand["score"] for c in place["candidates"]
+                      if c["type_id"] != cand["type_id"] and c["role_ok"])
             if cand["trusted"]:
                 conf = "verified"
+            elif sure and tie and cand["name_hit"] != 2:
+                conf = "low"
             elif sure and (cand["name_hit"] == 2 or cand["keyword_hit"] > 0):
                 conf = "high"
             elif sure and cand["name_hit"] == 1:

@@ -47168,7 +47168,7 @@
       }
      ],
      "city": "Донгола",
-     "confidence": "high",
+     "confidence": "low",
      "how": "title",
      "internal": "dn_modif_machingun",
      "loc_ids": [
@@ -47411,7 +47411,7 @@
       }
      ],
      "city": "Донгола",
-     "confidence": "high",
+     "confidence": "low",
      "how": "title",
      "internal": "dn_modif_assrifle",
      "loc_ids": [
@@ -48235,7 +48235,7 @@
       }
      ],
      "city": "Абу-Хамед",
-     "confidence": "high",
+     "confidence": "low",
      "how": "title",
      "internal": "ah_modif_assrifle",
      "loc_ids": [
@@ -49057,7 +49057,7 @@
       }
      ],
      "city": "Абу-Хамед",
-     "confidence": "high",
+     "confidence": "low",
      "how": "title",
      "internal": "ah_modif_machingun",
      "loc_ids": [
@@ -49295,7 +49295,7 @@
       }
      ],
      "city": "Абу-Хамед",
-     "confidence": "high",
+     "confidence": "low",
      "how": "title",
      "internal": "ah_modif_rifle",
      "loc_ids": [
@@ -49516,7 +49516,7 @@
       }
      ],
      "city": "Донгола",
-     "confidence": "high",
+     "confidence": "low",
      "how": "title",
      "internal": "dn_modif_submachgun",
      "loc_ids": [
@@ -49756,7 +49756,7 @@
       }
      ],
      "city": "Донгола",
-     "confidence": "high",
+     "confidence": "low",
      "how": "title",
      "internal": "dn_modif_rifle",
      "loc_ids": [
