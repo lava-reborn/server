@@ -162,8 +162,13 @@ check("the station is found despite the word order",
 check("an unnamed cell still leads somewhere",
       world.location_at(6100, 1900), world.pack(6100, 1900))
 # Fractional positions arrive mid-travel; the cell is the one the map drew.
-check("a fractional position rounds to the cell under it",
-      world.location_at(5970.4, 1729.6), 102)
+# The client floors a position to its cell (DisplayGlobalMap.as:207), and
+# draws the settlement from that square's corner, so 5970.9 is still cell
+# 5970 while 5969.9 is the neighbour's, however close it looks.
+check("a fractional position floors to the cell under it",
+      world.location_at(5970.9, 1730.9), 102)
+check("and just short of the square is the cell before",
+      world.location_at(5969.9, 1730.5) == 102, False)
 
 # Every recovered settlement has to resolve, or a cell on the map opens
 # nothing at all.

@@ -282,4 +282,6 @@ if __name__ == "__main__":
     print("res root : %s" % RES_ROOT)
     print("game srv : %s:%s" % (GAME_HOST, GAME_PORT))
     print("http     : http://127.0.0.1:%d/" % HTTP_PORT)
+    # Build the 1.9 MB string table before the client can ask for it.
+    names.document()
     ThreadingHTTPServer(("127.0.0.1", HTTP_PORT), Handler).serve_forever()

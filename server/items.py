@@ -595,3 +595,17 @@ def wiki_descs():
         if text and t in catalogue():
             out[t] = text
     return out
+
+
+def preload():
+    """Read every table now, before the first connection is accepted.
+
+    The wiki files run to megabytes and were parsed on first use -- inside
+    whatever handler happened to touch an item first, which held the event
+    loop for a couple of seconds and delayed every reply to every client.
+    A server may read its content at start; a request may not wait for it.
+    """
+    catalogue()
+    wiki()
+    links()
+    stock_table()

@@ -396,7 +396,7 @@ class Mail:
             fields = {f: s[f] for f in accounts.ITEM_FIELDS}
             fields["slot"] = inventory.BAG
             created.append(self.store.create_item(
-                self.char_id, s["type_id"], s["root"], **fields))
+                self.char_id, s["type_id"], s["root"], **{k: v for k, v in fields.items() if k not in ('char_id', 'uniq')}))
         if offer:
             ch.add_money(-afro, -gold)
         else:

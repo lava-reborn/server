@@ -1,5 +1,6 @@
 """End-to-end: replay exactly what lol.core.Session.as sends, against server.py."""
 import socket, subprocess, sys, time, os
+import threading
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -34,6 +35,15 @@ env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
 
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+
+# The log outgrows a pipe that nobody drains: at 64 KB the write blocks and
+# the server stops answering in the middle of the test, which showed up as
+# frames going missing at whatever step happened to cross the threshold.
+# Drain it as it comes, the way test_combat and test_quests already do.
+_log = []
+_drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
+_drain.start()
 
 def wait_port(port, timeout=10):
     end = time.time() + timeout
@@ -83,7 +93,9 @@ try:
     time.sleep(0.3)
 finally:
     srv.terminate()
-    out = srv.communicate(timeout=5)[0]
+    srv.wait(timeout=5)
+    _drain.join(timeout=2)
+    out = "".join(_log)
     print("\n--- server log ---")
     print(out.strip())
 

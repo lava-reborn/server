@@ -1,5 +1,6 @@
 """Checks the HTTP bootstrap against what lol/core/Session.as actually does."""
 import os, re, subprocess, sys, time, urllib.request, urllib.error
+import threading
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 def free_port():
@@ -22,6 +23,15 @@ env = dict(os.environ, LAVA_HTTP_PORT=str(PORT),
            LAVA_GAME_HOST="127.0.0.1", LAVA_GAME_PORT="9775")
 srv = subprocess.Popen([sys.executable, "bootstrap_http.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+
+# The log outgrows a pipe that nobody drains: at 64 KB the write blocks and
+# the server stops answering in the middle of the test, which showed up as
+# frames going missing at whatever step happened to cross the threshold.
+# Drain it as it comes, the way test_combat and test_quests already do.
+_log = []
+_drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
+_drain.start()
 
 fails = []
 def check(label, got, want):
@@ -173,7 +183,7 @@ try:
     check('landing page is utf-8', b'charset=utf-8' in page, True)
 finally:
     srv.terminate()
-    try: srv.communicate(timeout=5)
+    try: srv.wait(timeout=5)
     except Exception: srv.kill()
 
 print()

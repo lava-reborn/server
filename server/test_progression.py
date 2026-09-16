@@ -7,6 +7,7 @@ teacher's window as Training.as drives it, and everything still there after
 logging back in.
 """
 import os
+import threading
 import socket
 import sqlite3
 import subprocess
@@ -249,6 +250,15 @@ srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
 
+
+# The log outgrows a pipe that nobody drains: at 64 KB the write blocks and
+# the server stops answering in the middle of the test, which showed up as
+# frames going missing at whatever step happened to cross the threshold.
+# Drain it as it comes, the way test_combat and test_quests already do.
+_log = []
+_drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
+_drain.start()
+
 def connect(timeout=10):
     end = time.time() + timeout
     while time.time() < end:
@@ -446,7 +456,9 @@ try:
     c.send("logout;")
 finally:
     srv.terminate()
-    out = srv.communicate(timeout=5)[0]
+    srv.wait(timeout=5)
+    _drain.join(timeout=2)
+    out = "".join(_log)
     if "Traceback" in out:
         fails.append("server logged a traceback:\n" + out[-2000:])
 

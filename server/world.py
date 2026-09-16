@@ -11,6 +11,7 @@ extra byte follows, and 8 for mob spawns, whose last four characters are the
 type id. A hex cell's number is gy * width + gx.
 """
 import json
+import math
 import os
 import re
 
@@ -204,7 +205,12 @@ def location_at(gx, gy):
     Always answers: a cell with no settlement on it is open desert, and the
     packed cell is its own location id.
     """
-    cell = (int(round(gx)), int(round(gy)))
+    # Floor, not round: the client's own cell under a position is
+    # Math.floor(x) (DisplayGlobalMap.as:207, DisplayLandscape.as:29), the
+    # settlement icon is drawn from the cell's top-left corner, and a player
+    # standing anywhere on that square expects to walk into it. Rounding
+    # sent the half of the square past its centre into the neighbour.
+    cell = (int(math.floor(gx)), int(math.floor(gy)))
     found = settlements().get(cell)
     return pack(cell[0], cell[1]) if found is None else found
 

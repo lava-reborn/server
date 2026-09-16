@@ -9,6 +9,7 @@ A connection that simply breaks has to save the same way, with no logout
 before it.
 """
 import os
+import threading
 import signal
 import socket
 import sqlite3
@@ -54,6 +55,15 @@ env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
 
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+# The log outgrows a pipe that nobody drains: at 64 KB the write blocks and
+# the server stops answering in the middle of the test, which showed up as
+# frames going missing at whatever step happened to cross the threshold.
+# Drain it as it comes, the way test_combat and test_quests already do.
+_log = []
+_drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
+_drain.start()
+
 out = ""
 
 fails = []
@@ -73,7 +83,7 @@ def connect(timeout=10):
         # (a port taken after all), connecting would reach whoever has it.
         if srv.poll() is not None:
             raise SystemExit("server exited before listening:\n"
-                             + srv.communicate()[0][-1500:])
+                             + "".join(_log)[-1500:])
         try:
             return socket.create_connection(("127.0.0.1", PORT), 0.5)
         except OSError:
@@ -184,7 +194,9 @@ try:
     check("the client is told before the socket closes",
           got, ["shutdown;seconds=0;"])
     check("and the socket does close", c.eof, True)
-    out = srv.communicate(timeout=10)[0]
+    srv.wait(timeout=10)
+    _drain.join(timeout=2)
+    out = "".join(_log)
     check("server exits cleanly", srv.returncode, 0)
     check("position written on shutdown", saved(), (loc_id, 493))
     check("one save per session, not two",
@@ -192,7 +204,9 @@ try:
 finally:
     if srv.poll() is None:
         srv.terminate()
-        out = srv.communicate(timeout=5)[0]
+        srv.wait(timeout=5)
+        _drain.join(timeout=2)
+        out = "".join(_log)
     if "Traceback" in out:
         fails.append("server logged a traceback:\n" + out[-1500:])
 

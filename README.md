@@ -36,11 +36,11 @@
 Регистрация — в браузере на `http://127.0.0.1:8080/`. Тестовый аккаунт
 `polestvr` / `lava1234`.
 
-Тесты (тринадцать серверных наборов и два по данным, все обязаны быть
+Тесты (четырнадцать серверных наборов и два по данным, все обязаны быть
 зелёными перед коммитом):
 
 ```bash
-cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests test_social test_items; do python3 $t.py || break; done
+cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests test_social test_items test_combat; do python3 $t.py || break; done
 python3 data/test_wiki_data.py && python3 data/test_world_data.py
 ```
 
@@ -65,6 +65,10 @@ server/
                      ТТХ с вики (items_wiki.json), стоки торговцев с вики, имена и описания
   names.py           единая таблица строк (имена мобов, предметов, НПС, описания, квесты)
   accounts.py        SQLite: аккаунты, персонажи, позиция
+  combat.py          бой: ss_use 16/2/4, ОД и ws комнаты, резолверы выстрела и удара,
+                     HP/SP через usrUp, смерть/воскрешение, лут-сессия, e_si/e_di
+  mobs.py            модель моба из data/mob_types.json + mob_curves.json, геометрия
+                     гексов как в LocationGrid.as, BFS и конечный автомат ИИ
   bootstrap_http.py  HTTP: ресурсы клиента, регистрация, texts.xml, loaduser
   mail.py            почта: письма, вложения, тарифы, возврат посылок
   party.py           отряд: p_op/p_m, канал 1, «в сети/отключился»

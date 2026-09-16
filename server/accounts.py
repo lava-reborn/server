@@ -144,7 +144,9 @@ CHARACTER_COLUMNS = [
     ("kit", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
-ITEM_FIELDS = ("slot", "count", "brk", "max_break_cur", "ammo_count",
+# char_id is updatable too: an item picked out of a loot bag keeps its
+# serial, and with it the oid the client already holds it under (combat.py).
+ITEM_FIELDS = ("char_id", "slot", "count", "brk", "max_break_cur", "ammo_count",
                "ammo_type", "cur_mode", "use_count")
 
 

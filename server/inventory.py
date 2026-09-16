@@ -350,10 +350,11 @@ class Inventory:
         if mask & MASK_BAG:
             out += [BigUInt(oid_of(r)) for r in rows if r["slot"] == BAG]
         if mask & MASK_SESSION:
-            # The divider, then whatever the open session holds. Only the
-            # bank, loot and trophies ask with this bit, and none of the
-            # three exists yet, so the tail stays empty for now.
+            # The divider, then whatever the open session holds: a loot bag
+            # on the ground (combat.py); the bank and trophies do not exist
+            # yet, so with no bag open the tail stays empty.
             out.append(EMPTY)
+            out += [BigUInt(oid_of(r)) for r in self.sess.combat.session_items()]
         return out
 
     def ss_get(self, p):
@@ -467,9 +468,9 @@ class Inventory:
         elif kind == USE_MODE:
             self.use_mode(p)
         else:
-            # Shooting, striking and healing belong to combat; until then a
-            # refusal keeps the acknowledgement queue in step.
-            self.ack(RES_REFUSED)
+            # Shooting, striking (16) and healing (2/4) are combat.py's; it
+            # answers with exactly one cmdAck as well, unknown bits included.
+            self.sess.combat.ss_use(kind, p)
 
     def use_delete(self, p):
         """type=0: throw the item away. The client removes nothing until

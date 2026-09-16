@@ -88,6 +88,10 @@ class Room:
         self.npcs = {}
         # sessions present, in order of arrival (dict as an ordered set)
         self.players = {}
+        # War state and the fight itself live in combat.RoomCombat, made on
+        # the first entry; ws is what lcall reports, and lch;ws=1/0 switch it.
+        self.ws = False
+        self.combat = None
         skipped = 0
         for cell, type_id in loc.spawns:
             # A creature the client has no record of cannot be drawn or named.
@@ -356,10 +360,13 @@ def player_info(sess):
     must be truthy; afro, gold and transport are read only by Gamer.userInfo
     for id 0 and are not sent for anyone else."""
     pers = sess.active
+    ch = sess.character()
     return dict(id=sess.pid, name=Str(pers["name"]), sex=pers["sex"],
-                res=Str(str(pers["res"])), ail=0, ally=1, lvl=1,
-                rep=[0], bg_rep=0, bg_pen=0, hl=0, pr=0)
+                res=Str(str(pers["res"])), ail=0, ally=1, lvl=ch.level,
+                rep=[ch.rep], bg_rep=ch.bg_rep, bg_pen=ch.bg_pen, hl=0,
+                pr=ch.premium_level())
 
 
 def player_health(sess):
-    return dict(id=sess.pid, hcur=HP_MAX, hmax=HP_MAX, scur=SP_MAX, smax=SP_MAX)
+    """usrUp about a stranger: their real bars, from their own Character."""
+    return dict(id=sess.pid, **sess.character().vitals())

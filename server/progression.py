@@ -16,6 +16,7 @@ constitution with the best skill, skills and specialisations with experience
 for actions. The player's only choice is which specialisations to buy from a
 teacher, and that is the one part of this that has a command today.
 """
+import os
 import time
 
 ATTRIBS = 5    # сила, ловкость, телосложение, восприятие, интеллект
@@ -94,8 +95,10 @@ RANKS = [(0, 100, "Странник"), (100, 200, "Следопыт"), (200, 400
 REP_CAP = RANKS[-1][1] - 1
 
 # Action points regained per 600 ms tick (APManager.dt) while in combat. The
-# original's value did not survive; one point a tick is a placeholder.
-AP_REGEN = 1
+# original's value did not survive; one point a tick is a placeholder. Sent
+# as lenter;aspd and applied by combat.py on the same clock; LAVA_AP_REGEN
+# lets a test fight without waiting for the bar.
+AP_REGEN = int(os.environ.get("LAVA_AP_REGEN", "1"))
 
 # FireArm.as weapon types, the key the card's crit formula switches on.
 PISTOL, SHOTGUN, ASSAULT, RIFLE, MACHINEGUN, SMG = range(6)

@@ -212,6 +212,37 @@ def strings():
     return out
 
 
+def kill_progress(store, char_id, mob_type):
+    """A mob of this type died by this character's hand: advance every
+    kill_mobs instance in the log that wants it.
+
+    Returns the q_di_kill_mobs frames to push, one per instance that moved.
+    KillMobQuest.update reads kill_num against what it holds and prints
+    "Убито N целей из M" for the slot that changed; the client counts
+    nothing itself, so a kill the server does not report never happened.
+    """
+    out = []
+    for row in store.quests(char_id):
+        quest = get(row["type"])
+        if not quest or quest.kind != KILL_MOBS or mob_type not in quest.mobs_kill:
+            continue
+        progress = json.loads(row["progress_json"])
+        kill_num = list(progress.get("kill_num", [0] * len(quest.mobs_kill)))
+        kill_num += [0] * (len(quest.mobs_kill) - len(kill_num))
+        moved = False
+        for i, wanted in enumerate(quest.mobs_kill):
+            if wanted == mob_type and kill_num[i] < quest.num_kill[i]:
+                kill_num[i] += 1
+                moved = True
+        if not moved:
+            continue
+        progress["kill_num"] = kill_num
+        complete = quest.is_complete(progress)
+        store.update_quest(row["q_id"], progress, complete)
+        out.append(quest.di_frame(row["q_id"], progress, complete))
+    return out
+
+
 def stub_si(quest_type):
     """An answer for a type we do not have.
 

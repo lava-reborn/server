@@ -9,6 +9,7 @@ dropped socket reported as "disconnected" and the same character back as
 "returned".
 """
 import os
+import threading
 import socket
 import subprocess
 import tempfile
@@ -50,6 +51,15 @@ env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB)
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
+
+# The log outgrows a pipe that nobody drains: at 64 KB the write blocks and
+# the server stops answering in the middle of the test, which showed up as
+# frames going missing at whatever step happened to cross the threshold.
+# Drain it as it comes, the way test_combat and test_quests already do.
+_log = []
+_drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
+_drain.start()
+
 fails = []
 
 
@@ -65,7 +75,7 @@ def connect(timeout=10):
     while time.time() < end:
         if srv.poll() is not None:
             raise SystemExit("server exited before listening:\n"
-                             + srv.communicate()[0][-1500:])
+                             + "".join(_log)[-1500:])
         try:
             return socket.create_connection(("127.0.0.1", PORT), 0.5)
         except OSError:
@@ -511,7 +521,9 @@ except Exception:
     fails.append("test crashed:\n" + traceback.format_exc())
 finally:
     srv.terminate()
-    out = srv.communicate(timeout=5)[0]
+    srv.wait(timeout=5)
+    _drain.join(timeout=2)
+    out = "".join(_log)
     if "Traceback" in out:
         fails.append("server logged a traceback:\n" + out[-2500:])
     if fails and os.environ.get("LAVA_TEST_LOG"):
