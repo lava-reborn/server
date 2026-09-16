@@ -35,7 +35,7 @@
 Тесты (семь наборов, все обязаны быть зелёными перед коммитом):
 
 ```bash
-cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown; do python3 $t.py || break; done
+cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests; do python3 $t.py || break; done
 ```
 
 Переменные: `LAVA_GX`/`LAVA_GY` — стартовая клетка карты (5970×1730),

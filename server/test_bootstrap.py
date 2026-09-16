@@ -127,12 +127,14 @@ try:
     everything = get('/res/database/texts.xml?all=1')
     check('all=1 is not empty', len(everything) > 100000, True)
     sys.path.insert(0, HERE)
-    import world, items
+    import world, items, quests
     ids = set(world.mob_types())
     ids |= {items.STRING_ID_OFFSET + t for t in items.catalogue()}
+    # quest names and texts, plus the shared empty string they fall back to
+    ids |= set(quests.strings())
     have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
     check('every name the server sends is preloaded', ids - have, set())
-    check('creature and item ids do not collide',
+    check('creature, item and quest ids do not collide',
           len(have), len(ids))
     # 3. real client assets must come through
     # Fifteen files under res/ have a space in the name, and the client asks

@@ -17,6 +17,7 @@ import json
 import os
 
 import items
+import quests
 import world
 
 # Creatures and items are numbered in separate spaces that overlap, while the
@@ -41,9 +42,17 @@ try:
 except Exception:
     REAL_NAMES = {}
 
+# Quest names and texts, numbered 2 000 000 + 4 * type + k by quests.py, and
+# the one empty string (5 000 000) a quest points at where it has no
+# description. Deliberately no try/except: a table that fails to load would
+# leave every quest id off the preload, and the first q_status would cost the
+# player the login screen. Better to fail at start, in both processes.
+QUEST_STRINGS = quests.strings()
+
 ALL = dict(MOB_NAMES)
 ALL.update(ITEM_NAMES)
 ALL.update(REAL_NAMES)
+ALL.update(QUEST_STRINGS)
 
 
 def known(string_id):
