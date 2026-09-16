@@ -36,11 +36,11 @@
 Регистрация — в браузере на `http://127.0.0.1:8080/`. Тестовый аккаунт
 `polestvr` / `lava1234`.
 
-Тесты (четырнадцать серверных наборов и два по данным, все обязаны быть
+Тесты (пятнадцать серверных наборов и два по данным, все обязаны быть
 зелёными перед коммитом):
 
 ```bash
-cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests test_social test_items test_combat; do python3 $t.py || break; done
+cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests test_social test_items test_combat test_travel; do python3 $t.py || break; done
 python3 data/test_wiki_data.py && python3 data/test_world_data.py
 ```
 
@@ -50,7 +50,16 @@ python3 data/test_wiki_data.py && python3 data/test_world_data.py
 непригоден).
 
 Команды чата, наши, не игры: `/where` — где стою (название, файл, клетка),
-`/goto <id>` или `/goto <x> <y>` — переход в любую из 1381 локации.
+`/goto <id>` или `/goto <x> <y>` — переход в любую из 1381 локации,
+`/home` — домой (куда прописан у жителя, иначе на старт; тем же путём
+пойдёт возрождение).
+
+Выход из локации «в другую локацию» (`chWorld;to=1`) работает по стороне
+клетки выхода: стороны W/N/E/S ведут в соседнюю клетку карты с прибытием на
+противоположный край, двери a/b — в интерьер из `data/exits.json`, если цель
+известна хотя бы со средней уверенностью, иначе отказ строкой в чат. За
+краем карты (5833..6305 × 1600..2110) — «Граница пустоши» (`deadloc/`) с
+единственным выходом назад. Всё это — `server/travel.py`.
 
 ---
 
@@ -61,6 +70,8 @@ server/
   server.py          игровой сервер: asyncio, класс Session с cmd_* обработчиками
   protocol.py        кодек XMLSocket-кадров — не трогать, проверен клиентом
   world.py           локации: разбор XML, разрешение id → файл, посёлки на карте
+  travel.py          переходы: сторона выхода → соседняя клетка/дверь/край мира,
+                     клетка прибытия, метки карты, дом
   items.py           каталог предметов: спроектированные кадры ss_si_*, поверх них
                      ТТХ с вики (items_wiki.json), стоки торговцев с вики, имена и описания
   names.py           единая таблица строк (имена мобов, предметов, НПС, описания, квесты)
@@ -72,7 +83,7 @@ server/
   bootstrap_http.py  HTTP: ресурсы клиента, регистрация, texts.xml, loaduser
   mail.py            почта: письма, вложения, тарифы, возврат посылок
   party.py           отряд: p_op/p_m, канал 1, «в сети/отключился»
-  test_*.py          тринадцать наборов: реплеи клиентских последовательностей и
+  test_*.py          пятнадцать наборов: реплеи клиентских последовательностей и
                      test_items — вики поверх каталога, инварианты кадров, стоки
 data/
   settlements.json           клетка карты → id локации (77), выводится скриптом

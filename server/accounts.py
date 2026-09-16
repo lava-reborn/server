@@ -114,6 +114,19 @@ CREATE TABLE IF NOT EXISTS mail (
 );
 CREATE INDEX IF NOT EXISTS mail_by_to ON mail (to_char);
 CREATE INDEX IF NOT EXISTS mail_by_from ON mail (from_char);
+CREATE TABLE IF NOT EXISTS map_marks (
+    -- A character's bookmarks on the global map, addressed by position:
+    -- updMark;id= and rmMark;id= carry the index into the client's own
+    -- array (GlobalMap.editMark/removeMark), which is the order the marks
+    -- frame listed them in, so idx is the key and stays dense.
+    char_id INTEGER NOT NULL REFERENCES characters(id),
+    idx     INTEGER NOT NULL,
+    x       INTEGER NOT NULL,      -- absolute map cell; the wire carries
+    y       INTEGER NOT NULL,      -- offsets from wherever the player stands
+    title   TEXT    NOT NULL DEFAULT '',
+    info    TEXT    NOT NULL DEFAULT '',
+    PRIMARY KEY (char_id, idx)
+);
 """
 
 MAIL_FIELDS = ("to_char", "type", "subject", "body", "sent_at", "read",
@@ -142,6 +155,10 @@ CHARACTER_COLUMNS = [
     # whether the starter kit has been handed out; characters made before
     # the inventory existed get it on their next login
     ("kit", "INTEGER NOT NULL DEFAULT 0"),
+    # and the map cell the home location stands on: an interior does not
+    # know its own cell, so leaving home for the map needs it remembered here
+    ("home_gx", "INTEGER"),
+    ("home_gy", "INTEGER"),
 ]
 
 # char_id is updatable too: an item picked out of a loot bag keeps its
@@ -373,10 +390,58 @@ class Store:
         self.db.commit()
         return self.money(char_id)
 
-    def set_home(self, char_id, loc):
-        self.db.execute("UPDATE characters SET home_loc = ? WHERE id = ?",
-                        (loc, char_id))
+    def set_home(self, char_id, loc, gx=None, gy=None):
+        self.db.execute(
+            "UPDATE characters SET home_loc = ?, home_gx = ?, home_gy = ?"
+            " WHERE id = ?", (loc, gx, gy, char_id))
         self.db.commit()
+
+    # --- map marks -------------------------------------------------------
+    # The list is what the client indexes by, so it is kept dense: a removal
+    # renumbers everything behind it, exactly as Array.splice does on the
+    # other side (GlobalMap.__removeMark).
+    def marks(self, char_id):
+        return [dict(r) for r in self.db.execute(
+            "SELECT idx, x, y, title, info FROM map_marks WHERE char_id = ?"
+            " ORDER BY idx", (char_id,)).fetchall()]
+
+    def insert_mark(self, char_id, x, y, title, info):
+        """Append a mark; returns its index."""
+        idx = self.db.execute(
+            "SELECT COUNT(*) c FROM map_marks WHERE char_id = ?",
+            (char_id,)).fetchone()["c"]
+        self.db.execute(
+            "INSERT INTO map_marks (char_id, idx, x, y, title, info)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (char_id, idx, int(x), int(y), title, info))
+        self.db.commit()
+        return idx
+
+    def update_mark(self, char_id, idx, title, info):
+        cur = self.db.execute(
+            "UPDATE map_marks SET title = ?, info = ? WHERE char_id = ? AND idx = ?",
+            (title, info, char_id, idx))
+        self.db.commit()
+        return cur.rowcount > 0
+
+    def remove_mark(self, char_id, idx):
+        """Drop the mark at idx and close the gap. Returns False for an
+        index that names nothing."""
+        rows = self.marks(char_id)
+        if not (0 <= idx < len(rows)):
+            return False
+        del rows[idx]
+        # Rewritten whole rather than shifted in place: idx is part of the
+        # primary key, and SQLite checks it row by row during an UPDATE, so
+        # a bulk "idx = idx - 1" can collide with the row it has not moved yet.
+        self.db.execute("DELETE FROM map_marks WHERE char_id = ?", (char_id,))
+        self.db.executemany(
+            "INSERT INTO map_marks (char_id, idx, x, y, title, info)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            [(char_id, n, r["x"], r["y"], r["title"], r["info"])
+             for n, r in enumerate(rows)])
+        self.db.commit()
+        return True
 
     # --- quests ----------------------------------------------------------
     # An instance is one row of char_quests for as long as the character
