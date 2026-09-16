@@ -378,7 +378,9 @@ class Mail:
             self.ack(RES_NOTHING_TO_TAKE)
             return
         ch = self.sess.character()
-        offer = row["type"] in (TRADE, TRADE_EXPRESS)
+        # A returned offer is the seller's own goods coming back: a parcel,
+        # not a sale (rmvml has zeroed the asking price by then).
+        offer = row["type"] in (TRADE, TRADE_EXPRESS) and not row["returned"]
         afro, gold = row["afro"], row["gold"]
         if offer and not ch.can_afford(afro, gold):
             self.ack(RES_OK)
@@ -442,10 +444,15 @@ class Mail:
             if side == "in":
                 if attached(row) and not row["returned"] \
                         and row["from_char"] != row["to_char"]:
+                    # An offer's afro/gold were the asking price, and
+                    # nothing to hand back.
+                    offer = row["type"] in (TRADE, TRADE_EXPRESS)
                     self.store.mail_update(
                         row["id"], to_char=row["from_char"], returned=1,
                         read=0, to_deleted=0, from_deleted=1,
-                        sent_at=int(time.time()))
+                        sent_at=int(time.time()),
+                        afro=0 if offer else row["afro"],
+                        gold=0 if offer else row["gold"])
                     log.info("  ..    letter #%d returned to its sender", row["id"])
                     self.deliver(self.store.mail_letter(row["id"]))
                     continue

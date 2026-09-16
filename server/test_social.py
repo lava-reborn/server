@@ -324,6 +324,41 @@ try:
     a.send("rmvml;id=x%s;" % letter2)
     a.frames()
 
+    # --- an offer: goods against a price --------------------------------------------
+    a.send("sndml;afro=30;item=x%s;body=@купи@;type=4;subj=@За 30@;to=@Bob@;"
+           % rounds_back)
+    got = a.frames()
+    check("an offer is filed like a parcel",
+          [n for n, _ in got], ["cmdAck", "ctml", "userInfo_Player"])
+    afro_a -= PLAIN_FEE
+    check("its price is not taken from the seller", got[2][1]["afro"], afro_a)
+    offer = str(got[1][1]["id"])
+    b.frames()
+    b.send("getml;id=x%s;" % offer)
+    rc = named(b.frames(), "rcml")[0]
+    check("the buyer sees the type and the price", (rc["flag"] & 0xF, rc["afro"]),
+          (mail.TRADE, 30))
+    b.send("uldml;id=x%s;" % offer)
+    got = b.frames()
+    check("bought: the rounds received, the afro paid (code -1 at 5)",
+          got[1][1]["code"], [1, 0, 0, 0, 0, -1, 0])
+    afro_b -= 30
+    check("the buyer's purse", got[2][1]["afro"], afro_b)
+    got = a.frames()
+    check("the seller is paid by letter", [n for n, _ in got], ["lsml"])
+    pay = got[0][1]
+    check("from the buyer, with the money inside", (pay["name"], pay["flag"]),
+          (["Bob"], [mail.FLAG_UNREAD | mail.FLAG_ATTACHED]))
+    a.send("uldml;id=x%s;" % pay["id"][0])
+    got = a.frames()
+    afro_a += 30
+    check("and takes the 30 afro", (got[1][1]["code"][5], got[2][1]["afro"]), (1, afro_a))
+    a.send("rmvml;id=x%s;id=x%s;" % (offer, pay["id"][0]))
+    check("two letters deleted in one frame, one ack", a.frames(),
+          [("cmdAck", {"res": 0})])
+    b.send("rmvml;id=x%s;" % offer)
+    b.frames()
+
     # --- an addressee who is offline ----------------------------------------------
     b.send("logout;")
     b.s.close()
