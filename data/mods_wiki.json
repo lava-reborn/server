@@ -1,0 +1,7961 @@
+{
+ "_meta": {
+  "blueprints": 198,
+  "blueprints_linked": 179,
+  "effect_fields": "*_pct signed percent, perception/agility/max_range/clip_size absolute, durability_x multiplier, *_up/_down flags when the text gives no number",
+  "generated": "2026-09-16",
+  "mod_pages": 277,
+  "source": "data/wiki (CC BY-SA, lava-online.fandom.com/ru)"
+ },
+ "blueprints": {
+  "Броня (10у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защитных характеристик. Броня +10%",
+   "effect": "Броня",
+   "effects": {
+    "armor_pct": 10
+   },
+   "key": null,
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня (12у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защитных характеристик. Броня +10%",
+   "effect": "Броня",
+   "effects": {
+    "armor_pct": 10
+   },
+   "key": null,
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня (14у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защитных характеристик. Броня +10%",
+   "effect": "Броня",
+   "effects": {
+    "armor_pct": 10
+   },
+   "key": null,
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня (16у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защитных характеристик. Броня +N",
+   "effect": "Броня",
+   "effects": {},
+   "key": null,
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня (2у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защитных характеристик. Броня +10%",
+   "effect": "Броня",
+   "effects": {
+    "armor_pct": 10
+   },
+   "key": null,
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 1000,
+    "g": 0.25
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня (6у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защитных характеристик. Броня +10%",
+   "effect": "Броня",
+   "effects": {
+    "armor_pct": 10
+   },
+   "key": null,
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 3000,
+    "g": 0.75
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня (8у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защитных характеристик. Броня +10%",
+   "effect": "Броня",
+   "effects": {
+    "armor_pct": 10
+   },
+   "key": null,
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня и вес (10у)": {
+   "description": "Позволяет модифицировать бронежилет в целях повышения бронированности и снижения веса Броня +10% и вес -25%",
+   "effect": "Броня и вес",
+   "effects": {
+    "armor_pct": 10,
+    "weight_pct": -25
+   },
+   "key": null,
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 40000,
+    "g": 10
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня и вес (12у)": {
+   "description": "Позволяет модифицировать бронежилет в целях повышения бронированности и снижения веса Броня +10% и вес -25%",
+   "effect": "Броня и вес",
+   "effects": {
+    "armor_pct": 10,
+    "weight_pct": -25
+   },
+   "key": null,
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 60000,
+    "g": 15
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня и вес (14у)": {
+   "description": "Позволяет модифицировать бронежилет в целях повышения бронированности и снижения веса Броня +10% и вес -25%",
+   "effect": "Броня и вес",
+   "effects": {
+    "armor_pct": 10,
+    "weight_pct": -25
+   },
+   "key": null,
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня и вес (8у)": {
+   "description": "Позволяет модифицировать бронежилет в целях повышения бронированности и снижения веса Броня +10% и вес -25%",
+   "effect": "Броня и вес",
+   "effects": {
+    "armor_pct": 10,
+    "weight_pct": -25
+   },
+   "key": null,
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Броня и вес(16у)": {
+   "description": "Позволяет модифицировать бронежилет в целях повышения бронированности и снижения веса Броня +10% и выносливость +20%",
+   "effect": "Броня и вес",
+   "effects": {
+    "armor_pct": 10,
+    "stamina_pct": 20
+   },
+   "key": null,
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Вес (10у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    819
+   ]
+  },
+  "Вес (11у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 25000,
+    "g": 6.25
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2438
+   ]
+  },
+  "Вес (12у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    840
+   ]
+  },
+  "Вес (14у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    861
+   ]
+  },
+  "Вес (16у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    882
+   ]
+  },
+  "Вес (18у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    1282
+   ]
+  },
+  "Вес (19у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 19,
+   "mobs": [],
+   "price": {
+    "afro": 140000,
+    "g": 35
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    2456
+   ]
+  },
+  "Вес (20у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 160000,
+    "g": 40
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    2457
+   ]
+  },
+  "Вес (2у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 1000,
+    "g": 0.25
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    735
+   ]
+  },
+  "Вес (6у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 3000,
+    "g": 0.75
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    777
+   ]
+  },
+  "Вес (8у)": {
+   "description": "Позволяет модифицировать снаряжение в целях снижения его веса. Вес -25%",
+   "effect": "Вес",
+   "effects": {
+    "weight_pct": -25
+   },
+   "key": "weight",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    798
+   ]
+  },
+  "Восприятие (10у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы из него было легче целиться. Враги станет сложнее избегать ваших выстрелов. Восприятие +2",
+   "effect": "Восприятие",
+   "effects": {
+    "perception": 2
+   },
+   "key": "perception",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    817
+   ]
+  },
+  "Восприятие (12у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы из него было легче целиться. Враги станет сложнее избегать ваших выстрелов. Восприятие +2",
+   "effect": "Восприятие",
+   "effects": {
+    "perception": 2
+   },
+   "key": "perception",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    838
+   ]
+  },
+  "Восприятие (16у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы из него было легче целиться. Враги станет сложнее избегать ваших выстрелов. Восприятие +2",
+   "effect": "Восприятие",
+   "effects": {
+    "perception": 2
+   },
+   "key": "perception",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    880
+   ]
+  },
+  "Восприятие (18у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы из него было легче целиться. Врагам станет сложнее избегать ваших выстрелов. Восприятие +2",
+   "effect": "Восприятие",
+   "effects": {
+    "perception": 2
+   },
+   "key": "perception",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    1280
+   ]
+  },
+  "Восприятие (6у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы из него было легче целиться. Враги станет сложнее избегать ваших выстрелов. Восприятие +2",
+   "effect": "Восприятие",
+   "effects": {
+    "perception": 2
+   },
+   "key": "perception",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 3000,
+    "g": 0.75
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    775
+   ]
+  },
+  "Время прицеливания (4у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости прицеливания с ним. Время прицеливания -15%",
+   "effect": "Время прицеливания",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "key": "aim_time",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 2000,
+    "g": 0.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    742
+   ]
+  },
+  "Время прицеливания (5у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости прицеливания с ним. Время прицеливания -15%",
+   "effect": "Время прицеливания",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "key": "aim_time",
+   "level": 5,
+   "mobs": [],
+   "price": {
+    "afro": 2520,
+    "g": 0.63
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    2428
+   ]
+  },
+  "Время прицеливания (8у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости прицеливания с ним. Время прицеливания -15%",
+   "effect": "Время прицеливания",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "key": "aim_time",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Ракин",
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    784
+   ]
+  },
+  "Время прицеливания (9у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости прицеливания с ним. Время прицеливания -15%",
+   "effect": "Время прицеливания",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "key": "aim_time",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 15000,
+    "g": 3.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2435
+   ]
+  },
+  "Дистанция стрельбы (10у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    806
+   ]
+  },
+  "Дистанция стрельбы (11у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 25000,
+    "g": 6.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2437
+   ]
+  },
+  "Дистанция стрельбы (12у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    827
+   ]
+  },
+  "Дистанция стрельбы (16у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    869
+   ]
+  },
+  "Дистанция стрельбы (17у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективной стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 17,
+   "mobs": [],
+   "price": {
+    "afro": 100000,
+    "g": 25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    4180
+   ]
+  },
+  "Дистанция стрельбы (18у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    1276
+   ]
+  },
+  "Дистанция стрельбы (1у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 1,
+   "mobs": [],
+   "price": {
+    "afro": 520,
+    "g": 0.13
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    2419
+   ]
+  },
+  "Дистанция стрельбы (2у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 1000,
+    "g": 0.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    722
+   ]
+  },
+  "Дистанция стрельбы (4у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 2000,
+    "g": 0.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    743
+   ]
+  },
+  "Дистанция стрельбы (7у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 7,
+   "mobs": [],
+   "price": {
+    "afro": 6520,
+    "g": 0.163
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    2431
+   ]
+  },
+  "Дистанция стрельбы (9у)": {
+   "description": "Позволяет модифицировать оружие таким образом, чтобы дальность эффективная стрельбы из него повысилась.",
+   "effect": "Дистанция стрельбы",
+   "effects": {
+    "max_range_up": true
+   },
+   "key": "shot_range",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 15000,
+    "g": 3.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2433
+   ]
+  },
+  "Заточка Боевого ножа (14у)": {
+   "description": "Чертёж содержит схему и описание для заточки Боевого ножа (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 2.56
+   },
+   "quests": [
+    "Заточка Боевого ножа"
+   ],
+   "target": "knife Боевого ножа",
+   "traders": [],
+   "type_ids": [
+    6626
+   ]
+  },
+  "Заточка Кукри (18у)": {
+   "description": "Чертёж содержит схему и описание для заточки Кукри (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Заточка Кукри"
+   ],
+   "target": "knife Кукри",
+   "traders": [],
+   "type_ids": [
+    6632
+   ]
+  },
+  "Заточка Кухонного ножа (4у)": {
+   "description": "Чертёж содержит схему и описание для заточки Кухонного ножа (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0.84
+   },
+   "quests": [
+    "Заточка Кухонного ножа"
+   ],
+   "target": "knife Кухонного ножа",
+   "traders": [],
+   "type_ids": [
+    6611
+   ]
+  },
+  "Заточка Мачете (20у)": {
+   "description": "Чертёж содержит схему и описание для заточки Мачете (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Заточка Мачете"
+   ],
+   "target": "knife Мачете",
+   "traders": [],
+   "type_ids": [
+    6635
+   ]
+  },
+  "Заточка Нож кастета (10у)": {
+   "description": "Чертёж содержит схему и описание для заточки Нож кастета (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 1.64
+   },
+   "quests": [
+    "Заточка Нож кастета"
+   ],
+   "target": "knife Нож кастета",
+   "traders": [],
+   "type_ids": [
+    6620
+   ]
+  },
+  "Заточка Охотничего ножа (8у)": {
+   "description": "Чертёж содержит схему и описание для заточки Охотничего ножа (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Заточка Охотничего ножа"
+   ],
+   "target": "knife Охотничего ножа",
+   "traders": [],
+   "type_ids": [
+    6617
+   ]
+  },
+  "Заточка Самодельного ножа (2у)": {
+   "description": "Чертёж содержит схему и описание для заточки Самодельного ножа (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Заточка Самодельного ножа"
+   ],
+   "target": "knife Самодельного ножа",
+   "traders": [],
+   "type_ids": [
+    6608
+   ]
+  },
+  "Заточка Такоубы (16у)": {
+   "description": "Чертёж содержит схему и описание для заточки Такоубы (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 3.2
+   },
+   "quests": [
+    "Заточка Такоубы"
+   ],
+   "target": "knife Такоубы",
+   "traders": [],
+   "type_ids": [
+    6629
+   ]
+  },
+  "Заточка Тесака (6у)": {
+   "description": "Чертёж содержит схему и описание для заточки Тесака (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Заточка Тесака"
+   ],
+   "target": "knife Тесака",
+   "traders": [],
+   "type_ids": [
+    6614
+   ]
+  },
+  "Заточка Штык ножа (12у)": {
+   "description": "Чертёж содержит схему и описание для заточки Штык ножа (G) Использовав данный чертеж, вы увеличите Урон наносимый оружием.",
+   "effect": "Заточка",
+   "effects": {
+    "action_points_down": false,
+    "damage_up": true
+   },
+   "key": "knife_Damage",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 2.05
+   },
+   "quests": [
+    "Заточка Штык ножа"
+   ],
+   "target": "knife Штык ножа",
+   "traders": [],
+   "type_ids": [
+    6623
+   ]
+  },
+  "Заточка и Эргономика Боевого ножа (14у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 5.12
+   },
+   "quests": [
+    "Заточка и Эргономика Боевого ножа"
+   ],
+   "target": "knife Боевого ножа",
+   "traders": [
+    "Одноногий"
+   ],
+   "type_ids": [
+    6628
+   ]
+  },
+  "Заточка и Эргономика Кукри (18у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 8
+   },
+   "quests": [
+    "Заточка и Эргономика Кукри"
+   ],
+   "target": "knife Кукри",
+   "traders": [
+    "Шрам"
+   ],
+   "type_ids": [
+    6634
+   ]
+  },
+  "Заточка и Эргономика Кухонного ножа (4у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 1.68
+   },
+   "quests": [
+    "Заточка и Эргономика Кухонного ножа"
+   ],
+   "target": "knife Кухонного ножа",
+   "traders": [
+    "Одноглазый"
+   ],
+   "type_ids": [
+    6613
+   ]
+  },
+  "Заточка и Эргономика Мачете (20у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 10
+   },
+   "quests": [
+    "Заточка и Эргономика Мачете"
+   ],
+   "target": "knife Мачете",
+   "traders": [
+    "Шрам"
+   ],
+   "type_ids": [
+    6637
+   ]
+  },
+  "Заточка и Эргономика Нож кастета (10у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 3.28
+   },
+   "quests": [
+    "Заточка и Эргономика Нож кастета"
+   ],
+   "target": "knife Нож кастета",
+   "traders": [
+    "Одноухий"
+   ],
+   "type_ids": [
+    6622
+   ]
+  },
+  "Заточка и Эргономика Охотничего ножа (8у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 2.62
+   },
+   "quests": [
+    "Заточка и Эргономика Охотничего ножа"
+   ],
+   "target": "knife Охотничего ножа",
+   "traders": [
+    "Однопальцый"
+   ],
+   "type_ids": [
+    6619
+   ]
+  },
+  "Заточка и Эргономика Самодельного ножа (2у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 1.34
+   },
+   "quests": [
+    "Заточка и Эргономика Самодельного ножа"
+   ],
+   "target": "knife Самодельного ножа",
+   "traders": [
+    "Одноглазый"
+   ],
+   "type_ids": [
+    6610
+   ]
+  },
+  "Заточка и Эргономика Такоубы (16у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 6.4
+   },
+   "quests": [
+    "Заточка и Эргономика Такоубы"
+   ],
+   "target": "knife Такоубы",
+   "traders": [
+    "Одноногий"
+   ],
+   "type_ids": [
+    6631
+   ]
+  },
+  "Заточка и Эргономика Тесака (6у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 2.1
+   },
+   "quests": [
+    "Заточка и Эргономика Тесака"
+   ],
+   "target": "knife Тесака",
+   "traders": [
+    "Однопальцый"
+   ],
+   "type_ids": [
+    6616
+   ]
+  },
+  "Заточка и Эргономика Штык ножа (12у)": {
+   "description": "",
+   "effect": "Заточка и Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "key": "knife_Damage_Actionpoint",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 4.1
+   },
+   "quests": [
+    "Заточка и Эргономика Штык ножа"
+   ],
+   "target": "knife Штык ножа",
+   "traders": [
+    "Одноухий"
+   ],
+   "type_ids": [
+    6625
+   ]
+  },
+  "Зашифрованный чертеж (10у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1135
+   ]
+  },
+  "Зашифрованный чертеж (11у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2413
+   ]
+  },
+  "Зашифрованный чертеж (12у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1136
+   ]
+  },
+  "Зашифрованный чертеж (13у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 13,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2414
+   ]
+  },
+  "Зашифрованный чертеж (14у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1137
+   ]
+  },
+  "Зашифрованный чертеж (15у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 15,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2415
+   ]
+  },
+  "Зашифрованный чертеж (16у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [
+    "Чертежи 16-го уровня"
+   ],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1138
+   ]
+  },
+  "Зашифрованный чертеж (17у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 17,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [
+    "Чертежи 17-го уровня"
+   ],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2416
+   ]
+  },
+  "Зашифрованный чертеж (18у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1270
+   ]
+  },
+  "Зашифрованный чертеж (19у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 19,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2417
+   ]
+  },
+  "Зашифрованный чертеж (1у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 1,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2408
+   ]
+  },
+  "Зашифрованный чертеж (20у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2418
+   ]
+  },
+  "Зашифрованный чертеж (2у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 2,
+   "mobs": [
+    "Пахан Агнес"
+   ],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1131
+   ]
+  },
+  "Зашифрованный чертеж (3у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 3,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2409
+   ]
+  },
+  "Зашифрованный чертеж (4у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1132
+   ]
+  },
+  "Зашифрованный чертеж (5у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 5,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2410
+   ]
+  },
+  "Зашифрованный чертеж (6у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1133
+   ]
+  },
+  "Зашифрованный чертеж (7у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 7,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2411
+   ]
+  },
+  "Зашифрованный чертеж (8у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    1134
+   ]
+  },
+  "Зашифрованный чертеж (9у)": {
+   "description": "В этом документе содержится ценная информация. К сожалению, она зашифрована.",
+   "effect": "Зашифрованный чертеж",
+   "effects": {},
+   "key": "codified",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0
+   },
+   "quests": [],
+   "target": "any",
+   "traders": [],
+   "type_ids": [
+    2412
+   ]
+  },
+  "Ловкость (10у)": {
+   "description": "Позволяет модифицировать предмет в целях большего удобства пользования им. Ваши движения будут менее стеснены. Ловкость +2",
+   "effect": "Ловкость",
+   "effects": {
+    "agility": 2
+   },
+   "key": "agility",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    816
+   ]
+  },
+  "Ловкость (13у)": {
+   "description": "Позволяет модифицировать предмет в целях большего удобства пользования им. Ваши движения будут менее стеснены. Ловкость +2",
+   "effect": "Ловкость",
+   "effects": {
+    "agility": 2
+   },
+   "key": "agility",
+   "level": 13,
+   "mobs": [],
+   "price": {
+    "afro": 40000,
+    "g": 10
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Самир"
+   ],
+   "type_ids": [
+    2444
+   ]
+  },
+  "Ловкость (14у)": {
+   "description": "Позволяет модифицировать предмет в целях большего удобства пользования им. Ваши движения будут менее стеснены. Ловкость +2",
+   "effect": "Ловкость",
+   "effects": {
+    "agility": 2
+   },
+   "key": "agility",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Самир"
+   ],
+   "type_ids": [
+    858
+   ]
+  },
+  "Ловкость (5у)": {
+   "description": "Позволяет модифицировать предмет в целях большего удобства пользования им. Ваши движения будут менее стеснены. Ловкость +2",
+   "effect": "Ловкость",
+   "effects": {
+    "agility": 2
+   },
+   "key": "agility",
+   "level": 5,
+   "mobs": [],
+   "price": {
+    "afro": 2520,
+    "g": 0.63
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    2426
+   ]
+  },
+  "Ловкость (6у)": {
+   "description": "Позволяет модифицировать предмет в целях большего удобства пользования им. Ваши движения будут менее стеснены. Ловкость +2",
+   "effect": "Ловкость",
+   "effects": {
+    "agility": 2
+   },
+   "key": "agility",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 3000,
+    "g": 0.75
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    774
+   ]
+  },
+  "Ловкость (9у)": {
+   "description": "Позволяет модифицировать предмет в целях большего удобства пользования им. Ваши движения будут менее стеснены. Ловкость +2",
+   "effect": "Ловкость",
+   "effects": {
+    "agility": 2
+   },
+   "key": "agility",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 15000,
+    "g": 3.75
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    3432
+   ]
+  },
+  "Перезарядка (11у)": {
+   "description": "Позволяет модифицировать оружие в целях увеличения скорости его перезарядки. ОД на перезарядку -20%",
+   "effect": "Перезарядка",
+   "effects": {
+    "reload_cost_pct": -20
+   },
+   "key": "reload_speed",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 25000,
+    "g": 6.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2436
+   ]
+  },
+  "Перезарядка (17у)": {
+   "description": "Позволяет модифицировать оружие в целях увеличения скорости его перезарядки. ОД на перезарядку -20%",
+   "effect": "Перезарядка",
+   "effects": {
+    "reload_cost_pct": -20
+   },
+   "key": "reload_speed",
+   "level": 17,
+   "mobs": [],
+   "price": {
+    "afro": 100000,
+    "g": 25
+   },
+   "quests": [
+    "FN M249: скорость перезарядки",
+    "FN M249 (G): скорость перезарядки",
+    "FN M249 (P): скорость перезарядки"
+   ],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    2452
+   ]
+  },
+  "Перезарядка (19у)": {
+   "description": "Позволяет модифицировать оружие в целях увеличения скорости его перезарядки. ОД на перезарядку -20%",
+   "effect": "Перезарядка",
+   "effects": {
+    "reload_cost_pct": -20
+   },
+   "key": "reload_speed",
+   "level": 19,
+   "mobs": [],
+   "price": {
+    "afro": 140000,
+    "g": 35
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    2455
+   ]
+  },
+  "Перезарядка (5у)": {
+   "description": "Позволяет модифицировать оружие в целях увеличения скорости его перезарядки. ОД на перезарядку -20%",
+   "effect": "Перезарядка",
+   "effects": {
+    "reload_cost_pct": -20
+   },
+   "key": "reload_speed",
+   "level": 5,
+   "mobs": [],
+   "price": {
+    "afro": 2520,
+    "g": 0.63
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    2427
+   ]
+  },
+  "Прочность (10у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    818
+   ]
+  },
+  "Прочность (11у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 25000,
+    "g": 6.25
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2397
+   ]
+  },
+  "Прочность (12у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    839
+   ]
+  },
+  "Прочность (13у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 13,
+   "mobs": [],
+   "price": {
+    "afro": 40000,
+    "g": 10
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар",
+    "Мастер Самир"
+   ],
+   "type_ids": [
+    2398
+   ]
+  },
+  "Прочность (14у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар",
+    "Мастер Самир"
+   ],
+   "type_ids": [
+    860
+   ]
+  },
+  "Прочность (15у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 15,
+   "mobs": [],
+   "price": {
+    "afro": 69000,
+    "g": 17.25
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар",
+    "Мастер Самир",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    2399
+   ]
+  },
+  "Прочность (16у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар",
+    "Мастер Самир",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    881
+   ]
+  },
+  "Прочность (17у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 17,
+   "mobs": [],
+   "price": {
+    "afro": 100000,
+    "g": 25
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    2400
+   ]
+  },
+  "Прочность (18у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    1281
+   ]
+  },
+  "Прочность (19у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 19,
+   "mobs": [],
+   "price": {
+    "afro": 140000,
+    "g": 35
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2401
+   ]
+  },
+  "Прочность (20у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 160000,
+    "g": 40
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [],
+   "type_ids": [
+    2402
+   ]
+  },
+  "Прочность (8у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Ракин",
+    "Мастер Азам"
+   ],
+   "type_ids": [
+    797
+   ]
+  },
+  "Прочность (9у)": {
+   "description": "Позволяет модифицировать снаряжение в целях повышения его защиты от износа. Прочность +100%",
+   "effect": "Прочность",
+   "effects": {
+    "durability_pct": 100
+   },
+   "key": "durability",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 15000,
+    "g": 3.75
+   },
+   "quests": [],
+   "target": "wear or weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2396
+   ]
+  },
+  "Размер обоймы (10у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    802
+   ]
+  },
+  "Размер обоймы (11у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 25000,
+    "g": 6.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2440
+   ]
+  },
+  "Размер обоймы (12у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир"
+   ],
+   "type_ids": [
+    823
+   ]
+  },
+  "Размер обоймы (13у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 13,
+   "mobs": [],
+   "price": {
+    "afro": 40000,
+    "g": 10
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2442
+   ]
+  },
+  "Размер обоймы (14у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    844
+   ]
+  },
+  "Размер обоймы (15у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 15,
+   "mobs": [],
+   "price": {
+    "afro": 69000,
+    "g": 17.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    2449
+   ]
+  },
+  "Размер обоймы (16у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    865
+   ]
+  },
+  "Размер обоймы (18у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    1272
+   ]
+  },
+  "Размер обоймы (19у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 19,
+   "mobs": [],
+   "price": {
+    "afro": 140000,
+    "g": 35
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2454
+   ]
+  },
+  "Размер обоймы (20у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 160000,
+    "g": 40
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    2458
+   ]
+  },
+  "Размер обоймы (2у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 1000,
+    "g": 0.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    718
+   ]
+  },
+  "Размер обоймы (4у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 2000,
+    "g": 0.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    739
+   ]
+  },
+  "Размер обоймы (6у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 3000,
+    "g": 0.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    760
+   ]
+  },
+  "Размер обоймы (8у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    781
+   ]
+  },
+  "Размер обоймы (9у)": {
+   "description": "Позволяет увеличить размер обоймы для оружия.",
+   "effect": "Размер обоймы",
+   "effects": {
+    "clip_size_up": true
+   },
+   "key": "clip_size",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 15000,
+    "g": 3.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    3433
+   ]
+  },
+  "Скорострельность (10у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    804
+   ]
+  },
+  "Скорострельность (12у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    825
+   ]
+  },
+  "Скорострельность (13у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 13,
+   "mobs": [],
+   "price": {
+    "afro": 40000,
+    "g": 10
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир"
+   ],
+   "type_ids": [
+    2443
+   ]
+  },
+  "Скорострельность (14у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    846
+   ]
+  },
+  "Скорострельность (15у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 15,
+   "mobs": [],
+   "price": {
+    "afro": 69000,
+    "g": 17.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2450
+   ]
+  },
+  "Скорострельность (16у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    867
+   ]
+  },
+  "Скорострельность (6у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 3000,
+    "g": 0.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    762
+   ]
+  },
+  "Скорострельность (7у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 7,
+   "mobs": [],
+   "price": {
+    "afro": 6520,
+    "g": 0.163
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    2430
+   ]
+  },
+  "Скорострельность (8у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    783
+   ]
+  },
+  "Скорострельность (9у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения скорости стрельбы из него. ОД на выстрел -20%",
+   "effect": "Скорострельность",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "key": "shot_speed",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 15000,
+    "g": 3.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2434
+   ]
+  },
+  "Точность (11у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 25000,
+    "g": 6.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2439
+   ]
+  },
+  "Точность (12у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    828
+   ]
+  },
+  "Точность (13у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 13,
+   "mobs": [],
+   "price": {
+    "afro": 40000,
+    "g": 10
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2446
+   ]
+  },
+  "Точность (14у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    849
+   ]
+  },
+  "Точность (15у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 15,
+   "mobs": [],
+   "price": {
+    "afro": 69000,
+    "g": 17.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Умар",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    2447
+   ]
+  },
+  "Точность (16у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [
+    "РПД: точность",
+    "РПД (G): точность",
+    "РПД (P): точность",
+    "AUG /Hbar: точность",
+    "AUG /Hbar (G): точность",
+    "AUG /Hbar (P): точность",
+    "АС Вал: точность",
+    "АС Вал (G): точность",
+    "АС Вал (P): точность",
+    "US Army M24:точность",
+    "US Army M24 (G):точность",
+    "US Army M24 (P): точность"
+   ],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Умар",
+    "Мастер Гафур",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    870
+   ]
+  },
+  "Точность (17у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 17,
+   "mobs": [],
+   "price": {
+    "afro": 100000,
+    "g": 25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    4179
+   ]
+  },
+  "Точность (18у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    1277
+   ]
+  },
+  "Точность (1у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 1,
+   "mobs": [],
+   "price": {
+    "afro": 520,
+    "g": 0.13
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    2421
+   ]
+  },
+  "Точность (20у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 160000,
+    "g": 40
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    2459
+   ]
+  },
+  "Точность (2у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 1000,
+    "g": 0.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    723
+   ]
+  },
+  "Точность (3у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 3,
+   "mobs": [],
+   "price": {
+    "afro": 1520,
+    "g": 0.38
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    2422
+   ]
+  },
+  "Точность (4у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 2000,
+    "g": 0.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    744
+   ]
+  },
+  "Точность (5у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 5,
+   "mobs": [],
+   "price": {
+    "afro": 2520,
+    "g": 0.63
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара",
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    2424
+   ]
+  },
+  "Точность (6у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 3000,
+    "g": 0.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Азам"
+   ],
+   "type_ids": [
+    765
+   ]
+  },
+  "Точность (7у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 7,
+   "mobs": [],
+   "price": {
+    "afro": 6520,
+    "g": 0.163
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Азам"
+   ],
+   "type_ids": [
+    2707
+   ]
+  },
+  "Точность (8у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения точности стрельбы из него. Точность +20%",
+   "effect": "Точность",
+   "effects": {
+    "precision_pct": 20
+   },
+   "key": "precision",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Азам"
+   ],
+   "type_ids": [
+    786
+   ]
+  },
+  "Точность и дальность (14у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и дальнобойности. Точность +20% и дальнобойность увеличена",
+   "effect": "Точность и дальность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "key": null,
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир"
+   ],
+   "type_ids": []
+  },
+  "Точность и дальность (15у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и дальнобойности. Точность +20% и дальнобойность увеличена",
+   "effect": "Точность и дальность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "key": null,
+   "level": 15,
+   "mobs": [],
+   "price": {
+    "afro": 100000,
+    "g": 25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Аммар"
+   ],
+   "type_ids": []
+  },
+  "Точность и дальность (16у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и дальнобойности. Точность +20% и дальнобойность увеличена",
+   "effect": "Точность и дальность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "key": null,
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур",
+    "Мастер Самир",
+    "Мастер Аммар"
+   ],
+   "type_ids": []
+  },
+  "Точность и дальность (17у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и дальнобойности. Точность +20% и дальнобойность увеличена",
+   "effect": "Точность и дальность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "key": null,
+   "level": 17,
+   "mobs": [],
+   "price": {
+    "afro": 140000,
+    "g": 35
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": []
+  },
+  "Точность и дальность (18у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и дальнобойности. Точность +20% и дальнобойность увеличена",
+   "effect": "Точность и дальность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "key": null,
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 160000,
+    "g": 40
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": []
+  },
+  "Точность и дальность (19у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и дальнобойности. Точность +20% и дальнобойность увеличена",
+   "effect": "Точность и дальность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "key": null,
+   "level": 19,
+   "mobs": [],
+   "price": {
+    "afro": 180000,
+    "g": 45
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Точность и дальность (20у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и дальнобойности. Точность +20% и дальнобойность увеличена",
+   "effect": "Точность и дальность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "key": null,
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 200000,
+    "g": 50
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": []
+  },
+  "Урон (10у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    801
+   ]
+  },
+  "Урон (11у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 25000,
+    "g": 6.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    3434
+   ]
+  },
+  "Урон (12у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир"
+   ],
+   "type_ids": [
+    822
+   ]
+  },
+  "Урон (13у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 13,
+   "mobs": [],
+   "price": {
+    "afro": 40000,
+    "g": 10
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2441
+   ]
+  },
+  "Урон (14у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    843
+   ]
+  },
+  "Урон (15у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 15,
+   "mobs": [],
+   "price": {
+    "afro": 69000,
+    "g": 17.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    2448
+   ]
+  },
+  "Урон (16у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [
+    "РПД: урон",
+    "РПД (Р): урон",
+    "РПД (G): урон",
+    "G36: урон",
+    "G36 (G): урон",
+    "G36 (P): урон",
+    "US Army M24: урон",
+    "US Army M24 (G): урон",
+    "US Army M24 (P): урон"
+   ],
+   "target": "weapon",
+   "traders": [
+    "Мастер Самир",
+    "Мастер Умар",
+    "Мастер Гафур",
+    "Мастер Аммар"
+   ],
+   "type_ids": [
+    864
+   ]
+  },
+  "Урон (17у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 17,
+   "mobs": [],
+   "price": {
+    "afro": 100000,
+    "g": 25
+   },
+   "quests": [
+    "FN M249: урон",
+    "FN M249 (G): урон",
+    "FN M249 (P): урон"
+   ],
+   "target": "weapon",
+   "traders": [
+    "Мастер Гафур"
+   ],
+   "type_ids": [
+    2451
+   ]
+  },
+  "Урон (18у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    1271
+   ]
+  },
+  "Урон (19у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 19,
+   "mobs": [],
+   "price": {
+    "afro": 140000,
+    "g": 35
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    2453
+   ]
+  },
+  "Урон (1у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 1,
+   "mobs": [],
+   "price": {
+    "afro": 520,
+    "g": 0.13
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    2420
+   ]
+  },
+  "Урон (2у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 1000,
+    "g": 0.25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    717
+   ]
+  },
+  "Урон (3у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 3,
+   "mobs": [],
+   "price": {
+    "afro": 1520,
+    "g": 0.38
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    2423
+   ]
+  },
+  "Урон (4у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 2000,
+    "g": 0.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    738
+   ]
+  },
+  "Урон (5у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 5,
+   "mobs": [],
+   "price": {
+    "afro": 2520,
+    "g": 0.63
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Клара"
+   ],
+   "type_ids": [
+    2425
+   ]
+  },
+  "Урон (6у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 3000,
+    "g": 0.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм",
+    "Мастер Азам"
+   ],
+   "type_ids": [
+    759
+   ]
+  },
+  "Урон (7у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 7,
+   "mobs": [],
+   "price": {
+    "afro": 6520,
+    "g": 0.163
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм",
+    "Мастер Азам"
+   ],
+   "type_ids": [
+    2429
+   ]
+  },
+  "Урон (8у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Ракин",
+    "Мастер Азам"
+   ],
+   "type_ids": [
+    780
+   ]
+  },
+  "Урон (9у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик. Урон +10%",
+   "effect": "Урон",
+   "effects": {
+    "damage_pct": 10
+   },
+   "key": "damage",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 15000,
+    "g": 3.75
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    2432
+   ]
+  },
+  "Урон и размер обоймы (10у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 40000,
+    "g": 10
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад"
+   ],
+   "type_ids": [
+    26680,
+    37636,
+    37653,
+    37670
+   ]
+  },
+  "Урон и размер обоймы (11у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 11,
+   "mobs": [],
+   "price": {
+    "afro": 50000,
+    "g": 12.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    26681,
+    37637,
+    37654,
+    37671
+   ]
+  },
+  "Урон и размер обоймы (12у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 60000,
+    "g": 15
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    26682,
+    37638,
+    37655,
+    37672
+   ]
+  },
+  "Урон и размер обоймы (13у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 13,
+   "mobs": [],
+   "price": {
+    "afro": 70000,
+    "g": 17.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    26683,
+    37639,
+    37656,
+    37673
+   ]
+  },
+  "Урон и размер обоймы (14у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 80000,
+    "g": 20
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Фахад",
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    26684,
+    37640,
+    37657,
+    37674
+   ]
+  },
+  "Урон и размер обоймы (15у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 15,
+   "mobs": [],
+   "price": {
+    "afro": 100000,
+    "g": 25
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    26685,
+    37641,
+    37658,
+    37675
+   ]
+  },
+  "Урон и размер обоймы (16у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 120000,
+    "g": 30
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    26686,
+    37642,
+    37659,
+    37676
+   ]
+  },
+  "Урон и размер обоймы (18у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 160000,
+    "g": 40
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    26688,
+    37644,
+    37661,
+    37678
+   ]
+  },
+  "Урон и размер обоймы (19у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 19,
+   "mobs": [],
+   "price": {
+    "afro": 180000,
+    "g": 45
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Умар"
+   ],
+   "type_ids": [
+    26689,
+    37645,
+    37662,
+    37679
+   ]
+  },
+  "Урон и размер обоймы (5у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 5,
+   "mobs": [],
+   "price": {
+    "afro": 6000,
+    "g": 1.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    26675,
+    37631,
+    37648,
+    37665
+   ]
+  },
+  "Урон и размер обоймы (6у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 10000,
+    "g": 2.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    26676,
+    37632,
+    37649,
+    37666
+   ]
+  },
+  "Урон и размер обоймы (7у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 7,
+   "mobs": [],
+   "price": {
+    "afro": 14000,
+    "g": 3.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [
+    "Мастер Сэм"
+   ],
+   "type_ids": [
+    26677,
+    37633,
+    37650,
+    37667
+   ]
+  },
+  "Урон и размер обоймы (8у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 20000,
+    "g": 5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    26678,
+    37634,
+    37651,
+    37668
+   ]
+  },
+  "Урон и размер обоймы (9у)": {
+   "description": "Позволяет модифицировать оружие в целях повышения убойных характеристик и размера обоймы. Урон +10% и размер обоймы увеличен",
+   "effect": "Урон и размер обоймы",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "key": "damage_25",
+   "level": 9,
+   "mobs": [],
+   "price": {
+    "afro": 30000,
+    "g": 7.5
+   },
+   "quests": [],
+   "target": "weapon",
+   "traders": [],
+   "type_ids": [
+    26679,
+    37635,
+    37652,
+    37669
+   ]
+  },
+  "Эргономика Боевого ножа (14у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Боевого ножа (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 14,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 2.56
+   },
+   "quests": [
+    "Эргономика Боевого ножа"
+   ],
+   "target": "knife Боевого ножа",
+   "traders": [],
+   "type_ids": [
+    6627
+   ]
+  },
+  "Эргономика Кукри (18у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Кукри (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 18,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Эргономика Кукри"
+   ],
+   "target": "knife Кукри",
+   "traders": [],
+   "type_ids": [
+    6633
+   ]
+  },
+  "Эргономика Кухонного ножа (4у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Кухонного ножа (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 4,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 0.84
+   },
+   "quests": [
+    "Эргономика Кухонного ножа"
+   ],
+   "target": "knife Кухонного ножа",
+   "traders": [],
+   "type_ids": [
+    6612
+   ]
+  },
+  "Эргономика Мачете (20у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Мачете (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 20,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Эргономика Мачете"
+   ],
+   "target": "knife Мачете",
+   "traders": [],
+   "type_ids": [
+    6636
+   ]
+  },
+  "Эргономика Нож кастета (10у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Нож кастета (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 10,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 1.64
+   },
+   "quests": [
+    "Эргономика Нож кастета"
+   ],
+   "target": "knife Нож кастета",
+   "traders": [],
+   "type_ids": [
+    6621
+   ]
+  },
+  "Эргономика Охотничего ножа (8у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Охотничего ножа (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 8,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Эргономика Охотничего ножа"
+   ],
+   "target": "knife Охотничего ножа",
+   "traders": [],
+   "type_ids": [
+    6618
+   ]
+  },
+  "Эргономика Самодельного ножа (2у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Самодельного ножа (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 2,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Эргономика Самодельного ножа"
+   ],
+   "target": "knife Самодельного ножа",
+   "traders": [],
+   "type_ids": [
+    6609
+   ]
+  },
+  "Эргономика Такоубы (16у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Такоубы (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 16,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 3.2
+   },
+   "quests": [
+    "Эргономика Такоубы"
+   ],
+   "target": "knife Такоубы",
+   "traders": [],
+   "type_ids": [
+    6630
+   ]
+  },
+  "Эргономика Тесака (6у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Тесака (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 6,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": "?"
+   },
+   "quests": [
+    "Эргономика Тесака"
+   ],
+   "target": "knife Тесака",
+   "traders": [],
+   "type_ids": [
+    6615
+   ]
+  },
+  "Эргономика Штык ножа (12у)": {
+   "description": "Чертёж содержит схему и описание для замены рукояти Штык ножа (G). Использовав данный чертеж, вы увеличите Износ оружия, а так же уменьшите расход ОД на удар.",
+   "effect": "Эргономика",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": false
+   },
+   "key": "knife_Actionpoint",
+   "level": 12,
+   "mobs": [],
+   "price": {
+    "afro": 0,
+    "g": 2.05
+   },
+   "quests": [
+    "Эргономика Штык ножа"
+   ],
+   "target": "knife Штык ножа",
+   "traders": [],
+   "type_ids": [
+    6624
+   ]
+  }
+ },
+ "mod_pages": {
+  "AUG /Hbar Mod IX": {
+   "base": "AUG /Hbar",
+   "confidence": 0.2,
+   "description": "У оружия увеличен размер обоймы до 100 патронов.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "AUG /Hbar Mod VIII": {
+   "base": "AUG /Hbar",
+   "confidence": 0.2,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "AUG /Hbar Mod XI": {
+   "base": "AUG /Hbar",
+   "confidence": 0.2,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "AUG /Hbar Mod XIV": {
+   "base": "AUG /Hbar",
+   "confidence": 0.2,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "Armalite AR-10(t) Mod XI": {
+   "base": "Armalite AR-10(t)",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Armalite AR-10(t) Mod XII": {
+   "base": "Armalite AR-10(t)",
+   "confidence": 0.3,
+   "description": "Увеличено повреждение на 10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Armalite AR-10(t) Mod XV": {
+   "base": "Armalite AR-10(t)",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Benelli M4 Mod V": {
+   "base": "Benelli M4",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Benelli M4 Mod XII": {
+   "base": "Benelli M4",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Benelli M4 Mod XV": {
+   "base": "Benelli M4",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Borzh Mod IV": {
+   "base": "Borzh",
+   "confidence": 0.3,
+   "description": "Время прицеливания -15%.",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "knife": false,
+   "roman": "IV",
+   "suffix": "aimtime",
+   "type_ids": []
+  },
+  "Borzh Mod VIII": {
+   "base": "Borzh",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Borzh Mod XII": {
+   "base": "Borzh",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Bren L4 Mod IX": {
+   "base": "Bren L4",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 60 патронов",
+   "effects": {
+    "clip_size": 60,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Bren L4 Mod VIII": {
+   "base": "Bren L4",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Bren L4 Mod XI": {
+   "base": "Bren L4",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Bren L4 Mod XIV": {
+   "base": "Bren L4",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "Brugger & Thomet APR 338 Mod IX": {
+   "base": "Brugger & Thomet APR 338",
+   "confidence": 0.3,
+   "description": "Увеличен размер обоймы.",
+   "effects": {
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Brugger & Thomet APR 338 Mod VIII": {
+   "base": "Brugger & Thomet APR 338",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Brugger & Thomet APR 338 Mod XII": {
+   "base": "Brugger & Thomet APR 338",
+   "confidence": 0.3,
+   "description": "Урон +10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Brugger & Thomet APR 338 Mod XV": {
+   "base": "Brugger & Thomet APR 338",
+   "confidence": 0.3,
+   "description": "Новая винтовка предназначена для стрельбы по живым целям на больших (до 1500 метров) дистанциях, а также для поражения не бронированных материальных средств противника.",
+   "effects": {},
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "CZ 75 Mod XI": {
+   "base": "CZ 75",
+   "confidence": 0.3,
+   "description": "Точность из стрельбы из оружия повышена на 20%.",
+   "effects": {},
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "CZ 75 Mod XII": {
+   "base": "CZ 75",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Chang Feng Mod IX": {
+   "base": "Chang Feng",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 70 патронов.",
+   "effects": {
+    "clip_size": 70,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Chang Feng Mod X": {
+   "base": "Chang Feng",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "Chang Feng Mod XV": {
+   "base": "Chang Feng",
+   "confidence": 0.3,
+   "description": "У оружия на 10% улучшены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Colt 1911 Mod XI": {
+   "base": "Colt 1911",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Colt 1911 Mod XII": {
+   "base": "Colt 1911",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Desert Eagle Mod XI": {
+   "base": "Desert Eagle",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Desert Eagle Mod XII": {
+   "base": "Desert Eagle",
+   "confidence": 0.3,
+   "description": "Урон +10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "FN M249 Mod VIII": {
+   "base": "FN M249",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "FN M249 Mod X": {
+   "base": "FN M249",
+   "confidence": 0,
+   "description": "Скорость перезарядки увеличена",
+   "effects": {
+    "reload_speed_up": true
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "FN M249 Mod XII": {
+   "base": "FN M249",
+   "confidence": 0.3,
+   "description": "Увеличено повреждение на 10%",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "FN M249 Mod XIV": {
+   "base": "FN M249",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "FN MAG Mod II": {
+   "base": "FN MAG",
+   "confidence": 0.6,
+   "description": "Вес оружия снижен на 25%.",
+   "effects": {
+    "weight_pct": -25
+   },
+   "knife": false,
+   "roman": "II",
+   "suffix": "weight",
+   "type_ids": [
+    25099,
+    25100,
+    25101
+   ]
+  },
+  "FN MAG Mod VII": {
+   "base": "FN MAG",
+   "confidence": 0.3,
+   "description": "Скорость перезарядки увеличена.",
+   "effects": {
+    "reload_speed_up": true
+   },
+   "knife": false,
+   "roman": "VII",
+   "suffix": "reloadspeed",
+   "type_ids": []
+  },
+  "FN MAG Mod VIII": {
+   "base": "FN MAG",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "FN MAG Mod XIV": {
+   "base": "FN MAG",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "FN-FALL Mod IX": {
+   "base": "FN-FALL",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 100 патрона.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "FN-FALL Mod VI": {
+   "base": "FN-FALL",
+   "confidence": 0.3,
+   "description": "Ловкость +2.",
+   "effects": {
+    "agility": 2
+   },
+   "knife": false,
+   "roman": "VI",
+   "suffix": "agility",
+   "type_ids": []
+  },
+  "FN-FALL Mod VIII": {
+   "base": "FN-FALL",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "FN-FALL Mod XIV": {
+   "base": "FN-FALL",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "Franchi SPAS-15 Mod V": {
+   "base": "Franchi SPAS-15",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Franchi SPAS-15 Mod XII": {
+   "base": "Franchi SPAS-15",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Franchi SPAS-15 Mod XV": {
+   "base": "Franchi SPAS-15",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "G3 Mod VIII": {
+   "base": "G3",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "G3 Mod XI": {
+   "base": "G3",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "G3 Mod XIV": {
+   "base": "G3",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "G36 Mod III": {
+   "base": "G36",
+   "confidence": 0.3,
+   "description": "+2 к восприятию.",
+   "effects": {},
+   "knife": false,
+   "roman": "III",
+   "suffix": "perception",
+   "type_ids": []
+  },
+  "G36 Mod VIII": {
+   "base": "G36",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "G36 Mod XII": {
+   "base": "G36",
+   "confidence": 0.3,
+   "description": "Увеличено повреждение на 10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "G36 Mod XIV": {
+   "base": "G36",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "Galil AR Mod VI": {
+   "base": "Galil AR",
+   "confidence": 0.3,
+   "description": "Ловкость +2.",
+   "effects": {
+    "agility": 2
+   },
+   "knife": false,
+   "roman": "VI",
+   "suffix": "agility",
+   "type_ids": []
+  },
+  "Galil AR Mod VIII": {
+   "base": "Galil AR",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Galil AR Mod X": {
+   "base": "Galil AR",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "Glock 17 Mod IX": {
+   "base": "Glock 17",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 31 патрона.",
+   "effects": {
+    "clip_size": 31,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Glock 17 Mod XI": {
+   "base": "Glock 17",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "HK PSG-1 Mod III": {
+   "base": "HK PSG-1",
+   "confidence": 0.3,
+   "description": "Восприятие +2.",
+   "effects": {
+    "perception": 2
+   },
+   "knife": false,
+   "roman": "III",
+   "suffix": "perception",
+   "type_ids": []
+  },
+  "HK PSG-1 Mod VIII": {
+   "base": "HK PSG-1",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "HK PSG-1 Mod XII": {
+   "base": "HK PSG-1",
+   "confidence": 0.3,
+   "description": "Урон +10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "HK PSG-1 Mod XV": {
+   "base": "HK PSG-1",
+   "confidence": 0.3,
+   "description": "У оружия улучшены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Ingram MAC 10 Mod V": {
+   "base": "Ingram MAC 10",
+   "confidence": 0.2,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Ingram MAC 10 Mod VII": {
+   "base": "Ingram MAC 10",
+   "confidence": 0.2,
+   "description": "Скорость перезарядки увеличена. ОД на скорость перезарядки -20%.",
+   "effects": {
+    "reload_speed_up": true
+   },
+   "knife": false,
+   "roman": "VII",
+   "suffix": "reloadspeed",
+   "type_ids": []
+  },
+  "Ingram MAC 10 Mod VIII": {
+   "base": "Ingram MAC 10",
+   "confidence": 0.2,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Ingram MAC 10 Mod XV": {
+   "base": "Ingram MAC 10",
+   "confidence": 0.2,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Jackhammer Mod IV": {
+   "base": "Jackhammer",
+   "confidence": 0.3,
+   "description": "Время прицеливания -15%.",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "knife": false,
+   "roman": "IV",
+   "suffix": "aimtime",
+   "type_ids": []
+  },
+  "Jackhammer Mod VIII": {
+   "base": "Jackhammer",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Jackhammer Mod X": {
+   "base": "Jackhammer",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "Jackhammer Mod XV": {
+   "base": "Jackhammer",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "L85 Mod IX": {
+   "base": "L85",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 100 патрона.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "L85 Mod VIII": {
+   "base": "L85",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "L85 Mod XI": {
+   "base": "L85",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "L85 Mod XIV": {
+   "base": "L85",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "Lewis Mod II": {
+   "base": "Lewis",
+   "confidence": 0.6,
+   "description": "Вес оружия снижен на 25%.",
+   "effects": {
+    "weight_pct": -25
+   },
+   "knife": false,
+   "roman": "II",
+   "suffix": "weight",
+   "type_ids": [
+    25147
+   ]
+  },
+  "Lewis Mod X": {
+   "base": "Lewis",
+   "confidence": 0.6,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": [
+    25146
+   ]
+  },
+  "Lewis Mod XIV": {
+   "base": "Lewis",
+   "confidence": 0.15,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "Li-Enfield Mod VIII": {
+   "base": "Li-Enfield",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Li-Enfield Mod XI": {
+   "base": "Li-Enfield",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Li-Enfield Mod XII": {
+   "base": "Li-Enfield",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "M14 Mod IX": {
+   "base": "M14",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 40 патрона.",
+   "effects": {
+    "clip_size": 40,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "M14 Mod VIII": {
+   "base": "M14",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "M14 Mod XI": {
+   "base": "M14",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "M14 Mod XV": {
+   "base": "M14",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "M16A2 Mod IX": {
+   "base": "M16A2",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 100 патрона.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "M16A2 Mod VIII": {
+   "base": "M16A2",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "M16A2 Mod XII": {
+   "base": "M16A2",
+   "confidence": 0.3,
+   "description": "Увеличено повреждение на 10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "M16A2 Mod XIV": {
+   "base": "M16A2",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "M60 Mod V": {
+   "base": "M60",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "M60 Mod VIII": {
+   "base": "M60",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "M60 Mod XIV": {
+   "base": "M60",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "MG-3 Mod II": {
+   "base": "MG-3",
+   "confidence": 0.47,
+   "description": "Вес оружия снижен на 25%.",
+   "effects": {
+    "weight_pct": -25
+   },
+   "knife": false,
+   "roman": "II",
+   "suffix": "weight",
+   "type_ids": []
+  },
+  "MG-3 Mod VIII": {
+   "base": "MG-3",
+   "confidence": 0.47,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "MG-3 Mod XI": {
+   "base": "MG-3",
+   "confidence": 0.47,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "MG-3 Mod XIV": {
+   "base": "MG-3",
+   "confidence": 0.47,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "MP-40 Mod IV": {
+   "base": "MP-40",
+   "confidence": 0.3,
+   "description": "Время прицеливания -15%.",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "knife": false,
+   "roman": "IV",
+   "suffix": "aimtime",
+   "type_ids": []
+  },
+  "MP-40 Mod VIII": {
+   "base": "MP-40",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "MP-40 Mod X": {
+   "base": "MP-40",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "MP5 Mod V": {
+   "base": "MP5",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "MP5 Mod VIII": {
+   "base": "MP5",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "MP5 Mod XI": {
+   "base": "MP5",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "MP5 Mod XV": {
+   "base": "MP5",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Mauser K98k Mod III": {
+   "base": "Mauser K98k",
+   "confidence": 0.3,
+   "description": "Восприятие +2.",
+   "effects": {
+    "perception": 2
+   },
+   "knife": false,
+   "roman": "III",
+   "suffix": "perception",
+   "type_ids": []
+  },
+  "Mauser K98k Mod VI": {
+   "base": "Mauser K98k",
+   "confidence": 0.3,
+   "description": "В целом, винтовки Маузера образца 1898 года и их производные можно смело назвать одними из лучших в своем классе.",
+   "effects": {},
+   "knife": false,
+   "roman": "VI",
+   "suffix": "agility",
+   "type_ids": []
+  },
+  "Mauser K98k Mod VIII": {
+   "base": "Mauser K98k",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Mossberg 590 Mod IX": {
+   "base": "Mossberg 590",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 18 патрона.",
+   "effects": {
+    "clip_size": 18,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Mossberg 590 Mod XII": {
+   "base": "Mossberg 590",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Mossberg 590 Mod XV": {
+   "base": "Mossberg 590",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "P90 Mod IX": {
+   "base": "P90",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 100 патрона.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "P90 Mod VIII": {
+   "base": "P90",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "P90 Mod XII": {
+   "base": "P90",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "P90 Mod XV": {
+   "base": "P90",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Rasheed/Rashid Mod XI": {
+   "base": "Rasheed/Rashid",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Rasheed/Rashid Mod XII": {
+   "base": "Rasheed/Rashid",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Remington 11-87 Mod V": {
+   "base": "Remington 11-87",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Remington 11-87 Mod XII": {
+   "base": "Remington 11-87",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Remington 11-87 Mod XV": {
+   "base": "Remington 11-87",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Remington 1100 Mod V": {
+   "base": "Remington 1100",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Remington 1100 Mod XII": {
+   "base": "Remington 1100",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Remington 1100 Mod XV": {
+   "base": "Remington 1100",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "SIG-Sauer SSG 2000 Mod XI": {
+   "base": "SIG-Sauer SSG 2000",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "SIG-Sauer SSG 2000 Mod XII": {
+   "base": "SIG-Sauer SSG 2000",
+   "confidence": 0.3,
+   "description": "Увеличено повреждение на 10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "SIG-Sauer SSG 2000 Mod XV": {
+   "base": "SIG-Sauer SSG 2000",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "SPAS-12 Mod X": {
+   "base": "SPAS-12",
+   "confidence": 0.3,
+   "description": "SPAS-12 отличает высокая надежность и гибкость в применении, но, с другой стороны, это оружие имеет довольно большой вес и сложное устройство, как следствие - высокую цену.",
+   "effects": {},
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "SPAS-12 Mod XII": {
+   "base": "SPAS-12",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "SPAS-12 Mod XV": {
+   "base": "SPAS-12",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Scattergun patrol Mod IV": {
+   "base": "Scattergun patrol",
+   "confidence": 0.3,
+   "description": "Время прицеливания -15%.",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "knife": false,
+   "roman": "IV",
+   "suffix": "aimtime",
+   "type_ids": []
+  },
+  "Scattergun patrol Mod VII": {
+   "base": "Scattergun patrol",
+   "confidence": 0.3,
+   "description": "Скорость перезарядки увеличена. ОД на скорость перезарядки -20%.",
+   "effects": {
+    "reload_speed_up": true
+   },
+   "knife": false,
+   "roman": "VII",
+   "suffix": "reloadspeed",
+   "type_ids": []
+  },
+  "Scattergun patrol Mod XV": {
+   "base": "Scattergun patrol",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Stan MK3 Mod V": {
+   "base": "Stan MK3",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Stan MK3 Mod VIII": {
+   "base": "Stan MK3",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Stan MK3 Mod XII": {
+   "base": "Stan MK3",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Steyr Scout Tactical Mod III": {
+   "base": "Steyr Scout Tactical",
+   "confidence": 0.3,
+   "description": "Восприятие +2.",
+   "effects": {
+    "perception": 2
+   },
+   "knife": false,
+   "roman": "III",
+   "suffix": "perception",
+   "type_ids": []
+  },
+  "Steyr Scout Tactical Mod VIII": {
+   "base": "Steyr Scout Tactical",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Steyr Scout Tactical Mod X": {
+   "base": "Steyr Scout Tactical",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "Steyr Scout Tactical Mod XV": {
+   "base": "Steyr Scout Tactical",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Steyr TMP Mod IX": {
+   "base": "Steyr TMP",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 60 патронов.",
+   "effects": {
+    "clip_size": 60,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Steyr TMP Mod X": {
+   "base": "Steyr TMP",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "Steyr TMP Mod XV": {
+   "base": "Steyr TMP",
+   "confidence": 0.3,
+   "description": "У оружия на 10% улучшены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Stoeger P 350 Mod V": {
+   "base": "Stoeger P 350",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Stoeger P 350 Mod XII": {
+   "base": "Stoeger P 350",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Stoeger P 350 Mod XV": {
+   "base": "Stoeger P 350",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Stoeger SP 312 Mod V": {
+   "base": "Stoeger SP 312",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Stoeger SP 312 Mod XII": {
+   "base": "Stoeger SP 312",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Stoeger SP 312 Mod XV": {
+   "base": "Stoeger SP 312",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Striker Mod IX": {
+   "base": "Striker",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 20 патрона.",
+   "effects": {
+    "clip_size": 20,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Striker Mod XII": {
+   "base": "Striker",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Striker Mod XV": {
+   "base": "Striker",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Thompson Mod II": {
+   "base": "Thompson",
+   "confidence": 0.6,
+   "description": "Вес оружия снижен на 25%.",
+   "effects": {
+    "weight_pct": -25
+   },
+   "knife": false,
+   "roman": "II",
+   "suffix": "weight",
+   "type_ids": [
+    25456,
+    25457,
+    25458
+   ]
+  },
+  "Thompson Mod VIII": {
+   "base": "Thompson",
+   "confidence": 0.2,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Thompson Mod XI": {
+   "base": "Thompson",
+   "confidence": 0.2,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Thompson Mod XV": {
+   "base": "Thompson",
+   "confidence": 0.2,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Type56 Mod IX": {
+   "base": "Type56",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 100 патрона.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Type56 Mod VIII": {
+   "base": "Type56",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Type56 Mod XII": {
+   "base": "Type56",
+   "confidence": 0.3,
+   "description": "Увеличено повреждение на 10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "UMP Mod IX": {
+   "base": "UMP",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 60 патронов.",
+   "effects": {
+    "clip_size": 60,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "UMP Mod X": {
+   "base": "UMP",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "UMP Mod XV": {
+   "base": "UMP",
+   "confidence": 0.3,
+   "description": "У оружия на 10% улучшены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "US Army M24 Mod VIII": {
+   "base": "US Army M24",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "US Army M24 Mod XI": {
+   "base": "US Army M24",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "US Army M24 Mod XII": {
+   "base": "US Army M24",
+   "confidence": 0.3,
+   "description": "Урон +10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "US Army M24 Mod XV": {
+   "base": "US Army M24",
+   "confidence": 0.3,
+   "description": "У оружия улучшены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "USAS-12 Mod IX": {
+   "base": "USAS-12",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 20 патрона.",
+   "effects": {
+    "clip_size": 20,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "USAS-12 Mod VIII": {
+   "base": "USAS-12",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "USAS-12 Mod XII": {
+   "base": "USAS-12",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "USAS-12 Mod XV": {
+   "base": "USAS-12",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Valmet M76F Mod IX": {
+   "base": "Valmet M76F",
+   "confidence": 0.2,
+   "description": "У оружия увеличен размер обоймы до 100 патрона.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Valmet M76F Mod VIII": {
+   "base": "Valmet M76F",
+   "confidence": 0.2,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Valmet M76F Mod XI": {
+   "base": "Valmet M76F",
+   "confidence": 0.2,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Valmet M76F Mod XIV": {
+   "base": "Valmet M76F",
+   "confidence": 0.2,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "Valtro PM-5 Mod IX": {
+   "base": "Valtro PM-5",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 10 патрона.",
+   "effects": {
+    "clip_size": 10,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Valtro PM-5 Mod XII": {
+   "base": "Valtro PM-5",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Valtro PM-5 Mod XV": {
+   "base": "Valtro PM-5",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Walther P99 Mod V": {
+   "base": "Walther P99",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Walther P99 Mod XI": {
+   "base": "Walther P99",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Winchester 1200 Mod III": {
+   "base": "Winchester 1200",
+   "confidence": 0.2,
+   "description": "Восприятие +2.",
+   "effects": {
+    "perception": 2
+   },
+   "knife": false,
+   "roman": "III",
+   "suffix": "perception",
+   "type_ids": []
+  },
+  "Winchester 1200 Mod X": {
+   "base": "Winchester 1200",
+   "confidence": 0.2,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "Winchester 1200 Mod XV": {
+   "base": "Winchester 1200",
+   "confidence": 0.2,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "АК-47 Mod IX": {
+   "base": "АК-47",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 100 патрона.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "АК-47 Mod VIII": {
+   "base": "АК-47",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "АК-47 Mod XII": {
+   "base": "АК-47",
+   "confidence": 0.3,
+   "description": "Увеличено повреждение на 10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "АС Вал Mod V": {
+   "base": "АС Вал",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "АС Вал Mod VIII": {
+   "base": "АС Вал",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "АС Вал Mod XI": {
+   "base": "АС Вал",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "АС Вал Mod XIV": {
+   "base": "АС Вал",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность.",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "Беретта 92 Mod IX": {
+   "base": "Беретта 92",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 30 патрона.",
+   "effects": {
+    "clip_size": 30,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Беретта 92 Mod XII": {
+   "base": "Беретта 92",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Беретта M12 Mod V": {
+   "base": "Беретта M12",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Беретта M12 Mod VIII": {
+   "base": "Беретта M12",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Беретта M12 Mod XII": {
+   "base": "Беретта M12",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Беретта M12 Mod XV": {
+   "base": "Беретта M12",
+   "confidence": 0.3,
+   "description": "Любимое оружие итальянских мафиози. Отличается хорошей устойчивостью при стрельбе, а также достаточно небольшими габаритами.",
+   "effects": {},
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Бизон ПП-19 Mod IX": {
+   "base": "Бизон ПП-19",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 100 патронов.",
+   "effects": {
+    "clip_size": 100,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Бизон ПП-19 Mod X": {
+   "base": "Бизон ПП-19",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "Бизон ПП-19 Mod XV": {
+   "base": "Бизон ПП-19",
+   "confidence": 0.3,
+   "description": "У оружия на 10% улучшены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Боевой нож Mod I": {
+   "base": "Боевой нож",
+   "confidence": 0.7,
+   "description": "Нож, предназначен для поражения живой силы противника в ходе боевых действий или специальных операций. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6264
+   ]
+  },
+  "Боевой нож Mod II": {
+   "base": "Боевой нож",
+   "confidence": 0.7,
+   "description": "Нож, предназначен для поражения живой силы противника в ходе боевых действий или специальных операций. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6263
+   ]
+  },
+  "Боевой нож Mod III": {
+   "base": "Боевой нож",
+   "confidence": 0.7,
+   "description": "Нож, предназначен для поражения живой силы противника в ходе боевых действий или специальных операций. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6262
+   ]
+  },
+  "Браунинг Mod XI": {
+   "base": "Браунинг",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Браунинг Mod XII": {
+   "base": "Браунинг",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Вепрь-12 Mod VI": {
+   "base": "Вепрь-12",
+   "confidence": 0.3,
+   "description": "Ловкость +2.",
+   "effects": {
+    "agility": 2
+   },
+   "knife": false,
+   "roman": "VI",
+   "suffix": "agility",
+   "type_ids": []
+  },
+  "Вепрь-12 Mod XII": {
+   "base": "Вепрь-12",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Вепрь-12 Mod XV": {
+   "base": "Вепрь-12",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "ИЖ-27 Mod VI": {
+   "base": "ИЖ-27",
+   "confidence": 0.3,
+   "description": "Самое популярное классическое ружье Ижевского механического завода. Обладает хорошим балансом, стабильным боем, простой и надежной конструкцией.",
+   "effects": {},
+   "knife": false,
+   "roman": "VI",
+   "suffix": "agility",
+   "type_ids": []
+  },
+  "ИЖ-27 Mod XI": {
+   "base": "ИЖ-27",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Кукри Mod I": {
+   "base": "Кукри",
+   "confidence": 0.7,
+   "description": "Клинок с характерным профилем «крыла сокола» с заточкой по вогнутой грани. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6274
+   ]
+  },
+  "Кукри Mod II": {
+   "base": "Кукри",
+   "confidence": 0.7,
+   "description": "Клинок с характерным профилем «крыла сокола» с заточкой по вогнутой грани. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6273
+   ]
+  },
+  "Кукри Mod III": {
+   "base": "Кукри",
+   "confidence": 0.7,
+   "description": "Клинок с характерным профилем «крыла сокола» с заточкой по вогнутой грани. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6272
+   ]
+  },
+  "Кустарный ПП Mod VIII": {
+   "base": "Кустарный ПП",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Кухонный нож Mod I": {
+   "base": "Кухонный нож",
+   "confidence": 0.7,
+   "description": "Нож предназначен для использования в приготовлении пищи, но и для иных целей тоже сгодится. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6239
+   ]
+  },
+  "Кухонный нож Mod II": {
+   "base": "Кухонный нож",
+   "confidence": 0.7,
+   "description": "Нож предназначен для использования в приготовлении пищи, но и для иных целей тоже сгодится. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6238
+   ]
+  },
+  "Кухонный нож Mod III": {
+   "base": "Кухонный нож",
+   "confidence": 0.7,
+   "description": "Нож предназначен для использования в приготовлении пищи, но и для иных целей тоже сгодится. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6237
+   ]
+  },
+  "Маузер С96 Mod V": {
+   "base": "Маузер С96",
+   "confidence": 0.2,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Маузер С96 Mod XII": {
+   "base": "Маузер С96",
+   "confidence": 0.2,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Мачете Mod I": {
+   "base": "Мачете",
+   "confidence": 0.47,
+   "description": "Клинок с односторонней заточкой, выпуклым лезвием, иногда с загнутым к лезвию остриём. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": []
+  },
+  "Мачете Mod II": {
+   "base": "Мачете",
+   "confidence": 0.47,
+   "description": "Клинок с односторонней заточкой, выпуклым лезвием, иногда с загнутым к лезвию остриём. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": []
+  },
+  "Мачете Mod III": {
+   "base": "Мачете",
+   "confidence": 0.47,
+   "description": "Клинок с односторонней заточкой, выпуклым лезвием, иногда с загнутым к лезвию остриём. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Наган 1895 Mod V": {
+   "base": "Наган 1895",
+   "confidence": 0.3,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Наган 1895 Mod XII": {
+   "base": "Наган 1895",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Нож кастет Mod I": {
+   "base": "Нож кастет",
+   "confidence": 0.7,
+   "description": "Холодное оружие имеющее возможность наносить не только колюще-режущие, но и ударные повреждения. Никому не захочется увидеть это оружие у своего лица. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6254
+   ]
+  },
+  "Нож кастет Mod II": {
+   "base": "Нож кастет",
+   "confidence": 0.7,
+   "description": "Холодное оружие имеющее возможность наносить не только колюще-режущие, но и ударные повреждения. Никому не захочется увидеть это оружие у своего лица. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6253
+   ]
+  },
+  "Нож кастет Mod III": {
+   "base": "Нож кастет",
+   "confidence": 0.7,
+   "description": "Холодное оружие имеющее возможность наносить не только колюще-режущие, но и ударные повреждения. Никому не захочется увидеть это оружие у своего лица. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6252
+   ]
+  },
+  "Обрез Mod IV": {
+   "base": "Обрез",
+   "confidence": 0.3,
+   "description": "Время прицеливания -15%.",
+   "effects": {
+    "aim_time_pct": -15
+   },
+   "knife": false,
+   "roman": "IV",
+   "suffix": "aimtime",
+   "type_ids": []
+  },
+  "Обрез Mod XII": {
+   "base": "Обрез",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Охотничий нож Mod I": {
+   "base": "Охотничий нож",
+   "confidence": 0.7,
+   "description": "Холодное оружие из добротной стали применяется в основном на охоте. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6249
+   ]
+  },
+  "Охотничий нож Mod II": {
+   "base": "Охотничий нож",
+   "confidence": 0.7,
+   "description": "Холодное оружие из добротной стали применяется в основном на охоте. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6248
+   ]
+  },
+  "Охотничий нож Mod III": {
+   "base": "Охотничий нож",
+   "confidence": 0.7,
+   "description": "Холодное оружие из добротной стали применяется в основном на охоте. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6247
+   ]
+  },
+  "ПК Mod VII": {
+   "base": "ПК",
+   "confidence": 0.3,
+   "description": "Скорость перезарядки увеличена.",
+   "effects": {
+    "reload_speed_up": true
+   },
+   "knife": false,
+   "roman": "VII",
+   "suffix": "reloadspeed",
+   "type_ids": []
+  },
+  "ПК Mod VIII": {
+   "base": "ПК",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "ПК Mod XII": {
+   "base": "ПК",
+   "confidence": 0.3,
+   "description": "Увеличено повреждение на 10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "ПК Mod XIV": {
+   "base": "ПК",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "ПКП Печенег Mod II": {
+   "base": "ПКП Печенег",
+   "confidence": 0.3,
+   "description": "Вес оружия снижен на 25%.",
+   "effects": {
+    "weight_pct": -25
+   },
+   "knife": false,
+   "roman": "II",
+   "suffix": "weight",
+   "type_ids": []
+  },
+  "ПКП Печенег Mod IX": {
+   "base": "ПКП Печенег",
+   "confidence": 0.3,
+   "description": "Пулемет снаряжен подсумками на ленту в 200 патронов.",
+   "effects": {},
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "ПКП Печенег Mod VIII": {
+   "base": "ПКП Печенег",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "ПКП Печенег Mod XIV": {
+   "base": "ПКП Печенег",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "РПД Mod VIII": {
+   "base": "РПД",
+   "confidence": 0,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "РПД Mod XI": {
+   "base": "РПД",
+   "confidence": 0,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "РПД Mod XII": {
+   "base": "РПД",
+   "confidence": 0,
+   "description": "Увеличено повреждение на 10%.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "РПД Mod XIV": {
+   "base": "РПД",
+   "confidence": 0,
+   "description": "Точность стрельбы из оружия повышена на 20%, а так же увеличена дальнобойность",
+   "effects": {
+    "max_range_up": true,
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XIV",
+   "suffix": "precision_shotrange",
+   "type_ids": []
+  },
+  "С. и В. специальный Mod XI": {
+   "base": "С. и В. специальный",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "С. и В. специальный Mod XII": {
+   "base": "С. и В. специальный",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "СВД Mod VIII": {
+   "base": "СВД",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "СВД Mod X": {
+   "base": "СВД",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "СВД Mod XI": {
+   "base": "СВД",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "СВД Mod XV": {
+   "base": "СВД",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "СВТ-40 Mod III": {
+   "base": "СВТ-40",
+   "confidence": 0.2,
+   "description": "Восприятие +2.",
+   "effects": {
+    "perception": 2
+   },
+   "knife": false,
+   "roman": "III",
+   "suffix": "perception",
+   "type_ids": []
+  },
+  "СВТ-40 Mod VI": {
+   "base": "СВТ-40",
+   "confidence": 0.2,
+   "description": "Редкая винтовка. Старая добрая боевая подруга, не отказывающая ни при каких условиях.",
+   "effects": {},
+   "knife": false,
+   "roman": "VI",
+   "suffix": "agility",
+   "type_ids": []
+  },
+  "СВТ-40 Mod XII": {
+   "base": "СВТ-40",
+   "confidence": 0.2,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "СВТ-40 Mod XV": {
+   "base": "СВТ-40",
+   "confidence": 0.2,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "СПС Mod XI": {
+   "base": "СПС",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "СПС Mod XII": {
+   "base": "СПС",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Сайга-12 Mod VI": {
+   "base": "Сайга-12",
+   "confidence": 0.3,
+   "description": "Ружье пользовалось большой популярностью в России в качестве не только охотничьего но и спортивного оружия , а также оружия для самообороны.",
+   "effects": {},
+   "knife": false,
+   "roman": "VI",
+   "suffix": "agility",
+   "type_ids": []
+  },
+  "Сайга-12 Mod XII": {
+   "base": "Сайга-12",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Сайга-12 Mod XV": {
+   "base": "Сайга-12",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Самодельная винтовка Mod XI": {
+   "base": "Самодельная винтовка",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Самодельная винтовка Mod XII": {
+   "base": "Самодельная винтовка",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Самодельный автомат Mod VIII": {
+   "base": "Самодельный автомат",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Самодельный нож Mod I": {
+   "base": "Самодельный нож",
+   "confidence": 0.7,
+   "description": "Самодельный нож собранный из железки и куска дерева. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6234
+   ]
+  },
+  "Самодельный нож Mod II": {
+   "base": "Самодельный нож",
+   "confidence": 0.7,
+   "description": "Самодельный нож собранный из железки и куска дерева. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6233
+   ]
+  },
+  "Самодельный нож Mod III": {
+   "base": "Самодельный нож",
+   "confidence": 0.7,
+   "description": "Самодельный нож собранный из железки и куска дерева. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6232
+   ]
+  },
+  "Самопальный дробовик Mod XI": {
+   "base": "Самопальный дробовик",
+   "confidence": 0.3,
+   "description": "Точность стрельбы из оружия повышена на 20%.",
+   "effects": {
+    "precision_pct": 20
+   },
+   "knife": false,
+   "roman": "XI",
+   "suffix": "precision",
+   "type_ids": []
+  },
+  "Самопальный дробовик Mod XII": {
+   "base": "Самопальный дробовик",
+   "confidence": 0.3,
+   "description": "Урон +10.",
+   "effects": {
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XII",
+   "suffix": "damage",
+   "type_ids": []
+  },
+  "Суоми М31 Mod V": {
+   "base": "Суоми М31",
+   "confidence": 0.2,
+   "description": "У оружия увеличена максимальная дальность стрельбы на 3 единицы.",
+   "effects": {
+    "max_range": 3
+   },
+   "knife": false,
+   "roman": "V",
+   "suffix": "shotrange",
+   "type_ids": []
+  },
+  "Суоми М31 Mod VI": {
+   "base": "Суоми М31",
+   "confidence": 0.2,
+   "description": "Редкий пистолет-пулемет. Продукт энтузиазма финского оружейника Аймо Лахти.",
+   "effects": {},
+   "knife": false,
+   "roman": "VI",
+   "suffix": "agility",
+   "type_ids": []
+  },
+  "Суоми М31 Mod VIII": {
+   "base": "Суоми М31",
+   "confidence": 0.2,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Суоми М31 Mod XV": {
+   "base": "Суоми М31",
+   "confidence": 0.2,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Такоуба Mod I": {
+   "base": "Такоуба",
+   "confidence": 0.7,
+   "description": "Данный меч относится к одной из разновидностей мечей такуба (takouba, takooba, takuba) – традиционного оружия североафриканских туарегов. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6269
+   ]
+  },
+  "Такоуба Mod II": {
+   "base": "Такоуба",
+   "confidence": 0.7,
+   "description": "Данный меч относится к одной из разновидностей мечей такуба (takouba, takooba, takuba) – традиционного оружия североафриканских туарегов. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6268
+   ]
+  },
+  "Такоуба Mod III": {
+   "base": "Такоуба",
+   "confidence": 0.7,
+   "description": "Данный меч относится к одной из разновидностей мечей такуба (takouba, takooba, takuba) – традиционного оружия североафриканских туарегов. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6267
+   ]
+  },
+  "Тесак Mod I": {
+   "base": "Тесак",
+   "confidence": 0.7,
+   "description": "Тяжелый клинок сформирован скорее за счет толщины металла, а не его качества, но для разделки туш вполне пригоден. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6244
+   ]
+  },
+  "Тесак Mod II": {
+   "base": "Тесак",
+   "confidence": 0.7,
+   "description": "Тяжелый клинок сформирован скорее за счет толщины металла, а не его качества, но для разделки туш вполне пригоден. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6243
+   ]
+  },
+  "Тесак Mod III": {
+   "base": "Тесак",
+   "confidence": 0.7,
+   "description": "Тяжелый клинок сформирован скорее за счет толщины металла, а не его качества, но для разделки туш вполне пригоден. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6242
+   ]
+  },
+  "Узи Mod IX": {
+   "base": "Узи",
+   "confidence": 0.3,
+   "description": "У оружия увеличен размер обоймы до 31 патрона.",
+   "effects": {
+    "clip_size": 31,
+    "clip_size_up": true
+   },
+   "knife": false,
+   "roman": "IX",
+   "suffix": "clipsize",
+   "type_ids": []
+  },
+  "Узи Mod VIII": {
+   "base": "Узи",
+   "confidence": 0.3,
+   "description": "Прочность увеличена в 2 раза.",
+   "effects": {
+    "durability_x": 2
+   },
+   "knife": false,
+   "roman": "VIII",
+   "suffix": "attrition_x2",
+   "type_ids": []
+  },
+  "Узи Mod X": {
+   "base": "Узи",
+   "confidence": 0.3,
+   "description": "ОД на выстрел -20%.",
+   "effects": {
+    "fire_cost_pct": -20
+   },
+   "knife": false,
+   "roman": "X",
+   "suffix": "shotspeed",
+   "type_ids": []
+  },
+  "Узи Mod XV": {
+   "base": "Узи",
+   "confidence": 0.3,
+   "description": "У оружия на 10% увеличены убойные характеристики и увеличена обойма.",
+   "effects": {
+    "clip_size_up": true,
+    "damage_pct": 10
+   },
+   "knife": false,
+   "roman": "XV",
+   "suffix": "damage_clipsize",
+   "type_ids": []
+  },
+  "Штык нож Mod I": {
+   "base": "Штык нож",
+   "confidence": 0.7,
+   "description": "Холодное колюще-режущее оружие, примыкаемое к стволу для штыкового боя. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true,
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "I",
+   "suffix": "damage_actionpoints",
+   "type_ids": [
+    6259
+   ]
+  },
+  "Штык нож Mod II": {
+   "base": "Штык нож",
+   "confidence": 0.7,
+   "description": "Холодное колюще-режущее оружие, примыкаемое к стволу для штыкового боя. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "action_points_down": true
+   },
+   "knife": true,
+   "roman": "II",
+   "suffix": "actionpoint",
+   "type_ids": [
+    6258
+   ]
+  },
+  "Штык нож Mod III": {
+   "base": "Штык нож",
+   "confidence": 0.7,
+   "description": "Холодное колюще-режущее оружие, примыкаемое к стволу для штыкового боя. Имеет бритвенно острую заточку и сбалансированную рукоять.",
+   "effects": {
+    "damage_up": true
+   },
+   "knife": true,
+   "roman": "III",
+   "suffix": "damage",
+   "type_ids": [
+    6257
+   ]
+  }
+ },
+ "mod_table": {
+  "II": {
+   "effects": {
+    "weight_pct=-25": 5
+   },
+   "pages": 5,
+   "suffix": "weight",
+   "typical": "Вес оружия снижен на N%."
+  },
+  "III": {
+   "effects": {
+    "perception=2": 5
+   },
+   "pages": 6,
+   "suffix": "perception",
+   "typical": "Восприятие +N."
+  },
+  "IV": {
+   "effects": {
+    "aim_time_pct=-15": 5
+   },
+   "pages": 5,
+   "suffix": "aimtime",
+   "typical": "Время прицеливания -N%."
+  },
+  "IX": {
+   "effects": {
+    "clip_size=100": 9,
+    "clip_size=31": 2,
+    "clip_size=60": 3,
+    "clip_size_up": 22
+   },
+   "pages": 23,
+   "suffix": "clipsize",
+   "typical": "У оружия увеличен размер обоймы до N патрона."
+  },
+  "V": {
+   "effects": {
+    "max_range=3": 16
+   },
+   "pages": 16,
+   "suffix": "shotrange",
+   "typical": "У оружия увеличена максимальная дальность стрельбы на N единицы."
+  },
+  "VI": {
+   "effects": {
+    "agility=2": 3
+   },
+   "pages": 8,
+   "suffix": "agility",
+   "typical": "Ловкость +N."
+  },
+  "VII": {
+   "effects": {
+    "reload_speed_up": 4
+   },
+   "pages": 4,
+   "suffix": "reloadspeed",
+   "typical": "Скорость перезарядки увеличена."
+  },
+  "VIII": {
+   "effects": {
+    "durability_x=2": 41
+   },
+   "pages": 41,
+   "suffix": "attrition_x2",
+   "typical": "Прочность увеличена в N раза."
+  },
+  "X": {
+   "effects": {
+    "fire_cost_pct=-20": 12,
+    "reload_speed_up": 1
+   },
+   "pages": 14,
+   "suffix": "shotspeed",
+   "typical": "ОД на выстрел -N%."
+  },
+  "XI": {
+   "effects": {
+    "precision_pct=20": 27
+   },
+   "pages": 28,
+   "suffix": "precision",
+   "typical": "Точность стрельбы из оружия повышена на N%."
+  },
+  "XII": {
+   "effects": {
+    "damage_pct=10": 44
+   },
+   "pages": 44,
+   "suffix": "damage",
+   "typical": "Урон +N."
+  },
+  "XIV": {
+   "effects": {
+    "max_range_up": 17,
+    "precision_pct=20": 17
+   },
+   "pages": 17,
+   "suffix": "precision_shotrange",
+   "typical": "Точность стрельбы из оружия повышена на N%, а так же увеличена дальнобойность."
+  },
+  "XV": {
+   "effects": {
+    "clip_size_up": 34,
+    "damage_pct=10": 32
+   },
+   "pages": 36,
+   "suffix": "damage_clipsize",
+   "typical": "У оружия на N% увеличены убойные характеристики и увеличена обойма."
+  },
+  "knife I": {
+   "effects": {
+    "action_points_down": 10,
+    "damage_up": 10
+   },
+   "pages": 10,
+   "suffix": "damage_actionpoints",
+   "typical": "Нож, предназначен для поражения живой силы противника в ходе боевых действий или"
+  },
+  "knife II": {
+   "effects": {
+    "action_points_down": 10
+   },
+   "pages": 10,
+   "suffix": "actionpoint",
+   "typical": "Нож, предназначен для поражения живой силы противника в ходе боевых действий или"
+  },
+  "knife III": {
+   "effects": {
+    "damage_up": 10
+   },
+   "pages": 10,
+   "suffix": "damage",
+   "typical": "Нож, предназначен для поражения живой силы противника в ходе боевых действий или"
+  }
+ }
+}
