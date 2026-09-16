@@ -32,10 +32,12 @@
 Регистрация — в браузере на `http://127.0.0.1:8080/`. Тестовый аккаунт
 `polestvr` / `lava1234`.
 
-Тесты (семь наборов, все обязаны быть зелёными перед коммитом):
+Тесты (двенадцать серверных наборов и два по данным, все обязаны быть
+зелёными перед коммитом):
 
 ```bash
-cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests; do python3 $t.py || break; done
+cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests test_items; do python3 $t.py || break; done
+python3 data/test_wiki_data.py && python3 data/test_world_data.py
 ```
 
 Переменные: `LAVA_GX`/`LAVA_GY` — стартовая клетка карты (5970×1730),
@@ -55,19 +57,25 @@ server/
   server.py          игровой сервер: asyncio, класс Session с cmd_* обработчиками
   protocol.py        кодек XMLSocket-кадров — не трогать, проверен клиентом
   world.py           локации: разбор XML, разрешение id → файл, посёлки на карте
-  items.py           каталог предметов и их статические характеристики
-  names.py           единая таблица строк (имена мобов, предметов, НПС)
+  items.py           каталог предметов: спроектированные кадры ss_si_*, поверх них
+                     ТТХ с вики (items_wiki.json), стоки торговцев с вики, имена и описания
+  names.py           единая таблица строк (имена мобов, предметов, НПС, описания, квесты)
   accounts.py        SQLite: аккаунты, персонажи, позиция
   bootstrap_http.py  HTTP: ресурсы клиента, регистрация, texts.xml, loaduser
-  test_*.py          семь наборов, каждый — реплей клиентской последовательности
+  test_*.py          двенадцать наборов: реплеи клиентских последовательностей и
+                     test_items — вики поверх каталога, инварианты кадров, стоки
 data/
   settlements.json           клетка карты → id локации (77), выводится скриптом
   build_settlements.py       вывод таблицы из подсказок карты и заголовков локаций
   settlements_verified.json  проверенные игрой клетки, пересчётом не затираются
   wiki/                      зеркало вики (6538 страниц wikitext, список файлов), CC BY-SA
   wiki_dump.py               снятие зеркала через MediaWiki API, докачивает изменённое
-  wiki_links.py/.json        статья вики ↔ type_id objects.xml (иконки, калибры, чертежи), confidence
+  wiki_links.py/.json        статья вики ↔ type_id objects.xml (иконки, калибры, чертежи), confidence.
+                             ЧИТАЕТ СЕРВЕР: русские названия предметов, разрешение названий
+                             в стоках, квестах и калибрах (links с confidence ≥ 0.5)
   wiki_extract.py            все таблицы статей → wiki_items.json; схема ss_si_* → items_wiki.json
+  items_wiki.json            ЧИТАЕТ СЕРВЕР: ТТХ 1164 типов в полях ss_si_* поверх
+                             спроектированных кадров items.py, описания под 3 000 000 + type_id
   firearm_families.py/.json  массовый огнестрел: класс + «Стрельба N» ↔ линейки, кандидаты
   mods_wiki.py/.json         чертежи и «Mod N»: эффекты модификаций, номер ↔ суффикс _mod_*
   test_wiki_data.py          проверка выведенных данных и зафиксированное покрытие
@@ -76,7 +84,9 @@ data/
                              лут, квесты; CC-BY-SA), wiki_world_fetch.py
   npc_wiki.json              каждая статья НПС → место → кандидаты-спавны → type_id
                              с confidence (build_npc_wiki.py)
-  trader_stock_wiki.json     ассортимент 87 торговцев по спискам «Торговля»
+  trader_stock_wiki.json     ассортимент 87 торговцев по спискам «Торговля». ЧИТАЕТ СЕРВЕР:
+                             stock_for() — вики-стоки поверх шести спроектированных лавок;
+                             названия без type_id уходят в лог при загрузке, не в лавку
   mob_types.json             1739 мобов: уровень (откуда взят), оружие, роль, скорость
   mob_curves.json            ОДНА кривая по уровню 0..33: hp/урон/попадание/опыт —
                              спроектирована по формулам «Игромеханики» (build_mob_types.py)
@@ -85,6 +95,10 @@ data/
   exits.json                 двери a/b → целевой интерьер, с confidence (build_exits.py)
   settlements_wiki.json      предложения клетка→локация по координатам вики; не применяются
   quests_wiki.json           1191 квест в схеме quests.md §1; 371 привязан к type_id дающего
+  build_quests_start.py      отбор квестов Вади-Хальфы (102, 35, 36, 37) из quests_wiki.json
+                             в quests.json: дающий с confidence ≥ high, предметы и награды
+                             через wiki_links, тексты дочитаны из wikitext; печатает отчёт
+  quests.json                ЧИТАЕТ СЕРВЕР: шесть квестов рынка + семь с вики (wiki_type/source)
   test_world_data.py         проверка всех таблиц выше против mobs.xml и друг друга
 recon/
   as-src/lol/**      395 декомпилированных классов клиента (JPEXS FFDec)
