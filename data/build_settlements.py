@@ -160,6 +160,69 @@ def tooltips():
             re.findall(r'<location x="(\d+)" y="(\d+)" text="([^"]*)"', txt)]
 
 
+# Words that name a kind of place rather than a place, so sharing one of them
+# is no evidence that two names mean the same spot.
+GENERIC_WORDS = {"лагер", "база", "посел", "дерев", "оазис", "рынок", "лавка",
+                 "ферма", "пещер", "дорог", "пост"}
+
+
+def wiki_claims():
+    """Cells the wiki points at, from data/settlements_wiki.json.
+
+    The wiki gives every NPC and location article a map coordinate, which
+    data/build_exits.py turned into claims per cell: which files the
+    articles standing there could mean, with a confidence. City coordinates
+    on the wiki are coarse -- every stall of the black market is written as
+    one cell -- so the claims are evidence to weigh, not a table to copy.
+    """
+    path = os.path.join(HERE, "settlements_wiki.json")
+    try:
+        with io.open(path, encoding="utf-8") as fh:
+            return json.load(fh)["cells"]
+    except (OSError, ValueError, KeyError):
+        return {}
+
+
+def weigh_wiki(cell, rec, head, tl):
+    """One file the wiki claims for a free cell, or None.
+
+    A single candidate is taken at medium confidence or better. Where
+    articles disagree -- the black market's stalls are all written on the
+    old market's cell -- the file with at least two thirds of the votes
+    wins. A low-confidence single candidate counts only when the map's own
+    tooltip and the file's title share a word that names the place rather
+    than its kind: "Лагерь Новых Колонистов" against "Лагерь Новые
+    Колонисты" yes, "Лагерь Люшер" against the same file no.
+    """
+    votes = collections.Counter()
+    for claim in rec.get("claims", []):
+        ids = claim.get("loc_ids", [])
+        if len(ids) == 1:
+            votes[ids[0]] += 1
+        # A location article named exactly as the map's own tooltip is the
+        # place itself, whatever the NPC articles around it say: the black
+        # market's stalls are all written on the old market's cell, but the
+        # article "Старый рынок Вади-Хальфы" is the old market's.
+        src = claim.get("source", "")
+        if (len(ids) == 1 and src.startswith("location:") and head
+                and stems(norm(src[len("location:"):])) == stems(head)):
+            return ids[0]
+    if not votes:
+        return None
+    best, n = votes.most_common(1)[0]
+    total = sum(votes.values())
+    conf = rec.get("confidence")
+    if len(votes) > 1:
+        return best if n * 3 >= total * 2 and conf != "low" else None
+    if conf in ("verified", "high", "medium"):
+        return best
+    if conf == "low" and head and best in tl:
+        shared = (stems(head) & stems(tl[best])) - {w for w in stems(head)
+                                                   if w[:5] in GENERIC_WORDS}
+        return best if shared else None
+    return None
+
+
 def verified():
     """Cells confirmed by playing on them, which no rule may overrule."""
     path = os.path.join(HERE, "settlements_verified.json")
@@ -247,6 +310,32 @@ def main():
             table[(x, y)] = ranked[0][1]
         else:
             skipped["название не уникально"] += 1
+
+    # Fourth, the wiki's coordinates, for cells the names left free.
+    heads = {}
+    for x, y, raw in tooltips():
+        heads[(x, y)] = norm(re.split(BR, html.unescape(raw))[0])
+    RANK = {"verified": 3, "high": 2, "medium": 1}
+    claims = sorted(wiki_claims().items(),
+                    key=lambda kv: (-RANK.get(kv[1].get("confidence"), 0),
+                                    -int(kv[1].get("votes", 0) or 0)))
+    for cell, rec in claims:
+        gx, gy = (int(v) for v in cell.split(","))
+        if (gx, gy) in table:
+            continue
+        pick = weigh_wiki((gx, gy), rec, heads.get((gx, gy), ""), tl)
+        if pick is None or pick not in usable:
+            continue
+        # The wiki writes a whole town on one or two cells, so the same
+        # file turns up wherever its NPCs are listed. A file already
+        # standing further than a settlement is wide stays where it is.
+        far = [c for c, i in table.items() if i == pick
+               and abs(c[0] - gx) + abs(c[1] - gy) > ADJACENT]
+        if far:
+            skipped["вики: файл уже стоит в другом месте"] += 1
+            continue
+        table[(gx, gy)] = pick
+        skipped["добавлено по вики"] += 1
 
     # A third pass, for one file claimed from several places at once. Titles
     # like "Причал" or "Мясники" are reused up and down the map, so matching

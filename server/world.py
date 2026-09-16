@@ -209,6 +209,60 @@ def location_at(gx, gy):
     return pack(cell[0], cell[1]) if found is None else found
 
 
+# Spawn entries that belong to a season, a clan or the developers rather than
+# to the place. The location files still carry the New Year lottery stall,
+# the Victory Day trader and clan-event vendors, and wasteland templates were
+# reused for clan events, which is why a clan's trader stands in open desert.
+# Recognised by the tokens of the internal name, split on _ and digits.
+EVENT_TOKENS = {"vov", "vbg", "lemon", "ny", "9may", "presents", "lotery",
+                "lottery", "hw", "xmas", "valentine", "valentines", "admin",
+                "test", "event", "prazdnik"}
+
+_ROLES = None
+
+
+def creature_role(type_id):
+    """'mob', 'boss', 'animal', 'object' from data/mob_types.json, or None
+    for the NPC classes, which carry no role there."""
+    global _ROLES
+    if _ROLES is None:
+        _ROLES = {}
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "mob_types.json"),
+                      encoding="utf-8") as fh:
+                data = json.load(fh)
+            for k, v in (data.get("types") or data).items():
+                if isinstance(v, dict) and v.get("role"):
+                    _ROLES[int(k)] = v["role"]
+        except (OSError, ValueError):
+            pass
+    return _ROLES.get(type_id)
+
+
+def _name_tokens(name):
+    return {t for t in re.split(r"[^A-Za-z]+", name.lower()) if t}
+
+
+def belongs_here(type_id, name, root, war):
+    """Whether a spawn from the location file should stand in the room.
+
+    Three kinds are left out. Seasonal, clan and developer entries, by the
+    tokens of their name. Loot containers and other "objects", which the
+    client would draw as creatures with a health bar and which need loot
+    logic that does not exist yet. And hostile creatures (root 0) in a
+    peaceful location: a market with war=0 had them in its file for events
+    and quests, and a player cannot fight there anyway.
+    """
+    if _name_tokens(name) & EVENT_TOKENS:
+        return False
+    if creature_role(type_id) == "object":
+        return False
+    if root == MOB and not war:
+        return False
+    return True
+
+
 def mob_types():
     """type_id -> (root_type_id, internal name, art folder).
 

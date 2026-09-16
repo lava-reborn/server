@@ -139,6 +139,9 @@ CHARACTER_COLUMNS = [
     ("level", "INTEGER NOT NULL DEFAULT 0"),
     # where the character respawns, set by on_conv;op=0
     ("home_loc", "INTEGER"),
+    # whether the starter kit has been handed out; characters made before
+    # the inventory existed get it on their next login
+    ("kit", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
 ITEM_FIELDS = ("slot", "count", "brk", "max_break_cur", "ammo_count",

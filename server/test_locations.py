@@ -91,7 +91,34 @@ check("and the rest are known to be unplaceable", len(undrawable) > 0, True)
 
 # --- the map ---------------------------------------------------------------
 cells = world.settlements()
-check("settlements recovered", len(cells) >= 60, True)
+check("settlements recovered", len(cells) >= 100, True)
+
+# Cells confirmed by standing on them in the client, and the two markets the
+# wiki's own coordinates settle: its location article named exactly as the
+# map's tooltip outranks the NPC articles heaped on the same city cell.
+check("the new market is where it was played", world.location_at(5967, 1728), 104)
+check("the old market follows its wiki article", world.location_at(5968, 1727), 35)
+# No check for the oasis at 5972,1738: three cells far apart claim the same
+# file on the wiki, and the builder rightly refuses to pick one. It stays
+# desert until somebody stands on it in the client and says which.
+
+# Who stands in a room. The location file lists everyone who ever stood
+# there: New Year lottery stalls, Victory Day traders, clan-event vendors,
+# quest creatures and loot boxes. A market has none of that on an ordinary
+# day, and open desert has no clan's trader in it.
+import rooms
+mobs = world.mob_types()
+market = rooms.Room(world.location(102), rooms.IdAllocator(), mobs)
+stalls = {mobs[n.type_id][1] for n in market.npcs.values()}
+check("the market keeps its traders", "wh_Pistols" in stalls, True)
+check("but not the New Year lottery", any("lotery" in n for n in stalls), False)
+check("nor the developers' stand-ins", any("Admin" in n for n in stalls), False)
+waste = rooms.Room(world.location(world.pack(6100, 1901)), rooms.IdAllocator(), mobs)
+check("open desert holds no event trader", len(waste.npcs), 0)
+check("a hostile creature does not stand in a peaceful place",
+      world.belongs_here(1, "mAntilope", world.MOB, war=0), False)
+check("but does in the wasteland",
+      world.belongs_here(1, "mAntilope", world.MOB, war=1), True)
 
 # One file, one place. A title reused up and down the map used to pin the
 # same location to cells hundreds apart, and at most one of those could be

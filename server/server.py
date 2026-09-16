@@ -388,6 +388,7 @@ class Session:
         # A pistol and a pack of rounds in the bag, so there is something to
         # wear, load and sell before the first stall is found.
         self.inv.starter_kit(char_id)
+        STORE.save_character_state(char_id, kit=1)
         log.info("  ..    created %r in slot %d", name, slot)
         # The client plays its intro after this, then sends actPlayer itself.
         self.send("cmdAck", res=0)
@@ -402,6 +403,13 @@ class Session:
                 self.char_id = c["id"]
                 self.load_character(c["id"])
                 self.restore(c)
+                # A character from before the inventory existed has an
+                # empty bag and no kit flag: give the same pistol and
+                # rounds a newborn gets, once.
+                if not c.get("kit") and not STORE.items_of(c["id"]):
+                    self.inv.starter_kit(c["id"])
+                    STORE.save_character_state(c["id"], kit=1)
+                    log.info("  ..    starter kit handed to %s", c["name"])
                 break
         else:
             # A socket that never logged in, or names a slot it does not

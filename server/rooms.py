@@ -99,7 +99,14 @@ class Room:
             if type_id not in mob_types or not names.known(type_id):
                 skipped += 1
                 continue
-            self.npcs[ids.npc()] = NPC(cell, type_id, mob_types[type_id][0])
+            root, name, _art = mob_types[type_id]
+            # The file lists everyone who ever stood here, seasonal stalls
+            # and clan-event vendors included; world.belongs_here says who
+            # belongs to the place itself.
+            if not world.belongs_here(type_id, name, root, loc.war):
+                skipped += 1
+                continue
+            self.npcs[ids.npc()] = NPC(cell, type_id, root)
         log.info("  ..    room %s (%s) holds %d inhabitants%s",
                  loc.title, loc.file, len(self.npcs),
                  ", %d unknown to the client" % skipped if skipped else "")

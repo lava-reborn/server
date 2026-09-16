@@ -115,6 +115,9 @@ try:
     c.send("lenter;accept=1;")
     got = c.frames(wait=2)
     names = [f.split(";")[0] for f in got]
+    # Kept for later: ids are handed out per room in file order, so which
+    # number the pistol stall gets depends on who else stands there.
+    entry = list(got)
     # No acknowledgement on success: the client cancels the one it registered
     # as soon as the lenter frame arrives.
     check("positioned without an ack", names[0], "lenter")
@@ -230,13 +233,15 @@ try:
     # --- a trader's stock -------------------------------------------------
     # The price list rides in userInfo as type_list, and the client refers to a
     # purchase by its index in that list rather than by the item's own id.
-    c.send("getInfo;lvl=0;id=105;type=1;")
+    trader_id = int(next(f for f in entry if f.startswith("userInfo_Trader")
+                         and "type_list=|4380|" in f).split("id=")[1].split(";")[0])
+    c.send("getInfo;lvl=0;id=%d;type=1;" % trader_id)
     got = c.frames()
     trader = got[0]
     check("trader carries a price list", "type_list=|" in trader, True)
     first = int(trader.split("type_list=|")[1].split("|")[0])
 
-    c.send("ss_create;s_type=1;target=105;")
+    c.send("ss_create;s_type=1;target=%d;" % trader_id)
     check("trade session opens", c.names(), ["cmdAck"])
 
     # ItemFactory keeps five of these in flight and frees a slot only when the
@@ -355,8 +360,12 @@ try:
           "g_id=%d;" % wild in got[1], True)
     c.send("lenter;accept=1;")
     got = c.frames(wait=2)
-    check("the wasteland has its own inhabitants",
-          any(f.startswith("lch") for f in got), True)
+    # The tile's file lists one inhabitant, and it is a clan-event trader
+    # (VOV_T001 and friends): the wasteland templates were reused for events.
+    # world.belongs_here keeps such entries out, so the desert opens empty
+    # until the combat code spawns creatures of its own.
+    check("the wasteland opens without the event vendors from its file",
+          any(f.startswith("lch") for f in got), False)
 
     # Leaving goes back to that cell, not to wherever the session started.
     c.send("chWorld;")

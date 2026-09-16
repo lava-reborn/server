@@ -182,7 +182,12 @@ def _common(type_id, name, root, price, weight):
         name=STRING_ID_OFFSET + type_id,   # string id, not the item id
         desc="",
         vis=0, weight=weight, tech_dif=1, exchang=1,
-        cost=price, g_cost=0, bg_p_cost=0,
+        # No bg_p_cost here. Trade.buy switches to UPD_BGPOINTS_BUY the moment
+        # the field is defined and numeric -- zero included -- so a 0 sent
+        # "for completeness" turned every purchase into one for battleground
+        # points, which the server then refused. Items actually priced that
+        # way set the key themselves.
+        cost=price, g_cost=0,
         # A trade pack of one. The client divides the price by this, so leaving
         # it out makes the shop show an undefined price rather than no price.
         sell_num=1,
