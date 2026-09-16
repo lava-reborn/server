@@ -1,0 +1,488 @@
+{
+ "_": "Designed, not recovered: the client and the wiki hold no mob stat. One table by level; multiply hp/dmg/xp by the role and weapon multipliers of the type. Rationale and the player formulas this mirrors: docstring of data/build_mob_types.py (wiki 'Игромеханика', 'Таблица опыта', CC-BY-SA).",
+ "formulas": {
+  "ap": "50 + 5*L (wiki AP)",
+  "armor": "5 + 1.5*L (attribute part + gear of the tier)",
+  "dmg": "4 + 1.6*L .. 8 + 2.4*L, then * weapon dmg_mult * role dmg_mult",
+  "dodge": "2*(5 + min(5, L//4)) + L + 3*min(5, L//4) (wiki dodge)",
+  "hit": "49 + 1.25*L + 5*min(5, L//4), capped at 95 (wiki melee hit)",
+  "hp": "player HP of the same level: 20 + 20*(5 + floor(0.75*(L-1)))",
+  "sp": "same as hp (SP = 4*agility + 20*constitution)",
+  "xp_pool": "4*hp: what a same-level player earns for the kill, wiki: floor((clamp(Lmob-Lplayer,-4,4)+4) * damage)"
+ },
+ "hex_ms": {
+  "dog": 150,
+  "dog_fast": 120,
+  "flag": 0,
+  "man": 200,
+  "none": 0,
+  "unknown": 200
+ },
+ "levels": {
+  "0": {
+   "ap": 50,
+   "armor": 5,
+   "dmg_max": 8,
+   "dmg_min": 4,
+   "dodge": 10,
+   "hit": 49.0,
+   "hp": 120,
+   "sp": 120,
+   "xp_pool": 480
+  },
+  "1": {
+   "ap": 55,
+   "armor": 6,
+   "dmg_max": 10,
+   "dmg_min": 6,
+   "dodge": 11,
+   "hit": 50.25,
+   "hp": 120,
+   "sp": 120,
+   "xp_pool": 480
+  },
+  "10": {
+   "ap": 100,
+   "armor": 20,
+   "dmg_max": 32,
+   "dmg_min": 20,
+   "dodge": 30,
+   "hit": 71.5,
+   "hp": 240,
+   "sp": 240,
+   "xp_pool": 960
+  },
+  "11": {
+   "ap": 105,
+   "armor": 22,
+   "dmg_max": 34,
+   "dmg_min": 22,
+   "dodge": 31,
+   "hit": 72.75,
+   "hp": 260,
+   "sp": 260,
+   "xp_pool": 1040
+  },
+  "12": {
+   "ap": 110,
+   "armor": 23,
+   "dmg_max": 37,
+   "dmg_min": 23,
+   "dodge": 37,
+   "hit": 79.0,
+   "hp": 280,
+   "sp": 280,
+   "xp_pool": 1120
+  },
+  "13": {
+   "ap": 115,
+   "armor": 24,
+   "dmg_max": 39,
+   "dmg_min": 25,
+   "dodge": 38,
+   "hit": 80.25,
+   "hp": 300,
+   "sp": 300,
+   "xp_pool": 1200
+  },
+  "14": {
+   "ap": 120,
+   "armor": 26,
+   "dmg_max": 42,
+   "dmg_min": 26,
+   "dodge": 39,
+   "hit": 81.5,
+   "hp": 300,
+   "sp": 300,
+   "xp_pool": 1200
+  },
+  "15": {
+   "ap": 125,
+   "armor": 28,
+   "dmg_max": 44,
+   "dmg_min": 28,
+   "dodge": 40,
+   "hit": 82.75,
+   "hp": 320,
+   "sp": 320,
+   "xp_pool": 1280
+  },
+  "16": {
+   "ap": 130,
+   "armor": 29,
+   "dmg_max": 46,
+   "dmg_min": 30,
+   "dodge": 46,
+   "hit": 89.0,
+   "hp": 340,
+   "sp": 340,
+   "xp_pool": 1360
+  },
+  "17": {
+   "ap": 135,
+   "armor": 30,
+   "dmg_max": 49,
+   "dmg_min": 31,
+   "dodge": 47,
+   "hit": 90.25,
+   "hp": 360,
+   "sp": 360,
+   "xp_pool": 1440
+  },
+  "18": {
+   "ap": 140,
+   "armor": 32,
+   "dmg_max": 51,
+   "dmg_min": 33,
+   "dodge": 48,
+   "hit": 91.5,
+   "hp": 360,
+   "sp": 360,
+   "xp_pool": 1440
+  },
+  "19": {
+   "ap": 145,
+   "armor": 34,
+   "dmg_max": 54,
+   "dmg_min": 34,
+   "dodge": 49,
+   "hit": 92.75,
+   "hp": 380,
+   "sp": 380,
+   "xp_pool": 1520
+  },
+  "2": {
+   "ap": 60,
+   "armor": 8,
+   "dmg_max": 13,
+   "dmg_min": 7,
+   "dodge": 12,
+   "hit": 51.5,
+   "hp": 120,
+   "sp": 120,
+   "xp_pool": 480
+  },
+  "20": {
+   "ap": 150,
+   "armor": 35,
+   "dmg_max": 56,
+   "dmg_min": 36,
+   "dodge": 55,
+   "hit": 95,
+   "hp": 400,
+   "sp": 400,
+   "xp_pool": 1600
+  },
+  "21": {
+   "ap": 155,
+   "armor": 36,
+   "dmg_max": 58,
+   "dmg_min": 38,
+   "dodge": 56,
+   "hit": 95,
+   "hp": 420,
+   "sp": 420,
+   "xp_pool": 1680
+  },
+  "22": {
+   "ap": 160,
+   "armor": 38,
+   "dmg_max": 61,
+   "dmg_min": 39,
+   "dodge": 57,
+   "hit": 95,
+   "hp": 420,
+   "sp": 420,
+   "xp_pool": 1680
+  },
+  "23": {
+   "ap": 165,
+   "armor": 40,
+   "dmg_max": 63,
+   "dmg_min": 41,
+   "dodge": 58,
+   "hit": 95,
+   "hp": 440,
+   "sp": 440,
+   "xp_pool": 1760
+  },
+  "24": {
+   "ap": 170,
+   "armor": 41,
+   "dmg_max": 66,
+   "dmg_min": 42,
+   "dodge": 59,
+   "hit": 95,
+   "hp": 460,
+   "sp": 460,
+   "xp_pool": 1840
+  },
+  "25": {
+   "ap": 175,
+   "armor": 42,
+   "dmg_max": 68,
+   "dmg_min": 44,
+   "dodge": 60,
+   "hit": 95,
+   "hp": 480,
+   "sp": 480,
+   "xp_pool": 1920
+  },
+  "26": {
+   "ap": 180,
+   "armor": 44,
+   "dmg_max": 70,
+   "dmg_min": 46,
+   "dodge": 61,
+   "hit": 95,
+   "hp": 480,
+   "sp": 480,
+   "xp_pool": 1920
+  },
+  "27": {
+   "ap": 185,
+   "armor": 46,
+   "dmg_max": 73,
+   "dmg_min": 47,
+   "dodge": 62,
+   "hit": 95,
+   "hp": 500,
+   "sp": 500,
+   "xp_pool": 2000
+  },
+  "28": {
+   "ap": 190,
+   "armor": 47,
+   "dmg_max": 75,
+   "dmg_min": 49,
+   "dodge": 63,
+   "hit": 95,
+   "hp": 520,
+   "sp": 520,
+   "xp_pool": 2080
+  },
+  "29": {
+   "ap": 195,
+   "armor": 48,
+   "dmg_max": 78,
+   "dmg_min": 50,
+   "dodge": 64,
+   "hit": 95,
+   "hp": 540,
+   "sp": 540,
+   "xp_pool": 2160
+  },
+  "3": {
+   "ap": 65,
+   "armor": 10,
+   "dmg_max": 15,
+   "dmg_min": 9,
+   "dodge": 13,
+   "hit": 52.75,
+   "hp": 140,
+   "sp": 140,
+   "xp_pool": 560
+  },
+  "30": {
+   "ap": 200,
+   "armor": 50,
+   "dmg_max": 80,
+   "dmg_min": 52,
+   "dodge": 65,
+   "hit": 95,
+   "hp": 540,
+   "sp": 540,
+   "xp_pool": 2160
+  },
+  "31": {
+   "ap": 205,
+   "armor": 52,
+   "dmg_max": 82,
+   "dmg_min": 54,
+   "dodge": 66,
+   "hit": 95,
+   "hp": 560,
+   "sp": 560,
+   "xp_pool": 2240
+  },
+  "32": {
+   "ap": 210,
+   "armor": 53,
+   "dmg_max": 85,
+   "dmg_min": 55,
+   "dodge": 67,
+   "hit": 95,
+   "hp": 580,
+   "sp": 580,
+   "xp_pool": 2320
+  },
+  "33": {
+   "ap": 215,
+   "armor": 54,
+   "dmg_max": 87,
+   "dmg_min": 57,
+   "dodge": 68,
+   "hit": 95,
+   "hp": 600,
+   "sp": 600,
+   "xp_pool": 2400
+  },
+  "4": {
+   "ap": 70,
+   "armor": 11,
+   "dmg_max": 18,
+   "dmg_min": 10,
+   "dodge": 19,
+   "hit": 59.0,
+   "hp": 160,
+   "sp": 160,
+   "xp_pool": 640
+  },
+  "5": {
+   "ap": 75,
+   "armor": 12,
+   "dmg_max": 20,
+   "dmg_min": 12,
+   "dodge": 20,
+   "hit": 60.25,
+   "hp": 180,
+   "sp": 180,
+   "xp_pool": 720
+  },
+  "6": {
+   "ap": 80,
+   "armor": 14,
+   "dmg_max": 22,
+   "dmg_min": 14,
+   "dodge": 21,
+   "hit": 61.5,
+   "hp": 180,
+   "sp": 180,
+   "xp_pool": 720
+  },
+  "7": {
+   "ap": 85,
+   "armor": 16,
+   "dmg_max": 25,
+   "dmg_min": 15,
+   "dodge": 22,
+   "hit": 62.75,
+   "hp": 200,
+   "sp": 200,
+   "xp_pool": 800
+  },
+  "8": {
+   "ap": 90,
+   "armor": 17,
+   "dmg_max": 27,
+   "dmg_min": 17,
+   "dodge": 28,
+   "hit": 69.0,
+   "hp": 220,
+   "sp": 220,
+   "xp_pool": 880
+  },
+  "9": {
+   "ap": 95,
+   "armor": 18,
+   "dmg_max": 30,
+   "dmg_min": 18,
+   "dodge": 29,
+   "hit": 70.25,
+   "hp": 240,
+   "sp": 240,
+   "xp_pool": 960
+  }
+ },
+ "roles": {
+  "animal": {
+   "aggro": 5,
+   "dmg_mult": 0.8,
+   "hp_mult": 0.7,
+   "xp_mult": 0.7
+  },
+  "boss": {
+   "aggro": 8,
+   "dmg_mult": 1.5,
+   "hp_mult": 3.0,
+   "xp_mult": 3.0
+  },
+  "mob": {
+   "aggro": 6,
+   "dmg_mult": 1.0,
+   "hp_mult": 1.0,
+   "xp_mult": 1.0
+  },
+  "object": {
+   "aggro": 0,
+   "dmg_mult": 0.0,
+   "hp_mult": 1.0,
+   "xp_mult": 0.5
+  }
+ },
+ "weapon_classes": {
+  "assault_rifle": {
+   "anim": "rifle",
+   "ap": 10,
+   "dmg_mult": 0.9,
+   "range": 7,
+   "shots": 2
+  },
+  "fist": {
+   "anim": "fist",
+   "ap": 5,
+   "dmg_mult": 0.6,
+   "range": 1,
+   "shots": 1
+  },
+  "knife": {
+   "anim": "knife",
+   "ap": 6,
+   "dmg_mult": 1.0,
+   "range": 1,
+   "shots": 1
+  },
+  "machine_gun": {
+   "anim": "rifle",
+   "ap": 14,
+   "dmg_mult": 0.8,
+   "range": 8,
+   "shots": 4
+  },
+  "none": {
+   "anim": "fist",
+   "ap": 0,
+   "dmg_mult": 0.0,
+   "range": 0,
+   "shots": 0
+  },
+  "pistol": {
+   "anim": "pistol",
+   "ap": 8,
+   "dmg_mult": 1.0,
+   "range": 6,
+   "shots": 1
+  },
+  "rifle": {
+   "anim": "rifle",
+   "ap": 12,
+   "dmg_mult": 1.6,
+   "range": 10,
+   "shots": 1
+  },
+  "shotgun": {
+   "anim": "rifle",
+   "ap": 10,
+   "dmg_mult": 1.4,
+   "range": 4,
+   "shots": 1
+  },
+  "smg": {
+   "anim": "pistol",
+   "ap": 10,
+   "dmg_mult": 0.6,
+   "range": 5,
+   "shots": 3
+  }
+ }
+}
