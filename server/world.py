@@ -209,6 +209,35 @@ def location_at(gx, gy):
     return pack(cell[0], cell[1]) if found is None else found
 
 
+_SUBSTITUTES = None
+
+
+def substitute(type_id):
+    """A known creature to stand in for one the client cannot draw, or None.
+
+    DESIGNED, not recovered. 664 of the creature types the location files
+    spawn are gone from the shipped mobs.xml, so a battle camp would open
+    with its fighters missing. data/spawn_substitutes.json (built by
+    data/build_spawn_substitutes.py) maps each such type to a known creature
+    of the same faction -- read off the camp's own file name and the prefix
+    its known inhabitants share -- and the nearest level. rooms.Room asks
+    here only for hostile creatures in war=1 locations; a stand-in is never
+    a shopkeeper, and never stands in a peaceful place.
+    """
+    global _SUBSTITUTES
+    if _SUBSTITUTES is None:
+        _SUBSTITUTES = {}
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "spawn_substitutes.json"),
+                      encoding="utf-8") as fh:
+                for k, v in json.load(fh)["substitutes"].items():
+                    _SUBSTITUTES[int(k)] = int(v["type_id"])
+        except (OSError, ValueError, KeyError):
+            pass
+    return _SUBSTITUTES.get(type_id)
+
+
 # Spawn entries that belong to a season, a clan or the developers rather than
 # to the place. The location files still carry the New Year lottery stall,
 # the Victory Day trader and clan-event vendors, and wasteland templates were

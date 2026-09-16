@@ -88,7 +88,7 @@ class Room:
         self.npcs = {}
         # sessions present, in order of arrival (dict as an ordered set)
         self.players = {}
-        skipped = 0
+        skipped = stood_in = 0
         for cell, type_id in loc.spawns:
             # A creature the client has no record of cannot be drawn or named.
             # res misses in its copy of mobs.xml and the art resolves to
@@ -97,8 +97,18 @@ class Room:
             # back on top of the game. 670 of the type ids used by locations
             # are absent from mobs.xml, so this is not a rare corner.
             if type_id not in mob_types or not names.known(type_id):
-                skipped += 1
-                continue
+                # In a battle location a known creature of the same faction
+                # and level stands in (world.substitute, a designed table):
+                # only there, and only for hostiles, so that no shopkeeper
+                # is invented and no peaceful place gains a fighter.
+                stand_in = world.substitute(type_id) if loc.war else None
+                if (stand_in is None or stand_in not in mob_types
+                        or mob_types[stand_in][0] != world.MOB
+                        or not names.known(stand_in)):
+                    skipped += 1
+                    continue
+                type_id = stand_in
+                stood_in += 1
             root, name, _art = mob_types[type_id]
             # The file lists everyone who ever stood here, seasonal stalls
             # and clan-event vendors included; world.belongs_here says who
@@ -107,9 +117,10 @@ class Room:
                 skipped += 1
                 continue
             self.npcs[ids.npc()] = NPC(cell, type_id, root)
-        log.info("  ..    room %s (%s) holds %d inhabitants%s",
+        log.info("  ..    room %s (%s) holds %d inhabitants%s%s",
                  loc.title, loc.file, len(self.npcs),
-                 ", %d unknown to the client" % skipped if skipped else "")
+                 ", %d unknown to the client" % skipped if skipped else "",
+                 ", %d stood in by kin (designed)" % stood_in if stood_in else "")
 
     def npc(self, entity_id):
         return self.npcs.get(entity_id)
