@@ -1,5 +1,11 @@
 """Rebuild data/settlements.json: which map cell holds which location.
 
+SUPERSEDED by data/place_settlements.py, which weighs every clue (names,
+wiki coordinates, NPC bindings, promised services, region, art twins) per
+cell and writes data/settlements_report.md for a player to check. This
+script is the first, name-only pass and is kept for reference; running it
+overwrites settlements.json with the poorer table.
+
 The table the original server used is gone, and the client never had it: it
 is told the location id in lcall and looks no further. What the client does
 still carry is res/database/locations.xml, the 414 tooltips the global map
