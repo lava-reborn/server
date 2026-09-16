@@ -199,6 +199,26 @@ def settlements():
     return _SETTLEMENTS
 
 
+_CELL_OF = None
+
+
+def cell_of(loc_id):
+    """The map cell a location stands on, or None for an interior.
+
+    The reverse of location_at. A settlement is reachable both by walking
+    onto its cell and by being sent there directly, and in the second case
+    the player's position on the map has to follow, or leaving puts them
+    back wherever they happened to stand before. A settlement wide enough
+    to cover two cells answers with the first.
+    """
+    global _CELL_OF
+    if _CELL_OF is None:
+        _CELL_OF = {}
+        for cell, i in sorted(settlements().items()):
+            _CELL_OF.setdefault(i, cell)
+    return _CELL_OF.get(loc_id)
+
+
 def location_at(gx, gy):
     """Which location a map cell leads into.
 
@@ -213,6 +233,35 @@ def location_at(gx, gy):
     cell = (int(math.floor(gx)), int(math.floor(gy)))
     found = settlements().get(cell)
     return pack(cell[0], cell[1]) if found is None else found
+
+
+_SUBSTITUTES = None
+
+
+def substitute(type_id):
+    """A known creature to stand in for one the client cannot draw, or None.
+
+    DESIGNED, not recovered. 664 of the creature types the location files
+    spawn are gone from the shipped mobs.xml, so a battle camp would open
+    with its fighters missing. data/spawn_substitutes.json (built by
+    data/build_spawn_substitutes.py) maps each such type to a known creature
+    of the same faction -- read off the camp's own file name and the prefix
+    its known inhabitants share -- and the nearest level. rooms.Room asks
+    here only for hostile creatures in war=1 locations; a stand-in is never
+    a shopkeeper, and never stands in a peaceful place.
+    """
+    global _SUBSTITUTES
+    if _SUBSTITUTES is None:
+        _SUBSTITUTES = {}
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "spawn_substitutes.json"),
+                      encoding="utf-8") as fh:
+                for k, v in json.load(fh)["substitutes"].items():
+                    _SUBSTITUTES[int(k)] = int(v["type_id"])
+        except (OSError, ValueError, KeyError):
+            pass
+    return _SUBSTITUTES.get(type_id)
 
 
 # Spawn entries that belong to a season, a clan or the developers rather than

@@ -814,11 +814,14 @@ class Session:
                 loc_id = world.location_at(gx, gy)
             elif len(args) == 1:
                 loc_id = int(args[0])
-                # A wilderness id names its own cell; an interior does not,
-                # so the player keeps the cell they came from and leaving
-                # puts them back on it.
-                gx, gy = (world.unpack(loc_id) if world.is_wilderness(loc_id)
-                          else (self.gx, self.gy))
+                # A wilderness id names its own cell. A settlement has one
+                # in the map table, and the player has to be moved onto it,
+                # or leaving would drop them wherever they stood before. A
+                # true interior has none, and there the old cell is right.
+                if world.is_wilderness(loc_id):
+                    gx, gy = world.unpack(loc_id)
+                else:
+                    gx, gy = world.cell_of(loc_id) or (self.gx, self.gy)
             else:
                 self.say("/goto <номер локации>  или  /goto <x> <y>", group)
                 return

@@ -1,0 +1,7479 @@
+{
+ "_": "DESIGNED, not recovered: unknown spawn type id (absent from the client's mobs.xml) -> a known creature of the same faction and the nearest level, so that battle camps are not empty. Applied by server/rooms.py only in war=1 locations and only for hostile (root 0) creatures. faction = name prefix (ja_ Джанджавиды, mg_ Магриб, nc_ Новые Колонисты, lu_ Люшер, st_ Работорговцы, zd_ Живодеры, jm_ ДСР, pc_ Миротворцы, pt_ Пираты, na_ Северный Альянс, ...); how = camp_fn (Bandit_CampN / Up_Camp_*LVL_NN) or neighbours (prefix of the known hostiles in the same file); level from the file name (*LVL), the known neighbours, or the faction's median. Built by data/build_spawn_substitutes.py.",
+ "camp_factions": {
+  "1": "nc",
+  "10": "na",
+  "11": "na",
+  "2": "lu",
+  "3": "ja",
+  "4": "mg",
+  "5": "st",
+  "6": "zd",
+  "7": "jm",
+  "8": "pc",
+  "9": "pt"
+ },
+ "designed": true,
+ "pools": {
+  "ab": 13,
+  "abri": 4,
+  "ah": 10,
+  "archeolog": 20,
+  "city": 264,
+  "cosm": 4,
+  "craft": 4,
+  "delta": 5,
+  "dn": 13,
+  "hippie": 3,
+  "hws": 3,
+  "inst": 6,
+  "inv": 37,
+  "ja": 12,
+  "jm": 10,
+  "kv": 28,
+  "labor": 33,
+  "lib": 3,
+  "lm": 3,
+  "lu": 15,
+  "me": 6,
+  "mg": 15,
+  "mob": 4,
+  "na": 30,
+  "nc": 11,
+  "ng": 3,
+  "oasis": 19,
+  "olc": 12,
+  "olm": 70,
+  "ownloc": 23,
+  "pc": 15,
+  "pm": 4,
+  "prisoner": 3,
+  "pt": 15,
+  "raid": 4,
+  "rb": 3,
+  "set": 6,
+  "st": 13,
+  "touareg": 14,
+  "ufo": 5,
+  "ves": 4,
+  "wh": 11,
+  "xenos": 20,
+  "zd": 13
+ },
+ "substitutes": {
+  "2212": {
+   "faction": "mob",
+   "files": [
+    740,
+    741,
+    742,
+    743,
+    744,
+    749,
+    750,
+    751,
+    752,
+    753,
+    758,
+    759,
+    760,
+    761,
+    762,
+    1052,
+    1053,
+    1054,
+    1241,
+    1244,
+    1247
+   ],
+   "how": "neighbours",
+   "level": 15,
+   "level_source": "files",
+   "name": "mob_21_2012_lvl15",
+   "picked_level": 15,
+   "type_id": 2215
+  },
+  "2515": {
+   "faction": "nc",
+   "files": [
+    1056
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2516": {
+   "faction": "nc",
+   "files": [
+    1056
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2517": {
+   "faction": "lu",
+   "files": [
+    1069
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "lu_Ispolnitel_lvl4",
+   "picked_level": 4,
+   "type_id": 281
+  },
+  "2518": {
+   "faction": "lu",
+   "files": [
+    1069
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "lu_Master_lvl4",
+   "picked_level": 4,
+   "type_id": 279
+  },
+  "2519": {
+   "faction": "ja",
+   "files": [
+    1072
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2520": {
+   "faction": "ja",
+   "files": [
+    1072
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2521": {
+   "faction": "mg",
+   "files": [
+    1073
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "mg_Chasovoi_lvl6",
+   "picked_level": 6,
+   "type_id": 302
+  },
+  "2522": {
+   "faction": "mg",
+   "files": [
+    1073
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "mg_Officer_lvl6",
+   "picked_level": 6,
+   "type_id": 303
+  },
+  "2523": {
+   "faction": "st",
+   "files": [
+    1108
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "st_Gromila_lvl8",
+   "picked_level": 8,
+   "type_id": 317
+  },
+  "2524": {
+   "faction": "st",
+   "files": [
+    1108
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl8",
+   "picked_level": 8,
+   "type_id": 315
+  },
+  "2525": {
+   "faction": "zd",
+   "files": [
+    1109
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl10",
+   "picked_level": 10,
+   "type_id": 349
+  },
+  "2526": {
+   "faction": "zd",
+   "files": [
+    1109
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl10",
+   "picked_level": 10,
+   "type_id": 348
+  },
+  "2527": {
+   "faction": "jm",
+   "files": [
+    1110
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "jm_WilliamBlade",
+   "picked_level": 1,
+   "type_id": 1565
+  },
+  "2528": {
+   "faction": "jm",
+   "files": [
+    1110
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "jm_WilliamBlade",
+   "picked_level": 1,
+   "type_id": 1565
+  },
+  "2529": {
+   "faction": "pc",
+   "files": [
+    1111
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "pc_JohnTornhil",
+   "picked_level": 1,
+   "type_id": 2166
+  },
+  "2530": {
+   "faction": "pc",
+   "files": [
+    1111
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "pc_JohnTornhil",
+   "picked_level": 1,
+   "type_id": 2166
+  },
+  "2531": {
+   "faction": "pt",
+   "files": [
+    1112
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "pt_Dempers",
+   "picked_level": 1,
+   "type_id": 1750
+  },
+  "2532": {
+   "faction": "pt",
+   "files": [
+    1112
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "pt_Klenz1",
+   "picked_level": 1,
+   "type_id": 1760
+  },
+  "2533": {
+   "faction": "na",
+   "files": [
+    1113
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "na_JamesBaker",
+   "picked_level": 1,
+   "type_id": 2170
+  },
+  "2534": {
+   "faction": "na",
+   "files": [
+    1113
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "na_Pilot_First",
+   "picked_level": 1,
+   "type_id": 1889
+  },
+  "2535": {
+   "faction": "nc",
+   "files": [
+    1057
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2536": {
+   "faction": "nc",
+   "files": [
+    1057
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2537": {
+   "faction": "lu",
+   "files": [
+    1070
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "lu_Ispolnitel_lvl4",
+   "picked_level": 4,
+   "type_id": 281
+  },
+  "2538": {
+   "faction": "lu",
+   "files": [
+    1070
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "lu_Master_lvl4",
+   "picked_level": 4,
+   "type_id": 279
+  },
+  "2539": {
+   "faction": "ja",
+   "files": [
+    1074
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2540": {
+   "faction": "ja",
+   "files": [
+    1074
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2541": {
+   "faction": "mg",
+   "files": [
+    1075
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "mg_Chasovoi_lvl7",
+   "picked_level": 7,
+   "type_id": 306
+  },
+  "2542": {
+   "faction": "mg",
+   "files": [
+    1075
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "mg_Officer_lvl7",
+   "picked_level": 7,
+   "type_id": 307
+  },
+  "2543": {
+   "faction": "st",
+   "files": [
+    1114
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "st_Gromila_lvl8",
+   "picked_level": 8,
+   "type_id": 317
+  },
+  "2544": {
+   "faction": "st",
+   "files": [
+    1114
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl8",
+   "picked_level": 8,
+   "type_id": 315
+  },
+  "2545": {
+   "faction": "zd",
+   "files": [
+    1115
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl10",
+   "picked_level": 10,
+   "type_id": 349
+  },
+  "2546": {
+   "faction": "zd",
+   "files": [
+    1115
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl10",
+   "picked_level": 10,
+   "type_id": 348
+  },
+  "2547": {
+   "faction": "jm",
+   "files": [
+    1116
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "2548": {
+   "faction": "jm",
+   "files": [
+    1116
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "2549": {
+   "faction": "pc",
+   "files": [
+    1117
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "pc_JohnTornhil",
+   "picked_level": 1,
+   "type_id": 2166
+  },
+  "2550": {
+   "faction": "pc",
+   "files": [
+    1117
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "pc_JohnTornhil",
+   "picked_level": 1,
+   "type_id": 2166
+  },
+  "2551": {
+   "faction": "pt",
+   "files": [
+    1118
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "pt_Dempers",
+   "picked_level": 1,
+   "type_id": 1750
+  },
+  "2552": {
+   "faction": "pt",
+   "files": [
+    1118
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "pt_Klenz1",
+   "picked_level": 1,
+   "type_id": 1760
+  },
+  "2553": {
+   "faction": "na",
+   "files": [
+    1119
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "na_JamesBaker",
+   "picked_level": 1,
+   "type_id": 2170
+  },
+  "2554": {
+   "faction": "na",
+   "files": [
+    1119
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "na_Pilot_First",
+   "picked_level": 1,
+   "type_id": 1889
+  },
+  "2555": {
+   "faction": "nc",
+   "files": [
+    1058
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2556": {
+   "faction": "nc",
+   "files": [
+    1058
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2557": {
+   "faction": "lu",
+   "files": [
+    1071
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2558": {
+   "faction": "lu",
+   "files": [
+    1071
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "lu_Ispolnitel_lvl4",
+   "picked_level": 4,
+   "type_id": 281
+  },
+  "2559": {
+   "faction": "ja",
+   "files": [
+    1076
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2560": {
+   "faction": "ja",
+   "files": [
+    1076
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2561": {
+   "faction": "mg",
+   "files": [
+    1077
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "mg_Chasovoi_lvl8",
+   "picked_level": 8,
+   "type_id": 310
+  },
+  "2562": {
+   "faction": "mg",
+   "files": [
+    1077
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "mg_Officer_lvl8",
+   "picked_level": 8,
+   "type_id": 311
+  },
+  "2563": {
+   "faction": "st",
+   "files": [
+    1125
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "st_Gromila_lvl8",
+   "picked_level": 8,
+   "type_id": 317
+  },
+  "2564": {
+   "faction": "st",
+   "files": [
+    1125
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl8",
+   "picked_level": 8,
+   "type_id": 315
+  },
+  "2565": {
+   "faction": "zd",
+   "files": [
+    1124
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl10",
+   "picked_level": 10,
+   "type_id": 349
+  },
+  "2566": {
+   "faction": "zd",
+   "files": [
+    1124
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl10",
+   "picked_level": 10,
+   "type_id": 348
+  },
+  "2567": {
+   "faction": "jm",
+   "files": [
+    1123
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "2568": {
+   "faction": "jm",
+   "files": [
+    1123
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "2569": {
+   "faction": "pc",
+   "files": [
+    1122
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "2570": {
+   "faction": "pc",
+   "files": [
+    1122
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "2571": {
+   "faction": "pt",
+   "files": [
+    1121
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "pt_Dempers",
+   "picked_level": 1,
+   "type_id": 1750
+  },
+  "2572": {
+   "faction": "pt",
+   "files": [
+    1121
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "pt_Klenz1",
+   "picked_level": 1,
+   "type_id": 1760
+  },
+  "2573": {
+   "faction": "na",
+   "files": [
+    1120
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "na_JamesBaker",
+   "picked_level": 1,
+   "type_id": 2170
+  },
+  "2574": {
+   "faction": "na",
+   "files": [
+    1120
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "na_Pilot_First",
+   "picked_level": 1,
+   "type_id": 1889
+  },
+  "2575": {
+   "faction": "nc",
+   "files": [
+    1059
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2576": {
+   "faction": "nc",
+   "files": [
+    1059
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2577": {
+   "faction": "lu",
+   "files": [
+    1078
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2578": {
+   "faction": "lu",
+   "files": [
+    1078
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2579": {
+   "faction": "ja",
+   "files": [
+    1079
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2580": {
+   "faction": "ja",
+   "files": [
+    1079
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2581": {
+   "faction": "mg",
+   "files": [
+    1080
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2582": {
+   "faction": "mg",
+   "files": [
+    1080
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2583": {
+   "faction": "st",
+   "files": [
+    1126
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2584": {
+   "faction": "st",
+   "files": [
+    1126
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2585": {
+   "faction": "zd",
+   "files": [
+    1127
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl10",
+   "picked_level": 10,
+   "type_id": 349
+  },
+  "2586": {
+   "faction": "zd",
+   "files": [
+    1127
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl10",
+   "picked_level": 10,
+   "type_id": 348
+  },
+  "2587": {
+   "faction": "jm",
+   "files": [
+    1128
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "2588": {
+   "faction": "jm",
+   "files": [
+    1128
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "2589": {
+   "faction": "pc",
+   "files": [
+    1129
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "2590": {
+   "faction": "pc",
+   "files": [
+    1129
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "2591": {
+   "faction": "pt",
+   "files": [
+    1130
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "2592": {
+   "faction": "pt",
+   "files": [
+    1130
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "2593": {
+   "faction": "na",
+   "files": [
+    1131
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "2594": {
+   "faction": "na",
+   "files": [
+    1131
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "2595": {
+   "faction": "nc",
+   "files": [
+    1060
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2596": {
+   "faction": "nc",
+   "files": [
+    1060
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2597": {
+   "faction": "lu",
+   "files": [
+    1081
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2598": {
+   "faction": "lu",
+   "files": [
+    1081
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2599": {
+   "faction": "ja",
+   "files": [
+    1082
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2600": {
+   "faction": "ja",
+   "files": [
+    1082
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2601": {
+   "faction": "mg",
+   "files": [
+    1083
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2602": {
+   "faction": "mg",
+   "files": [
+    1083
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2603": {
+   "faction": "st",
+   "files": [
+    1137
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2604": {
+   "faction": "st",
+   "files": [
+    1137
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2605": {
+   "faction": "zd",
+   "files": [
+    1136
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl11",
+   "picked_level": 11,
+   "type_id": 353
+  },
+  "2606": {
+   "faction": "zd",
+   "files": [
+    1136
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl11",
+   "picked_level": 11,
+   "type_id": 352
+  },
+  "2607": {
+   "faction": "jm",
+   "files": [
+    1135
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "2608": {
+   "faction": "jm",
+   "files": [
+    1135
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "2609": {
+   "faction": "pc",
+   "files": [
+    1134
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "2610": {
+   "faction": "pc",
+   "files": [
+    1134
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "2611": {
+   "faction": "pt",
+   "files": [
+    1133
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "2612": {
+   "faction": "pt",
+   "files": [
+    1133
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "2613": {
+   "faction": "na",
+   "files": [
+    1132
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "2614": {
+   "faction": "na",
+   "files": [
+    1132
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "2615": {
+   "faction": "nc",
+   "files": [
+    1068
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2616": {
+   "faction": "nc",
+   "files": [
+    1068
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2617": {
+   "faction": "lu",
+   "files": [
+    1084
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2618": {
+   "faction": "lu",
+   "files": [
+    1084
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2619": {
+   "faction": "ja",
+   "files": [
+    1085
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2620": {
+   "faction": "ja",
+   "files": [
+    1085
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2621": {
+   "faction": "mg",
+   "files": [
+    1086
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2622": {
+   "faction": "mg",
+   "files": [
+    1086
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2623": {
+   "faction": "st",
+   "files": [
+    1138
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2624": {
+   "faction": "st",
+   "files": [
+    1138
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2625": {
+   "faction": "zd",
+   "files": [
+    1139
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "2626": {
+   "faction": "zd",
+   "files": [
+    1139
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "2627": {
+   "faction": "jm",
+   "files": [
+    1140
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "2628": {
+   "faction": "jm",
+   "files": [
+    1140
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "2629": {
+   "faction": "pc",
+   "files": [
+    1141
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "2630": {
+   "faction": "pc",
+   "files": [
+    1141
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "2631": {
+   "faction": "pt",
+   "files": [
+    1142
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "2632": {
+   "faction": "pt",
+   "files": [
+    1142
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "2633": {
+   "faction": "na",
+   "files": [
+    1143
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "2634": {
+   "faction": "na",
+   "files": [
+    1143
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "2635": {
+   "faction": "nc",
+   "files": [
+    1061
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2636": {
+   "faction": "nc",
+   "files": [
+    1061
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2637": {
+   "faction": "lu",
+   "files": [
+    1087
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2638": {
+   "faction": "lu",
+   "files": [
+    1087
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2639": {
+   "faction": "ja",
+   "files": [
+    1088
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2640": {
+   "faction": "ja",
+   "files": [
+    1088
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2641": {
+   "faction": "mg",
+   "files": [
+    1089
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2642": {
+   "faction": "mg",
+   "files": [
+    1089
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2643": {
+   "faction": "st",
+   "files": [
+    1147
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2644": {
+   "faction": "st",
+   "files": [
+    1147
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2645": {
+   "faction": "zd",
+   "files": [
+    1146
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "2646": {
+   "faction": "zd",
+   "files": [
+    1146
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "2647": {
+   "faction": "jm",
+   "files": [
+    1145
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "2648": {
+   "faction": "jm",
+   "files": [
+    1145
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "2649": {
+   "faction": "pc",
+   "files": [
+    1148
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "2650": {
+   "faction": "pc",
+   "files": [
+    1148
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "2651": {
+   "faction": "pt",
+   "files": [
+    1149
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "2652": {
+   "faction": "pt",
+   "files": [
+    1149
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "2653": {
+   "faction": "na",
+   "files": [
+    1144
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "2654": {
+   "faction": "na",
+   "files": [
+    1144
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "2655": {
+   "faction": "nc",
+   "files": [
+    1062
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2656": {
+   "faction": "nc",
+   "files": [
+    1062
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2657": {
+   "faction": "lu",
+   "files": [
+    1090
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2658": {
+   "faction": "lu",
+   "files": [
+    1090
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2659": {
+   "faction": "ja",
+   "files": [
+    1091
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2660": {
+   "faction": "ja",
+   "files": [
+    1091
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2661": {
+   "faction": "mg",
+   "files": [
+    1092
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2662": {
+   "faction": "mg",
+   "files": [
+    1092
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2663": {
+   "faction": "st",
+   "files": [
+    1155
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2664": {
+   "faction": "st",
+   "files": [
+    1155
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2665": {
+   "faction": "zd",
+   "files": [
+    1154
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "2666": {
+   "faction": "zd",
+   "files": [
+    1154
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "2667": {
+   "faction": "jm",
+   "files": [
+    1153
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "2668": {
+   "faction": "jm",
+   "files": [
+    1153
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "2669": {
+   "faction": "pc",
+   "files": [
+    1152
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl15",
+   "picked_level": 15,
+   "type_id": 402
+  },
+  "2670": {
+   "faction": "pc",
+   "files": [
+    1152
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "pc_sniper_lvl15",
+   "picked_level": 15,
+   "type_id": 400
+  },
+  "2671": {
+   "faction": "pt",
+   "files": [
+    1150
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "2672": {
+   "faction": "pt",
+   "files": [
+    1150
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "2673": {
+   "faction": "na",
+   "files": [
+    1151
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "2674": {
+   "faction": "na",
+   "files": [
+    1151
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "2675": {
+   "faction": "nc",
+   "files": [
+    1063
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2676": {
+   "faction": "nc",
+   "files": [
+    1063
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2677": {
+   "faction": "lu",
+   "files": [
+    1093
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2678": {
+   "faction": "lu",
+   "files": [
+    1093
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2679": {
+   "faction": "ja",
+   "files": [
+    1094
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2680": {
+   "faction": "ja",
+   "files": [
+    1094
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2681": {
+   "faction": "mg",
+   "files": [
+    1095
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2682": {
+   "faction": "mg",
+   "files": [
+    1095
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2683": {
+   "faction": "st",
+   "files": [
+    1156
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2684": {
+   "faction": "st",
+   "files": [
+    1156
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2685": {
+   "faction": "zd",
+   "files": [
+    1157
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "2686": {
+   "faction": "zd",
+   "files": [
+    1157
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "2687": {
+   "faction": "jm",
+   "files": [
+    1158
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "2688": {
+   "faction": "jm",
+   "files": [
+    1158
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "2689": {
+   "faction": "pc",
+   "files": [
+    1159
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "pc_miner_lvl16",
+   "picked_level": 16,
+   "type_id": 840
+  },
+  "2690": {
+   "faction": "pc",
+   "files": [
+    1159
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl16",
+   "picked_level": 16,
+   "type_id": 406
+  },
+  "2691": {
+   "faction": "pt",
+   "files": [
+    1160
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "2692": {
+   "faction": "pt",
+   "files": [
+    1160
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "2693": {
+   "faction": "na",
+   "files": [
+    1161
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "2694": {
+   "faction": "na",
+   "files": [
+    1161
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "2695": {
+   "faction": "nc",
+   "files": [
+    1064
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2696": {
+   "faction": "nc",
+   "files": [
+    1064
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2697": {
+   "faction": "lu",
+   "files": [
+    1096
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2698": {
+   "faction": "lu",
+   "files": [
+    1096
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2699": {
+   "faction": "ja",
+   "files": [
+    1097
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2700": {
+   "faction": "ja",
+   "files": [
+    1097
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2701": {
+   "faction": "mg",
+   "files": [
+    1098
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2702": {
+   "faction": "mg",
+   "files": [
+    1098
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2704": {
+   "faction": "st",
+   "files": [
+    1167
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2705": {
+   "faction": "zd",
+   "files": [
+    1166,
+    1167
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "2706": {
+   "faction": "zd",
+   "files": [
+    1166
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "2709": {
+   "faction": "pc",
+   "files": [
+    1164
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "2710": {
+   "faction": "pc",
+   "files": [
+    1164
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "2711": {
+   "faction": "pt",
+   "files": [
+    1163,
+    1165
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "pt_bocman_lvl17",
+   "picked_level": 17,
+   "type_id": 769
+  },
+  "2713": {
+   "faction": "na",
+   "files": [
+    1162
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "na_master_sergeant_lvl17",
+   "picked_level": 17,
+   "type_id": 1030
+  },
+  "2714": {
+   "faction": "na",
+   "files": [
+    1162
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "na_recruit_lvl17",
+   "picked_level": 17,
+   "type_id": 1029
+  },
+  "2715": {
+   "faction": "nc",
+   "files": [
+    1065
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2717": {
+   "faction": "lu",
+   "files": [
+    1099
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2719": {
+   "faction": "ja",
+   "files": [
+    1100
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2720": {
+   "faction": "ja",
+   "files": [
+    1100
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2721": {
+   "faction": "mg",
+   "files": [
+    1101
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2722": {
+   "faction": "mg",
+   "files": [
+    1101
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2723": {
+   "faction": "st",
+   "files": [
+    1168
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2724": {
+   "faction": "st",
+   "files": [
+    1168
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2725": {
+   "faction": "zd",
+   "files": [
+    1169
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "2726": {
+   "faction": "zd",
+   "files": [
+    1169
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "2727": {
+   "faction": "jm",
+   "files": [
+    1170
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "2728": {
+   "faction": "jm",
+   "files": [
+    1170
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "2731": {
+   "faction": "pt",
+   "files": [
+    1172
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "pt_bocman_lvl18",
+   "picked_level": 18,
+   "type_id": 773
+  },
+  "2732": {
+   "faction": "pt",
+   "files": [
+    1172
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl18",
+   "picked_level": 18,
+   "type_id": 774
+  },
+  "2733": {
+   "faction": "na",
+   "files": [
+    1173
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "na_sentinel_lvl18",
+   "picked_level": 18,
+   "type_id": 1033
+  },
+  "2734": {
+   "faction": "na",
+   "files": [
+    1173
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "na_sentinel_lvl18a",
+   "picked_level": 18,
+   "type_id": 2311
+  },
+  "2735": {
+   "faction": "nc",
+   "files": [
+    1066
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2736": {
+   "faction": "nc",
+   "files": [
+    1066
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2737": {
+   "faction": "lu",
+   "files": [
+    1102
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2738": {
+   "faction": "lu",
+   "files": [
+    1102
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2739": {
+   "faction": "ja",
+   "files": [
+    1103
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2740": {
+   "faction": "ja",
+   "files": [
+    1103
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2741": {
+   "faction": "mg",
+   "files": [
+    1104
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2742": {
+   "faction": "mg",
+   "files": [
+    1104
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2743": {
+   "faction": "st",
+   "files": [
+    1179
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2744": {
+   "faction": "st",
+   "files": [
+    1179
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2745": {
+   "faction": "zd",
+   "files": [
+    1178
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "2746": {
+   "faction": "zd",
+   "files": [
+    1178
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "2747": {
+   "faction": "jm",
+   "files": [
+    1177
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "2748": {
+   "faction": "jm",
+   "files": [
+    1177
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "2749": {
+   "faction": "pc",
+   "files": [
+    1176
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "2750": {
+   "faction": "pc",
+   "files": [
+    1176
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "2751": {
+   "faction": "pt",
+   "files": [
+    1175
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "pt_Klenz",
+   "picked_level": 19,
+   "type_id": 1752
+  },
+  "2752": {
+   "faction": "pt",
+   "files": [
+    1175
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "pt_miner_lvl19",
+   "picked_level": 19,
+   "type_id": 931
+  },
+  "2753": {
+   "faction": "na",
+   "files": [
+    1174
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "na_private_1_lvl19",
+   "picked_level": 19,
+   "type_id": 1728
+  },
+  "2754": {
+   "faction": "na",
+   "files": [
+    1174
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "na_private_1_lvl19a",
+   "picked_level": 19,
+   "type_id": 2316
+  },
+  "2755": {
+   "faction": "nc",
+   "files": [
+    1067
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2756": {
+   "faction": "nc",
+   "files": [
+    1067
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2757": {
+   "faction": "lu",
+   "files": [
+    1105
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "2758": {
+   "faction": "lu",
+   "files": [
+    1105
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "2759": {
+   "faction": "ja",
+   "files": [
+    1107
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "2760": {
+   "faction": "ja",
+   "files": [
+    1107
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "2761": {
+   "faction": "mg",
+   "files": [
+    1106
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2762": {
+   "faction": "mg",
+   "files": [
+    1106
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "2763": {
+   "faction": "st",
+   "files": [
+    1180
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "2764": {
+   "faction": "st",
+   "files": [
+    1180
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "2765": {
+   "faction": "zd",
+   "files": [
+    1181
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "2766": {
+   "faction": "zd",
+   "files": [
+    1181
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "2767": {
+   "faction": "jm",
+   "files": [
+    1182
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "2768": {
+   "faction": "jm",
+   "files": [
+    1182
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "2769": {
+   "faction": "pc",
+   "files": [
+    1183
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "2770": {
+   "faction": "pc",
+   "files": [
+    1183
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "2771": {
+   "faction": "pt",
+   "files": [
+    1184
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "pt_Klenz",
+   "picked_level": 19,
+   "type_id": 1752
+  },
+  "2772": {
+   "faction": "pt",
+   "files": [
+    1184
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "pt_miner_lvl19",
+   "picked_level": 19,
+   "type_id": 931
+  },
+  "2773": {
+   "faction": "na",
+   "files": [
+    1185
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "na_commander_lvl20",
+   "picked_level": 20,
+   "type_id": 1734
+  },
+  "2774": {
+   "faction": "na",
+   "files": [
+    1185
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "na_ranger_lvl20",
+   "picked_level": 20,
+   "type_id": 1733
+  },
+  "2814": {
+   "faction": "nc",
+   "files": [
+    768
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2815": {
+   "faction": "nc",
+   "files": [
+    768
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2816": {
+   "faction": "nc",
+   "files": [
+    769
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2817": {
+   "faction": "nc",
+   "files": [
+    769
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2818": {
+   "faction": "nc",
+   "files": [
+    770
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2819": {
+   "faction": "nc",
+   "files": [
+    770
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2820": {
+   "faction": "nc",
+   "files": [
+    771
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2821": {
+   "faction": "nc",
+   "files": [
+    771
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2822": {
+   "faction": "nc",
+   "files": [
+    772
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2823": {
+   "faction": "nc",
+   "files": [
+    772
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2824": {
+   "faction": "nc",
+   "files": [
+    773
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2825": {
+   "faction": "nc",
+   "files": [
+    773
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2826": {
+   "faction": "nc",
+   "files": [
+    774
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2827": {
+   "faction": "nc",
+   "files": [
+    774
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2828": {
+   "faction": "nc",
+   "files": [
+    775
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2829": {
+   "faction": "nc",
+   "files": [
+    775
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2830": {
+   "faction": "nc",
+   "files": [
+    776
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2831": {
+   "faction": "nc",
+   "files": [
+    776
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2832": {
+   "faction": "nc",
+   "files": [
+    777
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2833": {
+   "faction": "nc",
+   "files": [
+    777
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2834": {
+   "faction": "nc",
+   "files": [
+    779
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2835": {
+   "faction": "nc",
+   "files": [
+    779
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2836": {
+   "faction": "nc",
+   "files": [
+    780
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2837": {
+   "faction": "nc",
+   "files": [
+    780
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "2838": {
+   "faction": "nc",
+   "files": [
+    778
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "nc_BanditAssaultGunner_lvl2",
+   "picked_level": 2,
+   "type_id": 265
+  },
+  "2839": {
+   "faction": "nc",
+   "files": [
+    778
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "nc_BanditRaider_lvl2",
+   "picked_level": 2,
+   "type_id": 264
+  },
+  "3060": {
+   "faction": "lu",
+   "files": [
+    781
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "lu_Ispolnitel_lvl4",
+   "picked_level": 4,
+   "type_id": 281
+  },
+  "3061": {
+   "faction": "lu",
+   "files": [
+    781
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "lu_Master_lvl4",
+   "picked_level": 4,
+   "type_id": 279
+  },
+  "3062": {
+   "faction": "lu",
+   "files": [
+    790
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "lu_Ispolnitel_lvl4",
+   "picked_level": 4,
+   "type_id": 281
+  },
+  "3063": {
+   "faction": "lu",
+   "files": [
+    790
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "lu_Master_lvl4",
+   "picked_level": 4,
+   "type_id": 279
+  },
+  "3064": {
+   "faction": "lu",
+   "files": [
+    799
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3065": {
+   "faction": "lu",
+   "files": [
+    799
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "lu_Ispolnitel_lvl4",
+   "picked_level": 4,
+   "type_id": 281
+  },
+  "3066": {
+   "faction": "lu",
+   "files": [
+    808
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3067": {
+   "faction": "lu",
+   "files": [
+    808
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3068": {
+   "faction": "lu",
+   "files": [
+    817
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3069": {
+   "faction": "lu",
+   "files": [
+    817
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3070": {
+   "faction": "lu",
+   "files": [
+    819
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3071": {
+   "faction": "lu",
+   "files": [
+    819
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3072": {
+   "faction": "lu",
+   "files": [
+    835
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3073": {
+   "faction": "lu",
+   "files": [
+    835
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3074": {
+   "faction": "lu",
+   "files": [
+    844
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3075": {
+   "faction": "lu",
+   "files": [
+    844
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3076": {
+   "faction": "lu",
+   "files": [
+    853
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3077": {
+   "faction": "lu",
+   "files": [
+    853
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3078": {
+   "faction": "lu",
+   "files": [
+    862,
+    871
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3079": {
+   "faction": "lu",
+   "files": [
+    862,
+    871
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3082": {
+   "faction": "lu",
+   "files": [
+    880
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3083": {
+   "faction": "lu",
+   "files": [
+    880
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3084": {
+   "faction": "lu",
+   "files": [
+    889
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "lu_Fanatic_lvl12",
+   "picked_level": 12,
+   "type_id": 671
+  },
+  "3085": {
+   "faction": "lu",
+   "files": [
+    889
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "lu_Warrior_lvl12",
+   "picked_level": 12,
+   "type_id": 672
+  },
+  "3086": {
+   "faction": "ja",
+   "files": [
+    782
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3087": {
+   "faction": "ja",
+   "files": [
+    782
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3088": {
+   "faction": "ja",
+   "files": [
+    791
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3089": {
+   "faction": "ja",
+   "files": [
+    791
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3090": {
+   "faction": "ja",
+   "files": [
+    800
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3091": {
+   "faction": "ja",
+   "files": [
+    800
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3092": {
+   "faction": "ja",
+   "files": [
+    809
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3093": {
+   "faction": "ja",
+   "files": [
+    809
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3094": {
+   "faction": "ja",
+   "files": [
+    818
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3095": {
+   "faction": "ja",
+   "files": [
+    818
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3096": {
+   "faction": "ja",
+   "files": [
+    820
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3097": {
+   "faction": "ja",
+   "files": [
+    820
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3098": {
+   "faction": "ja",
+   "files": [
+    836
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3099": {
+   "faction": "ja",
+   "files": [
+    836
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3100": {
+   "faction": "ja",
+   "files": [
+    845
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3101": {
+   "faction": "ja",
+   "files": [
+    845
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3102": {
+   "faction": "ja",
+   "files": [
+    854
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3103": {
+   "faction": "ja",
+   "files": [
+    854
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3104": {
+   "faction": "ja",
+   "files": [
+    863
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3105": {
+   "faction": "ja",
+   "files": [
+    863
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3106": {
+   "faction": "ja",
+   "files": [
+    872
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3107": {
+   "faction": "ja",
+   "files": [
+    872
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3108": {
+   "faction": "ja",
+   "files": [
+    881
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3109": {
+   "faction": "ja",
+   "files": [
+    881
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3110": {
+   "faction": "ja",
+   "files": [
+    890
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "ja_Boevik_lvl6",
+   "picked_level": 6,
+   "type_id": 298
+  },
+  "3111": {
+   "faction": "ja",
+   "files": [
+    890
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "ja_Diversant_lvl6",
+   "picked_level": 6,
+   "type_id": 297
+  },
+  "3112": {
+   "faction": "mg",
+   "files": [
+    783
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "mg_Chasovoi_lvl6",
+   "picked_level": 6,
+   "type_id": 302
+  },
+  "3113": {
+   "faction": "mg",
+   "files": [
+    783
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "mg_Officer_lvl6",
+   "picked_level": 6,
+   "type_id": 303
+  },
+  "3114": {
+   "faction": "mg",
+   "files": [
+    792
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "mg_Chasovoi_lvl7",
+   "picked_level": 7,
+   "type_id": 306
+  },
+  "3115": {
+   "faction": "mg",
+   "files": [
+    792
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "mg_Officer_lvl7",
+   "picked_level": 7,
+   "type_id": 307
+  },
+  "3116": {
+   "faction": "mg",
+   "files": [
+    801
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "mg_Chasovoi_lvl8",
+   "picked_level": 8,
+   "type_id": 310
+  },
+  "3117": {
+   "faction": "mg",
+   "files": [
+    801
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "mg_Officer_lvl8",
+   "picked_level": 8,
+   "type_id": 311
+  },
+  "3118": {
+   "faction": "mg",
+   "files": [
+    810
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3119": {
+   "faction": "mg",
+   "files": [
+    810
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3120": {
+   "faction": "mg",
+   "files": [
+    828
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3121": {
+   "faction": "mg",
+   "files": [
+    828
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3122": {
+   "faction": "mg",
+   "files": [
+    821
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3123": {
+   "faction": "mg",
+   "files": [
+    821
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3124": {
+   "faction": "mg",
+   "files": [
+    837
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3125": {
+   "faction": "mg",
+   "files": [
+    837
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3126": {
+   "faction": "mg",
+   "files": [
+    846
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3127": {
+   "faction": "mg",
+   "files": [
+    846
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3128": {
+   "faction": "mg",
+   "files": [
+    855
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3129": {
+   "faction": "mg",
+   "files": [
+    855
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3130": {
+   "faction": "mg",
+   "files": [
+    864
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3131": {
+   "faction": "mg",
+   "files": [
+    864
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3132": {
+   "faction": "mg",
+   "files": [
+    873
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3133": {
+   "faction": "mg",
+   "files": [
+    873
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3134": {
+   "faction": "mg",
+   "files": [
+    882
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3135": {
+   "faction": "mg",
+   "files": [
+    882
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3136": {
+   "faction": "mg",
+   "files": [
+    891
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3137": {
+   "faction": "mg",
+   "files": [
+    891
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "mg_miner_lvl9",
+   "picked_level": 9,
+   "type_id": 839
+  },
+  "3138": {
+   "faction": "st",
+   "files": [
+    784
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "st_Gromila_lvl8",
+   "picked_level": 8,
+   "type_id": 317
+  },
+  "3139": {
+   "faction": "st",
+   "files": [
+    784
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl8",
+   "picked_level": 8,
+   "type_id": 315
+  },
+  "3140": {
+   "faction": "st",
+   "files": [
+    793
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "st_Gromila_lvl8",
+   "picked_level": 8,
+   "type_id": 317
+  },
+  "3141": {
+   "faction": "st",
+   "files": [
+    793
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl8",
+   "picked_level": 8,
+   "type_id": 315
+  },
+  "3142": {
+   "faction": "st",
+   "files": [
+    802
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "st_Gromila_lvl8",
+   "picked_level": 8,
+   "type_id": 317
+  },
+  "3143": {
+   "faction": "st",
+   "files": [
+    802
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl8",
+   "picked_level": 8,
+   "type_id": 315
+  },
+  "3144": {
+   "faction": "st",
+   "files": [
+    811
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3145": {
+   "faction": "st",
+   "files": [
+    811
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3146": {
+   "faction": "st",
+   "files": [
+    829
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3147": {
+   "faction": "st",
+   "files": [
+    829
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3148": {
+   "faction": "st",
+   "files": [
+    822
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3149": {
+   "faction": "st",
+   "files": [
+    822
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3150": {
+   "faction": "st",
+   "files": [
+    838
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3151": {
+   "faction": "st",
+   "files": [
+    838
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3152": {
+   "faction": "st",
+   "files": [
+    847
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3153": {
+   "faction": "st",
+   "files": [
+    847
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3154": {
+   "faction": "st",
+   "files": [
+    856
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3155": {
+   "faction": "st",
+   "files": [
+    856
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3156": {
+   "faction": "st",
+   "files": [
+    865
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3157": {
+   "faction": "st",
+   "files": [
+    865
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3158": {
+   "faction": "st",
+   "files": [
+    874
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3159": {
+   "faction": "st",
+   "files": [
+    874
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3160": {
+   "faction": "st",
+   "files": [
+    883
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3161": {
+   "faction": "st",
+   "files": [
+    883
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3162": {
+   "faction": "st",
+   "files": [
+    892
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "st_Gromila_lvl10",
+   "picked_level": 10,
+   "type_id": 325
+  },
+  "3163": {
+   "faction": "st",
+   "files": [
+    892
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "st_Karavanshik_lvl10",
+   "picked_level": 10,
+   "type_id": 323
+  },
+  "3164": {
+   "faction": "zd",
+   "files": [
+    785
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl10",
+   "picked_level": 10,
+   "type_id": 349
+  },
+  "3165": {
+   "faction": "zd",
+   "files": [
+    785
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl10",
+   "picked_level": 10,
+   "type_id": 348
+  },
+  "3166": {
+   "faction": "zd",
+   "files": [
+    794
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl10",
+   "picked_level": 10,
+   "type_id": 349
+  },
+  "3167": {
+   "faction": "zd",
+   "files": [
+    794
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl10",
+   "picked_level": 10,
+   "type_id": 348
+  },
+  "3168": {
+   "faction": "zd",
+   "files": [
+    803
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl10",
+   "picked_level": 10,
+   "type_id": 349
+  },
+  "3169": {
+   "faction": "zd",
+   "files": [
+    803
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl10",
+   "picked_level": 10,
+   "type_id": 348
+  },
+  "3170": {
+   "faction": "zd",
+   "files": [
+    812
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl10",
+   "picked_level": 10,
+   "type_id": 349
+  },
+  "3171": {
+   "faction": "zd",
+   "files": [
+    812
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl10",
+   "picked_level": 10,
+   "type_id": 348
+  },
+  "3172": {
+   "faction": "zd",
+   "files": [
+    830
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl11",
+   "picked_level": 11,
+   "type_id": 353
+  },
+  "3173": {
+   "faction": "zd",
+   "files": [
+    830
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl11",
+   "picked_level": 11,
+   "type_id": 352
+  },
+  "3174": {
+   "faction": "zd",
+   "files": [
+    823
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "3175": {
+   "faction": "zd",
+   "files": [
+    823
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "3176": {
+   "faction": "zd",
+   "files": [
+    839
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "3177": {
+   "faction": "zd",
+   "files": [
+    839
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "3178": {
+   "faction": "zd",
+   "files": [
+    848
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "3179": {
+   "faction": "zd",
+   "files": [
+    848
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "3180": {
+   "faction": "zd",
+   "files": [
+    857
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "3181": {
+   "faction": "zd",
+   "files": [
+    857
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "3182": {
+   "faction": "zd",
+   "files": [
+    866
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "3183": {
+   "faction": "zd",
+   "files": [
+    866
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "3184": {
+   "faction": "zd",
+   "files": [
+    875
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "3185": {
+   "faction": "zd",
+   "files": [
+    875
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "3186": {
+   "faction": "zd",
+   "files": [
+    884
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "3187": {
+   "faction": "zd",
+   "files": [
+    884
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "3188": {
+   "faction": "zd",
+   "files": [
+    893
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "zd_Hunter_lvl12",
+   "picked_level": 12,
+   "type_id": 357
+  },
+  "3189": {
+   "faction": "zd",
+   "files": [
+    893
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "zd_Maniak_lvl12",
+   "picked_level": 12,
+   "type_id": 356
+  },
+  "3190": {
+   "faction": "jm",
+   "files": [
+    786
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "jm_WilliamBlade",
+   "picked_level": 1,
+   "type_id": 1565
+  },
+  "3191": {
+   "faction": "jm",
+   "files": [
+    786
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "jm_WilliamBlade",
+   "picked_level": 1,
+   "type_id": 1565
+  },
+  "3192": {
+   "faction": "jm",
+   "files": [
+    795
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "3193": {
+   "faction": "jm",
+   "files": [
+    795
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "3196": {
+   "faction": "jm",
+   "files": [
+    813
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "3197": {
+   "faction": "jm",
+   "files": [
+    813
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "3198": {
+   "faction": "jm",
+   "files": [
+    831
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "3199": {
+   "faction": "jm",
+   "files": [
+    831
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "3200": {
+   "faction": "jm",
+   "files": [
+    824
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
+  },
+  "3201": {
+   "faction": "jm",
+   "files": [
+    824
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl12",
+   "picked_level": 12,
+   "type_id": 363
+  },
+  "3202": {
+   "faction": "jm",
+   "files": [
+    840
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "3203": {
+   "faction": "jm",
+   "files": [
+    840
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "3204": {
+   "faction": "jm",
+   "files": [
+    849
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "3205": {
+   "faction": "jm",
+   "files": [
+    849
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "3206": {
+   "faction": "jm",
+   "files": [
+    858
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "3207": {
+   "faction": "jm",
+   "files": [
+    858
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "3208": {
+   "faction": "jm",
+   "files": [
+    867
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "3209": {
+   "faction": "jm",
+   "files": [
+    867
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "3210": {
+   "faction": "jm",
+   "files": [
+    876
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "3211": {
+   "faction": "jm",
+   "files": [
+    876
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "3212": {
+   "faction": "jm",
+   "files": [
+    885
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "3213": {
+   "faction": "jm",
+   "files": [
+    885
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "3214": {
+   "faction": "jm",
+   "files": [
+    894
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "jm_Boevik_lvl14",
+   "picked_level": 14,
+   "type_id": 373
+  },
+  "3215": {
+   "faction": "jm",
+   "files": [
+    894
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "jm_Opolchenec_lvl14",
+   "picked_level": 14,
+   "type_id": 371
+  },
+  "3218": {
+   "faction": "pc",
+   "files": [
+    796
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "pc_JohnTornhil",
+   "picked_level": 1,
+   "type_id": 2166
+  },
+  "3219": {
+   "faction": "pc",
+   "files": [
+    796
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "pc_JohnTornhil",
+   "picked_level": 1,
+   "type_id": 2166
+  },
+  "3220": {
+   "faction": "pc",
+   "files": [
+    805
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "3221": {
+   "faction": "pc",
+   "files": [
+    805
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "3222": {
+   "faction": "pc",
+   "files": [
+    814
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "3223": {
+   "faction": "pc",
+   "files": [
+    814
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "3224": {
+   "faction": "pc",
+   "files": [
+    832
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "3225": {
+   "faction": "pc",
+   "files": [
+    832
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "3226": {
+   "faction": "pc",
+   "files": [
+    825
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "3227": {
+   "faction": "pc",
+   "files": [
+    825
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "3228": {
+   "faction": "pc",
+   "files": [
+    841
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl14",
+   "picked_level": 14,
+   "type_id": 398
+  },
+  "3229": {
+   "faction": "pc",
+   "files": [
+    841
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "pc_sniper_lvl14",
+   "picked_level": 14,
+   "type_id": 396
+  },
+  "3230": {
+   "faction": "pc",
+   "files": [
+    850
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl15",
+   "picked_level": 15,
+   "type_id": 402
+  },
+  "3231": {
+   "faction": "pc",
+   "files": [
+    850
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "pc_sniper_lvl15",
+   "picked_level": 15,
+   "type_id": 400
+  },
+  "3232": {
+   "faction": "pc",
+   "files": [
+    859
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "pc_miner_lvl16",
+   "picked_level": 16,
+   "type_id": 840
+  },
+  "3233": {
+   "faction": "pc",
+   "files": [
+    859
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "pc_shturmovik_lvl16",
+   "picked_level": 16,
+   "type_id": 406
+  },
+  "3234": {
+   "faction": "pc",
+   "files": [
+    868
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "3235": {
+   "faction": "pc",
+   "files": [
+    868
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "3236": {
+   "faction": "pc",
+   "files": [
+    877
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "3237": {
+   "faction": "pc",
+   "files": [
+    877
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "3238": {
+   "faction": "pc",
+   "files": [
+    886
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "3239": {
+   "faction": "pc",
+   "files": [
+    886
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "3240": {
+   "faction": "pc",
+   "files": [
+    895
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "3241": {
+   "faction": "pc",
+   "files": [
+    895
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "pc_miner_lvl17",
+   "picked_level": 17,
+   "type_id": 841
+  },
+  "3243": {
+   "faction": "pt",
+   "files": [
+    788
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "pt_Dempers",
+   "picked_level": 1,
+   "type_id": 1750
+  },
+  "3244": {
+   "faction": "pt",
+   "files": [
+    788
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "pt_Klenz1",
+   "picked_level": 1,
+   "type_id": 1760
+  },
+  "3245": {
+   "faction": "pt",
+   "files": [
+    797
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "pt_Dempers",
+   "picked_level": 1,
+   "type_id": 1750
+  },
+  "3246": {
+   "faction": "pt",
+   "files": [
+    797
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "pt_Klenz1",
+   "picked_level": 1,
+   "type_id": 1760
+  },
+  "3247": {
+   "faction": "pt",
+   "files": [
+    806
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "pt_Dempers",
+   "picked_level": 1,
+   "type_id": 1750
+  },
+  "3248": {
+   "faction": "pt",
+   "files": [
+    806
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "pt_Klenz1",
+   "picked_level": 1,
+   "type_id": 1760
+  },
+  "3249": {
+   "faction": "pt",
+   "files": [
+    815
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "3250": {
+   "faction": "pt",
+   "files": [
+    815
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "3251": {
+   "faction": "pt",
+   "files": [
+    833
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "3252": {
+   "faction": "pt",
+   "files": [
+    833
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "3253": {
+   "faction": "pt",
+   "files": [
+    826
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "3254": {
+   "faction": "pt",
+   "files": [
+    826
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "3255": {
+   "faction": "pt",
+   "files": [
+    842
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "3256": {
+   "faction": "pt",
+   "files": [
+    842
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "3257": {
+   "faction": "pt",
+   "files": [
+    851
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "3258": {
+   "faction": "pt",
+   "files": [
+    851
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "3259": {
+   "faction": "pt",
+   "files": [
+    860
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
+  },
+  "3260": {
+   "faction": "pt",
+   "files": [
+    860
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl16",
+   "picked_level": 16,
+   "type_id": 766
+  },
+  "3261": {
+   "faction": "pt",
+   "files": [
+    869
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "pt_bocman_lvl17",
+   "picked_level": 17,
+   "type_id": 769
+  },
+  "3262": {
+   "faction": "pt",
+   "files": [
+    869
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl17",
+   "picked_level": 17,
+   "type_id": 770
+  },
+  "3263": {
+   "faction": "pt",
+   "files": [
+    878
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "pt_bocman_lvl18",
+   "picked_level": 18,
+   "type_id": 773
+  },
+  "3264": {
+   "faction": "pt",
+   "files": [
+    878
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "pt_headhunter_lvl18",
+   "picked_level": 18,
+   "type_id": 774
+  },
+  "3265": {
+   "faction": "pt",
+   "files": [
+    887
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "pt_Klenz",
+   "picked_level": 19,
+   "type_id": 1752
+  },
+  "3266": {
+   "faction": "pt",
+   "files": [
+    887
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "pt_miner_lvl19",
+   "picked_level": 19,
+   "type_id": 931
+  },
+  "3267": {
+   "faction": "pt",
+   "files": [
+    896
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "pt_Klenz",
+   "picked_level": 19,
+   "type_id": 1752
+  },
+  "3268": {
+   "faction": "pt",
+   "files": [
+    896
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "pt_miner_lvl19",
+   "picked_level": 19,
+   "type_id": 931
+  },
+  "3269": {
+   "faction": "na",
+   "files": [
+    789
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "na_JamesBaker",
+   "picked_level": 1,
+   "type_id": 2170
+  },
+  "3270": {
+   "faction": "na",
+   "files": [
+    789
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "na_Pilot_First",
+   "picked_level": 1,
+   "type_id": 1889
+  },
+  "3271": {
+   "faction": "na",
+   "files": [
+    798
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "na_JamesBaker",
+   "picked_level": 1,
+   "type_id": 2170
+  },
+  "3272": {
+   "faction": "na",
+   "files": [
+    798
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "na_Pilot_First",
+   "picked_level": 1,
+   "type_id": 1889
+  },
+  "3273": {
+   "faction": "na",
+   "files": [
+    807
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "na_JamesBaker",
+   "picked_level": 1,
+   "type_id": 2170
+  },
+  "3274": {
+   "faction": "na",
+   "files": [
+    807
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "na_Pilot_First",
+   "picked_level": 1,
+   "type_id": 1889
+  },
+  "3275": {
+   "faction": "na",
+   "files": [
+    816
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "3276": {
+   "faction": "na",
+   "files": [
+    816
+   ],
+   "how": "camp_fn",
+   "level": 10,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "3277": {
+   "faction": "na",
+   "files": [
+    834
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "3278": {
+   "faction": "na",
+   "files": [
+    834
+   ],
+   "how": "camp_fn",
+   "level": 11,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "3279": {
+   "faction": "na",
+   "files": [
+    827
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "3280": {
+   "faction": "na",
+   "files": [
+    827
+   ],
+   "how": "camp_fn",
+   "level": 12,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "3281": {
+   "faction": "na",
+   "files": [
+    843
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "3282": {
+   "faction": "na",
+   "files": [
+    843
+   ],
+   "how": "camp_fn",
+   "level": 14,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "3283": {
+   "faction": "na",
+   "files": [
+    852
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "3284": {
+   "faction": "na",
+   "files": [
+    852
+   ],
+   "how": "camp_fn",
+   "level": 15,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "3285": {
+   "faction": "na",
+   "files": [
+    861
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "na_corporal_lvl16",
+   "picked_level": 16,
+   "type_id": 1027
+  },
+  "3286": {
+   "faction": "na",
+   "files": [
+    861
+   ],
+   "how": "camp_fn",
+   "level": 16,
+   "level_source": "files",
+   "name": "na_private_lvl16",
+   "picked_level": 16,
+   "type_id": 1026
+  },
+  "3287": {
+   "faction": "na",
+   "files": [
+    870
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "na_master_sergeant_lvl17",
+   "picked_level": 17,
+   "type_id": 1030
+  },
+  "3288": {
+   "faction": "na",
+   "files": [
+    870
+   ],
+   "how": "camp_fn",
+   "level": 17,
+   "level_source": "files",
+   "name": "na_recruit_lvl17",
+   "picked_level": 17,
+   "type_id": 1029
+  },
+  "3289": {
+   "faction": "na",
+   "files": [
+    879
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "na_sentinel_lvl18",
+   "picked_level": 18,
+   "type_id": 1033
+  },
+  "3290": {
+   "faction": "na",
+   "files": [
+    879
+   ],
+   "how": "camp_fn",
+   "level": 18,
+   "level_source": "files",
+   "name": "na_sentinel_lvl18a",
+   "picked_level": 18,
+   "type_id": 2311
+  },
+  "3291": {
+   "faction": "na",
+   "files": [
+    888
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "na_private_1_lvl19",
+   "picked_level": 19,
+   "type_id": 1728
+  },
+  "3292": {
+   "faction": "na",
+   "files": [
+    888
+   ],
+   "how": "camp_fn",
+   "level": 19,
+   "level_source": "files",
+   "name": "na_private_1_lvl19a",
+   "picked_level": 19,
+   "type_id": 2316
+  },
+  "3293": {
+   "faction": "na",
+   "files": [
+    897
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "na_commander_lvl20",
+   "picked_level": 20,
+   "type_id": 1734
+  },
+  "3294": {
+   "faction": "na",
+   "files": [
+    897
+   ],
+   "how": "camp_fn",
+   "level": 20,
+   "level_source": "files",
+   "name": "na_ranger_lvl20",
+   "picked_level": 20,
+   "type_id": 1733
+  },
+  "7456": {
+   "faction": "labor",
+   "files": [
+    986
+   ],
+   "how": "neighbours",
+   "level": 6,
+   "level_source": "files",
+   "name": "labor_Mob_1_lvl_6",
+   "picked_level": 6,
+   "type_id": 6832
+  },
+  "7470": {
+   "faction": "labor",
+   "files": [
+    987
+   ],
+   "how": "neighbours",
+   "level": 12,
+   "level_source": "files",
+   "name": "labor_Mob_1_lvl_12",
+   "picked_level": 12,
+   "type_id": 6846
+  },
+  "7498": {
+   "faction": "labor",
+   "files": [
+    990
+   ],
+   "how": "neighbours",
+   "level": 19,
+   "level_source": "files",
+   "name": "labor_Mob_3_lvl_19",
+   "picked_level": 19,
+   "type_id": 6876
+  },
+  "7525": {
+   "faction": "labor",
+   "files": [
+    987,
+    989,
+    990
+   ],
+   "how": "neighbours",
+   "level": 15,
+   "level_source": "files",
+   "name": "labor_Mob_2_lvl_14",
+   "picked_level": 14,
+   "type_id": 6855
+  }
+ },
+ "unresolved": {
+  "1007": {
+   "files": [
+    641
+   ],
+   "reason": "фракция не определена"
+  },
+  "1536": {
+   "files": [
+    170
+   ],
+   "reason": "фракция не определена"
+  },
+  "1537": {
+   "files": [
+    170
+   ],
+   "reason": "фракция не определена"
+  },
+  "1543": {
+   "files": [
+    170
+   ],
+   "reason": "фракция не определена"
+  },
+  "1549": {
+   "files": [
+    170
+   ],
+   "reason": "фракция не определена"
+  },
+  "1781": {
+   "files": [
+    698,
+    1234
+   ],
+   "reason": "фракция не определена"
+  },
+  "1783": {
+   "files": [
+    697,
+    1235,
+    1261
+   ],
+   "reason": "фракция не определена"
+  },
+  "1829": {
+   "files": [
+    677,
+    678,
+    679,
+    680,
+    681,
+    682
+   ],
+   "reason": "фракция не определена"
+  },
+  "1837": {
+   "files": [
+    701
+   ],
+   "reason": "фракция не определена"
+  },
+  "1838": {
+   "files": [
+    701
+   ],
+   "reason": "фракция не определена"
+  },
+  "1839": {
+   "files": [
+    701
+   ],
+   "reason": "фракция не определена"
+  },
+  "2161": {
+   "files": [
+    1234
+   ],
+   "reason": "фракция не определена"
+  },
+  "2191": {
+   "files": [
+    41,
+    185
+   ],
+   "reason": "фракция не определена"
+  },
+  "2288": {
+   "files": [
+    287
+   ],
+   "reason": "фракция не определена"
+  },
+  "2304": {
+   "files": [
+    1235,
+    1261
+   ],
+   "reason": "фракция не определена"
+  },
+  "2305": {
+   "files": [
+    1235,
+    1261
+   ],
+   "reason": "фракция не определена"
+  },
+  "2712": {
+   "files": [
+    1163,
+    1165
+   ],
+   "reason": "файлы разных фракций: {'pt': 1, 'jm': 1}"
+  },
+  "2716": {
+   "files": [
+    1065,
+    1099
+   ],
+   "reason": "файлы разных фракций: {'nc': 1, 'lu': 1}"
+  },
+  "3216": {
+   "files": [
+    787,
+    804
+   ],
+   "reason": "файлы разных фракций: {'pc': 1, 'jm': 1}"
+  },
+  "3217": {
+   "files": [
+    787,
+    804
+   ],
+   "reason": "файлы разных фракций: {'pc': 1, 'jm': 1}"
+  },
+  "3298": {
+   "files": [
+    769,
+    770,
+    771,
+    772,
+    773,
+    774,
+    775,
+    776,
+    777,
+    778,
+    779,
+    780,
+    781,
+    782,
+    783,
+    784,
+    785,
+    786,
+    787,
+    788,
+    789,
+    790,
+    791,
+    792,
+    793,
+    794,
+    796,
+    797,
+    798,
+    799,
+    800,
+    801,
+    802,
+    803,
+    804,
+    805,
+    806,
+    807,
+    808,
+    809,
+    810,
+    811,
+    812,
+    813,
+    814,
+    815,
+    816,
+    817,
+    818,
+    819,
+    820,
+    821,
+    822,
+    823,
+    824,
+    825,
+    826,
+    827,
+    828,
+    829,
+    830,
+    831,
+    833,
+    834,
+    835,
+    836,
+    837,
+    838,
+    839,
+    840,
+    841,
+    842,
+    843,
+    844,
+    846,
+    847,
+    848,
+    849,
+    850,
+    851,
+    852,
+    853,
+    854,
+    855,
+    856,
+    857,
+    858,
+    859,
+    860,
+    861,
+    862,
+    863,
+    864,
+    865,
+    866,
+    867,
+    868,
+    869,
+    870,
+    871,
+    872,
+    873,
+    874,
+    875,
+    876,
+    877,
+    878,
+    879,
+    880,
+    881,
+    882,
+    883,
+    884,
+    886,
+    887,
+    888,
+    889,
+    890,
+    891,
+    892,
+    893,
+    894,
+    895,
+    896,
+    897,
+    902,
+    903,
+    904,
+    905,
+    906,
+    907
+   ],
+   "reason": "файлы разных фракций: {'nc': 12, 'lu': 13, 'ja': 12, 'mg': 13, 'st': 13, 'zd': 13, 'jm': 11, 'pc': 12, 'pt': 13, 'na': 13}"
+  },
+  "3956": {
+   "files": [
+    903
+   ],
+   "reason": "фракция не определена"
+  },
+  "3966": {
+   "files": [
+    902
+   ],
+   "reason": "фракция не определена"
+  },
+  "3970": {
+   "files": [
+    904
+   ],
+   "reason": "фракция не определена"
+  },
+  "3980": {
+   "files": [
+    905
+   ],
+   "reason": "фракция не определена"
+  },
+  "3984": {
+   "files": [
+    906
+   ],
+   "reason": "фракция не определена"
+  },
+  "3994": {
+   "files": [
+    907
+   ],
+   "reason": "фракция не определена"
+  },
+  "4767": {
+   "files": [
+    325
+   ],
+   "reason": "фракция не определена"
+  },
+  "5984": {
+   "files": [
+    978
+   ],
+   "reason": "фракция не определена"
+  },
+  "5985": {
+   "files": [
+    1205
+   ],
+   "reason": "фракция не определена"
+  },
+  "5986": {
+   "files": [
+    1252
+   ],
+   "reason": "фракция не определена"
+  },
+  "5987": {
+   "files": [
+    1271
+   ],
+   "reason": "фракция не определена"
+  },
+  "5988": {
+   "files": [
+    976
+   ],
+   "reason": "фракция не определена"
+  },
+  "5989": {
+   "files": [
+    1203
+   ],
+   "reason": "фракция не определена"
+  },
+  "5990": {
+   "files": [
+    1250
+   ],
+   "reason": "фракция не определена"
+  },
+  "5991": {
+   "files": [
+    1269
+   ],
+   "reason": "фракция не определена"
+  },
+  "5992": {
+   "files": [
+    977
+   ],
+   "reason": "фракция не определена"
+  },
+  "5993": {
+   "files": [
+    1204
+   ],
+   "reason": "фракция не определена"
+  },
+  "5994": {
+   "files": [
+    1251
+   ],
+   "reason": "фракция не определена"
+  },
+  "5995": {
+   "files": [
+    1270
+   ],
+   "reason": "фракция не определена"
+  },
+  "5996": {
+   "files": [
+    975
+   ],
+   "reason": "фракция не определена"
+  },
+  "5997": {
+   "files": [
+    1202
+   ],
+   "reason": "фракция не определена"
+  },
+  "5998": {
+   "files": [
+    1249
+   ],
+   "reason": "фракция не определена"
+  },
+  "5999": {
+   "files": [
+    1268
+   ],
+   "reason": "фракция не определена"
+  },
+  "6862": {
+   "files": [
+    989
+   ],
+   "reason": "фракция не определена"
+  },
+  "7151": {
+   "files": [
+    970,
+    1297
+   ],
+   "reason": "фракция не определена"
+  },
+  "7152": {
+   "files": [
+    970,
+    1297
+   ],
+   "reason": "фракция не определена"
+  },
+  "7153": {
+   "files": [
+    970,
+    1297
+   ],
+   "reason": "фракция не определена"
+  },
+  "7154": {
+   "files": [
+    970,
+    1297
+   ],
+   "reason": "фракция не определена"
+  },
+  "7155": {
+   "files": [
+    971
+   ],
+   "reason": "фракция не определена"
+  },
+  "7156": {
+   "files": [
+    971
+   ],
+   "reason": "фракция не определена"
+  },
+  "7157": {
+   "files": [
+    971
+   ],
+   "reason": "фракция не определена"
+  },
+  "7158": {
+   "files": [
+    971
+   ],
+   "reason": "фракция не определена"
+  },
+  "7159": {
+   "files": [
+    969
+   ],
+   "reason": "фракция не определена"
+  },
+  "7160": {
+   "files": [
+    969
+   ],
+   "reason": "фракция не определена"
+  },
+  "7161": {
+   "files": [
+    969
+   ],
+   "reason": "фракция не определена"
+  },
+  "7162": {
+   "files": [
+    969
+   ],
+   "reason": "фракция не определена"
+  },
+  "7163": {
+   "files": [
+    968
+   ],
+   "reason": "фракция не определена"
+  },
+  "7164": {
+   "files": [
+    968
+   ],
+   "reason": "фракция не определена"
+  },
+  "7165": {
+   "files": [
+    968
+   ],
+   "reason": "фракция не определена"
+  },
+  "7166": {
+   "files": [
+    968
+   ],
+   "reason": "фракция не определена"
+  },
+  "7484": {
+   "files": [
+    989
+   ],
+   "reason": "фракция не определена"
+  },
+  "7512": {
+   "files": [
+    595
+   ],
+   "reason": "фракция не определена"
+  },
+  "7528": {
+   "files": [
+    437,
+    438,
+    439,
+    440
+   ],
+   "reason": "фракция не определена"
+  },
+  "7529": {
+   "files": [
+    522,
+    523,
+    524,
+    525
+   ],
+   "reason": "фракция не определена"
+  },
+  "7563": {
+   "files": [
+    70,
+    71,
+    72,
+    368,
+    370
+   ],
+   "reason": "фракция не определена"
+  },
+  "7564": {
+   "files": [
+    70,
+    71,
+    72,
+    368,
+    370
+   ],
+   "reason": "фракция не определена"
+  },
+  "7661": {
+   "files": [
+    429,
+    430,
+    431,
+    432,
+    433,
+    434,
+    435,
+    436
+   ],
+   "reason": "фракция не определена"
+  },
+  "7662": {
+   "files": [
+    470,
+    471,
+    472,
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7663": {
+   "files": [
+    470,
+    471,
+    472,
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7665": {
+   "files": [
+    433,
+    434,
+    435,
+    436
+   ],
+   "reason": "фракция не определена"
+  },
+  "7666": {
+   "files": [
+    429,
+    430,
+    431,
+    432,
+    433,
+    434,
+    435,
+    436
+   ],
+   "reason": "фракция не определена"
+  },
+  "7668": {
+   "files": [
+    429,
+    430,
+    431,
+    432,
+    433,
+    434,
+    435,
+    436
+   ],
+   "reason": "фракция не определена"
+  },
+  "7669": {
+   "files": [
+    975,
+    976,
+    977,
+    978
+   ],
+   "reason": "фракция не определена"
+  },
+  "7670": {
+   "files": [
+    1202,
+    1203,
+    1204,
+    1205
+   ],
+   "reason": "фракция не определена"
+  },
+  "7671": {
+   "files": [
+    1249,
+    1250,
+    1251,
+    1252
+   ],
+   "reason": "фракция не определена"
+  },
+  "7672": {
+   "files": [
+    1268,
+    1269,
+    1270,
+    1271
+   ],
+   "reason": "фракция не определена"
+  },
+  "7674": {
+   "files": [
+    470
+   ],
+   "reason": "фракция не определена"
+  },
+  "7675": {
+   "files": [
+    471
+   ],
+   "reason": "фракция не определена"
+  },
+  "7676": {
+   "files": [
+    472
+   ],
+   "reason": "фракция не определена"
+  },
+  "7677": {
+   "files": [
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7678": {
+   "files": [
+    470
+   ],
+   "reason": "фракция не определена"
+  },
+  "7679": {
+   "files": [
+    471
+   ],
+   "reason": "фракция не определена"
+  },
+  "7680": {
+   "files": [
+    472
+   ],
+   "reason": "фракция не определена"
+  },
+  "7681": {
+   "files": [
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7682": {
+   "files": [
+    470,
+    471,
+    472,
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7687": {
+   "files": [
+    429,
+    430,
+    431,
+    432,
+    433,
+    434,
+    435,
+    436
+   ],
+   "reason": "фракция не определена"
+  },
+  "7693": {
+   "files": [
+    470,
+    471,
+    472,
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7694": {
+   "files": [
+    470,
+    471,
+    472,
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7695": {
+   "files": [
+    470,
+    471,
+    472,
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7696": {
+   "files": [
+    470,
+    471,
+    472,
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7697": {
+   "files": [
+    426
+   ],
+   "reason": "фракция не определена"
+  },
+  "7702": {
+   "files": [
+    470,
+    471,
+    472,
+    473
+   ],
+   "reason": "фракция не определена"
+  },
+  "7713": {
+   "files": [
+    41,
+    255,
+    445,
+    446
+   ],
+   "reason": "фракция не определена"
+  },
+  "7714": {
+   "files": [
+    41,
+    255,
+    445,
+    446
+   ],
+   "reason": "фракция не определена"
+  },
+  "7716": {
+   "files": [
+    41,
+    255,
+    445,
+    446
+   ],
+   "reason": "фракция не определена"
+  },
+  "7757": {
+   "files": [
+    970,
+    1297
+   ],
+   "reason": "фракция не определена"
+  },
+  "7758": {
+   "files": [
+    970,
+    1297
+   ],
+   "reason": "фракция не определена"
+  },
+  "7759": {
+   "files": [
+    971
+   ],
+   "reason": "фракция не определена"
+  },
+  "7760": {
+   "files": [
+    971
+   ],
+   "reason": "фракция не определена"
+  },
+  "7761": {
+   "files": [
+    969
+   ],
+   "reason": "фракция не определена"
+  },
+  "7762": {
+   "files": [
+    969
+   ],
+   "reason": "фракция не определена"
+  },
+  "7763": {
+   "files": [
+    968
+   ],
+   "reason": "фракция не определена"
+  },
+  "7764": {
+   "files": [
+    968
+   ],
+   "reason": "фракция не определена"
+  },
+  "8407": {
+   "files": [
+    41
+   ],
+   "reason": "фракция не определена"
+  },
+  "8408": {
+   "files": [
+    187
+   ],
+   "reason": "фракция не определена"
+  },
+  "8411": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8412": {
+   "files": [
+    575,
+    576,
+    577,
+    578,
+    588,
+    589,
+    590,
+    591
+   ],
+   "reason": "фракция не определена"
+  },
+  "8413": {
+   "files": [
+    579,
+    580,
+    581,
+    582
+   ],
+   "reason": "фракция не определена"
+  },
+  "8414": {
+   "files": [
+    579,
+    580,
+    581,
+    582
+   ],
+   "reason": "фракция не определена"
+  },
+  "8415": {
+   "files": [
+    579,
+    580,
+    581,
+    582
+   ],
+   "reason": "фракция не определена"
+  },
+  "8416": {
+   "files": [
+    579,
+    580,
+    581,
+    582
+   ],
+   "reason": "фракция не определена"
+  },
+  "8417": {
+   "files": [
+    579,
+    580,
+    581,
+    582
+   ],
+   "reason": "фракция не определена"
+  },
+  "8418": {
+   "files": [
+    583,
+    584,
+    585,
+    586
+   ],
+   "reason": "фракция не определена"
+  },
+  "8419": {
+   "files": [
+    587
+   ],
+   "reason": "фракция не определена"
+  },
+  "8420": {
+   "files": [
+    579,
+    580,
+    581,
+    582
+   ],
+   "reason": "фракция не определена"
+  },
+  "8421": {
+   "files": [
+    575,
+    576,
+    588,
+    589,
+    590,
+    591
+   ],
+   "reason": "фракция не определена"
+  },
+  "8422": {
+   "files": [
+    575,
+    576,
+    588,
+    589,
+    590,
+    591
+   ],
+   "reason": "фракция не определена"
+  },
+  "8423": {
+   "files": [
+    429
+   ],
+   "reason": "фракция не определена"
+  },
+  "8424": {
+   "files": [
+    430
+   ],
+   "reason": "фракция не определена"
+  },
+  "8425": {
+   "files": [
+    431
+   ],
+   "reason": "фракция не определена"
+  },
+  "8426": {
+   "files": [
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8432": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8433": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8434": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8435": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8436": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8437": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8438": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8463": {
+   "files": [
+    429,
+    430,
+    431,
+    432
+   ],
+   "reason": "фракция не определена"
+  },
+  "8621": {
+   "files": [
+    522,
+    523,
+    524,
+    525
+   ],
+   "reason": "фракция не определена"
+  },
+  "8622": {
+   "files": [
+    522,
+    523,
+    524,
+    525
+   ],
+   "reason": "фракция не определена"
+  },
+  "8623": {
+   "files": [
+    502,
+    988
+   ],
+   "reason": "фракция не определена"
+  },
+  "8624": {
+   "files": [
+    522,
+    523,
+    524,
+    525
+   ],
+   "reason": "фракция не определена"
+  },
+  "8625": {
+   "files": [
+    522,
+    523,
+    524,
+    525
+   ],
+   "reason": "фракция не определена"
+  },
+  "8626": {
+   "files": [
+    522
+   ],
+   "reason": "фракция не определена"
+  },
+  "8627": {
+   "files": [
+    523
+   ],
+   "reason": "фракция не определена"
+  },
+  "8628": {
+   "files": [
+    524
+   ],
+   "reason": "фракция не определена"
+  },
+  "8629": {
+   "files": [
+    525
+   ],
+   "reason": "фракция не определена"
+  },
+  "8630": {
+   "files": [
+    1003,
+    1004,
+    1005,
+    1006
+   ],
+   "reason": "фракция не определена"
+  },
+  "8631": {
+   "files": [
+    508
+   ],
+   "reason": "фракция не определена"
+  },
+  "8632": {
+   "files": [
+    513
+   ],
+   "reason": "фракция не определена"
+  },
+  "8633": {
+   "files": [
+    516
+   ],
+   "reason": "фракция не определена"
+  },
+  "8634": {
+   "files": [
+    517
+   ],
+   "reason": "фракция не определена"
+  },
+  "8635": {
+   "files": [
+    502,
+    522,
+    523,
+    524,
+    525,
+    988
+   ],
+   "reason": "фракция не определена"
+  },
+  "8636": {
+   "files": [
+    522,
+    523,
+    524,
+    525
+   ],
+   "reason": "фракция не определена"
+  },
+  "8682": {
+   "files": [
+    1003
+   ],
+   "reason": "фракция не определена"
+  },
+  "8683": {
+   "files": [
+    1004
+   ],
+   "reason": "фракция не определена"
+  },
+  "8684": {
+   "files": [
+    1005
+   ],
+   "reason": "фракция не определена"
+  },
+  "8685": {
+   "files": [
+    1006
+   ],
+   "reason": "фракция не определена"
+  },
+  "8686": {
+   "files": [
+    1003,
+    1004,
+    1005,
+    1006
+   ],
+   "reason": "фракция не определена"
+  },
+  "8687": {
+   "files": [
+    522,
+    523,
+    524,
+    525
+   ],
+   "reason": "фракция не определена"
+  },
+  "8688": {
+   "files": [
+    502
+   ],
+   "reason": "фракция не определена"
+  }
+ }
+}

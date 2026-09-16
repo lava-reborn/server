@@ -91,16 +91,12 @@ check("and the rest are known to be unplaceable", len(undrawable) > 0, True)
 
 # --- the map ---------------------------------------------------------------
 cells = world.settlements()
-check("settlements recovered", len(cells) >= 100, True)
+check("settlements recovered", len(cells) >= 200, True)
 
-# Cells confirmed by standing on them in the client, and the two markets the
-# wiki's own coordinates settle: its location article named exactly as the
-# map's tooltip outranks the NPC articles heaped on the same city cell.
+# Only cells confirmed by standing on them in the client are pinned here;
+# everything else the placer chose is checked by data/test_settlements.py
+# for consistency, not for truth, and waits for a player to confirm it.
 check("the new market is where it was played", world.location_at(5967, 1728), 104)
-check("the old market follows its wiki article", world.location_at(5968, 1727), 35)
-# No check for the oasis at 5972,1738: three cells far apart claim the same
-# file on the wiki, and the builder rightly refuses to pick one. It stays
-# desert until somebody stands on it in the client and says which.
 
 # Who stands in a room. The location file lists everyone who ever stood
 # there: New Year lottery stalls, Victory Day traders, clan-event vendors,
@@ -120,16 +116,50 @@ check("a hostile creature does not stand in a peaceful place",
 check("but does in the wasteland",
       world.belongs_here(1, "mAntilope", world.MOB, war=1), True)
 
+# Stand-ins (a designed table, data/spawn_substitutes.json): a battle
+# location whose fighters the client cannot draw gets known creatures of the
+# same faction instead, and only there. The camp is found from the table
+# itself, so the check does not pin any one file.
+import json
+with open(os.path.join(os.path.dirname(HERE), "data", "spawn_substitutes.json"),
+          encoding="utf-8") as fh:
+    subs = json.load(fh)["substitutes"]
+camp = next(i for rec in subs.values() for i in rec["files"] if world.location(i).war)
+camp_room = rooms.Room(world.location(camp), rooms.IdAllocator(), mobs)
+stood_in = [n for n in camp_room.npcs.values()
+            if n.type_id in {int(r["type_id"]) for r in subs.values()}]
+check("a battle camp gets stand-ins for the creatures the client lacks",
+      len(stood_in) > 0, True)
+check("and every stand-in is a hostile", {n.root for n in stood_in}, {world.MOB})
+calm = next((i for rec in subs.values() for i in rec["files"]
+             if not world.location(i).war), None)
+if calm is not None:
+    calm_room = rooms.Room(world.location(calm), rooms.IdAllocator(), mobs)
+    check("a peaceful place gets none",
+          [n for n in calm_room.npcs.values()
+           if n.type_id in {int(r["type_id"]) for r in subs.values()}], [])
+
 # One file, one place. A title reused up and down the map used to pin the
 # same location to cells hundreds apart, and at most one of those could be
-# where it stood. Neighbouring cells are allowed: a settlement may be wider
-# than one cell.
+# where it stood. A chain of neighbouring cells is allowed: a settlement may
+# be wider than one cell, or a strip like the five cells of a mountain pass.
 claims = {}
 for cell, loc_id in cells.items():
     claims.setdefault(loc_id, []).append(cell)
-scattered = {i: cs for i, cs in claims.items()
-             if max(abs(a[0] - b[0]) + abs(a[1] - b[1])
-                    for a in cs for b in cs) > 3}
+
+
+def chained(cs):
+    seen, frontier = {cs[0]}, [cs[0]]
+    while frontier:
+        a = frontier.pop()
+        for b in cs:
+            if b not in seen and abs(a[0] - b[0]) + abs(a[1] - b[1]) <= 3:
+                seen.add(b)
+                frontier.append(b)
+    return len(seen) == len(cs)
+
+
+scattered = {i: cs for i, cs in claims.items() if not chained(cs)}
 check("no location claimed from two ends of the map", scattered, {})
 
 # Scratch files were never anywhere. KB_TESTCLAN_Block_Post is titled
@@ -141,22 +171,24 @@ check("the black market is where it was played",
 check("and Dongola's is its own", world.location_at(5879, 2012), 103)
 check("naming them apart needed the region, not the name alone",
       world.location(102).title != world.location(103).title, True)
-# A settlement usually ships twice, peaceful and war, as one background drawn
-# from one library; war decides whether walking costs action points and whether
-# players may shoot each other. File names gave nothing away -- the pair is
-# spelled Night_, NY_ or not marked at all -- so the two are recognised as one
-# place by their art, and the map leads into the peaceful one.
-check("the docks open peacefully", world.location_at(5965, 1728), 41)
-check("and that is the calm file", world.location(41).war, 0)
-check("its war twin exists and is not the one chosen",
-      world.location(677).war, 1)
-check("both draw the same place",
-      world.location(41).file != world.location(677).file, True)
+# The placer prefers the peaceful copy of a place: a night or war twin of a
+# town file is never what the map leads into. Whatever it chose for the
+# towns, none of it is a war file titled like a peaceful one.
+calm_titles = {world.location(i).title for i in set(cells.values())
+               if not world.location(i).war}
+war_twins = [i for i in set(cells.values())
+             if world.location(i).war and world.location(i).title in calm_titles]
+check("no war twin of a peaceful place is on the map", war_twins, [])
 
-# The station needed the words compared as a set: the map writes
-# "Вокзал Вади-Хальфы", the file is titled "Вади Хальфа: вокзал".
-check("the station is found despite the word order",
-      world.location_at(5967, 1727), 37)
+# cell_of is location_at read backwards, and it is what puts a player sent
+# straight to a settlement onto its cell: without it, leaving for the map
+# dropped them wherever they last stood.
+for _cell, _loc in list(world.settlements().items())[:40]:
+    if world.cell_of(_loc) == _cell:
+        check("a settlement answers with its own cell (%d)" % _loc,
+              world.location_at(*_cell), _loc)
+        break
+check("an interior has no cell of its own", world.cell_of(1072), None)
 
 # An unnamed cell must still answer, or the map has holes in it.
 check("an unnamed cell still leads somewhere",
