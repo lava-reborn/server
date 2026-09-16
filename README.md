@@ -65,7 +65,13 @@ data/
   build_settlements.py       вывод таблицы из подсказок карты и заголовков локаций
   settlements_verified.json  проверенные игрой клетки, пересчётом не затираются
   npc_names.json             настоящие имена НПС с вики
-  wiki_extract.py            выгрузка ТТХ со статей вики
+  wiki/                      зеркало вики (6538 страниц wikitext, список файлов), CC BY-SA
+  wiki_dump.py               снятие зеркала через MediaWiki API, докачивает изменённое
+  wiki_links.py/.json        статья вики ↔ type_id objects.xml (иконки, калибры, чертежи), confidence
+  wiki_extract.py            все таблицы статей → wiki_items.json; схема ss_si_* → items_wiki.json
+  firearm_families.py/.json  массовый огнестрел: класс + «Стрельба N» ↔ линейки, кандидаты
+  mods_wiki.py/.json         чертежи и «Mod N»: эффекты модификаций, номер ↔ суффикс _mod_*
+  test_wiki_data.py          проверка выведенных данных и зафиксированное покрытие
 recon/
   as-src/lol/**      395 декомпилированных классов клиента (JPEXS FFDec)
   analysis/*.md      разбор по подсистемам — см. ниже

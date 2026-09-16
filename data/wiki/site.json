@@ -1,0 +1,194 @@
+{
+ "dumped": "2026-09-15 21:51 UTC",
+ "general": {
+  "allcentralidlookupproviders": [
+   "local"
+  ],
+  "allunicodefixes": false,
+  "anonwallpost": "false",
+  "articlepath": "/ru/wiki/$1",
+  "base": "https://lava-online.fandom.com/ru/wiki/%D0%91%D1%83%D0%BD%D0%BA%D0%B5%D1%80_%D0%9B%D0%B0%D0%BC%D0%B0%D0%BD%D1%82%D0%B8%D0%BD%D0%B0",
+  "case": "first-letter",
+  "categorycollation": "uppercase",
+  "centralidlookupprovider": "local",
+  "citeresponsivereferences": true,
+  "dbtype": "mysql",
+  "dbversion": "8.0.44-35",
+  "externalimages": [
+   "https://images.wikia.com/",
+   "https://images.wikia.com",
+   "https://static.wikia.com",
+   "https://static.wikia.nocookie.net",
+   "https://img.wikia.nocookie.net",
+   "https://img1.wikia.nocookie.net",
+   "https://img2.wikia.nocookie.net",
+   "https://img3.wikia.nocookie.net",
+   "https://img4.wikia.nocookie.net",
+   "https://img5.wikia.nocookie.net",
+   "https://images.wikia.nocookie.net",
+   "https://images1.wikia.nocookie.net",
+   "https://images2.wikia.nocookie.net",
+   "https://images3.wikia.nocookie.net",
+   "https://images4.wikia.nocookie.net",
+   "https://images5.wikia.nocookie.net",
+   "https://vignette.wikia.nocookie.net",
+   "https://vignette1.wikia.nocookie.net",
+   "https://vignette2.wikia.nocookie.net",
+   "https://vignette3.wikia.nocookie.net",
+   "https://vignette4.wikia.nocookie.net",
+   "https://vignette5.wikia.nocookie.net"
+  ],
+  "externallinktarget": "_blank",
+  "fallback": [
+   {
+    "code": "en"
+   }
+  ],
+  "fallback8bitEncoding": "windows-1251",
+  "favicon": "$wgUploadPath/6/64/Favicon.ico",
+  "fixarabicunicode": true,
+  "fixmalayalamunicode": true,
+  "galleryoptions": {
+   "captionLength": true,
+   "imageHeight": 120,
+   "imageWidth": 120,
+   "imagesPerRow": 0,
+   "mode": "traditional",
+   "showBytes": true,
+   "showDimensions": true
+  },
+  "gamepedia": "false",
+  "generator": "MediaWiki 1.43.9",
+  "imagelimits": {
+   "0": {
+    "height": 240,
+    "width": 320
+   },
+   "1": {
+    "height": 480,
+    "width": 640
+   },
+   "2": {
+    "height": 600,
+    "width": 800
+   },
+   "3": {
+    "height": 768,
+    "width": 1024
+   },
+   "4": {
+    "height": 1024,
+    "width": 1280
+   },
+   "5": {
+    "height": 2048,
+    "width": 2560
+   }
+  },
+  "imagewhitelistenabled": false,
+  "interwikimagic": true,
+  "invalidusernamechars": "@:>=",
+  "lang": "ru",
+  "langconversion": true,
+  "legaltitlechars": " %!\"$&'()*,\\-.\\/0-9:;=?@A-Z\\\\^_`a-z~\\x80-\\xFF+",
+  "linkconversion": true,
+  "linkprefix": "",
+  "linkprefixcharset": "",
+  "linktrail": "/^([a-zабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+)(.*)$/sDu",
+  "logo": "https://images.wikia.com/lava-online/ru/images/b/bc/Wiki.png",
+  "magiclinks": {
+   "ISBN": true,
+   "PMID": false,
+   "RFC": false
+  },
+  "mainpage": "Бункер Ламантина",
+  "mainpageisdomainroot": false,
+  "maxarticlesize": 2097152,
+  "maxuploadsize": 10485760,
+  "minuploadchunksize": 1024,
+  "misermode": true,
+  "mobileserver": "https://lava-online.fandom.com",
+  "nofollowdomainexceptions": [
+   "fanatical.com",
+   "fandom.com",
+   "gamepedia.com",
+   "muthead.com",
+   "wikia.com",
+   "wikia.org",
+   "wowpedia.org"
+  ],
+  "nofollowlinks": true,
+  "nofollownsexceptions": [],
+  "phpsapi": "fpm-fcgi",
+  "phpversion": "8.3.33",
+  "readonly": false,
+  "rtl": false,
+  "script": "/ru/index.php",
+  "scriptpath": "/ru",
+  "server": "https://lava-online.fandom.com",
+  "servername": "lava-online.fandom.com",
+  "sitename": "Энциклопедия lava-online.ru вики",
+  "thumblimits": {
+   "0": 120,
+   "1": 150,
+   "2": 180,
+   "3": 200,
+   "4": 250,
+   "5": 300
+  },
+  "time": "2026-09-15T21:51:04Z",
+  "timeoffset": 0,
+  "timezone": "UTC",
+  "titleconversion": true,
+  "uploadsenabled": true,
+  "variantarticlepath": false,
+  "wikiid": "rulavaonline",
+  "writeapi": true
+ },
+ "namespaces": {
+  "-1": "Служебная",
+  "-2": "Медиа",
+  "0": "",
+  "1": "Обсуждение",
+  "10": "Шаблон",
+  "11": "Обсуждение шаблона",
+  "110": "Форум",
+  "111": "Обсуждение форума",
+  "12": "Справка",
+  "1200": "Стена обсуждения",
+  "1201": "Тема",
+  "1202": "Приветствие стены обсуждения",
+  "1203": "Message Wall Greeting Talk",
+  "13": "Обсуждение справки",
+  "14": "Категория",
+  "15": "Обсуждение категории",
+  "2": "Участник",
+  "2900": "Карта",
+  "2901": "Карта разговоры",
+  "3": "Обсуждение участника",
+  "4": "Энциклопедия lava-online.ru вики",
+  "420": "GeoJson",
+  "421": "GeoJson talk",
+  "5": "Обсуждение Энциклопедия lava-online.ru вики",
+  "500": "Блог участника",
+  "501": "Комментарий блога участника",
+  "502": "Блог",
+  "503": "Обсуждение блога",
+  "6": "Файл",
+  "7": "Обсуждение файла",
+  "8": "MediaWiki",
+  "828": "Модуль",
+  "829": "Обсуждение модуля",
+  "9": "Обсуждение MediaWiki"
+ },
+ "statistics": {
+  "activeusers": 0,
+  "admins": 8,
+  "articles": 4016,
+  "edits": 22570,
+  "images": 2265,
+  "jobs": 0,
+  "pages": 6721,
+  "users": 36263616
+ }
+}
