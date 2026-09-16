@@ -32,10 +32,10 @@
 Регистрация — в браузере на `http://127.0.0.1:8080/`. Тестовый аккаунт
 `polestvr` / `lava1234`.
 
-Тесты (семь наборов, все обязаны быть зелёными перед коммитом):
+Тесты (двенадцать наборов, все обязаны быть зелёными перед коммитом):
 
 ```bash
-cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests; do python3 $t.py || break; done
+cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests test_social; do python3 $t.py || break; done
 ```
 
 Переменные: `LAVA_GX`/`LAVA_GY` — стартовая клетка карты (5970×1730),
@@ -59,7 +59,9 @@ server/
   names.py           единая таблица строк (имена мобов, предметов, НПС)
   accounts.py        SQLite: аккаунты, персонажи, позиция
   bootstrap_http.py  HTTP: ресурсы клиента, регистрация, texts.xml, loaduser
-  test_*.py          семь наборов, каждый — реплей клиентской последовательности
+  mail.py            почта: письма, вложения, тарифы, возврат посылок
+  party.py           отряд: p_op/p_m, канал 1, «в сети/отключился»
+  test_*.py          двенадцать наборов, каждый — реплей клиентской последовательности
 data/
   settlements.json           клетка карты → id локации (77), выводится скриптом
   build_settlements.py       вывод таблицы из подсказок карты и заголовков локаций
