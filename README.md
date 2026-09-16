@@ -64,8 +64,22 @@ data/
   settlements.json           клетка карты → id локации (77), выводится скриптом
   build_settlements.py       вывод таблицы из подсказок карты и заголовков локаций
   settlements_verified.json  проверенные игрой клетки, пересчётом не затираются
-  npc_names.json             настоящие имена НПС с вики
+  npc_names.json             настоящие имена НПС с вики: 16 проверенных + 96 по вики
   wiki_extract.py            выгрузка ТТХ со статей вики
+  wiki_world/                сырой wikitext 3170 страниц по миру (НПС, локации, мобы,
+                             лут, квесты; CC-BY-SA), wiki_world_fetch.py
+  npc_wiki.json              каждая статья НПС → место → кандидаты-спавны → type_id
+                             с confidence (build_npc_wiki.py)
+  trader_stock_wiki.json     ассортимент 87 торговцев по спискам «Торговля»
+  mob_types.json             1739 мобов: уровень (откуда взят), оружие, роль, скорость
+  mob_curves.json            ОДНА кривая по уровню 0..33: hp/урон/попадание/опыт —
+                             спроектирована по формулам «Игромеханики» (build_mob_types.py)
+  loot_wiki.json             рёбра моб↔предмет с вики, шансы по тиру — спроектированы
+  exits_sides.json           сторона каждой клетки выхода всех 1381 локаций (outzones)
+  exits.json                 двери a/b → целевой интерьер, с confidence (build_exits.py)
+  settlements_wiki.json      предложения клетка→локация по координатам вики; не применяются
+  quests_wiki.json           1191 квест в схеме quests.md §1; 371 привязан к type_id дающего
+  test_world_data.py         проверка всех таблиц выше против mobs.xml и друг друга
 recon/
   as-src/lol/**      395 декомпилированных классов клиента (JPEXS FFDec)
   analysis/*.md      разбор по подсистемам — см. ниже
