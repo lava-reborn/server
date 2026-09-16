@@ -23,7 +23,9 @@ import time
 import accounts
 import inventory
 import items
+import mail
 import names
+import party
 import rooms
 import progression
 import quests
@@ -122,6 +124,9 @@ TRAVEL_SPEED = 0.35   # cells per second
 ROOMS = rooms.Rooms(MOB_TYPES)
 GMAP = rooms.GlobalMapRoom(VIEW_RADIUS)
 ONLINE = rooms.Directory()
+# Parties outlive the sockets of their members (party.py), so they are
+# kept here and not on the sessions.
+PARTIES = party.Parties(ONLINE)
 
 log = logging.getLogger("lava")
 
@@ -191,6 +196,9 @@ class Session:
         # Items, slots and the open stall: inventory.py. Reads the character
         # off this session, so it needs no update when the character changes.
         self.inv = inventory.Inventory(self, STORE)
+        # Letters: mail.py. Needs the directory to push a new letter to an
+        # addressee who is online.
+        self.mail = mail.Mail(self, STORE, ONLINE)
 
     @property
     def pid(self):
@@ -315,6 +323,9 @@ class Session:
             self.leave_room()
             GMAP.leave(self)
             ONLINE.remove(self)
+            # The party keeps the seat and tells the others "отключился";
+            # the same character on a new socket takes it back.
+            PARTIES.disconnected(self)
             if self.char_id:
                 STORE.save_position(self.char_id, self.loc.id, self.pos,
                                     self.gx, self.gy, self.on_map)
@@ -441,6 +452,9 @@ class Session:
         # before the new one is even loading.
         self.leave_room()
         ONLINE.add(self)
+        # A party member back on a socket: the others hear "в сети" and
+        # this client gets the roster. A no-op on every later lcall.
+        PARTIES.online(self)
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork.
         self.send("lcall", id=self.loc.id, ws=self.loc.war, ie=0,
@@ -582,6 +596,12 @@ class Session:
             self.room.broadcast(("userMsg", dict(
                 group=0, nick=Str(self.nick), entry=Str(raw),
                 **{"from": self.pid})), exclude=self)
+        elif group == 1:
+            # The party channel: ChatPan only opens it once a p_m or a
+            # join has arrived, so a line here without a party is a
+            # modified client's, and goes nowhere.
+            if not PARTIES.chat(self, raw):
+                log.info("  ..    party chat from %s, who has no party", self.nick)
         elif group == 6:
             # The world channel: everyone online, wherever they stand.
             for other in ONLINE:
@@ -1004,22 +1024,30 @@ class Session:
         self.send("q_list", q_id=[r["q_id"] for r in rows],
                   q_types=[r["type"] for r in rows])
 
+    # --- mail ----------------------------------------------------------------
+    # The whole cycle is in mail.py. The client asks for the inbox the
+    # moment it lands in a location (LocationInterface.checkNewLetter) and
+    # every one of the five commands expects an acknowledgement first.
     def cmd_chkml(self, p):
-        """Mail. The client asks the moment it lands in a location.
+        self.mail.chkml(p)
 
-        mode 0 is the inbox, 1 the outbox, 255 the tariffs. All three expect an
-        acknowledgement first, then the listing itself.
-        """
-        mode = int(p.get("mode", 0))
-        self.send("cmdAck", res=0)
-        if mode == 255:
-            # Eight prices and eight delivery times, in the order the client
-            # reads them: ordinary, express, clan, express clan, then the same
-            # four again as the charge per kilogram of attachments.
-            self.send("svml", data=[10, 100, 20, 200, 5, 50, 15, 150],
-                      time=[3600, 600, 3600, 600, 3600, 600, 3600, 600])
-        else:
-            self.send("lsml", id=[], date=[], name=[], flag=[], subj=[])
+    def cmd_getml(self, p):
+        self.mail.getml(p)
+
+    def cmd_sndml(self, p):
+        self.mail.sndml(p)
+
+    def cmd_uldml(self, p):
+        self.mail.uldml(p)
+
+    def cmd_rmvml(self, p):
+        self.mail.rmvml(p)
+
+    # --- party -----------------------------------------------------------------
+    def cmd_p_op(self, p):
+        """One command for the whole party protocol (party.py). op 5 asks
+        for the roster and is not acknowledged; see expects_ack."""
+        PARTIES.op(self, int(p.get("op", -1) or 0), int(p.get("id", 0) or 0))
 
     # --- quests ------------------------------------------------------------
     # The model is in quests.py and recon/analysis/quests.md 1-2. What matters

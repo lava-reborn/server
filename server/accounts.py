@@ -90,7 +90,35 @@ CREATE TABLE IF NOT EXISTS char_quests_done (
     type     INTEGER NOT NULL,
     done_at  INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS mail (
+    -- One row per letter, seen from two sides: the addressee's inbox and
+    -- the sender's outbox are the same row under two deletion flags, so a
+    -- sender clearing the outbox cannot take a parcel out of the inbox.
+    -- AUTOINCREMENT on purpose: MailInspector keys its inbox/outbox arrays
+    -- by id for the whole session, and a deleted id coming back on a new
+    -- letter would land on the old LetterObject.
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    to_char      INTEGER NOT NULL REFERENCES characters(id),
+    from_char    INTEGER NOT NULL REFERENCES characters(id),
+    type         INTEGER NOT NULL DEFAULT 0,      -- mail.py LETTER..ORDER_EXPRESS
+    subject      TEXT    NOT NULL DEFAULT '',
+    body         TEXT    NOT NULL DEFAULT '',
+    sent_at      INTEGER NOT NULL,
+    read         INTEGER NOT NULL DEFAULT 0,
+    returned     INTEGER NOT NULL DEFAULT 0,      -- came back with its parcel
+    afro         INTEGER NOT NULL DEFAULT 0,      -- attached, or the asking price
+    gold         INTEGER NOT NULL DEFAULT 0,
+    items_json   TEXT    NOT NULL DEFAULT '[]',   -- attached instances, mail.snapshot
+    to_deleted   INTEGER NOT NULL DEFAULT 0,
+    from_deleted INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS mail_by_to ON mail (to_char);
+CREATE INDEX IF NOT EXISTS mail_by_from ON mail (from_char);
 """
+
+MAIL_FIELDS = ("to_char", "type", "subject", "body", "sent_at", "read",
+               "returned", "afro", "gold", "items_json", "to_deleted",
+               "from_deleted")
 
 # Columns the characters table gained after the first databases were made.
 # SCHEMA runs as CREATE TABLE IF NOT EXISTS, which leaves an existing table
@@ -255,6 +283,22 @@ class Store:
         return self.db.execute("SELECT 1 FROM characters WHERE name = ?",
                                (name,)).fetchone() is not None
 
+    def character_by_name(self, name):
+        """The character called name, exactly or ignoring case, or None.
+
+        Mail addresses by the name typed into the window (sndml;to=@..@),
+        the same way private chat does; the id never travels.
+        """
+        row = self.db.execute("SELECT * FROM characters WHERE name = ?",
+                              (name,)).fetchone()
+        if row is not None:
+            return row
+        want = name.casefold()
+        for row in self.db.execute("SELECT * FROM characters"):
+            if row["name"].casefold() == want:
+                return row
+        return None
+
     def save_position(self, char_id, loc, pos, gx, gy, on_map):
         self.db.execute(
             "UPDATE characters SET loc = ?, pos = ?, gx = ?, gy = ?, on_map = ?"
@@ -384,6 +428,53 @@ class Store:
         return self.db.execute(
             "SELECT COUNT(*) c FROM char_quests_done WHERE char_id = ?"
             " AND done_at >= ?", (char_id, int(since))).fetchone()["c"]
+
+    # --- mail ------------------------------------------------------------
+    # Rows are returned as dicts, like items: mail.py reads and rewrites
+    # their fields and a sqlite3.Row cannot be assigned to.
+    def mail_inbox(self, char_id):
+        return [dict(r) for r in self.db.execute(
+            "SELECT * FROM mail WHERE to_char = ? AND to_deleted = 0"
+            " ORDER BY id", (char_id,)).fetchall()]
+
+    def mail_outbox(self, char_id):
+        return [dict(r) for r in self.db.execute(
+            "SELECT * FROM mail WHERE from_char = ? AND from_deleted = 0"
+            " ORDER BY id", (char_id,)).fetchall()]
+
+    def mail_letter(self, mail_id):
+        row = self.db.execute("SELECT * FROM mail WHERE id = ?",
+                              (mail_id,)).fetchone()
+        return dict(row) if row else None
+
+    def mail_send(self, to_char, from_char, kind, subject, body, afro, gold,
+                  items_json, when=None):
+        """File a letter; returns its row."""
+        cur = self.db.execute(
+            "INSERT INTO mail (to_char, from_char, type, subject, body,"
+            " sent_at, afro, gold, items_json)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (to_char, from_char, int(kind), subject, body,
+             int(when or time.time()), int(afro), int(gold), items_json))
+        self.db.commit()
+        return self.mail_letter(cur.lastrowid)
+
+    def mail_update(self, mail_id, **cols):
+        unknown = set(cols) - set(MAIL_FIELDS)
+        if unknown:
+            raise ValueError("no such mail field: %s" % ", ".join(sorted(unknown)))
+        if not cols:
+            return
+        keys = list(cols)
+        self.db.execute(
+            "UPDATE mail SET %s WHERE id = ?"
+            % ", ".join("%s = ?" % k for k in keys),
+            [cols[k] for k in keys] + [mail_id])
+        self.db.commit()
+
+    def mail_delete(self, mail_id):
+        self.db.execute("DELETE FROM mail WHERE id = ?", (mail_id,))
+        self.db.commit()
 
     def close(self):
         self.db.close()
