@@ -130,12 +130,22 @@ try:
     import world, items, quests
     ids = set(world.mob_types())
     ids |= {items.STRING_ID_OFFSET + t for t in items.catalogue()}
+    # item descriptions from the wiki, the id ss_si_* puts in desc
+    ids |= {items.DESC_ID_OFFSET + t for t in items.wiki_descs()}
     # quest names and texts, plus the shared empty string they fall back to
     ids |= set(quests.strings())
     have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
     check('every name the server sends is preloaded', ids - have, set())
-    check('creature, item and quest ids do not collide',
+    check('creature, item, description and quest ids do not collide',
           len(have), len(ids))
+    # the wiki's Russian names replace the internal ones under the same ids
+    body = everything.decode('utf-8')
+    check('a linked item is served under its wiki name',
+          "<s id='%d'>9мм НАТО КС</s>" % (items.STRING_ID_OFFSET + 6092) in body, True)
+    check('and its description under the description id',
+          "<s id='%d'>" % (items.DESC_ID_OFFSET + 6092) in body, True)
+    check('an unlinked item keeps its internal name',
+          "<s id='%d'>pistols_1</s>" % (items.STRING_ID_OFFSET + 4380) in body, True)
     # 3. real client assets must come through
     # Fifteen files under res/ have a space in the name, and the client asks
     # for them percent-escaped. Serving them meant decoding the path first:
