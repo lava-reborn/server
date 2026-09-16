@@ -19,6 +19,7 @@ import os
 import signal
 
 import accounts
+import inventory
 import items
 import names
 import rooms
@@ -161,6 +162,9 @@ class Session:
         self.npc_session = None
         # the Room this session stands in, from lenter until it leaves
         self.room = None
+        # Items, slots and the open stall: inventory.py. Reads the character
+        # off this session, so it needs no update when the character changes.
+        self.inv = inventory.Inventory(self, STORE)
 
     @property
     def pid(self):
@@ -273,19 +277,25 @@ class Session:
         if self.closed:
             return
         self.closed = True
-        self.cancel_travel()
-        # Whoever shared a room or the map with this player is told now: a
-        # dropped socket sends no logout, so this is the only place that
-        # covers every way out.
-        self.leave_room()
-        GMAP.leave(self)
-        ONLINE.remove(self)
-        if self.char_id:
-            STORE.save_position(self.char_id, self.loc.id, self.pos,
-                                self.gx, self.gy, self.on_map)
-        if self.char:
-            self.char.save(STORE)
-        self.writer.close()
+        # Whatever fails in here, the transport still closes: a socket left
+        # open by a bug in one subsystem would otherwise hold up shutdown()
+        # and keep a ghost in every room it was in.
+        try:
+            self.cancel_travel()
+            self.inv.close()
+            # Whoever shared a room or the map with this player is told now:
+            # a dropped socket sends no logout, so this is the only place
+            # that covers every way out.
+            self.leave_room()
+            GMAP.leave(self)
+            ONLINE.remove(self)
+            if self.char_id:
+                STORE.save_position(self.char_id, self.loc.id, self.pos,
+                                    self.gx, self.gy, self.on_map)
+            if self.char:
+                self.char.save(STORE)
+        finally:
+            self.writer.close()
 
     def shutdown(self):
         """The server is going: say so, then close as on logout.
@@ -338,6 +348,9 @@ class Session:
         self.char_id = char_id
         self.active = next(c for c in self.characters if c["slot"] == slot)
         self.load_character(char_id)
+        # A pistol and a pack of rounds in the bag, so there is something to
+        # wear, load and sell before the first stall is found.
+        self.inv.starter_kit(char_id)
         log.info("  ..    created %r in slot %d", name, slot)
         # The client plays its intro after this, then sends actPlayer itself.
         self.send("cmdAck", res=0)
@@ -719,6 +732,21 @@ class Session:
         self.send("userInfo_Player", **rooms.player_info(other))
         self.send("usrUp", **rooms.player_health(other))
 
+    def char_for_entity(self, entity_id):
+        """Which character an entity id on this client's screen belongs to.
+
+        Asked when the client wants somebody else's clothes and hands
+        (ss_get;target=<id>;slot=3) so it can draw them. None for anything
+        that is not a player -- the location's own inhabitants included --
+        and the answer is then bare hands, which is what the client draws
+        for a creature anyway. Another player's gear comes from their own
+        character, wherever they stand.
+        """
+        if not rooms.is_player_id(entity_id):
+            return None
+        other = ONLINE.by_pid(entity_id)
+        return other.char_id if other is not None else None
+
     def send_npc_info(self, npc_id):
         """Answer getInfo for one inhabitant.
 
@@ -862,6 +890,9 @@ class Session:
         if int(p.get("s_type", 0) or 0) == progression.SESSION_TRAINING:
             self.training_open(p)
             return
+        if int(p.get("s_type", -1) or 0) == inventory.SESSION_TRADE:
+            self.inv.open_trade(p)
+            return
         self.npc_session = int(p.get("s_type", 0) or 0)
         self.send("cmdAck", res=0)
 
@@ -883,6 +914,10 @@ class Session:
         from the side that never sent ss_create; the relay will have to set
         npc_session for it.
         """
+        # Inside an open stall the code is buy/sell/close, and close carries
+        # no acknowledgement at all (Trade.close registers none).
+        if self.inv.ss_upd(p):
+            return
         if self.training is not None:
             self.training_upd(p)
             return
@@ -894,29 +929,29 @@ class Session:
             return
         self.send("cmdAck", res=0)
 
+    def cmd_ss_get_di(self, p):
+        # Every real instance the client meets asks for this, through the
+        # same window of five as ss_get_si; the sixth item stalls without it.
+        self.inv.ss_get_di(p)
+
+    def cmd_ss_move(self, p):
+        self.inv.ss_move(p)
+
+    def cmd_ss_use(self, p):
+        self.inv.ss_use(p)
+
+    def cmd_ss_heap_c(self, p):
+        self.inv.ss_heap_c(p)
+
     def cmd_ss_get_s_si(self, p):
         # Nothing belongs to a set yet, but the request still needs answering.
         self.send("ss_si_set", type=int(p.get("type", 0)), res=0, name=0,
                   desc="")
 
     def cmd_ss_get(self, p):
-        target = int(p.get("target", 0) or 0)
-        if target and rooms.is_player_id(target):
-            # Another player's gear, asked for by the Player entity the
-            # client just built (Player.as:11-18, slot=3). PersEquip.ss_ack
-            # splices exactly six wear slots off the list and then two
-            # hands, so the answer is eight entries, x0 for an empty slot.
-            self.send("ss_ack", o_list=[BigUInt("0")] * 8)
-            return
-        # Answer even when empty; ItemFactory pipelines these and stops
-        # issuing new ones until each outstanding request comes back.
-        #
-        # slot=32 (PersEquip.requestPublicTrophy) is the one ss_get that
-        # registers on both queues, ss_ack and cmdAck, and whichever answer
-        # lands first skipCalls the other. So it gets the same single ss_ack
-        # as the rest and no cmdAck: a second answer would be consumed by the
-        # next command's handler.
-        self.send("ss_ack", o_list=[])
+        # Answered whatever the target: the ss_ack queue is FIFO and the
+        # client slices the list by the mask it remembers sending.
+        self.inv.ss_get(p)
 
     def cmd_q_list(self, p):
         # QuestInspector allows exactly one outstanding quest request, so a

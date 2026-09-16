@@ -257,8 +257,12 @@ try:
     # Buying registers Trade.transferAck; closing the shop (s_status=0) is
     # sent from Trade.close with no handler at all. Acknowledging the close
     # was enough to put the queue off by one for the rest of the session.
+    # A real purchase now: the client adds nothing to the bag by itself, so
+    # the acknowledgement is followed by the new object, its dynamic info
+    # and the purse (userInfo_Player is the only frame carrying money).
     c.send("ss_upd;s_status=1;obj=x0;param=1;")
-    check("a purchase is acknowledged", c.names(), ["cmdAck"])
+    check("a purchase is acknowledged, then delivered", c.names(),
+          ["cmdAck", "ss_obj_status", "ss_di_firearm", "userInfo_Player"])
     c.send("ss_upd;s_status=0;obj=x0;")
     check("closing the shop is not", c.frames(), [])
 

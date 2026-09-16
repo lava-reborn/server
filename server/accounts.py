@@ -53,6 +53,25 @@ CREATE TABLE IF NOT EXISTS char_stats (
     xp_max  INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (char_id, kind, idx)
 );
+CREATE TABLE IF NOT EXISTS items (
+    -- The serial part of the item's wire id. AUTOINCREMENT on purpose: the
+    -- client keeps every oid it has ever seen in ItemFactory.itemStore for
+    -- the whole session, so a serial reused for a new item of the same type
+    -- would hand the player the old object with its stale stack size.
+    uniq          INTEGER PRIMARY KEY AUTOINCREMENT,
+    char_id       INTEGER NOT NULL REFERENCES characters(id),
+    type_id       INTEGER NOT NULL,
+    root          INTEGER NOT NULL,
+    slot          INTEGER NOT NULL DEFAULT 2048,   -- container code, inventory.py
+    count         INTEGER NOT NULL DEFAULT 1,      -- stack size ("size" on the wire)
+    brk           INTEGER NOT NULL DEFAULT 0,      -- durability ("break" on the wire)
+    max_break_cur INTEGER NOT NULL DEFAULT 0,
+    ammo_count    INTEGER NOT NULL DEFAULT 0,
+    ammo_type     INTEGER NOT NULL DEFAULT 0,
+    cur_mode      INTEGER NOT NULL DEFAULT 0,
+    use_count     INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS items_by_char ON items (char_id);
 """
 
 # Columns the characters table gained after the first databases were made.
@@ -73,6 +92,9 @@ CHARACTER_COLUMNS = [
     ("max_specs", "INTEGER NOT NULL DEFAULT 1"),
     ("level", "INTEGER NOT NULL DEFAULT 0"),
 ]
+
+ITEM_FIELDS = ("slot", "count", "brk", "max_break_cur", "ammo_count",
+               "ammo_type", "cur_mode", "use_count")
 
 
 def credential(login, password):
@@ -217,6 +239,61 @@ class Store:
         self.db.execute(
             "UPDATE characters SET loc = ?, pos = ?, gx = ?, gy = ?, on_map = ?"
             " WHERE id = ?", (loc, pos, gx, gy, 1 if on_map else 0, char_id))
+        self.db.commit()
+
+    # --- money -----------------------------------------------------------
+    def money(self, char_id):
+        """(afro, gold) of a character; gold in hundredths of an ounce."""
+        row = self.db.execute("SELECT afro, gold FROM characters WHERE id = ?",
+                              (char_id,)).fetchone()
+        return (row["afro"], row["gold"]) if row else (0, 0)
+
+    def set_money(self, char_id, afro, gold):
+        self.db.execute("UPDATE characters SET afro = ?, gold = ? WHERE id = ?",
+                        (int(afro), int(gold), char_id))
+        self.db.commit()
+
+    # --- items -----------------------------------------------------------
+    # One row per item instance; a stack of ammunition is one row with a
+    # count. The wire id is derived from (uniq, type_id, root) by
+    # inventory.oid, never stored, so the layout can change in one place.
+    def items_of(self, char_id):
+        return [dict(r) for r in self.db.execute(
+            "SELECT * FROM items WHERE char_id = ? ORDER BY uniq",
+            (char_id,)).fetchall()]
+
+    def item(self, uniq):
+        row = self.db.execute("SELECT * FROM items WHERE uniq = ?",
+                              (uniq,)).fetchone()
+        return dict(row) if row else None
+
+    def create_item(self, char_id, type_id, root, **fields):
+        """Insert an instance; returns its row. Unset fields take the defaults."""
+        unknown = set(fields) - set(ITEM_FIELDS)
+        if unknown:
+            raise ValueError("no such item field: %s" % ", ".join(sorted(unknown)))
+        cols = ["char_id", "type_id", "root"] + list(fields)
+        vals = [char_id, type_id, root] + [int(v) for v in fields.values()]
+        cur = self.db.execute(
+            "INSERT INTO items (%s) VALUES (%s)"
+            % (", ".join(cols), ", ".join("?" * len(cols))), vals)
+        self.db.commit()
+        return self.item(cur.lastrowid)
+
+    def update_item(self, uniq, **fields):
+        unknown = set(fields) - set(ITEM_FIELDS)
+        if unknown:
+            raise ValueError("no such item field: %s" % ", ".join(sorted(unknown)))
+        if not fields:
+            return
+        self.db.execute(
+            "UPDATE items SET %s WHERE uniq = ?"
+            % ", ".join("%s = ?" % k for k in fields),
+            [int(v) for v in fields.values()] + [uniq])
+        self.db.commit()
+
+    def delete_item(self, uniq):
+        self.db.execute("DELETE FROM items WHERE uniq = ?", (uniq,))
         self.db.commit()
 
     def close(self):
