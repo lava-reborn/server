@@ -14,12 +14,15 @@ Two rules govern nearly every handler here (see PROTOCOL.md):
     reopens and it stalls with no error shown.
 """
 import asyncio
+import json
 import logging
 import os
+import time
 
 import accounts
 import items
 import names
+import quests
 import world
 from protocol import FrameReader, decode, frame, Str
 
@@ -92,6 +95,31 @@ POLICY = (
 ATTRIBS = 5    # сила, ловкость, телосложение, восприятие, интеллект
 SKILLS = 5     # ближний бой, стрельба, медицина, промышленность, производство
 SPECS = 15
+
+# Quest limits, sent in the constants frame and enforced here. The client
+# refuses a take beyond quest_log_capacity on its own (QuestInterface.getQuest),
+# but a modified one would not, so the server counts too. daily_reset_time is
+# minutes past UTC midnight; the client only uses it for the journal caption.
+QUEST_LOG_CAPACITY = 20
+DAILY_MAX = 10
+DAILY_RESET_TIME = 0
+
+# Until characters have statistics (TASKS stage 3): every skill sits at level
+# 1 (cmd_rp_get_info), HP and SP are a flat 100, and a medic charges 10 afro.
+SKILL_LEVEL = 1
+HP_MAX = 100
+MEDIC_PRICE = 10
+
+# cmdAck codes for quest and service refusals. The client shows any non-zero
+# answer to q_co as "сдали максимум ежедневных" (ErrorReport 44) and to
+# on_conv;op=2 as GET_TRANSPORT_FAIL, so the distinctions are for the log.
+RES_NO_SUCH = 1
+RES_WRONG_NPC = 2
+RES_NOT_READY = 3
+RES_NOT_AVAILABLE = 4
+RES_LOG_FULL = 5
+RES_NO_MONEY = 21
+RES_DAILY_LIMIT = 44
 
 
 def full_mask(n):
@@ -186,13 +214,13 @@ class Session:
         """
         self.send("constants",
                   gold_to_afro_rate=100,
-                  quest_log_capacity=20,
+                  quest_log_capacity=QUEST_LOG_CAPACITY,
                   leave_combat_timeout=30,
                   premium_weight_bonus_1=2, premium_weight_bonus_2=4,
                   premium_break_bonus_1=1, premium_break_bonus_2=2,
                   premium_xp_bonus_1=1, premium_xp_bonus_2=2,
                   gold_repair_price_mod=1, gold_repair_mod=10000,
-                  daily_max=10, daily_reset_time=0)
+                  daily_max=DAILY_MAX, daily_reset_time=DAILY_RESET_TIME)
         for pers in self.characters:
             self.send("persInfo", num=pers["slot"], name=Str(pers["name"]),
                       sex=pers["sex"], death=0, res=Str(str(pers["res"])))
@@ -292,6 +320,10 @@ class Session:
         """
         # aspd is the action-point gain per 600ms tick, amax the ceiling.
         self.send("lenter", pos=self.pos, aspd=1, amax=20)
+        # How many quests may still be handed in today. Only QuestInspector
+        # reads it, and that singleton exists from the first Entity built
+        # (Entity.as:37), long before the location opens, so it lands.
+        self.send("q_sys", daily_available=self.daily_available())
         self.populate()
 
     def populate(self):
@@ -508,14 +540,28 @@ class Session:
         if who != 0:
             self.send_npc_info(who)
             return
+        self.send_player_info()
+        self.send_vitals()
+
+    def send_player_info(self):
+        """userInfo_Player for the player, with the purse as stored.
+
+        This is the only frame that carries money: Gamer.userInfo reads afro
+        and gold off it and nothing else updates them, so a quest reward or a
+        medic's fee is paid by sending it again (quests.md 1.7).
+        """
         pers = self.active or default_character()
+        afro, gold = STORE.money(self.char_id) if self.char_id else (1000, 0)
         self.send("userInfo_Player",
                   id=0, name=Str(pers["name"]), sex=pers["sex"],
                   res=Str(str(pers["res"])), ail=0, ally=1, lvl=1,
                   rep=[0], bg_rep=0, bg_pen=0, clan=0,
                   hl=0, pr=0,
-                  afro=1000, gold=0, tr=0, tr_hours=0)
-        self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
+                  afro=afro, gold=gold, tr=0, tr_hours=0)
+
+    def send_vitals(self, hcur=HP_MAX, scur=HP_MAX):
+        """usrUp: the only frame that moves the HP and SP bars."""
+        self.send("usrUp", id=0, hcur=hcur, hmax=HP_MAX, scur=scur, smax=HP_MAX)
 
     def send_npc_info(self, npc_id):
         """Answer getInfo for one inhabitant.
@@ -537,10 +583,17 @@ class Session:
         # folder off it, so neither the folder name nor the creature name works
         # here: both make the lookup miss and the path resolve to
         # mobs/undefined.xml.
+        #
+        # give_quests is indexed by the client: q_st;q_idx is a position in
+        # this list (NPC.getGQIndex), so its order is part of the protocol
+        # and quests.given_by keeps the table's. The client answers each
+        # type here with a q_status, which is where availability is decided;
+        # m_hello is a dead field (NPC.createHelloStrings never assigns).
         params = dict(id=npc_id, name=type_id, sex=0, res=type_id,
                       ail=0,
                       ally=1, lvl=1, rep=[0], bg_rep=0, bg_pen=0,
-                      give_quests=[], take_quests=[], m_hello=[],
+                      give_quests=quests.given_by(type_id),
+                      take_quests=quests.taken_by(type_id), m_hello=[],
                       can_set_home=0, can_banking=0, can_trophy=0,
                       can_repair=0, can_trade=0)
         if root == world.TRADER:
@@ -556,7 +609,9 @@ class Session:
         elif root == world.LESSOR:
             params.update(give_transport=[])
         elif root == world.HEALER:
-            params.update(a_price=10)
+            # Healer.as builds g_price from the same a_price, so only the
+            # afro fee is ever shown; on_conv;op=1 charges this much.
+            params.update(a_price=MEDIC_PRICE)
         elif root == world.COMMONER:
             params.update(can_set_home=1)
         self.send(cmd, **params)
@@ -618,9 +673,16 @@ class Session:
         self.send("ss_ack", o_list=[])
 
     def cmd_q_list(self, p):
-        # QuestInspector allows exactly one outstanding quest request, so a
-        # missing answer wedges the whole quest pipeline.
-        self.send("q_list", q_id=[], q_types=[])
+        """The quest log, asked for once per entry into a location or the map.
+
+        Two parallel lists, instance ids and their types. For each entry the
+        client then asks q_si for a type it has not seen and q_di for the
+        instance -- one request in flight at a time, so a missing answer
+        anywhere wedges the whole quest pipeline.
+        """
+        rows = STORE.quests(self.char_id) if self.char_id else []
+        self.send("q_list", q_id=[r["q_id"] for r in rows],
+                  q_types=[r["type"] for r in rows])
 
     def cmd_chkml(self, p):
         """Mail. The client asks the moment it lands in a location.
@@ -639,9 +701,194 @@ class Session:
         else:
             self.send("lsml", id=[], date=[], name=[], flag=[], subj=[])
 
+    # --- quests ------------------------------------------------------------
+    # The model is in quests.py and recon/analysis/quests.md 1-2. What matters
+    # here: q_status/q_si/q_di are pipelined one at a time and must each be
+    # answered with a frame, q_st/q_co/q_ca each expect exactly one cmdAck,
+    # and after q_st the server itself has to push the new instance's q_di,
+    # or the quest never reaches the journal (the client adds nothing on the
+    # ack alone, QuestInspector.getAck).
+
+    def skill_level(self):
+        """The player's best skill level, the number quest.level is held to.
+        A flat 1 until characters have statistics (TASKS 3.x)."""
+        return SKILL_LEVEL
+
+    def quest_available(self, quest):
+        """Whether this player may take or carry the quest right now.
+
+        "Available" on the client gates both lists: a type with status=0
+        drops out of the giver's offers and out of the taker's unfinished
+        list alike (QuestInspector.getGQs/getTQs check quest.available), so
+        a quest already in the log must stay available until handed in.
+        """
+        if self.char_id and STORE.has_quest(self.char_id, quest.type):
+            return True
+        if quest.level > self.skill_level():
+            return False
+        if not quest.repeatable and self.char_id and \
+                STORE.quest_done(self.char_id, quest.type):
+            return False
+        return True
+
+    def daily_available(self):
+        """Hand-ins left today, counted from the last daily reset."""
+        if not self.char_id:
+            return DAILY_MAX
+        now = int(time.time())
+        reset = now - now % 86400 + DAILY_RESET_TIME * 60
+        if reset > now:
+            reset -= 86400
+        return max(0, DAILY_MAX - STORE.quests_done_since(self.char_id, reset))
+
+    def npc_type(self, npc_id):
+        """type_id of an inhabitant of this location, or None."""
+        entry = self.npcs.get(int(npc_id or 0))
+        return entry[1] if entry else None
+
     def cmd_q_status(self, p):
-        self.send("q_status", type=int(p.get("q_type", 0)), status=0,
-                  name=0, q_type=0)
+        """Availability of one type, asked once per type per NPC visit.
+
+        name is a string id and has to be one the preload carried; q_type is
+        the category (marker frame over the NPC). A type not in the table is
+        simply unavailable, but the frame is still owed.
+        """
+        quest_type = int(p.get("q_type", 0))
+        quest = quests.get(quest_type)
+        if not quest:
+            self.send("q_status", type=quest_type, status=0, name=0, q_type=0)
+            return
+        self.send("q_status", type=quest_type,
+                  status=1 if self.quest_available(quest) else 0,
+                  name=quest.string_id(quests.NAME), q_type=quest.q_type)
+
+    def cmd_q_si(self, p):
+        """Static description of a type, once per session per type."""
+        quest = quests.get(int(p.get("q_type", 0)))
+        cmd, params = quest.si_frame() if quest else quests.stub_si(p.get("q_type", 0))
+        self.send(cmd, **params)
+
+    def cmd_q_di(self, p):
+        """Progress of one instance. Only the character's own are known."""
+        q_id = int(p.get("q_id", 0))
+        row = STORE.quest(q_id)
+        quest = quests.get(row["type"]) if row and row["char_id"] == self.char_id else None
+        if not quest:
+            cmd, params = quests.stub_di(q_id)
+        else:
+            cmd, params = quest.di_frame(q_id, json.loads(row["progress_json"]),
+                                         row["complete"])
+        self.send(cmd, **params)
+
+    def cmd_q_st(self, p):
+        """Take a quest: q_idx is a position in the NPC's give_quests, not a type.
+
+        On success the ack is followed at once by the instance's q_di_*,
+        which is what puts it in the journal. A delivery with no item is
+        complete the moment it is taken.
+        """
+        npc_type = self.npc_type(p.get("mob"))
+        offered = quests.given_by(npc_type) if npc_type is not None else []
+        idx = int(p.get("q_idx", -1))
+        if not self.char_id or not (0 <= idx < len(offered)):
+            self.send("cmdAck", res=RES_NO_SUCH)
+            return
+        quest = quests.get(offered[idx])
+        if STORE.has_quest(self.char_id, quest.type):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        if not self.quest_available(quest):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        if len(STORE.quests(self.char_id)) >= QUEST_LOG_CAPACITY:
+            self.send("cmdAck", res=RES_LOG_FULL)
+            return
+        progress = quest.fresh_progress()
+        complete = quest.is_complete(progress)
+        q_id = STORE.take_quest(self.char_id, quest.type, progress, complete)
+        log.info("  ..    quest %d (%s) taken as #%d%s", quest.type, quest.name,
+                 q_id, ", already complete" if complete else "")
+        self.send("cmdAck", res=0)
+        cmd, params = quest.di_frame(q_id, progress, complete)
+        self.send(cmd, **params)
+
+    def cmd_q_co(self, p):
+        """Hand a quest in. Rewards go out before the ack: the client listens
+        for them between sending and the ack (QuestInspector.takeQuest), and
+        the purse only changes through a fresh userInfo_Player. Afterwards
+        the client re-asks q_status for every NPC here, and quest_available
+        answers from the history this writes.
+        """
+        q_id = int(p.get("q_id", 0))
+        row = STORE.quest(q_id)
+        if not row or row["char_id"] != self.char_id:
+            self.send("cmdAck", res=RES_NO_SUCH)
+            return
+        quest = quests.get(row["type"])
+        npc_type = self.npc_type(p.get("mob"))
+        if not quest or npc_type not in quest.take:
+            self.send("cmdAck", res=RES_WRONG_NPC)
+            return
+        if not row["complete"]:
+            self.send("cmdAck", res=RES_NOT_READY)
+            return
+        if self.daily_available() <= 0:
+            self.send("cmdAck", res=RES_DAILY_LIMIT)
+            return
+        # Reward items wait for the inventory (TASKS 5.11); the choice is
+        # still resolved so the index convention is exercised.
+        chosen = quest.reward_item(p.get("obj_idx", 0))
+        STORE.finish_quest(q_id, self.char_id, quest.type)
+        if quest.rew_afro or quest.rew_gold:
+            STORE.add_money(self.char_id, quest.rew_afro, quest.rew_gold)
+            self.send_player_info()
+        log.info("  ..    quest #%d (%s) handed in: +%d afro +%d gold, item %s",
+                 q_id, quest.name, quest.rew_afro, quest.rew_gold, chosen)
+        self.send("cmdAck", res=0)
+
+    def cmd_q_ca(self, p):
+        """Drop a quest from the journal; nothing is recorded of it."""
+        q_id = int(p.get("q_id", 0))
+        row = STORE.quest(q_id)
+        if not row or row["char_id"] != self.char_id:
+            self.send("cmdAck", res=RES_NO_SUCH)
+            return
+        STORE.drop_quest(q_id)
+        self.send("cmdAck", res=0)
+
+    def cmd_on_conv(self, p):
+        """Not a conversation: the NPC services with no session of their own.
+
+        op=0 registers this location as home (Attendance.SET_HOME), op=1 buys
+        healing from a medic (Attendance.HEAL), op=2 rents transport
+        (Rent.getTransport: p1 type, p2 days). Each expects one cmdAck and
+        nothing else from the client's side; the effect is all ours. A
+        non-zero answer to op=2 is what the client reports as the rental
+        failing, and transport does not exist yet (TASKS 8.7).
+        """
+        op = int(p.get("op", -1))
+        npc_type = self.npc_type(p.get("mob"))
+        if npc_type is None or not self.char_id:
+            self.send("cmdAck", res=RES_NO_SUCH)
+            return
+        if op == 0:
+            STORE.set_home(self.char_id, self.loc.id)
+            log.info("  ..    home set to %d (%s)", self.loc.id, self.loc.title)
+            self.send("cmdAck", res=0)
+        elif op == 1:
+            if MOB_TYPES[npc_type][0] != world.HEALER:
+                self.send("cmdAck", res=RES_WRONG_NPC)
+                return
+            afro, _gold = STORE.money(self.char_id)
+            if afro < MEDIC_PRICE:
+                self.send("cmdAck", res=RES_NO_MONEY)
+                return
+            STORE.add_money(self.char_id, -MEDIC_PRICE)
+            self.send_player_info()
+            self.send_vitals()
+            self.send("cmdAck", res=0)
+        else:
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
 
     def move_in_location(self, p):
         """Echo the path back; the client renders no step until we do.
