@@ -606,6 +606,9 @@ class Session:
         if text.startswith("/goto"):
             self.cmd_goto(text.split()[1:], group)
             return
+        if text.startswith("/give"):
+            self.cmd_give(text.split()[1:], group)
+            return
         if text.startswith("/where"):
             # Everything needed to report a cell that opens the wrong place:
             # the title as drawn, the file behind it, and the cell itself.
@@ -651,6 +654,38 @@ class Session:
         # private channel.
         target.send("userMsg", nick=Str(self.nick), entry=Str(raw),
                     **{"from": self.pid})
+
+    def cmd_give(self, args, group=0):
+        """/give <тип> [сколько] -- put an item straight into the bag.
+
+        Ours, not the game's, and for testing only: the client parses no
+        commands of its own, so this costs nothing to have. Everything a
+        purchase does on the server happens here too -- the instance, the
+        ss_obj_status that adds it to the bag, and the ss_di_* the client
+        asks for next -- because the client adds nothing on its own.
+        """
+        if not self.char_id:
+            return
+        try:
+            type_id = int(args[0])
+            count = int(args[1]) if len(args) > 1 else 1
+        except (IndexError, ValueError):
+            self.say("/give <номер типа> [сколько]   например /give 6092 200",
+                     group)
+            return
+        if items.params_of(type_id) is None:
+            self.say("Предмета %d нет в каталоге" % type_id, group)
+            return
+        root = items.root_of(type_id)
+        if root not in items.HEAPABLE_ROOTS:
+            count = 1
+        count = max(1, min(count, 999))
+        row = self.inv.create(type_id, count)
+        self.inv.push_status(row, 1)
+        self.inv.push_di(row)
+        self.say("Выдано: %s x%d"
+                 % (names.text(items.STRING_ID_OFFSET + type_id), count), group)
+        log.info("  ..    /give %d x%d to %s", type_id, count, self.nick)
 
     def cmd_goto(self, args, group=0):
         """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
