@@ -29,6 +29,7 @@ import party
 import rooms
 import progression
 import quests
+import travel
 import world
 from protocol import BigUInt, FrameReader, decode, frame, Str
 
@@ -430,19 +431,29 @@ class Session:
         """
         if c["gx"] and c["gy"]:
             self.gx, self.gy = c["gx"], c["gy"]
-        self.on_map = bool(c["on_map"])
-        if c["loc"] is not None:
+        loc_id, pos = c["loc"], c["pos"]
+        # selPers is always answered with an lcall, so the client starts in
+        # a location whichever way the last session ended. Someone who left
+        # on the map starts in the location of the cell they were over --
+        # the one saved with them is the last they walked out of, possibly
+        # cells away -- and the server must not think them still on the
+        # map, or their first chWorld re-enters instead of leaving.
+        if c["on_map"]:
+            self.gx, self.gy = int(round(self.gx)), int(round(self.gy))
+            loc_id, pos = travel.destination(self.gx, self.gy), None
+        self.on_map = False
+        if loc_id is not None:
             try:
-                self.loc = world.location(c["loc"])
+                self.loc = world.location(loc_id)
             except (KeyError, OSError) as exc:
                 log.warning("  ..    location %s unreadable (%s), starting over",
-                            c["loc"], exc)
+                            loc_id, exc)
                 self.loc = world.location(START_LOC)
                 self.gx, self.gy = GLOBAL_X, GLOBAL_Y
         # A cell saved in one location means nothing in another, and a cell
         # outside the grid would put the player in a wall.
-        if c["pos"] and 0 <= c["pos"] < self.loc.width * self.loc.height:
-            self.pos = c["pos"]
+        if pos and 0 <= pos < self.loc.width * self.loc.height:
+            self.pos = pos
         else:
             self.pos = self.loc.entry_cell()
 
@@ -464,9 +475,11 @@ class Session:
         # this client gets the roster. A no-op on every later lcall.
         PARTIES.online(self)
         # ie != 1 means the client must confirm with lenter;accept=1 once it
-        # has finished loading the location's XML and artwork.
+        # has finished loading the location's XML and artwork. g_id is the
+        # map cell, packed; beyond the map's edge it also says "no way to
+        # the map from here" (travel.geo_id).
         self.send("lcall", id=self.loc.id, ws=self.loc.war, ie=0,
-                  g_id=world.pack(round(self.gx), round(self.gy)))
+                  g_id=travel.geo_id(self.loc, self.gx, self.gy))
 
     def cmd_lenter(self, p):
         """Answer the client's "I have loaded, let me in".
@@ -503,27 +516,127 @@ class Session:
 
         GlobalMapInterface.toLocation and LocationInterface both call
         changeWorld with no argument, so which way the player goes is decided
-        here, from where they currently are.
+        here, from where they currently are. The one variant is to=1, the
+        exit window's "other location" button (Location.exitLoc): from an
+        exit cell that goes to whatever lies beyond it, never to the map.
         """
+        if not self.on_map and int(p.get("to", 0) or 0) == 1:
+            self.leave_through_exit()
+            return
         self.send("cmdAck", res=0)
         if self.on_map:
             self.enter_cell()
         else:
-            # Leaving puts the player back on the cell the location stands on.
+            # Leaving puts the player back on the cell the location stands
+            # on -- or the nearest one the map has, from a location beyond
+            # its edge: the client disables both map buttons there, but
+            # the change-world hotkey (LocationInterface.toGlobal) does
+            # not look, and a figure past the last tile would be lost.
             self.on_map = True
             self.cancel_travel()
             self.leave_room()
+            self.gx, self.gy = travel.clamp(self.gx, self.gy)
             self.send("gmap", x=self.gx, y=self.gy, v_rad=VIEW_RADIUS)
-            # Master.gmap builds a fresh GlobalMap every time, and its
-            # markList only comes into being in GlobalMap.marks(): dxdy is
-            # pairs of whole cells relative to the player, title and info
-            # run parallel to each other. Without this frame addMark pushes
-            # into undefined and the bookmarks panel is dead until relogin.
-            # No marks are stored yet, so the lists are empty.
-            self.send("marks", dxdy=[], title=[], info=[])
+            self.send_marks()
             # Only after gmap: newUser is an offset from the client's own
             # figure, which Master.gmap has just created.
             GMAP.enter(self)
+
+    def leave_through_exit(self):
+        """chWorld;to=1: out through the exit the player is standing on.
+
+        The client sends nothing about which exit that is (world.md §5), so
+        travel reads the side off the cell. A side leads to the neighbouring
+        map cell, arriving at the opposite edge; a door to the interior the
+        table knows, or nowhere. Master.changeWorldAck treats any non-zero
+        res but 39 as a silent return to the previous state, so the reason
+        for a refusal goes to chat behind the acknowledgement.
+        """
+        side = travel.side_at(self.loc, self.pos)
+        try:
+            dest = travel.plan_exit(self.loc, self.pos,
+                                    round(self.gx), round(self.gy))
+        except travel.Refused as why:
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.say(str(why))
+            return
+        # Ack first, lcall second: changeWorldAck must run while the client
+        # is still in CW_STATE, before Master.lcall starts the loader.
+        self.send("cmdAck", res=0)
+        self.cancel_travel()
+        self.gx, self.gy = dest.gx, dest.gy
+        self.loc = world.location(dest.loc_id)
+        self.pos = dest.pos
+        log.info("  ..    exit %s -> %s (%s) at %d, cell %d,%d", side,
+                 self.loc.title, self.loc.file, self.pos, self.gx, self.gy)
+        self.enter_location()
+
+    def go_home(self):
+        """Send the character home: an lcall into the location registered
+        with on_conv;op=0, standing on its map cell, or the starting one.
+
+        For the combat side to call from resurrect. Resurrector.resurrectAck
+        closes the window and returns the client to LOCAL_STATE on
+        cmdAck;res=0, and this lcall is what then moves the body; HP and
+        the dead flag are the caller's, this only travels. Works from the
+        map too, with one cosmetic catch: Master.lcall in GLOBAL_STATE with
+        no chWorld sent first is read as an interception, and the preloader
+        is captioned "На Вас напали" (Master.playerIntercepted).
+        """
+        row = STORE.character(self.char_id) if self.char_id else None
+        loc_id, gx, gy = travel.home(row, (START_LOC, GLOBAL_X, GLOBAL_Y))
+        self.on_map = False
+        self.cancel_travel()
+        GMAP.leave(self)
+        self.gx, self.gy = gx, gy
+        self.go_to(loc_id)
+        log.info("  ..    %s goes home to %s (%s) at %d,%d",
+                 self.nick, self.loc.title, self.loc.file, gx, gy)
+
+    # --- map marks ---------------------------------------------------------
+    # Bookmarks on the global map. Master.gmap builds a fresh GlobalMap every
+    # time, and its markList only comes into being in GlobalMap.marks(), so
+    # every gmap is followed by the whole list: dxdy as pairs of whole cells
+    # relative to the player, title and info in parallel. Without the frame
+    # addMark pushes into undefined and the panel is dead until relogin.
+    # The position in that list is the id the client later edits and
+    # removes by (GlobalMap.editMark, removeMark), so the store keeps the
+    # same order and renumbers on removal as Array.splice does.
+
+    def send_marks(self):
+        rows = STORE.marks(self.char_id) if self.char_id else []
+        self.send("marks", **travel.marks_frame(rows, self.gx, self.gy))
+
+    def cmd_insMark(self, p):
+        """GlobalMap.addMark: appends its own copy on cmdAck;res=0 alone, so
+        the answer decides both lists at once."""
+        if not self.char_id:
+            self.send("cmdAck", res=RES_NO_SUCH)
+            return
+        if len(STORE.marks(self.char_id)) >= travel.MARKS_MAX:
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        x, y = travel.mark_cell(*self.current_pos(),
+                                dx=int(p.get("dx", 0) or 0),
+                                dy=int(p.get("dy", 0) or 0))
+        STORE.insert_mark(self.char_id, x, y,
+                          str(p.get("title") or ""), str(p.get("info") or ""))
+        self.send("cmdAck", res=0)
+
+    def cmd_updMark(self, p):
+        """No acknowledgement: GlobalMap.editMark sends and applies at once,
+        registering no handler, so an answer would be consumed by whatever
+        the player does next."""
+        if self.char_id:
+            STORE.update_mark(self.char_id, int(p.get("id", -1)),
+                              str(p.get("title") or ""),
+                              str(p.get("info") or ""))
+
+    def cmd_rmMark(self, p):
+        """id is the index into the client's array; it splices on res=0."""
+        ok = self.char_id and STORE.remove_mark(self.char_id,
+                                                int(p.get("id", -1)))
+        self.send("cmdAck", res=0 if ok else RES_NO_SUCH)
 
     def enter_cell(self):
         """Walk into whatever occupies the cell under the player.
@@ -592,6 +705,11 @@ class Session:
             self.say("%s — %s [%s] — клетка %d,%d"
                      % (self.loc.title, self.loc.file, self.loc.fn or "-",
                         round(self.gx), round(self.gy)), group)
+            return
+        if text.startswith("/home"):
+            # The same journey resurrect will make, on demand: the way to
+            # check a registered home without dying for it.
+            self.go_home()
             return
         # Ordinary talk does NOT come back to the sender: Chat.delivery prints
         # the sender's own line the moment cmdAck;res=0 lands, and an echo
@@ -1232,7 +1350,10 @@ class Session:
             self.send("cmdAck", res=RES_NO_SUCH)
             return
         if op == 0:
-            STORE.set_home(self.char_id, self.loc.id)
+            # The cell goes with it: an interior does not know which map
+            # cell it stands on, and going home has to end on one.
+            STORE.set_home(self.char_id, self.loc.id,
+                           round(self.gx), round(self.gy))
             log.info("  ..    home set to %d (%s)", self.loc.id, self.loc.title)
             self.send("cmdAck", res=0)
         elif op == 1:
