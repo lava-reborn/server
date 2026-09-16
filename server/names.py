@@ -42,6 +42,16 @@ try:
 except Exception:
     REAL_NAMES = {}
 
+# Item names from the wiki over the internal ones, under the same ids, and
+# item descriptions under items.DESC_ID_OFFSET + type: the id ss_si_* puts in
+# desc. Deliberately no try/except, for the reason given at QUEST_STRINGS: a
+# wiki table that fails to load must stop both processes at start, not leave
+# the ids items.py sends off the preload.
+WIKI_ITEM_NAMES = {items.STRING_ID_OFFSET + t: n
+                   for t, n in items.wiki_names().items()}
+ITEM_DESCRIPTIONS = {items.DESC_ID_OFFSET + t: d
+                     for t, d in items.wiki_descs().items()}
+
 # Quest names and texts, numbered 2 000 000 + 4 * type + k by quests.py, and
 # the one empty string (5 000 000) a quest points at where it has no
 # description. Deliberately no try/except: a table that fails to load would
@@ -51,6 +61,8 @@ QUEST_STRINGS = quests.strings()
 
 ALL = dict(MOB_NAMES)
 ALL.update(ITEM_NAMES)
+ALL.update(WIKI_ITEM_NAMES)
+ALL.update(ITEM_DESCRIPTIONS)
 ALL.update(REAL_NAMES)
 ALL.update(QUEST_STRINGS)
 
