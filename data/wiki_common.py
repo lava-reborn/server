@@ -107,10 +107,15 @@ def image_names(page):
 # Trailing tokens that mark a clan/event/private copy rather than a variant.
 EXTRA_TOKENS = {"LeMon", "mob", "Blackwater", "Delta", "Force", "x10", "Pack",
                 "Pack1000", "Jons", "demo", "afro", "long", "super", "Event",
-                "NY", "xenos", "9may", "briket"}
+                "NY", "xenos", "9may", "briket", "Liberty", "VDV", "tur", "may",
+                "inst", "victory", "test"}
 TIER_TOKENS = {"pm": "P", "P": "P", "p": "P",
                "gold": "G", "Gold": "G", "G": "G", "g": "G",
                "A": "A", "a": "A"}
+# Modification keys that a few names carry without the _mod_ marker.
+BARE_MODS = {"damage", "damage25", "clipsize", "shotrange", "precision",
+             "reloadspeed", "agility", "perception", "aimtime", "shotspeed",
+             "durability", "weight", "attrition"}
 KNIFE = re.compile(r"^(knife_lvl\d+)_(A|G)(?:_(damage_actionpoints|actionpoint|damage))?$")
 WEAR_RE = re.compile(r"^(helm|shirt|armor|pants|boots|belt)_(.+?)_(M|W)_LVL_(\d+)_"
                      r"(A|P|G|U|Q)_mod(\d\d)(.*)$")
@@ -135,12 +140,13 @@ def parse_name(name):
         return "%s_%s_%s_LVL_%s" % m.groups()[:4], m.group(5), mod, extra
     toks = name.split("_")
     tier, extra = "A", []
+    mass = MASS_FIREARM.match(name)
     while len(toks) > 1:
         t = toks[-1]
         if t in TIER_TOKENS:
             tier = TIER_TOKENS[t]
             toks.pop()
-        elif t in EXTRA_TOKENS or re.match(r"^(ID|CL)\d+$|^base$", t):
+        elif t in EXTRA_TOKENS or re.match(r"^(ID|CL)\d+$|^base$|^\d{3,}$", t):
             extra.insert(0, t)
             toks.pop()
         else:
@@ -152,6 +158,8 @@ def parse_name(name):
         toks = toks[:i]
         while len(toks) > 1 and toks[-1] in TIER_TOKENS:
             tier = TIER_TOKENS[toks.pop()]
+    elif mass and toks[-1] in BARE_MODS and not toks[-1].startswith("lvl"):
+        mod = toks.pop()
     return "_".join(toks), tier, mod, extra
 
 

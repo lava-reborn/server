@@ -421,11 +421,16 @@ def main():
         links += narrow_by_mod(cat, icon_links, mod, kind)
         if kind == "firearm" and not any(l["confidence"] >= 0.5 for l in links):
             links += link_firearm(cat, title, page, cats)
-        # One record per (method, key); drop links that are subsets of others.
+        # One record per (method, key). A firm link (blueprint title, exact
+        # icon) makes the family-wide prefix links of the same page noise:
+        # every blueprint page shares the "Codified bp" icon.
         uniq = {}
         for l in links:
             uniq.setdefault((l["method"], l["key"]), l)
         links = sorted(uniq.values(), key=lambda l: (-l["confidence"], l["method"], l["key"]))
+        if links and links[0]["confidence"] >= 0.85:
+            links = [l for l in links
+                     if l["method"] not in ("icon_prefix", "icon_revprefix")]
         result[title] = dict(kind=kind, categories=sorted(cats), links=links,
                              mod=mod, confidence=max([l["confidence"] for l in links] or [0]))
 
