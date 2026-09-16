@@ -1,0 +1,5307 @@
+{
+ "_": "Map cell -> location proposed from wiki coordinates (location pages and NPC pages, CC-BY-SA), tolerance 3 cells. status: already (same as settlements.json), consistent (the location is pinned within 3 cells), proposed (free cell, one candidate), ambiguous (several candidates), occupied (cell taken by another location), conflict (location pinned elsewhere), interior (file has no map side). Nothing here is applied: move a row into settlements_verified.json after standing on it. Built by data/build_exits.py.",
+ "cells": {
+  "2862,1835": {
+   "claims": [
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Кукуруза"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "NY_Ab_Slums_old",
+   "known_cells_of_loc": [
+    "5862,1835"
+   ],
+   "loc_id": 255,
+   "other_candidates": [],
+   "status": "conflict",
+   "title": "Абри: Трущобы",
+   "votes": 1
+  },
+  "5850,1999": {
+   "claims": [
+    {
+     "loc_ids": [
+      562,
+      998
+     ],
+     "source": "location:Штаб Центр"
+    }
+   ],
+   "confidence": "none",
+   "existing_loc_id": null,
+   "fn": "9may_7_DN",
+   "known_cells_of_loc": [],
+   "loc_id": 562,
+   "other_candidates": [
+    {
+     "loc_id": 998,
+     "title": "Штаб",
+     "votes": 1
+    }
+   ],
+   "status": "interior",
+   "title": "Штаб",
+   "votes": 1
+  },
+  "5858,1929": {
+   "claims": [
+    {
+     "loc_ids": [
+      58,
+      267
+     ],
+     "source": "location:Городишко Эдем"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "IV_Hollow city",
+   "known_cells_of_loc": [],
+   "loc_id": 58,
+   "other_candidates": [
+    {
+     "loc_id": 267,
+     "title": "Городишко",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Городишко",
+   "votes": 1
+  },
+  "5860,1835": {
+   "claims": [
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "location:Портовый рынок"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Автоматы и патроны"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Алима"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Ан-Насир"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Ведич"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Винтовки и патроны"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Водитель Автобуса"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Гали"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Лотерейщик"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Лотерейщик Золотая лотерея"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Луиджи"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Марат"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Мухсин"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Одноухий"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Пистолет-пулеметы и патроны"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Странник"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Таможенник Магриба"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Техногик"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Торси"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Хан Сэлл"
+    },
+    {
+     "loc_ids": [
+      187
+     ],
+     "source": "npc:Хафиз"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Abri_Port_old",
+   "known_cells_of_loc": [],
+   "loc_id": 187,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Портовый рынок",
+   "votes": 21
+  },
+  "5861,1835": {
+   "claims": [
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "location:Жилой квартал Абри"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Автомобиль Вальдеса"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Базиль"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Вильгельм"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Дверь"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Доктор Гофус"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Зоричев"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Младший помощник"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Мурат"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Садовые ворота"
+    },
+    {
+     "loc_ids": [
+      188
+     ],
+     "source": "npc:Хасим"
+    },
+    {
+     "loc_ids": [
+      671,
+      1038
+     ],
+     "source": "npc:Холодильник"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 188,
+   "fn": "Abri_Settelment",
+   "known_cells_of_loc": [
+    "5861,1835"
+   ],
+   "loc_id": 188,
+   "other_candidates": [
+    {
+     "loc_id": 671,
+     "title": "Особняк Барона",
+     "votes": 1
+    },
+    {
+     "loc_id": 1038,
+     "title": "Особняк Бароня",
+     "votes": 1
+    }
+   ],
+   "status": "already",
+   "title": "Абри: Жилой квартал",
+   "votes": 11
+  },
+  "5862,1835": {
+   "claims": [
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "location:Трущобы"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Алиса дочь Фреи"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Альфред сын Фреи"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Багира"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Генри Джонс"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Дед Кузин"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Заур"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Иоан Суосан"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Камал Картограф"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Светлана"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Фрея Каплан"
+    },
+    {
+     "loc_ids": [
+      255
+     ],
+     "source": "npc:Эльза"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 255,
+   "fn": "NY_Ab_Slums_old",
+   "known_cells_of_loc": [
+    "5862,1835"
+   ],
+   "loc_id": 255,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Абри: Трущобы",
+   "votes": 12
+  },
+  "5862,1836": {
+   "claims": [
+    {
+     "loc_ids": [
+      261
+     ],
+     "source": "npc:Говард Хаксли"
+    },
+    {
+     "loc_ids": [
+      261
+     ],
+     "source": "npc:Кукуруза"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Q_Abri_Farm",
+   "known_cells_of_loc": [],
+   "loc_id": 261,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Абри: Поля",
+   "votes": 2
+  },
+  "5864,2002": {
+   "claims": [
+    {
+     "loc_ids": [
+      431
+     ],
+     "source": "location:Лагерь сопротивления Центр"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Invaider_Camp_DN",
+   "known_cells_of_loc": [],
+   "loc_id": 431,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Лагерь ",
+   "votes": 1
+  },
+  "5868,1854": {
+   "claims": [
+    {
+     "loc_ids": [
+      92,
+      1109,
+      1115,
+      1124,
+      1127,
+      1136,
+      1139,
+      1146,
+      1154,
+      1157,
+      1166,
+      1169,
+      1178,
+      1181
+     ],
+     "source": "location:Лагерь Живодеров"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Bandit_Camp6",
+   "known_cells_of_loc": [],
+   "loc_id": 92,
+   "other_candidates": [
+    {
+     "loc_id": 1109,
+     "title": "Лагерь Живодеров",
+     "votes": 1
+    },
+    {
+     "loc_id": 1115,
+     "title": "Лагерь Живодеров",
+     "votes": 1
+    },
+    {
+     "loc_id": 1124,
+     "title": "Лагерь Живодеров",
+     "votes": 1
+    },
+    {
+     "loc_id": 1127,
+     "title": "Лагерь Живодеров",
+     "votes": 1
+    },
+    {
+     "loc_id": 1136,
+     "title": "Лагерь Живодеров",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Лагерь Живодеров",
+   "votes": 1
+  },
+  "5870,2009": {
+   "claims": [
+    {
+     "loc_ids": [
+      632
+     ],
+     "source": "npc:Олег"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "DN_Stone_Mine_N",
+   "known_cells_of_loc": [],
+   "loc_id": 632,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Каменоломня.",
+   "votes": 1
+  },
+  "5875,1954": {
+   "claims": [
+    {
+     "loc_ids": [
+      1297
+     ],
+     "source": "location:Бункер Мантикоры"
+    },
+    {
+     "loc_ids": [
+      1297
+     ],
+     "source": "location:Вход в бункер Мантикоры"
+    },
+    {
+     "loc_ids": [
+      1297
+     ],
+     "source": "npc:Али-Малистик"
+    }
+   ],
+   "confidence": "none",
+   "existing_loc_id": null,
+   "fn": "Admin_Bunker",
+   "known_cells_of_loc": [],
+   "loc_id": 1297,
+   "other_candidates": [],
+   "status": "interior",
+   "title": "БУ-Бункер",
+   "votes": 3
+  },
+  "5875,2009": {
+   "claims": [
+    {
+     "loc_ids": [
+      697,
+      1235
+     ],
+     "source": "location:Гладиаторская арена"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Combat_Arena_Underground",
+   "known_cells_of_loc": [],
+   "loc_id": 697,
+   "other_candidates": [
+    {
+     "loc_id": 1235,
+     "title": "Гладиаторская арена",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Гладиаторская арена",
+   "votes": 1
+  },
+  "5876,1850": {
+   "claims": [
+    {
+     "loc_ids": [
+      672
+     ],
+     "source": "location:Дорога в Абри"
+    },
+    {
+     "loc_ids": [
+      672
+     ],
+     "source": "npc:Автомобиль Вальдеса"
+    },
+    {
+     "loc_ids": [
+      672
+     ],
+     "source": "npc:Небольшая ямка"
+    }
+   ],
+   "confidence": "none",
+   "existing_loc_id": 672,
+   "fn": "Abri_Road_2",
+   "known_cells_of_loc": [
+    "5876,1850"
+   ],
+   "loc_id": 672,
+   "other_candidates": [],
+   "status": "interior",
+   "title": "Дорога в Абри",
+   "votes": 3
+  },
+  "5876,2004": {
+   "claims": [
+    {
+     "loc_ids": [
+      435
+     ],
+     "source": "location:Археологические раскопки"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Archeologic_DN",
+   "known_cells_of_loc": [],
+   "loc_id": 435,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Археологические раскопки",
+   "votes": 1
+  },
+  "5876,2011": {
+   "claims": [
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "location:Лагерь Мастеров Донголы I"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Мастер Гази"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Мастер Самир"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Подмастерье Али"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Подмастерье Сафи"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Upgraders3",
+   "known_cells_of_loc": [],
+   "loc_id": 96,
+   "other_candidates": [
+    {
+     "loc_id": 97,
+     "title": "лагерь Мастеров",
+     "votes": 5
+    },
+    {
+     "loc_id": 125,
+     "title": "лагерь мастеров",
+     "votes": 5
+    }
+   ],
+   "status": "ambiguous",
+   "title": "лагерь Мастеров",
+   "votes": 5
+  },
+  "5876,2012": {
+   "claims": [
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "location:Лагерь Мастеров Донголы II"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Мастер Азиза"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Мастер Самир"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Мастер Умар"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Мастер Фахад"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Подмастерье Басам"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125
+     ],
+     "source": "npc:Подмастерье Санчес"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Upgraders3",
+   "known_cells_of_loc": [],
+   "loc_id": 96,
+   "other_candidates": [
+    {
+     "loc_id": 97,
+     "title": "лагерь Мастеров",
+     "votes": 7
+    },
+    {
+     "loc_id": 125,
+     "title": "лагерь мастеров",
+     "votes": 7
+    }
+   ],
+   "status": "ambiguous",
+   "title": "лагерь Мастеров",
+   "votes": 7
+  },
+  "5877,2004": {
+   "claims": [
+    {
+     "loc_ids": [
+      435
+     ],
+     "source": "location:Археологические раскопки-Вход"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Archeologic_DN",
+   "known_cells_of_loc": [],
+   "loc_id": 435,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Археологические раскопки",
+   "votes": 1
+  },
+  "5877,2009": {
+   "claims": [
+    {
+     "loc_ids": [
+      74,
+      475,
+      700
+     ],
+     "source": "location:Железнодорожный тупик"
+    },
+    {
+     "loc_ids": [
+      74,
+      475,
+      700
+     ],
+     "source": "npc:Поклонская Наблюдатель ЦСЦ"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Train_in_the_desert",
+   "known_cells_of_loc": [],
+   "loc_id": 74,
+   "other_candidates": [
+    {
+     "loc_id": 475,
+     "title": "Железнодорожный тупик",
+     "votes": 2
+    },
+    {
+     "loc_id": 700,
+     "title": "Железнодорожный тупик",
+     "votes": 2
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Железнодорожный тупик",
+   "votes": 2
+  },
+  "5877,2010": {
+   "claims": [
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "location:Вокзал Донголы"
+    },
+    {
+     "loc_ids": [
+      79
+     ],
+     "source": "location:Жилой квартал Донголы"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Агата"
+    },
+    {
+     "loc_ids": [
+      79
+     ],
+     "source": "npc:Агент Фарис"
+    },
+    {
+     "loc_ids": [
+      79
+     ],
+     "source": "npc:Али-Малистик"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Бамбук"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Банкир"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Водитель Автобуса"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Ганий"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Грегори"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Гудмэн"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Гусейн"
+    },
+    {
+     "loc_ids": [
+      79
+     ],
+     "source": "npc:Джонни Вышибала"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Добрый беженец"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Местный житель"
+    },
+    {
+     "loc_ids": [
+      79
+     ],
+     "source": "npc:Мистер Соренсен"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Нур-ад-Дин"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Рамон"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Рашид"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Ребенок"
+    },
+    {
+     "loc_ids": [
+      79
+     ],
+     "source": "npc:Старец Паисий"
+    },
+    {
+     "loc_ids": [
+      79
+     ],
+     "source": "npc:Тариф"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Тахир"
+    },
+    {
+     "loc_ids": [
+      49
+     ],
+     "source": "npc:Шамиль"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 49,
+   "fn": "Dangola",
+   "known_cells_of_loc": [
+    "5877,2010"
+   ],
+   "loc_id": 49,
+   "other_candidates": [
+    {
+     "loc_id": 79,
+     "title": "Донгола: Жилой квартал.",
+     "votes": 7
+    }
+   ],
+   "status": "already",
+   "title": "Донгола: Вокзал",
+   "votes": 17
+  },
+  "5877,2011": {
+   "claims": [
+    {
+     "loc_ids": [
+      79
+     ],
+     "source": "npc:Майор Давыдов"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 79,
+   "fn": "Dangola_Craft",
+   "known_cells_of_loc": [
+    "5877,2011"
+   ],
+   "loc_id": 79,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Донгола: Жилой квартал.",
+   "votes": 1
+  },
+  "5877,2012": {
+   "claims": [
+    {
+     "loc_ids": [
+      96,
+      97,
+      125,
+      431
+     ],
+     "source": "location:Лагерь Мастеров Донголы III"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125,
+      431
+     ],
+     "source": "npc:Мастер Умар"
+    },
+    {
+     "loc_ids": [
+      96,
+      97,
+      125,
+      431
+     ],
+     "source": "npc:Мастер Фахад"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Upgraders3",
+   "known_cells_of_loc": [],
+   "loc_id": 96,
+   "other_candidates": [
+    {
+     "loc_id": 97,
+     "title": "лагерь Мастеров",
+     "votes": 3
+    },
+    {
+     "loc_id": 125,
+     "title": "лагерь мастеров",
+     "votes": 3
+    },
+    {
+     "loc_id": 431,
+     "title": "Лагерь ",
+     "votes": 3
+    }
+   ],
+   "status": "ambiguous",
+   "title": "лагерь Мастеров",
+   "votes": 3
+  },
+  "5878,2009": {
+   "claims": [
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "location:Новый рынок Донголы"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Абу-бакр"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Генрих"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Грегори"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Густав Стивенсон"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Джамшут"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Доктор Гофус"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Зоричев"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Лотерейщик"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Мастер Гафур"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Мастер Самир"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Мастер Умар"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Мастер Фахад"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Младший помощник"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Муаз"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Ольсен"
+    },
+    {
+     "loc_ids": [
+      197
+     ],
+     "source": "npc:Савва Мамонтов"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 197,
+   "fn": "Dangola_market_new",
+   "known_cells_of_loc": [
+    "5878,2009"
+   ],
+   "loc_id": 197,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Донгола: Новый рынок",
+   "votes": 17
+  },
+  "5878,2010": {
+   "claims": [
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "location:Старый рынок Донголы"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Абу-бакр"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Грегори"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Лейла"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Лотерейщик"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Мастер Гафур"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Мастер Люшера Сэмир"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Мастер Самир"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Мастер Умар"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Мастер Фахад"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Мелкий хулиган"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Муаз"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Ольсен"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Техномастер"
+    },
+    {
+     "loc_ids": [
+      50
+     ],
+     "source": "npc:Хафиз"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "sklad2",
+   "known_cells_of_loc": [],
+   "loc_id": 50,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Донгола: Рынок",
+   "votes": 15
+  },
+  "5878,2011": {
+   "claims": [
+    {
+     "loc_ids": [
+      73
+     ],
+     "source": "location:Живодерня"
+    },
+    {
+     "loc_ids": [
+      73
+     ],
+     "source": "npc:Ящик с кошками"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Dangola_Zhivoderi",
+   "known_cells_of_loc": [],
+   "loc_id": 73,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Донгола: Живодеры",
+   "votes": 2
+  },
+  "5879,2012": {
+   "claims": [
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "location:Черный рынок Донголы"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Автоматы и патроны"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Винтовки и патроны"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Галия"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Давид"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Дари"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Лотерейщик Золотая лотерея"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Марат"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Одноногий"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Пистолет-пулеметы и патроны"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Пулеметы и патроны"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Савин"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Самуэль"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Серхио"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Техногик"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Точильный камень Донголы"
+    },
+    {
+     "loc_ids": [
+      103
+     ],
+     "source": "npc:Фарюх"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 103,
+   "fn": "DN_Gold_Traders_old",
+   "known_cells_of_loc": [
+    "5879,2012"
+   ],
+   "loc_id": 103,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Черный рынок Донголы",
+   "votes": 17
+  },
+  "5879,2013": {
+   "claims": [
+    {
+     "loc_ids": [
+      60,
+      695
+     ],
+     "source": "location:Свалка Донголы"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Gas Station",
+   "known_cells_of_loc": [],
+   "loc_id": 60,
+   "other_candidates": [
+    {
+     "loc_id": 695,
+     "title": "Свалка",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Свалка",
+   "votes": 1
+  },
+  "5880,1844": {
+   "claims": [
+    {
+     "loc_ids": [
+      88,
+      1108,
+      1114,
+      1125,
+      1126,
+      1137,
+      1138,
+      1147,
+      1155,
+      1156,
+      1167,
+      1168,
+      1179,
+      1180
+     ],
+     "source": "location:Лагерь Работорговцев"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Bandit_Camp5",
+   "known_cells_of_loc": [],
+   "loc_id": 88,
+   "other_candidates": [
+    {
+     "loc_id": 1108,
+     "title": "Лагерь Работорговцев",
+     "votes": 1
+    },
+    {
+     "loc_id": 1114,
+     "title": "Лагерь Работорговцев",
+     "votes": 1
+    },
+    {
+     "loc_id": 1125,
+     "title": "Лагерь Работорговцев",
+     "votes": 1
+    },
+    {
+     "loc_id": 1126,
+     "title": "Лагерь Работорговцев",
+     "votes": 1
+    },
+    {
+     "loc_id": 1137,
+     "title": "Лагерь Работорговцев",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Лагерь Работорговцев",
+   "votes": 1
+  },
+  "5880,2008": {
+   "claims": [
+    {
+     "loc_ids": [
+      72
+     ],
+     "source": "location:Кладбище Донголы"
+    },
+    {
+     "loc_ids": [
+      72
+     ],
+     "source": "npc:Могила"
+    },
+    {
+     "loc_ids": [
+      72
+     ],
+     "source": "npc:Мунир"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 72,
+   "fn": "Dangola_Graveyard",
+   "known_cells_of_loc": [
+    "5880,2008"
+   ],
+   "loc_id": 72,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Донгола: Кладбище",
+   "votes": 3
+  },
+  "5883,2035": {
+   "claims": [
+    {
+     "loc_ids": [
+      93,
+      1110,
+      1116,
+      1123,
+      1128,
+      1135,
+      1140,
+      1145,
+      1153,
+      1158,
+      1165,
+      1170,
+      1177,
+      1182
+     ],
+     "source": "location:Лагерь ДСР"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Bandit_Camp7",
+   "known_cells_of_loc": [],
+   "loc_id": 93,
+   "other_candidates": [
+    {
+     "loc_id": 1110,
+     "title": "Лагерь ДСР",
+     "votes": 1
+    },
+    {
+     "loc_id": 1116,
+     "title": "Лагерь ДСР",
+     "votes": 1
+    },
+    {
+     "loc_id": 1123,
+     "title": "Лагерь ДСР",
+     "votes": 1
+    },
+    {
+     "loc_id": 1128,
+     "title": "Лагерь ДСР",
+     "votes": 1
+    },
+    {
+     "loc_id": 1135,
+     "title": "Лагерь ДСР",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Лагерь ДСР",
+   "votes": 1
+  },
+  "5885,1836": {
+   "claims": [
+    {
+     "loc_ids": [
+      220
+     ],
+     "source": "location:База Мантикоры"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Manticore_Camp",
+   "known_cells_of_loc": [],
+   "loc_id": 220,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "База Мантикоры",
+   "votes": 1
+  },
+  "5890,1981": {
+   "claims": [
+    {
+     "loc_ids": [
+      195
+     ],
+     "source": "location:Оазис Донголы"
+    },
+    {
+     "loc_ids": [
+      195
+     ],
+     "source": "npc:Тьерри Сабин"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Oasis_DN",
+   "known_cells_of_loc": [],
+   "loc_id": 195,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Оазис Донголы",
+   "votes": 2
+  },
+  "5894,1854": {
+   "claims": [
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "location:Оазис Абри"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Абрахам Виннер"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Джут"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Лекарь"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Леон Бегин"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Менахем Альтман"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Натан Бакст"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Норберт Ваксман"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Оружие"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Осколок скалы (Аб)"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Торговец патронами"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Тьерри Сабин"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Фриденсрайх Шнеерсон"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Apoc_Oasis",
+   "known_cells_of_loc": [],
+   "loc_id": 283,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Оазис",
+   "votes": 13
+  },
+  "5908,2001": {
+   "claims": [
+    {
+     "loc_ids": [
+      53,
+      162,
+      163,
+      598,
+      623
+     ],
+     "source": "location:Горные тропы Донголы"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "MP_Enter3",
+   "known_cells_of_loc": [],
+   "loc_id": 53,
+   "other_candidates": [
+    {
+     "loc_id": 162,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 163,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 598,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 623,
+     "title": "Горные тропы",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Горные тропы",
+   "votes": 1
+  },
+  "5912,2002": {
+   "claims": [
+    {
+     "loc_ids": [
+      60,
+      695
+     ],
+     "source": "npc:Полковник Дарт Соренсен"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Gas Station",
+   "known_cells_of_loc": [],
+   "loc_id": 60,
+   "other_candidates": [
+    {
+     "loc_id": 695,
+     "title": "Свалка",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Свалка",
+   "votes": 1
+  },
+  "5913,1976": {
+   "claims": [
+    {
+     "loc_ids": [
+      113,
+      984
+     ],
+     "source": "location:Северный склад Донголы"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "stok_DN_sever",
+   "known_cells_of_loc": [],
+   "loc_id": 113,
+   "other_candidates": [
+    {
+     "loc_id": 984,
+     "title": "Северный склад",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Северный склад",
+   "votes": 1
+  },
+  "5921,2011": {
+   "claims": [
+    {
+     "loc_ids": [
+      98,
+      1111,
+      1117,
+      1122,
+      1129,
+      1134,
+      1141,
+      1148,
+      1152,
+      1159,
+      1164,
+      1171,
+      1176,
+      1183
+     ],
+     "source": "location:Лагерь Миротворцев"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Bandit_Camp8",
+   "known_cells_of_loc": [],
+   "loc_id": 98,
+   "other_candidates": [
+    {
+     "loc_id": 1111,
+     "title": "Лагерь Миротворцев",
+     "votes": 1
+    },
+    {
+     "loc_id": 1117,
+     "title": "Лагерь Миротворцев",
+     "votes": 1
+    },
+    {
+     "loc_id": 1122,
+     "title": "Лагерь Миротворцев",
+     "votes": 1
+    },
+    {
+     "loc_id": 1129,
+     "title": "Лагерь Миротворцев",
+     "votes": 1
+    },
+    {
+     "loc_id": 1134,
+     "title": "Лагерь Миротворцев",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Лагерь Миротворцев",
+   "votes": 1
+  },
+  "5935,1711": {
+   "claims": [
+    {
+     "loc_ids": [
+      546,
+      994
+     ],
+     "source": "location:Штаб Север"
+    }
+   ],
+   "confidence": "none",
+   "existing_loc_id": null,
+   "fn": "9may_7_WH",
+   "known_cells_of_loc": [],
+   "loc_id": 546,
+   "other_candidates": [
+    {
+     "loc_id": 994,
+     "title": "Штаб",
+     "votes": 1
+    }
+   ],
+   "status": "interior",
+   "title": "Штаб",
+   "votes": 1
+  },
+  "5943,1723": {
+   "claims": [
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "location:Лагерь сопротивления Север"
+    },
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "npc:Джон док Нильсон"
+    },
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "npc:Иван змей Сидоркин"
+    },
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "npc:Лазутчик"
+    },
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "npc:Раф профессор Лю"
+    },
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "npc:Сержант Билко"
+    },
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "npc:Техник Ларс"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Invaider_Camp_WH",
+   "known_cells_of_loc": [],
+   "loc_id": 429,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Лагерь ",
+   "votes": 7
+  },
+  "5957,1743": {
+   "claims": [
+    {
+     "loc_ids": [
+      109,
+      982
+     ],
+     "source": "location:Южный склад Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      112
+     ],
+     "source": "location:Южный склад Донголы"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "stok_WH_ug",
+   "known_cells_of_loc": [],
+   "loc_id": 109,
+   "other_candidates": [
+    {
+     "loc_id": 982,
+     "title": "Южный склад",
+     "votes": 1
+    },
+    {
+     "loc_id": 112,
+     "title": "Южный склад",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Южный склад",
+   "votes": 1
+  },
+  "5963,2063": {
+   "claims": [
+    {
+     "loc_ids": [
+      238
+     ],
+     "source": "location:Деревня Пунус"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Q_Domination_L2",
+   "known_cells_of_loc": [
+    "5991,2063"
+   ],
+   "loc_id": 238,
+   "other_candidates": [],
+   "status": "conflict",
+   "title": "Деревня Пунус",
+   "votes": 1
+  },
+  "5965,1728": {
+   "claims": [
+    {
+     "loc_ids": [
+      164
+     ],
+     "source": "location:Мясники Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "location:Причал Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Борн сын Марка"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Демир"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Доктор Гофус"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Полковник Шепард"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Рахат"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Ребенок"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Ребенок"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Рядовой Райн"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Странник"
+    },
+    {
+     "loc_ids": [
+      164
+     ],
+     "source": "npc:Сумасшедший живодер собиратель пальцев"
+    },
+    {
+     "loc_ids": [
+      164
+     ],
+     "source": "npc:Сумасшедший живодер собиратель рогов и копыт"
+    },
+    {
+     "loc_ids": [
+      164
+     ],
+     "source": "npc:Сумасшедший живодер собиратель рук"
+    },
+    {
+     "loc_ids": [
+      164
+     ],
+     "source": "npc:Сумасшедший живодер собиратель скальпов"
+    },
+    {
+     "loc_ids": [
+      164
+     ],
+     "source": "npc:Сумасшедший живодер собиратель ушей"
+    },
+    {
+     "loc_ids": [
+      164
+     ],
+     "source": "npc:Сумасшедший живодер собиратель черепов"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Сын Френка"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Таможенник Магриба"
+    },
+    {
+     "loc_ids": [
+      41
+     ],
+     "source": "npc:Хан Сэлл"
+    },
+    {
+     "loc_ids": [
+      164
+     ],
+     "source": "npc:Чарльз МакКалок"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 41,
+   "fn": "NY_Wadihalfa_port_old",
+   "known_cells_of_loc": [
+    "5965,1728"
+   ],
+   "loc_id": 41,
+   "other_candidates": [
+    {
+     "loc_id": 164,
+     "title": "Мясники",
+     "votes": 8
+    },
+    {
+     "loc_id": 36,
+     "title": "Вади Хальфа: жилой квартал",
+     "votes": 2
+    }
+   ],
+   "status": "already",
+   "title": "Причал",
+   "votes": 11
+  },
+  "5966,1728": {
+   "claims": [
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "location:Военная база Магриба"
+    },
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "npc:Бюльбюль-Оглы Пилигрим"
+    },
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "npc:Медик Умар"
+    },
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "npc:Механик Сейид"
+    },
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "npc:Офицер Раис"
+    },
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "npc:Прапорщик Касим"
+    },
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "npc:Рияд"
+    },
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "npc:Часовой"
+    },
+    {
+     "loc_ids": [
+      52
+     ],
+     "source": "npc:Ящик"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 52,
+   "fn": "Welcome Camp",
+   "known_cells_of_loc": [
+    "5966,1728"
+   ],
+   "loc_id": 52,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Военная база Магриба",
+   "votes": 9
+  },
+  "5966,1734": {
+   "claims": [
+    {
+     "loc_ids": [
+      140
+     ],
+     "source": "location:Дом агронома"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 140,
+   "fn": "Q_VH_AgronomKlimov",
+   "known_cells_of_loc": [
+    "5966,1734"
+   ],
+   "loc_id": 140,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Дом агронома Климова",
+   "votes": 1
+  },
+  "5967,1727": {
+   "claims": [
+    {
+     "loc_ids": [
+      37
+     ],
+     "source": "location:Вокзал Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      37
+     ],
+     "source": "npc:Алхимический столик"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Бандит-охранник"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Бернар"
+    },
+    {
+     "loc_ids": [
+      37
+     ],
+     "source": "npc:Водитель Автобуса"
+    },
+    {
+     "loc_ids": [
+      37
+     ],
+     "source": "npc:Деда Джоф"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Добрый беженец"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Каспар"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Младший помощник"
+    },
+    {
+     "loc_ids": [
+      37
+     ],
+     "source": "npc:Послушник Натти"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Расул"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Саид"
+    },
+    {
+     "loc_ids": [
+      37
+     ],
+     "source": "npc:Старая женщина"
+    },
+    {
+     "loc_ids": [
+      37
+     ],
+     "source": "npc:Странник (ВХ)"
+    },
+    {
+     "loc_ids": [
+      37
+     ],
+     "source": "npc:Хассир"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Эддай"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 37,
+   "fn": "Vadihalfa3",
+   "known_cells_of_loc": [
+    "5967,1727"
+   ],
+   "loc_id": 37,
+   "other_candidates": [
+    {
+     "loc_id": 36,
+     "title": "Вади Хальфа: жилой квартал",
+     "votes": 8
+    }
+   ],
+   "status": "already",
+   "title": "Вади Хальфа: вокзал",
+   "votes": 8
+  },
+  "5967,1728": {
+   "claims": [
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "location:Новый рынок Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Бартоломью"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Генри"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Зоричев"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Лотерейщик"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Мастер Азам"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Мастер Клара"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Мастер Ракин"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Мастер Сэм"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Старикашка"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Странник"
+    },
+    {
+     "loc_ids": [
+      104
+     ],
+     "source": "npc:Хафиз"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Vadihalfa_new",
+   "known_cells_of_loc": [],
+   "loc_id": 104,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Вади-Хальфа: Портовый Рынок",
+   "votes": 12
+  },
+  "5967,1740": {
+   "claims": [
+    {
+     "loc_ids": [
+      48
+     ],
+     "source": "location:Перебитый отряд"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 48,
+   "fn": "Q_IV_perebitiiotrad",
+   "known_cells_of_loc": [
+    "5967,1740"
+   ],
+   "loc_id": 48,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Перебитый отряд",
+   "votes": 1
+  },
+  "5968,1725": {
+   "claims": [
+    {
+     "loc_ids": [
+      119
+     ],
+     "source": "location:Домик Марии"
+    },
+    {
+     "loc_ids": [
+      119
+     ],
+     "source": "npc:Мария"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 119,
+   "fn": "Q_VH_Elections",
+   "known_cells_of_loc": [
+    "5968,1725"
+   ],
+   "loc_id": 119,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Домик Марии.",
+   "votes": 2
+  },
+  "5968,1726": {
+   "claims": [
+    {
+     "loc_ids": [
+      94,
+      95,
+      124
+     ],
+     "source": "location:Лагерь Мастеров Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      94,
+      95,
+      124
+     ],
+     "source": "npc:Мастер Азам"
+    },
+    {
+     "loc_ids": [
+      94,
+      95,
+      124
+     ],
+     "source": "npc:Мастер Ракин"
+    },
+    {
+     "loc_ids": [
+      94,
+      95,
+      124
+     ],
+     "source": "npc:Мастер Сэм"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Upgraders",
+   "known_cells_of_loc": [],
+   "loc_id": 94,
+   "other_candidates": [
+    {
+     "loc_id": 95,
+     "title": "лагерь Мастеров",
+     "votes": 4
+    },
+    {
+     "loc_id": 124,
+     "title": "лагерь мастеров",
+     "votes": 4
+    }
+   ],
+   "status": "ambiguous",
+   "title": "лагерь Мастеров",
+   "votes": 4
+  },
+  "5968,1727": {
+   "claims": [
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "location:Старый рынок Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "location:Черный рынок Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Аарон"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Банкир"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Бартоломью"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Берт Гаммер"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Ваккас"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Винс"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Винтовки и патроны"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Генри ст"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Джексон Кертис"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Дробовики и патроны"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Зоричев"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Иви"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Лотерейщик"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Лотерейщик Золотая лотерея"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Люций"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Магдалена"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Мастер Тиль"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Нильсон"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Однопальцый"
+    },
+    {
+     "loc_ids": [
+      35
+     ],
+     "source": "npc:Ольсен"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Пистолет-пулеметы и патроны"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Пистолеты и патроны"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Савин"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Самуэль"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Техногик"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Точильный камень ВХ"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Хамис"
+    },
+    {
+     "loc_ids": [
+      102
+     ],
+     "source": "npc:Шихаб"
+    }
+   ],
+   "confidence": "high",
+   "existing_loc_id": null,
+   "fn": "WH_Gold_Traders_old",
+   "known_cells_of_loc": [
+    "5970,1730"
+   ],
+   "loc_id": 102,
+   "other_candidates": [
+    {
+     "loc_id": 35,
+     "title": "Вади Хальфа: рынок",
+     "votes": 12
+    }
+   ],
+   "status": "consistent",
+   "title": "Черный рынок Вади-Хальфы",
+   "votes": 18
+  },
+  "5968,1728": {
+   "claims": [
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "location:Ремесленники Вади-Хальфы I"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "WH_district1",
+   "known_cells_of_loc": [],
+   "loc_id": 452,
+   "other_candidates": [
+    {
+     "loc_id": 456,
+     "title": "Ремесленники",
+     "votes": 1
+    },
+    {
+     "loc_id": 457,
+     "title": "Ремесленники",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Ремесленники",
+   "votes": 1
+  },
+  "5969,1727": {
+   "claims": [
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "location:Жилой квартал Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Барри"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Кшиштоф"
+    },
+    {
+     "loc_ids": [
+      36
+     ],
+     "source": "npc:Назир"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 36,
+   "fn": "Vadihalfa2",
+   "known_cells_of_loc": [
+    "5969,1727"
+   ],
+   "loc_id": 36,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Вади Хальфа: жилой квартал",
+   "votes": 4
+  },
+  "5969,1728": {
+   "claims": [
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "location:Ремесленники Вади-Хальфы II"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Мастер Аарон Уорнер"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Мастер Азам"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Мастер Клара"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Мастер Ракин"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Мастер Сэм"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Подмастерье Джерри"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Подмастерье Ицхак Уорнер"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Подмастерье Хаким"
+    },
+    {
+     "loc_ids": [
+      452,
+      456,
+      457
+     ],
+     "source": "npc:Подмастерье Шон"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "WH_district1",
+   "known_cells_of_loc": [],
+   "loc_id": 452,
+   "other_candidates": [
+    {
+     "loc_id": 456,
+     "title": "Ремесленники",
+     "votes": 10
+    },
+    {
+     "loc_id": 457,
+     "title": "Ремесленники",
+     "votes": 10
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Ремесленники",
+   "votes": 10
+  },
+  "5970,1724": {
+   "claims": [
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "location:Лагерь Новые Колонисты"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Invaider_Camp_WH",
+   "known_cells_of_loc": [],
+   "loc_id": 429,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Лагерь ",
+   "votes": 1
+  },
+  "5970,1728": {
+   "claims": [
+    {
+     "loc_ids": [
+      59,
+      78
+     ],
+     "source": "location:Боевая Арена №1"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 59,
+   "fn": "Battleground1",
+   "known_cells_of_loc": [
+    "5970,1728"
+   ],
+   "loc_id": 59,
+   "other_candidates": [
+    {
+     "loc_id": 78,
+     "title": "Боевая Арена 2",
+     "votes": 1
+    }
+   ],
+   "status": "already",
+   "title": "Боевая Арена 1",
+   "votes": 1
+  },
+  "5970,1729": {
+   "claims": [
+    {
+     "loc_ids": [
+      59,
+      78
+     ],
+     "source": "location:Боевая Арена №2"
+    }
+   ],
+   "confidence": "high",
+   "existing_loc_id": 78,
+   "fn": "Battleground1",
+   "known_cells_of_loc": [
+    "5970,1728"
+   ],
+   "loc_id": 59,
+   "other_candidates": [
+    {
+     "loc_id": 78,
+     "title": "Боевая Арена 2",
+     "votes": 1
+    }
+   ],
+   "status": "consistent",
+   "title": "Боевая Арена 1",
+   "votes": 1
+  },
+  "5971,1719": {
+   "claims": [
+    {
+     "loc_ids": [
+      120
+     ],
+     "source": "location:Ограбленный караван"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 120,
+   "fn": "Q_VH_Caravan_raid",
+   "known_cells_of_loc": [
+    "5971,1719"
+   ],
+   "loc_id": 120,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Ограбленный караван",
+   "votes": 1
+  },
+  "5971,1727": {
+   "claims": [
+    {
+     "loc_ids": [
+      100
+     ],
+     "source": "location:Свалка Вади-Хальфы"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 100,
+   "fn": "Svalka1",
+   "known_cells_of_loc": [
+    "5971,1727"
+   ],
+   "loc_id": 100,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Свалка Вади-Хальфы",
+   "votes": 1
+  },
+  "5972,1729": {
+   "claims": [
+    {
+     "loc_ids": [
+      70
+     ],
+     "source": "location:Кладбище Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      70
+     ],
+     "source": "npc:Вивек"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 70,
+   "fn": "Vadihalfa_Graveyard",
+   "known_cells_of_loc": [
+    "5972,1729"
+   ],
+   "loc_id": 70,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Вади Хальфа: Кладбище",
+   "votes": 2
+  },
+  "5972,1738": {
+   "claims": [
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "location:Оазис"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Отшельник"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Apoc_Oasis",
+   "known_cells_of_loc": [],
+   "loc_id": 283,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Оазис",
+   "votes": 2
+  },
+  "5972,2094": {
+   "claims": [
+    {
+     "loc_ids": [
+      247
+     ],
+     "source": "location:Деревня Арак"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 247,
+   "fn": "Q_Domination_T5",
+   "known_cells_of_loc": [
+    "5972,2094"
+   ],
+   "loc_id": 247,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Арак",
+   "votes": 1
+  },
+  "5974,1739": {
+   "claims": [
+    {
+     "loc_ids": [
+      84,
+      1072,
+      1074,
+      1076,
+      1079,
+      1082,
+      1085,
+      1088,
+      1091,
+      1094,
+      1097,
+      1100,
+      1103,
+      1107
+     ],
+     "source": "location:Лагерь Джанджавиды"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Bandit_Camp3",
+   "known_cells_of_loc": [],
+   "loc_id": 84,
+   "other_candidates": [
+    {
+     "loc_id": 1072,
+     "title": "Лагерь Джанджавидов",
+     "votes": 1
+    },
+    {
+     "loc_id": 1074,
+     "title": "Лагерь Джанджавидов",
+     "votes": 1
+    },
+    {
+     "loc_id": 1076,
+     "title": "Лагерь Джанджавидов",
+     "votes": 1
+    },
+    {
+     "loc_id": 1079,
+     "title": "Лагерь Джанджавидов",
+     "votes": 1
+    },
+    {
+     "loc_id": 1082,
+     "title": "Лагерь Джанджавидов",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Лагерь Джанджавидов",
+   "votes": 1
+  },
+  "5976,2071": {
+   "claims": [
+    {
+     "loc_ids": [
+      242
+     ],
+     "source": "location:Деревня Агаб"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 242,
+   "fn": "Q_Domination_L6",
+   "known_cells_of_loc": [
+    "5976,2071"
+   ],
+   "loc_id": 242,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Агаб",
+   "votes": 1
+  },
+  "5977,2084": {
+   "claims": [
+    {
+     "loc_ids": [
+      246
+     ],
+     "source": "location:Деревня Табат"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 246,
+   "fn": "Q_Domination_T4",
+   "known_cells_of_loc": [
+    "5977,2084"
+   ],
+   "loc_id": 246,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Табат",
+   "votes": 1
+  },
+  "5978,1727": {
+   "claims": [
+    {
+     "loc_ids": [
+      429
+     ],
+     "source": "location:Лагерь Люшер"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Invaider_Camp_WH",
+   "known_cells_of_loc": [],
+   "loc_id": 429,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Лагерь ",
+   "votes": 1
+  },
+  "5979,2101": {
+   "claims": [
+    {
+     "loc_ids": [
+      248
+     ],
+     "source": "location:Деревня Иллат"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 248,
+   "fn": "Q_Domination_T6",
+   "known_cells_of_loc": [
+    "5979,2101"
+   ],
+   "loc_id": 248,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Иллат",
+   "votes": 1
+  },
+  "5980,2055": {
+   "claims": [
+    {
+     "loc_ids": [
+      240
+     ],
+     "source": "location:Деревня Лакава"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 240,
+   "fn": "Q_Domination_L4",
+   "known_cells_of_loc": [
+    "5980,2055"
+   ],
+   "loc_id": 240,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Лакава",
+   "votes": 1
+  },
+  "5981,1719": {
+   "claims": [
+    {
+     "loc_ids": [
+      65
+     ],
+     "source": "location:Сборище"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 65,
+   "fn": "Q_LA_Sborishe",
+   "known_cells_of_loc": [
+    "5981,1719"
+   ],
+   "loc_id": 65,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Сборище",
+   "votes": 1
+  },
+  "5981,2065": {
+   "claims": [
+    {
+     "loc_ids": [
+      241
+     ],
+     "source": "location:Деревня Идд"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 241,
+   "fn": "Q_Domination_L5",
+   "known_cells_of_loc": [
+    "5981,2065"
+   ],
+   "loc_id": 241,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Идд",
+   "votes": 1
+  },
+  "5985,1721": {
+   "claims": [
+    {
+     "loc_ids": [
+      121
+     ],
+     "source": "location:Место засады"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 121,
+   "fn": "Q_VH_Interception",
+   "known_cells_of_loc": [
+    "5985,1721"
+   ],
+   "loc_id": 121,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Место засады.",
+   "votes": 1
+  },
+  "5987,1699": {
+   "claims": [
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "location:Оазис Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Лекарь"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Нуман"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Оружие"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Осколок скалы (ВХ)"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Послушник Джо"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Снитке"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Торговец патронами"
+    },
+    {
+     "loc_ids": [
+      283
+     ],
+     "source": "npc:Тьерри Сабин"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Apoc_Oasis",
+   "known_cells_of_loc": [],
+   "loc_id": 283,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Оазис",
+   "votes": 9
+  },
+  "5987,2092": {
+   "claims": [
+    {
+     "loc_ids": [
+      245
+     ],
+     "source": "location:Деревня Хив"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 245,
+   "fn": "Q_Domination_T3",
+   "known_cells_of_loc": [
+    "5987,2092"
+   ],
+   "loc_id": 245,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Хив",
+   "votes": 1
+  },
+  "5988,2072": {
+   "claims": [
+    {
+     "loc_ids": [
+      239
+     ],
+     "source": "location:Деревня Рахад"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 239,
+   "fn": "Q_Domination_L3",
+   "known_cells_of_loc": [
+    "5988,2072"
+   ],
+   "loc_id": 239,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Рахад",
+   "votes": 1
+  },
+  "5990,2042": {
+   "claims": [
+    {
+     "loc_ids": [
+      236
+     ],
+     "source": "location:Деревня Дхан"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 236,
+   "fn": "Q_Domination_D6",
+   "known_cells_of_loc": [
+    "5990,2042"
+   ],
+   "loc_id": 236,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Дхан",
+   "votes": 1
+  },
+  "5992,2084": {
+   "claims": [
+    {
+     "loc_ids": [
+      244
+     ],
+     "source": "location:Деревня Руаяс"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 244,
+   "fn": "Q_Domination_T2",
+   "known_cells_of_loc": [
+    "5992,2084"
+   ],
+   "loc_id": 244,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Руаяс",
+   "votes": 1
+  },
+  "5993,1721": {
+   "claims": [
+    {
+     "loc_ids": [
+      85,
+      1073,
+      1075,
+      1077,
+      1080,
+      1083,
+      1086,
+      1089,
+      1092,
+      1095,
+      1098,
+      1101,
+      1104,
+      1106
+     ],
+     "source": "location:Лагерь Магриба"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Bandit_Camp4",
+   "known_cells_of_loc": [],
+   "loc_id": 85,
+   "other_candidates": [
+    {
+     "loc_id": 1073,
+     "title": "Лагерь Магриба",
+     "votes": 1
+    },
+    {
+     "loc_id": 1075,
+     "title": "Лагерь Магриба",
+     "votes": 1
+    },
+    {
+     "loc_id": 1077,
+     "title": "Лагерь Магриба",
+     "votes": 1
+    },
+    {
+     "loc_id": 1080,
+     "title": "Лагерь Магриба",
+     "votes": 1
+    },
+    {
+     "loc_id": 1083,
+     "title": "Лагерь Магриба",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Лагерь Магриба",
+   "votes": 1
+  },
+  "5998,1697": {
+   "claims": [
+    {
+     "loc_ids": [
+      111
+     ],
+     "source": "location:Северный склад Вади-Хальфы"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "stok_WH_sever",
+   "known_cells_of_loc": [],
+   "loc_id": 111,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Северный склад",
+   "votes": 1
+  },
+  "5999,2053": {
+   "claims": [
+    {
+     "loc_ids": [
+      233
+     ],
+     "source": "location:Деревня Талсах"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 233,
+   "fn": "Q_Domination_D3",
+   "known_cells_of_loc": [
+    "5999,2053"
+   ],
+   "loc_id": 233,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Талсах",
+   "votes": 1
+  },
+  "6001,2071": {
+   "claims": [
+    {
+     "loc_ids": [
+      237
+     ],
+     "source": "location:Деревня Имат"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 237,
+   "fn": "Q_Domination_L1",
+   "known_cells_of_loc": [
+    "6001,2071"
+   ],
+   "loc_id": 237,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Имат",
+   "votes": 1
+  },
+  "6002,1738": {
+   "claims": [
+    {
+     "loc_ids": [
+      110,
+      983
+     ],
+     "source": "location:Восточный склад Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      114
+     ],
+     "source": "location:Восточный склад Донголы"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "stok_WH_vostok",
+   "known_cells_of_loc": [],
+   "loc_id": 110,
+   "other_candidates": [
+    {
+     "loc_id": 983,
+     "title": "Восточный склад",
+     "votes": 1
+    },
+    {
+     "loc_id": 114,
+     "title": "Восточный склад",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Восточный склад",
+   "votes": 1
+  },
+  "6002,2045": {
+   "claims": [
+    {
+     "loc_ids": [
+      235
+     ],
+     "source": "location:Деревня Асмад"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 235,
+   "fn": "Q_Domination_D5",
+   "known_cells_of_loc": [
+    "6002,2045"
+   ],
+   "loc_id": 235,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Асмад",
+   "votes": 1
+  },
+  "6002,2086": {
+   "claims": [
+    {
+     "loc_ids": [
+      243
+     ],
+     "source": "location:Деревня Тинах"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 243,
+   "fn": "Q_Domination_T1",
+   "known_cells_of_loc": [
+    "6002,2086"
+   ],
+   "loc_id": 243,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Тинах",
+   "votes": 1
+  },
+  "6004,2038": {
+   "claims": [
+    {
+     "loc_ids": [
+      234
+     ],
+     "source": "location:Деревня Цалим"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 234,
+   "fn": "Q_Domination_D4",
+   "known_cells_of_loc": [
+    "6004,2038"
+   ],
+   "loc_id": 234,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Цалим",
+   "votes": 1
+  },
+  "6009,1742": {
+   "claims": [
+    {
+     "loc_ids": [
+      116
+     ],
+     "source": "location:Золотая шахта"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 116,
+   "fn": "Q_IV_mountain_Gold",
+   "known_cells_of_loc": [
+    "6009,1742"
+   ],
+   "loc_id": 116,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Золотая шахта.",
+   "votes": 1
+  },
+  "6009,2052": {
+   "claims": [
+    {
+     "loc_ids": [
+      232
+     ],
+     "source": "location:Деревня Иса"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 232,
+   "fn": "Q_Domination_D2",
+   "known_cells_of_loc": [
+    "6009,2052"
+   ],
+   "loc_id": 232,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Иса",
+   "votes": 1
+  },
+  "6009,2063": {
+   "claims": [
+    {
+     "loc_ids": [
+      231
+     ],
+     "source": "location:Деревня Эмарах"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 231,
+   "fn": "Q_Domination_D1",
+   "known_cells_of_loc": [
+    "6009,2063"
+   ],
+   "loc_id": 231,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Эмарах",
+   "votes": 1
+  },
+  "6010,1724": {
+   "claims": [
+    {
+     "loc_ids": [
+      165
+     ],
+     "source": "location:Стройка"
+    },
+    {
+     "loc_ids": [
+      165
+     ],
+     "source": "npc:Варон"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Under_Construction",
+   "known_cells_of_loc": [],
+   "loc_id": 165,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Стройка. ",
+   "votes": 2
+  },
+  "6016,1747": {
+   "claims": [
+    {
+     "loc_ids": [
+      53,
+      162,
+      163,
+      598,
+      623
+     ],
+     "source": "location:Горные тропы Вади-Хальфы"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "MP_Enter3",
+   "known_cells_of_loc": [],
+   "loc_id": 53,
+   "other_candidates": [
+    {
+     "loc_id": 162,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 163,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 598,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 623,
+     "title": "Горные тропы",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Горные тропы",
+   "votes": 1
+  },
+  "6017,1726": {
+   "claims": [
+    {
+     "loc_ids": [
+      198
+     ],
+     "source": "location:Завод Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      198
+     ],
+     "source": "npc:Производство патронов"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "WH_BulletWorkshop",
+   "known_cells_of_loc": [],
+   "loc_id": 198,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Завод",
+   "votes": 2
+  },
+  "6017,2036": {
+   "claims": [
+    {
+     "loc_ids": [
+      230
+     ],
+     "source": "location:Деревня Аффат"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 230,
+   "fn": "Q_Domination_A6",
+   "known_cells_of_loc": [
+    "6017,2036"
+   ],
+   "loc_id": 230,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Аффат",
+   "votes": 1
+  },
+  "6019,2057": {
+   "claims": [
+    {
+     "loc_ids": [
+      226
+     ],
+     "source": "location:Деревня Зулу"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 226,
+   "fn": "Q_Domination_A2",
+   "known_cells_of_loc": [
+    "6019,2057"
+   ],
+   "loc_id": 226,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Зулу",
+   "votes": 1
+  },
+  "6023,2045": {
+   "claims": [
+    {
+     "loc_ids": [
+      228
+     ],
+     "source": "location:Деревня Нури"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 228,
+   "fn": "Q_Domination_A4",
+   "known_cells_of_loc": [
+    "6023,2045"
+   ],
+   "loc_id": 228,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Нури",
+   "votes": 1
+  },
+  "6026,2063": {
+   "claims": [
+    {
+     "loc_ids": [
+      225
+     ],
+     "source": "location:Деревня Инус"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 225,
+   "fn": "Q_Domination_A1",
+   "known_cells_of_loc": [
+    "6026,2063"
+   ],
+   "loc_id": 225,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Инус",
+   "votes": 1
+  },
+  "6030,2051": {
+   "claims": [
+    {
+     "loc_ids": [
+      227
+     ],
+     "source": "location:Деревня Эль-Ким"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 227,
+   "fn": "Q_Domination_A3",
+   "known_cells_of_loc": [
+    "6030,2051"
+   ],
+   "loc_id": 227,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Эль-Ким",
+   "votes": 1
+  },
+  "6031,2041": {
+   "claims": [
+    {
+     "loc_ids": [
+      229
+     ],
+     "source": "location:Деревня Дагаш"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 229,
+   "fn": "Q_Domination_A5",
+   "known_cells_of_loc": [
+    "6031,2041"
+   ],
+   "loc_id": 229,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Деревня Дагаш",
+   "votes": 1
+  },
+  "6032,1952": {
+   "claims": [
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "location:Оазис Тефнут"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Брю Топтенс"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Джорж Кэгплет"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Марко Буллетнович"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Норман Бэйтс"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Роберт Оппенгеймер"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Рэндл Макмерфи"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Тайник Контрабандистов"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Тарус Назван"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Тьерри Сабин"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Улхуз"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Флоренс Казантипский"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Хан Сэлл"
+    },
+    {
+     "loc_ids": [
+      287
+     ],
+     "source": "npc:Чарльз Спенсер"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Oasis_Tefnut",
+   "known_cells_of_loc": [],
+   "loc_id": 287,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Оазис Тефнут",
+   "votes": 14
+  },
+  "6033,1951": {
+   "claims": [
+    {
+     "loc_ids": [
+      308
+     ],
+     "source": "location:Храм Тефнут"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Tephnuty",
+   "known_cells_of_loc": [],
+   "loc_id": 308,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Храм Тефнут",
+   "votes": 1
+  },
+  "6033,1952": {
+   "claims": [
+    {
+     "loc_ids": [
+      286
+     ],
+     "source": "location:Храм Богини Тефнут"
+    },
+    {
+     "loc_ids": [
+      286
+     ],
+     "source": "npc:Аменти"
+    },
+    {
+     "loc_ids": [
+      286
+     ],
+     "source": "npc:Богиня Тефнут"
+    },
+    {
+     "loc_ids": [
+      286
+     ],
+     "source": "npc:Гомезз Воин Тефнут"
+    },
+    {
+     "loc_ids": [
+      286
+     ],
+     "source": "npc:Жрец Астенну"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 286,
+   "fn": "Tefnut_temple",
+   "known_cells_of_loc": [
+    "6033,1952"
+   ],
+   "loc_id": 286,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Храм Богини Тефнут",
+   "votes": 5
+  },
+  "6036,2019": {
+   "claims": [
+    {
+     "loc_ids": [
+      257
+     ],
+     "source": "location:База МКС"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "MKS_Desert_01",
+   "known_cells_of_loc": [],
+   "loc_id": 257,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "База МКС",
+   "votes": 1
+  },
+  "6040,1699": {
+   "claims": [
+    {
+     "loc_ids": [
+      1027,
+      1220,
+      1257
+     ],
+     "source": "location:Шахта свинца Вади-Хальфы"
+    },
+    {
+     "loc_ids": [
+      1027,
+      1220,
+      1257
+     ],
+     "source": "npc:Вход на карьер Добыча свинца"
+    }
+   ],
+   "confidence": "none",
+   "existing_loc_id": null,
+   "fn": "WH_Plumbum_Mine_lvl1",
+   "known_cells_of_loc": [],
+   "loc_id": 1027,
+   "other_candidates": [
+    {
+     "loc_id": 1220,
+     "title": "Свинцовая шахта 2",
+     "votes": 2
+    },
+    {
+     "loc_id": 1257,
+     "title": "Свинцовая шахта 3",
+     "votes": 2
+    }
+   ],
+   "status": "interior",
+   "title": "Свинцовая шахта 1",
+   "votes": 2
+  },
+  "6042,2025": {
+   "claims": [
+    {
+     "loc_ids": [
+      258
+     ],
+     "source": "location:Второй Склад МКС"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 258,
+   "fn": "MKS_Desert_02",
+   "known_cells_of_loc": [
+    "6042,2025"
+   ],
+   "loc_id": 258,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Второй склад МКС",
+   "votes": 1
+  },
+  "6045,2017": {
+   "claims": [
+    {
+     "loc_ids": [
+      259
+     ],
+     "source": "location:Третий Склад МКС"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 259,
+   "fn": "MKS_Desert_03",
+   "known_cells_of_loc": [
+    "6045,2017"
+   ],
+   "loc_id": 259,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Третий Склад МКС",
+   "votes": 1
+  },
+  "6070,1841": {
+   "claims": [
+    {
+     "loc_ids": [
+      149,
+      257,
+      334,
+      338,
+      534
+     ],
+     "source": "location:База НЗ ГСМ МКС"
+    },
+    {
+     "loc_ids": [
+      149,
+      257,
+      334,
+      338,
+      534
+     ],
+     "source": "npc:Тьерри Сабин"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "VES_KB_Enter",
+   "known_cells_of_loc": [],
+   "loc_id": 149,
+   "other_candidates": [
+    {
+     "loc_id": 257,
+     "title": "База МКС",
+     "votes": 2
+    },
+    {
+     "loc_id": 334,
+     "title": "База",
+     "votes": 2
+    },
+    {
+     "loc_id": 338,
+     "title": "База",
+     "votes": 2
+    },
+    {
+     "loc_id": 534,
+     "title": "База",
+     "votes": 2
+    }
+   ],
+   "status": "ambiguous",
+   "title": "База",
+   "votes": 2
+  },
+  "6126,1980": {
+   "claims": [
+    {
+     "loc_ids": [
+      196
+     ],
+     "source": "location:Оазис Абу-Хамеда"
+    },
+    {
+     "loc_ids": [
+      196
+     ],
+     "source": "npc:Тьерри Сабин"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Oasis_AH",
+   "known_cells_of_loc": [],
+   "loc_id": 196,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Оазис Абу-Хамеда",
+   "votes": 2
+  },
+  "6154,1963": {
+   "claims": [
+    {
+     "loc_ids": [
+      149,
+      334,
+      338,
+      534
+     ],
+     "source": "location:База клана"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "VES_KB_Enter",
+   "known_cells_of_loc": [],
+   "loc_id": 149,
+   "other_candidates": [
+    {
+     "loc_id": 334,
+     "title": "База",
+     "votes": 1
+    },
+    {
+     "loc_id": 338,
+     "title": "База",
+     "votes": 1
+    },
+    {
+     "loc_id": 534,
+     "title": "База",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "База",
+   "votes": 1
+  },
+  "6158,2000": {
+   "claims": [
+    {
+     "loc_ids": [
+      570,
+      1000
+     ],
+     "source": "location:Штаб Юг"
+    }
+   ],
+   "confidence": "none",
+   "existing_loc_id": null,
+   "fn": "9may_7_AH",
+   "known_cells_of_loc": [],
+   "loc_id": 570,
+   "other_candidates": [
+    {
+     "loc_id": 1000,
+     "title": "Штаб",
+     "votes": 1
+    }
+   ],
+   "status": "interior",
+   "title": "Штаб",
+   "votes": 1
+  },
+  "6165,1975": {
+   "claims": [
+    {
+     "loc_ids": [
+      432
+     ],
+     "source": "location:Лагерь Пиратов"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Invaider_Camp_AH",
+   "known_cells_of_loc": [],
+   "loc_id": 432,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Лагерь ",
+   "votes": 1
+  },
+  "6168,1989": {
+   "claims": [
+    {
+     "loc_ids": [
+      432
+     ],
+     "source": "location:Лагерь сопротивления Юг"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Invaider_Camp_AH",
+   "known_cells_of_loc": [],
+   "loc_id": 432,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Лагерь ",
+   "votes": 1
+  },
+  "6179,1980": {
+   "claims": [
+    {
+     "loc_ids": [
+      636
+     ],
+     "source": "npc:Гюнтер"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "AH_Stone_Mine_N",
+   "known_cells_of_loc": [],
+   "loc_id": 636,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Каменоломня.",
+   "votes": 1
+  },
+  "6180,1973": {
+   "claims": [
+    {
+     "loc_ids": [
+      71
+     ],
+     "source": "location:Кладбище Абу-Хамеда"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 71,
+   "fn": "Abu-Hamad_Graveyard",
+   "known_cells_of_loc": [
+    "6180,1973"
+   ],
+   "loc_id": 71,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Абу-Хамед: Кладбище",
+   "votes": 1
+  },
+  "6182,1973": {
+   "claims": [
+    {
+     "loc_ids": [
+      59,
+      78
+     ],
+     "source": "location:Боевая арена"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Battleground1",
+   "known_cells_of_loc": [
+    "5970,1728"
+   ],
+   "loc_id": 59,
+   "other_candidates": [
+    {
+     "loc_id": 78,
+     "title": "Боевая Арена 2",
+     "votes": 1
+    }
+   ],
+   "status": "conflict",
+   "title": "Боевая Арена 1",
+   "votes": 1
+  },
+  "6182,1975": {
+   "claims": [
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "location:Лагерь Мастеров Абу-Хамеда I"
+    },
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "npc:Адель Имам"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Upgraders_AH_P",
+   "known_cells_of_loc": [],
+   "loc_id": 130,
+   "other_candidates": [
+    {
+     "loc_id": 131,
+     "title": "Абухамед: Лагерь мастеров",
+     "votes": 2
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Абухамед: Лагерь мастеров",
+   "votes": 2
+  },
+  "6182,1976": {
+   "claims": [
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "location:Вокзал Абу-Хамеда"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Автоматы и патроны"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Веласкес"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Винтовки и патроны"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Водитель Автобуса"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Киплер"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Курт"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Пулеметы и патроны"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Роуз"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Симона"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Ученый МКС"
+    },
+    {
+     "loc_ids": [
+      126
+     ],
+     "source": "npc:Шрам"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Abuhamed_RailMarket",
+   "known_cells_of_loc": [],
+   "loc_id": 126,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Абухамед: Вокзал",
+   "votes": 12
+  },
+  "6183,1975": {
+   "claims": [
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "location:Жилой квартал Абу-Хамеда"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Анвар Хасимбек"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Грязный ящик Вюрта"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Доктор Гофус"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Мастер Гияс"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Мастер Заки"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Мастер Зияд"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Младший помощник"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Охранник Илья"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Самуэль"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Техногик"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Хаим"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Хафиз"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Юдифь"
+    },
+    {
+     "loc_ids": [
+      127
+     ],
+     "source": "npc:Юсуф"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "Abuhamed_GoldMarket",
+   "known_cells_of_loc": [],
+   "loc_id": 127,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Абухамед: Жилой квартал",
+   "votes": 15
+  },
+  "6183,1976": {
+   "claims": [
+    {
+     "loc_ids": [
+      128
+     ],
+     "source": "location:Центр Абу-Хамеда"
+    },
+    {
+     "loc_ids": [
+      128
+     ],
+     "source": "npc:Лаборант СА"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "stok_AH_vostok",
+   "known_cells_of_loc": [],
+   "loc_id": 128,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Абу-Хамед: Центр города",
+   "votes": 2
+  },
+  "6183,1977": {
+   "claims": [
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "location:Лагерь Мастеров Абу-Хамеда II"
+    },
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "npc:Мастер Аммар"
+    },
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "npc:Мастер Басам"
+    },
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "npc:Мастер Баха"
+    },
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "npc:Подмастерье Имран"
+    },
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "npc:Подмастерье Камаль"
+    },
+    {
+     "loc_ids": [
+      130,
+      131
+     ],
+     "source": "npc:Подмастерье Катада"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Upgraders_AH_P",
+   "known_cells_of_loc": [],
+   "loc_id": 130,
+   "other_candidates": [
+    {
+     "loc_id": 131,
+     "title": "Абухамед: Лагерь мастеров",
+     "votes": 7
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Абухамед: Лагерь мастеров",
+   "votes": 7
+  },
+  "6184,1975": {
+   "claims": [
+    {
+     "loc_ids": [
+      295
+     ],
+     "source": "location:Дорога на Абу Хамед"
+    },
+    {
+     "loc_ids": [
+      295
+     ],
+     "source": "npc:Кодого Авантюрист"
+    },
+    {
+     "loc_ids": [
+      295
+     ],
+     "source": "npc:Эммануил Людвигович"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Kerma_Road",
+   "known_cells_of_loc": [
+    "5863,1948"
+   ],
+   "loc_id": 295,
+   "other_candidates": [],
+   "status": "conflict",
+   "title": "Дорога из Кермы",
+   "votes": 3
+  },
+  "6196,1655": {
+   "claims": [
+    {
+     "loc_ids": [
+      606,
+      722
+     ],
+     "source": "location:Ущелье"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Bunker01_entrance",
+   "known_cells_of_loc": [],
+   "loc_id": 606,
+   "other_candidates": [
+    {
+     "loc_id": 722,
+     "title": "Ущелье",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Ущелье",
+   "votes": 1
+  },
+  "6211,1945": {
+   "claims": [
+    {
+     "loc_ids": [
+      53,
+      162,
+      163,
+      598,
+      623
+     ],
+     "source": "location:Горные тропы Абу-Хамеда"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "MP_Enter3",
+   "known_cells_of_loc": [],
+   "loc_id": 53,
+   "other_candidates": [
+    {
+     "loc_id": 162,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 163,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 598,
+     "title": "Горные тропы",
+     "votes": 1
+    },
+    {
+     "loc_id": 623,
+     "title": "Горные тропы",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "Горные тропы",
+   "votes": 1
+  },
+  "6218,1968": {
+   "claims": [
+    {
+     "loc_ids": [
+      156
+     ],
+     "source": "location:Темная шахта"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Top_Mine_Entrance",
+   "known_cells_of_loc": [],
+   "loc_id": 156,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Темная Шахта: Вход",
+   "votes": 1
+  },
+  "6261,1825": {
+   "claims": [
+    {
+     "loc_ids": [
+      184
+     ],
+     "source": "location:Захоронения предков"
+    },
+    {
+     "loc_ids": [
+      184
+     ],
+     "source": "npc:Жосеф-Дезире Мобуту"
+    },
+    {
+     "loc_ids": [
+      184
+     ],
+     "source": "npc:Ящик с инструментами"
+    }
+   ],
+   "confidence": "verified",
+   "existing_loc_id": 184,
+   "fn": "NoobZoneGraveard",
+   "known_cells_of_loc": [
+    "6261,1825"
+   ],
+   "loc_id": 184,
+   "other_candidates": [],
+   "status": "already",
+   "title": "Захоронение предков",
+   "votes": 3
+  },
+  "6262,1825": {
+   "claims": [
+    {
+     "loc_ids": [
+      183
+     ],
+     "source": "location:Западный поселок"
+    },
+    {
+     "loc_ids": [
+      183
+     ],
+     "source": "npc:Гамаль Ар-Рази"
+    },
+    {
+     "loc_ids": [
+      183
+     ],
+     "source": "npc:Джеррах ал Хакам"
+    },
+    {
+     "loc_ids": [
+      183
+     ],
+     "source": "npc:Ибрахим"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "NoobZoneWest_camp",
+   "known_cells_of_loc": [
+    "5834,1607"
+   ],
+   "loc_id": 183,
+   "other_candidates": [],
+   "status": "conflict",
+   "title": "Западный поселок",
+   "votes": 4
+  },
+  "6266,1823": {
+   "claims": [
+    {
+     "loc_ids": [
+      166
+     ],
+     "source": "location:Амбар Фермера"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "NoobZone_Hrush",
+   "known_cells_of_loc": [],
+   "loc_id": 166,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Амбар Фермера",
+   "votes": 1
+  },
+  "6268,1819": {
+   "claims": [
+    {
+     "loc_ids": [
+      181
+     ],
+     "source": "location:Северный поселок"
+    },
+    {
+     "loc_ids": [
+      181
+     ],
+     "source": "npc:Бомани"
+    },
+    {
+     "loc_ids": [
+      181
+     ],
+     "source": "npc:Думисани"
+    },
+    {
+     "loc_ids": [
+      181
+     ],
+     "source": "npc:Зула"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "NoobZoneNord_camp",
+   "known_cells_of_loc": [],
+   "loc_id": 181,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Нубийское поселение",
+   "votes": 4
+  },
+  "6268,1825": {
+   "claims": [
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "location:Рынок Нубии"
+    },
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "npc:Адам"
+    },
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "npc:Амина"
+    },
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "npc:Берт Гаммер"
+    },
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "npc:Борис"
+    },
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "npc:Джек Гарард"
+    },
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "npc:Доктор Гофус"
+    },
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "npc:Зоричев"
+    },
+    {
+     "loc_ids": [
+      185
+     ],
+     "source": "npc:Ибн Сина"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "NoobZone_Market",
+   "known_cells_of_loc": [
+    "5840,1607"
+   ],
+   "loc_id": 185,
+   "other_candidates": [],
+   "status": "conflict",
+   "title": "Нубийский рынок",
+   "votes": 9
+  },
+  "6270,1831": {
+   "claims": [
+    {
+     "loc_ids": [
+      59,
+      78
+     ],
+     "source": "location:Боевая Арена"
+    },
+    {
+     "loc_ids": [
+      59,
+      78
+     ],
+     "source": "npc:Барыга Сет"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Battleground1",
+   "known_cells_of_loc": [
+    "5970,1728"
+   ],
+   "loc_id": 59,
+   "other_candidates": [
+    {
+     "loc_id": 78,
+     "title": "Боевая Арена 2",
+     "votes": 2
+    }
+   ],
+   "status": "conflict",
+   "title": "Боевая Арена 1",
+   "votes": 2
+  },
+  "6271,1829": {
+   "claims": [
+    {
+     "loc_ids": [
+      186
+     ],
+     "source": "location:Потерянный караван"
+    },
+    {
+     "loc_ids": [
+      186
+     ],
+     "source": "npc:Абдула"
+    },
+    {
+     "loc_ids": [
+      186
+     ],
+     "source": "npc:Демир"
+    },
+    {
+     "loc_ids": [
+      186
+     ],
+     "source": "npc:Странник"
+    }
+   ],
+   "confidence": "medium",
+   "existing_loc_id": null,
+   "fn": "NoobZone_Market",
+   "known_cells_of_loc": [],
+   "loc_id": 186,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Караван",
+   "votes": 4
+  },
+  "6272,1840": {
+   "claims": [
+    {
+     "loc_ids": [
+      34
+     ],
+     "source": "location:Лагерь Бандитов"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "Bandit_Camp",
+   "known_cells_of_loc": [],
+   "loc_id": 34,
+   "other_candidates": [],
+   "status": "proposed",
+   "title": "Лагерь бандитов",
+   "votes": 1
+  },
+  "6273,1953": {
+   "claims": [
+    {
+     "loc_ids": [
+      149,
+      334,
+      338,
+      534
+     ],
+     "source": "location:База СА"
+    }
+   ],
+   "confidence": "low",
+   "existing_loc_id": null,
+   "fn": "VES_KB_Enter",
+   "known_cells_of_loc": [],
+   "loc_id": 149,
+   "other_candidates": [
+    {
+     "loc_id": 334,
+     "title": "База",
+     "votes": 1
+    },
+    {
+     "loc_id": 338,
+     "title": "База",
+     "votes": 1
+    },
+    {
+     "loc_id": 534,
+     "title": "База",
+     "votes": 1
+    }
+   ],
+   "status": "ambiguous",
+   "title": "База",
+   "votes": 1
+  }
+ }
+}
