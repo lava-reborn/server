@@ -21,6 +21,7 @@ import signal
 import time
 
 import accounts
+import combat
 import inventory
 import items
 import names
@@ -191,6 +192,9 @@ class Session:
         # Items, slots and the open stall: inventory.py. Reads the character
         # off this session, so it needs no update when the character changes.
         self.inv = inventory.Inventory(self, STORE)
+        # Action points, the shot in flight, death and the loot window:
+        # combat.py. Rooms hold the mobs and the war state.
+        self.combat = combat.Fighter(self)
 
     @property
     def pid(self):
@@ -212,6 +216,10 @@ class Session:
 
     def handle(self, cmd, params):
         log.info("  C->S  %s %s", cmd, params)
+        # Dead: the client's own filter lets only resurrect through
+        # (FilterManager.createDSFilter), so this is the server's copy of it.
+        if self.combat.blocks(cmd, expects_ack(cmd, params)):
+            return
         fn = getattr(self, "cmd_" + cmd, None)
         if not fn:
             log.warning("  ??    unimplemented command %r", cmd)
@@ -272,7 +280,7 @@ class Session:
         self.send("constants",
                   gold_to_afro_rate=100,
                   quest_log_capacity=QUEST_LOG_CAPACITY,
-                  leave_combat_timeout=30,
+                  leave_combat_timeout=combat.LEAVE_COMBAT_TIMEOUT,
                   premium_weight_bonus_1=progression.PREMIUM_WEIGHT_BONUS[1],
                   premium_weight_bonus_2=progression.PREMIUM_WEIGHT_BONUS[2],
                   premium_break_bonus_1=1, premium_break_bonus_2=2,
@@ -309,6 +317,7 @@ class Session:
         try:
             self.cancel_travel()
             self.inv.close()
+            self.combat.close()         # never raises; see Fighter.close
             # Whoever shared a room or the map with this player is told now:
             # a dropped socket sends no logout, so this is the only place
             # that covers every way out.
@@ -337,6 +346,7 @@ class Session:
         self.close()
     def leave_room(self):
         if self.room is not None:
+            self.combat.left()
             self.room.leave(self)
             self.room = None
 
@@ -442,8 +452,11 @@ class Session:
         self.leave_room()
         ONLINE.add(self)
         # ie != 1 means the client must confirm with lenter;accept=1 once it
-        # has finished loading the location's XML and artwork.
-        self.send("lcall", id=self.loc.id, ws=self.loc.war, ie=0,
+        # has finished loading the location's XML and artwork. ws is the
+        # room's actual war state, not the file's war flag: the flag only
+        # says fighting is possible here, and a client told ws=1 spends
+        # action points on every step from the moment it arrives.
+        self.send("lcall", id=self.loc.id, ws=int(ROOMS.get(self.loc.id).ws), ie=0,
                   g_id=world.pack(round(self.gx), round(self.gy)))
 
     def cmd_lenter(self, p):
@@ -475,6 +488,7 @@ class Session:
         stripped. See rooms.Room.snapshot_for for the frame order."""
         self.room = ROOMS.get(self.loc.id)
         self.room.enter(self)
+        self.combat.entered()
 
     def cmd_chWorld(self, p):
         """One command, both directions: the button is a toggle.
@@ -483,6 +497,9 @@ class Session:
         changeWorld with no argument, so which way the player goes is decided
         here, from where they currently are.
         """
+        # Too soon after a shot or a strike: res=39 instead, and nothing moves.
+        if self.combat.refuse_leave():
+            return
         self.send("cmdAck", res=0)
         if self.on_map:
             self.enter_cell()
@@ -828,7 +845,12 @@ class Session:
             params.update(a_price=MEDIC_PRICE)
         elif root == world.COMMONER:
             params.update(can_set_home=1)
+        # A mob's level paints the coloured frame over its head; its usrUp
+        # has to follow the userInfo at once, or the bar is drawn against a
+        # maximum of 1200 (combat.md 5).
+        params.update(self.combat.mob_info(npc_id))
         self.send(cmd, **params)
+        self.combat.after_npc_info(npc_id)
 
     def cmd_rp_get_info(self, p):
         """Attributes, skills and specialisations, despite the name.
@@ -932,6 +954,9 @@ class Session:
         if int(p.get("s_type", -1) or 0) == inventory.SESSION_TRADE:
             self.inv.open_trade(p)
             return
+        if int(p.get("s_type", -1) or 0) == combat.SESSION_LOOT:
+            self.combat.open_loot(p)
+            return
         self.npc_session = int(p.get("s_type", 0) or 0)
         self.send("cmdAck", res=0)
 
@@ -954,7 +979,10 @@ class Session:
         npc_session for it.
         """
         # Inside an open stall the code is buy/sell/close, and close carries
-        # no acknowledgement at all (Trade.close registers none).
+        # no acknowledgement at all (Trade.close registers none). A loot
+        # bag on the ground is the same shape (Loot.close).
+        if self.combat.ss_upd(p):
+            return
         if self.inv.ss_upd(p):
             return
         if self.training is not None:
@@ -971,6 +999,9 @@ class Session:
     def cmd_ss_get_di(self, p):
         # Every real instance the client meets asks for this, through the
         # same window of five as ss_get_si; the sixth item stalls without it.
+        # A mob's weapon is an instance too, just not one in the database.
+        if self.combat.ss_get_di(p):
+            return
         self.inv.ss_get_di(p)
 
     def cmd_ss_move(self, p):
@@ -989,8 +1020,22 @@ class Session:
 
     def cmd_ss_get(self, p):
         # Answered whatever the target: the ss_ack queue is FIFO and the
-        # client slices the list by the mask it remembers sending.
+        # client slices the list by the mask it remembers sending. A mob
+        # answers with the weapon it holds, which picks its animation set.
+        if self.combat.ss_get(p):
+            return
         self.inv.ss_get(p)
+
+    def cmd_resurrect(self, p):
+        self.combat.resurrect(p)
+
+    def cmd_e_get_si(self, p):
+        # Effects are not modelled yet, but EffectsFactory keeps five of these
+        # in flight and only releases a slot on the answer.
+        self.combat.e_get_si(p)
+
+    def cmd_e_get_di(self, p):
+        self.combat.e_get_di(p)
 
     def cmd_q_list(self, p):
         """The quest log, asked for once per entry into a location or the map.
@@ -1244,6 +1289,9 @@ class Session:
         self.send("cmdAck", res=0)
         self.pos = int(path[-1])
         cells = [int(c) for c in path]
+        # Walking drops the aim (the client cancels its own bar on this
+        # userMove) and costs a point a hex while the room is at war.
+        self.combat.moved(cells)
         self.send("userMove", id=0, path=cells)
         # The same walk under our real id for everyone else in the room:
         # Location.userMove looks the walker up by id and 0 is always the
