@@ -32,10 +32,10 @@
 Регистрация — в браузере на `http://127.0.0.1:8080/`. Тестовый аккаунт
 `polestvr` / `lava1234`.
 
-Тесты (шесть наборов, все обязаны быть зелёными перед коммитом):
+Тесты (семь наборов, все обязаны быть зелёными перед коммитом):
 
 ```bash
-cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap; do python3 $t.py || break; done
+cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_quests; do python3 $t.py || break; done
 ```
 
 Переменные: `LAVA_GX`/`LAVA_GY` — стартовая клетка карты (5970×1730),
