@@ -22,6 +22,7 @@ import accounts
 import items
 import names
 import rooms
+import progression
 import world
 from protocol import BigUInt, FrameReader, decode, frame, Str
 
@@ -130,16 +131,6 @@ POLICY = (
     b'</cross-domain-policy>\x00'
 )
 
-ATTRIBS = 5    # сила, ловкость, телосложение, восприятие, интеллект
-SKILLS = 5     # ближний бой, стрельба, медицина, промышленность, производство
-SPECS = 15
-
-
-def full_mask(n):
-    """Mask with every slot present, for the mask + dense-list encoding."""
-    return (1 << n) - 1
-
-
 class Session:
     def __init__(self, writer, peer):
         self.writer = writer
@@ -151,6 +142,10 @@ class Session:
         self.characters = []
         self.char_id = None
         self.active = None
+        # progression.Character of the selected one; None until selPers/newPers
+        self.char = None
+        # id of the teacher a training session is open with, or None
+        self.training = None
         self.loc = world.location(START_LOC)
         self.pos = self.loc.entry_cell()
         self.on_map = False
@@ -240,13 +235,19 @@ class Session:
         discarded outright unless can_create is truthy, so a zero there leaves
         the client idle with no error of any kind.
         """
+        # Premium bonuses are shares, not multipliers: the client takes the
+        # totals it is sent and splits a share of b/(1+b) back out as the
+        # premium part (SpecSkillMessages.getRealAndBonus, WeightPan), so a
+        # 1 here would tell it that half of everything is bonus.
         self.send("constants",
                   gold_to_afro_rate=100,
                   quest_log_capacity=20,
                   leave_combat_timeout=30,
-                  premium_weight_bonus_1=2, premium_weight_bonus_2=4,
+                  premium_weight_bonus_1=progression.PREMIUM_WEIGHT_BONUS[1],
+                  premium_weight_bonus_2=progression.PREMIUM_WEIGHT_BONUS[2],
                   premium_break_bonus_1=1, premium_break_bonus_2=2,
-                  premium_xp_bonus_1=1, premium_xp_bonus_2=2,
+                  premium_xp_bonus_1=progression.PREMIUM_XP_BONUS[1],
+                  premium_xp_bonus_2=progression.PREMIUM_XP_BONUS[2],
                   gold_repair_price_mod=1, gold_repair_mod=10000,
                   daily_max=10, daily_reset_time=0)
         for pers in self.characters:
@@ -282,6 +283,8 @@ class Session:
         if self.char_id:
             STORE.save_position(self.char_id, self.loc.id, self.pos,
                                 self.gx, self.gy, self.on_map)
+        if self.char:
+            self.char.save(STORE)
         self.writer.close()
 
     def shutdown(self):
@@ -301,6 +304,21 @@ class Session:
             self.room.leave(self)
             self.room = None
 
+    def load_character(self, char_id):
+        """Bring the selected character's numbers into memory.
+
+        Everything the client is later told about the character comes from
+        this object, and it goes back to the database after each change
+        that costs something and once more on the way out.
+        """
+        self.char = progression.Character.load(STORE, char_id)
+        self.training = None
+
+    def character(self):
+        """The loaded character, or a newborn's numbers for a socket that
+        asks before selecting one, so an early getInfo cannot fail."""
+        return self.char or progression.Character()
+
     # --- character -------------------------------------------------------
     def cmd_newPers(self, p):
         if not self.account:
@@ -319,6 +337,7 @@ class Session:
         self.characters = [dict(r) for r in STORE.characters(self.account["id"])]
         self.char_id = char_id
         self.active = next(c for c in self.characters if c["slot"] == slot)
+        self.load_character(char_id)
         log.info("  ..    created %r in slot %d", name, slot)
         # The client plays its intro after this, then sends actPlayer itself.
         self.send("cmdAck", res=0)
@@ -331,6 +350,7 @@ class Session:
             if c["slot"] == slot:
                 self.active = c
                 self.char_id = c["id"]
+                self.load_character(c["id"])
                 self.restore(c)
                 break
         else:
@@ -399,8 +419,10 @@ class Session:
             # case where lenter is acknowledged (see above).
             self.send("cmdAck", res=1)
             return
-        # aspd is the action-point gain per 600ms tick, amax the ceiling.
-        self.send("lenter", pos=self.pos, aspd=1, amax=20)
+        # aspd is the action-point gain per 600ms tick, amax the ceiling:
+        # APManager.setAP takes both from here and nowhere else.
+        self.send("lenter", pos=self.pos, aspd=progression.AP_REGEN,
+                  amax=self.character().ap_max)
         self.enter_room()
 
     def enter_room(self):
@@ -637,10 +659,22 @@ class Session:
         who = int(p.get("id", 0))
         if who != 0:
             if rooms.is_player_id(who):
-                self.send_player_info(who)
+                self.send_other_player_info(who)
             else:
                 self.send_npc_info(who)
             return
+        self.send_player_info()
+        self.push_vitals()
+
+    # --- the character's numbers ------------------------------------------
+    def send_player_info(self):
+        """userInfo_Player for id 0, whole every time.
+
+        Level, reputation, premium and money all ride here and only here:
+        Gamer.userInfo is the one reader of afro/gold (setMoney is called by
+        the mail window alone), so a purchase is followed by this frame
+        again rather than by anything smaller.
+        """
         pers = self.active or default_character()
         # No tr/tr_hours here until the player actually rents a transport.
         # Gamer.userInfo hands tr straight to TransportFactory.create, which
@@ -650,13 +684,25 @@ class Session:
         # undefined, which is what the client means by walking.
         self.send("userInfo_Player",
                   id=0, name=Str(pers["name"]), sex=pers["sex"],
-                  res=Str(str(pers["res"])), ail=0, ally=1, lvl=1,
-                  rep=[0], bg_rep=0, bg_pen=0, clan=0,
-                  hl=0, pr=0,
-                  afro=1000, gold=0)
-        self.send("usrUp", id=0, hcur=100, hmax=100, scur=100, smax=100)
+                  res=Str(str(pers["res"])), ail=0, ally=1, clan=0, hl=0,
+                  **self.character().player_info())
 
-    def send_player_info(self, pid):
+    def push_money(self):
+        self.send_player_info()
+
+    def push_vitals(self):
+        """HP and stamina go by usrUp, never by rp_info: Entity.userUpdate
+        assigns hmax before hcur, while PersAttributes.rp_info assigns hp
+        first and clamps it against the maximum it has not raised yet."""
+        self.send("usrUp", id=0, **self.character().vitals())
+
+    def push_stats(self, **groups):
+        """Send rp_info unasked, whole or for the indexes named in
+        attribs=/skills=/specs=. The client asks for this frame once per
+        session and never again, so every change is pushed from here."""
+        self.send("rp_info", **self.character().rp_info(**groups))
+
+    def send_other_player_info(self, pid):
         """Answer getInfo;type=0 about another player.
 
         The asking client just built a Player entity for an id it saw in
@@ -722,24 +768,79 @@ class Session:
 
         Each group is a bitmask plus a dense list holding only the slots the
         mask sets. A specialisation with a negative value counts as not yet
-        learned.
+        learned. The client sends this once per session (PersAttributes
+        firstLoad), so this is the first and last time it asks.
         """
-        self.send("rp_info",
-                  a_attribs_mask=full_mask(ATTRIBS), a_attribs=[5] * ATTRIBS,
-                  f_attribs_mask=full_mask(ATTRIBS), f_attribs=[5] * ATTRIBS,
-                  a_skills_mask=full_mask(SKILLS), a_skills=[1] * SKILLS,
-                  f_skills_mask=full_mask(SKILLS), f_skills=[1] * SKILLS,
-                  xp_skills_mask=full_mask(SKILLS), xp_skills=[1] * SKILLS,
-                  xp_max_skills_mask=full_mask(SKILLS),
-                  xp_max_skills=[100] * SKILLS,
-                  a_specs_mask=full_mask(SPECS), a_specs=[-1] * SPECS,
-                  f_specs_mask=full_mask(SPECS), f_specs=[1] * SPECS,
-                  xp_specs_mask=full_mask(SPECS), xp_specs=[1] * SPECS,
-                  xp_max_specs_mask=full_mask(SPECS),
-                  xp_max_specs=[100] * SPECS,
-                  max_specs=3,
-                  hp=100, hp_max=100, sp=100, sp_max=100,
-                  ap_max=20, max_weight=50000, armor=1, lvl=1)
+        self.push_stats()
+
+    # --- training with a teacher ------------------------------------------
+    def training_open(self, p):
+        """ss_create;s_type=4: open the teacher's window.
+
+        Training.proposeTrainingAck opens it on res=0 and shows "Невозможно
+        начать обучение у <res>" otherwise. The window then needs nothing
+        more from the server: it is built from the rp_info already held and
+        from res/xmldocs/spec.xml over HTTP. The client only sends this from
+        the teacher's own cell or a neighbouring one (Gamer.proposeContact),
+        and the server asks for no less.
+        """
+        target = int(p.get("target", 0))
+        # The room owns the inhabitants now; the record is still (cell, type, root).
+        entry = self.room.npc(target) if self.room is not None else None
+        if not entry or entry[2] != world.TEACHER:
+            self.send("cmdAck", res=progression.ERR_NOT_FOUND)
+            return
+        if not progression.within_reach(self.pos, entry[0], self.loc.width,
+                                        self.loc.height):
+            self.send("cmdAck", res=progression.ERR_TOO_FAR)
+            return
+        self.training = target
+        self.send("cmdAck", res=0)
+
+    def training_upd(self, p):
+        """ss_upd inside a training session: learn, forget, or close.
+
+        Closing (s_status=0) is sent by Training.close without registering
+        an acknowledgement handler, so answering it would hand the reply to
+        whatever the client asks next. Learn and forget do register one, and
+        its handler is empty: the window redraws from the rp_info that has
+        to follow, and the purse from the userInfo_Player after it.
+        """
+        status = int(p.get("s_status", 0))
+        if status == progression.UPD_CLOSE:
+            self.training = None
+            return
+        # obj is a BigUINT: "x" plus the index in hex, no padding.
+        try:
+            idx = int(str(p.get("obj", "0")), 16)
+        except ValueError:
+            idx = -1
+        char = self.character()
+        why = None
+        if status == progression.UPD_LEARN:
+            afro, gold = char.spec_cost()
+            res = char.learn_spec(idx)
+            if res == progression.ERR_SKILL:
+                why = "Нужен навык не ниже %d" % progression.SPEC_MIN_SKILL[idx]
+            elif res == progression.ERR_MONEY:
+                why = "Не хватает %s" % ("%d афро" % afro if afro
+                                         else "%d голда" % gold)
+        elif status == progression.UPD_FORGET:
+            res = char.forget_spec(idx)
+        else:
+            res = progression.ERR_STATE
+        self.send("cmdAck", res=res)
+        if res != 0:
+            # The window shows nothing on a refusal (trainingAck is empty),
+            # so the reason goes to the chat the player has open.
+            if why:
+                self.say(why)
+            return
+        char.save(STORE)
+        attribs = ({progression.SPEC_ATTRIB[idx]}
+                   if progression.SPEC_ATTRIB[idx] is not None else set())
+        self.push_stats(attribs=attribs, skills=set(), specs={idx})
+        self.push_money()
 
     def cmd_ss_get_si(self, p):
         """Static info for one item type.
@@ -758,6 +859,9 @@ class Session:
 
     def cmd_ss_create(self, p):
         """Open a session with an NPC: trade, bank, training and the rest."""
+        if int(p.get("s_type", 0) or 0) == progression.SESSION_TRAINING:
+            self.training_open(p)
+            return
         self.npc_session = int(p.get("s_type", 0) or 0)
         self.send("cmdAck", res=0)
 
@@ -779,6 +883,9 @@ class Session:
         from the side that never sent ss_create; the relay will have to set
         npc_session for it.
         """
+        if self.training is not None:
+            self.training_upd(p)
+            return
         s_status = int(p.get("s_status", 0) or 0)
         if s_status == 0:
             self.npc_session = None

@@ -172,7 +172,9 @@ try:
     # --- and the next login starts from there -----------------------------
     c = Client(connect())
     lcall, lenter = enter(c)
-    check("restored where the link broke", lenter, "lenter;pos=492;aspd=1;amax=20;")
+    # amax is the character's action-point ceiling, 50 + 5 * best skill, which
+    # for a newborn is 50; it used to be a constant 20.
+    check("restored where the link broke", lenter, "lenter;pos=492;aspd=1;amax=50;")
     c.send("moveTo;path=|492|493|;")
     check("moved again", c.names(), ["cmdAck", "userMove"])
 

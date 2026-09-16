@@ -248,20 +248,21 @@ try:
     a.send("chWorld;")
     got = a.frames()
     check("Alice leaves for the map",
-          [f.split(";")[0] for f in got], ["cmdAck", "gmap"])
+          [f.split(";")[0] for f in got], ["cmdAck", "gmap", "marks"])
     check("Bob sees her go", b.frames(), ["lch;lostUser=%d;" % pid_a])
     check("and Alice, alone on the map, hears nothing", a.frames(0.3), [])
 
     b.send("chWorld;")
     got = b.frames()
     check("Bob leaves for the map",
-          [f.split(";")[0] for f in got], ["cmdAck", "gmap", "newUser", "userMove"])
+          [f.split(";")[0] for f in got], ["cmdAck", "gmap", "marks", "newUser", "userMove"])
     # newUser is an offset the client subtracts from its own cell
     # (GlobalMap.newUser: x = my.x - dx): same cell, zero offset.
-    check("Alice appears beside him", got[2],
+    # cmdAck, gmap, marks, then the neighbours
+    check("Alice appears beside him", got[3],
           "newUser;id=%d;dx=0;dy=0;" % pid_a)
     check("standing still at her absolute cell",
-          got[3], "userMove;id=%d;dx=5970;dy=1730;vx=0;vy=0;t=0;" % pid_a)
+          got[4], "userMove;id=%d;dx=5970;dy=1730;vx=0;vy=0;t=0;" % pid_a)
     got = a.frames()
     # the first heartbeat may already follow within the window
     check("Bob appears beside her", got[:2],
