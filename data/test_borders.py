@@ -160,6 +160,8 @@ def check_pockets(wet):
         assert opens == {travel.OPPOSITE[side]}, \
             "borders: pocket %d for walking %s opens %s" % (
                 loc_id, side, "".join(sorted(opens)) or "nothing")
+        assert travel.POCKET_OPEN[loc_id] == travel.OPPOSITE[side], \
+            "borders: travel.POCKET_OPEN disagrees about %d" % loc_id
         loc = world.location(loc_id)
         assert loc.title == "Скалы", "borders: pocket %d is %r" % (loc_id,
                                                                    loc.title)
