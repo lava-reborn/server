@@ -1,0 +1,19 @@
+# Everything, then back in only what the server reads at run time. A denylist
+# would have let the next wiki dump into the image without anyone noticing.
+*
+!server/
+!data/
+
+# Build inputs, not run-time tables: the raw wiki dumps the data/build_*.py
+# scripts were fed, 15 MB of pages nothing imports.
+data/wiki/
+data/wiki_world/
+
+# The database belongs on a volume. Copying a development one in would have it
+# shadowed by the mount at best, and shipped with accounts in it at worst.
+data/lava.db
+data/lava.db-wal
+data/lava.db-shm
+
+**/__pycache__/
+**/*.pyc
