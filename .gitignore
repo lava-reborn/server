@@ -1,5 +1,12 @@
 logs/
-tools/
+# The scripts under tools/ are ours; the Flash projector and Ruffle that live
+# beside them are downloaded binaries and stay out. Excluding the directory
+# itself would make the negation below unreachable -- git does not re-include
+# a file whose parent directory is excluded.
+tools/*
+!tools/*.py
+dist/
+.env
 data/lava.db
 __pycache__/
 *.pyc

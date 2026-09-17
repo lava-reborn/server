@@ -65,7 +65,7 @@ start_servers() {
   in_wsl "mkdir -p '$REPO_WSL/logs'
     LAVA_RES='$RES_WSL' LAVA_HOST=0.0.0.0 LAVA_PORT=$GAME_PORT \
       nohup python3 '$REPO_WSL/server/server.py'         > '$REPO_WSL/logs/game.log' 2>&1 &
-    LAVA_RES='$RES_WSL' LAVA_HTTP_PORT=$HTTP_PORT \
+    LAVA_RES='$RES_WSL' LAVA_HTTP_PORT=$HTTP_PORT LAVA_HTTP_RES=1 \
     LAVA_GAME_HOST=127.0.0.1 LAVA_GAME_PORT=$GAME_PORT \
       nohup python3 '$REPO_WSL/server/bootstrap_http.py' > '$REPO_WSL/logs/http.log' 2>&1 &
     sleep 1" >/dev/null 2>&1

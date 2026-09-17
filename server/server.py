@@ -38,7 +38,10 @@ from protocol import BigUInt, FrameReader, decode, frame, Str
 
 HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
 PORT = int(os.environ.get("LAVA_PORT", "9775"))
-POLICY_PORT = 843
+# Flash's own port for the socket policy. Configurable because a container
+# that drops NET_BIND_SERVICE cannot have it at all, and 0 turns the second
+# listener off outright: the policy is also answered inline on the game port.
+POLICY_PORT = int(os.environ.get("LAVA_POLICY_PORT", "843"))
 STORE = accounts.Store()
 
 # Every connection with a Session behind it, so a stop can reach them all.
@@ -1769,7 +1772,8 @@ async def handle_policy(reader, writer):
 
 
 async def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    logging.basicConfig(level=os.environ.get("LAVA_LOG_LEVEL", "INFO").upper(),
+                        format="%(asctime)s %(message)s")
     # Content is read before the first socket is open, never inside a
     # handler: a lazy load of the wiki tables once stalled the loop for two
     # seconds on whichever request touched an item first.
@@ -1778,13 +1782,14 @@ async def main():
     game = await asyncio.start_server(handle_client, HOST, PORT)
     log.info("game server on %s:%d", HOST, PORT)
     servers = [game]
-    try:
-        pol = await asyncio.start_server(handle_policy, HOST, POLICY_PORT)
-        log.info("policy server on %s:%d", HOST, POLICY_PORT)
-        servers.append(pol)
-    except PermissionError:
-        log.warning("no permission for port %d; policy served inline only",
-                    POLICY_PORT)
+    if POLICY_PORT:
+        try:
+            pol = await asyncio.start_server(handle_policy, HOST, POLICY_PORT)
+            log.info("policy server on %s:%d", HOST, POLICY_PORT)
+            servers.append(pol)
+        except PermissionError:
+            log.warning("no permission for port %d; policy served inline only",
+                        POLICY_PORT)
     # run.sh stop sends SIGTERM and a terminal sends SIGINT. Either one only
     # raises the flag; the leaving is done below, on the loop, so a handler
     # in the middle of a frame finishes it first. Without this the loop just

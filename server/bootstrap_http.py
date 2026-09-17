@@ -14,8 +14,20 @@ Entry path (lol/core/Session.as:88): when _root.logged == 1 and PATHTYPE == WEB,
 the client POSTs to the relative loaduser URL and takes host, port and login hash
 straight from the reply. That bypasses the hardcoded www.lava-online.ru domain
 and the game_session.php endpoint entirely.
+
+None of that is wanted when the player runs the client off their own disk.
+Serving csettings_v1.xml is exactly what flips PATHTYPE to WEB, so the whole
+/res/ tree -- assets, csettings, texts.xml, hints.xml -- sits behind
+LAVA_HTTP_RES, which is off by default. With it off this process is the
+registration page and the service replies, nothing else: the client stays in
+LOCAL mode, reads its own res/ off the disk and only opens the game socket.
+Turn it on (LAVA_HTTP_RES=1) for the WEB path, which is what run.sh and the
+test suites use.
 """
+import json
 import os
+import signal
+import threading
 from xml.sax.saxutils import escape
 import posixpath
 import re
@@ -33,6 +45,21 @@ RES_ROOT = world.RES
 GAME_HOST = os.environ.get("LAVA_GAME_HOST", "127.0.0.1")
 GAME_PORT = os.environ.get("LAVA_GAME_PORT", "9775")
 HTTP_PORT = int(os.environ.get("LAVA_HTTP_PORT", "8080"))
+# Inside a container 127.0.0.1 is the container's own loopback and no
+# published port reaches it, so the address to listen on is configuration.
+HTTP_HOST = os.environ.get("LAVA_HTTP_HOST", "127.0.0.1")
+
+
+def _flag(name, default="0"):
+    return os.environ.get(name, default).strip().lower() not in (
+        "", "0", "no", "off", "false")
+
+
+# Everything under /res/ -- the client's own files and the three documents
+# this process synthesises for them -- is one switch, because they are one
+# decision. Serving any of them means serving csettings_v1.xml, and that is
+# what puts the client in WEB mode.
+SERVE_RES = _flag("LAVA_HTTP_RES")
 
 CSETTINGS = """<?xml version="1.0" encoding="windows-1251"?>
 <settings>
@@ -193,6 +220,26 @@ class Handler(BaseHTTPRequestHandler):
                                host=GAME_HOST, port=GAME_PORT),
                    "text/html; charset=utf-8")
 
+    def _status(self):
+        """What a healthcheck can ask without a game client.
+
+        Touching the account store is the point: the page cannot register
+        anyone if the database is unreachable, and a process that answers
+        while its only job is broken is worse than one that is down.
+        """
+        store = accounts.Store()
+        try:
+            count = store.account_count()
+        finally:
+            store.close()
+        self._send(json.dumps({
+            "ok": True,
+            "accounts": count,
+            "strings": len(names.ALL),
+            "game": "%s:%s" % (GAME_HOST, GAME_PORT),
+            "res": SERVE_RES,
+        }), "application/json; charset=utf-8")
+
     def _register(self, body):
         form = parse_qs(body.decode("utf-8", "replace"))
         login = (form.get("login") or [""])[0]
@@ -247,8 +294,16 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in ("/", "/index.html"):
             self._page()
+        elif path == "/status":
+            self._status()
         elif path.endswith("/crossdomain.xml"):
             self._send(CROSSDOMAIN, "text/x-cross-domain-policy")
+        elif path.startswith("/res/") and not SERVE_RES:
+            # Assets are the player's own copy of the game; we never hand them
+            # out. Answering 404 rather than 403 is also the answer the client
+            # needs: a csettings_v1.xml that is not there is what leaves it in
+            # LOCAL mode, reading its own res/ off the disk.
+            self._send("not found", code=404)
         elif path == "/res/xmldocs/csettings_v1.xml":
             self._send(CSETTINGS.format(host=GAME_HOST, port=GAME_PORT,
                                         http_port=HTTP_PORT), "text/xml")
@@ -281,7 +336,19 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     print("res root : %s" % RES_ROOT)
     print("game srv : %s:%s" % (GAME_HOST, GAME_PORT))
-    print("http     : http://127.0.0.1:%d/" % HTTP_PORT)
+    print("http     : http://%s:%d/" % (HTTP_HOST, HTTP_PORT))
+    print("res serve: %s" % ("on" if SERVE_RES else "off (registration only)"))
     # Build the 1.9 MB string table before the client can ask for it.
     names.document()
-    ThreadingHTTPServer(("127.0.0.1", HTTP_PORT), Handler).serve_forever()
+    httpd = ThreadingHTTPServer((HTTP_HOST, HTTP_PORT), Handler)
+    # docker stop sends SIGTERM, whose default action kills the process where
+    # it stands. Nothing here is worth saving, but the listener should close
+    # and the log should say so rather than the container reporting 143.
+    for _sig in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(_sig, lambda *_a: threading.Thread(
+            target=httpd.shutdown, daemon=True).start())
+    try:
+        httpd.serve_forever()
+    finally:
+        httpd.server_close()
+        print("http stopped", flush=True)

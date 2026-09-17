@@ -222,6 +222,16 @@ def connect():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     db = sqlite3.connect(DB_PATH)
     db.row_factory = sqlite3.Row
+    # Two processes share this file: the game server saving characters and
+    # the registration page creating accounts. Under the default rollback
+    # journal a writer locks readers out for the whole transaction, so a
+    # registration arriving mid-save waited it out and sometimes gave up.
+    # WAL lets them past each other, and the timeout covers writer against
+    # writer. On a filesystem that cannot do WAL -- a Windows drive mounted
+    # into WSL is one -- sqlite quietly stays where it was, which is why
+    # data/ belongs on a real Linux volume (TASKS 1.2).
+    db.execute("PRAGMA journal_mode=WAL")
+    db.execute("PRAGMA busy_timeout=5000")
     db.executescript(SCHEMA)
     migrate(db)
     return db

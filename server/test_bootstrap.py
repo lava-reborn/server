@@ -19,7 +19,10 @@ def free_port():
 
 PORT = free_port()
 BASE = "http://127.0.0.1:%d" % PORT
-env = dict(os.environ, LAVA_HTTP_PORT=str(PORT),
+# LAVA_HTTP_RES=1: everything below is the WEB path, and serving /res/ at all
+# is what puts the client on it. The default is off, checked separately at the
+# end of this file.
+env = dict(os.environ, LAVA_HTTP_PORT=str(PORT), LAVA_HTTP_RES="1",
            LAVA_GAME_HOST="127.0.0.1", LAVA_GAME_PORT="9775")
 srv = subprocess.Popen([sys.executable, "bootstrap_http.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -183,10 +186,69 @@ try:
     check('landing page is the registration form',
           b'action="/register"' in page, True)
     check('landing page is utf-8', b'charset=utf-8' in page, True)
+    status = get("/status")
+    check('status answers json', b'"ok": true' in status, True)
+    check('status says res serving is on', b'"res": true' in status, True)
 finally:
     srv.terminate()
     try: srv.wait(timeout=5)
     except Exception: srv.kill()
+    _drain.join(timeout=2)
+
+# --- the default: registration, and not one file of the game ---------------
+# The owner hands friends an address, not the game. With /res/ off the client
+# has to run off the player's own disk, which is the same thing as saying
+# csettings_v1.xml must not be there: that document is what flips PATHTYPE to
+# WEB. So the check is both that assets stay in and that LOCAL mode holds.
+PORT2 = free_port()
+BASE2 = "http://127.0.0.1:%d" % PORT2
+env2 = dict(os.environ, LAVA_HTTP_PORT=str(PORT2),
+            LAVA_GAME_HOST="127.0.0.1", LAVA_GAME_PORT="9775")
+env2.pop("LAVA_HTTP_RES", None)
+srv2 = subprocess.Popen([sys.executable, "bootstrap_http.py"], cwd=HERE,
+                        env=env2, stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT, text=True)
+_log2 = []
+_drain2 = threading.Thread(target=lambda: _log2.extend(srv2.stdout), daemon=True)
+_drain2.start()
+
+def code_of(url, data=None):
+    try:
+        rq = urllib.request.Request(url, data=data,
+                                    method="POST" if data is not None else "GET")
+        return urllib.request.urlopen(rq, timeout=10).status
+    except urllib.error.HTTPError as e:
+        return e.code
+
+try:
+    up = False
+    for _ in range(150):
+        try:
+            urllib.request.urlopen(BASE2 + "/", timeout=1).read(); up = True; break
+        except urllib.error.URLError:
+            time.sleep(0.1)
+        except Exception:
+            up = True; break
+    if not up:
+        raise SystemExit("bootstrap http (res off) did not start")
+    check("assets are not served by default",
+          code_of(BASE2 + "/res/main.swf"), 404)
+    check("nor the settings that would take the client off its own disk",
+          code_of(BASE2 + "/res/xmldocs/csettings_v1.xml"), 404)
+    check("nor over POST", code_of(BASE2 + "/res/main.swf", b""), 404)
+    check("nor the string table",
+          code_of(BASE2 + "/res/database/texts.xml?all=1"), 404)
+    reg = urllib.request.urlopen(BASE2 + "/", timeout=5).read()
+    check("registration page still stands",
+          b'action="/register"' in reg, True)
+    check("and it needs nothing out of res/", b"/res/" in reg, False)
+    st = urllib.request.urlopen(BASE2 + "/status", timeout=5).read()
+    check("status says res serving is off", b'"res": false' in st, True)
+finally:
+    srv2.terminate()
+    try: srv2.wait(timeout=5)
+    except Exception: srv2.kill()
+    _drain2.join(timeout=2)
 
 print()
 if fails:
