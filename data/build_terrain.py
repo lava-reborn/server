@@ -501,10 +501,19 @@ def write_report(path, grid, f, res, settled, hints, names):
     add = out.append
     add("# Passability of the global map, read off the map\n")
     add("Built by `data/build_terrain.py` from the %d tiles of"
-        " `res/globalmap/full` that cover the playable rectangle, 8x8 pixels"
+        " `res/globalmap/full` that cover the rectangle it reads, 8x8 pixels"
         " a cell.\nThe server's own table is lost; this is a"
         " reconstruction, and the checks below are how far it can be"
         " trusted.\n" % f["tiles"])
+    add("> **The server reads the water of this table and nothing else.**"
+        " LAVA had no terrain layer: a cell was walled because the location"
+        " standing on it had no outzone that way, and every wasteland"
+        " template has all four. The `#` below is what the photograph says,"
+        " not what the world is -- it would wall off cells that open as"
+        " ordinary wasteland, and it contradicts 18 of the 949 exits the"
+        " settlement files declare. Where the rock actually stood:"
+        " `data/borders.json`, `recon/analysis/borders.md`,"
+        " `data/test_borders.py`. Everything below is about the picture.\n")
     add("## What the picture says\n")
     add("| kind | cells | share |")
     add("| --- | ---: | ---: |")
