@@ -57,6 +57,7 @@ TABLE = {int(k): v for k, v in _DATA["types"].items()}
 LESSORS = {int(k): [int(t) for t in v] for k, v in _DATA["lessors"].items()}
 DEFAULT_SET = [int(t) for t in _DATA["default_lessor"]]
 
+
 def get(type_id):
     """One vehicle's record, or None."""
     return TABLE.get(int(type_id))
