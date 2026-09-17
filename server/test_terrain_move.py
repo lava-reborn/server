@@ -1,4 +1,4 @@
-"""Walking on the global map now stops at the mountains.
+"""Walking on the global map: the lake stops it, and the rim is a place.
 
 The client is told a velocity and nothing else (GlobalMap.moveAck ->
 MapObject.startMove), extrapolates from its own figure and never asks again,
@@ -8,9 +8,12 @@ with nowhere to go is answered with the frame an arrival uses -- userMove for
 id 0 with zero speed, which is the only thing that both puts the figure back
 and stops it.
 
-Where the walls are comes from data/map_terrain.json, so this test looks up
-the cells it needs rather than naming them: refining the thresholds moves the
-rock about, but not what the server does when a walker meets it.
+What refuses a walker is now two things and neither is a photograph of a
+mountain: the lake, and the edge of the world. Rock is a location standing on
+a cell with no outzone facing out (data/borders.json), so walking into the
+rim means walking into a scene of rocks and finding no way on -- which is
+what this checks from the client's side of the socket. The ring itself, and
+the walk to all 262 settlements, are checked in data/test_borders.py.
 
     wsl.exe -e python3 server/test_terrain_move.py
 """
@@ -36,6 +39,7 @@ PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts                                                  # noqa: E402
+import travel                                                    # noqa: E402
 import world                                                     # noqa: E402
 
 accounts.DB_PATH = DB
@@ -134,27 +138,28 @@ def goto(c, gx, gy):
     return got[1]
 
 
-def wall_spot():
-    """An open cell with rock to the west of it and room to its east.
+def shore():
+    """An open cell with water to the west of it and room to its east.
 
-    Found rather than named: the table is a reconstruction and its walls move
-    when its thresholds are refined, but there is always a mountain within
-    sight of the market.
+    Found rather than named: Lake Nasser is read off the map's own tiles and
+    its outline moves a little when the reading is refined, but the lake is
+    always a few dozen cells north-west of the market.
     """
-    for gy in range(1700, 1780):
-        for gx in range(5900, 6100):
-            if (world.passable(gx, gy) and not world.passable(gx - 1, gy)
+    for gy in range(1660, 1760):
+        for gx in range(5880, 6100):
+            if (world.passable(gx, gy) and world.water(gx - 1, gy)
                     and all(world.passable(gx + d, gy) for d in (1, 2))):
                 return gx, gy
-    raise SystemExit("no wall anywhere near the start: the table is wrong")
+    raise SystemExit("no lake anywhere near the start: the table is wrong")
 
 
-# The valley the player who walked it remembers as closed, and its market.
+# The valley the owner walked, its market, and the eastern rim of the world.
 NUBIA = (6250, 6285, 1810, 1845)
 VALLEY_CELL = (6268, 1825)
+RIM_CELL = (world.MAP_X[1], 1700)
 
 try:
-    WALL_X, WALL_Y = wall_spot()
+    SHORE_X, SHORE_Y = shore()
     c = Client(connect())
     c.send("hello;minor=2;major=0;")
     c.send("login;hash=@%s@;" % CRED)
@@ -184,24 +189,24 @@ try:
           (param(got[0], "dx"), param(got[0], "vx"), param(got[0], "vy")),
           ("5971", "0", "0"))
 
-    # --- into a mountain: stopped in front of it ---------------------------
-    print("  ..  the nearest mountain: %d,%d, open ground to its east"
-          % (WALL_X - 1, WALL_Y))
-    goto(c, WALL_X + 1, WALL_Y)
+    # --- into the lake: stopped on its shore -------------------------------
+    print("  ..  the lake reaches %d,%d, open ground to its east"
+          % (SHORE_X - 1, SHORE_Y))
+    goto(c, SHORE_X + 1, SHORE_Y)
     c.send("moveTo;dy=0;dx=-1000;")
     got = c.frames()
-    check("a leg into the mountain is acknowledged, it is the client that walks",
+    check("a leg into the water is acknowledged, it is the client that walks",
           [f.split(";")[0] for f in got], ["moveAck"])
     check("westwards", float(param(got[0], "vx")) < 0, True)
     got = c.frames(wait=6)
     check("and the server stops it early, on its own timer",
           [f.split(";")[0] for f in got], ["userMove"])
     stopped = float(param(got[0], "dx"))
-    check("just inside the last open cell, not in the rock",
-          WALL_X <= stopped < WALL_X + 0.1, True)
+    check("just inside the last dry cell, not in the water",
+          SHORE_X <= stopped < SHORE_X + 0.1, True)
     check("at rest, and not moved off its row",
           (param(got[0], "vx"), param(got[0], "vy"), param(got[0], "dy")),
-          ("0", "0", str(WALL_Y)))
+          ("0", "0", str(SHORE_Y)))
 
     # --- and the next step is refused where it stands ----------------------
     c.send("moveTo;dy=0;dx=-1000;")
@@ -217,42 +222,91 @@ try:
     # And the server's own idea of where the player is agrees with the frame.
     c.send("chWorld;")
     got = c.frames()
-    check("walking into the map from there enters the cell in front of the wall",
+    check("walking into the map from there enters the cell on the shore",
           [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
-          and "g_id=%d;" % world.pack(WALL_X, WALL_Y) in got[1], True)
+          and "g_id=%d;" % world.pack(SHORE_X, SHORE_Y) in got[1], True)
     c.send("lenter;accept=1;")
     enter(c)
 
-    # --- the Nubian valley is walled in ------------------------------------
+    # --- the Nubian valley is not walled in any more ------------------------
+    # It was: the roughness of the photograph read the valley's boulder
+    # fields as mountains and left a run west stopped twenty cells short.
+    # 6263..6266 on this row was that wall; four cells west of the market is
+    # the middle of it. A walker crosses 0.35 of a cell a second, so this leg
+    # is a slow twelve seconds and no longer than it has to be.
     goto(c, *VALLEY_CELL)
-    c.send("moveTo;dy=0;dx=-2000;")
+    c.send("moveTo;dy=0;dx=-400;")
     got = c.frames()
     check("a run west out of the valley starts",
           [f.split(";")[0] for f in got], ["moveAck"])
-    got = c.frames(wait=8)
-    check("and ends against the valley's own rim",
-          [f.split(";")[0] for f in got], ["userMove"])
+    got = c.frames(wait=25)
+    check("and it goes the whole way", [f.split(";")[0] for f in got],
+          ["userMove"])
     out = float(param(got[0], "dx"))
-    check("still inside the valley, twenty cells short of where it was aimed",
-          NUBIA[0] <= out <= VALLEY_CELL[0], True)
-    check("stopped there", param(got[0], "vx"), "0")
+    check("four cells west of the valley's market, through where the wall was",
+          abs(out - (VALLEY_CELL[0] - 4)) < 0.01, True)
 
-    # --- a walker standing on rock is not trapped on it --------------------
+    # --- a walker who ends up in the water is not trapped there -------------
     # A location's side exit hands out the neighbouring cell without asking
-    # the ground, so a player can end up standing on a mountain; the first
-    # move then carries them off it (travel.walk).
-    rock = (WALL_X - 1, WALL_Y)
-    check("the cell west of the wall really is rock", world.passable(*rock), False)
-    goto(c, *rock)
+    # the ground, and /goto asks nothing at all; the first move then carries
+    # them back out (travel.walk).
+    wet = (SHORE_X - 1, SHORE_Y)
+    check("the cell west of the shore really is water", world.passable(*wet),
+          False)
+    goto(c, *wet)
     c.send("moveTo;dy=0;dx=100;")
     got = c.frames()
-    check("a move off the rock is allowed",
+    check("a move out of the water is allowed",
           [f.split(";")[0] for f in got], ["moveAck"])
     got = c.frames(wait=8)
-    check("and lands on open ground", [f.split(";")[0] for f in got], ["userMove"])
+    check("and lands on dry ground", [f.split(";")[0] for f in got],
+          ["userMove"])
     landed = float(param(got[0], "dx"))
-    check("east of the rock, on ground the table allows",
-          world.passable(landed, WALL_Y), True)
+    check("east of the water, on ground the table allows",
+          world.passable(landed, SHORE_Y), True)
+
+    # --- the edge of the world is a scene, not an error ---------------------
+    # The rim cell carries one of the client's own "Скалы" files, and that
+    # file has no outzone facing out, so there is nothing to walk off.
+    goto(c, RIM_CELL[0] - 1, RIM_CELL[1])
+    c.send("moveTo;dy=0;dx=1000;")
+    got = c.frames()
+    check("a run east at the rim starts", [f.split(";")[0] for f in got],
+          ["moveAck"])
+    got = c.frames(wait=8)
+    check("and stops on the last cell of the world",
+          [f.split(";")[0] for f in got], ["userMove"])
+    edge = float(param(got[0], "dx"))
+    check("inside the rim cell, not past it",
+          RIM_CELL[0] <= edge < RIM_CELL[0] + 1, True)
+    c.send("moveTo;dy=0;dx=500;")
+    got = c.frames(wait=2)
+    check("and there is nowhere further east to walk",
+          [f.split(";")[0] for f in got], ["userMove"])
+    check("the figure put back where it stands, at rest",
+          (float(param(got[0], "dx")), param(got[0], "vx"),
+           param(got[0], "vy")), (edge, "0", "0"))
+    c.send("chWorld;")
+    got = c.frames()
+    rim_loc = world.location(world.location_at(*RIM_CELL))
+    check("walking into the rim opens the rocks that stand on it",
+          [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
+          and "id=%d;" % rim_loc.id in got[1], True)
+    check("one of the border scenes the client ships",
+          (rim_loc.title, rim_loc.fn.startswith("B_")), ("Скалы", True))
+    check("an ordinary location on an ordinary cell, not a sub-location",
+          (int(param(got[1], "g_id")) >> 26,
+           int(param(got[1], "g_id")) & 0x3FFFFFF),
+          (0, world.pack(*RIM_CELL)))
+    check("with no exit cell facing out of the world",
+          travel.E in {s for s in travel.exit_sides(rim_loc).values()
+                       if s in travel.SIDES}, False)
+    c.send("lenter;accept=1;")
+    enter(c)
+    c.send("chWorld;")
+    got = c.frames()
+    check("and the map puts the player on the rim, not beyond it",
+          "x=%d;y=%d;" % RIM_CELL in got[1], True)
 
     c.send("logout;")
     c.frames()
@@ -267,6 +321,7 @@ finally:
     if "Traceback" in out:
         fails.append("server logged a traceback:\n" + out[-1500:])
 
+
 def _exit_cell_on(loc, side):
     """A cell of this location whose outzone leads that way, or raise."""
     for cell in range(loc.width * loc.height):
@@ -275,30 +330,26 @@ def _exit_cell_on(loc, side):
     raise LookupError(side)
 
 
-# --- the valley cannot be stepped out of, either ---------------------------
-# Walking the map stops at the rock, but a location's side exit used to hand
-# over the neighbouring cell without asking, so the ring could be crossed one
-# location at a time. Stand in the valley and try to leave towards a peak.
-import travel
-import world as _w
-
-valley = [(gx, gy) for (gx, gy) in _w.settlements()
-          if 6255 <= gx <= 6280 and 1815 <= gy <= 1840 and _w.passable(gx, gy)]
-walled = [(gx, gy, side) for (gx, gy) in valley for side in travel.SIDES
-          if not _w.passable(*travel.neighbour(gx, gy, side))]
-check("the valley has cells walled on some side", bool(walled), True)
-
-gx, gy, side = walled[0]
-refused = None
-try:
-    travel.plan_exit(_w.location(_w.location_at(gx, gy)),
-                     _exit_cell_on(_w.location(_w.location_at(gx, gy)), side),
-                     gx, gy)
-except travel.Refused as why:
-    refused = str(why)
-except Exception:
-    refused = "no exit cell on that side"
-check("leaving towards the rock is refused", refused is not None, True)
+# --- the valley can be stepped out of, too ---------------------------------
+# A location's side exit hands over the neighbouring cell, and it used to be
+# stopped by the photograph: six of the valley's exits pointed at cells the
+# roughness called rock, so the settlement's own file said "east from here"
+# and the server answered with a wall. What a file declares is now honoured.
+valley = [(gx, gy) for (gx, gy) in world.settlements()
+          if NUBIA[0] <= gx <= NUBIA[1] and NUBIA[2] <= gy <= NUBIA[3]]
+check("the valley holds settlements", len(valley) >= 10, True)
+walked = []
+for gx, gy in valley:
+    loc = world.location(world.location_at(gx, gy))
+    for side in travel.SIDES:
+        try:
+            cell = _exit_cell_on(loc, side)
+        except LookupError:
+            continue
+        ex = travel.plan_exit(loc, cell, gx, gy)
+        walked.append((ex.gx, ex.gy) == travel.neighbour(gx, gy, side))
+check("every exit the valley's files declare leads to the cell it names",
+      (len(walked) >= 20, set(walked)), (True, {True}))
 
 # --- the rocks face the right way ------------------------------------------
 # A scene walled on the wrong side leaves the way on open, which is how the
@@ -310,30 +361,18 @@ for _side in travel.SIDES:
     check("walking %s ends against a wall facing %s" % (_side, _side),
           _side in travel.ROCK_WALL[_tile], True)
     check("and %s is one of the client's border scenes" % _side,
-          _w.location(_tile).title, "Скалы")
+          world.location(_tile).title, "Скалы")
 for _h, _v in ((travel.W, travel.N), (travel.W, travel.S),
                (travel.E, travel.N), (travel.E, travel.S)):
     _corner = travel.ROCK_CORNER[(_h, _v)]
     check("the %s%s corner is walled both ways" % (_h, _v),
           set(travel.ROCK_WALL[_corner]), {_h, _v})
-
-# --- a player's word over the picture --------------------------------------
-# The ground is read off the tiles by how rough the photograph is, and a
-# footpath between boulders is rough: the two cells of the south-western
-# neck read as rock and sealed the Nubian valley off from the mainland.
-# data/terrain_verified.json is where somebody who has walked it says so.
-check("the neck is open", (_w.passable(6264, 1829), _w.passable(6265, 1829)),
-      (True, True))
-_seen = {(5970, 1730)}
-_q = [(5970, 1730)]
-while _q:
-    _x, _y = _q.pop()
-    for _n in ((_x + 1, _y), (_x - 1, _y), (_x, _y + 1), (_x, _y - 1)):
-        if _n not in _seen and _w.passable(*_n):
-            _seen.add(_n)
-            _q.append(_n)
-check("and the valley can be walked to from the black market",
-      [(6268, 1819) in _seen, (6268, 1825) in _seen], [True, True])
+# And the pocket a way that runs out ends in opens only backwards.
+for _side in travel.SIDES:
+    _pocket = world.location(travel.POCKET[_side])
+    _open = {s for s in travel.exit_sides(_pocket).values() if s in travel.SIDES}
+    check("the pocket for walking %s opens only %s back"
+          % (_side, travel.OPPOSITE[_side]), _open, {travel.OPPOSITE[_side]})
 
 print()
 if fails:
