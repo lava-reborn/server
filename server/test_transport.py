@@ -13,6 +13,11 @@ a desk refuses what it does not stock, a stranger's desk and a desk across
 the room; money is actually taken and actually required; tr/tr_hours appear
 only while the rental runs and survive a relogin; and the map speed moves by
 the vehicle's own multiplier, in the velocity and in the arrival alike.
+
+The two timed legs run over the same stretch of desert, once with the donkey
+and once after the rental has expired. The velocity is compared exactly; the
+arrival, being wall-clock, is bounded rather than divided, because this
+machine can stall for a second at a time reading the client's files.
 """
 import os
 import socket
@@ -125,11 +130,22 @@ def enter(c):
     return c.until("lenter", settle=1.5)
 
 
+def ack(c):
+    """Everything up to and including the acknowledgement, however slow.
+
+    Not a fixed window: reading a location's file off the Windows drive can
+    stall the server for a second or two under load, and a refusal that
+    arrives late is still the refusal being tested.
+    """
+    return c.until("cmdAck", settle=0)
+
+
 def walk(c, cell):
     """Stand on a cell. The server checks only the path's shape, so one
     hop is enough to be where the client would have walked to."""
     c.send("moveTo;path=|%d|;" % cell)
-    check("stood on %d" % cell, c.names(), ["cmdAck", "userMove"])
+    check("stood on %d" % cell,
+          [n for n, _p in c.until("userMove", settle=0)], ["cmdAck", "userMove"])
 
 
 def to_map(c):
@@ -140,6 +156,18 @@ def to_map(c):
 
 def to_location(c):
     c.send("chWorld;")
+    c.until("lcall")
+    return enter(c)
+
+
+def goto_cell(c, gx, gy):
+    """Stand on a named map cell, through the server's own /goto.
+
+    Both timed legs start here, so they cross the same ground: the mountains
+    clip a leg before the speed is ever applied (travel.walk), and two legs
+    over different stretches of desert would not be comparable.
+    """
+    c.send("userMsg;entry=@/goto %d %d@;group=0;" % (gx, gy))
     c.until("lcall")
     return enter(c)
 
@@ -156,10 +184,10 @@ def leg(c, dx):
     """
     started = time.time()
     c.send("moveTo;dx=%d;dy=0;" % dx)
-    ack, stopped = None, None
+    vector, stopped = None, None
     c.s.settimeout(0.1)
     try:
-        deadline = time.time() + 25
+        deadline = time.time() + 30
         while time.time() < deadline and stopped is None:
             try:
                 chunk = c.s.recv(65536)
@@ -175,14 +203,14 @@ def leg(c, dx):
                     continue
                 name, params = decode(raw.decode(ENC))
                 if name == "moveAck":
-                    ack = params
+                    vector = params
                 elif name == "userMove" and not params.get("vx"):
                     stopped = time.time()
     finally:
         c.s.settimeout(2)
-    if ack is None or stopped is None:
-        raise RuntimeError("the leg never ended (moveAck=%r)" % (ack,))
-    return abs(ack["vx"]), stopped - started
+    if vector is None or stopped is None:
+        raise RuntimeError("the leg never ended (moveAck=%r)" % (vector,))
+    return abs(vector["vx"]), stopped - started
 
 
 # The black market of Wadi-Halfa, where a new character starts, and its one
@@ -191,6 +219,11 @@ MARKET = world.location(102)
 LESSOR_CELL = next(cell for cell, t in MARKET.spawns if t == 653)
 FAR_CELL = 0                      # the north-west corner, a long way off
 DONKEY, CAMEL, GAZ = 1, 2, 8      # gold-priced, afro-priced, premium-only
+# Where both timed legs start, and how far they run: 1.6 cells due east over
+# open desert (world.passable is true for 5967..5974 at this row, so the
+# mountain clip never shortens either of them).
+START_GX, START_GY = 5970, 1730
+LEG = 160
 
 try:
     c = Client(connect())
@@ -202,6 +235,12 @@ try:
     c.send("actPlayer;")
     check("called into the market", one(c.until("lcall"), "lcall")["id"], 102)
     got = enter(c)
+    # The market's snapshot is 21 inhabitants and can outrun the settle
+    # window on a busy machine; the lessor is the frame this set is about.
+    _deadline = time.time() + 20
+    while not any(n == "userInfo_Lessor" for n, _p in got) \
+            and time.time() < _deadline:
+        got += c.frames(0.5)
 
     # --- the desk ----------------------------------------------------------
     lessor = one(got, "userInfo_Lessor")
@@ -238,35 +277,30 @@ try:
     check("an unknown type is answered too, not dropped",
           one(c.until("ts_si"), "ts_si")["type"], 60)
 
-    # --- how fast a walker crosses the map ----------------------------------
-    to_map(c)
-    foot_v, foot_t = leg(c, 80)
-    to_location(c)
-
     # --- refusals -----------------------------------------------------------
     walk(c, FAR_CELL)
     c.send("on_conv;op=2;mob=%d;p1=%d;p2=1;" % (lessor["id"], DONKEY))
     check("a desk across the room is out of reach",
-          c.frames(), [("cmdAck", {"res": progression.ERR_TOO_FAR})])
+          ack(c), [("cmdAck", {"res": progression.ERR_TOO_FAR})])
 
     walk(c, LESSOR_CELL)
     c.send("on_conv;op=2;mob=%d;p1=%d;p2=1;" % (commoner, DONKEY))
     check("a commoner rents nothing",
-          c.frames(), [("cmdAck", {"res": progression.ERR_NOT_FOUND})])
+          ack(c), [("cmdAck", {"res": progression.ERR_NOT_FOUND})])
 
     # 4 is server.RES_NOT_AVAILABLE, 21 RES_NO_MONEY; spelled out rather than
     # imported, because importing server.py opens a database of its own.
     c.send("on_conv;op=2;mob=%d;p1=%d;p2=1;" % (lessor["id"], GAZ))
     check("nor does this desk stock the Газ 67 Б",
-          c.frames(), [("cmdAck", {"res": 4})])
+          ack(c), [("cmdAck", {"res": 4})])
 
     c.send("on_conv;op=2;mob=%d;p1=%d;p2=0;" % (lessor["id"], DONKEY))
     check("nor rent anything for nought days",
-          c.frames(), [("cmdAck", {"res": 4})])
+          ack(c), [("cmdAck", {"res": 4})])
 
     c.send("on_conv;op=2;mob=%d;p1=%d;p2=1;" % (lessor["id"], CAMEL))
     check("a newborn cannot afford a camel at 12000 afro a day",
-          c.frames(), [("cmdAck", {"res": 21})])
+          ack(c), [("cmdAck", {"res": 21})])
 
     c.send("getInfo;lvl=0;id=0;type=0;")
     info = one(c.until("usrUp"), "userInfo_Player")
@@ -291,16 +325,11 @@ try:
           (info["tr"], info["tr_hours"]), (DONKEY, 48))
 
     # --- and it is faster ---------------------------------------------------
+    # The walker's own pace is measured at the end, once the rental has run
+    # out, over the same stretch; the two are compared there.
+    goto_cell(c, START_GX, START_GY)
     to_map(c)
-    ride_v, ride_t = leg(c, -80)
-    check("the map velocity is the donkey's multiplier over the walker's",
-          round(ride_v / foot_v, 3), transport.speed_mod(DONKEY))
-    print("      walked %.2fs, rode %.2fs over the same 0.8 of a cell"
-          % (foot_t, ride_t))
-    check("and the server's own arrival timer moved with it, not apart"
-          " from it (%.2f vs %.2f s)" % (foot_t, ride_t),
-          ride_t < foot_t
-          and abs(foot_t / ride_t - transport.speed_mod(DONKEY)) < 0.4, True)
+    ride_v, ride_t = leg(c, LEG)
     to_location(c)
 
     # --- across a relogin ---------------------------------------------------
@@ -339,10 +368,31 @@ try:
     check("an expired rental sends neither key, or the client rides a"
           " transport of type 0",
           [k for k in ("tr", "tr_hours") if k in info], [])
+
+    # --- the same stretch on foot, for the comparison ------------------------
+    goto_cell(c, START_GX, START_GY)
     to_map(c)
-    expired_v, _t = leg(c, 40)
-    check("and the walker is back to walking pace",
-          round(expired_v / foot_v, 3), 1.0)
+    foot_v, foot_t = leg(c, LEG)
+    check("with the rental gone the map velocity is the walker's again,"
+          " and under it the donkey's was exactly its multiplier",
+          round(ride_v / foot_v, 3), transport.speed_mod(DONKEY))
+
+    # The velocity above is exact; the arrival is wall-clock, so it is
+    # checked as a bound rather than a ratio. What would be wrong is a
+    # server that boosts the velocity and leaves the timer on foot: the ride
+    # would then take as long as the walk. Each leg is allowed to run late
+    # -- the machine can stall for a second under load -- but not early, and
+    # the ride has to land inside the time the walk's own timer would have
+    # taken.
+    ride_ideal, foot_ideal = LEG / 100.0 / ride_v, LEG / 100.0 / foot_v
+    print("      rode %.2fs (timer says %.2f), walked %.2fs (timer says %.2f)"
+          % (ride_t, ride_ideal, foot_t, foot_ideal))
+    check("neither leg beat its own timer",
+          ride_t > ride_ideal - 0.1 and foot_t > foot_ideal - 0.1, True)
+    check("the ride was over before a walk's timer would have finished",
+          ride_t < foot_ideal, True)
+    check("and the walk was not quietly boosted too",
+          foot_t > ride_ideal + 0.5, True)
     c.send("logout;")
     c.frames()
 
