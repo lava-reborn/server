@@ -130,6 +130,24 @@ def main():
                  overlap / rows if rows else float('nan'), rows))
 
     print()
+    print('--- the pairs that actually separate the hypotheses ---')
+    for other in ('C  1=E 2=N 3=W 4=S (x mirrored)',
+                  'D  1=W 2=S 3=E 4=N (y mirrored)'):
+        sa = {v: k for k, v in HYP['A  1=W 2=N 3=E 4=S (server today)'].items()}
+        so = {v: k for k, v in HYP[other].items()}
+        print('  A over %s:' % other)
+        for a, la, oa, b, lb, ob, step in usable:
+            back = (-step[0], -step[1])
+            ja = bool(oa.get(sa[step])) and bool(ob.get(sa[back]))
+            jo = bool(oa.get(so[step])) and bool(ob.get(so[back]))
+            if ja and not jo:
+                print('     %s loc %-5d codes=%-5s --%s--> %s loc %-5d codes=%s'
+                      % (a, la, ''.join(sorted(set(oa) & set('1234'))),
+                         'E' if step[0] else 'S', b, lb,
+                         ''.join(sorted(set(ob) & set('1234')))))
+            elif jo and not ja:
+                print('     AGAINST A: %s loc %d --> %s loc %d' % (a, la, b, lb))
+    print()
     print('--- the same test restricted to pairs where at least one location '
           'lacks a side ---')
     tight = [t for t in usable
