@@ -63,11 +63,15 @@ H = GY1 - GY0 + 1
 
 # --- the rules, and the numbers they turn on -------------------------------
 # ROUGH is the one that matters. Raising it opens the mountains up; lowering
-# it walls the world off into pockets. 20 is the loosest value that still
-# closes the ring around the Nubian valley, which is the one piece of
-# passability a player remembers first-hand (TASKS 8.10): at 21 the ring
-# leaks at its western corner and the valley joins the rest of the world.
-ROUGH = 20.0              # smoothed mean absolute deviation of luminance
+# it walls the world off into pockets. It was first set to 20, the loosest
+# value that still sealed the Nubian valley -- but the player who remembers
+# the game says the valley has a footpath in, so that constraint was never
+# real. At 20 only 2 of the valley's 16 settlements could be walked to and
+# 17 settlements in all were cut off: roughness reads a boulder field as a
+# mountain, and the valley is full of them. 26 is the tightest value at
+# which every settlement of the valley connects and all but one on the whole
+# map do, with 2.5% of the ground still standing as rock.
+ROUGH = 26.0              # smoothed mean absolute deviation of luminance
 WATER = 2.0               # mean blue over mean red, in levels
 DRAWN = 0.25              # a cell painted over more than this is not measured
 DARK = 120.0              # passable, but lava field or wadi rather than sand
