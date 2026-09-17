@@ -235,6 +235,64 @@ def location_at(gx, gy):
     return pack(cell[0], cell[1]) if found is None else found
 
 
+_TERRAIN = None
+
+# The characters data/map_terrain.json uses for ground nobody walks over.
+BLOCKED = "#~"
+
+
+def terrain():
+    """The map's ground, as (bounds, rows) with one character per cell.
+
+    RECOVERED, not original. The server that knew which cells were mountain
+    is gone; data/build_terrain.py reads the passability back out of the
+    client's own map tiles -- roughness of the photograph for rock, blue over
+    red for water -- and checks it against every settlement and every map
+    tooltip. See data/map_terrain_report.md for how far it can be trusted.
+
+    Missing or broken, the table leaves the map as it was before: walkable
+    everywhere inside its rectangle. A server that cannot read a file has no
+    business freezing the world.
+    """
+    global _TERRAIN
+    if _TERRAIN is None:
+        # The rectangle is travel.MAP_X/MAP_Y, repeated here because travel
+        # imports this module and not the other way round.
+        _TERRAIN = ((5833, 1600, 6305, 2110), [])
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "map_terrain.json"),
+                      encoding="utf-8") as fh:
+                doc = json.load(fh)
+            b = doc["bounds"]
+            rows = doc["rows"]
+            wide = b["gx1"] - b["gx0"] + 1
+            high = b["gy1"] - b["gy0"] + 1
+            if len(rows) != high or any(len(r) != wide for r in rows):
+                raise ValueError("map_terrain.json does not fill its bounds")
+            _TERRAIN = ((b["gx0"], b["gy0"], b["gx1"], b["gy1"]), rows)
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+    return _TERRAIN
+
+
+def passable(gx, gy):
+    """Whether a walker can stand on a map cell.
+
+    Floor, not round, like location_at: the cell under a position is the one
+    the client draws the figure on. Outside the map's rectangle nothing is
+    walkable -- the edge of the world is crossed through a location's exit,
+    not by walking off the map.
+    """
+    (gx0, gy0, gx1, gy1), rows = terrain()
+    x, y = int(math.floor(gx)), int(math.floor(gy))
+    if not (gx0 <= x <= gx1 and gy0 <= y <= gy1):
+        return False
+    if not rows:
+        return True
+    return rows[y - gy0][x - gx0] not in BLOCKED
+
+
 _SUBSTITUTES = None
 
 
