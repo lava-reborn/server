@@ -435,6 +435,34 @@ def sketch(grid, step=8):
     return out
 
 
+def sketch_reach(grid, lab, start, step=8):
+    """The same blocks, but showing what a walker can get to: `o` marks a
+    block holding ground that is cut off from the start."""
+    out = []
+    for y in range(0, H, step):
+        line = []
+        for x in range(0, W, step):
+            pocket = blocked = total = 0
+            for yy in range(y, min(H, y + step)):
+                for xx in range(x, min(W, x + step)):
+                    i = yy * W + xx
+                    total += 1
+                    if grid[i] not in PASSABLE:
+                        blocked += 1
+                    elif lab[i] != start:
+                        pocket += 1
+            if pocket:
+                line.append("o")
+            elif blocked * 2 > total:
+                line.append("#")
+            elif blocked:
+                line.append("-")
+            else:
+                line.append(".")
+        out.append("".join(line))
+    return out
+
+
 def zoom(grid, gx0, gy0, w, h, settled):
     out = []
     for gy in range(gy0, gy0 + h):
@@ -542,6 +570,14 @@ def write_report(path, grid, f, res, settled, hints, names):
         % (GX0, GX1, GY0, GY1))
     add("```")
     for line in sketch(grid):
+        add(line)
+    add("```\n")
+    add("## What the walker can reach, eight cells to a character\n")
+    add("The same blocks again: `o` is a block that holds ground cut off from"
+        " the start -- the Nubian valley and a handful of one-cell pockets --"
+        " `#` mostly blocked, `-` a little broken, `.` open and reachable.\n")
+    add("```")
+    for line in sketch_reach(grid, res["labels"], res["start"]):
         add(line)
     add("```\n")
     add("## Where to distrust this\n")
