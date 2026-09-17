@@ -427,7 +427,6 @@ class Fighter:
         """
         self.dead = bool(row is not None and row["death"])
         self.died_at = now() if self.dead else -1e9
-        self.last_hostile = -1e9
 
     def close(self):
         """Connection gone. Must not raise: Session.close runs this before
