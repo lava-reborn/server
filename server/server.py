@@ -859,6 +859,10 @@ class Session:
         moveAck only sets a velocity; the client extrapolates from its own
         position and never asks again, so arrival has to be timed here and
         confirmed with a userMove carrying zero speed.
+
+        The mountains are the server's to keep: the client walks wherever it
+        is pointed and asks nothing, so a leg that runs into rock or water is
+        cut here and the player is stopped in front of it.
         """
         if "trg" in p:
             return                      # intercepting a player: not implemented
@@ -871,7 +875,23 @@ class Session:
         dist = (dx * dx + dy * dy) ** 0.5
         if dist < 0.01:
             return
-        tx, ty = self.gx + dx, self.gy + dy
+        # Only as far as the ground allows (world.passable, recovered by
+        # data/build_terrain.py): the leg ends just inside the last open cell.
+        tx, ty = travel.walk(self.gx, self.gy, dx, dy)
+        dx, dy = tx - self.gx, ty - self.gy
+        dist = (dx * dx + dy * dy) ** 0.5
+        if dist < 0.01:
+            # Nowhere to go. The map has no refusal frame: moveAck carries a
+            # velocity and nothing else, so a zero one would stop the figure
+            # wherever the client has already drawn it, and cor_pos is a
+            # location frame the map never listens for (GlobalMap.as registers
+            # userMove, moveAck and marks). userMove for id 0 says both things
+            # at once -- GlobalMap.userMove assigns walker.x/y and then
+            # startMove(0,0,0) -- which is exactly what an arrival sends, so
+            # the same frame confirms standing still.
+            self.cancel_travel()
+            self.arrive(self.gx, self.gy)
+            return
         vx, vy = dx / dist * TRAVEL_SPEED, dy / dist * TRAVEL_SPEED
         self.send("moveAck", vx=vx, vy=vy, t=0)
 
