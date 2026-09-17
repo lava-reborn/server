@@ -137,16 +137,18 @@ try:
     everything = get('/res/database/texts.xml?all=1')
     check('all=1 is not empty', len(everything) > 100000, True)
     sys.path.insert(0, HERE)
-    import world, items, quests
+    import world, items, quests, transport
     ids = set(world.mob_types())
     ids |= {items.STRING_ID_OFFSET + t for t in items.catalogue()}
     # item descriptions from the wiki, the id ss_si_* puts in desc
     ids |= {items.DESC_ID_OFFSET + t for t in items.wiki_descs()}
     # quest names and texts, plus the shared empty string they fall back to
     ids |= set(quests.strings())
+    # vehicle names and descriptions, the ids ts_si puts in name and desc
+    ids |= set(transport.strings())
     have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
     check('every name the server sends is preloaded', ids - have, set())
-    check('creature, item, description and quest ids do not collide',
+    check('creature, item, description, quest and transport ids do not collide',
           len(have), len(ids))
     # the wiki's Russian names replace the internal ones under the same ids
     body = everything.decode('utf-8')
