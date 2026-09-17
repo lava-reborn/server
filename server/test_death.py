@@ -301,6 +301,17 @@ try:
           [(n, p.get("res", p.get("id"))) for n, p in got
            if n in ("cmdAck", "lcall")], [("cmdAck", 0), ("lcall", MARKET)])
     enter(w)
+    # The same journey from the global map, which is the other side
+    # Session.go_home has to work from: off the map, onto the home cell, and
+    # into the location standing on it.
+    w.send("chWorld;")
+    got = w.until(lambda f: f[0] == "gmap", 2)
+    check("out to the map first", named(got, "gmap") != [], True)
+    chat(w, "/home")
+    got = w.until(lambda f: f[0] == "lcall", 2)
+    check("/home off the global map lands in the location all the same",
+          [p["id"] for p in named(got, "lcall")], [MARKET])
+    enter(w)
     chat(w, "/goto %d" % DUMP)
     w.until(lambda f: f[0] == "lcall", 2)
     enter(w)
@@ -405,7 +416,9 @@ try:
     v.send("logout;")
     v.frames(0.3)
     v.s.close()
-    w.frames(0.5)
+    check("a corpse that logs out does not stay standing in the room",
+          [p for n, p in w.frames(0.8) if n == "lch" and "lostUser" in p],
+          [{"lostUser": VICTIM_PID}])
     v = Client(connect())
     got = login(v, VICTIM)
     check("a dead character is announced dead at the character screen",
