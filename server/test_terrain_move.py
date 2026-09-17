@@ -267,6 +267,39 @@ finally:
     if "Traceback" in out:
         fails.append("server logged a traceback:\n" + out[-1500:])
 
+def _exit_cell_on(loc, side):
+    """A cell of this location whose outzone leads that way, or raise."""
+    for cell in range(loc.width * loc.height):
+        if travel.side_at(loc, cell) == side:
+            return cell
+    raise LookupError(side)
+
+
+# --- the valley cannot be stepped out of, either ---------------------------
+# Walking the map stops at the rock, but a location's side exit used to hand
+# over the neighbouring cell without asking, so the ring could be crossed one
+# location at a time. Stand in the valley and try to leave towards a peak.
+import travel
+import world as _w
+
+valley = [(gx, gy) for (gx, gy) in _w.settlements()
+          if 6255 <= gx <= 6280 and 1815 <= gy <= 1840 and _w.passable(gx, gy)]
+walled = [(gx, gy, side) for (gx, gy) in valley for side in travel.SIDES
+          if not _w.passable(*travel.neighbour(gx, gy, side))]
+check("the valley has cells walled on some side", bool(walled), True)
+
+gx, gy, side = walled[0]
+refused = None
+try:
+    travel.plan_exit(_w.location(_w.location_at(gx, gy)),
+                     _exit_cell_on(_w.location(_w.location_at(gx, gy)), side),
+                     gx, gy)
+except travel.Refused as why:
+    refused = str(why)
+except Exception:
+    refused = "no exit cell on that side"
+check("leaving towards the rock is refused", refused is not None, True)
+
 print()
 if fails:
     print("FAILED %d:" % len(fails))

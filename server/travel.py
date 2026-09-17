@@ -352,6 +352,14 @@ def plan_exit(loc, pos, gx, gy):
         raise Refused("Здесь нет выхода")
     if side in SIDES:
         nx, ny = neighbour(gx, gy, side)
+        # The mountains hold here too. Walking the map stops at the rock
+        # (move_on_map), but a location's side exit handed over the next
+        # cell without looking, so a ring of peaks could be stepped over
+        # one location at a time -- which is how the Nubian valley, sealed
+        # on the map, was still being walked out of. A player already
+        # standing on rock is not locked in: only the far side is asked.
+        if not world.passable(nx, ny) and world.passable(gx, gy):
+            raise Refused("Дальше горы, здесь не пройти")
         dest = world.location(destination(nx, ny))
         return Exit(dest.id, arrival_cell(dest, OPPOSITE[side]), nx, ny)
     rec = door(loc.id, side)
