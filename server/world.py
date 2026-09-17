@@ -219,6 +219,38 @@ def settlements():
     return _SETTLEMENTS
 
 
+_BORDERS = None
+
+
+def borders():
+    """Map cell -> location id, for the ring of rock around the world.
+
+    PROPOSED, not recovered, and the nearest thing to the original there can
+    be: the client ships the kit a wall was built out of -- four sides in two
+    variants, four corners, all titled "Скалы", all war=1 -- and a tile's wall
+    is the side its outzones never touch. data/build_borders.py lays one per
+    rim cell with the wall facing out, so the edge of the world is a place a
+    player walks into and finds rocks, rather than a line a walker is stopped
+    at for no visible reason. recon/analysis/borders.md has the evidence.
+
+    Missing or broken, the world simply has open desert on its rim and the
+    rectangle alone holds the walker in.
+    """
+    global _BORDERS
+    if _BORDERS is None:
+        _BORDERS = {}
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "borders.json"),
+                      encoding="utf-8") as fh:
+                for cell, loc_id in json.load(fh)["cells"].items():
+                    gx, gy = cell.split(",")
+                    _BORDERS[(int(gx), int(gy))] = int(loc_id)
+        except (OSError, ValueError, KeyError):
+            pass
+    return _BORDERS
+
+
 _CELL_OF = None
 
 
@@ -242,8 +274,14 @@ def cell_of(loc_id):
 def location_at(gx, gy):
     """Which location a map cell leads into.
 
-    Always answers: a cell with no settlement on it is open desert, and the
-    packed cell is its own location id.
+    Three tables in order of how well they are known: the settlement placed
+    there, then the rock of the world's rim, then -- always, for every other
+    cell -- open desert, whose packed cell is its own location id.
+
+    The rim comes second because a settlement is evidence and the ring is a
+    proposal; data/build_borders.py leaves those cells out of the ring for
+    the same reason, and this order holds even if somebody adds a settlement
+    on the rim by hand in settlements_verified.json.
     """
     # Floor, not round: the client's own cell under a position is
     # Math.floor(x) (DisplayGlobalMap.as:207, DisplayLandscape.as:29), the
@@ -252,6 +290,8 @@ def location_at(gx, gy):
     # sent the half of the square past its centre into the neighbour.
     cell = (int(math.floor(gx)), int(math.floor(gy)))
     found = settlements().get(cell)
+    if found is None:
+        found = borders().get(cell)
     return pack(cell[0], cell[1]) if found is None else found
 
 

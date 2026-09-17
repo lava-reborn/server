@@ -31,8 +31,9 @@ client lets us check (182 "Западные Предгорья" on gx 5833 and 3
 Предгорья" on gy 1600) have no outward exit of their own, which is what a
 cell on the edge of the world is supposed to look like.
 
-    python3 data/build_borders.py                # the server's rectangle
-    python3 data/build_borders.py --bounds artwork   # the artwork's rectangle
+    python3 data/build_borders.py                    # the world's rectangle
+    python3 data/build_borders.py --bounds captions  # the caption box it was
+    python3 data/build_borders.py --bounds artwork   # every drawn cell
 """
 import json
 import os
@@ -45,16 +46,19 @@ import world                                                     # noqa: E402
 
 RES = world.RES
 
-# The rectangle the server calls the world today (travel.MAP_X, travel.MAP_Y).
-# It is the bounding box of the 414 captions in res/database/locations.xml,
-# nothing more.
-SERVER_BOUNDS = (5833, 6305, 1600, 2110)
+# The rectangle the server calls the world, and the ring is built on it.
+SERVER_BOUNDS = (world.MAP_X[0], world.MAP_X[1], world.MAP_Y[0], world.MAP_Y[1])
+# What it used to be: the bounding box of the 414 captions in
+# res/database/locations.xml, nothing more. Its west and north edges are the
+# real ones and stayed; its east and south are the ones the two settlements
+# sitting on them argue with (303 "Выход с карьера" on 6305,1841 and 280
+# "Шахта Мероэ" on 5943,2110 both have exits pointing outward).
+CAPTION_BOUNDS = (5833, 6305, 1600, 2110)
 # What res/globalmap/full actually draws: tiles tx 182..197, ty 50..66 at 32
-# cells a tile. Past it the client has no picture to show. The west and north
-# edges of the two rectangles agree; the east and south do not, and the two
-# settlements sitting on the server's east and south rim (303 "Выход с
-# карьера", 280 "Вход в Свинцовую шахту") still have exits pointing outward,
-# so the world does go on there.
+# cells a tile. Past it the client has no picture to show at all. Its east and
+# south edges are the world's; its west edge is nine cells beyond the
+# "Западные Предгорья" the client's own captions put the wall at, so the world
+# does not use it.
 ARTWORK_BOUNDS = (5824, 6335, 1600, 2143)
 
 # id -> the side its wall faces, read off the file's own outzones
@@ -168,6 +172,8 @@ def main():
         arg = sys.argv[sys.argv.index("--bounds") + 1]
         if arg == "artwork":
             bounds, which = ARTWORK_BOUNDS, "artwork"
+        elif arg == "captions":
+            bounds, which = CAPTION_BOUNDS, "captions"
         elif arg != "server":
             gx0, gx1, gy0, gy1 = (int(v) for v in arg.split(","))
             bounds, which = (gx0, gx1, gy0, gy1), "given"

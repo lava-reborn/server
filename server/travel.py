@@ -18,10 +18,20 @@ data/settlements.json or open desert. A door is a lookup in data/exits.json,
 and only entries recovered with some confidence are followed; the rest are
 refused with a word in chat rather than sent somewhere wrong.
 
+The rim of the world is a ring of rock scenes standing on the rim cells
+themselves (data/borders.json, world.borders): a wall is a location with no
+outzone that way, which is the only kind of wall LAVA ever had. Walking into
+one is walking into a place, and there is simply no exit cell on its outward
+side to stand on. Where the way still runs out -- the last cell before a
+cell nobody can enter -- the answer is one of the kit's four dead-end
+pockets, entered over the edge the player came in by.
+
 Past the map's rectangle lie the four "Граница пустоши" files,
 locations/deadloc/0..3: no inhabitants, no obstacles, and zones along one
-edge only, west, north, east, south by file number. A step off the map
-opens the one whose single exit faces back in.
+edge only, west, north, east, south by file number. The ring stands in front
+of them now, so they are what a cell outside the world resolves to -- a
+character whose saved home fell outside it, or a /goto past the edge -- and
+the way back in is their one row of zones.
 
 Everything here is a function of the location, the cell and the map
 position; the Session applies the answer and sends the frames.
@@ -232,21 +242,12 @@ def is_deadloc(loc_id):
     return loc_id >> 28 == 4
 
 
-# The border ring the client ships: twelve files titled "Скалы", named for
-# the edge they are, all war=1. Walking into the mountains is meant to look
-# like arriving among rocks with no way on, not like an error window: the
-# player gets one of these and backs out the way they came.
-#
-# The scene is a dead end by construction. The map cell does not change --
-# it is the cell the player was standing on, exactly as for an interior --
-# so nothing can be walked around, and to=1 from inside simply returns to
-# the location of that cell.
-# Which way each scene is walled is read off its own outzones: the one side
-# with no cell to leave by. The file names are no guide at all -- B_LeftSide
-# is the tile walled on the EAST, B_DownSide the one walled on the NORTH --
-# so the table below is the data's and not the name's. Walking east into the
-# rock has to land in a scene whose wall faces east, or the player arrives
-# among mountains with the way on still open.
+# The rock kit the client ships: files titled "Скалы", library "Mountains",
+# all war=1 -- four sides in two variants, four corners, four dead-end
+# pockets. Which way each one is walled is read off its own outzones: the one
+# side with no cell to leave by. The file names are no guide at all --
+# B_LeftSide is the tile walled on the EAST, B_DownSide the one walled on the
+# NORTH -- so every table here is the data's and not the name's.
 ROCK_WALL = {1: (E,), 2: (E,), 12: (W,), 13: (W,),
              10: (N,), 11: (N,), 15: (S,), 16: (S,),
              0: (W, S), 3: (W, N), 8: (E, S), 9: (E, N)}
@@ -254,15 +255,37 @@ ROCK_SIDE = {E: (1, 2), W: (12, 13), N: (10, 11), S: (15, 16)}
 ROCK_CORNER = {(W, S): 0, (W, N): 3, (E, S): 8, (E, N): 9}
 ROCK_IDS = frozenset(ROCK_WALL)
 
+# The four pockets, by the direction the player was walking when the way ran
+# out. A pocket is open on exactly one side, and the side that has to be open
+# is the one the player comes in over: walking east, they arrive at the
+# scene's western edge, so the scene wanted is the one whose only opening
+# faces west -- 14, whose file is called B_LeftPocket. Again, not the name.
+POCKET = {E: 14, W: 4, N: 7, S: 40}
+POCKET_OPEN = {14: W, 4: E, 7: S, 40: N}
+POCKET_IDS = frozenset(POCKET.values())
+
+# A scene of rock is a place, not a cell: standing in one, the map cell is
+# still the cell the player walked in from, exactly as for an interior. So
+# to=1 out of it goes back to that cell's own location -- unless the rock IS
+# that cell's location, which is what the ring around the world is, and then
+# it is walked out of like any other place, by whichever sides its file
+# leaves open.
+SCENE_IDS = ROCK_IDS | POCKET_IDS
+
 
 def rock_for(side, gx, gy):
-    """Which rock scene lies that way. A corner when the ground is gone on
-    both axes, otherwise one of the side's two variants, picked from the
-    cell so the same spot always shows the same rocks."""
+    """Which wall of the ring stands on a rim cell, walking that way.
+
+    This is the rule data/borders.json is built by (data/build_borders.py
+    lays the same tiles on the same cells, and data/test_borders.py checks
+    the two agree cell by cell). A corner when the ground is gone on both
+    axes, otherwise one of the side's two variants, picked from the cell so
+    the same spot always shows the same rocks.
+    """
     if side in (W, E):
         for updown in (N, S):
             nx, ny = neighbour(gx, gy, updown)
-            if not world.passable(nx, ny) or not world.in_map(nx, ny):
+            if not world.in_map(nx, ny):
                 corner = ROCK_CORNER.get((side, updown))
                 if corner is not None:
                     return corner
@@ -273,9 +296,16 @@ def rock_for(side, gx, gy):
     return pair[(int(gx) + int(gy)) % len(pair)]
 
 
-def rock_exit(side, gx, gy):
-    """An Exit into the rocks, standing on the edge one came in over."""
-    loc_id = rock_for(side, gx, gy)
+def dead_end(side, gx, gy):
+    """An Exit into a pocket of rock: the scene for a way that runs out.
+
+    Walking up to the edge of the world is meant to look like arriving among
+    rocks with no way on, not like an error window. The pocket is a dead end
+    by construction -- one opening, the one the player came in by -- and the
+    map cell does not change, so nothing can be walked around through it and
+    backing out lands exactly where it started.
+    """
+    loc_id = POCKET[side]
     rock = world.location(loc_id)
     try:
         pos = arrival_cell(rock, OPPOSITE[side])
@@ -399,9 +429,11 @@ def door_arrival(loc, from_loc_id):
 def plan_exit(loc, pos, gx, gy):
     """Where chWorld;to=1 from this cell leads. Raises Refused when it is
     not an exit cell, or a door whose far side is not known well enough."""
-    if loc.id in ROCK_IDS:
-        # A dead end: whichever way the rocks let you walk, the way out is
-        # back to the place the cell holds.
+    if loc.id in SCENE_IDS and world.location_at(gx, gy) != loc.id:
+        # A scene of rock the player walked into rather than onto: whichever
+        # way it lets them walk, the way out is back to the place the cell
+        # holds. The ring around the world is the other case -- there the
+        # rock is the cell, and its own outzones answer below.
         back = world.location(world.location_at(gx, gy))
         return Exit(back.id, back.entry_cell(), int(gx), int(gy))
     side = side_at(loc, pos)
@@ -409,18 +441,17 @@ def plan_exit(loc, pos, gx, gy):
         raise Refused("Здесь нет выхода")
     if side in SIDES:
         nx, ny = neighbour(gx, gy, side)
-        # The mountains hold here too. Walking the map stops at the rock
-        # (move_on_map), but a location's side exit handed over the next
-        # cell without looking, so a ring of peaks could be stepped over
-        # one location at a time -- which is how the Nubian valley, sealed
-        # on the map, was still being walked out of. A player already
-        # standing on rock is not locked in: only the far side is asked.
-        # Rock ahead, or the end of the map: the border scene, and the cell
-        # stays where it is. Refusing here used to raise an error window on
-        # a perfectly ordinary walk up to the mountains.
+        # What a location's own file says about its sides is never argued
+        # with here: an outzone pointing east means the player goes east,
+        # and the ground beyond is whatever stands there. Only two things
+        # have no cell to offer -- the end of the world, and the lake -- and
+        # both answer with a pocket of rock rather than an error window,
+        # which is what walking up to a wall looks like from inside. A
+        # player who somehow stands on water is not locked in: only the far
+        # side is asked.
         if not in_map(nx, ny) or (not world.passable(nx, ny)
                                   and world.passable(gx, gy)):
-            return rock_exit(side, gx, gy)
+            return dead_end(side, gx, gy)
         dest = world.location(destination(nx, ny))
         return Exit(dest.id, arrival_cell(dest, OPPOSITE[side]), nx, ny)
     rec = door(loc.id, side)
