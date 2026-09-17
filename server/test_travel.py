@@ -264,21 +264,23 @@ try:
     stand_on(c, exit_cell(border, travel.E))
     c.send("chWorld;to=1;")
     got = c.frames()
-    check("east of the border is the edge of the world",
+    check("east of the border is a wall of rock",
           [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
-          and "id=%d;" % DEADLOC_W in got[1], True)
-    check("the one whose exit faces back west",
-          "deadloc/0.xml" in world.location(DEADLOC_W).file, True)
-    # z != 0 in g_id: Location.isSubLocation, which darkens both map
-    # buttons. Bit 31 stays clear, or it would be a battleground.
+          and "id=%d;" % travel.rock_for(travel.E, 6305, 1730) in got[1], True)
+    rock = world.location(travel.rock_for(travel.E, 6305, 1730))
+    check("one of the border scenes the client ships",
+          (rock.title, rock.fn.startswith("B_")), ("Скалы", True))
+    # The cell does not move: the rocks are a dead end entered from the cell
+    # the player was standing on, so nothing can be walked around through
+    # them and backing out lands where they started.
     g_id = int(param(got[1], "g_id"))
-    check("its g_id is the cell beyond the map", g_id & 0x3FFFFFF, BEYOND)
-    check("flagged as a sub-location", g_id >> 26, 1)
+    check("standing on the same map cell", g_id & 0x3FFFFFF,
+          (6305 << 13) | 1730)
+    check("an ordinary location, not a sub-location", g_id >> 26, 0)
     lenter, frames = enter(c)
-    dead = world.location(DEADLOC_W)
     pos = int(param(lenter, "pos"))
-    check("standing just inside its western exit, with no inzones to use",
-          pos % dead.width <= 2 and travel.side_at(dead, pos) is None, True)
+    check("arriving over the edge one came in by",
+          pos % rock.width >= rock.width - 8, True)
     check("nobody lives there", any(f.startswith("lch") for f in frames), False)
 
     # The hotkey can still ask for the map (LocationInterface.toGlobal does
@@ -298,18 +300,21 @@ try:
     c.frames()
     enter(c)
 
-    # and the one exit leads back onto the map
-    stand_on(c, exit_cell(dead, travel.W))
+    # The rocks are a dead end: whichever way they let a player walk, to=1
+    # takes them back to the place the cell holds.
+    rock = world.location(travel.rock_for(travel.E, 6305, 1730))
+    side = next((sd for sd in travel.SIDES
+                 if any(travel.side_at(rock, cell) == sd
+                        for cell in range(rock.width * rock.height))), None)
+    check("the rocks do have a way to walk out of", side is not None, True)
+    stand_on(c, exit_cell(rock, side))
     c.send("chWorld;to=1;")
     got = c.frames()
-    check("the deadloc's exit leads back to the border cell",
+    check("and it leads back to the border cell",
           [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
           and "id=%d;" % EDGE in got[1], True)
     check("as an ordinary cell again", "g_id=%d;" % EDGE in got[1], True)
-    lenter, _ = enter(c)
-    pos = int(param(lenter, "pos"))
-    check("arriving at its eastern edge",
-          border.width - 1 - pos % border.width <= travel.EDGE_BAND, True)
+    enter(c)
 
     # --- marks ---------------------------------------------------------------
     c.send("chWorld;")

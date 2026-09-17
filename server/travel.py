@@ -232,6 +232,49 @@ def is_deadloc(loc_id):
     return loc_id >> 28 == 4
 
 
+# The border ring the client ships: twelve files titled "Скалы", named for
+# the edge they are, all war=1. Walking into the mountains is meant to look
+# like arriving among rocks with no way on, not like an error window: the
+# player gets one of these and backs out the way they came.
+#
+# The scene is a dead end by construction. The map cell does not change --
+# it is the cell the player was standing on, exactly as for an interior --
+# so nothing can be walked around, and to=1 from inside simply returns to
+# the location of that cell.
+ROCK_SIDE = {W: (1, 2), N: (15, 16), E: (12, 13), S: (10, 11)}
+ROCK_CORNER = {(W, N): 8, (E, N): 0, (W, S): 9, (E, S): 3}
+ROCK_IDS = frozenset([0, 1, 2, 3, 8, 9, 10, 11, 12, 13])
+
+
+def rock_for(side, gx, gy):
+    """Which rock scene lies that way. A corner when the ground is gone on
+    both axes, otherwise one of the side's two variants, picked from the
+    cell so the same spot always shows the same rocks."""
+    if side in (W, E):
+        for updown in (N, S):
+            nx, ny = neighbour(gx, gy, updown)
+            if not world.passable(nx, ny) or not world.in_map(nx, ny):
+                corner = ROCK_CORNER.get((side, updown))
+                if corner is not None:
+                    return corner
+                break
+    pair = ROCK_SIDE.get(side)
+    if not pair:
+        return ROCK_SIDE[W][0]
+    return pair[(int(gx) + int(gy)) % len(pair)]
+
+
+def rock_exit(side, gx, gy):
+    """An Exit into the rocks, standing on the edge one came in over."""
+    loc_id = rock_for(side, gx, gy)
+    rock = world.location(loc_id)
+    try:
+        pos = arrival_cell(rock, OPPOSITE[side])
+    except Exception:
+        pos = rock.entry_cell()
+    return Exit(loc_id, pos, int(gx), int(gy))
+
+
 def destination(gx, gy):
     """The location a map cell opens: a settlement or desert inside the
     map, and beyond it the deadloc whose exit faces back in."""
@@ -347,6 +390,11 @@ def door_arrival(loc, from_loc_id):
 def plan_exit(loc, pos, gx, gy):
     """Where chWorld;to=1 from this cell leads. Raises Refused when it is
     not an exit cell, or a door whose far side is not known well enough."""
+    if loc.id in ROCK_IDS:
+        # A dead end: whichever way the rocks let you walk, the way out is
+        # back to the place the cell holds.
+        back = world.location(world.location_at(gx, gy))
+        return Exit(back.id, back.entry_cell(), int(gx), int(gy))
     side = side_at(loc, pos)
     if side is None:
         raise Refused("Здесь нет выхода")
@@ -358,9 +406,12 @@ def plan_exit(loc, pos, gx, gy):
         # one location at a time -- which is how the Nubian valley, sealed
         # on the map, was still being walked out of. A player already
         # standing on rock is not locked in: only the far side is asked.
-        if (world.in_map(nx, ny) and not world.passable(nx, ny)
-                and world.passable(gx, gy)):
-            raise Refused("Дальше горы, здесь не пройти")
+        # Rock ahead, or the end of the map: the border scene, and the cell
+        # stays where it is. Refusing here used to raise an error window on
+        # a perfectly ordinary walk up to the mountains.
+        if not in_map(nx, ny) or (not world.passable(nx, ny)
+                                  and world.passable(gx, gy)):
+            return rock_exit(side, gx, gy)
         dest = world.location(destination(nx, ny))
         return Exit(dest.id, arrival_cell(dest, OPPOSITE[side]), nx, ny)
     rec = door(loc.id, side)
