@@ -65,7 +65,7 @@ H = GY1 - GY0 + 1
 # ROUGH is the one that matters. Raising it opens the mountains up; lowering
 # it walls the world off into pockets. 20 is the loosest value that still
 # closes the ring around the Nubian valley, which is the one piece of
-# passability a player remembers first-hand (TASKS 8.12): at 21 the ring
+# passability a player remembers first-hand (TASKS 8.10): at 21 the ring
 # leaks at its western corner and the valley joins the rest of the world.
 ROUGH = 20.0              # smoothed mean absolute deviation of luminance
 WATER = 2.0               # mean blue over mean red, in levels
