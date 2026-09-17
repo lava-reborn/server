@@ -70,7 +70,14 @@ rem No command line switch carries flashvars into the projector; they ride in
 rem the query string of the movie's own path, and Flash unpacks them into
 rem _root the same way it would from a web page. var_host and var_port are
 rem where the client reads the server's address in local mode.
+rem
+rem If the projector says it cannot find the file, it took the query string
+rem for part of the name. Comment out the line below, uncomment the two after
+rem it, and it gets the same thing as a file:/// URL instead. Either way the
+rem login window has address and port fields you can type into.
 "%PLAYER%" "%RES%\\main.swf?vversion=1&var_host=%HOST%&var_port=%PORT%"
+rem set "RESURL=%RES:\\=/%"
+rem "%PLAYER%" "file:///%RESURL%/main.swf?vversion=1&var_host=%HOST%&var_port=%PORT%"
 endlocal
 """
 
@@ -160,6 +167,11 @@ README = """LAVA Online — как подключиться
 
 * Окно открылось и сразу закрылось, или пусто — путь к res\\ в lava.bat
   неверный. Проверьте, что "%RES%\\main.swf" существует.
+
+* Projector пишет, что не может открыть файл, хотя main.swf на месте —
+  он принял строку запроса за часть имени. В конце lava.bat есть
+  запасной вариант через file:/// — закомментируйте рабочую строку и
+  раскомментируйте две следующие.
 
 * Дошло до экрана входа, но поля адреса пустые — projector не передал
   игре строку запроса. Ничего страшного: впишите адрес и порт руками

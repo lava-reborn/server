@@ -88,7 +88,7 @@
 | # | Задача | Размер |
 |---|---|---|
 | 1.1 | `tools/test.sh`, запускающий все наборы; порты тестов — из свободного `socket.bind(0)` | S |
-| 1.2 | БД на ext4 в WSL (сейчас на OneDrive/drvfs), WAL, `LAVA_DB` обязателен | S |
+| 1.2 | БД на ext4 в WSL (сейчас на OneDrive/drvfs), WAL, `LAVA_DB` обязателен. **Частично (9.6)**: `accounts.connect` просит `journal_mode=WAL` и `busy_timeout`, в docker база лежит на именованном томе и WAL там действительно включается (проверено). При запуске через `run.sh` файл по-прежнему на drvfs, где sqlite молча остаётся на журнале, и `LAVA_DB` всё ещё не обязателен | S |
 | 1.3 | `net/connection.py`: `FrameReader` с лимитом размера, очередь исходящих с drain, rate-limit, таймаут `hello` 20 с | M |
 | 1.4 | `net/dispatcher.py`: реестр `@command(имя, ack=…, states=…)`, схема параметров, фильтр состояний (неавторизованный сокет сейчас проходит `selPers`/`lenter` в мир), контроль «ровно один ack» — сначала «только лог», потом строго. `cmd_*` переезжают в `session/handlers/*.py` | M |
 | 1.5 | Graceful shutdown: SIGTERM/SIGINT → `shutdown;seconds=` клиентам → сохранить всех → закрыть; `run.sh stop` ждёт. Сейчас позиции теряются | S |
