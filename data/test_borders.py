@@ -52,6 +52,9 @@ NUBIA = (6250, 6285, 1810, 1845)
 # has to be walkable to from the market a few cells away.
 NUBIAN_VILLAGE = (6268, 1819)
 NEW_COLONISTS = ((5970, 1724), (5971, 1723))
+# Open ground north-east of the camp, on the far side of the band of rock the
+# photograph drew over it: the way down to the tents the owner found shut.
+ABOVE_COLONISTS = (5980, 1718)
 
 
 def load(name):
@@ -287,13 +290,19 @@ def check_walk():
     for cell in NEW_COLONISTS:
         assert cell in seen, "borders: the New Colonists on %s are cut off" \
             % (cell,)
-        # And the walk there from the market is a straight line, not a detour
-        # around anything: travel.walk keeps the whole move.
-        dx, dy = cell[0] - START[0], cell[1] - START[1]
-        end = travel.walk(START[0] + 0.5, START[1] + 0.5, dx, dy)
-        assert (int(end[0]), int(end[1])) == cell, \
-            "borders: the way down to the New Colonists is cut at %s" % (end,)
-    print("the way to the New Colonists' camp is open, and straight")
+        # And the walk there is a straight line, not a detour around
+        # anything: travel.walk keeps the whole move. Twice -- up from the
+        # market, and down from the open ground north-east of the camp,
+        # which is the way the photograph sealed: it drew a band of rock
+        # over 5972..5987 by 1722..1726, right above the tents.
+        for origin in (START, ABOVE_COLONISTS):
+            dx, dy = cell[0] - origin[0], cell[1] - origin[1]
+            end = travel.walk(origin[0] + 0.5, origin[1] + 0.5, dx, dy)
+            assert (int(end[0]), int(end[1])) == cell, \
+                "borders: the way from %s to the New Colonists is cut at %s" \
+                % (origin, end)
+    print("the way to the New Colonists' camp is open from both sides, and"
+          " straight")
 
     # The rim can be walked onto -- it is a place, with rocks in it -- and
     # nothing beyond it can.
