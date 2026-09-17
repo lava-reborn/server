@@ -31,6 +31,7 @@ import party
 import rooms
 import progression
 import quests
+import transport
 import travel
 import world
 from protocol import BigUInt, FrameReader, decode, frame, Str
@@ -181,6 +182,11 @@ class Session:
         self.char = None
         # id of the teacher a training session is open with, or None
         self.training = None
+        # The rented vehicle as (type id, epoch second the rental ends), or
+        # None on foot. Loaded with the character, written straight to the
+        # characters table: Character.save does not carry these two columns,
+        # so nothing overwrites a rental on the way out.
+        self.transport = None
         self.loc = world.location(START_LOC)
         self.pos = self.loc.entry_cell()
         self.on_map = False
@@ -372,11 +378,36 @@ class Session:
         """
         self.char = progression.Character.load(STORE, char_id)
         self.training = None
+        row = STORE.character(char_id)
+        kind = row["transport_type"] if row is not None else None
+        self.transport = (int(kind), int(row["transport_until"] or 0)) \
+            if kind else None
 
     def character(self):
         """The loaded character, or a newborn's numbers for a socket that
         asks before selecting one, so an early getInfo cannot fail."""
         return self.char or progression.Character()
+
+    def transport_now(self):
+        """The type id under the player, or None once the rental has run out.
+
+        Expiry is noticed here rather than on a timer: nothing in the client
+        counts the hours down on its own, and the only moments the number
+        matters are the ones that pass through here -- a userInfo_Player, a
+        step on the map. The database is cleared at the same time so the next
+        login starts on foot.
+        """
+        if not self.transport:
+            return None
+        type_id, until = self.transport
+        if transport.hours_left(until) > 0:
+            return type_id
+        self.transport = None
+        if self.char_id:
+            STORE.save_character_state(self.char_id, transport_type=None,
+                                       transport_until=None)
+        log.info("  ..    the rental of type %d has run out", type_id)
+        return None
 
     # --- character -------------------------------------------------------
     def cmd_newPers(self, p):
@@ -723,6 +754,9 @@ class Session:
         if text.startswith("/give"):
             self.cmd_give(text.split()[1:], group)
             return
+        if text.startswith("/money"):
+            self.cmd_money(text.split()[1:], group)
+            return
         if text.startswith("/where"):
             # Everything needed to report a cell that opens the wrong place:
             # the title as drawn, the file behind it, and the cell itself.
@@ -806,6 +840,32 @@ class Session:
                  % (names.text(items.STRING_ID_OFFSET + type_id), count), group)
         log.info("  ..    /give %d x%d to %s", type_id, count, self.nick)
 
+    def cmd_money(self, args, group=0):
+        """/money <афро> [голда в сотых] -- top the purse up, for testing.
+
+        Ours, like /give, and for the same reason: a newborn carries 1000
+        afro while the rental yard asks thousands per day (the wiki's own
+        prices, data/transport.json), so without this nothing about the
+        lessor can be tried by hand. Goes through the Character like every
+        other change to money, so the writer on the way out agrees with it.
+        """
+        if not self.char_id:
+            return
+        try:
+            afro = int(args[0])
+            gold = int(args[1]) if len(args) > 1 else 0
+        except (IndexError, ValueError):
+            self.say("/money <афро> [голда в сотых]   например /money 20000 500",
+                     group)
+            return
+        char = self.character()
+        char.add_money(afro, gold)
+        char.save(STORE)
+        self.push_money()
+        self.say("Кошелёк: %d афро, %.2f голды" % (char.afro, char.gold / 100.0),
+                 group)
+        log.info("  ..    /money %+d afro %+d gold to %s", afro, gold, self.nick)
+
     def cmd_goto(self, args, group=0):
         """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
         try:
@@ -872,17 +932,29 @@ class Session:
         if dist < 0.01:
             return
         tx, ty = self.gx + dx, self.gy + dy
-        vx, vy = dx / dist * TRAVEL_SPEED, dy / dist * TRAVEL_SPEED
+        # A rented vehicle is a plain multiplier on the pace, and it has to
+        # go into both halves at once: the velocity the client extrapolates
+        # from, and the timer that decides when the trip is over. Move one
+        # without the other and the figure is somewhere else than the server
+        # thinks when it stops it (world.md 4: the client computes no speed
+        # of its own).
+        speed = TRAVEL_SPEED * self.travel_speed()
+        vx, vy = dx / dist * speed, dy / dist * speed
         self.send("moveAck", vx=vx, vy=vy, t=0)
 
         loop = asyncio.get_running_loop()
         self.leg = (loop.time(), self.gx, self.gy, vx, vy)
         if self.arrival:
             self.arrival.cancel()
-        self.arrival = loop.call_later(dist / TRAVEL_SPEED, self.arrive, tx, ty)
+        self.arrival = loop.call_later(dist / speed, self.arrive, tx, ty)
         # Whoever sees us on the map gets the new vector at once, not on the
         # next heartbeat.
         GMAP.moved(self)
+
+    def travel_speed(self):
+        """The multiplier on map travel: the vehicle's, or 1 on foot."""
+        type_id = self.transport_now()
+        return transport.speed_mod(type_id) if type_id is not None else 1.0
 
     def current_pos(self):
         """Where the player is now, matching the client's own extrapolation."""
@@ -930,10 +1002,19 @@ class Session:
         # its static info with ts_get_si and the player is riding a vehicle
         # type that does not exist. Leaving the key out leaves transport
         # undefined, which is what the client means by walking.
+        #
+        # With a rental in hand both go out together: MarksAndPlayersPan
+        # draws the panel only when the object AND the hours are there, and
+        # tr_hours is the countdown itself -- the client never recomputes it.
+        riding = {}
+        type_id = self.transport_now()
+        if type_id is not None:
+            riding = dict(tr=type_id,
+                          tr_hours=transport.hours_left(self.transport[1]))
         self.send("userInfo_Player",
                   id=0, name=Str(pers["name"]), sex=pers["sex"],
                   res=Str(str(pers["res"])), ail=0, ally=1, clan=0, hl=0,
-                  **self.character().player_info())
+                  **self.character().player_info(), **riding)
 
     def push_money(self):
         self.send_player_info()
@@ -1026,7 +1107,9 @@ class Session:
         elif root == world.UPGRADER:
             params.update(in_types=[], out_types=[], costs=[])
         elif root == world.LESSOR:
-            params.update(give_transport=[])
+            # Lessor.createTransList builds a TransObject per entry and asks
+            # for its ts_si; the list is the whole of the rental window.
+            params.update(give_transport=transport.offered_by(type_id))
         elif root == world.HEALER:
             # Healer.as builds g_price from the same a_price, so only the
             # afro fee is ever shown; on_conv;op=1 charges this much.
@@ -1039,6 +1122,19 @@ class Session:
         params.update(self.combat.mob_info(npc_id))
         self.send(cmd, **params)
         self.combat.after_npc_info(npc_id)
+
+    # --- transport --------------------------------------------------------
+    def cmd_ts_get_si(self, p):
+        """One vehicle's numbers, asked for every type a lessor offers.
+
+        No cmdAck: TransportFactory.addCall sends this without registering
+        one, and an acknowledgement here would be handed to whatever the
+        player does next. What it does wait for is the ts_si itself --
+        updateCall only reopens the five-deep request window when one
+        arrives -- so a type this table has never heard of is still answered,
+        with the placeholder frame transport.si_frame builds.
+        """
+        self.send("ts_si", **transport.si_frame(int(p.get("type", 0) or 0)))
 
     def cmd_rp_get_info(self, p):
         """Attributes, skills and specialisations, despite the name.
@@ -1429,7 +1525,7 @@ class Session:
         (Rent.getTransport: p1 type, p2 days). Each expects one cmdAck and
         nothing else from the client's side; the effect is all ours. A
         non-zero answer to op=2 is what the client reports as the rental
-        failing, and transport does not exist yet (TASKS 8.7).
+        failing.
         """
         op = int(p.get("op", -1))
         npc_type = self.npc_type(p.get("mob"))
@@ -1459,8 +1555,83 @@ class Session:
             self.push_money()
             self.push_vitals()
             self.send("cmdAck", res=0)
+        elif op == 2:
+            self.rent_transport(p)
         else:
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
+
+    def rent_transport(self, p):
+        """on_conv;op=2;mob=N;p1=<type>;p2=<days> -- hire a vehicle.
+
+        Rent.getTransportAck reads nothing but res: zero is the rental, any
+        other number is the one alert "У вас недостаточно денег". So the
+        codes below are for the log, and the frames that follow are what the
+        player actually sees -- a userInfo_Player carrying the new purse and
+        the new tr/tr_hours, which the client does not ask for and cannot
+        derive.
+
+        The reach check is the teacher's (training_open): the client only
+        opens a rental desk from its own cell or a neighbouring one
+        (Gamer.proposeContact), so the server asks for no less.
+        """
+        entry = self.room.npc(int(p.get("mob", 0) or 0)) \
+            if self.room is not None else None
+        if not entry or entry[2] != world.LESSOR:
+            log.info("  ..    rent refused: %r is no lessor here", p.get("mob"))
+            self.send("cmdAck", res=progression.ERR_NOT_FOUND)
+            return
+        cell, npc_type, _root = entry
+        if not progression.within_reach(self.pos, cell, self.loc.width,
+                                        self.loc.height):
+            log.info("  ..    rent refused: the desk is out of reach")
+            self.send("cmdAck", res=progression.ERR_TOO_FAR)
+            return
+        try:
+            type_id, days = int(p.get("p1", 0)), int(p.get("p2", 0))
+        except (TypeError, ValueError):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        vehicle = transport.get(type_id)
+        if vehicle is None or type_id not in transport.offered_by(npc_type):
+            log.info("  ..    rent refused: type %d is not on this desk's list",
+                     type_id)
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        if not transport.valid_days(days):
+            log.info("  ..    rent refused: %d days is outside 1..%d",
+                     days, transport.MAX_DAYS)
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        char = self.character()
+        # The residence permit gate. TransRentInterface refuses this one
+        # before it sends anything, so reaching it means a modified client.
+        if vehicle["premium"] > char.premium_level():
+            log.info("  ..    rent refused: type %d needs premium %d",
+                     type_id, vehicle["premium"])
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        afro, gold = transport.price(type_id, days)
+        if not char.can_afford(afro, gold):
+            log.info("  ..    rent refused: %d afro / %d gold is more than"
+                     " the purse holds", afro, gold)
+            self.send("cmdAck", res=RES_NO_MONEY)
+            return
+        char.add_money(-afro, -gold)
+        char.save(STORE)
+        # A second rental replaces the first outright: the client asks
+        # "поменять транспорт?" and sends this only once the player agrees,
+        # and there is nowhere to keep two.
+        self.transport = (type_id, transport.until_after(days))
+        STORE.save_character_state(self.char_id, transport_type=type_id,
+                                   transport_until=self.transport[1])
+        log.info("  ..    %s rented type %d for %d day(s), %d afro / %d gold",
+                 self.nick, type_id, days, afro, gold)
+        # The purse and the vehicle ride the same frame, and it is the only
+        # one either travels in. Sent before the acknowledgement, the way a
+        # medic's fee is (op=1 above): the ack is the last word on the
+        # command, and the client's handler for it only raises an alert.
+        self.push_money()
+        self.send("cmdAck", res=0)
 
     def move_in_location(self, p):
         """Echo the path back; the client renders no step until we do.

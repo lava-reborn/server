@@ -159,6 +159,12 @@ CHARACTER_COLUMNS = [
     # know its own cell, so leaving home for the map needs it remembered here
     ("home_gx", "INTEGER"),
     ("home_gy", "INTEGER"),
+    # The rented vehicle and the epoch second the rental runs out. Both NULL
+    # means on foot, which is what the client is told by leaving tr and
+    # tr_hours out of userInfo_Player altogether (world.md 4). Character.save
+    # does not write these, so a rental is not clobbered on the way out.
+    ("transport_type", "INTEGER"),
+    ("transport_until", "INTEGER"),
 ]
 
 # char_id is updatable too: an item picked out of a loot bag keeps its

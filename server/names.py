@@ -18,6 +18,7 @@ import os
 
 import items
 import quests
+import transport
 import world
 
 # Creatures and items are numbered in separate spaces that overlap, while the
@@ -59,12 +60,19 @@ ITEM_DESCRIPTIONS = {items.DESC_ID_OFFSET + t: d
 # player the login screen. Better to fail at start, in both processes.
 QUEST_STRINGS = quests.strings()
 
+# Vehicle names and descriptions, numbered 6 000 000 / 6 100 000 + type by
+# transport.py. Same rule, same reason: a lessor's window asks for a ts_si
+# per type it offers, each one carries a name id, and an id the preload
+# missed is a trip back to the login screen.
+TRANSPORT_STRINGS = transport.strings()
+
 ALL = dict(MOB_NAMES)
 ALL.update(ITEM_NAMES)
 ALL.update(WIKI_ITEM_NAMES)
 ALL.update(ITEM_DESCRIPTIONS)
 ALL.update(REAL_NAMES)
 ALL.update(QUEST_STRINGS)
+ALL.update(TRANSPORT_STRINGS)
 
 
 def known(string_id):
