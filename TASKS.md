@@ -50,7 +50,9 @@
 аренда у арендодателя, `ts_si`, `tr`/`tr_hours` и скорость на карте по
 `speed_mod`; параметры машин сняты с вики обратным пересчётом подсказки
 клиента, привязка иконки к машине спроектирована и помечена в таблице.
-**Не сделано:** 8.6, 8.9, этап 9 и остальной этап 1 (скелет).
+**Не сделано:** 8.6, 8.9, этап 9 кроме 9.6, и остальной этап 1 (скелет).
+Сервер поднимается в docker и раздаётся друзьям (9.6): ресурсы игры остаются
+у игрока, из пакета едут только таблица строк, запускалка и инструкция.
 Известная слабость после слияния: деньги и HP обязаны идти через `Character`
 (`progression.py`), никакой модуль не пишет в `characters` напрямую — иначе
 `Character.save` при выходе затрёт изменения.
@@ -259,7 +261,7 @@ primary 512, secondary 513, bag 2048.
 | 9.3 | Миграции БД, схема v2: `character_stats`, `items`, `character_quests`, `mail`, `map_marks`, `bank_accounts`, `audit_log` (DDL — architecture §2.5) | L |
 | 9.4 | `accounts.role` (player/gm/admin): `/goto` и прочие серверные команды только для gm/admin; `kickban`, `shutdown` | S |
 | 9.5 | Структурированные логи с `sid/char`, DEBUG-провод по флагу, ротация; `/metrics`, `/status` на HTTP | S |
-| 9.6 | Dockerfile + compose (`res/` как read-only volume), `run.sh` как обёртка; бэкап через `Connection.backup()` по таймеру и при остановке | M |
+| 9.6 | ✓ Dockerfile + compose (`res/` как read-only volume). **Сделано**: образ `python:3.12-slim` без зависимостей, в нём только `server/` и `data/` (без `data/wiki*`, без базы); два сервиса из одного образа — `game` и `http` — потому что `docker stop` шлёт сигнал одному процессу, а дойти он должен до игрового сервера; exec-форма CMD, `stop_grace_period: 30s`, проверено: SIGTERM доходит, лог пишет «shutting down / stopped», код выхода 0. `res/` монтируется read-only и в образе отсутствует; база — именованный том `lava-db` (не bind: на drvfs sqlite не берёт блокировки WAL, см. 1.2), `accounts.connect` просит WAL и `busy_timeout`. Ни одного захардкоженного пути: `LAVA_RES_DIR`, `LAVA_PUBLIC_HOST`, `LAVA_GAME_PORT`, `LAVA_HTTP_PORT`, `LAVA_BIND`, `LAVA_LOG_LEVEL`, `LAVA_POLICY_PORT` (0 — 843 привилегированный, а политика отвечается в самом игровом сокете), `LAVA_HTTP_RES`. Раздача `/res/**` по HTTP выключена по умолчанию и закрыта целиком, вместе с `csettings_v1.xml`: отдать его — значит увести клиент в режим WEB. Healthcheck: рукопожатие политики в игровом сокете и `GET /status`. Пакет игрока — `tools/make_client_package.py` → `dist/` (`texts.xml`, `lava.bat`, `README.txt`), ассетов не содержит; `tools/export_texts.py` + `tools/test_export_texts.py` держат таблицу строк совпадающей с ответом на `?all=1`. Режим LOCAL разобран по исходникам в `recon/analysis/local-mode.md`. **Не сделано**: `run.sh` как обёртка над compose (он остался прямым запуском в WSL — это по-прежнему рабочий цикл разработки), бэкап через `Connection.backup()` по таймеру и при остановке. **Не проверено на живом клиенте**: принимает ли projector флешвары в строке запроса к локальному файлу (запуск клиента был вне задачи); запасной путь — поля адреса в окне входа, `EnterGameInterface.as:162-163`, `:234-235` | M |
 | 9.7 | Тесты на pytest с фикстурами (сервер в процессе, где возможно); `FakeClient` из `test_world.Client` в `tests/fake_client.py` | M |
 | 9.8 | Обновить `PROTOCOL.md`: `usrUp` только HP/SP, `rp_info` пушится сервером, `ss_upd` close без ack, деньги через `userInfo_Player`, сторона выхода в `outzones` | S |
 
