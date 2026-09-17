@@ -16,9 +16,9 @@ What is checked here:
   * the ring agrees cell for cell with travel.rock_for, so the server's
     tables and the data file cannot drift apart;
   * not one location the server places on the map declares an exit the server
-    cannot honour: 0 of the 949 settlement exits and 0 of the ring's lead off
-    the world. This is the count that was 18 while the ground came from a
-    photograph;
+    cannot honour: 0 of the 951 the settlement cells declare and 0 of the
+    ring's lead off the world, and no settlement's leads into the lake. That
+    count was 18 while the ground came from a photograph;
   * a way that does run out ends in one of the four dead-end pockets, entered
     over the edge the player came in by, and backing out lands where it
     started -- never an error, never a black screen;
@@ -134,11 +134,14 @@ def check_ring():
 def check_exits(ring):
     """Nobody the server places on the map declares an exit it cannot honour."""
     off, wet = [], []
-    counted = 0
-    placed = list(world.settlements().items()) + list(ring.items())
+    counted = settlement_exits = 0
+    settled = world.settlements()
+    placed = list(settled.items()) + list(ring.items())
     for (gx, gy), loc_id in placed:
         for side in sides_of(loc_id):
             counted += 1
+            if (gx, gy) in settled:
+                settlement_exits += 1
             nx, ny = travel.neighbour(gx, gy, side)
             if not world.in_map(nx, ny):
                 off.append((gx, gy, loc_id, side))
@@ -146,12 +149,14 @@ def check_exits(ring):
                 wet.append((gx, gy, loc_id, side))
     assert not off, "borders: %d exits lead off the world: %s" % (
         len(off), off[:10])
-    settled_wet = [e for e in wet if (e[0], e[1]) in world.settlements()]
+    settled_wet = [e for e in wet if (e[0], e[1]) in settled]
     assert not settled_wet, "borders: %d settlement exits lead into water: %s" \
         % (len(settled_wet), settled_wet[:10])
-    print("all %d exits of the %d placed locations lead onto the map; %d of the"
-          " ring's meet the lake and get a pocket" % (counted, len(placed),
-                                                      len(wet)))
+    assert settlement_exits >= 949, \
+        "borders: only %d settlement exits to check" % settlement_exits
+    print("all %d exits of the %d placed locations lead onto the map, the %d"
+          " of the settlements among them; %d of the ring's meet the lake and"
+          " get a pocket" % (counted, len(placed), settlement_exits, len(wet)))
     return wet
 
 
