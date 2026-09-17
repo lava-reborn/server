@@ -40,12 +40,12 @@
 Регистрация — в браузере на `http://127.0.0.1:8080/`. Тестовый аккаунт
 `polestvr` / `lava1234`.
 
-Тесты (шестнадцать серверных наборов и два по данным, все обязаны быть
+Тесты (восемнадцать серверных наборов и пять по данным, все обязаны быть
 зелёными перед коммитом):
 
 ```bash
-cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests test_social test_items test_combat test_travel test_death; do python3 $t.py || break; done
-python3 data/test_wiki_data.py && python3 data/test_world_data.py
+cd server && for t in test_protocol test_accounts test_handshake test_locations test_world test_bootstrap test_shutdown test_progression test_inventory test_two_clients test_quests test_social test_items test_combat test_travel test_terrain_move test_death test_transport; do python3 $t.py || break; done
+cd .. && for t in test_wiki_data test_world_data test_settlements test_terrain test_transport_data; do python3 data/$t.py || break; done
 ```
 
 Переменные: `LAVA_GX`/`LAVA_GY` — стартовая клетка карты (5970×1730),
@@ -56,7 +56,16 @@ python3 data/test_wiki_data.py && python3 data/test_world_data.py
 Команды чата, наши, не игры: `/where` — где стою (название, файл, клетка),
 `/goto <id>` или `/goto <x> <y>` — переход в любую из 1381 локации,
 `/home` — домой (куда прописан у жителя, иначе на старт; тем же путём
-пойдёт возрождение).
+пойдёт возрождение), `/give <тип> [сколько]` — предмет в рюкзак,
+`/money <афро> [голда в сотых]` — пополнить кошелёк (новичку дают 1000 афро,
+а аренда транспорта стоит тысячи в день, иначе её не попробовать руками).
+
+Аренда транспорта: у арендодателя (в Вади-Хальфе это Шихаб на чёрном рынке)
+окно «Аренда» показывает, что он сдаёт, срок 1..365 дней и цену за день.
+Ослик — 0.1 голды в день и +70 % к скорости на карте, дальше по возрастанию
+до Ларвы (+350 %). Пока аренда идёт, `userInfo_Player` несёт `tr`/`tr_hours`,
+и перелёты по карте идут быстрее ровно во столько раз. Таблица —
+`data/transport.json`, провод — `server/transport.py`.
 
 ### Что происходит, когда убивают
 
@@ -115,9 +124,12 @@ server/
   bootstrap_http.py  HTTP: ресурсы клиента, регистрация, texts.xml, loaduser
   mail.py            почта: письма, вложения, тарифы, возврат посылок
   party.py           отряд: p_op/p_m, канал 1, «в сети/отключился»
-  test_*.py          шестнадцать наборов: реплеи клиентских последовательностей и
+  transport.py       аренда: таблица data/transport.json, кадр ts_si, цена за день,
+                     множитель скорости на карте, часы до конца аренды
+  test_*.py          семнадцать наборов: реплеи клиентских последовательностей и
                      test_items — вики поверх каталога, инварианты кадров, стоки;
-                     test_terrain_move.py — барьер гор на проводе
+                     test_terrain_move.py — барьер гор на проводе,
+                     test_transport.py — аренда и скорость на карте
 data/
   settlements.json           клетка карты → id локации (77), выводится скриптом
   build_settlements.py       вывод таблицы из подсказок карты и заголовков локаций
@@ -163,6 +175,16 @@ data/
                              в quests.json: дающий с confidence ≥ high, предметы и награды
                              через wiki_links, тексты дочитаны из wikitext; печатает отчёт
   quests.json                ЧИТАЕТ СЕРВЕР: шесть квестов рынка + семь с вики (wiki_type/source)
+  build_transport.py         сборка таблицы транспорта: параметры из вики (обратный
+                             пересчёт подсказки клиента), списки аренды из npc_wiki.json,
+                             номера иконок из res/transport/*.swf. Печатает, что взято
+                             с вики, а что спроектировано
+  transport.json             ЧИТАЕТ СЕРВЕР: 16 машин (speed_mod, aggro_mod, premium,
+                             цена за день: афро **или** голда в сотых), что сдаёт каждый
+                             арендодатель, общий набор для остальных. СПРОЕКТИРОВАНО:
+                             какой SWF какой машине (в клиенте связи имени с файлом нет),
+                             числа «Северного оленя» и «Кобылы» — помечено в каждой записи
+  test_transport_data.py     проверка таблицы против res/transport, mobs.xml и names.ALL
   test_world_data.py         проверка всех таблиц выше против mobs.xml и друг друга
 recon/
   as-src/lol/**      395 декомпилированных классов клиента (JPEXS FFDec)

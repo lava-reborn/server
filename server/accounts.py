@@ -170,6 +170,12 @@ CHARACTER_COLUMNS = [
     # runs on the way out over hp/sp/money and would have to be taught the
     # flag as well for it not to be undone.
     ("death", "INTEGER NOT NULL DEFAULT 0"),
+    # The rented vehicle and the epoch second the rental runs out. Both NULL
+    # means on foot, which is what the client is told by leaving tr and
+    # tr_hours out of userInfo_Player altogether (world.md 4). Character.save
+    # does not write these, so a rental is not clobbered on the way out.
+    ("transport_type", "INTEGER"),
+    ("transport_until", "INTEGER"),
 ]
 
 # char_id is updatable too: an item picked out of a loot bag keeps its
