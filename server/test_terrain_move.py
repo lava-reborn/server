@@ -300,6 +300,23 @@ except Exception:
     refused = "no exit cell on that side"
 check("leaving towards the rock is refused", refused is not None, True)
 
+# --- the rocks face the right way ------------------------------------------
+# A scene walled on the wrong side leaves the way on open, which is how the
+# barrier looked "random" from inside. The wall is the side its outzones
+# never touch, and the file names point the other way: B_LeftSide is walled
+# on the east.
+for _side in travel.SIDES:
+    _tile = travel.rock_for(_side, 6000, 1800)
+    check("walking %s ends against a wall facing %s" % (_side, _side),
+          _side in travel.ROCK_WALL[_tile], True)
+    check("and %s is one of the client's border scenes" % _side,
+          _w.location(_tile).title, "Скалы")
+for _h, _v in ((travel.W, travel.N), (travel.W, travel.S),
+               (travel.E, travel.N), (travel.E, travel.S)):
+    _corner = travel.ROCK_CORNER[(_h, _v)]
+    check("the %s%s corner is walled both ways" % (_h, _v),
+          set(travel.ROCK_WALL[_corner]), {_h, _v})
+
 print()
 if fails:
     print("FAILED %d:" % len(fails))

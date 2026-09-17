@@ -241,9 +241,18 @@ def is_deadloc(loc_id):
 # it is the cell the player was standing on, exactly as for an interior --
 # so nothing can be walked around, and to=1 from inside simply returns to
 # the location of that cell.
-ROCK_SIDE = {W: (1, 2), N: (15, 16), E: (12, 13), S: (10, 11)}
-ROCK_CORNER = {(W, N): 8, (E, N): 0, (W, S): 9, (E, S): 3}
-ROCK_IDS = frozenset([0, 1, 2, 3, 8, 9, 10, 11, 12, 13])
+# Which way each scene is walled is read off its own outzones: the one side
+# with no cell to leave by. The file names are no guide at all -- B_LeftSide
+# is the tile walled on the EAST, B_DownSide the one walled on the NORTH --
+# so the table below is the data's and not the name's. Walking east into the
+# rock has to land in a scene whose wall faces east, or the player arrives
+# among mountains with the way on still open.
+ROCK_WALL = {1: (E,), 2: (E,), 12: (W,), 13: (W,),
+             10: (N,), 11: (N,), 15: (S,), 16: (S,),
+             0: (W, S), 3: (W, N), 8: (E, S), 9: (E, N)}
+ROCK_SIDE = {E: (1, 2), W: (12, 13), N: (10, 11), S: (15, 16)}
+ROCK_CORNER = {(W, S): 0, (W, N): 3, (E, S): 8, (E, N): 9}
+ROCK_IDS = frozenset(ROCK_WALL)
 
 
 def rock_for(side, gx, gy):

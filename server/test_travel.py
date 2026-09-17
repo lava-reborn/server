@@ -279,8 +279,10 @@ try:
     check("an ordinary location, not a sub-location", g_id >> 26, 0)
     lenter, frames = enter(c)
     pos = int(param(lenter, "pos"))
-    check("arriving over the edge one came in by",
-          pos % rock.width >= rock.width - 8, True)
+    # Heading east, the scene is entered over its western edge -- the wall
+    # is the far side, the one the player was trying to walk through.
+    check("arriving over the edge one came in by", pos % rock.width <= 8, True)
+    check("with the wall ahead", travel.E in travel.ROCK_WALL[rock.id], True)
     check("nobody lives there", any(f.startswith("lch") for f in frames), False)
 
     # The hotkey can still ask for the map (LocationInterface.toGlobal does
