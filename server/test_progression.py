@@ -103,12 +103,18 @@ check("999 afro is not enough", ch.learn_spec(0), progression.ERR_MONEY)
 ch.afro = 1000
 check("1000 afro is", ch.learn_spec(0), 0)
 check("and is spent", ch.afro, 0)
-check("the third costs 10 gold", ch.spec_cost(), (0, 10))
+# The window's prices are whole ounces; the purse is hundredths. Ten ounces
+# is 1000 in the purse, and charging 10 took a hundredth of the asking price.
+OUNCE = progression.GOLD_OUNCE
+check("the third costs ten ounces", ch.spec_cost(), (0, 10 * OUNCE))
 check("with no gold it is refused", ch.learn_spec(1), progression.ERR_MONEY)
 ch.gold = 10
-check("10 gold buys it", (ch.learn_spec(1), ch.gold), (0, 0))
-check("then 30, 55, 75 gold", [progression.SPEC_COST[3], progression.SPEC_COST[4],
-                              progression.SPEC_COST_MAX], [(0, 30), (0, 55), (0, 75)])
+check("ten hundredths is not ten ounces", ch.learn_spec(1), progression.ERR_MONEY)
+ch.gold = 10 * OUNCE
+check("ten ounces buys it", (ch.learn_spec(1), ch.gold), (0, 0))
+check("then 30, 55, 75 ounces", [progression.SPEC_COST[3], progression.SPEC_COST[4],
+                                 progression.SPEC_COST_MAX],
+      [(0, 30 * OUNCE), (0, 55 * OUNCE), (0, 75 * OUNCE)])
 ch.max_specs = 5
 check("free slots cover the count", ch.spec_cost(), (0, 0))
 
