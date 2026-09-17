@@ -73,8 +73,18 @@ ERR_SKILL = 45          # "У вас не хватает навыков для �
 # Cost of one more specialisation once the free ones are used up, by the
 # number already learned: Training.getCost, which is also what the window
 # prints next to the button. (afro, gold)
-SPEC_COST = {0: (0, 0), 1: (1000, 0), 2: (0, 10), 3: (0, 30), 4: (0, 55)}
-SPEC_COST_MAX = (0, 75)
+# Training.getCost names the price of the next specialisation: free while
+# fewer than max_specs are learned, then 1000 afro, then 10, 30, 55 and 75
+# gold. Those gold figures are WHOLE OUNCES -- TrainingInterface prints the
+# number as it comes and MoneyPan shows a purse as floor(gold/100) ounces and
+# gold%100 on top -- while the purse itself is kept in hundredths, the unit
+# every frame carries. So a price of 10 is 1000 in the purse; charging 10
+# took a hundredth of what the window asked for.
+GOLD_OUNCE = 100
+
+SPEC_COST = {0: (0, 0), 1: (1000, 0), 2: (0, 10 * GOLD_OUNCE),
+             3: (0, 30 * GOLD_OUNCE), 4: (0, 55 * GOLD_OUNCE)}
+SPEC_COST_MAX = (0, 75 * GOLD_OUNCE)
 
 # Premium ("вид на жительство" 1, "гражданство" 2) bonuses are shares b of the
 # base: the client is handed the total v and splits it back as
