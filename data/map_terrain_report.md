@@ -20,6 +20,8 @@ Passable: **223499 of 241703 cells, 92.47%**. The rectangle is 473 by 511 cells,
 
 **Map tooltips.** All 414 cells of `res/database/locations.xml` are passable, 17 of them forced the same way. Blocked after forcing: 0.
 
+Of the 48 cells forced open, 42 read as rock and 6 as water. The wet ones are shore: 5863,1946, 5879,2011, 5970,1727, 6017,2086, 6032,1951, 6185,1977 -- a place standing on the bank of the lake covers a cell whose 8x8 block is mostly water.
+
 **Connectivity.** From the start cell 5970,1730 (the black market of Wadi Halfa) 223076 cells are reachable on foot, 99.8% of the passable ground, and 246 of the 262 settlements. The world falls into 77 separate pieces of walkable ground; the main one holds everything but the pockets listed here.
 
 | settlement | cell | location | pocket |

@@ -487,6 +487,12 @@ def write_report(path, grid, f, res, settled, hints, names):
         " %d.\n" % (len(hints),
                     sum(1 for c, _ in res["forced"] if c not in settled),
                     len(res["blocked_hints"])))
+    wet = [c for c, ch in res["forced"] if ch == WATER_C]
+    add("Of the %d cells forced open, %d read as rock and %d as water. The"
+        " wet ones are shore: %s -- a place standing on the bank of the lake"
+        " covers a cell whose 8x8 block is mostly water.\n"
+        % (len(res["forced"]), len(res["forced"]) - len(wet), len(wet),
+           ", ".join("%d,%d" % c for c in wet)))
     add("**Connectivity.** From the start cell %d,%d (the black market of"
         " Wadi Halfa) %d cells are reachable on foot, %.1f%% of the passable"
         " ground, and %d of the %d settlements. The world falls into %d"

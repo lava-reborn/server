@@ -36,7 +36,6 @@ PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts                                                  # noqa: E402
-import travel                                                    # noqa: E402
 import world                                                     # noqa: E402
 
 accounts.DB_PATH = DB
