@@ -299,8 +299,14 @@ class Session:
                   gold_repair_price_mod=1, gold_repair_mod=10000,
                   daily_max=DAILY_MAX, daily_reset_time=DAILY_RESET_TIME)
         for pers in self.characters:
+            # death is a flag, not a count: PersGenerator.persInfo takes it
+            # as Boolean(param.death) into PersInfo.dead, and that is what
+            # Master.lenter and Master.gmap check to open the regeneration
+            # window once the character is standing somewhere. A character
+            # that logged out dead must come back to it.
             self.send("persInfo", num=pers["slot"], name=Str(pers["name"]),
-                      sex=pers["sex"], death=0, res=Str(str(pers["res"])))
+                      sex=pers["sex"], death=int(bool(pers["death"])),
+                      res=Str(str(pers["res"])))
         # can_create must be falsy once the account has someone, or the client
         # opens the creation screen instead of selecting: PersGenerator acts on
         # the flag alone and never looks at how many characters arrived.
@@ -372,6 +378,11 @@ class Session:
         """
         self.char = progression.Character.load(STORE, char_id)
         self.training = None
+        # Whether this one is lying dead is the characters row's business,
+        # not the Character's (accounts.CHARACTER_COLUMNS): combat.py wrote
+        # it when the body fell and reads it back here, so a logout does not
+        # undo a death. The client is told separately, by persInfo;death.
+        self.combat.restore(STORE.character(char_id))
 
     def character(self):
         """The loaded character, or a newborn's numbers for a socket that
@@ -735,7 +746,15 @@ class Session:
             return
         if text.startswith("/home"):
             # The same journey resurrect will make, on demand: the way to
-            # check a registered home without dying for it.
+            # check a registered home without dying for it. Not out of a
+            # fight, though, or it would be the way round the exit timer
+            # chWorld is held to -- and the refusal has to be a line of
+            # chat, because this userMsg has already been acknowledged and
+            # a second cmdAck would shift the client's queue by one.
+            if self.combat.in_combat():
+                self.say("Из боя домой не уйти: подождите %d с после боя"
+                         % combat.LEAVE_COMBAT_TIMEOUT, group)
+                return
             self.go_home()
             return
         # Ordinary talk does NOT come back to the sender: Chat.delivery prints
