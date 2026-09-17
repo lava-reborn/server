@@ -72,10 +72,46 @@ FIST_AP = 5
 # RegenerationInterface shows (5 gold / 500 afro; free after 15 s).
 RES_NO_LEAVE = 39
 RES_TOO_FAR = progression.ERR_TOO_FAR
+# The three buttons of the regeneration window, in its own numbering
+# (RegenerationInterface.RESURECT_FREE/GOLD/AFRO).
+RES_FREE, RES_GOLD, RES_AFRO = 0, 1, 2
+# GOLD_COST=5 is checked against attributes.gold, which is the same number
+# userInfo_Player sent: hundredths of an ounce, the whole part of which the
+# purse panel shows (MoneyPan.set value divides by 100). payAfro checks 500,
+# and at the gold_to_afro_rate of 100 the server's own constants frame
+# carries, the two buttons are one price in two currencies.
 RESURRECT_GOLD = 5
 RESURRECT_AFRO = 500
+# RegenerationInterface.timePause: the window counts fifteen seconds down and
+# then presses the free button itself, so free costs the wait (see resurrect).
+RESURRECT_WAIT = float(os.environ.get("LAVA_RESURRECT_WAIT", "15"))
+# What a free resurrection wakes up with, as a share of the maximum. Designed:
+# the client says nothing about how whole a body comes back.
+FREE_HP_SHARE = 0.25
 # char_id of item rows lying in a bag on the ground: no character has id 0.
 LOOT_OWNER = 0
+
+# What the server still accepts from a client it knows to be dead. Two
+# families, and neither of them moves anything in the world:
+#
+#   the way in and the way out, because DEAD_STATE is entered after lenter,
+#   never before it. A character that logged out dead selects, loads and
+#   walks into a location alive as far as the client is concerned, and only
+#   when Master.lenter (or gmap) reads persInfo;death does the regeneration
+#   window open. Refusing lenter here would leave it standing in nowhere;
+#
+#   the pipelined requests, each of which carries a window on the client's
+#   side that only an answer reopens (PROTOCOL 7): a dropped ss_get leaves
+#   its ss_ack queue waiting for ever, and a dropped q_si wedges the journal.
+#
+# Everything else is an action, and the client's own filter
+# (FilterManager.createDSFilter) never sends one while dead.
+DEAD_PASSES = frozenset((
+    "hello", "login", "logout", "selPers", "newPers", "actPlayer", "lenter",
+    "resurrect",
+    "getInfo", "rp_get_info", "q_list", "q_si", "q_di", "q_status",
+    "ss_get", "ss_get_si", "ss_get_di", "ss_get_s_si", "e_get_si", "e_get_di",
+))
 
 # The specialisation each firearm class trains (PersAttributes.specMatrix,
 # CharInterface.showKrit): pistols 2, shotguns 3, assault 4, rifles 5,
@@ -104,6 +140,19 @@ def now():
 def roll(chance):
     """The wiki's test: a number from 1 to 100, at or under the chance."""
     return RNG.randint(1, 100) <= chance
+
+
+def drops_on_death(type_id):
+    """Whether the wiki marks this type as one that falls off a corpse.
+
+    The articles' "Шанс выпадения при смерти" reached data/items_wiki.json as
+    drop_on_death, and it is a flag, not a percentage: of the 644 types whose
+    article tabulates it, 88 carry a 1. It is one of the wiki extras
+    items._overlay deliberately keeps off the wire, so it is read from the
+    raw table rather than from params_of.
+    """
+    rec = items.wiki().get(int(type_id))
+    return bool(rec and rec.get("drop_on_death"))
 
 
 def parse_target(value):
@@ -208,6 +257,9 @@ class Fighter:
         # exit timer (LocationInterface.startExitTimer mirrors it)
         self.last_hostile = -1e9
         self.dead = False
+        # loop time of the death the character is still lying in, for the
+        # free resurrection's wait (RegenerationInterface.timePause)
+        self.died_at = -1e9
         self.aim = None         # TimerHandle: a burst waiting for fire_times
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
@@ -316,6 +368,18 @@ class Fighter:
         # A full replacement of the list (EffectManager.e_list); empty is a
         # list too, and mobi_id=0 resolves to the gamer (PlayerRegister).
         self.sess.send("e_list", mobi_id=0, effects=[])
+        # Corpses, both ways round. Someone who logged out dead walks in as
+        # one, and the figure the room has just built for them has to fall
+        # over (DisplayLocScene.dead); anyone already lying here has to be a
+        # corpse on the newcomer's screen too. Never about oneself:
+        # Resurrector.lch reads lch;dead=0 as "open the regeneration window",
+        # and that window is already up from persInfo;death.
+        if self.dead:
+            self.sess.room.broadcast(("lch", dict(dead=self.eid)),
+                                     exclude=self.sess)
+        for other in rc.fighters():
+            if other is not self and other.dead:
+                self.sess.send("lch", dead=other.eid)
 
     def left(self):
         """Before Room.leave: whatever was in flight aims at nothing now."""
@@ -347,37 +411,61 @@ class Fighter:
             self.healing.cancel()
             self.healing = None
 
+    def restore(self, row):
+        """A character has just been loaded: take its death back up.
+
+        The flag is the characters row's (accounts.CHARACTER_COLUMNS), not
+        the Character's, and this is the one place it comes back out of the
+        database. The client learns of it from persInfo;death, sent before
+        the selection, and raises the regeneration window by itself the
+        moment it is standing somewhere (Master.lenter/gmap).
+
+        The wait before a free resurrection starts afresh here rather than
+        surviving the logout: the window's own countdown starts when it
+        opens, a moment after this, so the server's is never the one that
+        refuses.
+        """
+        self.dead = bool(row is not None and row["death"])
+        self.died_at = now() if self.dead else -1e9
+        self.last_hostile = -1e9
+
     def close(self):
         """Connection gone. Must not raise: Session.close runs this before
-        the position and the character are written."""
+        the position and the character are written.
+
+        The dead stay dead: characters.death was written in die(), and the
+        Character carries hp=0 out with it, so the next login finds a corpse
+        where a corpse was left.
+        """
         try:
             self.cancel_timers()
             self.loot = None
-            if self.dead:
-                # No dead flag survives a logout yet, so the character comes
-                # back on its feet, as after a free resurrection.
-                ch = self.character()
-                ch.hp = None
-                ch.sp = None
-                self.dead = False
         except Exception:
             log.exception("  !!    combat close failed")
 
     def blocks(self, cmd, wants_ack):
         """The dead filter (FilterManager.createDSFilter): the client sends
-        nothing but resurrect while dead, so anything else came from a
-        modified one and is refused -- with an ack where one is owed, so
-        the queue stays in step."""
-        if not self.dead or cmd in ("resurrect", "logout", "hello", "login"):
+        nothing but resurrect while dead, so an action that arrives anyway
+        came from a modified one and is refused -- with an ack where one is
+        owed, so the queue stays in step. What still goes through, and why,
+        is DEAD_PASSES."""
+        if not self.dead or cmd in DEAD_PASSES:
             return False
         if wants_ack:
             self.ack(inventory.RES_REFUSED)
         return True
 
+    def in_combat(self):
+        """Whether the exit timer from the last shot or strike is still
+        running. Asked and not answered, for a caller that has already
+        acknowledged the command in hand (/home) and must not ack twice."""
+        return (not self.sess.on_map
+                and now() - self.last_hostile < LEAVE_COMBAT_TIMEOUT)
+
     def refuse_leave(self):
         """chWorld inside leave_combat_timeout of the last shot or strike:
         Master.changeWorldAck words res=39 with that timeout."""
-        if self.sess.on_map or now() - self.last_hostile >= LEAVE_COMBAT_TIMEOUT:
+        if not self.in_combat():
             return False
         self.ack(RES_NO_LEAVE)
         return True
@@ -758,66 +846,135 @@ class Fighter:
     # --- death and resurrection ----------------------------------------------
     def die(self, killer):
         """hcur reached 0. lch;dead=<me> puts the client into DEAD_STATE and
-        opens the regeneration window; until resurrect, blocks() holds."""
+        opens the regeneration window; until resurrect, blocks() holds.
+
+        The flag goes to the database as well as into memory. A death a
+        logout undoes is no death at all, and characters.death is what the
+        next login is told about by persInfo;death (Session.send_account).
+        """
         self.dead = True
+        self.died_at = now()
         self.cancel_timers()
         self.loot = None
         self.last_hostile = now()
         ch = self.character()
         ch.hp = 0
         ch.save(self.store)
+        if self.sess.char_id:
+            self.store.save_character_state(self.sess.char_id, death=1)
         room = self.sess.room
         if room is not None:
             room.broadcast(("lch", dict(dead=self.eid)))
+            self.drop_on_death()
+        # Nothing here to shoot at any more. think() would notice on its
+        # next tick (present() is false for a corpse), but until then the
+        # room stays at war over a target that cannot be hit.
+        rc = self.rc
+        if rc is not None:
+            for mob in rc.mobs.values():
+                if mob.target is self:
+                    rc.mob_reset(mob)
         log.info("  ..    %s died%s", self.sess.nick,
                  "" if killer is None else " to %s" % killer.eid)
 
-    def resurrect(self, p):
-        """resurrect;res_type=0|1|2: free, 5 gold, 500 afro (RegenerationInterface).
+    def drop_on_death(self):
+        """What the corpse leaves lying on its cell.
 
-        The client closes the window on res=0 and does nothing else: HP is
-        restored here and travels by usrUp, and the character is called
-        home (characters.home_loc, set by on_conv;op=0) with a fresh lcall,
-        or stays put where nothing is registered. A price that cannot be
-        paid leaves the window up and restarts its 15 s timer.
+        The wiki's "Шанс выпадения при смерти" (drops_on_death) decides
+        WHICH item can fall; the rest is DESIGNED, there being nothing else
+        in the client or the tables about it. One loose item at a time, from
+        the backpack only -- what is worn or held stays on the body -- into
+        the ordinary bag on the ground, the same one a mob's loot lands in,
+        so it is picked up through the loot session that already exists
+        (ss_create;s_type=0, ss_get;slot=24, ss_upd) and expires with it.
+
+        The item leaves the client's bag by ss_obj_status;status=0, which is
+        how every other removal is reported (inventory.push_status).
+        """
+        rc = self.rc
+        if rc is None or not self.sess.char_id:
+            return
+        loose = [r for r in self.sess.inv.rows()
+                 if r["slot"] == inventory.BAG and drops_on_death(r["type_id"])]
+        if not loose:
+            return
+        row = RNG.choice(loose)
+        self.store.update_item(row["uniq"], char_id=LOOT_OWNER,
+                               slot=inventory.BAG)
+        self.sess.inv.push_status(row, 0)
+        rc.add_to_bag(self.cell, [row])
+        log.info("  ..    %s drops item %d (type %d) on cell %d",
+                 self.sess.nick, row["uniq"], row["type_id"], self.cell)
+
+    def resurrect(self, p):
+        """resurrect;res_type=0|1|2 -- the three buttons of the regeneration
+        window (gpui/RegenerationInterface.as), and what each one costs.
+
+        RESURECT_FREE=0 is not really a choice: timePause is 15 and
+        checkTimePause presses free() itself when the count reaches it
+        (:122-142), so the free button is what happens to anyone who waits.
+        The wait is therefore the price, and it is the one the server
+        charges: before RESURRECT_WAIT seconds have passed the answer is
+        non-zero, and RegenerationInterface.resurrect takes a failure by
+        restarting its countdown (:108-115) -- the window stays up, nothing
+        is shown anywhere, and the timer asks again for free when it runs
+        out. On top of the wait the body wakes up at FREE_HP_SHARE of its HP
+        with no stamina: DESIGNED, the client saying nothing about how whole
+        a corpse comes back.
+
+        RESURECT_GOLD=1 costs GOLD_COST=5 and the button hides itself when
+        the purse is short of it (init/uiUpd, with a link to the top-up page
+        in its place); RESURECT_AFRO=2 costs the 500 payAfro checks for. At
+        the gold_to_afro_rate of 100 this server sends in its constants
+        frame, 5 gold and 500 afro are the same sum -- which is what those
+        two buttons are, one purchase in either purse. Both skip the wait
+        and give HP and stamina back whole.
+
+        Then home, always: the location registered with a resident
+        (on_conv;op=0), or the starting cell when none was. resurrectAck
+        closes the window and returns the client to LOCAL_STATE on res=0, so
+        the acknowledgement goes first and Session.go_home's lcall second.
         """
         if not self.dead:
+            # The window is not up. Nothing to do, but the ack is owed.
             self.ack(inventory.RES_OK)
             return
         res_type = int(p.get("res_type", 0) or 0)
         ch = self.character()
-        if res_type == 1:
+        if res_type == RES_GOLD:
             if ch.gold < RESURRECT_GOLD:
                 self.ack(inventory.RES_NO_MONEY)
                 return
             ch.add_money(gold=-RESURRECT_GOLD)
-        elif res_type == 2:
+        elif res_type == RES_AFRO:
             if ch.afro < RESURRECT_AFRO:
                 self.ack(inventory.RES_NO_MONEY)
                 return
             ch.add_money(afro=-RESURRECT_AFRO)
-        ch.hp = None
-        ch.sp = None
+        elif now() - self.died_at < RESURRECT_WAIT:
+            # Not yet. res=17 is "объект не готов", and nothing shows it:
+            # resurrectAck reads res alone and ErrorReport is not called.
+            self.ack(inventory.RES_NOT_READY)
+            return
+        if res_type in (RES_GOLD, RES_AFRO):
+            # None is how the Character spells "full" (progression.py).
+            ch.hp = None
+            ch.sp = None
+        else:
+            ch.hp = max(1, int(ch.hp_max * FREE_HP_SHARE))
+            ch.sp = 0
         self.dead = False
+        self.died_at = -1e9
         self.last_hostile = -1e9
         ch.save(self.store)
+        if self.sess.char_id:
+            self.store.save_character_state(self.sess.char_id, death=0)
         self.ack(inventory.RES_OK)
         if res_type:
             self.sess.push_money()
-        sess = self.sess
-        home = None
-        row = self.store.character(sess.char_id) if sess.char_id else None
-        if row is not None and row["home_loc"] is not None:
-            try:
-                home = world.location(row["home_loc"])
-            except (KeyError, OSError):
-                home = None
-        if home is not None:
-            sess.loc = home
-            sess.pos = home.entry_cell()
-            sess.enter_location()
-        else:
-            sess.push_vitals()
+        log.info("  ..    %s resurrects (res_type=%d) and goes home",
+                 self.sess.nick, res_type)
+        self.sess.go_home()
 
     # --- the loot window ------------------------------------------------------
     def open_loot(self, p):
@@ -1254,19 +1411,26 @@ class RoomCombat:
         for sess in witnesses:
             if sess in self.room.players:
                 sess.send("lch", lostUser=mob.eid)
-        rows = self.drop_loot(mob)
-        if rows:
-            bag = self.loot.get(mob.cell)
-            if bag is None:
-                bag = self.loot[mob.cell] = LootBag(mob.cell, [r["uniq"] for r in rows])
-                self.room.broadcast(("ss_loot", dict(s_status=1, hex=[mob.cell])))
-            else:
-                bag.uniqs += [r["uniq"] for r in rows]
-            if bag.expiry is not None:
-                bag.expiry.cancel()
-            bag.expiry = asyncio.get_running_loop().call_later(
-                LOOT_LIFETIME, self.expire_bag, mob.cell)
+        self.add_to_bag(mob.cell, self.drop_loot(mob))
         asyncio.get_running_loop().call_later(RESPAWN_DELAY, self.respawn, mob)
+
+    def add_to_bag(self, cell, rows):
+        """Put item rows into the bag on a cell, opening one where there is
+        none. ss_loot;s_status=1 is what draws it (Location.ss_loot), and
+        the lifetime restarts with every addition. Shared by a mob's loot
+        and by what a player drops where they died."""
+        if not rows:
+            return
+        bag = self.loot.get(cell)
+        if bag is None:
+            bag = self.loot[cell] = LootBag(cell, [r["uniq"] for r in rows])
+            self.room.broadcast(("ss_loot", dict(s_status=1, hex=[cell])))
+        else:
+            bag.uniqs += [r["uniq"] for r in rows]
+        if bag.expiry is not None:
+            bag.expiry.cancel()
+        bag.expiry = asyncio.get_running_loop().call_later(
+            LOOT_LIFETIME, self.expire_bag, cell)
 
     def drop_loot(self, mob):
         """Item rows on the ground, owned by nobody, made through the store

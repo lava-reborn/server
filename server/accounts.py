@@ -159,6 +159,17 @@ CHARACTER_COLUMNS = [
     # know its own cell, so leaving home for the map needs it remembered here
     ("home_gx", "INTEGER"),
     ("home_gy", "INTEGER"),
+    # whether the character is lying dead. A death the socket does not
+    # outlive is no death at all, so the flag is written here by
+    # combat.Fighter.die and read back at selPers; it is also what
+    # persInfo;death carries to the character screen, and the flag the
+    # client raises the regeneration window from once it is in a location
+    # (PersGenerator.persInfo, Master.lenter/gmap).
+    #
+    # Deliberately not a column progression.Character writes: its save()
+    # runs on the way out over hp/sp/money and would have to be taught the
+    # flag as well for it not to be undone.
+    ("death", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
 # char_id is updatable too: an item picked out of a loot bag keeps its

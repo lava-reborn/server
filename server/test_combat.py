@@ -112,9 +112,12 @@ _scratch.close()
 
 # --- the server -----------------------------------------------------------------
 # AP regeneration is raised so the bar never throttles the fight, the exit
-# timer and the respawn are shortened, and the dice are seeded.
+# timer and the respawn are shortened, and the dice are seeded. The wait a
+# free resurrection costs goes to zero: that it is charged at all is
+# test_death's business, and here it would only add fifteen seconds.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
-           LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT="3", LAVA_RESPAWN="4", LAVA_SEED="7")
+           LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT="3", LAVA_RESPAWN="4",
+           LAVA_RESURRECT_WAIT="0", LAVA_SEED="7")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 _log = []
@@ -724,7 +727,12 @@ try:
     c.send("getInfo;lvl=0;id=0;type=0;")
     got = c.until(lambda f: f[0] == "usrUp")
     v = named(got, "usrUp")[0]
-    check("alive and whole at home", (v["hcur"] == v["hmax"], v["scur"] == v["smax"]), (True, True))
+    # A free resurrection is the penalised one: a quarter of the HP and no
+    # stamina (combat.Fighter.resurrect). The prices and the rest of what
+    # dying costs are test_death's.
+    check("alive at home, on a free resurrection's quarter of the HP",
+          (v["hcur"], v["hcur"] < v["hmax"], v["scur"]),
+          (max(1, int(v["hmax"] * combat.FREE_HP_SHARE)), True, 0))
     c.send("logout;")
     c.frames(0.3)
 except Exception:
