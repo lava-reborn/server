@@ -723,6 +723,9 @@ class Session:
         if text.startswith("/give"):
             self.cmd_give(text.split()[1:], group)
             return
+        if text.startswith("/money"):
+            self.cmd_money(text.split()[1:], group)
+            return
         if text.startswith("/where"):
             # Everything needed to report a cell that opens the wrong place:
             # the title as drawn, the file behind it, and the cell itself.
@@ -773,6 +776,31 @@ class Session:
         # private channel.
         target.send("userMsg", nick=Str(self.nick), entry=Str(raw),
                     **{"from": self.pid})
+
+    def cmd_money(self, args, group=0):
+        """/money <афро> [голда] -- credit the purse, for testing.
+
+        Through the Character and nowhere else: the row in characters is
+        written back from it on the way out, so money added behind its back
+        would vanish at logout. The client is told by userInfo_Player, the
+        only frame that carries afro and gold at all.
+        """
+        if not self.char_id:
+            return
+        try:
+            afro = int(args[0]) if args else 1000
+            gold = int(args[1]) if len(args) > 1 else 0
+        except ValueError:
+            self.say("/money <афро> [голда]   например /money 0 1000", group)
+            return
+        ch = self.character()
+        ch.add_money(afro, gold)
+        ch.save(STORE)
+        self.push_money()
+        # Gold is kept in hundredths of an ounce, the unit the client divides
+        # by 100 to show; afro is whole.
+        self.say("Теперь: %d афро, %d голды" % (ch.afro, ch.gold // 100), group)
+        log.info("  ..    /money %+d afro %+d gold to %s", afro, gold, self.nick)
 
     def cmd_give(self, args, group=0):
         """/give <тип> [сколько] -- put an item straight into the bag.
