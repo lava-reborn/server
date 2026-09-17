@@ -276,6 +276,36 @@ def terrain():
     return _TERRAIN
 
 
+_TERRAIN_FIX = None
+
+
+def terrain_overrides():
+    """Cells a player has walked and the picture got wrong, by cell.
+
+    The ground is read off the map's own tiles by how rough the photograph
+    is, and a footpath winding between boulders is rough. Where somebody has
+    stood and seen otherwise, their word wins -- data/terrain_verified.json,
+    the same arrangement settlements_verified.json has.
+    """
+    global _TERRAIN_FIX
+    if _TERRAIN_FIX is None:
+        _TERRAIN_FIX = {}
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "terrain_verified.json"),
+                      encoding="utf-8") as fh:
+                doc = json.load(fh)
+            for cell in doc.get("passable") or ():
+                gx, gy = cell.split(",")
+                _TERRAIN_FIX[(int(gx), int(gy))] = True
+            for cell in doc.get("blocked") or ():
+                gx, gy = cell.split(",")
+                _TERRAIN_FIX[(int(gx), int(gy))] = False
+        except (OSError, ValueError, KeyError, AttributeError):
+            pass
+    return _TERRAIN_FIX
+
+
 def in_map(gx, gy):
     """Whether a cell is inside the map's rectangle at all.
 
@@ -298,6 +328,9 @@ def passable(gx, gy):
     """
     (gx0, gy0, gx1, gy1), rows = terrain()
     x, y = int(math.floor(gx)), int(math.floor(gy))
+    fixed = terrain_overrides().get((x, y))
+    if fixed is not None:
+        return fixed
     if not (gx0 <= x <= gx1 and gy0 <= y <= gy1):
         return False
     if not rows:

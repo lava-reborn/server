@@ -317,6 +317,24 @@ for _h, _v in ((travel.W, travel.N), (travel.W, travel.S),
     check("the %s%s corner is walled both ways" % (_h, _v),
           set(travel.ROCK_WALL[_corner]), {_h, _v})
 
+# --- a player's word over the picture --------------------------------------
+# The ground is read off the tiles by how rough the photograph is, and a
+# footpath between boulders is rough: the two cells of the south-western
+# neck read as rock and sealed the Nubian valley off from the mainland.
+# data/terrain_verified.json is where somebody who has walked it says so.
+check("the neck is open", (_w.passable(6264, 1829), _w.passable(6265, 1829)),
+      (True, True))
+_seen = {(5970, 1730)}
+_q = [(5970, 1730)]
+while _q:
+    _x, _y = _q.pop()
+    for _n in ((_x + 1, _y), (_x - 1, _y), (_x, _y + 1), (_x, _y - 1)):
+        if _n not in _seen and _w.passable(*_n):
+            _seen.add(_n)
+            _q.append(_n)
+check("and the valley can be walked to from the black market",
+      [(6268, 1819) in _seen, (6268, 1825) in _seen], [True, True])
+
 print()
 if fails:
     print("FAILED %d:" % len(fails))
