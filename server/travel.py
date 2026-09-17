@@ -172,6 +172,57 @@ def neighbour(gx, gy, side):
     return int(gx) + dx, int(gy) + dy
 
 
+# How far short of a mountain a walker is left. A step of a cell is 8 pixels
+# of map, so two hundredths of a cell is well under a pixel, but it keeps the
+# stopping position inside the last open cell whichever way the client rounds
+# its own float.
+CLEARANCE = 0.02
+
+
+def walk(gx, gy, dx, dy):
+    """The far end of a move, cut short at the first cell nobody can enter.
+
+    The walker crosses cells, not points: this is the grid traversal every
+    tile engine uses (Amanatides & Woo), stepping to whichever cell boundary
+    comes first and asking world.passable about the cell beyond it. The whole
+    move is kept when nothing blocks it, and otherwise the position just
+    inside the last open cell is returned.
+
+    A player standing on blocked ground -- through a location's side exit,
+    which hands out the neighbouring cell without asking, or through /goto --
+    is not trapped there: the cut only starts once the ray has been on open
+    ground, so the first move always carries them out of the rock.
+    """
+    if not dx and not dy:
+        return gx, gy
+    x, y = int(math.floor(gx)), int(math.floor(gy))
+    open_yet = world.passable(x, y)
+    step_x = 1 if dx > 0 else -1
+    step_y = 1 if dy > 0 else -1
+    inf = float("inf")
+    # The ray is parametrised over the move itself: t = 1 is the target.
+    next_x = (x + 1 - gx) / dx if dx > 0 else (x - gx) / dx if dx < 0 else inf
+    next_y = (y + 1 - gy) / dy if dy > 0 else (y - gy) / dy if dy < 0 else inf
+    span_x = abs(1.0 / dx) if dx else inf
+    span_y = abs(1.0 / dy) if dy else inf
+    while True:
+        if next_x < next_y:
+            t, x = next_x, x + step_x
+            next_x += span_x
+        else:
+            t, y = next_y, y + step_y
+            next_y += span_y
+        if t >= 1.0:
+            return gx + dx, gy + dy
+        if world.passable(x, y):
+            open_yet = True
+            continue
+        if not open_yet:
+            continue                    # still walking out of the rock
+        back = max(0.0, t - CLEARANCE / math.hypot(dx, dy))
+        return gx + dx * back, gy + dy * back
+
+
 def deadloc_id(exit_side):
     """The edge-of-the-world location whose one exit is on exit_side."""
     return DEADLOC_BASE | (SIDES.index(exit_side) << 26)
@@ -301,6 +352,15 @@ def plan_exit(loc, pos, gx, gy):
         raise Refused("Здесь нет выхода")
     if side in SIDES:
         nx, ny = neighbour(gx, gy, side)
+        # The mountains hold here too. Walking the map stops at the rock
+        # (move_on_map), but a location's side exit handed over the next
+        # cell without looking, so a ring of peaks could be stepped over
+        # one location at a time -- which is how the Nubian valley, sealed
+        # on the map, was still being walked out of. A player already
+        # standing on rock is not locked in: only the far side is asked.
+        if (world.in_map(nx, ny) and not world.passable(nx, ny)
+                and world.passable(gx, gy)):
+            raise Refused("Дальше горы, здесь не пройти")
         dest = world.location(destination(nx, ny))
         return Exit(dest.id, arrival_cell(dest, OPPOSITE[side]), nx, ny)
     rec = door(loc.id, side)

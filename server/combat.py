@@ -70,6 +70,13 @@ REGEN_PERIOD = 60.0
 FIST_AP = 5
 # ErrorReport codes beyond inventory's, and the resurrection prices
 # RegenerationInterface shows (5 gold / 500 afro; free after 15 s).
+#
+# The gold figure stays as the window writes it. Unlike the training window,
+# which only prints its price, this one compares: it greys the button while
+# attributes.gold < GOLD_COST, and attributes.gold is the purse in hundredths
+# of an ounce. So its 5 is five hundredths, and the server charges what the
+# button lets the player press. (Training's prices are whole ounces and are
+# scaled in progression.SPEC_COST; the two windows simply disagree.)
 RES_NO_LEAVE = 39
 RES_TOO_FAR = progression.ERR_TOO_FAR
 RESURRECT_GOLD = 5

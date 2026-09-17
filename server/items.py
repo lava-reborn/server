@@ -341,6 +341,41 @@ def _common(type_id, name, root, price, weight):
         action_map=0)
 
 
+# The developers left themselves a weapon: objects.xml carries type 1534 under
+# the name admin_gun, in no trader's stock and in no location's spawns. It is
+# given the numbers that name implies, so a tester can settle a fight without
+# arguing with the balance. Ours, and openly so; nothing sells it.
+ADMIN_GUN = 1534
+
+ADMIN_OVERRIDES = {
+    ADMIN_GUN: dict(
+        # One action point a shot, the whole clip in a burst if wanted.
+        fire_costs=[1, 1, 1],
+        fire_times=[200, 200, 200],
+        fire_mods=[1, 3, 9],
+        h_damage_min=[999, 999, 999],
+        h_damage_max=[999, 999, 999],
+        st_damage_min=[99, 99, 99],
+        st_damage_max=[99, 99, 99],
+        # Reaches across any location and never misses for spread: the
+        # client divides by target_size, so it may be small but never zero.
+        max_range=[64, 64, 64],
+        opt_range=[1, 1, 1],
+        end_opt_range=[64, 64, 64],
+        target_size=[1, 1, 1],
+        piercing=[99, 99, 99],
+        clip_size=99,
+        reload_time=200,
+        reload_cost=1,
+        max_break_abs=9999,
+        weight=100,
+        cost=0,
+        # Takes the rounds a starting pistol takes, so /give 6092 feeds it.
+        comp_array=[AMMO_9MM[0], AMMO_9MM[1], AMMO_9MM[2]],
+    ),
+}
+
+
 def static_info(type_id):
     """Everything the client needs to describe one item type.
 
@@ -353,6 +388,10 @@ def static_info(type_id):
         rec = wiki().get(type_id)
         if rec:
             _overlay(type_id, info[1], rec)
+        # Last, so neither the design nor the wiki can argue with it.
+        admin = ADMIN_OVERRIDES.get(type_id)
+        if admin:
+            info[1].update(admin)
     return info
 
 

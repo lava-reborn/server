@@ -808,6 +808,31 @@ class Session:
         target.send("userMsg", nick=Str(self.nick), entry=Str(raw),
                     **{"from": self.pid})
 
+    def cmd_money(self, args, group=0):
+        """/money <афро> [голда] -- credit the purse, for testing.
+
+        Through the Character and nowhere else: the row in characters is
+        written back from it on the way out, so money added behind its back
+        would vanish at logout. The client is told by userInfo_Player, the
+        only frame that carries afro and gold at all.
+        """
+        if not self.char_id:
+            return
+        try:
+            afro = int(args[0]) if args else 1000
+            gold = int(args[1]) if len(args) > 1 else 0
+        except ValueError:
+            self.say("/money <афро> [голда]   например /money 0 1000", group)
+            return
+        ch = self.character()
+        ch.add_money(afro, gold)
+        ch.save(STORE)
+        self.push_money()
+        # Gold is kept in hundredths of an ounce, the unit the client divides
+        # by 100 to show; afro is whole.
+        self.say("Теперь: %d афро, %d голды" % (ch.afro, ch.gold // 100), group)
+        log.info("  ..    /money %+d afro %+d gold to %s", afro, gold, self.nick)
+
     def cmd_give(self, args, group=0):
         """/give <тип> [сколько] -- put an item straight into the bag.
 
@@ -839,32 +864,6 @@ class Session:
         self.say("Выдано: %s x%d"
                  % (names.text(items.STRING_ID_OFFSET + type_id), count), group)
         log.info("  ..    /give %d x%d to %s", type_id, count, self.nick)
-
-    def cmd_money(self, args, group=0):
-        """/money <афро> [голда в сотых] -- top the purse up, for testing.
-
-        Ours, like /give, and for the same reason: a newborn carries 1000
-        afro while the rental yard asks thousands per day (the wiki's own
-        prices, data/transport.json), so without this nothing about the
-        lessor can be tried by hand. Goes through the Character like every
-        other change to money, so the writer on the way out agrees with it.
-        """
-        if not self.char_id:
-            return
-        try:
-            afro = int(args[0])
-            gold = int(args[1]) if len(args) > 1 else 0
-        except (IndexError, ValueError):
-            self.say("/money <афро> [голда в сотых]   например /money 20000 500",
-                     group)
-            return
-        char = self.character()
-        char.add_money(afro, gold)
-        char.save(STORE)
-        self.push_money()
-        self.say("Кошелёк: %d афро, %.2f голды" % (char.afro, char.gold / 100.0),
-                 group)
-        log.info("  ..    /money %+d afro %+d gold to %s", afro, gold, self.nick)
 
     def cmd_goto(self, args, group=0):
         """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
@@ -919,6 +918,10 @@ class Session:
         moveAck only sets a velocity; the client extrapolates from its own
         position and never asks again, so arrival has to be timed here and
         confirmed with a userMove carrying zero speed.
+
+        The mountains are the server's to keep: the client walks wherever it
+        is pointed and asks nothing, so a leg that runs into rock or water is
+        cut here and the player is stopped in front of it.
         """
         if "trg" in p:
             return                      # intercepting a player: not implemented
@@ -931,13 +934,30 @@ class Session:
         dist = (dx * dx + dy * dy) ** 0.5
         if dist < 0.01:
             return
-        tx, ty = self.gx + dx, self.gy + dy
-        # A rented vehicle is a plain multiplier on the pace, and it has to
-        # go into both halves at once: the velocity the client extrapolates
-        # from, and the timer that decides when the trip is over. Move one
-        # without the other and the figure is somewhere else than the server
-        # thinks when it stops it (world.md 4: the client computes no speed
-        # of its own).
+        # Only as far as the ground allows (world.passable, recovered by
+        # data/build_terrain.py): the leg ends just inside the last open cell.
+        tx, ty = travel.walk(self.gx, self.gy, dx, dy)
+        dx, dy = tx - self.gx, ty - self.gy
+        dist = (dx * dx + dy * dy) ** 0.5
+        if dist < 0.01:
+            # Nowhere to go. The map has no refusal frame: moveAck carries a
+            # velocity and nothing else, so a zero one would stop the figure
+            # wherever the client has already drawn it, and cor_pos is a
+            # location frame the map never listens for (GlobalMap.as registers
+            # userMove, moveAck and marks). userMove for id 0 says both things
+            # at once -- GlobalMap.userMove assigns walker.x/y and then
+            # startMove(0,0,0) -- which is exactly what an arrival sends, so
+            # the same frame confirms standing still.
+            self.cancel_travel()
+            self.arrive(self.gx, self.gy)
+            return
+        # A rented vehicle is a plain multiplier on the pace, applied after
+        # the ground has had its say: the mountains stop a rider exactly
+        # where they stop a walker, only sooner. It has to go into both
+        # halves at once -- the velocity the client extrapolates from, and
+        # the timer that decides when the trip is over. Move one without the
+        # other and the figure is somewhere else than the server thinks when
+        # it stops it (world.md 4: the client computes no speed of its own).
         speed = TRAVEL_SPEED * self.travel_speed()
         vx, vy = dx / dist * speed, dy / dist * speed
         self.send("moveAck", vx=vx, vy=vy, t=0)

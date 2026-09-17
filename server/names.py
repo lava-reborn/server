@@ -75,6 +75,12 @@ ALL.update(QUEST_STRINGS)
 ALL.update(TRANSPORT_STRINGS)
 
 
+# The developers' own weapon (items.ADMIN_GUN) has an internal name and no
+# article anywhere, so it would reach the player as "admin_gun". Named here
+# in the same breath as the numbers that make it what it is.
+ALL[items.STRING_ID_OFFSET + items.ADMIN_GUN] = "Админский ствол"
+
+
 def known(string_id):
     """Whether this id can be sent at all without costing the player a login."""
     return string_id in ALL
