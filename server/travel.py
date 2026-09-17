@@ -36,11 +36,11 @@ from protocol import Str
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# The playable rectangle of the global map (world.md §5, TASKS 8.8): every
-# recovered settlement and every tooltip cell lies within it. A neighbour
-# outside is the edge of the world.
-MAP_X = (5833, 6305)
-MAP_Y = (1600, 2110)
+# The playable rectangle of the global map, written down in world and
+# re-exported here because everything else asks travel for it. Why it ends
+# where it does: world.MAP_X.
+MAP_X = world.MAP_X
+MAP_Y = world.MAP_Y
 
 W, N, E, S = "W", "N", "E", "S"
 SIDES = (W, N, E, S)
