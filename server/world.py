@@ -276,6 +276,18 @@ def terrain():
     return _TERRAIN
 
 
+def in_map(gx, gy):
+    """Whether a cell is inside the map's rectangle at all.
+
+    passable() answers no for everything outside, which is right for a
+    walker but wrong for a question about terrain: the edge of the world
+    is crossed deliberately, through a location's exit into deadloc.
+    """
+    (gx0, gy0, gx1, gy1), _rows = terrain()
+    x, y = int(math.floor(gx)), int(math.floor(gy))
+    return gx0 <= x <= gx1 and gy0 <= y <= gy1
+
+
 def passable(gx, gy):
     """Whether a walker can stand on a map cell.
 

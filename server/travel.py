@@ -358,7 +358,8 @@ def plan_exit(loc, pos, gx, gy):
         # one location at a time -- which is how the Nubian valley, sealed
         # on the map, was still being walked out of. A player already
         # standing on rock is not locked in: only the far side is asked.
-        if not world.passable(nx, ny) and world.passable(gx, gy):
+        if (world.in_map(nx, ny) and not world.passable(nx, ny)
+                and world.passable(gx, gy)):
             raise Refused("Дальше горы, здесь не пройти")
         dest = world.location(destination(nx, ny))
         return Exit(dest.id, arrival_cell(dest, OPPOSITE[side]), nx, ny)
