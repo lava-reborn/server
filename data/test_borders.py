@@ -213,6 +213,27 @@ def check_pockets(wet):
     print("no rim cell has an exit facing out of the world, and all four lead"
           " back in")
 
+    # And a cell outside the world still answers with something enterable:
+    # the "Граница пустоши" whose one row of zones faces back in. Nobody can
+    # walk out to one any more, but a character who logged out beyond the
+    # rim before it was drawn there has to be able to log in again.
+    for side, cell in ((travel.W, (world.MAP_X[0] - 1, 1700)),
+                       (travel.E, (world.MAP_X[1] + 1, 1700)),
+                       (travel.N, (5900, world.MAP_Y[0] - 1)),
+                       (travel.S, (5900, world.MAP_Y[1] + 1))):
+        back = travel.OPPOSITE[side]
+        loc_id = travel.destination(*cell)
+        assert loc_id == travel.deadloc_id(back), \
+            "borders: %s past the %s rim is location %d" % (cell, side, loc_id)
+        loc = world.location(loc_id)
+        assert sides_of(loc_id) == {back}, \
+            "borders: the %s border of the wasteland opens %s" % (
+                side, "".join(sorted(sides_of(loc_id))))
+        assert travel.arrival_cell(loc, side) not in loc.obstacles, \
+            "borders: arriving in %d lands on an obstacle" % loc_id
+    print("and a cell outside the world is still the wasteland's border,"
+          " facing back in")
+
 
 def walk_from(start):
     """Every cell reachable on foot, breadth-first as a walker moves."""

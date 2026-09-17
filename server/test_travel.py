@@ -7,9 +7,11 @@ cmdAck;res=0 followed by an lcall it will then confirm with lenter. Which
 exit and where it leads is the server's to know (recon/analysis/world.md
 §5); the tests pin the rules travel.py recovered: a side leads to the
 neighbouring map cell and arrives at the opposite edge, a door follows
-data/exits.json or is refused, and past the map's edge lies a deadloc whose
-one exit faces back. Map bookmarks (GlobalMap.marks/addMark/editMark/
-removeMark) and the way home (on_conv;op=0, then go_home) ride along.
+data/exits.json or is refused, the rim of the world is a cell with rocks
+standing on it and no exit facing out, and a way that does run out -- an
+exit pointing into the lake -- ends in a pocket the player backs out of.
+Map bookmarks (GlobalMap.marks/addMark/editMark/removeMark) and the way home
+(on_conv;op=0, then go_home) ride along.
 """
 import os
 import socket
@@ -135,9 +137,29 @@ def exit_cell(loc, side):
 
 CELL_102 = world.pack(5970, 1730)          # the black market's own cell
 EAST_OF_102 = world.pack(5971, 1730)       # open desert
-EDGE = world.pack(6305, 1730)              # the last cell before the border
-BEYOND = world.pack(6306, 1730)            # one past it
-DEADLOC_W = travel.deadloc_id(travel.W)    # exit on the west, facing back in
+ROW = 1730
+LAST_X = world.MAP_X[1] - 1                # the last open cell before the rim
+LAST = world.pack(LAST_X, ROW)
+RIM_X = world.MAP_X[1]                     # the rim itself, rock standing on it
+RIM = world.pack(RIM_X, ROW)
+RIM_LOC = world.location_at(RIM_X, ROW)    # one of the ring's "Скалы" files
+
+
+def shore():
+    """A dry cell with the lake to its east, and room to its west.
+
+    Found rather than named: the water is read off the client's map tiles
+    and its outline moves a little when the reading is refined.
+    """
+    for gy in range(1600, 1800):
+        for gx in range(5900, 6200):
+            if (world.passable(gx, gy) and world.water(gx + 1, gy)
+                    and world.passable(gx - 1, gy)):
+                return gx, gy
+    raise SystemExit("no lake on the map: data/map_terrain.json is wrong")
+
+
+SHORE = shore()
 
 try:
     c = Client(connect())
@@ -257,25 +279,25 @@ try:
     check("still in the same location", "static/1000.xml" in got[1], True)
 
     # --- the edge of the world ------------------------------------------------
-    lcall = goto(c, "6305 1730")
-    check("on the last cell before the border", "id=%d;" % EDGE in lcall, True)
+    # The rim is a ring of the client's own rock scenes standing on the rim
+    # cells themselves (data/borders.json). So walking east off the last open
+    # cell is an ordinary step onto the next cell -- and that cell is a place
+    # with no exit facing east, which is the only kind of wall LAVA had.
+    lcall = goto(c, "%d %d" % (LAST_X, ROW))
+    check("on the last open cell before the rim", "id=%d;" % LAST in lcall, True)
     enter(c)
-    border = world.location(EDGE)
+    border = world.location(LAST)
     stand_on(c, exit_cell(border, travel.E))
     c.send("chWorld;to=1;")
     got = c.frames()
-    check("east of the border is a wall of rock",
+    check("east of it stands the rock of the rim",
           [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
-          and "id=%d;" % travel.rock_for(travel.E, 6305, 1730) in got[1], True)
-    rock = world.location(travel.rock_for(travel.E, 6305, 1730))
+          and "id=%d;" % RIM_LOC in got[1], True)
+    rock = world.location(RIM_LOC)
     check("one of the border scenes the client ships",
           (rock.title, rock.fn.startswith("B_")), ("Скалы", True))
-    # The cell does not move: the rocks are a dead end entered from the cell
-    # the player was standing on, so nothing can be walked around through
-    # them and backing out lands where they started.
     g_id = int(param(got[1], "g_id"))
-    check("standing on the same map cell", g_id & 0x3FFFFFF,
-          (6305 << 13) | 1730)
+    check("standing on the rim cell itself", g_id & 0x3FFFFFF, RIM)
     check("an ordinary location, not a sub-location", g_id >> 26, 0)
     lenter, frames = enter(c)
     pos = int(param(lenter, "pos"))
@@ -284,38 +306,67 @@ try:
     check("arriving over the edge one came in by", pos % rock.width <= 8, True)
     check("with the wall ahead", travel.E in travel.ROCK_WALL[rock.id], True)
     check("nobody lives there", any(f.startswith("lch") for f in frames), False)
+    check("and no cell to stand on to leave the world by",
+          any(travel.side_at(rock, cell) == travel.E
+              for cell in range(rock.width * rock.height)), False)
 
-    # The hotkey can still ask for the map (LocationInterface.toGlobal does
-    # not look at isSubLocation): that lands on the border cell, not beyond.
+    # The map from the rim is the rim, and walking back into it is the rocks.
     c.send("chWorld;")
     got = c.frames()
-    check("the map from beyond its edge",
+    check("the map from the rim",
           [f.split(";")[0] for f in got], ["cmdAck", "gmap", "marks"])
     check("puts the player on the last cell of the map",
-          "x=6305;y=1730;" in got[1], True)
+          "x=%d;y=%d;" % (RIM_X, ROW) in got[1], True)
     c.send("chWorld;")
     got = c.frames()
-    check("which opens the border desert again", "id=%d;" % EDGE in got[1], True)
-    enter(c)
-    stand_on(c, exit_cell(border, travel.E))
-    c.send("chWorld;to=1;")
-    c.frames()
+    check("which opens the rocks again", "id=%d;" % RIM_LOC in got[1], True)
     enter(c)
 
-    # The rocks are a dead end: whichever way they let a player walk, to=1
-    # takes them back to the place the cell holds.
-    rock = world.location(travel.rock_for(travel.E, 6305, 1730))
-    side = next((sd for sd in travel.SIDES
-                 if any(travel.side_at(rock, cell) == sd
-                        for cell in range(rock.width * rock.height))), None)
-    check("the rocks do have a way to walk out of", side is not None, True)
-    stand_on(c, exit_cell(rock, side))
+    # Out of the rocks the way one came: west, onto the cell west of them.
+    stand_on(c, exit_cell(rock, travel.W))
     c.send("chWorld;to=1;")
     got = c.frames()
-    check("and it leads back to the border cell",
+    check("walking west out of the rim is the cell west of it",
           [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
-          and "id=%d;" % EDGE in got[1], True)
-    check("as an ordinary cell again", "g_id=%d;" % EDGE in got[1], True)
+          and "id=%d;" % LAST in got[1], True)
+    check("as an ordinary cell again", "g_id=%d;" % LAST in got[1], True)
+    enter(c)
+
+    # --- a way that runs out: the lake ----------------------------------------
+    # Water is the one thing left on the map nobody can enter, and an exit
+    # pointing into it gets the scene a dead end deserves: one of the kit's
+    # four pockets, open only on the side the player came in over. The map
+    # cell does not move, so backing out lands exactly where it started.
+    lcall = goto(c, "%d %d" % SHORE)
+    check("on the shore of the lake", "id=%d;" % world.pack(*SHORE) in lcall,
+          True)
+    enter(c)
+    beach = world.location(world.location_at(*SHORE))
+    stand_on(c, exit_cell(beach, travel.E))
+    c.send("chWorld;to=1;")
+    got = c.frames()
+    pocket = world.location(travel.POCKET[travel.E])
+    check("the exit into the water opens a pocket of rock",
+          [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
+          and "id=%d;" % pocket.id in got[1], True)
+    check("also one of the border scenes",
+          (pocket.title, travel.E), ("Скалы", "E"))
+    check("and the map cell has not moved",
+          "g_id=%d;" % world.pack(*SHORE) in got[1], True)
+    enter(c)
+    check("the pocket opens on one side only, the one walked in over",
+          {s for s in travel.exit_sides(pocket).values() if s in travel.SIDES},
+          {travel.W})
+    stand_on(c, exit_cell(pocket, travel.W))
+    c.send("chWorld;to=1;")
+    got = c.frames()
+    check("and backing out of it lands on the cell it was entered from",
+          [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
+          and "id=%d;" % world.pack(*SHORE) in got[1], True)
+    enter(c)
+
+    # Back to a cell in the middle of nowhere for the marks below.
+    goto(c, "6305 1730")
     enter(c)
 
     # --- marks ---------------------------------------------------------------
@@ -411,8 +462,8 @@ try:
     enter(c)
     c.send("chWorld;")
     got = c.frames()
-    # The well was set 1,1 from the border cell 6305,1730, so it sits on
-    # 6306,1731; seen from the market that is 336,1 away.
+    # The well was set 1,1 from the cell 6305,1730 the marks were made on, so
+    # it sits on 6306,1731; seen from the market that is 336,1 away.
     check("the marks are the character's, not the socket's",
           got[2], "marks;dxdy=|%d|%d|;title=|@Колодец@|;info=|@@|;"
                   % (6306 - 5970, 1731 - 1730))
