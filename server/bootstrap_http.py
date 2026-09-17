@@ -238,7 +238,7 @@ class Handler(BaseHTTPRequestHandler):
             "strings": len(names.ALL),
             "game": "%s:%s" % (GAME_HOST, GAME_PORT),
             "res": SERVE_RES,
-        }), "application/json")
+        }), "application/json; charset=utf-8")
 
     def _register(self, body):
         form = parse_qs(body.decode("utf-8", "replace"))
