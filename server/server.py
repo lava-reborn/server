@@ -42,6 +42,12 @@ PORT = int(os.environ.get("LAVA_PORT", "9775"))
 # that drops NET_BIND_SERVICE cannot have it at all, and 0 turns the second
 # listener off outright: the policy is also answered inline on the game port.
 POLICY_PORT = int(os.environ.get("LAVA_POLICY_PORT", "843"))
+
+# /goto, /give and /money in chat. Off unless a test run turns them on: they
+# are the admin panel's business now, and on a server other people are on
+# they would be a purse and an armoury for anyone who can type.
+CHEATS = os.environ.get("LAVA_CHEATS", "").strip().lower() not in (
+    "", "0", "no", "off", "false")
 STORE = accounts.Store()
 
 # Every connection with a Session behind it, so a stop can reach them all.
@@ -378,6 +384,24 @@ class Session:
             return
         self.send("shutdown", seconds=0)
         self.close()
+
+    def kick(self, admin="Сервер", seconds=0, reason=""):
+        """Put the player out with the game's own words for it.
+
+        Session.kickban (Session.as:199) writes "Администратор <admin> ведет
+        работу над вашим аккаунтом", adds how long the account will be
+        unavailable when seconds is given, and the reason underneath. It only
+        opens the window -- the leaving is the socket closing behind it, and
+        close() saves the character on the way, so nothing is lost by it.
+        """
+        if self.closed:
+            return
+        self.send("kickban", admin=Str(admin), seconds=int(seconds),
+                  reason=Str(reason or ""))
+        log.info("  ..    kicked %s by %s: %s", self.nick, admin,
+                 reason or "-")
+        self.close()
+
     def leave_room(self):
         if self.room is not None:
             self.combat.left()
@@ -768,14 +792,40 @@ class Session:
             self.whisper(p["to"], raw)
             return
         self.send("cmdAck", res=0)
-        if text.startswith("/goto"):
-            self.cmd_goto(text.split()[1:], group)
-            return
-        if text.startswith("/give"):
-            self.cmd_give(text.split()[1:], group)
-            return
-        if text.startswith("/money"):
-            self.cmd_money(text.split()[1:], group)
+        # /goto, /give and /money make money, items and distance out of
+        # nothing for whoever types them, which stopped being acceptable the
+        # moment anyone else could log in. They are the admin panel's now,
+        # and reach the game through admin_actions.
+        #
+        # They stay here behind a switch that is off everywhere but a test
+        # run, because the suites use them to set a scene -- put the player
+        # in the dump, give them the item that drops on death, take their
+        # money away to check the refusal. Driving all of that through the
+        # queue would test the queue instead of what the suite is about.
+        # LAVA_CHEATS is set by no script that serves anybody: not run.sh,
+        # not the compose file, not the deployment.
+        if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money"):
+            args = text.split()[1:]
+            try:
+                if text.startswith("/goto"):
+                    if len(args) >= 2:
+                        out = self.admin_goto(None, args[0], args[1])
+                    else:
+                        out = self.admin_goto(args[0] if args else None)
+                    # Silent when it worked, the way it always was: the
+                    # location frame is the answer, and a line of chat behind
+                    # it is one more frame every caller has to expect.
+                    if out.startswith(self.nick + ":"):
+                        return
+                elif text.startswith("/give"):
+                    out = self.admin_give(args[0], args[1] if len(args) > 1
+                                          else 1)
+                else:
+                    out = self.admin_money(args[0] if args else 1000,
+                                           args[1] if len(args) > 1 else 0)
+            except (IndexError, ValueError):
+                out = "не понял аргументы"
+            self.say(out, group)
             return
         if text.startswith("/where"):
             # Everything needed to report a cell that opens the wrong place:
@@ -836,96 +886,116 @@ class Session:
         target.send("userMsg", nick=Str(self.nick), entry=Str(raw),
                     **{"from": self.pid})
 
-    def cmd_money(self, args, group=0):
-        """/money <афро> [голда] -- credit the purse, for testing.
+    # --- what the admin panel asks for ------------------------------------
+    #
+    # These were chat commands once, open to whoever typed them, which was
+    # fine while the only player was the person running the server. They are
+    # driven from the panel now (admin_actions in the database, drained by
+    # apply_admin_actions below) and the chat knows nothing about them.
+    #
+    # Each returns a line for the panel's log. They run against a character
+    # that is online, so the change goes through the objects holding it --
+    # money added behind Character's back is written over at logout.
 
-        Through the Character and nowhere else: the row in characters is
-        written back from it on the way out, so money added behind its back
-        would vanish at logout. The client is told by userInfo_Player, the
-        only frame that carries afro and gold at all.
-        """
+    def admin_money(self, afro=0, gold=0):
         if not self.char_id:
-            return
-        try:
-            afro = int(args[0]) if args else 1000
-            gold = int(args[1]) if len(args) > 1 else 0
-        except ValueError:
-            self.say("/money <афро> [голда]   например /money 0 1000", group)
-            return
+            return "персонаж не выбран"
         ch = self.character()
-        ch.add_money(afro, gold)
+        ch.add_money(int(afro), int(gold))
         ch.save(STORE)
         self.push_money()
         # Gold is kept in hundredths of an ounce, the unit the client divides
         # by 100 to show; afro is whole.
-        self.say("Теперь: %d афро, %d голды" % (ch.afro, ch.gold // 100), group)
-        log.info("  ..    /money %+d afro %+d gold to %s", afro, gold, self.nick)
+        return "%s: теперь %d афро, %d голды" % (self.nick, ch.afro,
+                                                 ch.gold // 100)
 
-    def cmd_give(self, args, group=0):
-        """/give <тип> [сколько] -- put an item straight into the bag.
+    def admin_give(self, type_id, count=1):
+        """Put an item straight into the bag.
 
-        Ours, not the game's, and for testing only: the client parses no
-        commands of its own, so this costs nothing to have. Everything a
-        purchase does on the server happens here too -- the instance, the
-        ss_obj_status that adds it to the bag, and the ss_di_* the client
-        asks for next -- because the client adds nothing on its own.
+        Everything a purchase does on the server happens here too -- the
+        instance, the ss_obj_status that adds it to the bag, and the ss_di_*
+        the client asks for next -- because the client adds nothing itself.
         """
         if not self.char_id:
-            return
-        try:
-            type_id = int(args[0])
-            count = int(args[1]) if len(args) > 1 else 1
-        except (IndexError, ValueError):
-            self.say("/give <номер типа> [сколько]   например /give 6092 200",
-                     group)
-            return
+            return "персонаж не выбран"
+        type_id, count = int(type_id), int(count)
         if items.params_of(type_id) is None:
-            self.say("Предмета %d нет в каталоге" % type_id, group)
-            return
-        root = items.root_of(type_id)
-        if root not in items.HEAPABLE_ROOTS:
+            return "предмета %d нет в каталоге" % type_id
+        if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
             count = 1
         count = max(1, min(count, 999))
         row = self.inv.create(type_id, count)
         self.inv.push_status(row, 1)
         self.inv.push_di(row)
-        self.say("Выдано: %s x%d"
-                 % (names.text(items.STRING_ID_OFFSET + type_id), count), group)
-        log.info("  ..    /give %d x%d to %s", type_id, count, self.nick)
+        return "%s: выдано %s x%d" % (
+            self.nick, names.text(items.STRING_ID_OFFSET + type_id), count)
 
-    def cmd_goto(self, args, group=0):
-        """/goto <id> | /goto <x> <y> -- open a location, or a map cell."""
+    def admin_transport(self, type_id, days=None):
+        """Hand a vehicle over, paying nobody and asking no lessor.
+
+        This is the only way to the nine the lessors do not stock, the
+        winged manatee among them -- a hundred times walking pace, where
+        nothing else in the table passes five.
+        """
+        if not self.char_id:
+            return "персонаж не выбран"
+        type_id = int(type_id)
+        if type_id == 0:
+            self.transport = None
+            STORE.save_character_state(self.char_id, transport_type=None,
+                                       transport_until=None)
+            self.send_player_info()
+            return "%s: транспорт снят" % self.nick
+        vehicle = transport.get(type_id)
+        if vehicle is None:
+            return "транспорта %d нет в таблице" % type_id
+        # Clamped rather than refused: valid_days answers whether the client
+        # could have sent it, and this does not come from the client.
+        days = transport.MAX_DAYS if days is None else int(days)
+        days = max(1, min(days, transport.MAX_DAYS))
+        self.transport = (type_id, transport.until_after(days))
+        STORE.save_character_state(self.char_id, transport_type=type_id,
+                                   transport_until=self.transport[1])
+        # tr and tr_hours ride userInfo_Player and travel in nothing else.
+        self.send_player_info()
+        return "%s: %s на %d дн., скорость x%s" % (
+            self.nick, vehicle["name"], days, vehicle["speed_mod"])
+
+    def admin_goto(self, loc_id=None, gx=None, gy=None):
+        """Open a location, or the one standing on a map cell.
+
+        This is how the rest of the world is reached at all: most of the 1381
+        location files are interiors, and the graph that led into them lived
+        in the serverdata node, which is stripped from every shipped file.
+        """
+        if not self.char_id:
+            return "персонаж не выбран"
         try:
-            if len(args) >= 2:
-                gx, gy = int(args[0]), int(args[1])
+            if loc_id is None:
+                gx, gy = int(gx), int(gy)
                 loc_id = world.location_at(gx, gy)
-            elif len(args) == 1:
-                loc_id = int(args[0])
-                # A wilderness id names its own cell. A settlement has one
-                # in the map table, and the player has to be moved onto it,
-                # or leaving would drop them wherever they stood before. A
-                # true interior has none, and there the old cell is right.
+            else:
+                loc_id = int(loc_id)
+                # A wilderness id names its own cell. A settlement has one in
+                # the map table, and the player has to be moved onto it, or
+                # leaving would drop them wherever they stood before. A true
+                # interior has none, and there the old cell is right.
                 if world.is_wilderness(loc_id):
                     gx, gy = world.unpack(loc_id)
                 else:
                     gx, gy = world.cell_of(loc_id) or (self.gx, self.gy)
-            else:
-                self.say("/goto <номер локации>  или  /goto <x> <y>", group)
-                return
-        except ValueError:
-            self.say("Не понял. /goto <номер локации> или /goto <x> <y>", group)
-            return
+        except (TypeError, ValueError):
+            return "нужен номер локации или пара координат"
         try:
             loc = world.location(loc_id)
         except (KeyError, OSError):
-            self.say("Локации %d нет" % loc_id, group)
-            return
+            return "локации %d нет" % loc_id
         self.on_map = False
         self.cancel_travel()
         GMAP.leave(self)
         self.gx, self.gy = gx, gy
         self.go_to(loc.id)
-        log.info("  ..    /goto %d -> %s", loc_id, loc.file)
+        return "%s: перенесён в %s [%d]" % (self.nick, loc.title, loc.id)
 
     def cancel_travel(self):
         """Drop any leg in flight, so the position stops extrapolating."""
@@ -1788,6 +1858,7 @@ async def main():
     game = await asyncio.start_server(handle_client, HOST, PORT)
     log.info("game server on %s:%d", HOST, PORT)
     servers = [game]
+    admin_task = asyncio.ensure_future(drain_admin_actions())
     if POLICY_PORT:
         try:
             pol = await asyncio.start_server(handle_policy, HOST, POLICY_PORT)
@@ -1807,7 +1878,137 @@ async def main():
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, stopping.set)
     await stopping.wait()
+    admin_task.cancel()
     await shutdown(servers)
+
+
+ADMIN_POLL_SECONDS = float(os.environ.get("LAVA_ADMIN_POLL", "1.0"))
+
+
+def session_for(char_id):
+    """The live session playing that character, if any."""
+    for sess in SESSIONS:
+        if sess.char_id == char_id and not sess.closed:
+            return sess
+    return None
+
+
+def apply_admin_action(row):
+    """Carry out one queued action and say what happened.
+
+    A character who is online is changed through the session holding it,
+    because Character.save() writes its own numbers back at logout and would
+    undo anything done behind it. A character who is not online has no such
+    copy, so the database is the truth and is written directly.
+    """
+    args = json.loads(row["args_json"] or "{}")
+    kind = row["kind"]
+    sess = session_for(row["char_id"]) if row["char_id"] else None
+
+    if kind == "kick" or kind == "ban":
+        if kind == "ban":
+            STORE.set_banned(row["account_id"], bool(args.get("banned", True)))
+        target = None
+        for s in SESSIONS:
+            if s.account and s.account["id"] == row["account_id"]:
+                target = s
+                break
+        if target is None:
+            return ("забанен, в игре его нет" if kind == "ban"
+                    else "в игре его нет")
+        target.kick(row["admin"], args.get("seconds", 0), args.get("reason", ""))
+        return "выкинут из игры"
+
+    if row["char_id"] is None:
+        return "действию нужен персонаж"
+
+    if sess is not None:
+        if kind == "money":
+            return sess.admin_money(args.get("afro", 0), args.get("gold", 0))
+        if kind == "item":
+            return sess.admin_give(args["type_id"], args.get("count", 1))
+        if kind == "transport":
+            return sess.admin_transport(args["type_id"], args.get("days"))
+        if kind == "goto":
+            return sess.admin_goto(args.get("loc_id"), args.get("gx"),
+                                   args.get("gy"))
+        return "неизвестное действие: %s" % kind
+
+    # Offline: nothing is holding this character, so the row is the truth.
+    row_c = STORE.character(row["char_id"])
+    if row_c is None:
+        return "персонажа нет"
+    if kind == "money":
+        STORE.save_character_state(
+            row["char_id"],
+            afro=int(row_c["afro"]) + int(args.get("afro", 0)),
+            gold=int(row_c["gold"]) + int(args.get("gold", 0)))
+        return "начислено (не в игре)"
+    if kind == "item":
+        type_id = int(args["type_id"])
+        if items.params_of(type_id) is None:
+            return "предмета %d нет в каталоге" % type_id
+        count = int(args.get("count", 1))
+        if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
+            count = 1
+        STORE.create_item(row["char_id"], type_id, items.root_of(type_id),
+                          count=max(1, min(count, 999)))
+        return "положено в рюкзак (не в игре)"
+    if kind == "transport":
+        type_id = int(args["type_id"])
+        if type_id == 0:
+            STORE.save_character_state(row["char_id"], transport_type=None,
+                                       transport_until=None)
+            return "транспорт снят (не в игре)"
+        if transport.get(type_id) is None:
+            return "транспорта %d нет в таблице" % type_id
+        days = max(1, min(int(args.get("days") or transport.MAX_DAYS),
+                          transport.MAX_DAYS))
+        STORE.save_character_state(
+            row["char_id"], transport_type=type_id,
+            transport_until=transport.until_after(days))
+        return "выдан на %d дн. (не в игре)" % days
+    if kind == "goto":
+        loc_id = args.get("loc_id")
+        if loc_id is None:
+            gx, gy = int(args["gx"]), int(args["gy"])
+            loc_id = world.location_at(gx, gy)
+        else:
+            loc_id = int(loc_id)
+            gx, gy = (world.unpack(loc_id) if world.is_wilderness(loc_id)
+                      else world.cell_of(loc_id) or (row_c["gx"], row_c["gy"]))
+        STORE.save_character_state(row["char_id"])       # no-op, keeps the API
+        STORE.db.execute(
+            "UPDATE characters SET loc = ?, gx = ?, gy = ?, on_map = 0"
+            " WHERE id = ?", (loc_id, gx, gy, row["char_id"]))
+        STORE.db.commit()
+        return "перенесён (войдёт там)"
+    return "неизвестное действие: %s" % kind
+
+
+async def drain_admin_actions():
+    """Watch the queue the admin panel writes into.
+
+    Polling, and not a socket between the two processes: one small indexed
+    read a second costs nothing, needs no port, no second protocol and no
+    second thing to authenticate, and it keeps working when the panel is
+    restarted under the game or the other way round.
+    """
+    while True:
+        try:
+            for row in STORE.admin_pending():
+                try:
+                    result = apply_admin_action(row)
+                except Exception as exc:                 # noqa: BLE001
+                    log.exception("admin action %d failed", row["id"])
+                    result = "ошибка: %s" % exc
+                log.info("  ..    admin %s: %s -> %s",
+                         row["admin"], row["kind"], result)
+                STORE.admin_done(row["id"], result)
+        except Exception:                                # noqa: BLE001
+            # A failure here must not take the game down with it.
+            log.exception("admin queue")
+        await asyncio.sleep(ADMIN_POLL_SECONDS)
 
 
 async def shutdown(servers):

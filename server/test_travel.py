@@ -46,8 +46,11 @@ CRED = accounts.credential("tester", "secret")
 # The start cell is a server default and has moved since; these
 # assertions name the market by number, so the suite says which
 # world it wants.
+# /goto, /give and /money are off on a served server and belong to
+# the admin panel; this suite uses them to set a scene, so it asks
+# for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
-           LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730")
+           LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730")
 
 # The server's log goes to a file, not a pipe. This replay walks into the
 # market half a dozen times, and each entry logs the whole snapshot, some

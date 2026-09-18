@@ -114,6 +114,25 @@ CREATE TABLE IF NOT EXISTS mail (
 );
 CREATE INDEX IF NOT EXISTS mail_by_to ON mail (to_char);
 CREATE INDEX IF NOT EXISTS mail_by_from ON mail (from_char);
+CREATE TABLE IF NOT EXISTS admin_actions (
+    -- The admin panel runs in the HTTP process and the game runs in another,
+    -- with only this database between them. A panel that wrote to characters
+    -- directly would lose every change made to somebody who is online: their
+    -- Character.save() on the way out writes the numbers it has been holding
+    -- since login, over the top. So the panel writes intent here and the game
+    -- server, which owns those objects, carries it out and marks the row done.
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    made_at    INTEGER NOT NULL,
+    admin      TEXT    NOT NULL,      -- the name the kick window shows
+    kind       TEXT    NOT NULL,      -- money | item | transport | goto | kick | ban
+    char_id    INTEGER,               -- target character, when there is one
+    account_id INTEGER,               -- target account, for kick and ban
+    args_json  TEXT    NOT NULL DEFAULT '{}',
+    done_at    INTEGER,               -- NULL while it is still waiting
+    result     TEXT                   -- what happened, for the panel to show
+);
+CREATE INDEX IF NOT EXISTS admin_actions_pending
+    ON admin_actions (done_at) WHERE done_at IS NULL;
 CREATE TABLE IF NOT EXISTS map_marks (
     -- A character's bookmarks on the global map, addressed by position:
     -- updMark;id= and rmMark;id= carry the index into the client's own
@@ -278,6 +297,42 @@ class Store:
 
     def account_count(self):
         return self.db.execute("SELECT COUNT(*) c FROM accounts").fetchone()["c"]
+
+    def all_accounts(self):
+        return self.db.execute(
+            "SELECT * FROM accounts ORDER BY id").fetchall()
+
+    def set_banned(self, account_id, flag=True):
+        self.db.execute("UPDATE accounts SET banned = ? WHERE id = ?",
+                        (1 if flag else 0, account_id))
+        self.db.commit()
+
+    # --- admin actions ---------------------------------------------------
+    def admin_push(self, admin, kind, char_id=None, account_id=None, **args):
+        """Queue one action for the game server to carry out."""
+        cur = self.db.execute(
+            "INSERT INTO admin_actions (made_at, admin, kind, char_id,"
+            " account_id, args_json) VALUES (?, ?, ?, ?, ?, ?)",
+            (int(time.time()), admin, kind, char_id, account_id,
+             json.dumps(args, ensure_ascii=False)))
+        self.db.commit()
+        return cur.lastrowid
+
+    def admin_pending(self):
+        return self.db.execute(
+            "SELECT * FROM admin_actions WHERE done_at IS NULL ORDER BY id"
+        ).fetchall()
+
+    def admin_done(self, action_id, result):
+        self.db.execute(
+            "UPDATE admin_actions SET done_at = ?, result = ? WHERE id = ?",
+            (int(time.time()), result, action_id))
+        self.db.commit()
+
+    def admin_recent(self, limit=40):
+        return self.db.execute(
+            "SELECT * FROM admin_actions ORDER BY id DESC LIMIT ?",
+            (limit,)).fetchall()
 
     # --- characters ------------------------------------------------------
     def characters(self, account_id):

@@ -107,7 +107,10 @@ LEAVE = 3.0
 # The start cell is a server default and has moved since; these
 # assertions name the market by number, so the suite says which
 # world it wants.
-env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730",
+# /goto, /give and /money are off on a served server and belong to
+# the admin panel; this suite uses them to set a scene, so it asks
+# for them by name.
+env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
            LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT=str(int(LEAVE)),
            LAVA_RESPAWN="120", LAVA_RESURRECT_WAIT=str(WAIT), LAVA_SEED="11")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,

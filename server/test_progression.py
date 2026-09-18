@@ -251,7 +251,7 @@ _store.register("tester", "secret")
 _store.close()
 CRED = accounts.credential("tester", "secret")
 
-env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=SDB)
+env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=SDB, LAVA_CHEATS="1")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 

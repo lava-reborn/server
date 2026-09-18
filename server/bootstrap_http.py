@@ -33,9 +33,12 @@ import posixpath
 import re
 import sys
 
+import hmac
+
 import accounts
 import names
 import items
+import transport
 import world
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
@@ -66,6 +69,16 @@ def _flag(name, default="0"):
 # decision. Serving any of them means serving csettings_v1.xml, and that is
 # what puts the client in WEB mode.
 SERVE_RES = _flag("LAVA_HTTP_RES")
+
+# The admin panel. No token, no panel: unset, every /admin path answers 404,
+# the same as any other address that is not ours, so a server nobody
+# configured for it does not advertise that it has one. The token is compared
+# whole with compare_digest rather than ==, because a plain comparison returns
+# as soon as two bytes differ and that difference is measurable.
+ADMIN_TOKEN = os.environ.get("LAVA_ADMIN_TOKEN", "")
+# The name the game shows the player when the panel puts them out:
+# "Администратор <...> ведет работу над вашим аккаунтом".
+ADMIN_NAME = os.environ.get("LAVA_ADMIN_NAME", "Администратор")
 
 CSETTINGS = """<?xml version="1.0" encoding="windows-1251"?>
 <settings>
@@ -156,6 +169,120 @@ HOWTO_WEB = """<div class=note>
 <p>3. В окне входа введите логин и пароль отсюда. Персонаж создаётся при
 первом входе. Всё остальное игра возьмёт с этого сервера сама.</p>
 </div>"""
+
+ADMIN_STYLE = """
+ body{{background:#15130f;color:#cfc6b0;font:14px/1.5 system-ui,sans-serif;
+      margin:0;padding:28px 20px}}
+ .w{{max-width:900px;margin:0 auto}}
+ h1{{font-size:18px;letter-spacing:.14em;text-transform:uppercase;
+    color:#b9a678;margin:0 0 20px}}
+ h3{{font-size:15px;margin:26px 0 8px;color:#e8dfc8;
+    border-bottom:1px solid #332d22;padding-bottom:6px}}
+ .dim{{color:#7d7566;font-weight:normal}}
+ .card{{background:#1e1b15;border:1px solid #332d22;border-radius:4px;
+       padding:12px 14px;margin:0 0 10px}}
+ .row{{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}}
+ input,select{{background:#100e0a;color:#e8dfc8;border:1px solid #3d362a;
+      border-radius:3px;padding:6px 8px;font-size:14px}}
+ input[type=number]{{width:96px}}
+ input[type=text]{{width:150px}}
+ button{{background:#6b5a34;color:#f2e9d2;border:0;border-radius:3px;
+        padding:6px 12px;font-size:14px;cursor:pointer}}
+ button:hover{{background:#7d6a3e}}
+ form{{display:inline}}
+ table{{width:100%;border-collapse:collapse;margin-top:8px}}
+ td{{border-top:1px solid #2a251c;padding:5px 6px;font-size:13px}}
+ .msg{{padding:10px 12px;border-radius:3px;margin:0 0 16px;font-size:14px}}
+ .ok{{background:#243a20;border:1px solid #3d5c33;color:#bfe0ae}}
+ .err{{background:#3a2020;border:1px solid #5c3333;color:#e0aeae}}
+ label{{color:#9c9280;font-size:13px}}
+"""
+
+ADMIN_GATE = """<!doctype html><html lang=ru><meta charset=utf-8>
+<title>LAVA Online — панель</title><style>%s</style>
+<div class=w>
+<h1>Панель администратора</h1>
+{message}
+<form method=post action="/admin/login" class=card>
+ <label for=token>Ключ</label>
+ <div class=row>
+  <input id=token name=token type=password autofocus style="width:280px">
+  <button type=submit>Войти</button>
+ </div>
+</form>
+</div></html>""" % ADMIN_STYLE
+
+ADMIN_PAGE_REDIRECT = "<!doctype html><meta charset=utf-8>ok"
+
+# One card per character: everything that can be done to it, each its own
+# form, because a single form with one button per action would send every
+# field of every action every time.
+ADMIN_CHAR = """<div class=card>
+<b>{name}</b> <span class=dim>#{char_id} · {afro} афро · {gold} голды ·
+локация {loc}</span>
+<form method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=money><input type=hidden name=char_id value={char_id}>
+ <label>деньги</label>
+ <input type=number name=afro value=0 title="афро"> афро
+ <input type=number name=gold value=0 title="голда, целыми унциями"> голды
+ <button type=submit>Начислить</button>
+</div></form>
+<form method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=item><input type=hidden name=char_id value={char_id}>
+ <label>предмет</label>
+ <input type=number name=type_id placeholder="тип" title="номер типа">
+ <input type=number name=count value=1 title="сколько">
+ <button type=submit>Выдать</button>
+</div></form>
+<form method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=transport><input type=hidden name=char_id value={char_id}>
+ <label>транспорт</label>
+ <select name=type_id>{cars}</select>
+ <input type=number name=days placeholder="дней" title="по умолчанию 365">
+ <button type=submit>Выдать</button>
+</div></form>
+<form method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=goto><input type=hidden name=char_id value={char_id}>
+ <label>перенести</label>
+ <input type=number name=loc placeholder="локация">
+ <span class=dim>или</span>
+ <input type=number name=gx placeholder="x"> <input type=number name=gy placeholder="y">
+ <button type=submit>Перенести</button>
+</div></form>
+</div>"""
+
+ADMIN_ACCOUNT_ACTIONS = """<div class=card>
+<form method=post action="/admin/do"><div class=row>
+ <input type=hidden name=account_id value={account_id}>
+ <label>причина</label>
+ <input type=text name=reason placeholder="видна игроку">
+ <input type=number name=seconds placeholder="секунд" title="0 — не указывать">
+ <button type=submit name=kind value=kick>Выкинуть</button>
+ <button type=submit name=kind value=ban>Забанить</button>
+ <button type=submit name=kind value=unban {unban_checked}>Разбанить</button>
+</div></form>
+</div>"""
+
+ADMIN_PAGE = """<!doctype html><html lang=ru><meta charset=utf-8>
+<title>LAVA Online — панель</title><style>%s</style>
+<div class=w>
+<h1>Панель администратора</h1>
+{note}
+<p class=dim>Действия выполняет игровой сервер: он разбирает очередь раз в
+секунду. Игроку в игре изменения приходят сразу, остальным — при следующем
+входе.</p>
+{accounts}
+<h3>Последние действия</h3>
+<table>{log}</table>
+</div></html>""" % ADMIN_STYLE
+
+# Built once: the table is loaded at import and never changes.
+TRANSPORT_OPTIONS = "".join(
+    '<option value="%d">%d · %s (x%s)</option>'
+    % (int(v["type"]), int(v["type"]), v["name"], v["speed_mod"])
+    for v in sorted(transport.TABLE.values(), key=lambda v: int(v["type"]))
+) + '<option value="0">0 · снять транспорт</option>'
+
 
 # And when it does not: the client is the player's own copy, so the launcher
 # and the string table come from the package instead.
@@ -257,6 +384,150 @@ class Handler(BaseHTTPRequestHandler):
                                host=GAME_HOST, port=GAME_PORT),
                    "text/html; charset=utf-8")
 
+    # --- admin panel -----------------------------------------------------
+
+    @staticmethod
+    def _same(a, b):
+        """Constant-time compare of two strings of any alphabet.
+
+        compare_digest refuses a str with a character above 127, and a
+        cookie arrives decoded as latin-1, so anything non-ASCII in it
+        would be a 500 rather than a refusal. Bytes have no such rule.
+        """
+        return hmac.compare_digest(a.encode("utf-8", "replace"),
+                                   b.encode("utf-8", "replace"))
+
+    def _admin_ok(self):
+        """Whether this request carries the token."""
+        if not ADMIN_TOKEN:
+            return False
+        cookie = self.headers.get("Cookie") or ""
+        for part in cookie.split(";"):
+            name, _, value = part.strip().partition("=")
+            if name == "lava_admin" and self._same(value, ADMIN_TOKEN):
+                return True
+        return False
+
+    def _admin_login(self, body):
+        form = parse_qs(body.decode("utf-8", "replace"))
+        token = (form.get("token") or [""])[0]
+        if not self._same(token, ADMIN_TOKEN):
+            self._admin_gate("Неверный ключ")
+            return
+        payload = ADMIN_PAGE_REDIRECT.encode("utf-8")
+        self.send_response(303)
+        self.send_header("Location", "/admin")
+        # Session-only, not readable from script, and not sent along with
+        # requests arriving from other sites -- which is what stops a page
+        # elsewhere from posting actions with this cookie attached.
+        self.send_header("Set-Cookie",
+                         "lava_admin=%s; Path=/; HttpOnly; SameSite=Strict"
+                         % token)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def _admin_gate(self, message=""):
+        msg = '<p class="msg err">%s</p>' % escape(message) if message else ""
+        self._send(ADMIN_GATE.format(message=msg), "text/html; charset=utf-8")
+
+    def _admin_panel(self, note=""):
+        store = accounts.Store()
+        try:
+            rows = []
+            for acc in store.all_accounts():
+                chars = [dict(c) for c in store.characters(acc["id"])]
+                rows.append((dict(acc), chars))
+            recent = [dict(r) for r in store.admin_recent(25)]
+        finally:
+            store.close()
+
+        blocks = []
+        for acc, chars in rows:
+            flag = " · <b>забанен</b>" if acc["banned"] else ""
+            head = ("<h3>%s <span class=dim>#%d%s</span></h3>"
+                    % (escape(acc["login"]), acc["id"], flag))
+            body = []
+            for ch in chars:
+                body.append(ADMIN_CHAR.format(
+                    char_id=ch["id"], name=escape(ch["name"]),
+                    afro=ch["afro"], gold=ch["gold"] // 100,
+                    loc=ch["loc"] if ch["loc"] is not None else "-",
+                    cars=TRANSPORT_OPTIONS))
+            if not chars:
+                body.append("<p class=dim>персонажей нет</p>")
+            body.append(ADMIN_ACCOUNT_ACTIONS.format(
+                account_id=acc["id"],
+                unban_checked="checked" if acc["banned"] else ""))
+            blocks.append(head + "".join(body))
+
+        log_rows = "".join(
+            "<tr><td>%s</td><td>%s</td><td>%s</td></tr>"
+            % (escape(r["admin"]), escape(r["kind"]),
+               escape(r["result"] or "ждёт очереди"))
+            for r in recent) or "<tr><td colspan=3 class=dim>пусто</td></tr>"
+
+        note_html = '<p class="msg ok">%s</p>' % escape(note) if note else ""
+        self._send(ADMIN_PAGE.format(note=note_html,
+                                     accounts="".join(blocks),
+                                     log=log_rows),
+                   "text/html; charset=utf-8")
+
+    def _admin_do(self, body):
+        """Queue one action. The game server is what carries it out."""
+        form = parse_qs(body.decode("utf-8", "replace"))
+
+        def one(key, default=""):
+            return (form.get(key) or [default])[0].strip()
+
+        def num(key, default=0):
+            try:
+                return int(one(key) or default)
+            except ValueError:
+                return default
+
+        kind = one("kind")
+        char_id = num("char_id") or None
+        account_id = num("account_id") or None
+        store = accounts.Store()
+        try:
+            if kind == "money":
+                store.admin_push(ADMIN_NAME, "money", char_id=char_id,
+                                 afro=num("afro"), gold=num("gold") * 100)
+                note = "Деньги поставлены в очередь"
+            elif kind == "item":
+                store.admin_push(ADMIN_NAME, "item", char_id=char_id,
+                                 type_id=num("type_id"),
+                                 count=num("count", 1) or 1)
+                note = "Предмет поставлен в очередь"
+            elif kind == "transport":
+                store.admin_push(ADMIN_NAME, "transport", char_id=char_id,
+                                 type_id=num("type_id"),
+                                 days=num("days") or None)
+                note = "Транспорт поставлен в очередь"
+            elif kind == "goto":
+                loc = one("loc")
+                if loc:
+                    store.admin_push(ADMIN_NAME, "goto", char_id=char_id,
+                                     loc_id=int(loc))
+                else:
+                    store.admin_push(ADMIN_NAME, "goto", char_id=char_id,
+                                     gx=num("gx"), gy=num("gy"))
+                note = "Перенос поставлен в очередь"
+            elif kind in ("kick", "ban", "unban"):
+                store.admin_push(
+                    ADMIN_NAME, "kick" if kind == "kick" else "ban",
+                    account_id=account_id, seconds=num("seconds"),
+                    reason=one("reason"), banned=(kind == "ban"))
+                note = {"kick": "Игрок будет выкинут",
+                        "ban": "Бан поставлен в очередь",
+                        "unban": "Разбан поставлен в очередь"}[kind]
+            else:
+                note = "Неизвестное действие"
+        finally:
+            store.close()
+        self._admin_panel(note)
+
     def _status(self):
         """What a healthcheck can ask without a game client.
 
@@ -328,6 +599,18 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/register":
             self._register(body)
+            return
+        if path == "/admin" or path.startswith("/admin/"):
+            if not ADMIN_TOKEN:
+                self._send("not found", code=404)
+            elif path == "/admin/login":
+                self._admin_login(body)
+            elif not self._admin_ok():
+                self._admin_gate()
+            elif path == "/admin/do":
+                self._admin_do(body)
+            else:
+                self._admin_panel()
             return
         if path in ("/", "/index.html"):
             self._page()
