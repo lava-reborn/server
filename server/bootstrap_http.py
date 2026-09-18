@@ -45,6 +45,12 @@ RES_ROOT = world.RES
 GAME_HOST = os.environ.get("LAVA_GAME_HOST", "127.0.0.1")
 GAME_PORT = os.environ.get("LAVA_GAME_PORT", "9775")
 HTTP_PORT = int(os.environ.get("LAVA_HTTP_PORT", "8080"))
+
+# Adobe pulled the browser plugin and left the standalone player up. Same
+# address as tools/make_client_package.py hands out; repeated rather than
+# imported, because the image carries server/ and data/ and nothing else.
+PROJECTOR_URL = ("https://fpdownload.macromedia.com/pub/flashplayer/updaters/"
+                 "32/flashplayer_32_sa.exe")
 # Inside a container 127.0.0.1 is the container's own loopback and no
 # published port reaches it, so the address to listen on is configuration.
 HTTP_HOST = os.environ.get("LAVA_HTTP_HOST", "127.0.0.1")
@@ -132,10 +138,31 @@ PAGE = """<!doctype html><html lang=ru><meta charset=utf-8>
  <input id=password name=password type=password autocomplete=new-password>
  <button type=submit>Создать аккаунт</button>
 </form>
-<p class=note>Учётных записей: {count}. Вход выполняется из самой игры:
-запустите клиент и введите те же логин и пароль. Сервер отвечает на
+{howto}
+<p class=note>Учётных записей: {count}. Сервер отвечает на
 <code>{host}:{port}</code>.</p>
 </div></html>"""
+
+# Shown when this server hands out the client as well: then a newcomer needs
+# nothing but the projector, because csettings_v1.xml goes out with the rest
+# and puts the client in WEB mode, pointed back here for every file.
+HOWTO_WEB = """<div class=note>
+<p><b>Как играть</b></p>
+<p>1. Скачайте проигрыватель Flash — отдельную программу, не браузер:<br>
+<a href="{projector}">flashplayer_32_sa.exe</a></p>
+<p>2. Запустите игру через него. Перетащите ссылку на скачанный файл или
+выполните в командной строке:</p>
+<p><code>flashplayer_32_sa.exe {base}/res/main.swf</code></p>
+<p>3. В окне входа введите логин и пароль отсюда. Персонаж создаётся при
+первом входе. Всё остальное игра возьмёт с этого сервера сама.</p>
+</div>"""
+
+# And when it does not: the client is the player's own copy, so the launcher
+# and the string table come from the package instead.
+HOWTO_LOCAL = """<div class=note>
+<p>Вход выполняется из самой игры: запустите клиент и введите те же логин и
+пароль.</p>
+</div>"""
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -216,7 +243,17 @@ class Handler(BaseHTTPRequestHandler):
             count = store.account_count()
         finally:
             store.close()
-        self._send(PAGE.format(message=message, count=count,
+        if SERVE_RES:
+            # The address the browser reached us by, not one from the
+            # environment: it is right whether that was an IP and a port or
+            # a name in front of a proxy, and the proxy says which scheme.
+            host = self.headers.get("Host") or ("%s:%s" % (GAME_HOST, HTTP_PORT))
+            scheme = self.headers.get("X-Forwarded-Proto") or "http"
+            howto = HOWTO_WEB.format(base="%s://%s" % (scheme, host),
+                                     projector=PROJECTOR_URL)
+        else:
+            howto = HOWTO_LOCAL
+        self._send(PAGE.format(message=message, count=count, howto=howto,
                                host=GAME_HOST, port=GAME_PORT),
                    "text/html; charset=utf-8")
 
