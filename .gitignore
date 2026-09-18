@@ -13,3 +13,4 @@ data/lava.db-wal
 __pycache__/
 *.pyc
 .claude/
+data/map_editor_base.png
