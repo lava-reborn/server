@@ -25,14 +25,23 @@ services:
       LAVA_DB: /var/lib/lava/lava.db
       LAVA_RES: /res
       LAVA_LOG_LEVEL: ${LAVA_LOG_LEVEL:-INFO}
-      # 843 is Flash's own port for the socket policy and it is privileged,
-      # which the unprivileged user in the image cannot take. The policy is
-      # answered inline on the game port anyway. Set it to 843 and add
-      # cap_add: [NET_BIND_SERVICE] if a client ever turns out to need it.
-      LAVA_POLICY_PORT: ${LAVA_POLICY_PORT:-0}
+      # Flash asks for the socket policy on 843 before it will open the game
+      # socket, and only falls back to asking on the game port when that
+      # attempt ends. Whether it ends quickly is not ours to decide: on this
+      # host 843 is silently dropped rather than refused, so the fallback
+      # waits out a timeout that the player sees as the game hanging on
+      # connect. Answering on 843 removes the wait.
+      #
+      # 843 is privileged and the image runs unprivileged, so the listener
+      # takes a high port inside and docker publishes 843 to it -- the bind
+      # that needs the privilege is dockerd's, not ours.
+      LAVA_POLICY_PORT: ${LAVA_POLICY_PORT:-8430}
     ports:
       # The game socket is the one thing that has to reach the player.
       - "${LAVA_BIND:-0.0.0.0}:${LAVA_GAME_PORT:-9775}:9775"
+      # Set LAVA_POLICY_PUBLIC_PORT to something else where 843 is taken or
+      # cannot be had; the inline answer still works, just more slowly.
+      - "${LAVA_BIND:-0.0.0.0}:${LAVA_POLICY_PUBLIC_PORT:-843}:8430"
     volumes:
       # The player's own client, read-only: the server reads locations,
       # database/mobs.xml and database/objects.xml out of it and writes
