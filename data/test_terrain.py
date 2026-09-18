@@ -1,18 +1,21 @@
-"""The recovered passability of the global map.
+"""What the photograph of the map says, and the one column of it believed.
 
 data/map_terrain.json is read off the client's own map tiles by
-data/build_terrain.py; the server that knew the real table is gone. This
-checks what the reconstruction promised rather than the numbers it happened
-to produce, so refining the thresholds does not break it:
+data/build_terrain.py; the server that knew the real table is gone. Of the
+two things it reads, the server takes the water only: rock in LAVA was a
+location with no outzone that way and never a pixel, and the roughness that
+stood in for it walled 6130 cells that would open as ordinary wasteland
+(recon/analysis/borders.md §3, §9, and data/test_borders.py for the ring that
+replaced it). This checks:
 
-  * the table covers the playable rectangle exactly, in the characters its
-    own legend declares, and server/world.passable agrees with it;
+  * the table covers the rectangle the photograph was read over, in the
+    characters its own legend declares;
+  * server/world.passable takes the water from it and nothing else, and the
+    world reaches past the picture's own rectangle;
   * every one of the 262 settlement cells and every one of the 414 cells
     with a map tooltip is walkable -- those are cells players stood on;
-  * the world is one piece: nearly all of the walkable ground, and nearly
-    all of the settlements, can be reached on foot from the start cell;
-  * the Nubian valley is a pocket of its own, which is the one piece of
-    passability a player remembers first-hand.
+  * the reading is internally whole, and data/map_terrain_report.md still
+    describes the table it was written for.
 
 Runs under WSL with the client resources present:
 
@@ -33,7 +36,14 @@ import world  # noqa: E402
 START = (5970, 1730)
 # The valley as the player who walked it describes it, with a margin.
 NUBIA = (6250, 6285, 1810, 1845)
+# The characters of the table that are ground the photograph found dry. Two
+# of them are walkable to the server and so is the third: only "~" is not.
 PASSABLE = ".,"
+DRY = ".,#"
+# The rectangle data/build_terrain.py reads the tiles over. It is not the
+# world -- the world runs further east and south (world.MAP_X) -- and it is
+# written here rather than imported because build_terrain needs Pillow.
+PHOTO = (5833, 6305, 1600, 2110)
 
 
 def load(name):
@@ -84,8 +94,12 @@ def main():
 
     # --- the table is the map ----------------------------------------------
     assert doc["version"] == 1, "terrain: version %r" % doc.get("version")
-    assert (gx0, gx1) == travel.MAP_X and (gy0, gy1) == travel.MAP_Y, \
-        "terrain: bounds %s do not match the playable rectangle" % b
+    assert (gx0, gx1, gy0, gy1) == PHOTO, \
+        "terrain: bounds %s are not the rectangle the tiles were read over" % b
+    assert (travel.MAP_X[0] <= gx0 and gx1 <= travel.MAP_X[1]
+            and travel.MAP_Y[0] <= gy0 and gy1 <= travel.MAP_Y[1]), \
+        "terrain: the picture sticks out of the world %s %s" % (travel.MAP_X,
+                                                                travel.MAP_Y)
     wide, high = gx1 - gx0 + 1, gy1 - gy0 + 1
     assert len(rows) == high, "terrain: %d rows for %d cells of gy" % (len(rows), high)
     for i, row in enumerate(rows):
@@ -106,17 +120,36 @@ def main():
           % (wide, high, 100.0 * walkable / total, 100.0 * rock / total,
              100.0 * kinds.get("~", 0) / total))
 
-    # --- the server reads the same ground -----------------------------------
-    for gx, gy in [START, (gx0, gy0), (gx1, gy1), (6268, 1825), (5900, 1900)]:
-        want = rows[gy - gy0][gx - gx0] in PASSABLE
-        assert world.passable(gx, gy) is want, \
-            "terrain: world.passable disagrees at %d,%d" % (gx, gy)
-    assert not world.passable(gx0 - 1, gy0), "terrain: walkable off the map"
-    assert not world.passable(gx1 + 1, gy1), "terrain: walkable off the map"
+    # --- the server takes the water and leaves the rock ---------------------
+    disagree = [(gx0 + x, gy0 + y)
+                for y, row in enumerate(rows) for x, ch in enumerate(row)
+                if world.passable(gx0 + x, gy0 + y) is not (ch in DRY)]
+    assert not disagree, \
+        "terrain: world.passable disagrees with the water at %d cells: %s" % (
+            len(disagree), disagree[:10])
+    dry_rock = [(gx0 + x, gy0 + y)
+                for y, row in enumerate(rows) for x, ch in enumerate(row)
+                if ch == "#"]
+    assert len(dry_rock) > 1000, "terrain: no rock in the table to ignore"
+    assert all(world.passable(*c) for c in dry_rock), \
+        "terrain: the photograph's rock still stops a walker"
+    print("the %d cells of rock are walkable, the %d of water are not"
+          % (len(dry_rock), kinds.get("~", 0)))
+
+    # --- and the world is bigger than the picture ---------------------------
+    wx0, wx1 = travel.MAP_X
+    wy0, wy1 = travel.MAP_Y
+    assert world.passable(gx1 + 1, gy1), \
+        "terrain: the ground east of the picture is not walkable"
+    assert world.passable(gx0, gy1 + 1), \
+        "terrain: the ground south of the picture is not walkable"
+    assert not world.passable(wx0 - 1, wy0), "terrain: walkable off the world"
+    assert not world.passable(wx1 + 1, wy1), "terrain: walkable off the world"
     # A position inside a cell belongs to that cell, as location_at has it.
     assert world.passable(START[0] + 0.9, START[1] + 0.9) is \
         world.passable(*START), "terrain: passable does not floor its position"
-    print("world.passable agrees with the table, and the map ends at its edge")
+    print("the world runs %d..%d by %d..%d and ends there"
+          % (wx0, wx1, wy0, wy1))
 
     # --- the cells players stood on ----------------------------------------
     settled = world.settlements()
@@ -132,7 +165,12 @@ def main():
     print("all %d settlements and all %d tooltip cells are walkable"
           % (len(settled), len(marks)))
 
-    # --- one world, walkable from the start ---------------------------------
+    # --- the photograph's own reading is whole ------------------------------
+    # Not a statement about the world any more -- the server walks over the
+    # rock of this table, and data/test_borders.py is where "everything can
+    # be reached on foot" is checked. It stays because a reading that falls
+    # into islands is a reading that went wrong, and the report below quotes
+    # these very numbers.
     lab, sizes = components(rows, gx0, gy0)
     at = lambda c: lab[c[1] - gy0][c[0] - gx0]
     start = at(START)

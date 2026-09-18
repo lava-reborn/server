@@ -34,6 +34,12 @@ tooltip in res/database/locations.xml are cells players stood on, so they are
 passable whatever the photograph says. Each one that had to be forced is
 counted in the report.
 
+Of the two the server now believes the water only. LAVA had no terrain layer
+at all: a cell was walled because the location standing on it had no outzone
+that way, and every wasteland template has all four (recon/analysis/borders.md
+§3, §9). The "#" column stays in the table as what the photograph says, and
+data/borders.json says where the rock actually stood.
+
 Nothing here is the original table, and the report says where the result is
 least trustworthy. Run with a Python that has Pillow:
 
@@ -51,13 +57,18 @@ from PIL import Image, ImageChops
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
-import travel                                                    # noqa: E402
 import world                                                     # noqa: E402
 
 TILE = 32                 # cells along a tile
 PX = 8                    # pixels along a cell
-GX0, GX1 = travel.MAP_X
-GY0, GY1 = travel.MAP_Y
+# The rectangle the photograph is read over. It was travel.MAP_X/MAP_Y once;
+# it is written out here because the world has since grown east and south
+# (world.MAP_X) while the reading has not, and because the table is a picture
+# of a fixed piece of ground that should not move when the world's bounds are
+# argued about. Of what comes out of it the server now believes the water
+# only -- see world.BLOCKED and recon/analysis/borders.md §9.
+GX0, GX1 = 5833, 6305
+GY0, GY1 = 1600, 2110
 W = GX1 - GX0 + 1
 H = GY1 - GY0 + 1
 
@@ -490,10 +501,19 @@ def write_report(path, grid, f, res, settled, hints, names):
     add = out.append
     add("# Passability of the global map, read off the map\n")
     add("Built by `data/build_terrain.py` from the %d tiles of"
-        " `res/globalmap/full` that cover the playable rectangle, 8x8 pixels"
+        " `res/globalmap/full` that cover the rectangle it reads, 8x8 pixels"
         " a cell.\nThe server's own table is lost; this is a"
         " reconstruction, and the checks below are how far it can be"
         " trusted.\n" % f["tiles"])
+    add("> **The server reads the water of this table and nothing else.**"
+        " LAVA had no terrain layer: a cell was walled because the location"
+        " standing on it had no outzone that way, and every wasteland"
+        " template has all four. The `#` below is what the photograph says,"
+        " not what the world is -- it would wall off cells that open as"
+        " ordinary wasteland, and it contradicts 18 of the 949 exits the"
+        " settlement files declare. Where the rock actually stood:"
+        " `data/borders.json`, `recon/analysis/borders.md`,"
+        " `data/test_borders.py`. Everything below is about the picture.\n")
     add("## What the picture says\n")
     add("| kind | cells | share |")
     add("| --- | ---: | ---: |")

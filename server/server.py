@@ -118,10 +118,11 @@ def default_character():
     return {"name": "polestvr", "sex": sex, "res": res}
 
 
-# The map is a plain grid, 5833..6305 by 1600..2110, and the client labels its
-# cells from res/database/locations.xml on its own. Every cell can be entered:
-# 86 of them hold a settlement recovered into data/settlements.json, and the
-# rest resolve to open desert by world.location_at.
+# The map is a plain grid (world.MAP_X by world.MAP_Y) and the client labels
+# its cells from res/database/locations.xml on its own. Every cell can be
+# entered: 262 of them hold a settlement recovered into data/settlements.json,
+# 2088 on the rim hold a rock scene from data/borders.json, and the rest
+# resolve to open desert by world.location_at.
 VIEW_RADIUS = 8
 TRAVEL_SPEED = 0.35   # cells per second
 
@@ -941,9 +942,9 @@ class Session:
         position and never asks again, so arrival has to be timed here and
         confirmed with a userMove carrying zero speed.
 
-        The mountains are the server's to keep: the client walks wherever it
-        is pointed and asks nothing, so a leg that runs into rock or water is
-        cut here and the player is stopped in front of it.
+        The ground is the server's to keep: the client walks wherever it is
+        pointed and asks nothing, so a leg that runs into the lake or off the
+        edge of the world is cut here and the player stopped in front of it.
         """
         if "trg" in p:
             return                      # intercepting a player: not implemented
@@ -956,8 +957,8 @@ class Session:
         dist = (dx * dx + dy * dy) ** 0.5
         if dist < 0.01:
             return
-        # Only as far as the ground allows (world.passable, recovered by
-        # data/build_terrain.py): the leg ends just inside the last open cell.
+        # Only as far as the ground allows (world.passable: the lake and the
+        # rectangle): the leg ends just inside the last open cell.
         tx, ty = travel.walk(self.gx, self.gy, dx, dy)
         dx, dy = tx - self.gx, ty - self.gy
         dist = (dx * dx + dy * dy) ** 0.5

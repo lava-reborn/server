@@ -75,6 +75,26 @@ def _chunks(txt, tag, step):
 GEO_SHIFT = 13
 GEO_MASK = 0x1FFF
 
+# The rectangle the world is played on, and the single place it is written
+# down (travel re-exports it; travel imports this module and not the other way
+# round).
+#
+# West and north are the client's own word. The captions on gx=5833 and
+# gy=1600 read "Западные Предгорья" and "Северные Предгорья", and the two
+# locations standing there -- 182 on 5833,1607 and 322 on 5840,1600 -- have no
+# outzone pointing outward at all (recon/analysis/borders.md §8).
+#
+# East and south are not that: 5833..6305 by 1600..2110 is the bounding box of
+# the 414 map captions, and the settlements on its east and south rim (303
+# "Выход с карьера" on 6305,1841, 280 "Шахта Мероэ" on 5943,2110) do have
+# exits pointing outward, so the world went on past them. It is taken to the
+# last cell the client can draw: res/globalmap/full covers tiles tx 182..197
+# by ty 50..66 at 32 cells a tile, that is gx 5824..6335 by gy 1600..2143, and
+# past that the map screen has no picture to show at all. That keeps both of
+# those exits leading onto drawn ground instead of into a refusal.
+MAP_X = (5833, 6335)
+MAP_Y = (1600, 2143)
+
 
 def pack(gx, gy):
     """Map cell to the id the client unpacks in LocIdToCoordinate."""
@@ -199,6 +219,38 @@ def settlements():
     return _SETTLEMENTS
 
 
+_BORDERS = None
+
+
+def borders():
+    """Map cell -> location id, for the ring of rock around the world.
+
+    PROPOSED, not recovered, and the nearest thing to the original there can
+    be: the client ships the kit a wall was built out of -- four sides in two
+    variants, four corners, all titled "Скалы", all war=1 -- and a tile's wall
+    is the side its outzones never touch. data/build_borders.py lays one per
+    rim cell with the wall facing out, so the edge of the world is a place a
+    player walks into and finds rocks, rather than a line a walker is stopped
+    at for no visible reason. recon/analysis/borders.md has the evidence.
+
+    Missing or broken, the world simply has open desert on its rim and the
+    rectangle alone holds the walker in.
+    """
+    global _BORDERS
+    if _BORDERS is None:
+        _BORDERS = {}
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "borders.json"),
+                      encoding="utf-8") as fh:
+                for cell, loc_id in json.load(fh)["cells"].items():
+                    gx, gy = cell.split(",")
+                    _BORDERS[(int(gx), int(gy))] = int(loc_id)
+        except (OSError, ValueError, KeyError):
+            pass
+    return _BORDERS
+
+
 _CELL_OF = None
 
 
@@ -222,8 +274,14 @@ def cell_of(loc_id):
 def location_at(gx, gy):
     """Which location a map cell leads into.
 
-    Always answers: a cell with no settlement on it is open desert, and the
-    packed cell is its own location id.
+    Three tables in order of how well they are known: the settlement placed
+    there, then the rock of the world's rim, then -- always, for every other
+    cell -- open desert, whose packed cell is its own location id.
+
+    The rim comes second because a settlement is evidence and the ring is a
+    proposal; data/build_borders.py leaves those cells out of the ring for
+    the same reason, and this order holds even if somebody adds a settlement
+    on the rim by hand in settlements_verified.json.
     """
     # Floor, not round: the client's own cell under a position is
     # Math.floor(x) (DisplayGlobalMap.as:207, DisplayLandscape.as:29), the
@@ -232,32 +290,50 @@ def location_at(gx, gy):
     # sent the half of the square past its centre into the neighbour.
     cell = (int(math.floor(gx)), int(math.floor(gy)))
     found = settlements().get(cell)
+    if found is None:
+        found = borders().get(cell)
     return pack(cell[0], cell[1]) if found is None else found
 
 
 _TERRAIN = None
 
-# The characters data/map_terrain.json uses for ground nobody walks over.
-BLOCKED = "#~"
+# The one character of data/map_terrain.json that still stops a walker.
+#
+# The table also carries "#" for rock, read off how rough the photograph is,
+# and that column is no longer believed: LAVA never had a terrain layer. The
+# client carries none (recon/analysis/borders.md §3), every one of the eleven
+# locations/desert templates the server falls back to has all four outzones,
+# and so every cell the roughness called a mountain would open as plain
+# wasteland with four ways out the moment a player stood in it. It walled off
+# 6130 cells that way and contradicted 18 of the 949 exits the settlement
+# files themselves declare. Rock is a location now (data/borders.json), not a
+# pixel.
+#
+# Water stays, because it is the one thing the photograph finds reliably:
+# blue over red is Lake Nasser and a little speckle, it is not something a
+# threshold was tuned to produce, and no exit of any known location leads into
+# it (0 of 949).
+BLOCKED = "~"
 
 
 def terrain():
-    """The map's ground, as (bounds, rows) with one character per cell.
+    """The map's water, as (bounds, rows) with one character per cell.
 
-    RECOVERED, not original. The server that knew which cells were mountain
-    is gone; data/build_terrain.py reads the passability back out of the
-    client's own map tiles -- roughness of the photograph for rock, blue over
-    red for water -- and checks it against every settlement and every map
-    tooltip. See data/map_terrain_report.md for how far it can be trusted.
+    RECOVERED, not original, and only the "~" of it is used: see BLOCKED for
+    why the rock of the same table is not. data/build_terrain.py reads both
+    off the client's own map tiles; data/map_terrain_report.md says how far
+    that can be trusted.
 
-    Missing or broken, the table leaves the map as it was before: walkable
-    everywhere inside its rectangle. A server that cannot read a file has no
-    business freezing the world.
+    The rows cover the rectangle the photograph was read over, which is no
+    longer the whole world (MAP_X/MAP_Y reach further east and south). A cell
+    outside the rows is simply dry.
+
+    Missing or broken, the table leaves the map walkable everywhere inside its
+    rectangle. A server that cannot read a file has no business freezing the
+    world.
     """
     global _TERRAIN
     if _TERRAIN is None:
-        # The rectangle is travel.MAP_X/MAP_Y, repeated here because travel
-        # imports this module and not the other way round.
         _TERRAIN = ((5833, 1600, 6305, 2110), [])
         here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         try:
@@ -280,12 +356,14 @@ _TERRAIN_FIX = None
 
 
 def terrain_overrides():
-    """Cells a player has walked and the picture got wrong, by cell.
+    """Cells a player has walked and the table got wrong, by cell.
 
-    The ground is read off the map's own tiles by how rough the photograph
-    is, and a footpath winding between boulders is rough. Where somebody has
-    stood and seen otherwise, their word wins -- data/terrain_verified.json,
-    the same arrangement settlements_verified.json has.
+    Little is left for it to correct now that only water stops anyone -- the
+    footpaths it was opened for are open by construction -- but the
+    arrangement stays: where somebody who has stood there says otherwise,
+    their word wins over data/map_terrain.json, the same way
+    settlements_verified.json wins over the placer. It cannot reach outside
+    the world's rectangle, which is not a matter of opinion.
     """
     global _TERRAIN_FIX
     if _TERRAIN_FIX is None:
@@ -307,35 +385,49 @@ def terrain_overrides():
 
 
 def in_map(gx, gy):
-    """Whether a cell is inside the map's rectangle at all.
+    """Whether a cell is inside the world's rectangle at all.
 
     passable() answers no for everything outside, which is right for a
-    walker but wrong for a question about terrain: the edge of the world
-    is crossed deliberately, through a location's exit into deadloc.
+    walker but wrong for a question about the ground: the edge of the world
+    is crossed deliberately, through a location's exit.
     """
-    (gx0, gy0, gx1, gy1), _rows = terrain()
     x, y = int(math.floor(gx)), int(math.floor(gy))
-    return gx0 <= x <= gx1 and gy0 <= y <= gy1
+    return MAP_X[0] <= x <= MAP_X[1] and MAP_Y[0] <= y <= MAP_Y[1]
+
+
+def water(gx, gy):
+    """Whether the map's picture shows water on a cell.
+
+    Outside the rows the photograph was read over there is no answer, and no
+    answer means dry: what lies east and south of that rectangle is more of
+    the same desert (recon/analysis/borders.md §8).
+    """
+    (gx0, gy0, gx1, gy1), rows = terrain()
+    x, y = int(math.floor(gx)), int(math.floor(gy))
+    if not rows or not (gx0 <= x <= gx1 and gy0 <= y <= gy1):
+        return False
+    return rows[y - gy0][x - gx0] in BLOCKED
 
 
 def passable(gx, gy):
     """Whether a walker can stand on a map cell.
 
+    Two things say no, and neither of them is a photograph of a mountain:
+    the edge of the world, and the lake. Everything else is ground somebody
+    can stand on -- a cell with no location of its own opens as wasteland
+    with four ways out, and a cell the rock ring stands on opens as rocks
+    that let nobody through, which is a scene rather than a hole in the map.
+
     Floor, not round, like location_at: the cell under a position is the one
-    the client draws the figure on. Outside the map's rectangle nothing is
-    walkable -- the edge of the world is crossed through a location's exit,
-    not by walking off the map.
+    the client draws the figure on.
     """
-    (gx0, gy0, gx1, gy1), rows = terrain()
     x, y = int(math.floor(gx)), int(math.floor(gy))
+    if not in_map(x, y):
+        return False
     fixed = terrain_overrides().get((x, y))
     if fixed is not None:
         return fixed
-    if not (gx0 <= x <= gx1 and gy0 <= y <= gy1):
-        return False
-    if not rows:
-        return True
-    return rows[y - gy0][x - gx0] not in BLOCKED
+    return not water(x, y)
 
 
 _SUBSTITUTES = None
