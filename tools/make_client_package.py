@@ -245,7 +245,10 @@ def main(argv=None):
     ap.add_argument("--port", default="9775", help="game socket port")
     ap.add_argument("--http-port", default="8080",
                     help="port of the registration page")
-    ap.add_argument("-o", "--out", default=os.path.join(ROOT, "dist"),
+    # dist/ itself belongs to launcher/build.ps1, which puts the single exe
+    # there. This is the fallback for a machine that will not run an unsigned
+    # one: the same three files, built beside it rather than over it.
+    ap.add_argument("-o", "--out", default=os.path.join(ROOT, "dist", "manual"),
                     help="where to build (default: dist/)")
     args = ap.parse_args(argv)
 
