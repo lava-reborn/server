@@ -570,7 +570,8 @@ class Session:
         # action points on every step from the moment it arrives. g_id is
         # the map cell, packed; beyond the map's edge it also says "no way
         # to the map from here" (travel.geo_id).
-        self.send("lcall", id=self.loc.id, ws=int(ROOMS.get(self.loc.id).ws),
+        self.send("lcall", id=self.loc.id,
+                  ws=int(ROOMS.get(self.room_key()).ws),
                   ie=0, g_id=travel.geo_id(self.loc, self.gx, self.gy))
 
     def cmd_lenter(self, p):
@@ -595,12 +596,16 @@ class Session:
         self.send("q_sys", daily_available=self.daily_available())
         self.enter_room()
 
+    def room_key(self):
+        """Which room this location is, for us: see travel.room_key."""
+        return travel.room_key(self.loc, self.gx, self.gy)
+
     def enter_room(self):
         """Join the location as a room: its inhabitants and other players
         come to us, and we are announced to them. The spawn points and their
         type ids come straight out of the location file; only behaviour was
         stripped. See rooms.Room.snapshot_for for the frame order."""
-        self.room = ROOMS.get(self.loc.id)
+        self.room = ROOMS.get(self.room_key())
         self.room.enter(self)
         self.combat.entered()
 

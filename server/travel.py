@@ -273,6 +273,19 @@ POCKET_IDS = frozenset(POCKET.values())
 SCENE_IDS = ROCK_IDS | POCKET_IDS
 
 
+def room_key(loc, gx, gy):
+    """What rooms.Rooms should file this location under.
+
+    A settlement or an interior is one place and one room. A rock scene is
+    not: the same file stands on every cell of a wall, and four deadloc files
+    stand on everything outside the map. Those are split by cell, or the rim
+    would be one room from corner to corner.
+    """
+    if loc.id in SCENE_IDS or is_deadloc(loc.id):
+        return (loc.id, int(gx), int(gy))
+    return loc.id
+
+
 def rock_for(side, gx, gy):
     """Which wall of the ring stands on a rim cell, walking that way.
 

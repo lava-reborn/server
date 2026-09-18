@@ -46,7 +46,7 @@ CRED_B = accounts.credential("bob", "secret")
 # assertions name the market by number, so the suite says which
 # world it wants.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
-           LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730")
+           LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730")
 
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -335,6 +335,44 @@ try:
     b.send("moveTo;path=|490|491|;")
     check("and can still walk",
           b.frames(), ["cmdAck;res=0;", "userMove;id=0;path=|490|491|;"])
+    b.send("logout;")
+
+    # The rim is one file standing on hundreds of cells, so a room keyed by
+    # location id alone would put the whole western wall in one room: two
+    # players a hundred cells apart would see each other through the rock.
+    print("\nстена мира -- не одна комната на всю длину")
+    a = Client(connect())
+    b = Client(connect())
+    a.send("hello;minor=2;major=0;")
+    a.send("login;hash=@%s@;" % CRED_A)
+    a.frames()
+    a.send("selPers;num=0;")
+    a.frames()
+    a.send("userMsg;entry=@/goto 5833 1700@;group=0;")
+    got = a.frames(wait=2)
+    wall = [f for f in got if f.startswith("lcall")]
+    check("Алиса встала на западную стену", bool(wall), True)
+    a.send("lenter;accept=1;")
+    a.frames(wait=2)
+
+    b.send("hello;minor=2;major=0;")
+    b.send("login;hash=@%s@;" % CRED_B)
+    b.frames()
+    b.send("selPers;num=0;")
+    b.frames()
+    b.send("userMsg;entry=@/goto 5833 1900@;group=0;")
+    got = b.frames(wait=2)
+    far = [f for f in got if f.startswith("lcall")]
+    check("Боб встал на ту же стену двумястами клетками южнее", bool(far), True)
+    check("и это та же локация",
+          bool(wall) and bool(far) and param(wall[0], "id") == param(far[0], "id"),
+          True)
+    b.send("lenter;accept=1;")
+    got = b.frames(wait=2)
+    check("но Алисы там нет", any("rtype=-1;" in f for f in got), False)
+    check("и Алисе о Бобе не сказали",
+          any(f.startswith("newUser") for f in a.frames(wait=1)), False)
+    a.send("logout;")
     b.send("logout;")
 finally:
     srv.terminate()

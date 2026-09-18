@@ -204,18 +204,32 @@ class Room:
 
 
 class Rooms:
-    """loc_id -> Room, created on first entry and kept."""
+    """key -> Room, created on first entry and kept.
+
+    The key is the location id for anything that stands in one place, and
+    (id, gx, gy) for the scenes that do not: one rock tile of the rim is the
+    location of hundreds of cells, and keyed by id alone the whole western
+    wall would be a single room -- two players a hundred cells apart would
+    see each other, stand on each other and shoot each other.
+
+    In the original every placement of a tile had its own location id. Those
+    ids are lost and inventing them would put us at odds with the client,
+    which is told the file's id and looks up the artwork by it. But the room
+    is ours: the client never learns which one it is in, only what is in it,
+    so the split costs nothing on the wire.
+    """
 
     def __init__(self, mob_types, ids=None):
         self.mob_types = mob_types
         self.ids = ids or IdAllocator()
         self.rooms = {}
 
-    def get(self, loc_id):
-        room = self.rooms.get(loc_id)
+    def get(self, key):
+        room = self.rooms.get(key)
         if room is None:
-            room = self.rooms[loc_id] = Room(world.location(loc_id), self.ids,
-                                             self.mob_types)
+            loc_id = key[0] if isinstance(key, tuple) else key
+            room = self.rooms[key] = Room(world.location(loc_id), self.ids,
+                                          self.mob_types)
         return room
 
 
