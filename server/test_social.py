@@ -47,7 +47,10 @@ CRED_A = accounts.credential("alice", "secret")
 CRED_B = accounts.credential("bob", "secret")
 CRED_C = accounts.credential("carol", "secret")
 
-env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB)
+# The start cell is a server default and has moved since; these
+# assertions name the market by number, so the suite says which
+# world it wants.
+env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 

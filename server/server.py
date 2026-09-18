@@ -91,12 +91,17 @@ def expects_ack(cmd, params):
         return int(params.get("op", -1)) != 5
     return cmd in EXPECTS_ACK
 
-# Where a new character starts, as a cell of the global map. Cell 5970x1730
-# is "Черный рынок Вади-Хальфы": peaceful (war="0", so walking costs no action
-# points) and already populated in its own XML with 21 traders, an upgrader,
-# a lessor and several commoners.
-GLOBAL_X = int(os.environ.get("LAVA_GX", "5970"))
-GLOBAL_Y = int(os.environ.get("LAVA_GY", "1730"))
+# Where a new character starts, as a cell of the global map. Cell 6268x1819 is
+# "Нубийское поселение": peaceful (war="0", so walking costs no action points),
+# pvp="0", with a medic, four traders and a commoner in its own XML. The
+# Nubian market is six cells south at 6268x1825 and carries the rest of what a
+# newcomer wants -- the specialisation trainer, the lessor, a bank and an
+# auctioneer -- so the two are a short walk apart.
+#
+# Was 5970x1730, "Черный рынок Вади-Хальфы", which is where the recovered
+# quests still are; a character made now starts away from them.
+GLOBAL_X = int(os.environ.get("LAVA_GX", "6268"))
+GLOBAL_Y = int(os.environ.get("LAVA_GY", "1819"))
 
 # The location follows from the cell, so the two cannot drift apart. LAVA_LOC
 # overrides it for trying a particular file out.

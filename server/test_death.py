@@ -104,7 +104,10 @@ check("and five gold is five hundred afro at the rate the server sends",
 # long respawn so nothing walks in on the corpse.
 WAIT = 4.0
 LEAVE = 3.0
-env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
+# The start cell is a server default and has moved since; these
+# assertions name the market by number, so the suite says which
+# world it wants.
+env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730",
            LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT=str(int(LEAVE)),
            LAVA_RESPAWN="120", LAVA_RESURRECT_WAIT=str(WAIT), LAVA_SEED="11")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,

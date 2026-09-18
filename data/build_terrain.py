@@ -91,7 +91,7 @@ SPECKS = 2                # a rock cell needs this many rock neighbours
 PASSABLE = ".,"
 SAND, PLAIN, ROCK, WATER_C = ".", ",", "#", "~"
 
-START = (5970, 1730)      # the black market of Wadi Halfa, where players begin
+START = (6268, 1819)      # the Nubian settlement, where players begin
 NUBIA = (6250, 6285, 1810, 1845)   # the valley, as the player who walked it
 #                                    remembers it, with a margin
 

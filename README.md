@@ -50,7 +50,7 @@ cd .. && for t in test_wiki_data test_world_data test_settlements test_terrain t
 python3 tools/test_export_texts.py
 ```
 
-Переменные: `LAVA_GX`/`LAVA_GY` — стартовая клетка карты (5970×1730),
+Переменные: `LAVA_GX`/`LAVA_GY` — стартовая клетка карты (6268×1819, Нубийское поселение),
 `LAVA_LOC` — принудительный id локации, `LAVA_DEBUG=1` — отладочный projector
 с `flashlog.txt`, `LAVA_PLAYER=ruffle` — Ruffle (рисует интерфейс в 313×107,
 непригоден).
