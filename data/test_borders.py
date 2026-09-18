@@ -258,6 +258,27 @@ def walk_from(start):
     return seen
 
 
+def steps_between(a, b):
+    """How many cells a walker actually covers, going round whatever is in
+    the way. Compared against the straight-line distance, it says whether an
+    obstacle is a detour or a wall."""
+    prev = {a: None}
+    queue = collections.deque([a])
+    while queue:
+        cur = queue.popleft()
+        if cur == b:
+            n = 0
+            while prev[cur]:
+                cur, n = prev[cur], n + 1
+            return n
+        x, y = cur
+        for nb in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if nb not in prev and world.passable(*nb):
+                prev[nb] = cur
+                queue.append(nb)
+    return None
+
+
 def check_walk():
     assert world.passable(*START), "borders: the start cell is not walkable"
     seen = walk_from(START)
@@ -267,10 +288,15 @@ def check_walk():
                for gy in range(world.MAP_Y[0], world.MAP_Y[1] + 1)
                for gx in range(world.MAP_X[0], world.MAP_X[1] + 1)
                if not world.passable(gx, gy)]
-    dry = [c for c in blocked if not world.water(*c)]
-    assert not dry, "borders: %d cells blocked by something other than water: %s" \
-        % (len(dry), dry[:10])
-    print("the world is %d by %d cells; %d are blocked, every one of them water"
+    # Nothing stops a walker except what the map itself draws -- the lake and
+    # the mountains, both read out of the same picture. world.water answers
+    # for both, since BLOCKED covers both characters.
+    unexplained = [c for c in blocked if not world.water(*c)]
+    assert not unexplained, \
+        "borders: %d cells blocked by something the map does not draw: %s" \
+        % (len(unexplained), unexplained[:10])
+    print("the world is %d by %d cells; %d are blocked, every one of them"
+          " drawn as rock or water"
           % (wide, high, len(blocked)))
 
     settled = world.settlements()
@@ -295,30 +321,60 @@ def check_walk():
     for cell in NEW_COLONISTS:
         assert cell in seen, "borders: the New Colonists on %s are cut off" \
             % (cell,)
-        # And the walk there is a straight line, not a detour around
-        # anything: travel.walk keeps the whole move. Twice -- up from the
-        # market, and down from the open ground north-east of the camp,
-        # which is the way the photograph sealed: it drew a band of rock
-        # over 5972..5987 by 1722..1726, right above the tents.
-        for origin in (START, ABOVE_COLONISTS):
-            dx, dy = cell[0] - origin[0], cell[1] - origin[1]
-            end = travel.walk(origin[0] + 0.5, origin[1] + 0.5, dx, dy)
-            assert (int(end[0]), int(end[1])) == cell, \
-                "borders: the way from %s to the New Colonists is cut at %s" \
-                % (origin, end)
-    print("the way to the New Colonists' camp is open from both sides, and"
-          " straight")
+        # From the market the walk is a straight line and travel.walk keeps
+        # the whole move: six cells due north, nothing in the way.
+        dx, dy = cell[0] - START[0], cell[1] - START[1]
+        end = travel.walk(START[0] + 0.5, START[1] + 0.5, dx, dy)
+        assert (int(end[0]), int(end[1])) == cell, \
+            "borders: the way from the market to the New Colonists is cut" \
+            " at %s" % (end,)
+
+    # From the open ground north-east of the camp a single order does NOT
+    # arrive, and should not: the map draws a band of rock over 5973..5987 by
+    # 1722..1726, just east of the tents, and a walk into it is cropped in
+    # front of it like any other mountain. What matters is that the band is
+    # something to walk around rather than a wall: the way round costs
+    # nothing, sixteen steps against sixteen in a straight line.
+    camp = NEW_COLONISTS[0]
+    dx, dy = camp[0] - ABOVE_COLONISTS[0], camp[1] - ABOVE_COLONISTS[1]
+    end = travel.walk(ABOVE_COLONISTS[0] + 0.5, ABOVE_COLONISTS[1] + 0.5,
+                      dx, dy)
+    assert (int(end[0]), int(end[1])) != camp, \
+        "borders: the band of rock east of the camp lets a walk straight" \
+        " through, so it is not there at all"
+    assert steps_between(ABOVE_COLONISTS, camp) == abs(dx) + abs(dy), \
+        "borders: going round the band costs %s steps against %d straight" \
+        % (steps_between(ABOVE_COLONISTS, camp), abs(dx) + abs(dy))
+    print("the way to the New Colonists' camp is straight from the market,"
+          " and round the rock from the north-east at no extra cost")
 
     # The rim can be walked onto -- it is a place, with rocks in it -- and
-    # nothing beyond it can.
-    for cell in ((world.MAP_X[0], 1700), (world.MAP_X[1], 1700),
-                 (5900, world.MAP_Y[0]), (5900, world.MAP_Y[1])):
-        assert cell in seen, "borders: the rim cell %s cannot be reached" % (cell,)
+    # nothing beyond it can. Not every cell of it: the mountains reach the
+    # northern edge in places and seal a stretch of rim behind them, which is
+    # the picture being obeyed rather than a hole in the ring. What has to
+    # hold is that every side of the world can be reached somewhere, and that
+    # the sealed part stays small.
+    rim = {tuple(int(v) for v in key.split(","))
+           for key in load("borders.json")["cells"]}
+    reached = rim & seen
+    assert len(reached) >= 0.9 * len(rim), \
+        "borders: only %d of %d rim cells can be reached" % (len(reached),
+                                                             len(rim))
+    for side, on_side in (
+            ("west", [c for c in rim if c[0] == world.MAP_X[0]]),
+            ("east", [c for c in rim if c[0] == world.MAP_X[1]]),
+            ("north", [c for c in rim if c[1] == world.MAP_Y[0]]),
+            ("south", [c for c in rim if c[1] == world.MAP_Y[1]])):
+        got = [c for c in on_side if c in seen]
+        assert len(got) >= 0.5 * len(on_side), \
+            "borders: only %d of %d cells of the %s rim can be reached" \
+            % (len(got), len(on_side), side)
     for cell in ((world.MAP_X[0] - 1, 1700), (world.MAP_X[1] + 1, 1700),
                  (5900, world.MAP_Y[0] - 1), (5900, world.MAP_Y[1] + 1)):
         assert not world.passable(*cell), "borders: %s is off the world and" \
             " walkable" % (cell,)
-    print("every rim cell is walked onto, and nothing past it")
+    print("%d of %d rim cells are walked onto, every side among them, and"
+          " nothing past the rim" % (len(reached), len(rim)))
 
 
 def main():

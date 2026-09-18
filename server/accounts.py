@@ -343,10 +343,15 @@ class Store:
         the Cyrillic the nicknames are actually in.
         """
         like = "%" + (query or "").strip().lower() + "%"
+        # pylower, not sqlite's LOWER: that one folds ASCII and nothing else,
+        # so a search for "Вет" would never find "Ветеран" -- which is most
+        # nicknames on this server.
+        self.db.create_function("pylower", 1,
+                                lambda s: (s or "").lower(), deterministic=True)
         return self.db.execute(
             "SELECT c.*, a.login, a.banned FROM characters c"
             " JOIN accounts a ON a.id = c.account_id"
-            " WHERE LOWER(c.name) LIKE ? OR LOWER(a.login) LIKE ?"
+            " WHERE pylower(c.name) LIKE ? OR pylower(a.login) LIKE ?"
             " ORDER BY c.name LIMIT ?", (like, like, limit)).fetchall()
 
     # --- who is in the game ----------------------------------------------

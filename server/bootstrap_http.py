@@ -177,127 +177,175 @@ HOWTO_WEB = """<div class=note>
 первом входе. Всё остальное игра возьмёт с этого сервера сама.</p>
 </div>"""
 
-ADMIN_STYLE = """
- body{{background:#15130f;color:#cfc6b0;font:14px/1.5 system-ui,sans-serif;
-      margin:0;padding:28px 20px}}
- .w{{max-width:900px;margin:0 auto}}
- h1{{font-size:18px;letter-spacing:.14em;text-transform:uppercase;
-    color:#b9a678;margin:0 0 20px}}
- h3{{font-size:15px;margin:26px 0 8px;color:#e8dfc8;
-    border-bottom:1px solid #332d22;padding-bottom:6px}}
- .dim{{color:#7d7566;font-weight:normal}}
- .card{{background:#1e1b15;border:1px solid #332d22;border-radius:4px;
-       padding:12px 14px;margin:0 0 10px}}
- .row{{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}}
- input,select{{background:#100e0a;color:#e8dfc8;border:1px solid #3d362a;
-      border-radius:3px;padding:6px 8px;font-size:14px}}
- input[type=number]{{width:96px}}
- input[type=text]{{width:150px}}
- button{{background:#6b5a34;color:#f2e9d2;border:0;border-radius:3px;
-        padding:6px 12px;font-size:14px;cursor:pointer}}
+ADMIN_STYLE = '''
+ :root{{--bg:#15130f;--card:#1e1b15;--line:#332d22;--ink:#cfc6b0;
+        --dim:#8a8172;--gold:#b9a678;--brass:#6b5a34;--field:#100e0a}}
+ *{{box-sizing:border-box}}
+ body{{background:var(--bg);color:var(--ink);margin:0;
+       font:14px/1.55 -apple-system,Segoe UI,Roboto,system-ui,sans-serif}}
+ a{{color:var(--gold)}}
+ .bar{{border-bottom:1px solid var(--line);background:#1a1712;
+       padding:14px 20px;display:flex;align-items:baseline;gap:12px;
+       flex-wrap:wrap}}
+ .bar h1{{font-size:15px;letter-spacing:.16em;text-transform:uppercase;
+          color:var(--gold);margin:0;font-weight:600}}
+ .w{{max-width:920px;margin:0 auto;padding:22px 20px 60px}}
+ h2{{font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+     color:var(--dim);font-weight:600;margin:30px 0 10px;
+     padding-bottom:7px;border-bottom:1px solid var(--line)}}
+ h2:first-of-type{{margin-top:6px}}
+ .dim{{color:var(--dim)}}
+ .card{{background:var(--card);border:1px solid var(--line);border-radius:5px;
+        padding:14px 16px;margin:0 0 12px}}
+ .card h3{{margin:0 0 2px;font-size:15px;color:#e8dfc8;font-weight:600}}
+ .row{{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:9px 0 0}}
+ .row > label{{color:var(--dim);font-size:12px;letter-spacing:.06em;
+               text-transform:uppercase;min-width:82px}}
+ input,select{{background:var(--field);color:#e8dfc8;
+      border:1px solid #3d362a;border-radius:4px;padding:7px 9px;
+      font:inherit;min-width:0}}
+ input:focus,select:focus{{outline:none;border-color:var(--gold);
+      box-shadow:0 0 0 2px rgba(185,166,120,.18)}}
+ input[type=number]{{width:92px}}
+ input[type=text]{{width:160px}}
+ select{{max-width:270px}}
+ button{{background:var(--brass);color:#f6efdd;border:1px solid #7d6a3e;
+         border-radius:4px;padding:7px 14px;font:inherit;cursor:pointer}}
  button:hover{{background:#7d6a3e}}
- form{{display:inline}}
- table{{width:100%;border-collapse:collapse;margin-top:8px}}
- td{{border-top:1px solid #2a251c;padding:5px 6px;font-size:13px}}
- .msg{{padding:10px 12px;border-radius:3px;margin:0 0 16px;font-size:14px}}
- .ok{{background:#243a20;border:1px solid #3d5c33;color:#bfe0ae}}
- .err{{background:#3a2020;border:1px solid #5c3333;color:#e0aeae}}
- label{{color:#9c9280;font-size:13px}}
-"""
+ button.ghost{{background:transparent;color:var(--ink);border-color:var(--line)}}
+ button.ghost:hover{{background:#262119;border-color:#4a4132}}
+ button.warn{{background:#5c3333;border-color:#7a4444;color:#f0d9d9}}
+ button.warn:hover{{background:#6e3d3d}}
+ /* The five action forms share one card: without this each would draw its
+    own box. Scoped to them by class on purpose -- the sign-in form IS a
+    card, and display:contents would dissolve it. */
+ form.act{{display:contents}}
+ table{{width:100%;border-collapse:collapse;background:var(--card);
+        border:1px solid var(--line);border-radius:5px;overflow:hidden}}
+ th{{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+     color:var(--dim);font-weight:600;padding:9px 12px;
+     border-bottom:1px solid var(--line);background:#1a1712}}
+ td{{padding:9px 12px;border-top:1px solid #262119}}
+ tr:first-child td{{border-top:0}}
+ .num{{font-family:ui-monospace,Consolas,monospace;color:var(--gold)}}
+ .msg{{padding:11px 14px;border-radius:4px;margin:0 0 16px;border:1px solid}}
+ .ok{{background:#243a20;border-color:#3d5c33;color:#bfe0ae}}
+ .err{{background:#3a2020;border-color:#5c3333;color:#e0aeae}}
+ .gate{{min-height:100vh;display:flex;align-items:center;justify-content:center;
+        padding:24px}}
+ .gate .card{{width:100%;max-width:330px;margin:0;padding:26px 24px}}
+ .gate .brand{{font-size:12px;letter-spacing:.24em;text-transform:uppercase;
+               color:var(--gold);text-align:center;margin:0 0 4px}}
+ .gate .sub{{text-align:center;color:var(--dim);font-size:13px;margin:0 0 22px}}
+ .gate label{{display:block;color:var(--dim);font-size:12px;
+              letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}}
+ .gate input{{width:100%;margin:0 0 16px}}
+ .gate button{{width:100%;padding:10px}}
+ .gate .foot{{color:var(--dim);font-size:12px;text-align:center;margin:18px 0 0}}
+'''
 
-ADMIN_GATE = """<!doctype html><html lang=ru><meta charset=utf-8>
+ADMIN_GATE = '''<!doctype html><html lang=ru><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
 <title>LAVA Online — панель</title><style>%s</style>
-<div class=w>
-<h1>Панель администратора</h1>
-{message}
-<form method=post action="/admin/login" class=card>
- <div class=row>
-  <label>логин</label>
-  <input name=login autocomplete=username autofocus>
-  <label>пароль</label>
-  <input name=password type=password autocomplete=current-password>
+<div class=gate>
+ <form method=post action="/admin/login" class=card>
+  <p class=brand>LAVA Online</p>
+  <p class=sub>Панель администратора</p>
+  {message}
+  <label for=l>Логин</label>
+  <input id=l name=login autocomplete=username autofocus>
+  <label for=p>Пароль</label>
+  <input id=p name=password type=password autocomplete=current-password>
   <button type=submit>Войти</button>
- </div>
- <p class=dim>Те же логин и пароль, что и в игре.</p>
-</form>
-</div></html>""" % ADMIN_STYLE
+  <p class=foot>Те же логин и пароль, что и в игре</p>
+ </form>
+</div></html>''' % ADMIN_STYLE
 
-ADMIN_ONLINE_ROW = """<tr>
+ADMIN_ONLINE_ROW = '''<tr>
  <td><b>{nick}</b></td><td class=dim>{login}</td>
- <td>{where} <span class=dim>{cell}</span></td>
+ <td>{where} <span class=num>{cell}</span></td>
  <td class=dim>{mins} мин</td>
  <td><a href="/admin?q={query}">открыть</a></td>
-</tr>"""
+</tr>'''
 
 # One card per character found: everything that can be done to it, each its
 # own form, because a single form with one button per action would send every
 # field of every action every time. q rides along so the page comes back with
-# the same search still on it.
-ADMIN_CHAR = """<div class=card>
-<b>{name}</b> <span class=dim>#{char_id} · учётка {login} · {afro} афро ·
-{gold} голды · локация {loc}{banned}</span>
-<form method=post action="/admin/do"><div class=row>
+# the same search still on it. The class on each form is what lets five of
+# them share one card without five boxes appearing round them.
+ADMIN_CHAR = '''<div class=card>
+<h3>{name} <span class=dim>· {login}{banned}</span></h3>
+<div class=dim>#{char_id} · <span class=num>{afro}</span> афро ·
+<span class=num>{gold}</span> голды · локация <span class=num>{loc}</span></div>
+<form class=act method=post action="/admin/do"><div class=row>
  <input type=hidden name=kind value=money><input type=hidden name=char_id value={char_id}>
  <input type=hidden name=q value="{name}">
- <label>деньги</label>
+ <label>Деньги</label>
  <input type=number name=afro value=0 title="афро"> афро
  <input type=number name=gold value=0 title="голда, целыми унциями"> голды
  <button type=submit>Начислить</button>
 </div></form>
-<form method=post action="/admin/do"><div class=row>
+<form class=act method=post action="/admin/do"><div class=row>
  <input type=hidden name=kind value=item><input type=hidden name=char_id value={char_id}>
  <input type=hidden name=q value="{name}">
- <label>предмет</label>
+ <label>Предмет</label>
  <input type=number name=type_id placeholder="тип" title="номер типа">
  <input type=number name=count value=1 title="сколько">
  <button type=submit>Выдать</button>
 </div></form>
-<form method=post action="/admin/do"><div class=row>
+<form class=act method=post action="/admin/do"><div class=row>
  <input type=hidden name=kind value=transport><input type=hidden name=char_id value={char_id}>
  <input type=hidden name=q value="{name}">
- <label>транспорт</label>
+ <label>Транспорт</label>
  <select name=type_id>{cars}</select>
  <input type=number name=days placeholder="дней" title="по умолчанию 365">
  <button type=submit>Выдать</button>
 </div></form>
-<form method=post action="/admin/do"><div class=row>
+<form class=act method=post action="/admin/do"><div class=row>
  <input type=hidden name=kind value=goto><input type=hidden name=char_id value={char_id}>
  <input type=hidden name=q value="{name}">
- <label>перенести</label>
+ <label>Перенести</label>
  <input type=number name=loc placeholder="локация">
  <span class=dim>или</span>
  <input type=number name=gx placeholder="x"> <input type=number name=gy placeholder="y">
- <button type=submit>Перенести</button>
+ <button type=submit class=ghost>Перенести</button>
 </div></form>
-<form method=post action="/admin/do"><div class=row>
+<form class=act method=post action="/admin/do"><div class=row>
  <input type=hidden name=account_id value={account_id}>
  <input type=hidden name=q value="{name}">
- <label>учётка</label>
+ <label>Учётка</label>
  <input type=text name=reason placeholder="причина, видна игроку">
  <input type=number name=seconds placeholder="секунд" title="0 — не указывать">
- <button type=submit name=kind value=kick>Выкинуть</button>
- <button type=submit name=kind value=ban>Забанить</button>
- <button type=submit name=kind value=unban>Разбанить</button>
+ <button type=submit name=kind value=kick class=ghost>Выкинуть</button>
+ <button type=submit name=kind value=ban class=warn>Забанить</button>
+ <button type=submit name=kind value=unban class=ghost>Разбанить</button>
 </div></form>
-</div>"""
+</div>'''
 
-ADMIN_PAGE = """<!doctype html><html lang=ru><meta charset=utf-8>
+ADMIN_PAGE = '''<!doctype html><html lang=ru><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
 <title>LAVA Online — панель</title><style>%s</style>
+<div class=bar>
+ <h1>LAVA Online</h1>
+ <span class=dim>панель администратора · {who}</span>
+</div>
 <div class=w>
-<h1>Панель администратора <span class=dim>— {who}</span></h1>
 {note}
-<h3>Сейчас в игре</h3>
+<h2>Сейчас в игре</h2>
 {online}
-<h3>Найти игрока</h3>
-<form method=get action="/admin" class=card><div class=row>
+<h2>Найти игрока</h2>
+<div class=card><form method=get action="/admin"><div class=row>
  <input type=text name=q value="{query}" placeholder="ник или логин"
-        style="width:260px" autofocus>
+        style="width:280px" autofocus>
  <button type=submit>Искать</button>
-</div></form>
+</div></form></div>
 {results}
-<h3>Последние действия</h3>
-<table>{log}</table>
-</div></html>""" % ADMIN_STYLE
+<h2>Последние действия</h2>
+<table><tr><th>кто</th><th>что</th><th>итог</th></tr>{log}</table>
+<p class=dim style="margin-top:26px">Действия выполняет игровой сервер: он
+разбирает очередь раз в секунду. Игроку в игре изменения приходят сразу,
+остальным — при следующем входе.</p>
+</div></html>''' % ADMIN_STYLE
 
 # Built once: the table is loaded at import and never changes.
 TRANSPORT_OPTIONS = "".join(

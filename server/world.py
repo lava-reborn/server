@@ -313,16 +313,17 @@ _TERRAIN = None
 # blue over red is Lake Nasser and a little speckle, it is not something a
 # threshold was tuned to produce, and no exit of any known location leads into
 # it (0 of 949).
-BLOCKED = "~"
+BLOCKED = "#~"
 
 
 def terrain():
-    """The map's water, as (bounds, rows) with one character per cell.
+    """The map's rock and water, as (bounds, rows), one character per cell.
 
-    RECOVERED, not original, and only the "~" of it is used: see BLOCKED for
-    why the rock of the same table is not. data/build_terrain.py reads both
-    off the client's own map tiles; data/map_terrain_report.md says how far
-    that can be trusted.
+    RECOVERED, not original: data/build_terrain.py reads it off the client's
+    own map tiles, and data/map_terrain_report.md says how far that can be
+    trusted. It is a photograph, so it is evidence and not testimony -- where
+    a location file declares an exit into a cell this calls rock, the file
+    wins and the cell is opened (data/terrain_repairs.json).
 
     The rows cover the rectangle the photograph was read over, which is no
     longer the whole world (MAP_X/MAP_Y reach further east and south). A cell
@@ -353,6 +354,7 @@ def terrain():
 
 
 _TERRAIN_FIX = None
+_TERRAIN_OPEN = None
 
 
 def terrain_overrides():
@@ -384,6 +386,31 @@ def terrain_overrides():
     return _TERRAIN_FIX
 
 
+def terrain_repairs():
+    """Cells the picture calls rock and a location file calls its own exit.
+
+    Eighteen declared exits out of 951 lead into one, over fifteen cells.
+    Without this the server would refuse a step the game itself promises and
+    the player would meet a wall that is in no file -- which is how the rock
+    layer earned its removal the first time round. Built by
+    data/build_terrain_repairs.py, which lists the reason for every cell.
+    """
+    global _TERRAIN_OPEN
+    if _TERRAIN_OPEN is None:
+        _TERRAIN_OPEN = set()
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "terrain_repairs.json"),
+                      encoding="utf-8") as fh:
+                doc = json.load(fh)
+            for cell in doc.get("opened") or ():
+                gx, gy = cell.split(",")
+                _TERRAIN_OPEN.add((int(gx), int(gy)))
+        except (OSError, ValueError, KeyError, AttributeError):
+            pass
+    return _TERRAIN_OPEN
+
+
 def in_map(gx, gy):
     """Whether a cell is inside the world's rectangle at all.
 
@@ -412,11 +439,14 @@ def water(gx, gy):
 def passable(gx, gy):
     """Whether a walker can stand on a map cell.
 
-    Two things say no, and neither of them is a photograph of a mountain:
-    the edge of the world, and the lake. Everything else is ground somebody
-    can stand on -- a cell with no location of its own opens as wasteland
-    with four ways out, and a cell the rock ring stands on opens as rocks
-    that let nobody through, which is a scene rather than a hole in the map.
+    Three things say no: the edge of the world, the lake, and the mountains
+    the map draws. The mountains are read off the picture, so they yield to
+    anything written down -- a cell some location declares as its own exit is
+    open however dark the pixels are (terrain_repairs), and a cell a player
+    has stood on is open because they say so (terrain_overrides).
+
+    Order matters: a player's word beats the repairs, the repairs beat the
+    photograph, and none of them reaches outside the world's rectangle.
 
     Floor, not round, like location_at: the cell under a position is the one
     the client draws the figure on.
@@ -427,6 +457,8 @@ def passable(gx, gy):
     fixed = terrain_overrides().get((x, y))
     if fixed is not None:
         return fixed
+    if (x, y) in terrain_repairs():
+        return True
     return not water(x, y)
 
 

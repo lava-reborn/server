@@ -120,21 +120,35 @@ def main():
           % (wide, high, 100.0 * walkable / total, 100.0 * rock / total,
              100.0 * kinds.get("~", 0) / total))
 
-    # --- the server takes the water and leaves the rock ---------------------
+    # --- the server takes both, minus what the files overrule ---------------
+    #
+    # Rock and water alike stop a walker. The picture yields in exactly one
+    # direction: a cell some location declares as its own way out is open
+    # however dark the pixels are, because a location file is testimony from
+    # the people who built the world and the picture is our reading of an
+    # image (data/terrain_repairs.json).
+    repairs = world.terrain_repairs()
+    assert repairs, "terrain: no repairs at all, which cannot be right"
     disagree = [(gx0 + x, gy0 + y)
                 for y, row in enumerate(rows) for x, ch in enumerate(row)
-                if world.passable(gx0 + x, gy0 + y) is not (ch in DRY)]
+                if (gx0 + x, gy0 + y) not in repairs
+                and world.passable(gx0 + x, gy0 + y) is not (ch in PASSABLE)]
     assert not disagree, \
-        "terrain: world.passable disagrees with the water at %d cells: %s" % (
+        "terrain: world.passable disagrees with the picture at %d cells: %s" % (
             len(disagree), disagree[:10])
-    dry_rock = [(gx0 + x, gy0 + y)
-                for y, row in enumerate(rows) for x, ch in enumerate(row)
-                if ch == "#"]
-    assert len(dry_rock) > 1000, "terrain: no rock in the table to ignore"
-    assert all(world.passable(*c) for c in dry_rock), \
-        "terrain: the photograph's rock still stops a walker"
-    print("the %d cells of rock are walkable, the %d of water are not"
-          % (len(dry_rock), kinds.get("~", 0)))
+    assert all(world.passable(*c) for c in repairs), \
+        "terrain: a cell a location file calls its own exit is still blocked"
+    rock_cells = [(gx0 + x, gy0 + y)
+                  for y, row in enumerate(rows) for x, ch in enumerate(row)
+                  if ch == "#"]
+    assert len(rock_cells) > 1000, "terrain: no rock in the table"
+    stopped = [c for c in rock_cells if not world.passable(*c)]
+    assert len(stopped) == len(rock_cells) - len(repairs), \
+        "terrain: %d of %d rock cells stop a walker, expected %d" % (
+            len(stopped), len(rock_cells), len(rock_cells) - len(repairs))
+    print("rock stops a walker on %d cells and water on %d; %d cells are open"
+          " because a location file says they are"
+          % (len(stopped), kinds.get("~", 0), len(repairs)))
 
     # --- and the world is bigger than the picture ---------------------------
     wx0, wx1 = travel.MAP_X
