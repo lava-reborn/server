@@ -59,8 +59,14 @@ services:
       retries: 3
 
   http:
-    build: .
+    # No build here on purpose. Both services run the same image, and with a
+    # build section on each one buildx builds them at the same time and they
+    # collide on the name: "image lava-server:latest already exists", and
+    # nothing starts. game builds it; this one waits for game and takes it
+    # from the local store, which pull_policy has to be told, since there is
+    # no such image in any registry to fall back on.
     image: lava-server
+    pull_policy: never
     container_name: lava-http
     restart: unless-stopped
     stop_grace_period: 10s

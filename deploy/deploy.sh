@@ -52,6 +52,11 @@ if [ "$data_only" = 0 ]; then
   # the include has to come before the exclude or rsync never sees them.
   # recon/ is the decompiled client: our reading material, no business on a
   # public host. The image itself takes only server/ and data/ (.dockerignore).
+  #
+  # The two wiki excludes name directories, not a data/wiki* glob: the glob
+  # also takes wiki_links.json and wiki_items.json, which are run-time tables
+  # the server refuses to start without. Same two lines as .dockerignore, and
+  # they should stay the same two.
   rsync -a --delete --info=stats1 \
     --exclude '.git/' \
     --exclude '.claude/' \
@@ -62,7 +67,8 @@ if [ "$data_only" = 0 ]; then
     --include 'tools/' \
     --include 'tools/*.py' \
     --exclude 'tools/*' \
-    --exclude 'data/wiki*' \
+    --exclude 'data/wiki/' \
+    --exclude 'data/wiki_world/' \
     --exclude 'data/lava.db*' \
     --exclude '__pycache__/' \
     --exclude '*.pyc' \
