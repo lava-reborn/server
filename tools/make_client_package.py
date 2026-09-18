@@ -66,6 +66,34 @@ if not exist "%RES%\\database\\texts.xml" (
   )
 )
 
+rem Flash will not open a socket for a movie it loaded off the disk unless the
+rem folder is trusted: the login window still appears, but pressing the play
+rem button answers "connection not established" and the server never sees a
+rem byte. One line naming this folder is the whole remedy, and it also covers
+rem res\\ underneath it. Verified on projector 32.0.0.465: without the file
+rem there is no connection at all, with it the login reaches the server.
+set "HERE=%~dp0"
+set "HERE=%HERE:~0,-1%"
+set "TRUSTDIR=%APPDATA%\\Macromedia\\Flash Player\\#Security\\FlashPlayerTrust"
+set "TRUSTFILE=%TRUSTDIR%\\lava.cfg"
+if exist "%TRUSTFILE%" (
+  findstr /x /c:"%HERE%" "%TRUSTFILE%" >nul 2>&1 || (
+    echo Allowing "%HERE%" to reach the network
+    >>"%TRUSTFILE%" echo %HERE%
+  )
+) else (
+  echo Allowing "%HERE%" to reach the network
+  if not exist "%TRUSTDIR%" mkdir "%TRUSTDIR%"
+  >"%TRUSTFILE%" echo %HERE%
+)
+if not exist "%TRUSTFILE%" (
+  echo.
+  echo WARNING: could not write %TRUSTFILE%
+  echo The login window will open, but the game will not connect.
+  echo See README.txt, the section about FlashPlayerTrust.
+  echo.
+)
+
 rem No command line switch carries flashvars into the projector; they ride in
 rem the query string of the movie's own path, and Flash unpacks them into
 rem _root the same way it would from a web page. var_host and var_port are
@@ -117,6 +145,23 @@ README = """LAVA Online — как подключиться
 
 2. Скопируйте texts.xml в res\\database\\texts.xml.
    lava.bat сделает это сам при первом запуске, если файла там ещё нет.
+
+3. Разрешите игре выход в сеть. Flash не открывает сокет фильму, который
+   запущен с диска, пока папка не внесена в список доверенных, — и это не
+   мелочь: без разрешения окно входа появляется, но по кнопке «Играть»
+   игра пишет «Соединение с сервером не установлено!», и до сервера не
+   доходит вообще ничего.
+
+   lava.bat делает это сам: заводит файл
+
+       %APPDATA%\\Macromedia\\Flash Player\\#Security\\FlashPlayerTrust\\lava.cfg
+
+   и вписывает в него путь к папке с игрой. Отдельно делать ничего не
+   нужно; если запись в AppData запрещена, батник предупредит, и тогда
+   этот файл придётся создать руками — одна строка, полный путь к папке,
+   где лежит lava.bat, например
+
+       C:\\Games\\LAVA
 
 Должно получиться так:
 
@@ -184,16 +229,12 @@ README = """LAVA Online — как подключиться
 * «Соединение с сервером потеряно» — сервер выключен или порт {port}
   закрыт. Проверьте страницу регистрации: если она открывается, сервер жив.
 
-* Flash отказывается открывать сокет (окно входа есть, но соединения нет).
-  Разрешите папке с игрой выход в сеть: создайте текстовый файл
-
-      %APPDATA%\\Macromedia\\Flash Player\\#Security\\FlashPlayerTrust\\lava.cfg
-
-  и напишите в нём одну строку — полный путь к папке с игрой, например
-
-      C:\\Games\\LAVA
-
-  После этого запустите lava.bat снова.
+* «Соединение с сервером не установлено!» сразу по нажатию «Играть», а
+  страница регистрации при этом открывается — значит папка не в списке
+  доверенных и Flash не дал игре выйти в сеть. Смотрите пункт 3
+  установки: проверьте, что lava.cfg существует и что путь в нём совпадает
+  с папкой, где лежит lava.bat (без обратной косой черты в конце). После
+  правки запустите lava.bat снова.
 """
 
 
