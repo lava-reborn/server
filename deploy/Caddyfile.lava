@@ -1,50 +1,46 @@
-# The HTTPS front for the LAVA server, to be served by the Caddy that already
-# holds 80 and 443 on this host for Agile Quest. Two things have to happen
-# before it can be used, and neither is done from this repository:
+# The HTTPS front for the LAVA server, served by the Caddy that already holds
+# 80 and 443 on this host for Agile Quest.
 #
-# 1. DNS. lava.devmachine.tech does not resolve at all yet, and devmachine.tech
-#    has no wildcard, so the name is free and nothing is being shadowed: it
-#    needs one A record pointing at 159.194.247.90. The apex points elsewhere
-#    (185.215.4.25) and is none of our business.
+# It is appended to that project's Caddyfile (/opt/agile-quest/deploy/
+# Caddyfile) and must be committed in THAT repository too: its own deploy.sh
+# rsyncs the file, so a hand edit on the server lives exactly until its next
+# deployment.
 #
-# 2. One line in the Agile Quest Caddyfile, committed in THAT repository
-#    (a hand edit on the server is wiped by its own deploy.sh rsync):
+# reverse_proxy goes to the host's published port rather than to the
+# container by name, which is the whole reason this needs no change to the
+# Agile Quest stack: no shared docker network, no extra volume, no
+# recreating its containers. 172.18.0.1 is the gateway of the network Caddy
+# is on, which is this host; check it with
 #
-#        import /etc/caddy/conf.d/*.caddy
+#     docker exec agile-caddy wget -qO- http://172.18.0.1:8080/status
 #
-#    plus the directory mounted into its caddy service:
+# before trusting it, because a recreated network can renumber.
 #
-#        - /opt/caddy-conf.d:/etc/caddy/conf.d:ro
+# Reload without restarting anything:
 #
-#    Then this file is copied to /opt/caddy-conf.d/lava.caddy and Caddy is
-#    reloaded. After that the two projects never touch each other's config
-#    again.
+#     docker exec agile-caddy caddy reload --config /etc/caddy/Caddyfile
 #
-# The lava-http container has to be reachable from the caddy container, so
-# they need a shared docker network:
-#
-#     docker network create web            (once)
-#     docker network connect web agile-caddy
-#     docker network connect web lava-http
-#
-# With this in place LAVA_HTTP_PORT can stop being published at all, and
-# LAVA_BIND can go back to 127.0.0.1.
+# DNS: lava.devmachine.tech has an A record on 159.194.247.90 (the apex
+# points elsewhere and is none of our business). Let's Encrypt issues on
+# that name by itself the first time it is asked for.
 
 lava.devmachine.tech {
 	encode zstd gzip
 
-	# Only the registration page lives behind this. The client is not served
-	# -- players bring their own -- so there is nothing here worth caching,
-	# and an account count that lies is worse than one fetched every time.
+	# Only the registration page and the admin panel live here. The client
+	# is not served -- players bring their own -- so there is nothing worth
+	# caching, and an account count or an online list that lies is worse
+	# than one fetched every time.
 	header Cache-Control "no-store"
 
 	header {
+		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		-Server
 	}
 
-	reverse_proxy lava-http:8080
+	reverse_proxy 172.18.0.1:8080
 
 	log {
 		output file /data/lava-access.log {
