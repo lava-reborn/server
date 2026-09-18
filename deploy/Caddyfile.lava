@@ -33,17 +33,10 @@
 lava.devmachine.tech {
 	encode zstd gzip
 
-	# The client is ~2 GB of SWF and JPEG that never changes. It is fetched
-	# file by file as the player walks around, so caching it hard is the
-	# difference between a brisk game and a slideshow.
-	@client path /res/*
-	header @client Cache-Control "public, max-age=2592000, immutable"
-
-	# Except the two the server makes up on the spot: the string table and
-	# the settings that carry this host's address. Cache those and a change
-	# of address would never reach anyone.
-	@live path /res/database/texts.xml /res/xmldocs/csettings_v1.xml
-	header @live Cache-Control "no-store"
+	# Only the registration page lives behind this. The client is not served
+	# -- players bring their own -- so there is nothing here worth caching,
+	# and an account count that lies is worse than one fetched every time.
+	header Cache-Control "no-store"
 
 	header {
 		X-Content-Type-Options "nosniff"

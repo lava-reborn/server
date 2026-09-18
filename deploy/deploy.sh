@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
 # Put the LAVA server on the host that already runs Agile Quest.
 #
-#   bash deploy/deploy.sh              code only: rsync, rebuild, restart
-#   bash deploy/deploy.sh --with-res   also push the client (2.1 GB, once)
-#   bash deploy/deploy.sh --res-only   only the client, no rebuild
+#   bash deploy/deploy.sh               code only: rsync, rebuild, restart
+#   bash deploy/deploy.sh --with-data   also push the tables the server reads
+#   bash deploy/deploy.sh --data-only   only those, no rebuild
 #
 # The database lives in a named docker volume and is never touched here.
-# Secrets and addresses live in /opt/lava/.env on the server; this script
-# creates it from deploy/env.example on the first run and then leaves it
-# alone, so a redeploy cannot overwrite the address friends are using.
+# Addresses live in /opt/lava/.env on the server; this script creates it from
+# deploy/env.example on the first run and then leaves it alone, so a redeploy
+# cannot overwrite the address friends are already using.
 #
-# The client's own files are NOT in this repository and never will be. They
-# go up as a separate rsync into /opt/lava/res, which docker mounts
-# read-only. Keeping them out of the image means a rebuild moves megabytes
-# instead of gigabytes, and the server reads that tree without writing to it.
+# WHAT GOES UP, AND WHY SO LITTLE OF IT
+#
+# The client is 2.1 GB and the server opens six kinds of file out of it:
+# locations/{static,deadloc,desert}/*.xml, database/mobs.xml,
+# database/objects.xml and avatars/list.xml -- about 35 MB, 1.7 % of the
+# whole. Everything else is artwork, sound and animation that the server
+# never reads; it belongs to the player's own copy and travels no further
+# than their disk. So only that slice is pushed, into a read-only mount.
+#
+# This is a server, not a game distribution. A player brings their own client
+# and the package from tools/make_client_package.py, which is three text
+# files and no part of the game.
 set -euo pipefail
 
 HOST=${LAVA_DEPLOY_HOST:-root@159.194.247.90}
@@ -25,12 +33,12 @@ RES_SRC=${LAVA_RES_SRC:-/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res}
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SSH=(ssh -o BatchMode=yes)
 
-with_res=0
-res_only=0
+with_data=0
+data_only=0
 for arg in "$@"; do
   case "$arg" in
-    --with-res) with_res=1 ;;
-    --res-only) with_res=1; res_only=1 ;;
+    --with-data) with_data=1 ;;
+    --data-only) with_data=1; data_only=1 ;;
     *) echo "unknown argument: $arg" >&2; exit 2 ;;
   esac
 done
@@ -38,11 +46,8 @@ done
 echo "==> $HOST:$DEST"
 "${SSH[@]}" "$HOST" "mkdir -p '$DEST' '$DEST/res'"
 
-if [ "$res_only" = 0 ]; then
+if [ "$data_only" = 0 ]; then
   echo "==> code"
-  # Everything the image needs and nothing else: no client, no database, no
-  # wiki dumps, no worktrees. --delete keeps the server from accumulating
-  # files that have been deleted here.
   # tools/ holds ~80 MB of downloaded players; only its scripts are ours, and
   # the include has to come before the exclude or rsync never sees them.
   # recon/ is the decompiled client: our reading material, no business on a
@@ -66,16 +71,32 @@ if [ "$res_only" = 0 ]; then
     "$HERE/" "$HOST:$DEST/"
 fi
 
-if [ "$with_res" = 1 ]; then
+if [ "$with_data" = 1 ]; then
   [ -d "$RES_SRC" ] || { echo "no client at $RES_SRC" >&2; exit 1; }
-  echo "==> client (this is the slow one)"
-  rsync -a --partial --info=progress2 \
+  echo "==> location and item tables"
+  # Named file by named file. --prune-empty-dirs keeps the directories that
+  # end up with nothing in them from being created at all, and the final
+  # --exclude '*' is what makes this a whitelist rather than a filter.
+  rsync -a --delete --prune-empty-dirs --info=stats1 \
+    --include 'database/' \
+    --include 'database/mobs.xml' \
+    --include 'database/objects.xml' \
+    --include 'avatars/' \
+    --include 'avatars/list.xml' \
+    --include 'locations/' \
+    --include 'locations/static/' \
+    --include 'locations/static/*.xml' \
+    --include 'locations/deadloc/' \
+    --include 'locations/deadloc/*.xml' \
+    --include 'locations/desert/' \
+    --include 'locations/desert/*.xml' \
+    --exclude '*' \
     -e "${SSH[*]}" \
     "$RES_SRC/" "$HOST:$DEST/res/"
 fi
 
-if [ "$res_only" = 1 ]; then
-  echo "==> done (client only, nothing restarted)"
+if [ "$data_only" = 1 ]; then
+  echo "==> done (tables only, nothing restarted)"
   exit 0
 fi
 
