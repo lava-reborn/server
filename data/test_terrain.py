@@ -129,23 +129,48 @@ def main():
     # image (data/terrain_repairs.json).
     repairs = world.terrain_repairs()
     assert repairs, "terrain: no repairs at all, which cannot be right"
+    # And the hand outranks both: tools/map_editor.py writes cells a person
+    # walled off or opened while looking at the map, and world.passable
+    # consults them before anything else. The wall round the Nubian valley
+    # is drawn there.
+    hand = set()
+    try:
+        with io.open(os.path.join(HERE, "terrain_verified.json"),
+                     encoding="utf-8") as fh:
+            doc = json.load(fh)
+        for kind in ("blocked", "passable"):
+            for key in doc.get(kind) or ():
+                hand.add(tuple(int(v) for v in key.split(",")))
+    except (OSError, ValueError):
+        pass
     disagree = [(gx0 + x, gy0 + y)
                 for y, row in enumerate(rows) for x, ch in enumerate(row)
                 if (gx0 + x, gy0 + y) not in repairs
+                and (gx0 + x, gy0 + y) not in hand
                 and world.passable(gx0 + x, gy0 + y) is not (ch in PASSABLE)]
     assert not disagree, \
         "terrain: world.passable disagrees with the picture at %d cells: %s" % (
             len(disagree), disagree[:10])
-    assert all(world.passable(*c) for c in repairs), \
-        "terrain: a cell a location file calls its own exit is still blocked"
+    # A repair opens what the picture called rock, and a hand-drawn wall
+    # closes it again: the order is hand, then repairs, then the picture.
+    overruled = [c for c in repairs if not world.passable(*c)]
+    assert all(c in hand for c in overruled), \
+        "terrain: a cell a location file calls its own exit is blocked by" \
+        " neither a hand nor anything else: %s" % (
+            [c for c in overruled if c not in hand][:6],)
     rock_cells = [(gx0 + x, gy0 + y)
                   for y, row in enumerate(rows) for x, ch in enumerate(row)
                   if ch == "#"]
     assert len(rock_cells) > 1000, "terrain: no rock in the table"
+    # Rock stops a walker unless something with more authority says
+    # otherwise: a repair, or a hand that painted the cell open.
     stopped = [c for c in rock_cells if not world.passable(*c)]
-    assert len(stopped) == len(rock_cells) - len(repairs), \
-        "terrain: %d of %d rock cells stop a walker, expected %d" % (
-            len(stopped), len(rock_cells), len(rock_cells) - len(repairs))
+    walkable_rock = [c for c in rock_cells if world.passable(*c)]
+    unexplained = [c for c in walkable_rock
+                   if c not in repairs and c not in hand]
+    assert not unexplained, \
+        "terrain: %d rock cells are walkable for no recorded reason: %s" % (
+            len(unexplained), unexplained[:6])
     print("rock stops a walker on %d cells and water on %d; %d cells are open"
           " because a location file says they are"
           % (len(stopped), kinds.get("~", 0), len(repairs)))

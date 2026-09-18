@@ -131,6 +131,23 @@ def check_ring():
     return ring
 
 
+def hand_drawn():
+    """Cells a person walled off in tools/map_editor.py.
+
+    They outrank everything else world.passable consults, so every check
+    that asks "why is this blocked" has to know about them.
+    """
+    out = set()
+    try:
+        with io.open(os.path.join(HERE, "terrain_verified.json"),
+                     encoding="utf-8") as fh:
+            for key in json.load(fh).get("blocked") or ():
+                out.add(tuple(int(v) for v in key.split(",")))
+    except (OSError, ValueError):
+        pass
+    return out
+
+
 def check_exits(ring):
     """Nobody the server places on the map declares an exit it cannot honour."""
     off, wet = [], []
@@ -149,9 +166,20 @@ def check_exits(ring):
                 wet.append((gx, gy, loc_id, side))
     assert not off, "borders: %d exits lead off the world: %s" % (
         len(off), off[:10])
+    # A settlement's declared exit must not meet blocked ground -- unless a
+    # person drew the wall there deliberately. The hand layer outranks both
+    # the photograph and the repairs (world.passable), and walling a valley
+    # in is exactly what it exists for, so those are listed, not refused.
+    drawn = hand_drawn()
     settled_wet = [e for e in wet if (e[0], e[1]) in settled]
-    assert not settled_wet, "borders: %d settlement exits lead into water: %s" \
-        % (len(settled_wet), settled_wet[:10])
+    by_hand = [e for e in settled_wet
+               if travel.neighbour(e[0], e[1], e[3]) in drawn]
+    by_map = [e for e in settled_wet if e not in by_hand]
+    assert not by_map, "borders: %d settlement exits lead into blocked" \
+        " ground the map itself drew: %s" % (len(by_map), by_map[:10])
+    if by_hand:
+        print("  %d settlement exits meet a hand-drawn wall, which outranks"
+              " them: %s" % (len(by_hand), by_hand[:4]))
     assert settlement_exits >= 949, \
         "borders: only %d settlement exits to check" % settlement_exits
     print("all %d exits of the %d placed locations lead onto the map, the %d"
@@ -288,36 +316,65 @@ def check_walk():
                for gy in range(world.MAP_Y[0], world.MAP_Y[1] + 1)
                for gx in range(world.MAP_X[0], world.MAP_X[1] + 1)
                if not world.passable(gx, gy)]
-    # Nothing stops a walker except what the map itself draws -- the lake and
-    # the mountains, both read out of the same picture. world.water answers
-    # for both, since BLOCKED covers both characters.
-    unexplained = [c for c in blocked if not world.water(*c)]
+    # Nothing stops a walker without a reason on record: either the map drew
+    # it -- the lake and the mountains, both out of the same picture, which
+    # world.water answers for since BLOCKED covers both -- or a person drew
+    # it by hand in terrain_verified.json.
+    drawn = hand_drawn()
+    unexplained = [c for c in blocked
+                   if not world.water(*c) and c not in drawn]
     assert not unexplained, \
-        "borders: %d cells blocked by something the map does not draw: %s" \
+        "borders: %d cells blocked by neither the map nor a hand: %s" \
         % (len(unexplained), unexplained[:10])
+    print("  %d of them drawn by hand" % len([c for c in blocked
+                                              if c in drawn]))
     print("the world is %d by %d cells; %d are blocked, every one of them"
           " drawn as rock or water"
           % (wide, high, len(blocked)))
 
     settled = world.settlements()
-    missing = sorted(c for c in settled if c not in seen)
-    assert not missing, "borders: %d settlements cannot be walked to: %s" % (
-        len(missing), missing[:10])
     assert len(settled) >= 262, "borders: only %d settlements" % len(settled)
-    print("from %d,%d on foot: %d cells, and all %d settlements"
-          % (START[0], START[1], len(seen), len(settled)))
+
+    # The world is no longer one piece, and that is a decision rather than a
+    # fault: the owner drew a wall round the Nubian valley, so the starting
+    # zone is closed and the rest of the map is outside it. What must still
+    # hold is that nothing is sealed on its own -- every settlement belongs
+    # to one side or the other, and both sides are whole.
+    inside = walk_from(NUBIAN_VILLAGE)
+    outside = walk_from(START)
+    assert not (inside & outside), \
+        "borders: the valley and the rest of the world are the same place," \
+        " so the wall has a hole in it"
+    stranded = sorted(c for c in settled
+                      if c not in inside and c not in outside)
+    assert not stranded, \
+        "borders: %d settlements belong to neither side of the wall: %s" \
+        % (len(stranded), stranded[:10])
+    in_n = sum(1 for c in settled if c in inside)
+    out_n = sum(1 for c in settled if c in outside)
+    assert in_n + out_n == len(settled), "borders: %d + %d settlements of %d" \
+        % (in_n, out_n, len(settled))
+    print("the wall divides the world: %d cells and %d settlements inside,"
+          " %d and %d outside, nothing stranded between them"
+          % (len(inside), in_n, len(outside), out_n))
 
     valley = [c for c in settled if NUBIA[0] <= c[0] <= NUBIA[1]
               and NUBIA[2] <= c[1] <= NUBIA[3]]
     assert len(valley) >= 10, "borders: only %d settlements in the valley" \
         % len(valley)
-    assert all(c in seen for c in valley), "borders: the Nubian valley is sealed"
+    seen = inside                       # the walk that matters starts at home
+    assert all(c in seen for c in valley), \
+        "borders: %d of the valley's own settlements are outside its wall" \
+        % len([c for c in valley if c not in seen])
     assert NUBIAN_VILLAGE in seen and NUBIAN_VILLAGE in settled, \
         "borders: the Nubian village on %s is not there to walk to" \
         % (NUBIAN_VILLAGE,)
     print("the Nubian valley: all %d settlements on foot, the village among them"
           % len(valley))
 
+    # Everything below is the world outside the wall: the New Colonists and
+    # the rim both lie there, and it is the market they are walked to from.
+    seen = outside
     for cell in NEW_COLONISTS:
         assert cell in seen, "borders: the New Colonists on %s are cut off" \
             % (cell,)
