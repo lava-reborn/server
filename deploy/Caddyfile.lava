@@ -1,0 +1,61 @@
+# The HTTPS front for the LAVA server, to be served by the Caddy that already
+# holds 80 and 443 on this host for Agile Quest. Two things have to happen
+# before it can be used, and neither is done from this repository:
+#
+# 1. DNS. lava.lab260.ru currently resolves to the landing server through the
+#    wildcard on lab260.ru; it needs an A record of its own pointing at
+#    159.194.247.90, the way agilequest.lab260.ru already does.
+#
+# 2. One line in the Agile Quest Caddyfile, committed in THAT repository
+#    (a hand edit on the server is wiped by its own deploy.sh rsync):
+#
+#        import /etc/caddy/conf.d/*.caddy
+#
+#    plus the directory mounted into its caddy service:
+#
+#        - /opt/caddy-conf.d:/etc/caddy/conf.d:ro
+#
+#    Then this file is copied to /opt/caddy-conf.d/lava.caddy and Caddy is
+#    reloaded. After that the two projects never touch each other's config
+#    again.
+#
+# The lava-http container has to be reachable from the caddy container, so
+# they need a shared docker network:
+#
+#     docker network create web            (once)
+#     docker network connect web agile-caddy
+#     docker network connect web lava-http
+#
+# With this in place LAVA_HTTP_PORT can stop being published at all, and
+# LAVA_BIND can go back to 127.0.0.1.
+
+lava.lab260.ru {
+	encode zstd gzip
+
+	# The client is ~2 GB of SWF and JPEG that never changes. It is fetched
+	# file by file as the player walks around, so caching it hard is the
+	# difference between a brisk game and a slideshow.
+	@client path /res/*
+	header @client Cache-Control "public, max-age=2592000, immutable"
+
+	# Except the two the server makes up on the spot: the string table and
+	# the settings that carry this host's address. Cache those and a change
+	# of address would never reach anyone.
+	@live path /res/database/texts.xml /res/xmldocs/csettings_v1.xml
+	header @live Cache-Control "no-store"
+
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy lava-http:8080
+
+	log {
+		output file /data/lava-access.log {
+			roll_size 20MiB
+			roll_keep 5
+		}
+	}
+}
