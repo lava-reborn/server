@@ -43,14 +43,20 @@ if [ "$res_only" = 0 ]; then
   # Everything the image needs and nothing else: no client, no database, no
   # wiki dumps, no worktrees. --delete keeps the server from accumulating
   # files that have been deleted here.
+  # tools/ holds ~80 MB of downloaded players; only its scripts are ours, and
+  # the include has to come before the exclude or rsync never sees them.
+  # recon/ is the decompiled client: our reading material, no business on a
+  # public host. The image itself takes only server/ and data/ (.dockerignore).
   rsync -a --delete --info=stats1 \
     --exclude '.git/' \
     --exclude '.claude/' \
     --exclude 'res/' \
     --exclude 'dist/' \
     --exclude 'logs/' \
-    --exclude 'tools/flash/' \
-    --exclude 'tools/ruffle/' \
+    --exclude 'recon/' \
+    --include 'tools/' \
+    --include 'tools/*.py' \
+    --exclude 'tools/*' \
     --exclude 'data/wiki*' \
     --exclude 'data/lava.db*' \
     --exclude '__pycache__/' \
