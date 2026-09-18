@@ -20,11 +20,13 @@
 #
 #     docker exec agile-caddy caddy reload --config /etc/caddy/Caddyfile
 #
-# DNS: lava.devmachine.tech has an A record on 159.194.247.90 (the apex
-# points elsewhere and is none of our business). Let's Encrypt issues on
-# that name by itself the first time it is asked for.
+# DNS: lava-reborn.ru and www.lava-reborn.ru both have A records on
+# 159.194.247.90. lava.devmachine.tech was the name before and still
+# resolves, so it is kept as a redirect rather than dropped -- every
+# LavaOnline.exe handed out before the move carries it, and the game socket
+# it dials is the same machine either way.
 
-lava.devmachine.tech {
+lava-reborn.ru {
 	encode zstd gzip
 
 	# Only the registration page and the admin panel live here. The client
@@ -48,4 +50,8 @@ lava.devmachine.tech {
 			roll_keep 5
 		}
 	}
+}
+
+www.lava-reborn.ru, lava.devmachine.tech {
+	redir https://lava-reborn.ru{uri} permanent
 }

@@ -231,7 +231,7 @@ compose, ни выкладка этот выключатель не ставят
 ### Пакет игрока: один файл
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -ServerHost lava.devmachine.tech
+powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -ServerHost lava-reborn.ru
 ```
 
 Кладёт в `dist/` **`LavaOnline.exe`** (17 МБ) и короткий `README.txt`. Игрок
@@ -324,7 +324,7 @@ bash deploy/deploy.sh               # дальше: только код, пер�
 
 ### Адрес
 
-**`lava.devmachine.tech`** — A-запись на 159.194.247.90. Страница регистрации
+**`lava-reborn.ru`** — A-запись на 159.194.247.90. Страница регистрации
 и панель идут по HTTPS через тот же Caddy, что держит `agilequest.lab260.ru`:
 сертификат Let's Encrypt он выписал сам, как только имя начало резолвиться.
 Игровой сокет и порт политики Flash отвечают на том же имени напрямую,
