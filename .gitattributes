@@ -1,0 +1,10 @@
+# These are read by Linux: a CRLF in a shell script breaks its shebang, and a
+# CRLF in an env file becomes part of the value -- LAVA_RES_DIR would point at
+# a path with a carriage return on the end. Git on Windows converts by default,
+# so the files that leave this machine are pinned to LF here.
+*.sh text eol=lf
+deploy/env.example text eol=lf
+deploy/Caddyfile.lava text eol=lf
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+*.py text eol=lf
