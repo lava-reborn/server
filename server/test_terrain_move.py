@@ -8,15 +8,21 @@ with nowhere to go is answered with the frame an arrival uses -- userMove for
 id 0 with zero speed, which is the only thing that both puts the figure back
 and stops it.
 
-What refuses a walker is now two things and neither is a photograph of a
-mountain: the lake, and the edge of the world. Rock is a location standing on
-a cell with no outzone facing out (data/borders.json), so walking into the
-rim means walking into a scene of rocks and finding no way on -- which is
-what this checks from the client's side of the socket. The ring itself, and
-the walk to all 262 settlements, are checked in data/test_borders.py.
+Three things refuse a walker: the lake, the mountains the map draws, and the
+edge of the world. The first two are read off the same picture and both stop
+a leg where it meets them; the edge is a location standing on a cell with no
+outzone facing out (data/borders.json), so walking into the rim means walking
+into a scene of rocks and finding no way on -- which is what this checks from
+the client's side of the socket.
+
+The mountains yield to one thing: a cell some location declares as its own
+exit is open however dark the pixels are (data/terrain_repairs.json). The
+ring itself, and the walk to all 262 settlements, are checked in
+data/test_borders.py.
 
     wsl.exe -e python3 server/test_terrain_move.py
 """
+import collections
 import os
 import socket
 import subprocess
@@ -159,8 +165,31 @@ def shore():
     raise SystemExit("no lake anywhere near the start: the table is wrong")
 
 
-# The valley the owner walked, its market, and the eastern rim of the world.
+def steps_between(a, b):
+    """Cells a walker actually covers, going round whatever is in the way.
+    Against the straight-line distance it says whether the map's rock is a
+    detour or a wall."""
+    prev = {a: None}
+    queue = collections.deque([a])
+    while queue:
+        cur = queue.popleft()
+        if cur == b:
+            n = 0
+            while prev[cur]:
+                cur, n = prev[cur], n + 1
+            return n
+        x, y = cur
+        for nb in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if nb not in prev and world.passable(*nb):
+                prev[nb] = cur
+                queue.append(nb)
+    return None
+
+
+# The valley the owner walked, its market, the old market this suite starts
+# on, and the eastern rim of the world.
 NUBIA = (6250, 6285, 1810, 1845)
+MARKET_CELL = (5970, 1730)
 VALLEY_CELL = (6268, 1825)
 RIM_CELL = (world.MAP_X[1], 1700)
 
@@ -234,23 +263,34 @@ try:
     c.send("lenter;accept=1;")
     enter(c)
 
-    # --- the Nubian valley is not walled in any more ------------------------
-    # It was: the roughness of the photograph read the valley's boulder
-    # fields as mountains and left a run west stopped twenty cells short.
-    # 6263..6266 on this row was that wall; four cells west of the market is
-    # the middle of it. A walker crosses 0.35 of a cell a second, so this leg
-    # is a slow twelve seconds and no longer than it has to be.
+    # --- the Nubian valley: walked out of, round the rock and not through ---
+    #
+    # The map draws a boulder field immediately west of the valley's market,
+    # and since the mountains stop a walker again a run due west is cropped
+    # in front of it rather than crossing it. That is the picture being
+    # obeyed, and it is not the valley being sealed: the way out costs
+    # exactly the straight-line distance, 393 cells to Wadi Halfa against
+    # 393 straight, because the outcrop is walked around at no cost.
+    #
+    # A walker crosses 0.35 of a cell a second, so this leg is a slow twelve
+    # seconds even when it is cut short.
     goto(c, *VALLEY_CELL)
     c.send("moveTo;dy=0;dx=-400;")
     got = c.frames()
     check("a run west out of the valley starts",
           [f.split(";")[0] for f in got], ["moveAck"])
     got = c.frames(wait=25)
-    check("and it goes the whole way", [f.split(";")[0] for f in got],
-          ["userMove"])
+    check("and it ends", [f.split(";")[0] for f in got], ["userMove"])
     out = float(param(got[0], "dx"))
-    check("four cells west of the valley's market, through where the wall was",
-          abs(out - (VALLEY_CELL[0] - 4)) < 0.01, True)
+    check("the run west stops in front of the boulder field, not past it",
+          VALLEY_CELL[0] - 4 <= out < VALLEY_CELL[0], True)
+    # And the valley is open all the same: every one of its settlements can
+    # be walked to, and walking out is no longer than the straight line.
+    check("leaving the valley costs no detour",
+          steps_between(VALLEY_CELL, MARKET_CELL)
+          == (abs(VALLEY_CELL[0] - MARKET_CELL[0])
+              + abs(VALLEY_CELL[1] - MARKET_CELL[1])),
+          True)
 
     # --- a walker who ends up in the water is not trapped there -------------
     # A location's side exit hands out the neighbouring cell without asking
