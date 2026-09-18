@@ -114,6 +114,29 @@ CREATE TABLE IF NOT EXISTS mail (
 );
 CREATE INDEX IF NOT EXISTS mail_by_to ON mail (to_char);
 CREATE INDEX IF NOT EXISTS mail_by_from ON mail (from_char);
+CREATE TABLE IF NOT EXISTS online (
+    -- Who is in the game right now, written by the game server once a second
+    -- and read by the admin panel, which has no other way to know: the
+    -- sessions live in the other process. Rows are replaced wholesale on
+    -- every pass, so a server that stops leaves the table as it was -- hence
+    -- seen_at, which is what makes a stale snapshot obvious instead of a lie.
+    char_id INTEGER PRIMARY KEY,
+    nick    TEXT    NOT NULL,
+    login   TEXT    NOT NULL DEFAULT '',
+    loc     INTEGER,
+    title   TEXT    NOT NULL DEFAULT '',
+    gx      INTEGER,
+    gy      INTEGER,
+    since   INTEGER NOT NULL,
+    seen_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS heartbeat (
+    -- One row, rewritten by the game server on every pass. Without it an
+    -- empty online table says two different things -- nobody is playing, or
+    -- nobody is writing -- and the panel has no way to tell them apart.
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS admin_actions (
     -- The admin panel runs in the HTTP process and the game runs in another,
     -- with only this database between them. A panel that wrote to characters
@@ -306,6 +329,55 @@ class Store:
         self.db.execute("UPDATE accounts SET banned = ? WHERE id = ?",
                         (1 if flag else 0, account_id))
         self.db.commit()
+
+    def account_by_login(self, login):
+        return self.db.execute("SELECT * FROM accounts WHERE login = ?",
+                               (login,)).fetchone()
+
+    def find_characters(self, query, limit=40):
+        """Characters whose name contains this, with the owning login.
+
+        The panel used to list everybody, which is fine for three accounts
+        and useless for three hundred. Matching is case-insensitive the way
+        sqlite does it for ASCII only, so LOWER is applied to both sides for
+        the Cyrillic the nicknames are actually in.
+        """
+        like = "%" + (query or "").strip().lower() + "%"
+        return self.db.execute(
+            "SELECT c.*, a.login, a.banned FROM characters c"
+            " JOIN accounts a ON a.id = c.account_id"
+            " WHERE LOWER(c.name) LIKE ? OR LOWER(a.login) LIKE ?"
+            " ORDER BY c.name LIMIT ?", (like, like, limit)).fetchall()
+
+    # --- who is in the game ----------------------------------------------
+    def set_online(self, rows):
+        """Replace the snapshot. rows: dicts with the online columns."""
+        now = int(time.time())
+        with self.db:
+            self.db.execute("DELETE FROM online")
+            self.db.executemany(
+                "INSERT INTO online (char_id, nick, login, loc, title, gx, gy,"
+                " since, seen_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [(r["char_id"], r["nick"], r.get("login", ""), r.get("loc"),
+                  r.get("title", ""), r.get("gx"), r.get("gy"),
+                  r.get("since", now), now) for r in rows])
+            self.db.execute(
+                "INSERT INTO heartbeat (id, at) VALUES (1, ?)"
+                " ON CONFLICT(id) DO UPDATE SET at = excluded.at", (now,))
+
+    def online(self):
+        """Who the game server last said was playing, and when it last said.
+
+        Returns (rows, at). `at` is None when the game server has never
+        written, and an old one means it is not writing now -- which the
+        panel says out loud rather than showing an empty list as if it were
+        the truth.
+        """
+        rows = self.db.execute(
+            "SELECT * FROM online ORDER BY nick").fetchall()
+        beat = self.db.execute("SELECT at FROM heartbeat WHERE id = 1"
+                               ).fetchone()
+        return rows, (beat["at"] if beat else None)
 
     # --- admin actions ---------------------------------------------------
     def admin_push(self, admin, kind, char_id=None, account_id=None, **args):

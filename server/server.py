@@ -187,6 +187,9 @@ class Session:
         self.writer = writer
         self.peer = peer
         self.closed = False
+        # When this socket arrived, so the panel can show how long somebody
+        # has been in the game.
+        self.since = int(time.time())
         self.hash = None
         self.logged_in = False
         self.account = None
@@ -1986,6 +1989,31 @@ def apply_admin_action(row):
     return "неизвестное действие: %s" % kind
 
 
+def publish_online():
+    """Write down who is playing, for the panel in the other process.
+
+    It cannot see the sessions -- they are objects in this one -- so the
+    snapshot goes through the database with the rest of the traffic between
+    the two. Rewritten whole on every pass rather than patched, because a
+    session that ends abruptly leaves no event to patch it by.
+    """
+    rows = []
+    for sess in list(SESSIONS):
+        if sess.closed or not sess.char_id:
+            continue
+        loc = getattr(sess, "loc", None)
+        rows.append(dict(
+            char_id=sess.char_id,
+            nick=sess.nick or "",
+            login=(sess.account["login"] if sess.account else ""),
+            loc=(loc.id if loc is not None else None),
+            title=("на карте" if sess.on_map else
+                   (loc.title if loc is not None else "")),
+            gx=int(sess.gx or 0), gy=int(sess.gy or 0),
+            since=int(getattr(sess, "since", time.time()))))
+    STORE.set_online(rows)
+
+
 async def drain_admin_actions():
     """Watch the queue the admin panel writes into.
 
@@ -1996,6 +2024,7 @@ async def drain_admin_actions():
     """
     while True:
         try:
+            publish_online()
             for row in STORE.admin_pending():
                 try:
                     result = apply_admin_action(row)

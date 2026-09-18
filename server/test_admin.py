@@ -9,8 +9,10 @@ change to an online player quietly undone the moment they left. So the game
 server is what carries the action out, and the check is not "the row changed"
 but "the row is still changed after the player logs out".
 
-The other half is the door: with no token configured there is no panel at
-all, and with one, nothing answers without it.
+The other half is the door. It is the game's own account: the same login and
+password, checked against the same digest the client sends, so the panel
+keeps no passwords of its own. Which logins may open it is configuration --
+with none set there is no panel at all.
 """
 import json
 import os
@@ -22,11 +24,13 @@ import tempfile
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
-TOKEN = "test-token-42"
+ADMIN_LOGIN = "tester"
+ADMIN_PASSWORD = "secret"
 
 
 def free_port():
@@ -39,7 +43,7 @@ def free_port():
 
 PORT = free_port()
 HTTP_PORT = free_port()
-HTTP_NO_TOKEN_PORT = free_port()
+HTTP_CLOSED_PORT = free_port()
 
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
@@ -63,8 +67,7 @@ _drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
 _drain.start()
 
 http_env = dict(os.environ, LAVA_HTTP_PORT=str(HTTP_PORT), LAVA_DB=DB,
-                LAVA_GAME_PORT=str(PORT), LAVA_ADMIN_TOKEN=TOKEN,
-                LAVA_ADMIN_NAME="Тестер")
+                LAVA_GAME_PORT=str(PORT), LAVA_ADMINS=ADMIN_LOGIN)
 http = subprocess.Popen([sys.executable, "bootstrap_http.py"], cwd=HERE,
                         env=http_env, stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT, text=True)
@@ -72,7 +75,7 @@ _hlog = []
 threading.Thread(target=lambda: _hlog.extend(http.stdout), daemon=True).start()
 
 # A second HTTP process with no token at all: the panel must not exist there.
-closed_env = dict(os.environ, LAVA_HTTP_PORT=str(HTTP_NO_TOKEN_PORT),
+closed_env = dict(os.environ, LAVA_HTTP_PORT=str(HTTP_CLOSED_PORT),
                   LAVA_DB=DB, LAVA_GAME_PORT=str(PORT))
 closed = subprocess.Popen([sys.executable, "bootstrap_http.py"], cwd=HERE,
                           env=closed_env, stdout=subprocess.PIPE,
@@ -123,6 +126,22 @@ def post(port, path, fields, cookie=None):
             return r.status, r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode("utf-8", "replace")
+
+
+def sign_in(login=None, password=None):
+    """Sign in the way a browser does and keep the cookie it is given."""
+    import http.client
+    conn = http.client.HTTPConnection("127.0.0.1", HTTP_PORT, timeout=5)
+    body = urllib.parse.urlencode(
+        {"login": login or ADMIN_LOGIN,
+         "password": ADMIN_PASSWORD if password is None else password})
+    conn.request("POST", "/admin/login", body,
+                 {"Content-Type": "application/x-www-form-urlencoded"})
+    resp = conn.getresponse()
+    resp.read()
+    raw = resp.getheader("Set-Cookie") or ""
+    conn.close()
+    return raw.split(";")[0].split("=", 1)[1] if "=" in raw else ""
 
 
 def row(char_id):
@@ -204,27 +223,66 @@ class Client:
 
 try:
     wait_http(HTTP_PORT)
-    wait_http(HTTP_NO_TOKEN_PORT)
+    wait_http(HTTP_CLOSED_PORT)
 
     print("дверь")
-    code, _ = get(HTTP_NO_TOKEN_PORT, "/admin")
-    check("без ключа в настройках панели нет вовсе", code, 404)
+    code, _ = get(HTTP_CLOSED_PORT, "/admin")
+    check("без списка админов панели нет вовсе", code, 404)
 
     code, body = get(HTTP_PORT, "/admin")
-    check("без куки отдаётся форма входа", "name=token" in body, True)
-    check("и не сама панель", "Последние действия" in body, False)
+    check("без входа отдаётся форма", "name=password" in body, True)
+    check("и не сама панель", "Сейчас в игре" in body, False)
 
-    code, body = get(HTTP_PORT, "/admin", cookie="wrong-token")
-    check("с неверной кукой тоже форма", "name=token" in body, True)
+    code, body = get(HTTP_PORT, "/admin", cookie="forged%7C99999999999%7Cdeadbeef")
+    check("подделанная кука не пускает", "name=password" in body, True)
 
-    code, body = get(HTTP_PORT, "/admin", cookie=TOKEN)
-    check("с ключом открывается панель", "Последние действия" in body, True)
+    code, body = post(HTTP_PORT, "/admin/login",
+                      {"login": ADMIN_LOGIN, "password": "wrong"})
+    check("неверный пароль не пускает", "name=password" in body, True)
+
+    code, body = post(HTTP_PORT, "/admin/login",
+                      {"login": "stranger", "password": ADMIN_PASSWORD})
+    check("посторонний логин не пускает", "name=password" in body, True)
+
+    COOKIE = sign_in()
+    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    check("свой логин с паролем открывает панель",
+          "Сейчас в игре" in body, True)
+    check("и панель подписана именем администратора",
+          ADMIN_LOGIN in body, True)
+
+    print("\nпоиск по нику")
+    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    check("без запроса карточек нет", "Начислить" in body, False)
+    code, body = get(HTTP_PORT, "/admin?q=tes", cookie=COOKIE)
+    check("часть ника находит персонажа", "Начислить" in body, True)
+    code, body = get(HTTP_PORT, "/admin?q=TES", cookie=COOKIE)
+    check("регистр не важен", "Начислить" in body, True)
+    code, body = get(HTTP_PORT, "/admin?q=" + urllib.parse.quote("такогонет"),
+                     cookie=COOKIE)
+    check("чужой запрос ничего не находит", "Начислить" in body, False)
+    check("и об этом сказано", "никого" in body, True)
+
+    print("\nкто в игре")
+    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    check("пока никто не зашёл -- так и написано",
+          "никого нет в игре" in body, True)
+    watcher = Client()
+    watcher.enter()
+    time.sleep(2.5)                      # a pass of the game server's loop
+    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    check("вошедший игрок виден в таблице",
+          "никого нет в игре" not in body, True)
+    watcher.close()
+    time.sleep(2.5)
+    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    check("вышедший из неё пропадает", "никого нет в игре" in body, True)
 
     print("\nперсонаж не в игре")
     before = row(_char_id)
     post(HTTP_PORT, "/admin/do",
          {"kind": "money", "char_id": str(_char_id), "afro": "500",
-          "gold": "0"}, cookie=TOKEN)
+          "gold": "0"}, cookie=COOKIE)
     check("очередь разобрана", wait_done(), True)
     check("деньги записаны в базу",
           row(_char_id)["afro"], before["afro"] + 500)
@@ -235,7 +293,7 @@ try:
     was = row(_char_id)["afro"]
     post(HTTP_PORT, "/admin/do",
          {"kind": "money", "char_id": str(_char_id), "afro": "300",
-          "gold": "0"}, cookie=TOKEN)
+          "gold": "0"}, cookie=COOKIE)
     check("очередь разобрана", wait_done(), True)
     frames = cl.frames(1.0)
     check("игроку пришёл кошелёк, не дожидаясь перезахода",
@@ -252,7 +310,7 @@ try:
     cl.enter()
     post(HTTP_PORT, "/admin/do",
          {"kind": "transport", "char_id": str(_char_id), "type_id": "16",
-          "days": "5"}, cookie=TOKEN)
+          "days": "5"}, cookie=COOKIE)
     check("очередь разобрана", wait_done(), True)
     cl.frames(1.0)
     cl.close()
@@ -267,7 +325,7 @@ try:
     cl.enter()
     post(HTTP_PORT, "/admin/do",
          {"kind": "kick", "account_id": str(_acc), "reason": "проверка",
-          "seconds": "60"}, cookie=TOKEN)
+          "seconds": "60"}, cookie=COOKIE)
     check("очередь разобрана", wait_done(), True)
     frames = cl.frames(2.0)
     kick = [f for f in frames if f.startswith("kickban")]
@@ -275,7 +333,8 @@ try:
     if kick:
         # Session.as:199 reads exactly these three and writes
         # "Администратор <admin> ведет работу над вашим аккаунтом".
-        check("с именем администратора", "admin=@Тестер@" in kick[0], True)
+        check("с логином администратора вместо общего имени",
+              "admin=@%s@" % ADMIN_LOGIN in kick[0], True)
         check("со сроком", "seconds=60" in kick[0], True)
         check("и с причиной", "reason=@проверка@" in kick[0], True)
     check("и сокет закрыт", cl.eof or not cl.frames(1.0), True)
@@ -284,7 +343,7 @@ try:
     print("\nбан")
     post(HTTP_PORT, "/admin/do",
          {"kind": "ban", "account_id": str(_acc), "reason": "нельзя"},
-         cookie=TOKEN)
+         cookie=COOKIE)
     check("очередь разобрана", wait_done(), True)
     db = sqlite3.connect(DB)
     banned = db.execute("SELECT banned FROM accounts WHERE id = ?",
