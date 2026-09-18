@@ -8,6 +8,8 @@ tools/*
 dist/
 .env
 data/lava.db
+data/lava.db-shm
+data/lava.db-wal
 __pycache__/
 *.pyc
 .claude/
