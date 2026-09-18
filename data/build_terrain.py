@@ -74,15 +74,29 @@ H = GY1 - GY0 + 1
 
 # --- the rules, and the numbers they turn on -------------------------------
 # ROUGH is the one that matters. Raising it opens the mountains up; lowering
-# it walls the world off into pockets. It was first set to 20, the loosest
-# value that still sealed the Nubian valley -- but the player who remembers
-# the game says the valley has a footpath in, so that constraint was never
-# real. At 20 only 2 of the valley's 16 settlements could be walked to and
-# 17 settlements in all were cut off: roughness reads a boulder field as a
-# mountain, and the valley is full of them. 26 is the tightest value at
-# which every settlement of the valley connects and all but one on the whole
-# map do, with 2.5% of the ground still standing as rock.
-ROUGH = 26.0              # smoothed mean absolute deviation of luminance
+# it walls the world off into pockets. Measured across the whole map, with
+# the cells the location files declare as exits repaired open:
+#
+#   порог   скала   отрезано посёлков   долина
+#    26     1.89%          0             16/16
+#    24     2.96%          0             16/16
+#    22     4.58%          2             16/16
+#    20     6.90%        249             13/16
+#    18    10.22%        249             13/16
+#
+# There is a cliff between 22 and 20, and it is not the mountains growing:
+# it is roughness losing the difference between a ridge and a boulder field,
+# after which the map shatters into pockets and 249 of 262 settlements are
+# unreachable. So 20 is not "more honest", it is past the end of what this
+# measure can tell apart.
+#
+# 26 was chosen when the only tools were the threshold and connectivity, and
+# it is too timid: the owner, standing on the map, could walk straight
+# through drawn mountains. 22 is where the picture is followed as far as the
+# measure can be trusted -- two and a half times the rock -- and the two
+# settlements it cuts off are opened by name, the same way the eighteen
+# declared exits are (data/terrain_repairs.json).
+ROUGH = 22.0              # smoothed mean absolute deviation of luminance
 WATER = 2.0               # mean blue over mean red, in levels
 DRAWN = 0.25              # a cell painted over more than this is not measured
 DARK = 120.0              # passable, but lava field or wadi rather than sand
