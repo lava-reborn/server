@@ -1,21 +1,36 @@
-# Build the one file a player gets: LavaOnline.exe.
+# Build the one file a player gets: LavaReborn.exe.
 #
-#   powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -ServerHost 159.194.247.90
+#   powershell -ExecutionPolicy Bypass -File launcher\build.ps1
+#   powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -ServerHost 127.0.0.1 -Port 9775
 #
 # Uses csc.exe out of the Windows .NET Framework, which is already on every
-# Windows that can run the game, so there is nothing to install. The projector
-# and the generated string table go in as embedded resources; the game itself
-# does not, and never will -- that stays the player's own res/ folder.
+# Windows that can run the game, so there is nothing to install. Three things
+# go in as embedded resources -- the Flash projector, the generated string
+# table and the window's photograph. The game itself does not, and never will:
+# that stays the player's own res/ folder.
+#
+# ASCII only in this file. Windows PowerShell 5.1 reads a .ps1 saved as UTF-8
+# without a mark as cp1251, and one Cyrillic letter or long dash here is a
+# parse error somewhere else entirely.
 param(
-  [string]$ServerHost = "159.194.247.90",
+  [string]$ServerHost = "lava-reborn.ru",
   [string]$Port = "9775",
+  [string]$Site = "https://lava-reborn.ru",
+  [string]$RegisterUrl = "",
+  [string]$LostPasswordUrl = "",
   [string]$Out = ""
 )
 
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repo = Split-Path -Parent $here
-if (-not $Out) { $Out = Join-Path $repo "dist\LavaOnline.exe" }
+# No space in the file name: this is handed out as a link, and a link with a
+# space in it breaks the moment someone pastes it into a chat. The name the
+# player reads -- window, taskbar, Explorer details, SmartScreen -- is set by
+# AssemblyTitle in Launcher.cs, and that one does say "Lava Reborn".
+if (-not $Out) { $Out = Join-Path $repo "dist\LavaReborn.exe" }
+if (-not $RegisterUrl) { $RegisterUrl = "$Site/register" }
+if (-not $LostPasswordUrl) { $LostPasswordUrl = "$Site/" }
 
 $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 if (-not (Test-Path $csc)) { throw "csc.exe not found at $csc" }
@@ -25,10 +40,17 @@ if (-not (Test-Path $projector)) {
   throw "Flash projector not found at $projector -- download flashplayer_32_sa.exe and put it there"
 }
 
+$hero = Join-Path $here "assets\hero.jpg"
+if (-not (Test-Path $hero)) { throw "Window artwork not found at $hero" }
+
+# Drawn from the brand mark by assets\make_icon.py; regenerate it with that
+# script rather than by hand.
+$icon = Join-Path $here "assets\lava.ico"
+if (-not (Test-Path $icon)) { throw "Icon not found at $icon" }
+
 # The string table has to hold every id this server can send, so it is
 # regenerated here rather than taken from whatever dist/ happens to hold.
-# Python lives in WSL on this machine (the Windows one is the Store stub),
-# and export_texts.py writes dist/texts.xml by default.
+# Python lives in WSL on this machine (the Windows one is the Store stub).
 # Into a build directory, not into dist/ itself: what lands beside the exe is
 # what a player is handed, and a loose copy of a file the exe already carries
 # is only there to be picked up by mistake.
@@ -41,57 +63,66 @@ Write-Host "==> string table"
 if ($LASTEXITCODE -ne 0) { throw "export_texts.py failed" }
 if (-not (Test-Path $texts)) { throw "export_texts.py produced nothing at $texts" }
 
-# The address is compiled in, so the player has nothing to type or edit.
-$src = Get-Content (Join-Path $here "LavaLauncher.cs") -Raw -Encoding UTF8
+# What the window shows in its corner. The commit is what a bug report needs;
+# the date is what a player can actually read.
+$stamp = Get-Date -Format "dd.MM.yyyy"
+$sha = ""
+try {
+  Push-Location $repo
+  $sha = (& git rev-parse --short HEAD 2>$null)
+  Pop-Location
+} catch { }
+$version = if ($sha) { "$stamp $sha" } else { $stamp }
+# Windows wants four numbers; the build date makes them, and they sort.
+$now = Get-Date
+$fileVersion = "{0}.{1}.{2}.0" -f $now.Year, $now.Month, $now.Day
+
+# The address and the links are compiled in, so the player has nothing to type
+# or edit anywhere.
+$src = Get-Content (Join-Path $here "Launcher.cs") -Raw -Encoding UTF8
 $src = $src.Replace("@HOST@", $ServerHost).Replace("@PORT@", $Port)
-$gen = Join-Path $env:TEMP "LavaLauncher.generated.cs"
+$src = $src.Replace("@VERSION@", $version).Replace("@FILEVERSION@", $fileVersion)
+$src = $src.Replace("@REGISTER@", $RegisterUrl).Replace("@LOST@", $LostPasswordUrl)
+$gen = Join-Path $build "Launcher.generated.cs"
 [System.IO.File]::WriteAllText($gen, $src, (New-Object System.Text.UTF8Encoding $true))
+
+$sources = @(
+  (Join-Path $here "Theme.cs"),
+  (Join-Path $here "Controls.cs"),
+  (Join-Path $here "LoginForm.cs"),
+  (Join-Path $here "Notice.cs"),
+  (Join-Path $here "Creds.cs"),
+  (Join-Path $here "GameProbe.cs"),
+  (Join-Path $here "GameWindow.cs"),
+  (Join-Path $here "LocalServer.cs"),
+  $gen
+)
 
 New-Item -ItemType Directory -Force (Split-Path -Parent $Out) | Out-Null
 Write-Host "==> compile"
 & $csc /nologo /target:winexe /platform:anycpu /optimize+ /codepage:65001 `
-  /reference:System.dll /reference:System.Windows.Forms.dll `
+  /reference:System.dll /reference:System.Drawing.dll `
+  /reference:System.Windows.Forms.dll /reference:System.Security.dll `
+  "/win32icon:$icon" `
   "/resource:$projector,fp32_sa.exe" `
   "/resource:$texts,texts.xml" `
-  "/out:$Out" $gen
+  "/resource:$hero,hero.jpg" `
+  "/resource:$icon,icon.ico" `
+  "/out:$Out" $sources
 if ($LASTEXITCODE -ne 0) { throw "csc failed" }
 
 Remove-Item $gen -Force
 
-# Short enough that someone will actually read it. Everything the old
-# three-file package explained is now done by the exe itself.
-$readme = @"
-LAVA Online
-===========
-
-Положите LavaOnline.exe рядом с вашей папкой res (той, в которой лежит
-main.swf) и запустите. Больше ничего делать не нужно.
-
-Должно получиться так:
-
-    LAVA\
-      LavaOnline.exe
-      res\
-        main.swf
-        ...
-
-Игра в раздачу не входит: res — ваша собственная копия клиента. Всё
-остальное программа делает сама при первом запуске — распаковывает
-проигрыватель Flash, кладёт на место таблицу названий и разрешает игре
-выход в сеть.
-
-Сервер: $ServerHost`:$Port
-Регистрация: http://$ServerHost`:8080/
-
-Логин и пароль придумываете при регистрации, персонаж создаётся при первом
-входе. Пароль на сервер не уходит: клиент считает от него хеш и посылает
-только его.
-
-Если игра пишет, что рядом нет папки res — значит exe лежит не там.
-"@
+# Short enough that someone will actually read it. It lives in its own file
+# rather than in a here-string: PowerShell 5.1 reads this script as cp1251,
+# and the Cyrillic that used to sit here shipped to every player as mojibake.
+$readme = [System.IO.File]::ReadAllText((Join-Path $here "README.player.txt"),
+                                        (New-Object System.Text.UTF8Encoding $false))
+$readme = $readme.Replace("@HOST@", $ServerHost).Replace("@PORT@", $Port)
+$readme = $readme.Replace("@REGISTER@", $RegisterUrl)
 [System.IO.File]::WriteAllText((Join-Path (Split-Path -Parent $Out) "README.txt"),
                                $readme, (New-Object System.Text.UTF8Encoding $true))
 
 $mb = [math]::Round((Get-Item $Out).Length / 1MB, 1)
-Write-Host "==> $Out  ($mb MB)  -> $ServerHost`:$Port"
+Write-Host "==> $Out  ($mb MB)  -> $ServerHost`:$Port  [$version]"
 Write-Host "==> README.txt"

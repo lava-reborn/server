@@ -26,6 +26,7 @@ import logging
 import re
 import os
 
+import npcs
 import world
 
 log = logging.getLogger("lava")
@@ -176,7 +177,16 @@ def tier(name):
 
 
 def stock_for(trader_type):
-    """What this trader sells, as the list of type ids the client indexes."""
+    """What this trader sells, as the list of type ids the client indexes.
+
+    The owner's own list wins where there is one (data/npcs.json, written by
+    tools/npc_editor.py): the wiki records what a dead server sold, which is
+    a starting point and not a decision. An empty list there is a decision as
+    much as a full one, so only a missing entry falls through.
+    """
+    chosen = npcs.stock(trader_type)
+    if chosen is not None:
+        return chosen
     return stock_table().get(trader_type, [])
 
 

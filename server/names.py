@@ -17,6 +17,7 @@ import json
 import os
 
 import items
+import npcs
 import quests
 import transport
 import world
@@ -79,6 +80,39 @@ ALL.update(TRANSPORT_STRINGS)
 # article anywhere, so it would reach the player as "admin_gun". Named here
 # in the same breath as the numbers that make it what it is.
 ALL[items.STRING_ID_OFFSET + items.ADMIN_GUN] = "Админский ствол"
+
+# Some "inhabitants" are not people. Their sprite is a strongbox and they
+# open the storage window instead of talking, but mobs.xml still calls them
+# by the clerk who was once written beside them -- and the wiki is worse,
+# since it recorded the clerk's given name: the black market's box (2424)
+# comes back as "Аарон". A man's name floating over a steel cabinet is the
+# kind of thing that makes a world look unfinished, so anything drawn as a
+# safe is named for what it is.
+#
+# Matched on the art folder rather than a list of ids: the folder is what
+# decides what the player actually sees, and a new location that puts down
+# another box gets the right name without anyone remembering to add it.
+SAFE_SPRITES = ("1f_Safe", "1f_BankSafe", "1f_Seif_Stary")
+STORAGE_NAME = "Хранилище"
+
+try:
+    SAFES = frozenset(t for t, (_root, _n, art) in world.mob_types().items()
+                      if art in SAFE_SPRITES)
+except Exception:
+    SAFES = frozenset()
+
+for _t in SAFES:
+    ALL[_t] = STORAGE_NAME
+
+# The table as the game's own sources leave it, before anybody had a say.
+# tools/npc_editor.py compares against this to tell a name that was chosen
+# from one that was merely sitting in the field when Save was pressed.
+BASE = dict(ALL)
+
+# Last word of all: the names the owner gave by hand in tools/npc_editor.py.
+# After the wiki and after the storage rule, because it is the only one of
+# the three that somebody decided on purpose.
+ALL.update(npcs.NAMES)
 
 
 def known(string_id):

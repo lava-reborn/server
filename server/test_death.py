@@ -288,22 +288,16 @@ try:
     chat(w, "/goto %d" % DUMP)
     w.until(lambda f: f[0] == "lcall", 2)
     _arrival, wpos = enter(w)
-    # /home is not a way round the exit timer chWorld is held to. The dog is
-    # asleep at the far end -- a swing at an empty hex is what starts the
-    # clock -- and the refusal has to be a line of chat, because this userMsg
-    # has already been acknowledged and a second cmdAck would shift the queue.
+    # /home goes through the same gate as chWorld, and that gate asks who is
+    # after you rather than whether you swung. The dog is asleep at the far
+    # end, so a swing at an empty hex answers to nobody and the way home stays
+    # open. The other side of the rule -- hunted, and refused in a line of
+    # chat -- is held by test_combat, where the dog is actually awake.
     w.send("ss_use;type=16;obj=x0;target=%s;" % hexcell(wpos + 1))
     w.frames(0.5)
     chat(w, "/home")
-    got = w.frames(0.5)
-    check("a swing just thrown: /home says no, in chat, and nobody travels",
-          ([n for n, _ in only(got, "cmdAck", "lcall", "userMsg")],
-           [p for n, p in got if n == "lch" and "lostUser" in p]),
-          (["cmdAck", "userMsg"], []))
-    time.sleep(LEAVE)
-    chat(w, "/home")
     got = w.until(lambda f: f[0] == "lcall", 2)
-    check("once the exit timer is out, it goes -- to the start, unregistered",
+    check("a swing nothing answered: /home goes, to the start, unregistered",
           [(n, p.get("res", p.get("id"))) for n, p in got
            if n in ("cmdAck", "lcall")], [("cmdAck", 0), ("lcall", MARKET)])
     enter(w)

@@ -260,9 +260,13 @@ class Fighter:
     def __init__(self, sess):
         self.sess = sess
         self.ap = 0
-        # loop time of the last shot or strike given or taken, for the
-        # exit timer (LocationInterface.startExitTimer mirrors it)
+        # loop time of the last shot or strike given or taken. This is what
+        # keeps the room at war (RoomCombat.hostilities), and nothing else:
+        # it says a fight happened here, not that anyone is after this player.
         self.last_hostile = -1e9
+        # loop time of the last blow exchanged with another player, either
+        # way round. Leaving is what this one governs -- see in_combat.
+        self.last_pvp = -1e9
         self.dead = False
         # loop time of the death the character is still lying in, for the
         # free resurrection's wait (RegenerationInterface.timePause)
@@ -461,12 +465,33 @@ class Fighter:
             self.ack(inventory.RES_REFUSED)
         return True
 
+    def hunted(self):
+        """Whether any living creature here is currently after this player."""
+        rc = self.rc
+        if rc is None:
+            return False
+        return any(m.alive and m.target is self for m in rc.mobs.values())
+
     def in_combat(self):
-        """Whether the exit timer from the last shot or strike is still
-        running. Asked and not answered, for a caller that has already
-        acknowledged the command in hand (/home) and must not ack twice."""
-        return (not self.sess.on_map
-                and now() - self.last_hostile < LEAVE_COMBAT_TIMEOUT)
+        """Whether this player is barred from walking out.
+
+        The question is who is after you, not whether you fired. A shot that
+        nothing answered -- a miss at a mob that never woke, a creature killed
+        outright, a burst into the scenery -- leaves the wasteland as quiet as
+        it was, and standing in it for thirty seconds is a punishment for
+        nothing. What holds a player is a mob that has taken them as its
+        target, or a fight with another player: there leaving at will would
+        make every exchange end the moment it started going badly, so both
+        sides are held, the one who struck as much as the one who was struck.
+
+        Asked and not answered, for a caller that has already acknowledged the
+        command in hand (/home) and must not ack twice.
+        """
+        if self.sess.on_map:
+            return False
+        if now() - self.last_pvp < LEAVE_COMBAT_TIMEOUT:
+            return True
+        return self.hunted()
 
     def refuse_leave(self):
         """chWorld inside leave_combat_timeout of the last shot or strike:
@@ -972,6 +997,10 @@ class Fighter:
         self.dead = False
         self.died_at = -1e9
         self.last_hostile = -1e9
+        # Resurrection puts the character at their home, well away from
+        # whoever killed them; carrying the duel's timer across would lock
+        # them out of the map on arrival.
+        self.last_pvp = -1e9
         ch.save(self.store)
         if self.sess.char_id:
             self.store.save_character_state(self.sess.char_id, death=0)
@@ -1244,6 +1273,10 @@ class RoomCombat:
             return
         if target.is_player:
             target.last_hostile = t
+            if attacker.is_player:
+                # Both ends of a duel are held for the same timeout: the one
+                # who opened it cannot walk out of the answer.
+                attacker.last_pvp = target.last_pvp = t
         elif target.alive and attacker.is_player and target.target is not attacker:
             self.aggro(target, attacker, t)
 

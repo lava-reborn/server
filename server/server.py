@@ -214,6 +214,11 @@ class Session:
         self.arrival = None
         # a leg in flight: (start time, from x, from y, vx, vy)
         self.leg = None
+        # the player id being run down on the map, and the timer that keeps
+        # re-aiming at them: the global map's "перехват".
+        self.chase = None
+        self.chase_timer = None
+        self.chase_until = 0.0
         # s_type of the open session with an NPC (StuffManager.SESSION_*:
         # 1 trade, 2 barter, 3 bank, 4 training, 5 upgrade, 6 trophies), or
         # None. Which ss_upd frames get acknowledged depends on it.
@@ -1005,8 +1010,101 @@ class Session:
         self.go_to(loc.id)
         return "%s: перенесён в %s [%d]" % (self.nick, loc.title, loc.id)
 
+    # --- running somebody down on the map ---------------------------------
+    # How close counts as caught. A cell is a day's walk across the wasteland
+    # and the figures are drawn at its centre, so anything under a third of
+    # one is the two of them standing together.
+    CHASE_CAUGHT = 0.3
+    # How often the pursuit re-aims. The quarry is walking too, so a single
+    # leg towards where they were is a leg to where they no longer are; this
+    # is a chase, not a delivery. Under the map's own 2 s heartbeat, so the
+    # figure turns as often as it is redrawn.
+    CHASE_BEAT = 1.0
+    # Long enough to cross the valley, short enough that a pursuit nobody is
+    # watching does not run forever.
+    CHASE_LIMIT = 300.0
+
+    def intercept(self, pid):
+        """Start running down another player on the map."""
+        other = ONLINE.by_pid(pid) if pid else None
+        if other is None or other is self or not other.on_map:
+            # Gone into a location, logged out, or never there. The client
+            # has no frame for a refused interception (GlobalMap.interceptAck
+            # is empty), so there is nothing to say: the figure simply does
+            # not set off.
+            self.stop_chase()
+            return
+        self.chase = pid
+        self.chase_until = asyncio.get_running_loop().time() + self.CHASE_LIMIT
+        self.pursue()
+
+    def pursue(self):
+        """One beat of the chase: aim at where the quarry is now."""
+        self.chase_timer = None
+        pid, self.chase = self.chase, None
+        if pid is None or not self.on_map:
+            return
+        loop = asyncio.get_running_loop()
+        other = ONLINE.by_pid(pid)
+        if (other is None or not other.on_map
+                or loop.time() > self.chase_until):
+            return
+        x, y = self.current_pos()
+        ox, oy = other.current_pos()
+        dx, dy = ox - x, oy - y
+        if (dx * dx + dy * dy) ** 0.5 <= self.CHASE_CAUGHT:
+            self.caught(other, ox, oy)
+            return
+        self.chase = pid
+        self.step_on_map(dx, dy)
+        self.chase_timer = loop.call_later(self.CHASE_BEAT, self.pursue)
+
+    def caught(self, other, ox, oy):
+        """Run down: both of them go into the location under that cell.
+
+        Catching somebody on the open map and then standing next to them is
+        not an interception, it is an escort -- the quarry walks on and the
+        map has no way to stop them. So the ground itself decides: both are
+        put into whatever occupies the cell, facing each other, and getting
+        out of it is the ordinary way out of any location.
+
+        The one who was caught has no say in it, which is the point and also
+        the danger, so it is kept narrow: it happens on the pursuer's own
+        cell, it cannot reach anyone already inside a location, and whether
+        the two can then shoot each other is the location's business -- most
+        of the wasteland is declared peaceful between players, and this does
+        not overrule that.
+        """
+        self.stop_chase()
+        self.cancel_travel()
+        self.arrive(ox, oy)
+        self.say("Вы настигли %s." % other.nick)
+        other.say("%s настиг вас." % self.nick)
+        # The pursuer goes in first, so the cell is resolved from the
+        # position that was just confirmed to both clients.
+        self.enter_cell()
+        if other.on_map and not other.closed:
+            other.cancel_travel()
+            other.gx, other.gy = self.gx, self.gy
+            other.on_map = False
+            GMAP.leave(other)
+            other.go_to(self.loc.id)
+
+    def stop_chase(self):
+        if self.chase_timer is not None:
+            self.chase_timer.cancel()
+            self.chase_timer = None
+        self.chase = None
+
     def cancel_travel(self):
-        """Drop any leg in flight, so the position stops extrapolating."""
+        """Drop any leg in flight, so the position stops extrapolating.
+
+        A pursuit is a stream of legs, so it ends here too -- and that covers
+        every way it can end without being caught: going into a location,
+        logging out, being stopped by the lake, or simply pointing somewhere
+        else. One place, rather than a stop_chase beside every one of them.
+        """
+        self.stop_chase()
         if self.arrival:
             self.arrival.cancel()
             self.arrival = None
@@ -1030,13 +1128,24 @@ class Session:
         edge of the world is cut here and the player stopped in front of it.
         """
         if "trg" in p:
-            return                      # intercepting a player: not implemented
+            # The map's context menu, opened by holding shift and clicking
+            # somebody (DisplayGlobalMap.playerMcOnPress): "перехват" sends
+            # moveTo with the target's id and nothing else, because where
+            # they are is the server's business, not the client's.
+            self.intercept(int(p.get("trg", 0) or 0))
+            return
+        # Any ordinary order gives up the pursuit: the player pointed
+        # somewhere else, and that is an answer.
+        self.stop_chase()
+        self.step_on_map(float(p.get("dx", 0)) / 100.0,
+                         float(p.get("dy", 0)) / 100.0)
+
+    def step_on_map(self, dx, dy):
+        """Lay one leg from where we stand, dx and dy in whole cells."""
         # Offsets are measured from where the player is standing right now, and
         # the client has been extrapolating since the last moveAck, so a stale
         # origin here sends them somewhere neither side expects.
         self.gx, self.gy = self.current_pos()
-        dx = float(p.get("dx", 0)) / 100.0
-        dy = float(p.get("dy", 0)) / 100.0
         dist = (dx * dx + dy * dy) ** 0.5
         if dist < 0.01:
             return

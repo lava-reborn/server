@@ -455,13 +455,19 @@ try:
           [p for n, p in got if n == "lch"], [{"enemy": dog}])
     dog_cell = last_cell(got, dog, DOG_HOME)
 
-    # --- leaving is refused right after a shot ------------------------------------------
+    # --- leaving is refused while the dog is after us -----------------------------------
+    # The dog took the shooter as its target above, and that -- not the shot
+    # itself -- is what shuts the exit.
     c.send("chWorld;")
     got = c.frames(0.4)
     tracker.feed(got)
     dog_cell = last_cell(got, dog, dog_cell)
-    check("chWorld inside leave_combat_timeout: res=39 and no gmap",
+    check("chWorld while hunted: res=39 and no gmap",
           [(n, p) for n, p in got if n in ("cmdAck", "gmap", "lcall")], [("cmdAck", {"res": 39})])
+    # /home goes through the same gate and is refused here too, in a line of
+    # chat rather than a second cmdAck. Not checked inside this scene: the
+    # fight below is scripted frame by frame, and one more command in the
+    # middle gives the dog half a second it does not have in the script.
 
     # --- moving cancels the aim, at no cost --------------------------------------------
     c.send("ss_use;type=16;obj=x%s;target=%s;" % (pistol, entity(dog)))
@@ -648,9 +654,19 @@ try:
           (got[i + 1][0], got[i + 1][1]["id"], got[i + 1][1]["lvl"],
            got[i + 2][0], got[i + 2][1]["id"], got[i + 2][1]["hcur"]),
           ("userInfo", dog, 1, "usrUp", dog, dog_hp))
+    # A blow that nothing answers must not hold the player: the exit is shut
+    # by whoever is after you, not by having swung. The dog has respawned and
+    # is minding its own business, so a swing at bare ground wakes nobody and
+    # the way out stays open with the timer still warm.
+    ground = [n for n in progression.hex_neighbours(pos, loc.width, loc.height)
+              if n not in loc.obstacles and n != DOG_HOME]
+    c.send("ss_use;type=16;obj=x0;target=%s;" % hexcell(ground[0]))
+    got = c.frames(1.5)
+    check("the swing at empty ground was accepted",
+          [p["res"] for n, p in got if n == "cmdAck"][:1], [0])
     c.send("chWorld;")
     got = c.frames()
-    check("leaving is allowed once the timer ran out",
+    check("a blow nothing answered leaves the way out open",
           [n for n, _ in got], ["cmdAck", "gmap", "marks"])
     # Back into the dump before logging out: a character that logs out on
     # the map is restored with on_map set, and the next sessions fight here.

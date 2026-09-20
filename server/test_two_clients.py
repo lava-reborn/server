@@ -302,6 +302,52 @@ try:
           any("dx=5969;dy=1730;vx=0;vy=0;" in f for f in got), True)
     a.frames(0.2)
 
+    # --- перехват: the map's shift-click menu -------------------------------
+    # DisplayGlobalMap.playerMcOnPress offers "перехват" on another player,
+    # and GlobalMap.interceptPlayer sends moveTo carrying nothing but their
+    # id: where they are is the server's to work out, and they are walking.
+    b.send("moveTo;trg=%d;" % pid_a)
+    got = b.frames(1.0)
+    check("the pursuit sets off", [f.split(";")[0] for f in got][:1], ["moveAck"])
+    check("westward, towards her", any("vx=-0.35" in f for f in got), True)
+    # She is standing still one cell away, so he is on her inside a few
+    # seconds; the chase re-aims once a second until then.
+    got = b.frames(6)
+    check("he runs her down",
+          any("настигли" in f for f in got if f.startswith("userMsg")), True)
+    # Catching somebody and then standing beside them on the map would be an
+    # escort, not an interception: the ground decides instead, and takes both.
+    check("and both are taken into the cell",
+          [f.split(";")[0] for f in got if f.startswith("lcall")], ["lcall"])
+    got = a.frames(0.5)
+    check("she is told who by",
+          any("настиг вас" in f for f in got if f.startswith("userMsg")), True)
+    check("and pulled in after him, without being asked",
+          [f.split(";")[0] for f in got if f.startswith("lcall")], ["lcall"])
+    b.send("lenter;accept=1;")
+    b.frames(wait=2)
+    a.send("lenter;accept=1;")
+    a.frames(wait=2)
+    check("into the same location",
+          [f for f in b.frames(1.5) if "rtype=-1;" in f] != [], True)
+    # Back out to the map, where the rest of the scene expects them.
+    for who in (a, b):
+        who.send("chWorld;")
+        check("out to the map again",
+              any(f.startswith("gmap") for f in who.frames(wait=2)), True)
+    a.frames(0.5)
+    b.frames(0.5)
+
+    # Intercepting somebody who is not on the map at all does nothing: the
+    # client has no frame for a refusal (GlobalMap.interceptAck is empty),
+    # so silence is the whole answer.
+    b.send("moveTo;trg=%d;" % (pid_a + 4242))
+    # The map's own heartbeat keeps arriving whatever happens here, so only
+    # what is not a heartbeat counts as an answer.
+    check("a chase after nobody sets off nothing",
+          [f for f in b.frames(0.5) if not f.startswith("userMove")], [])
+    a.frames(0.3)
+
     # --- into a cell, and gone ----------------------------------------------
     a.send("chWorld;")
     got = a.frames()
