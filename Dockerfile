@@ -5,9 +5,16 @@
 # server only ever reads locations, mobs.xml and objects.xml out of it. Without
 # that mount the process stops at start rather than coming up half-built.
 #
-# No dependencies to install: everything here is the standard library, so there
-# is no pip step, no wheel cache and no build stage.
+# One dependency, and only for the shared database: with SQLite the server
+# runs on the standard library alone, and psycopg is what it needs when
+# LAVA_DB_URL points it at Postgres instead.
 FROM python:3.12-slim
+
+# Единственная зависимость, и та появилась вместе с общей базой: с
+# SQLite сервер работает стандартной библиотекой, драйвер нужен только
+# когда задан LAVA_DB_URL. Ставится всегда, чтобы переключение было
+# переменной окружения, а не пересборкой в неудобную минуту.
+RUN pip install --no-cache-dir "psycopg[binary]==3.2.3"
 
 # Unbuffered, or a container's log stays empty until the process dies; and no
 # .pyc next to the source, which is read-only to the runtime user anyway.

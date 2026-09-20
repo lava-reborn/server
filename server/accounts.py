@@ -13,10 +13,10 @@ That makes it a plain md5 of the cp1251 bytes of password + login.
 import hashlib
 import json
 import os
-import sqlite3
 import time
 
 import progression
+import storage
 
 DB_PATH = os.environ.get(
     "LAVA_DB",
@@ -238,7 +238,7 @@ def migrate(db):
     included: they had none stored, and the server they were made under
     showed everyone the same fixed figures anyway.
     """
-    have = {r["name"] for r in db.execute("PRAGMA table_info(characters)")}
+    have = db.columns("characters")
     for col, decl in CHARACTER_COLUMNS:
         if col not in have:
             db.execute("ALTER TABLE characters ADD COLUMN %s %s" % (col, decl))
@@ -251,30 +251,22 @@ def migrate(db):
 
 
 def seed_stats(db, char_id):
-    db.executemany(
-        "INSERT OR REPLACE INTO char_stats (char_id, kind, idx, value, xp, xp_max)"
-        " VALUES (?, ?, ?, ?, ?, ?)",
-        [(char_id,) + r for r in progression.starting_rows()])
+    db.replace("char_stats",
+               ("char_id", "kind", "idx", "value", "xp", "xp_max"),
+               [(char_id,) + r for r in progression.starting_rows()],
+               conflict=("char_id", "kind", "idx"))
     db.execute("UPDATE characters SET afro = ?, gold = 0, max_specs = 1,"
                " level = 0, hp = NULL, sp = NULL WHERE id = ?",
                (progression.START_AFRO, char_id))
 
 
 def connect():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    db = sqlite3.connect(DB_PATH)
-    db.row_factory = sqlite3.Row
-    # Two processes share this file: the game server saving characters and
-    # the registration page creating accounts. Under the default rollback
-    # journal a writer locks readers out for the whole transaction, so a
-    # registration arriving mid-save waited it out and sometimes gave up.
-    # WAL lets them past each other, and the timeout covers writer against
-    # writer. On a filesystem that cannot do WAL -- a Windows drive mounted
-    # into WSL is one -- sqlite quietly stays where it was, which is why
-    # data/ belongs on a real Linux volume (TASKS 1.2).
-    db.execute("PRAGMA journal_mode=WAL")
-    db.execute("PRAGMA busy_timeout=5000")
-    db.executescript(SCHEMA)
+    db = storage.connect(DB_PATH)
+    # Журнал и таймаут выставляет сам storage: два процесса держат эту
+    # базу -- сервер игры и страница регистрации, -- и писатель не должен
+    # запирать читателя на всю транзакцию. Схема одна на обе базы: для
+    # Postgres она переводится, а не переписывается второй раз.
+    db.create_schema(SCHEMA)
     migrate(db)
     return db
 
@@ -300,12 +292,12 @@ class Store:
             return None, "Пароль короче четырёх символов"
         cred = credential(login, password)
         try:
-            cur = self.db.execute(
+            new_id = self.db.insert(
                 "INSERT INTO accounts (login, hash, created) VALUES (?, ?, ?)",
-                (login, cred, int(time.time())))
+                (login, cred, int(time.time())), returning="id")
             self.db.commit()
-            return cur.lastrowid, None
-        except sqlite3.IntegrityError:
+            return new_id, None
+        except storage.IntegrityError:
             row = self.db.execute("SELECT id FROM accounts WHERE login = ?",
                                   (login,)).fetchone()
             if row:
@@ -351,7 +343,8 @@ class Store:
         return self.db.execute(
             "SELECT c.*, a.login, a.banned FROM characters c"
             " JOIN accounts a ON a.id = c.account_id"
-            " WHERE pylower(c.name) LIKE ? OR pylower(a.login) LIKE ?"
+            " WHERE %s LIKE ? OR %s LIKE ?"
+            % (storage.lower("c.name"), storage.lower("a.login")) +
             " ORDER BY c.name LIMIT ?", (like, like, limit)).fetchall()
 
     # --- who is in the game ----------------------------------------------
@@ -387,13 +380,13 @@ class Store:
     # --- admin actions ---------------------------------------------------
     def admin_push(self, admin, kind, char_id=None, account_id=None, **args):
         """Queue one action for the game server to carry out."""
-        cur = self.db.execute(
+        new_id = self.db.insert(
             "INSERT INTO admin_actions (made_at, admin, kind, char_id,"
             " account_id, args_json) VALUES (?, ?, ?, ?, ?, ?)",
             (int(time.time()), admin, kind, char_id, account_id,
-             json.dumps(args, ensure_ascii=False)))
+             json.dumps(args, ensure_ascii=False)), returning="id")
         self.db.commit()
-        return cur.lastrowid
+        return new_id
 
     def admin_pending(self):
         return self.db.execute(
@@ -420,14 +413,15 @@ class Store:
     def create_character(self, account_id, name, sex, res):
         used = [r["slot"] for r in self.characters(account_id)]
         slot = next(i for i in range(100) if i not in used)
-        cur = self.db.execute(
+        char_id = self.db.insert(
             "INSERT INTO characters (account_id, slot, name, sex, res)"
-            " VALUES (?, ?, ?, ?, ?)", (account_id, slot, name, sex, str(res)))
+            " VALUES (?, ?, ?, ?, ?)", (account_id, slot, name, sex, str(res)),
+            returning="id")
         # The client never sends a stat: everything a newborn has is decided
         # here (wiki: "задаётся в GSDL, экземпляр Player_Trait").
-        seed_stats(self.db, cur.lastrowid)
+        seed_stats(self.db, char_id)
         self.db.commit()
-        return cur.lastrowid, slot
+        return char_id, slot
 
     def character(self, char_id):
         return self.db.execute("SELECT * FROM characters WHERE id = ?",
@@ -441,9 +435,10 @@ class Store:
 
     def save_stats(self, char_id, rows):
         """rows: (kind, idx, value, xp, xp_max), the whole set at once."""
-        self.db.executemany(
-            "INSERT OR REPLACE INTO char_stats (char_id, kind, idx, value, xp, xp_max)"
-            " VALUES (?, ?, ?, ?, ?, ?)", [(char_id,) + tuple(r) for r in rows])
+        self.db.replace("char_stats",
+                        ("char_id", "kind", "idx", "value", "xp", "xp_max"),
+                        [(char_id,) + tuple(r) for r in rows],
+                        conflict=("char_id", "kind", "idx"))
         self.db.commit()
 
     def save_character_state(self, char_id, **cols):
@@ -519,11 +514,12 @@ class Store:
             raise ValueError("no such item field: %s" % ", ".join(sorted(unknown)))
         cols = ["char_id", "type_id", "root"] + list(fields)
         vals = [char_id, type_id, root] + [int(v) for v in fields.values()]
-        cur = self.db.execute(
+        uniq = self.db.insert(
             "INSERT INTO items (%s) VALUES (%s)"
-            % (", ".join(cols), ", ".join("?" * len(cols))), vals)
+            % (", ".join(cols), ", ".join("?" * len(cols))), vals,
+            returning="uniq")
         self.db.commit()
-        return self.item(cur.lastrowid)
+        return self.item(uniq)
 
     def update_item(self, uniq, **fields):
         unknown = set(fields) - set(ITEM_FIELDS)
@@ -621,13 +617,13 @@ class Store:
             (char_id, quest_type)).fetchone() is not None
 
     def take_quest(self, char_id, quest_type, progress, complete):
-        cur = self.db.execute(
+        q_id = self.db.insert(
             "INSERT INTO char_quests (char_id, type, progress_json, complete,"
             " taken_at) VALUES (?, ?, ?, ?, ?)",
             (char_id, quest_type, json.dumps(progress), 1 if complete else 0,
-             int(time.time())))
+             int(time.time())), returning="q_id")
         self.db.commit()
-        return cur.lastrowid
+        return q_id
 
     def update_quest(self, q_id, progress, complete):
         self.db.execute(
@@ -679,14 +675,15 @@ class Store:
     def mail_send(self, to_char, from_char, kind, subject, body, afro, gold,
                   items_json, when=None):
         """File a letter; returns its row."""
-        cur = self.db.execute(
+        mail_id = self.db.insert(
             "INSERT INTO mail (to_char, from_char, type, subject, body,"
             " sent_at, afro, gold, items_json)"
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (to_char, from_char, int(kind), subject, body,
-             int(when or time.time()), int(afro), int(gold), items_json))
+             int(when or time.time()), int(afro), int(gold), items_json),
+            returning="id")
         self.db.commit()
-        return self.mail_letter(cur.lastrowid)
+        return self.mail_letter(mail_id)
 
     def mail_update(self, mail_id, **cols):
         unknown = set(cols) - set(MAIL_FIELDS)

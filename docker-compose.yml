@@ -23,6 +23,9 @@ services:
       LAVA_PORT: "9775"
       LAVA_HOST: "0.0.0.0"
       LAVA_DB: /var/lib/lava/lava.db
+      # Общая база стойки. Пусто -- работаем с файлом выше, как раньше;
+      # задано -- и файл больше не открывается вовсе.
+      LAVA_DB_URL: ${LAVA_DB_URL:-}
       LAVA_RES: /res
       LAVA_LOG_LEVEL: ${LAVA_LOG_LEVEL:-INFO}
       # Flash asks for the socket policy on 843 before it will open the game
@@ -77,6 +80,9 @@ services:
       LAVA_HTTP_HOST: "0.0.0.0"
       LAVA_HTTP_PORT: "8080"
       LAVA_DB: /var/lib/lava/lava.db
+      # Общая база стойки. Пусто -- работаем с файлом выше, как раньше;
+      # задано -- и файл больше не открывается вовсе.
+      LAVA_DB_URL: ${LAVA_DB_URL:-}
       LAVA_RES: /res
       # The address and port the registration page tells people to connect to.
       # Not where this container listens: what the player types into the
