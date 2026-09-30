@@ -33,12 +33,13 @@ import names  # noqa: E402  (needs the path above)
 # Exactly what bootstrap_http._send_xml puts on the wire for ?all=1: the byte
 # order mark, the client's own single-quoted declaration, then the document.
 # Both sides are checked against each other in tools/test_export_texts.py.
-PROLOGUE = "﻿<?xml version='1.0'?>"
-
-
-def document_bytes():
-    """The whole table as the bytes the client expects to read."""
-    return (PROLOGUE + "<data>" + names.document() + "</data>").encode("utf-8")
+# Both of these moved into server/names.py, which is the only copy now: the
+# HTTP stub, this exporter and the update endpoint all have to put the same
+# bytes on the wire, and a prologue kept in two files is a digest mismatch
+# waiting to happen. Re-exported under the old names so this file, its test
+# and anything importing it read unchanged.
+PROLOGUE = names.PROLOGUE
+document_bytes = names.document_bytes
 
 
 def verify(blob):

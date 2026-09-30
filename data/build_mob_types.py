@@ -13,7 +13,8 @@ the other mobs spawned in the same location, and last of all defaulted.
 
 mob_types.json: type_id -> level, where the level came from, weapon class
 (read off a word in the name: Shotgun, AssaultGunner, Shooter, SubMach,
-Raider ...), role (mob / boss / animal / object), body type and move speed.
+Raider ...), role (mob / boss / animal / object, and the one designed turret),
+body type and move speed.
 Covers every root_type_id 0 entry and every other type carrying a level.
 
 mob_curves.json: one table by level, 0..33, giving hp, sp, damage range,
@@ -114,6 +115,44 @@ WIKI_LEVELS = {
     "pt_Klenz": 19,               # Шахтер Хорст Кленз, 19 ур.
     "mg_miner": 8,                # Шахтер Магриб, 8-ой уровень
     "Stone_DN": 15,               # Камень (ДН), 15 ур.
+}
+
+# --- levels set by hand -----------------------------------------------------
+# DESIGNED, not recovered: a creature a quest needs that nothing above gives
+# a level, so that it would default to 1. nubia_boss is Большой Мвамба of the
+# Nubian valley (31, «Лагерь Большого Мвамбы», data/orig_names_manual.json),
+# whom Шульц's «Экипировка к пистолету» sends a party to: «В одиночку с ним не
+# справиться ... отряд как минимум из трех человек», «Приходи, когда
+# дорастешь до 3-4-го уровня» (texts.xml 59832, 59945). The level of the
+# valley's other boss, [5] Лидер Ян Дуглас (m05_nc_Leader_lvl5): a boss
+# triples its hit points (ROLES), which is what makes it a party's fight.
+#
+# And the ammunition boxes of Вади-Хальфа's four camps, which stand, can be
+# broken and are looted there (server/world.py STANDING_OBJECTS) and nowhere
+# else: one type serves a faction's camp in every city and every Up_Camp
+# copy, whose median made each of them level 14 -- a box of 300 hit points
+# and armour 26 in the camp for levels 0-2. Each takes the middle of its
+# Halfa camp's band, as the map's tooltips give it («Для игроков 0-2
+# уровней» on 5970,1724, 2-4 on 5978,1727, 4-6 on 5974,1739, 6-8 on
+# 5993,1721).
+DESIGNED_LEVELS = {
+    "nubia_boss": 5,
+    "nc_box_ammo": 1,
+    "lu_box_ammo": 3,
+    "ja_box_ammo": 5,
+    "mg_box_ammo": 7,
+}
+
+# --- kinds set by hand ------------------------------------------------------
+# DESIGNED: a type whose name makes it something it is not in its place.
+# m_turret_lvl6 (832) is named an object by the word "turret" and would stand
+# nowhere; the twelve of them in «Огневые установки» (141, Q_VH_TurretGArden)
+# are the «автоматические огневые установки» of «Механизмы» that shoot «во
+# все движущееся» (texts.xml 47467-47472), and their art (Turrel) is a figure
+# with the rifle's firing frames. So a turret: a gun that never walks, with
+# a machine gun's burst, and the rounds of it in its bag (ROLES "turret").
+DESIGNED_KINDS = {
+    "m_turret_lvl6": {"role": "turret", "weapon_class": "machine_gun", "hex_ms": 0},
 }
 
 # --- weapon class from a word in the name ---------------------------------
@@ -260,6 +299,9 @@ ROLES = {
     "boss": {"hp_mult": 3.0, "dmg_mult": 1.5, "xp_mult": 3.0, "aggro": 8},
     "animal": {"hp_mult": 0.7, "dmg_mult": 0.8, "xp_mult": 0.7, "aggro": 5},
     "object": {"hp_mult": 1.0, "dmg_mult": 0.0, "xp_mult": 0.5, "aggro": 0},
+    # A fixed gun (DESIGNED_KINDS): a man's numbers, and it opens fire as
+    # soon as anybody is within its machine gun's range.
+    "turret": {"hp_mult": 1.0, "dmg_mult": 1.0, "xp_mult": 1.0, "aggro": 8},
 }
 
 
@@ -294,6 +336,8 @@ def main():
             continue
         if lvl is None and name in WIKI_LEVELS:
             lvl, src = WIKI_LEVELS[name], "wiki"
+        if lvl is None and name in DESIGNED_LEVELS:
+            lvl, src = DESIGNED_LEVELS[name], "designed"
         if lvl is None:
             camps = sorted(camp_level[l] for l in where[tid] if l in camp_level)
             if camps:
@@ -306,6 +350,7 @@ def main():
             "weapon_class": weapon, "hex_ms": HEX_MS.get(body, 200),
             "spawn_locations": len(where[tid]),
         }
+        types[tid].update(DESIGNED_KINDS.get(name, {}))
 
     # Second pass: a type with no level of its own takes the median level of
     # the levelled types spawned beside it.
@@ -351,7 +396,8 @@ def main():
         "_": "type_id -> level (level_source: name = _lvlN in mobs.xml, "
              "name_index = animal numbered by level, name_band = "
              "m05_/m510_/m1520_ tier prefix, city_band = region named in "
-             "the type, wiki = mob page, camp = Up_*LVL location it spawns "
+             "the type, wiki = mob page, designed = set by hand for a "
+             "quest (DESIGNED_LEVELS), camp = Up_*LVL location it spawns "
              "in, location = median of neighbours, default), role, "
              "weapon_class, body from "
              "res/mobs/<resource>.xml, hex_ms move speed. Built by "

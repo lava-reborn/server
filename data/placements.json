@@ -1,0 +1,13 @@
+{
+ "_": "Inhabitants put down by hand, beside the ones a location's own file spawns (its mobs node). Read by server/world.py (placements) and stood in the room by server/rooms.py (Room), after the file's own and under the same kind of entity id, so the client builds them from the same lch;newUser and userInfo_* frames: a Commoner is talked to, a Trader trades, a hostile creature fights, dies and comes back on its cell. Keyed by location id; each row is {type: the creature's type id in mobs.xml, cell: [x, y] of the location's own grid, home: false to offer no «Прописка» (a Commoner that is a thing, not a person), why: RECOVERED or DESIGNED and the evidence}. The server checks every row before its first socket (rooms.check_placements) and does not start on one that cannot stand: a type the client has no record or name of, a loot box or heap of ore (role object), a hostile creature in a location at peace, a cell off the grid, on an obstacle, on an exit or on somebody else's spawn. LAVA_PLACEMENTS replaces the table, for a suite that needs one of its own (server/test_valley_world.py).",
+ "locations": {
+  "184": [
+   {
+    "type": 1135,
+    "cell": [56, 88],
+    "home": false,
+    "why": "RECOVERED creature and place, DESIGNED cell. The tools box of Ибрахим's «Друзья I» (texts.xml 59797-59799: «принести инструменты из ящика в соседней локации (Захоронения предков)», west of the Западный поселок 183, which is 184 on 6261,1825) and of its own quest «Забрать инструменты» (59800-59802: «Ящик не закрыт, внутри лежат несколько инструментов... возьмите квест и сразу его сдайте здесь же»). mobs.xml has the box as nz_Box (1135, a Commoner drawn as 1f_Minibox), and no location file puts it down. The cell is ours: seven steps in from the east edge the player arrives by from 183, on open ground clear of the dogs' and rats' spawns. A box registers nobody's home, so it offers no «Прописка»."
+   }
+  ]
+ }
+}

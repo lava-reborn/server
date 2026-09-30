@@ -208,6 +208,14 @@ def save(doc):
         "names": {str(k): v for k, v in sorted(kept_names.items())},
         "stock": {str(k): v for k, v in sorted(kept_stock.items())},
     }
+    # The keys this page does not edit -- a healer's fee, the things that
+    # register nobody's home (server/npcs.py) -- stay as the file has them.
+    try:
+        with io.open(OUT, encoding="utf-8") as fh:
+            for key, value in json.load(fh).items():
+                out.setdefault(key, value)
+    except (OSError, ValueError):
+        pass
     with io.open(OUT, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(out, fh, ensure_ascii=False, indent=1, sort_keys=True)
         fh.write("\n")

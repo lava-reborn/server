@@ -7,6 +7,7 @@ journal, q_co to hand in, q_ca to drop, on_conv for the services. Every quest
 request is pipelined one at a time, so each has to be answered by a frame,
 and every string id sent has to be in the preload.
 """
+import json
 import os
 import socket
 import subprocess
@@ -16,6 +17,101 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
+
+# The black market's placeholder quests (Техногик 652, Аарон 2424, Шихаб
+# 653, Точильный камень 2279) as they stood in data/quests.json until
+# 2026-09-28, when they left it (the plan's correction а: texts of this
+# server's, no row of the original, 3 paying half an ounce for a word). The
+# suite plays the engine on them still, as fixtures put in front of the real
+# table -- for this process and the server alike (quests.quests_path,
+# LAVA_QUESTS) -- so their givers list them first.
+BLACK_MARKET = [
+    dict(type=1,
+         kind="del_obj",
+         name="Посылка для Аарона",
+         start=("Слушай, %имя%, выручи. Аарон ждёт от меня расписку, а я от верстака "
+                "отойти не могу. <hint>Передай ему на словах</hint>, что всё готово, — "
+                "он тут же, на рынке, у сейфа."),
+         notfinish="Ты от Техногика? Он обещал расписку... Так что передать-то велел?",
+         finish=("Значит, всё готово? Хорошо. Передай Техногику, что я доволен. А это "
+                 "тебе за ноги — %sex?сам:сама% понимаешь, лишними не будут."),
+         give=[652],
+         take=[2424],
+         obj=0,
+         rew_afro=50,
+         rew_gold=0,
+         repeatable=0,
+         level=0,
+         q_type=0),
+    dict(type=2,
+         kind="del_obj",
+         name="Весточка Шихабу",
+         start=("Раз уж ты бегаешь по рынку — скажи Шихабу, что его верблюды "
+                "застрахованы. Он у загона, там, где сдают транспорт."),
+         notfinish="От Аарона? Ну и что там с моими верблюдами?",
+         finish="Застрахованы, говоришь? Хвала небесам. Держи за труды.",
+         give=[2424],
+         take=[653],
+         obj=0,
+         rew_afro=20,
+         rew_gold=0,
+         repeatable=1,
+         level=0,
+         q_type=0),
+    dict(type=3,
+         kind="del_obj",
+         name="Слово для Точильного камня",
+         start=("Передай Точильному камню, что ослик Панург снова хромает — пусть "
+                "посмотрит подковы. Он у своего станка, за оружейными рядами."),
+         notfinish="Что там у Шихаба?",
+         finish="Опять Панург? Ладно, зайду. Вот тебе за беготню — щепотка золота.",
+         give=[653],
+         take=[2279],
+         obj=0,
+         rew_afro=0,
+         rew_gold=50,
+         repeatable=1,
+         level=0,
+         q_type=0),
+    dict(type=5,
+         kind="kill_mobs",
+         name="Голодные собаки",
+         start=("Голодные собаки таскают со склада всё, что плохо лежит. Отгони их — "
+                "трёх хватит, чтобы остальные поумнели. Ищи за стеной, в пустоши."),
+         notfinish="Собаки всё ещё здесь. Три штуки, %имя%, я считал.",
+         finish="Тише стало. Держи, заслужил%sex?:а%.",
+         give=[652],
+         take=[652],
+         mobs_kill=[82],
+         num_kill=[3],
+         rew_afro=40,
+         rew_gold=0,
+         repeatable=1,
+         level=0,
+         q_type=0),
+    dict(type=6,
+         kind="del_obj",
+         name="Заказ для бывалого",
+         start="Есть заказ для того, кто умеет держать нож. Новичкам не предлагаю.",
+         notfinish="Ну что, справился?",
+         finish="Чисто сработано. Держи.",
+         give=[2279],
+         take=[2279],
+         obj=0,
+         rew_afro=200,
+         rew_gold=0,
+         repeatable=1,
+         level=3,
+         q_type=0),
+]
+
+with open(os.path.join(os.path.dirname(HERE), "data", "quests.json"), encoding="utf-8") as _fh:
+    _TABLE = json.load(_fh)
+_TABLE["quests"] = BLACK_MARKET + _TABLE["quests"]
+QUESTS_FILE = os.path.join(tempfile.mkdtemp(), "quests.json")
+with open(QUESTS_FILE, "w", encoding="utf-8") as _fh:
+    json.dump(_TABLE, _fh, ensure_ascii=False)
+os.environ["LAVA_QUESTS"] = QUESTS_FILE
 
 
 def free_port():
@@ -57,6 +153,15 @@ for q in quests.QUESTS.values():
               names.known(sid), True)
 check("the shared empty string is preloaded",
       names.known(quests.EMPTY_STRING_ID), True)
+# The generated companions (data/questgen_*.json) load with the real table
+# and never with a table a suite names; data/quests_wiki.json is not one.
+_companions = quests.companion_paths(quests.PATH)
+check("companions are the questgen_ files beside the table, none of them quests_wiki",
+      all(os.path.basename(p).startswith("questgen_") for p in _companions), True)
+check("  ..and every row of the table and its companions is loaded",
+      sorted(r["type"] for r in quests.table_rows(quests.PATH)),
+      sorted(quests.load(quests.PATH)))
+check("  ..a table named by path stands alone", quests.companion_paths(DB), [])
 check("quest ids sit in their own range",
       all(2_000_000 <= i < 3_000_000 for q in quests.QUESTS.values()
           for i in q.strings()), True)
@@ -72,7 +177,7 @@ check("give order follows the table", quests.given_by(652), [1, 5])
 check("take list by NPC type", quests.taken_by(2424), [1])
 # QuestInterface numbers reward icons n-1-i, so obj_idx counts from the end.
 q4 = quests.get(4)
-check("reward index counts from the end", q4.reward_item(0), (11782, 1))
+check("reward index counts from the end", q4.reward_item(0), (5052, 1))
 check("delivery with no item completes on take",
       quests.get(1).is_complete(quests.get(1).fresh_progress()), True)
 check("kill quest does not", quests.get(5).is_complete(
@@ -163,7 +268,7 @@ try:
     c.send("hello;minor=2;major=0;")
     c.send("login;hash=@%s@;" % CRED)
     c.frames()
-    c.send("newPers;res=1;sex=0;name=@polestvr@;")
+    c.send("newPers;res=1;sex=0;name=@Archivist@;")
     c.frames()
     c.send("actPlayer;")
     c.frames()
@@ -227,7 +332,7 @@ try:
     check("first slot is the certificate", field(si, "obj_1"), "3742")
     check("unused slots are zero", field(si, "obj_6"), "0")
     check("unused mob lists are empty lists", "mobs_6=|;" in si, True)
-    check("reward item listed", field(si, "rew_obj"), "|11782|")
+    check("reward items listed", field(si, "rew_obj"), "|5047|5048|5049|5050|5051|5052|")
 
     c.send("q_si;q_type=5;")
     si = c.frames()[0]
@@ -332,25 +437,32 @@ try:
     c.frames()
     got = enter(c)
     npc = npc_ids(got)
-    AARON, SHIHAB = npc[2424], npc[653]
-    check("one daily hand-in used, remembered across logins",
-          [f for f in got if f.startswith("q_sys")], ["q_sys;daily_available=9;"])
+    AARON, SHIHAB, TECHNOGEEK = npc[2424], npc[653], npc[652]
+    # The daily limit counts repeatable quests only (server.DAILY_MAX): the
+    # one-off delivery above cost none of the day's ten.
+    check("a one-off hand-in costs none of the day's",
+          [f for f in got if f.startswith("q_sys")], ["q_sys;daily_available=10;"])
     c.send("q_list;")
     check("the log is kept across logins", c.frames()[0],
           "q_list;q_id=|3|;q_types=|2|;")
     c.send("q_co;obj_idx=0;mob=%d;q_id=3;" % SHIHAB)
     got = c.frames()
-    check("handed to the lessor", [f.split(";")[0] for f in got],
-          ["userInfo_Player", "cmdAck"])
+    # A repeatable one does, and the journal's caption is told at once,
+    # before the ack its window rebuilds on.
+    check("handed to the lessor, the day's count before the ack",
+          [f.split(";")[0] for f in got], ["userInfo_Player", "q_sys", "cmdAck"])
     check("purse credited again", field(got[0], "afro"), "1070")
+    check("one daily hand-in used", got[1], "q_sys;daily_available=9;")
     c.send("q_status;q_type=2;")
     check("a repeatable quest stays available", "status=1;" in c.frames()[0], True)
 
     # --- services without a fight -------------------------------------------
-    c.send("on_conv;mob=%d;op=0;" % AARON)
+    # Home is registered with a commoner that offers "Прописка"; Aaron's
+    # safe is a bank and does not (can_set_home=0, test_bank).
+    c.send("on_conv;mob=%d;op=0;" % TECHNOGEEK)
     check("registering home is acknowledged", c.frames()[0], "cmdAck;res=0;")
     store = accounts.Store(DB)
-    home = store.db.execute("SELECT home_loc FROM characters").fetchone()[0]
+    home = store.db.execute("SELECT home_loc FROM characters").fetchone()["home_loc"]
     store.close()
     check("home is this location", home, 102)
     c.send("on_conv;p2=1;p1=1;mob=%d;op=2;" % SHIHAB)
@@ -368,8 +480,8 @@ try:
     c.send("userMsg;entry=@/goto 37@;group=0;")
     c.frames()
     got = enter(c)
-    check("two daily hand-ins used",
-          [f for f in got if f.startswith("q_sys")], ["q_sys;daily_available=8;"])
+    check("the day's count as the hand-in left it",
+          [f for f in got if f.startswith("q_sys")], ["q_sys;daily_available=9;"])
     medic = [f for f in got if f.startswith("lch") and "rtype=5;" in f]
     check("the station has a medic", len(medic) > 0, True)
     MEDIC = int(field(medic[0], "newUser"))
@@ -377,12 +489,69 @@ try:
     got = c.frames()
     check("healing: purse, bars, then the ack",
           [f.split(";")[0] for f in got], ["userInfo_Player", "usrUp", "cmdAck"])
-    check("fee taken", field(got[0], "afro"), "1060")
+    # The station's healer (100) charges the original's 150 (data/npcs.json
+    # healer_price), not the old flat 10.
+    check("fee taken", field(got[0], "afro"), "920")
     # Full is whatever the character's maximum is (120 for a newborn), so
     # compare the two fields rather than pin a number.
     check("healed to full", field(got[1], "hcur") == field(got[1], "hmax")
           and field(got[1], "scur") == field(got[1], "smax"), True)
     check("healing acknowledged", got[2], "cmdAck;res=0;")
+
+    # --- a reward thing, and a chain, at the master's -------------------------
+    # Мастер Тиль (5) on the market gives «Пистолетчик» (4) once Берт's
+    # course is over: the certificate of the shooting range in the bag, one
+    # of the six parts of «Самоучитель: Пистолеты» chosen as the reward and
+    # the finish's coin beside it. The things go into the bag before the ack
+    # -- ss_obj_status 1 and their dynamic info -- which is what the client
+    # lists under «Вы получили».
+    c.send("userMsg;entry=@/goto 102@;group=0;")
+    c.frames()
+    got = enter(c)
+    npc = npc_ids(got)
+    TIL = npc[5]
+    store = accounts.Store(DB)
+    me = store.db.execute("SELECT id FROM characters WHERE name = 'Archivist'").fetchone()["id"]
+    store.close()
+    # «Охотник» (1829), as «Пистолетчик», comes after the course's last
+    # lesson (need_quest 357): not offered until that is handed in, then
+    # offered.
+    c.send("q_status;q_type=1829;")
+    check("a quest whose chain is not walked is not offered",
+          "status=0;" in c.frames()[0], True)
+    store = accounts.Store(DB)
+    store.finish_quest(0, me, 357)
+    store.close()
+    c.send("q_status;q_type=1829;")
+    check("and is, once what comes before it is handed in",
+          "status=1;" in c.frames()[0], True)
+    c.send("userMsg;entry=@/give 3742@;group=0;")
+    c.frames()
+    c.send("q_st;mob=%d;q_idx=0;" % TIL)
+    got = c.frames()
+    check("the certificate in the bag, «Пистолетчик» starts complete",
+          [(f.split(";")[0], field(f, "complete")) for f in got
+           if f.startswith("q_di_")], [("q_di_bring_l_obj", "1")])
+    q_pistol = int(field([f for f in got if f.startswith("q_di_")][0], "q_id"))
+    c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (TIL, q_pistol))
+    got = c.frames()
+    check("handed in: the certificate out, the part and the coin in, the day's count, the ack",
+          [f.split(";")[0] for f in got],
+          ["ss_obj_status", "ss_obj_status", "ss_di_heap", "ss_obj_status", "ss_di_heap",
+           "q_sys", "cmdAck"])
+    check("the certificate left, the part and the coin came",
+          [field(f, "status") for f in got if f.startswith("ss_obj_status")], ["0", "1", "1"])
+    check("one of each", [field(f, "size") for f in got if f.startswith("ss_di_heap")],
+          ["1", "1"])
+    check("two of the day's hand-ins used",
+          [f for f in got if f.startswith("q_sys")], ["q_sys;daily_available=8;"])
+    check("acknowledged", got[-1], "cmdAck;res=0;")
+    store = accounts.Store(DB)
+    kept = sorted((r["type_id"], r["count"]) for r in store.items_of(me)
+                  if r["type_id"] in (3742, 5052, 46652))
+    store.close()
+    check("and the bag holds the part chosen (obj_idx 0: the last, «Пистолеты 6 часть») and the"
+          " coin, not the certificate", kept, [(5052, 1), (46652, 1)])
 
     c.send("logout;")
 except Exception:

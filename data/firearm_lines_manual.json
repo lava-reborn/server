@@ -1,0 +1,140 @@
+{
+ "_meta": {
+  "what": "Which client weapon line each wiki firearm article names.",
+  "why": "The client names a gun by class, line index and level -- pistols_1_lvl_4 -- and the Russian name it carried lived in texts.xml, which this copy of the game never shipped. The wiki has the names. data/firearm_families.py narrows the pairing with everything both sides state (the modifications a line owns, whether it has _pm/_gold copies) and still leaves every pistol ambiguous between the two lines of its level: 'ambiguous: 2 lines fit'. The evidence is exhausted, so the rest is a decision, and this file is where it is written down.",
+  "rule": "A line whose family has no _pm/_gold copies can only take an article whose table has no (P)/(G) columns -- that part is measured, not chosen. Among the remaining models of a level, top-end damage ascending takes the lines in index order.",
+  "edit": "Change a family here and re-run: wsl.exe -e python3 data/wiki_links.py && wsl.exe -e python3 data/wiki_extract.py. One entry decides the whole family -- the base gun, its Mod pages and its (P)/(G) copies follow, because the linker picks the variant by column and modification on its own.",
+  "invisible": "The line index is never shown to a player. The name, the description and the numbers are, and those come from the article, so any consistent assignment reads as a correct game; this one is consistent and reversible.",
+  "level": "This file can only say WHICH line an article names, never at which level. data/wiki_links.py::link_firearm reads the level from the article's own «Необходимые навыки» row (skill_levels()) and consults \"lines\" inside that loop, so a page without that row produces no candidate families at all and the entry here is never reached. \"Самострел\" is such a page: the owner set its level to 0 by hand, but there is no supported field for that, and none was invented. Wiring it up needs a code change in wiki_links.py (a level fallback keyed by title), not another key here."
+ },
+ "lines": {
+  "Наган 1895": {
+   "family": "pistols_1_lvl_1",
+   "why": "Стрельба 1, верхний урон 31 -- ниже, чем у С. и В. специального (40)"
+  },
+  "С. и В. специальный": {
+   "family": "pistols_2_lvl_1",
+   "why": "Стрельба 1, верхний урон 40"
+  },
+  "Браунинг": {
+   "family": "pistols_2_lvl_2",
+   "why": "Измерено по иконке: ico.swf линии разобран из res/classes/FireArm и сравнён с картинкой статьи попиксельно; альфа-канал совпал во всех пикселях, премультиплицированный RGB расходится не более чем на 1 из 255 (усечение вместо округления). Прежнее обоснование опиралось на предположение, что индекс линии растёт вместе с верхним уроном; на уровнях 1, 3, 5 и 6 оно совпало с картинкой, здесь -- нет. Картинка перевешивает: вики заливала иконки прямо из клиента. pistols_2_lvl_2/ico.swf (119x52) бит-в-бит равен Браунинг.png."
+  },
+  "Беретта 92": {
+   "family": "pistols_1_lvl_2",
+   "why": "Измерено по иконке: ico.swf линии разобран из res/classes/FireArm и сравнён с картинкой статьи попиксельно; альфа-канал совпал во всех пикселях, премультиплицированный RGB расходится не более чем на 1 из 255 (усечение вместо округления). Прежнее обоснование опиралось на предположение, что индекс линии растёт вместе с верхним уроном; на уровнях 1, 3, 5 и 6 оно совпало с картинкой, здесь -- нет. Картинка перевешивает: вики заливала иконки прямо из клиента. pistols_1_lvl_2/ico.swf (118x49) бит-в-бит равен Беретта.png."
+  },
+  "CZ 75": {
+   "family": "pistols_1_lvl_3",
+   "why": "Стрельба 3, верхний урон 37"
+  },
+  "Colt 1911": {
+   "family": "pistols_2_lvl_3",
+   "why": "Стрельба 3, верхний урон 52"
+  },
+  "Walther P99": {
+   "family": "pistols_2_lvl_4",
+   "why": "Измерено по иконке: ico.swf линии разобран из res/classes/FireArm и сравнён с картинкой статьи попиксельно; альфа-канал совпал во всех пикселях, премультиплицированный RGB расходится не более чем на 1 из 255 (усечение вместо округления). Прежнее обоснование опиралось на предположение, что индекс линии растёт вместе с верхним уроном; на уровнях 1, 3, 5 и 6 оно совпало с картинкой, здесь -- нет. Картинка перевешивает: вики заливала иконки прямо из клиента. pistols_2_lvl_4/ico.swf (121x61) -- Walther P99 с оливковой рамкой."
+  },
+  "Glock 17": {
+   "family": "pistols_1_lvl_4",
+   "why": "Измерено по иконке: ico.swf линии разобран из res/classes/FireArm и сравнён с картинкой статьи попиксельно; альфа-канал совпал во всех пикселях, премультиплицированный RGB расходится не более чем на 1 из 255 (усечение вместо округления). Прежнее обоснование опиралось на предположение, что индекс линии растёт вместе с верхним уроном; на уровнях 1, 3, 5 и 6 оно совпало с картинкой, здесь -- нет. Картинка перевешивает: вики заливала иконки прямо из клиента. pistols_1_lvl_4/ico.swf (121x55) -- чёрный полимерный Glock 17."
+  },
+  "СПС": {
+   "family": "pistols_1_lvl_5",
+   "why": "Стрельба 5, единственная модель уровня; линия pistols_2_lvl_5 (43707) остаётся пустой"
+  },
+  "Desert Eagle": {
+   "family": "pistols_1_lvl_6",
+   "why": "Стрельба 6, единственная модель уровня; линия pistols_2_lvl_6 (43777) остаётся пустой"
+  },
+  "Маузер С96": {
+   "family": "pistols_0_lvl_2",
+   "why": "Измерено по иконке: pistols_0_lvl_2/ico.swf (131x55) -- Маузер C96 с отъёмным магазином, бит-в-бит равен картинке статьи. Линия раньше была отдана «Самопальному револьверу» по цене (100 афро совпало), но картинка это опровергла, и владелец решил в пользу картинки."
+  },
+  "Самострел": {
+   "family": "pistols_1_lvl_0",
+   "level": 0,
+   "why": "Уровень 0 назван владельцем: строки «Необходимые навыки» на странице нет, а примечание говорит «Пистолет выдается в самом начале игры», и цена 100 афро сходится. Линия выбрана из двух, а не из четырёх: картинка статьи (Револьвер.png) лежит на pistols_1_lvl_0 и pistols_2_lvl_0, у которых ico.swf совпадает байт в байт, поэтому между ними картинкой не выбрать, а две другие линии нулевого уровня она исключает -- pistols_3_lvl_0 рисует золотой Маузер C96 с прикладом, которого на вики нет совсем, а pistols_0_lvl_0 рисует Desert Eagle (тот же файл, что у pistols_1_lvl_6). Из двух неразличимых взят первый. Таблица статьи без колонок (P)/(G), поэтому запись назовёт только обычный вариант (25562), а золотая и премиумная копии линии останутся безымянными и в лавку не идут."
+  },
+  "Самодельная винтовка": {
+   "family": "rifle_2_lvl_6",
+   "why": "Названо оригиналом: texts.xml 4346 «Самодельная винтовка[A][6]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка «Винтовки и патроны» (1202), вики; rifle_1_lvl_6 оригинал зовёт «Arisaka Тип 99»."
+  },
+  "Rasheed/Rashid": {
+   "family": "rifle_1_lvl_7",
+   "why": "Названо оригиналом: texts.xml 4363 «Rasheed/Rashid[A][7]» -- строка этой линии (data/orig_items.json, medium), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1202, вики."
+  },
+  "Li-Enfield": {
+   "family": "rifle_1_lvl_8",
+   "why": "Названо оригиналом: texts.xml 4380 «Li-Enfield[A][8]» -- строка этой линии (data/orig_items.json, medium), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1202, вики."
+  },
+  "Самопальный дробовик": {
+   "family": "shotgun_1_lvl_4",
+   "why": "Названо оригиналом: texts.xml 2129 «Самопальный дробовик[A][4]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка «Дробовики и патроны» (1201), вики; у Обреза те же цифры, и различает их только оригинал."
+  },
+  "Обрез": {
+   "family": "shotgun_2_lvl_4",
+   "why": "Названо оригиналом: texts.xml 2146 «Обрез[A][4]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. В лавке не продаётся; записан вместе с соседом по уровню."
+  },
+  "ИЖ-27": {
+   "family": "shotgun_1_lvl_5",
+   "why": "Названо оригиналом: texts.xml 2163 «ИЖ-27[A][5]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1201, вики."
+  },
+  "Scattergun patrol": {
+   "family": "shotgun_2_lvl_5",
+   "why": "Названо оригиналом: texts.xml 2180 «Scattergun patrol[A][5]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1201, вики."
+  },
+  "Сайга-12": {
+   "family": "shotgun_1_lvl_6",
+   "why": "Названо оригиналом: texts.xml 2197 «Сайга-12[A][6]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1201, вики."
+  },
+  "Mossberg 590": {
+   "family": "shotgun_2_lvl_6",
+   "why": "Названо оригиналом: texts.xml 2214 «Mossberg 590[A][6]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1201, вики."
+  },
+  "SPAS-12": {
+   "family": "shotgun_1_lvl_7",
+   "why": "Названо оригиналом: texts.xml 2245 «SPAS-12[A][7]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1201, вики."
+  },
+  "Benelli M4": {
+   "family": "shotgun_2_lvl_7",
+   "why": "Названо оригиналом: texts.xml 2262 «Benelli M4[A][7]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1201, вики."
+  },
+  "Jackhammer": {
+   "family": "shotgun_1_lvl_8",
+   "why": "Названо оригиналом: texts.xml 2279 «Jackhammer[A][8]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1201, вики."
+  },
+  "USAS-12": {
+   "family": "shotgun_2_lvl_8",
+   "why": "Названо оригиналом: texts.xml 2296 «USAS-12[A][8]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. В лавке не продаётся; записан вместе с соседом по уровню."
+  },
+  "Кустарный ПП": {
+   "family": "sub_machine_guns_1_lvl_8",
+   "why": "Названо оригиналом: texts.xml 2859 «Кустарный ПП[A][8]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка «Пистолет-пулеметы и патроны» (1203), вики; у Borzh те же цифры."
+  },
+  "Borzh": {
+   "family": "sub_machine_guns_2_lvl_8",
+   "why": "Названо оригиналом: texts.xml 2876 «Borzh[A][8]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1203, вики."
+  },
+  "Stan MK3": {
+   "family": "sub_machine_guns_1_lvl_9",
+   "why": "Названо оригиналом: texts.xml 2893 «Stan MK3[A][9]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1203, вики."
+  },
+  "MP-40": {
+   "family": "sub_machine_guns_2_lvl_9",
+   "why": "Названо оригиналом: texts.xml 2910 «MP-40[A][9]» -- строка этой линии (data/orig_items.json, high), так что статья вики ложится на неё, а не на соседнюю линию уровня. Лавка 1203, вики."
+  }
+ },
+ "unassigned": {
+  "ПММ": "Стрельба 2, цена в золоте. Линию назначать не нужно: страница привязана иконкой. Её картинка -- Lamantin_pistols.png, то есть вики загрузила иконку самого клиента, и lamantin_pistols_* (7055-7058) -- внутреннее имя этой же линейки, а не чужое оружие. icon_prefix с уверенностью 0.8 попал верно.",
+  "Самопальный револьвер": "Линии не досталось. Статья заявляет Стрельбу 2, но иллюстрирована Револьвер.png -- картинкой предметов НУЛЕВОГО уровня, той же, что у «Самострела». Это противоречие внутри самой вики, а не в репозитории: по объявленному уровню статья просится на второй, по картинке -- на нулевой. Единственную бестировую линию второго уровня, pistols_0_lvl_2, картинка отдала Маузеру С96. В игру эта статья не попадает."
+ },
+ "no_level": {
+  "_why": "Линия выбирается внутри уровня, а уровень берётся из строки «Необходимые навыки» статьи. У этих страниц такой строки нет вовсе, поэтому назначить им линию значило бы придумать им уровень, а не выбрать имя среди линий известного уровня. Оставлены без линии; в игру не попадают.",
+  "Тренировочный пистолет": "цена 1 афро, свои «Тренировочные патроны» (3727), магазин 10 -- учебная вещь, не товар лавки",
+  "Макаров модернизированный": "у страницы нет таблицы характеристик вообще",
+  "Walther AP I ст": "наградной за золото («За заслуги перед проектом LAVA-Online»), не линия лавки",
+  "Walther AP II ст": "то же самое"
+ }
+}

@@ -51,6 +51,10 @@ CRED_C = accounts.credential("carol", "secret")
 # assertions name the market by number, so the suite says which
 # world it wants.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730")
+# The lines the server says by itself (Session.say) are off on a served
+# server; this suite reads them as the server's reasons, so it asks for
+# them by name.
+env["LAVA_SERVER_CHAT"] = "1"
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
@@ -157,12 +161,22 @@ def purse(c):
     return named(c.frames(), "userInfo_Player")[0]["afro"]
 
 
-PISTOL = 4380
+# The parcel: a pistol that changes hands. The kit's own (Самострел) does
+# not -- no exchang, and the window will not attach it (MailInterface.drop,
+# mail.postable) -- so the one posted here is a Беретта 92 put in the bag.
+PISTOL = 25586
 ROUNDS = items.AMMO_9MM[0]
 PISTOL_SI = items.params_of(PISTOL)
 ROUNDS_SI = items.params_of(ROUNDS)
 LETTER_FEE = mail.tariff(mail.LETTER, PISTOL_SI["weight"])[0]
 PLAIN_FEE = mail.tariff(mail.LETTER, 0)[0]
+# Записи (the notes of the valley's leader): no price, no exchange, no quest
+# flag -- the kind of thing only the exchang test keeps out of a letter.
+NO_EXCHANGE = 234
+check("Записи change no hands and carry no quest flag; the Беретта does, the kit's"
+      " pistol does not",
+      [tuple((items.params_of(t) or {}).get(k) for k in ("exchang", "quest"))
+       for t in (NO_EXCHANGE, PISTOL, inventory.STARTER_PISTOL)], [(0, 0), (1, 0), (0, 0)])
 
 try:
     a = Client(connect())
@@ -188,7 +202,19 @@ try:
     a.frames()
 
     # --- a parcel: money and the pistol -------------------------------------
-    pistol_a, rounds_a = bag(a)
+    # The kit's pistol stays in the hand (the hand is not the bag, and that
+    # one changes no hands); the Беретта goes into the bag whole. The bag is
+    # read from the database at every command, so it is there at once.
+    _st = accounts.Store(DB)
+    _alice = _st.db.execute("SELECT id FROM characters WHERE name = 'Alice'").fetchone()["id"]
+    _mb = PISTOL_SI["max_break_abs"]
+    _st.create_item(_alice, PISTOL, items.root_of(PISTOL), slot=inventory.BAG,
+                    brk=_mb, max_break_cur=_mb)
+    _st.close()
+    held = bag(a)
+    pistol_a = [o for o in held if inventory.parse_oid(o)[1] == PISTOL][0]
+    rounds_a = [o for o in held if inventory.parse_oid(o)[1] == inventory.STARTER_AMMO][0]
+    check("the bag holds the Беретта and the kit's rounds", len(held), 2)
     afro_a = purse(a)
     afro_b = purse(b)
     check("both start with the newborn's purse", (afro_a, afro_b), (1000, 1000))
@@ -261,7 +287,9 @@ try:
     afro_b += 100
     check("the purse is the record with the money in", got[2][1]["afro"], afro_b)
     bag_b = bag(b)
-    check("the pistol is in the addressee's bag", new_pistol in bag_b and len(bag_b) == 3, True)
+    # Two, not three: the addressee's own pistol is in his hand, so his bag
+    # holds his rounds and the parcel.
+    check("the pistol is in the addressee's bag", new_pistol in bag_b and len(bag_b) == 2, True)
     b.send("ss_get_di;obj=x%s;" % new_pistol)
     got = b.frames()
     check("with the durability it was sent with",
@@ -384,6 +412,12 @@ try:
     letter3 = str(got[1][1]["id"])
     afro_a -= 50 + PLAIN_FEE
     check("charged", got[2][1]["afro"], afro_a)
+    # Something that changes no hands, in Bob's bag for when he is back.
+    _st = accounts.Store(DB)
+    _bob = _st.db.execute("SELECT id FROM characters WHERE name = 'Bob'").fetchone()["id"]
+    keepsake = inventory.oid_of(_st.create_item(
+        _bob, NO_EXCHANGE, items.root_of(NO_EXCHANGE), slot=inventory.BAG, count=1))
+    _st.close()
 
     b = Client(connect())
     enter(b, CRED_B, "Bob", first=False)
@@ -400,6 +434,17 @@ try:
     check("the purse survived the relogin too", purse(b), afro_b)
     b.send("rmvml;id=x%s;" % letter3)
     b.frames()
+
+    # --- a thing that changes no hands stays out of the post ---------------------------
+    # MailInterface.drop will not attach it («Данный предмет нельзя
+    # передавать»: no exchang), so only a modified client sends one; the
+    # server refuses it all the same, as it refuses a quest's thing.
+    b.send("sndml;item=x%s;body=@@;type=0;subj=@x@;to=@Alice@;" % keepsake)
+    check("a thing with no exchange attached: refused, no ctml",
+          b.frames(), [("cmdAck", {"res": 3})])
+    check("  ..still in the bag, and nothing reached the addressee",
+          (keepsake in bag(b), a.frames(0.3)), (True, []))
+    check("  ..nothing charged", purse(b), afro_b)
 
     # --- party: invite, accept, roster -----------------------------------------------
     a.send("p_op;id=7;op=0;")

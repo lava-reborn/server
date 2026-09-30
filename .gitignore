@@ -10,6 +10,7 @@ dist/
 data/lava.db
 data/lava.db-shm
 data/lava.db-wal
+data/lava.db.before-*
 __pycache__/
 *.pyc
 .claude/

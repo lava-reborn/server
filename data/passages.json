@@ -1,0 +1,721 @@
+{
+ "_": "Ways between locations that data/exits.json does not give, kept by hand. Read by server/travel.py. 'doors' overrides exits.json for one door (outzones side a or b) of one location: the target, and why it is believed. 'walk_in' lists cells that lead somewhere although the location file has no zone on them, so the client never opens its exit window there; the server moves the player once their walk ends on one (server.py, Session.arm_passage). None are listed now -- the Nubian mine's mouth and its EXIT sign, the two there were, became the quests below -- and the mechanism stays for the next place that needs one (server/test_walk_in.py runs it on a table of its own, LAVA_PASSAGES). 'quest' lists the ways a quest of an inhabitant of the location takes a player: taken, it sits in the journal like any quest, and handed in to the same inhabitant it moves him there (server.py, Session.hand_in_way) -- nothing paid, nothing counted against the day; its cells are where the file draws that way, beside which a player coming the other way arrives (travel.door_arrival). A quest named here is refused, taken or handed in, in a location with no row for it. Cells are [x, y] of the location's own grid. Every row says whether it is RECOVERED (the client's files show it) or DESIGNED (ours, because what the original did there is lost with the serverdata node).",
+ "doors": {
+  "166": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 643,
+    "why": "RECOVERED. NoobZone_Hrush, the Амбар Фермера of Фермер Хрущ (map cell 6266,1823). Its one door, b, is a patch of 19 cells at the north-east (51-56, 15-20), and the file draws DN_Backdoor04 right over it (52,13): a way down. exits.json had no target for it at all. Below is 643 'Старые штольни.' (Noob_Rat_Event_Mine1), full of the black rats (mRat_3, 1019) whose king Хрущ's quest asks for (texts.xml 59918-59919), and the fan wiki's 'Старая штольня' is a location of 'Нубийская долина / Амбар Фермера'."
+   }
+  },
+  "643": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 166,
+    "why": "RECOVERED. Noob_Rat_Event_Mine1, 'Старые штольни.': its one door, a, north-east (55-57, 17-20), has W_Pointer_Up beside it (55,16): up, back to the barn it is entered from (door b of 166 above)."
+   }
+  },
+  "612": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1011,
+    "why": "RECOVERED. Noob_mine_lvl1, the first tier of the Nubian mine ('Штольня' on the fan wiki: NPC Камал, mobs Мародер). Its one door, b, is at the south-west, and the file puts W_Pointer_Down beside it (10,109): down, to the second tier. exits.json guessed the target by file name and rated it low; the sign settles it."
+   }
+  },
+  "1011": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 612,
+    "why": "RECOVERED. Noob_mine_lvl2: door a, south-west, has W_Pointer_Up and a ladder (W_ladder1) beside it (6,113 and 7,113), so it climbs back to the first tier. exits.json had the letters the other way round -- its a=deeper, b=back is a convention it calls unverified -- and sent this door down to 1217."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1217,
+    "why": "RECOVERED. Noob_mine_lvl2: door b, north-east, has W_Pointer_Down beside it (50,19): down, to the third tier, whose own door comes up in the same corner of its map."
+   }
+  },
+  "1217": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1011,
+    "why": "RECOVERED. Noob_mine_lvl3, the bottom tier: its one door, a, north-east, has W_Pointer_Up beside it (55,16): back up to the second tier."
+   }
+  },
+  "657": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1025,
+    "why": "RECOVERED. WH_Copper_Mine_Enter, the control room of the town's copper mine («Комната управления»): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1025 «Медная Шахта 1» (WH_Copper_Mine_lvl1). exits.json guessed the same by file name and rated it low; the sign settles it."
+   }
+  },
+  "1025": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 657,
+    "why": "RECOVERED. WH_Copper_Mine_lvl1: door a, the small one at the west (6-7, 29-30), has W_Pointer_Exit beside it (6,35): out, back to the control room 657. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1218."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1218,
+    "why": "RECOVERED. WH_Copper_Mine_lvl1: door b, two galleries -- south-west and north-east -- each with W_Pointer_Down beside it (14,114 and 54,24): down, to the second tier, 1218 (WH_Copper_Mine_lvl2). exits.json sent it back up to 657."
+   }
+  },
+  "1218": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1025,
+    "why": "RECOVERED. WH_Copper_Mine_lvl2: door a, north-east, has W_Pointer_Up beside it (51,20): up, to the first tier, 1025. exits.json had it leading down to 1255."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1255,
+    "why": "RECOVERED. WH_Copper_Mine_lvl2: door b, south-west, has W_Pointer_Down beside it (12,102): down, to the third tier, 1255 (WH_Copper_Mine_lvl3). exits.json had it leading up to 1025."
+   }
+  },
+  "1255": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1218,
+    "why": "RECOVERED. WH_Copper_Mine_lvl3, the bottom tier: its one door, a, two galleries with W_Pointer_Up beside them (12,108 and 54,24) and a ladder, W_ladder1 (10,110): up, to the second tier, 1218."
+   }
+  },
+  "658": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1027,
+    "why": "RECOVERED. WH_Plumbum_Mine_Enter, the control room of the town's lead mine («Комната управления»): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1027 «Свинцовая шахта 1» (WH_Plumbum_Mine_lvl1). exits.json guessed the same by file name and rated it low; the sign settles it."
+   }
+  },
+  "1027": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 658,
+    "why": "RECOVERED. WH_Plumbum_Mine_lvl1: door a, the small one at the west (6-7, 29-30), has W_Pointer_Exit beside it (6,35): out, back to the control room 658. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1220."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1220,
+    "why": "RECOVERED. WH_Plumbum_Mine_lvl1: door b, two galleries -- south-west and north-east -- each with W_Pointer_Down beside it (14,115 and 54,24): down, to the second tier, 1220 (WH_Plumbum_Mine_lvl2). exits.json sent it back up to 658."
+   }
+  },
+  "1220": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1027,
+    "why": "RECOVERED. WH_Plumbum_Mine_lvl2: door a, north-east, has W_Pointer_Up beside it (53,23): up, to the first tier, 1027. exits.json had it leading down to 1257."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1257,
+    "why": "RECOVERED. WH_Plumbum_Mine_lvl2: door b, south-west, has W_Pointer_Down beside it (19,111): down, to the third tier, 1257 (WH_Plumbum_Mine_lvl3). exits.json had it leading up to 1027."
+   }
+  },
+  "1257": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1220,
+    "why": "RECOVERED. WH_Plumbum_Mine_lvl3, the bottom tier: its one door, a, two galleries with W_Pointer_Up beside them (12,104) and a ladder, W_ladder1 (10,109): up, to the second tier, 1220."
+   }
+  },
+  "659": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1026,
+    "why": "RECOVERED. WH_Nitre_Mine_Enter, the control room of the town's nitre mine («Комната управления»): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1026 «Выработка селитры 1» (WH_Nitre_Mine_lvl1). exits.json guessed the same by file name and rated it low; the sign settles it."
+   }
+  },
+  "1026": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 659,
+    "why": "RECOVERED. WH_Nitre_Mine_lvl1: door a, the small one at the west (6-7, 29-30), has W_Pointer_Exit beside it (10,30): out, back to the control room 659. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1219."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1219,
+    "why": "RECOVERED. WH_Nitre_Mine_lvl1: door b, two galleries -- south-west and north-east -- each with W_Pointer_Down beside it (11,111 and 54,24): down, to the second tier, 1219 (WH_Nitre_Mine_lvl2). exits.json sent it back up to 659."
+   }
+  },
+  "1219": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1026,
+    "why": "RECOVERED. WH_Nitre_Mine_lvl2: door a, north-east, has W_Pointer_Up beside it (51,20): up, to the first tier, 1026. exits.json had it leading down to 1256."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1256,
+    "why": "RECOVERED. WH_Nitre_Mine_lvl2: door b, south-west, has W_Pointer_Down beside it (13,101): down, to the third tier, 1256 (WH_Nitre_Mine_lvl3). exits.json had it leading up to 1026."
+   }
+  },
+  "1256": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1219,
+    "why": "RECOVERED. WH_Nitre_Mine_lvl3, the bottom tier: its one door, a, two galleries with W_Pointer_Up beside them (13,112 and 53,23) and a ladder, W_ladder1 (10,111): up, to the second tier, 1219."
+   }
+  },
+  "154": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 613,
+    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance, «Шахта в пустыне» (5983,1735), the first of the three entrances the wiki gives «Шахты Вади-Хальфы» (5983x1735, 5984x1735, 5988x1735; «Под локации: несколько подземных ярусов шахты»). Its one door, b (53-55, 20-22), is under a drawn door, DN_Backdoor01 (52,19); no file of the mine carries a sign saying where. Down to the first tier, VH_mine_lvl1 (613, «Шахта: Первый ярус»), whose door a comes up in the same north-east corner. The mine's doors keep the letters the town's ore mines sign (data/passages.json above: a up, b down)."
+   }
+  },
+  "613": {
+   "a": {
+    "confidence": "medium",
+    "own_cell": true,
+    "source": "designed",
+    "target_loc_id": 154,
+    "why": "DESIGNED. VH_mine_lvl1, «Шахта: Первый ярус»: door a (north-east, 51-52, 21-23), up, back to the entrance it is entered from, 154, arrived at on its own cell (own_cell, travel.plan_exit: one of the mine's three entrances)."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1024,
+    "why": "DESIGNED. VH_mine_lvl1: door b (south-west, 6-10, 109-114), down, to the second tier's middle file, VH_mine_lvl6 (1024, «Шахта: Второй ярус»), whose door a comes up in the same corner -- the pairing data/exits.json guessed by file name (low), taken."
+   }
+  },
+  "158": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 617,
+    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance2 (5984,1735), the wiki's second entrance: its one door, b (11-16, 96-101), no sign. Down to the first tier's other file, VH_mine_lvl2 (617, «Шахта: Первый ярус.»)."
+   }
+  },
+  "617": {
+   "a": {
+    "confidence": "medium",
+    "own_cell": true,
+    "source": "designed",
+    "target_loc_id": 158,
+    "why": "DESIGNED. VH_mine_lvl2, «Шахта: Первый ярус.»: door a (south-west, 8-10, 114-116), up, back to the second entrance, 158, arrived at on its own cell (own_cell, travel.plan_exit: entered by the third entrance and the second tier's side, the player would otherwise stand on 160's)."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1012,
+    "why": "DESIGNED. VH_mine_lvl2: door b (north-east, 50-52, 20-22), down, to the second tier's west file, VH_mine_lvl4 (1012, «Шахта: Второй ярус»), whose door a comes up in the same corner."
+   }
+  },
+  "160": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1016,
+    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance3 (5988,1735), the wiki's third entrance and «Индийское кино»'s own mark: its one door, b (14-17, 96-98), under a drawn door, DN_Backdoor04 (14,91). Down to the second tier's east file, VH_mine_lvl5 (1016, «Шахта: Второй ярус»), which has no other door: a shaft straight down, the one way left once each file's up-door has its tier above."
+   }
+  },
+  "1012": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 617,
+    "why": "DESIGNED. VH_mine_lvl4, «Шахта: Второй ярус»: its one door, a (north-east, 51-52, 21-23), up, to the first tier's file 617 it is entered from; its west side joins it to 1016 ('sides')."
+   }
+  },
+  "1016": {
+   "a": {
+    "confidence": "medium",
+    "own_cell": true,
+    "source": "designed",
+    "target_loc_id": 160,
+    "why": "DESIGNED. VH_mine_lvl5, «Шахта: Второй ярус»: its one door, a (north-east, 51-52, 21-23), up, to the third entrance, 160, arrived at on its own cell (own_cell, travel.plan_exit); its east side joins it to 1012 ('sides')."
+   }
+  },
+  "1024": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 613,
+    "why": "DESIGNED. VH_mine_lvl6, «Шахта: Второй ярус»: door a (south-west, 8-12, 108-114), up, to the first tier, 613 -- the pairing data/exits.json guessed (low), taken."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1215,
+    "why": "DESIGNED. VH_mine_lvl6: door b (north-east, 45-46, 19-21), down, to the third tier, VH_mine_lvl3 (1215, «Шахта: Третий ярус.»: the [9] miners, 839), whose one door comes up in the same corner."
+   }
+  },
+  "1215": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1024,
+    "why": "DESIGNED. VH_mine_lvl3, «Шахта: Третий ярус.», the bottom of the mine: its one door, a (north-east, 50-52, 20-22), up, to the second tier's middle file, 1024."
+   }
+  }
+ },
+ "sides": {
+  "_": "Side exits (outzones codes 1-4) of interiors that lead into each other, not onto the map: location -> side -> the location it leads to, arrived at over the opposite edge, the map cell kept (server/travel.py plan_exit, side_way). Only the locations listed here; every other side exit leads to the neighbouring map cell. Each row says whether it is RECOVERED or DESIGNED.",
+  "626": {
+   "N": {
+    "target_loc_id": 627,
+    "why": "DESIGNED topology on the files' own sides. The quarry of Вади-Хальфа, «Каменоломня.», is five files with no map cell (the wiki's 5961,1727 is the lake) that open only by their sides: the centre, 626 WH_Stone_Mine_C, on all four; the north pit 627 (WH_Stone_Mine_N: Большой Сэм, Деда Джоф), south only; the south pit 628 (WH_Stone_Mine_S), north only; 629 (WH_Stone_Mine_W2), east only; 630 (WH_Stone_Mine_E2), west only. So each opening of the centre leads to the pit whose one opening faces it: north, to the north pit, where the way in arrives."
+   },
+   "S": {
+    "target_loc_id": 628,
+    "why": "DESIGNED topology on the files' own sides. The quarry of Вади-Хальфа, «Каменоломня.», is five files with no map cell (the wiki's 5961,1727 is the lake) that open only by their sides: the centre, 626 WH_Stone_Mine_C, on all four; the north pit 627 (WH_Stone_Mine_N: Большой Сэм, Деда Джоф), south only; the south pit 628 (WH_Stone_Mine_S), north only; 629 (WH_Stone_Mine_W2), east only; 630 (WH_Stone_Mine_E2), west only. So each opening of the centre leads to the pit whose one opening faces it: south, to the south pit."
+   },
+   "W": {
+    "target_loc_id": 629,
+    "why": "DESIGNED topology on the files' own sides. The quarry of Вади-Хальфа, «Каменоломня.», is five files with no map cell (the wiki's 5961,1727 is the lake) that open only by their sides: the centre, 626 WH_Stone_Mine_C, on all four; the north pit 627 (WH_Stone_Mine_N: Большой Сэм, Деда Джоф), south only; the south pit 628 (WH_Stone_Mine_S), north only; 629 (WH_Stone_Mine_W2), east only; 630 (WH_Stone_Mine_E2), west only. So each opening of the centre leads to the pit whose one opening faces it: west, to WH_Stone_Mine_W2, whose one opening faces east."
+   },
+   "E": {
+    "target_loc_id": 630,
+    "why": "DESIGNED topology on the files' own sides. The quarry of Вади-Хальфа, «Каменоломня.», is five files with no map cell (the wiki's 5961,1727 is the lake) that open only by their sides: the centre, 626 WH_Stone_Mine_C, on all four; the north pit 627 (WH_Stone_Mine_N: Большой Сэм, Деда Джоф), south only; the south pit 628 (WH_Stone_Mine_S), north only; 629 (WH_Stone_Mine_W2), east only; 630 (WH_Stone_Mine_E2), west only. So each opening of the centre leads to the pit whose one opening faces it: east, to WH_Stone_Mine_E2, whose one opening faces west."
+   }
+  },
+  "627": {
+   "S": {
+    "target_loc_id": 626,
+    "why": "DESIGNED topology on the files' own sides. The quarry of Вади-Хальфа, «Каменоломня.», is five files with no map cell (the wiki's 5961,1727 is the lake) that open only by their sides: the centre, 626 WH_Stone_Mine_C, on all four; the north pit 627 (WH_Stone_Mine_N: Большой Сэм, Деда Джоф), south only; the south pit 628 (WH_Stone_Mine_S), north only; 629 (WH_Stone_Mine_W2), east only; 630 (WH_Stone_Mine_E2), west only. So each opening of the centre leads to the pit whose one opening faces it: the north pit's one opening, south, back to the centre."
+   }
+  },
+  "628": {
+   "N": {
+    "target_loc_id": 626,
+    "why": "DESIGNED topology on the files' own sides. The quarry of Вади-Хальфа, «Каменоломня.», is five files with no map cell (the wiki's 5961,1727 is the lake) that open only by their sides: the centre, 626 WH_Stone_Mine_C, on all four; the north pit 627 (WH_Stone_Mine_N: Большой Сэм, Деда Джоф), south only; the south pit 628 (WH_Stone_Mine_S), north only; 629 (WH_Stone_Mine_W2), east only; 630 (WH_Stone_Mine_E2), west only. So each opening of the centre leads to the pit whose one opening faces it: the south pit's one opening, north, back to the centre."
+   }
+  },
+  "629": {
+   "E": {
+    "target_loc_id": 626,
+    "why": "DESIGNED topology on the files' own sides. The quarry of Вади-Хальфа, «Каменоломня.», is five files with no map cell (the wiki's 5961,1727 is the lake) that open only by their sides: the centre, 626 WH_Stone_Mine_C, on all four; the north pit 627 (WH_Stone_Mine_N: Большой Сэм, Деда Джоф), south only; the south pit 628 (WH_Stone_Mine_S), north only; 629 (WH_Stone_Mine_W2), east only; 630 (WH_Stone_Mine_E2), west only. So each opening of the centre leads to the pit whose one opening faces it: WH_Stone_Mine_W2's one opening, east, back to the centre."
+   }
+  },
+  "630": {
+   "W": {
+    "target_loc_id": 626,
+    "why": "DESIGNED topology on the files' own sides. The quarry of Вади-Хальфа, «Каменоломня.», is five files with no map cell (the wiki's 5961,1727 is the lake) that open only by their sides: the centre, 626 WH_Stone_Mine_C, on all four; the north pit 627 (WH_Stone_Mine_N: Большой Сэм, Деда Джоф), south only; the south pit 628 (WH_Stone_Mine_S), north only; 629 (WH_Stone_Mine_W2), east only; 630 (WH_Stone_Mine_E2), west only. So each opening of the centre leads to the pit whose one opening faces it: WH_Stone_Mine_E2's one opening, west, back to the centre."
+   }
+  },
+  "644": {
+   "E": {
+    "target_loc_id": 646,
+    "why": "DESIGNED topology on the files' own sides. The prison of Вади-Хальфа, m8 (the uprising of data/schedule.json prison_wh), is five files with no map cell under the yard 176 (5985,1744) that open only by their sides: the centre block 646 (Prison_3_WH) on all four; 644 (Prison_1_WH, titled «Северный блок», the western gate's), east only; 645 (Prison_2_WH, titled «Восточный блок», the southern gate's), north only; the northern cells 647 (Prison_4_WH), south only; the eastern cells 648 (Prison_5_WH), west only. So each opening of the centre leads to the file whose one opening faces it, as the quarry's do, and the guards' blocks lie west and south of it -- the wiki's «Западный блок» and «Южный блок», whose «Локации» is the centre -- the cells north and east (the wiki's «Северный блок»/«Восточный блок», «Заключенный»). 644 signs its one opening W_Pointer_East (31,71), 645 W_Pointer_West (25,58), each by a ladder down from the yard. Here: 644's one opening, east, into the centre."
+   }
+  },
+  "645": {
+   "N": {
+    "target_loc_id": 646,
+    "why": "DESIGNED topology on the files' own sides. The prison of Вади-Хальфа, m8 (the uprising of data/schedule.json prison_wh), is five files with no map cell under the yard 176 (5985,1744) that open only by their sides: the centre block 646 (Prison_3_WH) on all four; 644 (Prison_1_WH, titled «Северный блок», the western gate's), east only; 645 (Prison_2_WH, titled «Восточный блок», the southern gate's), north only; the northern cells 647 (Prison_4_WH), south only; the eastern cells 648 (Prison_5_WH), west only. So each opening of the centre leads to the file whose one opening faces it, as the quarry's do, and the guards' blocks lie west and south of it -- the wiki's «Западный блок» and «Южный блок», whose «Локации» is the centre -- the cells north and east (the wiki's «Северный блок»/«Восточный блок», «Заключенный»). 644 signs its one opening W_Pointer_East (31,71), 645 W_Pointer_West (25,58), each by a ladder down from the yard. Here: 645's one opening, north, into the centre."
+   }
+  },
+  "646": {
+   "W": {
+    "target_loc_id": 644,
+    "why": "DESIGNED topology on the files' own sides. The prison of Вади-Хальфа, m8 (the uprising of data/schedule.json prison_wh), is five files with no map cell under the yard 176 (5985,1744) that open only by their sides: the centre block 646 (Prison_3_WH) on all four; 644 (Prison_1_WH, titled «Северный блок», the western gate's), east only; 645 (Prison_2_WH, titled «Восточный блок», the southern gate's), north only; the northern cells 647 (Prison_4_WH), south only; the eastern cells 648 (Prison_5_WH), west only. So each opening of the centre leads to the file whose one opening faces it, as the quarry's do, and the guards' blocks lie west and south of it -- the wiki's «Западный блок» and «Южный блок», whose «Локации» is the centre -- the cells north and east (the wiki's «Северный блок»/«Восточный блок», «Заключенный»). 644 signs its one opening W_Pointer_East (31,71), 645 W_Pointer_West (25,58), each by a ladder down from the yard. Here: the centre's west, into the western gate's block 644."
+   },
+   "S": {
+    "target_loc_id": 645,
+    "why": "DESIGNED topology on the files' own sides. The prison of Вади-Хальфа, m8 (the uprising of data/schedule.json prison_wh), is five files with no map cell under the yard 176 (5985,1744) that open only by their sides: the centre block 646 (Prison_3_WH) on all four; 644 (Prison_1_WH, titled «Северный блок», the western gate's), east only; 645 (Prison_2_WH, titled «Восточный блок», the southern gate's), north only; the northern cells 647 (Prison_4_WH), south only; the eastern cells 648 (Prison_5_WH), west only. So each opening of the centre leads to the file whose one opening faces it, as the quarry's do, and the guards' blocks lie west and south of it -- the wiki's «Западный блок» and «Южный блок», whose «Локации» is the centre -- the cells north and east (the wiki's «Северный блок»/«Восточный блок», «Заключенный»). 644 signs its one opening W_Pointer_East (31,71), 645 W_Pointer_West (25,58), each by a ladder down from the yard. Here: the centre's south, into the southern gate's block 645."
+   },
+   "N": {
+    "target_loc_id": 647,
+    "why": "DESIGNED topology on the files' own sides. The prison of Вади-Хальфа, m8 (the uprising of data/schedule.json prison_wh), is five files with no map cell under the yard 176 (5985,1744) that open only by their sides: the centre block 646 (Prison_3_WH) on all four; 644 (Prison_1_WH, titled «Северный блок», the western gate's), east only; 645 (Prison_2_WH, titled «Восточный блок», the southern gate's), north only; the northern cells 647 (Prison_4_WH), south only; the eastern cells 648 (Prison_5_WH), west only. So each opening of the centre leads to the file whose one opening faces it, as the quarry's do, and the guards' blocks lie west and south of it -- the wiki's «Западный блок» and «Южный блок», whose «Локации» is the centre -- the cells north and east (the wiki's «Северный блок»/«Восточный блок», «Заключенный»). 644 signs its one opening W_Pointer_East (31,71), 645 W_Pointer_West (25,58), each by a ladder down from the yard. Here: the centre's north, into the northern cells 647."
+   },
+   "E": {
+    "target_loc_id": 648,
+    "why": "DESIGNED topology on the files' own sides. The prison of Вади-Хальфа, m8 (the uprising of data/schedule.json prison_wh), is five files with no map cell under the yard 176 (5985,1744) that open only by their sides: the centre block 646 (Prison_3_WH) on all four; 644 (Prison_1_WH, titled «Северный блок», the western gate's), east only; 645 (Prison_2_WH, titled «Восточный блок», the southern gate's), north only; the northern cells 647 (Prison_4_WH), south only; the eastern cells 648 (Prison_5_WH), west only. So each opening of the centre leads to the file whose one opening faces it, as the quarry's do, and the guards' blocks lie west and south of it -- the wiki's «Западный блок» and «Южный блок», whose «Локации» is the centre -- the cells north and east (the wiki's «Северный блок»/«Восточный блок», «Заключенный»). 644 signs its one opening W_Pointer_East (31,71), 645 W_Pointer_West (25,58), each by a ladder down from the yard. Here: the centre's east, into the eastern cells 648."
+   }
+  },
+  "647": {
+   "S": {
+    "target_loc_id": 646,
+    "why": "DESIGNED topology on the files' own sides. The prison of Вади-Хальфа, m8 (the uprising of data/schedule.json prison_wh), is five files with no map cell under the yard 176 (5985,1744) that open only by their sides: the centre block 646 (Prison_3_WH) on all four; 644 (Prison_1_WH, titled «Северный блок», the western gate's), east only; 645 (Prison_2_WH, titled «Восточный блок», the southern gate's), north only; the northern cells 647 (Prison_4_WH), south only; the eastern cells 648 (Prison_5_WH), west only. So each opening of the centre leads to the file whose one opening faces it, as the quarry's do, and the guards' blocks lie west and south of it -- the wiki's «Западный блок» and «Южный блок», whose «Локации» is the centre -- the cells north and east (the wiki's «Северный блок»/«Восточный блок», «Заключенный»). 644 signs its one opening W_Pointer_East (31,71), 645 W_Pointer_West (25,58), each by a ladder down from the yard. Here: the northern cells' one opening, south, back to the centre."
+   }
+  },
+  "648": {
+   "W": {
+    "target_loc_id": 646,
+    "why": "DESIGNED topology on the files' own sides. The prison of Вади-Хальфа, m8 (the uprising of data/schedule.json prison_wh), is five files with no map cell under the yard 176 (5985,1744) that open only by their sides: the centre block 646 (Prison_3_WH) on all four; 644 (Prison_1_WH, titled «Северный блок», the western gate's), east only; 645 (Prison_2_WH, titled «Восточный блок», the southern gate's), north only; the northern cells 647 (Prison_4_WH), south only; the eastern cells 648 (Prison_5_WH), west only. So each opening of the centre leads to the file whose one opening faces it, as the quarry's do, and the guards' blocks lie west and south of it -- the wiki's «Западный блок» and «Южный блок», whose «Локации» is the centre -- the cells north and east (the wiki's «Северный блок»/«Восточный блок», «Заключенный»). 644 signs its one opening W_Pointer_East (31,71), 645 W_Pointer_West (25,58), each by a ladder down from the yard. Here: the eastern cells' one opening, west, back to the centre."
+   }
+  },
+  "1012": {
+   "W": {
+    "target_loc_id": 1016,
+    "why": "DESIGNED topology on the files' own sides. The second tier of the Вади-Хальфа mine is three files, «Шахта: Второй ярус»: VH_mine_lvl4 (1012) opens to the west by a gallery mouth drawn inside its map (8-11, 30-32), VH_mine_lvl5 (1016) to the east by one (57-59, 30-32), and no other file of the mine opens either way there: the two halves of one gallery, west of 1012 lies 1016."
+   }
+  },
+  "1016": {
+   "E": {
+    "target_loc_id": 1012,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_lvl5's gallery mouth to the east (57-59, 30-32) back into VH_mine_lvl4 (1012), whose own mouth faces west (see 1012 W)."
+   }
+  },
+  "1024": {
+   "E": {
+    "target_loc_id": 1017,
+    "why": "DESIGNED topology on the files' own sides. The second tier's middle file, VH_mine_lvl6 (1024), is open along both edges (west 59-75, east 60-75), and the mine's three «Шахта: Тунели» (VH_mine_tunel1..3_horizont, 1017-1019) are each open along their west and east edges and nothing else: a gallery running east out of 1024 through the three and round into it again from the west. East, into the first tunnel."
+   },
+   "W": {
+    "target_loc_id": 1019,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_lvl6's west edge, into the last of the tunnels, 1019, over its east edge: the gallery's ring closed (see 1024 E)."
+   }
+  },
+  "1017": {
+   "W": {
+    "target_loc_id": 1024,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel1_horizont, «Шахта: Тунели»: its west edge back into the second tier's middle file, 1024 (see 1024 E)."
+   },
+   "E": {
+    "target_loc_id": 1018,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel1_horizont: its east edge on into the second tunnel, 1018."
+   }
+  },
+  "1018": {
+   "W": {
+    "target_loc_id": 1017,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel2_horizont: its west edge back into the first tunnel, 1017."
+   },
+   "E": {
+    "target_loc_id": 1019,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel2_horizont: its east edge on into the third tunnel, 1019."
+   }
+  },
+  "1019": {
+   "W": {
+    "target_loc_id": 1018,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel3_horizont: its west edge back into the second tunnel, 1018."
+   },
+   "E": {
+    "target_loc_id": 1024,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel3_horizont: its east edge round into the second tier's middle file, 1024, over its west edge (see 1024 W)."
+   }
+  }
+ },
+ "no_map": {
+  "_": "Interiors left only by their own ways, never straight onto the global map: location -> why. The lcall's g_id carries the sublocation bit there, as a deadloc's does, so the client greys both map buttons out, and the server refuses chWorld to the map and /home (server/travel.py no_map, geo_id; server.py Session.cmd_chWorld, cmd_userMsg). A death still sends a player home. Their sides and quest ways work as anywhere. Each row says whether it is RECOVERED or DESIGNED.",
+  "732": {"why": "DESIGNED. Берт Гаммер's bunker, TIR_00: the course (1682 and its lessons) is walked once, and a button to the map in the middle of it would lose it for good -- the lessons' givers stand in rooms only the lessons lead to. The ways out are the lesson on (351) and «Прервать обучение» (358), back to the market."},
+  "1048": {"why": "DESIGNED. TIR_01, the pistols' range: as TIR_00 -- out by the lesson (352) or «Прервать обучение» (359)."},
+  "1233": {"why": "DESIGNED. TIR_02, the shotguns' range: out by the lesson (353) or «Прервать обучение» (360)."},
+  "1260": {"why": "DESIGNED. TIR_03, the sub-machine guns' range: out by the lesson (354) or «Прервать обучение» (361)."},
+  "1276": {"why": "DESIGNED. TIR_04, the assault rifles' range: out by the lesson (355) or «Прервать обучение» (362)."},
+  "1280": {"why": "DESIGNED. TIR_05, the machine guns' range: out by the lesson (356) or «Прервать обучение» (363)."},
+  "1282": {"why": "DESIGNED. TIR_06, the rifles' range: out by the last lesson (357) or «Прервать обучение» (364), both to the market."},
+  "626": {"why": "DESIGNED. The quarry's centre: the pick Сэм's work lends (403, 404) stays in the quarry (quests.json stay_in), and the way out is Сэм's «Покинуть каменоломню.» (402) in the north pit, reached by the sides ('sides')."},
+  "627": {"why": "DESIGNED. The quarry's north pit, where Равшан's contract (401) arrives and Сэм's «Покинуть каменоломню.» (402) leaves, back to Причал; its south side leads into the centre."},
+  "628": {"why": "DESIGNED. The quarry's south pit: its one side back to the centre."},
+  "629": {"why": "DESIGNED. The quarry's west pit: its one side back to the centre."},
+  "630": {"why": "DESIGNED. The quarry's east pit: its one side back to the centre."},
+  "644": {"why": "DESIGNED. The prison's western block (Prison_1_WH), entered by the western gate (161) at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre, «При выходе отбирает все повязки» (the wiki's «Томас»), and a death, which sends home; their sides lead into each other ('sides')."},
+  "645": {"why": "DESIGNED. The prison's southern block (Prison_2_WH), entered by the southern gate (162): as 644."},
+  "646": {"why": "DESIGNED. The prison's centre block (Prison_3_WH): Томас (876) and his «Выход» (163) back to the yard, the godfather and the medics of the uprising; its four sides lead to the other four files."},
+  "647": {"why": "DESIGNED. The prison's northern cells (Prison_4_WH): the prisoners of the uprising; its one side back to the centre."},
+  "648": {"why": "DESIGNED. The prison's eastern cells (Prison_5_WH): the prisoners of the uprising; its one side back to the centre."},
+  "447": {"why": "DESIGNED. The Квартал ремесленников (WH_Masters_01), whose map cell 5968,1719 is inside the owner's wall: reached only by Мастер Азам's way from the masters' camp (quests.json 414), left only by the way back (415) -- a button to the map would put the player on the walled cell."}
+ },
+ "walk_in": {},
+ "quest": {
+  "102": [
+   {
+    "quest": 146,
+    "cells": [[9, 83], [10, 83], [9, 84], [10, 84]],
+    "target_loc_id": 117,
+    "why": "RECOVERED place and ride, DESIGNED way. 102 'Черный рынок Вади-Хальфы' (WH_Gold_Traders_old, map cell 5970,1730): Мастер Тиль (5) stands at (11,82) beside a car, O_Hummer1 at (8,84), whose body is the obstacles at 6-10 x 81-84. His «К шахте» (texts.xml 62707/62708, 'Нужно будет вернуться к шахте - говори.'; his step of the gold rush, 62700: 'туда как раз направлялся мой человек, может и тебя подвезти') is the ride to his driver at the gold mine: handed back to Тиль, it moves the player to 117 ('Пустошь', 6008,1742), where the driver (666) waits by his own car. The cells are the ground between the Hummer and Тиль, where a player driven back from the mine arrives (travel.door_arrival)."
+   }
+  ],
+  "117": [
+   {
+    "quest": 143,
+    "cells": [[27, 60], [29, 60], [27, 61], [28, 61]],
+    "target_loc_id": 102,
+    "why": "RECOVERED place and ride, DESIGNED way. 117 'Пустошь' (map cell 6008,1742, beside «Золотая шахта.» 116): Водитель Тиля (666, wh_gold_driver_1) stands at (29,62) beside his car, O_Bugcar1 at (28,60), whose body is the obstacles at 27-30 x 57-59. His «В Вади-Хальфу» (texts.xml 62705/62706, 'Нужно будет вернуться в Хальфу - говори.') is the ride back to Тиль's black market (102). The cells are the ground by the car, where a player driven out from Тиль arrives (travel.door_arrival)."
+   }
+  ],
+  "153": [
+   {
+    "quest": 7,
+    "cells": [[47, 24], [48, 24], [46, 25], [47, 25], [48, 25], [47, 26], [48, 26]],
+    "target_loc_id": 612,
+    "why": "RECOVERED way and place, DESIGNED workings. 153 'Скалы: Шахта' (Noob_mine_entrance, map cell 6273,1829) is the wiki's 'Старая шахта' with Рудо, 'шахтер в пятом поколении', at the mouth, and the wiki and the original's texts (59928-59931) say his quest 'Отправка в шахту' took people down: the file has no zone to go in by. It draws mine_entrance.png at (52,16) with rails running out of it to the south-west, and a pocket of inzones (43-49, 23-31) at the rails' end -- the cells a player came out of the mine onto. The cells here are the end of the rails, the walkable cells nearest the opening and outside that pocket: where the way is drawn, so a player coming up out of the mine arrives beside them. Handing the quest in to Рудо moves him down; walking onto the cells does nothing."
+   }
+  ],
+  "612": [
+   {
+    "quest": 8,
+    "cells": [[49, 19], [48, 20], [49, 20], [50, 20]],
+    "target_loc_id": 153,
+    "why": "RECOVERED way and place, DESIGNED workings. The first tier puts W_Pointer_Exit at (50,19), at the dead end of its north-east gallery, with its inzones (49-53, 21-25) just below -- where a player arrived from the surface -- and Камал beside them, whose quest 'Выведи меня отсюда' (texts 59940-59943) was the way out. No zone there either. The cells are the ones under the sign: a player coming down arrives beside them, and Камал's quest, handed back to him, leads to the mine's mouth."
+   }
+  ],
+  "186": [
+   {
+    "quest": 43,
+    "cells": [[33, 36], [36, 36], [34, 37], [36, 37]],
+    "target_loc_id": 41,
+    "why": "RECOVERED place, DESIGNED way. 186 'Караван' (NoobZone_Market, map cell 6271,1829), inside the owner's wall. Демир (5193), the driver, stands at (35,37) beside his car: O_Bugcar1 at (34,36), whose body is the obstacles at 33-37 x 33-36. His quest «В Хальфу!» (texts.xml 24434-24436, 'Пойдем, отвезу тебя в город.') is the ride out of the walled valley to Вади-Хальфа, the owner's decision (2026-09-26). The file draws no way out, so the cells are the ground around the car, where the ride starts: a player driven back from the city arrives nearest them (travel.door_arrival). Handing the quest in to Демир moves the player to Причал (41, 5965,1728), where the other Демир waits."
+   }
+  ],
+  "41": [
+   {
+    "quest": 44,
+    "cells": [[28, 73], [29, 73], [30, 73], [28, 74], [29, 74]],
+    "target_loc_id": 186,
+    "why": "RECOVERED place, DESIGNED way. 41 'Причал' of Вади-Хальфа (map cell 5965,1728): Демир (30, nz_Demir) stands at (27,73) beside a car, O_car02_vp at (30,75). His quest «Назад, в долину» (texts.xml 59870/59871) is the ride back into the valley, which the original closes 'после достижения третьего уровня любого навыка' (quests.json max_level 2). The cells are the ground by the car, where a player driven out of the valley arrives (travel.door_arrival). Handing the quest in to Демир moves the player to the caravan's village (186)."
+   },
+   {
+    "quest": 401,
+    "cells": [[51, 17], [52, 19], [50, 17], [52, 16]],
+    "target_loc_id": 627,
+    "why": "RECOVERED way (the wiki's «Работа в Каменоломне (Вади-Хальфа)», 5965x1728: «после выполнения задания Вас переместят в другое место»), DESIGNED place. 41 'Причал': Равшан, «Владелец каменоломни» (978), stands at (52,18); his contract takes the player into the quarry's north pit, 627, beside Большой Сэм. The quarry has no cell on the map (the wiki's 5961,1727 is the lake). The cells are the ground beside him, where a player leaving the quarry arrives."
+   },
+   {
+    "quest": 412,
+    "cells": [[21, 73], [22, 73], [21, 74], [23, 74]],
+    "target_loc_id": 429,
+    "why": "RECOVERED way (texts.xml 24443: «Запрыгивай в лодку, мы отправляемся!»), DESIGNED place. 41 'Причал': Лейтенант О'Нилл (5685, Армия ЦСЦ) stands at (22,74) by the water; «Боец сопротивления» rows the player over the Nile to the resistance's camp, 429 -- switched off (quests.json 412) until Заречье is filled. The cells are the ground beside him, where the boat brings a player back."
+   }
+  ],
+  "35": [
+   {
+    "quest": 1682,
+    "cells": [[54, 25], [55, 25], [54, 24], [56, 24]],
+    "target_loc_id": 732,
+    "why": "RECOVERED way, DESIGNED place. 35 'Вади Хальфа: рынок', the old market: Берт Гаммер (2088, BertGammer_GoldMarket) stands at (55,24), and his «Тир Берта Гаммера» (59768: «Следуй за мной. Разговор продолжим в бункере.») takes the player into his bunker, TIR_00 (732). The file draws no way there; the cells are the ground at his feet, where a player who breaks the course off in TIR_00 comes back out (travel.door_arrival). Handed back to him, the quest moves the player (server.py Session.hand_in_way)."
+   }
+  ],
+  "732": [
+   {
+    "quest": 351,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 1048,
+    "why": "RECOVERED place, DESIGNED way. TIR_00 (732), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_0 (2089) stands at (8,29) in the booth: his lesson (351), handed back to him, leads on to the next range, TIR_01 (1048). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
+   },
+   {
+    "quest": 358,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 35,
+    "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_00 (732): Берт's «Прервать обучение» (358), handed back to him (2089), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
+   }
+  ],
+  "1048": [
+   {
+    "quest": 352,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 1233,
+    "why": "RECOVERED place, DESIGNED way. TIR_01 (1048), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_1 (2090) stands at (8,29) in the booth: his lesson (352), handed back to him, leads on to the next range, TIR_02 (1233). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
+   },
+   {
+    "quest": 359,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 35,
+    "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_01 (1048): Берт's «Прервать обучение» (359), handed back to him (2090), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
+   }
+  ],
+  "1233": [
+   {
+    "quest": 353,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 1260,
+    "why": "RECOVERED place, DESIGNED way. TIR_02 (1233), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_2 (2091) stands at (8,29) in the booth: his lesson (353), handed back to him, leads on to the next range, TIR_03 (1260). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
+   },
+   {
+    "quest": 360,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 35,
+    "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_02 (1233): Берт's «Прервать обучение» (360), handed back to him (2091), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
+   }
+  ],
+  "1260": [
+   {
+    "quest": 354,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 1276,
+    "why": "RECOVERED place, DESIGNED way. TIR_03 (1260), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_3 (2092) stands at (8,29) in the booth: his lesson (354), handed back to him, leads on to the next range, TIR_04 (1276). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
+   },
+   {
+    "quest": 361,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 35,
+    "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_03 (1260): Берт's «Прервать обучение» (361), handed back to him (2092), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
+   }
+  ],
+  "1276": [
+   {
+    "quest": 355,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 1280,
+    "why": "RECOVERED place, DESIGNED way. TIR_04 (1276), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_4 (2093) stands at (8,29) in the booth: his lesson (355), handed back to him, leads on to the next range, TIR_05 (1280). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
+   },
+   {
+    "quest": 362,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 35,
+    "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_04 (1276): Берт's «Прервать обучение» (362), handed back to him (2093), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
+   }
+  ],
+  "1280": [
+   {
+    "quest": 356,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 1282,
+    "why": "RECOVERED place, DESIGNED way. TIR_05 (1280), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_5 (2094) stands at (8,29) in the booth: his lesson (356), handed back to him, leads on to the next range, TIR_06 (1282). The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
+   },
+   {
+    "quest": 363,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 35,
+    "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_05 (1280): Берт's «Прервать обучение» (363), handed back to him (2094), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
+   }
+  ],
+  "1282": [
+   {
+    "quest": 357,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 35,
+    "why": "RECOVERED place, DESIGNED way. TIR_06 (1282), a range of Берт Гаммер's bunker, where his copy BertGammer_TI_6 (2095) stands at (8,29) in the booth: his lesson (357), handed back to him, leads back to the market (35): «Теперь время вернуться на рынок». The file draws no way; the cells are the booth's floor beside him, off its entries, which are where a player coming in stands."
+   },
+   {
+    "quest": 364,
+    "cells": [[7, 29], [9, 30], [7, 28], [8, 27]],
+    "target_loc_id": 35,
+    "why": "RECOVERED place and target (the wiki's «Прервать обучение»: «Вас переместят на Старый рынок Вади Хальфы»), DESIGNED way. TIR_06 (1282): Берт's «Прервать обучение» (364), handed back to him (2095), leads back to the market (35). The same cells as the lesson's: the booth's floor beside him."
+   }
+  ],
+  "627": [
+   {
+    "quest": 402,
+    "cells": [[55, 17], [55, 18], [55, 19], [56, 19]],
+    "target_loc_id": 41,
+    "why": "RECOVERED way (the wiki's «Покинуть каменоломню (Вади-Хальфа)»: «после выполнения задания Вас переместят в другое место»), DESIGNED place. 627 «Каменоломня.» (WH_Stone_Mine_N), the quarry's north pit: Большой Сэм (979) stands at (56,18), and his «Покинуть каменоломню.» leads back to Причал (41), where Равшан signs the contract. The cells are the ground beside him, where a player sent in by Равшан arrives."
+   }
+  ],
+  "200": [
+   {
+    "quest": 406,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 657,
+    "why": "DESIGNED way, RECOVERED place. 200, the entrance of the town's copper mine, draws its door (DN_Backdoor05 at 33,50) with the gatekeeper (1328) in front of it at (31,57); the file has no zone to go in by. His quest takes the player down to the control room, 657. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "202": [
+   {
+    "quest": 407,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 658,
+    "why": "DESIGNED way, RECOVERED place. 202, the entrance of the town's lead mine, draws its door (DN_Backdoor05 at 33,50) with the gatekeeper (1320) in front of it at (31,57); the file has no zone to go in by. His quest takes the player down to the control room, 658. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "201": [
+   {
+    "quest": 408,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 659,
+    "why": "DESIGNED way, RECOVERED place. 201, the entrance of the town's nitre mine, draws its door (DN_Backdoor05 at 33,50) with the gatekeeper (1324) in front of it at (31,57); the file has no zone to go in by. His quest takes the player down to the control room, 659. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "657": [
+   {
+    "quest": 409,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 200,
+    "why": "DESIGNED way, RECOVERED place. 657 «Комната управления», the control room of the copper mine: «Выход из шахты/карьера» (1340) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 200. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "658": [
+   {
+    "quest": 410,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 202,
+    "why": "DESIGNED way, RECOVERED place. 658 «Комната управления», the control room of the lead mine: «Выход из шахты/карьера» (1332) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 202. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "659": [
+   {
+    "quest": 411,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 201,
+    "why": "DESIGNED way, RECOVERED place. 659 «Комната управления», the control room of the nitre mine: «Выход из шахты/карьера» (1336) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 201. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "429": [
+   {
+    "quest": 413,
+    "cells": [[51, 29], [50, 30], [52, 30], [51, 31]],
+    "target_loc_id": 41,
+    "why": "DESIGNED way, RECOVERED place. 429 «Лагерь» (Invaider_Camp_WH, 5943,1723), the resistance's camp over the Nile, which no walk reaches: Рядовой Дуэйн Доберман (5694) stands at (51,30), and «Вернуться в город» takes the player back to Причал (41) -- switched off with the boat (quests.json 413). The cells are the ground beside him, where the boat lands a player."
+   }
+  ],
+  "37": [
+   {
+    "quest": 159,
+    "cells": [[30, 77], [31, 78], [32, 77], [30, 76]],
+    "target_loc_id": 176,
+    "why": "RECOVERED way and time, DESIGNED place. 37 «Вади Хальфа: вокзал» (5967,1727): Хассир (105), «водитель», the station's driver («В другие города часто Хассир ездит», 50343), stands at (31,77). «Поехали!» (62262/62263: «Мне как раз по пути, подброшу тебя до нового работодателя ... В 12:00, 16:00 или 23:00 отправиться в тюрьму ... Вас отправят в тюрьму около Вади Хальфы») is the ride to the prison's yard (176, 5985,1744), open from a quarter of an hour before an uprising to its end (data/schedule.json prison_wh_gates). The cells are the ground by him, where a player driven back from the prison arrives (travel.door_arrival)."
+   }
+  ],
+  "176": [
+   {
+    "quest": 160,
+    "cells": [[31, 43], [32, 42], [32, 44], [33, 43]],
+    "target_loc_id": 37,
+    "why": "RECOVERED way, DESIGNED giver and place. 176 «Тюремный двор» (Prison_Entrance_WH, 5985,1744): «Назад в Вади Хальфу» (62266/62267: «Могу подвезти до Вади Хальфы, садись!») is the ride back to the station (37); the yard has no driver, and the one who drives in and out is the supply man, «Снабженец Хальфы» (2180), at (32,43) -- DESIGNED. Any time. The cells are the ground by him, where a player driven to the prison arrives."
+   },
+   {
+    "quest": 161,
+    "cells": [[16, 39], [17, 38], [15, 39], [16, 40]],
+    "target_loc_id": 644,
+    "why": "RECOVERED way and time, DESIGNED place. 176 «Тюремный двор»: «Охранник<br>Западная сторона» (1791, uf_EnterMan_North_WH; the wiki: «Локации: Западный блок») at (16,38), and his «Тюрьма: западные ворота» (62275; start 62272, «в тюремных блоках восстание - двигай туда и стреляй во все, что движется»), handed back to him at the uprising (data/schedule.json prison_wh_gates), takes the player down into the western block (644, Prison_1_WH, by its ladder). The file draws no way; the cells are the ground at his feet."
+   },
+   {
+    "quest": 162,
+    "cells": [[40, 38], [41, 37], [39, 38], [40, 39]],
+    "target_loc_id": 645,
+    "why": "RECOVERED way and time, DESIGNED place. 176 «Тюремный двор»: «Охранник<br>Южная сторона» (1794, uf_EnterMan_South_WH; the wiki: «Локации: Южный блок») at (40,37), and his «Тюрьма: южные ворота» (62274, the same start), handed back to him at the uprising, takes the player down into the southern block (645, Prison_2_WH, by its ladder). The cells are the ground at his feet."
+   }
+  ],
+  "646": [
+   {
+    "quest": 163,
+    "cells": [[30, 74], [31, 73], [31, 75], [32, 74]],
+    "target_loc_id": 176,
+    "why": "RECOVERED way and giver, DESIGNED place. 646 «Тюрьма: Центральный блок.» (Prison_3_WH): «Томас<Br>Выход из тюрьмы» (876, uf_ExitMan, 62317; the wiki: «безопасно выводит из тюрьмы. При выходе отбирает все повязки») at (31,74), and his «Выход» (62276-62278, «Там еще кто-нибудь выходить будет?»), handed back to him, leads up to the yard (176) at any time; the armbands stay below (data/schedule.json keep_in). The cells are the ground at his feet."
+   }
+  ],
+  "124": [
+   {
+    "quest": 414,
+    "cells": [[19, 58], [19, 59], [20, 59], [21, 58]],
+    "target_loc_id": 447,
+    "why": "DESIGNED way, RECOVERED place. 124 «лагерь мастеров» (Upgraders_VH_P, 5968,1726), the town's masters' camp next to the quarter: Мастер Азам (704) stands at (20,58), and «Квартал ремесленников» takes the player to 447 (WH_Masters_01, 5968,1719), whose own map cell is inside the owner's wall, to the quarter's masters of the [Q] guns (its map label: «Ремесленники, Мастера улучшения: -Оружия [Q] \"Веселый праздник\"»). The wall is not touched. The cells are the ground beside him, where a player coming back arrives."
+   }
+  ],
+  "447": [
+   {
+    "quest": 415,
+    "cells": [[43, 101], [44, 101], [44, 102], [45, 102]],
+    "target_loc_id": 124,
+    "why": "DESIGNED way, RECOVERED place. 447 «Квартал ремесленников»: its weapons' master (5771) stands at (45,101), and «Назад, в лагерь мастеров» takes the player back to the masters' camp (124), the quarter's only way out (passages.json 'no_map'). The cells are the ground beside him, where a player led in by Мастер Азам arrives."
+   }
+  ]
+ }
+}

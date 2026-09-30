@@ -1,0 +1,51 @@
+{
+ "_meta": {
+  "about": "Numbers for heal items that have no wiki article, laid over the designed frame by server/items.py exactly the way a data/items_wiki.json record is (same keys, frame shape unchanged). A wiki record, where one exists, wins. DESIGNED, NOT RECOVERED: the original server kept these numbers and they are lost. Each record says in _designed what was chosen and in _source what is real.",
+  "decided": "2026-09-23, owner: trader Морис (5211) sells medicine for character levels 0-8, i.e. the level bands 0_3, 4_7 and 8_11, in every variant (A/P/G); the 20-dose packs take the single injector's numbers with 20 uses at 20 times the price; the (P) kits between Мини and Стандарт are interpolated.",
+  "fields": "ss_si_heal names as in server/items.py; g_cost in hundredths of G (0.01 G = 1), like items_wiki.json; need_skills_m/need_skills as Item.parseNeedBonus reads them (bit 2 = Медицина). Keys starting with _ never reach the wire."
+ },
+ "items": {
+  "6068": {
+   "_name": "Аптечка «Базовая» (5) (P)",
+   "_source": "texts.xml 394/395: heal_cost 10 (Расход ОД), use_count 5 and premium from '(5) (P)' in the name",
+   "_designed": "health, stamina, weight and price interpolated at 1/3 between Аптечка «Мини» (6067, band 0_3: 90-180, 90-180, 150 g, 0.01 G) and Аптечка «Стандарт» (6070, band 12_15: 155-310, 355-790, 374 g, 0.04 G), both off the wiki; Медицина 2 by the ladder bandages and food follow (0_3 -> 0, 4_7 -> 2, 8_11 -> 4, 12_15 -> 6, which Стандарт confirms for this line)",
+   "min_h_rest": 112, "max_h_rest": 223, "min_st_rest": 178, "max_st_rest": 383,
+   "heal_cost": 10, "use_count": 5, "weight": 225,
+   "cost": 0, "g_cost": 2, "premium": 1, "exchang": 1,
+   "need_skills_m": 4, "need_skills": [2]
+  },
+  "6069": {
+   "_name": "Аптечка «Индивидуальная» (5) (P)",
+   "_source": "texts.xml 396/397: heal_cost 12 (Расход ОД), use_count 5 and premium from '(5) (P)' in the name",
+   "_designed": "health, stamina, weight and price interpolated at 2/3 between Аптечка «Мини» (6067) and Аптечка «Стандарт» (6070); Медицина 4 by the same ladder",
+   "min_h_rest": 133, "max_h_rest": 267, "min_st_rest": 267, "max_st_rest": 587,
+   "heal_cost": 12, "use_count": 5, "weight": 299,
+   "cost": 0, "g_cost": 3, "premium": 1, "exchang": 1,
+   "need_skills_m": 4, "need_skills": [4]
+  },
+  "7100": {
+   "_name": "20 доз Б.Т.Р. (G)",
+   "_source": "texts.xml 450: use_count 20 and gold from '20 доз ... (G)'",
+   "_designed": "everything else is the single Б.Т.Р. (6073, wiki) as it is, weight included; price 20 x 0.01 G",
+   "min_h_rest": 135, "max_h_rest": 180, "min_st_rest": 250, "max_st_rest": 270,
+   "heal_cost": 5, "use_count": 20, "weight": 75,
+   "cost": 0, "g_cost": 20, "premium": 0, "exchang": 1
+  },
+  "7101": {
+   "_name": "20 доз Р.О.С.А. (G)",
+   "_source": "texts.xml 451: use_count 20 and gold from '20 доз ... (G)'",
+   "_designed": "everything else is the single Р.О.С.А. (6074, wiki) as it is, weight included; price 20 x 0.02 G",
+   "min_h_rest": 180, "max_h_rest": 240, "min_st_rest": 340, "max_st_rest": 360,
+   "heal_cost": 6, "use_count": 20, "weight": 75,
+   "cost": 0, "g_cost": 40, "premium": 0, "exchang": 1
+  },
+  "7102": {
+   "_name": "20 доз В.И.Л.К.А. (G)",
+   "_source": "texts.xml 452: use_count 20 and gold from '20 доз ... (G)'",
+   "_designed": "everything else is the single В.И.Л.К.А. (6075, wiki) as it is, weight included; price 20 x 0.03 G",
+   "min_h_rest": 285, "max_h_rest": 380, "min_st_rest": 550, "max_st_rest": 570,
+   "heal_cost": 7, "use_count": 20, "weight": 75,
+   "cost": 0, "g_cost": 60, "premium": 0, "exchang": 1
+  }
+ }
+}

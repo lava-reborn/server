@@ -1,8 +1,8 @@
 {
  "_meta": {
-  "ambiguous": 334,
-  "articles": 348,
-  "generated": "2026-09-16",
+  "ambiguous": 301,
+  "articles": 315,
+  "generated": "2026-09-21",
   "knife_mod": {
    "I": "damage_actionpoints",
    "II": "actionpoint",
@@ -852,84 +852,6 @@
    ],
    "title": "Brugger & Thomet APR 338 Mod XV"
   },
-  "CZ 75": {
-   "base": "CZ 75",
-   "candidates": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "compatible": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "confidence": 0.3,
-   "level": 3,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "CZ 75"
-  },
-  "CZ 75 Mod XI": {
-   "base": "CZ 75",
-   "candidates": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "compatible": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "confidence": 0.3,
-   "level": 3,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "precision",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "CZ 75 Mod XI"
-  },
-  "CZ 75 Mod XII": {
-   "base": "CZ 75",
-   "candidates": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "compatible": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "confidence": 0.3,
-   "level": 3,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "damage",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "CZ 75 Mod XII"
-  },
   "Chang Feng": {
    "base": "Chang Feng",
    "candidates": [
@@ -1037,84 +959,6 @@
    ],
    "title": "Chang Feng Mod XV"
   },
-  "Colt 1911": {
-   "base": "Colt 1911",
-   "candidates": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "compatible": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "confidence": 0.3,
-   "level": 3,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Colt 1911"
-  },
-  "Colt 1911 Mod XI": {
-   "base": "Colt 1911",
-   "candidates": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "compatible": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "confidence": 0.3,
-   "level": 3,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "precision",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Colt 1911 Mod XI"
-  },
-  "Colt 1911 Mod XII": {
-   "base": "Colt 1911",
-   "candidates": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "compatible": [
-    "pistols_1_lvl_3",
-    "pistols_2_lvl_3"
-   ],
-   "confidence": 0.3,
-   "level": 3,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "damage",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Colt 1911 Mod XII"
-  },
   "Cнайперский карабин «Zf.Kar.98k»": {
    "base": "Cнайперский карабин «Zf.Kar.98k»",
    "candidates": [
@@ -1136,32 +980,6 @@
     "G"
    ],
    "title": "Cнайперский карабин «Zf.Kar.98k»"
-  },
-  "Desert Eagle": {
-   "base": "Desert Eagle",
-   "candidates": [
-    "pistols_1_lvl_6",
-    "pistols_2_lvl_6"
-   ],
-   "compatible": [
-    "pistols_1_lvl_6",
-    "pistols_2_lvl_6"
-   ],
-   "confidence": 0.3,
-   "level": 6,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Desert Eagle"
   },
   "Desert Eagle I ст": {
    "base": "Desert Eagle I ст",
@@ -1204,58 +1022,6 @@
     "G"
    ],
    "title": "Desert Eagle II ст"
-  },
-  "Desert Eagle Mod XI": {
-   "base": "Desert Eagle",
-   "candidates": [
-    "pistols_1_lvl_6",
-    "pistols_2_lvl_6"
-   ],
-   "compatible": [
-    "pistols_1_lvl_6",
-    "pistols_2_lvl_6"
-   ],
-   "confidence": 0.3,
-   "level": 6,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "precision",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Desert Eagle Mod XI"
-  },
-  "Desert Eagle Mod XII": {
-   "base": "Desert Eagle",
-   "candidates": [
-    "pistols_1_lvl_6",
-    "pistols_2_lvl_6"
-   ],
-   "compatible": [
-    "pistols_1_lvl_6",
-    "pistols_2_lvl_6"
-   ],
-   "confidence": 0.3,
-   "level": 6,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "damage",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Desert Eagle Mod XII"
   },
   "FN F2000": {
    "base": "FN F2000",
@@ -2111,84 +1877,6 @@
     "P"
    ],
    "title": "Galil AR Mod X"
-  },
-  "Glock 17": {
-   "base": "Glock 17",
-   "candidates": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "compatible": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "confidence": 0.3,
-   "level": 4,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "clipsize",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Glock 17"
-  },
-  "Glock 17 Mod IX": {
-   "base": "Glock 17",
-   "candidates": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "compatible": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "confidence": 0.3,
-   "level": 4,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "clipsize",
-   "mods": [
-    "clipsize",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Glock 17 Mod IX"
-  },
-  "Glock 17 Mod XI": {
-   "base": "Glock 17",
-   "candidates": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "compatible": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "confidence": 0.3,
-   "level": 4,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "precision",
-   "mods": [
-    "clipsize",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Glock 17 Mod XI"
   },
   "HK PSG-1": {
    "base": "HK PSG-1",
@@ -6316,79 +6004,6 @@
    ],
    "title": "Valtro PM-5 Mod XV"
   },
-  "Walther P99": {
-   "base": "Walther P99",
-   "candidates": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "compatible": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "confidence": 0.3,
-   "level": 4,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Walther P99"
-  },
-  "Walther P99 Mod V": {
-   "base": "Walther P99",
-   "candidates": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "compatible": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "confidence": 0.3,
-   "level": 4,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "shotrange",
-   "mods": [
-    "shotrange"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Walther P99 Mod V"
-  },
-  "Walther P99 Mod XI": {
-   "base": "Walther P99",
-   "candidates": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "compatible": [
-    "pistols_1_lvl_4",
-    "pistols_2_lvl_4"
-   ],
-   "confidence": 0.3,
-   "level": 4,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "precision",
-   "mods": [
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Walther P99 Mod XI"
-  },
   "Winchester 1200": {
    "base": "Winchester 1200",
    "candidates": [
@@ -6789,87 +6404,6 @@
    ],
    "title": "АС Вал Mod XIV"
   },
-  "Беретта 92": {
-   "base": "Беретта 92",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.3,
-   "level": 2,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "clipsize",
-    "damage"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Беретта 92"
-  },
-  "Беретта 92 Mod IX": {
-   "base": "Беретта 92",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.3,
-   "level": 2,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "clipsize",
-   "mods": [
-    "clipsize",
-    "damage"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Беретта 92 Mod IX"
-  },
-  "Беретта 92 Mod XII": {
-   "base": "Беретта 92",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.3,
-   "level": 2,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "damage",
-   "mods": [
-    "clipsize",
-    "damage"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Беретта 92 Mod XII"
-  },
   "Беретта M12": {
    "base": "Беретта M12",
    "candidates": [
@@ -7119,87 +6653,6 @@
     "P"
    ],
    "title": "Бизон ПП-19 Mod XV"
-  },
-  "Браунинг": {
-   "base": "Браунинг",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.3,
-   "level": 2,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Браунинг"
-  },
-  "Браунинг Mod XI": {
-   "base": "Браунинг",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.3,
-   "level": 2,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "precision",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Браунинг Mod XI"
-  },
-  "Браунинг Mod XII": {
-   "base": "Браунинг",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.3,
-   "level": 2,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "damage",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Браунинг Mod XII"
   },
   "Вепрь-12": {
    "base": "Вепрь-12",
@@ -7582,162 +7035,6 @@
     "A"
    ],
    "title": "Маузер 712"
-  },
-  "Маузер С96": {
-   "base": "Маузер С96",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.2,
-   "level": 2,
-   "method": "ambiguous: 3 lines fit",
-   "mod": null,
-   "mods": [
-    "damage",
-    "shotrange"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A"
-   ],
-   "title": "Маузер С96"
-  },
-  "Маузер С96 Mod V": {
-   "base": "Маузер С96",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.2,
-   "level": 2,
-   "method": "ambiguous: 3 lines fit",
-   "mod": "shotrange",
-   "mods": [
-    "damage",
-    "shotrange"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A"
-   ],
-   "title": "Маузер С96 Mod V"
-  },
-  "Маузер С96 Mod XII": {
-   "base": "Маузер С96",
-   "candidates": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "compatible": [
-    "pistols_0_lvl_2",
-    "pistols_1_lvl_2",
-    "pistols_2_lvl_2"
-   ],
-   "confidence": 0.2,
-   "level": 2,
-   "method": "ambiguous: 3 lines fit",
-   "mod": "damage",
-   "mods": [
-    "damage",
-    "shotrange"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A"
-   ],
-   "title": "Маузер С96 Mod XII"
-  },
-  "Наган 1895": {
-   "base": "Наган 1895",
-   "candidates": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "compatible": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "confidence": 0.3,
-   "level": 1,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "damage",
-    "shotrange"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Наган 1895"
-  },
-  "Наган 1895 Mod V": {
-   "base": "Наган 1895",
-   "candidates": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "compatible": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "confidence": 0.3,
-   "level": 1,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "shotrange",
-   "mods": [
-    "damage",
-    "shotrange"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Наган 1895 Mod V"
-  },
-  "Наган 1895 Mod XII": {
-   "base": "Наган 1895",
-   "candidates": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "compatible": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "confidence": 0.3,
-   "level": 1,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "damage",
-   "mods": [
-    "damage",
-    "shotrange"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "Наган 1895 Mod XII"
   },
   "Обрез": {
    "base": "Обрез",
@@ -8141,84 +7438,6 @@
    ],
    "title": "Пистоль"
   },
-  "С. и В. специальный": {
-   "base": "С. и В. специальный",
-   "candidates": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "compatible": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "confidence": 0.3,
-   "level": 1,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "С. и В. специальный"
-  },
-  "С. и В. специальный Mod XI": {
-   "base": "С. и В. специальный",
-   "candidates": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "compatible": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "confidence": 0.3,
-   "level": 1,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "precision",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "С. и В. специальный Mod XI"
-  },
-  "С. и В. специальный Mod XII": {
-   "base": "С. и В. специальный",
-   "candidates": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "compatible": [
-    "pistols_1_lvl_1",
-    "pistols_2_lvl_1"
-   ],
-   "confidence": 0.3,
-   "level": 1,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "damage",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "С. и В. специальный Mod XII"
-  },
   "СВД": {
    "base": "СВД",
    "candidates": [
@@ -8497,84 +7716,6 @@
     "A"
    ],
    "title": "СВТ-40 Mod XV"
-  },
-  "СПС": {
-   "base": "СПС",
-   "candidates": [
-    "pistols_1_lvl_5",
-    "pistols_2_lvl_5"
-   ],
-   "compatible": [
-    "pistols_1_lvl_5",
-    "pistols_2_lvl_5"
-   ],
-   "confidence": 0.3,
-   "level": 5,
-   "method": "ambiguous: 2 lines fit",
-   "mod": null,
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "СПС"
-  },
-  "СПС Mod XI": {
-   "base": "СПС",
-   "candidates": [
-    "pistols_1_lvl_5",
-    "pistols_2_lvl_5"
-   ],
-   "compatible": [
-    "pistols_1_lvl_5",
-    "pistols_2_lvl_5"
-   ],
-   "confidence": 0.3,
-   "level": 5,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "precision",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "СПС Mod XI"
-  },
-  "СПС Mod XII": {
-   "base": "СПС",
-   "candidates": [
-    "pistols_1_lvl_5",
-    "pistols_2_lvl_5"
-   ],
-   "compatible": [
-    "pistols_1_lvl_5",
-    "pistols_2_lvl_5"
-   ],
-   "confidence": 0.3,
-   "level": 5,
-   "method": "ambiguous: 2 lines fit",
-   "mod": "damage",
-   "mods": [
-    "damage",
-    "precision"
-   ],
-   "resolved": null,
-   "tiers": [
-    "A",
-    "G",
-    "P"
-   ],
-   "title": "СПС Mod XII"
   },
   "Сайга-12": {
    "base": "Сайга-12",
@@ -12568,7 +11709,6 @@
    ],
    "wiki": null,
    "wiki_candidates": [
-    "Маузер С96",
     "Самопальный револьвер"
    ],
    "wiki_confidence": 0
@@ -12819,10 +11959,7 @@
     "P"
    ],
    "wiki": null,
-   "wiki_candidates": [
-    "Наган 1895",
-    "С. и В. специальный"
-   ],
+   "wiki_candidates": [],
    "wiki_confidence": 0
   },
   "pistols_1_lvl_10": {
@@ -13677,9 +12814,6 @@
    ],
    "wiki": null,
    "wiki_candidates": [
-    "Беретта 92",
-    "Браунинг",
-    "Маузер С96",
     "Самопальный револьвер"
    ],
    "wiki_confidence": 0
@@ -13828,10 +12962,7 @@
     "P"
    ],
    "wiki": null,
-   "wiki_candidates": [
-    "CZ 75",
-    "Colt 1911"
-   ],
+   "wiki_candidates": [],
    "wiki_confidence": 0
   },
   "pistols_1_lvl_4": {
@@ -13903,10 +13034,7 @@
     "P"
    ],
    "wiki": null,
-   "wiki_candidates": [
-    "Glock 17",
-    "Walther P99"
-   ],
+   "wiki_candidates": [],
    "wiki_confidence": 0
   },
   "pistols_1_lvl_5": {
@@ -13978,9 +13106,7 @@
     "P"
    ],
    "wiki": null,
-   "wiki_candidates": [
-    "СПС"
-   ],
+   "wiki_candidates": [],
    "wiki_confidence": 0
   },
   "pistols_1_lvl_6": {
@@ -14053,7 +13179,6 @@
    ],
    "wiki": null,
    "wiki_candidates": [
-    "Desert Eagle",
     "Desert Eagle I ст",
     "Desert Eagle II ст"
    ],
@@ -14418,10 +13543,7 @@
     "P"
    ],
    "wiki": null,
-   "wiki_candidates": [
-    "Наган 1895",
-    "С. и В. специальный"
-   ],
+   "wiki_candidates": [],
    "wiki_confidence": 0
   },
   "pistols_2_lvl_10": {
@@ -15251,9 +14373,6 @@
    ],
    "wiki": null,
    "wiki_candidates": [
-    "Беретта 92",
-    "Браунинг",
-    "Маузер С96",
     "Самопальный револьвер"
    ],
    "wiki_confidence": 0
@@ -15401,10 +14520,7 @@
     "P"
    ],
    "wiki": null,
-   "wiki_candidates": [
-    "CZ 75",
-    "Colt 1911"
-   ],
+   "wiki_candidates": [],
    "wiki_confidence": 0
   },
   "pistols_2_lvl_4": {
@@ -15476,10 +14592,7 @@
     "P"
    ],
    "wiki": null,
-   "wiki_candidates": [
-    "Glock 17",
-    "Walther P99"
-   ],
+   "wiki_candidates": [],
    "wiki_confidence": 0
   },
   "pistols_2_lvl_5": {
@@ -15551,9 +14664,7 @@
     "P"
    ],
    "wiki": null,
-   "wiki_candidates": [
-    "СПС"
-   ],
+   "wiki_candidates": [],
    "wiki_confidence": 0
   },
   "pistols_2_lvl_6": {
@@ -15626,7 +14737,6 @@
    ],
    "wiki": null,
    "wiki_candidates": [
-    "Desert Eagle",
     "Desert Eagle I ст",
     "Desert Eagle II ст"
    ],

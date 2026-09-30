@@ -48,6 +48,11 @@ static class Launcher
     const string HOST = "@HOST@";
     const int PORT = @PORT@;
     const string VERSION = "@VERSION@";
+    // Where the launcher itself and the resource manifest are published.
+    // Separate from HOST because they are separate things: build.ps1 takes
+    // -ServerHost and -Site apart, and its own documented example gives them
+    // different values.
+    const string SITE = "@SITE@";
     const string REGISTER_URL = "@REGISTER@";
     const string LOST_URL = "@LOST@";
     const string TITLE = "Lava Reborn";
@@ -133,10 +138,58 @@ static class Launcher
                 form.Status(up, up ? "Сервер доступен" : "Сервер недоступен");
             });
         });
+
+        // The update check runs beside those two, and unlike them it owns the
+        // way in: until it says the table on hand is the table this server
+        // speaks, the button is not "Войти". Updater.Start returns at once and
+        // works on its own thread, so this costs the window nothing.
+        Updater.Changed = delegate { Say(ShowUpdate); };
+        Updater.Start(SITE, delegate { return Bytes("texts.xml"); });
+        ShowUpdate();
+    }
+
+    // The one place that turns an update state into something on screen.
+    static void ShowUpdate()
+    {
+        if (form == null || form.GameStarted) return;
+        switch (Updater.State)
+        {
+            case UpState.MustUpdate:
+                form.Gate(Updater.Note, "Скачать новую версию",
+                          delegate { Browse(Updater.DownloadUrl); }, true);
+                break;
+            case UpState.Checking:
+                form.Gate(Updater.Note, "Проверяем обновления", null, false);
+                break;
+            case UpState.Downloading:
+                form.Gate(Updater.Note, "Обновляем ресурсы", null, false);
+                break;
+            default:
+                // Ready, or asked and not answered. Either way the way in is
+                // open -- refusing to start because a web server is down
+                // would lock every player out of a game that is running.
+                form.Ungate();
+                // Not over an error. The unpacking thread can fail while this
+                // one is still on the network, and its message is the only
+                // account of why the game will not start -- an update line
+                // written over it leaves the player with nothing to read.
+                if (!form.ErrorShown) form.Note(Updater.Note);
+                break;
+        }
     }
 
     static void Submit(string login, string password, bool remember)
     {
+        // The form will not call this while it is gated; this is the second
+        // lock on the same door, for the day somebody wires up another way in.
+        // Named for the states that open the door rather than the ones that
+        // close it: Checking is where the launcher spends most of its life,
+        // and listing the closed states left that one standing open.
+        if (Updater.State != UpState.Ready && Updater.State != UpState.Unchecked)
+        {
+            ShowUpdate();
+            return;
+        }
         form.Busy(true, "Входим");
         form.Note("Проверяем учётные данные");
 
@@ -190,6 +243,12 @@ static class Launcher
             try { LaunchWeb(hash); }
             catch (Exception e)
             {
+                // Let the door shut again. launched is a guard against two
+                // clicks landing together, not a one-shot fuse: if the
+                // projector could not be started -- an antivirus took the
+                // unpacked player, the disk filled -- the player has to be
+                // able to try again without closing the launcher.
+                Interlocked.Exchange(ref launched, 0);
                 Say(delegate { form.Error("Не удалось запустить игру: " + e.Message); });
             }
         });
@@ -198,8 +257,92 @@ static class Launcher
     // The path this launcher exists for. See LocalServer for the why.
     static void LaunchWeb(string hash)
     {
+        // One click, one game. The button is disabled while the login is in
+        // flight, but the check runs on a worker thread and a second click
+        // landing before it returns gets here too -- and two projectors is
+        // two windows, one of them the empty one that was reported. Exchange
+        // rather than a bool, because the two clicks are on two threads.
+        if (Interlocked.Exchange(ref launched, 1) != 0) return;
         Log.Start();
-        server = new LocalServer(res, Bytes("texts.xml"), HOST, PORT);
+        // The 16:9 wrapper is opt-in, and it is opt-in for a reason that was
+        // seen rather than feared. Inside it the world is drawn correctly --
+        // right size, nothing cut off -- and then the client stops taking
+        // mouse clicks, which in this game means the character cannot walk,
+        // because walking is a click on the ground.
+        //
+        // The cause is not settled, and one suspicion is now ruled out. It
+        // used to be the keeper: it re-asserts Stage.scaleMode 25 times a
+        // second, every such assignment fires onResize at every Stage
+        // listener, and SceneShifter's onResize (SceneShifter.as:56-58) is
+        // setMCSize, which rebuilds the layout. But wrapper_plain.swf -- the
+        // same film with no scaling at all, main.swf's own 950x650 stage, the
+        // game at the origin, not one word said to Stage -- loses the clicks
+        // just the same: on 2026-09-29 six left clicks posted to the
+        // projector's window walked the character four times on main.swf
+        // and not once in either film. So it is something about the game
+        // being loaded into a clip, not about the stage.
+        //
+        // Until that is found and cured, the default is the client as it
+        // was drawn: main.swf on level 0, 950x650, nothing in the way.
+        // LAVA_SCALE=1 brings the 16:9 wrapper back for whoever is working on
+        // it, LAVA_PLAIN=1 the unscaled one.
+        //
+        // Both films carry the ClanInspector mend (tools/make_wrapper.py,
+        // CLAN INSPECTOR) -- the clan window no longer goes deaf after a
+        // reconnect, and the founding page shows its price -- and only the
+        // films can carry it, because it has to run inside the client. So
+        // that mend reaches players the day the clicks are cured and a film
+        // becomes the default, and not before.
+        byte[] wrapper = null;
+        if (Flag("LAVA_SCALE"))
+        {
+            // A film that cannot be read is a smaller game, not a dead
+            // launcher: fall back rather than refuse to start.
+            try { wrapper = Bytes("wrapper.swf"); }
+            catch { wrapper = null; }
+        }
+        // What the projector is pointed at. The plain film has main.swf's own
+        // stage, so nothing about the window changes for it: no Stage() and
+        // no Zoom, the built-in 950x650 stands. Unreadable -> the bare game,
+        // for the same reason as above.
+        byte[] film = wrapper;
+        if (film == null && Flag("LAVA_PLAIN"))
+        {
+            try { film = Bytes("wrapper_plain.swf"); }
+            catch { film = null; }
+        }
+        if (wrapper != null)
+        {
+            // The window is cut to the wrapper's stage, and by default to
+            // exactly that size: one pixel for one pixel, nothing stretched.
+            // What makes the picture bigger is the wider stage itself --
+            // the game lays out into it -- not magnification.
+            //
+            // LAVA_SCALE therefore changes the window and never the field.
+            // Every value but the default is enlargement, and enlargement is
+            // the softness that was complained about: there are 1280x720 real
+            // pixels and no more. fit fills the desktop, 1.5 asks for one and
+            // a half times the stage's own size, and so on.
+            Stage(wrapper);
+            GameWindow.Zoom = 1;
+            string want = (Environment.GetEnvironmentVariable("LAVA_SCALE") ?? "").Trim();
+            double zoom;
+            if (want.Equals("fit", StringComparison.OrdinalIgnoreCase) ||
+                want.Equals("max", StringComparison.OrdinalIgnoreCase))
+                GameWindow.Zoom = 0;                       // as large as the desktop allows
+            else if (double.TryParse(want, System.Globalization.NumberStyles.Float,
+                                     System.Globalization.CultureInfo.InvariantCulture,
+                                     out zoom) && zoom > 0.1)
+                GameWindow.Zoom = zoom;
+        }
+        // If the check has not settled yet, wait a moment for it here rather
+        // than serve a table that may have fallen behind. The player is
+        // already looking at "Запускаем игру", so a second or two is invisible
+        // -- and the alternative is not a blank label but a session that ends
+        // by itself at the login screen. When there is nothing left to wait
+        // for, which is the usual case, this returns immediately.
+        Updater.Wait(4000);
+        server = new LocalServer(res, Updater.Texts(), film, HOST, PORT);
         server.Hash = hash;
         server.WorldLoading += delegate { Start(Settle); };
         server.Start();
@@ -217,10 +360,20 @@ static class Launcher
 
         Start(delegate
         {
-            gameWnd = GameWindow.Find(game, 20000);
-            GameWindow.Park(gameWnd);
-            if (revealed) GameWindow.Reveal(gameWnd);   // lost the race; show it now
-            GameWindow.Title(gameWnd, TITLE, game);
+            // Find takes as long as the projector takes to open its window,
+            // so it is deliberately outside the lock; only the decision that
+            // follows it is not.
+            IntPtr h = GameWindow.Find(game, 20000);
+            lock (windowLock)
+            {
+                gameWnd = h;
+                // Parking a window the world is already showing in is how the
+                // game ends up back at -32000 after it was revealed. Whoever
+                // gets here second does what the first one decided.
+                if (revealed) GameWindow.Reveal(h);
+                else GameWindow.Park(h);
+            }
+            GameWindow.Title(h, TITLE, game);
         });
         Start(delegate
         {
@@ -263,24 +416,38 @@ static class Launcher
         Say(Done);
     }
 
+    // revealed and gameWnd are written by the thread that finds the window and
+    // read by the thread that shows it, and either can be first: the world can
+    // settle before the projector has drawn a window, and a slow disk can put
+    // the window first. windowLock is what makes the pair of them one decision.
+    static readonly object windowLock = new object();
     static bool revealed;
     static IntPtr gameWnd;
     static Process gameProc;
+    static int launched;
 
     static void Done()
     {
-        if (revealed) return;
-        revealed = true;
+        lock (windowLock)
+        {
+            if (revealed) return;       // Settle and the timeout both call this
+            revealed = true;
+        }
         Start(delegate
         {
             // The game was started hidden, so showing it is not optional: if
             // the window was never found, look once more rather than leave a
             // running game nobody can see. Revealed first, hidden second --
             // the other order leaves a moment with neither window on screen.
-            IntPtr h = gameWnd;
+            IntPtr h;
+            lock (windowLock) h = gameWnd;
             if (h == IntPtr.Zero && gameProc != null && !gameProc.HasExited)
                 h = GameWindow.Find(gameProc, 3000);
-            GameWindow.Reveal(h);
+            lock (windowLock)
+            {
+                if (gameWnd == IntPtr.Zero) gameWnd = h;
+                GameWindow.Reveal(gameWnd);
+            }
             Say(delegate { form.Hide(); });
         });
     }
@@ -330,6 +497,28 @@ static class Launcher
             if (form != null && form.IsHandleCreated) form.BeginInvoke(what);
         }
         catch { }
+    }
+
+    // The wrapper's stage, read out of its own header so the size lives in
+    // one place. Our wrapper is written uncompressed (FWS), so the header is
+    // right there: a RECT of four signed fields, each as many bits wide as
+    // the five bits in front of them say, in twips.
+    static void Stage(byte[] swf)
+    {
+        try
+        {
+            int nbits = swf[8] >> 3, at = 5;
+            int[] v = new int[4];
+            for (int i = 0; i < 4; i++)
+            {
+                int n = 0;
+                for (int b = 0; b < nbits; b++, at++)
+                    n = (n << 1) | ((swf[8 + (at >> 3)] >> (7 - (at & 7))) & 1);
+                v[i] = n;
+            }
+            GameWindow.SetArt((v[1] - v[0]) / 20, (v[3] - v[2]) / 20);
+        }
+        catch { /* the built-in 950x650 stands */ }
     }
 
     static bool Flag(string name)

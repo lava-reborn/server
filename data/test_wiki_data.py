@@ -102,6 +102,34 @@ class Data(unittest.TestCase):
             else:
                 self.assertLess(a["confidence"], 0.6, key)
 
+    def test_heal_relinks(self):
+        """Food and kits link by MANUAL, never by the icons uploaded under
+        another type's name (wiki_links.WRONG_ICONS)."""
+        by_name = {n: t for t, (r, n) in self.objects.items()}
+        pages = self.links["pages"]
+        want = {"Корень Маниока": "Med_Pacific_Heal_0_3_A",
+                "Корни Маниока": "Med_Pacific_Heal_0_3_Ax10",
+                "Вяленое Мясо": "Med_Pacific_Heal_12_15_A",
+                "Аптечка «Мини»": "Med_Battle_HR_0_3_P",
+                "Аптечка «Стандарт»": "Med_Battle_HR_12_15_P",
+                "Аптечка «Эгоист»": "Med_Pacific_HR_0_3_G",
+                "Аптечка «Спасатель»": "Med_Pacific_HR_20_G"}
+        for title, name in want.items():
+            ids = [t for l in pages[title]["links"] for t in l["type_ids"]]
+            self.assertEqual(ids, [by_name[name]], title)
+        self.assertEqual(self.links["by_type"][str(by_name["Med_Pacific_Heal_0_3_A"])],
+                         ["Корень Маниока"])
+        self.assertNotIn(str(by_name["Med_Battle_HR_4_7_P"]), self.links["by_type"])
+        mini = self.si[str(by_name["Med_Battle_HR_0_3_P"])]
+        self.assertEqual((mini["heal_cost"], mini["use_count"], mini["premium"], mini["g_cost"]),
+                         (7, 5, 1, 1))
+        egoist = self.si[str(by_name["Med_Pacific_HR_0_3_G"])]
+        self.assertEqual((egoist["heal_cost"], egoist["use_count"], egoist["premium"],
+                          egoist["g_cost"]), (0, 20, 0, 1))
+        # "Медецина 6" on the Стандарт page is read as Медицина (bit 2).
+        std = self.si[str(by_name["Med_Battle_HR_12_15_P"])]
+        self.assertEqual((std["need_skills_m"], std["need_skills"]), (4, [6]))
+
     def test_mods(self):
         bp = self.mods["blueprints"]
         self.assertGreaterEqual(len(bp), MIN_BLUEPRINTS)

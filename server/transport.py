@@ -54,6 +54,27 @@ with io.open(_PATH, encoding="utf-8") as _fh:
 MAX_DAYS = int(_DATA["max_days"])
 ICONS = {int(i) for i in _DATA["icons"]}
 TABLE = {int(k): v for k, v in _DATA["types"].items()}
+
+
+def _lay_original():
+    """The original's name and description of each vehicle, over ours.
+
+    A description the original has and we did not is simply added: si_frame
+    sends a description id only when there is a description to send, so the
+    frame follows the table without being told.
+    """
+    import orig_texts
+    for ttype, (name, desc) in orig_texts.transport().items():
+        rec = TABLE.get(ttype)
+        if rec is None:
+            continue
+        if name:
+            rec["name"] = name
+        if desc:
+            rec["desc"] = desc
+
+
+_lay_original()
 LESSORS = {int(k): [int(t) for t in v] for k, v in _DATA["lessors"].items()}
 DEFAULT_SET = [int(t) for t in _DATA["default_lessor"]]
 

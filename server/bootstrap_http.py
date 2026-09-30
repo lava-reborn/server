@@ -41,6 +41,7 @@ from urllib.parse import quote
 import accounts
 import names
 import items
+import map_labels
 import transport
 import world
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -340,12 +341,106 @@ ADMIN_PAGE = '''<!doctype html><html lang=ru><meta charset=utf-8>
  <button type=submit>Искать</button>
 </div></form></div>
 {results}
+<h2>Кланы</h2>
+{clans}
 <h2>Последние действия</h2>
 <table><tr><th>кто</th><th>что</th><th>итог</th></tr>{log}</table>
 <p class=dim style="margin-top:26px">Действия выполняет игровой сервер: он
 разбирает очередь раз в секунду. Игроку в игре изменения приходят сразу,
 остальным — при следующем входе.</p>
 </div></html>''' % ADMIN_STYLE
+
+# The clans: one row each on the main page, and a page of its own with the
+# members, the treasury's journal and the five orders the client has no
+# button for (clan_admin.py carries them out in the game process, as it does
+# every order here). Nothing on these pages writes a clan: each form queues
+# an admin_actions row of kind 'clan' and the game answers it in the log.
+ADMIN_CLAN_ROW = '''<tr>
+ <td><a href="/admin/clan?id={clan_id}"><b>{name}</b></a> <span class=dim>#{clan_id}</span></td>
+ <td>{head}</td><td class=num>{members}</td><td class=num>{afro}</td>
+ <td class=dim>{created}</td>
+</tr>'''
+
+ADMIN_CLAN_PAGE = '''<!doctype html><html lang=ru><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>LAVA Online — клан</title><style>%s</style>
+<div class=bar>
+ <h1>LAVA Online</h1>
+ <span class=dim>панель администратора · {who}</span>
+</div>
+<div class=w>
+<p><a href="/admin">← к панели</a></p>
+{note}
+{body}
+<h2>Действия с этим кланом</h2>
+<table><tr><th>кто</th><th>что</th><th>итог</th></tr>{log}</table>
+<p class=dim style="margin-top:26px">Каждая форма ставит действие в очередь,
+выполняет его игровой сервер (раз в секунду): членам клана в игре всё
+приходит сразу, остальным — при входе. Новое название члены клана и те, кто
+видит их метку, увидят только после обновления страницы (F5): клиент помнит
+название по id клана. Итог — в таблице выше, после обновления этой страницы.</p>
+</div></html>''' % ADMIN_STYLE
+
+ADMIN_CLAN_CARD = '''<h2>Клан</h2>
+<div class=card>
+<h3>{name} <span class=dim>· #{clan_id}</span></h3>
+<div class=dim>глава <b>{head}</b> · членов <span class=num>{members}</span> ·
+казна <span class=num>{afro}</span> афро · основан {created}</div>
+<form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=clan><input type=hidden name=op value=rename>
+ <input type=hidden name=clan value={clan_id}>
+ <label>Название</label>
+ <input type=text name=name value="{name}" maxlength=40 style="width:240px">
+ <button type=submit>Переименовать</button>
+</div></form>
+<form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=clan><input type=hidden name=op value=head>
+ <input type=hidden name=clan value={clan_id}>
+ <label>Глава</label>
+ <select name=char>{others}</select>
+ <button type=submit>Сделать главой</button>
+</div></form>
+<form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=clan><input type=hidden name=op value=treasury>
+ <input type=hidden name=clan value={clan_id}>
+ <label>Казна</label>
+ <input type=number name=afro value=0 title="афро: плюс — положить, минус — снять"> афро
+ <button type=submit>Поправить</button>
+</div></form>
+<form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=clan><input type=hidden name=op value=kick>
+ <input type=hidden name=clan value={clan_id}>
+ <label>Исключить</label>
+ <select name=char>{others}</select>
+ <button type=submit class=ghost>Исключить</button>
+</div></form>
+<form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=clan><input type=hidden name=op value=disband>
+ <input type=hidden name=clan value={clan_id}>
+ <label>Распустить</label>
+ казну — <select name=payout>{payees}</select>
+ <input type=text name=payout_name placeholder="или ник любого персонажа">
+ <label style="min-width:0;text-transform:none;letter-spacing:0">
+ <input type=checkbox name=confirm value=1> да, распустить</label>
+ <button type=submit class=warn>Распустить</button>
+</div></form>
+</div>
+<h2>Состав</h2>
+<table><tr><th>ник</th><th>должность</th><th>права</th><th>в клане с</th>
+<th>последний вход</th><th></th></tr>{roster}</table>
+<h2>Журнал казны</h2>
+<table><tr><th>когда</th><th>что</th><th>кто</th><th>ref</th><th>афро</th></tr>{ledger}</table>'''
+
+# What a rank is called here (accounts.clan_rank: ClanInterface.rankDetection
+# has no names; these are the panel's).
+CLAN_RANKS = {4: "глава", 2: "офицер", 1: "вербовщик", 0: "рядовой"}
+
+# What each queued clan order says on the page it came back to.
+CLAN_QUEUED = {"rename": "Переименование поставлено в очередь",
+               "head": "Смена главы поставлена в очередь",
+               "treasury": "Правка казны поставлена в очередь",
+               "kick": "Исключение поставлено в очередь",
+               "disband": "Роспуск поставлен в очередь"}
 
 # Built once: the table is loaded at import and never changes.
 TRANSPORT_OPTIONS = "".join(
@@ -399,7 +494,12 @@ class Handler(BaseHTTPRequestHandler):
         ctype = CTYPES.get(os.path.splitext(full)[1].lower(),
                            "application/octet-stream")
         with open(full, "rb") as fh:
-            self._send(fh.read(), ctype)
+            body = fh.read()
+        if rel.replace(os.sep, "/").lower() == "database/locations.xml":
+            # The names over the global map's cells, with the owner's edits
+            # laid on -- what the launcher does for every player (map_labels).
+            body, _changed = map_labels.apply(body)
+        self._send(body, ctype)
 
     def _texts(self, query, body):
         """Stand in for the missing res/database/texts.xml.
@@ -432,8 +532,64 @@ class Handler(BaseHTTPRequestHandler):
         if unknown:
             print("  HTTP строки мимо предзагрузки: %s" % unknown[:10],
                   flush=True)
-        rows = "".join("<s id='%d'>%s</s>" % (i, names.text(i)) for i in ids)
+        # Escaped as the whole-table document is: the texts carry <br>, <b>
+        # and ampersands, and one bare one makes the batch unparseable -- which
+        # the client reads as no strings at all.
+        rows = "".join("<s id='%d'>%s</s>" % (i, names._escape(names.text(i)))
+                       for i in ids)
         self._send_xml("<data>%s</data>" % rows)
+
+    # --- update channel --------------------------------------------------
+    #
+    # Why these live under /exe/ and not under /client/ or /res/: the front in
+    # production is not what deploy/Caddyfile.lava describes. That file is a
+    # dead copy -- an unknown path answers with an nginx page, not a Caddy one.
+    # The live front is the Agile Quest Caddy, and `path /exe/*` is the matcher
+    # that reaches this process: /exe/lavaclient/manifest already answered 404
+    # from here, in this process's own cp1251 text/plain, before either handler
+    # existed. Anything under /client/ would have been answered by nginx.
+    #
+    # /res/ is not an option either: SERVE_RES is off in production and the
+    # guard above returns 404 for everything beneath it, texts.xml included.
+
+    def _manifest(self):
+        """What the launcher must agree with before it lets anybody play.
+
+        Only the documents this server generates are listed. The player's own
+        res/ is not ours to hand out and never appears here.
+        """
+        blob = names.document_bytes()
+        doc = {
+            "version": 1,
+            "resources": [{
+                "name": "database/texts.xml",
+                "sha256": names.document_sha256(),
+                "size": len(blob),
+                # Carried so the launcher can reject a truncated download
+                # before hashing it, and so a human reading the manifest can
+                # see at a glance whether the table looks sane.
+                "rows": len(names.ALL),
+                "url": "/exe/lavaclient/texts.xml",
+            }],
+        }
+        self._send(json.dumps(doc, ensure_ascii=False),
+                   "application/json; charset=utf-8")
+
+    def _texts_blob(self):
+        """The string table, byte for byte what ?all=1 puts on the wire.
+
+        The digest goes in a header as well as in the manifest: a client that
+        already holds the manifest can then check what arrived without asking
+        for it a second time, and a proxy that re-encodes the body cannot make
+        the two disagree, because both come from the same bytes.
+        """
+        blob = names.document_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/xml; charset=utf-8")
+        self.send_header("Content-Length", str(len(blob)))
+        self.send_header("X-Lava-Sha256", names.document_sha256())
+        self.end_headers()
+        self.wfile.write(blob)
 
     def _page(self, message=""):
         store = accounts.Store()
@@ -535,6 +691,7 @@ class Handler(BaseHTTPRequestHandler):
             online, beat = store.online()
             online = [dict(r) for r in online]
             recent = [dict(r) for r in store.admin_recent(25)]
+            clan_rows = self._clan_rows(store)
         finally:
             store.close()
 
@@ -572,16 +729,124 @@ class Handler(BaseHTTPRequestHandler):
                     cars=TRANSPORT_OPTIONS)
                 for ch in found)
 
-        log_rows = "".join(
-            "<tr><td>%s</td><td>%s</td><td>%s</td></tr>"
-            % (escape(r["admin"]), escape(r["kind"]),
-               escape(r["result"] or "ждёт очереди"))
-            for r in recent) or "<tr><td colspan=3 class=dim>пусто</td></tr>"
+        log_rows = self._log_rows(recent)
+        clans_html = ("<table><tr><th>клан</th><th>глава</th><th>членов</th>"
+                      "<th>казна</th><th>основан</th></tr>" + clan_rows + "</table>"
+                      if clan_rows else "<p class=dim>Кланов пока нет.</p>")
 
         note_html = '<p class="msg ok">%s</p>' % escape(note) if note else ""
         self._send(ADMIN_PAGE.format(who=escape(who), note=note_html,
                                      online=live, query=escape(query),
-                                     results=results, log=log_rows),
+                                     results=results, clans=clans_html,
+                                     log=log_rows),
+                   "text/html; charset=utf-8")
+
+    @staticmethod
+    def _log_rows(recent):
+        """The queue's log as table rows: who, what -- a clan's order by its
+        op -- and what came of it."""
+        out = []
+        for r in recent:
+            what = r["kind"]
+            if what == "clan":
+                try:
+                    args = json.loads(r["args_json"] or "{}")
+                except ValueError:
+                    args = {}
+                what = "клан %s: %s" % (args.get("clan", "?"), args.get("op", "?"))
+            out.append("<tr><td>%s</td><td>%s</td><td>%s</td></tr>"
+                       % (escape(r["admin"]), escape(str(what)),
+                          escape(r["result"] or "ждёт очереди")))
+        return "".join(out) or "<tr><td colspan=3 class=dim>пусто</td></tr>"
+
+    @staticmethod
+    def _day(when):
+        return time.strftime("%Y-%m-%d", time.localtime(int(when))) if when else "—"
+
+    @staticmethod
+    def _minute(when):
+        return time.strftime("%Y-%m-%d %H:%M", time.localtime(int(when))) if when else "никогда"
+
+    def _clan_rows(self, store):
+        """Every clan, oldest first, as rows of the main page's table: one
+        read of all memberships for the counts, one of each head's name."""
+        members = {}
+        for clan_id, _perm in store.clan_members_all().values():
+            members[clan_id] = members.get(clan_id, 0) + 1
+        rows = []
+        for c in store.clan_all():
+            head = store.character(c["head"])
+            rows.append(ADMIN_CLAN_ROW.format(
+                clan_id=int(c["id"]), name=escape(c["name"]),
+                head=escape(head["name"]) if head is not None else "#%d" % c["head"],
+                members=members.get(int(c["id"]), 0), afro=int(c["afro"]),
+                created=self._day(c["created_at"])))
+        return "".join(rows)
+
+    def _admin_clan(self, who, clan_id, note=""):
+        """One clan's page: its card with the five orders, its members and
+        its treasury's journal, and what the queue did with the orders about
+        it. A clan that is no more (disbanded) keeps the last part."""
+        attr = {'"': "&quot;"}
+        store = accounts.Store()
+        try:
+            clan = store.clan(clan_id) if clan_id else None
+            roster = store.clan_roster(clan_id) if clan is not None else []
+            ledger = store.clan_ledger_rows(clan_id, 50) if clan is not None else []
+            online, _beat = store.online()
+            playing = {int(r["char_id"]) for r in online}
+            names = {}
+            for r in ledger:
+                if r["char_id"] and r["char_id"] not in names:
+                    row = store.character(r["char_id"])
+                    names[r["char_id"]] = row["name"] if row is not None else "#%d" % r["char_id"]
+            recent = []
+            for r in store.admin_recent(200):
+                if r["kind"] != "clan":
+                    continue
+                try:
+                    args = json.loads(r["args_json"] or "{}")
+                except ValueError:
+                    continue
+                if str(args.get("clan")) == str(clan_id):
+                    recent.append(dict(r))
+        finally:
+            store.close()
+        if clan is None:
+            body = ('<p class="msg err">Клана #%d нет: распущен или не было.</p>'
+                    % int(clan_id or 0))
+        else:
+            head_name = next((r["name"] for r in roster if int(r["char_id"]) == int(clan["head"])),
+                             "#%d" % clan["head"])
+            others = "".join('<option value="%d">%s</option>' % (int(r["char_id"]), escape(r["name"]))
+                             for r in roster if int(r["char_id"]) != int(clan["head"]))
+            payees = ('<option value="0">главе — %s</option>' % escape(head_name)) + others
+            rows = []
+            for r in roster:
+                perm = int(r["perm"])
+                rows.append(
+                    "<tr><td><a href=\"/admin?q=%s\"><b>%s</b></a></td><td>%s</td>"
+                    "<td>%s <span class=num>0x%04X</span></td><td class=dim>%s</td>"
+                    "<td class=dim>%s</td><td>%s</td></tr>"
+                    % (quote(r["name"]), escape(r["name"]), escape(r["post"] or ""),
+                       CLAN_RANKS.get(accounts.clan_rank(perm), "?"), perm,
+                       self._day(r["joined_at"]), self._minute(r["seen_at"]),
+                       "в игре" if int(r["char_id"]) in playing else ""))
+            led = "".join(
+                "<tr><td class=dim>%s</td><td>%s</td><td>%s</td><td class=num>%s</td>"
+                "<td class=num>%+d</td></tr>"
+                % (self._minute(r["at"]), escape(r["source"]),
+                   escape(names.get(r["char_id"], "—")), r["ref"] or "", int(r["afro"]))
+                for r in ledger) or "<tr><td colspan=5 class=dim>пусто</td></tr>"
+            body = ADMIN_CLAN_CARD.format(
+                clan_id=int(clan["id"]), name=escape(clan["name"], attr),
+                head=escape(head_name), members=len(roster), afro=int(clan["afro"]),
+                created=self._day(clan["created_at"]),
+                others=others or '<option value="0">— больше никого —</option>',
+                payees=payees, roster="".join(rows), ledger=led)
+        note_html = '<p class="msg ok">%s</p>' % escape(note) if note else ""
+        self._send(ADMIN_CLAN_PAGE.format(who=escape(who), note=note_html, body=body,
+                                          log=self._log_rows(recent)),
                    "text/html; charset=utf-8")
 
     def _admin_do(self, who, body):
@@ -603,6 +868,9 @@ class Handler(BaseHTTPRequestHandler):
         # Whatever was searched for stays searched for, so the page comes
         # back with the same player on it rather than empty.
         query = one("q")
+        if kind == "clan":
+            self._admin_clan_do(who, one, num)
+            return
         store = accounts.Store()
         try:
             if kind == "money":
@@ -641,6 +909,35 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             store.close()
         self._admin_panel(who, note, query)
+
+    def _admin_clan_do(self, who, one, num):
+        """Queue one clan order from the clan's page, and show that page
+        again. Only the shape is made here -- ids as numbers, the payee's
+        nick as it was typed -- every check is clan_admin.apply's, in the
+        game process, and its answer is what the log shows."""
+        op = one("op")
+        clan_id = num("clan")
+        args = {"op": op, "clan": clan_id}
+        if op == "rename":
+            args["name"] = one("name")
+        elif op in ("head", "kick"):
+            args["char"] = num("char")
+        elif op == "treasury":
+            args["afro"] = num("afro")
+        elif op == "disband":
+            if one("confirm") != "1":
+                self._admin_clan(who, clan_id, "Роспуск не поставлен: отметьте «да, распустить»")
+                return
+            args["payout"] = one("payout_name") or num("payout") or None
+        else:
+            self._admin_clan(who, clan_id, "Неизвестное действие")
+            return
+        store = accounts.Store()
+        try:
+            store.admin_push(who, "clan", **args)
+        finally:
+            store.close()
+        self._admin_clan(who, clan_id, CLAN_QUEUED[op])
 
     def _status(self):
         """What a healthcheck can ask without a game client.
@@ -686,7 +983,7 @@ class Handler(BaseHTTPRequestHandler):
         socket uses, leaves the parser with bytes it cannot read, and the
         client quietly ends up with no strings at all rather than an error.
         """
-        payload = ("﻿<?xml version='1.0'?>" + body).encode("utf-8")
+        payload = (names.PROLOGUE + body).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "text/xml; charset=utf-8")
         self.send_header("Content-Length", str(len(payload)))
@@ -711,6 +1008,12 @@ class Handler(BaseHTTPRequestHandler):
             # Ruffle issues the POST that was actually requested.
             self._send("data=%s:%s" % (GAME_HOST, GAME_PORT))
             return
+        if path.rstrip("/") == "/exe/lavaclient/manifest":
+            self._manifest()
+            return
+        if path.rstrip("/") == "/exe/lavaclient/texts.xml":
+            self._texts_blob()
+            return
         if path == "/register":
             self._register(body)
             return
@@ -726,6 +1029,12 @@ class Handler(BaseHTTPRequestHandler):
                 self._admin_gate()
             elif path == "/admin/do":
                 self._admin_do(who, body)
+            elif path == "/admin/clan":
+                try:
+                    clan_id = int(parse_qs(parts.query).get("id", ["0"])[0])
+                except ValueError:
+                    clan_id = 0
+                self._admin_clan(who, clan_id)
             else:
                 self._admin_panel(who, query=parse_qs(parts.query)
                                   .get("q", [""])[0])

@@ -35,14 +35,24 @@ import asyncio
 import logging
 import os
 import random
+import re
+import time
 from collections import namedtuple
 
+import bosses
+import events
 import inventory
 import items
 import mobs
+import names
+import orig_texts
+import production
 import progression
 import quests
 import rooms
+import sets
+import travel
+import trophies
 import world
 from protocol import BigUInt
 
@@ -51,16 +61,55 @@ log = logging.getLogger("lava")
 # StuffManager.SESSION_LOOT: the s_type of a bag on the ground.
 SESSION_LOOT = 0
 
-# Seconds after a shot or a strike during which chWorld is refused with 39
-# ("Вы не можете выйти из локации в режиме боя..."). Sent to the client in
-# the constants frame as leave_combat_timeout, so the message it shows
-# quotes the same number.
+# The exit timer, in seconds: the owner's «таймер», after which a player may
+# leave a location whatever is still after him, and before which he may not
+# (chWorld is refused with 39, "Вы не можете выйти из локации в режиме боя
+# в течение N сек..."; the walk-ins, the quest ways and /home wait). It is
+# the countdown the client itself shows -- "Выход возможен через N сек." --
+# and runs exactly as that one does (Fighter.in_combat): restarted by every
+# hit the player gives or takes, a faHit or caHit with him at either end
+# (Location.faHit/caHit -> LocationInterface.startExitTimer), and cancelled
+# when the room goes to peace (lch;ws=0 -> battleMode ->
+# deleteTimerLeaveLocation). Sent to the client in the constants frame as
+# leave_combat_timeout, which is what its countdown counts down from.
+#
+# The same length keeps a room at war after a blow between two players,
+# landed or not (RoomCombat.hostilities); a fight with creatures has no such
+# tail: it lasts while one of them is after somebody.
 LEAVE_COMBAT_TIMEOUT = int(os.environ.get("LAVA_LEAVE_COMBAT", "30"))
 # A dead mob lies for this long before lch;lostUser fades it and the bag
 # appears; then it comes back after RESPAWN_DELAY. The bag stays LOOT_LIFETIME.
 CORPSE_DELAY = 2.5
 RESPAWN_DELAY = float(os.environ.get("LAVA_RESPAWN", "45"))
-LOOT_LIFETIME = 120.0
+# How long a thing lies on the ground, in seconds: fifteen minutes from the
+# moment it was put down, and then it is gone -- the owner's rule of
+# 2026-09-28, «лут должен быть на локации 15 минут, даже если там никого
+# нет». Every kind alike: a creature's loot, what fell off a dead player, a
+# thing thrown down, a trophy. Nobody need be there: the clock runs in an
+# empty room as in a full one, whoever walks in meanwhile is shown the bag
+# (Fighter.entered), a pack's room hands its ground to its location's when
+# it goes (RoomCombat.hand_over), and a restart stops nothing either (the
+# ground table, restore_ground). Each thing keeps its own clock, so one put
+# into a bag already lying there neither shortens nor stretches the time of
+# what was in it before (RoomCombat.add_to_bag). The environment moves it
+# for a test that cannot wait a quarter of an hour (test_ground); nothing
+# that serves anybody sets it.
+LOOT_LIFETIME = float(os.environ.get("LAVA_LOOT_LIFETIME", str(15 * 60)))
+# Whose quests a corpse's quest rows of loot are rolled for (mobs.QUEST_TIER,
+# RoomCombat.quest_wants): everybody still here who harmed the mob, and the
+# one who struck the last blow -- so a friend's shot does not rob a player of
+# the letter his quest sends him for. False: the last blow's alone, the way a
+# kill counts towards a kill quest (Fighter.count_kill).
+QUEST_LOOT_FOR_ALL_WHO_HARMED = True
+# Whether a creature of the role "object" -- a box, a Tir target, a quarry
+# stone (world.STANDING_OBJECTS, data/mob_curves.json roles.object) -- pays
+# experience for the harm done to it. It never fights back and stands again
+# after RESPAWN_DELAY, so paying was a farm without risk: 32 of Стрельба a
+# level-5 stone at skill 4, every 45 seconds. False (the owner's plan,
+# 2026-09-28): it still dies, counts as a kill for a kill quest
+# (Fighter.count_kill) and rolls its loot, and teaches nothing. True pays
+# it at the role's xp_mult, as before.
+OBJECTS_PAY_XP = False
 # APManager.dt: the client adds aspd to the bar every 600 ms while ws=1, and
 # the server keeps the same clock so c_ap rarely has to correct anything.
 AP_TICK = 0.6
@@ -69,7 +118,8 @@ REGEN_PERIOD = 60.0
 # A bare-handed strike costs 5 AP (PersEquip.as:86, wiki).
 FIST_AP = 5
 # ErrorReport codes beyond inventory's, and the resurrection prices
-# RegenerationInterface shows (5 gold / 500 afro; free after 15 s).
+# RegenerationInterface checks (5 hundredths of an ounce / 500 afro; free
+# at any time).
 #
 # The gold figure stays as the window writes it. Unlike the training window,
 # which only prints its price, this one compares: it greys the button while
@@ -79,24 +129,40 @@ FIST_AP = 5
 # scaled in progression.SPEC_COST; the two windows simply disagree.)
 RES_NO_LEAVE = 39
 RES_TOO_FAR = progression.ERR_TOO_FAR
+# An attack on a player where that is not allowed. ErrorReport has no text
+# for 22, so the figure lowers its weapon (Location.fireFailed) and nothing
+# pops up; the reason goes to chat (Fighter.refuse_pvp).
+RES_NO_PVP = 22
 # The three buttons of the regeneration window, in its own numbering
 # (RegenerationInterface.RESURECT_FREE/GOLD/AFRO).
 RES_FREE, RES_GOLD, RES_AFRO = 0, 1, 2
 # GOLD_COST=5 is checked against attributes.gold, which is the same number
 # userInfo_Player sent: hundredths of an ounce, the whole part of which the
-# purse panel shows (MoneyPan.set value divides by 100). payAfro checks 500,
-# and at the gold_to_afro_rate of 100 the server's own constants frame
-# carries, the two buttons are one price in two currencies.
+# purse panel shows (MoneyPan.set value divides by 100): 0.05 G. payAfro
+# checks 500 afro, which at the gold_to_afro_rate the server's own constants
+# frame carries (progression.GOLD_TO_AFRO_RATE, 50 000: "G 1 = A 50000",
+# GoldToAfroInterface) is a hundredth of an ounce -- a fifth of the gold
+# button. Both stay as the client has them; only a hand-made
+# frame reaches the afro one (see resurrect()).
 RESURRECT_GOLD = 5
 RESURRECT_AFRO = 500
-# RegenerationInterface.timePause: the window counts fifteen seconds down and
-# then presses the free button itself, so free costs the wait (see resurrect).
-RESURRECT_WAIT = float(os.environ.get("LAVA_RESURRECT_WAIT", "15"))
-# What a free resurrection wakes up with, as a share of the maximum. Designed:
-# the client says nothing about how whole a body comes back.
-FREE_HP_SHARE = 0.25
+# What the free button ("Частичное восстановление") wakes up with, in per cent
+# of the maximum. The window prints it under the button, in the static text
+# of regenerationInterface in main.swf: "Я выкарабкаюсь сам ... 10% здоровья,
+# 10% выносливости" -- and 100% of both under "Полное восстановление".
+FREE_SHARE_PERCENT = 10
 # char_id of item rows lying in a bag on the ground: no character has id 0.
 LOOT_OWNER = 0
+# What a dead player loses, in per cent -- the owner's rules of 2026-09-25,
+# for every death, whoever or whatever did the killing («При любой смерти»):
+# each piece of clothing on the body falls with WEAR_DROP_CHANCE if it is
+# an afro thing («...с вероятностью 10%, если оно афро; если голд-предметы,
+# то они не падают»), and each thing in the backpack with BAG_DROP_CHANCE
+# («Каждая вещь с шансом 30%»). See death_losses. The environment moves them
+# for a test that has to know what falls (test_death_drops sets both to
+# 100); nothing that serves anybody sets either.
+WEAR_DROP_CHANCE = int(os.environ.get("LAVA_WEAR_DROP", "10"))
+BAG_DROP_CHANCE = int(os.environ.get("LAVA_BAG_DROP", "30"))
 
 # What the server still accepts from a client it knows to be dead. Two
 # families, and neither of them moves anything in the world:
@@ -111,6 +177,14 @@ LOOT_OWNER = 0
 #   side that only an answer reopens (PROTOCOL 7): a dropped ss_get leaves
 #   its ss_ack queue waiting for ever, and a dropped q_si wedges the journal.
 #
+#   and gg_info, the clan's questions, which change nothing and which the
+#   client asks by itself at the very moment a dead member logs in:
+#   Master.lenter enters LOCAL_STATE, ClanInspector.firstRequest sends
+#   gg_info;det=1 (and det=5) on that change of state, and only then does
+#   the resurrector put the client into DEAD_STATE. Refused, the roster was
+#   answered «Сервер не отвечает» (res 3) and never asked for again
+#   (ClanInspector.infoReceived) on that connection.
+#
 # Everything else is an action, and the client's own filter
 # (FilterManager.createDSFilter) never sends one while dead.
 DEAD_PASSES = frozenset((
@@ -118,7 +192,15 @@ DEAD_PASSES = frozenset((
     "resurrect",
     "getInfo", "rp_get_info", "q_list", "q_si", "q_di", "q_status",
     "ss_get", "ss_get_si", "ss_get_di", "ss_get_s_si", "e_get_si", "e_get_di",
+    "gg_info",
 ))
+
+# What an action refused by the dead filter is answered with, where it is
+# not RES_REFUSED (3). 3 is ErrorReport's «Сервер не отвечает», an alert over
+# the whole screen; the clan's own commands are refused with the silent 20
+# every clan refusal uses (clans.NOT_ALLOWED), whatever the server and the
+# client happen to think of the body at that moment.
+DEAD_REFUSAL = {"head": 20, "admit": 20, "apply": 20}
 
 # The specialisation each firearm class trains (PersAttributes.specMatrix,
 # CharInterface.showKrit): pistols 2, shotguns 3, assault 4, rifles 5,
@@ -144,22 +226,219 @@ def now():
     return asyncio.get_running_loop().time()
 
 
-def roll(chance):
+def roll(chance, rng=None):
     """The wiki's test: a number from 1 to 100, at or under the chance."""
-    return RNG.randint(1, 100) <= chance
+    return (RNG if rng is None else rng).randint(1, 100) <= chance
+
+
+# --- what a dead player loses -----------------------------------------------
+
+# The gold mark in a type's internal name, where the client's own table says
+# what the price does not: the _G_ of the LVL clothing
+# ("helm_Set_M_LVL_2_G_mod00"), _gold/_Gold on the guns and medicines
+# ("pistols_1_lvl_1_gold", "Salus_MK_1_Gold"), _g on the belts
+# ("belt_pistols_g"), G_ on the Ninth of May guns.
+_GOLD_NAME = re.compile(r"(?:^|_)(?:G|g|gold|Gold|GOLD)(?:_|$)")
+_GOLD = {}
+_ORIG_NAMES = None
+
+
+def _positive(rec, key):
+    v = rec.get(key)
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0
+
+
+def _price_written(type_id):
+    """Whether some table names this type's price -- the wiki's, a set's in
+    data/sets.json, one of the hand-made files, an admin's -- rather than the
+    designed frame guessing one (items.designed_info: 80 or 120 afro a tier,
+    for 28 000 types the wiki says nothing about)."""
+    for rec in (items.wiki().get(type_id), sets.item(type_id),
+                items.heal_manual().get(type_id), items.loot_manual().get(type_id),
+                items.coldarm_manual().get(type_id), items.ADMIN_OVERRIDES.get(type_id)):
+        if rec and (_positive(rec, "cost") or _positive(rec, "g_cost")):
+            return True
+    return False
+
+
+def gold_item(type_id):
+    """Whether a type is a gold thing -- one of the owner's «голд-предметы»,
+    which never fall off a dead player.
+
+    A thing's currency is its price: cost is what a stall asks in afro, g_cost
+    in hundredths of an ounce (items._common), and a type priced in gold
+    alone is sold for gold alone (Inventory.buy refuses the afro code for
+    it, and repair() restores it for its g_cost). That decides first. A type
+    with both prices -- the tickets, the upgrade blueprints, the 9 mm rounds
+    a newcomer is given -- is bought with afro and is an afro thing.
+
+    Then the game's own label: the original's name tag [G], which reaches
+    the player as "(G)" (orig_texts.item_name), is a gold copy whatever a
+    wiki column linked to it by its icon says. And where no table names a
+    price at all the designed frame's afro figure is a guess, so the gold
+    mark of the internal name decides (_GOLD_NAME): a "_G_" piece of
+    clothing is the gold copy of its [A] twin even though the frame prices
+    both at 80 afro. A written afro price is believed over the name: the
+    stun bolts "Ammo_stun_bolt_gold_10" are sold for afro in their article.
+    (The gold line's upgrade blueprints "bpg_damage_25_gold_lvl*", which
+    their articles price in both, are sold for gold alone since 2026-09-28,
+    items.GOLD_PRICE_ONLY, so the price makes them gold things.) So is the
+    Nubian valley boss's ingot, "New_Gold_Ingot_5" (4796): gold is what it
+    is made of, not what it was bought for. The owner's «голдовое оружие и
+    сэты не падают» is about gear bought for gold -- «это не лут» -- and the
+    ingot is loot, which falls («любой лут должен падать»); data/
+    loot_manual.json writes its afro price for that reason among others.
+    """
+    type_id = int(type_id)
+    cached = _GOLD.get(type_id)
+    if cached is None:
+        cached = _GOLD[type_id] = _gold_item(type_id)
+    return cached
+
+
+def _gold_item(type_id):
+    global _ORIG_NAMES
+    si = items.params_of(type_id) or {}
+    if _positive(si, "g_cost") and not _positive(si, "cost"):
+        return True
+    if _ORIG_NAMES is None:
+        _ORIG_NAMES = orig_texts.item_names()
+    if "(G)" in (_ORIG_NAMES.get(type_id) or ""):
+        return True
+    if _price_written(type_id):
+        return False
+    entry = items.catalogue().get(type_id)
+    return bool(entry and _GOLD_NAME.search(entry[1]))
 
 
 def drops_on_death(type_id):
-    """Whether the wiki marks this type as one that falls off a corpse.
+    """Whether a thing of this type may fall off a dead player at all; how
+    likely it is to, and how much of a stack, is death_losses'.
 
-    The articles' "Шанс выпадения при смерти" reached data/items_wiki.json as
-    drop_on_death, and it is a flag, not a percentage: of the 644 types whose
-    article tabulates it, 88 carry a 1. It is one of the wiki extras
-    items._overlay deliberately keeps off the wire, so it is read from the
-    raw table rather than from params_of.
+    Every thing may: the owner's rule is «Каждая вещь с шансом 30%». Kept
+    on the body whatever the roll:
+
+      * a gold thing (gold_item) -- «если голд-предметы, то они не падают»;
+      * a premium one (items.premium): out of the game, and priced in gold
+        anyway;
+      * a quest's own thing, the quest flag of its frame: it belongs to the
+        quest, as at the stall, in the post, at the auction and in a barter
+        (Inventory.sell, mail, auction, barter.tradable), and no mob drops
+        one either (mobs.droppable);
+      * a thing a quest hands over when it is taken -- a parcel, provisions
+        to carry (quests.kept_on_death, the owner's decision of 2026-09-26):
+        fallen into a bag on the ground, it would leave a delivery that
+        can never be handed in;
+      * a thing whose hand-made record in data/loot_manual.json says
+        drop_on_death 0. None does today: the mine's emeralds, which the
+        game itself said could not be lost («Падающие в шахте изумруды
+        нельзя потерять при гибели персонажа», texts.xml 59937), fall by
+        the owner's rule («любой лут должен падать в том числе из шахты»),
+        as the gold sand does and the valley boss's ingot of 5 ounces;
+      * the developers' own gun (items.ADMIN_GUN), which is a tester's and
+        nothing a player can buy: dropped by a tester killed in the open,
+        it would be one.
+
+    The wiki's own column, "Шанс выпадения при смерти", is not asked any
+    more. It reached data/items_wiki.json as a flag: 88 of the 1 270 records
+    say "да", 556 say "нет" and 626 do not tabulate it. Read as a rule, the
+    556 would keep most of what a player carries -- the quest parts, the
+    tickets, the blueprints, whole families of rounds and medicines -- out
+    of the owner's "each thing", so it stays a note of the old game's and
+    decides nothing here.
     """
-    rec = items.wiki().get(int(type_id))
-    return bool(rec and rec.get("drop_on_death"))
+    type_id = int(type_id)
+    rec = items.loot_manual().get(type_id)
+    if rec is not None and "drop_on_death" in rec and not rec["drop_on_death"]:
+        return False
+    si = items.params_of(type_id)
+    if si is None or si.get("quest") or type_id == items.ADMIN_GUN:
+        return False
+    if quests.kept_on_death(type_id):
+        return False
+    return not items.premium(type_id) and not gold_item(type_id)
+
+
+def pieces_of(row):
+    """How many of a thing a row is: a stack's size, one of anything else."""
+    return row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
+
+
+def bag_share(row, rng=None):
+    """How many pieces of one backpack row fall.
+
+    A single thing, and a stack of one or two, fall whole with
+    BAG_DROP_CHANCE. A stack of three and more loses a third of itself,
+    round(count / 3), every time, and keeps the rest under its own serial.
+
+    The owner's "each thing with a chance of 30%" counts pieces: two hundred
+    rounds are two hundred things, and thirty per cent of each is sixty on
+    average. A third is the whole-number share nearest that which a player
+    can be told in one word ("стопка теряет треть") -- 67 of 200, 7 of 20,
+    1 of 3 or 4 -- and it is the same share every time, so a stack is never
+    wiped out or spared whole by luck. It fails only where a third is less
+    than one piece: round(1/3) is 0, a stack that could never fall, and
+    round(2/3) is 1, a half. So one and two roll as a single thing does,
+    and go whole or not at all. count / 3 is never a half, so round() has
+    no tie to break.
+    """
+    n = pieces_of(row)
+    if n >= 3:
+        return int(round(n / 3.0))
+    return n if roll(BAG_DROP_CHANCE, rng) else 0
+
+
+def death_losses(rows, locked=(), rng=None):
+    """What falls off a dead player: (row, pieces) for each row that loses
+    anything, in the order of the rows given (Inventory.rows: by serial).
+
+    Only two places are looked in. The six clothing slots (inventory.
+    WEAR_SLOTS: head, shirt, armour, belt, trousers, boots -- everything the
+    client draws on the body and describes by ss_si_wear, the belt as much
+    as the rest) are the owner's «одежда»: each piece that may fall at all
+    does so with WEAR_DROP_CHANCE. The backpack (inventory.BAG) is his
+    «рюкзак»: each row there loses bag_share. The two hands hold weapons and
+    medicines, which are neither, and keep what they hold; the bank is not
+    on the body; what lies on the table in a barter (locked) is not in the
+    backpack either -- though Fighter.die ends the barter first, and it
+    comes back to it. One roll per row, rows in order, so a seeded RNG
+    gives the same losses for the same things.
+    """
+    out = []
+    for row in rows:
+        if row["uniq"] in locked or not drops_on_death(row["type_id"]):
+            continue
+        if row["slot"] in inventory.WEAR_SLOTS:
+            if roll(WEAR_DROP_CHANCE, rng):
+                out.append((row, pieces_of(row)))
+        elif row["slot"] == inventory.BAG:
+            n = bag_share(row, rng)
+            if n:
+                out.append((row, n))
+    return out
+
+
+# At most this many things are named in the line about what fell; the rest
+# are counted, so that a full backpack does not make a screenful of chat.
+LOST_NAMED = 8
+
+
+def lost_line(plan):
+    """The chat line that tells a dead player what fell off the body:
+    plan is Fighter.drop_on_death's, (row, None for whole or the pieces
+    split off). The names are the ones the client shows (names.ALL, the
+    class line after "$" cut off, as the client cuts it)."""
+    said = []
+    for row, part in plan:
+        name = names.text(items.STRING_ID_OFFSET + row["type_id"]).split("$")[0].strip()
+        n = pieces_of(row) if part is None else part
+        said.append("%s (%d шт.)" % (name, n) if row["root"] in items.HEAPABLE_ROOTS
+                    else name)
+    text = ", ".join(said[:LOST_NAMED])
+    if len(said) > LOST_NAMED:
+        text += " и ещё %d" % (len(said) - LOST_NAMED)
+    return ("При гибели выпало: %s. Всё это лежит в мешке там, где вы погибли."
+            % text)
 
 
 def parse_target(value):
@@ -200,15 +479,19 @@ def ranged_evade(ch):
 
 
 def melee_crit(ch, spec):
-    """Wiki: agility + melee * 2.5 + specialisation * 6."""
+    """Wiki: agility + melee * 2.5 + specialisation * 6, and the gear's crit
+    on top. The card shows no melee crit to agree with; a "Крит +N" on a
+    piece of clothing or a set is still a crit, whatever is in the hand."""
     return ch.attr(progression.AGILITY) + 2.5 * ch.skill_level(progression.MELEE) \
-        + 6 * spec_or_zero(ch, spec)
+        + 6 * spec_or_zero(ch, spec) + ch.bonus_cp
 
 
 def melee_crit_evade(ch):
-    """Wiki: (agility + perception) / 2 + melee / 4 + specialisation."""
+    """Wiki: (agility + perception) / 2 + melee / 4 + specialisation, and
+    the gear's anti-crit on top, as melee_crit takes its crit."""
     return (ch.attr(progression.AGILITY) + ch.attr(progression.PERCEPTION)) / 2.0 \
-        + ch.skill_level(progression.MELEE) / 4.0 + spec_or_zero(ch, SPEC_FIST)
+        + ch.skill_level(progression.MELEE) / 4.0 + spec_or_zero(ch, SPEC_FIST) \
+        + ch.bonus_ce
 
 
 def split_damage(dmg, armor, piercing, crit, sp_left):
@@ -242,12 +525,34 @@ def miss_at(rx, ry):
                 y=round(ry + RNG.uniform(-0.7, 0.7), 2))
 
 
+class _Sights(object):
+    """The ground as a bullet sees it where it flies over a counter."""
+
+    def __init__(self, loc):
+        self.width, self.height = loc.width, loc.height
+        self.obstacles = loc.obstacles - loc.shoot_over
+
+
+def shot_wall(loc, a, b):
+    """mobs.line_of_fire for a shot: the first obstacle between the hexes, or
+    None -- but in a range (world.SHOOT_OVER) the booth's counter is shot
+    over, so the targets beyond it can be hit at all. Everywhere else the
+    same answer as line_of_fire."""
+    wall = mobs.line_of_fire(loc, a, b)
+    if wall is None or not getattr(loc, "shoot_over", None):
+        return wall
+    return mobs.line_of_fire(_Sights(loc), a, b)
+
+
 # --- a bag on the ground --------------------------------------------------
 
 class LootBag:
     def __init__(self, cell, uniqs):
         self.cell = cell
         self.uniqs = list(uniqs)
+        # uniq -> the epoch second that thing goes (LOOT_LIFETIME after it
+        # was put down); expiry is the timer for the first of them.
+        self.until = {}
         self.expiry = None
 
 
@@ -260,22 +565,38 @@ class Fighter:
     def __init__(self, sess):
         self.sess = sess
         self.ap = 0
-        # loop time of the last shot or strike given or taken. This is what
-        # keeps the room at war (RoomCombat.hostilities), and nothing else:
-        # it says a fight happened here, not that anyone is after this player.
-        self.last_hostile = -1e9
         # loop time of the last blow exchanged with another player, either
-        # way round. Leaving is what this one governs -- see in_combat.
+        # way round, landed or not. A duel keeps the room at war for
+        # leave_combat_timeout after it (RoomCombat.hostilities); what holds
+        # the two of them in it is the exit timer below, which a blow that
+        # lands starts for both.
         self.last_pvp = -1e9
+        # loop time of the last hit this player gave or took -- a creature's
+        # or a player's, his on anything -- from which the exit timer runs
+        # (LEAVE_COMBAT_TIMEOUT, in_combat). Forgotten whenever the client
+        # forgets its countdown: the room going to peace, and a new location.
+        self.last_hit = -1e9
+        # Entity ids of the players this client has been told are its enemies
+        # here (lch;enemy, RoomCombat.mark_foe). The mark lives on the other's
+        # walker in the client, so it is good until either of them walks in
+        # afresh and the figure is built again.
+        self.foes = set()
         self.dead = False
-        # loop time of the death the character is still lying in, for the
-        # free resurrection's wait (RegenerationInterface.timePause)
-        self.died_at = -1e9
         self.aim = None         # TimerHandle: a burst waiting for fire_times
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
         self.loot = None        # cell of the bag the loot window is open on
+        # Things that ran out of that bag while its window was open, as
+        # (uniq, type_id, root) rows: the window still shows them, since
+        # nothing can tell it otherwise (RoomCombat.expire_bag), and a
+        # take-all moves them into the bag on the client (ss_upd 3).
+        self.ran_out = []
         self.regen_at = 0.0
+        # The amax the last lenter carried, or None before the first. The
+        # client's bar keeps that ceiling until the next lenter
+        # (APManager.setAP is called from Master.lenter and nowhere else),
+        # so the fight here keeps it too -- see ap_max.
+        self.amax_sent = None
 
     # --- plumbing ------------------------------------------------------------
     @property
@@ -317,7 +638,19 @@ class Fighter:
 
     @property
     def ap_max(self):
-        return self.character().ap_max
+        """The card's ОД and the bar's ceiling, gear included: what lenter
+        told the client (Character.ap_ceiling), not rp_info's bare ap_max.
+
+        The figure of the last lenter, not the live one. A set piece that
+        breaks or comes off in the middle of a location lowers ap_ceiling
+        at once, but the client's bar still fills to the old amax -- on its
+        own tick and on every edge of ws -- and a server that regenerated
+        and reset to the lower one would refuse, with res=11, the shots the
+        bar says are paid for. The new ceiling reaches both sides together,
+        with the next lenter."""
+        if self.amax_sent is not None:
+            return self.amax_sent
+        return self.character().ap_ceiling
 
     def vitals(self):
         return self.character().vitals()
@@ -332,6 +665,14 @@ class Fighter:
         v = ch.vitals()
         ch.hp = max(0, v["hcur"] - hdmg)
         ch.sp = max(0, v["scur"] - sdmg)
+        # Armour is what took the blow, so armour is what it costs. One piece
+        # per hit, chosen by the roll -- this is the only place every hit on a
+        # player passes through, from a mob, from a burst or from a blade.
+        if hdmg > 0 or sdmg > 0:
+            try:
+                self.sess.inv.wear_worn(1)
+            except Exception:                    # never let a bag fault stop a fight
+                log.exception("  ..    wearing armour failed")
         return ch.hp <= 0
 
     def dodge_melee(self):
@@ -345,12 +686,15 @@ class Fighter:
 
     def crit_evade_ranged(self):
         """The card's anti-crit for the weapon in hand (CharInterface.showKrit);
-        with no firearm, the pistol row, the one the card would show first."""
+        with no firearm, the pistol row, the one the card would show first --
+        but the card shows nothing then, so its set counted twice
+        (inventory.card_repeat) is left out, as melee leaves it out."""
         gun = self.primary()
-        wt = items.PISTOL
         if gun is not None and gun["root"] == items.FIRE_ARM:
             wt = (items.params_of(gun["type_id"]) or {}).get("weapon_type", items.PISTOL)
-        pair = progression.crit_chance(self.character(), wt)
+            pair = progression.crit_chance(self.character(), wt)
+        else:
+            pair = progression.crit_chance(self.character(), items.PISTOL, card=False)
         return pair[1] if pair else 0
 
     def armor(self):
@@ -375,6 +719,12 @@ class Fighter:
             return
         self.ap = self.ap_max
         self.regen_at = now() + REGEN_PERIOD
+        # Every figure here is new to this client, and neutral.
+        self.foes = set()
+        # And its exit countdown is not running: a new location is a new
+        # LocationInterface (SceneShifter.locationScene), which starts with
+        # the way out open until a hit here starts the count.
+        self.last_hit = -1e9
         rc.player_entered(self)
         # A full replacement of the list (EffectManager.e_list); empty is a
         # list too, and mobi_id=0 resolves to the gamer (PlayerRegister).
@@ -391,11 +741,26 @@ class Fighter:
         for other in rc.fighters():
             if other is not self and other.dead:
                 self.sess.send("lch", dead=other.eid)
+        # And the bags lying here, in one frame (Location.ss_loot takes a
+        # list of hexes). The ss_loot that drew each went to whoever stood
+        # here when it was put down, and a bag lies its LOOT_LIFETIME
+        # whoever is in the room: without this a player back for his own
+        # gear walked over it unseen. DisplayLocScene reads the Location's
+        # list when it is built, so this lands whether the scene is up yet
+        # or not.
+        cells = rc.ground_cells()
+        if cells:
+            self.sess.send("ss_loot", s_status=1, hex=cells)
 
     def left(self):
-        """Before Room.leave: whatever was in flight aims at nothing now."""
+        """Before Room.leave: whatever was in flight aims at nothing now,
+        and the exit timer and a duel stay with the room they ran in. A duel
+        whose last blow missed no longer holds anybody (in_combat), so the
+        one who walks out of it must not carry its war into the next room."""
         self.cancel_timers()
         self.loot = None
+        self.last_hit = -1e9
+        self.last_pvp = -1e9
 
     def moved(self, cells):
         """The player walked. The client drops its aim bar and autofire on
@@ -430,14 +795,8 @@ class Fighter:
         database. The client learns of it from persInfo;death, sent before
         the selection, and raises the regeneration window by itself the
         moment it is standing somewhere (Master.lenter/gmap).
-
-        The wait before a free resurrection starts afresh here rather than
-        surviving the logout: the window's own countdown starts when it
-        opens, a moment after this, so the server's is never the one that
-        refuses.
         """
         self.dead = bool(row is not None and row["death"])
-        self.died_at = now() if self.dead else -1e9
 
     def close(self):
         """Connection gone. Must not raise: Session.close runs this before
@@ -457,45 +816,78 @@ class Fighter:
         """The dead filter (FilterManager.createDSFilter): the client sends
         nothing but resurrect while dead, so an action that arrives anyway
         came from a modified one and is refused -- with an ack where one is
-        owed, so the queue stays in step. What still goes through, and why,
-        is DEAD_PASSES."""
+        owed, and an empty page for a search that waits on its own queue,
+        so every queue stays in step. What still goes through, and why, is
+        DEAD_PASSES."""
         if not self.dead or cmd in DEAD_PASSES:
             return False
         if wants_ack:
-            self.ack(inventory.RES_REFUSED)
+            self.ack(DEAD_REFUSAL.get(cmd, inventory.RES_REFUSED))
+        elif cmd == "ah_search":
+            # Its handler waits on a queue of its own, ah_sresult, and every
+            # later search of the session is answered through the same
+            # queue: one swallowed search hands each later page to a stale
+            # handler for good (auction.py). A server that thinks the player
+            # dead while the client does not is exactly the case this
+            # filter cannot rule out, so it answers with an empty page.
+            self.sess.send("ah_sresult", page=0, count=0, next=0)
         return True
 
-    def hunted(self):
-        """Whether any living creature here is currently after this player."""
-        rc = self.rc
-        if rc is None:
-            return False
-        return any(m.alive and m.target is self for m in rc.mobs.values())
+    def hit_exchanged(self, t=None):
+        """A hit with this player at one end has just gone out, a faHit or a
+        caHit: the client has restarted its exit countdown on it, and so
+        does the server (in_combat)."""
+        self.last_hit = now() if t is None else t
+
+    def exit_timer_left(self):
+        """Seconds the exit timer still runs, 0 once it has run out -- the
+        client's countdown to the second (LocationInterface.exitTimer): it
+        opens the way when leave_combat_timeout whole seconds have passed
+        since the last hit given or taken, and the server, which sent that
+        hit before the client could count from it, is never the later of
+        the two. Nothing runs off any room."""
+        if self.sess.on_map or self.sess.room is None:
+            return 0.0
+        return max(0.0, LEAVE_COMBAT_TIMEOUT - (now() - self.last_hit))
 
     def in_combat(self):
-        """Whether this player is barred from walking out.
+        """Whether this player is barred from walking out: while the exit
+        timer runs, and only then (the owner's rule, 2026-09-25).
 
-        The question is who is after you, not whether you fired. A shot that
-        nothing answered -- a miss at a mob that never woke, a creature killed
-        outright, a burst into the scenery -- leaves the wasteland as quiet as
-        it was, and standing in it for thirty seconds is a punishment for
-        nothing. What holds a player is a mob that has taken them as its
-        target, or a fight with another player: there leaving at will would
-        make every exchange end the moment it started going badly, so both
-        sides are held, the one who struck as much as the one who was struck.
+        The question is not who is after you. A creature that has taken you
+        as its target keeps you for as long as you stay (mobs.Mob.think),
+        and the room at war with it (RoomCombat.hostilities) -- but the way
+        out is yours once the timer has run out, the creature still at your
+        heels. Nor is it whether you fired: a shot that hit nothing -- a
+        miss, a burst into the scenery, a swing at bare ground -- starts no
+        countdown on the client, and none here. What starts it is a hit,
+        given or taken, by a creature or by a player; so a duel holds both
+        its sides, the one who struck as much as the one who was struck, and
+        every hit that lands keeps it running.
+
+        It is the client's own countdown, which is why it has to be exactly
+        that one. The exit window of a zone cell -- the one way out a player
+        still has while ws=1 greys the map button (LocationInterface.
+        battleMode) -- lights its buttons when that countdown ends
+        (ExitLocationInterface.exitEnabled), and the server answers the
+        chWorld they send by the same clock: refused while the window is
+        dark, never refused when it is lit.
 
         Asked and not answered, for a caller that has already acknowledged the
         command in hand (/home) and must not ack twice.
         """
-        if self.sess.on_map:
-            return False
-        if now() - self.last_pvp < LEAVE_COMBAT_TIMEOUT:
-            return True
-        return self.hunted()
+        return self.exit_timer_left() > 0
+
+    def acting(self):
+        """Whether a shot, a swing or a heal of this player's is still in
+        the air, waiting on its timer."""
+        return (self.aim is not None or self.strike is not None
+                or self.healing is not None)
 
     def refuse_leave(self):
-        """chWorld inside leave_combat_timeout of the last shot or strike:
-        Master.changeWorldAck words res=39 with that timeout."""
+        """chWorld while in_combat: Master.changeWorldAck words res=39 as
+        "leave_combat_timeout seconds after your last shot", the text the
+        client has; what is actually held is the exit timer's countdown."""
         if not self.in_combat():
             return False
         self.ack(RES_NO_LEAVE)
@@ -503,6 +895,50 @@ class Fighter:
 
     def c_ap(self):
         self.sess.send("c_ap", ap=int(self.ap))
+
+    def newbie_ground(self):
+        """Standing on the Nubian valley's ground (travel.newbie_ground):
+        the file the client reads here lets a player be attacked, and the
+        valley does not."""
+        sess = self.sess
+        return travel.newbie_ground(sess.loc, sess.gx, sess.gy)
+
+    def pvp_allowed(self):
+        """Whether another player may be shot or struck here: where the
+        location's file allows it, as the client reads it, and not on the
+        valley's ground whatever the file says."""
+        return bool(self.sess.loc.pvp) and not self.newbie_ground()
+
+    def refuse_pvp(self):
+        """A shot or a blow at another player where that is not allowed.
+
+        Where the location's own file says pvp="0" the client never sends
+        this (ItemActivator.fire/strike show "В этой локации Вы не можете
+        нападать на других игроков" instead), so it is a modified client's.
+        In the Nubian valley it is not: the client reads the desert template
+        or the pocket of rock, which say nothing or pvp="1", and lets the blow
+        go (travel.newbie_ground). Either way the answer is a code the client
+        has no text for -- res=3 would pop "Сервер не отвечает" over a rule
+        -- and the reason goes to chat: the client's own sentence, or for the
+        valley one that says where a fight is allowed."""
+        self.ack(RES_NO_PVP)
+        if self.newbie_ground():
+            self.sess.say("Нубийская долина — земля новичков: здесь нельзя "
+                          "нападать на других игроков. Для поединков есть "
+                          "Арена Нубии.")
+        else:
+            self.sess.say("В этой локации Вы не можете нападать на других "
+                          "игроков")
+
+    def refuse_no_ap(self):
+        """res=11, and then the pool as it stands here. The client let the
+        command through on its own bar (ItemActivator.canUse,
+        AutoCommandManager.canFire), so its bar is ahead of this pool --
+        steps and heals it charged by itself, a tick it counted early --
+        and a refusal alone would leave it there to let the next one
+        through as well. c_ap takes no handler, so the queue is untouched."""
+        self.ack(inventory.RES_NO_AP)
+        self.c_ap()
 
     # --- mobs as the client sees them ----------------------------------------
     def mob_info(self, npc_id):
@@ -597,8 +1033,26 @@ class Fighter:
             if target is None:
                 self.ack(inventory.RES_NOT_FOUND)
                 return
-            if target is self or (target.is_player and not sess.loc.pvp):
-                self.ack(inventory.RES_REFUSED)
+            if target is self:
+                # The client never aims at its own figure (ItemActivator:
+                # targetActionMap[Gamer] = null), so this is a modified one;
+                # res=3 would read "Сервер не отвечает", and 22 only lowers
+                # the weapon (RES_NO_PVP).
+                self.ack(RES_NO_PVP)
+                return
+            if target.is_player and not self.pvp_allowed():
+                self.refuse_pvp()
+                return
+            if target.is_player and row is not None and quests.lent(row["type_id"]):
+                # What a quest lends (quests.lent) is the quest's tool, not
+                # a weapon: the stonecutter's pick breaks a stone of the
+                # quarry in one strike (its article: 2250-2750) and the
+                # training guns are for the Tir's targets, and neither is
+                # turned on a player -- the quarry's pits are pvp="1".
+                # DESIGNED (2026-09-28). The same answer as a peaceful
+                # location's: the client lowers the weapon.
+                self.ack(RES_NO_PVP)
+                self.sess.say("Казённым инструментом на людей не нападают")
                 return
         else:
             if not (0 <= tid < sess.loc.width * sess.loc.height):
@@ -633,12 +1087,12 @@ class Fighter:
             return
         cost = si["fire_costs"][mode]
         if rc.room.ws and self.ap < cost:
-            self.ack(inventory.RES_NO_AP)
+            self.refuse_no_ap()
             return
         self.ack(inventory.RES_OK)
-        # Raising the gun is already hostile: the exit timer runs from here,
-        # and the room must not fall back to ws=0 while the aim bar runs.
-        self.last_hostile = now()
+        # Raising the gun is already hostile: the room goes to war here, and
+        # self.aim, set below before any tick can run, keeps it there while
+        # the aim bar runs (RoomCombat.hostilities).
         rc.set_ws(True)
         ch = self.character()
         wt = si.get("weapon_type", items.PISTOL)
@@ -675,15 +1129,27 @@ class Fighter:
         pool = target.hp if target is not None and not target.is_player else 0
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live)
         if row is not None:
-            self.store.update_item(uniq, ammo_count=row["ammo_count"] - live)
+            # A point of durability per round that left the barrel. The starter
+            # pistol holds 120 of them, a median firearm 500, so a gun is good
+            # for some fifteen magazines before it wants a gunsmith -- and the
+            # refusal when it reaches nothing is already written and waiting
+            # (res=16, at the top of fire()). A gun a quest lends does not
+            # wear: Берт's training pistol holds 120 and a level-0 cadet can
+            # spend more than that on one lesson's targets, and a gun broken
+            # halfway would lock the lesson until the next day (quests.lent).
+            wear = 0 if quests.lent(row["type_id"]) else live
+            self.store.update_item(uniq, ammo_count=row["ammo_count"] - live,
+                                   brk=max(0, row["brk"] - wear))
         if rc.room.ws:
             self.ap = max(0, self.ap - cost)
         self.c_ap()
         if row is not None:
             self.sess.inv.push_di(self.store.item(uniq))
-        if target is not None and not target.is_player and h > 0:
-            self.award_xp(weapon.skill, weapon.spec, min(h, pool) * target.stats.xp_mult,
-                          target.level)
+        if target is not None and not target.is_player:
+            # Health up to what the mob had, and the stamina the armour
+            # turned the rest into (burst never takes more than there is):
+            # both are harm done, see award_xp.
+            self.award_xp(weapon.skill, weapon.spec, min(h, pool) + s, target)
         rc.after_hostile(self, target)
         if killed:
             rc.kill(target, self)
@@ -710,12 +1176,14 @@ class Fighter:
             dmin = si.get("h_damage_min", 1) + strength
             dmax = si.get("h_damage_max", 1) + strength
         if rc.room.ws and self.ap < cost:
-            self.ack(inventory.RES_NO_AP)
+            self.refuse_no_ap()
             return
         self.ack(inventory.RES_OK)
-        self.last_hostile = now()
         rc.set_ws(True)
-        args = (target, hexcell, (max(1, dmin), max(1, dmax)), spec, cost)
+        # The blade is carried into strike_now so the swing can wear it:
+        # a fist has no uniq and wears nothing.
+        args = (target, hexcell, (max(1, dmin), max(1, dmax)), spec, cost,
+                row["uniq"] if row is not None else None)
         if delay:
             # The strike bar runs strike_time from the send to caHit/caMiss
             # (WeaponPan.strike); a fist has none and lands at once.
@@ -724,7 +1192,7 @@ class Fighter:
         else:
             self.strike_now(*args)
 
-    def strike_now(self, target, hexcell, dmg_range, spec, cost):
+    def strike_now(self, target, hexcell, dmg_range, spec, cost, uniq=None):
         self.strike = None
         rc = self.rc
         if rc is None or self.dead:
@@ -734,9 +1202,9 @@ class Fighter:
         loc = sess.loc
         aim_cell = target.cell if target is not None else hexcell
         killed = False
-        hit = (target is not None and target.present(rc)
-               and mobs.adjacent(sess.pos, target.cell, loc)
-               and roll(melee_hit_chance(ch, spec) - target.dodge_melee()))
+        reach = (target is not None and target.present(rc)
+                 and mobs.adjacent(sess.pos, target.cell, loc))
+        hit = reach and roll(melee_hit_chance(ch, spec) - target.dodge_melee())
         if hit:
             crit = roll(melee_crit(ch, spec) - target.crit_evade_melee())
             dmg = RNG.randint(dmg_range[0], dmg_range[1])
@@ -744,6 +1212,7 @@ class Fighter:
             pool = target.hp if not target.is_player else 0
             rc.room.broadcast(("caHit", dict(id=self.eid, target=target.eid,
                                              dmg=h, sdmg=s, crit=int(crit))))
+            rc.hit_landed(self, target)
             killed = target.apply_damage(h, s)
             rc.push_vitals(target)
         else:
@@ -753,10 +1222,25 @@ class Fighter:
         if rc.room.ws:
             self.ap = max(0, self.ap - cost)
         self.c_ap()
-        if hit and not target.is_player and h > 0:
-            self.award_xp(progression.MELEE, spec, min(h, pool) * target.stats.xp_mult,
-                          target.level)
-        rc.after_hostile(self, target)
+        # The swing costs the blade a point whether or not it landed: the
+        # edge meets something either way, and a miss that cost nothing would
+        # make flailing free.
+        if uniq is not None:
+            self.sess.inv.wear_uniq(uniq, 1)
+        if hit and not target.is_player:
+            # A blow that does not crit lands on stamina first, and a mob has
+            # as much of it as of health: counting the health alone left the
+            # first half of every knife fight training nothing. melee_split
+            # never takes more stamina than there is; health is capped here.
+            self.award_xp(progression.MELEE, spec, min(h, pool) + s, target)
+        # A swing at a player who was never within reach opens no duel. The
+        # client strikes only a neighbour (Gamer.strike: isSiblings), so this
+        # is one who stepped away while the blade was coming down -- or a
+        # modified client swinging from across the room, which would
+        # otherwise hold its mark there (res=39) for as long as it kept
+        # throwing a fist every half minute.
+        if reach or target is None or not target.is_player:
+            rc.after_hostile(self, target)
         if killed:
             rc.kill(target, self)
 
@@ -789,10 +1273,17 @@ class Fighter:
         if self.healing is not None:
             self.ack(inventory.RES_NOT_READY)
             return
+        if rc is not None and rc.room.ws and items.no_combat(row["type_id"]):
+            # "Нельзя использовать в бою", and with heal_cost 0 the AP check
+            # below would let it through every time. The client's quick heal
+            # offers it all the same (items.no_combat), so this is the one
+            # place that holds the line; one refusal, as any other.
+            self.ack(inventory.RES_REFUSED)
+            return
         si = items.params_of(row["type_id"]) or {}
         cost = si.get("heal_cost", 0)
         if rc is not None and rc.room.ws and self.ap < cost:
-            self.ack(inventory.RES_NO_AP)
+            self.refuse_no_ap()
             return
         self.ack(inventory.RES_OK)
         if rc is not None and rc.room.ws:
@@ -844,22 +1335,59 @@ class Fighter:
                 self.sess.push_stats(**changed)
 
     # --- experience ---------------------------------------------------------
-    def award_xp(self, skill, spec, dealt, mob_level):
-        """Wiki "Начисление опыта по мобу": (clamp(mob - player, -4, 4) + 4)
-        times the damage, floored; Character.gain_xp splits it between the
-        skill and the specialisation and carries the remainder. Damage is
-        the HP part, capped by what the mob had left, times the role's
-        share: that is how the curve's xp_pool (4 * hp) is what a kill at
-        equal level pays out, "пропорционально пулу моба". The client
-        prints "+N опыта" from the difference in the next rp_info, which is
-        pushed for the indexes that moved; a level-up moves constitution and
-        with it hp_max, which travels by usrUp."""
+    def award_xp(self, skill, spec, dealt, target):
+        """Experience for a blow or a burst that harmed a mob, by the owner's
+        rule (progression.mob_xp): a price by the mob's level, halved at the
+        trained skill's own level, quartered one below, nothing two below,
+        times the mob's xp_mult.
+
+        A kill is worth the price and no more, and a blow pays the part of
+        it that its harm is of the mob's health and stamina together -- a
+        blade lands on stamina first, and those blows have to train as well.
+        A bullet takes little stamina, so blows alone would pay a gun less
+        than a knife for the same kill; RoomCombat.settle_xp pays the rest
+        when the mob dies, to everyone who harmed it by their share. The
+        mob's ledger never lets one fighter be paid more than a whole kill.
+
+        Against the level of the skill being trained, not the best one: a
+        Стрельба 6 picking up a knife is a beginner with the blade, and the
+        level-1 dog has to teach the knife (test_combat pins it).
+        """
+        st = getattr(target, "stats", None)
+        if st is None or dealt <= 0:
+            return
+        pool = max(1, int(getattr(st, "hp_max", 1)) + int(getattr(st, "sp_max", 0)))
+        share = min(float(dealt), pool) / pool
+        ledger = getattr(target, "xp_ledger", None)
+        if ledger is not None:
+            row = ledger.setdefault(self, [0.0, 0.0, skill, spec])
+            row[0] += dealt
+            row[2], row[3] = skill, spec
+            share = min(share, max(0.0, 1.0 - row[1]))
+            row[1] += share
+        self.credit_xp(skill, spec, share, target)
+
+    def credit_xp(self, skill, spec, share, target):
+        """`share` of a kill of `target` into `skill`: the skill takes the
+        whole award and a learned specialisation the same on top (gain_xp
+        spec_on_top), so that opening one does not halve the pace the rule
+        is built around. The fraction a hit leaves over carries to the next.
+        The client prints "+N опыта" from the difference in the next
+        rp_info, pushed for the indexes that moved; a level-up moves
+        constitution and with it hp_max, which travels by usrUp. An object
+        pays nothing (OBJECTS_PAY_XP)."""
+        if share <= 0:
+            return
         ch = self.character()
-        xp = int((progression.level_gap(mob_level, ch.level) + 4) * dealt)
+        st = target.stats
+        if not OBJECTS_PAY_XP and getattr(st, "role", None) == "object":
+            return
+        xp = ch.carry_xp(skill, progression.mob_xp(
+            target.level, ch.skill_level(skill), share, getattr(st, "xp_mult", 1)))
         if xp <= 0:
             return
         old_level = ch.level
-        changed = ch.gain_xp(skill, xp, spec)
+        changed = ch.gain_xp(skill, xp, spec, spec_on_top=True)
         if any(changed.values()):
             self.sess.push_stats(**changed)
         if ch.level != old_level:
@@ -874,6 +1402,25 @@ class Fighter:
             self.sess.send(cmd, **params)
         self.character().save(self.store)
 
+    def pvp_kill(self, victim):
+        """Another player died by this one's hand: the trophy.
+
+        Skills and specialisations learn from creatures only (the wiki's
+        "Игромеханика": experience is paid when the harm was done to a mob),
+        and award_xp keeps to that. What a fight between people trains is the
+        card's other number, «Навык бойца» -- rep, whose ranks run from
+        Странник to Ассасин and whose rise the client announces by itself
+        («Навык бойца повышен на: N», SpecSkillMessages.increase_reputation)
+        when userInfo_Player brings a larger one. The kill itself pays none
+        of it any more. The owner's rule: «навык бойца качается, если убить
+        кого-то, получить с него трофей и сдать». So a killer at the
+        victim's level or below gets a trophy, always, in the bag the death
+        has just left on the victim's cell (die() put down what fell off
+        the body first), and the skill is paid when that trophy is
+        registered (trophies.Collection.register).
+        """
+        trophies.drop(self, victim, LOOT_OWNER, inventory.BAG)
+
     # --- death and resurrection ----------------------------------------------
     def die(self, killer):
         """hcur reached 0. lch;dead=<me> puts the client into DEAD_STATE and
@@ -883,11 +1430,16 @@ class Fighter:
         logout undoes is no death at all, and characters.death is what the
         next login is told about by persInfo;death (Session.send_account).
         """
+        # A barter ends with the life, and before anything falls off the
+        # body: what was on the table is the dead player's again, as much a
+        # thing that can fall as the rest of the backpack. getattr, because
+        # the suites fight with sessions of their own that have no barter.
+        barter = getattr(self.sess, "barter", None)
+        if barter is not None:
+            barter.died()
         self.dead = True
-        self.died_at = now()
         self.cancel_timers()
         self.loot = None
-        self.last_hostile = now()
         ch = self.character()
         ch.hp = 0
         ch.save(self.store)
@@ -904,62 +1456,92 @@ class Fighter:
         if rc is not None:
             for mob in rc.mobs.values():
                 if mob.target is self:
-                    rc.mob_reset(mob)
+                    rc.mob_release(mob)
         log.info("  ..    %s died%s", self.sess.nick,
                  "" if killer is None else " to %s" % killer.eid)
 
     def drop_on_death(self):
-        """What the corpse leaves lying on its cell.
+        """What the corpse leaves lying on its cell: death_losses decides,
+        the owner's rules for every death.
 
-        The wiki's "Шанс выпадения при смерти" (drops_on_death) decides
-        WHICH item can fall; the rest is DESIGNED, there being nothing else
-        in the client or the tables about it. One loose item at a time, from
-        the backpack only -- what is worn or held stays on the body -- into
-        the ordinary bag on the ground, the same one a mob's loot lands in,
-        so it is picked up through the loot session that already exists
-        (ss_create;s_type=0, ss_get;slot=24, ss_upd) and expires with it.
+        All of it goes into ONE bag on the cell of the death, the ordinary
+        one a mob's loot lands in, so the killer -- or anybody -- picks it up
+        through the loot session that already exists (ss_create;s_type=0,
+        ss_get;slot=24, ss_upd), and it expires with it (LOOT_LIFETIME).
 
-        The item leaves the client's bag by ss_obj_status;status=0, which is
-        how every other removal is reported (inventory.push_status).
+        Every move of the death is one transaction (Store.drop_items): a
+        thing that falls whole changes owner under its own serial, a stack
+        that loses a part keeps the rest under its serial and the part
+        becomes a row of its own. Then the client is told, the way it is
+        told of every other removal, since it takes nothing away by itself:
+        ss_obj_status;status=0 for a thing that left whole -- PersEquip.
+        ss_obj_status looks for the id in the bag, both hands and all six
+        clothing slots, and its removeItem runs checkFullSet, so the wearer's
+        own figure is redrawn there -- and ss_di_heap with the new size for a
+        stack that kept the rest (inventory.push_status, push_di). When
+        anything came off the body the gear is recounted (Inventory.
+        refresh_gear): the bonuses of the pieces and of their sets, pushed
+        to the victim and the bars to the room, and the figure to everybody
+        else in the room. A line in the chat says what fell.
         """
         rc = self.rc
         if rc is None or not self.sess.char_id:
             return
-        loose = [r for r in self.sess.inv.rows()
-                 if r["slot"] == inventory.BAG and drops_on_death(r["type_id"])]
-        if not loose:
+        inv = self.sess.inv
+        losses = death_losses(inv.rows(), inv.locked)
+        if not losses:
             return
-        row = RNG.choice(loose)
-        self.store.update_item(row["uniq"], char_id=LOOT_OWNER,
-                               slot=inventory.BAG)
-        self.sess.inv.push_status(row, 0)
-        rc.add_to_bag(self.cell, [row])
-        log.info("  ..    %s drops item %d (type %d) on cell %d",
-                 self.sess.nick, row["uniq"], row["type_id"], self.cell)
+        # None moves the row whole; a number splits that many pieces off.
+        plan = [(row, None if n >= pieces_of(row) else n) for row, n in losses]
+        ground = self.store.drop_items(self.sess.char_id, plan, LOOT_OWNER,
+                                       inventory.BAG)
+        if ground is None:
+            # A row was no longer as it was read a moment ago, and nothing
+            # at all was written: better nothing lost than half a death.
+            log.warning("  !!    %s died, but the things to drop changed under"
+                        " the write: nothing falls", self.sess.nick)
+            return
+        off_body = False
+        for row, part in plan:
+            if part is None:
+                inv.forget_reload(row["uniq"])
+                inv.push_status(row, 0)
+                off_body = off_body or row["slot"] in inventory.WEAR_SLOTS
+            else:
+                inv.push_di(dict(row, count=row["count"] - part))
+        rc.add_to_bag(self.cell, ground)
+        if off_body:
+            inv.refresh_gear()
+        self.sess.say(lost_line(plan))
+        log.info("  ..    %s drops %s on cell %d", self.sess.nick,
+                 ", ".join("%d%s (type %d)" % (row["uniq"], "" if part is None
+                                               else "/%d" % part, row["type_id"])
+                           for row, part in plan), self.cell)
 
     def resurrect(self, p):
-        """resurrect;res_type=0|1|2 -- the three buttons of the regeneration
-        window (gpui/RegenerationInterface.as), and what each one costs.
+        """resurrect;res_type=0|1|2 -- the buttons of the regeneration window
+        (gpui/RegenerationInterface.as), and what each one costs.
 
-        RESURECT_FREE=0 is not really a choice: timePause is 15 and
-        checkTimePause presses free() itself when the count reaches it
-        (:122-142), so the free button is what happens to anyone who waits.
-        The wait is therefore the price, and it is the one the server
-        charges: before RESURRECT_WAIT seconds have passed the answer is
-        non-zero, and RegenerationInterface.resurrect takes a failure by
-        restarting its countdown (:108-115) -- the window stays up, nothing
-        is shown anywhere, and the timer asks again for free when it runs
-        out. On top of the wait the body wakes up at FREE_HP_SHARE of its HP
-        with no stamina: DESIGNED, the client saying nothing about how whole
-        a corpse comes back.
+        RESURECT_FREE=0 is the button main.swf labels "Частичное
+        восстановление" (freeOfCharge_btn): "Я выкарабкаюсь сам", 10% of
+        health and 10% of stamina, "this option will be chosen automatically
+        in N s". It is enabled from the moment the window opens, and the
+        countdown only presses it for a player who does not; so it is taken
+        whenever it comes, and FREE_SHARE_PERCENT of both is what the body
+        wakes up with. A refusal here would not be silent: ErrorReport
+        listens to every cmdAck, so a 17 ("wait for the countdown") shows
+        "Объект не готов" over a button the window lets the player press,
+        and the press does nothing.
 
-        RESURECT_GOLD=1 costs GOLD_COST=5 and the button hides itself when
-        the purse is short of it (init/uiUpd, with a link to the top-up page
-        in its place); RESURECT_AFRO=2 costs the 500 payAfro checks for. At
-        the gold_to_afro_rate of 100 this server sends in its constants
-        frame, 5 gold and 500 afro are the same sum -- which is what those
-        two buttons are, one purchase in either purse. Both skip the wait
-        and give HP and stamina back whole.
+        RESURECT_GOLD=1 is "Полное восстановление" (paymentGold_btn, 100% of
+        both): it costs GOLD_COST=5 and hides itself when the purse is short
+        of it (init/uiUpd, with a link to the top-up page in its place).
+        RESURECT_AFRO=2 costs the 500 payAfro checks for; the class wires a
+        paymentAfro_btn, but the window in main.swf places none, so only a
+        hand-made frame sends it. The two are not one price: GOLD_COST is
+        five hundredths of an ounce (0.05 G), and at the gold_to_afro_rate
+        this server sends (progression.GOLD_TO_AFRO_RATE, 50 000) 500 afro
+        are 0.01 of an ounce. Both give HP and stamina back whole.
 
         Then home, always: the location registered with a resident
         (on_conv;op=0), or the starting cell when none was. resurrectAck
@@ -982,21 +1564,14 @@ class Fighter:
                 self.ack(inventory.RES_NO_MONEY)
                 return
             ch.add_money(afro=-RESURRECT_AFRO)
-        elif now() - self.died_at < RESURRECT_WAIT:
-            # Not yet. res=17 is "объект не готов", and nothing shows it:
-            # resurrectAck reads res alone and ErrorReport is not called.
-            self.ack(inventory.RES_NOT_READY)
-            return
         if res_type in (RES_GOLD, RES_AFRO):
             # None is how the Character spells "full" (progression.py).
             ch.hp = None
             ch.sp = None
         else:
-            ch.hp = max(1, int(ch.hp_max * FREE_HP_SHARE))
-            ch.sp = 0
+            ch.hp = max(1, ch.hp_max * FREE_SHARE_PERCENT // 100)
+            ch.sp = ch.sp_max * FREE_SHARE_PERCENT // 100
         self.dead = False
-        self.died_at = -1e9
-        self.last_hostile = -1e9
         # Resurrection puts the character at their home, well away from
         # whoever killed them; carrying the duel's timer across would lock
         # them out of the map on arrival.
@@ -1014,11 +1589,20 @@ class Fighter:
     # --- the loot window ------------------------------------------------------
     def open_loot(self, p):
         """ss_create;s_type=0;target=<cell>: Loot.createSession from a click
-        on a bag, after Gamer.gotoLoot walked next to it."""
+        on a bag, after Gamer.gotoLoot walked onto its cell -- or from
+        PersEquip.dropItem, a thing dragged out of the equipment window onto
+        the ground, which opens a session with no window on the player's own
+        cell, bag or no bag.
+
+        So the player's own cell opens with nothing on it too, and the first
+        thing dropped there puts the bag down (ss_upd). Refused, Loot.status
+        would stay false and every drop after it would wait in dropStack for
+        a session that never comes: nothing could be thrown away on empty
+        ground at all."""
         rc = self.rc
         cell = int(p.get("target", 0) or 0)
         bag = rc.loot.get(cell) if rc is not None else None
-        if bag is None:
+        if bag is None and (rc is None or cell != self.sess.pos):
             self.ack(inventory.RES_NOT_FOUND)
             return
         loc = self.sess.loc
@@ -1026,6 +1610,7 @@ class Fighter:
             self.ack(RES_TOO_FAR)
             return
         self.loot = cell
+        self.ran_out = []           # a new window, listed afresh (ss_get)
         self.ack(inventory.RES_OK)
 
     def session_items(self):
@@ -1051,8 +1636,13 @@ class Fighter:
             return True
         rc = self.rc
         bag = rc.loot.get(self.loot) if rc is not None else None
-        if bag is None:
-            self.loot = None
+        # A session on the player's own cell outlives its bag (close_bag):
+        # the window or the equipment's drop is still open on the client,
+        # and the next thing put down there puts a new bag down.
+        underfoot = rc is not None and self.loot == self.sess.pos
+        if bag is None and not (underfoot and code == 2):
+            if not underfoot:
+                self.loot = None
             self.ack(inventory.RES_NOT_FOUND)
             return True
         inv = self.sess.inv
@@ -1074,9 +1664,21 @@ class Fighter:
             if row is None:
                 self.ack(inventory.RES_NOT_FOUND)
                 return True
+            if quests.not_on_ground(row["type_id"]):
+                # A quest's parcel stays with whoever it was handed to
+                # (quests.START_OBJ_NOT_ON_GROUND). Before any bag is put
+                # down; on anything but 0 Loot.transferAck puts it back in
+                # the bag, and the session stays open for the next drop.
+                log.info("  ..    %s keeps %d: a quest hands it over",
+                         self.sess.nick, row["type_id"])
+                self.ack(inventory.RES_REFUSED)
+                return True
             self.store.update_item(row["uniq"], char_id=LOOT_OWNER, slot=inventory.BAG)
-            bag.uniqs.append(row["uniq"])
+            # The ack first, as for code 1; then the thing is in the bag --
+            # a new one drawn for the whole room -- with its own lifetime
+            # running and its place written down (add_to_bag).
             self.ack(inventory.RES_OK)
+            rc.add_to_bag(self.loot, [row])
         elif code == 3:
             rows = self.session_items()
             if inv.total_weight() + sum(inventory.weight_of(r) for r in rows) \
@@ -1085,6 +1687,15 @@ class Fighter:
                 self.ack(inventory.RES_OVERLOAD)
                 return True
             self.ack(inventory.RES_OK)
+            # On res=0 the client moves every item its window shows into
+            # the bag (Loot.allTranferAck) -- a thing that ran out while it
+            # was open too (ran_out). Right behind the ack that put it there,
+            # the frame of every other removal takes it out again (PersEquip.
+            # ss_obj_status finds it in the bag): nothing is left on the
+            # client that the server does not hold.
+            for row in self.ran_out:
+                inv.push_status(row, 0)
+            self.ran_out = []
             self.take(bag, rows)
         else:
             self.ack(inventory.RES_REFUSED)
@@ -1092,12 +1703,14 @@ class Fighter:
 
     def take(self, bag, rows):
         """Rows keep their serial and so their oid: the client already holds
-        the Item under it and only moves it between containers."""
+        the Item under it and only moves it between containers. Off the
+        ground table in the same transaction (Store.pick_up)."""
+        self.store.pick_up([row["uniq"] for row in rows], self.sess.char_id,
+                           inventory.BAG)
         for row in rows:
-            self.store.update_item(row["uniq"], char_id=self.sess.char_id,
-                                   slot=inventory.BAG)
             if row["uniq"] in bag.uniqs:
                 bag.uniqs.remove(row["uniq"])
+            bag.until.pop(row["uniq"], None)
         if not bag.uniqs:
             self.rc.close_bag(bag.cell)
 
@@ -1151,7 +1764,14 @@ class RoomCombat:
         self.store = store
         self.mobs = {eid: mobs.Mob(eid, npc.type_id, npc.cell)
                      for eid, npc in room.npcs.items() if npc.root == world.MOB}
+        # The ones that keep hours instead of the respawn timer (bosses.py):
+        # keep_hours brings them in and sends them away.
+        self.bosses = [m for m in self.mobs.values() if bosses.keeps_hours(m.type_id)]
         self.loot = {}          # cell -> LootBag
+        # The combat state of the room that took this one's ground over when
+        # a pack's room was taken away (hand_over): a corpse still fading
+        # here then drops its bag there.
+        self.heir = None
         self.timer = None
         self.ap_last = 0.0
 
@@ -1187,9 +1807,23 @@ class RoomCombat:
 
     # --- the clock -------------------------------------------------------------------
     def player_entered(self, fighter):
+        # The newcomer's figure is built afresh on every screen here
+        # (lch;newUser -> Location.addPlayer, a new LocWalker, relation
+        # "neutral"), so a mark it carried from an earlier visit is gone.
+        for f in self.fighters():
+            f.foes.discard(fighter.eid)
         if self.timer is None:
             self.ap_last = now()
             self._arm()
+        if getattr(self.room, "ambush", None) is not None and not fighter.dead:
+            # A pack met on the map (encounters.py) is after the one it
+            # waylaid from the moment he is in: the room at war (lch;ws=1,
+            # the battle track, the fight's bar) and every creature of it red
+            # on his screen (lch;enemy). That is what says «На Вас напали»;
+            # the loader's caption of those words never comes (encounters.py).
+            for mob in self.mobs.values():
+                if mob.alive and mob.target is None and mob.stats.can_attack:
+                    self.aggro(mob, fighter)
 
     def _arm(self):
         self.timer = asyncio.get_running_loop().call_later(AI_TICK, self._tick)
@@ -1207,12 +1841,16 @@ class RoomCombat:
             # next arrival finds it at peace (lcall;ws reads room.ws).
             self.room.ws = False
             for mob in self.mobs.values():
-                mob.target = None
+                if mob.target is not None:
+                    self.mob_release(mob)
                 if mob.aim is not None:
                     mob.aim.cancel()
                     mob.aim = None
 
     def _step(self):
+        # Before the brains, so a boss whose stay is over is gone before it
+        # thinks again.
+        self.keep_hours()
         t = now()
         fighters = self.fighters()
         if self.room.ws:
@@ -1227,14 +1865,13 @@ class RoomCombat:
             self.ap_last = t
         for mob in list(self.mobs.values()):
             mob.think(self, t)
-        if self.room.ws and not self.hostilities(t):
-            self.set_ws(False)
+        self.calm(t)
         for f in fighters:
             if t >= f.regen_at:
                 f.regen()
                 f.regen_at = t + REGEN_PERIOD
         for mob in self.mobs.values():
-            if mob.alive and mob.target is None and t >= mob.regen_at:
+            if mob.alive and mob.target is None and not mob.homing and t >= mob.regen_at:
                 mob.regen_at = t + REGEN_PERIOD
                 if mob.hp < mob.hp_max or mob.sp < mob.sp_max:
                     mob.hp = min(mob.hp_max, mob.hp + mob.level + 1)
@@ -1242,11 +1879,44 @@ class RoomCombat:
                     self.push_vitals(mob)
 
     def hostilities(self, t):
-        """Whether the room still counts as at war: a mob with a target, or
-        a player within leave_combat_timeout of a shot or strike."""
-        if any(m.alive and m.target is not None for m in self.mobs.values()):
-            return True
-        return any(f.last_hostile + LEAVE_COMBAT_TIMEOUT > t for f in self.fighters())
+        """Whether the room is still at war.
+
+        A creature after somebody here, a duel between players inside
+        leave_combat_timeout, or a shot or swing still in the air -- anyone's,
+        so that the bar a burst was charged on does not reset under it. That
+        is all. The room used to stay at war for leave_combat_timeout after
+        anybody's last shot or strike as well, and ws is not a detail the
+        client shrugs off: while it is 1, LocationInterface.battleMode greys
+        the exit button and toGlobal refuses, so a player who had killed the
+        only creature that was after him -- or swung at nothing -- stood in a
+        finished fight unable to leave for half a minute, however freely the
+        server would have answered a chWorld (Fighter.in_combat).
+
+        A creature after somebody keeps it at war for as long as it keeps
+        its target, which is until he leaves or dies (mobs.Mob.think). The
+        player is not shut in by that: ws=1 greys the map button, but the
+        exit window of a zone cell opens by the exit timer alone.
+        """
+        for mob in self.mobs.values():
+            if mob.alive and (mob.target is not None or mob.aim is not None):
+                return True
+        for f in self.fighters():
+            if f.aim is not None or f.strike is not None:
+                return True
+            if t - f.last_pvp < LEAVE_COMBAT_TIMEOUT:
+                return True
+        return False
+
+    def calm(self, t=None):
+        """Peace, the moment there is nothing left to be at war over. Asked
+        on every tick and straight after every death: the kill of the last
+        creature that was after anybody must not leave the room at war for
+        the rest of a tick either, because lch;ws=0 is what lights the
+        client's exit button again (LocationInterface.battleMode) and
+        cancels the countdown its faHit/caHit started
+        (deleteTimerLeaveLocation)."""
+        if self.room.ws and not self.hostilities(now() if t is None else t):
+            self.set_ws(False)
 
     def set_ws(self, on):
         """lch;ws to everyone here. The client resets its bar to maxAP on
@@ -1260,25 +1930,51 @@ class RoomCombat:
         self.ap_last = now()
         for f in self.fighters():
             f.ap = f.ap_max
+            if not on:
+                # Peace cancels the client's exit countdown (battleMode ->
+                # deleteTimerLeaveLocation), and the next war does not bring
+                # it back: the server's timer goes with it.
+                f.last_hit = -1e9
         for mob in self.mobs.values():
             mob.ap = mob.ap_max
 
     def after_hostile(self, attacker, target):
-        """Bookkeeping after any shot or swing: the exit timers of the
-        players involved, and a mob that was attacked turns on its attacker."""
+        """Bookkeeping after any shot or swing: the duel timer of two players
+        who exchanged it, and a mob that was attacked turns on its attacker.
+        Nothing else is remembered: a shot at nobody leaves nobody after
+        anyone, and the room returns to peace on its next tick."""
         t = now()
-        if attacker.is_player:
-            attacker.last_hostile = t
         if target is None:
             return
         if target.is_player:
-            target.last_hostile = t
             if attacker.is_player:
                 # Both ends of a duel are held for the same timeout: the one
                 # who opened it cannot walk out of the answer.
                 attacker.last_pvp = target.last_pvp = t
-        elif target.alive and attacker.is_player and target.target is not attacker:
+                self.mark_foe(target, attacker)
+        elif (target.alive and attacker.is_player and target.stats.can_attack
+              and target.target is not attacker):
+            # Only what can fight back turns on its attacker. A box or a heap
+            # of ore that took its shooter as a target would hold the room at
+            # war over nothing -- and, standing next to him, "strike" him for
+            # 0 (think() attacks whatever is in reach), which the client's
+            # AUTO_SHOT answers with another shot at the box, for ever.
             self.aggro(target, attacker, t)
+
+    def mark_foe(self, fighter, foe):
+        """A player was shot at or swung at by another: the one attacked is
+        told who by, the frame a mob's aggro sends. lch;enemy is not a mob's
+        frame (Location.setEnemy takes any id in the room): the attacker's
+        name and minimap mark turn red on the victim's screen
+        (DisplayLocScene.enemy, DisplayMM.enemy), as a hostile clan's do
+        (CharInfo.checkColor, standing -1). Once per figure: a duel is many
+        blows, and the mark stays on the walker until it is built again
+        (Fighter.foes). The attacker is marked on the other side the moment
+        the victim answers, by the same rule."""
+        if foe.eid in fighter.foes:
+            return
+        fighter.foes.add(foe.eid)
+        fighter.sess.send("lch", enemy=foe.eid)
 
     def aggro(self, mob, fighter, t=None):
         """A mob picks a player: the room goes to war and the player's client
@@ -1299,9 +1995,14 @@ class RoomCombat:
         loc = self.room.loc
         blocked = {m.cell for m in self.mobs.values() if m.alive and m is not mob}
         blocked |= {s.pos for s in self.room.players}
-        path = mobs.find_path(loc, mob.cell, goal, blocked)
+        # Where it is going, for a goal beyond the search's reach: the
+        # target's cell while it chases, its spawn on the way home.
+        toward = mob.target.cell if mob.target is not None else mob.home
+        path = mobs.find_path(loc, mob.cell, goal, blocked, toward=toward)
         if not path or len(path) < 2:
-            mob.busy_until = t + 1.0
+            # Nothing nearer to step to: it waits and looks again, holding
+            # on to its target all the same (Mob.think).
+            mob.busy_until = t + mobs.STUCK_WAIT
             return
         leg = path[:mobs.LEG + 1]
         self.room.broadcast(("userMove", dict(id=mob.eid, path=leg)))
@@ -1311,10 +2012,18 @@ class RoomCombat:
             self.room.npcs[mob.eid] = npc._replace(cell=leg[-1])
         mob.busy_until = t + mobs.HEX_MS / 1000.0 * (len(leg) - 1) + 0.1
 
-    def mob_reset(self, mob):
-        """The target is gone or out of reach: forget it and recover; the
-        walk home follows on the next ticks."""
+    def mob_release(self, mob):
+        """The target has left the room, died or dropped its socket: forget
+        it. Not whole again on the spot -- the walk home follows on the next
+        ticks, and it heals when it gets there (mob_recover). Healed where it
+        let go, a creature whose target was still in reach took him again a
+        tick later, whole every time."""
         mob.target = None
+        mob.homing = True
+
+    def mob_recover(self, mob):
+        """Home again after a chase: whole, and the bar over its head shows it."""
+        mob.homing = False
         if mob.hp < mob.hp_max or mob.sp < mob.sp_max:
             mob.hp, mob.sp = mob.hp_max, mob.sp_max
             self.push_vitals(mob)
@@ -1360,6 +2069,7 @@ class RoomCombat:
             h, s = melee_split(dmg, crit, target.sp_now())
             self.room.broadcast(("caHit", dict(id=mob.eid, target=target.eid,
                                                dmg=h, sdmg=s, crit=int(crit))))
+            self.hit_landed(mob, target)
             killed = target.apply_damage(h, s)
             self.push_vitals(target)
         else:
@@ -1382,7 +2092,7 @@ class RoomCombat:
         aim = target.cell if target is not None else hexcell
         if aim is None or not (0 <= aim < width * loc.height):
             aim = shooter.cell
-        wall = mobs.line_of_fire(loc, shooter.cell, aim)
+        wall = shot_wall(loc, shooter.cell, aim)
         dist = mobs.hex_distance(shooter.cell, aim, width)
         tx, ty = mobs.real(aim, width)
         total_h = total_s = hits = 0
@@ -1415,14 +2125,28 @@ class RoomCombat:
             self.room.broadcast(frame)
         killed = False
         if target is not None and hits:
+            self.hit_landed(shooter, target)
             killed = target.apply_damage(total_h, total_s)
             self.push_vitals(target)
         return total_h, total_s, hits, killed
+
+    def hit_landed(self, attacker, target):
+        """A faHit or a caHit has just gone out: the exit timer restarts for
+        each player at either end of it, as the client's countdown does
+        (Location.faHit/caHit -> startExitTimer)."""
+        t = now()
+        for side in (attacker, target):
+            if side is not None and side.is_player:
+                side.hit_exchanged(t)
 
     # --- death, corpse, bag, respawn ----------------------------------------------------
     def kill(self, victim, killer):
         if victim.is_player:
             victim.die(killer)
+            if killer is not None and killer.is_player and killer is not victim:
+                killer.pvp_kill(victim)
+            # die() has let go every creature that was after the dead.
+            self.calm()
             return
         mob = victim
         mob.alive = False
@@ -1434,7 +2158,14 @@ class RoomCombat:
         # focus; the corpse stays until lostUser (DisplayLocScene.dead).
         self.room.broadcast(("lch", dict(dead=mob.eid)))
         if killer is not None and killer.is_player:
+            # An ore rock teaches Промышленность (production.mined_by);
+            # count_kill saves the character.
+            production.mined_by(killer, mob)
             killer.count_kill(mob.type_id)
+        # Before the ledger is settled and emptied: who brought it down is
+        # who its quest rows of loot are rolled for (quest_wants).
+        mob.quest_wants = self.quest_wants(mob, killer)
+        self.settle_xp(mob)
         # Out of the room's inhabitants until it respawns, so an arrival in
         # the meantime is not handed a corpse as a newUser.
         self.room.npcs.pop(mob.eid, None)
@@ -1442,40 +2173,177 @@ class RoomCombat:
         asyncio.get_running_loop().call_later(CORPSE_DELAY, self.corpse_gone, mob, witnesses)
         log.info("  ..    mob %d (%s) killed by %s", mob.eid, mob.stats.name,
                  "nobody" if killer is None else killer.eid)
+        # If it was the last one after anybody here, the fight is over now.
+        self.calm()
+
+    def settle_xp(self, mob):
+        """The rest of the kill's price, to everyone who harmed the mob and is
+        still here, by their share of all the harm it took. Blows paid as they
+        landed against health and stamina together; a gun takes little
+        stamina, so its blows fall short of the price, and this closes the
+        gap, whichever weapon did the work."""
+        ledger, mob.xp_ledger = mob.xp_ledger, {}
+        total = sum(row[0] for row in ledger.values())
+        if total <= 0:
+            return
+        for fighter, (harm, paid, skill, spec) in ledger.items():
+            if getattr(fighter, "sess", None) not in self.room.players:
+                continue
+            owed = harm / total - paid
+            if owed > 1e-9:
+                fighter.credit_xp(skill, spec, owed, mob)
+
+    def quest_wants(self, mob, killer):
+        """The things a quest still asks of those who brought the mob down
+        -- everybody here who harmed it (its xp ledger; QUEST_LOOT_FOR_ALL_
+        WHO_HARMED) and whoever struck the last blow -- for which it has a
+        quest row of loot (mobs.
+        QUEST_TIER): the courier's letter is in his bag for a player sent to
+        intercept him, and for nobody else. Everybody's wants together, since
+        the bag lies on the ground for whoever picks it up; each against his
+        own bag (quests.wanted_things), so once one has enough it stops.
+        Empty for a creature with no quest rows, and nothing is asked then."""
+        if not mobs.quest_table(mob.type_id):
+            return frozenset()
+        fighters = [f for f in mob.xp_ledger
+                    if getattr(f, "sess", None) in self.room.players] \
+            if QUEST_LOOT_FOR_ALL_WHO_HARMED else []
+        if killer is not None and killer.is_player and killer not in fighters:
+            fighters.append(killer)
+        out = set()
+        for f in fighters:
+            sess = f.sess
+            if sess.char_id:
+                out |= quests.wanted_things(self.store, sess.char_id,
+                                            sess.inv.bag_pieces())
+        return frozenset(out)
 
     def corpse_gone(self, mob, witnesses):
         """The figure fades (only for those who saw it: a lostUser about an
         id the client never met logs an event with no name), the bag drops
-        where it fell, and the respawn clock starts."""
+        where it fell, and the respawn clock starts -- for a boss, the clock
+        on the wall: it is back at its next hour and not before
+        (keep_hours)."""
         for sess in witnesses:
             if sess in self.room.players:
                 sess.send("lch", lostUser=mob.eid)
         self.add_to_bag(mob.cell, self.drop_loot(mob))
-        asyncio.get_running_loop().call_later(RESPAWN_DELAY, self.respawn, mob)
+        if bosses.keeps_hours(mob.type_id):
+            mob.away = True
+        elif getattr(self.room, "ambush", None) is not None:
+            # A pack met on the map (encounters.py) is met once: nothing of
+            # it comes back.
+            mob.away = True
+        else:
+            asyncio.get_running_loop().call_later(RESPAWN_DELAY, self.respawn, mob)
 
-    def add_to_bag(self, cell, rows):
+    def add_to_bag(self, cell, rows, until=None):
         """Put item rows into the bag on a cell, opening one where there is
-        none. ss_loot;s_status=1 is what draws it (Location.ss_loot), and
-        the lifetime restarts with every addition. Shared by a mob's loot
-        and by what a player drops where they died."""
+        none. ss_loot;s_status=1 is what draws it (Location.ss_loot). Shared
+        by a mob's loot, what a player drops where they died, a thing thrown
+        down and a trophy.
+
+        Each thing lies LOOT_LIFETIME from now, on its own clock (LootBag.
+        until): one added to a bag already lying there neither shortens nor
+        stretches the time of what was in it before. Where it lies and until
+        when is written down (Store.lay_down), so that a restart puts it
+        back. until, {uniq: epoch second}, is for things written down
+        already with their time running -- put back after a restart
+        (restore_ground), handed over from a pack's room (hand_over) -- and
+        then nothing is written."""
         if not rows:
             return
+        if self.heir is not None:
+            self.heir.add_to_bag(cell, rows, until)
+            return
+        if until is None:
+            t = time.time() + LOOT_LIFETIME
+            until = {r["uniq"]: t for r in rows}
+            self.store.lay_down(until, self.place, cell)
         bag = self.loot.get(cell)
         if bag is None:
-            bag = self.loot[cell] = LootBag(cell, [r["uniq"] for r in rows])
+            bag = self.loot[cell] = LootBag(cell, [])
             self.room.broadcast(("ss_loot", dict(s_status=1, hex=[cell])))
-        else:
-            bag.uniqs += [r["uniq"] for r in rows]
+        for r in rows:
+            if r["uniq"] not in bag.uniqs:
+                bag.uniqs.append(r["uniq"])
+            bag.until[r["uniq"]] = until[r["uniq"]]
+        self.arm_bag(bag)
+
+    def arm_bag(self, bag):
+        """The bag's timer, set for the first of its things to run out.
+
+        The deadlines are the wall clock's -- they outlive a restart (the
+        ground table) -- and the loop's timer counts on its own clock, which
+        never jumps. The two part whenever the wall clock is set: WSL steps
+        it forward by most of a second every half minute or so, and a timer
+        that slept the whole difference in one go came as late as all the
+        steps it slept through, some twenty seconds on a quarter of an hour.
+        So it never sleeps more than half of what is left, and expire_bag,
+        finding nothing due yet, sets it again from the wall clock as it
+        then reads; only the last second is slept in one piece. About ten
+        wakes to a bag's fifteen minutes, and late by one step of the clock
+        at most. Nothing goes early whatever the clock does: expire_bag
+        takes only what the wall clock says is due."""
         if bag.expiry is not None:
             bag.expiry.cancel()
+        first = min(bag.until.get(u, 0.0) for u in bag.uniqs)
+        left = first - time.time()
         bag.expiry = asyncio.get_running_loop().call_later(
-            LOOT_LIFETIME, self.expire_bag, cell)
+            max(0.0, min(left, max(left / 2.0, 1.0))), self.expire_bag, bag.cell)
+
+    @property
+    def place(self):
+        """Where this room's ground is written down as lying (the ground
+        table): its key (rooms.Room.key) as (loc, gx, gy) for a scene split
+        by cell, and (loc, None, None) for a place that is one room -- a
+        pack's room (encounters.py) too, whose ground is its location's own
+        once the pack's room is gone (hand_over)."""
+        key = getattr(self.room, "key", None)
+        if isinstance(key, tuple) and len(key) == 3 and all(isinstance(k, int) for k in key):
+            return key
+        return (self.room.loc.id, None, None)
+
+    def ground_cells(self):
+        """The hexes a bag lies on here, for a newcomer (Fighter.entered)."""
+        return sorted(self.loot)
+
+    def hand_over(self, room):
+        """Every bag of this room's ground onto the same cell of another
+        room's, each thing with the time it has left. A pack's room goes
+        with the last one out (encounters.Encounters.left), and what lay in
+        it -- the pack's loot, a dead man's gear -- lies on in the room of
+        its location, the cell's wasteland whoever walks in next enters;
+        the ground table has had it there all along (place). Whatever this
+        room still puts down -- a corpse that has not yet faded -- goes
+        there too (heir)."""
+        heir = room_combat(room, self.store)
+        self.heir = heir
+        for cell, bag in list(self.loot.items()):
+            if bag.expiry is not None:
+                bag.expiry.cancel()
+            heir.add_to_bag(cell, [dict(uniq=u) for u in bag.uniqs], dict(bag.until))
+        self.loot = {}
 
     def drop_loot(self, mob):
         """Item rows on the ground, owned by nobody, made through the store
         so they carry real serials the client can keep after picking up."""
         rows = []
-        for type_id, count in mobs.loot_for(mob.stats, RNG):
+        thing = mob.stats.role == "object"
+        # What a timed event puts on top, by place (events.loot): a
+        # prisoner's red armband in the uprising. An ore rock leaves its ore
+        # beside the loot (production.yield_of).
+        for type_id, count in mobs.loot_for(mob.stats, RNG, mob.quest_wants) \
+                + events.loot(self.room.loc.id, mob.type_id, RNG) \
+                + production.yield_of(mob.type_id):
+            if items.premium(type_id):
+                continue            # out of the game; see items.premium
+            if thing and type_id == mobs.FALLBACK_LOOT:
+                # A box, a target or a stone (world.STANDING_OBJECTS) holds
+                # what its table rolls and what a quest wants of it -- and an
+                # ammunition box its rounds -- not the cigarette that keeps a
+                # creature's bag from being empty: nothing found, no bag.
+                continue
             fields = inventory.new_fields(type_id, count)
             root = fields.pop("root")
             rows.append(self.store.create_item(LOOT_OWNER, type_id, root, **fields))
@@ -1488,23 +2356,58 @@ class RoomCombat:
         if bag.expiry is not None:
             bag.expiry.cancel()
         for f in self.fighters():
-            if f.loot == cell:
+            # Except for whoever stands on the cell: the client opens every
+            # bag from on top of it (Gamer.gotoLoot), and its window stays
+            # open when the bag goes (Location.ss_loot only takes the bag
+            # off the ground). Something dragged into that window -- or
+            # dropped from the equipment -- must still land somewhere, or
+            # the generic ss_upd answer would say it did while it did not.
+            if f.loot == cell and f.sess.pos != cell:
                 f.loot = None
         self.room.broadcast(("ss_loot", dict(s_status=0, hex=[cell])))
 
     def expire_bag(self, cell):
+        """The bag's timer: whatever in it has lain its LOOT_LIFETIME goes
+        for good -- the items row, a trophy's words with it (trophies.py),
+        the ground row (Store.sweep_ground) -- and the bag with the last of
+        it; the rest waits for its own time.
+
+        A loot window open on the bag goes on showing what went: the client
+        has no frame that takes a thing out of one (Loot listens to nothing
+        but its own answers). Each such viewer keeps it in Fighter.ran_out,
+        and his take-all takes it back out of his bag (ss_upd 3)."""
         bag = self.loot.get(cell)
         if bag is None:
             return
-        for uniq in bag.uniqs:
-            self.store.delete_item(uniq)
-        bag.uniqs = []
-        self.close_bag(cell)
+        bag.expiry = None
+        t = time.time()
+        gone = [u for u in bag.uniqs if bag.until.get(u, 0.0) <= t]
+        if gone:
+            viewers = [f for f in self.fighters() if f.loot == cell]
+            if viewers:
+                shown = [dict(uniq=r["uniq"], type_id=r["type_id"], root=r["root"])
+                         for r in (self.store.item(u) for u in gone) if r is not None]
+                for f in viewers:
+                    f.ran_out += shown
+            self.store.sweep_ground(gone, LOOT_OWNER)
+            for uniq in gone:
+                bag.uniqs.remove(uniq)
+                bag.until.pop(uniq, None)
+            log.info("  ..    %s on cell %d of %s lay out its time: gone",
+                     ", ".join(str(u) for u in gone), cell, self.room.loc.title)
+        if bag.uniqs:
+            self.arm_bag(bag)
+        else:
+            self.close_bag(cell)
 
     def respawn(self, mob):
         """Back on its spawn cell under the same id: the client dropped the
         entity on lostUser and builds it afresh from lch;newUser, then asks
-        for its details itself; the details are pushed anyway, as on entry."""
+        for its details itself; the details are pushed anyway, as on entry.
+        One back already, or sent away meanwhile -- a window of events.py
+        shut before its respawn came -- is not made again."""
+        if mob.alive or mob.away:
+            return
         mob.reset()
         mob.cell = mob.home
         self.room.npcs[mob.eid] = rooms.NPC(mob.home, mob.type_id, world.MOB)
@@ -1512,9 +2415,95 @@ class RoomCombat:
             sess.send("lch", newUser=mob.eid, pos=mob.home, rtype=world.MOB)
             sess.send_npc_info(mob.eid)
 
+    # --- bosses and their hours ----------------------------------------------------------
+    def keep_hours(self):
+        """The room's bosses in step with the clock (bosses.py).
+
+        Asked on every tick and, through Session.enter_room, before anybody
+        arriving is shown who is here: an empty room has no tick, and a boss
+        whose hour came or went meanwhile must be neither met outside it nor
+        missed inside it by whoever walks in next.
+
+        Away, with a window open that it has not yet come for, a boss arrives
+        the way a respawn does -- lch;newUser, its details and bars -- on its
+        own cell, whole. Standing here with no window open, it leaves: the
+        lostUser a corpse fades with, and out of the room's inhabitants. Not
+        in the middle of a fight, though -- nobody should lose a boss worn
+        down to its last hit points to the clock -- so one that is fighting
+        stays until the fight is over and starts no new one meanwhile
+        (Mob.leaving). A corpse is corpse_gone's to put away. The timed
+        windows of events.py are kept the same way, first.
+        """
+        events.keep(self)
+        if not self.bosses:
+            return
+        due = bosses.slot(bosses.clock())
+        for mob in self.bosses:
+            if mob.away:
+                if due is not None and due != mob.slot:
+                    mob.slot, mob.away = due, False
+                    self.respawn(mob)
+                    log.info("  ..    boss %d (%s) arrives in %s",
+                             mob.eid, mob.stats.name, self.room.loc.title)
+            elif not mob.alive:
+                continue
+            elif due is not None:
+                # Standing here in a window counts as having come for it,
+                # whether it arrived just now or the room was made in it.
+                mob.slot, mob.leaving = due, False
+            elif mob.target is None and mob.aim is None:
+                self.boss_leaves(mob)
+            else:
+                mob.leaving = True
+
+    def boss_leaves(self, mob):
+        """Its stay is over: gone from every screen here (Location.lch ->
+        removePlayer) and from the room, until the next window."""
+        mob.alive = False
+        mob.away = True
+        mob.leaving = False
+        mob.target = None
+        self.room.npcs.pop(mob.eid, None)
+        self.room.broadcast(("lch", dict(lostUser=mob.eid)))
+        log.info("  ..    boss %d (%s) leaves %s", mob.eid, mob.stats.name,
+                 self.room.loc.title)
+
 
 def room_combat(room, store):
     """The RoomCombat of a room, made on first use."""
     if room.combat is None:
         room.combat = RoomCombat(room, store)
     return room.combat
+
+
+def restore_ground(rooms_, store, now=None):
+    """The game server's start, before its first socket: whatever the last
+    run left on the ground with time still to lie goes back where it lay --
+    its room built for it (rooms.Rooms.get, as a first entry would build
+    it), each thing on its cell with the time it has left, running out
+    there whoever comes (LOOT_LIFETIME). A deploy restarts the game, and a
+    dead player's gear lost to it would be a loss like any other. The rest
+    is cleared (Store.clear_ground), and so is a thing whose room cannot be
+    built any more. Returns (cleared, put back)."""
+    swept = store.clear_ground(LOOT_OWNER, now)
+    by_place = {}
+    for row in store.on_ground(LOOT_OWNER):
+        by_place.setdefault((row["loc"], row["gx"], row["gy"]), []).append(row)
+    back = 0
+    for (loc, gx, gy), rows in by_place.items():
+        try:
+            room = rooms_.get(loc if gx is None or gy is None else (loc, gx, gy))
+        except Exception as exc:
+            log.warning("  !!    no room at %s to put %d thing(s) back into (%s):"
+                        " cleared", (loc, gx, gy), len(rows), exc)
+            store.sweep_ground([r["uniq"] for r in rows], LOOT_OWNER)
+            swept += len(rows)
+            continue
+        rc = room_combat(room, store)
+        cells = {}
+        for row in rows:
+            cells.setdefault(row["cell"], []).append(row)
+        for cell, lying in cells.items():
+            rc.add_to_bag(cell, lying, {r["uniq"]: r["expires_at"] for r in lying})
+        back += len(rows)
+    return swept, back

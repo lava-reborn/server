@@ -6,6 +6,7 @@ export is right is to compare it with the document the WEB path serves, byte
 for byte, and to check the PROTOCOL.md 9 invariant on the bytes themselves --
 every id in names.ALL present, nothing else.
 """
+import io
 import os
 import re
 import socket
@@ -56,6 +57,23 @@ check("row count matches the table",
 # Cyrillic has to survive as UTF-8; cp1251 here is the silent failure the
 # HTTP stub already had once, and the client ends up with no strings at all.
 check("decodes as utf-8", isinstance(blob.decode("utf-8"), str), True)
+
+# --- what the launcher will say -------------------------------------------
+# Updater.Sane refuses a whole table for a single tag it does not know, and a
+# refused table leaves the player on the one he had -- whose missing ids are a
+# trip back to the login screen. So every row goes through a port of its check.
+import orig_texts                                     # noqa: E402
+import re as _re                                      # noqa: E402
+refused = [i for i, v in names.ALL.items() if v and not orig_texts.launcher_ok(v)]
+check("the launcher would accept every row", refused[:10], [])
+
+# The port is only worth anything while it checks against the launcher's own
+# list. Read the C# array and compare, so the two cannot drift apart unseen.
+_cs = io.open(os.path.join(ROOT, "launcher", "Updater.cs"), encoding="utf-8").read()
+_arr = _re.search(r"ALLOWED_TAGS\s*=\s*\{(.*?)\};", _cs, _re.S).group(1)
+_cs_tags = set(_re.findall(r'"([^"]*)"', _arr))
+check("the Python whitelist is the launcher's", sorted(orig_texts.ALLOWED_TAGS),
+      sorted(_cs_tags))
 
 # --- the file on disk, written where the player will copy it from ----------
 tmp = tempfile.mkdtemp(prefix="lava-texts-")

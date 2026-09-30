@@ -1,0 +1,223 @@
+{
+ "_": "DESIGNED, not recovered: who stands in the empty (type 0) spawn slots of Вади-Хальфа's camps and quest places, one type per slot in the file's order. Applied by server/rooms.py in war=1 locations, to these files only; every other file's empty slot stays empty. Built by data/build_spawn_substitutes.py (CAMP_FILL), which says why for each.",
+ "designed": true,
+ "fill": {
+  "122": {
+   "band": [
+    7,
+    8
+   ],
+   "faction": null,
+   "fn": "Q_VH_Mechanic",
+   "types": [
+    62,
+    62,
+    90,
+    51,
+    51,
+    87,
+    1040,
+    1040
+   ],
+   "why": "«Механик ДСР» (Q_VH_Mechanic, tooltip 5988,1714): the mechanic 717 and the ДСР of levels 7-8 texts.xml names for this line -- [7] Ополченец, [8] Диверсант, [7] Боевик, [8] Старший офицер, [7] Новобранец (10611-10615) -- whose creatures are not in mobs.xml (the ДСР jm_ it has are levels 12-14). Stand-ins of the level and a soldier's art that no location puts down: Ополченец m05_BanditShooter_lvl7 (62), Боевик m510_BanditAssaultRifle_lvl7 (90), Новобранец m510_Courier_lvl7 (51) -- all three in the mechanic's own art, mob-m2 -- Диверсант m510_BanditShotgunner_lvl8 (87), Старший офицер inv_8_cap (1040), two officers for «Операция \"Возмездие\"» (texts.xml 62728: «уничтожить 5 старших офицеров ДСР»). The rule that the officers come running at the shooting is not built: they stand from the start."
+  },
+  "46": {
+   "band": [
+    3,
+    3
+   ],
+   "faction": null,
+   "fn": "Q_IV_perehvat",
+   "types": [
+    21
+   ],
+   "why": "«Перехват» (Q_IV_perehvat): a fourth m05_BanditShooter_lvl3 beside the three the file has, over the box m_WF_Q8_Box (50)."
+  },
+  "64": {
+   "band": [
+    4,
+    4
+   ],
+   "faction": "lu",
+   "fn": "Q_IV_RitualnoeSozzenie",
+   "types": [
+    282,
+    280
+   ],
+   "why": "«Сектанты Люшера. Говорят они где-то нашли ящик спирта.» (Q_IV_RitualnoeSozzenie, tooltip 5986,1725): two level-4 sectarians of the sect, a Послушник and a Проповедник, beside the six m510_sektant_lvl4 and the box."
+  },
+  "80": {
+   "band": [
+    0,
+    2
+   ],
+   "faction": "nc",
+   "fn": "Bandit_Camp1",
+   "types": [
+    258,
+    259,
+    260,
+    261,
+    262,
+    263,
+    264,
+    265,
+    268,
+    586
+   ],
+   "why": "Лагерь Новых Колонистов (Bandit_Camp1), «Для игроков 0-2 уровней» (tooltip 5970,1724): the colonists nc_ of levels 0-2, and their treasurer nc_Kaznachei (586), the chief's man who «руководит сборами дани» -- the commissar «Реклама» sends the player to kill (texts.xml 62675). He stands all day (server/bosses.py ALL_DAY)."
+  },
+  "81": {
+   "band": [
+    2,
+    4
+   ],
+   "faction": "lu",
+   "fn": "Bandit_Camp2",
+   "types": [
+    271,
+    272,
+    273,
+    274,
+    276,
+    277,
+    278,
+    285,
+    282,
+    336
+   ],
+   "why": "Лагерь Сектантов Люшеров (Bandit_Camp2), «Для игроков 2-4 уровней» (tooltip 5978,1727): the sect's lu_ of levels 2-4, and lu_Looser_lvl2 (336), the sectarian of «Театр жизни»."
+  },
+  "82": {
+   "band": [
+    0,
+    2
+   ],
+   "faction": "nc",
+   "fn": "MW_bandits1_boss",
+   "types": [
+    258,
+    259,
+    261,
+    262,
+    263,
+    264,
+    266,
+    267,
+    268
+   ],
+   "why": "Асмунд's meeting place (MW_bandits1_boss) beside the camp 80: the colonists around their chief, the kinds 80 leaves out (266, 267) among them."
+  },
+  "83": {
+   "band": [
+    2,
+    4
+   ],
+   "faction": "lu",
+   "fn": "MW_bandits2_boss",
+   "types": [
+    271,
+    272,
+    273,
+    274,
+    276,
+    277,
+    278,
+    285,
+    279,
+    280,
+    281,
+    282,
+    279,
+    280,
+    281,
+    282
+   ],
+   "why": "Лука's meeting place (MW_bandits2_boss) beside the camp 81: every kind of the sect of levels 2-4, the level-4 ones twice."
+  },
+  "84": {
+   "band": [
+    4,
+    6
+   ],
+   "faction": "ja",
+   "fn": "Bandit_Camp3",
+   "types": [
+    287,
+    288,
+    289,
+    290,
+    291,
+    291,
+    291,
+    293,
+    294
+   ],
+   "why": "Лагерь Джанджавидов (Bandit_Camp3), «Для игроков 4-6 уровней» (tooltip 5974,1739): the Janjaweed ja_ of levels 4-5, and three ja_Diversant_lvl5 (291): «Бандитская активность» wants five «Диверсант 5го уровня ... рядом с основным лагерем» (texts.xml 47283)."
+  },
+  "85": {
+   "band": [
+    6,
+    8
+   ],
+   "faction": "mg",
+   "fn": "Bandit_Camp4",
+   "types": [
+    301,
+    302,
+    303,
+    304,
+    305,
+    306,
+    307,
+    308,
+    309,
+    311
+   ],
+   "why": "Лагерь Магриба (Bandit_Camp4), «Для игроков 6-8 уровней» (tooltip 5993,1721): Magrib's mg_ of levels 6-8, the three officers mg_Officer_lvl6/7/8 (303, 307, 311) among them: «Порядок (часть 2)» finds the plans on the officers of «военного лагеря Магриба» (texts.xml 47387)."
+  },
+  "86": {
+   "band": [
+    4,
+    6
+   ],
+   "faction": "ja",
+   "fn": "MW_bandits3_boss",
+   "types": [
+    292,
+    294,
+    295,
+    296,
+    297,
+    298,
+    296,
+    297
+   ],
+   "why": "Рашад's meeting place (MW_bandits3_boss) beside the camp 84: the Janjaweed of levels 5-6, the kinds 84 leaves out (292, 295-298)."
+  },
+  "87": {
+   "band": [
+    6,
+    8
+   ],
+   "faction": "mg",
+   "fn": "MW_bandits4_boss",
+   "types": [
+    301,
+    302,
+    304,
+    305,
+    306,
+    308,
+    309,
+    310,
+    311,
+    303,
+    307,
+    310,
+    309
+   ],
+   "why": "Кайс's meeting place (MW_bandits4_boss) beside the camp 85: every kind of Magrib's soldiers of levels 6-8, 310 (which 85 leaves out) twice."
+  }
+ }
+}

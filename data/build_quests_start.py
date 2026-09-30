@@ -18,9 +18,13 @@ where nothing has to be guessed:
     an item that does not resolve is dropped, and a quest left with nothing
     to give is not imported.
 
-The six hand-written quests already in the table stay as they are; rows
-this script wrote before (marked wiki_type) are replaced, so a rerun is
-idempotent. Imported types are 1000 + the wiki quest's number in
+The hand-written quests already in the table -- the market's six, the
+Nubian mine's two ways, 7 and 8, and Камал's «Золотоискатель», 9 -- stay as
+they are; rows
+this script wrote before (marked wiki_type) are replaced where they stand,
+so a rerun is idempotent and keeps the file's order, and a wiki quest a hand
+row stands for (by its name, or the type the import would give it) is not
+imported. Imported types are 1000 + the wiki quest's number in
 quests_wiki.json, which keeps their string ids stable (quests.md 4.4).
 Texts the builder left empty are read again off the wikitext here, where the
 article puts the quest's name on the same line as the opening speech.
@@ -157,7 +161,12 @@ def main():
         why = None
         if q["kind"] not in ("del_obj", "bring_l_obj"):
             why = "kind %s not importable yet" % q["kind"]
-        elif any(int(r.get("type", 0)) == int(key) or r.get("name") == name
+        # A hand row stands for the wiki's quest by its name, or by the type
+        # the import would give it (TYPE_BASE + the wiki's number: 1682 is
+        # the wiki's 682, renamed by hand). Never by the wiki's own number
+        # as a type: hand rows 5, 7, 11 ... are other quests than the wiki's
+        # #5, #7, #11 («30 Каменных Блоков» was skipped for row 5).
+        elif any(r.get("name") == name or int(r.get("type", 0)) == TYPE_BASE + int(key)
                  for r in table["quests"] if "wiki_type" not in r):
             why = "already in the table by hand"
         if why:
@@ -221,12 +230,20 @@ def main():
         row["need_quest"] = next((by_name[p] for p in row.pop("parents") if p in by_name), 0)
 
     kept = [r for r in table["quests"] if "wiki_type" not in r]
+    # The file's order stays: a row imported before is replaced where it
+    # stands, one the wiki no longer gives is dropped, a new one goes last.
+    fresh = {r["type"]: r for r in rows}
+    ordered = [r if "wiki_type" not in r else fresh.get(r["type"])
+               for r in table["quests"]]
+    placed = {r["type"] for r in ordered if r is not None}
+    ordered = [r for r in ordered if r is not None] + \
+        [r for r in rows if r["type"] not in placed]
     table["_source"] = ("Quest 4 is the article 'Пистолетчик' on https://lava-online.fandom.com/ru "
                         "(CC-BY-SA); rows carrying wiki_type/source were imported from the wiki "
                         "by data/build_quests_start.py; the rest are written for this server.")
     head = ",\n".join('  "%s": %s' % (k, json.dumps(v, ensure_ascii=False))
                       for k, v in table.items() if k != "quests")
-    body = ",\n".join(dumps_row(r) for r in kept + rows)
+    body = ",\n".join(dumps_row(r) for r in ordered)
     with io.open(QUESTS, "w", encoding="utf-8") as fh:
         fh.write("{\n%s,\n  \"quests\": [\n%s\n  ]\n}\n" % (head, body))
     json.loads(io.open(QUESTS, encoding="utf-8").read())   # what was written parses

@@ -30,7 +30,7 @@ def _load():
         with open(PATH, encoding="utf-8") as fh:
             doc = json.load(fh)
     except FileNotFoundError:
-        return {}, {}
+        return {}, {}, {}, frozenset()
     except (OSError, ValueError) as e:
         # Deliberately loud, like the wiki tables in items.py: a file that is
         # there but unreadable is a mistake someone just made, and starting
@@ -42,10 +42,17 @@ def _load():
              if str(v).strip()}
     stock = {int(k): [int(t) for t in v]
              for k, v in (doc.get("stock") or {}).items()}
-    return names, stock
+    # A healer's fee by type (on_conv;op=1, Healer.as a_price); a type with
+    # none takes server.MEDIC_PRICE.
+    healer = {int(k): int(v) for k, v in (doc.get("healer_price") or {}).items()
+              if not str(k).startswith("_")}
+    # Types that register nobody's home: things, not people -- a box, a
+    # rock, a fountain -- whatever class mobs.xml gives them (world.offers_home).
+    no_home = frozenset(int(t) for t in (doc.get("no_home") or {}).get("types", ()))
+    return names, stock, healer, no_home
 
 
-NAMES, STOCK = _load()
+NAMES, STOCK, HEALER_PRICE, NO_HOME = _load()
 
 
 def name(type_id):
@@ -60,3 +67,13 @@ def stock(type_id):
     is not the same as no entry at all.
     """
     return STOCK.get(type_id)
+
+
+def healer_price(type_id, default):
+    """What this healer charges for a full heal, or default."""
+    return HEALER_PRICE.get(type_id, default)
+
+
+def no_home(type_id):
+    """Whether this type is a thing that registers nobody's home."""
+    return type_id in NO_HOME

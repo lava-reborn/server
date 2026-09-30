@@ -12,7 +12,8 @@ sndml or uldml.
     chkml;mode=0|1|255       -> cmdAck, then lsml (inbox/outbox) or svml
     getml;id=xN              -> cmdAck (0 | 35), then rcml
     sndml;to;subj;type;body;item=xN...;afro;gold
-                             -> cmdAck (0 | 34 | 37 | 3), at 0 also ctml
+                             -> cmdAck (0 | 34 | 37 | 3), at 0 also ctml;
+                                types 2/3 go to the whole clan (clan_letter)
     uldml;id=xN              -> cmdAck (0 | 35 | 36), at 0 also ctml
     rmvml;id=xN;id=xN;...    -> cmdAck
 
@@ -35,6 +36,7 @@ import json
 import logging
 import math
 import time
+import unicodedata
 
 import accounts
 import inventory
@@ -51,6 +53,41 @@ LETTER, LETTER_EXPRESS = 0, 1
 CLAN, CLAN_EXPRESS = 2, 3
 TRADE, TRADE_EXPRESS = 4, 5
 ORDER, ORDER_EXPRESS = 6, 7
+
+# Letters the server files itself (auction.py) come from character 0,
+# which no character is: ids start at 1. The name is what the inbox shows
+# for them, and no player may take it (is_system_name): a reply to the
+# auction would otherwise reach whoever did, and a letter from them would
+# look like one from the house.
+SYSTEM_SENDER = 0
+SYSTEM_NAME = "Аукцион"
+
+# Latin and Greek letters that look like Cyrillic ones, and the zero that
+# looks like an о, so "Aукцион" with a Latin A or "Αукцион" with a Greek
+# one cannot pass for the house in an inbox either. Lower case only: the
+# name is case-folded first.
+_LOOKALIKE = str.maketrans("aceopxykmhtb" "αβεοκμηρτυχ" "0",
+                           "асеорхукмнтв" "авеокмнртух" "о")
+
+
+def _skeleton(name):
+    """What a name looks like on the screen, for comparing: compatibility
+    forms folded (a fullwidth or mathematical А is an А), case folded,
+    accents split off and dropped with everything that draws nothing --
+    combining marks, format characters such as the zero-width space and
+    the word joiner, controls and spaces -- then the lookalikes."""
+    s = unicodedata.normalize("NFKC", str(name or "")).casefold()
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if unicodedata.category(c)[0] not in "MCZ")
+    return s.translate(_LOOKALIKE)
+
+
+def is_system_name(name):
+    """Whether a name would read as the auction house's: the same letters in
+    any case, lookalikes, accents and invisible characters included. Such a
+    name is refused at newPers and as a letter's addressee."""
+    return _skeleton(name) == _skeleton(SYSTEM_NAME)
+
 
 # flag bits (LetterObject.set flag); bits 0-3 are the type
 FLAG_RETURNED = 1 << 4
@@ -80,6 +117,11 @@ CODE_FAILED = 11
 # the control packet indexes 0..4 for items and 5/6 for afro/gold).
 MAX_ATTACHMENTS = 5
 SUBJECT_MAX = 120          # MailInterface.__sendLetter: subj.substr(0, 120)
+# Whether a letter may carry gold, attached or as an offer's price. Off
+# (2026-09-28, with the rate at 50 000): the original moved gold between
+# players by the auction alone, as ingots, and gold earned on a second
+# character would otherwise be posted to the first and cashed.
+GOLD_BY_POST = False
 
 # Tariffs (svml), in the order MailParam reads them: letter, express
 # letter, clan, express clan, per kg, express per kg, order, express
@@ -105,6 +147,19 @@ def tariff(kind, grams):
     if kind in WEIGHED:
         total += int(math.floor(grams / 1000.0 * PRICES[5 if express else 4]))
     return (0, total) if express else (total, 0)
+
+
+def postable(type_id):
+    """Whether a thing may go into a letter. The client's own test is the
+    static exchang flag (MailInterface.drop: «Данный предмет нельзя
+    передавать»), and a modified client would not make it; a quest's thing
+    stays with its quest, as at the auction. A thing with no exchange that
+    got into a letter all the same would be out of the reach of the quest
+    that handed it over, which takes back only what the character carries
+    or banks (Inventory.reclaim_pieces): Аюб's notes, posted, were a new set
+    at every take of «Новые вопросы» (quests.START_OBJ_NOT_ON_GROUND)."""
+    si = items.params_of(type_id) or {}
+    return bool(si.get("exchang")) and not si.get("quest")
 
 
 def stamp(when):
@@ -172,6 +227,17 @@ def flag_of(row, outbox):
     return f
 
 
+def _money(value):
+    """Whether a letter's afro or gold field holds anything: a number other
+    than 0, or anything else at all -- the window Number()s its text field,
+    and what is not a number is not nothing either."""
+    if value is None or value == "":
+        return False
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return value != 0
+    return True
+
+
 def letter_id(text):
     """The row id out of a big-uint parameter, or None."""
     try:
@@ -205,6 +271,8 @@ class Mail:
         self.send("cmdAck", res=res)
 
     def name_of(self, char_id):
+        if char_id == SYSTEM_SENDER:
+            return SYSTEM_NAME
         row = self.store.character(char_id)
         return row["name"] if row else "?"
 
@@ -290,18 +358,28 @@ class Mail:
             self.ack(RES_REFUSED)
             return
         kind = int(p.get("type", 0) or 0)
+        if kind in (CLAN, CLAN_EXPRESS):
+            self.clan_letter(p, kind)
+            return
         afro = int(p.get("afro", 0) or 0)
         gold = int(p.get("gold", 0) or 0)
-        if kind in (CLAN, CLAN_EXPRESS):
-            # The one refusal the window explains by itself; there are no
-            # clans to send to yet.
-            self.ack(RES_NOT_IN_CLAN)
-            return
         if kind not in BASE_INDEX or kind in (ORDER, ORDER_EXPRESS) \
                 or afro < 0 or gold < 0:
             self.ack(RES_REFUSED)
             return
-        target = self.store.character_by_name(str(p.get("to") or "").strip())
+        if gold and not GOLD_BY_POST:
+            # Gold changes hands by the auction alone, as ingots (the wiki's
+            # «Покупка голд»: «Голд нельзя передавать ... на прямую, только
+            # через Аукцион»); neither attached nor asked as a price. The
+            # express tariff is still paid in gold: that leaves the game.
+            log.info("  ..    letter with %d gold refused", gold)
+            self.ack(RES_REFUSED)
+            return
+        to = str(p.get("to") or "").strip()
+        # "Ответить" on a letter from the auction fills in its name; the
+        # house reads nothing, and a character that slipped in under that
+        # name before it was reserved must not get the replies.
+        target = None if is_system_name(to) else self.store.character_by_name(to)
         if target is None or target["id"] == self.char_id:
             self.ack(RES_NO_ADDRESSEE)
             return
@@ -313,10 +391,10 @@ class Mail:
         rows = []
         for text in oids:
             row = self.sess.inv.find(text)
-            if row is None or (items.params_of(row["type_id"]) or {}).get("quest"):
-                # The window only offers what the bag holds, so this is a
-                # modified client or a stale id; no ctml at all is what
-                # keeps its queue straight.
+            if row is None or not postable(row["type_id"]):
+                # The window only offers what the bag holds and what may
+                # change hands, so this is a modified client or a stale id;
+                # no ctml at all is what keeps its queue straight.
                 log.info("  ..    letter attachment %s refused", text)
                 self.ack(RES_REFUSED)
                 return
@@ -358,6 +436,80 @@ class Mail:
         if other is not None:
             other.mail.arrived(letter)
 
+    # --- the clan's mail ---------------------------------------------------------
+    def clan_letter(self, p, kind):
+        """sndml type 2 («Внутриклановая рассылка», afro) or 3 (the express
+        one, gold): the letter to every member of the sender's clan but
+        himself, those offline too (the owner's decision 10), for one
+        tariff, flat -- MailInterface.updateLetterPrise weighs nothing for
+        these two, and tariff() does not either.
+
+        The window hides the addressee and nulls the parcel for these types
+        (MailInterface.__sendLetter, :1112-1120), but still sends whatever
+        `to` held and whatever afro or gold was typed before the radio was
+        switched: `to` is not read, and money or a parcel refuses the
+        letter -- a clan's mail carries words only. Membership is the
+        database's (clans.py keeps nothing in memory), never the client's:
+        the radios are greyed out only while clanInfo.reg is 0, and a
+        client put out of its clan keeps its old reg until the page is
+        reloaded (ClanInspector.fellow, the kicked case). No right gates
+        it: the window asks for none, only for a clan.
+
+        Every refusal is 37, the one code sendLetterAck keeps for these
+        letters. It has no listener in the window, so it is silent -- and
+        never 3, which ErrorReport shows as «Сервер не отвечает» over the
+        whole screen, nor 2 («Аккаунт забанен»), nor 34, whose alert names
+        an addressee the window hid. A character in no clan -- a client
+        kept stale since a kick -- gets the bare 37; for the rest, a letter
+        the player wrote and pressed «Отправить» for, the reason is said to
+        him (Session.answer: the answer to his own action, as clans.invite
+        does for its silent 29).
+
+        On 0: cmdAck, the ctml the window queued (the first letter's id,
+        nothing taken out of the bag), the purse, then each letter to its
+        addressee if he plays. The letters and the postage are one
+        transaction (Store.mail_send_each); the sender's outbox holds one
+        copy, the first."""
+        m = self.store.clan_member(self.char_id)
+        if m is None:
+            log.info("  ..    clan letter from %s, who is in no clan", self.sess.nick)
+            self.ack(RES_NOT_IN_CLAN)
+            return
+        if every(p, "item") or _money(p.get("afro")) or _money(p.get("gold")):
+            self.ack(RES_NOT_IN_CLAN)
+            self.sess.answer("Во внутриклановую рассылку нельзя вложить ни деньги, ни"
+                             " вещи: очистите поля «афро» и «золото» и отправьте снова")
+            return
+        to = [c for c, _perm in self.store.clan_member_perms(m["clan_id"])
+              if c != self.char_id]
+        if not to:
+            self.ack(RES_NOT_IN_CLAN)
+            self.sess.answer("В клане «%s», кроме вас, никого нет: рассылать некому"
+                             % m["clan_name"])
+            return
+        fee_afro, fee_gold = tariff(kind, 0)
+        ch = self.sess.character()
+        if not ch.can_afford(fee_afro, fee_gold):
+            self.ack(RES_NOT_IN_CLAN)
+            self.sess.answer("Не хватает денег на рассылку: она стоит %s"
+                             % ("%d афро" % fee_afro if fee_afro
+                                else ("%.2f G" % (fee_gold / 100.0)).replace(".", ",")))
+            return
+        letters = self.store.mail_send_each(
+            to, self.char_id, kind, str(p.get("subj") or "")[:SUBJECT_MAX],
+            str(p.get("body") or ""), (self.char_id, ch.afro - fee_afro, ch.gold - fee_gold))
+        # The copy in memory follows the row: it is what Character.save
+        # writes back at logout.
+        ch.add_money(-fee_afro, -fee_gold)
+        log.info("  ..    clan letter #%d.. from %s to %d member(s) of %r, fee %d/%d",
+                 letters[0]["id"], self.sess.nick, len(letters), m["clan_name"],
+                 fee_afro, fee_gold)
+        self.ack(RES_OK)
+        self.send("ctml", id=BigUInt(str(letters[0]["id"])), item=[], code=[])
+        self.sess.push_money()
+        for letter in letters:
+            self.deliver(letter)
+
     # --- taking the parcel out --------------------------------------------------
     def uldml(self, p):
         """Items into the bag, money into the purse; for an offer the price
@@ -397,6 +549,9 @@ class Mail:
             fields["slot"] = inventory.BAG
             created.append(self.store.create_item(
                 self.char_id, s["type_id"], s["root"], **{k: v for k, v in fields.items() if k not in ('char_id', 'uniq')}))
+            if s["root"] == items.TROPHY:
+                # Unpacked under a new serial: its words follow it.
+                self.store.rekey_trophy(s["uniq"], created[-1]["uniq"])
         if offer:
             ch.add_money(-afro, -gold)
         else:
@@ -437,8 +592,28 @@ class Mail:
         also what the offer window's "отказаться" button amounts to. A
         returned letter thrown away loses its parcel; it has nowhere left
         to go.
+
+        A letter from the auction house (SYSTEM_SENDER) that still holds
+        its purchase, payment or refund has nobody to go back to either,
+        and throwing it away would throw the goods away with it. So such a
+        request is refused whole, with the one code the window words
+        (removeLettersAck 2: "Недопустимое действие"), and nothing on the
+        list is deleted: on any code but 0 the client keeps every id it
+        asked about, and deleting some of them anyway would leave letters in
+        its list that are gone here. The window asks one letter at a time.
         """
-        for text in every(p, "id"):
+        ids = every(p, "id")
+        for text in ids:
+            row = self.store.mail_letter(letter_id(text))
+            if self.side_of(row) == "in" and row["from_char"] == SYSTEM_SENDER \
+                    and attached(row):
+                log.info("  ..    letter #%d from the auction still holds its"
+                         " parcel, not deleted", row["id"])
+                self.ack(RES_BAN)
+                self.sess.say("Письмо аукциона нельзя удалить, пока в нём"
+                              " что-то лежит: сначала заберите вложение")
+                return
+        for text in ids:
             row = self.store.mail_letter(letter_id(text))
             side = self.side_of(row)
             if side == "in":
@@ -464,6 +639,9 @@ class Mail:
             else:
                 log.info("  ..    rmvml for letter %r, not this character's", text)
                 continue
-            if row["to_deleted"] and row["from_deleted"]:
+            # The house keeps no outbox, so its letters have only one side
+            # to be deleted from.
+            if row["to_deleted"] and (row["from_deleted"]
+                                      or row["from_char"] == SYSTEM_SENDER):
                 self.store.mail_delete(row["id"])
         self.ack(RES_OK)

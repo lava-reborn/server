@@ -12,7 +12,6 @@ import os
 import threading
 import signal
 import socket
-import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -43,6 +42,7 @@ PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts
+import storage
 accounts.DB_PATH = DB
 _store = accounts.Store(DB)
 _acc, _err = _store.register("tester", "secret")
@@ -144,9 +144,10 @@ class Client:
 
 def saved():
     """(loc, pos) as the database has it right now."""
-    db = sqlite3.connect(DB)
+    db = storage.connect(DB)
     try:
-        return db.execute("SELECT loc, pos FROM characters").fetchone()
+        row = db.execute("SELECT loc, pos FROM characters").fetchone()
+        return (row["loc"], row["pos"]) if row else None
     finally:
         db.close()
 

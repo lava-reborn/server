@@ -6,13 +6,17 @@ order checked here (recon/analysis/combat.md 1-3, invariants in 10). The
 fight happens in location 100, the dump behind the black market, where quest
 5 sends the player for three dogs; the dog nearest the entrance stands 6.2
 hexes away, one more than its aggro radius, so the first shot is the
-player's.
+player's. Quest 5, «Голодные собаки», was one of the black market's
+placeholders that left data/quests.json on 2026-09-28 (the plan's gold
+taps); the suite keeps it as a fixture of its own table (LAVA_QUESTS).
 
 Randomness is real (hits, misses, damage), so the fight is a loop that
 checks the shape of every burst rather than a fixed transcript, and the AP
 regeneration and the combat timeouts are shortened through the environment
 to keep the whole thing under a minute.
 """
+import asyncio
+import json
 import os
 import socket
 import subprocess
@@ -24,8 +28,25 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
 
+# The dogs' errand at Техногик (652), as it stood in data/quests.json until
+# 2026-09-28: the real table with it put back, for this process and the
+# server alike (quests.quests_path).
+DOGS_Q = dict(type=5, kind="kill_mobs", name="Голодные собаки",
+              start="Голодные собаки таскают со склада всё, что плохо лежит.",
+              notfinish="Собаки всё ещё здесь.", finish="Тише стало.",
+              give=[652], take=[652], mobs_kill=[82], num_kill=[3], rew_afro=40,
+              repeatable=1)
+with open(os.path.join(os.path.dirname(HERE), "data", "quests.json"), encoding="utf-8") as _fh:
+    _TABLE = json.load(_fh)
+_TABLE["quests"].append(DOGS_Q)
+QUESTS_FILE = os.path.join(tempfile.mkdtemp(), "quests.json")
+with open(QUESTS_FILE, "w", encoding="utf-8") as _fh:
+    json.dump(_TABLE, _fh, ensure_ascii=False)
+os.environ["LAVA_QUESTS"] = QUESTS_FILE
+
 sys.path.insert(0, HERE)
 import accounts
+import storage
 import combat
 import inventory
 import items
@@ -93,26 +114,245 @@ check("a level-1 dog has the curve's HP times the animal share",
       (dog_stats.level, dog_stats.hp_max, dog_stats.ranged, dog_stats.can_attack),
       (1, 84, False, True))
 check("a box is an object: shot at, never shooting", mobs.stats(409).can_attack, False)
-check("an armed bandit carries the stall's pistol", mobs.stats(17).weapon_type_id, 4380)
+check("an armed bandit carries a pistol of his own",
+      mobs.stats(17).weapon_type_id, 4380)
+
+
+# --- a target is let go of only when it is gone ---------------------------------
+# The owner's rule (2026-09-25): the aggro does not drop by itself while the
+# player is in the location. There used to be two ways it did: a leash of 24
+# hexes from home, and fifteen seconds of not getting at the target. Neither
+# is left: only the target leaving the room or dying frees the creature
+# (test_aggro_hold has the rest, on a real room and on a socket).
+class _Release(object):
+    """Just enough of a RoomCombat for Mob.think to talk to."""
+    def __init__(self, loc):
+        self.room = type("R", (), {"loc": loc})()
+        self.released = 0
+
+    def mob_release(self, mob):
+        self.released += 1
+        mob.target = None
+    mob_reset = mob_release           # its name before the rule
+
+    def nearest_fighter(self, cell, aggro):
+        return None
+
+    def mob_walk(self, mob, goal, t):
+        pass
+
+
+class _Target(object):
+    here = True
+
+    def present(self, rc):
+        return self.here
+    cell = 0
+
+
+def _let_go(far=0, idle=0.0, here=True):
+    """How often a mob chasing a player across loc100 lets go of him on one
+    tick: `far` rows from its home, `idle` seconds since it was
+    provoked, with nothing it could do about him in between."""
+    rc = _Release(loc100)
+    m = mobs.Mob(1, 82, 10)
+    m.cell = 10 + far * loc100.width
+    m.target = _Target()
+    m.target.here = here
+    m.target.cell = m.cell + 40 * loc100.width   # far away and never approached
+    t = 1000.0
+    m.pressed = t - idle              # the old clock, for the code before the rule
+    m.busy_until = 0.0
+    m.next_attack = 0.0
+    m.think(rc, t)
+    return rc.released
+
+
+check("a mob thirty rows from home, past the old leash of 24 hexes, keeps its target",
+      _let_go(far=30), 0)
+check("so does one that has not got at it for a minute", _let_go(idle=60.0), 0)
+check("it lets go when the target is gone", _let_go(here=False), 1)
 
 # The kill counter, on a scratch character in a scratch database.
 _scratch = accounts.Store(os.path.join(tempfile.mkdtemp(), "scratch.db"))
 _acc, _ = _scratch.register("scratch", "secret")
 _cid, _ = _scratch.create_character(_acc, "scratch", 0, "1")
 _q5 = quests.get(5)
-_scratch.take_quest(_cid, 5, _q5.fresh_progress(), 0)
+_scratch_q = _scratch.take_quest(_cid, 5, _q5.fresh_progress(), 0)
 check("a kill of the wrong type moves nothing", quests.kill_progress(_scratch, _cid, 999), [])
 check("a dog counts", quests.kill_progress(_scratch, _cid, 82),
-      [("q_di_kill_mobs", dict(q_id=1, q_type=5, complete=0, kill_num=[1]))])
+      [("q_di_kill_mobs", dict(q_id=_scratch_q, q_type=5, complete=0, kill_num=[1]))])
 quests.kill_progress(_scratch, _cid, 82)
 check("the third completes the quest", quests.kill_progress(_scratch, _cid, 82),
-      [("q_di_kill_mobs", dict(q_id=1, q_type=5, complete=1, kill_num=[3]))])
+      [("q_di_kill_mobs", dict(q_id=_scratch_q, q_type=5, complete=1, kill_num=[3]))])
+# The server's first quest: 1 in its own file, the next id when LAVA_DB_URL
+# puts the scratch character in the same database.
+FIRST_Q = _scratch_q + 1 if storage.using_postgres() else 1
 check("a fourth is not counted", quests.kill_progress(_scratch, _cid, 82), [])
+
+
+# --- medicines that are for peace only, and a refusal for want of AP ------------
+# The Med_Pacific_ series says "Нельзя использовать в бою" and costs 0 AP, so
+# only the server can keep it out of a fight; a refusal for AP brings the
+# client's bar down to the pool, so it does not let the next one through too.
+class _Medic(combat.Fighter):
+    rc = None           # the room's combat, set by hand: only its ws is read
+
+
+class _MedicSession(object):
+    def __init__(self, store, cid):
+        self.char_id, self.pos, self.room, self.loc = cid, 0, None, None
+        self.sent = []
+        self.char = progression.Character.load(store, cid)
+        self.inv = inventory.Inventory(self, store)
+
+    def send(self, *cmd, **params):
+        self.sent.append((cmd[0], params))
+
+    def character(self):
+        return self.char
+
+    def send_player_info(self):
+        self.send("userInfo_Player", afro=self.char.afro)
+
+
+def _at_war(ws):
+    return type("RC", (), {"room": type("R", (), {"ws": ws})()})()
+
+
+pacific = sorted(t for t, (r, n) in items.catalogue().items()
+                 if r == items.HEAL and items.no_combat(t))
+check("peace-only medicines: the 24 of the Med_Pacific_ series and nothing else",
+      (len(pacific), all(items.catalogue()[t][1].startswith("Med_Pacific_") for t in pacific),
+       items.no_combat(7100), items.no_combat(6055)), (24, True, False, False))
+
+
+async def _heals():
+    ms = _MedicSession(_scratch, _cid)
+    medic = _Medic(ms)
+    peace_only = inventory.oid_of(_scratch.create_item(
+        _cid, 6904, items.HEAL, slot=inventory.BAG, use_count=1))
+    for_war = inventory.oid_of(_scratch.create_item(
+        _cid, 7100, items.HEAL, slot=inventory.BAG, use_count=1))
+    medic.rc, medic.ap = _at_war(True), 100
+    medic.use_heal({"obj": peace_only}, inventory.USE_IDLE)
+    check("a peace-only medicine in a fight: one refusal, nothing started",
+          (ms.sent, medic.healing, medic.ap), ([("cmdAck", {"res": inventory.RES_REFUSED})], None, 100))
+    ms.sent, medic.ap = [], 2
+    medic.use_heal({"obj": for_war}, inventory.USE_IDLE)
+    check("a battle medicine without the AP: res=11, then the pool as it stands",
+          ms.sent, [("cmdAck", {"res": inventory.RES_NO_AP}), ("c_ap", {"ap": 2})])
+    ms.sent, medic.rc = [], _at_war(False)
+    medic.use_heal({"obj": peace_only}, inventory.USE_IDLE)
+    check("the peace-only one out of a fight: accepted",
+          (ms.sent, medic.healing is not None), ([("cmdAck", {"res": 0})], True))
+    medic.cancel_timers()
+    # A medicine made when its type held more uses than it does now sells
+    # for one of itself, not twenty: 6071 was twenty uses, is one today.
+    old = _scratch.create_item(_cid, 6071, items.HEAL, slot=inventory.BAG, use_count=20)
+    si = items.params_of(6071)
+    ms.sent, before = [], ms.char.afro
+    ms.inv.sell({"obj": inventory.oid_of(old)})
+    check("a medicine with more uses than its type sells at the whole price, never above",
+          (ms.char.afro - before, [p["res"] for n, p in ms.sent if n == "cmdAck"]),
+          (max(1, int(si["cost"] / float(si.get("sell_num", 1)) * inventory.SMOD
+                      * si.get("sell_mod", 1))), [0]))
+
+
+asyncio.run(_heals())
 _scratch.close()
 
+
+# --- which level a mob's experience is measured against -------------------------
+# By the skill that is being trained, not by the character's best one. A
+# character who has shot his way to Стрельба 6 and picks up a knife is a
+# beginner with the blade: the level-1 dog is five levels beneath his gun and
+# one above his knife, and it has to pay the knife as a mob one level up pays
+# a beginner. Measured against the best skill it paid nothing at all -- every
+# creature a melee novice can actually hit sits four and more levels under his
+# gun -- and the knife never trained.
+class _XpSession(object):
+    def __init__(self, ch):
+        self.char, self.pushed = ch, []
+
+    def character(self):
+        return self.char
+
+    def push_stats(self, **groups):
+        self.pushed.append(groups)
+
+    def push_vitals(self):
+        pass
+
+
+_shooter = progression.Character()
+_shooter.skill[progression.SHOOTING] = [6, 0, progression.skill_xp_max(6)]
+_shooter.recalc()
+_blade = combat.Fighter(_XpSession(_shooter))
+_dog = mobs.Mob(1, 82, 10)
+# Harm worth a whole kill: health and stamina together are what a blow is
+# measured against (Fighter.award_xp).
+_whole = dog_stats.hp_max + dog_stats.sp_max
+_blade.award_xp(progression.MELEE, combat.SPEC_BLADE, _whole, _dog)
+check("a knife at Ближний бой 0 against the level-1 dog: a mob one level up, 20, times its 0.7",
+      _shooter.skill[progression.MELEE][:2], [0, round(20 * dog_stats.xp_mult)])
+_blade.award_xp(progression.SHOOTING, 2, _whole, mobs.Mob(2, 82, 10))
+check("the same dog is worth nothing to Стрельба 6",
+      _shooter.skill[progression.SHOOTING][:2], [6, 0])
+
+# A bullet takes little stamina: the blows of a gun pay short of the price,
+# and the kill settles the rest (RoomCombat.settle_xp). Health alone is half
+# of the dog's health and stamina, so the pistol is paid half as it shoots
+# and half at the death -- the same 14 the knife gets.
+_gunner = progression.Character()
+_gun = combat.Fighter(_XpSession(_gunner))
+_gdog = mobs.Mob(3, 82, 10)
+_gun.award_xp(progression.SHOOTING, 2, dog_stats.hp_max, _gdog)
+_by_blows = _gunner.skill[progression.SHOOTING][1]
+_grc = combat.RoomCombat.__new__(combat.RoomCombat)
+_grc.room = type("R", (), {})()
+_grc.room.players = {_gun.sess: None}
+_grc.settle_xp(_gdog)
+check("a gun's shots pay half the dog, its death the other half: 14, as for a knife",
+      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (7, [0, 14]))
+check("and the ledger is closed with the kill", _gdog.xp_ledger, {})
+
+
+# --- what keeps a room at war -----------------------------------------------------
+# The client greys its exit button for as long as the room is at war
+# (LocationInterface.battleMode), whatever the server would answer to chWorld.
+# So the war state is the rule itself: a creature after somebody here, a duel
+# inside leave_combat_timeout, or a shot or swing still in the air -- and not
+# the mere memory of having fired.
+class _Seat(object):
+    def __init__(self):
+        self.combat = combat.Fighter(self)
+
+
+_room = type("R", (), {})()
+_room.players = {_Seat(): None, _Seat(): None}
+_rc = combat.RoomCombat.__new__(combat.RoomCombat)
+_rc.room = _room
+_rc.mobs = {1: mobs.Mob(1, 82, 10)}
+_first, _second = [s.combat for s in _room.players]
+_T = 1000.0
+check("nobody hunted, aiming or duelling: peace", _rc.hostilities(_T), False)
+_rc.mobs[1].target = _second
+check("a creature after one player holds the whole room", _rc.hostilities(_T), True)
+_rc.mobs[1].target = None
+_first.aim = object()
+check("so does a burst still being aimed", _rc.hostilities(_T), True)
+_first.aim = None
+_first.last_pvp = _second.last_pvp = _T - combat.LEAVE_COMBAT_TIMEOUT + 1
+check("and a duel inside leave_combat_timeout", _rc.hostilities(_T), True)
+check("but not one past it", _rc.hostilities(_T + 2), False)
+
 # --- the server -----------------------------------------------------------------
-# AP regeneration is raised so the bar never throttles the fight, the exit
-# timer and the respawn are shortened, and the dice are seeded. The wait a
+# AP regeneration is raised so the bar never throttles the fight, the respawn
+# is shortened, and the dice are seeded. The exit timer is left at the game's
+# own thirty seconds: a chWorld inside it has to be refused, and a room
+# still at war half a minute after its last creature fell is exactly what
+# the checks below have to be able to see. The wait a
 # free resurrection costs goes to zero: that it is charged at all is
 # test_death's business, and here it would only add fifteen seconds.
 # The start cell is a server default and has moved since; these
@@ -122,8 +362,8 @@ _scratch.close()
 # the admin panel; this suite uses them to set a scene, so it asks
 # for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
-           LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT="3", LAVA_RESPAWN="4",
-           LAVA_RESURRECT_WAIT="0", LAVA_SEED="7")
+           LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT="30", LAVA_RESPAWN="4",
+           LAVA_SEED="7", LAVA_START_AFRO="20000")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 _log = []
@@ -213,11 +453,23 @@ def hexcell(cell):
     return "x0%08x" % cell
 
 
-PISTOL = 4380
-ROUNDS = items.AMMO_9MM[0]
+# The gun this suite shoots with is bought from the stall, not taken from
+# the starting kit. The kit's Самострел eats "9мм даренные" and nothing else,
+# and this stall does not sell them -- coupling the two only ever worked by
+# accident, while the kit happened to carry an ordinary 9mm gun.
+# The scenario shoots a dog from outside its aggro of five and inside the
+# gun's own reach, so the gun has to reach further than six and a half cells.
+# Of everything the stall sells, only the last two do; this is the cheaper.
+PISTOL = 25646                       # СПС, eleven cells, a clip of eighteen
+ROUNDS = 6103                        # СП-10 КС, which is what it takes
 PISTOL_SI = items.params_of(PISTOL)
 CLIP = PISTOL_SI["clip_size"]
 COST = PISTOL_SI["fire_costs"][0]
+# What holding it asks (inventory.item_level): the character's level below.
+LEVEL = inventory.item_level(PISTOL)
+# The blade: the first rung of the knives the stalls sell (knife_lvl1_A).
+KNIFE = 6229
+check("the knife is a cold arm", items.root_of(KNIFE), items.COLD_ARM)
 
 
 def login(c, first=False):
@@ -311,17 +563,47 @@ try:
     check("a peaceful location is called with ws=0", lcall["ws"], 0)
     arrival, pos = enter(c)
     npc = {p["name"]: p["id"] for n, p in arrival if n.startswith("userInfo")}
-    TECHNOGEEK, AARON = npc[652], npc[2424]
+    TECHNOGEEK = npc[652]
     c.send("getInfo;lvl=0;id=0;type=0;")
     got = c.frames()
     check("own bars on entry", [n for n, _ in got], ["userInfo_Player", "usrUp"])
     check("full at birth", (got[1][1]["hcur"], got[1][1]["hmax"]), (120, 120))
 
+    # --- the level the pistol asks -----------------------------------------------
+    # СПС asks Стрельба 5 of whoever holds it (inventory.py, "the level") and
+    # a newborn is level 0. The level is the best skill, whichever it is, so
+    # the character is made a level-5 industrialist between two sessions --
+    # not a shooter: what a shot at the dog teaches is weighed below, and a
+    # Стрельба five levels above the dog would be taught nothing.
+    c.send("logout;")
+    c.frames(0.3)
+    c.s.close()
+    store = accounts.Store(DB)
+    char_id = store.db.execute("SELECT id FROM characters WHERE name = 'gunner'").fetchone()["id"]
+    ch = progression.Character.load(store, char_id)
+    ch.skill[progression.INDUSTRY] = [LEVEL, 0, progression.skill_xp_max(LEVEL)]
+    ch.recalc()
+    ch.save(store)
+    store.close()
+    c = Client(connect())
+    login(c)
+    arrival, pos = enter(c)
+    npc = {p["name"]: p["id"] for n, p in arrival if n.startswith("userInfo")}
+    TECHNOGEEK = npc[652]
+
     # --- the kit: rounds from the stall, the pistol worn and loaded ------------
-    stall = [p for p in named(arrival, "userInfo_Trader") if p["type_list"][:1] == [PISTOL]][0]
-    ammo_idx = stall["type_list"].index(ROUNDS)
+    # The stall's own head, which is not the kit's pistol: it sells the models
+    # the wiki named, starting at the cheapest.
+    head = items.stock_for(1200)[0]
+    stall = [p for p in named(arrival, "userInfo_Trader") if p["type_list"][:1] == [head]][0]
     c.send("ss_create;s_type=1;target=%d;" % stall["id"])
     c.frames()
+    # The gun first, then its rounds, both from the stall.
+    c.send("ss_upd;param=1;obj=x%x;s_status=1;" % stall["type_list"].index(PISTOL))
+    got = c.frames()
+    check("a pistol bought", [n for n, _ in got],
+          ["cmdAck", "ss_obj_status", "ss_di_firearm", "userInfo_Player"])
+    ammo_idx = stall["type_list"].index(ROUNDS)
     c.send("ss_upd;param=200;obj=x%x;s_status=1;" % ammo_idx)
     got = c.frames()
     check("200 rounds bought", [n for n, _ in got],
@@ -331,8 +613,16 @@ try:
     c.frames(0.2)
     c.send("ss_get;target=0;slot=11;")
     lst = oids(c.frames()[0][1])
+    # The kit's own pistol is in the hand already, so the bought one goes to
+    # the other hand first and is swapped in.
     pistol = [o for o in lst[8:] if inventory.parse_oid(o)[1] == PISTOL][0]
-    c.send("ss_move;obj=x%s;to=512;from=2048;" % pistol)
+    c.send("ss_move;obj=x%s;to=513;from=2048;" % pistol)
+    c.frames()
+    kit_gun = lst[6]
+    if kit_gun != "0":
+        c.send("ss_move;obj=x%s;to=2048;from=512;" % kit_gun)
+        c.frames()
+    c.send("ss_move;obj=x%s;to=512;from=513;" % pistol)
     c.frames()
     c.send("ss_use;target=x%s;obj=x%s;type=1;" % (rounds, pistol))
     got = c.frames()
@@ -340,14 +630,20 @@ try:
     got = c.until(lambda f: f[0] == "ss_di_firearm")
     check("a full magazine", named(got, "ss_di_firearm")[0]["ammo_count"], CLIP)
     ammo = CLIP
+    # A gun that has not been fired is as new as it will ever be, and the
+    # client draws the bar from these two numbers.
+    fresh = named(got, "ss_di_firearm")[0]
+    check("and a whole gun to go with it", fresh["break"], fresh["max_break_cur"])
+    brk = int(fresh["break"])
 
     # --- the errand, and a home to come back to ----------------------------------
-    c.send("q_st;mob=%d;q_idx=1;" % TECHNOGEEK)
+    c.send("q_st;mob=%d;q_idx=%d;" % (TECHNOGEEK, quests.given_by(652).index(5)))
     got = c.frames()
     check("the dog quest is taken", got,
           [("cmdAck", {"res": 0}),
-           ("q_di_kill_mobs", dict(q_id=1, q_type=5, complete=0, kill_num=[0]))])
-    c.send("on_conv;mob=%d;op=0;" % AARON)
+           ("q_di_kill_mobs", dict(q_id=FIRST_Q, q_type=5, complete=0, kill_num=[0]))])
+    # With the technogeek, who offers "Прописка"; Aaron's safe is a bank.
+    c.send("on_conv;mob=%d;op=0;" % TECHNOGEEK)
     check("home registered on the market", c.frames(), [("cmdAck", {"res": 0})])
 
     # --- no fighting on the market: one refusal, nothing else --------------------
@@ -448,26 +744,52 @@ try:
               [bool(p["xp_skills_mask"] & 2) for p in named(got, "rp_info")][:1], [True])
     else:
         check("after the pair: c_ap, then the magazine", tail[:2], ["c_ap", "ss_di_firearm"])
-    check("the burst cost one shot's action points", named(got, "c_ap")[0]["ap"], 50 - COST)
+    check("the burst cost one shot's action points", named(got, "c_ap")[0]["ap"], 50 + 5 * LEVEL - COST)
     ammo -= 1
     check("the magazine lost a round", named(got, "ss_di_firearm")[0]["ammo_count"], ammo)
+    # And the gun lost a point with it. A whole point: Store writes these
+    # fields through int(), so anything fractional would round to nothing and
+    # the durability bar would sit full for ever, which is the fault this
+    # check exists to catch.
+    brk -= 1
+    check("and the gun a point of durability",
+          int(named(got, "ss_di_firearm")[0]["break"]), brk)
     check("the dog turns on the shooter, and the room stays at war",
           [p for n, p in got if n == "lch"], [{"enemy": dog}])
     dog_cell = last_cell(got, dog, DOG_HOME)
 
-    # --- leaving is refused while the dog is after us -----------------------------------
-    # The dog took the shooter as its target above, and that -- not the shot
-    # itself -- is what shuts the exit.
-    c.send("chWorld;")
-    got = c.frames(0.4)
-    tracker.feed(got)
-    dog_cell = last_cell(got, dog, dog_cell)
-    check("chWorld while hunted: res=39 and no gmap",
-          [(n, p) for n, p in got if n in ("cmdAck", "gmap", "lcall")], [("cmdAck", {"res": 39})])
-    # /home goes through the same gate and is refused here too, in a line of
+    # --- leaving is refused while the exit timer runs -----------------------------------
+    # The dog took the shooter as its target above and keeps him, but that is
+    # not what shuts the exit: the exit timer is, which every hit given or
+    # taken starts (the client's own countdown, LocationInterface.
+    # startExitTimer), and which runs thirty seconds here. A bullet that found
+    # the dog has started it; one that missed has not, and then the way out
+    # is still open -- so the door is tried at the first hit of the fight,
+    # the player's or the dog's, whichever comes first (try_exit).
+    # /home goes through the same gate and is refused too, in a line of
     # chat rather than a second cmdAck. Not checked inside this scene: the
     # fight below is scripted frame by frame, and one more command in the
     # middle gives the dog half a second it does not have in the script.
+    exit_tried = []
+
+    def try_exit(frames):
+        """chWorld once a hit has gone either way: res=39 and no gmap. Only
+        the player and the dog fight here, and the dog has no gun, so any
+        faHit or caHit is one the player gave or took. The frames it brings
+        back, for the tracker and the dog's whereabouts."""
+        if exit_tried or not [n for n, _ in frames if n in ("faHit", "caHit")]:
+            return []
+        exit_tried.append(True)
+        c.send("chWorld;")
+        got = c.frames(0.4)
+        check("chWorld while the exit timer runs: res=39 and no gmap",
+              [(n, p) for n, p in got if n in ("cmdAck", "gmap", "lcall")],
+              [("cmdAck", {"res": 39})])
+        return got
+
+    got = try_exit(got)
+    tracker.feed(got)
+    dog_cell = last_cell(got, dog, dog_cell)
 
     # --- moving cancels the aim, at no cost --------------------------------------------
     c.send("ss_use;type=16;obj=x%s;target=%s;" % (pistol, entity(dog)))
@@ -499,7 +821,7 @@ try:
 
     # --- the fight to the death ----------------------------------------------------------
     bites = hits_on_me = punched = 0
-    ap_max = 50
+    ap_max = 50 + 5 * LEVEL
     dead_frames = None
     for attempt in range(60):
         if ammo == 0:
@@ -511,6 +833,8 @@ try:
         c.send("ss_use;type=16;obj=x%s;target=%s;" % (pistol, entity(dog)))
         got = c.until(lambda f: f[0] == "ss_di_firearm" or (f[0] == "cmdAck" and f[1]["res"] != 0), 3)
         got += c.frames(0.2)
+        if not [p for n, p in got if n == "lch" and p.get("dead") == dog]:
+            got += try_exit(got)
         tracker.feed(got)
         for i, (n, p) in enumerate(got):
             if n == "userMove" and p.get("id") == dog:
@@ -560,21 +884,34 @@ try:
                 dead_frames = got
                 break
     check("the dog died within sixty shots", dead_frames is not None, True)
+    check("and the door was tried while the timer ran", exit_tried, [True])
     check("the dog came and bit", bites > 0, True)
     check("the player's own bars followed a bite", hits_on_me > 0, True)
     check("every burst kept its shape", tracker.finish(), [])
     names_ = [n for n, _ in dead_frames]
     i_dead = [i for i, (n, p) in enumerate(dead_frames) if n == "lch" and p.get("dead") == dog][0]
     check("the kill is reported to the journal right after lch;dead",
-          dead_frames[i_dead + 1], ("q_di_kill_mobs", dict(q_id=1, q_type=5, complete=0, kill_num=[1])))
+          dead_frames[i_dead + 1], ("q_di_kill_mobs", dict(q_id=FIRST_Q, q_type=5, complete=0,
+                                                         kill_num=[1])))
     dog_cell = last_cell(dead_frames, dog, dog_cell)
+    # The dog was the only creature after the player, so the room is at
+    # peace the moment it falls: lch;ws=0 right behind its lch;dead, not
+    # leave_combat_timeout after the last shot. Held any longer, the client
+    # keeps its exit button greyed (LocationInterface.battleMode) over a
+    # fight that is over.
+    ws_off = lambda f: f[0] == "lch" and f[1].get("ws") == 0
+    tail = list(dead_frames)
+    if not any(ws_off(f) for f in tail):
+        tail += c.until(ws_off, 1.5)
+    check("the room leaves the war state as its last hunter falls",
+          [p for n, p in tail if n == "lch" and "ws" in p], [{"ws": 0}])
     got = c.until(lambda f: f[0] == "ss_loot", 4)
     check("the corpse fades and a bag appears where it fell",
           only(got, "lch", "ss_loot"),
           [("lch", {"lostUser": dog}), ("ss_loot", {"s_status": 1, "hex": [dog_cell]})])
-    # From here the room's own life goes on around the checks: the war
-    # state ends leave_combat_timeout after the kill and the dog respawns,
-    # whenever those fall; they are gathered and judged at the end.
+    # From here the room's own life goes on around the checks: the dog
+    # respawns whenever that falls, and the peace has to hold meanwhile;
+    # both are gathered and judged at the end.
     after = list(got)
 
     # --- the bag -------------------------------------------------------------------------------
@@ -593,6 +930,12 @@ try:
     bag, loot = lst[:divider], lst[divider + 1:]
     check("the bag lists the player's things, a 0, then the loot",
           (pistol not in bag, rounds in bag, len(loot) >= 1), (True, True, True))
+    # What a dog leaves is meat for certain and the fang and the skin on a
+    # coin toss each (mobs.ANIMAL_LOOT), and the checks below need a second
+    # piece: a bag closes with its last one and code 2 has no bag to put it
+    # back into. LAVA_SEED decides the toss, so the dependency is stated here
+    # rather than surfacing as a puzzling frame mismatch further down.
+    check("the corpse holds more than one piece", len(loot) >= 2, True)
     kinds = sorted({inventory.parse_oid(o)[1] for o in loot})
     check("a dog leaves meat, and maybe a fang or a skin",
           all(k in (216, 217, 218) for k in kinds) and 216 in kinds, True)
@@ -644,8 +987,8 @@ try:
     tracker2 = FireTracker()
     tracker2.feed(got)
     check("nothing shoots while nobody fights", tracker2.finish(), [])
-    check("the room leaves the war state after leave_combat_timeout",
-          [p for n, p in got if n == "lch" and "ws" in p], [{"ws": 0}])
+    check("and peace holds while the bag is emptied and the dog comes back",
+          [p for n, p in got if n == "lch" and "ws" in p], [])
     back = [i for i, (n, p) in enumerate(got) if n == "lch" and p.get("newUser") == dog]
     check("the dog respawns under its old id on its spawn cell",
           [got[i][1] for i in back], [dict(newUser=dog, pos=DOG_HOME, rtype=0)])
@@ -655,15 +998,19 @@ try:
            got[i + 2][0], got[i + 2][1]["id"], got[i + 2][1]["hcur"]),
           ("userInfo", dog, 1, "usrUp", dog, dog_hp))
     # A blow that nothing answers must not hold the player: the exit is shut
-    # by whoever is after you, not by having swung. The dog has respawned and
-    # is minding its own business, so a swing at bare ground wakes nobody and
-    # the way out stays open with the timer still warm.
+    # by the timer a hit starts, not by having swung. The dog has respawned
+    # and is minding its own business, so a swing at bare ground wakes nobody,
+    # hits nothing, and leaves the way out open.
     ground = [n for n in progression.hex_neighbours(pos, loc.width, loc.height)
               if n not in loc.obstacles and n != DOG_HOME]
     c.send("ss_use;type=16;obj=x0;target=%s;" % hexcell(ground[0]))
     got = c.frames(1.5)
     check("the swing at empty ground was accepted",
           [p["res"] for n, p in got if n == "cmdAck"][:1], [0])
+    # The swing opens the war state -- the bar has to be charged -- and with
+    # nothing woken by it the room closes it again on its next tick.
+    check("and the room is at peace again as soon as it has landed",
+          [p for n, p in got if n == "lch" and "ws" in p], [{"ws": 1}, {"ws": 0}])
     c.send("chWorld;")
     got = c.frames()
     check("a blow nothing answered leaves the way out open",
@@ -682,7 +1029,8 @@ try:
 
     # --- a heal, on a wounded character with a bandage slipped into the bag -----------------
     store = accounts.Store(DB)
-    char_id = store.db.execute("SELECT id FROM characters").fetchone()[0]
+    char_id = store.db.execute("SELECT id FROM characters WHERE name = 'gunner'"
+                               ).fetchone()["id"]
     heal_type = next(t for t, (root, name) in sorted(items.catalogue().items())
                      if root == items.HEAL and items.params_of(t) is not None)
     heal_row = store.create_item(char_id, heal_type, items.HEAL, slot=inventory.BAG, use_count=1)
@@ -717,6 +1065,123 @@ try:
     c.frames(0.3)
     c.s.close()
 
+    # --- a knife, in the hand of a character who has only ever shot -----------------------------
+    # Стрельба 6 and Ближний бой 0, written into the database the way a
+    # character who shot his way up would have them; the pistol goes to the
+    # bag and a stall's knife into the hand. A blow that does not crit lands
+    # on the dog's stamina first (wiki "Ближний бой"), and the dog has as
+    # much of it as of health, so the first blows take no health at all:
+    # they must train the blade all the same, and the kill must bring the
+    # whole to the dog's price.
+    store = accounts.Store(DB)
+    ch = progression.Character.load(store, char_id)
+    ch.skill[progression.MELEE] = [0, 0, progression.skill_xp_max(0)]
+    ch.skill[progression.SHOOTING] = [6, 0, progression.skill_xp_max(6)]
+    ch.recalc()
+    ch.hp = ch.sp = None
+    ch.save(store)
+    pistol_uniq = inventory.parse_oid(pistol)[0]
+    store.update_item(pistol_uniq, slot=inventory.BAG)
+    fields = inventory.new_fields(KNIFE)
+    knife_root = fields.pop("root")
+    fields["slot"] = inventory.PRIMARY
+    knife_row = store.create_item(char_id, KNIFE, knife_root, **fields)
+    store.close()
+    knife = inventory.oid_of(knife_row)
+
+    c = Client(connect())
+    login(c)
+    arrival, pos = enter(c)
+    spawns = {p["pos"]: p["newUser"] for p in named(arrival, "lch") if "newUser" in p}
+    check("the dog is home again for the knife", spawns.get(DOG_HOME), dog)
+    c.send("rp_get_info;")
+    rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
+    check("a shooter's hands: Стрельба 6, Ближний бой 0 of 100",
+          (rp["a_skills"][:2], rp["xp_skills"][:2], rp["xp_max_skills"][0]), ([0, 6], [0, 0], 100))
+    # Into the dog's aggro radius; it comes the rest of the way itself.
+    pos, got = walk(c, loc, pos,
+                    lambda cell: mobs.hex_distance(cell, DOG_HOME, loc.width) <= dog_stats.aggro - 0.5,
+                    avoid={DOG_HOME})
+    dog_cell = last_cell(got, dog, DOG_HOME)
+    # What the server must have paid, worked out from what the blows did:
+    # each the part of the dog's health and stamina it took, of the price of
+    # a mob one level above the blade (20, times the dog's 0.7), and the kill
+    # whatever those parts left of a whole (progression.mob_xp,
+    # Fighter.award_xp, RoomCombat.settle_xp).
+    mirror = progression.Character()
+    whole, paid = float(dog_stats.hp_max + dog_stats.sp_max), [0.0]
+
+    def pay(share):
+        paid[0] += share
+        mirror.gain_xp(progression.MELEE, mirror.carry_xp(progression.MELEE, progression.mob_xp(
+            dog_stats.level, mirror.skill_level(progression.MELEE), share, dog_stats.xp_mult)),
+            spec_on_top=True)
+
+    dog_hp = dog_stats.hp_max
+    stamina_trained, stamina_only, shooting_pushed, dead_frames = [], 0, 0, None
+    for attempt in range(80):
+        if mobs.adjacent(pos, dog_cell, loc):
+            c.send("ss_use;type=16;obj=x%s;target=%s;" % (knife, entity(dog)))
+            got = c.until(lambda f: f[0] == "c_ap" or (f[0] == "cmdAck" and f[1]["res"] != 0), 2)
+            got += c.frames(0.2)
+        else:
+            got = c.frames(0.4)
+        dog_cell = last_cell(got, dog, dog_cell)
+        for i, (n, p) in enumerate(got):
+            if n == "rp_info" and p["xp_skills_mask"] & 2:
+                shooting_pushed += 1
+            if not (n == "caHit" and p.get("id", 0) == 0 and p["target"] == dog):
+                continue
+            to_hp = min(p["dmg"], dog_hp)
+            dog_hp -= to_hp
+            harm = to_hp + p["sdmg"]
+            if harm <= 0:
+                continue
+            stamina_only += p["dmg"] == 0
+            pay(min(harm / whole, 1.0 - paid[0]))
+            if p["dmg"] == 0:
+                stamina_trained.append(any(m == "rp_info" and q["xp_skills_mask"] & 1
+                                           for m, q in got[i + 1:]))
+        if [p for n, p in got if n == "lch" and p.get("dead") == dog]:
+            dead_frames = got
+            break
+    pay(1.0 - paid[0])             # the kill settles the rest
+    check("the dog died to the knife", dead_frames is not None, True)
+    check("some blows took stamina only", stamina_only > 0, True)
+    check("the blows that took stamina only trained Ближний бой as well",
+          any(stamina_trained), True)
+    check("and not one of them Стрельба", shooting_pushed, 0)
+    c.send("rp_get_info;")
+    rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
+    check("the kill paid Ближний бой the dog's whole price, 20 times its 0.7",
+          (rp["a_skills"][0], rp["xp_skills"][0]), (0, round(20 * dog_stats.xp_mult)))
+    check("to exactly what the owner's rule makes of those blows",
+          [rp["a_skills"][0], rp["xp_skills"][0]], mirror.skill[progression.MELEE][:2])
+    check("while Стрельба is where it was", (rp["a_skills"][1], rp["xp_skills"][1]), (6, 0))
+    # The dog was all that was after him: peace at once, and the way out.
+    tail = list(dead_frames)
+    if not any(ws_off(f) for f in tail):
+        tail += c.until(ws_off, 1.5)
+    check("a knife kill ends the war state as a shot does",
+          [p for n, p in tail if n == "lch" and "ws" in p], [{"ws": 0}])
+    c.send("chWorld;")
+    got = c.frames()
+    check("and the way out is open at once",
+          [(n, p.get("res")) for n, p in got if n in ("cmdAck", "gmap")], [("cmdAck", 0), ("gmap", None)])
+    c.send("userMsg;entry=@/goto 100@;group=0;")
+    c.until(lambda f: f[0] == "lcall")
+    arrival, pos = enter(c)
+    if dog not in [p["newUser"] for p in named(arrival, "lch") if "newUser" in p]:
+        c.until(lambda f: f[0] == "lch" and f[1].get("newUser") == dog, 10)
+    c.send("logout;")
+    c.frames(0.3)
+    c.s.close()
+    # The pistol back into the hand for what follows.
+    store = accounts.Store(DB)
+    store.update_item(knife_row["uniq"], slot=inventory.BAG)
+    store.update_item(pistol_uniq, slot=inventory.PRIMARY)
+    store.close()
+
     # --- death and resurrection ------------------------------------------------------------------
     store = accounts.Store(DB)
     store.save_character_state(char_id, hp=2, sp=0)
@@ -740,6 +1205,8 @@ try:
           [(n, p) for n, p in got if n in ("cmdAck", "faAim")], [("cmdAck", {"res": 3})])
     c.send("moveTo;path=|%d|%d|;" % (pos, pos + 1))
     check("dead: a walk is dropped", [n for n, _ in c.frames(0.4) if n in ("cmdAck", "userMove", "breakMv")], [])
+    # "Частичное восстановление", pressed the moment the body falls: the
+    # window's countdown is only there to press it for whoever does not.
     c.send("resurrect;res_type=0;")
     got = c.until(lambda f: f[0] == "lcall", 2)
     check("resurrection is acknowledged and the character is called home",
@@ -749,12 +1216,12 @@ try:
     c.send("getInfo;lvl=0;id=0;type=0;")
     got = c.until(lambda f: f[0] == "usrUp")
     v = named(got, "usrUp")[0]
-    # A free resurrection is the penalised one: a quarter of the HP and no
-    # stamina (combat.Fighter.resurrect). The prices and the rest of what
-    # dying costs are test_death's.
-    check("alive at home, on a free resurrection's quarter of the HP",
+    # A free resurrection is the penalised one: the 10% of health and of
+    # stamina its window prints (combat.Fighter.resurrect). The prices and
+    # the rest of what dying costs are test_death's.
+    check("alive at home, on a free resurrection's tenth of HP and stamina",
           (v["hcur"], v["hcur"] < v["hmax"], v["scur"]),
-          (max(1, int(v["hmax"] * combat.FREE_HP_SHARE)), True, 0))
+          (max(1, v["hmax"] * 10 // 100), True, v["smax"] * 10 // 100))
     c.send("logout;")
     c.frames(0.3)
 except Exception:

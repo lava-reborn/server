@@ -32,6 +32,25 @@ class BigUInt(str):
     """Force x-prefixed big-unsigned encoding (kept as text, per client)."""
 
 
+class RawList(list):
+    """A list of strings sent the way the client reads string lists back:
+    |@a@|@b@| with NO escaping.
+
+    A scalar @string@ goes through XMLString.unescape on arrival
+    (SCDataParser.getStringData), but the items of a string list do not:
+    getStringListData only cuts the text between "|@" and "@|;" on "@|@"
+    and hands the pieces over as they are. An escaped item would reach the
+    screen as "O%27Neil", and the client's own-row checks, which compare a
+    list's names with the gamer's unescaped one, would miss. So these go
+    raw -- and raw, an item must not hold what ends or splits the list, or
+    what the frame parser walks by (SCDataParser.parse looks for the next
+    ";" and "=" straight through a list). The caller keeps them out
+    (clans.list_safe); one that slips through is refused here, never sent.
+    """
+
+    UNSAFE = (";", "=", "@", "|")
+
+
 class Repeated(list):
     """Every value of a key that occurred more than once in one frame.
 
@@ -100,6 +119,13 @@ def _enc_value(v):
         return "1" if v else "0"
     if isinstance(v, (int, float)):
         return "%g" % v if isinstance(v, float) else str(v)
+    if isinstance(v, RawList):
+        if not v:
+            return "|"
+        for x in v:
+            if any(c in str(x) for c in RawList.UNSAFE):
+                raise ValueError("unsafe item in a raw string list: %r" % (x,))
+        return "|" + "|".join("@%s@" % x for x in v) + "|"
     if isinstance(v, (list, tuple)):
         if not v:
             return "|"

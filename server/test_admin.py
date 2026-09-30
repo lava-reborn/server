@@ -17,7 +17,6 @@ with none set there is no panel at all.
 import json
 import os
 import socket
-import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -48,6 +47,8 @@ HTTP_CLOSED_PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
+import inventory  # noqa: E402
+import storage  # noqa: E402
 import transport  # noqa: E402
 
 accounts.DB_PATH = DB
@@ -145,8 +146,8 @@ def sign_in(login=None, password=None):
 
 
 def row(char_id):
-    db = sqlite3.connect(DB)
-    db.row_factory = sqlite3.Row
+    # storage, not sqlite3: under LAVA_DB_URL the same suite runs on Postgres.
+    db = storage.connect(DB)
     try:
         return dict(db.execute("SELECT * FROM characters WHERE id = ?",
                                (char_id,)).fetchone())
@@ -156,12 +157,12 @@ def row(char_id):
 
 def wait_done(n=1, timeout=10):
     """Wait for the game server to drain the queue."""
-    db = sqlite3.connect(DB)
+    db = storage.connect(DB)
     try:
         end = time.time() + timeout
         while time.time() < end:
-            left = db.execute("SELECT COUNT(*) FROM admin_actions"
-                              " WHERE done_at IS NULL").fetchone()[0]
+            left = db.execute("SELECT COUNT(*) c FROM admin_actions"
+                              " WHERE done_at IS NULL").fetchone()["c"]
             if left == 0:
                 return True
             time.sleep(0.2)
@@ -264,18 +265,35 @@ try:
     check("и об этом сказано", "никого" in body, True)
 
     print("\nкто в игре")
-    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+
+    def panel_until(pred, timeout=10):
+        """The panel once `pred` holds of it, or as it was at the deadline.
+
+        The list travels game server -> database -> panel, once a second
+        and in two processes, so one fixed sleep either waits for nothing
+        or, on a loaded machine, not long enough: the game server's first
+        mark can come after the panel's first answer, and a leaving player
+        after the next pass. The panel still has to say the right thing;
+        it only gets a deadline to say it by instead of an instant.
+        """
+        end = time.time() + timeout
+        while True:
+            code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+            if pred(body) or time.time() > end:
+                return body
+            time.sleep(0.25)
+
+    body = panel_until(lambda b: "никого нет в игре" in b)
     check("пока никто не зашёл -- так и написано",
           "никого нет в игре" in body, True)
     watcher = Client()
     watcher.enter()
-    time.sleep(2.5)                      # a pass of the game server's loop
-    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    body = panel_until(lambda b: "<td><b>tester</b></td>" in b)
     check("вошедший игрок виден в таблице",
-          "никого нет в игре" not in body, True)
+          ("никого нет в игре" not in body, "<td><b>tester</b></td>" in body),
+          (True, True))
     watcher.close()
-    time.sleep(2.5)
-    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    body = panel_until(lambda b: "никого нет в игре" in b)
     check("вышедший из неё пропадает", "никого нет в игре" in body, True)
 
     print("\nперсонаж не в игре")
@@ -286,6 +304,31 @@ try:
     check("очередь разобрана", wait_done(), True)
     check("деньги записаны в базу",
           row(_char_id)["afro"], before["afro"] + 500)
+    # Вещь -- такой же, как выдаёт Session.admin_give в игре (new_fields):
+    # раньше строка ложилась голой, ствол 0 из 0 -- NaN у клиента, мимо
+    # окна ремонта; дробовик -- на выключенном режиме огня, лекарство без
+    # зарядов.
+    GIFTS = (25636, 7072, 6049)          # Walther, lamantin_shotgun_4, Med_Pacific_Rest
+    for t in GIFTS:
+        post(HTTP_PORT, "/admin/do",
+             {"kind": "item", "char_id": str(_char_id), "type_id": str(t),
+              "count": "1"}, cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    db = storage.connect(DB)
+    got = {r["type_id"]: (r["brk"], r["max_break_cur"], r["cur_mode"], r["use_count"])
+           for r in db.execute("SELECT * FROM items WHERE char_id = ?", (_char_id,)).fetchall()
+           if r["type_id"] in GIFTS}
+    said = [r["result"] for r in db.execute(
+        "SELECT result FROM admin_actions WHERE kind = 'item' ORDER BY id").fetchall()]
+    db.close()
+    check("выдано мимо сессии -- персонажа в игре нет", said,
+          ["положено в рюкзак (не в игре)"] * len(GIFTS))
+    fresh = {t: inventory.new_fields(t) for t in GIFTS}
+    check("вещь в рюкзак -- как новая: прочность заводская, режим огня рабочий, заряды на месте",
+          got, {t: (f.get("brk", 0), f.get("max_break_cur", 0), f.get("cur_mode", 0),
+                    f.get("use_count", 0)) for t, f in fresh.items()})
+    check("  ..это и в самом деле не нули",
+          [got[t] for t in GIFTS], [(500, 500, 0, 0), (400, 400, 2, 0), (0, 0, 0, 10)])
 
     print("\nперсонаж в игре")
     cl = Client()
@@ -345,9 +388,9 @@ try:
          {"kind": "ban", "account_id": str(_acc), "reason": "нельзя"},
          cookie=COOKIE)
     check("очередь разобрана", wait_done(), True)
-    db = sqlite3.connect(DB)
+    db = storage.connect(DB)
     banned = db.execute("SELECT banned FROM accounts WHERE id = ?",
-                        (_acc,)).fetchone()[0]
+                        (_acc,)).fetchone()["banned"]
     db.close()
     check("аккаунт помечен", banned, 1)
     cl = Client()

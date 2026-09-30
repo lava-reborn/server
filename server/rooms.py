@@ -22,6 +22,7 @@ import logging
 from collections import namedtuple
 
 import names
+import travel
 import world
 from protocol import Str
 
@@ -81,8 +82,12 @@ def viewer_frame(cmd, params):
 class Room:
     """One location, shared. Subscribers are sessions standing in it."""
 
-    def __init__(self, loc, ids, mob_types):
+    def __init__(self, loc, ids, mob_types, key=None):
         self.loc = loc
+        # What Rooms files it under (travel.room_key, or a pack's key from
+        # encounters.py): where a bag on its ground is written down as lying
+        # (combat.RoomCombat.place), so that a restart can put it back.
+        self.key = loc.id if key is None else key
         # entity id -> NPC, allocated once: every player in this room sees the
         # same trader under the same id, and a second visit finds it unchanged.
         self.npcs = {}
@@ -92,8 +97,16 @@ class Room:
         # the first entry; ws is what lcall reports, and lch;ws=1/0 switch it.
         self.ws = False
         self.combat = None
-        skipped = stood_in = 0
+        skipped = stood_in = filled = 0
+        # An empty slot (type 0) names nobody: the dead server chose who
+        # stood there. In the few battle files world.camp_fill lists --
+        # Вади-Хальфа's camps and quest places, a designed table -- it says
+        # who, slot by slot; anywhere else the slot stays empty, as before.
+        fill = list(world.camp_fill(loc.id)) if loc.war else []
         for cell, type_id in loc.spawns:
+            if type_id == 0 and fill:
+                type_id = fill.pop(0)
+                filled += 1
             # A creature the client has no record of cannot be drawn or named.
             # res misses in its copy of mobs.xml and the art resolves to
             # mobs/undefined.xml, and worse, the name id reaches the client
@@ -117,14 +130,33 @@ class Room:
             # The file lists everyone who ever stood here, seasonal stalls
             # and clan-event vendors included; world.belongs_here says who
             # belongs to the place itself.
-            if not world.belongs_here(type_id, name, root, loc.war):
+            if not world.belongs_here(type_id, name, root, loc.war, loc.id):
                 skipped += 1
                 continue
-            self.npcs[ids.npc()] = NPC(cell, type_id, root)
-        log.info("  ..    room %s (%s) holds %d inhabitants%s%s",
+            self.npcs[ids.npc()] = NPC(cell, type_id, world.entity_root(type_id, root))
+        # Then whoever data/placements.json puts down here, under ids of the
+        # same counter: to the client an inhabitant is an inhabitant. They
+        # were put here on purpose, so belongs_here is not asked of them;
+        # what it guards against -- a box that is loot, a fighter in a place
+        # at peace -- check_placements refuses before the server starts.
+        # One the client cannot draw or name is still left out, as above.
+        placed = 0
+        for rec in world.placed_in(loc.id):
+            type_id = int(rec.get("type", 0))
+            if type_id not in mob_types or not names.known(type_id):
+                skipped += 1
+                continue
+            x, y = rec["cell"]
+            root = mob_types[type_id][0]
+            self.npcs[ids.npc()] = NPC(int(y) * loc.width + int(x), type_id,
+                                       world.entity_root(type_id, root))
+            placed += 1
+        log.info("  ..    room %s (%s) holds %d inhabitants%s%s%s%s",
                  loc.title, loc.file, len(self.npcs),
                  ", %d unknown to the client" % skipped if skipped else "",
-                 ", %d stood in by kin (designed)" % stood_in if stood_in else "")
+                 ", %d stood in by kin (designed)" % stood_in if stood_in else "",
+                 ", %d empty slots filled (designed)" % filled if filled else "",
+                 ", %d put down by hand" % placed if placed else "")
 
     def npc(self, entity_id):
         return self.npcs.get(entity_id)
@@ -229,8 +261,77 @@ class Rooms:
         if room is None:
             loc_id = key[0] if isinstance(key, tuple) else key
             room = self.rooms[key] = Room(world.location(loc_id), self.ids,
-                                          self.mob_types)
+                                          self.mob_types, key)
         return room
+
+
+def placement_problems(mob_types, table=None):
+    """["loc N: why"] for every row of data/placements.json (or of the table
+    given, location id -> rows, as world.placements returns it) that cannot
+    stand in its room. Empty when all of them can.
+
+    A row names a creature the client has a record and a name of (the same
+    test the file's own spawns are put to: an unknown one costs the player
+    the login screen); not a loot box or a heap of ore (world.creature_role
+    "object"), which the client would draw with a health bar and nothing
+    would loot; not a hostile creature in a location at peace, where nobody
+    can fight it (world.belongs_here leaves those out of the files too). Its
+    cell is on the grid, walkable, and not an exit, where it would stand in
+    the way out, nor where the file or another row already has somebody.
+    And it says why it is there, the way every hand-kept row does.
+    """
+    out = []
+    table = world.placements() if table is None else table
+    for loc_id, rows in sorted(table.items()):
+        try:
+            loc = world.location(int(loc_id))
+        except (KeyError, OSError, ValueError, AttributeError) as exc:
+            out.append("loc %s: no location to put anybody in (%s)" % (loc_id, exc))
+            continue
+        taken = {cell for cell, _t in loc.spawns}
+        sides = travel.exit_sides(loc)
+        for rec in rows:
+            try:
+                type_id = int(rec["type"])
+                x, y = (int(v) for v in rec["cell"])
+            except (KeyError, TypeError, ValueError):
+                out.append("loc %s: a row without a type and a cell [x, y]: %r" % (loc_id, rec))
+                continue
+            what = "loc %s: %d on %d,%d" % (loc_id, type_id, x, y)
+            if type_id not in mob_types or not names.known(type_id):
+                out.append("%s: a creature the client has no record or name of" % what)
+                continue
+            root = mob_types[type_id][0]
+            if world.creature_role(type_id) == "object":
+                out.append("%s: a loot box or a heap of ore, not an inhabitant" % what)
+            if root == world.MOB and not loc.war:
+                out.append("%s: a hostile creature in a location at peace" % what)
+            cell = y * loc.width + x
+            if not (0 <= x < loc.width and 0 <= y < loc.height):
+                out.append("%s: off the %dx%d grid" % (what, loc.width, loc.height))
+            elif cell in loc.obstacles:
+                out.append("%s: on an obstacle" % what)
+            elif cell in sides:
+                out.append("%s: on an exit" % what)
+            elif cell in taken:
+                out.append("%s: where somebody already stands" % what)
+            taken.add(cell)
+            if not str(rec.get("why") or "").strip():
+                out.append("%s: no why" % what)
+            if "home" in rec and not isinstance(rec["home"], bool):
+                out.append("%s: home is true or false, not %r" % (what, rec["home"]))
+    return out
+
+
+def check_placements(mob_types, table=None):
+    """Raise ValueError naming every row that cannot stand (placement_problems).
+    The server asks this before its first socket (server.main), so a table
+    that would put somebody nowhere, or somewhere the client cannot draw
+    him, does not start the game; a room is only built on its first entry,
+    too late to say no."""
+    problems = placement_problems(mob_types, table)
+    if problems:
+        raise ValueError("data/placements.json: " + "; ".join(problems))
 
 
 class GlobalMapRoom:
@@ -241,14 +342,32 @@ class GlobalMapRoom:
     the figure fades, after 6 s it is removed without a word. So each viewer
     is sent a userMove for every visible player on a fixed beat, moving or
     not, and the beat has to be under 3 s.
+
+    That silence is also the only goodbye: userLost is never sent. The
+    client does act on it -- GlobalMap.userLost takes the player out of its
+    list and kills the figure's timer -- but the figure on the map
+    (DisplayGlobalMap) and the name in the list beside it
+    (GlobalMapInterface) listen for the timer's "lost" alone, and nothing
+    hears the "removePlayer" userLost ends in. So a userLost left the
+    figure standing where the player went in, frozen, until the viewer's
+    own next gmap built the map anew, and the player's next newUser drew a
+    second one beside it: the doubled players of the map. With no more
+    userMove about him, the timer's "lost" takes the figure, the name and
+    the player together, 6-7 s after the last one.
     """
     HEARTBEAT = 2.0
 
     def __init__(self, radius):
         self.radius = radius
-        # session -> the set of sessions it has been shown (newUser sent and
-        # no userLost since)
+        # session -> the set of sessions it is being shown now: introduced
+        # and beaten a userMove every HEARTBEAT
         self.seen = {}
+        # session -> the player ids introduced to it since its gmap, whose
+        # figures its client may still hold (see _introduce)
+        self.told = {}
+        # session -> the leg its viewers were last sent (moved), while it has
+        # one: what their clients are extrapolating the figure along
+        self.legs = {}
         self._timer = None
 
     def enter(self, sess):
@@ -256,19 +375,37 @@ class GlobalMapRoom:
         if sess in self.seen:
             return
         self.seen[sess] = set()
+        # A gmap is a new GlobalMap on the client (Master.gmap), holding
+        # nobody yet.
+        self.told[sess] = set()
         self._refresh()
         if self._timer is None:
             self._arm()
 
     def leave(self, sess):
-        """Into a cell, /goto, logout, a dropped socket: userLost to whoever
-        could see the leaver."""
+        """Into a cell, /goto, /home, a resurrection, a pack on the way,
+        logout, a dropped socket: whoever could see the leaver stops hearing
+        of him, and their clients take the figure off by themselves (see
+        the class docstring)."""
         if self.seen.pop(sess, None) is None:
             return
+        self.told.pop(sess, None)
+        # Every way out drops the leg before it gets here
+        # (Session.cancel_travel), and a figure left on one would walk on
+        # for the seconds the viewers' timers take: it stops where the leg
+        # has brought it, with the zero speed an arrival sends.
+        stop = None
+        leg = self.legs.pop(sess, None)
+        if leg is not None:
+            started, sx, sy, vx, vy = leg
+            dt = asyncio.get_running_loop().time() - started
+            stop = dict(id=sess.pid, dx=sx + vx * dt, dy=sy + vy * dt,
+                        vx=0, vy=0, t=0)
         for other, shown in self.seen.items():
             if sess in shown:
                 shown.discard(sess)
-                other.send("userLost", id=sess.pid)
+                if stop is not None:
+                    other.send("userMove", **stop)
         if not self.seen and self._timer is not None:
             self._timer.cancel()
             self._timer = None
@@ -277,6 +414,11 @@ class GlobalMapRoom:
         """A new leg or an arrival: whoever sees sess gets the vector now
         rather than on the next beat, so the figure turns when the player
         does."""
+        if sess in self.seen:
+            if sess.leg:
+                self.legs[sess] = sess.leg
+            else:
+                self.legs.pop(sess, None)
         for other, shown in self.seen.items():
             if sess in shown:
                 self._send_move(other, sess)
@@ -289,14 +431,18 @@ class GlobalMapRoom:
 
     def _refresh(self):
         """Bring each viewer's shown set in line with who is in radius:
-        newUser for the newly visible, userLost for those gone out of it."""
+        introduced when newly visible, and simply no longer beaten once out
+        of it, which is how the client is told (see the class docstring)."""
+        # Closed, or off the map by now, and still here: a way out that did
+        # not call leave(). Beaten on, he would stand on every viewer's map
+        # where he left it for as long as they looked.
+        for gone in [s for s in self.seen if s.closed or not s.on_map]:
+            self.leave(gone)
         for viewer, shown in self.seen.items():
             visible = {o for o in self.seen
                        if o is not viewer and self._within(viewer, o)}
             for other in visible - shown:
                 self._introduce(viewer, other)
-            for other in shown - visible:
-                viewer.send("userLost", id=other.pid)
             shown.clear()
             shown.update(visible)
 
@@ -305,11 +451,22 @@ class GlobalMapRoom:
         (GlobalMap.newUser: x = gamer.x - dx), so the offset is viewer minus
         other, in whole cells. The absolute position and speed follow at once
         in a userMove, which is also what starts the client's liveness
-        timer for the figure."""
-        vx, vy = viewer.current_pos()
-        ox, oy = other.current_pos()
-        viewer.send("newUser", id=other.pid,
-                    dx=int(round(vx - ox)), dy=int(round(vy - oy)))
+        timer for the figure.
+
+        newUser goes once per viewer's gmap, though. It always adds a figure
+        (GlobalMap.addPlayer), and one of the same player can still be
+        standing there -- gone from sight a moment ago, fading, its timer
+        not yet run out -- and would be drawn twice. userMove alone adds a
+        player the client has none of under that id and moves the one it
+        has otherwise (GlobalMap.userMove), so every later introduction is
+        that frame alone, right whether the timer has gone off or not."""
+        told = self.told.setdefault(viewer, set())
+        if other.pid not in told:
+            told.add(other.pid)
+            vx, vy = viewer.current_pos()
+            ox, oy = other.current_pos()
+            viewer.send("newUser", id=other.pid,
+                        dx=int(round(vx - ox)), dy=int(round(vy - oy)))
         self._send_move(viewer, other)
 
     def _send_move(self, viewer, other):

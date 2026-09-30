@@ -17,6 +17,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -33,29 +34,52 @@ static class GameWindow
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
     [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr hwnd, uint cmd);
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hwnd, out RECT r);
+    [DllImport("user32.dll")] static extern bool GetClientRect(IntPtr hwnd, out RECT r);
     [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hwnd, int cmd);
     [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hwnd, IntPtr after,
                                                              int x, int y, int cx, int cy, uint flags);
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern bool SetWindowText(IntPtr hwnd, string text);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern int GetClassName(IntPtr hwnd, StringBuilder buf, int max);
 
     [StructLayout(LayoutKind.Sequential)]
     struct RECT { public int Left, Top, Right, Bottom; }
 
-    // MainWindowHandle only ever finds a window that is already visible, and
-    // this one is started hidden on purpose, so the process is enumerated by
-    // hand. The projector opens exactly one top-level window of its own; the
-    // largest unowned one is it.
+    // The window the game is actually drawn in, found by class.
+    //
+    // It used to be found by size -- "the projector opens exactly one
+    // top-level window of its own; the largest unowned one is it" -- and that
+    // was wrong. Measured on this machine, the projector opens TWO unowned
+    // top-level windows six milliseconds apart:
+    //
+    //      141 ms   966x709    class ShockwaveFlash   "Adobe Flash Player 32"
+    //      147 ms   1920x1023  class Messaging        "Msg"
+    //
+    // The wrong one is nearly three times the bigger. Both carry a caption, a
+    // system menu and a thick frame, so the styles do not separate them; only
+    // the class does. Whenever the poll below landed after that six-millisecond
+    // gap -- which is most of the time -- the helper was what got parked,
+    // renamed and revealed, while the real window, started hidden, stayed
+    // hidden. That is the "two windows and one of them is empty" that kept
+    // coming back, and the reason the game sometimes could not be seen at all.
+    //
+    // MainWindowHandle is no use here for the original reason: it only returns
+    // a window that is already visible, and this one is started hidden on
+    // purpose.
+    const string FLASH_CLASS = "ShockwaveFlash";
+
     public static IntPtr Find(Process game, int millis)
     {
         int deadline = Environment.TickCount + millis;
+        StringBuilder cls = new StringBuilder(64);
         while (Environment.TickCount < deadline)
         {
             if (game.HasExited) return IntPtr.Zero;
 
-            IntPtr best = IntPtr.Zero;
-            long bestArea = 0;
+            IntPtr best = IntPtr.Zero, fallback = IntPtr.Zero;
+            long bestArea = 0, fallbackArea = 0;
             uint want = (uint)game.Id;
             EnumWindows(delegate(IntPtr h, IntPtr l)
             {
@@ -66,11 +90,25 @@ static class GameWindow
                 RECT r;
                 if (!GetWindowRect(h, out r)) return true;
                 long area = (long)(r.Right - r.Left) * (r.Bottom - r.Top);
-                if (area > bestArea) { bestArea = area; best = h; }
+                if (area <= 0) return true;
+
+                cls.Length = 0;
+                bool flash = GetClassName(h, cls, cls.Capacity) > 0
+                             && cls.ToString() == FLASH_CLASS;
+                if (flash)
+                {
+                    if (area > bestArea) { bestArea = area; best = h; }
+                }
+                // Kept for a projector build whose window class is not this
+                // one: better the old guess than no window at all. It is only
+                // used when nothing of the right class was seen.
+                else if (area > fallbackArea) { fallbackArea = area; fallback = h; }
                 return true;
             }, IntPtr.Zero);
 
-            if (best != IntPtr.Zero && bestArea > 0) return best;
+            if (best != IntPtr.Zero) return best;
+            if (fallback != IntPtr.Zero && Environment.TickCount + 250 > deadline)
+                return fallback;          // out of time; take what there is
             Thread.Sleep(2);      // tight: every millisecond here is a blink
         }
         return IntPtr.Zero;
@@ -90,20 +128,62 @@ static class GameWindow
         catch { }
     }
 
+    // The game is drawn 950 by 650 and the wrapper scales it while keeping
+    // that shape (showAll). So the window is cut to the same shape: the
+    // largest 950:650 rectangle the desktop has room for. Any other shape
+    // would be the picture plus black bands, and stretching it to fill them
+    // is what makes every face in the game squat.
+    // The shape of the picture. It is the WRAPPER's stage, not the game's own
+    // 950x650: under showAll the game reads Stage.width from whatever sits on
+    // level 0, and lays itself out to that. Learned from the wrapper's header
+    // rather than written down twice.
+    static int ART_W = 950, ART_H = 650;
+
+    public static void SetArt(int w, int h)
+    {
+        if (w > 0 && h > 0) { ART_W = w; ART_H = h; }
+    }
+
+    // How many times the picture's own size the window should be. Zero means
+    // as large as the desktop allows. A smaller number is a sharper picture:
+    // there are only 950x650 real pixels, and every one of them is spread
+    // over Zoom*Zoom of the screen's.
+    public static double Zoom;
+
     public static void Reveal(IntPtr h)
     {
         if (h == IntPtr.Zero) return;
         try
         {
-            RECT r;
-            if (GetWindowRect(h, out r))
+            RECT r, c;
+            if (GetWindowRect(h, out r) && GetClientRect(h, out c))
             {
-                int w = r.Right - r.Left, ht = r.Bottom - r.Top;
+                // The frame and menu bar are not part of the picture, so
+                // they are measured and added on top of it.
+                int chromeW = (r.Right - r.Left) - (c.Right - c.Left);
+                int chromeH = (r.Bottom - r.Top) - (c.Bottom - c.Top);
                 Rectangle area = Screen.PrimaryScreen.WorkingArea;
+                int room_w = area.Width - chromeW, room_h = area.Height - chromeH;
+                int w, ht;
+                if (Zoom > 0)
+                {
+                    w = (int)Math.Round(ART_W * Zoom);
+                    ht = (int)Math.Round(ART_H * Zoom);
+                }
+                else
+                {
+                    w = room_h * ART_W / ART_H;
+                    ht = room_h;
+                }
+                // Never larger than the desktop, whatever was asked for.
+                if (w > room_w) { w = room_w; ht = room_w * ART_H / ART_W; }
+                if (ht > room_h) { ht = room_h; w = room_h * ART_W / ART_H; }
+                w += chromeW;
+                ht += chromeH;
                 SetWindowPos(h, IntPtr.Zero,
                              area.X + (area.Width - w) / 2,
                              area.Y + (area.Height - ht) / 2,
-                             0, 0, SWP_NOSIZE | SWP_NOZORDER);
+                             w, ht, SWP_NOZORDER);
             }
             ShowWindow(h, SW_SHOW);
             SetForegroundWindow(h);

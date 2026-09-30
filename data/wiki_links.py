@@ -20,7 +20,10 @@ The wiki never mentions a type_id, so every link is inferred and carries a
   calibre         ammunition: the calibre of the page and the quality column
                   (КС, СТ, ОТ, ...) give Ammo_<calibre>_<KS|ST|OT|...>
   manual          hand-made tables for buffs and a few drinks whose names
-                  are transliterations (Анестетик МК I -> Anesthetic_MK_1)
+                  are transliterations (Анестетик МК I -> Anesthetic_MK_1),
+                  and for food and first-aid kits, whose pages carry no icon
+                  or the icon of another type (WRONG_ICONS, which the icon
+                  methods skip)
   firearm_class_level
                   mass-produced firearms are named <class>_<index>_lvl_<N>
                   and the wiki names real guns, so the only key is the class
@@ -33,6 +36,7 @@ _mod_* modifications. Coverage per category is printed and stored in _meta.
 """
 import collections
 import datetime
+import json
 import os
 import re
 import sys
@@ -43,6 +47,53 @@ from wiki_common import (HERE, ITEM_CATEGORIES, FIREARM_CLASS, ROMAN, MASS_FIREA
                          parse_name, parse_tables, dump_json)
 
 OUT = os.path.join(HERE, "wiki_links.json")
+# The hand-made half of the firearm pairing: which line each article names,
+# for the articles where class and level alone leave two lines fitting and
+# data/firearm_families.py reports "ambiguous". See that file's _meta.
+LINES_MANUAL = os.path.join(HERE, "firearm_lines_manual.json")
+MOD_TAIL = re.compile(r"\s+Mod\s*[IVX]+\s*$")
+
+
+def hand_lines():
+    """Base article title -> the family line chosen for it by hand.
+
+    A missing file is not an error: without it every ambiguous firearm simply
+    stays a list of candidates, which is where the linker was before.
+    """
+    try:
+        with open(LINES_MANUAL, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except FileNotFoundError:
+        return {}
+    return {t: v["family"] for t, v in (doc.get("lines") or {}).items()}
+
+
+def hand_levels():
+    """Base article title -> the level supplied by hand, for the few articles
+    that state none.
+
+    The level is not decoration here: link_firearm can only look for candidate
+    lines once it knows which level to look in, and it takes that from the
+    "Необходимые навыки" row. A page without that row therefore produces no
+    links at all, and no decision recorded in firearm_lines_manual.json can
+    reach it -- the hand lookup happens inside the loop over the levels the
+    page states.
+
+    So an entry may carry a level of its own. It is a decision like the family
+    beside it, and it is written down in the same place, with the same
+    obligation to say why.
+    """
+    try:
+        with open(LINES_MANUAL, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except FileNotFoundError:
+        return {}
+    return {t: int(v["level"]) for t, v in (doc.get("lines") or {}).items()
+            if v.get("level") is not None}
+
+
+HAND = hand_lines()
+HAND_LEVEL = hand_levels()
 
 # "Mod IX" in a firearm title -> the _mod_* suffix in objects.xml. Read off
 # the effect descriptions of the 278 Mod pages (see data/mods_wiki.json).
@@ -118,7 +169,74 @@ MANUAL = [
     (r"^Палец трофей$", ["tr_Finger"], 0.9), (r"^Ухо трофей$", ["tr_Ear"], 0.9),
     (r"^Кисть трофей$", ["tr_Hand"], 0.9), (r"^Сердце$", ["tr_Heart"], 0.8),
     (r"^Рога трофей$", ["tr_Horn"], 0.9), (r"^Жетон трофей$", ["tr_Token"], 0.9),
+    # Food and first-aid kits. The food pages carry icons of their own
+    # ("Food1.png") that name no type, so nothing linked them; the kit pages
+    # carry icons named after the wrong type (WRONG_ICONS below). The right
+    # type comes from two agreeing sources. The original texts.xml lists each
+    # line as one block of six level bands, 0_3 .. 20 in order -- rows 320
+    # (food), 332 (food, 10 portions), 356 (kits "(20) (G)"), 392 (kits
+    # "(5) (P)") -- and every row states "Расход ОД", which equals the
+    # page's "Очки действия". And the client's own icons show a root marked
+    # "ЕДА" for Med_Pacific_Heal_0_3_A, a first-aid box for Med_Pacific_HR_*_G
+    # and an army pouch for Med_Battle_HR_*_P.
+    (r"^Корень Маниока$", ["Med_Pacific_Heal_0_3_A"], 0.9),
+    (r"^Отварная Кукуруза$", ["Med_Pacific_Heal_4_7_A"], 0.9),
+    (r"^Сушеная Рыба$", ["Med_Pacific_Heal_8_11_A"], 0.9),
+    (r"^Вяленое Мясо$", ["Med_Pacific_Heal_12_15_A"], 0.9),
+    (r"^Завтрак Туриста$", ["Med_Pacific_Heal_16_19_A"], 0.9),
+    (r"^Консерва$", ["Med_Pacific_Heal_20_A"], 0.9),
+    (r"^Корни Маниока$", ["Med_Pacific_Heal_0_3_Ax10"], 0.9),
+    (r"^Фуль$", ["Med_Pacific_Heal_4_7_Ax10"], 0.9),
+    (r"^Связка Сушеной Рыбы$", ["Med_Pacific_Heal_8_11_Ax10"], 0.9),
+    (r"^Коробка Вяленого Мяса$", ["Med_Pacific_Heal_12_15_Ax10"], 0.9),
+    (r"^Суточный Рацион$", ["Med_Pacific_Heal_16_19_Ax10"], 0.9),
+    (r"^Продуктовый Набор$", ["Med_Pacific_Heal_20_Ax10"], 0.9),
+    (r"^Аптечка «Эгоист»$", ["Med_Pacific_HR_0_3_G"], 0.9),
+    (r"^Аптечка «Самоспас»$", ["Med_Pacific_HR_4_7_G"], 0.9),
+    (r"^Аптечка «Резерв»$", ["Med_Pacific_HR_8_11_G"], 0.9),
+    (r"^Аптечка «Медик»$", ["Med_Pacific_HR_12_15_G"], 0.9),
+    (r"^Аптечка «Профи»$", ["Med_Pacific_HR_16_19_G"], 0.9),
+    (r"^Аптечка «Спасатель»$", ["Med_Pacific_HR_20_G"], 0.9),
+    (r"^Аптечка «Мини»$", ["Med_Battle_HR_0_3_P"], 0.9),
+    (r"^Аптечка «Стандарт»$", ["Med_Battle_HR_12_15_P"], 0.9),
+    # Belts. The pages carry no icon at all, and the client names the line
+    # after the weapon class its pouches hold: "Удобные подсумки для
+    # пистолетных магазинов" is belt_pistols, "... для 12 мм" belt_shotguns,
+    # "... магазинов ПП" belt_sub_machineguns, "... магазинов винтовки"
+    # belt_rifles, each with its gold copy (_g, the G column). Ваккас (1204)
+    # sells the four (data/npcs.json stock). «Подсумки рукопашника» is left
+    # out: belt_closecombat's own icon is on «Противогазная сумка(Q)».
+    (r"^Подсумки пистолетные$", ["belt_pistols", "belt_pistols_g"], 0.9),
+    (r"^Подсумки охотника$", ["belt_shotguns", "belt_shotguns_g"], 0.9),
+    (r"^Подсумки спецназовца$", ["belt_sub_machineguns", "belt_sub_machineguns_g"], 0.9),
+    (r"^Подсумки снайпера$", ["belt_rifles", "belt_rifles_g"], 0.9),
+    # The gold lottery's ticket: its page carries an icon named after no
+    # type, and the client's WhLoteryKey_g is the one gold key of Вади-Хальфа's
+    # series (LoteryKey, WhLoteryKey_g, DnLoteryKey_*, AhLoteryKey_* -- the
+    # order of texts.xml 6918-6925, «Лотерейный билет [8]», «Золотой
+    # лотерейный билет [8]», [10] ...).
+    (r"^Золотой лотерейный билет \(8\)$", ["WhLoteryKey_g"], 0.9),
 ]
+
+# Icon files the wiki uploaded under another type's internal name, so an
+# icon_exact link off them lands on the wrong type with the highest confidence
+# the linker gives. Each is used by one page only: Med_Pacific_Heal_0_3_A.png
+# shows the "Мини" kit (the client's own icon of that name is a manioc root),
+# Med_Pacific_Heal_12_15_A.png the "Стандарт" kit (the client's is dried meat),
+# and the six Med_Battle_HR_*_P.png sit on the "Эгоист" .. "Спасатель" pages,
+# kits the original sells as "(20) (G)" and that the client draws as
+# Med_Pacific_HR_*_G. The pages are linked by MANUAL above instead.
+WRONG_ICONS = {norm(n) for n in (
+    "Med_Pacific_Heal_0_3_A", "Med_Pacific_Heal_12_15_A",
+    "Med_Battle_HR_0_3_P", "Med_Battle_HR_4_7_P", "Med_Battle_HR_8_11_P",
+    "Med_Battle_HR_12_15_P", "Med_Battle_HR_16_19_P", "Med_Battle_HR_20_P")}
+# And icons one page borrowed from another type, skipped on that page
+# alone: qMultipass is «Билет в Донголу» (1124, texts.xml 6909), and the
+# wiki put it on «Пропуск», a quest pass to the Maghreb base that costs
+# 30 000 afro, and on «Лотерейный билет (8)», so Рияд's stall sold a
+# ticket to Dongola and the lottery man one too.
+WRONG_PAGE_ICONS = {"Пропуск": {norm("qMultipass")},
+                    "Лотерейный билет (8)": {norm("qMultipass")}}
 
 # Blueprint page title -> bpg_<key>_lvl<N>.
 BLUEPRINT_EFFECT = {
@@ -248,12 +366,12 @@ def skill_levels(page):
     return out
 
 
-def link_icons(cat, page):
+def link_icons(cat, page, title=None):
     links = []
     seen = set()
     for img in image_names(page):
         key = norm(img)
-        if not key or key in seen:
+        if not key or key in seen or key in WRONG_ICONS                 or key in WRONG_PAGE_ICONS.get(title, ()):
             continue
         seen.add(key)
         if key in cat.by_norm:
@@ -358,7 +476,18 @@ def link_firearm(cat, title, page, cats):
     if mod and mod.startswith("unknown"):
         return []
     links = []
-    for col, lvl in skill_levels(page):
+    levels = skill_levels(page)
+    if not levels:
+        # No "Необходимые навыки" row, so the page states no level and there is
+        # nothing to search. Unless the level was supplied by hand: then look in
+        # that one, under an empty column label, which column_tier reads as the
+        # ordinary (A) variant -- correct for a table with no (P)/(G) columns,
+        # which is the only shape these pages have.
+        manual = HAND_LEVEL.get(MOD_TAIL.sub("", title))
+        if manual is None:
+            return links
+        levels = [("", manual)]
+    for col, lvl in levels:
         tier = column_tier(col)
         families = collections.defaultdict(list)
         for cls in classes:
@@ -368,10 +497,18 @@ def link_firearm(cat, title, page, cats):
                     families[base].append(t)
         if not families:
             continue
-        conf = round(0.6 / len(families), 2)
+        # A decision recorded by hand settles the line; the column and the
+        # modification still pick the variant, so one entry covers the base
+        # gun, its Mod pages and its (P)/(G) copies.
+        chosen = HAND.get(MOD_TAIL.sub("", title))
+        if chosen and chosen in families:
+            families = {chosen: families[chosen]}
+            method, conf = "hand", 1.0
+        else:
+            method, conf = "firearm_class_level", round(0.6 / len(families), 2)
         ids = [t for v in families.values() for t in v]
         links.append(cat.link(
-            "firearm_class_level", conf, "%s lvl %d %s%s" % (
+            method, conf, "%s lvl %d %s%s" % (
                 "/".join(classes), lvl, tier, " mod " + mod if mod else ""),
             ids, column=col, level=lvl,
             candidates=[dict(family=b, type_ids=sorted(v)) for b, v in sorted(families.items())]))
@@ -416,7 +553,7 @@ def main():
         if kind == "ammo":
             links += link_ammo(cat, title, page)
         links += link_manual(cat, title)
-        icon_links = link_icons(cat, page) + link_title(cat, title)
+        icon_links = link_icons(cat, page, title) + link_title(cat, title)
         mod = title_mod(title, kind)
         links += narrow_by_mod(cat, icon_links, mod, kind)
         if kind == "firearm" and not any(l["confidence"] >= 0.5 for l in links):

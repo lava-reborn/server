@@ -59,6 +59,41 @@ check("action points = 50 + 5*best skill", ch.ap_max, 50)
 check("weight = (30 + 2*strength) kg, in grams", ch.max_weight(), 40000)
 check("base armour is the card's (3*agility + perception)/4", ch.armor, 5.0)
 check("level is the best skill", ch.level, 0)
+
+# Experience from mobs, the owner's rule (progression.mob_xp): a price by the
+# mob's level, halved at the player's level, quartered one below, nothing two
+# below; a level takes 5, 8, 11 ... kills of mobs above and half as long again
+# each time. The first version priced a kill in the player's own threshold and
+# paid a veteran more for a colonist than a beginner; nothing here noticed, so
+# the shape is pinned now, not only the numbers.
+_T = progression.skill_xp_max
+check("the colonist: 20 from below, 10 at its level, 5 one above, then nothing",
+      [progression.mob_xp(1, lvl) for lvl in range(4)], [20, 10, 5, 0])
+check("a level-10 mob by the same ladder",
+      [progression.mob_xp(10, lvl) for lvl in (9, 10, 11, 12)], [267, 133.5, 66.75, 0])
+check("a mob far above pays as one level up, no more",
+      progression.mob_xp(10, 3), progression.mob_xp(4, 3))
+check("kills of mobs above: 5, 8, 11, 17, 25, half as long again each level",
+      [-(-_T(lvl) // int(progression.mob_xp(lvl + 1, lvl))) for lvl in range(5)],
+      [5, 8, 11, 17, 25])
+check("at one's own level: 10, 20, 32, 44, 67",
+      [int(-(-_T(lvl) // progression.mob_xp(lvl, lvl))) for lvl in range(5)],
+      [10, 20, 32, 44, 67])
+check("one mob never pays more as the player grows past it",
+      all(progression.mob_xp(m, a) >= progression.mob_xp(m, a + 1)
+          for m in range(1, 21) for a in range(m - 1, m + 3)), True)
+check("no kill is worth a whole level, a boss's included",
+      all(progression.mob_xp(m, lvl, 1.0, 3.0) < _T(lvl)
+          for lvl in range(20) for m in range(34)), True)
+check("a share of the kill pays its share; xp_mult counts once",
+      (progression.mob_xp(1, 0, 0.5), progression.mob_xp(1, 0, 1.0, 3.0)), (10, 60))
+_c = Character()
+check("the fraction a hit leaves over waits for the next one",
+      [_c.carry_xp(progression.SHOOTING, 2.5) for _ in range(4)], [2, 3, 2, 3])
+_c.learn_spec(2)
+_c.gain_xp(progression.SHOOTING, 100, spec_idx=2, spec_on_top=True)
+check("a kill feeds the skill whole and a learned specialisation the same on top",
+      (_c.skill[1][:2], _c.spec[2][:2]), ([1, 0], [0, 100]))
 check("the first specialisation is free", ch.spec_cost(), (0, 0))
 
 # The frame: a mask and a dense list per group, values only for the set bits.
@@ -217,41 +252,54 @@ check("an oversized stored reputation loads capped", Character.load(store, char_
 store.close()
 
 # An older database: the characters table as it was, no char_stats at all.
-OLD = os.path.join(tempfile.mkdtemp(), "old.db")
-raw = sqlite3.connect(OLD)
-raw.executescript("""
-CREATE TABLE accounts (id INTEGER PRIMARY KEY, login TEXT NOT NULL UNIQUE,
-    hash TEXT NOT NULL UNIQUE, created INTEGER NOT NULL, banned INTEGER NOT NULL DEFAULT 0);
-CREATE TABLE characters (id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL,
-    slot INTEGER NOT NULL, name TEXT NOT NULL, sex INTEGER NOT NULL, res TEXT NOT NULL,
-    loc INTEGER, pos INTEGER, gx REAL, gy REAL, on_map INTEGER NOT NULL DEFAULT 0,
-    UNIQUE (account_id, slot));
-INSERT INTO accounts VALUES (1, 'old', 'abc', 0, 0);
-INSERT INTO characters (id, account_id, slot, name, sex, res, loc, pos) VALUES (1, 1, 0, 'Старый', 0, '45676', 102, 3809);
-""")
-raw.commit()
-raw.close()
-old = accounts.Store(OLD)
-cols = {r["name"] for r in old.db.execute("PRAGMA table_info(characters)")}
-check("migration adds the new columns",
-      all(c in cols for c, _d in accounts.CHARACTER_COLUMNS), True)
-check("an old character gets the newborn's rows", len(old.load_stats(1)), 25)
-migrated = Character.load(old, 1)
-check("and the newborn's numbers", (migrated.hp_max, migrated.afro, migrated.spec[0][0]), (120, 1000, -1))
-check("its position is untouched", (old.character(1)["loc"], old.character(1)["pos"]), (102, 3809))
-old.close()
-check("opening it again changes nothing", len(accounts.Store(OLD).load_stats(1)), 25)
+# A SQLite file made by hand; the same upgrade on Postgres is test_storage_pg's.
+if not os.environ.get("LAVA_DB_URL"):
+    OLD = os.path.join(tempfile.mkdtemp(), "old.db")
+    raw = sqlite3.connect(OLD)
+    raw.executescript("""
+    CREATE TABLE accounts (id INTEGER PRIMARY KEY, login TEXT NOT NULL UNIQUE,
+        hash TEXT NOT NULL UNIQUE, created INTEGER NOT NULL, banned INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE characters (id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL,
+        slot INTEGER NOT NULL, name TEXT NOT NULL, sex INTEGER NOT NULL, res TEXT NOT NULL,
+        loc INTEGER, pos INTEGER, gx REAL, gy REAL, on_map INTEGER NOT NULL DEFAULT 0,
+        UNIQUE (account_id, slot));
+    INSERT INTO accounts VALUES (1, 'old', 'abc', 0, 0);
+    INSERT INTO characters (id, account_id, slot, name, sex, res, loc, pos) VALUES (1, 1, 0, 'Старый', 0, '45676', 102, 3809);
+    """)
+    raw.commit()
+    raw.close()
+    old = accounts.Store(OLD)
+    cols = {r["name"] for r in old.db.execute("PRAGMA table_info(characters)")}
+    check("migration adds the new columns",
+          all(c in cols for c, _d in accounts.CHARACTER_COLUMNS), True)
+    check("an old character gets the newborn's rows", len(old.load_stats(1)), 25)
+    migrated = Character.load(old, 1)
+    check("and the newborn's numbers", (migrated.hp_max, migrated.afro, migrated.spec[0][0]), (120, 1000, -1))
+    check("its position is untouched", (old.character(1)["loc"], old.character(1)["pos"]), (102, 3809))
+    old.close()
+    check("opening it again changes nothing", len(accounts.Store(OLD).load_stats(1)), 25)
 
 
 # --- over the socket --------------------------------------------------------
 SDB = os.path.join(tempfile.mkdtemp(), "server.db")
 accounts.DB_PATH = SDB
 _store = accounts.Store(SDB)
+if os.environ.get("LAVA_DB_URL"):
+    # One database for both halves under Postgres: the in-process tester
+    # and Ветеран go, so the socket's are the only ones, as with two files.
+    for _table in ("char_stats", "items", "char_quests", "char_quests_done",
+                   "mail", "map_marks", "characters", "accounts"):
+        _store.db.execute("DELETE FROM %s" % _table)
+    _store.db.commit()
 _store.register("tester", "secret")
 _store.close()
 CRED = accounts.credential("tester", "secret")
 
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=SDB, LAVA_CHEATS="1")
+# The lines the server says by itself (Session.say) are off on a served
+# server; this suite reads them as the server's reasons, so it asks for
+# them by name.
+env["LAVA_SERVER_CHAT"] = "1"
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 

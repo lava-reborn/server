@@ -1058,16 +1058,21 @@ class Placer:
                 return False
             if not placed[i]:
                 return True
-            return any(manhattan(cell, c) <= ADJACENT and real[cell] == real[c]
+            # A verified cell may carry no tooltip at all (a quest place the
+            # wiki gives, 45 «Курьер» on 5967,1737): it names nothing, so no
+            # file grows from it into a named neighbour.
+            return any(manhattan(cell, c) <= ADJACENT and c in real and real[cell] == real[c]
                        for c in placed[i])
 
         kin_bonus = {}
 
         def kin(cell, i):
-            """Placed files within KIN cells sharing a rare file-name word."""
+            """Placed files within KIN cells sharing a rare file-name word.
+            A verified file the placer would not have looked at itself --
+            a quest place, a file named test (28 «Гонец») -- lends none."""
             n = 0
             for j, cells in placed.items():
-                if j != i and self.rare[i] & self.rare[j] \
+                if j != i and self.rare[i] & self.rare.get(j, set()) \
                         and any(cheb(cell, c) <= KIN for c in cells):
                     n += 1
             return min(W["neighbour"] * n, W["neighbour_cap"])

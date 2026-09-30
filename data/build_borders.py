@@ -29,7 +29,9 @@ name, so the table can be adopted or ignored.
 A rim cell that already carries a settlement is left alone -- the two the
 client lets us check (182 "Западные Предгорья" on gx 5833 and 322 "Северные
 Предгорья" on gy 1600) have no outward exit of their own, which is what a
-cell on the edge of the world is supposed to look like.
+cell on the edge of the world is supposed to look like. 182 has since moved
+to the Nubian valley's «Поля и Пастбища» (data/settlements_verified.json),
+and its old corner 5833,1607 takes a tile of the ring like its neighbours.
 
     python3 data/build_borders.py                    # the world's rectangle
     python3 data/build_borders.py --bounds captions  # the caption box it was

@@ -1,0 +1,685 @@
+{
+ "_meta": {
+  "about": "Clothing sets: which five pieces make one, what each piece is called and worth, what the set adds, what a full set draws its wearer as. Read by server/sets.py at start; a file that does not parse or does not validate stops the server (the set names are string ids the HTTP preload must carry). Keys starting with _ never reach the wire. Built by data/build_sets.py from the owner's wardrobe layout; edit the layout and rebuild, or edit here by hand and keep the rules.",
+  "decided": "Owner's wardrobe layout (main.json): 15 sets on the ladder, Беженец 1, Колонист 2, Странник 4, Магриб 6, Налетчик 8, Пустынник 10, Чёрный Ловелас 12, Спецназ 13, Легионер 14, Штурм-М 15, Красное Эхо 16, Тёмное Эхо 17, Дредноут 18, Паладин 19, Апокалипсис 20. Trader Локсли (5213, 'Одежда и Броня') sells the rungs up to level 8, A then G, helm to boots, mod00 only (data/npcs.json stock 5213); the higher sets exist as data only, for quests and drops to come.",
+  "real": "FROM THE WIKI wherever it has the number: the 2013 tables of these very sets and their pieces (data/wiki/pages.json, parsed into data/wiki_items.json), each member's _wiki naming the page and the column. Names and descriptions from the original texts.xml or the wiki, as each piece's _desc says (none: the wiki page's).",
+  "designed": "DESIGNED only where the wiki is silent or contradicts itself, and each such place says so in its set's _designed: a variant column the wiki does not have, the ladder's Стрельба where a page asks another, four prices a page gives that its own set page refutes, and three sets with no numbers on the wiki at all (Чёрный Ловелас's pieces, Дредноут, Паладин), interpolated between their neighbours on the ladder.",
+  "rules": [
+   "Pieces: the layout's A piece for each slot (or quest piece, _Q_); the G variant is the G of the same series and level, the same icon in gold. A set of quest pieces is its one variant, Q. A quest piece among A ones is matched in G by the G of the series the rest of the set is. No P anywhere: the owner took premium out of the game (items.premium).",
+   "set key = set_type = the texts.xml row of the name of the set these very types formed in the original (the block 10938-11289): Колонист[N] for Set_M_LVL_N, Беженец[N] for Bs_M_LVL_N, Легионер / Красное ЭXO / Темное ЭXO / Штурм-М / Дредноут / Паладин / Апокалипсис[N] for Exzo_M_LVL_N, the [Q] rows for the quest family Bs_U. Stable, unique, below 100 000, and the row the types already answered to. The owner's names are his own: Странник sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник on Колонист[7]'s, Спецназ on Колонист[17]'s.",
+   "Магриб is the owner's name for Bs_M_LVL_16, whose icons are a steel helmet, a field shirt, a plate vest, army trousers and boots: the wiki's Армейские вещи ('used everywhere, the military of Магриб among them'), whose pieces ask Стрельба 6, the rung he put it on. Its numbers, names and bonus are that page's.",
+   "name: written the way texts.xml writes one, [level][variant] and all, with the ladder's level, and cleaned by server/orig_texts.item_name: [A] and the level go, [G] shows as ' (G)', [Q] as ' (Q)' like every quest thing in the game.",
+   "res: the figure (res/personages/<res>, a folder with its .xml) the layout gives, else the one suggested to the owner; the same on every variant; 0 leaves the wearer's own.",
+   "Numbers per piece from the wiki page in _wiki: Уровень брони -> armor_class, Износ -> max_break_abs, Вес -> weight (grams), Здоровье / Выносливость / Очки действия / Крит. попадание / Избег. крит. попадание -> bonus_hp / bonus_st / bonus_od / bonus_cp / bonus_ce, Базовая цена -> cost (afro) or g_cost (hundredths of G: 0.25 G is 25), Необходимые атрибуты / навыки / специализации -> need.",
+   "Columns: the page's A column for A, its G column for G. A lone column is the variant its price says and the other copies its numbers with the price converted at 4000 afro = 1 G, the rate of every wiki set page; rounding half up. A quest piece takes its page's first column (Тёмное Эхо's pages have three, by the attribute each favours: Сила, Ловкость, Восприятие) and is priced in afro, as the wiki prices it.",
+   "Variants: A priced in afro (cost), exchangeable; G priced in gold (g_cost), cost 0, not exchangeable; Q priced in afro and not exchangeable, as the wiki's quest pieces; premium 0 throughout.",
+   "Requirement Стрельба = the set's level on the ladder, on every piece; the other requirements are the page's. Where a page asks another Стрельба, its set's _designed says so.",
+   "Set bonuses per K pieces worn, from the set page's column (a lone column serves every variant); cumulative, K=5 adds to what 2..4 gave, the way the client's tooltip lights its lines. Снаряжение Чёрного Ловеласа and Темное Эхо are transcribed from the page's wikitext, which wiki_items.json does not parse. Вещи Беженца has none ('Дополнительных бонусов и параметров не предусмотрено').",
+   "Модификация паладин is Апокалипсис's table: the page lists the five Апокалипсис pieces and its 300 G is their sum; only its title and blurb are Паладин's.",
+   "DESIGNED sets (no numbers on the wiki): each number of each piece linear between the nearest rungs below and above that have wiki numbers, by level -- value = low + (high - low) x (level - low level) / (high level - low level), half up -- from their A (or Q) pieces in the same slot; afro prices to whole thousands; Телосложение asked likewise, a requirement only one neighbour has is not carried; the G copies the A's numbers, its price at 4000 afro = 1 G. A set with no wiki page gets its bonuses the same way, K by K and bonus by bonus, 0 where a neighbour has none.",
+   "Not carried: a piece's own attribute bonus (the wiki's 'Бонусы к атрибутам') has no field in server/sets.py ITEM_FIELDS; it is kept under the piece's _bonus_attribs, unread, until it has one. Nor 'Допустимость продажи: Нет' of the quest pieces.",
+   "Wiki numbers kept although odd, for the owner to judge: Пончо's Выносливость 45 at the first rung; Снаряжение Чёрного Ловеласа's bonuses are Штурм-М's A column word for word (+20 action points at three pieces); on the owner's ladder Магриб (Армейские вещи, 4 G the set) stands above Странник (5 G) and Красное Эхо (500 000 afro) above Штурм-М (700 000), both weaker than the rung below; Броня пустынника (G) and Ботинки легионера (G) wear out sooner than their A, as their pages say; Апокалипсис asks 5 in every firearm specialisation."
+  ],
+  "sets": [
+   "Беженец (level 1): A 11218, G 11221 -- Bs_M_LVL_0",
+   "Колонист (level 2): A 11167, G 11169 -- Set_M_LVL_2",
+   "Странник (level 4): A 11191, G 11193 -- Set_M_LVL_11",
+   "Магриб (level 6): A 11258, G 11260 -- Bs_M_LVL_16",
+   "Налетчик (level 8): A 11185, G 11187 -- Set_M_LVL_8",
+   "Пустынник (level 10): A 11182, G 11184 -- Set_M_LVL_7",
+   "Чёрный Ловелас (level 12): Q 11120 -- Bs_U_LVL_12",
+   "Спецназ (level 13): A 11206, G 11208 -- Set_M_LVL_17",
+   "Легионер (level 14): A 10954, G 10956 -- Exzo_M_LVL_6",
+   "Штурм-М (level 15): A 11002, G 11004 -- Exzo_M_LVL_16",
+   "Красное Эхо (level 16): A 10961, G 10965 -- Exzo_M_LVL_8",
+   "Тёмное Эхо (level 17): Q 11125 -- Bs_U_LVL_16",
+   "Дредноут (level 18): A 11016, G 11018 -- Exzo_M_LVL_18",
+   "Паладин (level 19): A 11030, G 11033 -- Exzo_M_LVL_19",
+   "Апокалипсис (level 20): A 11043, G 11046 -- Exzo_M_LVL_20"
+  ],
+  "fields": "sets.<set_type>: name, desc (cleaned by orig_texts as described), family (the client's series), level (the ladder's), variant, res, bonus, members; _layout, _source and _designed are the audit trail. bonus.<K> (K = 2..6 pieces worn): hp, st, od, cp, ce, and any attribute, skill or specialisation by the name the client's tooltip gives it (Сила, Стрельба, Ближний бой, ...). members.<helm|shirt|armor|pants|boots>: type, name and desc (the piece's own, over the original's), _wiki / _desc (where the numbers and the text come from), then ss_si_wear fields laid over the designed frame the way a wiki record is -- armor_class, max_break_abs, weight, cost (afro), g_cost (hundredths of G), premium, exchang, bonus_hp, bonus_st, bonus_od, bonus_cp, bonus_ce -- need: requirements by name, and _bonus_attribs (not read, see rules)."
+ },
+ "sets": {
+  "11218": {
+   "name": "Беженец[1][A]",
+   "desc": "Добротная одежда беженца. Еще не успела истрепаться.",
+   "_layout": "sgyqaabf",
+   "_source": "key texts.xml 11218, the row of the set these types formed in the original; desc texts.xml 11219; numbers wiki, each piece's own page (its _wiki); bonus none: the wiki's Вещи Беженца says there is none",
+   "_designed": ["Стрельба 1 on every piece, the set's level (the wiki's pieces ask none)", "exchang 1 on every piece where the wiki says 'Допустимость обмена: Нет': there they were a quest's gift, here they are bought, and an A piece follows the A rule"],
+   "family": "Bs_M",
+   "level": 1,
+   "variant": "A",
+   "res": 0,
+   "bonus": {},
+   "members": {
+    "helm": {"type": 10059, "name": "Панама[1][A]", "desc": "Легкая шляпа с упругими полями, выполненная в стиле милитари. Неплохо защищает от солнца.", "_wiki": "Панама (its one column, A)", "_desc": "texts.xml 22946, its Latin e made Cyrillic and its <br/> a space (the wiki's copy writes 'Не плохо')", "armor_class": 2, "max_break_abs": 625, "weight": 1250, "cost": 500, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 5, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "shirt": {"type": 10060, "name": "Пончо[1][A]", "desc": "Этот древнейший предмет одежды, пришедший к нам из Южной Америки. Хорошо защищает от солнца, ветра, песка и пыли.", "_wiki": "Пончо (its one column, A)", "armor_class": 1, "max_break_abs": 375, "weight": 750, "cost": 300, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 45, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "armor": {"type": 10061, "name": "Самодельная Броня[1][A]", "desc": "Броня собранная из различного хлама техногенного происхождения.", "_wiki": "Самодельная броня (its one column, A)", "armor_class": 5, "max_break_abs": 675, "weight": 1500, "cost": 600, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 5, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "pants": {"type": 10062, "name": "Шорты[1][A]", "desc": "Некогда это были штаны, но элегантным движением руки, они превратились в эти замечательные шорты!", "_wiki": "Шорты (its one column, A)", "armor_class": 1, "max_break_abs": 500, "weight": 1000, "cost": 400, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 10, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "boots": {"type": 10063, "name": "Самодельные тапки[1][A]", "desc": "Тапки изготовленные народными умельцами из старых автомобильных покрышек и полосок резины.", "_wiki": "Самодельные тапки (its one column, A)", "armor_class": 1, "max_break_abs": 250, "weight": 500, "cost": 200, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 5, "need": {"Телосложение": 5, "Стрельба": 1}}
+   }
+  },
+  "11221": {
+   "name": "Беженец[1][G]",
+   "desc": "Добротная одежда беженца. Еще не успела истрепаться.",
+   "_layout": "sgyqaabf",
+   "_source": "key texts.xml 11221, the row of the set these types formed in the original; desc texts.xml 11219; numbers wiki, each piece's own page (its _wiki); bonus none: the wiki's Вещи Беженца says there is none",
+   "_designed": ["Стрельба 1 on every piece, the set's level (the wiki's pieces ask none)", "the wiki's pieces have no G column: the afro column's numbers, priced in gold at 4000 afro = 1 G"],
+   "family": "Bs_M",
+   "level": 1,
+   "variant": "G",
+   "res": 0,
+   "bonus": {},
+   "members": {
+    "helm": {"type": 10079, "name": "Панама[1][G]", "desc": "Легкая шляпа с упругими полями, выполненная в стиле милитари. Неплохо защищает от солнца.", "_wiki": "Панама (its one column, A)", "_desc": "texts.xml 22946, its Latin e made Cyrillic and its <br/> a space (the wiki's copy writes 'Не плохо')", "armor_class": 2, "max_break_abs": 625, "weight": 1250, "cost": 0, "g_cost": 13, "premium": 0, "exchang": 0, "bonus_st": 5, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "shirt": {"type": 10080, "name": "Пончо[1][G]", "desc": "Этот древнейший предмет одежды, пришедший к нам из Южной Америки. Хорошо защищает от солнца, ветра, песка и пыли.", "_wiki": "Пончо (its one column, A)", "armor_class": 1, "max_break_abs": 375, "weight": 750, "cost": 0, "g_cost": 8, "premium": 0, "exchang": 0, "bonus_st": 45, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "armor": {"type": 10081, "name": "Самодельная Броня[1][G]", "desc": "Броня собранная из различного хлама техногенного происхождения.", "_wiki": "Самодельная броня (its one column, A)", "armor_class": 5, "max_break_abs": 675, "weight": 1500, "cost": 0, "g_cost": 15, "premium": 0, "exchang": 0, "bonus_st": 5, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "pants": {"type": 10082, "name": "Шорты[1][G]", "desc": "Некогда это были штаны, но элегантным движением руки, они превратились в эти замечательные шорты!", "_wiki": "Шорты (its one column, A)", "armor_class": 1, "max_break_abs": 500, "weight": 1000, "cost": 0, "g_cost": 10, "premium": 0, "exchang": 0, "bonus_st": 10, "need": {"Телосложение": 5, "Стрельба": 1}},
+    "boots": {"type": 10083, "name": "Самодельные тапки[1][G]", "desc": "Тапки изготовленные народными умельцами из старых автомобильных покрышек и полосок резины.", "_wiki": "Самодельные тапки (its one column, A)", "armor_class": 1, "max_break_abs": 250, "weight": 500, "cost": 0, "g_cost": 5, "premium": 0, "exchang": 0, "bonus_st": 5, "need": {"Телосложение": 5, "Стрельба": 1}}
+   }
+  },
+  "11167": {
+   "name": "Колонист[2][A]",
+   "desc": "Добротная одежда колониста. Еще не успела истрепаться.",
+   "_layout": "sl77ql0k",
+   "_source": "key texts.xml 11167, the row of the set these types formed in the original; desc texts.xml 11164; numbers wiki, each piece's own page (its _wiki); bonus wiki Вещи Колонистов",
+   "family": "Set_M",
+   "level": 2,
+   "variant": "A",
+   "res": 102,
+   "bonus": {
+    "5": {"hp": 5, "cp": 1, "ce": 1}
+   },
+   "members": {
+    "helm": {"type": 10179, "name": "Гоглы с фильтром[2][A]", "desc": "Очки-консервы интегрированные с противопыльным респиратором.", "_wiki": "Каска строителя (A column)", "_desc": "texts.xml 16576", "armor_class": 5, "max_break_abs": 750, "weight": 1500, "cost": 1000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 7, "bonus_cp": 1, "need": {"Телосложение": 6, "Стрельба": 2}},
+    "shirt": {"type": 10180, "name": "Рубашка[2][A]", "desc": "Рубашка неизвестного происхождения с короткими рукавами.", "_wiki": "Рубашка (A column)", "armor_class": 1, "max_break_abs": 450, "weight": 900, "cost": 600, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 18, "need": {"Телосложение": 6, "Стрельба": 2}},
+    "armor": {"type": 10181, "name": "Кусковая броня[2][A]", "desc": "Броня изготовленная из кусков выделанной кожи и железных пластин.", "_wiki": "Кусковая броня (A column)", "armor_class": 20, "max_break_abs": 900, "weight": 1800, "cost": 1200, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 7, "bonus_ce": 1, "need": {"Телосложение": 6, "Стрельба": 2}},
+    "pants": {"type": 10182, "name": "Джинсы[2][A]", "desc": "Брюки из плотной хлопчатобумажной ткани, с проклёпанными стыками швов на карманах. Старые и грязные, но всё еще прочные.", "_wiki": "Джинсы (A column)", "_desc": "texts.xml 16747, the wiki's very sentence as the original spells it (the wiki's hand copy splits 'про клепанными')", "armor_class": 1, "max_break_abs": 600, "weight": 1200, "cost": 800, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 13, "need": {"Телосложение": 6, "Стрельба": 2}},
+    "boots": {"type": 10183, "name": "Старые ботинки[2][A]", "desc": "Старые кожаные ботинки пережившие не только великую катастрофу, но и не одного владельца.", "_wiki": "Старые ботинки (A column)", "armor_class": 1, "max_break_abs": 300, "weight": 600, "cost": 400, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_st": 6, "need": {"Телосложение": 6, "Стрельба": 2}}
+   }
+  },
+  "11169": {
+   "name": "Колонист[2][G]",
+   "desc": "Добротная одежда колониста. Еще не успела истрепаться.",
+   "_layout": "sl77ql0k",
+   "_source": "key texts.xml 11169, the row of the set these types formed in the original; desc texts.xml 11164; numbers wiki, each piece's own page (its _wiki); bonus wiki Вещи Колонистов",
+   "family": "Set_M",
+   "level": 2,
+   "variant": "G",
+   "res": 102,
+   "bonus": {
+    "5": {"hp": 5, "cp": 1, "ce": 1}
+   },
+   "members": {
+    "helm": {"type": 10199, "name": "Гоглы с фильтром[2][G]", "desc": "Очки-консервы интегрированные с противопыльным респиратором.", "_wiki": "Каска строителя (G column)", "_desc": "texts.xml 16576", "armor_class": 6, "max_break_abs": 750, "weight": 1500, "cost": 0, "g_cost": 25, "premium": 0, "exchang": 0, "bonus_st": 8, "bonus_cp": 1, "need": {"Телосложение": 6, "Стрельба": 2}},
+    "shirt": {"type": 10200, "name": "Рубашка[2][G]", "desc": "Рубашка неизвестного происхождения с короткими рукавами.", "_wiki": "Рубашка (G column)", "armor_class": 1, "max_break_abs": 450, "weight": 900, "cost": 0, "g_cost": 15, "premium": 0, "exchang": 0, "bonus_st": 24, "need": {"Телосложение": 6, "Стрельба": 2}},
+    "armor": {"type": 10201, "name": "Кусковая броня[2][G]", "desc": "Броня изготовленная из кусков выделанной кожи и железных пластин.", "_wiki": "Кусковая броня (G column)", "armor_class": 23, "max_break_abs": 900, "weight": 1800, "cost": 0, "g_cost": 30, "premium": 0, "exchang": 0, "bonus_st": 11, "bonus_ce": 1, "need": {"Телосложение": 6, "Стрельба": 2}},
+    "pants": {"type": 10202, "name": "Джинсы[2][G]", "desc": "Брюки из плотной хлопчатобумажной ткани, с проклёпанными стыками швов на карманах. Старые и грязные, но всё еще прочные.", "_wiki": "Джинсы (G column)", "_desc": "texts.xml 16747, the wiki's very sentence as the original spells it (the wiki's hand copy splits 'про клепанными')", "armor_class": 1, "max_break_abs": 600, "weight": 1200, "cost": 0, "g_cost": 20, "premium": 0, "exchang": 0, "bonus_st": 19, "need": {"Телосложение": 6, "Стрельба": 2}},
+    "boots": {"type": 10203, "name": "Старые ботинки[2][G]", "desc": "Старые кожаные ботинки пережившие не только великую катастрофу, но и не одного владельца.", "_wiki": "Старые ботинки (G column)", "armor_class": 1, "max_break_abs": 300, "weight": 600, "cost": 0, "g_cost": 10, "premium": 0, "exchang": 0, "bonus_st": 8, "need": {"Телосложение": 6, "Стрельба": 2}}
+   }
+  },
+  "11191": {
+   "name": "Странник[4][A]",
+   "desc": "Добротная экипировка, в которую облачены Странники. Они могут продать её всем желающим, предоставив защиту и удобство за минимум стоимости.",
+   "_layout": "svmxr8oi",
+   "_source": "key texts.xml 11191, the row of the set these types formed in the original; desc wiki Сет Странник; numbers wiki, each piece's own page (its _wiki); bonus wiki Сет Странник (one column)",
+   "_designed": ["Стрельба 4 on every piece, the set's level (the wiki's pieces ask none)", "the wiki's pieces have no afro column: the gold column's numbers, priced in afro at 4000 afro = 1 G"],
+   "family": "Set_M",
+   "level": 4,
+   "variant": "A",
+   "res": 114,
+   "bonus": {
+    "2": {"hp": 5, "st": 5},
+    "3": {"st": 10, "od": 2, "Сила": 1},
+    "4": {"st": 15, "od": 3, "ce": 2, "Ловкость": 1},
+    "5": {"st": 25, "cp": 2, "Телосложение": 1, "Восприятие": 1, "Интеллект": 1}
+   },
+   "members": {
+    "helm": {"type": 10899, "name": "Шапка странника[4][A]", "desc": "Плотная повязка на голову, защищающая от солнца и песка.", "_wiki": "Шапка странника (its one column, G)", "armor_class": 10, "max_break_abs": 1125, "weight": 2250, "cost": 5000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 3, "bonus_st": 20, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "shirt": {"type": 10900, "name": "Плащ странника[4][A]", "desc": "Хороший плотный плащ с внутренними карманами и кожаным укреплением.", "_wiki": "Плащ странника (its one column, G)", "armor_class": 3, "max_break_abs": 675, "weight": 1350, "cost": 3000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 3, "bonus_st": 45, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "armor": {"type": 10901, "name": "Броня странника[4][A]", "desc": "Легкий потрепанный бронежилет. Еще послужит.", "_wiki": "Броня странника (its one column, G)", "armor_class": 40, "max_break_abs": 1350, "weight": 2700, "cost": 6000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 3, "bonus_st": 25, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "pants": {"type": 10902, "name": "Штаны странника[4][A]", "desc": "Хорошие крепко сшитые штаны помогут выдержать возможную непогоду.", "_wiki": "Штаны странника (its one column, G)", "armor_class": 3, "max_break_abs": 900, "weight": 1800, "cost": 4000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 3, "bonus_st": 40, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "boots": {"type": 10903, "name": "Ботинки странника[4][A]", "desc": "Немного изношенные сапоги тем не менее еще способные выдержать пару сотен километров.", "_wiki": "Ботинки странника (its one column, G)", "armor_class": 2, "max_break_abs": 450, "weight": 900, "cost": 2000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 3, "bonus_st": 15, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}}
+   }
+  },
+  "11193": {
+   "name": "Странник[4][G]",
+   "desc": "Добротная экипировка, в которую облачены Странники. Они могут продать её всем желающим, предоставив защиту и удобство за минимум стоимости.",
+   "_layout": "svmxr8oi",
+   "_source": "key texts.xml 11193, the row of the set these types formed in the original; desc wiki Сет Странник; numbers wiki, each piece's own page (its _wiki); bonus wiki Сет Странник (one column)",
+   "_designed": ["Стрельба 4 on every piece, the set's level (the wiki's pieces ask none)"],
+   "family": "Set_M",
+   "level": 4,
+   "variant": "G",
+   "res": 114,
+   "bonus": {
+    "2": {"hp": 5, "st": 5},
+    "3": {"st": 10, "od": 2, "Сила": 1},
+    "4": {"st": 15, "od": 3, "ce": 2, "Ловкость": 1},
+    "5": {"st": 25, "cp": 2, "Телосложение": 1, "Восприятие": 1, "Интеллект": 1}
+   },
+   "members": {
+    "helm": {"type": 10919, "name": "Шапка странника[4][G]", "desc": "Плотная повязка на голову, защищающая от солнца и песка.", "_wiki": "Шапка странника (its one column, G)", "armor_class": 10, "max_break_abs": 1125, "weight": 2250, "cost": 0, "g_cost": 125, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 20, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "shirt": {"type": 10920, "name": "Плащ странника[4][G]", "desc": "Хороший плотный плащ с внутренними карманами и кожаным укреплением.", "_wiki": "Плащ странника (its one column, G)", "armor_class": 3, "max_break_abs": 675, "weight": 1350, "cost": 0, "g_cost": 75, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 45, "bonus_cp": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "armor": {"type": 10921, "name": "Броня странника[4][G]", "desc": "Легкий потрепанный бронежилет. Еще послужит.", "_wiki": "Броня странника (its one column, G)", "armor_class": 40, "max_break_abs": 1350, "weight": 2700, "cost": 0, "g_cost": 150, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 25, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "pants": {"type": 10922, "name": "Штаны странника[4][G]", "desc": "Хорошие крепко сшитые штаны помогут выдержать возможную непогоду.", "_wiki": "Штаны странника (its one column, G)", "armor_class": 3, "max_break_abs": 900, "weight": 1800, "cost": 0, "g_cost": 100, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 40, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}},
+    "boots": {"type": 10923, "name": "Ботинки странника[4][G]", "desc": "Немного изношенные сапоги тем не менее еще способные выдержать пару сотен километров.", "_wiki": "Ботинки странника (its one column, G)", "armor_class": 2, "max_break_abs": 450, "weight": 900, "cost": 0, "g_cost": 50, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 15, "bonus_ce": 1, "need": {"Телосложение": 5, "Стрельба": 4}}
+   }
+  },
+  "11258": {
+   "name": "Магриб[6][A]",
+   "desc": "Добротная армейская экипировка, используемая повсеместно. В том числе и военными Магриба.",
+   "_layout": "sw7tcqrl",
+   "_source": "key texts.xml 11258, the row of the set these types formed in the original; desc wiki Армейские вещи; numbers wiki, each piece's own page (its _wiki); bonus wiki Армейские вещи",
+   "family": "Bs_M",
+   "level": 6,
+   "variant": "A",
+   "res": 101,
+   "bonus": {
+    "5": {"hp": 5, "cp": 3, "ce": 3}
+   },
+   "members": {
+    "helm": {"type": 11229, "name": "Армейский шлем[6][A]", "desc": "Стальной армейский шлем времен первой мировой войны, сколько этого добра еще в песке лежит.", "_wiki": "Армейский шлем (A column)", "armor_class": 8, "max_break_abs": 1000, "weight": 2000, "cost": 4000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 14, "bonus_cp": 1, "need": {"Телосложение": 9, "Стрельба": 6}},
+    "shirt": {"type": 11230, "name": "Армейская рубашка[6][A]", "desc": "Классическая армейская одежда. Военные рубашки стали новым стилем в африканской моде - прочный материал, различные расцветки ткани, дешево и сердито.", "_wiki": "Армейская рубашка (A column)", "armor_class": 2, "max_break_abs": 600, "weight": 1200, "cost": 2400, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 36, "need": {"Телосложение": 9, "Стрельба": 6}},
+    "armor": {"type": 11231, "name": "Общевойсковой бронежилет[6][A]", "desc": "Бронежилет предназначенный для защиты личного состава. Обеспечивает защиту торса от воздействия холодного и огнестрельного оружия.", "_wiki": "Общевойсковой бронежилет (A column)", "armor_class": 32, "max_break_abs": 1200, "weight": 2400, "cost": 4800, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 19, "bonus_ce": 1, "need": {"Телосложение": 9, "Стрельба": 6}},
+    "pants": {"type": 11232, "name": "Армейские штаны[6][A]", "desc": "Классическая армейская одежда. Военные стали частью нового стиля постапокалиптической моды - прочный материал, различные расцветки ткани, дешево и сердито.", "_wiki": "Армейские штаны (A column)", "_desc": "texts.xml 23243, the trousers' own line (the wiki's page repeats the shirt's)", "armor_class": 2, "max_break_abs": 800, "weight": 1600, "cost": 3200, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 31, "need": {"Телосложение": 9, "Стрельба": 6}},
+    "boots": {"type": 11233, "name": "Армейские ботинки[6][A]", "desc": "Военные ботинки с высокими берцами на шнурках. В отличие от сапог, оставляют максимально подвижным голеностоп, одновременно с этим фиксируя его, снижают опасность растяжения сухожилий.", "_wiki": "Армейские ботинки (A column)", "armor_class": 2, "max_break_abs": 400, "weight": 800, "cost": 1600, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 12, "need": {"Телосложение": 9, "Стрельба": 6}}
+   }
+  },
+  "11260": {
+   "name": "Магриб[6][G]",
+   "desc": "Добротная армейская экипировка, используемая повсеместно. В том числе и военными Магриба.",
+   "_layout": "sw7tcqrl",
+   "_source": "key texts.xml 11260, the row of the set these types formed in the original; desc wiki Армейские вещи; numbers wiki, each piece's own page (its _wiki); bonus wiki Армейские вещи",
+   "family": "Bs_M",
+   "level": 6,
+   "variant": "G",
+   "res": 101,
+   "bonus": {
+    "5": {"hp": 5, "cp": 3, "ce": 3}
+   },
+   "members": {
+    "helm": {"type": 11249, "name": "Армейский шлем[6][G]", "desc": "Стальной армейский шлем времен первой мировой войны, сколько этого добра еще в песке лежит.", "_wiki": "Армейский шлем (G column)", "armor_class": 9, "max_break_abs": 1000, "weight": 2000, "cost": 0, "g_cost": 100, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 18, "bonus_cp": 1, "need": {"Телосложение": 9, "Стрельба": 6}},
+    "shirt": {"type": 11250, "name": "Армейская рубашка[6][G]", "desc": "Классическая армейская одежда. Военные рубашки стали новым стилем в африканской моде - прочный материал, различные расцветки ткани, дешево и сердито.", "_wiki": "Армейская рубашка (G column)", "armor_class": 5, "max_break_abs": 600, "weight": 1200, "cost": 0, "g_cost": 60, "premium": 0, "exchang": 0, "bonus_hp": 5, "bonus_st": 42, "need": {"Телосложение": 9, "Стрельба": 6}},
+    "armor": {"type": 11251, "name": "Общевойсковой бронежилет[6][G]", "desc": "Бронежилет предназначенный для защиты личного состава. Обеспечивает защиту торса от воздействия холодного и огнестрельного оружия.", "_wiki": "Общевойсковой бронежилет (G column)", "armor_class": 37, "max_break_abs": 1200, "weight": 2400, "cost": 0, "g_cost": 120, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 23, "bonus_ce": 1, "need": {"Телосложение": 9, "Стрельба": 6}},
+    "pants": {"type": 11252, "name": "Армейские штаны[6][G]", "desc": "Классическая армейская одежда. Военные стали частью нового стиля постапокалиптической моды - прочный материал, различные расцветки ткани, дешево и сердито.", "_wiki": "Армейские штаны (G column)", "_desc": "texts.xml 23243, the trousers' own line (the wiki's page repeats the shirt's)", "armor_class": 2, "max_break_abs": 800, "weight": 1600, "cost": 0, "g_cost": 80, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 37, "need": {"Телосложение": 9, "Стрельба": 6}},
+    "boots": {"type": 11253, "name": "Армейские ботинки[6][G]", "desc": "Военные ботинки с высокими берцами на шнурках. В отличие от сапог, оставляют максимально подвижным голеностоп, одновременно с этим фиксируя его, снижают опасность растяжения сухожилий.", "_wiki": "Армейские ботинки (G column)", "armor_class": 2, "max_break_abs": 400, "weight": 1300, "cost": 0, "g_cost": 40, "premium": 0, "exchang": 0, "bonus_hp": 2, "bonus_st": 14, "need": {"Телосложение": 9, "Стрельба": 6}}
+   }
+  },
+  "11185": {
+   "name": "Налетчик[8][A]",
+   "desc": "Комплект, призванный обеспечить удобное существование и защиту своего владельца в долгом путешествии.",
+   "_layout": "s6phmcqd",
+   "_source": "key texts.xml 11185, the row of the set these types formed in the original; desc wiki Налетчик; numbers wiki, each piece's own page (its _wiki); bonus wiki Налетчик",
+   "family": "Set_M",
+   "level": 8,
+   "variant": "A",
+   "res": 107,
+   "bonus": {
+    "2": {"st": 4, "ce": 2},
+    "3": {"st": 10, "od": 6, "Сила": 1},
+    "4": {"hp": 6, "st": 20, "ce": 3, "Ловкость": 1},
+    "5": {"st": 35, "cp": 3, "Сила": 1, "Телосложение": 1}
+   },
+   "members": {
+    "helm": {"type": 10719, "name": "Очки налетчика[8][A]", "desc": "Тёмные очки, плотно прилегающие к лицу, хорошо защищают не только от солнца, но и от песка.", "_wiki": "Очки налетчика (A column)", "armor_class": 11, "max_break_abs": 1250, "weight": 2500, "cost": 10000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 22, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 11, "Стрельба": 8}},
+    "shirt": {"type": 10720, "name": "Куртка налетчика[8][A]", "desc": "Плотная и удобная кожаная куртка с кучей карманов.", "_wiki": "Куртка налетчика (A column)", "armor_class": 3, "max_break_abs": 750, "weight": 1500, "cost": 6000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 48, "bonus_cp": 1, "need": {"Телосложение": 11, "Стрельба": 8}},
+    "armor": {"type": 10721, "name": "Бронежилет налетчика[8][A]", "desc": "Переделка из армейского. Тяжелые пластины заменены на более лёгкие, перешиты манжеты и крепления, степень защиты принесена в угоду удобству.", "_wiki": "Бронежилет налетчика (A column)", "armor_class": 47, "max_break_abs": 1250, "weight": 3000, "cost": 12000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 27, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 11, "Стрельба": 8}},
+    "pants": {"type": 10722, "name": "Кожаные штаны налетчика[8][A]", "desc": "Залатанные, но еще способные послужить, с дополнительным усилением на коленках штаны.", "_wiki": "Кожаные штаны налетчика (A column)", "armor_class": 3, "max_break_abs": 1000, "weight": 2000, "cost": 8000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 43, "bonus_ce": 1, "need": {"Телосложение": 11, "Стрельба": 8}},
+    "boots": {"type": 10723, "name": "Ботинки налетчика[8][A]", "desc": "Крепкие, надежные, удобные. Так и просятся в дорогу.", "_wiki": "Ботинки налетчика (A column)", "armor_class": 2, "max_break_abs": 500, "weight": 1000, "cost": 4000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 2, "bonus_st": 16, "need": {"Телосложение": 11, "Стрельба": 8}}
+   }
+  },
+  "11187": {
+   "name": "Налетчик[8][G]",
+   "desc": "Комплект, призванный обеспечить удобное существование и защиту своего владельца в долгом путешествии.",
+   "_layout": "s6phmcqd",
+   "_source": "key texts.xml 11187, the row of the set these types formed in the original; desc wiki Налетчик; numbers wiki, each piece's own page (its _wiki); bonus wiki Налетчик",
+   "_designed": ["Очки налетчика G: price 250 -- the page's 1.25 G; the set page's 10 G and 10000 afro / 4000 say 2.5 G"],
+   "family": "Set_M",
+   "level": 8,
+   "variant": "G",
+   "res": 107,
+   "bonus": {
+    "2": {"st": 10, "ce": 2},
+    "3": {"st": 17, "od": 10, "Сила": 1},
+    "4": {"hp": 15, "st": 30, "ce": 5, "Ловкость": 1},
+    "5": {"st": 40, "cp": 5, "Сила": 1, "Телосложение": 2}
+   },
+   "members": {
+    "helm": {"type": 10739, "name": "Очки налетчика[8][G]", "desc": "Тёмные очки, плотно прилегающие к лицу, хорошо защищают не только от солнца, но и от песка.", "_wiki": "Очки налетчика (G column)", "armor_class": 12, "max_break_abs": 1250, "weight": 2500, "cost": 0, "g_cost": 250, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 26, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 11, "Стрельба": 8}},
+    "shirt": {"type": 10740, "name": "Куртка налетчика[8][G]", "desc": "Плотная и удобная кожаная куртка с кучей карманов.", "_wiki": "Куртка налетчика (G column)", "armor_class": 3, "max_break_abs": 750, "weight": 1500, "cost": 0, "g_cost": 150, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 54, "bonus_cp": 1, "need": {"Телосложение": 11, "Стрельба": 8}},
+    "armor": {"type": 10741, "name": "Бронежилет налетчика[8][G]", "desc": "Переделка из армейского. Тяжелые пластины заменены на более лёгкие, перешиты манжеты и крепления, степень защиты принесена в угоду удобству.", "_wiki": "Бронежилет налетчика (G column)", "armor_class": 54, "max_break_abs": 1250, "weight": 3000, "cost": 0, "g_cost": 300, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 31, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 11, "Стрельба": 8}},
+    "pants": {"type": 10742, "name": "Кожаные штаны налетчика[8][G]", "desc": "Залатанные, но еще способные послужить, с дополнительным усилением на коленках штаны.", "_wiki": "Кожаные штаны налетчика (G column)", "armor_class": 3, "max_break_abs": 1000, "weight": 2000, "cost": 0, "g_cost": 200, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 49, "bonus_ce": 1, "need": {"Телосложение": 11, "Стрельба": 8}},
+    "boots": {"type": 10743, "name": "Ботинки налетчика[8][G]", "desc": "Крепкие, надежные, удобные. Так и просятся в дорогу.", "_wiki": "Ботинки налетчика (G column)", "armor_class": 3, "max_break_abs": 500, "weight": 1000, "cost": 0, "g_cost": 100, "premium": 0, "exchang": 0, "bonus_hp": 3, "bonus_st": 18, "need": {"Телосложение": 11, "Стрельба": 8}}
+   }
+  },
+  "11182": {
+   "name": "Пустынник[10][A]",
+   "desc": "В него можно аккуратно закутаться и укрыться от песка, что бы при этом излишний вес не мешал нести побольше полезного груза.",
+   "_layout": "sfvlxmnn",
+   "_source": "key texts.xml 11182, the row of the set these types formed in the original; desc wiki Пустынник; numbers wiki, each piece's own page (its _wiki); bonus wiki Пустынник",
+   "family": "Set_M",
+   "level": 10,
+   "variant": "A",
+   "res": 103,
+   "bonus": {
+    "2": {"hp": 5, "st": 8},
+    "3": {"st": 10, "ce": 3, "Ловкость": 1},
+    "4": {"hp": 15, "st": 25, "od": 2, "ce": 3},
+    "5": {"st": 35, "od": 3, "cp": 6, "Сила": 2, "Телосложение": 2}
+   },
+   "members": {
+    "helm": {"type": 10629, "name": "Шлем пустынника[10][A]", "desc": "Арафатка, очки и каска - сухо, удобно и комфортно.", "_wiki": "Шлем пустынника (A column)", "armor_class": 14, "max_break_abs": 1500, "weight": 3000, "cost": 25000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 6, "bonus_st": 34, "bonus_od": 2, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 12, "Стрельба": 10}},
+    "shirt": {"type": 10630, "name": "Накидка пустынника[10][A]", "desc": "В накидку можно закутаться, защитит от солнца и песка днем и от холода ночью.", "_wiki": "Накидка пустынника (A column)", "armor_class": 5, "max_break_abs": 900, "weight": 1800, "cost": 15000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 6, "bonus_st": 66, "bonus_od": 2, "bonus_cp": 2, "need": {"Телосложение": 12, "Стрельба": 10}},
+    "armor": {"type": 10631, "name": "Броня пустынника[10][A]", "desc": "У этой брони есть очень полезное защитное свойство - она не мешает ее владельцу быстро бежать.", "_wiki": "Броня пустынника (A column)", "armor_class": 74, "max_break_abs": 1800, "weight": 3600, "cost": 30000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 6, "bonus_st": 39, "bonus_od": 2, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 12, "Стрельба": 10}},
+    "pants": {"type": 10632, "name": "Штаны пустынника[10][A]", "desc": "Прочные, надежные и ... хм... немного грязные.", "_wiki": "Штаны пустынника (A column)", "armor_class": 5, "max_break_abs": 1200, "weight": 2400, "cost": 20000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 6, "bonus_st": 61, "bonus_od": 2, "bonus_cp": 2, "need": {"Телосложение": 12, "Стрельба": 10}},
+    "boots": {"type": 10633, "name": "Сапоги пустынника[10][A]", "desc": "Удобные высокие ботинки. Неприхотливы и надежны.", "_wiki": "Сапоги пустынника (A column)", "armor_class": 4, "max_break_abs": 1200, "weight": 1200, "cost": 10000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 6, "bonus_st": 22, "bonus_od": 2, "need": {"Телосложение": 12, "Стрельба": 10}}
+   }
+  },
+  "11184": {
+   "name": "Пустынник[10][G]",
+   "desc": "В него можно аккуратно закутаться и укрыться от песка, что бы при этом излишний вес не мешал нести побольше полезного груза.",
+   "_layout": "sfvlxmnn",
+   "_source": "key texts.xml 11184, the row of the set these types formed in the original; desc wiki Пустынник; numbers wiki, each piece's own page (its _wiki); bonus wiki Пустынник",
+   "family": "Set_M",
+   "level": 10,
+   "variant": "G",
+   "res": 103,
+   "bonus": {
+    "2": {"hp": 10, "st": 10},
+    "3": {"st": 20, "ce": 3, "Ловкость": 1},
+    "4": {"hp": 20, "st": 25, "od": 5, "ce": 5},
+    "5": {"st": 40, "od": 3, "cp": 8, "Сила": 2, "Телосложение": 2}
+   },
+   "members": {
+    "helm": {"type": 10649, "name": "Шлем пустынника[10][G]", "desc": "Арафатка, очки и каска - сухо, удобно и комфортно.", "_wiki": "Шлем пустынника (G column)", "armor_class": 16, "max_break_abs": 1500, "weight": 3000, "cost": 0, "g_cost": 625, "premium": 0, "exchang": 0, "bonus_hp": 8, "bonus_st": 40, "bonus_od": 3, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 12, "Стрельба": 10}},
+    "shirt": {"type": 10650, "name": "Накидка пустынника[10][G]", "desc": "В накидку можно закутаться, защитит от солнца и песка днем и от холода ночью.", "_wiki": "Накидка пустынника (G column)", "armor_class": 7, "max_break_abs": 900, "weight": 1800, "cost": 0, "g_cost": 375, "premium": 0, "exchang": 0, "bonus_hp": 8, "bonus_st": 75, "bonus_od": 3, "bonus_cp": 2, "need": {"Телосложение": 12, "Стрельба": 10}},
+    "armor": {"type": 10651, "name": "Броня пустынника[10][G]", "desc": "У этой брони есть очень полезное защитное свойство - она не мешает ее владельцу быстро бежать.", "_wiki": "Броня пустынника (G column)", "armor_class": 93, "max_break_abs": 1500, "weight": 3600, "cost": 0, "g_cost": 750, "premium": 0, "exchang": 0, "bonus_hp": 8, "bonus_st": 45, "bonus_od": 3, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 12, "Стрельба": 10}},
+    "pants": {"type": 10652, "name": "Штаны пустынника[10][G]", "desc": "Прочные, надежные и ... хм... немного грязные.", "_wiki": "Штаны пустынника (G column)", "armor_class": 7, "max_break_abs": 1200, "weight": 2400, "cost": 0, "g_cost": 500, "premium": 0, "exchang": 0, "bonus_hp": 8, "bonus_st": 70, "bonus_od": 3, "bonus_cp": 2, "need": {"Телосложение": 12, "Стрельба": 10}},
+    "boots": {"type": 10653, "name": "Сапоги пустынника[10][G]", "desc": "Удобные высокие ботинки. Неприхотливы и надежны.", "_wiki": "Сапоги пустынника (G column)", "armor_class": 5, "max_break_abs": 1200, "weight": 1200, "cost": 0, "g_cost": 250, "premium": 0, "exchang": 0, "bonus_hp": 8, "bonus_st": 25, "bonus_od": 3, "need": {"Телосложение": 12, "Стрельба": 10}}
+   }
+  },
+  "11120": {
+   "name": "Чёрный Ловелас[12][Q]",
+   "desc": "Комплекс снаряжения легендарной антитеррористической группы «ЛОВЕЛАС».",
+   "_layout": "skac67rc",
+   "_source": "key texts.xml 11120, the row of the set these types formed in the original; desc texts.xml 11121; numbers designed; bonus wiki Снаряжение Чёрного Ловеласа, transcribed from its wikitext (one column)",
+   "_designed": ["no numbers on the wiki: every piece designed between Пустынник (10) and Спецназ (13), t = 2/3, by the rule in _meta"],
+   "family": "Bs_U",
+   "level": 12,
+   "variant": "Q",
+   "res": 111,
+   "bonus": {
+    "2": {"hp": 50, "st": 20},
+    "3": {"st": 55, "od": 20, "Ловкость": 1},
+    "4": {"hp": 60, "st": 100, "ce": 17, "Интеллект": 1},
+    "5": {"st": 200, "cp": 17, "Сила": 2, "Телосложение": 3, "Восприятие": 2}
+   },
+   "members": {
+    "helm": {"type": 11721, "name": "Шлем Чёрного Ловеласа[12][Q]", "desc": "Встроен рентген сканер обнажающий натуру противника. Без смсок!", "_wiki": null, "_desc": "texts.xml 15109", "armor_class": 18, "max_break_abs": 1750, "weight": 3500, "cost": 42000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 11, "bonus_st": 43, "bonus_od": 3, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 13, "Стрельба": 12}},
+    "shirt": {"type": 11722, "name": "Жилет Чёрного Ловеласа[12][Q]", "desc": "Плотный и облегающий жилет - лучше для мужчины нет.", "_wiki": null, "_desc": "texts.xml 15111", "armor_class": 8, "max_break_abs": 1050, "weight": 2100, "cost": 25000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 11, "bonus_st": 76, "bonus_od": 3, "bonus_cp": 2, "bonus_ce": 1, "need": {"Телосложение": 13, "Стрельба": 12}},
+    "armor": {"type": 11723, "name": "Броня Чёрного Ловеласа[12][Q]", "desc": "Лучшая защита на свете от нежелательной Бременской Музыкантки.", "_wiki": null, "_desc": "texts.xml 15113", "armor_class": 109, "max_break_abs": 2100, "weight": 4200, "cost": 50000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 11, "bonus_st": 48, "bonus_od": 3, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 13, "Стрельба": 12}},
+    "pants": {"type": 11724, "name": "Штанишки Чёрного Ловеласа[12][Q]", "desc": "Немного жмут в паховой области, тем самым подчеркивая достоинства… Если таковые имеются. Придётся потерпеть.", "_wiki": null, "_desc": "texts.xml 15115", "armor_class": 8, "max_break_abs": 1400, "weight": 2800, "cost": 33000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 11, "bonus_st": 75, "bonus_od": 3, "bonus_cp": 2, "bonus_ce": 1, "need": {"Телосложение": 13, "Стрельба": 12}},
+    "boots": {"type": 11725, "name": "Ботинки Чёрного Ловеласа[12][Q]", "desc": "Они просто клёвые, для настоящих метросексуалов.", "_wiki": null, "_desc": "texts.xml 15117", "armor_class": 5, "max_break_abs": 900, "weight": 1400, "cost": 17000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 11, "bonus_st": 27, "bonus_od": 3, "bonus_cp": 1, "bonus_ce": 1, "need": {"Телосложение": 13, "Стрельба": 12}}
+   }
+  },
+  "11206": {
+   "name": "Спецназ[13][A]",
+   "desc": "Легкий удобный и надежный комплект Спецподразделений обеспечит вам непревзойденную маневренность и комфорт в боевой обстановке.",
+   "_layout": "snw4poo6",
+   "_source": "key texts.xml 11206, the row of the set these types formed in the original; desc wiki Спецназ; numbers wiki, each piece's own page (its _wiki); bonus wiki Спецназ",
+   "_designed": ["Стрельба 13 on every piece, the set's level (the wiki's pieces ask 12)"],
+   "family": "Set_M",
+   "level": 13,
+   "variant": "A",
+   "res": 10,
+   "bonus": {
+    "2": {"hp": 15, "st": 6},
+    "3": {"st": 10, "ce": 4, "Ловкость": 1},
+    "4": {"hp": 25, "st": 20, "ce": 5, "Сила": 2},
+    "5": {"st": 40, "od": 5, "cp": 9, "Телосложение": 2, "Восприятие": 1}
+   },
+   "members": {
+    "helm": {"type": 11349, "name": "Шлем спецназа[13][A]", "desc": "Легкий шлем для спецопераций. Не предназначен защитить от чего либо быстрее удара дубиной или неудачно подвернувшейся балки. Очень удобен, вентилируется, предусмотрена установка ПНВ и гарнитуры.", "_wiki": "Шлем спецназа (A column)", "armor_class": 20, "max_break_abs": 1875, "weight": 3750, "cost": 50000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 14, "bonus_st": 48, "bonus_od": 4, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}},
+    "shirt": {"type": 11350, "name": "Куртка спецназа[13][A]", "desc": "Не стесняет движений, легкая прочная и огнеупорная.", "_wiki": "Куртка спецназа (A column)", "armor_class": 10, "max_break_abs": 1125, "weight": 2250, "cost": 30000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 14, "bonus_st": 81, "bonus_od": 4, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}},
+    "armor": {"type": 11351, "name": "Броня спецназа[13][A]", "desc": "Пулезащитная/противоосколочная броня, совмещена с разгрузкой, почти не стесняет движений.", "_wiki": "Броня спецназа (A column)", "armor_class": 127, "max_break_abs": 2250, "weight": 4500, "cost": 60000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 14, "bonus_st": 53, "bonus_od": 4, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}},
+    "pants": {"type": 11352, "name": "Штаны спецназа[13][A]", "desc": "Легкие прочные и огнеупорные как и куртка. Много удобных карманов.", "_wiki": "Штаны спецназа (A column)", "armor_class": 10, "max_break_abs": 1500, "weight": 3000, "cost": 40000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 14, "bonus_st": 82, "bonus_od": 4, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}},
+    "boots": {"type": 11353, "name": "Ботинки спецназа[13][A]", "desc": "Мягкие, плотно облегают ступню, очень удобные.", "_wiki": "Ботинки спецназа (A column)", "armor_class": 6, "max_break_abs": 750, "weight": 1500, "cost": 20000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 14, "bonus_st": 29, "bonus_od": 4, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}}
+   }
+  },
+  "11208": {
+   "name": "Спецназ[13][G]",
+   "desc": "Легкий удобный и надежный комплект Спецподразделений обеспечит вам непревзойденную маневренность и комфорт в боевой обстановке.",
+   "_layout": "snw4poo6",
+   "_source": "key texts.xml 11208, the row of the set these types formed in the original; desc wiki Спецназ; numbers wiki, each piece's own page (its _wiki); bonus wiki Спецназ",
+   "_designed": ["Стрельба 13 on every piece, the set's level (the wiki's pieces ask 12)"],
+   "family": "Set_M",
+   "level": 13,
+   "variant": "G",
+   "res": 10,
+   "bonus": {
+    "2": {"hp": 20, "st": 19},
+    "3": {"st": 25, "ce": 5, "Ловкость": 2},
+    "4": {"hp": 30, "st": 36, "ce": 6, "Сила": 2},
+    "5": {"st": 50, "od": 5, "cp": 11, "Телосложение": 2, "Восприятие": 2}
+   },
+   "members": {
+    "helm": {"type": 11369, "name": "Шлем спецназа[13][G]", "desc": "Легкий шлем для спецопераций. Не предназначен защитить от чего либо быстрее удара дубиной или неудачно подвернувшейся балки. Очень удобен, вентилируется, предусмотрена установка ПНВ и гарнитуры.", "_wiki": "Шлем спецназа (G column)", "armor_class": 22, "max_break_abs": 1875, "weight": 3750, "cost": 0, "g_cost": 1250, "premium": 0, "exchang": 0, "bonus_hp": 16, "bonus_st": 52, "bonus_od": 5, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}},
+    "shirt": {"type": 11370, "name": "Куртка спецназа[13][G]", "desc": "Не стесняет движений, легкая прочная и огнеупорная.", "_wiki": "Куртка спецназа (G column)", "armor_class": 12, "max_break_abs": 1125, "weight": 2250, "cost": 0, "g_cost": 750, "premium": 0, "exchang": 0, "bonus_hp": 16, "bonus_st": 93, "bonus_od": 5, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}},
+    "armor": {"type": 11371, "name": "Броня спецназа[13][G]", "desc": "Пулезащитная/противоосколочная броня, совмещена с разгрузкой, почти не стесняет движений.", "_wiki": "Броня спецназа (G column)", "armor_class": 148, "max_break_abs": 2250, "weight": 4500, "cost": 0, "g_cost": 1500, "premium": 0, "exchang": 0, "bonus_hp": 16, "bonus_st": 57, "bonus_od": 5, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}},
+    "pants": {"type": 11372, "name": "Штаны спецназа[13][G]", "desc": "Легкие прочные и огнеупорные как и куртка. Много удобных карманов.", "_wiki": "Штаны спецназа (G column)", "armor_class": 12, "max_break_abs": 1500, "weight": 3000, "cost": 0, "g_cost": 1000, "premium": 0, "exchang": 0, "bonus_hp": 16, "bonus_st": 88, "bonus_od": 5, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}},
+    "boots": {"type": 11373, "name": "Ботинки спецназа[13][G]", "desc": "Мягкие, плотно облегают ступню, очень удобные.", "_wiki": "Ботинки спецназа (G column)", "armor_class": 7, "max_break_abs": 750, "weight": 1500, "cost": 0, "g_cost": 500, "premium": 0, "exchang": 0, "bonus_hp": 16, "bonus_st": 31, "bonus_od": 5, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 14, "Стрельба": 13}}
+   }
+  },
+  "10954": {
+   "name": "Легионер[14][A]",
+   "desc": "Тяжесть и мощь. Доблесть и честь. Пришел, увидел, схватил... а вот убежать в нем будет сложно, хотя за медведем гонятся себе дороже.",
+   "_layout": "sit0bx7h",
+   "_source": "key texts.xml 10954, the row of the set these types formed in the original; desc texts.xml 10939; numbers wiki, each piece's own page (its _wiki); bonus wiki Легионер",
+   "family": "Exzo_M",
+   "level": 14,
+   "variant": "A",
+   "res": 1401,
+   "bonus": {
+    "2": {"hp": 25, "st": 15},
+    "3": {"st": 20, "ce": 5, "Ловкость": 1},
+    "4": {"hp": 45, "st": 30, "ce": 6, "Сила": 2},
+    "5": {"st": 45, "od": 5, "cp": 11, "Ловкость": 1, "Телосложение": 2}
+   },
+   "members": {
+    "helm": {"type": 10569, "name": "Шлем легионера[14][A]", "desc": "За основу был взят Глухой шлем, более известный как Коринфский, часть лицевого щитка была спилена, а на освободившееся место установлен противогаз, защищающий владельца от песка и пыли.", "_wiki": "Шлем легионера (A column)", "armor_class": 27, "max_break_abs": 2375, "weight": 4750, "cost": 75000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 20, "bonus_st": 60, "bonus_od": 6, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 14}},
+    "shirt": {"type": 10570, "name": "Плащ легионера[14][A]", "desc": "Плотный брезентовый плащ, с подкладкой из лоскутов кевларовой ткани. Защищает не только от солнца, но и при необходимости можно тент из него сделать.", "_wiki": "Плащ легионера (A column)", "armor_class": 17, "max_break_abs": 1425, "weight": 2850, "cost": 45000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 20, "bonus_st": 105, "bonus_od": 6, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 14}},
+    "armor": {"type": 10571, "name": "Броня легионера[14][A]", "desc": "За основу у данной брони был взят Гиппоторакс - анатомическая кираса, которую использовали войны древности. Дополнительно она усилена вставками и частями современного армейского бронежилета.", "_wiki": "Броня легионера (A column)", "armor_class": 201, "max_break_abs": 2850, "weight": 5700, "cost": 90000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 20, "bonus_st": 65, "bonus_od": 6, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 14}},
+    "pants": {"type": 10572, "name": "Штаны легионера[14][A]", "desc": "Основной элемент этих штанов Книмиды, совместив их с кевларовыми штанами, народным умельцам удалось защитить воинов и от современного оружия.", "_wiki": "Штаны легионера (A column)", "armor_class": 17, "max_break_abs": 1900, "weight": 3800, "cost": 60000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 20, "bonus_st": 100, "bonus_od": 6, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 14}},
+    "boots": {"type": 10573, "name": "Ботинки легионера[14][A]", "desc": "Очередная вариация местного рукоделия на тему - надежная обувь.", "_wiki": "Ботинки легионера (A column)", "armor_class": 10, "max_break_abs": 950, "weight": 1900, "cost": 30000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 20, "bonus_st": 35, "bonus_od": 6, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 15, "Стрельба": 14}}
+   }
+  },
+  "10956": {
+   "name": "Легионер[14][G]",
+   "desc": "Тяжесть и мощь. Доблесть и честь. Пришел, увидел, схватил... а вот убежать в нем будет сложно, хотя за медведем гонятся себе дороже.",
+   "_layout": "sit0bx7h",
+   "_source": "key texts.xml 10956, the row of the set these types formed in the original; desc texts.xml 10939; numbers wiki, each piece's own page (its _wiki); bonus wiki Легионер",
+   "_designed": ["Ботинки легионера G: price 750 -- the page's 5 G; the set page's 75 G and 30000 afro / 4000 say 7.5 G"],
+   "family": "Exzo_M",
+   "level": 14,
+   "variant": "G",
+   "res": 1401,
+   "bonus": {
+    "2": {"hp": 30, "st": 28},
+    "3": {"st": 35, "ce": 6, "Сила": 2},
+    "4": {"hp": 50, "st": 40, "ce": 7, "Ловкость": 2},
+    "5": {"st": 55, "od": 5, "cp": 13, "Телосложение": 2, "Восприятие": 2}
+   },
+   "members": {
+    "helm": {"type": 10589, "name": "Шлем легионера[14][G]", "desc": "За основу был взят Глухой шлем, более известный как Коринфский, часть лицевого щитка была спилена, а на освободившееся место установлен противогаз, защищающий владельца от песка и пыли.", "_wiki": "Шлем легионера (G column)", "armor_class": 29, "max_break_abs": 2375, "weight": 4750, "cost": 0, "g_cost": 1875, "premium": 0, "exchang": 0, "bonus_hp": 22, "bonus_st": 64, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 14}},
+    "shirt": {"type": 10590, "name": "Плащ легионера[14][G]", "desc": "Плотный брезентовый плащ, с подкладкой из лоскутов кевларовой ткани. Защищает не только от солнца, но и при необходимости можно тент из него сделать.", "_wiki": "Плащ легионера (G column)", "armor_class": 21, "max_break_abs": 1425, "weight": 2850, "cost": 0, "g_cost": 1125, "premium": 0, "exchang": 0, "bonus_hp": 22, "bonus_st": 111, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 14}},
+    "armor": {"type": 10591, "name": "Броня легионера[14][G]", "desc": "За основу у данной брони был взят Гиппоторакс - анатомическая кираса, которую использовали войны древности. Дополнительно она усилена вставками и частями современного армейского бронежилета.", "_wiki": "Броня легионера (G column)", "armor_class": 254, "max_break_abs": 2850, "weight": 5700, "cost": 0, "g_cost": 2250, "premium": 0, "exchang": 0, "bonus_hp": 22, "bonus_st": 69, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 14}},
+    "pants": {"type": 10592, "name": "Штаны легионера[14][G]", "desc": "Основной элемент этих штанов Книмиды, совместив их с кевларовыми штанами, народным умельцам удалось защитить воинов и от современного оружия.", "_wiki": "Штаны легионера (G column)", "armor_class": 21, "max_break_abs": 1900, "weight": 3800, "cost": 0, "g_cost": 1500, "premium": 0, "exchang": 0, "bonus_hp": 22, "bonus_st": 106, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 14}},
+    "boots": {"type": 10593, "name": "Ботинки легионера[14][G]", "desc": "Очередная вариация местного рукоделия на тему - надежная обувь.", "_wiki": "Ботинки легионера (G column)", "armor_class": 12, "max_break_abs": 750, "weight": 1500, "cost": 0, "g_cost": 750, "premium": 0, "exchang": 0, "bonus_hp": 22, "bonus_st": 37, "bonus_od": 7, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 15, "Стрельба": 14}}
+   }
+  },
+  "11002": {
+   "name": "Штурм-М[15][A]",
+   "desc": "Современные наработки в области Экзоскелета, только успевшие поступить в гвардейские части для тестирования.",
+   "_layout": "ssxdot7n",
+   "_source": "key texts.xml 11002, the row of the set these types formed in the original; desc texts.xml 10988; numbers wiki, each piece's own page (its _wiki); bonus wiki Штурм-М",
+   "_designed": ["Стрельба 15 on every piece, the set's level (the wiki's pieces ask 17)", "Броня Штурм-М A: price 210000 -- the page's 2 100 000 afro, a zero too many; its 52.5 G x 4000 and the set page's 700 000 afro say 210 000", "Моторика Штурм-М A: price 140000 -- the page's 120 000 afro; its 35 G x 4000 and the set page's 700 000 afro say 140 000"],
+   "family": "Exzo_M",
+   "level": 15,
+   "variant": "A",
+   "res": 80,
+   "bonus": {
+    "2": {"hp": 50, "st": 20},
+    "3": {"st": 55, "od": 20, "Ловкость": 1},
+    "4": {"hp": 60, "st": 100, "ce": 17, "Интеллект": 1},
+    "5": {"st": 200, "cp": 17, "Сила": 2, "Телосложение": 3, "Восприятие": 2}
+   },
+   "members": {
+    "helm": {"type": 11289, "name": "Шлем Штурм-М[15][A]", "desc": "Иногда кажется, что этот шлем самостоятельнее его обладателя.", "_wiki": "Шлем Штурм-М (A column)", "_desc": "wiki Шлем Штурм-М, its doubled first letter ('ИИногда') dropped", "armor_class": 43, "max_break_abs": 3125, "weight": 6250, "cost": 175000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 80, "bonus_od": 9, "bonus_cp": 4, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Восприятие": 1, "Интеллект": 1}},
+    "shirt": {"type": 11290, "name": "Жилет Штурм-М[15][A]", "desc": "Датчики системы жизнеобеспечения и контроля состояния, очень комфортно.", "_wiki": "Жилет Штурм-М (A column)", "armor_class": 45, "max_break_abs": 1875, "weight": 3750, "cost": 105000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 135, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Ловкость": 1}},
+    "armor": {"type": 11291, "name": "Броня Штурм-М[15][A]", "desc": "Армированный корпус модульного типа, защита всех жизненно важных органов от внешних воздействий.", "_wiki": "Броня Штурм-М (A column)", "armor_class": 469, "max_break_abs": 3750, "weight": 7500, "cost": 210000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 85, "bonus_od": 9, "bonus_cp": 4, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Сила": 1}},
+    "pants": {"type": 11292, "name": "Моторика Штурм-М[15][A]", "desc": "Перераспределение нагрузки и возможность жесткой фиксации, это только пара особенностей из большого списка.", "_wiki": "Моторика Штурм-М (A column)", "armor_class": 45, "max_break_abs": 2500, "weight": 5000, "cost": 140000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 130, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Ловкость": 1}},
+    "boots": {"type": 11293, "name": "Боты Штурм-М[15][A]", "desc": "Штурмовые бутсы протестированы в боевых операциях, в том числе и в горах, пересечённой местности и джунглях. Для подошвы используется кожа и углеродный материал обеспечивающий защиту от огня и жары и стальной нержавеющий шнур.", "_wiki": "Боты Штурм-М (A column)", "armor_class": 22, "max_break_abs": 1250, "weight": 2500, "cost": 70000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 45, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}}
+   }
+  },
+  "11004": {
+   "name": "Штурм-М[15][G]",
+   "desc": "Современные наработки в области Экзоскелета, только успевшие поступить в гвардейские части для тестирования.",
+   "_layout": "ssxdot7n",
+   "_source": "key texts.xml 11004, the row of the set these types formed in the original; desc texts.xml 10988; numbers wiki, each piece's own page (its _wiki); bonus wiki Штурм-М",
+   "_designed": ["Стрельба 15 on every piece, the set's level (the wiki's pieces ask 17)"],
+   "family": "Exzo_M",
+   "level": 15,
+   "variant": "G",
+   "res": 80,
+   "bonus": {
+    "2": {"hp": 55, "st": 28},
+    "3": {"st": 75, "od": 25, "Ловкость": 2},
+    "4": {"hp": 65, "st": 150, "ce": 19, "Интеллект": 2},
+    "5": {"st": 200, "cp": 19, "Сила": 3, "Телосложение": 4, "Восприятие": 3}
+   },
+   "members": {
+    "helm": {"type": 11309, "name": "Шлем Штурм-М[15][G]", "desc": "Иногда кажется, что этот шлем самостоятельнее его обладателя.", "_wiki": "Шлем Штурм-М (G column)", "_desc": "wiki Шлем Штурм-М, its doubled first letter ('ИИногда') dropped", "armor_class": 48, "max_break_abs": 3125, "weight": 6250, "cost": 0, "g_cost": 4375, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 84, "bonus_od": 10, "bonus_cp": 4, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Восприятие": 2, "Интеллект": 1}},
+    "shirt": {"type": 11310, "name": "Жилет Штурм-М[15][G]", "desc": "Датчики системы жизнеобеспечения и контроля состояния, очень комфортно.", "_wiki": "Жилет Штурм-М (G column)", "armor_class": 55, "max_break_abs": 1875, "weight": 3750, "cost": 0, "g_cost": 2625, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 144, "bonus_od": 10, "bonus_cp": 4, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Ловкость": 2}},
+    "armor": {"type": 11311, "name": "Броня Штурм-М[15][G]", "desc": "Армированный корпус модульного типа, защита всех жизненно важных органов от внешних воздействий.", "_wiki": "Броня Штурм-М (G column)", "armor_class": 547, "max_break_abs": 3750, "weight": 7500, "cost": 0, "g_cost": 5250, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 89, "bonus_od": 10, "bonus_cp": 5, "bonus_ce": 5, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Сила": 1}},
+    "pants": {"type": 11312, "name": "Моторика Штурм-М[15][G]", "desc": "Перераспределение нагрузки и возможность жесткой фиксации, это только пара особенностей из большого списка.", "_wiki": "Моторика Штурм-М (G column)", "armor_class": 55, "max_break_abs": 2500, "weight": 5000, "cost": 0, "g_cost": 3500, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 136, "bonus_od": 10, "bonus_cp": 3, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Ловкость": 2}},
+    "boots": {"type": 11313, "name": "Боты Штурм-М[15][G]", "desc": "Штурмовые бутсы протестированы в боевых операциях, в том числе и в горах, пересечённой местности и джунглях. Для подошвы используется кожа и углеродный материал обеспечивающий защиту от огня и жары и стальной нержавеющий шнур.", "_wiki": "Боты Штурм-М (G column)", "armor_class": 25, "max_break_abs": 1250, "weight": 2500, "cost": 0, "g_cost": 1750, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 47, "bonus_od": 10, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}}
+   }
+  },
+  "10961": {
+   "name": "Красное Эхо[16][A]",
+   "desc": "Экзоскелет — устройство, предназначенное для увеличения силы человека за счёт внешнего каркаса. Он повторяет биомеханику человека и пропорционально увеличивает усилия при движениях. Первые образцы были разработаны в 60-х годах.",
+   "_layout": "s6ry01n2",
+   "_source": "key texts.xml 10961, the row of the set these types formed in the original; desc texts.xml 10958; numbers wiki, each piece's own page (its _wiki); bonus wiki Красное Эхо",
+   "_designed": ["Стрельба 16 on every piece, the set's level (the wiki's pieces ask 14 / 15)"],
+   "family": "Exzo_M",
+   "level": 16,
+   "variant": "A",
+   "res": 1601,
+   "bonus": {
+    "2": {"hp": 30, "st": 53},
+    "3": {"st": 75, "Сила": 1, "Ближний бой": 1},
+    "4": {"hp": 50, "od": 10, "ce": 14, "Восприятие": 1},
+    "5": {"st": 124, "cp": 14, "Телосложение": 2, "Интеллект": 2, "Стрельба": 1}
+   },
+   "members": {
+    "helm": {"type": 10749, "name": "Шлем Красного Эхо[16][A]", "desc": "Вес шлема должен лежать на экзоскелете так что владельцу не о чем беспокоится, если конечно у него он есть. Встроен кондиционер, тактический анализатор, детектор движения и ПНВ.", "_wiki": "Шлем Красного Эхо (A column)", "_desc": "texts.xml 12336 (the wiki's line is about the dead man who wore it)", "armor_class": 31, "max_break_abs": 2625, "weight": 5250, "cost": 125000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 24, "bonus_st": 66, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 16}, "_bonus_attribs": {"Восприятие": 1}},
+    "shirt": {"type": 10750, "name": "Поддоспешник Красного Эхо[16][A]", "desc": "Герметичный комбинезон одеваемый под внешнюю броню. Является частью системы жизнеобеспечения боевого комплекта.", "_wiki": "Поддоспешник Красного Эхо (A column)", "armor_class": 23, "max_break_abs": 1575, "weight": 3150, "cost": 75000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 24, "bonus_st": 114, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 16, "Стрельба": 16}, "_bonus_attribs": {"Ловкость": 1}},
+    "armor": {"type": 10751, "name": "Корпус Красного Эхо[16][A]", "desc": "Основной элемент бронекостюма Красного ЭХА, содержит блоки питания, сервоуселители, защиту всех жизненно важных органов, электронику управления и массу прочих экзотических элементов.", "_wiki": "Корпус Красного Эхо (A column)", "armor_class": 274, "max_break_abs": 3150, "weight": 6300, "cost": 150000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 24, "bonus_st": 71, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 16, "Стрельба": 16}, "_bonus_attribs": {"Сила": 1}},
+    "pants": {"type": 10752, "name": "Моторика Красного Эхо[16][A]", "desc": "Приводы, защита, основа экзоскелета.", "_wiki": "Моторика Красного Эхо (A column)", "armor_class": 23, "max_break_abs": 2100, "weight": 4200, "cost": 100000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 24, "bonus_st": 109, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 16, "Стрельба": 16}, "_bonus_attribs": {"Ловкость": 1}},
+    "boots": {"type": 10753, "name": "Боты Красного Эхо[16][A]", "desc": "Механизированные боты являются частью опорно-двигательного аппарата.", "_wiki": "Боты Красного Эхо (A column)", "_desc": "texts.xml 12344 (the wiki's page repeats the undersuit's line)", "armor_class": 13, "max_break_abs": 1050, "weight": 2100, "cost": 50000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 24, "bonus_st": 38, "bonus_od": 7, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 16, "Стрельба": 16}}
+   }
+  },
+  "10965": {
+   "name": "Красное Эхо[16][G]",
+   "desc": "Экзоскелет — устройство, предназначенное для увеличения силы человека за счёт внешнего каркаса. Он повторяет биомеханику человека и пропорционально увеличивает усилия при движениях. Первые образцы были разработаны в 60-х годах.",
+   "_layout": "s6ry01n2",
+   "_source": "key texts.xml 10965, the row of the set these types formed in the original; desc texts.xml 10958; numbers wiki, each piece's own page (its _wiki); bonus wiki Красное Эхо",
+   "_designed": ["Стрельба 16 on every piece, the set's level (the wiki's pieces ask 14 / 15)"],
+   "family": "Exzo_M",
+   "level": 16,
+   "variant": "G",
+   "res": 1601,
+   "bonus": {
+    "2": {"hp": 40, "st": 54},
+    "3": {"st": 95, "Сила": 1, "Ближний бой": 2},
+    "4": {"hp": 50, "od": 15, "ce": 16, "Восприятие": 1},
+    "5": {"st": 160, "cp": 16, "Телосложение": 2, "Интеллект": 2, "Стрельба": 2}
+   },
+   "members": {
+    "helm": {"type": 10769, "name": "Шлем Красного Эхо[16][G]", "desc": "Вес шлема должен лежать на экзоскелете так что владельцу не о чем беспокоится, если конечно у него он есть. Встроен кондиционер, тактический анализатор, детектор движения и ПНВ.", "_wiki": "Шлем Красного Эхо (G column)", "_desc": "texts.xml 12336 (the wiki's line is about the dead man who wore it)", "armor_class": 36, "max_break_abs": 2625, "weight": 5250, "cost": 0, "g_cost": 3125, "premium": 0, "exchang": 0, "bonus_hp": 26, "bonus_st": 72, "bonus_od": 8, "bonus_cp": 4, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 16}, "_bonus_attribs": {"Восприятие": 1}},
+    "shirt": {"type": 10770, "name": "Поддоспешник Красного Эхо[16][G]", "desc": "Герметичный комбинезон одеваемый под внешнюю броню. Является частью системы жизнеобеспечения боевого комплекта.", "_wiki": "Поддоспешник Красного Эхо (G column)", "armor_class": 31, "max_break_abs": 1575, "weight": 3150, "cost": 0, "g_cost": 1875, "premium": 0, "exchang": 0, "bonus_hp": 26, "bonus_st": 123, "bonus_od": 8, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 16, "Стрельба": 16}, "_bonus_attribs": {"Ловкость": 2}},
+    "armor": {"type": 10771, "name": "Корпус Красного Эхо[16][G]", "desc": "Основной элемент бронекостюма Красного ЭХА, содержит блоки питания, сервоуселители, защиту всех жизненно важных органов, электронику управления и массу прочих экзотических элементов.", "_wiki": "Корпус Красного Эхо (G column)", "armor_class": 345, "max_break_abs": 3150, "weight": 6300, "cost": 0, "g_cost": 3750, "premium": 0, "exchang": 0, "bonus_hp": 26, "bonus_st": 77, "bonus_od": 8, "bonus_cp": 3, "bonus_ce": 4, "need": {"Телосложение": 16, "Стрельба": 16}, "_bonus_attribs": {"Сила": 2}},
+    "pants": {"type": 10772, "name": "Моторика Красного Эхо[16][G]", "desc": "Приводы, защита, основа экзоскелета.", "_wiki": "Моторика Красного Эхо (G column)", "armor_class": 31, "max_break_abs": 2100, "weight": 4200, "cost": 0, "g_cost": 2500, "premium": 0, "exchang": 0, "bonus_hp": 26, "bonus_st": 118, "bonus_od": 8, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 16, "Стрельба": 16}, "_bonus_attribs": {"Ловкость": 2}},
+    "boots": {"type": 10773, "name": "Боты Красного Эхо[16][G]", "desc": "Механизированные боты являются частью опорно-двигательного аппарата.", "_wiki": "Боты Красного Эхо (G column)", "_desc": "texts.xml 12344 (the wiki's page repeats the undersuit's line)", "armor_class": 16, "max_break_abs": 1050, "weight": 2100, "cost": 0, "g_cost": 1250, "premium": 0, "exchang": 0, "bonus_hp": 26, "bonus_st": 41, "bonus_od": 8, "bonus_cp": 2, "bonus_ce": 2, "need": {"Телосложение": 16, "Стрельба": 16}}
+   }
+  },
+  "11125": {
+   "name": "Тёмное Эхо[17][Q]",
+   "desc": "Модификация известного сета, переработанного учеными МКС с использованием редкоземельных элементов.",
+   "_layout": "sekjzpi9",
+   "_source": "key texts.xml 11125, the row of the set these types formed in the original; desc texts.xml 10972; numbers wiki, each piece's own page (its _wiki); bonus wiki Темное Эхо, transcribed from its wikitext (one column)",
+   "_designed": ["Стрельба 17 on every piece, the set's level (the wiki's pieces ask 18)", "the wiki's pieces have one column per favoured attribute; the first is taken, as the rule says"],
+   "family": "Bs_U",
+   "level": 17,
+   "variant": "Q",
+   "res": 119,
+   "bonus": {
+    "2": {"st": 38, "ce": 6},
+    "3": {"st": 100, "Сила": 1, "Ловкость": 1},
+    "4": {"st": 150, "ce": 10, "Сила": 3, "Интеллект": 2},
+    "5": {"st": 250, "cp": 16, "Ловкость": 3, "Телосложение": 4, "Восприятие": 4}
+   },
+   "members": {
+    "helm": {"type": 36056, "name": "Шлем Тёмного Эха[17][Q]", "desc": "Шлем укреплен дополнительными силовыми пластинами и пуленепробиваемым стеклом.", "_wiki": "Шлем Темного Эха (the first of its 3 columns, Сила)", "armor_class": 53, "max_break_abs": 3375, "weight": 6750, "cost": 200000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 93, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}},
+    "shirt": {"type": 36057, "name": "Жилет Тёмного Эха[17][Q]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": "Жилет Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2025, "weight": 4050, "cost": 120000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 171, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1, "Восприятие": 1}},
+    "armor": {"type": 36058, "name": "Броня Тёмного Эха[17][Q]", "desc": "Встроенная система гашения отдачи и электронная система прицеливания.", "_wiki": "Броня Темного Эха (the first of its 3 columns, Сила)", "armor_class": 638, "max_break_abs": 4050, "weight": 8100, "cost": 240000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 104, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 2, "Восприятие": 1}},
+    "pants": {"type": 36059, "name": "Моторика Тёмного Эха[17][Q]", "desc": "Уровень брони облегчен. Моторика позволяет передвигаться бегом.", "_wiki": "Моторика Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2700, "weight": 5400, "cost": 160000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 165, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 1, "Сила": 1}},
+    "boots": {"type": 36060, "name": "Ступни Тёмного Эха[17][Q]", "desc": "Тюнингованные сервоприводы обеспечивают обратную связь за 0.01 мс.", "_wiki": "Ступни Темного Эха (the first of its 3 columns, Сила)", "armor_class": 29, "max_break_abs": 1350, "weight": 2700, "cost": 80000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 55, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1}}
+   }
+  },
+  "11016": {
+   "name": "Дредноут[18][A]",
+   "desc": "Новый комплект брони для выполнения самых сложных боевых операций.",
+   "_layout": "snz2pqdc",
+   "_source": "key texts.xml 11016, the row of the set these types formed in the original; desc texts.xml 11011; numbers designed; bonus designed",
+   "_designed": ["no numbers on the wiki: every piece designed between Тёмное Эхо (17) and Апокалипсис (20), t = 1/3, by the rule in _meta", "bonus: no set page on the wiki; each K and each bonus between Тёмное Эхо (17) and Апокалипсис (20), 0 where one has none, half up"],
+   "family": "Exzo_M",
+   "level": 18,
+   "variant": "A",
+   "res": 77,
+   "bonus": {
+    "2": {"hp": 17, "st": 59, "ce": 4},
+    "3": {"hp": 50, "st": 117, "Сила": 1, "Ловкость": 1},
+    "4": {"st": 183, "ce": 13, "Сила": 3, "Интеллект": 1},
+    "5": {"st": 333, "cp": 17, "Ловкость": 4, "Телосложение": 5, "Восприятие": 5}
+   },
+   "members": {
+    "helm": {"type": 11469, "name": "Шлем Дредноута[18][A]", "desc": "Уникальная многокомпонентная защитная структура бронешлема практически полностью поглощает ударный импульс пули.", "_wiki": null, "_desc": "texts.xml 13966", "armor_class": 67, "max_break_abs": 4038, "weight": 8075, "cost": 233000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 73, "bonus_st": 117, "bonus_od": 16, "bonus_cp": 6, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 18}},
+    "shirt": {"type": 11470, "name": "Жилет Дредноута[18][A]", "desc": "Система гашения ударного импульса в этом бронекомбинезоне основана на технологии жидкой брони – при ударе формирующей твердые кластеры.", "_wiki": null, "_desc": "texts.xml 13968", "armor_class": 84, "max_break_abs": 2509, "weight": 5018, "cost": 140000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 73, "bonus_st": 216, "bonus_od": 16, "bonus_cp": 5, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 18}},
+    "armor": {"type": 11471, "name": "Броня Дредноута[18][A]", "desc": "Корпус из углепластика покрыт титано-керамикой. Внутри, под многослойным кевларом, находятся полости для специальной останавливающей жидкости с наночастицами. Самая высокотехнологичная защита тела из всех возможных!", "_wiki": null, "_desc": "texts.xml 13970", "armor_class": 806, "max_break_abs": 4802, "weight": 9603, "cost": 280000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 73, "bonus_st": 131, "bonus_od": 16, "bonus_cp": 5, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 18}},
+    "pants": {"type": 11472, "name": "Моторика Дредноута[18][A]", "desc": "Композитные материалы, армированная ткань, тонкий слой жидкой брони в сочетании с надёжной системой охлаждения обеспечивают лучшую защиту нижних конечностей от пуль и осколков, а также спасают от перегрева в условиях пустыни.", "_wiki": null, "_desc": "texts.xml 13972", "armor_class": 84, "max_break_abs": 4067, "weight": 8133, "cost": 187000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 73, "bonus_st": 208, "bonus_od": 16, "bonus_cp": 5, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 18}},
+    "boots": {"type": 11473, "name": "Ступни Дредноута[18][A]", "desc": "Композитный материал с высочайшей степенью бронирования - кевлар-арамид, дополнительно армированный титановыми нитями, остановит большинство известных калибров стрелкового оружия.", "_wiki": null, "_desc": "texts.xml 13974", "armor_class": 37, "max_break_abs": 1745, "weight": 3490, "cost": 93000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 73, "bonus_st": 69, "bonus_od": 16, "bonus_cp": 5, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 18}}
+   }
+  },
+  "11018": {
+   "name": "Дредноут[18][G]",
+   "desc": "Новый комплект брони для выполнения самых сложных боевых операций.",
+   "_layout": "snz2pqdc",
+   "_source": "key texts.xml 11018, the row of the set these types formed in the original; desc texts.xml 11011; numbers designed; bonus designed",
+   "_designed": ["no numbers on the wiki: every piece designed between Тёмное Эхо (17) and Апокалипсис (20), t = 1/3, by the rule in _meta", "G: the A's numbers, priced at 4000 afro = 1 G", "bonus: no set page on the wiki; each K and each bonus between Тёмное Эхо (17) and Апокалипсис (20), 0 where one has none, half up"],
+   "family": "Exzo_M",
+   "level": 18,
+   "variant": "G",
+   "res": 77,
+   "bonus": {
+    "2": {"hp": 17, "st": 59, "ce": 4},
+    "3": {"hp": 50, "st": 117, "Сила": 1, "Ловкость": 1},
+    "4": {"st": 183, "ce": 13, "Сила": 3, "Интеллект": 1},
+    "5": {"st": 333, "cp": 17, "Ловкость": 4, "Телосложение": 5, "Восприятие": 5}
+   },
+   "members": {
+    "helm": {"type": 11489, "name": "Шлем Дредноута[18][G]", "desc": "Уникальная многокомпонентная защитная структура бронешлема практически полностью поглощает ударный импульс пули.", "_wiki": null, "_desc": "texts.xml 13966", "armor_class": 67, "max_break_abs": 4038, "weight": 8075, "cost": 0, "g_cost": 5825, "premium": 0, "exchang": 0, "bonus_hp": 73, "bonus_st": 117, "bonus_od": 16, "bonus_cp": 6, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 18}},
+    "shirt": {"type": 11490, "name": "Жилет Дредноута[18][G]", "desc": "Система гашения ударного импульса в этом бронекомбинезоне основана на технологии жидкой брони – при ударе формирующей твердые кластеры.", "_wiki": null, "_desc": "texts.xml 13968", "armor_class": 84, "max_break_abs": 2509, "weight": 5018, "cost": 0, "g_cost": 3500, "premium": 0, "exchang": 0, "bonus_hp": 73, "bonus_st": 216, "bonus_od": 16, "bonus_cp": 5, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 18}},
+    "armor": {"type": 11491, "name": "Броня Дредноута[18][G]", "desc": "Корпус из углепластика покрыт титано-керамикой. Внутри, под многослойным кевларом, находятся полости для специальной останавливающей жидкости с наночастицами. Самая высокотехнологичная защита тела из всех возможных!", "_wiki": null, "_desc": "texts.xml 13970", "armor_class": 806, "max_break_abs": 4802, "weight": 9603, "cost": 0, "g_cost": 7000, "premium": 0, "exchang": 0, "bonus_hp": 73, "bonus_st": 131, "bonus_od": 16, "bonus_cp": 5, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 18}},
+    "pants": {"type": 11492, "name": "Моторика Дредноута[18][G]", "desc": "Композитные материалы, армированная ткань, тонкий слой жидкой брони в сочетании с надёжной системой охлаждения обеспечивают лучшую защиту нижних конечностей от пуль и осколков, а также спасают от перегрева в условиях пустыни.", "_wiki": null, "_desc": "texts.xml 13972", "armor_class": 84, "max_break_abs": 4067, "weight": 8133, "cost": 0, "g_cost": 4675, "premium": 0, "exchang": 0, "bonus_hp": 73, "bonus_st": 208, "bonus_od": 16, "bonus_cp": 5, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 18}},
+    "boots": {"type": 11493, "name": "Ступни Дредноута[18][G]", "desc": "Композитный материал с высочайшей степенью бронирования - кевлар-арамид, дополнительно армированный титановыми нитями, остановит большинство известных калибров стрелкового оружия.", "_wiki": null, "_desc": "texts.xml 13974", "armor_class": 37, "max_break_abs": 1745, "weight": 3490, "cost": 0, "g_cost": 2325, "premium": 0, "exchang": 0, "bonus_hp": 73, "bonus_st": 69, "bonus_od": 16, "bonus_cp": 5, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 18}}
+   }
+  },
+  "11030": {
+   "name": "Паладин[19][A]",
+   "desc": "Паладин - попытка дальнейшего улучшения тактической брони Дредноут. Благодаря нанесению оксида титана броня приобрела желто-золотой оттенок, что является дополнительной маскировкой в условиях пустыни.",
+   "_layout": "siwh0q40",
+   "_source": "key texts.xml 11030, the row of the set these types formed in the original; desc texts.xml 11031; numbers designed; bonus designed",
+   "_designed": ["no numbers on the wiki: every piece designed between Тёмное Эхо (17) and Апокалипсис (20), t = 2/3, by the rule in _meta", "bonus: no set page on the wiki; each K and each bonus between Тёмное Эхо (17) and Апокалипсис (20), 0 where one has none, half up"],
+   "family": "Exzo_M",
+   "level": 19,
+   "variant": "A",
+   "res": 76,
+   "bonus": {
+    "2": {"hp": 33, "st": 79, "ce": 2},
+    "3": {"hp": 100, "st": 133, "Сила": 2},
+    "4": {"st": 217, "ce": 15, "Сила": 4, "Ловкость": 1, "Интеллект": 1},
+    "5": {"st": 417, "cp": 17, "Ловкость": 4, "Телосложение": 5, "Восприятие": 5}
+   },
+   "members": {
+    "helm": {"type": 11559, "name": "Шлем Паладина[19][A]", "desc": "Уникальная многокомпонентная защитная структура бронешлема практически полностью поглощает ударный импульс пули.", "_wiki": null, "_desc": "texts.xml 13966, Шлем Дредноута's (the original has none for this helmet)", "armor_class": 80, "max_break_abs": 4700, "weight": 9400, "cost": 267000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 87, "bonus_st": 142, "bonus_od": 17, "bonus_cp": 7, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 19}},
+    "shirt": {"type": 11560, "name": "Жилет Паладина[19][A]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": null, "_desc": "texts.xml 14377", "armor_class": 101, "max_break_abs": 2994, "weight": 5987, "cost": 160000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 87, "bonus_st": 261, "bonus_od": 17, "bonus_cp": 7, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 19}},
+    "armor": {"type": 11561, "name": "Броня Паладина[19][A]", "desc": "Корпус из углепластика покрыт титано-керамикой. Внутри, под многослойным кевларом, находятся полости для специальной останавливающей жидкости с наночастицами. Самая высокотехнологичная защита тела из всех возможных!", "_wiki": null, "_desc": "texts.xml 13970, Броня Дредноута's (the original has none for this armour)", "armor_class": 975, "max_break_abs": 5554, "weight": 11107, "cost": 320000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 87, "bonus_st": 159, "bonus_od": 17, "bonus_cp": 7, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 19}},
+    "pants": {"type": 11562, "name": "Моторика Паладина[19][A]", "desc": "Современная электроника в сочетании с кинетическими стабилизаторами обеспечивают наилучшую устойчивость при стрельбе.", "_wiki": null, "_desc": "texts.xml 14380", "armor_class": 101, "max_break_abs": 5433, "weight": 10867, "cost": 213000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 87, "bonus_st": 252, "bonus_od": 17, "bonus_cp": 6, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 19}},
+    "boots": {"type": 11563, "name": "Боты Паладина[19][A]", "desc": "Композитный материал с высочайшей степенью бронирования - кевлар-арамид, дополнительно армированный титановыми нитями, остановит большинство известных калибров стрелкового оружия.", "_wiki": null, "_desc": "texts.xml 13974, Ступни Дредноута's (the original has none for these boots)", "armor_class": 44, "max_break_abs": 2140, "weight": 4280, "cost": 107000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 87, "bonus_st": 84, "bonus_od": 17, "bonus_cp": 6, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 19}}
+   }
+  },
+  "11033": {
+   "name": "Паладин[19][G]",
+   "desc": "Паладин - попытка дальнейшего улучшения тактической брони Дредноут. Благодаря нанесению оксида титана броня приобрела желто-золотой оттенок, что является дополнительной маскировкой в условиях пустыни.",
+   "_layout": "siwh0q40",
+   "_source": "key texts.xml 11033, the row of the set these types formed in the original; desc texts.xml 11031; numbers designed; bonus designed",
+   "_designed": ["no numbers on the wiki: every piece designed between Тёмное Эхо (17) and Апокалипсис (20), t = 2/3, by the rule in _meta", "G: the A's numbers, priced at 4000 afro = 1 G", "bonus: no set page on the wiki; each K and each bonus between Тёмное Эхо (17) and Апокалипсис (20), 0 where one has none, half up"],
+   "family": "Exzo_M",
+   "level": 19,
+   "variant": "G",
+   "res": 76,
+   "bonus": {
+    "2": {"hp": 33, "st": 79, "ce": 2},
+    "3": {"hp": 100, "st": 133, "Сила": 2},
+    "4": {"st": 217, "ce": 15, "Сила": 4, "Ловкость": 1, "Интеллект": 1},
+    "5": {"st": 417, "cp": 17, "Ловкость": 4, "Телосложение": 5, "Восприятие": 5}
+   },
+   "members": {
+    "helm": {"type": 11579, "name": "Шлем Паладина[19][G]", "desc": "Уникальная многокомпонентная защитная структура бронешлема практически полностью поглощает ударный импульс пули.", "_wiki": null, "_desc": "texts.xml 13966, Шлем Дредноута's (the original has none for this helmet)", "armor_class": 80, "max_break_abs": 4700, "weight": 9400, "cost": 0, "g_cost": 6675, "premium": 0, "exchang": 0, "bonus_hp": 87, "bonus_st": 142, "bonus_od": 17, "bonus_cp": 7, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 19}},
+    "shirt": {"type": 11580, "name": "Жилет Паладина[19][G]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": null, "_desc": "texts.xml 14377", "armor_class": 101, "max_break_abs": 2994, "weight": 5987, "cost": 0, "g_cost": 4000, "premium": 0, "exchang": 0, "bonus_hp": 87, "bonus_st": 261, "bonus_od": 17, "bonus_cp": 7, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 19}},
+    "armor": {"type": 11581, "name": "Броня Паладина[19][G]", "desc": "Корпус из углепластика покрыт титано-керамикой. Внутри, под многослойным кевларом, находятся полости для специальной останавливающей жидкости с наночастицами. Самая высокотехнологичная защита тела из всех возможных!", "_wiki": null, "_desc": "texts.xml 13970, Броня Дредноута's (the original has none for this armour)", "armor_class": 975, "max_break_abs": 5554, "weight": 11107, "cost": 0, "g_cost": 8000, "premium": 0, "exchang": 0, "bonus_hp": 87, "bonus_st": 159, "bonus_od": 17, "bonus_cp": 7, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 19}},
+    "pants": {"type": 11582, "name": "Моторика Паладина[19][G]", "desc": "Современная электроника в сочетании с кинетическими стабилизаторами обеспечивают наилучшую устойчивость при стрельбе.", "_wiki": null, "_desc": "texts.xml 14380", "armor_class": 101, "max_break_abs": 5433, "weight": 10867, "cost": 0, "g_cost": 5325, "premium": 0, "exchang": 0, "bonus_hp": 87, "bonus_st": 252, "bonus_od": 17, "bonus_cp": 6, "bonus_ce": 8, "need": {"Телосложение": 19, "Стрельба": 19}},
+    "boots": {"type": 11583, "name": "Боты Паладина[19][G]", "desc": "Композитный материал с высочайшей степенью бронирования - кевлар-арамид, дополнительно армированный титановыми нитями, остановит большинство известных калибров стрелкового оружия.", "_wiki": null, "_desc": "texts.xml 13974, Ступни Дредноута's (the original has none for these boots)", "armor_class": 44, "max_break_abs": 2140, "weight": 4280, "cost": 0, "g_cost": 2675, "premium": 0, "exchang": 0, "bonus_hp": 87, "bonus_st": 84, "bonus_od": 17, "bonus_cp": 6, "bonus_ce": 7, "need": {"Телосложение": 19, "Стрельба": 19}}
+   }
+  },
+  "11043": {
+   "name": "Апокалипсис[20][A]",
+   "desc": "Апокалипсис сочетает в себе все преимущества различных модификаций Паладина.",
+   "_layout": "s4d6fvkr",
+   "_source": "key texts.xml 11043, the row of the set these types formed in the original; desc texts.xml 11044; numbers wiki, each piece's own page (its _wiki); bonus wiki Модификация паладин (one column)",
+   "_designed": ["the wiki's pieces have no afro column: the gold column's numbers, priced in afro at 4000 afro = 1 G"],
+   "family": "Exzo_M",
+   "level": 20,
+   "variant": "A",
+   "res": 84,
+   "bonus": {
+    "2": {"hp": 50, "st": 100},
+    "3": {"hp": 150, "st": 150, "Сила": 2},
+    "4": {"st": 250, "ce": 18, "Сила": 4, "Ловкость": 1},
+    "5": {"st": 500, "cp": 18, "Ловкость": 5, "Телосложение": 6, "Восприятие": 6}
+   },
+   "members": {
+    "helm": {"type": 11649, "name": "Шлем Апокалипсиса[20][A]", "desc": "Этот Шлем сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Шлем Апокалипсиса (its one column, G)", "armor_class": 94, "max_break_abs": 5363, "weight": 10725, "cost": 300000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 100, "bonus_st": 166, "bonus_od": 19, "bonus_cp": 9, "bonus_ce": 9, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 2, "Телосложение": 3, "Восприятие": 2}},
+    "shirt": {"type": 11650, "name": "Жилет Апокалипсиса[20][A]", "desc": "Этот Жилет сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Жилет Апокалипсиса (its one column, G)", "armor_class": 119, "max_break_abs": 3478, "weight": 6955, "cost": 180000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 100, "bonus_st": 306, "bonus_od": 19, "bonus_cp": 8, "bonus_ce": 8, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 3, "Телосложение": 2, "Восприятие": 2}},
+    "armor": {"type": 11651, "name": "Броня Апокалипсиса[20][A]", "desc": "Эта Броня сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Броня Апокалипсиса (its one column, G)", "_desc": "texts.xml 14583 (the wiki's page says 'Эти Боты')", "armor_class": 1143, "max_break_abs": 6306, "weight": 12610, "cost": 360000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 100, "bonus_st": 186, "bonus_od": 19, "bonus_cp": 9, "bonus_ce": 9, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 2, "Телосложение": 2, "Восприятие": 2}},
+    "pants": {"type": 11652, "name": "Моторика Апокалипсиса[20][A]", "desc": "Эта Моторика сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Моторика Апокалипсиса (its one column, G)", "armor_class": 119, "max_break_abs": 6800, "weight": 13600, "cost": 240000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 100, "bonus_st": 295, "bonus_od": 19, "bonus_cp": 8, "bonus_ce": 8, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 3, "Телосложение": 2, "Восприятие": 2}},
+    "boots": {"type": 11653, "name": "Боты Апокалипсиса[20][A]", "desc": "Эти Боты сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Боты Апокалипсиса (its one column, G)", "armor_class": 52, "max_break_abs": 2535, "weight": 5070, "cost": 120000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 100, "bonus_st": 98, "bonus_od": 19, "bonus_cp": 8, "bonus_ce": 8, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 2, "Телосложение": 2, "Восприятие": 2}}
+   }
+  },
+  "11046": {
+   "name": "Апокалипсис[20][G]",
+   "desc": "Апокалипсис сочетает в себе все преимущества различных модификаций Паладина.",
+   "_layout": "s4d6fvkr",
+   "_source": "key texts.xml 11046, the row of the set these types formed in the original; desc texts.xml 11044; numbers wiki, each piece's own page (its _wiki); bonus wiki Модификация паладин (one column)",
+   "family": "Exzo_M",
+   "level": 20,
+   "variant": "G",
+   "res": 84,
+   "bonus": {
+    "2": {"hp": 50, "st": 100},
+    "3": {"hp": 150, "st": 150, "Сила": 2},
+    "4": {"st": 250, "ce": 18, "Сила": 4, "Ловкость": 1},
+    "5": {"st": 500, "cp": 18, "Ловкость": 5, "Телосложение": 6, "Восприятие": 6}
+   },
+   "members": {
+    "helm": {"type": 11669, "name": "Шлем Апокалипсиса[20][G]", "desc": "Этот Шлем сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Шлем Апокалипсиса (its one column, G)", "armor_class": 94, "max_break_abs": 5363, "weight": 10725, "cost": 0, "g_cost": 7500, "premium": 0, "exchang": 0, "bonus_hp": 100, "bonus_st": 166, "bonus_od": 19, "bonus_cp": 9, "bonus_ce": 9, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 2, "Телосложение": 3, "Восприятие": 2}},
+    "shirt": {"type": 11670, "name": "Жилет Апокалипсиса[20][G]", "desc": "Этот Жилет сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Жилет Апокалипсиса (its one column, G)", "armor_class": 119, "max_break_abs": 3478, "weight": 6955, "cost": 0, "g_cost": 4500, "premium": 0, "exchang": 0, "bonus_hp": 100, "bonus_st": 306, "bonus_od": 19, "bonus_cp": 8, "bonus_ce": 8, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 3, "Телосложение": 2, "Восприятие": 2}},
+    "armor": {"type": 11671, "name": "Броня Апокалипсиса[20][G]", "desc": "Эта Броня сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Броня Апокалипсиса (its one column, G)", "_desc": "texts.xml 14583 (the wiki's page says 'Эти Боты')", "armor_class": 1143, "max_break_abs": 6306, "weight": 12610, "cost": 0, "g_cost": 9000, "premium": 0, "exchang": 0, "bonus_hp": 100, "bonus_st": 186, "bonus_od": 19, "bonus_cp": 9, "bonus_ce": 9, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 2, "Телосложение": 2, "Восприятие": 2}},
+    "pants": {"type": 11672, "name": "Моторика Апокалипсиса[20][G]", "desc": "Эта Моторика сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Моторика Апокалипсиса (its one column, G)", "armor_class": 119, "max_break_abs": 6800, "weight": 13600, "cost": 0, "g_cost": 6000, "premium": 0, "exchang": 0, "bonus_hp": 100, "bonus_st": 295, "bonus_od": 19, "bonus_cp": 8, "bonus_ce": 8, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 3, "Телосложение": 2, "Восприятие": 2}},
+    "boots": {"type": 11673, "name": "Боты Апокалипсиса[20][G]", "desc": "Эти Боты сочетает в себе все преимущества различных модификаций Паладина.", "_wiki": "Боты Апокалипсиса (its one column, G)", "armor_class": 52, "max_break_abs": 2535, "weight": 5070, "cost": 0, "g_cost": 3000, "premium": 0, "exchang": 0, "bonus_hp": 100, "bonus_st": 98, "bonus_od": 19, "bonus_cp": 8, "bonus_ce": 8, "need": {"Телосложение": 20, "Стрельба": 20, "Пистолеты": 5, "Дробовики": 5, "Автоматы": 5, "Винтовки": 5, "Ручные пулеметы": 5, "Пистолет-пулеметы": 5}, "_bonus_attribs": {"Сила": 2, "Ловкость": 2, "Телосложение": 2, "Восприятие": 2}}
+   }
+  }
+ }
+}

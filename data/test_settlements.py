@@ -74,10 +74,18 @@ def main():
         tooltips.add((int(x), int(y)))
     for key, loc_id in table.items():
         assert re.match(r"^\d{4},\d{4}$", key), key
-        assert cell_of(key) in tooltips, "settlements: %s has no tooltip on the map" % key
+        # A verified cell may be a quest place with no tooltip, which the
+        # wiki's quest gives instead (45 «Курьер» on 5967,1737); nothing
+        # else is placed off the tooltips.
+        assert cell_of(key) in tooltips or fixed.get(key) == loc_id, \
+            "settlements: %s has no tooltip on the map" % key
         assert world.path_for(loc_id) is not None, "settlements: %s -> %s has no file" % (key, loc_id)
         meta = sides[str(loc_id)]
-        assert "test" not in meta["fn"].lower(), "settlements: scratch file %s on %s" % (loc_id, key)
+        # A cell the verified table puts a file on is the truth, whatever the
+        # file is called: the valley's courier place 28 is Q_IV_test_gonec,
+        # and the map's own tooltip on 6272,1833 is «Гонец».
+        assert "test" not in meta["fn"].lower() or fixed.get(key) == loc_id, \
+            "settlements: scratch file %s on %s" % (loc_id, key)
         assert any(s in "WNES" for s in meta["sides"]), \
             "settlements: interior %s (%s) on %s" % (loc_id, meta["fn"], key)
     assert len(table) >= 200, "settlements: only %d cells bound" % len(table)
@@ -102,13 +110,16 @@ def main():
             rows[m.group(1)] = int(m.group(3)) if m.group(3) else None
     assert len(rows) == len(tooltips), "report: %d rows for %d tooltip cells" % (len(rows), len(tooltips))
     for key, loc_id in table.items():
+        if cell_of(key) not in tooltips:
+            continue        # a verified quest place: the report rows are the tooltips
         assert rows.get(key) == loc_id, "report: %s shows %s, table says %s" % (key, rows.get(key), loc_id)
     for key, loc_id in rows.items():
         if loc_id is not None:
             assert table.get(key) == loc_id, "report: %s chosen %s but not in the table" % (key, loc_id)
     m = re.search(r"уверенно (\d+); слабо (\d+); пустошь (\d+)", report)
     assert m, "report: no summary line"
-    bound = int(m.group(1)) + int(m.group(2)) + len(fixed)
+    # A verified null binds nothing: it takes a cell off the map.
+    bound = int(m.group(1)) + int(m.group(2)) + sum(1 for v in fixed.values() if v is not None)
     assert bound == len(table), "report: summary says %d bound, table has %d" % (bound, len(table))
     print("report: %d rows, summary and table agree" % len(rows))
 

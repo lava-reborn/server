@@ -1,0 +1,22 @@
+{
+ "_meta": {
+  "about": "Numbers for cold arms whose wiki table leaves a hole the game cannot live with, laid over the frame by server/items.py after the wiki's own (same keys, frame shape unchanged). A key is taken only where the wiki gives no positive value for it, and a price only where the wiki gives none in either currency, so a fuller table, should one turn up, wins. DESIGNED, NOT RECOVERED: the original server kept these numbers and they are lost. Each record says in _designed what was chosen and in _source what is real.",
+  "decided": "2026-09-24, owner: Одноглазый (5222, Караван) sells cold arms for levels 0-8, the plain and the gold copy of each like Борис sells his pistols, nothing premium. The level-0 one, knife_lvl0_A (the wiki's Булыжник), is the only one whose article lacks numbers a stall needs.",
+  "fields": "ss_si_coldarm names as in server/items.py; cost in afro, g_cost in hundredths of G (0.01 G = 1), like items_wiki.json. Keys starting with _ never reach the wire."
+ },
+ "items": {
+  "6228": {
+   "_name": "Булыжник",
+   "_source": "wiki article Булыжник (icon knife_lvl0_A.png, the type's own): damage 27-38, reach 1.7, wear 3000, 300 g, exchangeable and sellable, not premium, no skill needed; the article has no Базовая цена row and says Очки действия 0; texts.xml has no row for it",
+   "_designed": "price 100 afro: what the market's other level-0 weapon costs (Самострел, 25562, at Борис), under Шило's 253 at level 1. 5 action points a strike: a bare fist's (combat.FIST_AP) and Шило's, the floor of the knife ladder (5, 6, 7, 8, 9 AP at levels 1, 2, 4, 6, 8); at 0 a strike would be a free swing with no end to them",
+   "cost": 100,
+   "strike_cost": 5
+  },
+  "2943": {
+   "_name": "Кайло каменотёса",
+   "_source": "wiki article Кайло каменотёса (icon PickAxe.png, the type's own): damage 2250-2750, reach 1.7, wear 1000, 2500 g, neither exchanged nor sold, not premium; the article says Очки действия 0 and has no Базовая цена row. The quarry's work lends it (quests.json 403, 404), so no stall prices it",
+   "_designed": "8 action points a strike (2026-09-28): the designed frame's own figure for a cold arm (server/items.py designed_info) and the knife ladder's at level 6, the quarry's first level (Работа в Каменоломне, levels 6-10). At 0 a strike would be a free swing with no end to them -- a stone of the quarry and anything else within reach broken as fast as the client can send. No price: a lent thing is sold nowhere",
+   "strike_cost": 8
+  }
+ }
+}

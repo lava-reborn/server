@@ -1,0 +1,12 @@
+{
+ "_meta": {
+  "what": "The owner's edits to the names the global map writes over its cells.",
+  "why": "Those names come from res/database/locations.xml, the player's own file: 414 <location x y text> rows the client draws itself; nothing the server sends touches them. So an edit is made where the file is served -- by the player's launcher (launcher/MapLabels.cs, from the rules tools/export_map_labels.py embeds at build) and by bootstrap_http for a local run (server/map_labels.py). The player's file on disk is never changed.",
+  "rule": "Each edit names a cell (x, y) and the text the row there has now ('was', entities decoded: '<BR>', not '&lt;BR&gt;'). hide: true drops that row; text: gives it another. A row that does not match exactly is left alone, so another copy of the client cannot be edited by mistake.",
+  "edit": "Add or change an edit, then rebuild the launcher (launcher/build.ps1) and publish it; a local run picks it up on restart."
+ },
+ "labels": [
+  {"x": 6266, "y": 1822, "was": "Новогодняя Елка", "hide": true,
+   "why": "Owner 2026-09-24: the farm reads 'Новогодняя Елка'. The cell carries two rows -- the farm's own, 'Ферма Говарда Хаксли <BR>Здесь можно найти задания.' (row 24), and a New Year one added at the very end of the file (row 416) -- and the later one is what the map shows. Hiding it lets the farm's own name through."}
+ ]
+}

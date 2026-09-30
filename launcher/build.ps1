@@ -43,6 +43,18 @@ if (-not (Test-Path $projector)) {
 $hero = Join-Path $here "assets\hero.jpg"
 if (-not (Test-Path $hero)) { throw "Window artwork not found at $hero" }
 
+# The film that scales the game: the projector is pointed at this rather than
+# at main.swf, which fixes its stage at 950x650 and forbids scaling. Built by
+# tools\make_wrapper.py, which also explains why it exists.
+$wrapper = Join-Path $here "assets\wrapper.swf"
+if (-not (Test-Path $wrapper)) { throw "Wrapper film not found at $wrapper -- build it with tools/make_wrapper.py" }
+# Its unscaled twin, 950x650 like main.swf, opt-in with LAVA_PLAIN=1: the
+# ClanInspector mend without the scaling, for working on why a game loaded
+# into either film stops taking clicks. Same script builds both;
+# tools/test_wrapper.py checks them.
+$plain = Join-Path $here "assets\wrapper_plain.swf"
+if (-not (Test-Path $plain)) { throw "Plain wrapper film not found at $plain -- build it with tools/make_wrapper.py" }
+
 # Drawn from the brand mark by assets\make_icon.py; regenerate it with that
 # script rather than by hand.
 $icon = Join-Path $here "assets\lava.ico"
@@ -62,6 +74,14 @@ Write-Host "==> string table"
 & wsl.exe -e bash -lc "cd '$repoWsl' && python3 tools/export_texts.py -o dist/.build/texts.xml"
 if ($LASTEXITCODE -ne 0) { throw "export_texts.py failed" }
 if (-not (Test-Path $texts)) { throw "export_texts.py produced nothing at $texts" }
+
+# The owner's edits to the names over the global map (data/map_labels.json),
+# which LocalServer lays over the player's own res/database/locations.xml.
+$labels = Join-Path $build "map_labels.txt"
+Write-Host "==> map labels"
+& wsl.exe -e bash -lc "cd '$repoWsl' && python3 tools/export_map_labels.py -o dist/.build/map_labels.txt"
+if ($LASTEXITCODE -ne 0) { throw "export_map_labels.py failed" }
+if (-not (Test-Path $labels)) { throw "export_map_labels.py produced nothing at $labels" }
 
 # What the window shows in its corner. The commit is what a bug report needs;
 # the date is what a player can actually read.
@@ -83,6 +103,10 @@ $src = Get-Content (Join-Path $here "Launcher.cs") -Raw -Encoding UTF8
 $src = $src.Replace("@HOST@", $ServerHost).Replace("@PORT@", $Port)
 $src = $src.Replace("@VERSION@", $version).Replace("@FILEVERSION@", $fileVersion)
 $src = $src.Replace("@REGISTER@", $RegisterUrl).Replace("@LOST@", $LostPasswordUrl)
+# Where updates are published. Trailing slash trimmed here rather than in the
+# launcher, so the compiled-in string is already the origin it will be pasted
+# onto.
+$src = $src.Replace("@SITE@", $Site.TrimEnd("/"))
 $gen = Join-Path $build "Launcher.generated.cs"
 [System.IO.File]::WriteAllText($gen, $src, (New-Object System.Text.UTF8Encoding $true))
 
@@ -95,6 +119,8 @@ $sources = @(
   (Join-Path $here "GameProbe.cs"),
   (Join-Path $here "GameWindow.cs"),
   (Join-Path $here "LocalServer.cs"),
+  (Join-Path $here "MapLabels.cs"),
+  (Join-Path $here "Updater.cs"),
   $gen
 )
 
@@ -106,8 +132,11 @@ Write-Host "==> compile"
   "/win32icon:$icon" `
   "/resource:$projector,fp32_sa.exe" `
   "/resource:$texts,texts.xml" `
+  "/resource:$labels,map_labels.txt" `
   "/resource:$hero,hero.jpg" `
   "/resource:$icon,icon.ico" `
+  "/resource:$wrapper,wrapper.swf" `
+  "/resource:$plain,wrapper_plain.swf" `
   "/out:$Out" $sources
 if ($LASTEXITCODE -ne 0) { throw "csc failed" }
 

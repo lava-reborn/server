@@ -5,6 +5,7 @@ and both sides read the walkability grid out of whatever file they picked, so
 a disagreement is not cosmetic: the player would walk through walls the client
 is drawing, or into ones it is not.
 """
+import json
 import os
 import sys
 
@@ -107,7 +108,9 @@ mobs = world.mob_types()
 market = rooms.Room(world.location(102), rooms.IdAllocator(), mobs)
 stalls = {mobs[n.type_id][1] for n in market.npcs.values()}
 check("the market keeps its traders", "wh_Pistols" in stalls, True)
-check("but not the New Year lottery", any("lotery" in n for n in stalls), False)
+# The gold lottery (wh_lotery_g) is the town's own and stands again
+# (world.SEASON_KEPT, 2026-09-28); the New Year presents stall does not.
+check("but not the New Year presents", any("presents" in n for n in stalls), False)
 check("nor the developers' stand-ins", any("Admin" in n for n in stalls), False)
 waste = rooms.Room(world.location(world.pack(6100, 1901)), rooms.IdAllocator(), mobs)
 check("open desert holds no event trader", len(waste.npcs), 0)
@@ -163,9 +166,15 @@ scattered = {i: cs for i, cs in claims.items() if not chained(cs)}
 check("no location claimed from two ends of the map", scattered, {})
 
 # Scratch files were never anywhere. KB_TESTCLAN_Block_Post is titled
-# "Кладбище", generic enough that it had claimed six scattered cells.
-check("no scratch file ended up on the map",
-      [i for i in claims if "test" in world.location(i).fn.lower()], [])
+# "Кладбище", generic enough that it had claimed six scattered cells. What
+# data/settlements_verified.json puts down is the truth whatever the file is
+# called: the valley's courier place 28 is Q_IV_test_gonec, on the map's own
+# «Гонец» (6272,1833).
+with open(os.path.join(os.path.dirname(HERE), "data", "settlements_verified.json"),
+          encoding="utf-8") as _fh:
+    _verified = {v for v in json.load(_fh)["cells"].values() if v is not None}
+check("no scratch file ended up on the map, but for one a verified cell holds",
+      [i for i in claims if "test" in world.location(i).fn.lower() and i not in _verified], [])
 check("the black market is where it was played",
       world.location_at(5970, 1730), 102)
 check("and Dongola's is its own", world.location_at(5879, 2012), 103)

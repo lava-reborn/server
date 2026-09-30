@@ -146,6 +146,10 @@ KNOWN_LABELS = set(LABEL_INDEX)
 ATTR_INDEX = {key_norm(a): i for i, a in enumerate(ATTRIBS)}
 ATTR_INDEX[key_norm("Интелект")] = 4
 SKILL_INDEX = {key_norm(s): i for i, s in enumerate(SKILLS)}
+# "Медецина 6" on the "Аптечка «Стандарт»" page: the one misspelling of the
+# skill in the dump, and it hides the requirement that proves the kits follow
+# the same Медицина 0/2/4/6/8/10 ladder as bandages and food.
+SKILL_INDEX[key_norm("Медецина")] = 2
 SPEC_INDEX = {key_norm(s): i for i, s in enumerate(SPECS)}
 SPEC_INDEX[key_norm("Режущие оружие")] = 1
 SPEC_INDEX[key_norm("Ручные пулемёты")] = 6
@@ -639,6 +643,31 @@ def build_si(root, tables, facts, price, col_choice, tier, cls):
     return None, None
 
 
+# Cells the wiki mistyped. A table rather than a cleverer parser: the whole
+# dump holds four cells shaped "N/M", three of them this one page's spread
+# column across its (A)/(P)/(G) copies, and a fraction means nothing there.
+# The modification's own text says precision is up 20 %, and the base Desert
+# Eagle's spread is 7.3, so 7.3 * 0.8 = 5.84 -- the cell is "5.8" with the
+# dot mistyped. Left unfixed it reaches target_size as a zero, which the
+# client divides by (see the head of server/items.py).
+CELL_FIXES = {
+    ("Desert Eagle Mod XI", "Разброс на 100 метров", "5/8"): 5.8,
+}
+
+
+def repair_cells(title, tables):
+    """Put the known mistyped cells of this page right, in place."""
+    for table in tables:
+        for section in (table.get("sections") or {}).values():
+            for label, value in (section or {}).items():
+                if not isinstance(value, list):
+                    continue
+                for i, cell in enumerate(value):
+                    fix = CELL_FIXES.get((title, label, cell)) if isinstance(cell, str) else None
+                    if fix is not None:
+                        value[i] = fix
+
+
 def main():
     pages = load_pages()
     objects = load_objects()
@@ -648,6 +677,7 @@ def main():
         page = pages[title]
         txt = page["wikitext"]
         tables = [t for t in (typed_table(x) for x in parse_tables(txt)) if t]
+        repair_cells(title, tables)
         facts, price = bullets_of(txt)
         items[title] = dict(
             kind=rec["kind"], categories=rec["categories"],

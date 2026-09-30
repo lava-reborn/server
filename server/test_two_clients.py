@@ -48,6 +48,10 @@ CRED_B = accounts.credential("bob", "secret")
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
            LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730")
 
+# The lines the server says by itself (Session.say) are off on a served
+# server; this suite reads them as the server's reasons, so it asks for
+# them by name.
+env["LAVA_SERVER_CHAT"] = "1"
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
@@ -196,8 +200,12 @@ try:
     check("stranger's gear answered", got[0].split(";")[0], "ss_ack")
     # PersEquip.ss_ack splices six wear slots and then two hands off the list
     # regardless of what came, so an empty answer is eight empty entries.
-    check("six wear slots and two hands, all empty",
-          got[0], "ss_ack;o_list=|x0|x0|x0|x0|x0|x0|x0|x0|;")
+    # Six wear slots empty, then the two hands: the kit puts a pistol in the
+    # first of them, so a stranger's gear is not eight zeroes any more.
+    fields = got[0].split("o_list=|")[1].rstrip("|;").split("|")
+    check("six wear slots, all empty", fields[:6], ["x0"] * 6)
+    check("a pistol in the hand and nothing in the other",
+          (fields[6] != "x0", fields[7]), (True, "x0"))
 
     # --- walking -----------------------------------------------------------
     path = "|%d|%d|" % (pos_a, pos_a + 1)
@@ -256,6 +264,85 @@ try:
     check("Alice notices nothing", a.frames(0.3), [])
     check("Bob notices nothing", b.frames(0.3), [])
     c.s.close()
+
+    # --- throwing a thing on the ground -------------------------------------
+    # PersEquip.dropItem: a thing dragged out of the equipment window onto
+    # the ground opens a loot session with no window on the player's own
+    # cell (Loot.createSession(walker.numPos, true)), bag or no bag, and each
+    # thing then goes into it as a Loot transfer (2). Refused, Loot.status
+    # stays false and every later drop waits in dropStack for ever.
+    here = pos_a + 1
+    guns = []
+    for _ in range(2):
+        a.send("userMsg;entry=@/give 25586@;group=0;")
+        guns += [param(f, "obj") for f in a.frames()
+                 if f.startswith("ss_obj_status") and param(f, "status") == "1"]
+    check("Alice is given two Berettas to throw away", len(guns), 2)
+    a.send("ss_create;s_type=0;target=%d;" % here)
+    check("the drop opens a session on her own empty cell",
+          a.frames(), ["cmdAck;res=0;"])
+    a.send("ss_upd;s_status=2;obj=%s;param=1;" % guns[0])
+    got = a.frames()
+    check("the first thing goes down: acked, then a bag drawn on her cell",
+          [f for f in got if f.split(";")[0] in ("cmdAck", "ss_loot")],
+          ["cmdAck;res=0;", "ss_loot;s_status=1;hex=|%d|;" % here])
+    check("Bob sees the bag appear", b.frames(),
+          ["ss_loot;s_status=1;hex=|%d|;" % here])
+    # Bob, beside it, takes it: the bag is empty and goes -- while Alice's
+    # equipment window, and so her session, is still open.
+    b.send("ss_create;s_type=0;target=%d;" % here)
+    check("Bob opens the bag", b.frames(), ["cmdAck;res=0;"])
+    b.send("ss_upd;s_status=1;obj=%s;param=1;" % guns[0])
+    got = b.frames()
+    check("and takes the Beretta; the empty bag goes",
+          [f for f in got if f.split(";")[0] in ("cmdAck", "ss_loot")],
+          ["cmdAck;res=0;", "ss_loot;s_status=0;hex=|%d|;" % here])
+    b.send("ss_upd;s_status=0;obj=x0;param=1;")
+    check("Bob closes the bag, unanswered", b.frames(0.3), [])
+    check("Alice sees the bag go", a.frames(), ["ss_loot;s_status=0;hex=|%d|;" % here])
+    a.send("ss_upd;s_status=2;obj=%s;param=1;" % guns[1])
+    got = a.frames()
+    check("her next drop still lands: a new bag, not an ack for nothing",
+          [f for f in got if f.split(";")[0] in ("cmdAck", "ss_loot")],
+          ["cmdAck;res=0;", "ss_loot;s_status=1;hex=|%d|;" % here])
+    check("Bob sees that bag too", b.frames(),
+          ["ss_loot;s_status=1;hex=|%d|;" % here])
+    a.send("ss_upd;s_status=0;obj=x0;param=1;")
+    check("the equipment window shuts the session, unanswered", a.frames(0.3), [])
+    a.send("ss_get;target=0;slot=8;")
+    bag_a = a.frames()[0]
+    b.send("ss_get;target=0;slot=8;")
+    bag_b = b.frames()[0]
+    check("the Berettas are out of Alice's bag, the first one in Bob's",
+          (guns[0] in bag_a, guns[1] in bag_a, guns[0] in bag_b),
+          (False, False, True))
+
+    # --- a bag's session under a stall ---------------------------------------
+    # Every session window is modal, so a new ss_create means the last one is
+    # gone even when its close never came -- and a bag left open would read
+    # the stall's codes as its own, cmd_ss_upd asking the bag first: the
+    # repair window's afro repair (3) is the bag's "take all".
+    a.send("ss_get;target=0;slot=11;")
+    pistol = a.frames()[0].split("o_list=|")[1].rstrip("|;").split("|")[6]
+    stall = next(int(param(f, "id")) for f in got_a if f.startswith("userInfo_Trader"))
+    a.send("ss_create;s_type=0;target=%d;" % here)
+    check("Alice opens the bag on her cell", a.frames(), ["cmdAck;res=0;"])
+    a.send("ss_create;s_type=1;target=%d;" % stall)
+    check("then a stall, the bag's close never sent", a.frames(), ["cmdAck;res=0;"])
+    a.send("ss_upd;s_status=3;obj=%s;param=1;" % pistol)
+    got = a.frames()
+    # A whole pistol: the stall has nothing to do, answers 0, charges
+    # nothing and sends the pistol's own state back (Inventory.repair).
+    check("the repair is the stall's to answer (a whole pistol: nothing to do), not"
+          " the bag's take-all",
+          ([f for f in got if f.startswith("cmdAck")],
+           [f.split(";")[0] for f in got if f.split(";")[0] in ("cmdAck", "ss_loot", "ss_di_firearm")]),
+          (["cmdAck;res=0;"], ["cmdAck", "ss_di_firearm"]))
+    check("and the Beretta still lies in the bag", b.frames(0.3), [])
+    a.send("ss_upd;s_status=0;obj=x0;param=1;")
+    a.frames(0.3)
+    a.send("ss_get;target=0;slot=8;")
+    check("not in Alice's bag", guns[1] in a.frames()[0], False)
 
     # --- leaving for the map ------------------------------------------------
     a.send("chWorld;")
@@ -355,11 +442,13 @@ try:
     check("Alice walks into the cell under her",
           [f.split(";")[0] for f in got if not f.startswith("userMove")],
           ["cmdAck", "lcall"])
+    # No userLost: the client's map drops a figure only when its own timer
+    # runs out (MapObject.checkLive), and a userLost would stop that timer
+    # and leave her drawn for good (rooms.GlobalMapRoom; test_gmap_presence).
     got = b.frames()
-    check("Bob sees her vanish from the map",
-          [f for f in got if f.startswith("userLost")],
-          ["userLost;id=%d;" % pid_a])
-    check("and hears no more of her",
+    check("Bob is told nothing of her going",
+          [f for f in got if str(pid_a) in f and not f.startswith("userMove")], [])
+    check("and hears no more of her, so his map lets her go",
           [f for f in b.frames(2.5) if str(pid_a) in f], [])
     a.send("lenter;accept=1;")
     got = a.frames(wait=2)

@@ -418,6 +418,12 @@
    "dmg_mult": 0.0,
    "hp_mult": 1.0,
    "xp_mult": 0.5
+  },
+  "turret": {
+   "aggro": 8,
+   "dmg_mult": 1.0,
+   "hp_mult": 1.0,
+   "xp_mult": 1.0
   }
  },
  "weapon_classes": {

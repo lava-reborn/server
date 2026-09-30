@@ -1,5 +1,5 @@
 {
- "_": "type_id -> level (level_source: name = _lvlN in mobs.xml, name_index = animal numbered by level, name_band = m05_/m510_/m1520_ tier prefix, city_band = region named in the type, wiki = mob page, camp = Up_*LVL location it spawns in, location = median of neighbours, default), role, weapon_class, body from res/mobs/<resource>.xml, hex_ms move speed. Built by data/build_mob_types.py.",
+ "_": "type_id -> level (level_source: name = _lvlN in mobs.xml, name_index = animal numbered by level, name_band = m05_/m510_/m1520_ tier prefix, city_band = region named in the type, wiki = mob page, designed = set by hand for a quest (DESIGNED_LEVELS), camp = Up_*LVL location it spawns in, location = median of neighbours, default), role, weapon_class, body from res/mobs/<resource>.xml, hex_ms move speed. Built by data/build_mob_types.py.",
  "types": {
   "1000": {
    "body": "dog",
@@ -1624,8 +1624,8 @@
   "1406": {
    "body": "man",
    "hex_ms": 200,
-   "level": 1,
-   "level_source": "default",
+   "level": 5,
+   "level_source": "designed",
    "name": "nubia_boss",
    "resource": "mob-m20",
    "role": "boss",
@@ -4816,8 +4816,8 @@
   "2162": {
    "body": "none",
    "hex_ms": 0,
-   "level": 14,
-   "level_source": "camp",
+   "level": 7,
+   "level_source": "designed",
    "name": "mg_box_ammo",
    "resource": "q-box",
    "role": "object",
@@ -7840,8 +7840,8 @@
   "409": {
    "body": "none",
    "hex_ms": 0,
-   "level": 14,
-   "level_source": "camp",
+   "level": 1,
+   "level_source": "designed",
    "name": "nc_box_ammo",
    "resource": "q-box",
    "role": "object",
@@ -16000,8 +16000,8 @@
   "641": {
    "body": "none",
    "hex_ms": 0,
-   "level": 14,
-   "level_source": "camp",
+   "level": 3,
+   "level_source": "designed",
    "name": "lu_box_ammo",
    "resource": "q-box",
    "role": "object",
@@ -16012,8 +16012,8 @@
   "642": {
    "body": "none",
    "hex_ms": 0,
-   "level": 14,
-   "level_source": "camp",
+   "level": 5,
+   "level_source": "designed",
    "name": "ja_box_ammo",
    "resource": "q-box",
    "role": "object",
@@ -19803,15 +19803,15 @@
   },
   "832": {
    "body": "man",
-   "hex_ms": 200,
+   "hex_ms": 0,
    "level": 6,
    "level_source": "name",
    "name": "m_turret_lvl6",
    "resource": "Turrel",
-   "role": "object",
+   "role": "turret",
    "root": 0,
    "spawn_locations": 1,
-   "weapon_class": "none"
+   "weapon_class": "machine_gun"
   },
   "833": {
    "body": "man",

@@ -140,23 +140,38 @@ try:
     everything = get('/res/database/texts.xml?all=1')
     check('all=1 is not empty', len(everything) > 100000, True)
     sys.path.insert(0, HERE)
-    import world, items, quests, transport
+    import world, items, quests, transport, names
     ids = set(world.mob_types())
     ids |= {items.STRING_ID_OFFSET + t for t in items.catalogue()}
-    # item descriptions from the wiki, the id ss_si_* puts in desc
+    # item descriptions, the id ss_si_* puts in desc: the wiki's, and the
+    # original table's, which also describes types the wiki never did
     ids |= {items.DESC_ID_OFFSET + t for t in items.wiki_descs()}
+    import orig_texts                                  # noqa: E402
+    ids |= {items.DESC_ID_OFFSET + t for t in orig_texts.item_descs()}
     # quest names and texts, plus the shared empty string they fall back to
     ids |= set(quests.strings())
     # vehicle names and descriptions, the ids ts_si puts in name and desc
     ids |= set(transport.strings())
+    # clothing set names and descriptions, the ids ss_si_set puts in name and desc
+    import sets                                        # noqa: E402
+    ids |= set(sets.strings())
+    # and the descriptions data/sets.json gives its pieces, over the
+    # original's: a piece the original never described still gets its id
+    ids |= {items.DESC_ID_OFFSET + t for t in sets.item_descs()}
+    # and the reworked pieces' and the clothing cheques' words (setcraft.py)
+    import setcraft                                    # noqa: E402
+    ids |= set(setcraft.strings())
     have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
     check('every name the server sends is preloaded', ids - have, set())
-    check('creature, item, description, quest and transport ids do not collide',
+    check('creature, item, description, quest, transport and set ids do not collide',
           len(have), len(ids))
-    # the wiki's Russian names replace the internal ones under the same ids
+    # Russian names replace the internal ones under the same ids: the
+    # original table's first, the wiki's where it is silent
     body = everything.decode('utf-8')
-    check('a linked item is served under its wiki name',
-          "<s id='%d'>9мм НАТО КС</s>" % (items.STRING_ID_OFFSET + 6092) in body, True)
+    _want = names._escape(names.text(items.STRING_ID_OFFSET + 6092))
+    check('a linked item is served under its Russian name',
+          ("<s id='%d'>%s</s>" % (items.STRING_ID_OFFSET + 6092, _want) in body,
+           _want != "Ammo_9mmNato_KS"), (True, True))
     check('and its description under the description id',
           "<s id='%d'>" % (items.DESC_ID_OFFSET + 6092) in body, True)
     check('an unlinked item keeps its internal name',
@@ -244,6 +259,38 @@ try:
     check("and it needs nothing out of res/", b"/res/" in reg, False)
     st = urllib.request.urlopen(BASE2 + "/status", timeout=5).read()
     check("status says res serving is off", b'"res": false' in st, True)
+
+    # The update channel, checked here and nowhere else. It has to answer with
+    # res serving OFF -- that is the whole point of putting it under /exe/
+    # rather than under /res/, and this is the only block in the suite where
+    # the guard is actually in force. A regression that moved these two routes
+    # below it would pass every other check green.
+    import hashlib as _hashlib
+    import json as _json
+    man = urllib.request.urlopen(BASE2 + "/exe/lavaclient/manifest", timeout=10)
+    check("manifest answers with res serving off", man.status, 200)
+    doc = _json.loads(man.read().decode("utf-8"))
+    row = doc["resources"][0]
+    rs = urllib.request.urlopen(BASE2 + "/exe/lavaclient/texts.xml", timeout=30)
+    check("string table answers with res serving off", rs.status, 200)
+    blob = rs.read()
+    check("manifest size is the size that arrives", row["size"], len(blob))
+    check("manifest digest is the digest that arrives",
+          row["sha256"], _hashlib.sha256(blob).hexdigest())
+    check("and the header carries it too",
+          rs.headers.get("X-Lava-Sha256"), row["sha256"])
+    check("manifest row count is the row count that arrives",
+          row["rows"], blob.count(b"<s id='"))
+    # Byte for byte the document the WEB path serves, because the launcher
+    # compares a digest of one against the other.
+    check("it is the same document ?all=1 would serve",
+          blob.startswith("﻿<?xml version='1.0'?><data>".encode("utf-8")), True)
+    check("and it is closed", blob.endswith(b"</data>"), True)
+    # Nothing under /res/ was opened up by adding them.
+    check("the guard still stands after them",
+          code_of(BASE2 + "/res/database/texts.xml?all=1"), 404)
+    check("and loaduser was not shadowed",
+          code_of(BASE2 + "/exe/lavaclient/loaduser"), 200)
 finally:
     srv2.terminate()
     try: srv2.wait(timeout=5)

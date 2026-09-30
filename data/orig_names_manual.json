@@ -1,0 +1,1563 @@
+{
+ "_meta": {
+  "what": "Original texts.xml strings for creatures the matcher in build_orig_npcs.py cannot reach by name, chosen by hand.",
+  "why": "The matcher ties a type to a string when its internal name transliterates into the string (Aziz_Trader -> Азиз). Mobs named mAntilope, mRat_2 or m05_NewColonAsslt_s_lvl3 translate, they do not transliterate, so the animals and bandits of the Nubian valley kept their internal names. Owner's request 2026-09-24: give them their names from the original.",
+  "rule": "string_id is the row of the original texts.xml; text is a fragment that row must contain (the build stops if it does not, so another copy of the file cannot slip a different row in); why is the evidence. The level prefix [N] is rewritten to the mob's real level by server/orig_texts.py, as for every mob.",
+  "edit": "Change a row, then: MSYS_NO_PATHCONV=1 wsl.exe -e bash -lc \"cd /mnt/c/Users/gmkrt/OneDrive/Desktop/claude/lava-server && LAVA_RES=/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res python3 data/build_orig_npcs.py\"; the string table changes, so the launcher is rebuilt too."
+ },
+ "types": {
+  "12": {
+   "string_id": 10637,
+   "text": "Молодая Антилопа",
+   "why": "mAntilope, the plain antelope of the Nubian 'Антилопы'. The numbered family mAntilope_07/11/15/19 owns the level-coded 'Антилопа' rows 9503-9509; this is the antelope of the starter-animal block 10632-10640."
+  },
+  "1023": {
+   "string_id": 62313,
+   "text": "Серая крыса",
+   "why": "mRat_2, the rats of 'Амбар Фермера'. The fan wiki's page of that location lists its mobs as 'Серая крыса', and the original has that row. It sits in a prison quest's block, so the evidence is the wiki's, not the row's place."
+  },
+  "82": {
+   "string_id": 10634,
+   "text": "Голодная собака",
+   "why": "mStarvingDog_lvl1: starving dog, level 1 -- '[1] Голодная собака' of the starter-animal block, word for word and level for level."
+  },
+  "14": {
+   "string_id": 50267,
+   "text": "Слабый Мародёр",
+   "why": "m05_BanditRaider_lvl1. The m05 names block (50242-) holds '[4] Лидер бандитов' for BanditLeader_lvl4 and '[1] Слабый Мародёр', '[2] Мародёр' at exactly the raiders' levels 1 and 2."
+  },
+  "15": {
+   "string_id": 50268,
+   "text": "Мародёр",
+   "why": "m05_BanditRaider_lvl2, as the row above."
+  },
+  "16": {
+   "string_id": 50268,
+   "text": "Мародёр",
+   "why": "DESIGNED, not recovered: m05_BanditRaider_lvl3, the three raiders beside the commissar Рекс (1405) in 30 (Q_IV_pustina2, the map's 'Банда коммисара Рекса' at 6273,1832, which stage 2 of the valley's quests made reachable -- before it the type stood only in 43 'Генри Мл.', outside the owner's wall) and so shown to players by its internal name. The m05 block (50242-) has no raider of level 3: its raiders stop at '[1] Слабый Мародёр' and '[2] Мародёр' (14, 15), and '[4] Мародер<Br>Новые колонисты' (50254) is a New Colonists' marauder, another level and spelling. So the family's own word, the row of the level-2 raider 15, whose sprite (m9) it wears; the prefix is rewritten to its own level, '[3] Мародёр'. The owner's session's choice of 2026-09-26; 50254 is the one-line alternative."
+  },
+  "20": {
+   "string_id": 10597,
+   "text": "Бандит",
+   "why": "m05_BanditShooter_lvl2: '[2] Бандит', the bandit of the same level."
+  },
+  "21": {
+   "string_id": 10597,
+   "text": "Бандит",
+   "why": "m05_BanditShooter_lvl3, the same bandit a level up; the prefix shows its own level."
+  },
+  "250": {
+   "string_id": 8831,
+   "text": "Стрелок<Br>Новые колонисты",
+   "why": "m05_NewColonPistol_lvl3: a New Colonists' shooter from their block 8823-8837."
+  },
+  "251": {
+   "string_id": 8828,
+   "text": "Штурмовик<Br>Новые колонисты",
+   "why": "m05_NewColonAsslt_s_lvl3: assault -- 'Штурмовик' of the New Colonists' block."
+  },
+  "2103": {
+   "string_id": 50270,
+   "text": "Лидер Ян Дуглас<Br>Новые колонисты",
+   "why": "m05_nc_Leader_lvl5, the one leader of the Лагерь бандитов (34), by his full name: '[5] Лидер Ян Дуглас<Br>Новые колонисты', level for level, in the same m05 block as the valley's other creatures (50242-). The quests that send the player to him call him by it ('убить лидера Новых Колонистов Яна Дугласа', texts.xml 59864-59865), and so does the wiki ('Лидер Ян Дуглас', 6272x1840). The owner's decision of 2026-09-26, over 50245 '[5] Лидер <Br>Новые колонисты', the nameless row two above it."
+  },
+  "17": {
+   "string_id": 50247,
+   "text": "Курьер",
+   "why": "m05_BanditCourier_lvl2, the courier of 28 «Гонец» whom Сейфул's «Пути информации» sends the player to intercept (texts.xml 59859-59860): '[3] Курьер' of the m05 block, the only courier in it. The level prefix is rewritten to his own (2)."
+  },
+  "1405": {
+   "string_id": 50244,
+   "text": "Комиссар Рекс<Br>Новые колонисты",
+   "why": "m05_nc_Comissar_lvl3, the commissar of 30 (Q_IV_pustina2), whose cell the map names 'Банда коммисара Рекса' (6273,1832): '[3] Комиссар Рекс<Br>Новые колонисты' of the m05 block, level for level. Аюб's «Важные персоны» is to kill him (texts.xml 24349-24351)."
+  },
+  "1019": {
+   "string_id": 9494,
+   "text": "Черная Крыса<Br>Дикое животное",
+   "why": "mRat_3, the rats of 643 'Старые штольни.' behind Хрущ's barn: '[3] Черная Крыса<Br>Дикое животное', level for level, where the matcher only suggested the row before it ('[0] Крысёныш'). Хрущ's «Крысиный король» calls them so: 'в старых штольнях, где обитают Черные крысы' (texts.xml 59918)."
+  },
+  "1187": {
+   "string_id": 59991,
+   "text": "Барыга Сет<Br>Торговля для экспедиций",
+   "why": "nz_arena_trd, the trader of 'Арена Нубии' (167). The valley's own names block 59979-59993 (Сейфул, Мертвая антилопа, Нубийский защитник ... Джеррах, Рудо, Камал, Джек Гарард) has 'Барыга Сет<Br>Торговля для экспедиций', and Муад's «Лучшее снаряжение» sends the player to him at the arena: '*Сет хитро улыбается* ... это арена - место опасное' (texts.xml 59899-59901)."
+  },
+  "1135": {
+   "string_id": 41476,
+   "text": "Ящик с инструментами",
+   "why": "nz_Box (1f_Minibox), the tools box data/placements.json puts down in 184 for Ибрахим's «Друзья I» and its own «Забрать инструменты» (texts.xml 59797-59802, 'Ящик не закрыт, внутри лежат несколько инструментов'). No row names the valley's box itself; this one is the words of the box of tools in Абри's quest block (41472-41478), and they say what this box is."
+  },
+  "114": {
+   "string_id": 9651,
+   "text": "Корова",
+   "why": "env_NPC_Cow_Side_1, a cow drawn from the side (animal-f2-1): 'Корова', the row of the valley's cow Npc_Commoner000059 (5195), which wears the same art family. It grazes in 322 and in 44."
+  },
+  "115": {
+   "string_id": 9651,
+   "text": "Корова",
+   "why": "env_NPC_Cow_Side_2 (animal-f2-2), grazing beside the cows 5195 in 182 on the 'Поля и Пастбища' (6268,1818): as 114."
+  },
+  "116": {
+   "string_id": 9651,
+   "text": "Корова",
+   "why": "env_NPC_Cow_Side_3 (animal-f2-3), in 182 and 44: as 114."
+  },
+  "117": {
+   "string_id": 9651,
+   "text": "Корова",
+   "why": "env_NPC_Cow_Side_4 (animal-f2-4), in 44: as 114."
+  },
+  "118": {
+   "string_id": 9651,
+   "text": "Корова",
+   "why": "env_NPC_Cow_Side_5 (animal-f2-5), in 44: as 114."
+  },
+  "119": {
+   "string_id": 9651,
+   "text": "Корова",
+   "why": "env_NPC_Cow_Side_6 (animal-f2-6), in 44: as 114."
+  },
+  "120": {
+   "string_id": 9651,
+   "text": "Корова",
+   "why": "env_NPC_Cow_Side_7 (animal-f2-7), in 182 and 44: as 114."
+  },
+  "121": {
+   "string_id": 9651,
+   "text": "Корова",
+   "why": "env_NPC_Cow_Side_8 (animal-f2-8), in 44: as 114."
+  },
+  "40": {
+   "string_id": 59981,
+   "text": "Нубийский защитник",
+   "why": "nz_NoobianDefender, word for word; it stands in 'Отряд нубийских защитников' beside Сейфул (type 35), whose row 59979 is two rows up."
+  },
+  "5205": {
+   "string_id": 10431,
+   "text": "Говард Хаксли<Br>Антиквариат",
+   "why": "Npc_Trader000032, standing at 'Ферма Г. Хаксли'. The traders' block runs at offset 10399 here (000033 -> 10432 Джеррах, 000034 -> 10433 Думисани) and drops to 10398 at 000036 (-> 10434 Рихтер), so 000032 falls on 10431: Говард Хаксли, the G. of the farm."
+  },
+  "5225": {
+   "string_id": 10450,
+   "text": "Торговец Йонас<Br>Патроны и лекарства",
+   "why": "Npc_Trader000052 at 'Грузовик': the free row between its neighbours 000051 -> 10449 Эрикесэм and 000053 -> 10451 Святой Бенкур, both at offset 10398."
+  },
+  "5196": {
+   "string_id": 9652,
+   "text": "Мастер Норман",
+   "why": "Npc_Commoner000060 at 'Грузовик': its family position (000059 -> 9651 Корова, 000061 -> 9653 Сержант Чугункин) is Мастер Норман's row, and it wears Норман's own sprite q1-3, the one nz_Master_Norman (type 34) has. A second placement of him, as the Проповедник of the sect stands in three."
+  },
+  "836": {
+   "string_id": 50267,
+   "text": "Слабый Мародёр",
+   "why": "m05_Locked_bandit_lvl1, the weaker bandits of the Nubian mine (Noob_mine_lvl1, 612). The fan wiki's page of that tier, 'Штольня' -- the one with Камал, type 1134, who stands in 612 -- lists its mobs as 'Мародер', and the m05 block has '[1] Слабый Мародёр', '[2] Мародёр' at exactly these two levels, right behind '[2] Шахтер' (50266) -- a miner, in a block of the valley's creatures. The same rows as the valley's raiders (14, 15)."
+  },
+  "837": {
+   "string_id": 50268,
+   "text": "Мародёр",
+   "why": "m05_Locked_bandit_lvl2, the rest of the Nubian mine's bandits on all three tiers (612, 1011, 1217), as the row above."
+  },
+  "1406": {
+   "string_id": 10536,
+   "text": "Большой Мвамба<Br>Новые колонисты",
+   "why": "nubia_boss, the one creature of 31 (Q_IV_pustina3), which the map's own tooltip on its cell calls «Лагерь Большого Мвамбы» (6274,1833, data/settlements_verified.json): 'Большой Мвамба<Br>Новые колонисты' (10536), between '[2] Серая Крыса' (10535) and the range targets 'Цель №1' ... (10537-): the valley's grey rats and Берт Гаммер's range. Шульц's «Экипировка к пистолету» sends a party to kill him (texts.xml 59832-59833). The row writes no level; server/orig_texts.py puts his own in front, as for every mob."
+  },
+  "6763": {
+   "string_id": 10351,
+   "text": "Эддай<Br>Местный житель",
+   "why": "Npc_Commoner000799 (art q10-3), which the quarter's own file (36, Vadihalfa2) puts down: the Эддай of Хрущ's «Королевский Элексир» ('Зовут его Эддай, а его дом расположен в жилом квартале Вади-Хальфы', texts.xml 59920) and of the wiki's article, 'Жилой квартал, 5967x1727'. The family's members 799-803 run on one offset onto 10351-10355: 800 (6764, in the Магриб base 52) is 'Бюльбюль-Оглы<Br>Пилигрим', whom the wiki stands in the base, and 801-803 (6824-6826) are the 'Ящик с деньгами' of the Северный, Восточный and Южный склад, and those three types stand in exactly 111, 110 and 109. It replaces the stand-in wh_ny_Local_Man (421, the same art) that data/placements.json used to put down for him (the Halfa plan's owner default 14)."
+  },
+  "6764": {
+   "string_id": 10352,
+   "text": "Бюльбюль-Оглы<Br>Пилигрим",
+   "why": "Npc_Commoner000800 in the Магриб base (52), the member after Эддай on the run 799-803 -> 10351-10355 (see 6763); the wiki's 'Бюльбюль-Оглы Пилигрим' stands in the base and gives the 'Собрать «Самоучитель ...»' quests."
+  },
+  "6824": {
+   "string_id": 10353,
+   "text": "Ящик с деньгами<Br>Северный склад",
+   "why": "Npc_Commoner000801 (art q-box) in the Северный склад (111, stok_WH_sever), on the run 799-803 -> 10351-10355 (see 6763)."
+  },
+  "6825": {
+   "string_id": 10354,
+   "text": "Ящик с деньгами<Br>Восточный склад",
+   "why": "Npc_Commoner000802 (art q-box) in the Восточный склад (110, stok_WH_vostok), on the run 799-803 (see 6763)."
+  },
+  "6826": {
+   "string_id": 10355,
+   "text": "Ящик с деньгами<Br>Южный склад",
+   "why": "Npc_Commoner000803 (art q-box_small) in the Южный склад (109, stok_WH_ug), on the run 799-803 (see 6763)."
+  },
+  "6520": {
+   "string_id": 10327,
+   "text": "Бари",
+   "why": "Medium. Npc_Commoner000764, a bedouin (art berber) in the quarter (36). The row follows 10326 'Ямка', the one name of the family's holes 759-763 (1f_SmallHole, the dig spots of Q_Tresure1-5), and the texts speak of 'слепой Бари' in Хальфа (41385, 47048); the wiki's 'Барри' gives «Билли Джей» and «Курьер» in the quarter. The offset drifts in this stretch (765, a money box, took 10357 of the boxes' run), hence medium."
+  },
+  "6522": {
+   "string_id": 10328,
+   "text": "Мауризио",
+   "why": "Medium. Npc_Commoner000766 (art q1-1) at the old gas station (60), whose own map label reads 'Собственность \"Самореза\" Мауризио' and whose wiki page lists Мауризио first: the row after Бари (764), 765 having taken a money box's row."
+  },
+  "4043": {
+   "string_id": 62146,
+   "text": "Племяш Бари",
+   "why": "Medium. xenos_00_Trader, drawn as a pilot (1f_Pilot), three cells from Бари (6520) in the quarter (36): 'Племяш Бари<Br>Астронавигатор в отставке', Бари's nephew, a retired astronavigator."
+  },
+  "1196": {
+   "string_id": 62131,
+   "text": "Бернар<Br>старший помощник",
+   "why": "Dr_Gofus_senior_assistent in the quarter (36) beside Доктор Гофус (1013): the wiki's Бернар, 'старший помощник', of the quarter's list. The type also stands in 58, 127, 188 and 197, whose assistants the original calls Вильгельм, Генрих and Демид (62132-62134); one name per type, Halfa's while the other cities are shut (the Halfa plan's owner default 15)."
+  },
+  "2015": {
+   "string_id": 62130,
+   "text": "Младший<Br>помощник Доктора",
+   "why": "Dr_Gofus_assistent_WH, only in the quarter (36): the wiki's 'Младший помощник' of the quarter's list, the row before Бернар (1196)."
+  },
+  "1188": {
+   "string_id": 62140,
+   "text": "Мортимер<Br>Обменник",
+   "why": "ow_GoldExchange: it stands in 36, 58, 197, 255 and 446, the wiki's five places of Мортимер the exchanger."
+  },
+  "69": {
+   "string_id": 59982,
+   "text": "Бандит-охранник",
+   "why": "Medium. nz_BanditDefender, two of them in the quarter (36), the wiki's 'Бандит-охранник' x2 of the quarter's list: the word of the valley's nz_ names block 59979-59985 (Сейфул 35, Нубийский защитник 40), whose run of internal names it shares."
+  },
+  "423": {
+   "string_id": 59671,
+   "text": "Ребенок",
+   "why": "wh_ny_Kid1 (a child) in the quarter (36), the wiki's 'Ребенок' of the quarter's list. Hidden by the seasonal filter (world.EVENT_TOKENS, 'ny') until the allow-list brings the town's residents back (the Halfa plan's owner default 5)."
+  },
+  "1977": {
+   "string_id": 59670,
+   "text": "Добрый беженец",
+   "why": "wh_ny_2011_good_Good_Refugee in the quarter (36): the wiki's 'Добрый беженец' of the quarter's list, word for word. Seasonal-filtered like 423."
+  },
+  "46": {
+   "string_id": 62766,
+   "text": "Генри мл.",
+   "why": "wh_HenryJr in 43 (Q_IV_Henryml, 5969,1733): the Halfa block 62765-62794 (Саид 44, Генри мл., Кшиштоф 47 ...), and the wiki's 'Генри мл' at 5969х1733 with «Недельная добыча» (62667). The wiki layer had given him 'Ящик в подвале', a box in another Генри's cellar."
+  },
+  "68": {
+   "string_id": 62771,
+   "text": "жена Рахата",
+   "why": "wh_RahatsWife (art dead-woman) in 47 (Q_IV_rahat_wife): the block's row after Рахат (67)."
+  },
+  "86": {
+   "string_id": 62772,
+   "text": "Инсар",
+   "why": "Medium. wh_ManWithRat in 63 (S_IV_Manwithrat, 'Конец Пути.'), the place Каспар's «В пустыню к Инсару» sends the player to: the block's row between жена Рахата (68) and Иви (101). The block does not keep type order everywhere (Кёртис 2276 sits between Винс 668 and Нильсон 694), hence medium."
+  },
+  "101": {
+   "string_id": 62773,
+   "text": "Иви",
+   "why": "wh_Ivy in the market (35): the block's row between Инсар and Послушник Джо (103)."
+  },
+  "103": {
+   "string_id": 62774,
+   "text": "Послушник Джо",
+   "why": "wh_PoslJoe in the oasis 62 (Q_HappyHolyday): the wiki's Послушник Джо, giver of «Веселый праздник» at 5987x1699."
+  },
+  "104": {
+   "string_id": 62776,
+   "text": "Спящий верблюд",
+   "why": "Medium. rndloc_Sleepin_Camel (art camel1) in 63 beside Инсар: the words of its own internal name, in the block after Послушник Натти (106)."
+  },
+  "666": {
+   "string_id": 62777,
+   "text": "Водитель Тиля",
+   "why": "wh_gold_driver_1 in 117 (Q_IV_mountain_Gold_Arraival), the driver of «Золотая лихорадка» ('туда как раз направлялся мой человек, может и тебя подвезти', 62700): the block's row before Винс (668)."
+  },
+  "2276": {
+   "string_id": 62779,
+   "text": "Джексон Кёртис",
+   "why": "wh_Kertis in the market (35): the block's 'Джексон Кёртис<Br>Волонтер Фонд спасения цивилизаци', with the ё and the subtitle the wiki's name lacks."
+  },
+  "978": {
+   "string_id": 62789,
+   "text": "Равшан<Br>Владелец каменоломни",
+   "why": "WH_Stone_Owner at the Причал (41): «Работа в Каменоломне» has him say 'Меня зовут Равшан, я владелец каменоломни' (61429)."
+  },
+  "979": {
+   "string_id": 62790,
+   "text": "Большой Сэм<Br>Прораб",
+   "why": "WH_Stone_Brigadir in the quarry (627): the row after Равшан, the wiki's Большой Сэм."
+  },
+  "1657": {
+   "string_id": 62791,
+   "text": "Старикашка",
+   "why": "WH_Old_Hangman in the Новый рынок (104): the wiki's Старикашка of «Шутка висельника»."
+  },
+  "1685": {
+   "string_id": 62792,
+   "text": "Старая женщина",
+   "why": "WH_Old_Hindi at the station (37): the wiki's Старая женщина of «Индийское кино»."
+  },
+  "1692": {
+   "string_id": 62794,
+   "text": "Алхимический столик",
+   "why": "WH_Alchemy_Table (art 1f_Alchem) at the station (37): the wiki's 'Алхимический столик' of the station's list."
+  },
+  "100": {
+   "string_id": 50005,
+   "text": "Деда Джоф<Br>Лекарь",
+   "why": "wh_DedaJoff, the healer at the station (37) and in the quarry (627): the wiki's Деда Джоф."
+  },
+  "2111": {
+   "string_id": 50008,
+   "text": "Ланд Байрон<Br>Лекарь",
+   "why": "wh_prison_Healer in the prison yard (176, 5985,1744): the wiki's 'Ланд Брайтон' of the Тюрьма Вади-Хальфы, whose article calls him Ланд Байрон, and who heals for 250 afro there."
+  },
+  "1387": {
+   "string_id": 10531,
+   "text": "Водитель автобуса<Br>до завода",
+   "why": "WH_factory_bus_driver at the station (37): the wiki's Водитель Автобуса («До завода за афро»)."
+  },
+  "634": {
+   "string_id": 59675,
+   "text": "Фонтан",
+   "why": "stv_bowl (art bowl) at the station (37): the wiki's Фонтан of the station's list."
+  },
+  "625": {
+   "string_id": 59673,
+   "text": "Цветущий куст",
+   "why": "stv_flower_bush (art ikebana) on the Побережье Вади Хальфы (107)."
+  },
+  "2011": {
+   "string_id": 60232,
+   "text": "Мун Сон Мён<Br>Колдунья",
+   "why": "Medium. Wh_Kitaec, drawn as 1f_Chinese_girl (its Dongola twin Dn_Kitaec 2010 is 1f_Chinese_man), on the Побережье Вади Хальфы (107). The wiki's Мун Сон Мён is the sorceress of Вади-Хальфа («Хижина колдуньи Мун», 5967х1725), her husband Хоу Сян (60231) the sorcerer of Донгола; the B81 texts send the player to 'китаянке' with 'письмо ... от мужа твоего' (41528). The Halfa plan's 60231 is the husband's row: the sprite and the wiki say the wife."
+  },
+  "72": {
+   "string_id": 48431,
+   "text": "Часовой<Br>Магриб",
+   "why": "Medium. nz_Watcher (art a4, the Магриб soldiers' sprite) in the base (52): the wiki's Часовой of «Часовой (квест)». Of the three 'Часовой' rows, 10663 is a clan base's and 41588 a base gate's ('Вход на базу'); 48431 is the Магриб one."
+  },
+  "75": {
+   "string_id": 59985,
+   "text": "я не бомба нет",
+   "why": "nz_Bomb (art q-box) in the base (52), the «Бомба» of the storyline: the last row of the nz_ names block 59979-59985 (Сейфул, Мертвая антилопа, Нубийский защитник, Бандит-охранник, Бензоколонка, Отшельник), the box's own joke."
+  },
+  "1077": {
+   "string_id": 50661,
+   "text": "Капитан Калиюга",
+   "why": "MKS_welcome_1 (art a2-Sergant) at the old gas station (60): the wiki's Капитан Калиюга of its list, 'Встречающий МКС'."
+  },
+  "4689": {
+   "string_id": 59983,
+   "text": "Бензоколонка",
+   "why": "nz_Benzokolonka (art 1f_Pixel, the pump drawn in the ground) at the gas station (60): its own word, in the nz_ block 59979-59985."
+  },
+  "2259": {
+   "string_id": 60233,
+   "text": "Энди Уорхол<Br>Старый коллекционер",
+   "why": "Wh_collection_NPC at the gas station (60): the wiki's Энди Уорхол of its list, giver of the «Коллекция ...» quests (47950-47957)."
+  },
+  "5114": {
+   "string_id": 9629,
+   "text": "Ябир ибн Хайянс",
+   "why": "Medium. Npc_Commoner000037 (art 1f_Arab_boroda) at the gas station (60), on the family's offset 9592 of members 33-65 (45 Кондрат, 48-65 the valley's people: high; 40-47 the ПДС and ЦСЦ men of the Авиабаза ЦСЦ 427, all standing there together; 35 and 36 the 'Мастер ... Улучшение пулеметов' of the masters' camp 96): 'Подмастерье Ябир ибн Хайянс<Br>Улучшение пулеметов', the masters' apprentice. None of the wiki's three at the gas station (Мауризио, Капитан Калиюга, Энди Уорхол) is left for it."
+  },
+  "2391": {
+   "string_id": 46643,
+   "text": "Хан Сэлл<Br>Контрабанда",
+   "why": "NPC_lamantin_Trader: it stands in 41, 187, 287, 445 and 446, the five places of the wiki's Хан Сэлл. The matcher's 43553 'Ламантин' is an admin's nickname."
+  },
+  "1959": {
+   "string_id": 59610,
+   "text": "Марк Клаус<Br>Подарки",
+   "why": "WH_romantik_trader at the Причал (41): the wiki's Марк Клаус of the Причал's list."
+  },
+  "2000": {
+   "string_id": 59611,
+   "text": "Борн<Br>сын Марка",
+   "why": "WH_romantik_Upgrader_1 (a child's sprite) at the Причал (41): the wiki's 'Борн сын Марка', the row after Марк Клаус."
+  },
+  "2001": {
+   "string_id": 59612,
+   "text": "Лана<Br>дочь Марка",
+   "why": "WH_romantik_Upgrader_2 (a woman's sprite) at the Причал (41): the wiki's 'Лана дочь Марка', the row after Борн."
+  },
+  "1014": {
+   "string_id": 59671,
+   "text": "Ребенок",
+   "why": "wh_Franks_Child at the Причал (41): the wiki's 'Сын Френка', linked in the Причал's list as 'Ребенок'."
+  },
+  "425": {
+   "string_id": 59671,
+   "text": "Ребенок",
+   "why": "wh_ny_Kid3 (a child) at the Причал (41), the wiki's second 'Ребенок' there. Seasonal-filtered like 423."
+  },
+  "4670": {
+   "string_id": 62147,
+   "text": "Карен ван Бурен",
+   "why": "Medium. wh_city_travel, a helicopter pilot (1f_Pilot_Vert) at the Причал (41). The Halfa block 62120-62155 has two rows 'Карен ван Бурен<Br>Пилот вертолета' for the two helicopters, 62147 SE.313 Alouette II and 62148 МН-6; the city flight (wh_city_travel) takes the first, the oasis flight (wh_oasis_travel 4671) would take the second (DESIGNED order). The flights themselves stay off while the other cities are shut (the Halfa plan's owner default 20)."
+  },
+  "6891": {
+   "string_id": 10360,
+   "text": "Лаура Принсипе",
+   "why": "Npc_Commoner000811 (art 123) at the Причал (41). The family's members 809-811 run on one offset onto 10358-10360, pinned by the art of the two before it: 809 (6889, art 1f_BigMom) is 10358 'Клава Цветкин<Br>Пламенный революционер' and 810 (6890, art 1f_Terminal) 10359 'Терминал<Br>Гермодвери в бункер доктора Д'; the four ikebanas after it (812-815) share 10361 'Весенний цветок'. Эддай's offset (799 -> 10351) does not reach here: the five money boxes 804-808 between have only two rows (10356, 10357). The story fits the pier: in №0000880 (26572) a woman asks the player to tell 'моего Маузирио' that 'я приехала в Африку', and in №0000881 (26575) «Саморез» Мауризио (6522, the gas station 60) answers 'мое полное имя Мауризио Санчес Принсипе. Это моя жена'. (It stood as a designed 'Странник' by elimination until the review of 2026-09-28 read the run.)"
+  },
+  "1189": {
+   "string_id": 47751,
+   "text": "Странник",
+   "why": "DESIGNED. ow_Stranger (art m24-Sniper) in the Новый рынок (104) and the Абри port (187), the wiki's Странник of both (5967х1728, 5860х1835). No creature row names him; the word is row 47751, the name of the Странник kit, whose description (47752) says Странники sell it. wh_Strannik (112) at the station shows the same word, from the wiki."
+  },
+  "5685": {
+   "string_id": 9665,
+   "text": "Лейтенант О’Нилл<Br>Армия ЦСЦ",
+   "why": "Medium. The family's members 91-110 stand two by two in the ports and the resistance camps and one by one in the digs (91/92 Причал 41, 93/94 Абри 187, 95/96 Донгола 445, 97/98 Абу-Хамед 446; 99 433, 100/101 429, 102 434, 103/104 430, 105 435, 106/107 431, 108 436, 109/110 432), and texts.xml has exactly twenty rows 'X<Br>Армия ЦСЦ' / 'Др. X<Br>Археолог' for them, 9665-9684, on offset 9574: the four archaeologists (art q1-1, members 99, 102, 105, 108, each alone in one of the four «Археологические раскопки» 433-436) fall on 9673, 9676, 9679 and 9682, the four 'Др. ... Археолог', and in every pair art 101 is the officer or technician, art 100 the private or sergeant. The wiki (2013) knew older names (Рядовой Райн and Полковник Шепард in every port, Сержант Билко and Техник Ларс in the camp), which the 2022 files and texts replaced. Npc_Commoner000091 (art 101) at the Причал (41): 'Лейтенант О’Нилл', the officer of «Боец сопротивления» (24440-24443, the boat to the camp)."
+  },
+  "5686": {
+   "string_id": 9666,
+   "text": "Рядовой Беккет<Br>Армия ЦСЦ",
+   "why": "Medium. The family's members 91-110 stand two by two in the ports and the resistance camps and one by one in the digs (91/92 Причал 41, 93/94 Абри 187, 95/96 Донгола 445, 97/98 Абу-Хамед 446; 99 433, 100/101 429, 102 434, 103/104 430, 105 435, 106/107 431, 108 436, 109/110 432), and texts.xml has exactly twenty rows 'X<Br>Армия ЦСЦ' / 'Др. X<Br>Археолог' for them, 9665-9684, on offset 9574: the four archaeologists (art q1-1, members 99, 102, 105, 108, each alone in one of the four «Археологические раскопки» 433-436) fall on 9673, 9676, 9679 and 9682, the four 'Др. ... Археолог', and in every pair art 101 is the officer or technician, art 100 the private or sergeant. The wiki (2013) knew older names (Рядовой Райн and Полковник Шепард in every port, Сержант Билко and Техник Ларс in the camp), which the 2022 files and texts replaced. Npc_Commoner000092 (art 100) at the Причал (41): 'Рядовой Беккет', whom «Боец сопротивления» names for the boat: 'Рядовой Беккет прибудет в течение 1 минуты' (24442)."
+  },
+  "5693": {
+   "string_id": 9673,
+   "text": "Др. Генри<Br>Археолог",
+   "why": "Medium. The family's members 91-110 stand two by two in the ports and the resistance camps and one by one in the digs (91/92 Причал 41, 93/94 Абри 187, 95/96 Донгола 445, 97/98 Абу-Хамед 446; 99 433, 100/101 429, 102 434, 103/104 430, 105 435, 106/107 431, 108 436, 109/110 432), and texts.xml has exactly twenty rows 'X<Br>Армия ЦСЦ' / 'Др. X<Br>Археолог' for them, 9665-9684, on offset 9574: the four archaeologists (art q1-1, members 99, 102, 105, 108, each alone in one of the four «Археологические раскопки» 433-436) fall on 9673, 9676, 9679 and 9682, the four 'Др. ... Археолог', and in every pair art 101 is the officer or technician, art 100 the private or sergeant. The wiki (2013) knew older names (Рядовой Райн and Полковник Шепард in every port, Сержант Билко and Техник Ларс in the camp), which the 2022 files and texts replaced. Npc_Commoner000099 (art q1-1), alone in the Археологические раскопки of Вади-Хальфа (433): the first archaeologist."
+  },
+  "5694": {
+   "string_id": 9674,
+   "text": "Рядовой Дуэйн Доберман<Br>Армия ЦСЦ",
+   "why": "Medium. The family's members 91-110 stand two by two in the ports and the resistance camps and one by one in the digs (91/92 Причал 41, 93/94 Абри 187, 95/96 Донгола 445, 97/98 Абу-Хамед 446; 99 433, 100/101 429, 102 434, 103/104 430, 105 435, 106/107 431, 108 436, 109/110 432), and texts.xml has exactly twenty rows 'X<Br>Армия ЦСЦ' / 'Др. X<Br>Археолог' for them, 9665-9684, on offset 9574: the four archaeologists (art q1-1, members 99, 102, 105, 108, each alone in one of the four «Археологические раскопки» 433-436) fall on 9673, 9676, 9679 and 9682, the four 'Др. ... Археолог', and in every pair art 101 is the officer or technician, art 100 the private or sergeant. The wiki (2013) knew older names (Рядовой Райн and Полковник Шепард in every port, Сержант Билко and Техник Ларс in the camp), which the 2022 files and texts replaced. Npc_Commoner000100 (art 100) in the camp 429 (Invaider_Camp_WH)."
+  },
+  "5695": {
+   "string_id": 9675,
+   "text": "Техник Джеймс Хэтфилд<Br>Армия ЦСЦ",
+   "why": "Medium. The family's members 91-110 stand two by two in the ports and the resistance camps and one by one in the digs (91/92 Причал 41, 93/94 Абри 187, 95/96 Донгола 445, 97/98 Абу-Хамед 446; 99 433, 100/101 429, 102 434, 103/104 430, 105 435, 106/107 431, 108 436, 109/110 432), and texts.xml has exactly twenty rows 'X<Br>Армия ЦСЦ' / 'Др. X<Br>Археолог' for them, 9665-9684, on offset 9574: the four archaeologists (art q1-1, members 99, 102, 105, 108, each alone in one of the four «Археологические раскопки» 433-436) fall on 9673, 9676, 9679 and 9682, the four 'Др. ... Археолог', and in every pair art 101 is the officer or technician, art 100 the private or sergeant. The wiki (2013) knew older names (Рядовой Райн and Полковник Шепард in every port, Сержант Билко and Техник Ларс in the camp), which the 2022 files and texts replaced. Npc_Commoner000101 (art 101) in the camp 429 (Invaider_Camp_WH)."
+  },
+  "5707": {
+   "string_id": 10455,
+   "text": "Раф профессор Лю",
+   "why": "Medium. Npc_Trader000060, the third trader of the camp 429 beside Джон док Нильсон (5705, 10456) and Иван змей Сидоркин (5706, 10457), both high: the wiki's Лагерь сопротивления Север lists exactly those two and 'Раф профессор Лю', and his row 10455 heads the same three (the traders' offset 10398 would give 10458, a name with no trade, 'Зейд Абдуррахман ибн Мухаммад')."
+  },
+  "1791": {
+   "string_id": 62315,
+   "text": "Охранник<Br>Западная сторона",
+   "why": "Medium. uf_EnterMan_North_WH in the prison yard (176): the wiki's Тюрьма Вади-Хальфы has 'Охранник Западная сторона' and 'Охранник Южная сторона', the rows 62315/62316; South takes Южная, and the other gate its west row."
+  },
+  "1794": {
+   "string_id": 62316,
+   "text": "Охранник<Br>Южная сторона",
+   "why": "uf_EnterMan_South_WH in the prison yard (176): the wiki's 'Охранник Южная сторона' of the prison's list."
+  },
+  "2180": {
+   "string_id": 48847,
+   "text": "Снабженец Хальфы",
+   "why": "uf_SupplyMan_g_WH in the prison yard (176): the wiki's 'Снабженец' of the prison's list; 'Снабженец Хальфы<Br>Патроны и лекарства' is the WH copy, 48848 the plain one of uf_SupplyMan_g (880)."
+  },
+  "1224": {
+   "string_id": 62153,
+   "text": "Оружие",
+   "why": "wh_oasis_w_trd in the oasis (62): the wiki's 'Оружие' of the oasis' list ('только здесь редкое вооружение'); the row sits in the Halfa traders' block after Магдалена (62152)."
+  },
+  "1227": {
+   "string_id": 62154,
+   "text": "Торговец патронами",
+   "why": "wh_oasis_ammo in the oasis (62): the wiki's 'Торговец патронами' of the oasis' list, the row after 'Оружие'."
+  },
+  "1234": {
+   "string_id": 46359,
+   "text": "Лекарь",
+   "why": "wh_oasis_healer in the oasis (62): the wiki's 'Лекарь' of the oasis' list (healing for 150 afro); the plain word of the role block 46350-46360 (Банкир, Лекарь, Тренер)."
+  },
+  "202": {
+   "string_id": 62127,
+   "text": "Снитке<Br>Аптекарь",
+   "why": "hh_Med_trader (hh_ = HappyHoliday, the oasis' file) in the oasis (62): the wiki's Снитке, 'странствующий лекарь' who sells herbs and medicines at 5987x1699."
+  },
+  "660": {
+   "string_id": 50409,
+   "text": "Нуман<Br>Аренда верблюдов и ослов",
+   "why": "Medium. oasis_Lessor (a lessor, art q1-2 like Шихаб 653) in the oasis (62): the wiki's Нуман, who rents camels there."
+  },
+  "2298": {
+   "string_id": 50410,
+   "text": "Тьерри Сабин",
+   "why": "Medium. oasis_Lessor_1 (art 1f_Tankist2; _2 and _3 are its copies) in the oasis (62): the wiki's Тьерри Сабин, the buggy pilot who drives between the oases. The row is 'Тьерри Сабин<Br>' with an empty second line."
+  },
+  "1753": {
+   "string_id": 60227,
+   "text": "Осколок скалы (ВХ)",
+   "why": "WH_Rock in the oasis (62): the row names itself, (ВХ); 60228-60230 are the Аб, Дн and АХ ones, the AB_/DN_/AH_Rock 1754-1756. The wiki's oasis list has the 'Осколок скалы'."
+  },
+  "74": {
+   "string_id": 59984,
+   "text": "Отшельник",
+   "why": "nz_Hermit in the Оазис (61, Q_Hermit, 5972,1738), the wiki's Отшельник of that oasis: the nz_ block 59979-59985."
+  },
+  "377": {
+   "string_id": 51657,
+   "text": "Мастер Клара<Br>улучшение пистолетов",
+   "why": "wh_modif_pistol_g in Ремесленники I (94): sprite mnpc-q15, the one of 575 'Мастер Клара'; the wiki's Клара upgrades pistols (G) there."
+  },
+  "2012": {
+   "string_id": 51666,
+   "text": "Мастер Аарон Уорнер<Br>улучшение пистолетов",
+   "why": "wh_modif_pistol_pm in Ремесленники I (94): the wiki's Аарон Уорнер upgrades pistols (P) there."
+  },
+  "338": {
+   "string_id": 51649,
+   "text": "Подмастерье Ицхак Уорнер",
+   "why": "wh_modif_pistol in Ремесленники I (94): the wiki's Ицхак Уорнер upgrades plain pistols there."
+  },
+  "339": {
+   "string_id": 51650,
+   "text": "Подмастерье Хаким",
+   "why": "wh_modif_shotgun in Ремесленники II (95): the wiki's Хаким (the page's list spells Хасим, his quests Хаким), shotguns."
+  },
+  "341": {
+   "string_id": 51651,
+   "text": "Подмастерье Шон",
+   "why": "wh_modif_rifle in Ремесленники II (95): the wiki's Шон, rifles."
+  },
+  "378": {
+   "string_id": 51658,
+   "text": "Мастер Сэм<Br>улучшение дробовиков",
+   "why": "wh_modif_shotgun_g in Ремесленники II (95): sprite mob-m15, the one of 702 'Мастер Сэм'."
+  },
+  "380": {
+   "string_id": 51659,
+   "text": "Мастер Азам<Br>улучшение винтовок",
+   "why": "wh_modif_rifle_g in Ремесленники II (95): the wiki's Азам upgrades rifles in the Новый рынок, the Лагерь Мастеров and Ремесленники."
+  },
+  "578": {
+   "string_id": 51659,
+   "text": "Мастер Азам<Br>улучшение винтовок",
+   "why": "wh_trmodif_rifle_g in the Новый рынок (104): as 380."
+  },
+  "704": {
+   "string_id": 51659,
+   "text": "Мастер Азам<Br>улучшение винтовок",
+   "why": "wh_trmodif_rifle_pm in the лагерь мастеров (124): as 380."
+  },
+  "893": {
+   "string_id": 47958,
+   "text": "Самуэль<Br>патроны по талонам",
+   "why": "wh_convert_assrifle: it stands in 102, 103 and 127, exactly the wiki's three places of Самуэль."
+  },
+  "6765": {
+   "string_id": 10496,
+   "text": "Чарльз МакКалок",
+   "why": "Medium. Npc_Upgrader000021 (an upgrader, 1f_npc5) in Мясники (164): the wiki has Чарльз МакКалок there with the service 'Улучшения', and the type is of the same update as 6763/6764. The six butchers keep the owner's names (data/npcs.json)."
+  },
+  "698": {
+   "string_id": 47429,
+   "text": "Фрэнк",
+   "why": "wh_Frank in the Новый рынок (104): the one plain row of his name is the title of the quest «Фрэнк» (47429-47430, 'Фрэнк - уважаемый в Хальфе торговец'), a row outside the names blocks as 1023's is."
+  },
+  "431": {
+   "string_id": 62122,
+   "text": "Ольсен<Br>Амулеты и сувениры",
+   "why": "Medium. ny_trader: apart from Бартоломью (81) and the lottery man (662), the one type in both markets, 35 and 104, as the wiki's Ольсен is; 35's map label says 'Торговец сувенирами', the row after (62123). Seasonal-filtered like 423."
+  },
+  "5783": {
+   "string_id": 9691,
+   "text": "Мастер Мишари ат-Хайям",
+   "why": "Npc_Commoner000121 (art 1f_arabec_01) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5784": {
+   "string_id": 9692,
+   "text": "Подмастерье Аскар аль-Шади",
+   "why": "Npc_Commoner000122 (art 1f_arabec_02) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5785": {
+   "string_id": 9693,
+   "text": "Ученик Файхан ат-Муаммаль",
+   "why": "Npc_Commoner000123 (art 1f_arabec_03) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5786": {
+   "string_id": 9694,
+   "text": "Мастер Захид ибн Фади",
+   "why": "Npc_Commoner000124 (art 1f_arabec_04) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5787": {
+   "string_id": 9695,
+   "text": "Подмастерье Маъмун аль-Хидр",
+   "why": "Npc_Commoner000125 (art 1f_arabec_05) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5788": {
+   "string_id": 9696,
+   "text": "Ученик Шейбан ат-Ханбаль",
+   "why": "Npc_Commoner000126 (art 1f_arabec_06) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5789": {
+   "string_id": 9697,
+   "text": "Мастер Салах ибн Низам",
+   "why": "Npc_Commoner000127 (art 1f_arabec_07) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5790": {
+   "string_id": 9698,
+   "text": "Подмастерье Шакир ат-Фахим",
+   "why": "Npc_Commoner000128 (art 1f_arabec_08) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5791": {
+   "string_id": 9699,
+   "text": "Ученик Шакур аль-Идрис",
+   "why": "Npc_Commoner000129 (art 1f_arabec_09) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5792": {
+   "string_id": 9700,
+   "text": "Мастер Шукри ат-Раджих",
+   "why": "Npc_Commoner000130 (art 1f_arabec_10) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5793": {
+   "string_id": 9701,
+   "text": "Подмастерье Латаиф ат-Мааруф",
+   "why": "Npc_Commoner000131 (art 1f_arabec_11) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5794": {
+   "string_id": 9702,
+   "text": "Ученик Хайри аш-Джалил",
+   "why": "Npc_Commoner000132 (art 1f_arabec_12) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5795": {
+   "string_id": 9703,
+   "text": "Мастер Наим аш-Асаф",
+   "why": "Npc_Commoner000133 (art 1f_arabec_13) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5796": {
+   "string_id": 9704,
+   "text": "Подмастерье Шариф ибн Муктади",
+   "why": "Npc_Commoner000134 (art 1f_arabec_14) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5797": {
+   "string_id": 9705,
+   "text": "Ученик Наджиб аш-Магсум",
+   "why": "Npc_Commoner000135 (art 1f_arabec_15) in Ремесленники 452 (WH_district1): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 6 уровень'."
+  },
+  "5828": {
+   "string_id": 9736,
+   "text": "Мастер Марсад аш-Тураб",
+   "why": "Npc_Commoner000166 (art 1f_arabec_01) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5829": {
+   "string_id": 9737,
+   "text": "Подмастерье Набиль ар-Захид",
+   "why": "Npc_Commoner000167 (art 1f_arabec_02) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5830": {
+   "string_id": 9738,
+   "text": "Ученик Мабрур ат-Дахдах",
+   "why": "Npc_Commoner000168 (art 1f_arabec_03) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5831": {
+   "string_id": 9739,
+   "text": "Мастер Юсри аль-Кусай",
+   "why": "Npc_Commoner000169 (art 1f_arabec_04) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5832": {
+   "string_id": 9740,
+   "text": "Подмастерье Баррак ат-Мурад",
+   "why": "Npc_Commoner000170 (art 1f_arabec_05) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5833": {
+   "string_id": 9741,
+   "text": "Ученик Мубарак аш-Халис",
+   "why": "Npc_Commoner000171 (art 1f_arabec_06) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5834": {
+   "string_id": 9742,
+   "text": "Мастер Захир аль-Латиф",
+   "why": "Npc_Commoner000172 (art 1f_arabec_07) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5835": {
+   "string_id": 9743,
+   "text": "Подмастерье Насиб ат-Маъмун",
+   "why": "Npc_Commoner000173 (art 1f_arabec_08) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5836": {
+   "string_id": 9744,
+   "text": "Ученик Вали ат-Баррак",
+   "why": "Npc_Commoner000174 (art 1f_arabec_09) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5837": {
+   "string_id": 9745,
+   "text": "Мастер Дани аль-Насих",
+   "why": "Npc_Commoner000175 (art 1f_arabec_10) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5838": {
+   "string_id": 9746,
+   "text": "Подмастерье Сарват ибн Салих",
+   "why": "Npc_Commoner000176 (art 1f_arabec_11) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5839": {
+   "string_id": 9747,
+   "text": "Ученик Гани аш-Сирадж",
+   "why": "Npc_Commoner000177 (art 1f_arabec_12) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5840": {
+   "string_id": 9748,
+   "text": "Мастер Мусир аль-Насиф",
+   "why": "Npc_Commoner000178 (art 1f_arabec_13) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5841": {
+   "string_id": 9749,
+   "text": "Подмастерье Сарван ар-Мунзир",
+   "why": "Npc_Commoner000179 (art 1f_arabec_14) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5842": {
+   "string_id": 9750,
+   "text": "Ученик Сахир аль-Билял",
+   "why": "Npc_Commoner000180 (art 1f_arabec_15) in Ремесленники 456 (WH_district4): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 7 уровень'."
+  },
+  "5873": {
+   "string_id": 9781,
+   "text": "Мастер Джалил аш-Муниф",
+   "why": "Npc_Commoner000211 (art 1f_arabec_01) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5874": {
+   "string_id": 9782,
+   "text": "Подмастерье Джасим ибн Залиль",
+   "why": "Npc_Commoner000212 (art 1f_arabec_02) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5875": {
+   "string_id": 9783,
+   "text": "Ученик Муджалид аль-Джамиг",
+   "why": "Npc_Commoner000213 (art 1f_arabec_03) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5876": {
+   "string_id": 9784,
+   "text": "Мастер Рами аш-Имад",
+   "why": "Npc_Commoner000214 (art 1f_arabec_04) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5877": {
+   "string_id": 9785,
+   "text": "Подмастерье Махди ибн Курбан",
+   "why": "Npc_Commoner000215 (art 1f_arabec_05) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5878": {
+   "string_id": 9786,
+   "text": "Ученик Муджахид ибн Надр",
+   "why": "Npc_Commoner000216 (art 1f_arabec_06) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5879": {
+   "string_id": 9787,
+   "text": "Мастер Кабир ибн Ияс",
+   "why": "Npc_Commoner000217 (art 1f_arabec_07) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5880": {
+   "string_id": 9788,
+   "text": "Подмастерье Азим ат-Мумин",
+   "why": "Npc_Commoner000218 (art 1f_arabec_08) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5881": {
+   "string_id": 9789,
+   "text": "Ученик Джалал аш-Ханиф",
+   "why": "Npc_Commoner000219 (art 1f_arabec_09) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5882": {
+   "string_id": 9790,
+   "text": "Мастер Джарир ар-Усман",
+   "why": "Npc_Commoner000220 (art 1f_arabec_10) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5883": {
+   "string_id": 9791,
+   "text": "Подмастерье Вафи ар-Икрам",
+   "why": "Npc_Commoner000221 (art 1f_arabec_11) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5884": {
+   "string_id": 9792,
+   "text": "Ученик Амин ат-Шахир",
+   "why": "Npc_Commoner000222 (art 1f_arabec_12) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5885": {
+   "string_id": 9793,
+   "text": "Мастер Мумин аль-Макин",
+   "why": "Npc_Commoner000223 (art 1f_arabec_13) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5886": {
+   "string_id": 9794,
+   "text": "Подмастерье Рабиг ар-Талиб",
+   "why": "Npc_Commoner000224 (art 1f_arabec_14) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5887": {
+   "string_id": 9795,
+   "text": "Ученик Башир аш-Джасим",
+   "why": "Npc_Commoner000225 (art 1f_arabec_15) in Ремесленники 457 (WH_district7): members 118-225 of the family sit on texts.xml 9570 + member (the three 'Казначей местных ремесленников' 118-120 on 9688-9690, each district's fifteen craftsmen on its block of fifteen 'Мастер / Подмастерье / Ученик <name><Br><piece>[level][G/P/A]', five pieces by three grades), and the art 1f_arabec_01..15 runs in the same order; the level is the map label's 'ремесленники по одежде 8 уровень'."
+  },
+  "5767": {
+   "string_id": 9688,
+   "text": "Казначей местных ремесленников",
+   "why": "Npc_Commoner000118 (art 1f_Arab_boroda) in the craftsmen's quarter (447, inside the owner's wall): a treasurer of the craftsmen, on the offset 9570 of members 118-225 (see 5783)."
+  },
+  "5768": {
+   "string_id": 9689,
+   "text": "Казначей местных ремесленников",
+   "why": "Npc_Commoner000119 (art 1f_Arab_broun) in the craftsmen's quarter (447, inside the owner's wall): a treasurer of the craftsmen, on the offset 9570 of members 118-225 (see 5783)."
+  },
+  "5769": {
+   "string_id": 9690,
+   "text": "Казначей местных ремесленников",
+   "why": "Npc_Commoner000120 (art 1f_arabec_07) in the craftsmen's quarter (447, inside the owner's wall): a treasurer of the craftsmen, on the offset 9570 of members 118-225 (see 5783)."
+  },
+  "62": {
+   "string_id": 10611,
+   "text": "Ополченец<Br>ДСР",
+   "why": "m05_BanditShooter_lvl7, one of the ДСР stand-ins that stand in «Механик ДСР» (122) and nowhere else (data/camp_fill.json fills its empty slots; no location file names the type): the ДСР have no creatures of their own at 7-8 in mobs.xml (jm_ are 12-14), so the world package stood same-level types in the mechanic's art, chosen as the ranks of the ДСР block 10611-10615 of the original's names ('[7] Ополченец', '[8] Диверсант', '[7] Боевик', '[8] Старший офицер', '[7] Новобранец' <Br>ДСР, levels as they fight). This one is the '[7] Ополченец'. Named at the integration of 2026-09-28 (the handoffs of halfa-world and halfa-story left it showing its internal name)."
+  },
+  "87": {
+   "string_id": 10612,
+   "text": "Диверсант<Br>ДСР",
+   "why": "m510_BanditShotgunner_lvl8, the '[8] Диверсант' of the ДСР stand-ins in 122 (see 62): level for level, the block's only other 8 being the officers."
+  },
+  "90": {
+   "string_id": 10613,
+   "text": "Боевик<Br>ДСР",
+   "why": "m510_BanditAssaultRifle_lvl7, the '[7] Боевик' of the ДСР stand-ins in 122 (see 62)."
+  },
+  "1040": {
+   "string_id": 10614,
+   "text": "Старший офицер<Br>ДСР",
+   "why": "inv_8_cap, the two '[8] Старший офицер' of the ДСР stand-ins in 122 (see 62): the officers «Операция \"Возмездие\"» (150) sends the player to kill, whose kill target read 'inv_8_cap'."
+  },
+  "51": {
+   "string_id": 10615,
+   "text": "Новобранец",
+   "why": "m510_Courier_lvl7, the '[7] Новобранец <Br>ДСР' of the ДСР stand-ins in 122 (see 62); the row has a space before its <Br>, kept as the original writes it."
+  },
+  "5770": {
+   "string_id": 10395,
+   "text": "Мастер Гуго Борхардт",
+   "why": "Medium, a DESIGNED reading of an original row. Npc_Trader000071, the one trader of all four «Квартал ремесленников» files (447 WH_Masters_01, 448 Dangola_master_01, 449 AH_master_01, 450 Ab_master_01), beside the three treasurers 5767-5769 and each city's three exchangers of the upgraders' family (members 9-20, 10484-10495). The traders' own run (offset 10399/10398, members 8-59) has no row for member 71: the rows after 10457 are Абри's and Донгола's people and the black diggers 10465-10475, whose 'Новые стволы[A]/[P]/[G]' 10471-10473 belong to 6513-6515 (members 72-74, beside the diggers' pits 6512/6516-6519). 10395 is the first of the six [Q] masters 10395-10400 that stand just before the traders' test row 10401: '<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]' is what this stall is in Вади-Хальфа's weapon craft -- it sells the [Q] Маузер C96's blueprints of 2у (craft.stock_extra, data/questgen_weaponcraft.json), in the quarter where the [Q] line is upgraded. One name per type, so the other three quarters show it too. The weaponcraft package's reading (2026-09-28), taken at the integration of 2026-09-28; the alternative is the 'none' remainder."
+  },
+  "5771": {
+   "string_id": 10484,
+   "text": "Аббас ибн Заглюль",
+   "why": "Medium. Npc_Upgrader000009 in the craftsmen's quarter (447): the family's members 9-20 on offset 10475, onto the exchangers 10484-10495 (four series of four level bands); 9, 13 and 17 are the [6-8] exchanger of each. The files bear it out: 447 (Вади-Хальфа, whose map label at 5969,1730 reads «Улучшение сетов 6-8[G]<BR>Казначеи ремесленников») holds 9, 13 and 17, 450 Ab_master_01 holds 10, 14 and 18 ([9-12]), 448 Dangola_master_01 11, 15 and 19 ([13-16]), 449 AH_master_01 12, 16 and 20 ([17-20]). The weapon craft makes him the quarter's [Q] weapons upgrader (data/build_weaponcraft.py q_masters, DESIGNED), which his original «Обмен экзоодежды [6-8]» does not say: the owner's decision (2026-09-28) whether to keep the original row, give him a DESIGNED subtitle, or move the [Q] recipes."
+  },
+  "5775": {
+   "string_id": 10488,
+   "text": "Абид ибн Заки",
+   "why": "Medium. Npc_Upgrader000013 in the craftsmen's quarter (447): the family's members 9-20 on offset 10475, onto the exchangers 10484-10495 (four series of four level bands); 9, 13 and 17 are the [6-8] exchanger of each."
+  },
+  "5779": {
+   "string_id": 10492,
+   "text": "Вафи ибн Имам",
+   "why": "Medium. Npc_Upgrader000017 in the craftsmen's quarter (447): the family's members 9-20 on offset 10475, onto the exchangers 10484-10495 (four series of four level bands); 9, 13 and 17 are the [6-8] exchanger of each."
+  },
+  "5158": {
+   "string_id": 10407,
+   "text": "Торговец<Br>",
+   "why": "Npc_Trader000008 at the clothing market (468, the map's 'Торговцы одеждой'): the traders' family runs on offset 10399 (000032 -> 10431 Говард Хаксли and 000033-000034, high), and 000008-000011 fall on the set sellers 10407-10410, 000031 on 10430 'Шахтерская одежда', which stands in all four «Вещевой рынок» (378, 467, 468, 469)."
+  },
+  "5159": {
+   "string_id": 10408,
+   "text": "Торговец<Br>",
+   "why": "Npc_Trader000009 at the clothing market (468, the map's 'Торговцы одеждой'): the traders' family runs on offset 10399 (000032 -> 10431 Говард Хаксли and 000033-000034, high), and 000008-000011 fall on the set sellers 10407-10410, 000031 on 10430 'Шахтерская одежда', which stands in all four «Вещевой рынок» (378, 467, 468, 469)."
+  },
+  "5160": {
+   "string_id": 10409,
+   "text": "Торговец<Br>",
+   "why": "Npc_Trader000010 at the clothing market (468, the map's 'Торговцы одеждой'): the traders' family runs on offset 10399 (000032 -> 10431 Говард Хаксли and 000033-000034, high), and 000008-000011 fall on the set sellers 10407-10410, 000031 on 10430 'Шахтерская одежда', which stands in all four «Вещевой рынок» (378, 467, 468, 469)."
+  },
+  "5161": {
+   "string_id": 10410,
+   "text": "Торговец<Br>",
+   "why": "Npc_Trader000011 at the clothing market (468, the map's 'Торговцы одеждой'): the traders' family runs on offset 10399 (000032 -> 10431 Говард Хаксли and 000033-000034, high), and 000008-000011 fall on the set sellers 10407-10410, 000031 on 10430 'Шахтерская одежда', which stands in all four «Вещевой рынок» (378, 467, 468, 469)."
+  },
+  "5181": {
+   "string_id": 10430,
+   "text": "Торговец<Br>",
+   "why": "Npc_Trader000031 at the clothing market (468, the map's 'Торговцы одеждой'): the traders' family runs on offset 10399 (000032 -> 10431 Говард Хаксли and 000033-000034, high), and 000008-000011 fall on the set sellers 10407-10410, 000031 on 10430 'Шахтерская одежда', which stands in all four «Вещевой рынок» (378, 467, 468, 469)."
+  },
+  "653": {
+   "string_id": 10387,
+   "text": "Шихаб<Br>Аренда транспорта",
+   "why": "wh_Lessor at the black market (102): the original's full row, with the second line the wiki's name ('Шихаб') lacks."
+  },
+  "652": {
+   "string_id": 46942,
+   "text": "Техногик<Br>расшифровка чертежей",
+   "why": "wh_technogeek at the black market (102): the original's full row, with the second line the wiki's name ('Техногик') lacks."
+  },
+  "1152": {
+   "string_id": 62136,
+   "text": "Однопальцый<Br>Торговец ножами",
+   "why": "wh_knife_trd at the black market (102): the original's full row, with the second line the wiki's name ('Однопальцый') lacks."
+  },
+  "1204": {
+   "string_id": 62149,
+   "text": "Ваккас<Br>Броня, одежда, пояса",
+   "why": "wh_wear_trd at the black market (102): the original's full row, with the second line the wiki's name ('Ваккас') lacks."
+  },
+  "1205": {
+   "string_id": 62150,
+   "text": "Хамис<Br>Торговец комплектами",
+   "why": "wh_set_trd at the black market (102): the original's full row, with the second line the wiki's name ('Хамис') lacks."
+  },
+  "1206": {
+   "string_id": 62151,
+   "text": "Люций<Br>Боевая медицина",
+   "why": "wh_med_battle at the black market (102): the original's full row, with the second line the wiki's name ('Люций') lacks."
+  },
+  "1207": {
+   "string_id": 62152,
+   "text": "Магдалена<Br>Еда, вода, лекарства",
+   "why": "wh_med_simple at the black market (102): the original's full row, with the second line the wiki's name ('Магдалена') lacks."
+  },
+  "2279": {
+   "string_id": 51645,
+   "text": "Точильный камень<Br>Вади-Хальфы",
+   "why": "wh_modif_knifes (art 1f_Grindstone) at the black market (102): the original's full row, with the second line the wiki's name ('Точильный камень') lacks."
+  },
+  "650": {
+   "string_id": 60225,
+   "text": "Рияд<Br>Магриб",
+   "why": "wh_Riyad in the base (52): the original's full row, with the second line the wiki's name ('Рияд') lacks."
+  },
+  "883": {
+   "string_id": 9621,
+   "text": "Хафиз<Br>Аукционер",
+   "why": "auctioneer in the Новый рынок (104): the wiki's Хафиз with the original's second line. The type stands in every city's market, whose auctioneers the original calls Рушди, Гюнтер, Степан ... (10654-10659); one name per type, Halfa's while the other cities are shut (the Halfa plan's owner default 15)."
+  },
+  "4": {
+   "string_id": 9619,
+   "text": "Зоричев<Br>Обучение специализациям",
+   "why": "Simple_SpecTrainer in the markets (35, 104): the wiki's Зоричев with the original's second line. Other cities' trainer is Омар (9620); one name per type, as 883."
+  },
+  "2088": {
+   "string_id": 9644,
+   "text": "Берт Гаммер",
+   "why": "BertGammer_GoldMarket (art 1f_npc15, Берт's) in the market (35), who sends the player to his range: 'Берт Гаммер', the row of the valley's nz_BertGammer (1403, high)."
+  },
+  "2089": {
+   "string_id": 9644,
+   "text": "Берт Гаммер",
+   "why": "BertGammer_TI_0 (art 1f_npc15), the Берт Гаммер who stands in lesson 0 of his range (TIR_00, 732): the row of the valley's nz_BertGammer (1403, high)."
+  },
+  "2090": {
+   "string_id": 9644,
+   "text": "Берт Гаммер",
+   "why": "BertGammer_TI_1 (art 1f_npc15), the Берт Гаммер who stands in lesson 1 of his range (TIR_01, 1048): the row of the valley's nz_BertGammer (1403, high)."
+  },
+  "2091": {
+   "string_id": 9644,
+   "text": "Берт Гаммер",
+   "why": "BertGammer_TI_2 (art 1f_npc15), the Берт Гаммер who stands in lesson 2 of his range (TIR_02, 1233): the row of the valley's nz_BertGammer (1403, high)."
+  },
+  "2092": {
+   "string_id": 9644,
+   "text": "Берт Гаммер",
+   "why": "BertGammer_TI_3 (art 1f_npc15), the Берт Гаммер who stands in lesson 3 of his range (TIR_03, 1260): the row of the valley's nz_BertGammer (1403, high)."
+  },
+  "2093": {
+   "string_id": 9644,
+   "text": "Берт Гаммер",
+   "why": "BertGammer_TI_4 (art 1f_npc15), the Берт Гаммер who stands in lesson 4 of his range (TIR_04, 1276): the row of the valley's nz_BertGammer (1403, high)."
+  },
+  "2094": {
+   "string_id": 9644,
+   "text": "Берт Гаммер",
+   "why": "BertGammer_TI_5 (art 1f_npc15), the Берт Гаммер who stands in lesson 5 of his range (TIR_05, 1280): the row of the valley's nz_BertGammer (1403, high)."
+  },
+  "2095": {
+   "string_id": 9644,
+   "text": "Берт Гаммер",
+   "why": "BertGammer_TI_6 (art 1f_npc15), the Берт Гаммер who stands in lesson 6 of his range (TIR_06, 1282): the row of the valley's nz_BertGammer (1403, high)."
+  },
+  "1397": {
+   "string_id": 10537,
+   "text": "Цель №1",
+   "why": "nz_Target1 (art 1f_target) of Берт's range (TIR_01..06): 'Цель №1', the run 10537-10542 whose number is the target's own, right after Большой Мвамба (10536) of the valley's rows."
+  },
+  "1398": {
+   "string_id": 10538,
+   "text": "Цель №2",
+   "why": "nz_Target2 (art 1f_target) of Берт's range (TIR_01..06): 'Цель №2', the run 10537-10542 whose number is the target's own, right after Большой Мвамба (10536) of the valley's rows."
+  },
+  "1399": {
+   "string_id": 10539,
+   "text": "Цель №3",
+   "why": "nz_Target3 (art 1f_target) of Берт's range (TIR_01..06): 'Цель №3', the run 10537-10542 whose number is the target's own, right after Большой Мвамба (10536) of the valley's rows."
+  },
+  "1400": {
+   "string_id": 10540,
+   "text": "Цель №4",
+   "why": "nz_Target4 (art 1f_target) of Берт's range (TIR_01..06): 'Цель №4', the run 10537-10542 whose number is the target's own, right after Большой Мвамба (10536) of the valley's rows."
+  },
+  "1401": {
+   "string_id": 10541,
+   "text": "Цель №5",
+   "why": "nz_Target5 (art 1f_target) of Берт's range (TIR_01..06): 'Цель №5', the run 10537-10542 whose number is the target's own, right after Большой Мвамба (10536) of the valley's rows."
+  },
+  "1402": {
+   "string_id": 10542,
+   "text": "Цель №6",
+   "why": "nz_Target6 (art 1f_target) of Берт's range (TIR_01..06): 'Цель №6', the run 10537-10542 whose number is the target's own, right after Большой Мвамба (10536) of the valley's rows."
+  },
+  "1320": {
+   "string_id": 10521,
+   "text": "Добыча свинца",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_EnterPlumbumNPC1, the terminal at the lead mine's mouth (202)."
+  },
+  "1324": {
+   "string_id": 10522,
+   "text": "Добыча селитры",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_EnterNitreNPC1, the terminal at the nitre pit (201)."
+  },
+  "1328": {
+   "string_id": 10523,
+   "text": "Добыча меди",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_EnterCopperNPC1, the terminal at the copper mine's mouth (200)."
+  },
+  "1332": {
+   "string_id": 10524,
+   "text": "Выход из шахты",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_ExitPlumbumNPC1, the way out of the lead mine's control room (658)."
+  },
+  "1340": {
+   "string_id": 10524,
+   "text": "Выход из шахты",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_ExitCopperNPC1, the way out of the copper mine's control room (657)."
+  },
+  "1336": {
+   "string_id": 10525,
+   "text": "Выход из карьера",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_ExitNitreNPC1, the way out of the nitre pit's control room (659)."
+  },
+  "1359": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_plumbum_sorting in the lead mine's control room (658)."
+  },
+  "1363": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_nitre_sorting in the nitre pit's control room (659)."
+  },
+  "1367": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "The ore mines' run 10521-10526 in the order of the types: 'Вход в шахту<Br>Добыча свинца' (1320 Plumbum), 'Вход на карьер<Br>Добыча селитры' (1324 Nitre: an open pit, a 'карьер'), 'Вход в шахту<Br>Добыча меди' (1328 Copper), 'Выход из шахты', 'Выход из карьера', 'Сортировка'. WH_copper_sorting in the copper mine's control room (657)."
+  },
+  "977": {
+   "string_id": 48065,
+   "text": "Порода",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). Stone_WH (art 1f_Stone), the rock of the quarry 626-630 that «Каменные блоки» has the player hew: the generic 'Порода'."
+  },
+  "1308": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Stone_Plumbum_1, the lead ore of the tiers 1027/1220/1257."
+  },
+  "1344": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Stone_Plumbum_2, the lead ore of the tiers 1027/1220/1257."
+  },
+  "1345": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Stone_Plumbum_3, the lead ore of the tiers 1027/1220/1257."
+  },
+  "1312": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Source_Nitre_1, the nitre of the tiers 1026/1219/1256."
+  },
+  "1349": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Source_Nitre_2, the nitre of the tiers 1026/1219/1256."
+  },
+  "1350": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Source_Nitre_3, the nitre of the tiers 1026/1219/1256."
+  },
+  "1316": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Stone_Copper_1, the copper ore of the tiers 1025/1218/1255."
+  },
+  "1354": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Stone_Copper_2, the copper ore of the tiers 1025/1218/1255."
+  },
+  "1355": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). WH_Stone_Copper_3, the copper ore of the tiers 1025/1218/1255."
+  },
+  "1714": {
+   "string_id": 48069,
+   "text": "Злой шахтёр",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). Craft_Miner_1, the hostile miners of every ore tier."
+  },
+  "2022": {
+   "string_id": 48070,
+   "text": "Электрощит",
+   "why": "The mines' objects are one run of texts.xml, 48065-48070: 'Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит<Br>Под напряжением<Br>Опасно для жизни' -- the generic rock, the three ores by the words of their internal names (WH_Stone_Plumbum_N, WH_Source_Nitre_N, WH_Stone_Copper_N), the hostile miners and the switchboard (Craft_Miner_elect_panel, drawn as 1f_Secret_door). Craft_Miner_elect_panel, in every ore tier and every quarry field."
+  },
+  "258": {
+   "string_id": 8824,
+   "text": "Лазутчик<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Лазутчик'."
+  },
+  "259": {
+   "string_id": 8825,
+   "text": "Новобранец<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Новобранец'."
+  },
+  "260": {
+   "string_id": 8826,
+   "text": "Налетчик<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Налетчик'."
+  },
+  "261": {
+   "string_id": 8827,
+   "text": "Каратель<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Каратель'."
+  },
+  "262": {
+   "string_id": 8828,
+   "text": "Штурмовик<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Штурмовик'."
+  },
+  "263": {
+   "string_id": 8829,
+   "text": "Дозорный<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Дозорный'."
+  },
+  "264": {
+   "string_id": 8830,
+   "text": "Боевик<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Боевик'."
+  },
+  "265": {
+   "string_id": 8831,
+   "text": "Стрелок<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Стрелок'."
+  },
+  "266": {
+   "string_id": 8832,
+   "text": "Бригадир<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Бригадир'."
+  },
+  "267": {
+   "string_id": 8833,
+   "text": "Боец<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Боец'."
+  },
+  "268": {
+   "string_id": 8834,
+   "text": "Часовой<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. This one: 'Часовой'."
+  },
+  "586": {
+   "string_id": 8823,
+   "text": "Казначей<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. nc_Kaznachei, the treasurer: the block's first row."
+  },
+  "409": {
+   "string_id": 8837,
+   "text": "Ящик<Br>Новые колонисты",
+   "why": "The New Colonists' ranks, texts.xml 8823-8837 ('[2] Казначей', '[0] Лазутчик', '[1] Новобранец', '[1] Налетчик', '[1] Каратель', '[1] Штурмовик', '[1] Дозорный', '[2] Боевик', '[2] Стрелок', '[2] Бригадир', '[2] Боец', '[2] Часовой', Асмунд, Агнес, '[2] Ящик'), taken in the order of the types, level by level: nc_ 258 (level 0), 259-263 and 264-268 (levels 1 and 2, each Raider, AssaultGunner, SubMach, Shotgun, Shooter). It is borne out where the texts name them: «Учет» sends the player to kill the Бригадиры (62658), the SubMach of level 2 (266), and the old edition's 'каратели' are 261, the SubMach of level 1. nc_box_ammo (art q-box), the camp's ammunition box: the block's last row."
+  },
+  "587": {
+   "string_id": 8838,
+   "text": "Казначей<Br>Секта Люшер",
+   "why": "The Lusher sect's ranks, texts.xml 8838-8854 ('[4] Казначей', '[2] Неудачник', '[2] Послушник', '[2] Исполнитель', '[2] Проповедник', '[2] Подмастерье', '[3] Ученик', '[3] Старший Исполнитель', '[3] Мастер', '[3] Наставник', '[4] Фанатик', '[4] Инквизитор', '[4] Клирик', '[4] Экзорцист', Лука, Дитрих, '[4] Ящик'), level by level; the matcher already holds 271-273 and 276 of them by name, and the rest keep that order (Looser, Poslyshnik, Ispolnitel, Propovednik, Master). lu_Kaznachei, the treasurer: the block's first row (the matcher had given it the Джанджавиды's 8855)."
+  },
+  "336": {
+   "string_id": 8839,
+   "text": "Неудачник",
+   "why": "The Lusher sect's ranks, texts.xml 8838-8854 ('[4] Казначей', '[2] Неудачник', '[2] Послушник', '[2] Исполнитель', '[2] Проповедник', '[2] Подмастерье', '[3] Ученик', '[3] Старший Исполнитель', '[3] Мастер', '[3] Наставник', '[4] Фанатик', '[4] Инквизитор', '[4] Клирик', '[4] Экзорцист', Лука, Дитрих, '[4] Ящик'), level by level; the matcher already holds 271-273 and 276 of them by name, and the rest keep that order (Looser, Poslyshnik, Ispolnitel, Propovednik, Master). lu_Looser_lvl2: '[2] Неудачник'."
+  },
+  "274": {
+   "string_id": 8843,
+   "text": "Подмастерье",
+   "why": "The Lusher sect's ranks, texts.xml 8838-8854 ('[4] Казначей', '[2] Неудачник', '[2] Послушник', '[2] Исполнитель', '[2] Проповедник', '[2] Подмастерье', '[3] Ученик', '[3] Старший Исполнитель', '[3] Мастер', '[3] Наставник', '[4] Фанатик', '[4] Инквизитор', '[4] Клирик', '[4] Экзорцист', Лука, Дитрих, '[4] Ящик'), level by level; the matcher already holds 271-273 and 276 of them by name, and the rest keep that order (Looser, Poslyshnik, Ispolnitel, Propovednik, Master). lu_Master_lvl2: the master of level 2, '[2] Подмастерье'."
+  },
+  "277": {
+   "string_id": 8846,
+   "text": "Мастер<Br>Секта Люшер",
+   "why": "The Lusher sect's ranks, texts.xml 8838-8854 ('[4] Казначей', '[2] Неудачник', '[2] Послушник', '[2] Исполнитель', '[2] Проповедник', '[2] Подмастерье', '[3] Ученик', '[3] Старший Исполнитель', '[3] Мастер', '[3] Наставник', '[4] Фанатик', '[4] Инквизитор', '[4] Клирик', '[4] Экзорцист', Лука, Дитрих, '[4] Ящик'), level by level; the matcher already holds 271-273 and 276 of them by name, and the rest keep that order (Looser, Poslyshnik, Ispolnitel, Propovednik, Master). lu_Master_lvl3: '[3] Мастер', word for word."
+  },
+  "281": {
+   "string_id": 8849,
+   "text": "Инквизитор",
+   "why": "The Lusher sect's ranks, texts.xml 8838-8854 ('[4] Казначей', '[2] Неудачник', '[2] Послушник', '[2] Исполнитель', '[2] Проповедник', '[2] Подмастерье', '[3] Ученик', '[3] Старший Исполнитель', '[3] Мастер', '[3] Наставник', '[4] Фанатик', '[4] Инквизитор', '[4] Клирик', '[4] Экзорцист', Лука, Дитрих, '[4] Ящик'), level by level; the matcher already holds 271-273 and 276 of them by name, and the rest keep that order (Looser, Poslyshnik, Ispolnitel, Propovednik, Master). lu_Ispolnitel_lvl4: the executor of level 4, '[4] Инквизитор'."
+  },
+  "279": {
+   "string_id": 8851,
+   "text": "Экзорцист",
+   "why": "The Lusher sect's ranks, texts.xml 8838-8854 ('[4] Казначей', '[2] Неудачник', '[2] Послушник', '[2] Исполнитель', '[2] Проповедник', '[2] Подмастерье', '[3] Ученик', '[3] Старший Исполнитель', '[3] Мастер', '[3] Наставник', '[4] Фанатик', '[4] Инквизитор', '[4] Клирик', '[4] Экзорцист', Лука, Дитрих, '[4] Ящик'), level by level; the matcher already holds 271-273 and 276 of them by name, and the rest keep that order (Looser, Poslyshnik, Ispolnitel, Propovednik, Master). lu_Master_lvl4: the master of level 4, '[4] Экзорцист'."
+  },
+  "641": {
+   "string_id": 8854,
+   "text": "Ящик<Br>Секта Люшер",
+   "why": "The Lusher sect's ranks, texts.xml 8838-8854 ('[4] Казначей', '[2] Неудачник', '[2] Послушник', '[2] Исполнитель', '[2] Проповедник', '[2] Подмастерье', '[3] Ученик', '[3] Старший Исполнитель', '[3] Мастер', '[3] Наставник', '[4] Фанатик', '[4] Инквизитор', '[4] Клирик', '[4] Экзорцист', Лука, Дитрих, '[4] Ящик'), level by level; the matcher already holds 271-273 and 276 of them by name, and the rest keep that order (Looser, Poslyshnik, Ispolnitel, Propovednik, Master). lu_box_ammo (art q-box), the camp's ammunition box: the block's last row."
+  },
+  "588": {
+   "string_id": 8855,
+   "text": "Казначей<Br>Джанджавиды",
+   "why": "The Janjaweed's ranks, texts.xml 8855-8870 ('[6] Казначей', '[4] Разведчик', '[4] Грабитель', '[4] Боевик', '[4] Саботажник', '[5] Диверсант', '[5] Боевик', '[5] Дозорный', '[5] Налетчик', '[6] Мародер', '[6] Стрелок', '[6] Саботажник', '[6] Ветеран', Рашад, Ашрам, '[6] Ящик'), level by level; the matcher holds 289 (Боевик) and 291-293 of them by name, and level 4's order (Dozor, Maroder, Boevik, Diversant) is level 6's too. ja_Kaznachei, the treasurer: the block's first row (the matcher had given it Магриб's 8871)."
+  },
+  "287": {
+   "string_id": 8856,
+   "text": "Разведчик",
+   "why": "The Janjaweed's ranks, texts.xml 8855-8870 ('[6] Казначей', '[4] Разведчик', '[4] Грабитель', '[4] Боевик', '[4] Саботажник', '[5] Диверсант', '[5] Боевик', '[5] Дозорный', '[5] Налетчик', '[6] Мародер', '[6] Стрелок', '[6] Саботажник', '[6] Ветеран', Рашад, Ашрам, '[6] Ящик'), level by level; the matcher holds 289 (Боевик) and 291-293 of them by name, and level 4's order (Dozor, Maroder, Boevik, Diversant) is level 6's too. ja_Dozor_lvl4: '[4] Разведчик'."
+  },
+  "288": {
+   "string_id": 8857,
+   "text": "Грабитель<Br>Джанджавиды",
+   "why": "The Janjaweed's ranks, texts.xml 8855-8870 ('[6] Казначей', '[4] Разведчик', '[4] Грабитель', '[4] Боевик', '[4] Саботажник', '[5] Диверсант', '[5] Боевик', '[5] Дозорный', '[5] Налетчик', '[6] Мародер', '[6] Стрелок', '[6] Саботажник', '[6] Ветеран', Рашад, Ашрам, '[6] Ящик'), level by level; the matcher holds 289 (Боевик) and 291-293 of them by name, and level 4's order (Dozor, Maroder, Boevik, Diversant) is level 6's too. ja_Maroder_lvl4: '[4] Грабитель'."
+  },
+  "295": {
+   "string_id": 8864,
+   "text": "Мародер<Br>Джанджавиды",
+   "why": "The Janjaweed's ranks, texts.xml 8855-8870 ('[6] Казначей', '[4] Разведчик', '[4] Грабитель', '[4] Боевик', '[4] Саботажник', '[5] Диверсант', '[5] Боевик', '[5] Дозорный', '[5] Налетчик', '[6] Мародер', '[6] Стрелок', '[6] Саботажник', '[6] Ветеран', Рашад, Ашрам, '[6] Ящик'), level by level; the matcher holds 289 (Боевик) and 291-293 of them by name, and level 4's order (Dozor, Maroder, Boevik, Diversant) is level 6's too. ja_Maroder_lvl6: '[6] Мародер', word for word."
+  },
+  "296": {
+   "string_id": 8865,
+   "text": "Стрелок<Br>Джанджавиды",
+   "why": "The Janjaweed's ranks, texts.xml 8855-8870 ('[6] Казначей', '[4] Разведчик', '[4] Грабитель', '[4] Боевик', '[4] Саботажник', '[5] Диверсант', '[5] Боевик', '[5] Дозорный', '[5] Налетчик', '[6] Мародер', '[6] Стрелок', '[6] Саботажник', '[6] Ветеран', Рашад, Ашрам, '[6] Ящик'), level by level; the matcher holds 289 (Боевик) and 291-293 of them by name, and level 4's order (Dozor, Maroder, Boevik, Diversant) is level 6's too. ja_Dozor_lvl6: '[6] Стрелок'."
+  },
+  "297": {
+   "string_id": 8866,
+   "text": "Саботажник",
+   "why": "The Janjaweed's ranks, texts.xml 8855-8870 ('[6] Казначей', '[4] Разведчик', '[4] Грабитель', '[4] Боевик', '[4] Саботажник', '[5] Диверсант', '[5] Боевик', '[5] Дозорный', '[5] Налетчик', '[6] Мародер', '[6] Стрелок', '[6] Саботажник', '[6] Ветеран', Рашад, Ашрам, '[6] Ящик'), level by level; the matcher holds 289 (Боевик) and 291-293 of them by name, and level 4's order (Dozor, Maroder, Boevik, Diversant) is level 6's too. ja_Diversant_lvl6: '[6] Саботажник', as the diversant of level 4 (the matcher had given it ДСР's 10612)."
+  },
+  "298": {
+   "string_id": 8867,
+   "text": "Ветеран<Br>Джанджавиды",
+   "why": "The Janjaweed's ranks, texts.xml 8855-8870 ('[6] Казначей', '[4] Разведчик', '[4] Грабитель', '[4] Боевик', '[4] Саботажник', '[5] Диверсант', '[5] Боевик', '[5] Дозорный', '[5] Налетчик', '[6] Мародер', '[6] Стрелок', '[6] Саботажник', '[6] Ветеран', Рашад, Ашрам, '[6] Ящик'), level by level; the matcher holds 289 (Боевик) and 291-293 of them by name, and level 4's order (Dozor, Maroder, Boevik, Diversant) is level 6's too. ja_Boevik_lvl6: '[6] Ветеран' (the matcher had given it Beja Congress' 10603)."
+  },
+  "642": {
+   "string_id": 8870,
+   "text": "Ящик<Br>Джанджавиды",
+   "why": "The Janjaweed's ranks, texts.xml 8855-8870 ('[6] Казначей', '[4] Разведчик', '[4] Грабитель', '[4] Боевик', '[4] Саботажник', '[5] Диверсант', '[5] Боевик', '[5] Дозорный', '[5] Налетчик', '[6] Мародер', '[6] Стрелок', '[6] Саботажник', '[6] Ветеран', Рашад, Ашрам, '[6] Ящик'), level by level; the matcher holds 289 (Боевик) and 291-293 of them by name, and level 4's order (Dozor, Maroder, Boevik, Diversant) is level 6's too. ja_box_ammo (art q-box), the camp's ammunition box: the block's last row."
+  },
+  "589": {
+   "string_id": 8871,
+   "text": "Казначей<Br>Союз арабского Магриба",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Kaznachei, the treasurer: the block's first row."
+  },
+  "303": {
+   "string_id": 8874,
+   "text": "Лейтенант",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Officer_lvl6: '[6] Лейтенант'."
+  },
+  "304": {
+   "string_id": 8875,
+   "text": "Рядовой",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Soldier_lvl6: '[6] Рядовой'."
+  },
+  "306": {
+   "string_id": 8877,
+   "text": "Дозорный<Br>Союз арабского Магриба",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Chasovoi_lvl7: '[7] Дозорный' (the matcher had given it 9570, a sentry of the Лаборатория доктора «D»)."
+  },
+  "307": {
+   "string_id": 8878,
+   "text": "Капитан",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Officer_lvl7: '[7] Капитан'."
+  },
+  "308": {
+   "string_id": 8879,
+   "text": "Рядовой",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Soldier_lvl7: '[7] Рядовой'."
+  },
+  "310": {
+   "string_id": 8881,
+   "text": "Стрелок<Br>Союз арабского Магриба",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Chasovoi_lvl8: '[8] Стрелок'."
+  },
+  "311": {
+   "string_id": 8882,
+   "text": "Майор",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Officer_lvl8: '[8] Майор'."
+  },
+  "312": {
+   "string_id": 8883,
+   "text": "Ефрейтор",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_Soldier_lvl8: '[8] Ефрейтор', the guards of the VH mine's mouths 154, 158 and 160 (the wiki has a 'Ефрейтор Магриб' picture)."
+  },
+  "314": {
+   "string_id": 8884,
+   "text": "Раид Кайс",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mrare_Kais_lvl12, the boss of 87 (MW_bandits4_boss): '[9] Раид Кайс', by his name."
+  },
+  "2162": {
+   "string_id": 8886,
+   "text": "Ящик<Br>Союз арабского Магриба",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_box_ammo (art q-box), the camp's ammunition box."
+  },
+  "838": {
+   "string_id": 8887,
+   "text": "Шахтер<Br>Союз арабского Магриба",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_miner_lvl8 in the VH mine's tiers (613, 617, 1012, 1016, 1024): '[8] Шахтер', level for level."
+  },
+  "839": {
+   "string_id": 8888,
+   "text": "Шахтер<Br>Союз арабского Магриба",
+   "why": "The Arab Maghreb Union's ranks, texts.xml 8871-8889 ('[8] Казначей', then four a level: '[6] Спецназ', '[6] Часовой', '[6] Лейтенант', '[6] Рядовой', '[7] Спецназ', '[7] Дозорный', '[7] Капитан', '[7] Рядовой', '[8] Спецназ', '[8] Стрелок', '[8] Майор', '[8] Ефрейтор'; Кайс, Ихсан, '[8] Ящик', the two miners), in the order of the types 301-312 (Specnaz, Chasovoi, Officer, Soldier a level); the matcher holds 301, 302, 305 and 309 of them by name. mg_miner_lvl9 in the VH mine's second tier (1016): '[9] Шахтер', level for level."
+  },
+  "696": {
+   "string_id": 10610,
+   "text": "Главарь бандитов",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m05_glavbandit, the one leader of the robbed caravan (120), whose head «Фрэнк» asks for."
+  },
+  "110": {
+   "string_id": 10598,
+   "text": "Послушник Люшера",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m510_sektant_lvl6, the sectarians of the Сборище (65): '[6] Послушник Люшера', level for level."
+  },
+  "111": {
+   "string_id": 10609,
+   "text": "Мастер Люшера",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m510_mastasektant_lvl6, their masters in the Сборище (65): '[6] Мастер Люшера', level for level."
+  },
+  "854": {
+   "string_id": 10600,
+   "text": "Послушник Люшера",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m510_sektant_lvl4, the sectarians of the ritual in 64: '[4] Послушник Люшера', level for level."
+  },
+  "722": {
+   "string_id": 10605,
+   "text": "Грабитель",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m05_grabitel_lvl6, the robbers' camp (137) and Климов's house (140): '[6] Грабитель', level for level (the matcher had swapped it with 833)."
+  },
+  "833": {
+   "string_id": 10606,
+   "text": "Трусливый грабитель",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m05_trys_grabitel_lvl6 (trys = трус), the feared raiders of 142: '[6] Трусливый грабитель'."
+  },
+  "814": {
+   "string_id": 10607,
+   "text": "Погонщик верблюдов",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m05_ja_pogonshik_lvl6, the camel drivers of the camel stables (139): '[6] Погонщик верблюдов<Br>Джанджавиды'."
+  },
+  "723": {
+   "string_id": 10636,
+   "text": "Озверевшая собака",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. mStarvingDog_lvl6, the dogs at the dead camel (138): '[6] Озверевшая собака', level for level."
+  },
+  "83": {
+   "string_id": 10635,
+   "text": "Дикая собака",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. mStarvingDog_lvl2, the dogs at Рахат's wife (47): '[2] Дикая собака', level for level."
+  },
+  "102": {
+   "string_id": 10591,
+   "text": "Ящик спирту",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m_WF_ADQ19_Box (art q-box) in 64: 'Ящик спирту', the box of spirit the sect guards."
+  },
+  "832": {
+   "string_id": 10590,
+   "text": "Огневая установка",
+   "why": "The mob block 10590-10640 holds the creatures of Halfa's old-edition quest places ('[4] Огневая установка', 'Ящик спирту', '[2] Бандит', '[6] Послушник Люшера', '[3] Негодяй', '[6] Грабитель', '[6] Трусливый грабитель', '[6] Погонщик верблюдов', '[5] Главарь бандитов', the ДСР, the dogs); the matcher holds 693, 695 and 815 of them. m_turret_lvl6 (art Turrel), the twelve turrets of 141, the «Огневые установки» of «Механизмы» (47467-47472)."
+  },
+  "852": {
+   "string_id": 50247,
+   "text": "Курьер",
+   "why": "The valley's m05 names block 50242-50270 carries the ones of the old-edition places around Halfa too. m510_Courier_lvl3 in 45 (Q_IV_carier), the courier of «Передача» ('встретиться с курьером', 62687): '[3] Курьер', level for level; the valley's courier 17 wears the same row."
+  },
+  "665": {
+   "string_id": 50266,
+   "text": "Шахтер",
+   "why": "The valley's m05 names block 50242-50270 carries the ones of the old-edition places around Halfa too. m05_Digger_lvl2, the diggers of the gold mine (116) of «Золотая лихорадка» ('старатели местные пришлых не жалуют', 62700): '[2] Шахтер', level for level."
+  },
+  "1694": {
+   "string_id": 50269,
+   "text": "Призрак-страж",
+   "why": "The valley's m05 names block 50242-50270 carries the ones of the old-edition places around Halfa too. m05_Ghost_lvl5, the ghosts of the dark graveyard (688): '[5] Призрак-страж', level for level."
+  },
+  "853": {
+   "string_id": 50261,
+   "text": "Лидер бандитов",
+   "why": "The valley's m05 names block 50242-50270 carries the ones of the old-edition places around Halfa too. DESIGNED. m510_Makhrovoy_lvl4 (махровый: hardened), the one leader (art m9) among the seven shooters of the Перебитый отряд (48), the killers of the Магриб group of «Потерянная группа» (62692-62693): '[4] Лидер бандитов', level for level; no row names him."
+  },
+  "717": {
+   "string_id": 50321,
+   "text": "Механик<Br>ДСР",
+   "why": "m510_BanditMechanic_lvl7, the one fighter of 122 (Q_VH_Mechanic) with a name of his own: 'Механик<Br>ДСР' of the m05 block's later part (50309-50330)."
+  },
+  "855": {
+   "string_id": 50323,
+   "text": "Скотовод Халид",
+   "why": "m510_Khalid_lvl4 at the Прибрежное пастбище (44): «Назидание» sends the player to kill 'брат-пастух, Халид' (62690): 'Скотовод Халид'."
+  },
+  "856": {
+   "string_id": 50324,
+   "text": "Пастух",
+   "why": "m510_Pastyx_lvl4 (пастух), the other herdsmen of the pasture (44): 'Пастух', the row after Халид."
+  },
+  "851": {
+   "string_id": 10597,
+   "text": "Бандит",
+   "why": "DESIGNED. m05_BanditShooter_lvl4, the seven shooters of the Перебитый отряд (48): '[2] Бандит', the row of the same line's shooters of levels 2 and 3 (20, 21); the prefix shows its own level."
+  },
+  "664": {
+   "string_id": 10597,
+   "text": "Бандит",
+   "why": "DESIGNED. m05_Dolzhnik_lvl2 (должник: the debtor), the five of 108 (Desert_crates): «Золотая лихорадка» asks 'найти среди бандитов должника и забрать у него мешочек с золотом' (62696), so they are bandits: '[2] Бандит', level for level; no row names the debtor."
+  },
+  "411": {
+   "string_id": 49749,
+   "text": "Бомж",
+   "why": "Medium. m05_bich (art bich), the bums of the Свалка (100, 101), the map's 'Место жительства бомжей': the plain 'Бомж' of the Свалка's block 49745-49750; '[15] Бомж' (10617) is another's level."
+  },
+  "41": {
+   "string_id": 47949,
+   "text": "Ящик с деньгами",
+   "why": "DESIGNED. m05_Box (art q-box) in Генри Мл. (43), the chest where the bandits kept their takings (Генри мл. in «Недельная добыча»: 'бандиты складывали всю собранную дань в сундук', 62668): the plain 'Ящик с деньгами'."
+  },
+  "50": {
+   "string_id": 8837,
+   "text": "Ящик<Br>Новые колонисты",
+   "why": "DESIGNED. m_WF_Q8_Box (art q-box) in the Перехват (46), the New Colonists' cargo of «Можно ли отказаться?» ('перехватить и принести им какой-то груз Новых Колонистов', 62678): the New Colonists' box row, as their ammunition box 409."
+  },
+  "2099": {
+   "string_id": 800,
+   "text": "Череп",
+   "why": "DESIGNED. TreasureIsland_4 (art 1f_Skull) at the camel stables (139): a skull, the word of row 800 (the trophy 'Череп')."
+  },
+  "6512": {
+   "string_id": 10326,
+   "text": "Ямка",
+   "why": "Npc_Commoner000759 (art 1f_SmallHole), the hole of Q_Tresure1 (250), Зубери's dig on 5987,1729: the family's holes 759-763 (6512, 6516-6519, one in each Q_Tresure) follow Камал Картограф 758 (6511, 10325 'Камал<Br>Картограф') and come before Бари 764 (6520, 10327) -- one row, 10326 'Ямка', for the five, whose run of names is the family's offset (the Бари row's why)."
+  },
+  "7448": {
+   "string_id": 9610,
+   "text": "Хозяин склада<Br>Северный склад",
+   "why": "boss_WH_sever, the boss of the Северный склад (111): '[8]/[12] Хозяин склада<Br>Северный склад', the stores' own rows (9610-9612), beside their money boxes 6824-6826."
+  },
+  "7449": {
+   "string_id": 9611,
+   "text": "Хозяин склада<Br>Восточный склад",
+   "why": "boss_WH_vostok, the boss of the Восточный склад (110): '[8]/[12] Хозяин склада<Br>Восточный склад', the stores' own rows (9610-9612), beside their money boxes 6824-6826."
+  },
+  "7450": {
+   "string_id": 9612,
+   "text": "Хозяин склада<Br>Южный склад",
+   "why": "boss_WH_ug, the boss of the Южный склад (109): '[8]/[12] Хозяин склада<Br>Южный склад', the stores' own rows (9610-9612), beside their money boxes 6824-6826."
+  },
+  "6960": {
+   "string_id": 10370,
+   "text": "Лазутчик<Br>Северный Альянс",
+   "why": "Npc_Commoner000824 (art 118), two in the resistance camp 429 and one or two in each of 430-432. The family's members 816-830 run on one offset onto 10362-10376, pinned at both ends: 816-823 (four of art 140 and four 1f_Dummy; 817/818 in the Victory Day staff 924) are the eight officers and soldiers of that event, 10362-10369, and 825-830 (art mine) the six mines 10371-10376 'Мина<Br>ППМ-06-…', whose last letter is the side of the warehouse whose desert each lies in (825 in stok*_WH_sever -> '08С', 826 WH_vostok -> '08В', 827 WH_ug -> '12Ю', 828-830 the same three of Донгола). 824 between them is 10370, and the wiki's «Лагерь сопротивления Север» (5943х1723, this camp) lists a 'Лазутчик' whose article says 'Лазутчик Северного Альянса ведет разведывательную деятельность в тылу неприятеля'."
+  },
+  "7548": {
+   "string_id": 10507,
+   "text": "Жозеф де Гобино<Br>Оружейный механик",
+   "why": "Npc_Upgrader000036 (art 104) in the oases 62, 76, 195 and 196. The upgraders' members 31-45 run on one offset onto 10502-10516, each standing where its row says: 31-33 (7025-7027) in «Мастерские в Керме» (296) are the three 'Ополченец Кермы' 10502-10504, 34 (7028) at the «Блок-пост Delta Force» (382) 'Карлайт<Br>Delta Force', 35 (7029) at the «Блок-пост Blackwater» (317) 'Дональд Кук<Br>Blackwater', 37 (7549) at the Liberty posts of «Плешь Смерти» (326/327) 'Бред Питов<Br>Liberty', 38-43 (7550-7554, 7560) in the six weapon workshops MiniB_CRAFT_LVL1-6 the six 'Оружейный механик' 10509-10514. 36 is 10507, and its last words are the oasis': Halfa's northern oasis is 'Аль-Висам, или Оазис Веселый праздник' on the wiki, its file (62) is Q_HappyHolyday «Веселый праздник», and «Весёлый праздник» is the quest of the seven [Q] guns (47333-47350). The matcher's 9634 'Прапорщик Сидоренко<Br>ПДС' is the Npc_Commoner run 9592 (members 40-47 in the Авиабаза ЦСЦ 427) reused for this family."
+  },
+  "7021": {
+   "string_id": 10498,
+   "text": "Корщунд<Br>Аццкий обмен",
+   "why": "Medium. Npc_Upgrader000027 (art 119), the upgrader of the resistance camp 429; 28-30 (7022-7024, art 119) stand one in each of the other camps 430-432. On the family's own offset from member 31 on (10471, see 7548: every member 31-43 stands where its row says) the four are 10498-10501, the four 'X<Br>Аццкий обмен' -- one exchanger per camp, all four of one art. The four art-119 members before them (23-26, 6991-6994) stand nowhere and the art cannot tell which four of the eight got the rows, hence medium; the four that stand are taken. The upgraders' earlier offset 10475 (21 -> 10496 Чарльз МакКалок) would give 10502 'Ваха аль-Закир<Br>Ополченец Кермы', one of the three who stand in Kerma's workshops, and the matcher's 9625 'Непонятная машина' is the Commoner run's reuse (see 7548)."
+  },
+  "238": {
+   "string_id": 48071,
+   "text": "Оружейник<Br>Винтовки",
+   "why": "wh_craft_RifleCrafter, one of the four gunsmiths of «Горные тропы: Мастера» (599, MP_Center): the run 48071-48076 'Оружейник<Br>Винтовки / Дробовики / Автоматы / Пистолеты / Пистолет-пулеметы / Пулеметы', by the word of the internal name, right after the mines' objects 48065-48070 and before the (P) recipes they teach (48077-); the wiki's «Горные тропы Вади-Хальфы» (6015х1742) lists 'Оружейник Винтовки', 'Оружейник Пистолет-пулеметы' and 'Оружейник Дробовики'."
+  },
+  "239": {
+   "string_id": 48072,
+   "text": "Оружейник<Br>Дробовики",
+   "why": "wh_craft_ShotgunCrafter in 599: the run 48071-48076 'Оружейник<Br>Винтовки / Дробовики / Автоматы / Пистолеты / Пистолет-пулеметы / Пулеметы', by the word of the internal name, right after the mines' objects 48065-48070 and before the (P) recipes they teach (48077-); the wiki's «Горные тропы Вади-Хальфы» (6015х1742) lists 'Оружейник Винтовки', 'Оружейник Пистолет-пулеметы' and 'Оружейник Дробовики'."
+  },
+  "242": {
+   "string_id": 48074,
+   "text": "Оружейник<Br>Пистолеты",
+   "why": "wh_craft_PistolCrafter in 599: the run 48071-48076 'Оружейник<Br>Винтовки / Дробовики / Автоматы / Пистолеты / Пистолет-пулеметы / Пулеметы', by the word of the internal name, right after the mines' objects 48065-48070 and before the (P) recipes they teach (48077-); the wiki's «Горные тропы Вади-Хальфы» (6015х1742) lists 'Оружейник Винтовки', 'Оружейник Пистолет-пулеметы' and 'Оружейник Дробовики'."
+  },
+  "243": {
+   "string_id": 48075,
+   "text": "Оружейник<Br>Пистолет-пулеметы",
+   "why": "wh_craft_SubMachGunCrafter in 599: the run 48071-48076 'Оружейник<Br>Винтовки / Дробовики / Автоматы / Пистолеты / Пистолет-пулеметы / Пулеметы', by the word of the internal name, right after the mines' objects 48065-48070 and before the (P) recipes they teach (48077-); the wiki's «Горные тропы Вади-Хальфы» (6015х1742) lists 'Оружейник Винтовки', 'Оружейник Пистолет-пулеметы' and 'Оружейник Дробовики'."
+  },
+  "1371": {
+   "string_id": 10527,
+   "text": "Производство пуль",
+   "why": "WH_bullet_creator, one of the three workshops of the «База переработки» (199, WH_Refactoring_Camp): the run 10527-10530 'Производство пуль / пороха / гильз / патронов' by the words of the internal names (bullet, powder, shell, ammo); the matcher gives the last to WH_ammo_creator (1383) of the Завод (198), and the wiki's «Производство пуль» stands in the «Центр переработки Вади-Хальфы» at 6030х1711, this place's cell."
+  },
+  "1375": {
+   "string_id": 10528,
+   "text": "Производство пороха",
+   "why": "WH_powder_creator in 199: the run 10527-10530 'Производство пуль / пороха / гильз / патронов' by the words of the internal names (bullet, powder, shell, ammo); the matcher gives the last to WH_ammo_creator (1383) of the Завод (198), and the wiki's «Производство пуль» stands in the «Центр переработки Вади-Хальфы» at 6030х1711, this place's cell."
+  },
+  "1379": {
+   "string_id": 10529,
+   "text": "Производство гильз",
+   "why": "WH_shell_creator in 199: the run 10527-10530 'Производство пуль / пороха / гильз / патронов' by the words of the internal names (bullet, powder, shell, ammo); the matcher gives the last to WH_ammo_creator (1383) of the Завод (198), and the wiki's «Производство пуль» stands in the «Центр переработки Вади-Хальфы» at 6030х1711, this place's cell."
+  },
+  "60": {
+   "string_id": 10597,
+   "text": "Бандит",
+   "why": "DESIGNED. m05_BanditAssaultGunner_lvl6, the ten ambushers of «Место засады» (121, Q_VH_Interception, 5985,1721), where «Радиоперехват» (62723-62726) sends the player for the supply group's five boxes. Neither the m05 block (50242-) nor Halfa's quest-mob block (10590-10616) has a bandit gunner of level 6, and the wiki's page of the place lists no mobs; so the row of the same line's shooters (20, 21, 851), '[2] Бандит'; the prefix shows its own level."
+  },
+  "1011": {
+   "string_id": 7495,
+   "text": "Флаг",
+   "why": "DESIGNED. ownloc_Flag_Clan (art flag, a Trader in mobs.xml), the flag of a clan-held warehouse: in Вади-Хальфа's three склады 109-111 and the other cities' (112-114, 128, 982-984, 1380). No creature row names it -- the wiki's warehouse pages list only the 'Ящик с деньгами' -- so the word is the original's 'Флаг' (7495, the flag taken from the sports arena's flagpole, an item row)."
+  },
+  "876": {
+   "string_id": 62317,
+   "text": "Томас",
+   "why": "uf_ExitMan in the centre block 646 (Prison_3_WH): the run 62317-62320 'Томас<Br>Выход из тюрьмы', 'Джеф<Br>Патологоанатом', 'Аль-Назир<Br>Коронер', 'Томпсон<Br>Судмедэксперт' is the prison's staff in the order of mobs.xml's uf_ExitMan 876, uf_RewardMan_1..3 877-879, and the wiki's «Томас» ('безопасно выводит из тюрьмы', «Центральный блок» тюрьмы) is the one who leads out, as uf_ExitMan's quest «Выход» (62276-62278) does. Вади-Хальфа's prison (Prison_1..5_WH, 644-648, under the yard 176), opened by the events package (data/schedule.json, data/passages.json)."
+  },
+  "877": {
+   "string_id": 62318,
+   "text": "Джеф",
+   "why": "uf_RewardMan_1 in 646, the first of the three medics of the uprising: 62318 'Джеф<Br>Патологоанатом', by the staff's run 62317-62320 (see 876); the wiki's «Джеф», «Центральный блок» тюрьмы, «25 повязок». Вади-Хальфа's prison (Prison_1..5_WH, 644-648, under the yard 176), opened by the events package (data/schedule.json, data/passages.json)."
+  },
+  "878": {
+   "string_id": 62319,
+   "text": "Аль-Назир",
+   "why": "uf_RewardMan_2 in 646: 62319 'Аль-Назир<Br>Коронер', by the staff's run (see 876); the wiki's «Аль-Назир», «Центральный блок» тюрьмы, «50 повязок». Вади-Хальфа's prison (Prison_1..5_WH, 644-648, under the yard 176), opened by the events package (data/schedule.json, data/passages.json)."
+  },
+  "879": {
+   "string_id": 62320,
+   "text": "Томпсон",
+   "why": "uf_RewardMan_3 in 646: 62320 'Томпсон<Br>Судмедэксперт', by the staff's run (see 876); the wiki's «Томпсон (Судмедэксперт)», «Центральный блок» тюрьмы, «75 двухсотых». Вади-Хальфа's prison (Prison_1..5_WH, 644-648, under the yard 176), opened by the events package (data/schedule.json, data/passages.json)."
+  },
+  "2173": {
+   "string_id": 60387,
+   "text": "Хранитель общака",
+   "why": "m8_uf_godfather_1, the godfather of the centre block 646: 60387 'Беглый каторжник<Br>Хранитель общака', the row between 'Макисе Курису' (60386) and 'Заключенный' (60388) -- the prison's three kinds of inhabitant -- and the wiki's page of the name ('хранитель общака заключённый из местной тюрьмы', «Центральный блок»). Вади-Хальфа's prison (Prison_1..5_WH, 644-648, under the yard 176), opened by the events package (data/schedule.json, data/passages.json)."
+  },
+  "1113": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m8_uf_Competitor_1, the prisoners of the northern and eastern cells 647/648: 60388 'Заключенный', the wiki's mob of «Северный блок» and «Восточный блок». Five ranks (1113-1117) and no row each -- 60389-60391 'Заключенный 1..3' are three, and numbered -- so all five take the plain word (DESIGNED). Вади-Хальфа's prison (Prison_1..5_WH, 644-648, under the yard 176), opened by the events package (data/schedule.json, data/passages.json)."
+  },
+  "1114": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m8_uf_Competitor_2: as 1113."
+  },
+  "1115": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m8_uf_Competitor_3: as 1113."
+  },
+  "1116": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m8_uf_Competitor_4: as 1113."
+  },
+  "1117": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m8_uf_Competitor_5: as 1113."
+  },
+  "2176": {
+   "string_id": 60386,
+   "text": "Макисе Курису",
+   "why": "zapadlist_dvor, the guard at the foot of the ladders of the western and southern blocks 644/645: 60386 'Макисе Курису', the first of the prison's run 60386-60391, and the wiki's page of the name ('злобный охранник, который наносит неприятные удары при помощи костыля', in «Южный блок» and «Западный блок», where the gates lead). Named though data/schedule.json keeps it out for now (held_out: a level-20 figure by the Абу-Хамед prison it also stands in). Вади-Хальфа's prison (Prison_1..5_WH, 644-648, under the yard 176), opened by the events package (data/schedule.json, data/passages.json)."
+  }
+ },
+ "none": {
+  "5208": "Npc_Trader000035 at 'Западный поселок': the traders' block has no row for it -- the offset steps from 10399 to 10398 exactly here -- and its stall is empty. The fan wiki's 'Бомани' was wrong: the original gives Бомани to 5218.",
+  "639": "wh_modif_armor_g (art m2) at the black market (102): no row, and no resident of the wiki's black market list is left for it; the matcher's 62149 is Ваккас (1204).",
+  "7660": "AQ000001 (art 119) in the four resistance camps 429-432: the only member of its family, no row, no wiki name.",
+  "8236": "VOV_Q_022 in the oasis 62: a Victory Day quest thing, left out of every room by world.EVENT_TOKENS ('vov'); nobody sees it.",
+  "8213": "FSC_U_000001 (art 118, an upgrader) at every Аэроплощадка (527-532, 538; Вади-Хальфа's is 528, 5970,1727): no row. The two 'Фонд спасения цивилизаци' rows of the traders' block, 10453 'Старшина Миринков … Боеприпасы' and 10454 'Волонтер Маштаков … Лекарства', are the traders' own on their offset 10398 (members 55/56; 5671 stands in the Авиабаза ЦСЦ 427), the Фонд's two instructors 49107/49113 sit in the Apoc block beside Говард Хаксли (2192 -> 49108), and no wiki page names anybody at an Аэроплощадка.",
+  "8214": "FSC_U_000002, the other of the pair at every Аэроплощадка (see 8213)."
+ }
+}

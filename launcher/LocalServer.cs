@@ -30,6 +30,7 @@ class LocalServer
 {
     readonly string root;          // the player's res/ folder, resolved
     readonly byte[] texts;         // the string table we carry
+    readonly byte[] wrapper;       // the film that loads the game (16:9 or plain), or null
     readonly string gameHost;
     readonly int gamePort;
     TcpListener listener;
@@ -51,10 +52,12 @@ class LocalServer
     // the game than any number of seconds guessed in advance.
     public volatile int LastRequest;
 
-    public LocalServer(string resDir, byte[] textsXml, string host, int port)
+    public LocalServer(string resDir, byte[] textsXml, byte[] wrapperSwf,
+                       string host, int port)
     {
         root = Path.GetFullPath(resDir).TrimEnd(Path.DirectorySeparatorChar);
         texts = textsXml;
+        wrapper = wrapperSwf;
         gameHost = host;
         gamePort = port;
     }
@@ -85,7 +88,17 @@ class LocalServer
     {
         // logged=1 is the whole point: without it the client shows its own
         // login window and never asks loaduser anything.
-        return "http://127.0.0.1:" + Port + "/res/main.swf?logged=1&vversion=1"
+        //
+        // The projector is pointed at our wrapper rather than at the game:
+        // the 16:9 one because the game fixes the stage at 950x650 and
+        // forbids scaling, the plain one because it is the only way to run
+        // our ClanInspector mend inside the client (see tools/make_wrapper.py;
+        // either film is served here under the one name). The wrapper lives at the same /res/
+        // as the game, so every relative path the client builds -- above all
+        // xmldocs/csettings_v1.xml, which is what puts it in WEB mode --
+        // resolves exactly as it would have.
+        string movie = wrapper != null ? "wrapper.swf" : "main.swf";
+        return "http://127.0.0.1:" + Port + "/res/" + movie + "?logged=1&vversion=1"
              + "&var_host=" + gameHost + "&var_port=" + gamePort;
     }
 
@@ -173,6 +186,7 @@ class LocalServer
     void Route(string method, string path, string query, Stream outp, bool keep)
     {
         LastRequest = Environment.TickCount;
+        Log.Hit(method, path, query);
 
         if (path.StartsWith("/exe/lavaclient/loaduser", StringComparison.OrdinalIgnoreCase))
         {
@@ -212,6 +226,14 @@ class LocalServer
             Send(outp, 200, "text/xml", Encoding.UTF8.GetBytes(Csettings()), keep);
             return;
         }
+        if (wrapper != null
+            && rel.Equals("wrapper.swf", StringComparison.OrdinalIgnoreCase))
+        {
+            // Ours, not the player's: it is served from here rather than
+            // written into their res/, which this launcher never touches.
+            Send(outp, 200, "application/x-shockwave-flash", wrapper, keep);
+            return;
+        }
         if (rel.Equals("database/texts.xml", StringComparison.OrdinalIgnoreCase))
         {
             // Always the whole table, whatever was asked. A string fetched
@@ -235,6 +257,19 @@ class LocalServer
             return;
         }
 
+        if (rel.Equals("database/locations.xml", StringComparison.OrdinalIgnoreCase))
+        {
+            // The names over the global map's cells: the player's own file,
+            // with the owner's edits laid on (MapLabels). Unreadable, it falls
+            // through to File, which says so the usual way.
+            byte[] raw = ReadRes(rel);
+            if (raw != null)
+            {
+                Send(outp, 200, Mime(rel), MapLabels.Apply(raw), keep);
+                return;
+            }
+        }
+
         if (rel.StartsWith("locations/", StringComparison.OrdinalIgnoreCase) &&
             Interlocked.Exchange(ref worldSignalled, 1) == 0)
         {
@@ -243,6 +278,21 @@ class LocalServer
         }
 
         File(rel, outp, keep);
+    }
+
+    /// <summary>A file of the player's res/ as bytes, or null if it is not
+    /// there or not inside res/ -- File's own checks, for a file that is
+    /// served changed rather than as it lies.</summary>
+    byte[] ReadRes(string rel)
+    {
+        try
+        {
+            string full = Path.GetFullPath(Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar)));
+            if (!full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                return null;
+            return System.IO.File.Exists(full) ? System.IO.File.ReadAllBytes(full) : null;
+        }
+        catch { return null; }
     }
 
     void File(string rel, Stream outp, bool keep)
@@ -399,6 +449,49 @@ static class Log
         }
     }
 
+    // Every request, not only the ones that failed. A client that hangs
+    // without asking for anything and a client that asked for the wrong
+    // thing look identical from outside, and the difference is the whole
+    // diagnosis. Switched on by LAVA_HTTPLOG=1; off, this costs one
+    // comparison per request.
+    static readonly bool Verbose = IsOn("LAVA_HTTPLOG");
+    static int hits;
+
+    static bool IsOn(string name)
+    {
+        string v = Environment.GetEnvironmentVariable(name);
+        if (v == null) return false;
+        v = v.Trim().ToLowerInvariant();
+        return v != "" && v != "0" && v != "no" && v != "off" && v != "false";
+    }
+
+    public static string HitPath
+    {
+        get
+        {
+            return System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "LavaOnline", "http.log");
+        }
+    }
+
+    public static void Hit(string method, string path, string query)
+    {
+        if (!Verbose) return;
+        lock (gate)
+        {
+            if (hits > 4000) return;
+            hits++;
+            try
+            {
+                System.IO.File.AppendAllText(HitPath,
+                    DateTime.Now.ToString("HH:mm:ss.fff") + "  " + method + " " + path
+                    + (string.IsNullOrEmpty(query) ? "" : "?" + query) + "\r\n");
+            }
+            catch { }
+        }
+    }
+
     public static void Miss(string what)
     {
         lock (gate)
@@ -419,7 +512,10 @@ static class Log
         lock (gate)
         {
             written = 0;
+            hits = 0;
             try { System.IO.File.Delete(Path); }
+            catch { }
+            try { System.IO.File.Delete(HitPath); }
             catch { }
         }
     }

@@ -22,10 +22,18 @@
   состав таблиц и из него собирается CREATE TABLE для Postgres.
   Второй экземпляр схемы разошёлся бы с первым в первый же вечер.
 * **Состав таблицы.** `PRAGMA table_info` против `information_schema`.
+* **Сколько строк задето.** `cursor.rowcount` есть у обоих курсоров.
+* **Неудачный оператор.** В SQLite он соседей не трогает, в Postgres
+  обрывает транзакцию целиком; поэтому соединение Postgres после ошибки
+  откатывается само и остаётся годным.
+* **Две перестройки схемы разом.** Файл SQLite запирает себя на запись
+  сам, а в Postgres create_schema и migrate двух процессов сталкиваются;
+  их разводит `schema_lock()`.
 
 Из кода игры сюда ходят только `connect()` и методы соединения; ничего
 специфичного для драйвера наружу не торчит.
 """
+import contextlib
 import os
 import re
 import sqlite3
@@ -56,6 +64,16 @@ class SqliteDB:
         # ждала его и иногда сдавалась. WAL пропускает их мимо друг друга.
         self._db.execute("PRAGMA journal_mode=WAL")
         self._db.execute("PRAGMA busy_timeout=5000")
+        # REFERENCES в схеме — документация, а не ограничение, и так было
+        # всегда (в SQLite это умолчание); здесь это сказано вслух, чтобы
+        # никто не включил проверку «для порядка». Персонаж 0 — это «никто»,
+        # и на нём держатся две вещи: вещи в мешке на земле
+        # (items.char_id = combat.LOOT_OWNER) и письма аукциона
+        # (mail.from_char = mail.SYSTEM_SENDER). С foreign_keys=ON каждое
+        # такое письмо падало бы, а вместе с ним откатывалась бы вся
+        # сделка: выкуп, ставка, возврат лота. test_auction.py это
+        # проверяет.
+        self._db.execute("PRAGMA foreign_keys=OFF")
 
     # --- общий интерфейс -------------------------------------------------
     def execute(self, sql, args=()):
@@ -65,11 +83,22 @@ class SqliteDB:
             raise IntegrityError(str(exc))
 
     def executemany(self, sql, rows):
-        return self._db.executemany(sql, rows)
+        try:
+            return self._db.executemany(sql, rows)
+        except sqlite3.IntegrityError as exc:
+            raise IntegrityError(str(exc))
 
     def insert(self, sql, args=(), returning="id"):
         """Выполнить INSERT и вернуть новый идентификатор."""
         return self.execute(sql, args).lastrowid
+
+    @contextlib.contextmanager
+    def schema_lock(self):
+        # Файл запирает себя сам на каждую запись; см. PostgresDB.
+        yield self
+
+    def add_column(self, table, column, decl):
+        self._db.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, column, decl))
 
     def replace(self, table, columns, rows, conflict):
         self._db.executemany(
@@ -128,6 +157,13 @@ class PgCursor:
         self._cur = cur
         self.lastrowid = None
 
+    @property
+    def rowcount(self):
+        # Сколько строк задел последний UPDATE/DELETE — как у курсора
+        # sqlite3. Без него update_mark падал на AttributeError, и
+        # правка метки на карте не доходила до базы.
+        return self._cur.rowcount
+
     def execute(self, sql, args=()):
         self._cur.execute(_qmarks_to_pg(sql), tuple(args))
         return self
@@ -152,16 +188,38 @@ class PostgresDB:
     def _cursor(self):
         return PgCursor(self._conn.cursor())
 
+    def _abort(self):
+        # Любая ошибка оператора в Postgres обрывает всю транзакцию, и до
+        # отката соединение отвечает на всё «current transaction is
+        # aborted». У сервера игры соединение одно на всех: один неудачный
+        # запрос оставил бы без базы каждого игрока. В SQLite неудачный
+        # оператор соседей не трогает, и здесь так же. Соединение, которого
+        # уже нет, откатывать нечем: наверх уходит исходная ошибка.
+        try:
+            self._conn.rollback()
+        except self._psycopg.Error:
+            pass
+
     def execute(self, sql, args=()):
         try:
             return self._cursor().execute(sql, args)
         except self._psycopg.errors.UniqueViolation as exc:
-            self._conn.rollback()
+            self._abort()
             raise IntegrityError(str(exc))
+        except self._psycopg.Error:
+            self._abort()
+            raise
 
     def executemany(self, sql, rows):
         cur = self._conn.cursor()
-        cur.executemany(_qmarks_to_pg(sql), [tuple(r) for r in rows])
+        try:
+            cur.executemany(_qmarks_to_pg(sql), [tuple(r) for r in rows])
+        except self._psycopg.errors.UniqueViolation as exc:
+            self._abort()
+            raise IntegrityError(str(exc))
+        except self._psycopg.Error:
+            self._abort()
+            raise
         return cur
 
     def insert(self, sql, args=(), returning="id"):
@@ -189,6 +247,56 @@ class PostgresDB:
         for statement in pg_schema(schema_sql):
             self.execute(statement)
         self.commit()
+
+    def add_column(self, table, column, decl):
+        """ALTER TABLE ADD COLUMN с типом, переведённым так же, как в
+        pg_schema. Объявление пишется на диалекте SQLite, а там INTEGER —
+        64 бита; в Postgres INTEGER — 32, и досоздаваемые колонки
+        (accounts.CHARACTER_COLUMNS) выходили бы уже остальных: деньги
+        свежей базы упирались в 2 147 483 647, а в SQLite и в перенесённой
+        sqlite_to_pg базе — нет."""
+        kind, _, rest = decl.strip().partition(" ")
+        self.execute("ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s %s"
+                     % (table, column, _pg_type(kind), rest))
+
+    # Ключ pg_advisory_lock: любое число, лишь бы одно у всех процессов.
+    SCHEMA_LOCK = int.from_bytes(b"lavaschm", "big")
+
+    @contextlib.contextmanager
+    def schema_lock(self):
+        """Схему и миграции проходит один процесс за раз на всю базу.
+
+        Сервер игры и страница регистрации открывают базу одновременно
+        (docker compose поднимает оба), и каждый делает CREATE TABLE IF NOT
+        EXISTS, ALTER TABLE ADD COLUMN и run_once. В Postgres два таких
+        прохода по новой схеме сталкиваются: второй CREATE TABLE падает на
+        pg_type_typname_nsp_index, второй ALTER — на «column already
+        exists», и процесс не поднимается. Замок сессии, а не транзакции:
+        create_schema и migrate фиксируют свои транзакции сами, а
+        отпускается он только здесь.
+        """
+        self._conn.execute("SELECT pg_advisory_lock(%s)", (self.SCHEMA_LOCK,))
+        try:
+            yield self
+        except BaseException:
+            # Наверх уходит та ошибка, из-за которой мы здесь. Если умерло
+            # само соединение, снять замок тоже не выйдет — и не нужно:
+            # замок сессии Postgres снимает сам, когда сессия кончается. А
+            # исключение из снятия заняло бы место исходного, и в журнале
+            # вместо причины осталось бы «the connection is closed».
+            try:
+                self._schema_unlock()
+            except self._psycopg.Error:
+                pass
+            raise
+        self._schema_unlock()
+
+    def _schema_unlock(self):
+        if self._conn.info.transaction_status == \
+                self._psycopg.pq.TransactionStatus.INERROR:
+            self._conn.rollback()
+        self._conn.execute("SELECT pg_advisory_unlock(%s)", (self.SCHEMA_LOCK,))
+        self._conn.commit()
 
     def create_function(self, *args, **kwargs):
         # В Postgres LOWER знает кириллицу сам, и свою функцию заводить
@@ -235,6 +343,10 @@ def pg_schema(schema_sql):
     DDL исполняется в базе в памяти, и состав таблиц читается уже оттуда:
     так перевод не зависит от того, как именно написан текст схемы —
     комментарии, переносы, CHECK и прочее разбирает сам SQLite.
+
+    REFERENCES не переносятся, и это намеренно, а не недосмотр: персонаж 0
+    — «никто» (мешок на земле, письма аукциона), и внешний ключ в Postgres
+    отверг бы каждую такую строку. См. SqliteDB.__init__.
     """
     mem = sqlite3.connect(":memory:")
     mem.row_factory = sqlite3.Row

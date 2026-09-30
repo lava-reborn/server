@@ -1,0 +1,107 @@
+{
+ "_": "Timed windows and what they open and close, read by server/events.py (its docstring has the format): windows (daily times, windows laid over another's openings, calendar dates), spawns (the creatures of a location's own file that stand only while a window is open), held_out (of a file's own, never), quests (rows on offer only while a window is open), loot (a thing creatures carry in certain places), keep_in (things that exist in certain places only). The clock is the bosses' (server/bosses.py: Moscow time, LAVA_BOSS_CLOCK for a test), and nothing here is remembered: a server restarted in a window is in it. The bosses keep the owner's 18/20 (bosses.py); the rest keeps the times the map labels and the texts give. Every row says whether it is RECOVERED or DESIGNED.",
+ "windows": {
+  "prison_wh": {
+   "daily": ["12:00", "16:00", "23:00"],
+   "minutes": 30,
+   "why": "RECOVERED. The uprising in Вади-Хальфа's prison (m8, the blocks 644-648 under the yard 176, 5985,1744): the yard's map label «Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml; the wiki's «Тюрьма Вади-Хальфы» the same), and the guard's call 62258: «каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа», its hint «\"Охранять\" заключенных нужно в течение 30 минут» (62272). The prisoners and the godfather stand while it is open. Not the bosses' 18/20: the owner's rule is for world bosses and camp chiefs, and the prison keeps the times its label gives."
+  },
+  "prison_wh_gates": {
+   "of": "prison_wh",
+   "from": -15,
+   "to": 30,
+   "why": "RECOVERED lead, DESIGNED end. The gates of the prison open a quarter of an hour before the uprising -- the label's «прибывать за 15 минут» -- and stay open while it lasts: the guards' ways into the blocks (161, 162), the station's ride to the yard (159) and the guard's hand-in of the invitation (158)."
+  },
+  "prison_wh_medics": {
+   "of": "prison_wh",
+   "from": 25,
+   "to": 30,
+   "why": "RECOVERED. The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 646), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
+  },
+  "ny": {
+   "dates": [["12-20", "01-15"]],
+   "why": "RECOVERED dates, the owner's default (plan, decision 22): the New Year «План Новогодних праздников» (62256) runs from «20 декабря» (the towns' trees) to «15 января 2016 года — Отключение новогодних квестов». Nothing of Вади-Хальфа's band stands by it yet: of the band's New Year residents, the children 423/425, the refugee 1977 and the lottery men 662/711 stand all year by the owner's default 5 (server/world.py SEASON_KEPT), Ольсен 431 stands nowhere (the default names him, but SEASON_KEPT leaves him out of 35 and 104 until his stall has goods of its own), the tree and Дед Мороз's company (Npc_Commoner000780-797) stand in no file, and the rest of the event runs through Донгола and the admin bunkers."
+  },
+  "may9": {
+   "dates": [["05-09", "08-02"]],
+   "why": "RECOVERED dates, the owner's default (plan, decision 22): from Victory Day to «Заказы принимаю до 2 августа» (46792-46800). The band's copy, 9may_*_WH (539-546, 571, 994, 995, level 6), is not stood in here: no way into it is recorded, its fighters' slots are empty, and its documents and awards have no item types found (see the handoff)."
+  },
+  "halloween": {
+   "dates": [["10-30", "12-01"]],
+   "why": "RECOVERED dates, the owner's default (plan, decision 22; the wiki's «Halloween 2015»). No creature of the band the client can draw belongs to it: the catacombs HW_cotakomb_*_WH put down types mobs.xml does not have."
+  },
+  "feb23": {
+   "dates": [["02-20", "02-26"]],
+   "why": "DESIGNED dates, the owner's default (plan, decision 22: a week around the day). Its content (48959-48961, fevral23_exit 988 at 5851,1991) is around Абри and Мероэ, none of it in Вади-Хальфа's band."
+  }
+ },
+ "spawns": [
+  {
+   "window": "prison_wh",
+   "loc": 647,
+   "types": [1113, 1114, 1115, 1116, 1117],
+   "why": "RECOVERED creatures and place, the window's time. The prisoners m8_uf_Competitor_1..5 («Заключенный», 60388; the wiki's «Северный блок» lists «Заключенный») in the northern cells (Prison_4_WH, «Тюрьма: Северные камеры»), ten of them: they break out when the uprising begins and are gone when it ends."
+  },
+  {
+   "window": "prison_wh",
+   "loc": 648,
+   "types": [1113, 1114, 1115, 1116, 1117],
+   "why": "RECOVERED creatures and place, the window's time. The prisoners of the eastern cells (Prison_5_WH, «Тюрьма: Восточные камеры»), ten of them, as the northern ones."
+  },
+  {
+   "window": "prison_wh",
+   "loc": 646,
+   "types": [2173],
+   "why": "RECOVERED creature and place, the window's time. The godfather m8_uf_godfather_1, «Беглый каторжник<Br>Хранитель общака» (60387; the wiki's page of the name: «Центральный блок»), in the centre block (Prison_3_WH). A boss: he comes once an uprising, and killed he is gone until the next one."
+  },
+  {
+   "window": "prison_wh_medics",
+   "loc": 646,
+   "types": [877, 878, 879],
+   "why": "RECOVERED people, place and time. uf_RewardMan_1..3, «Джеф<Br>Патологоанатом», «Аль-Назир<Br>Коронер», «Томпсон<Br>Судмедэксперт» (62318-62320; the wiki: «Центральный блок» тюрьмы), who take the armbands, for the last five minutes of the uprising."
+  }
+ ],
+ "held_out": [
+  {
+   "loc": 644,
+   "types": [2176],
+   "why": "DESIGNED. zapadlist_dvor, «Макисе Курису» (60386; the wiki: «злобный охранник, который наносит неприятные удары при помощи костыля», in the blocks a guard's way leads into), stands at the entrance of Prison_1_WH (titled «Северный блок»; west of the centre by its one opening, the wiki's «Западный блок», where the western gate leads). data/mob_types.json has it at level 20 by the highest place it stands in (the Абу-Хамед prison's), and nothing gives its level in Вади-Хальфа's: a level-20 hostile at the foot of the ladder of an m8 prison would kill whoever the gate lets in. Kept out until its level is known."
+  },
+  {
+   "loc": 645,
+   "types": [2176],
+   "why": "DESIGNED. The same guard at the entrance of Prison_2_WH (titled «Восточный блок»; south of the centre by its one opening, the wiki's «Южный блок», where the southern gate leads), for the same reason."
+  }
+ ],
+ "quests": [
+  {
+   "window": "prison_wh_gates",
+   "types": [159, 161, 162],
+   "gate": "both",
+   "why": "RECOVERED times. The ride to the prison, «Поехали!» (62262/62263: «В 12:00, 16:00 или 23:00 отправиться в тюрьму»), and the guards' gates «Тюрьма: западные/южные ворота» (62275/62274) lead there only for the uprising, from a quarter of an hour before it."
+  },
+  {
+   "window": "prison_wh_gates",
+   "types": [158],
+   "gate": "hand_in",
+   "why": "RECOVERED. «Охранник санатория особого режима» is taken at the station any time and handed in at the prison when the guard needs hands: «Доброволец? ... Сейчас этот зоопарк полезет наружу» (62259)."
+  }
+ ],
+ "loot": [
+  {
+   "locs": [646, 647, 648],
+   "mobs": [1113, 1114, 1115, 1116, 1117, 2173],
+   "obj": 2476,
+   "num": 1,
+   "chance": 1.0,
+   "why": "RECOVERED thing, DESIGNED chance. Red_Bandage, «Красная повязка ВХ» — «Красная повязка, сорванная с ваших соперников» (7323/7324): the proof the medics pay for («принесешь медикам доказательства отстрела урок», 62272). One on every prisoner and on the godfather, in the blocks only."
+  }
+ ],
+ "keep_in": [
+  {
+   "types": [2476],
+   "locs": [644, 645, 646, 647, 648],
+   "why": "RECOVERED rule. Томас, who leads out of the prison, «При выходе отбирает все повязки» (the wiki's «Томас»): the armbands stay in the blocks, whichever way the player leaves -- Томас's «Выход», a death sent home, a login elsewhere. DESIGNED: and no other way either -- the frame of a thing kept in carries the quest flag and no exchange (server/events.py kept, items.static_info), so no letter, lot, barter or stall takes one out, and a death does not drop it."
+  }
+ ]
+}

@@ -8,15 +8,19 @@ and every step is what the client does with what it is sent:
   * characters.death outlives the socket, and persInfo;death=1 is how the
     next login is told -- PersGenerator.persInfo takes it as
     Boolean(param.death) and Master.lenter opens the window from it;
-  * the three buttons of RegenerationInterface differ: free is the one the
-    window's fifteen-second timer presses by itself, so the wait is what it
-    costs and the body comes back at a quarter; five gold and five hundred
-    afro are the same sum at the gold_to_afro_rate the server sends, and
-    both are instant and whole;
+  * the buttons of RegenerationInterface differ: "Частичное
+    восстановление" is free, taken the moment it is pressed -- the window's
+    fifteen-second timer only presses it for whoever does not -- and brings
+    the body back at the 10% of health and stamina the window prints; five
+    hundredths of an ounce ("Полное восстановление") and five hundred
+    afro (a button the window does not place) both bring it back whole;
   * the body always travels home (characters.home_loc, on_conv;op=0), or to
     the starting cell when nowhere is registered -- never to where it fell;
-  * one backpack item the wiki marks with drop_on_death is left lying in an
-    ordinary loot bag on the cell of the death;
+  * what falls off the body (combat.death_losses: a thing in the backpack
+    with 30 per cent, a stack a third of itself -- the chances raised to
+    100 per cent here, so that what falls is known) lies in an ordinary
+    loot bag on the cell of the death, and what is in the bank stays there.
+    The rest of those rules is test_death_drops';
   * a corpse acts on nothing: its shots, walks and chWorld are refused,
     while the pipelined requests are still answered so no request window on
     the client's side is left shut.
@@ -83,26 +87,35 @@ def check(label, got, want):
 # "Шанс выпадения при смерти" reached data/items_wiki.json as a flag, not a
 # percentage, and it is a wiki extra: items._overlay keeps it off the wire,
 # so combat reads it from the raw table.
+#
+# The column decides nothing any more: every thing may fall that is not gold,
+# premium, a quest's own or the emeralds (combat.drops_on_death). The bottle
+# it marks is still the thing handed out here, and the starter kit may fall
+# as well -- the pistol rides in the hand, which keeps what it holds, and
+# the rounds lose a third.
 DROPPING = [t for t in sorted(items.catalogue())
-            if combat.drops_on_death(t) and items.params_of(t) is not None]
+            if (items.wiki().get(t) or {}).get("drop_on_death")
+            and combat.drops_on_death(t) and items.params_of(t) is not None]
 check("the wiki marks some types as falling off a corpse", len(DROPPING) >= 50, True)
-check("and the starter kit is not among them",
-      [combat.drops_on_death(t) for t, _n in inventory.STARTER_KIT], [False, False])
+check("and the starter kit may fall too",
+      [combat.drops_on_death(t) for t, _n in inventory.STARTER_KIT], [True, True])
 DROP_TYPE = DROPPING[0]
+check("the first of the wiki's is the bottle, a stack of one",
+      (items.catalogue()[DROP_TYPE][1], items.root_of(DROP_TYPE) in items.HEAPABLE_ROOTS),
+      ("bottle", True))
 check("with no home registered, home is the starting cell, not the last one",
       travel.home({"home_loc": None, "home_gx": None, "home_gy": None},
                   (102, 5970, 1730)), (102, 5970, 1730))
 check("free, gold and afro are the window's own numbering",
       (combat.RES_FREE, combat.RES_GOLD, combat.RES_AFRO), (0, 1, 2))
-check("and five gold is five hundred afro at the rate the server sends",
-      combat.RESURRECT_GOLD * 100, combat.RESURRECT_AFRO)
+check("the gold button costs the window's own 5, which the purse holds in"
+      " hundredths of an ounce, and the afro button its 500",
+      (combat.RESURRECT_GOLD, combat.RESURRECT_AFRO), (5, 500))
 
 # --- the server ---------------------------------------------------------------
-# The free resurrection's wait is cut from the window's fifteen seconds to
-# four, so that the refusal before it and the acceptance after it both fit in
-# a test; the exit timer is shortened for the /home check; the dog is given a
-# long respawn so nothing walks in on the corpse.
-WAIT = 4.0
+# The exit timer is shortened for the /home check; the dog is given a long
+# respawn so nothing walks in on the corpse. The free resurrection has no
+# wait of its own to shorten: the button is taken when it is pressed.
 LEAVE = 3.0
 # The start cell is a server default and has moved since; these
 # assertions name the market by number, so the suite says which
@@ -112,7 +125,10 @@ LEAVE = 3.0
 # for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
            LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT=str(int(LEAVE)),
-           LAVA_RESPAWN="120", LAVA_RESURRECT_WAIT=str(WAIT), LAVA_SEED="11")
+           LAVA_RESPAWN="120", LAVA_SEED="11",
+           # Every thing that may fall does: the bottle whole, the rounds
+           # a third of themselves.
+           LAVA_WEAR_DROP="100", LAVA_BAG_DROP="100")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 # The log outgrows a pipe nobody drains: at 64 KB the write blocks and the
@@ -252,12 +268,43 @@ try:
     MARKET = named(got, "lcall")[0]["id"]
     arrival, pos = enter(v)
     npc = {p["name"]: p["id"] for n, p in arrival if n.startswith("userInfo")}
-    v.send("on_conv;mob=%d;op=0;" % npc[2424])
+    # "Прописка" is offered by a commoner whose userInfo says can_set_home
+    # (Attendance.SET_HOME). The safe on this market (2424) is a bank and
+    # offers none, so the home is registered with the technogeek.
+    info = {p["name"]: p for n, p in arrival if n.startswith("userInfo")}
+    check("the market's bank offers no Прописка, the technogeek does",
+          (info[2424]["can_set_home"], info[652]["can_set_home"]), (0, 1))
+    v.send("on_conv;mob=%d;op=0;" % npc[652])
     check("home registered on the market", v.frames(), [("cmdAck", {"res": 0})])
     VICTIM_ID = store().db.execute(
-        "SELECT id FROM characters WHERE name = 'victim'").fetchone()[0]
+        "SELECT id FROM characters WHERE name = 'victim'").fetchone()["id"]
     check("and written down with its cell",
           (row_of(VICTIM_ID)["home_loc"], row_of(VICTIM_ID)["death"]), (MARKET, 0))
+
+    # Two more things that could fall off a corpse go into the bank first,
+    # the way the wiki tells players to keep what they cannot lose: only the
+    # backpack is what a body drops from.
+    chat(v, "/give %d" % DROP_TYPE)
+    chat(v, "/give %d" % DROP_TYPE)
+    got = v.frames()
+    stored = [str(p["obj"]) for p in named(got, "ss_obj_status") if p["status"] == 1]
+    check("two of them handed out", len(stored), 2)
+    market_loc = world.location(MARKET)
+    banker = [p for n, p in arrival if n == "lch" and p.get("newUser") == npc[2424]]
+    beside = progression.hex_neighbours(banker[0]["pos"], market_loc.width,
+                                        market_loc.height)[0]
+    v.send("moveTo;path=|%d|%d|;" % (pos, beside))
+    v.frames()
+    v.send("ss_create;target=%d;s_type=3;" % npc[2424])
+    check("the market's bank opens",
+          [p["res"] for p in named(v.frames(), "cmdAck")], [0])
+    for oid in stored:
+        v.send("ss_upd;obj=x%s;s_status=1;" % oid)
+    check("both go into storage",
+          [p["res"] for p in named(v.frames(), "cmdAck")], [0, 0])
+    v.send("ss_upd;obj=x0;s_status=0;")
+    check("and the window closes in silence", v.frames(0.3), [])
+    STORED = {inventory.parse_oid(o)[0] for o in stored}
 
     chat(v, "/give %d" % DROP_TYPE)
     got = v.frames()
@@ -276,10 +323,13 @@ try:
     # will finish it.
     st = store()
     st.save_character_state(VICTIM_ID, hp=1, sp=0)
-    bag_before = {r["uniq"] for r in st.items_of(VICTIM_ID)
-                  if r["slot"] == inventory.BAG and combat.drops_on_death(r["type_id"])}
+    in_bag = {r["type_id"]: r for r in st.items_of(VICTIM_ID)
+              if r["slot"] == inventory.BAG and combat.drops_on_death(r["type_id"])}
     st.close()
-    check("exactly one thing in the bag can fall", len(bag_before), 1)
+    check("two things in the bag can fall: the bottle and the starter rounds",
+          sorted(in_bag), sorted((DROP_TYPE, inventory.STARTER_AMMO)))
+    bottle, rounds = in_bag[DROP_TYPE], in_bag[inventory.STARTER_AMMO]
+    bag_before = {bottle["uniq"]}
 
     # --- a witness in the room, who first tries to walk out of a fight -------
     w = Client(connect())
@@ -288,11 +338,12 @@ try:
     chat(w, "/goto %d" % DUMP)
     w.until(lambda f: f[0] == "lcall", 2)
     _arrival, wpos = enter(w)
-    # /home goes through the same gate as chWorld, and that gate asks who is
-    # after you rather than whether you swung. The dog is asleep at the far
-    # end, so a swing at an empty hex answers to nobody and the way home stays
-    # open. The other side of the rule -- hunted, and refused in a line of
-    # chat -- is held by test_combat, where the dog is actually awake.
+    # /home goes through the same gate as chWorld, and that gate asks whether
+    # a hit has started the exit timer rather than whether you swung. The dog
+    # is asleep at the far end, so a swing at an empty hex hits nobody and the
+    # way home stays open. The other side of the rule -- the timer running,
+    # and /home refused in a line of chat -- is held by test_aggro_hold,
+    # where a dog is actually awake and punched.
     w.send("ss_use;type=16;obj=x0;target=%s;" % hexcell(wpos + 1))
     w.frames(0.5)
     chat(w, "/home")
@@ -361,21 +412,27 @@ try:
           (row_of(VICTIM_ID)["death"], row_of(VICTIM_ID)["hp"]), (1, 0))
     st = store()
     left = {r["uniq"] for r in st.items_of(VICTIM_ID)}
-    on_ground = {r["uniq"] for r in st.db.execute(
-        "SELECT uniq FROM items WHERE char_id = 0").fetchall()}
+    banked = {r["uniq"] for r in st.items_of(VICTIM_ID)
+              if r["slot"] == inventory.BANK}
+    ground_rows = [dict(r) for r in st.db.execute(
+        "SELECT * FROM items WHERE char_id = 0").fetchall()]
+    on_ground = {r["uniq"] for r in ground_rows}
+    rounds_now = st.item(rounds["uniq"])
     st.close()
     check("the bottle is on the ground and no longer the victim's",
           (bag_before & left, bag_before <= on_ground), (set(), True))
-    check("the client is told it left the bag",
-          [(str(p["obj"]), p["status"]) for p in named(got, "ss_obj_status")
-           if p["status"] == 0] != [], True)
-
-    # --- free is not free: it costs the window's fifteen seconds -------------
-    v.send("resurrect;res_type=0;")
-    check("free too soon is refused, and no lcall follows",
-          only(v.frames(0.5), "cmdAck", "lcall"),
-          [("cmdAck", {"res": inventory.RES_NOT_READY})])
-    check("the character is still dead in the table", row_of(VICTIM_ID)["death"], 1)
+    check("the rounds lose a third: thirteen stay the victim's, seven lie as a"
+          " row of their own",
+          ((rounds_now["char_id"], rounds_now["count"]),
+           [(r["type_id"], r["count"]) for r in ground_rows
+            if r["uniq"] not in bag_before]),
+          ((VICTIM_ID, 13), [(inventory.STARTER_AMMO, 7)]))
+    check("what was in the bank stays there, the victim's",
+          (banked, STORED & on_ground), (STORED, set()))
+    check("the client is told the bottle left the bag, and the rounds' new size",
+          ([str(p["obj"]) for p in named(got, "ss_obj_status") if p["status"] == 0],
+           [(str(p["obj"]), p["size"]) for p in named(got, "ss_di_heap")]),
+          ([inventory.oid_of(bottle)], [(inventory.oid_of(rounds), 13)]))
 
     # --- a corpse acts on nothing, and is answered all the same --------------
     v.send("ss_use;type=16;obj=x0;target=%s;" % hexcell(step + 1))
@@ -393,6 +450,12 @@ try:
     check("dead: even the chat is refused, and its ack comes anyway",
           only(v.frames(0.4), "cmdAck", "lcall", "userMsg"),
           [("cmdAck", {"res": inventory.RES_REFUSED})])
+    # Closing a window registers no handler anywhere (Trade, Bank, Loot,
+    # Training... all send s_status=0 bare), and being dead changes nothing
+    # about that: a refusal here would be taken by the next command's.
+    v.send("ss_upd;obj=x0;s_status=0;")
+    check("dead: closing a window is answered with nothing at all",
+          only(v.frames(0.4), "cmdAck"), [])
     v.send("ss_get;target=0;slot=8;")
     check("but a request with a window of its own is still answered",
           [n for n, _ in v.frames(0.4)], ["ss_ack"])
@@ -435,11 +498,14 @@ try:
           only(v.frames(0.4), "cmdAck"),
           [("cmdAck", {"res": inventory.RES_REFUSED})])
 
-    # --- free, once the window's timer has run out ---------------------------
-    time.sleep(WAIT)
+    # --- "Частичное восстановление", pressed while the countdown still runs ----
+    # The window opens with the free button enabled and a fifteen-second
+    # countdown that presses it for whoever does not. A player who presses it
+    # at once used to get cmdAck;res=17 -- which ErrorReport, listening to
+    # every cmdAck, puts on screen as "Объект не готов" -- and nothing else.
     v.send("resurrect;res_type=0;")
     got = v.until(lambda f: f[0] == "lcall", 2)
-    check("after the wait it is taken, and the body is called home",
+    check("the free button is taken at once, and the body is called home",
           [(n, p.get("res", p.get("id"))) for n, p in got
            if n in ("cmdAck", "lcall")],
           [("cmdAck", 0), ("lcall", MARKET)])
@@ -454,9 +520,12 @@ try:
     v.send("getInfo;lvl=0;id=0;type=0;")
     vit = named(v.until(lambda f: f[0] == "usrUp"), "usrUp")[0]
     FULL_HP, FULL_SP = vit["hmax"], vit["smax"]
-    check("a free resurrection is the penalised one: a quarter, no stamina",
+    # The window's own words under that button: "10% здоровья, 10%
+    # выносливости". The figure is written out here rather than read from
+    # combat, so the test holds the server to the window and not to itself.
+    check("and it wakes up with what the window promises: 10% of each",
           (vit["hcur"], vit["scur"]),
-          (max(1, int(FULL_HP * combat.FREE_HP_SHARE)), 0))
+          (max(1, FULL_HP * 10 // 100), FULL_SP * 10 // 100))
 
     # And the neighbours can see the resurrected body standing there.
     chat(w, "/goto %d" % MARKET)
@@ -469,7 +538,7 @@ try:
     check("and is seen by them in turn",
           [p["newUser"] for n, p in seen if n == "lch" and "newUser" in p] != [], True)
 
-    # --- five gold: the price the window prints ------------------------------
+    # --- five hundredths of an ounce: the price the window checks ------------
     chat(v, "/money 0 %d" % combat.RESURRECT_GOLD)
     v.frames(0.5)
     check("the purse holds exactly what the gold button checks for",
@@ -486,14 +555,14 @@ try:
     check("gold: acknowledged, the purse pushed, and home at once",
           [n for n, _ in got if n in ("cmdAck", "userInfo_Player", "lcall")],
           ["cmdAck", "userInfo_Player", "lcall"])
-    check("the five gold are gone", row_of(VICTIM_ID)["gold"], 0)
+    check("the five hundredths are gone", row_of(VICTIM_ID)["gold"], 0)
     enter(v)
     v.send("getInfo;lvl=0;id=0;type=0;")
     vit = named(v.until(lambda f: f[0] == "usrUp"), "usrUp")[0]
     check("and a paid body is whole, hit points and stamina",
           (vit["hcur"], vit["scur"]), (FULL_HP, FULL_SP))
 
-    # --- five hundred afro: the same sum, the other purse --------------------
+    # --- five hundred afro: the other purse ----------------------------------
     afro_before = row_of(VICTIM_ID)["afro"]
     check("there is enough afro for the other button",
           afro_before >= combat.RESURRECT_AFRO, True)
@@ -536,10 +605,9 @@ try:
           only(v.frames(0.5), "cmdAck", "lcall"),
           [("cmdAck", {"res": inventory.RES_NO_MONEY})])
     check("and the body is still lying there", row_of(VICTIM_ID)["death"], 1)
-    time.sleep(WAIT)
     v.send("resurrect;res_type=0;")
     got = v.until(lambda f: f[0] == "lcall", 2)
-    check("the free one always works in the end",
+    check("the free one always works, penniless or not",
           [(n, p.get("res", p.get("id"))) for n, p in got
            if n in ("cmdAck", "lcall")], [("cmdAck", 0), ("lcall", MARKET)])
     enter(v)
@@ -560,7 +628,6 @@ try:
     check("the body is where it fell, in the dump",
           named(got, "lcall")[0]["id"], DUMP)
     enter(v)
-    time.sleep(WAIT)
     v.send("resurrect;res_type=0;")
     got = v.until(lambda f: f[0] == "lcall", 2)
     check("with no home, it wakes up at the start and not in the dump",

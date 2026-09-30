@@ -13,20 +13,34 @@ and stack sizes. action_map is a bitmask of the actions the item offers at
 all; without the right bits a weapon cannot be loaded or fired.
 
 Part of the numbers did survive, on the community wiki, whose tables were
-copied off the game's own tooltips: data/items_wiki.json holds them for 1 164
+copied off the game's own tooltips: data/items_wiki.json holds them for 1 255
 types in the ss_si_* vocabulary, data/wiki_links.json ties wiki pages to type
 ids, and data/trader_stock_wiki.json lists what 87 traders sold. Those are
 laid over the designed frames here, field by field, never changing the shape
 of a frame: a wiki table decides what a rifle does, the designed frame decides
 which keys travel. The same files give the Russian names and descriptions
-names.py serves.
+names.py serves. A few medicines no article describes take numbers of our
+own, from data/heal_manual.json, laid over the same way, and so do the
+pieces of the clothing sets of data/sets.json (sets.py). A cold arm whose
+article leaves a hole a stall cannot sell around -- no price, a strike for
+no action points -- has it filled from data/coldarm_manual.json. And the
+things the Nubian mine's marauders drop, whose articles the extractor could
+not read or the linker could not tie, take their numbers from the "items" of
+data/loot_manual.json, the file whose rows make them drop -- and so does
+the Nubian valley boss's ingot of 5 ounces of gold.
 """
 import json
 import logging
 import re
 import os
 
+import craft
 import npcs
+import orig_texts
+import production
+import progression
+import quests
+import sets
 import world
 
 log = logging.getLogger("lava")
@@ -35,6 +49,9 @@ DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 WIKI_ITEMS_PATH = os.path.join(DATA, "items_wiki.json")
 WIKI_LINKS_PATH = os.path.join(DATA, "wiki_links.json")
 WIKI_STOCK_PATH = os.path.join(DATA, "trader_stock_wiki.json")
+HEAL_MANUAL_PATH = os.path.join(DATA, "heal_manual.json")
+COLDARM_MANUAL_PATH = os.path.join(DATA, "coldarm_manual.json")
+LOOT_MANUAL_PATH = os.path.join(DATA, "loot_manual.json")
 
 # A wiki page names a type through a link with a confidence; below this the
 # link is a candidate the linker could not settle (two firearm lines fitting
@@ -74,21 +91,51 @@ AMMO_9MM = [6092, 6104, 6116]        # Ammo_9mmNato_KS / _ST / _OT
 AMMO_762x39 = [6098, 6110, 6122]     # Ammo_762x39_*
 AMMO_762x51 = [6095, 6107, 6119]     # Ammo_762x51_*
 AMMO_12MM = [6096, 6108, 6120]       # Ammo_12mm_*
+# The other calibres the recovered pistols chamber. SP-10 has no tracer round.
+AMMO_45 = [6093, 6105, 6117]         # Ammo_45_*
+AMMO_762x25 = [6094, 6106, 6118]     # Ammo_762x25_*
+AMMO_SP10 = [6103, 6115]             # Ammo_SP_10_12_KS / _ST
 
-# Designed stock, by the trader's own type id. The numbered series in
-# objects.xml line up with the stalls: five tiers each, exactly what a
-# tier-one shop would hold, followed by the rounds those guns take. The
-# weapons stay first: the client refers to a purchase by its index in this
-# list, and a test relies on the head of the pistol stall being a firearm.
-# stock_for() is what goes on the wire: this table, extended with what the
-# wiki says each of these traders sold, and the wiki alone for the rest.
+# The pistols the wiki named, by the line each one sits on (the pairing is
+# data/firearm_lines_manual.json), cheapest first. Ordinary copies only: the
+# _pm and _gold ones were never sold for afro. The five nameless pistols_1..5
+# the stall used to hold stay where they are still needed -- the starter kit
+# and a bandit's weapon (inventory.py, mobs.py) -- but a stall that can name
+# its wares should.
+WIKI_PISTOLS = [
+    25666,   # Самопальный револьвер, Стрельба 2, 100
+    25566,   # Наган 1895,            Стрельба 1, 400
+    25576,   # С. и В. специальный,   Стрельба 1, 400
+    25586,   # Браунинг,              Стрельба 2, 800
+    25596,   # Беретта 92,            Стрельба 2, 800
+    25606,   # CZ 75,                 Стрельба 3, 1600
+    25616,   # Colt 1911,             Стрельба 3, 1600
+    25626,   # Walther P99,           Стрельба 4, 2800
+    25636,   # Glock 17,              Стрельба 4, 2800
+    25646,   # СПС,                   Стрельба 5, 4300
+    25656,   # Desert Eagle,          Стрельба 6, 6400
+]
+
+# Designed stock, by the trader's own type id. The pistol stall holds the
+# wiki's pistols, named; the other three gun stalls of the black market only
+# the rounds their guns take, and their guns are the ones the wiki says they
+# sold (data/trader_stock_wiki.json: Jackhammer, SPAS-12, Li-Enfield, MP-40
+# and the rest, tied to their lines by data/firearm_lines_manual.json), which
+# stock_table() puts first -- no longer the nameless placeholder series of
+# objects.xml (shotgun_1..5, rifle_1..5, assrifle_1..5, the last an assault
+# rifle in the stall of sub-machine guns). The weapons stay first: the client
+# refers to a purchase by its index in this list, and a test relies on the
+# head of the pistol stall being a firearm. stock_for() is what goes on the
+# wire: data/npcs.json where the owner decided, else this table extended
+# with what the wiki says each of these traders sold, and the wiki alone
+# for the rest. Ваккас (1204) and Хамис (1205) are data/npcs.json's.
 STOCK = {
-    1200: [4380, 4381, 4382, 4383, 4384] + AMMO_9MM,      # wh_Pistols
-    1202: [4385, 4386, 4387, 4388, 4389] + AMMO_762x51,   # wh_Rifles
-    1201: [4392, 4393, 4394, 4395, 4396] + AMMO_12MM,     # wh_Shotguns
-    1203: [4397, 4398, 4399, 4400, 4401] + AMMO_762x39,   # wh_SubMachineGuns
-    1204: [6848, 6853, 6858, 6863, 6868],                 # wh_wear_trd, shirts
-    1205: [6847, 6849, 6850, 6852, 6854],                 # wh_set_trd, a raider set
+    1200: WIKI_PISTOLS + AMMO_9MM + AMMO_45 + AMMO_762x25 + AMMO_SP10,  # wh_Pistols
+    1202: AMMO_762x51,                                    # wh_Rifles
+    1201: AMMO_12MM,                                      # wh_Shotguns
+    # The sub-machine guns chamber 9 mm (their articles' «Тип патронов»),
+    # beside the wiki's own 0.45 and 7.62x25 lines of this stall.
+    1203: AMMO_9MM,                                       # wh_SubMachineGuns
 }
 
 # Which weapon class a series belongs to, and the ammunition it accepts.
@@ -122,11 +169,34 @@ AMMO_FOR = {
     MACHINEGUN: AMMO_762x51,
 }
 
+# Берт Гаммер's training guns, one of each class his lessons teach (the
+# Tir's lessons lend them, quests.json 352-357): noob_Pistol, _Shotgun, _SMG,
+# _AssaultGun, _MachineGun, _Rifle. They chamber the Tir's own rounds,
+# noob_ammo, and nothing else, as the original says of both: «Предназначен
+# для тренировочной стрельбы особыми пулями кал. 5,6 мм» (texts.xml 1815 to
+# 1823, 2013) and «Могут быть использованы только в специальном,
+# тренировочном оружии» (1095). The class and the rounds are RECOVERED; the
+# numbers are the class's designed shape (CLASS_SHAPE), as for any gun the
+# wiki has no table for.
+TRAINING_GUNS = {3728: PISTOL, 3729: SHOTGUN, 3730: SMG, 3731: ASSAULT,
+                 3732: MACHINEGUN, 3733: RIFLE}
+TRAINING_ROUNDS = 3727
+
 # Rounds per trade pack, and the most one stack holds. The client divides the
 # pack price by the first to show a per-round price, and caps the "how many"
 # dialogue at the second; a purchase asks for rounds, never packs.
+#
+# The owner's rule (2026-09-25): up to 5000 rounds in one purchase. The
+# window's ceiling IS the stack: a stall's rounds are drawn as a stack of
+# max_count (TradeItem.initParams) and "Сколько штук купить?" runs from 1
+# to that size (TradeInterface.createExchangePan), and the same max_count is
+# what a stack in the bag holds -- the client joins two up to it
+# (StuffManager.joinHeap) and inventory.ss_heap_c refuses past it. So a
+# purchase of 5000 is one stack of 5000, and no other number could let the
+# window offer it; it was 200. Rounds only: the client asks "how many" for
+# nothing else (Trade.buy sends 1), and junk keeps its stack of 50.
 AMMO_PACK = 20
-AMMO_STACK = 200
+AMMO_STACK = 5000
 
 # Which slot classes a hand takes: PersEquip.checkUse and the drop targets in
 # EquipInterface only ever put these three in primary/secondary. A heal item
@@ -176,18 +246,84 @@ def tier(name):
     return int(m.group(2)) if m else 1
 
 
+def slot_of(name):
+    """The slot a piece of clothing goes in, read off its internal name.
+
+    A numbered series ("helm_12") says it in its stem. Every other name says
+    it in its first word: the 15 169 pieces of the LVL system are
+    "<helm|shirt|armor|pants|boots>_<series>_M_LVL_<level>_...", the belts
+    "belt_...". Reading the whole name instead found no slot in any of them,
+    and the default put every helmet, boot and belt into the shirt's place --
+    where inventory.fits then kept them, so no set could ever be worn whole.
+    """
+    m = _SERIES.match(name)
+    prefix = m.group(1) if m else name.split("_", 1)[0].lower()
+    return SLOT_BY_PREFIX.get(prefix, SLOT_CAMO)
+
+
 def stock_for(trader_type):
     """What this trader sells, as the list of type ids the client indexes.
 
     The owner's own list wins where there is one (data/npcs.json, written by
     tools/npc_editor.py): the wiki records what a dead server sold, which is
     a starting point and not a decision. An empty list there is a decision as
-    much as a full one, so only a missing entry falls through.
+    much as a full one, so only a missing entry falls through -- to the
+    wiki's list and what the weapon craft adds to it (craft.stock_extra).
     """
     chosen = npcs.stock(trader_type)
-    if chosen is not None:
-        return chosen
-    return stock_table().get(trader_type, [])
+    if chosen is None:
+        chosen = stock_table().get(trader_type, [])
+        chosen = chosen + [t for t in craft.stock_extra(trader_type) if t not in chosen]
+    return [t for t in chosen if not premium(t)]
+
+
+def premium(type_id):
+    """Whether the type is a premium item, the "(P)" of its name.
+
+    The client will not put one in a hand or on the body without a residence
+    permit (EquipInterface: "У вас должен быть вид на жительство"), and
+    nothing on this server grants one. So a premium item is money spent on
+    something that can only sit in the bag, and the owner took them out of
+    the game: no stall sells one and no mob drops one. Filtered here and in
+    combat.drop_loot rather than in each list, so a wiki fallback or a
+    hand-written list cannot bring one back by accident.
+
+    The frame's premium flag alone is not enough: it is set only where the
+    wiki or a data file said so, and most premium types have neither. The
+    client's own internal name says it for all of them -- _P_modNN on the
+    clothing series, _pm on the guns, a trailing _P on the medicines, 6 848
+    types -- and the original's "(P)" catches the rest.
+    """
+    global _ORIG_NAMES
+    cached = _PREMIUM.get(type_id)
+    if cached is None:
+        if _ORIG_NAMES is None:
+            _ORIG_NAMES = orig_texts.item_names()
+        entry = catalogue().get(type_id)
+        p = params_of(type_id)
+        cached = _PREMIUM[type_id] = bool(
+            (p and p.get("premium"))
+            or (entry and _PREMIUM_NAME.search(entry[1]))
+            or "(P)" in (_ORIG_NAMES.get(type_id) or ""))
+    return cached
+
+
+_PREMIUM = {}
+_ORIG_NAMES = None
+_PREMIUM_NAME = re.compile(r"(?:^|_)(?:P|pm)(?:_|$)")
+
+
+def no_combat(type_id):
+    """Whether a medicine is for peace only: the Med_Pacific_ series, 24
+    types, each described "<b>Нельзя использовать в бою.</b>" in the
+    original's own words -- and exactly those; the Med_Battle_ ones say
+    nothing of the kind. Their heal_cost is 0, as a thing never spent in a
+    fight needs none, so nothing but this refusal keeps them out of one: the
+    client's own quick heal picks the strongest medicine in the bag with no
+    look at the war state (PersEquip.useHealItem), 1035-1380 health for
+    0 AP among them."""
+    entry = catalogue().get(type_id)
+    return bool(entry and entry[0] == HEAL and entry[1].startswith("Med_Pacific_"))
 
 
 # --- the wiki -------------------------------------------------------------
@@ -209,6 +345,10 @@ def _load_wiki(path, *keys):
 _WIKI = None
 _LINKS = None
 _STOCK = None
+_HEAL_MANUAL = None
+_COLDARM_MANUAL = None
+_LOOT_MANUAL = None
+_ORIG_DESCRIBED = None
 
 
 def wiki():
@@ -219,6 +359,83 @@ def wiki():
     return _WIKI
 
 
+def heal_manual():
+    """type_id -> designed ss_si_heal fields (data/heal_manual.json).
+
+    For the medicine a trader sells that no wiki article describes: the
+    (P) kits between "Мини" and "Стандарт" and the 20-dose injector packs.
+    The numbers are ours, and the file says which and how they were chosen.
+    They travel the way a wiki record does, through _overlay, so the frame
+    keeps its shape; a wiki table for the same type, should one turn up,
+    wins. Loaded like the wiki tables: unreadable means no start.
+    """
+    global _HEAL_MANUAL
+    if _HEAL_MANUAL is None:
+        _HEAL_MANUAL = {int(k): v for k, v in _load_wiki(HEAL_MANUAL_PATH, "items").items()}
+    return _HEAL_MANUAL
+
+
+def coldarm_manual():
+    """type_id -> designed ss_si_coldarm fields (data/coldarm_manual.json).
+
+    Unlike the medicines of heal_manual, these types have a wiki table; it
+    just leaves out what a stall needs -- the level-0 Булыжник has no price
+    and a strike for 0 action points, which is a free swing without end. So
+    the file fills holes (_holes) instead of standing in for a table, and
+    says in each record which numbers are ours. Loaded like the wiki tables.
+    """
+    global _COLDARM_MANUAL
+    if _COLDARM_MANUAL is None:
+        _COLDARM_MANUAL = {int(k): v for k, v in
+                           _load_wiki(COLDARM_MANUAL_PATH, "items").items()}
+    return _COLDARM_MANUAL
+
+
+def loot_manual():
+    """type_id -> the numbers of a hand-dropped thing (the "items" of
+    data/loot_manual.json): the Nubian mine's gold sand and emeralds, and
+    the valley boss's ingot of 5 ounces of gold.
+
+    Recovered, unlike heal_manual's: each record is its wiki article's own
+    figures, which data/items_wiki.json lacks because the article writes
+    them as sections the extractor does not read (Золотой песок) or carries
+    an icon named after no type (Небольшие изумруды, 5 унций золота) -- but
+    for the ingot's afro price, which the file designs out of the article's
+    gold one and says why. Laid over the frame
+    like a heal_manual record, and like one only where the wiki has no table
+    of its own. drop_on_death rides along for combat.drops_on_death and,
+    being no key of any frame, stays off the wire. Loaded like the wiki
+    tables: unreadable means no start.
+    """
+    global _LOOT_MANUAL
+    if _LOOT_MANUAL is None:
+        _LOOT_MANUAL = {int(k): v for k, v in _load_wiki(LOOT_MANUAL_PATH, "items").items()}
+    return _LOOT_MANUAL
+
+
+def _holes(rec, fix):
+    """The part of a hand-made record that fills what a wiki table leaves out.
+
+    A key the table gives a positive value for stays the table's, and a
+    price stays out altogether when the table names one in either currency:
+    an afro price laid next to the wiki's gold one would be an item priced
+    twice, which the client buys for gold and the server buys back for afro.
+    """
+    rec = rec or {}
+    has = lambda k: _number(rec.get(k)) and rec[k] > 0
+    priced = has("cost") or has("g_cost")
+    return {k: v for k, v in fix.items()
+            if not has(k) and not (priced and k in ("cost", "g_cost"))}
+
+
+def _orig_described():
+    """Type ids the original string table has a description for."""
+    global _ORIG_DESCRIBED
+    if _ORIG_DESCRIBED is None:
+        _ORIG_DESCRIBED = frozenset(orig_texts.item_descs())
+    return _ORIG_DESCRIBED
+
+
 def links():
     """(page title -> type ids of its standard (A) variants,
     page title -> type ids of every variant, type_id -> page titles), from
@@ -226,7 +443,7 @@ def links():
     global _LINKS
     if _LINKS is None:
         pages, by_type = _load_wiki(WIKI_LINKS_PATH, "pages", "by_type")
-        standard, every = {}, {}
+        standard, every, columns = {}, {}, {}
         for title, page in pages.items():
             a_ids, all_ids = [], []
             for link in page.get("links", []):
@@ -234,13 +451,45 @@ def links():
                     continue
                 a_ids += (link.get("variants") or {}).get("A", [])
                 all_ids += link.get("type_ids", [])
+                # Ammunition is linked calibre-wide, one id per quality
+                # column, and a stall names the column it sells.
+                for col, ids in (link.get("by_column") or {}).items():
+                    columns.setdefault(title, {})[col] = list(ids)
             if all_ids:
                 # A page with no (A) column at all -- a gold-only item, say --
                 # stands for whatever it lists.
                 standard[title] = _unique(a_ids or all_ids)
                 every[title] = _unique(all_ids)
-        _LINKS = (standard, every, {int(k): v for k, v in by_type.items()})
+        _LINKS = (standard, every, {int(k): v for k, v in by_type.items()},
+                  columns)
     return _LINKS
+
+
+# A stall lists a round by its page and the quality column: "0.45 калибр СТ".
+# "(OLD)" marks the pre-patch copy of a round the wiki kept a single page for,
+# and names the same column.
+_OLD = re.compile(r"\s*\(OLD\)")
+
+
+def resolve_stock_title(title):
+    """Type ids for one line of a trader's list, the column suffix included.
+
+    resolve_title answers for a page; this also answers for "<page> <column>",
+    which is how the wiki's stock lists name a single quality of a round.
+    """
+    ids = resolve_title(title)
+    if ids:
+        return ids
+    columns = links()[3]
+    words = _OLD.sub("", title).split()
+    for k in (1, 2):
+        if len(words) <= k:
+            break
+        page, col = " ".join(words[:-k]), " ".join(words[-k:])
+        got = columns.get(page, {}).get(col)
+        if got:
+            return list(got)
+    return []
 
 
 def _unique(ids):
@@ -283,7 +532,7 @@ def stock_table():
             trader = int(key)
             goods = []
             for title in rec.get("items", []):
-                ids = [i for i in resolve_title(title) if i in catalogue()]
+                ids = [i for i in resolve_stock_title(title) if i in catalogue()]
                 if not ids:
                     unresolved.setdefault(rec.get("npc", key), []).append(title)
                     continue
@@ -351,6 +600,87 @@ def _common(type_id, name, root, price, weight):
         action_map=0)
 
 
+# The gold ingots of 1, 5 and 10 ounces (New_Gold_Ingot_1/_5/_10, texts.xml
+# 7636-7641), by what each is worth in hundredths of an ounce. The price is
+# that at the one rate (progression.GOLD_TO_AFRO_RATE), in afro alone: priced
+# in gold an ingot would be a gold thing, which never falls off a body
+# (combat.gold_item), and the ingot is loot; a stall pays SMOD of it, less
+# than Мортимер's cashing (0.95, 4.95, 9.95 ounces) or Джеррах's 5 ounces
+# for the five. The articles' «Базовая цена 1 G / 5 G / 10 G».
+GOLD_INGOTS = {7620: 100, 4796: 500, 4797: 1000}
+
+# Things a table prices in both currencies that are sold for gold alone:
+# their afro price is dropped from the frame. The gold lottery's ticket
+# (1333; its article: 500 afro or 0.5 G) buys prizes priced in gold -- five
+# expansive rounds (quests.json 309) -- and for 500 afro it would turn afro
+# into five times as much gold at the one rate (fifty before the rounds fell
+# to a hundredth, GOLD_AMMO_ROUND). DESIGNED (2026-09-28); take a type out to
+# sell it for both again.
+#
+# So is the gold line's own blueprint, «Урон и размер обоймы» of the (G)
+# guns (bpg_damage_25_gold_lvl4..20, objects.xml 37664-37680; the upgrade
+# rows of data/questgen_weaponcraft.json line "G" ask 37665-37668): its
+# article prices it in both, 6 000 afro or 1.50 G at level 5, and afro
+# bought a gold gun's upgrade. The owner's gold line is paid in gold
+# (2026-09-28). Gold alone, it is a gold thing (combat.gold_item): it never
+# falls off a body, and a stall does not buy it (inventory.SELL_GOLD_ONLY).
+# The blueprints both lines share (bpg_damage_lvl2 ...) and the afro line's
+# own (bpg_damage_25_afro_*) keep both prices.
+GOLD_LINE_BLUEPRINTS = frozenset(range(37664, 37681))
+GOLD_PRICE_ONLY = frozenset({1333}) | GOLD_LINE_BLUEPRINTS
+
+# The price of a gold round, in hundredths of an ounce a ROUND: the owner's
+# «цену патронам снизь до 0.01 голды (которые голдовые)» (2026-09-28). A
+# round is gold when it is priced in gold alone and is not premium
+# (gold_round): the (G) ЭК and ББ of every calibre, СБ of six, the 9мм ШК
+# and the (Q) ОТ the prison's coupons pay out, 43 types. The premium КС
+# (_KS_P) keep their price, out of the game with every premium thing
+# (premium), and so do the few priced in both, which no stall stocks but
+# the 9мм даренные, already a hundredth a round. It replaces the wiki's
+# columns, 10 hundredths a round (a pack of 20 at 2 G) for ЭК, ББ, ОТ and
+# ШК and 20 (4 G a pack) for СБ:
+# a pack is now 20 hundredths, 0.20 G, and 5000 rounds 50 G. A hundredth is
+# the least a round can cost at all -- Ammo.initialize rounds the pack's
+# g_cost over sell_num to whole hundredths -- and it is nearer the original
+# than the columns were: its own gift lists offer «Купон на 500 патронов
+# [G]» as the alternative to «Слиток 1 унция золота» (texts.xml 26121). On
+# the wire g_cost is the pack's price (_overlay), so a pack of sell_num
+# rounds is GOLD_AMMO_ROUND * sell_num; Ammo.initialize divides it back to
+# 1 a round, the tooltip's «Базовая цена: 0.01 G», and the stall's
+# «Сколько штук купить?» asks n hundredths for n rounds (inventory.buy_price).
+GOLD_AMMO_ROUND = 1
+
+
+def gold_round(p):
+    """Whether a frame of rounds is gold ammunition (GOLD_AMMO_ROUND)."""
+    return p.get("g_cost", 0) > 0 and not p.get("cost") and not p.get("premium")
+
+
+# The afro price of a thing whose wiki record is another article's. The
+# Вади-Хальфа lottery's own ticket, LoteryKey 1307 («Лотерейный билет [8]»,
+# texts.xml 6918; what the lottery man 662 sells and «Лотерея Вади-Хальфы
+# (0-9)» takes), carries the record of «Билет в Вади Хальфу», a train
+# ticket's article that borrowed LoteryKey.png (data/wiki_links.py links
+# by icon), and with it that ticket's 400 afro; its own article,
+# «Лотерейный билет (8)» -- seller «Лотерейщик», quest «Лотерея
+# Вади-Хальфы (0-9)» -- says 500. RECOVERED (2026-09-28).
+OWN_ARTICLE_PRICE = {1307: 500}
+
+# The miner's clothes «Шахтерская одежда» (5181) sells: Вади-Хальфа's
+# helm_..boots_minecraft_U_LVL_WH_A_mod00 34480-34484 and their gold copies
+# 34490-34494, named and described by the original (texts.xml 22856-22875,
+# data/build_orig_items.py rule 7h). Neither the wiki nor the original has a
+# number for them, so each piece takes those of the same slot of the owner's
+# Колонист[2] (data/sets.json 11167 for A, 11169 for G): armour, wear,
+# weight, price -- afro for A, gold for G --, what it asks and what it adds;
+# and nothing of the set itself: a miner's piece is in none (set_type 0) and
+# counts towards no set bonus. DESIGNED (2026-09-28): work clothes a rung
+# above the refugee's rags, at a price the ladder already asks, following
+# the owner's numbers of that rung if he moves them.
+MINER_WEAR = {first + k: sets.SETS[like]["members"][slot]
+              for first, like in ((34480, 11167), (34490, 11169))
+              for k, slot in enumerate(sets.SLOTS)}
+
 # The developers left themselves a weapon: objects.xml carries type 1534 under
 # the name admin_gun, in no trader's stock and in no location's spawns. It is
 # given the numbers that name implies, so a tester can settle a fight without
@@ -391,13 +721,117 @@ def static_info(type_id):
 
     Returns (command, params) or None when the type is unknown. The frame is
     the designed one, with the wiki's numbers laid over it where the wiki
-    has a table for this type (see _overlay).
+    has a table for this type (see _overlay), or the hand-made numbers of
+    data/heal_manual.json or data/loot_manual.json where it has none;
+    data/coldarm_manual.json then
+    fills what a cold arm's table leaves out (_holes). A piece of a set
+    takes the numbers of data/sets.json last: the owner's file for the whole
+    ladder of a set, which a wiki table of the old system has no say in.
     """
     info = designed_info(type_id)
     if info:
         rec = wiki().get(type_id)
         if rec:
             _overlay(type_id, info[1], rec)
+        elif type_id in heal_manual():
+            _overlay(type_id, info[1], heal_manual()[type_id])
+            # A designed record has no wiki text to show; the original's
+            # description, where the game had one, is already under this
+            # id in names.ALL (names.ORIG_ITEM_DESCS).
+            if type_id in _orig_described():
+                info[1]["desc"] = DESC_ID_OFFSET + type_id
+        elif type_id in loot_manual():
+            _overlay(type_id, info[1], loot_manual()[type_id])
+            # The same: the original's description, where it has one, is
+            # under this id in names.ALL (names.ORIG_ITEM_DESCS).
+            if type_id in _orig_described():
+                info[1]["desc"] = DESC_ID_OFFSET + type_id
+        # The weapon craft's things (craft.lay_frame): a modified gun with no
+        # table of its own takes its base's and its blueprint's effect, a
+        # blueprint with no price its level's.
+        craft.lay_frame(type_id, info[1], rec)
+        fix = coldarm_manual().get(type_id)
+        if fix:
+            _overlay(type_id, info[1], _holes(rec, fix))
+            # Without a table there is no wiki text; the original's, as for
+            # the medicines above.
+            if not rec and type_id in _orig_described():
+                info[1]["desc"] = DESC_ID_OFFSET + type_id
+        piece = sets.item(type_id)
+        if piece:
+            _overlay(type_id, info[1], piece)
+            # Its description is the file's own or else the original's;
+            # either is under this id in names.ALL (names.SET_ITEM_DESCS,
+            # names.ORIG_ITEM_DESCS).
+            if sets.described(type_id) or type_id in _orig_described():
+                info[1]["desc"] = DESC_ID_OFFSET + type_id
+        # A miner's piece: the numbers of its rung's piece (MINER_WEAR), the
+        # original's words (names.ORIG_ITEM_DESCS).
+        like = MINER_WEAR.get(type_id)
+        if like:
+            _overlay(type_id, info[1], sets.item(like))
+            if type_id in _orig_described():
+                info[1]["desc"] = DESC_ID_OFFSET + type_id
+        # A reworked piece of the owner's ladder (mod01-mod10: its rung's
+        # numbers stepped up, its set) or a clothing cheque (its price):
+        # setcraft.py's, with its words (names.SETCRAFT_STRINGS; a reworked
+        # piece's description is its rung's, setcraft.desc_of).
+        import setcraft                    # late: setcraft imports this module
+        reworked = setcraft.record(type_id)
+        if reworked:
+            _overlay(type_id, info[1], reworked)
+            desc = setcraft.desc_of(type_id)
+            if desc:
+                info[1]["desc"] = desc
+        # A trophy changes hands (trophies.py): the game's own template, the
+        # wiki's "Описание трофея", says «Допустимость обмена: Да» and
+        # «Допустимость продажи: Нет», and the auction has a «Трофеи»
+        # category. Each trophy's article lists "Допустимость обмена" twice,
+        # Да and then Нет -- the second is the sale row under the wrong
+        # label -- and the table took the last. Selling one to a trader is
+        # refused whatever this says (Inventory.sell).
+        if root_of(type_id) == TROPHY:
+            info[1]["exchang"] = 1
+        # A simple object is nothing but its name and its words: a dog's
+        # fang, a quest's gun part, an ingot. One the wiki does not describe
+        # takes the original's description where the game had one
+        # (names.ORIG_ITEM_DESCS, data/build_orig_items.py rules 7d and 7e):
+        # without this the table carried the text and no frame pointed at
+        # it, so the tooltip stayed empty -- the valley's animal parts and
+        # quest things, the 1- and 10-ounce ingots. Every other root keeps
+        # the rule above (a wiki or hand-made record first), UNDONE.
+        if root_of(type_id) == TRASH and not info[1].get("desc") \
+                and type_id in _orig_described():
+            info[1]["desc"] = DESC_ID_OFFSET + type_id
+        # The ore and what the plant makes of it: price, weight, stack
+        # (production.item_numbers).
+        made = production.item_numbers(type_id)
+        if made:
+            info[1].update(made)
+        if type_id in GOLD_PRICE_ONLY:
+            info[1]["cost"] = 0
+        if type_id in OWN_ARTICLE_PRICE:
+            info[1]["cost"] = OWN_ARTICLE_PRICE[type_id]
+        # A gold ingot is worth its ounces at the one rate (GOLD_INGOTS).
+        ounces = GOLD_INGOTS.get(type_id)
+        if ounces:
+            info[1].update(cost=ounces * progression.GOLD_TO_AFRO_RATE
+                           // progression.GOLD_OUNCE, g_cost=0)
+        # A gold round costs the owner's hundredth, the pack its rounds'
+        # worth (GOLD_AMMO_ROUND).
+        if root_of(type_id) == AMMO and gold_round(info[1]):
+            info[1]["g_cost"] = GOLD_AMMO_ROUND * info[1]["sell_num"]
+        # A thing a quest lends (quests.lent) is the quest's, not the
+        # player's: the quest flag and no exchange, the two things the
+        # stall, the barter, the post and the auction ask (Inventory.sell,
+        # barter.tradable, mail.postable, Auction.create), and a death and
+        # the ground ask quests.kept_on_death/not_on_ground. The client
+        # files it with the quest things and will not post or barter it.
+        # So is a thing that exists in certain places only, theirs
+        # (events.kept, data/schedule.json keep_in: the prison's armbands).
+        import events                   # late: it reads data/schedule.json
+        if quests.lent(type_id) or events.kept(type_id):
+            info[1].update(quest=1, exchang=0)
         # Last, so neither the design nor the wiki can argue with it.
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
@@ -415,7 +849,7 @@ def designed_info(type_id):
     t = tier(name)
 
     if root == FIRE_ARM:
-        cls = WEAPON_CLASS.get(type_id, PISTOL)
+        cls = WEAPON_CLASS.get(type_id, TRAINING_GUNS.get(type_id, PISTOL))
         sh = CLASS_SHAPE[cls]
         lo, hi = sh["dmg"][0] + 4 * (t - 1), sh["dmg"][1] + 9 * (t - 1)
         modes = sh["modes"]
@@ -440,14 +874,14 @@ def designed_info(type_id):
             piercing=[t, t, t],
             fire_costs=[sh["ap"], sh["ap"] + 4, sh["ap"] + 8],
             fire_times=[700, 800, 900],
-            comp_array=AMMO_FOR.get(cls, AMMO_9MM))
+            comp_array=([TRAINING_ROUNDS] if type_id in TRAINING_GUNS
+                        else AMMO_FOR.get(cls, AMMO_9MM)))
         return SI_COMMAND[root], p
 
     if root == WEAR:
-        prefix = _SERIES.match(name).group(1) if _SERIES.match(name) else name
         p = _common(type_id, name, root, 80 * t, 900 + 200 * t)
-        p.update(armor_class=t, slot_type=SLOT_BY_PREFIX.get(prefix, SLOT_CAMO),
-                 max_break_abs=60 + 15 * t, set_type=0)
+        p.update(armor_class=t, slot_type=slot_of(name),
+                 max_break_abs=60 + 15 * t, set_type=sets.set_of(type_id))
         return SI_COMMAND[root], p
 
     if root == AMMO:
@@ -536,6 +970,13 @@ def _overlay(type_id, p, rec):
             p[key] = value
     # Grams, like the client's; one table carries a fraction.
     p["weight"] = int(round(p["weight"]))
+
+    # Priced in gold and not in afro: say so rather than let the designed
+    # frame's guess stand. Without this a gold copy arrives with the 120 afro
+    # the frame invents for a tier it could not read, and the trader buys it
+    # back for them.
+    if _number(rec.get("g_cost")) and rec["g_cost"] > 0 and not _number(rec.get("cost")):
+        p["cost"] = 0
 
     if root == FIRE_ARM:
         if not any(p["fire_mods"]):
@@ -633,7 +1074,24 @@ def wiki_names():
             if variant in ("G", "P") and not name.endswith("(%s)" % variant):
                 name = "%s (%s)" % (name, variant)
         out[t] = name
+    for t, name in out.items():
+        out[t] = _WIKI_DISAMBIGUATION.sub("", name)
+    # The weapon craft's names for what the original names only in words
+    # (craft.item_names: the gunsmith's parts), where the wiki has none;
+    # the original's own names still go over them (names.py).
+    for t, name in craft.item_names().items():
+        if t in catalogue():
+            out.setdefault(t, name)
     return out
+
+
+# A page title's disambiguation, which is not part of the name: the wiki
+# keeps the junk bottle (TrashLoot_LvL_2, «Пластиковая бутылка (trash)»,
+# category «Треш лут») apart from another page of the same name, and the
+# page's own heading says «Пластиковая бутылка». The original's text has no
+# row for it, so the title is what a player reads, and every man of level 2
+# to 4 carries one (mobs.junk).
+_WIKI_DISAMBIGUATION = re.compile(r"\s*\((?:trash|треш)\)\s*$", re.I)
 
 
 def wiki_descs():
@@ -643,6 +1101,9 @@ def wiki_descs():
         text = clean_text(rec.get("desc_ru", ""))
         if text and t in catalogue():
             out[t] = text
+    for t, text in craft.item_descs().items():         # as wiki_names
+        if t in catalogue():
+            out.setdefault(t, text)
     return out
 
 
@@ -656,5 +1117,9 @@ def preload():
     """
     catalogue()
     wiki()
+    heal_manual()
+    coldarm_manual()
+    loot_manual()
+    _orig_described()
     links()
     stock_table()

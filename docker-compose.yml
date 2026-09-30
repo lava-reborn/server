@@ -39,6 +39,15 @@ services:
       # takes a high port inside and docker publishes 843 to it -- the bind
       # that needs the privilege is dockerd's, not ours.
       LAVA_POLICY_PORT: ${LAVA_POLICY_PORT:-8430}
+      # Боссы приходят только в эти часы по Москве и стоят столько минут
+      # (server/bosses.py). Правило владельца: 18 и 20 часов, по часу.
+      LAVA_BOSS_HOURS: ${LAVA_BOSS_HOURS:-18,20}
+      LAVA_BOSS_STAY: ${LAVA_BOSS_STAY:-60}
+      LAVA_BOSS_TZ: ${LAVA_BOSS_TZ:-Europe/Moscow}
+      LAVA_NOOB_VALLEY_SAFE: ${LAVA_NOOB_VALLEY_SAFE:-0}
+      # Свои строки в чат (причины отказов, выпавшее при гибели, исход
+      # бартера...): 0 -- только в лог, как решил владелец; 1 -- снова в чат.
+      LAVA_SERVER_CHAT: ${LAVA_SERVER_CHAT:-0}
     ports:
       # The game socket is the one thing that has to reach the player.
       - "${LAVA_BIND:-0.0.0.0}:${LAVA_GAME_PORT:-9775}:9775"

@@ -36,6 +36,7 @@ ENC = "utf-8"
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts
+import items
 accounts.DB_PATH = DB
 _store = accounts.Store(DB)
 _store.register("tester", "secret")
@@ -51,6 +52,10 @@ CRED = accounts.credential("tester", "secret")
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
            LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730")
 
+# The lines the server says by itself (Session.say) are off on a served
+# server; this suite reads them as the server's reasons, so it asks for
+# them by name.
+env["LAVA_SERVER_CHAT"] = "1"
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
@@ -120,7 +125,7 @@ try:
 
     # A character is created, then the client plays its intro and sends
     # actPlayer of its own accord.
-    c.send("newPers;res=1;sex=0;name=@polestvr@;")
+    c.send("newPers;res=1;sex=0;name=@Archivist@;")
     check("newPers acked", c.names(), ["cmdAck"])
 
     c.send("actPlayer;")
@@ -163,7 +168,7 @@ try:
     got = c.frames()
     check("getInfo answered", [f.split(";")[0] for f in got],
           ["userInfo_Player", "usrUp"])
-    check("name survives the collision", "name=@polestvr@;" in got[0], True)
+    check("name survives the collision", "name=@Archivist@;" in got[0], True)
     # Gamer.userInfo hands tr to TransportFactory.create unconditionally, and
     # that builds a vehicle of type 0 and asks for its description. A player
     # on foot has no tr key at all.
@@ -213,18 +218,25 @@ try:
     c.send("chkml;mode=0;")
     check("mail answered", c.names(), ["cmdAck", "lsml"])
 
-    # An unimplemented command that registers a handler must still be refused,
-    # not ignored, or the same desynchronisation follows.
-    c.send("ah_op;op=0;lot=x0;")
+    # A command that registers a handler must be answered even when what it
+    # asks makes no sense, or the same desynchronisation follows: a clan
+    # question naming no det (clans.py) is refused -- with the clan's own
+    # silent 20, never 3, which the client shows as «Сервер не отвечает».
+    c.send("gg_info;id=0;")
     got = c.frames()
-    check("unimplemented but acknowledged", got[0].split(";")[0], "cmdAck")
-    check("and refused rather than accepted", "res=0;" in got[0], False)
+    check("a clan question with no det: acknowledged", got[0].split(";")[0], "cmdAck")
+    check("and refused rather than accepted, with 20", got, ["cmdAck;res=20;"])
+    # The auction is implemented now, and an operation that names no
+    # auctioneer is still answered by exactly one refusal.
+    c.send("ah_op;type=0;obj=x0;target=0;")
+    check("ah_op with no auctioneer: one refusal", c.frames(), ["cmdAck;res=3;"])
 
     # And the reverse: commands the client sends without registering anything
     # must get no acknowledgement at all, or it lands on the next handler.
     # Auction.search waits on ah_sresult, GlobalMap.editMark just sends.
     c.send("ah_search;target=0;page=0;")
-    check("ah_search is not acknowledged", c.frames(), [])
+    check("ah_search is not acknowledged, only answered on its own queue",
+          c.frames(), ["ah_sresult;page=0;count=0;next=0;"])
     c.send("updMark;id=0;title=@a@;info=@b@;")
     check("updMark is not acknowledged", c.frames(), [])
     # bg_op registers for joining (0) and leaving (2) the queue only;
@@ -249,8 +261,11 @@ try:
     # --- a trader's stock -------------------------------------------------
     # The price list rides in userInfo as type_list, and the client refers to a
     # purchase by its index in that list rather than by the item's own id.
+    # The stall is known by the head of its own price list, not by a fixed id:
+    # what a pistol stall sells first changed once the guns had names.
+    head = "type_list=|%d|" % items.stock_for(1200)[0]
     trader_id = int(next(f for f in entry if f.startswith("userInfo_Trader")
-                         and "type_list=|4380|" in f).split("id=")[1].split(";")[0])
+                         and head in f).split("id=")[1].split(";")[0])
     c.send("getInfo;lvl=0;id=%d;type=1;" % trader_id)
     got = c.frames()
     trader = got[0]
@@ -281,7 +296,13 @@ try:
     # A real purchase now: the client adds nothing to the bag by itself, so
     # the acknowledgement is followed by the new object, its dynamic info
     # and the purse (userInfo_Player is the only frame carrying money).
-    c.send("ss_upd;s_status=1;obj=x0;param=1;")
+    # The first gun priced in afro, not simply the first: the head of the
+    # list may be sold for gold only, and the afro code (1) rightly refuses
+    # that -- it used to hand gold items over for a price of 0.
+    stock = items.stock_for(1200)
+    buy = next(i for i, t in enumerate(stock)
+               if items.root_of(t) == items.FIRE_ARM and items.params_of(t)["cost"] > 0)
+    c.send("ss_upd;s_status=1;obj=x%x;param=1;" % buy)
     check("a purchase is acknowledged, then delivered", c.names(),
           ["cmdAck", "ss_obj_status", "ss_di_firearm", "userInfo_Player"])
     c.send("ss_upd;s_status=0;obj=x0;")
@@ -290,9 +311,14 @@ try:
     # Barter uses the same command with its own numbering, and three of its
     # values go out bare: 2 deny, 5 apply, 6 break. In a trade session the
     # same numbers (sell, gold repair, trophy) do register, so the session
-    # type decides.
+    # decides. A barter needs another player (test_barter has two and three
+    # of them); proposed to an inhabitant it is refused -- the cmdAck the
+    # proposer waits for, the ss_upd 0 its Barter needs to die, and why --
+    # and what the window may still send after that is answered the way
+    # that close left the client's queue.
     c.send("ss_create;s_type=2;target=105;")
-    check("barter session opens", c.names(), ["cmdAck"])
+    check("a barter with an inhabitant is refused, and the client's Barter closed",
+          c.names(), ["cmdAck", "ss_upd", "userMsg"])
     for status in (2, 5, 6):
         c.send("ss_upd;s_status=%d;obj=x0;" % status)
         check("barter s_status=%d is not acknowledged" % status,

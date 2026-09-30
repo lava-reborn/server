@@ -1,0 +1,401 @@
+{
+ "_meta": {
+  "about": "Loot decided by hand, next to data/loot_wiki.json. That file is generated (data/build_loot_wiki.py) from the wiki, which has no page for these creatures' drops, so their rows live here rather than in it. by_type is rolled by server/mobs.loot_table exactly like a loot_wiki.json row -- one roll per row, valuables first, at most mobs.MAX_DROPS kept -- and names its item by type id, since the linker ties the emerald and the ingot to no type at all; a row at chance mobs.SURE (1.0) is no roll but a certainty, and lies in the bag outside that cap (mobs.roll_table). items are the numbers of those items, laid over the designed frame by server/items.py the way data/heal_manual.json is (same keys, frame shape unchanged; a data/items_wiki.json record, should one appear, wins), and drop_on_death, which server/combat.drops_on_death reads here before the wiki. Keys starting with _ never reach the wire.",
+  "decided": "2026-09-25, owner («Песок и изумруды»): the Nubian mine's marauders, [1] Слабый Мародёр 836 and [2] Мародёр 837, drop gold sand and emeralds. They stand in the mine's files and nowhere else (612, 1011, 1217 and the unused copies 767, 1248; no spawn substitute maps to them), so nothing else in the world drops either. Chances DESIGNED: gold sand 0.50 from both (the owner raised it from 0.20/0.30 the same day: «подними шанс песка до 50%»), an ordinary row; the emerald 0.10 from both, a valuable one. 2026-09-26, owner («давай добавим лут шахтерам: бритву и наручные часы и еще сломанные часы, вероятность выпадения 20-30 процентов»): the same marauders also roll, as ordinary rows, Сломанные часы 6919 and Бритва 6926 at 0.30 and Наручные часы 6932 at 0.35 -- under mobs.MAX_DROPS about 0.28, 0.23 and 0.21 a kill. Then («давай еще золотой портсигар и золотой зуб») Золотой зуб 6950 and Золотой портсигар 6953 as valuables at 0.05 each. The sand and the emeralds fall off a dead player like any loot (the owner, 2026-09-25: «любой лут должен падать в том числе из шахты», against the game's hint that the mine's emeralds could not be lost), and the way out of the mine takes neither («Нет, пусть выносят»). 2026-09-25, owner («давай чтобы у босса в нубийке выпадал слиток золото и сделай квест, чтобы его можно было сдать и получить на баланс», then «и слиток в 5 голд»): the Nubian valley's one boss, [5] Лидер Новые колонисты 2103 (Лагерь бандитов, location 34, where it keeps the boss hours of server/bosses.py), carries one ingot of 5 ounces of gold (4796 New_Gold_Ingot_5) on every kill, chance 1.0, and Джеррах in the Западный поселок pays 5 ounces for it (data/quests.json 10). It falls off a dead player like any loot («любой лут должен падать»): it is loot, not gold-bought gear. 2026-09-26, for the Nubian valley's quests (the owner's «давай готовь квесты все»): rows of the tier «Квестовый», the wiki's own word, for what those quests send the player to take off a creature -- the courier's letter (17), the four gun parts and the medicaments off the raiders of «Грабители» (14, 15), the medicaments, matches and the grindstone off the New Colonists (250, 251), the leader's notes (2103) and the rat king (1019). Such a row rolls only while somebody who brought the creature down has a quest open that asks for the thing and does not yet have as many as it asks (server/mobs.py QUEST_TIER, quests.wanted_things), the original's «loot only while the quest is open»: nobody else finds a quest's litter in a bag, and a thing with no price or with the quest flag, which no other row may drop, may drop here. Holders RECOVERED where the original's texts or the quests' lavabook records name them, chances DESIGNED. The same day, for the valley's market, farm and mine quests (the third batch): the old chip Доктор Гофус asks for off the New Colonists (250, 251), and the antelope's meat and fillet the village asks for off the antelopes (12). A quest row drops only while its quest is open; one the player sells while it is (the matches, 84 afro at a stall) is loot like any other, about a third more than the colonists' 67 afro a kill: accepted, DESIGNED (counting the bank too would not stop a sale).",
+  "fields": "by_type: mob type id -> rows {type, tier ('Обычный' or 'Ценный', as in loot_wiki.json, or 'Квестовый': rolled only for a quest that asks for the thing, on its own and outside the cap), chance; 1.0 is certain and outside the cap}. items: type id -> ss_si_simple_obj fields as in server/items.py (cost in afro, g_cost in hundredths of G, weight in grams, max_count the most one stack holds), plus drop_on_death (1 can fall off a corpse, 0 never)."
+ },
+ "by_type": {
+  "12": [
+   {
+    "type": 260,
+    "_name": "Мясо антилопы",
+    "tier": "Квестовый",
+    "chance": 1.0,
+    "_source": "RECOVERED item and holders: the wiki's article Мясо антилопы (its icon qDogsMeat.png is 260's, qDogsMeat, which the game shows as 'Мясо антилопы' and flags a quest's thing) names the antelope of the Антилопы (25, 6265x1822) its holder; the valley's «Еда» asks for 'еще мяса для деревни' (texts.xml 59875) after «Любимая антилопа» brought a piece of it (59849). The antelopes (mAntilope, 12) stand in 25 only among the valley's places",
+    "_designed": "the chance: certain (mobs.SURE), an antelope's meat is on it; AntilopeMeat (224) stays what every antelope carries (mobs.ANIMAL_LOOT), sold at a stall"
+   },
+   {
+    "type": 3059,
+    "_name": "Вырезка антилопы",
+    "tier": "Квестовый",
+    "chance": 0.5,
+    "_source": "RECOVERED item and holders: «Охота на антилоп», 'принести 10 кусков вырезки антилоп' (texts.xml 59892); the wiki's article Вырезка антилопы (qAntilopeFillet, 3059, 'Вырезка антилопы для жителей Нубийской деревни') names the antelope its holder",
+    "_designed": "the chance, 0.50: ten fillets in about twenty antelopes of the eleven in 25"
+   }
+  ],
+  "14": [
+   {
+    "type": 228,
+    "_name": "Ствол оружия",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Мастер Норман's «Похищенный груз (часть 2)» asks for 'Железный ствол с рамой, УСМ, Железный Затвор, Рукоятку' (texts.xml 59854), and the quest's record on lavabook (data/wiki/pages.json) names m05_BanditRaider_lvl1(14):m05_BanditRaider_lvl2(15) as the holders of each of the four -- the raiders of 'Грабители' (27, 6270,1827), the stragglers of the text (the same text says 'Новобранцы и Рекетиры Новых колонистов', of whom the valley has none)",
+    "_designed": "the chance: 0.30 a part a kill, no source gives one; ten raiders stand in 27"
+   },
+   {
+    "type": 229,
+    "_name": "УСМ",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Мастер Норман's «Похищенный груз (часть 2)» asks for 'Железный ствол с рамой, УСМ, Железный Затвор, Рукоятку' (texts.xml 59854), and the quest's record on lavabook (data/wiki/pages.json) names m05_BanditRaider_lvl1(14):m05_BanditRaider_lvl2(15) as the holders of each of the four -- the raiders of 'Грабители' (27, 6270,1827), the stragglers of the text (the same text says 'Новобранцы и Рекетиры Новых колонистов', of whom the valley has none)",
+    "_designed": "the chance: 0.30 a part a kill, no source gives one; ten raiders stand in 27"
+   },
+   {
+    "type": 230,
+    "_name": "Железный затвор",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Мастер Норман's «Похищенный груз (часть 2)» asks for 'Железный ствол с рамой, УСМ, Железный Затвор, Рукоятку' (texts.xml 59854), and the quest's record on lavabook (data/wiki/pages.json) names m05_BanditRaider_lvl1(14):m05_BanditRaider_lvl2(15) as the holders of each of the four -- the raiders of 'Грабители' (27, 6270,1827), the stragglers of the text (the same text says 'Новобранцы и Рекетиры Новых колонистов', of whom the valley has none)",
+    "_designed": "the chance: 0.30 a part a kill, no source gives one; ten raiders stand in 27"
+   },
+   {
+    "type": 231,
+    "_name": "Рукоятка",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Мастер Норман's «Похищенный груз (часть 2)» asks for 'Железный ствол с рамой, УСМ, Железный Затвор, Рукоятку' (texts.xml 59854), and the quest's record on lavabook (data/wiki/pages.json) names m05_BanditRaider_lvl1(14):m05_BanditRaider_lvl2(15) as the holders of each of the four -- the raiders of 'Грабители' (27, 6270,1827), the stragglers of the text (the same text says 'Новобранцы и Рекетиры Новых колонистов', of whom the valley has none)",
+    "_designed": "the chance: 0.30 a part a kill, no source gives one; ten raiders stand in 27"
+   },
+   {
+    "type": 232,
+    "_name": "Медикаменты",
+    "tier": "Квестовый",
+    "chance": 0.5,
+    "_source": "RECOVERED item: the quests' records on lavabook name Медикаменты (1 шт.) for «Похищенный груз (часть 3)» (texts.xml 59856: 'Этот грузовик вез бесценные в наших условиях медикаменты - их и похитил этот сброд') and «Одолжить аптечку»; for part 3 the record names the boxes m00_Box(39) of 27, which stand in no room (world.belongs_here: an object), so their raiders carry it instead",
+    "_designed": "the holder, the raiders for the boxes, and the chance, 0.50"
+   }
+  ],
+  "15": [
+   {
+    "type": 228,
+    "_name": "Ствол оружия",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Мастер Норман's «Похищенный груз (часть 2)» asks for 'Железный ствол с рамой, УСМ, Железный Затвор, Рукоятку' (texts.xml 59854), and the quest's record on lavabook (data/wiki/pages.json) names m05_BanditRaider_lvl1(14):m05_BanditRaider_lvl2(15) as the holders of each of the four -- the raiders of 'Грабители' (27, 6270,1827), the stragglers of the text (the same text says 'Новобранцы и Рекетиры Новых колонистов', of whom the valley has none)",
+    "_designed": "the chance: 0.30 a part a kill, no source gives one; ten raiders stand in 27"
+   },
+   {
+    "type": 229,
+    "_name": "УСМ",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Мастер Норман's «Похищенный груз (часть 2)» asks for 'Железный ствол с рамой, УСМ, Железный Затвор, Рукоятку' (texts.xml 59854), and the quest's record on lavabook (data/wiki/pages.json) names m05_BanditRaider_lvl1(14):m05_BanditRaider_lvl2(15) as the holders of each of the four -- the raiders of 'Грабители' (27, 6270,1827), the stragglers of the text (the same text says 'Новобранцы и Рекетиры Новых колонистов', of whom the valley has none)",
+    "_designed": "the chance: 0.30 a part a kill, no source gives one; ten raiders stand in 27"
+   },
+   {
+    "type": 230,
+    "_name": "Железный затвор",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Мастер Норман's «Похищенный груз (часть 2)» asks for 'Железный ствол с рамой, УСМ, Железный Затвор, Рукоятку' (texts.xml 59854), and the quest's record on lavabook (data/wiki/pages.json) names m05_BanditRaider_lvl1(14):m05_BanditRaider_lvl2(15) as the holders of each of the four -- the raiders of 'Грабители' (27, 6270,1827), the stragglers of the text (the same text says 'Новобранцы и Рекетиры Новых колонистов', of whom the valley has none)",
+    "_designed": "the chance: 0.30 a part a kill, no source gives one; ten raiders stand in 27"
+   },
+   {
+    "type": 231,
+    "_name": "Рукоятка",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Мастер Норман's «Похищенный груз (часть 2)» asks for 'Железный ствол с рамой, УСМ, Железный Затвор, Рукоятку' (texts.xml 59854), and the quest's record on lavabook (data/wiki/pages.json) names m05_BanditRaider_lvl1(14):m05_BanditRaider_lvl2(15) as the holders of each of the four -- the raiders of 'Грабители' (27, 6270,1827), the stragglers of the text (the same text says 'Новобранцы и Рекетиры Новых колонистов', of whom the valley has none)",
+    "_designed": "the chance: 0.30 a part a kill, no source gives one; ten raiders stand in 27"
+   },
+   {
+    "type": 232,
+    "_name": "Медикаменты",
+    "tier": "Квестовый",
+    "chance": 0.5,
+    "_source": "RECOVERED item: the quests' records on lavabook name Медикаменты (1 шт.) for «Похищенный груз (часть 3)» (texts.xml 59856: 'Этот грузовик вез бесценные в наших условиях медикаменты - их и похитил этот сброд') and «Одолжить аптечку»; for part 3 the record names the boxes m00_Box(39) of 27, which stand in no room (world.belongs_here: an object), so their raiders carry it instead",
+    "_designed": "the holder, the raiders for the boxes, and the chance, 0.50"
+   }
+  ],
+  "17": [
+   {
+    "type": 233,
+    "_name": "Бумага с посланием",
+    "tier": "Квестовый",
+    "chance": 1.0,
+    "_source": "RECOVERED item and holder: Сейфул's «Пути информации» (texts.xml 59859: 'они отправили курьера... найди его и выясни, что это за сообщение'); its lavabook record names m05_BanditCourier_lvl2(17) and 'Бумага с посланием (1 шт.)'. The courier stands in 28 «Гонец» alone (6272,1833, data/settlements_verified.json)",
+    "_designed": "the chance: certain (mobs.SURE), since the one courier is the message's one carrier"
+   }
+  ],
+  "250": [
+   {
+    "type": 232,
+    "_name": "Медикаменты",
+    "tier": "Квестовый",
+    "chance": 0.5,
+    "_source": "RECOVERED item: the quests' records on lavabook name Медикаменты (1 шт.) for «Похищенный груз (часть 3)» (texts.xml 59856: 'Этот грузовик вез бесценные в наших условиях медикаменты - их и похитил этот сброд') and «Одолжить аптечку»; «Одолжить аптечку»'s record names m05_NewColonAsslt_s_lvl3(251), 'the pursuers' of 33 (texts.xml 59862), and Муад's «Раненый сын» says 'Они есть у Новых Колонистов 3го и 4го уровня' (59913): the valley's are 250 and 251, level 3",
+    "_designed": "250 beside 251, and the chance, 0.50"
+   },
+   {
+    "type": 6915,
+    "_name": "Коробка спичек",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Сорванец's «Спички детям», 'спички можно отобрать у Новых Колонистов 3го и 4го уровня' (texts.xml 59896): the valley's are 250 and 251, level 3, in 33 and 34",
+    "_designed": "the chance, 0.30: five boxes a day"
+   },
+   {
+    "type": 3217,
+    "_name": "Точильный камень",
+    "tier": "Квестовый",
+    "chance": 0.2,
+    "_source": "RECOVERED item: Муад's «Точильный камень», 'отобрать его у Рекетира Новых Колонистов... Иногда необходимо уничтожить и обыскать несколько противников' (texts.xml 59905)",
+    "_designed": "the holder: no Рэкетир of the New Colonists stands anywhere (mobs.xml has no such type), so the valley's own colonists 250 and 251 carry it; and the chance, 0.20"
+   },
+   {
+    "type": 3179,
+    "_name": "Старая микросхема",
+    "tier": "Квестовый",
+    "chance": 0.25,
+    "_source": "RECOVERED item and holders: Доктор Гофус's «Сгоревшая микросхема», 'за любую микросхему, найденную тобой в окрестностях лагерей' and 'принести доктору Гофусу Старую микросхему' (texts.xml 59742); the wiki's article Старая микросхема names Новые Колонисты its holders, and the valley's are 250 and 251. The thing is old_chip (3179), 'Старая микросхема' 8327 by its name (data/build_orig_items.py rule 7e)",
+    "_designed": "the chance, 0.25: one chip a day. A quest row, not the wiki's trash row, so that nobody finds it without the quest open; its price stays the frame's 10 afro, not the article's 250, for the same reason as the matches' (quests.wanted_things counts the bag)"
+   }
+  ],
+  "251": [
+   {
+    "type": 232,
+    "_name": "Медикаменты",
+    "tier": "Квестовый",
+    "chance": 0.5,
+    "_source": "RECOVERED item: the quests' records on lavabook name Медикаменты (1 шт.) for «Похищенный груз (часть 3)» (texts.xml 59856: 'Этот грузовик вез бесценные в наших условиях медикаменты - их и похитил этот сброд') and «Одолжить аптечку»; «Одолжить аптечку»'s record names m05_NewColonAsslt_s_lvl3(251), 'the pursuers' of 33 (texts.xml 59862), and Муад's «Раненый сын» says 'Они есть у Новых Колонистов 3го и 4го уровня' (59913): the valley's are 250 and 251, level 3",
+    "_designed": "250 beside 251, and the chance, 0.50"
+   },
+   {
+    "type": 6915,
+    "_name": "Коробка спичек",
+    "tier": "Квестовый",
+    "chance": 0.3,
+    "_source": "RECOVERED item and holders: Сорванец's «Спички детям», 'спички можно отобрать у Новых Колонистов 3го и 4го уровня' (texts.xml 59896): the valley's are 250 and 251, level 3, in 33 and 34",
+    "_designed": "the chance, 0.30: five boxes a day"
+   },
+   {
+    "type": 3217,
+    "_name": "Точильный камень",
+    "tier": "Квестовый",
+    "chance": 0.2,
+    "_source": "RECOVERED item: Муад's «Точильный камень», 'отобрать его у Рекетира Новых Колонистов... Иногда необходимо уничтожить и обыскать несколько противников' (texts.xml 59905)",
+    "_designed": "the holder: no Рэкетир of the New Colonists stands anywhere (mobs.xml has no such type), so the valley's own colonists 250 and 251 carry it; and the chance, 0.20"
+   },
+   {
+    "type": 3179,
+    "_name": "Старая микросхема",
+    "tier": "Квестовый",
+    "chance": 0.25,
+    "_source": "RECOVERED item and holders: Доктор Гофус's «Сгоревшая микросхема», 'за любую микросхему, найденную тобой в окрестностях лагерей' and 'принести доктору Гофусу Старую микросхему' (texts.xml 59742); the wiki's article Старая микросхема names Новые Колонисты its holders, and the valley's are 250 and 251. The thing is old_chip (3179), 'Старая микросхема' 8327 by its name (data/build_orig_items.py rule 7e)",
+    "_designed": "the chance, 0.25: one chip a day. A quest row, not the wiki's trash row, so that nobody finds it without the quest open; its price stays the frame's 10 afro, not the article's 250, for the same reason as the matches' (quests.wanted_things counts the bag)"
+   },
+   {
+    "type": 3179,
+    "_name": "Старая микросхема",
+    "tier": "Обычный",
+    "chance": 0.05,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («добавь в лагерь выпадение микросхемы с 5% шансом»)",
+    "_designed": "0.05 from everyone who stands in Лагерь бандитов (34): Бандит 20 and 21, Штурмовик 251, the leader 2103. A row is a creature's, not a place's, so 21 drops it also in 42/45/46 near Вади-Хальфа and 251 in 33 Раненый разведчик"
+   }
+  ],
+  "836": [
+   {
+    "type": 2258,
+    "_name": "Золотой песок",
+    "tier": "Обычный",
+    "chance": 0.5,
+    "_source": "RECOVERED item: Камал's quest «Золотоискатель», texts.xml 59933: 'отобрать у мародеров 5 мешков с золотым песком'",
+    "_designed": "the chance: no source gives one. 0.50, the owner's (2026-09-25), the same as 837"
+   },
+   {
+    "type": 3159,
+    "_name": "Небольшие изумруды",
+    "tier": "Ценный",
+    "chance": 0.1,
+    "_source": "RECOVERED item: Камал's quest «Изумруды», texts.xml 59937: 'отобрать у мародеров 5 изумрудов'; which emerald, see items 3159",
+    "_designed": "the chance, and the valuable tier: no source gives either"
+   },
+   {
+    "type": 6919,
+    "_name": "Сломанные часы",
+    "tier": "Обычный",
+    "chance": 0.3,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай добавим лут шахтерам»)",
+    "_designed": "0.30, the owner's «20-30 процентов»; rolled first of the three, about 0.28 a kill once the cap of two is counted"
+   },
+   {
+    "type": 6926,
+    "_name": "Бритва",
+    "tier": "Обычный",
+    "chance": 0.3,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай добавим лут шахтерам»)",
+    "_designed": "0.30, the owner's «20-30 процентов»; about 0.23 a kill after the cap of two"
+   },
+   {
+    "type": 6932,
+    "_name": "Наручные часы",
+    "tier": "Обычный",
+    "chance": 0.35,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай добавим лут шахтерам»)",
+    "_designed": "0.35 so that, rolled last under the cap of two, it lands at about 0.21 a kill, inside the owner's «20-30 процентов»"
+   },
+   {
+    "type": 6950,
+    "_name": "Золотой зуб",
+    "tier": "Ценный",
+    "chance": 0.05,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай еще золотой портсигар и золотой зуб»)",
+    "_designed": "0.05, DESIGNED: a valuable (1920 afro, ValuableLoot of level 17), so the valuable rate of the wiki's design and not the owner's 20-30 for junk; about 0.05 a kill"
+   },
+   {
+    "type": 6953,
+    "_name": "Золотой портсигар",
+    "tier": "Ценный",
+    "chance": 0.05,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай еще золотой портсигар и золотой зуб»)",
+    "_designed": "0.05, DESIGNED: a valuable (2280 afro, ValuableLoot of level 18), as the gold tooth; about 0.05 a kill"
+   }
+  ],
+  "837": [
+   {
+    "type": 2258,
+    "_name": "Золотой песок",
+    "tier": "Обычный",
+    "chance": 0.5,
+    "_source": "RECOVERED item, as for 836",
+    "_designed": "the chance: the owner's 0.50 (2026-09-25), up from the ordinary 0.30 of loot_wiki.json's design"
+   },
+   {
+    "type": 3159,
+    "_name": "Небольшие изумруды",
+    "tier": "Ценный",
+    "chance": 0.1,
+    "_source": "RECOVERED item, as for 836",
+    "_designed": "the chance, and the valuable tier"
+   },
+   {
+    "type": 6919,
+    "_name": "Сломанные часы",
+    "tier": "Обычный",
+    "chance": 0.3,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай добавим лут шахтерам»)",
+    "_designed": "0.30, the owner's «20-30 процентов»; rolled first of the three, about 0.28 a kill once the cap of two is counted"
+   },
+   {
+    "type": 6926,
+    "_name": "Бритва",
+    "tier": "Обычный",
+    "chance": 0.3,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай добавим лут шахтерам»)",
+    "_designed": "0.30, the owner's «20-30 процентов»; about 0.23 a kill after the cap of two"
+   },
+   {
+    "type": 6932,
+    "_name": "Наручные часы",
+    "tier": "Обычный",
+    "chance": 0.35,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай добавим лут шахтерам»)",
+    "_designed": "0.35 so that, rolled last under the cap of two, it lands at about 0.21 a kill, inside the owner's «20-30 процентов»"
+   },
+   {
+    "type": 6950,
+    "_name": "Золотой зуб",
+    "tier": "Ценный",
+    "chance": 0.05,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай еще золотой портсигар и золотой зуб»)",
+    "_designed": "0.05, DESIGNED: a valuable (1920 afro, ValuableLoot of level 17), so the valuable rate of the wiki's design and not the owner's 20-30 for junk; about 0.05 a kill"
+   },
+   {
+    "type": 6953,
+    "_name": "Золотой портсигар",
+    "tier": "Ценный",
+    "chance": 0.05,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («давай еще золотой портсигар и золотой зуб»)",
+    "_designed": "0.05, DESIGNED: a valuable (2280 afro, ValuableLoot of level 18), as the gold tooth; about 0.05 a kill"
+   }
+  ],
+  "1019": [
+   {
+    "type": 3218,
+    "_name": "Крысиный король",
+    "tier": "Квестовый",
+    "chance": 0.1,
+    "_source": "RECOVERED item and holders: Фермер Хрущ's «Крысиный король», 'Искать Крысиного короля нужно в старых штольнях, где обитают Черные крысы' (texts.xml 59918); the wiki's article of the item names Черная крыса its holder. The black rats (mRat_3, 1019) stand in 643 'Старые штольни.' only, behind the barn's door (data/passages.json)",
+    "_designed": "the chance, 0.10: one king among seventeen rats, a quest of once a day"
+   }
+  ],
+  "2103": [
+   {
+    "type": 4796,
+    "_name": "5 унций золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "DESIGNED, the owner's (2026-09-25): «давай чтобы у босса в нубийке выпадал слиток золото», then «и слиток в 5 голд». 2103 m05_nc_Leader_lvl5, '[5] Лидер Новые колонисты' -- the wiki's 'Лидер Ян Дуглас' of the Лагерь Бандитов at 6272x1840 -- stands in location 34 and in no other file, no spawn substitute maps to it, and it was the only boss of the valley's sixteen settlements (the one other Nubian boss, nubia_boss 1406, Большой Мвамба, came onto the map with his camp 31 at 6274,1833 for Шульц's «Экипировка к пистолету» on 2026-09-26, and does not carry the ingot); which ingot, see items 4796",
+    "_designed": "all of it: one ingot on every kill, chance 1.0 (mobs.SURE), so outside the two a kill's rolls may keep (mobs.MAX_DROPS) and never pushed out by them; the valuable tier is a label only. The boss comes at 18:00 and 20:00 (server/bosses.py), so it is two ingots a day at most for the whole server, and 10 ounces of gold a day through Джеррах's quest, a hand-in each against the daily limit"
+   },
+   {
+    "type": 234,
+    "_name": "Записи",
+    "tier": "Квестовый",
+    "chance": 1.0,
+    "_source": "RECOVERED item and holder: Аюб's «Последний удар», 'убить лидера Новых Колонистов Яна Дугласа и забрать его записи' (texts.xml 59864-59865); its lavabook record asks for 'Записи (1 шт.)'",
+    "_designed": "the chance: certain (mobs.SURE), the one leader's own notes"
+   },
+   {
+    "type": 3179,
+    "_name": "Старая микросхема",
+    "tier": "Обычный",
+    "chance": 0.05,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («добавь в лагерь выпадение микросхемы с 5% шансом»)",
+    "_designed": "0.05 from everyone who stands in Лагерь бандитов (34): Бандит 20 and 21, Штурмовик 251, the leader 2103. A row is a creature's, not a place's, so 21 drops it also in 42/45/46 near Вади-Хальфа and 251 in 33 Раненый разведчик"
+   }
+  ],
+  "20": [
+   {
+    "type": 3179,
+    "_name": "Старая микросхема",
+    "tier": "Обычный",
+    "chance": 0.05,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («добавь в лагерь выпадение микросхемы с 5% шансом»)",
+    "_designed": "0.05 from everyone who stands in Лагерь бандитов (34): Бандит 20 and 21, Штурмовик 251, the leader 2103. A row is a creature's, not a place's, so 21 drops it also in 42/45/46 near Вади-Хальфа and 251 in 33 Раненый разведчик"
+   }
+  ],
+  "21": [
+   {
+    "type": 3179,
+    "_name": "Старая микросхема",
+    "tier": "Обычный",
+    "chance": 0.05,
+    "_source": "DESIGNED: the owner's order of 2026-09-26 («добавь в лагерь выпадение микросхемы с 5% шансом»)",
+    "_designed": "0.05 from everyone who stands in Лагерь бандитов (34): Бандит 20 and 21, Штурмовик 251, the leader 2103. A row is a creature's, not a place's, so 21 drops it also in 42/45/46 near Вади-Хальфа and 251 in 33 Раненый разведчик"
+   }
+  ]
+ },
+ "items": {
+  "2258": {
+   "_name": "Золотой песок",
+   "_source": "RECOVERED. The wiki article Золотой песок, which carries the type's own icon (Gold_sand.png; data/wiki_links.json ties it icon_exact): 'Вес 100 гр.', 'Базовая цена 100 афро', exchange and sale 'Да'. It writes them as sections, not the bullets or tables data/wiki_extract.py reads, so data/items_wiki.json has no record and the frame's 10 afro and 150 g stood in. Name and description: texts.xml 7352/7353 (data/orig_items.json, rule 7c). Falls off a corpse: texts.xml 59937 sets the emeralds apart as the one thing 'мародеры не смогут отобрать у тебя', unlike 'мешков с золотом'",
+   "_designed": "the stack of 50, the frame's: the article gives none",
+   "cost": 100,
+   "g_cost": 0,
+   "weight": 100,
+   "exchang": 1,
+   "drop_on_death": 1
+  },
+  "3159": {
+   "_name": "Небольшие изумруды",
+   "_source": "RECOVERED. The type: objects.xml 3159-3161 small_emerald, cracked_emerald, fine_emerald and texts.xml 7241-7246 'Треснутый изумруд', 'Небольшие изумруды', 'Крупный изумруд' (7246 'прекрасного качества') pair by their names, so 7243/7244 are small_emerald's (data/orig_items.json, rule 7c); and of the three it is the one the quest describes, 'они небольшие и их легко припрятать' (59937). Numbers: the wiki article Небольшие изумруды (its icon is an upload named after nothing, so the linker tied it to no type): 'Цена в афро 400', 'в унциях золота 0', 'Вес 1 шт. 10 гр', 'Количество предметов в стеке 100', exchange, sale and auction 'да'. drop_on_death 1, the owner's (2026-09-25: «любой лут должен падать в том числе из шахты»), as the article says ('Шанс выпадения при смерти да') and against the game's own hint 'Падающие в шахте изумруды нельзя потерять при гибели персонажа' (59937)",
+   "cost": 400,
+   "g_cost": 0,
+   "weight": 10,
+   "max_count": 100,
+   "exchang": 1,
+   "drop_on_death": 1
+  },
+  "4796": {
+   "_name": "5 унций золота",
+   "_source": "RECOVERED. The type: texts.xml 7636-7641 are the three gold ingots of 1, 5 and 10 ounces, name and description each, and objects.xml's New_Gold_Ingot_1/_5/_10 (7620, 4796, 4797) are the one series of three with icons stamped 1, 5 and 10; the older Gold_Ingot_5 (3562) draws a lollipop in the client (data/build_orig_items.py rule 7d, data/orig_items.json). Numbers: the wiki article 5 унций золота (its icon 5.png is named after no type, so the linker tied it to none and data/items_wiki.json has no record): 'Вес 5 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 5 G'; sold by Мортимер, the money-changer, and cashed in by his 'Обналичить 5 унций' for 5 ounces. drop_on_death 1: loot, the owner's rule («любой лут должен падать»; «голдовое оружие и сэты не падают» is about gold-bought gear, «это не лут»)",
+   "_designed": "the price in afro: the article's 5 G at the game's one rate, laid by server/items.py GOLD_INGOTS from progression.GOLD_TO_AFRO_RATE, which wins over the cost here: 20 000 is that price at the first rate of 4000 (the rate is 50 000 since 2026-09-28, which makes it 250 000), written down so that the price counts as a written one (combat._price_written; the name's _Gold_ would otherwise make it a gold thing), and no g_cost. Priced in gold alone it would be one of the owner's gold things (combat.gold_item), which never fall off a body, and mobs.droppable keeps anything without an afro price out of a corpse's bag. A trader pays 70 per cent of it (inventory.SMOD), 175 000 afro at 50 000, against Джеррах's 5 ounces of gold, which is the whole 250 000 at that rate, and Мортимер's cashing, 4.95 ounces: the quest is always the better deal, which is the point. No stall sells the ingot (Мортимер sells nothing here, data/npcs.json stock 1188; data/trader_stock_wiki.json lists it for nobody, no designed stall holds it), and none should: sold for afro it would turn afro into gold. The stack of 50 is the frame's: the article gives none",
+   "cost": 20000,
+   "g_cost": 0,
+   "weight": 5,
+   "exchang": 1,
+   "drop_on_death": 1
+  }
+ }
+}

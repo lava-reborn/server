@@ -11,10 +11,18 @@ Postgres может и не стоять, а обычный прогон дол�
 Проверяется не SQL как таковой, а то, ради чего затевался storage.py:
 что одни и те же методы Store дают в Postgres тот же результат, что в
 SQLite, — включая места, где диалекты расходятся: новый идентификатор,
-INSERT OR REPLACE, уникальность логина, состав таблицы.
+INSERT OR REPLACE, уникальность логина, состав таблицы, rowcount,
+транзакция после ошибки. И переезд: база, которую оставил прежний сервер
+(без auction_lots, migrations и bank_steps), открывается новым — в том
+числе двумя процессами разом, как их поднимает docker compose.
+
+База под набор нужна своя: таблицы сносятся и создаются заново.
 """
+import json
 import os
+import subprocess
 import sys
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -24,11 +32,18 @@ if not DSN:
     print("storage(pg): пропущено, LAVA_DB_URL не задан")
     sys.exit(0)
 
+import psycopg  # noqa: E402
+
 import accounts  # noqa: E402
 import progression  # noqa: E402
 import storage  # noqa: E402
 
 checks = 0
+TABLES = ("mail", "map_marks", "items", "char_quests_done", "char_quests",
+          "char_stats", "online", "heartbeat", "admin_actions", "auction_lots",
+          "migrations", "trophies", "clan_ledger", "clan_relations", "clan_members",
+          "clans", "characters", "accounts", "money_ledger", "char_lent", "ground")
+RELINK = "heal-relink-2026-09-23"
 
 
 def ok(cond, what):
@@ -40,13 +55,19 @@ def ok(cond, what):
 def fresh_store():
     """Store на чистой схеме: таблицы сносим и создаём заново."""
     db = storage.connect()
-    for table in ("mail", "map_marks", "items", "char_quests_done", "char_quests",
-                  "char_stats", "online", "heartbeat", "admin_actions",
-                  "characters", "accounts"):
+    for table in TABLES:
         db.execute("DROP TABLE IF EXISTS %s CASCADE" % table)
     db.commit()
     db.close()
     return accounts.Store()
+
+
+def raises(fn, *exc):
+    try:
+        fn()
+    except exc:
+        return True
+    return False
 
 
 store = fresh_store()
@@ -62,6 +83,17 @@ ok(store.account_by_login("боец")["id"] == aid, "учётка ищется �
 # --- персонаж и его статы --------------------------------------------------
 char_id, slot = store.create_character(aid, "Ветеран", 0, "45676")
 ok(char_id and slot == 0, "персонаж создан: id %s, слот %s" % (char_id, slot))
+# Старт, вытянутый при создании (server.START_PLACES), ложится в ту же
+# строку и местом, и пропиской; без него оба пусты, как у всех прежних.
+west_acc, _ = store.register("западный", "пароль")
+west_id, _ = store.create_character(west_acc, "Западный", 0, "1", home=(183, 6262, 1825))
+row = store.character(west_id)
+ok([row[k] for k in ("loc", "gx", "gy", "home_loc", "home_gx", "home_gy")]
+   == [183, 6262, 1825, 183, 6262, 1825],
+   "новичок записан со своим стартом — место и прописка одним INSERT: %s" % dict(row))
+row = store.character(char_id)
+ok([row[k] for k in ("loc", "gx", "gy", "home_loc", "home_gx", "home_gy")] == [None] * 6,
+   "без старта место и прописка пусты: %s" % dict(row))
 rows = store.load_stats(char_id)
 ok(len(rows) == len(progression.starting_rows()),
    "новорождённому розданы все статы: %d" % len(rows))
@@ -75,21 +107,405 @@ ok(len(after) == len(rows), "перезапись не наплодила стр
 store.save_character_state(char_id, gold=500, afro=7)
 row = store.character(char_id)
 ok(row["gold"] == 500 and row["afro"] == 7, "деньги записались: %s" % dict(row))
+ok(row["bank_steps"] == 0, "bank_steps у новорождённого 0")
+store.save_character_state(char_id, bank_steps=2)
+ok(store.character(char_id)["bank_steps"] == 2, "покупка хранилища записывается")
 
 # --- вещи, квесты, письма: у всех свой ключ --------------------------------
 item = store.create_item(char_id, 45676, 1, count=3)
 ok(item and item["uniq"], "предмет создан, ключ uniq: %s" % dict(item))
 ok(item["count"] == 3, "поля предмета на месте")
 
+# Мешки на земле прошлого запуска: строки ничьи (char_id 0, combat.LOOT_OWNER).
+# Сервер игры стирает их при старте и пишет в журнал, сколько, — rowcount.
+ground = [store.create_item(0, 6910, 4)["uniq"] for _ in range(2)]
+ok(store.clear_ground(0) == 2, "ничьи вещи с земли стираются, счёт по rowcount")
+ok([store.item(u) for u in ground] == [None, None], "их больше нет")
+ok(store.item(item["uniq"]) is not None, "а вещь персонажа на месте")
+ok(store.clear_ground(0) == 0, "на пустой земле — ноль, не ошибка")
+
 q_id = store.take_quest(char_id, 1, {"step": 0}, False)
 ok(q_id, "квест взят, ключ q_id: %s" % q_id)
 ok(store.has_quest(char_id, 1), "квест виден")
 
+# Дневной лимит считает только повторяемые: types — список «IN (?, ?)».
+for t in (1, 2, 2, 5):
+    store.finish_quest(0, char_id, t, when=1000)
+ok(store.quests_done_since(char_id, 999) == 4, "сдачи с момента: все")
+ok(store.quests_done_since(char_id, 999, [2, 5]) == 3, "сдачи с момента: только этих типов")
+ok(store.quests_done_since(char_id, 999, []) == 0, "пустой список типов — ноль, не ошибка")
+ok(store.quests_done_since(char_id, 1001, [2, 5]) == 0, "раньше момента не считаются")
+# Какая ветка выбора сдана первой (Session.excluded): раньше по done_at, а в
+# одну секунду — та, что записана первой.
+ok(store.first_done(char_id, [5, 2]) == 2, "первая сдача: в одну секунду — по порядку записи")
+store.finish_quest(0, char_id, 7, when=900)
+ok(store.first_done(char_id, [2, 7]) == 7, "первая сдача: раньше по времени, хоть и записана позже")
+ok(store.first_done(char_id, [42]) is None, "не сдан ни один из типов — None")
+ok(store.first_done(char_id, []) is None, "пустой список типов — None, не ошибка")
+
 letter = store.mail_send(char_id, char_id, 0, "привет", "текст", 0, 0, "[]")
 ok(letter and letter["id"], "письмо отправлено, ключ id: %s" % letter["id"])
 
+# --- метки карты: rowcount -------------------------------------------------
+# PgCursor не знал rowcount, и update_mark (updMark с клиента) падал на
+# AttributeError — ещё в сервере, который работал на Postgres до этой правки.
+idx = store.insert_mark(char_id, 6000, 1700, "Лагерь", "")
+ok(store.update_mark(char_id, idx, "Лагерь мобов", "стая") is True,
+   "правка метки: update_mark по rowcount отвечает True")
+ok([(m["title"], m["info"]) for m in store.marks(char_id)] == [("Лагерь мобов", "стая")],
+   "правка записана")
+ok(store.update_mark(char_id, 7, "x", "y") is False, "метки 7 нет: False, а не исключение")
+ok(store.remove_mark(char_id, idx) and store.marks(char_id) == [], "метка удаляется")
+
+# --- ошибка не оставляет соединение без базы -------------------------------
+# В Postgres неудачный оператор обрывает всю транзакцию, и без отката
+# соединение на всё отвечает «current transaction is aborted». У сервера
+# игры оно одно на всех игроков.
+ok(raises(lambda: store.db.execute("SELECT no_such_column FROM accounts"), psycopg.Error),
+   "кривой запрос падает")
+ok(store.account_by_login("боец")["id"] == aid, "а следующий запрос отвечает")
+store.add_money(char_id, afro=1)
+ok(store.character(char_id)["afro"] == 8, "и запись после ошибки фиксируется")
+
+
+def half_done():
+    with store.db:
+        store.db.execute("UPDATE characters SET afro = 999 WHERE id = ?", (char_id,))
+        store.db.execute("SELECT no_such_column FROM accounts")
+
+
+ok(raises(half_done, psycopg.Error), "ошибка посреди with доходит до вызывающего")
+ok(store.character(char_id)["afro"] == 8, "и откатывает всю транзакцию, как в SQLite")
+# То, чем это грозило на деле: сумма из панели за пределами BIGINT. SQLite
+# отказывает ещё в драйвере (OverflowError), Postgres — самой базой, и
+# без отката очередь админки после этого не могла даже отметить действие
+# сделанным (admin_done) и повторяла его каждую секунду.
+ok(raises(lambda: store.add_money(char_id, afro=10 ** 19), psycopg.Error),
+   "10**19 афро не влезает в BIGINT")
+store.admin_done(0, "проверка")
+ok(store.money(char_id) == (8, 500), "кошелёк цел, а соединение пишет дальше")
+# Деньги, репутация, bank_steps досоздаются через ALTER TABLE (migrate), и
+# тип им должен достаться тот же, что остальным: INTEGER в SQLite — 64 бита.
+types = {r["column_name"]: r["data_type"] for r in store.db.execute(
+    "SELECT column_name, data_type FROM information_schema.columns"
+    " WHERE table_name = 'characters'")}
+ok({types[c] for c, _d in accounts.CHARACTER_COLUMNS} == {"bigint"},
+   "досозданные колонки characters — BIGINT: %s" % types)
+store.add_money(char_id, afro=3 * 10 ** 9)
+ok(store.money(char_id)[0] == 3 * 10 ** 9 + 8, "три миллиарда афро помещаются, как в SQLite")
+store.add_money(char_id, afro=-3 * 10 ** 9)
+
+# --- аукцион: транзакции, identity, письма от персонажа 0 -------------------
+other_acc, _ = store.register("покупатель", "пароль")
+other, _ = store.create_character(other_acc, "Покупатель", 0, "1")
+now = time.time()
+
+
+def lot_fields(row, **kw):
+    snap = {"uniq": row["uniq"], "type_id": row["type_id"], "root": row["root"]}
+    snap.update({f: row[f] for f in accounts.ITEM_FIELDS})
+    return dict(dict(type_id=row["type_id"], root=row["root"], item_json=json.dumps(snap),
+                     seller=char_id, seller_name="Ветеран", currency=0, start_bid=100,
+                     buyout=500, fee=5, hours=24, created_at=int(now), ends_at=now + 60), **kw)
+
+
+def letter_to(to_char, **kw):
+    return dict(dict(to_char=to_char, from_char=0, kind=0, subject="Аукцион: ",
+                     body="", afro=0, gold=0, items_json="[]"), **kw)
+
+
+gun = store.create_item(char_id, 25586, 3)
+lot = store.auction_list(gun["uniq"], char_id, lot_fields(gun), purse=(char_id, 3, 500))
+ok(lot and lot["id"] and lot["item_uniq"] == gun["uniq"], "лот выставлен: %s" % lot)
+ok(isinstance(lot["ends_at"], float) and abs(lot["ends_at"] - (now + 60)) < 1e-3,
+   "ends_at — число с дробью, как REAL в SQLite: %r" % lot["ends_at"])
+ok(store.item(gun["uniq"]) is None, "вещь ушла из items")
+ok(store.money(char_id) == (3, 500), "кошелёк продавца записан той же транзакцией")
+ok(store.auction_lot_by_item(gun["uniq"])["id"] == lot["id"], "лот ищется по вещи")
+ok(store.auction_count(char_id, now) == 1 and len(store.auction_active(now)) == 1
+   and store.auction_due(now) == [], "счёт, активные и истёкшие")
+
+theirs = store.create_item(other, 25586, 3)
+ok(raises(lambda: store.auction_list(theirs["uniq"], char_id, lot_fields(theirs)), ValueError),
+   "чужую вещь выставить нельзя")
+ok(store.item(theirs["uniq"]) is not None, "и она не тронута")
+
+
+def twice():
+    with store.db:
+        store.db.insert("INSERT INTO auction_lots (%s) VALUES (%s)"
+                        % (", ".join(store.AUCTION_COLS), ", ".join("?" * len(store.AUCTION_COLS))),
+                        [dict(lot_fields(gun), item_uniq=gun["uniq"])[c]
+                         for c in store.AUCTION_COLS])
+
+
+ok(raises(twice, storage.IntegrityError), "одна вещь — один лот: UNIQUE (item_uniq) доехал")
+ok(len(store.auction_active(now)) == 1, "и соединение после этого живое")
+
+sent = store.auction_rebid(lot["id"], 150, other, "Покупатель",
+                           [letter_to(char_id, afro=100)], purse=(other, 850, 0))
+ok([(m["from_char"], m["to_char"], m["afro"]) for m in sent] == [(0, char_id, 100)],
+   "письмо от персонажа 0 проходит: внешних ключей в Postgres нет")
+ok(store.auction_lot(lot["id"])["bid"] == 150 and store.money(other) == (850, 0),
+   "ставка и кошелёк покупателя записаны вместе")
+ok(store.db.execute(
+    "SELECT COUNT(*) c FROM information_schema.table_constraints"
+    " WHERE constraint_type = 'FOREIGN KEY'").fetchone()["c"] == 0,
+   "ни одного FOREIGN KEY в схеме")
+
+lot2 = store.auction_list(theirs["uniq"], other, lot_fields(theirs, seller=other))
+
+
+def broken_close():
+    store.auction_close(lot2["id"], [letter_to(other, subject=None)])
+
+
+ok(raises(broken_close, psycopg.Error), "закрытие с негодным письмом падает")
+ok(store.auction_lot(lot2["id"]) is not None, "и откатывается целиком: лот на месте")
+sent = store.auction_close(lot["id"], [letter_to(other, items_json=lot["item_json"])])
+ok(len(sent) == 1 and json.loads(sent[0]["items_json"])["uniq"] == gun["uniq"],
+   "лот закрыт, вещь уехала письмом")
+ok(store.auction_close(lot["id"], []) is None, "и закрыт один раз")
+ok(store.auction_rebid(lot["id"], 200, other, "x") is None, "ставка на закрытый лот: None")
+ok(lot2["id"] > lot["id"], "id лотов раздаёт identity")
+
+# --- бартер: обе половины одной транзакцией ---------------------------------
+# Вещь переходит UPDATE-ом, который называет её такой, какой её выложили;
+# rowcount решает, прошла ли она, а неудача на любой вещи откатывает и те,
+# что прошли до неё, и оба кошелька (Store.barter_swap).
+mine = store.create_item(char_id, 25586, 0, brk=80, max_break_cur=100)
+yours = store.create_item(other, 6188, 3, count=20)
+store.save_character_state(char_id, afro=100, gold=0)
+store.save_character_state(other, afro=0, gold=40)
+ok(store.barter_swap([(mine, other), (yours, char_id)],
+                     [(char_id, 70, 15), (other, 30, 25)]) is None,
+   "бартер прошёл: None")
+ok((store.item(mine["uniq"])["char_id"], store.item(yours["uniq"])["char_id"])
+   == (other, char_id), "вещи поменялись хозяевами")
+ok((store.money(char_id), store.money(other)) == ((70, 15), (30, 25)),
+   "и кошельки записаны той же транзакцией")
+mine, yours = store.item(mine["uniq"]), store.item(yours["uniq"])
+store.update_item(yours["uniq"], count=19)
+ok(store.barter_swap([(mine, char_id), (yours, other)],
+                     [(char_id, 0, 0), (other, 0, 0)]) == yours["uniq"],
+   "стопка изменилась после того, как её выложили: её номер назад")
+ok((store.item(mine["uniq"])["char_id"], store.item(yours["uniq"])["char_id"])
+   == (other, char_id), "и откат целиком: даже первая вещь осталась, где была")
+ok((store.money(char_id), store.money(other)) == ((70, 15), (30, 25)),
+   "кошельки не тронуты")
+ok(store.characters(aid) is not None, "и соединение после отката живое")
+
+# --- журнал денег: строка на каждое изменение кошелька ------------------------
+# Строка пишется в той же транзакции, что и кошелёк (accounts.book): разница
+# с тем, что было в строке персонажа, источник и уровень. Откат бартера выше
+# не оставил своих строк -- их и не было: кошельки не тронуты.
+led = store.ledger(char_id)
+ok([(r["source"], r["afro"], r["gold"]) for r in led][:1] == [("start", progression.START_AFRO, 0)],
+   "первая строка -- кошелёк новорождённого: %s" % led[:1])
+ok([(r["source"], r["ref"], r["afro"], r["gold"]) for r in led if r["source"] == "barter"]
+   == [("barter", other, -30, 15)], "бартер записан один раз, с другой стороной: %s" % led)
+ok([(r["source"], r["ref"], r["afro"], r["gold"]) for r in store.ledger(other)
+    if r["source"] == "barter"] == [("barter", char_id, 30, -15)], "и у другой стороны")
+ok(sum(r["afro"] for r in led) == store.money(char_id)[0]
+   and sum(r["gold"] for r in led) == store.money(char_id)[1],
+   "сумма журнала -- это кошелёк: %s" % (store.money(char_id),))
+with store.booked_as("quest", 9):
+    store.save_character_state(char_id, afro=70, gold=115, level=3)
+last = store.ledger(char_id)[-1]
+ok((last["source"], last["ref"], last["afro"], last["gold"], last["level"])
+   == ("quest", 9, 0, 100, 3), "источник из booked_as, уровень из той же записи: %s" % last)
+n = len(store.ledger(char_id))
+store.save_character_state(char_id, afro=70, gold=115)
+ok(len(store.ledger(char_id)) == n, "запись без изменения денег строки не пишет")
+ok(isinstance(last["id"], int) and last["id"] > led[-1]["id"], "id раздаёт identity")
+store.note_lent(char_id, 90013, 1000)
+store.note_lent(char_id, 90013, 2000)
+ok(store.lent_at(char_id, 90013) == 2000 and store.lent_at(char_id, 1) is None,
+   "выданные патроны: одна строка на квест, перезапись через ON CONFLICT")
+store.forget_lent(char_id, 90013)
+ok(store.lent_at(char_id, 90013) is None, "заём вычеркнут: всё вернулось неизрасходованным")
+
+# --- гибель: всё, что выпало, одной транзакцией -----------------------------
+# Целая вещь уходит на землю (char_id 0) под своим номером, от стопки
+# отщепляется новая строка — её uniq раздаёт identity через RETURNING, — а
+# строка, изменившаяся после чтения, откатывает всю гибель (Store.drop_items).
+boots = store.create_item(char_id, 10183, 1, slot=261, brk=70, max_break_cur=75)
+stack = store.create_item(char_id, 6188, 3, count=20)
+ground = store.drop_items(char_id, [(boots, None), (stack, 7)], 0, 2048)
+ok(ground is not None and [(r["char_id"], r["slot"], r["count"]) for r in ground]
+   == [(0, 2048, 1), (0, 2048, 7)], "выпало: сапоги целиком и семь патронов: %r" % ground)
+ok(ground[0]["uniq"] == boots["uniq"] and ground[0]["brk"] == 70,
+   "сапоги — та же строка, с износом")
+ok(ground[1]["uniq"] > stack["uniq"] and ground[1]["type_id"] == 6188,
+   "семь патронов — новая строка с новым uniq")
+ok(store.item(stack["uniq"])["count"] == 13, "в стопке осталось тринадцать")
+other = store.create_item(char_id, 25566, 0, brk=50, max_break_cur=50)
+ok(store.drop_items(char_id, [(other, None), (stack, 7)], 0, 2048) is None,
+   "стопка уже не та, что прочитана: None")
+ok(store.item(other["uniq"])["char_id"] == char_id
+   and store.item(stack["uniq"])["count"] == 13,
+   "и откат целиком: и вещь перед ней осталась у персонажа")
+ok(store.characters(aid) is not None, "и соединение после отката живое")
+
+# --- трофеи: вещь и её слова одной транзакцией, регистрация — тоже ----------
+# Трофей — строка items (корень 6) и строка trophies под тем же uniq: ключ
+# раздаёт identity items через RETURNING, в trophies он вписан явно (своего
+# счётчика там нет). Регистрация (trophies.Collection.register) — одна
+# транзакция: вещь из рюкзака, слова в коллекцию, кошелёк и навык бойца.
+T0 = 1_790_000_000
+buyer = store.character_by_name("Покупатель")["id"]
+
+
+def words(**kw):
+    return dict(dict(killer_id=char_id, killer_name="Ветеран", killer_lvl=0,
+                     victim_id=buyer, victim_name="Покупатель", victim_lvl=0,
+                     victim_clan="", killed_at=T0), **kw)
+
+
+ok(store.db.execute("SELECT data_type FROM information_schema.columns WHERE table_name ="
+                    " 'trophies' AND column_name = 'registered_at'").fetchone()["data_type"]
+   == "bigint", "trophies.registered_at — BIGINT, NULL разрешён")
+ear = store.create_trophy(0, 2048, 1495, 6, words())
+ok(ear["uniq"] and store.trophy(ear["uniq"])["type_id"] == 1495
+   and store.trophy(ear["uniq"])["registered_at"] is None,
+   "трофей создан: вещь на земле и её слова под одним uniq: %s" % ear["uniq"])
+store.update_item(ear["uniq"], char_id=char_id)
+ear = store.item(ear["uniq"])
+store.save_character_state(char_id, afro=100, gold=0, rep=0)
+store.update_item(ear["uniq"], slot=4096)
+ok(store.register_trophy(ear, store.trophy(ear["uniq"]), char_id, T0 + 60, True,
+                         (char_id, 75, 0), 10) is False,
+   "вещь уже не там, где её прочли: регистрация отказана")
+ok(store.item(ear["uniq"]) is not None and store.trophy(ear["uniq"])["registered_at"] is None
+   and store.money(char_id) == (100, 0) and store.character(char_id)["rep"] == 0,
+   "и откат целиком: вещь, слова, кошелёк, навык")
+store.update_item(ear["uniq"], slot=2048)
+ear = store.item(ear["uniq"])
+ok(store.register_trophy(ear, store.trophy(ear["uniq"]), char_id, T0 + 60, True,
+                         (char_id, 75, 0), 10) is True, "регистрация прошла")
+kept = store.trophies_of(char_id)
+ok(store.item(ear["uniq"]) is None and [(r["uniq"], r["owner"], r["paid_at"]) for r in kept]
+   == [(ear["uniq"], char_id, T0 + 60)] and store.money(char_id) == (75, 0)
+   and store.character(char_id)["rep"] == 10,
+   "вещи нет, слова в коллекции, оплачено; кошелёк и навык записаны: %s" % kept)
+ok(store.trophy_paid_since(char_id, buyer, T0 + 60 - 3600)
+   and not store.trophy_paid_since(char_id, buyer, T0 + 60),
+   "пара оплачена в этот час, и не позже")
+second = store.create_trophy(char_id, 2048, 1495, 6, words(killed_at=T0 + 600, victim_lvl=1))
+into = store.trophy_like(char_id, 1495, buyer)
+ok(into and into["uniq"] == ear["uniq"], "второе ухо той же жертвы находит первое")
+ok(store.register_trophy(second, store.trophy(second["uniq"]), char_id, T0 + 700, False,
+                         (char_id, 50, 0), 10, into) is True, "и вливается в него")
+kept = store.trophies_of(char_id)
+ok([(r["kills"], r["killed_at"], r["victim_lvl"], r["paid_at"]) for r in kept]
+   == [(2, T0 + 600, 1, T0 + 60)] and store.trophy(second["uniq"]) is None,
+   "одна запись: два убийства, время и уровни новее, отметка оплаты прежняя: %s" % kept)
+ok(store.register_trophy(second, words(), char_id, T0 + 800, False, (char_id, 0, 0), 10)
+   is False and store.money(char_id) == (50, 0), "повтор той же вещи: отказ, кошелёк цел")
+lost = store.create_trophy(char_id, 2048, 1492, 6, words())
+store.rekey_trophy(lost["uniq"], lost["uniq"] + 1000)
+ok(store.trophy(lost["uniq"]) is None and store.trophy(lost["uniq"] + 1000)["type_id"] == 1492,
+   "слова идут за трофеем под новый uniq (письмо)")
+lying = store.create_trophy(0, 2048, 1493, 6, words())
+on_ground = len(store.items_of(0))      # with what the death above left there
+ok(store.clear_ground(0) == on_ground and store.trophy(lying["uniq"]) is None
+   and store.trophies_of(char_id), "чистка земли уносит слова лежавшего, коллекцию — нет")
+ok(store.delete_trophy(ear["uniq"], buyer) is False and store.delete_trophy(ear["uniq"], char_id)
+   and store.trophies_of(char_id) == [], "чужой не удалит, хозяин — да")
+ok(store.trophy_paid_since(char_id, buyer, T0 + 60 - 3600)
+   and store.trophy_like(char_id, 1495, buyer) is None
+   and store.delete_trophy(ear["uniq"], char_id) is False,
+   "удалённая запись хранит отметку оплаты пары: час не сбрасывается")
+ok(store.characters(aid) is not None, "и соединение после всего этого живое")
+
+# --- витрина трофеев: место записи коллекции и купленные места ----------------
+# trophies.shown — место записи на витрине (NULL — только в коллекции),
+# characters.trophy_places — сколько мест куплено; обе колонки досоздаются
+# ALTER TABLE (accounts.TROPHY_COLUMNS, CHARACTER_COLUMNS) и в Postgres
+# должны выйти BIGINT, как соседние.
+for table, col in (("trophies", "shown"), ("characters", "trophy_places")):
+    ok(store.db.execute("SELECT data_type FROM information_schema.columns WHERE table_name ="
+                        " ? AND column_name = ?", (table, col)).fetchone()["data_type"]
+       == "bigint", "%s.%s — BIGINT" % (table, col))
+
+
+def registered(type_id, victim):
+    t = store.create_trophy(char_id, 2048, type_id, 6, words(victim_id=victim))
+    ok(store.register_trophy(t, store.trophy(t["uniq"]), char_id, T0 + 900, False,
+                             (char_id, 50, 0), 10), "запись %d в коллекции" % t["uniq"])
+    return t["uniq"]
+
+
+skull, scalp = registered(1492, buyer + 100), registered(1493, buyer + 101)
+ok(store.shown_trophies(char_id) == {}, "на витрине пусто")
+ok(store.show_trophy(char_id, 0, skull) and store.show_trophy(char_id, 2, skull)
+   and sorted(store.shown_trophies(char_id)) == [2],
+   "запись переезжает с места на место, а не встаёт дважды")
+ok(store.show_trophy(char_id, 2, scalp) and store.trophy(skull)["shown"] is None
+   and store.shown_trophies(char_id)[2]["uniq"] == scalp,
+   "другая на то же место — прежняя обратно только в коллекцию")
+ok(store.show_trophy(buyer, 0, scalp) is False and store.show_trophy(char_id, 2, 999999) is False
+   and store.shown_trophies(char_id)[2]["uniq"] == scalp,
+   "чужую и несуществующую не показать, и отказ места не освобождает (откат)")
+ok(store.delete_trophy(scalp, char_id) and store.shown_trophies(char_id) == {}
+   and store.trophy(scalp)["shown"] is None, "удалённая уходит и с витрины")
+ok(store.show_trophy(char_id, 1, skull) and store.show_trophy(char_id, 1)
+   and store.shown_trophies(char_id) == {}, "пустой obj освобождает место")
+store.save_character_state(char_id, afro=700, gold=3)
+ok(store.character(char_id)["trophy_places"] == 0
+   and store.buy_trophy_place(char_id, 0, 200, 3) == 1
+   and store.character(char_id)["trophy_places"] == 1 and store.money(char_id) == (200, 3),
+   "место куплено: счётчик и кошелёк одной транзакцией")
+ok(store.buy_trophy_place(char_id, 0, 0, 0) is None
+   and store.character(char_id)["trophy_places"] == 1 and store.money(char_id) == (200, 3),
+   "покупка по устаревшему счётчику не проходит, кошелёк цел")
+ok(store.characters(aid) is not None, "и соединение после витрины живое")
+
+# --- земля: где лежит вещь и до каких пор (таблица ground) --------------------
+# Правило владельца (2026-09-28): вещь на земле лежит 15 минут с того мига,
+# как легла, есть кто в локации или нет, и перезапуск этого не обрывает.
+# Место и срок — строка ground под uniq вещи: ключ вписан явно (identity
+# его не раздаёт), gx/gy — NULL у места, которое одна комната, срок — в
+# долях секунды (DOUBLE PRECISION), lay_down поверх записанной — ON CONFLICT.
+T = 1_800_000_000.5
+keep, late, gone_, bare = [store.create_item(0, 6910, 4)["uniq"] for _ in range(4)]
+store.lay_down({keep: T + 100, gone_: T - 1}, (100, None, None), 4363)
+store.lay_down({late: T + 50.25}, (7, 5833, 1600), 9)
+ok([(r["uniq"], r["loc"], r["gx"], r["gy"], r["cell"], r["expires_at"])
+    for r in store.on_ground(0)]
+   == [(keep, 100, None, None, 4363, T + 100), (late, 7, 5833, 1600, 9, T + 50.25),
+       (gone_, 100, None, None, 4363, T - 1)],
+   "записано: место, клетка карты или NULL, срок до долей секунды: %s" % store.on_ground(0))
+store.lay_down({keep: T + 300}, (100, None, None), 4430)
+ok([(r["cell"], r["expires_at"]) for r in store.on_ground(0) if r["uniq"] == keep]
+   == [(4430, T + 300)], "записанная второй раз — переписана, не задвоена")
+ok(store.clear_ground(0, T) == 2 and [store.item(u) for u in (gone_, bare)] == [None, None]
+   and [r["uniq"] for r in store.on_ground(0)] == [keep, late],
+   "старт: истёкшая и никогда не записанная стёрты (rowcount), остальные лежат")
+store.pick_up([keep], char_id, 2048)
+ok(store.item(keep)["char_id"] == char_id and [r["uniq"] for r in store.on_ground(0)] == [late],
+   "подобрал: вещь его под тем же uniq, строки земли у неё нет")
+store.lay_down({keep: T + 100}, (100, None, None), 4363)
+ok(store.clear_ground(0, T) == 0 and store.item(keep)["char_id"] == char_id
+   and store.db.execute("SELECT COUNT(*) c FROM ground").fetchone()["c"] == 1,
+   "строка земли у чужой вещи стирается, сама вещь — нет")
+ear2 = store.create_trophy(0, 2048, 1492, 6, words())
+store.lay_down({ear2["uniq"]: T + 10}, (100, None, None), 4363)
+store.lay_down({keep: T + 100}, (100, None, None), 4363)
+store.sweep_ground([late, ear2["uniq"], keep], 0)
+ok(store.item(late) is None and store.item(ear2["uniq"]) is None
+   and store.trophy(ear2["uniq"]) is None and store.item(keep)["char_id"] == char_id
+   and store.on_ground(0) == []
+   and store.db.execute("SELECT COUNT(*) c FROM ground").fetchone()["c"] == 0,
+   "срок вышел: вещь, слова трофея и строка — одной транзакцией; чужая вещь цела")
+for col, kind in (("expires_at", "double precision"), ("gx", "bigint"), ("uniq", "bigint")):
+    ok(store.db.execute("SELECT data_type FROM information_schema.columns WHERE table_name ="
+                        " 'ground' AND column_name = ?", (col,)).fetchone()["data_type"] == kind,
+       "ground.%s — %s" % (col, kind))
+ok(store.characters(aid) is not None, "и соединение после земли живое")
+
 # --- очередь админки -------------------------------------------------------
-action = store.admin_push("polestvr", "money", char_id=char_id, account_id=aid,
+action = store.admin_push("Archivist", "money", char_id=char_id, account_id=aid,
                           afro=100)
 ok(action, "действие встало в очередь: %s" % action)
 pending = store.admin_pending()
@@ -98,10 +514,355 @@ store.admin_done(pending[0]["id"], "начислено")
 ok(not store.admin_pending(), "после отметки очередь пуста")
 ok(store.admin_recent()[0]["result"] == "начислено", "результат записан")
 
+# --- кланы: каждая перемена одной транзакцией -------------------------------
+# Схема: UNIQUE имени написан в CREATE TABLE, а не отдельным CREATE UNIQUE
+# INDEX, — pg_schema дописывает IF NOT EXISTS только обычному индексу, и
+# второй запуск сервера на Postgres упал бы. Проверяем, что он доехал и что
+# схема ложится второй раз без ошибки.
+ok({"clans", "clan_members", "clan_relations", "clan_ledger"}
+   <= {r["table_name"] for r in store.db.execute(
+       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")},
+   "четыре клановые таблицы созданы")
+# Чтение в Postgres тоже открывает транзакцию; прежде чем второй Store
+# пройдёт migrate (ALTER TABLE ждёт всех читавших), эту закрываем.
+store.db.commit()
+again = accounts.Store()
+ok(again.clan_all() == [], "схема легла второй раз без ошибки")
+again.close()
+ok({"clan_no_invites", "seen_at"} <= store.db.columns("characters"),
+   "в characters есть clan_no_invites и seen_at")
+store.save_character_state(char_id, afro=1000, gold=2500)
+store.save_character_state(buyer, afro=10, gold=0)
+wolves = store.clan_create(char_id, "Волки", "волки", "стая", (char_id, 1000, 1500))
+ok(wolves and store.clan(wolves)["head"] == char_id
+   and store.clan_member(char_id)["perm"] == 65535,
+   "клан основан, глава с 65535: id %s" % wolves)
+ok(store.money(char_id) == (1000, 1500) and [(r["source"], r["ref"], r["gold"])
+                                             for r in store.ledger(char_id)][-1]
+   == ("clan_create", wolves, -1000), "взнос списан и записан clan_create той же транзакцией")
+ok(store.clan_create(buyer, "ВОЛКИ", "волки", "", (buyer, 10, 0)) is None,
+   "то же имя (ключ) второй раз: None — UNIQUE (name_key) доехал")
+ok(store.clan_member(buyer) is None and store.money(buyer) == (10, 0),
+   "и ни члена, ни списания; соединение живое")
+ok(raises(lambda: store.clan_create(buyer, "Лисы", "лисы", "", (buyer, None, 0)), TypeError),
+   "основание с негодным кошельком падает")
+ok(store.clan_by_key("лисы") is None and store.clan_member(buyer) is None,
+   "и откатывается целиком: ни клана, ни члена")
+ok(store.clan_member_add(buyer, wolves, 0x2, "Боец", char_id) is True
+   and store.clan_member(buyer)["post"] == "Боец", "вступление")
+ok(raises(lambda: store.clan_member_add(buyer, wolves, 0x2, "", char_id), storage.IntegrityError),
+   "второй клан одному персонажу — IntegrityError, наружу, а не внутри транзакции")
+ok(store.clan_member(buyer)["clan_id"] == wolves, "и соединение живое, членство прежнее")
+ok(store.clan_treasury_adjust(wolves, 300, "admin") == 300, "казна пополнена админом")
+ok(store.clan_treasury_move(wolves, buyer, 5, (buyer, 5, 0)) == 305
+   and store.money(buyer) == (5, 0), "взнос члена: казна и кошелёк одной транзакцией")
+ok([(r["source"], r["afro"]) for r in store.clan_ledger_rows(wolves)]
+   == [("deposit", 5), ("admin", 300)], "журнал казны: %s" % store.clan_ledger_rows(wolves))
+ok(store.clan_treasury_move(wolves, buyer, -400, (buyer, 405, 0)) is None
+   and store.money(buyer) == (5, 0) and store.clan_treasury(wolves) == 305,
+   "снять больше, чем в казне: None, ничего не записано")
+
+# Две сессии снимают всю казну разом: строку clans держит первый UPDATE,
+# второй ждёт его фиксации, перечитывает условие (afro >= ?) и не находит
+# строки — снято один раз.
+import threading  # noqa: E402
+
+store.db.commit()
+second = accounts.Store()
+first = storage.connect()
+first.execute("UPDATE clans SET afro = afro - 305 WHERE id = ? AND afro >= 305", (wolves,))
+race = {}
+worker = threading.Thread(target=lambda: race.update(
+    got=second.clan_treasury_move(wolves, buyer, -305, (buyer, 310, 0))))
+worker.start()
+time.sleep(0.7)
+ok(worker.is_alive(), "вторая сессия ждёт блокировку строки казны")
+first.commit()
+worker.join(15)
+ok(race.get("got", "нет ответа") is None and store.clan_treasury(wolves) == 0
+   and store.money(buyer) == (5, 0), "и после фиксации первой не снимает ничего: %s" % race)
+first.close()
+second.close()
+
+# Уход главы: клан переходит к старшему; уход последнего — роспуск, казна
+# в кошелёк уходящего (переданный — живого Character, или строки), одной
+# транзакцией.
+ok(store.clan_leave(char_id, wolves, purse=(char_id, 1000, 1500))
+   == {"new_head": buyer, "disbanded": False, "paid": 0}
+   and store.clan(wolves)["head"] == buyer and store.clan_member(buyer)["perm"] == 65535
+   and store.clan_member(char_id) is None, "глава ушёл: клан у оставшегося, 65535 у него")
+store.clan_treasury_adjust(wolves, 40, "admin")
+ok(raises(lambda: store.clan_leave(buyer, wolves, purse=(buyer, None, 0)), TypeError)
+   and store.clan(wolves)["afro"] == 40 and store.clan_member(buyer) is not None,
+   "роспуск с негодным кошельком откатывается целиком: клан, член и казна на месте")
+ok(store.clan_leave(buyer, wolves, purse=(buyer, 5, 0))
+   == {"new_head": None, "disbanded": True, "paid": 40}
+   and store.clan(wolves) is None and store.money(buyer) == (45, 0),
+   "последний ушёл: клан распущен, 40 афро в кошелёк")
+ok([(r["source"], r["ref"], r["afro"]) for r in store.ledger(buyer)][-1]
+   == ("clan_disband", wolves, 40)
+   and [(r["source"], r["afro"]) for r in store.clan_ledger_rows(wolves)][0] == ("disband", -40),
+   "в обоих журналах: clan_disband +40 и disband -40")
+foxes = store.clan_create(char_id, "Лисы", "лисы", "", None)
+store.clan_member_add(buyer, foxes, 0x2, "", char_id)
+store.clan_relation_set(foxes, 999, -1)
+store.clan_relation_set(foxes, 999, 1)
+ok(store.clan_relations_of(foxes) == {999: 1} and store.clan_relation(999, foxes) == 0,
+   "отношение перезаписывается (ON CONFLICT), и оно одностороннее")
+store.clan_treasury_adjust(foxes, 70, "admin")
+ok(store.clan_disband(foxes, buyer) == 70 and store.money(buyer) == (115, 0)
+   and store.clan_relations_of(foxes) == {} and store.clan_member(buyer) is None,
+   "админский роспуск: казна в кошелёк строки, отношения и члены ушли")
+ok(store.clan_disband(foxes, buyer) is None, "второй роспуск того же клана: None")
+bears = store.clan_create(buyer, "Медведи", "медведи", "", None)
+store.clan_member_add(char_id, bears, 0x100 | 0x2, "", buyer)
+with store.db:
+    handed = accounts.clan_hand_over(store.db, buyer)
+ok(handed == (bears, char_id, 0) and store.clan(bears)["head"] == char_id,
+   "инструмент админа передаёт клан удаляемого главы: %s" % (handed,))
+ok(store.characters(aid) is not None, "и соединение после кланов живое")
+
 # --- схема -----------------------------------------------------------------
 cols = store.db.columns("characters")
-for col in ("id", "account_id", "name", "gold", "afro", "level", "rep"):
+for col in ("id", "account_id", "name", "gold", "afro", "level", "rep", "bank_steps",
+            "trophy_places"):
     ok(col in cols, "в characters есть %s" % col)
-
+ok([r["name"] for r in store.db.execute("SELECT name FROM migrations")
+    if r["name"] == RELINK] == [RELINK],
+   "на чистой базе перенос лекарств отмечен сразу")
 store.db.close()
+
+
+# --- переезд: база прежнего сервера ------------------------------------------
+# Та, что работает сейчас: без auction_lots, migrations и bank_steps, с
+# лекарствами 6067..6072 в рюкзаке и в письме. keep_lots оставляет
+# auction_lots с лотом-лекарством — чтобы перенос прошёл и по лотам.
+def old_database(keep_lots=False, trophies_unshown=False):
+    """trophies_unshown: база сервера 2026-09-25 — trophies уже есть, с
+    записью в коллекции, но без места на витрине (shown), и купленных мест
+    нет ни у кого (trophy_places). Иначе trophies нет вовсе."""
+    st = fresh_store()
+    acc, _ = st.register("старожил", "пароль")
+    cid, _ = st.create_character(acc, "Старожил", 0, "1")
+    for type_id, uses in ((6071, 20), (6067, 3), (6043, 5), (6904, 7)):
+        st.create_item(cid, type_id, 2, use_count=uses)
+    st.mail_send(cid, cid, 0, "Посылка", "", 100, 0, json.dumps(
+        [{"uniq": 90, "type_id": 6069, "root": 2, "use_count": 12},
+         {"uniq": 91, "type_id": 3577, "root": 1}]))
+    if keep_lots:
+        heal = st.create_item(cid, 6072, 2, use_count=20)
+        st.auction_list(heal["uniq"], cid, dict(lot_fields(heal), seller=cid))
+    else:
+        st.db.execute("DROP TABLE auction_lots")
+    st.db.execute("DROP TABLE migrations")
+    if trophies_unshown:
+        ear = st.create_trophy(cid, 2048, 1495, 6, dict(
+            killer_id=cid, killer_name="Старожил", killer_lvl=0, victim_id=cid + 1,
+            victim_name="Жертва", victim_lvl=0, victim_clan="", killed_at=1_790_000_000))
+        st.register_trophy(ear, st.trophy(ear["uniq"]), cid, 1_790_000_060, True,
+                           (cid, 0, 0), 10)
+        st.db.execute("ALTER TABLE trophies DROP COLUMN shown")
+    else:
+        st.db.execute("DROP TABLE trophies")
+    # Nor had it the journal of money, nor the record of rounds lent.
+    st.db.execute("DROP TABLE money_ledger")
+    st.db.execute("DROP TABLE char_lent")
+    # Nor the ground table: a bag it left out is a row of nobody's, and
+    # nothing more.
+    st.create_item(0, 6910, 4)
+    st.db.execute("DROP TABLE ground")
+    st.db.execute("ALTER TABLE characters DROP COLUMN bank_steps")
+    st.db.execute("ALTER TABLE characters DROP COLUMN trophy_places")
+    # Nor any clan (2026-09-28).
+    for table in ("clans", "clan_members", "clan_relations", "clan_ledger"):
+        st.db.execute("DROP TABLE %s" % table)
+    st.db.execute("ALTER TABLE characters DROP COLUMN clan_no_invites")
+    st.db.execute("ALTER TABLE characters DROP COLUMN seen_at")
+    st.db.commit()
+    st.close()
+    return cid
+
+
+cid = old_database(keep_lots=True)
+db = storage.connect()
+ok("bank_steps" not in db.columns("characters"), "старая база: bank_steps нет")
+db.close()
+up = accounts.Store()
+ok("bank_steps" in up.db.columns("characters") and up.character(cid)["bank_steps"] == 0,
+   "ALTER TABLE добавил bank_steps, у старожила 0")
+ok((up.character(cid)["clan_no_invites"], up.character(cid)["seen_at"], up.clan_all(),
+    up.clan_member(cid)) == (0, 0, [], None),
+   "база без кланов: таблицы созданы, у старожила 0 в новых колонках и ни клана")
+ok({"uniq", "killer_id", "victim_id", "registered_at", "paid_at"} <= up.db.columns("trophies")
+   and up.trophies_of(cid) == [], "старая база без trophies: таблица создана, пустая")
+ok(set(accounts.Store.GROUND_COLUMNS) <= up.db.columns("ground") and up.on_ground(0) == []
+   and up.clear_ground(0) == 1 and up.items_of(0) == [],
+   "старая база без ground: таблица создана; мешок прежнего сервера, без строки"
+   " земли, стирается на старте, как раньше")
+ok(up.db.execute("SELECT data_type FROM information_schema.columns WHERE table_name ="
+                 " 'characters' AND column_name = 'bank_steps'").fetchone()["data_type"]
+   == "bigint", "и BIGINT, как соседние колонки перенесённой базы")
+ok([(r["type_id"], r["use_count"]) for r in up.items_of(cid)]
+   == [(6908, 20), (6904, 3), (6043, 5), (6904, 7)],
+   "лекарства в рюкзаке переехали на 6904..6909 со своими зарядами: %s"
+   % [(r["type_id"], r["use_count"]) for r in up.items_of(cid)])
+letter = up.db.execute("SELECT items_json FROM mail").fetchone()["items_json"]
+ok([(s["type_id"], s.get("use_count")) for s in json.loads(letter)] == [(6906, 12), (3577, None)],
+   "и в письме: %s" % letter)
+lot = up.db.execute("SELECT type_id, item_json FROM auction_lots").fetchone()
+ok((lot["type_id"], json.loads(lot["item_json"])["type_id"]) == (6909, 6909),
+   "и на аукционе — и тип лота, и снимок")
+ok([r["name"] for r in up.db.execute("SELECT name FROM migrations")
+    if r["name"] == RELINK] == [RELINK],
+   "перенос отмечен один раз")
+ok([(r["source"], r["afro"], r["gold"]) for r in up.ledger(cid)]
+   == [("opening", progression.START_AFRO, 0)],
+   "журнал денег открыт кошельком старожила, одной строкой: %s" % up.ledger(cid))
+up.create_item(cid, 6067, 2, use_count=5)
+up.close()
+
+# Второй раз: ничего не повторяется — и INSERT в migrations даже не
+# пробуется. Иначе каждая страница регистрации (она открывает Store на
+# каждый запрос) писала бы в журнал Postgres ERROR о дубле ключа.
+refused = []
+_execute = storage.PostgresDB.execute
+
+
+def spying(self, sql, args=()):
+    try:
+        return _execute(self, sql, args)
+    except storage.IntegrityError:
+        refused.append(sql)
+        raise
+
+
+storage.PostgresDB.execute = spying
+try:
+    up = accounts.Store()
+finally:
+    storage.PostgresDB.execute = _execute
+ok(refused == [], "второе открытие не упирается в ключ migrations: %s" % refused)
+ok(up.items_of(cid)[-1]["type_id"] == 6067, "выданное после переноса 6067 так и осталось")
+ok(up.db.execute("SELECT COUNT(*) c FROM migrations WHERE name = ?", (RELINK,)).fetchone()["c"] == 1,
+   "строка миграции всё ещё одна")
+up.close()
+
+# --- переезд: база сервера 2026-09-25, трофеи без витрины --------------------
+# Таблица trophies уже есть, с записью в коллекции, но без места на витрине
+# (trophies.shown), а у персонажей нет купленных мест (trophy_places).
+cid = old_database(trophies_unshown=True)
+db = storage.connect()
+ok("shown" not in db.columns("trophies") and "trophy_places" not in db.columns("characters"),
+   "старая база: ни места на витрине, ни купленных мест")
+db.close()
+up = accounts.Store()
+ok("shown" in up.db.columns("trophies") and up.character(cid)["trophy_places"] == 0,
+   "ALTER TABLE добавил trophies.shown и characters.trophy_places, у старожила 0 купленных")
+kept = up.trophies_of(cid)
+ok(len(kept) == 1 and kept[0]["shown"] is None and up.shown_trophies(cid) == {},
+   "его запись коллекции цела и не стоит ни на каком месте: %s" % kept)
+ok(up.show_trophy(cid, 0, kept[0]["uniq"]) and list(up.shown_trophies(cid)) == [0],
+   "и её можно выставить")
+up.close()
+
+# --- журнал денег: персонаж без статов в базе до журнала ---------------------
+# migrate даёт ему кошелёк новорождённого и записывает это (seed_stats), а
+# открытие журнала -- остаток: кошелёк минус то, что в журнале уже есть
+# (open_ledger, LEFT JOIN на суммы). Сумма строк -- снова кошелёк.
+cid = old_database()
+db = storage.connect()
+db.execute("DELETE FROM char_stats WHERE char_id = ?", (cid,))
+db.execute("UPDATE characters SET afro = 5, gold = 7 WHERE id = ?", (cid,))
+db.commit()
+db.close()
+up = accounts.Store()
+ok([(r["source"], r["afro"], r["gold"]) for r in up.ledger(cid)]
+   == [("start", progression.START_AFRO - 5, -7), ("opening", 5, 7)],
+   "персонаж без статов: пересев записан, открытие -- остаток: %s" % up.ledger(cid))
+ok(tuple(up.money(cid)) == (progression.START_AFRO, 0)
+   and sum(r["afro"] for r in up.ledger(cid)) == progression.START_AFRO
+   and sum(r["gold"] for r in up.ledger(cid)) == 0, "и сумма журнала -- кошелёк")
+up.close()
+
+# --- переезд двумя процессами разом ----------------------------------------
+# docker compose поднимает сервер игры и страницу регистрации вместе, и оба
+# открывают базу. Без storage.PostgresDB.schema_lock второй CREATE TABLE
+# падал на pg_type_typname_nsp_index, второй ALTER — на «already exists».
+CHILD = r"""
+import sys, time
+sys.path.insert(0, %r)
+import accounts
+time.sleep(max(0.0, float(sys.argv[1]) - time.time()))
+accounts.Store().close()
+"""
+for attempt in range(3):
+    cid = old_database()
+    start = time.time() + 1.5
+    procs = [subprocess.Popen([sys.executable, "-c", CHILD % HERE, str(start)],
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+             for _ in range(8)]
+    outs = [p.communicate(timeout=120)[0] for p in procs]
+    bad = [o.strip().splitlines()[-1] for p, o in zip(procs, outs) if p.returncode]
+    ok(not bad, "попытка %d: восемь процессов открыли старую базу разом: %s" % (attempt, bad))
+    db = storage.connect()
+    ok(db.execute("SELECT COUNT(*) c FROM migrations WHERE name = ?", (RELINK,)).fetchone()["c"] == 1
+       and "bank_steps" in db.columns("characters")
+       and "trophy_places" in db.columns("characters")
+       and "shown" in db.columns("trophies")
+       and {"clan_no_invites", "seen_at"} <= db.columns("characters")
+       and {"name_key", "afro"} <= db.columns("clans") and db.columns("clan_ledger")
+       and "expires_at" in db.columns("ground")
+       and db.execute("SELECT COUNT(*) c FROM auction_lots").fetchone()["c"] == 0,
+       "попытка %d: схема доведена один раз" % attempt)
+    ok([r["type_id"] for r in db.execute(
+        "SELECT type_id FROM items WHERE char_id = ? ORDER BY uniq", (cid,))]
+       == [6908, 6904, 6043, 6904], "попытка %d: лекарства перенесены один раз" % attempt)
+    db.close()
+
+# --- подарки админки персонажу не в игре -------------------------------------
+# До 2026-09-29 такая вещь ложилась голой строкой: ствол 0 из 0 (NaN у
+# клиента, мимо окна ремонта), дробовик на выключенном режиме огня,
+# лекарство без зарядов. Один раз на базу их дозаполняет сервер при старте
+# (inventory.OFFLINE_GIFTS_FIX через run_once) -- в рюкзаке, в письме и на
+# аукционе. Здесь -- что тот же SELECT с IN, UPDATE и JSON проходят в Postgres.
+import inventory  # noqa: E402
+
+WALTHER, SHOTGUN, MEDICINE = 25636, 7072, 6049
+store = fresh_store()
+aid, _ = store.register("даритель", "пароль")
+cid, _ = store.create_character(aid, "Одарённый", 0, 1)
+bare = {t: store.create_item(cid, t, root) for t, root in
+        ((WALTHER, 0), (SHOTGUN, 0), (MEDICINE, 2))}
+worn = store.create_item(cid, WALTHER, 0, brk=0, max_break_cur=500)
+posted = store.create_item(cid, WALTHER, 0)
+snap = {f: posted[f] for f in accounts.ITEM_FIELDS}
+snap.update(uniq=posted["uniq"], type_id=WALTHER, root=0)
+store.delete_item(posted["uniq"])
+letter = store.mail_send(cid, cid, 0, "подарок", "", 0, 0, json.dumps([snap]))
+listed = store.create_item(cid, SHOTGUN, 0)
+lsnap = {f: listed[f] for f in accounts.ITEM_FIELDS}
+lsnap.update(uniq=listed["uniq"], type_id=SHOTGUN, root=0)
+lot = store.auction_list(listed["uniq"], cid, dict(
+    type_id=SHOTGUN, root=0, item_json=json.dumps(lsnap), seller=cid, seller_name="Одарённый",
+    currency=0, start_bid=1, buyout=0, fee=0, hours=24, created_at=int(time.time()),
+    ends_at=time.time() + 86400))
+ok(accounts.run_once(store.db, inventory.OFFLINE_GIFTS_FIX, inventory.fill_offline_gifts)
+   and not accounts.run_once(store.db, inventory.OFFLINE_GIFTS_FIX, inventory.fill_offline_gifts),
+   "подарки дозаполнены один раз")
+
+
+def fields(r):
+    return (r["brk"], r["max_break_cur"], r["cur_mode"], r["use_count"])
+
+
+got = [fields(store.item(bare[t]["uniq"])) for t in (WALTHER, SHOTGUN, MEDICINE)]
+ok(got == [(500, 500, 0, 0), (400, 400, 2, 0), (0, 0, 0, 10)],
+   "в рюкзаке -- как новые: %s" % got)
+ok(fields(store.item(worn["uniq"])) == (0, 500, 0, 0), "сломанный, но не голый, не тронут")
+ok([fields(s) for s in json.loads(store.mail_letter(letter["id"])["items_json"])]
+   == [(500, 500, 0, 0)]
+   and fields(json.loads(store.auction_lot(lot["id"])["item_json"])) == (400, 400, 2, 0),
+   "и в письме, и на аукционе")
+store.close()
+
 print("storage(pg): %d проверок, все зелёные" % checks)

@@ -1,0 +1,7530 @@
+{
+ "_meta": {
+  "counts": {
+   "creature_types": 5987,
+   "dropped_test_high": 85,
+   "dropped_test_medium": 18,
+   "manual": 309,
+   "npcs": 697,
+   "npcs_mob": 320,
+   "npcs_npc": 377,
+   "suggest": 665,
+   "verified_promoted_to_high": 1
+  },
+  "rule": "type_id -> original string. Numbered families (Npc_Trader000039): member k takes string block start + k, the start picked by a Viterbi pass over wiki placement, role, sprite and the 'Тестовый' string of member 000000; high = own evidence in a run with >=2 evidenced members incl. a wiki-loc or test one. Speaking-name families (dn_, wh_, nz_): transliteration anchors chained in family order; >=2 proper-name anchors = high, 1:1 fill between anchors = medium. Mobs: proper name in one '[N] Name' string or level-equal = high. Single strong signal = medium. Output drops strings starting with 'Тест' and never uses the generated block 9182-9445. Text = html.unescape of the original, nothing else.",
+  "source": "texts.xml",
+  "source_md5": "7a10e992003480a76546b6c824b3dbc2",
+  "source_size": 20433511
+ },
+ "npcs": {
+  "100": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Деда Джоф<Br>Лекарь",
+   "string_id": 50005
+  },
+  "1005": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Варон<Br>Старший прораб",
+   "string_id": 60226
+  },
+  "101": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Иви",
+   "string_id": 62773
+  },
+  "1011": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Флаг",
+   "string_id": 7495
+  },
+  "1014": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ребенок",
+   "string_id": 59671
+  },
+  "1015": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джек Скарабей<Br>Капитан",
+   "string_id": 47251
+  },
+  "1019": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Черная Крыса<Br>Дикое животное",
+   "string_id": 9494
+  },
+  "102": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Ящик спирту",
+   "string_id": 10591
+  },
+  "1020": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Муад",
+   "string_id": 9642
+  },
+  "1023": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Серая крыса",
+   "string_id": 62313
+  },
+  "1024": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[18] Казначей<Br>Северный Альянс",
+   "string_id": 8980
+  },
+  "103": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Послушник Джо",
+   "string_id": 62774
+  },
+  "1037": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[22] Генерал Шерхан<Br>Северный Альянс",
+   "string_id": 9010
+  },
+  "1038": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[21] Бригадир Табаки<Br>Северный Альянс",
+   "string_id": 9009
+  },
+  "104": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Спящий верблюд",
+   "string_id": 62776
+  },
+  "1040": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Старший офицер<Br>ДСР",
+   "string_id": 10614
+  },
+  "105": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Хассир<Br>водитель",
+   "string_id": 62126
+  },
+  "107": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Расул",
+   "string_id": 48745
+  },
+  "1077": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Капитан Калиюга<Br>Встречающий<Br>МКС",
+   "string_id": 50661
+  },
+  "108": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Тахир",
+   "string_id": 48746
+  },
+  "110": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Послушник Люшера",
+   "string_id": 10598
+  },
+  "1107": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Думисани<Br>Вождь Племени",
+   "string_id": 10433
+  },
+  "111": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Мастер Люшера",
+   "string_id": 10609
+  },
+  "1113": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Заключенный",
+   "string_id": 60388
+  },
+  "1114": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Заключенный",
+   "string_id": 60388
+  },
+  "1115": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Заключенный",
+   "string_id": 60388
+  },
+  "1116": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Заключенный",
+   "string_id": 60388
+  },
+  "1117": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Заключенный",
+   "string_id": 60388
+  },
+  "1127": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джек Гарард",
+   "string_id": 9643
+  },
+  "1129": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ибрахим<Br>Прапорщик",
+   "string_id": 10435
+  },
+  "1130": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джеррах ал-Хакам<Br>Воевода",
+   "string_id": 59987
+  },
+  "1133": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рудо",
+   "string_id": 59988
+  },
+  "1134": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Камал",
+   "string_id": 59989
+  },
+  "1135": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ящик с инструментами",
+   "string_id": 41476
+  },
+  "114": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "1142": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Зула<Br>Целительница",
+   "string_id": 10390
+  },
+  "1143": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Гамаль Ар-Рази<Br>Медик",
+   "string_id": 10391
+  },
+  "1147": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Наби ал-Асад<Br>Лекарь",
+   "string_id": 10392
+  },
+  "115": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "1152": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Однопальцый<Br>Торговец ножами",
+   "string_id": 62136
+  },
+  "116": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "117": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "1175": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Хиппи<Br>Дети цветов",
+   "string_id": 9048
+  },
+  "1176": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[0] Хиппи<Br>Дети цветов",
+   "string_id": 9050
+  },
+  "118": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "1187": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Барыга Сет<Br>Торговля для экспедиций",
+   "string_id": 59991
+  },
+  "1188": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мортимер<Br>Обменник",
+   "string_id": 62140
+  },
+  "1189": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Странник",
+   "string_id": 47751
+  },
+  "119": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "1196": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Бернар<Br>старший помощник",
+   "string_id": 62131
+  },
+  "12": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Молодая Антилопа",
+   "string_id": 10637
+  },
+  "120": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "1204": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ваккас<Br>Броня, одежда, пояса",
+   "string_id": 62149
+  },
+  "1205": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Хамис<Br>Торговец комплектами",
+   "string_id": 62150
+  },
+  "1206": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Люций<Br>Боевая медицина",
+   "string_id": 62151
+  },
+  "1207": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Магдалена<Br>Еда, вода, лекарства",
+   "string_id": 62152
+  },
+  "121": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "1224": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Оружие",
+   "string_id": 62153
+  },
+  "1227": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Торговец патронами",
+   "string_id": 62154
+  },
+  "1234": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Лекарь",
+   "string_id": 46359
+  },
+  "13": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[0] Тренирующийся нубиец",
+   "string_id": 50242
+  },
+  "1308": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Свинцовая порода",
+   "string_id": 48066
+  },
+  "1312": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Источник селитры",
+   "string_id": 48067
+  },
+  "1316": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Медная порода",
+   "string_id": 48068
+  },
+  "1320": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вход в шахту<Br>Добыча свинца",
+   "string_id": 10521
+  },
+  "1324": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вход на карьер<Br>Добыча селитры",
+   "string_id": 10522
+  },
+  "1328": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вход в шахту<Br>Добыча меди",
+   "string_id": 10523
+  },
+  "133": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Гудмэн",
+   "string_id": 48748
+  },
+  "1332": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Выход из шахты",
+   "string_id": 10524
+  },
+  "1336": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Выход из карьера",
+   "string_id": 10525
+  },
+  "134": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Джохар<Br>помощник Амина",
+   "string_id": 50285
+  },
+  "1340": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Выход из шахты",
+   "string_id": 10524
+  },
+  "1344": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Свинцовая порода",
+   "string_id": 48066
+  },
+  "1345": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Свинцовая порода",
+   "string_id": 48066
+  },
+  "1349": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Источник селитры",
+   "string_id": 48067
+  },
+  "135": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Амин",
+   "string_id": 50286
+  },
+  "1350": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Источник селитры",
+   "string_id": 48067
+  },
+  "1354": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Медная порода",
+   "string_id": 48068
+  },
+  "1355": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Медная порода",
+   "string_id": 48068
+  },
+  "1359": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Сортировка",
+   "string_id": 10526
+  },
+  "1363": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Сортировка",
+   "string_id": 10526
+  },
+  "1367": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Сортировка",
+   "string_id": 10526
+  },
+  "137": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Гусейн",
+   "string_id": 48749
+  },
+  "1371": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Производство пуль",
+   "string_id": 10527
+  },
+  "1375": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Производство пороха",
+   "string_id": 10528
+  },
+  "1379": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Производство гильз",
+   "string_id": 10529
+  },
+  "1387": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Водитель автобуса<Br>до завода",
+   "string_id": 10531
+  },
+  "139": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Айна",
+   "string_id": 48750
+  },
+  "1397": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Цель №1",
+   "string_id": 10537
+  },
+  "1398": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Цель №2",
+   "string_id": 10538
+  },
+  "1399": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Цель №3",
+   "string_id": 10539
+  },
+  "14": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Слабый Мародёр",
+   "string_id": 50267
+  },
+  "1400": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Цель №4",
+   "string_id": 10540
+  },
+  "1401": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Цель №5",
+   "string_id": 10541
+  },
+  "1402": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Цель №6",
+   "string_id": 10542
+  },
+  "1403": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "1405": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Комиссар Рекс<Br>Новые колонисты",
+   "string_id": 50244
+  },
+  "1406": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Большой Мвамба<Br>Новые колонисты",
+   "string_id": 10536
+  },
+  "141": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ганий<Br>попрошайка",
+   "string_id": 48752
+  },
+  "1413": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Барон Дайсон",
+   "string_id": 10578
+  },
+  "1414": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Телохранитель Дайсона",
+   "string_id": 10579
+  },
+  "1415": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Автомобиль Вальдеса",
+   "string_id": 46933
+  },
+  "1416": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Труп Родригеса",
+   "string_id": 46934
+  },
+  "1418": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Эсмеральда",
+   "string_id": 46936
+  },
+  "1429": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "146": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рашид",
+   "string_id": 48757
+  },
+  "147": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Шамиль",
+   "string_id": 48758
+  },
+  "15": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Мародёр",
+   "string_id": 50268
+  },
+  "1507": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[20]Танк Т-34",
+   "string_id": 10653
+  },
+  "1562": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Ганс Грубер<Br>Союз арабского Магриба",
+   "string_id": 8889
+  },
+  "1564": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Бутч Кэссиди<Br>Живодеры Элфрида",
+   "string_id": 8920
+  },
+  "1565": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Вильям Блейд<Br>ДСР",
+   "string_id": 8937
+  },
+  "16": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Мародёр",
+   "string_id": 50268
+  },
+  "1657": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Старикашка",
+   "string_id": 62791
+  },
+  "1681": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Оперативник Моссада",
+   "string_id": 50308
+  },
+  "1682": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Кукуруза",
+   "string_id": 46953
+  },
+  "1685": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Старая женщина",
+   "string_id": 62792
+  },
+  "1686": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Тотем",
+   "string_id": 46955
+  },
+  "1691": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вивек",
+   "string_id": 62793
+  },
+  "1692": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Алхимический столик",
+   "string_id": 62794
+  },
+  "1694": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[5] Призрак-страж",
+   "string_id": 50269
+  },
+  "1698": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мистер Соренсен",
+   "string_id": 48775
+  },
+  "1699": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Жан-Батист",
+   "string_id": 48776
+  },
+  "17": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Курьер",
+   "string_id": 50247
+  },
+  "1714": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Злой шахтёр<Br>Стахановцы",
+   "string_id": 48069
+  },
+  "1726": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Абимбола",
+   "string_id": 60590
+  },
+  "1752": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Хорст Кленз<Br>Шахтер",
+   "string_id": 10618
+  },
+  "1753": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Осколок скалы (ВХ)",
+   "string_id": 60227
+  },
+  "1757": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Старик Том Райц",
+   "string_id": 47253
+  },
+  "1760": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Хорст Кленз<Br>Шахтер",
+   "string_id": 10618
+  },
+  "1761": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Райнхольд Вюрт<Br>Коллекционер",
+   "string_id": 47254
+  },
+  "1763": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Капитан<Br>Пират контрабандист",
+   "string_id": 10619
+  },
+  "1765": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Боцман<Br>Пират контрабандист",
+   "string_id": 10621
+  },
+  "1767": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Полковник Дарт Соренсен<Br>Барон бомжей",
+   "string_id": 49946
+  },
+  "1772": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Полковник Дарт Соренсен<Br>Барон бомжей",
+   "string_id": 49946
+  },
+  "178": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Головорез",
+   "string_id": 50276
+  },
+  "1791": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Охранник<Br>Западная сторона",
+   "string_id": 62315
+  },
+  "1794": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Охранник<Br>Южная сторона",
+   "string_id": 62316
+  },
+  "1831": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[25] Себек<Br>Божество Нила",
+   "string_id": 9537
+  },
+  "184": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Головорез",
+   "string_id": 50282
+  },
+  "1841": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Генри Джонс",
+   "string_id": 46956
+  },
+  "1876": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Заур<Br>Скаут",
+   "string_id": 50572
+  },
+  "1878": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Иоан Суосан<Br>Скаут",
+   "string_id": 50574
+  },
+  "1879": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "1880": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "1881": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "190": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Головорез",
+   "string_id": 50292
+  },
+  "1929": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[10] Караван-Баши<Br>Работорговцы",
+   "string_id": 8899
+  },
+  "1932": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Купец<Br>Корован Союз арабского Магрибаа",
+   "string_id": 9054
+  },
+  "1933": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Проводник<Br>Корован Союз арабского Магрибаа",
+   "string_id": 9055
+  },
+  "1934": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[10] Караван-Баши<Br>Работорговцы",
+   "string_id": 8899
+  },
+  "1937": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Купец<Br>Корован работорговцев",
+   "string_id": 9059
+  },
+  "1938": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Проводник<Br>Корован работорговцев",
+   "string_id": 9060
+  },
+  "1939": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[10] Караван-Баши<Br>Работорговцы",
+   "string_id": 8899
+  },
+  "1942": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Купец<Br>Военный корован",
+   "string_id": 9064
+  },
+  "1943": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Проводник<Br>Военный корован",
+   "string_id": 9065
+  },
+  "1944": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[10] Караван-Баши<Br>Работорговцы",
+   "string_id": 8899
+  },
+  "1947": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[18] Купец<Br>Корован особого назначения",
+   "string_id": 9069
+  },
+  "1948": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[18] Проводник<Br>Корован особого назначения",
+   "string_id": 9070
+  },
+  "1953": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Густав Стивенсон",
+   "string_id": 48779
+  },
+  "1959": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Марк Клаус<Br>Подарки",
+   "string_id": 59610
+  },
+  "196": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Головорез",
+   "string_id": 50298
+  },
+  "1977": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Добрый беженец",
+   "string_id": 59670
+  },
+  "198": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[9] Головорез<Br>Работорговцы",
+   "string_id": 8897
+  },
+  "20": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Бандит",
+   "string_id": 10597
+  },
+  "2000": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Борн<Br>сын Марка<Br>упаковка подарков",
+   "string_id": 59611
+  },
+  "2001": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Лана<Br>дочь Марка<Br>распаковка подарков",
+   "string_id": 59612
+  },
+  "2011": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мун Сон Мён<Br>Колдунья",
+   "string_id": 60232
+  },
+  "2012": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Аарон Уорнер<Br>улучшение пистолетов",
+   "string_id": 51666
+  },
+  "2015": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Младший<Br>помощник Доктора",
+   "string_id": 62130
+  },
+  "202": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Снитке<Br>Аптекарь",
+   "string_id": 62127
+  },
+  "2022": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Электрощит<Br>Под напряжением<Br>Опасно для жизни",
+   "string_id": 48070
+  },
+  "2048": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "2072": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "2088": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "2089": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "2090": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "2091": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "2092": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "2093": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "2094": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "2095": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "2099": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Череп",
+   "string_id": 800
+  },
+  "21": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Бандит",
+   "string_id": 10597
+  },
+  "2103": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[5] Лидер Ян Дуглас<Br>Новые колонисты",
+   "string_id": 50270
+  },
+  "2111": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ланд Байрон<Br>Лекарь",
+   "string_id": 50008
+  },
+  "2118": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Эммануил Людвигович<Br>Инженер-Технолог МКС",
+   "string_id": 60591
+  },
+  "2162": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Ящик<Br>Союз арабского Магриба",
+   "string_id": 8886
+  },
+  "2168": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[18] Том Морган<Br>Пираты Сомали",
+   "string_id": 8974
+  },
+  "2173": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Беглый каторжник<Br>Хранитель общака",
+   "string_id": 60387
+  },
+  "2176": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Макисе Курису",
+   "string_id": 60386
+  },
+  "2180": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Снабженец Хальфы<Br>Патроны и лекарства",
+   "string_id": 48847
+  },
+  "2192": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Говард Хаксли",
+   "string_id": 49108
+  },
+  "2193": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Марис Дамбис",
+   "string_id": 49109
+  },
+  "2194": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Финиковая пальма",
+   "string_id": 49110
+  },
+  "2196": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Карло Меони",
+   "string_id": 49112
+  },
+  "2250": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Жрец Астенну<Br>помощник Джехути",
+   "string_id": 46636
+  },
+  "2252": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Леонофф<Br>механник МКС",
+   "string_id": 47257
+  },
+  "2253": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Аменти<Br>Хранитель Храма богини Тефнут",
+   "string_id": 46637
+  },
+  "2259": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Энди Уорхол<Br>Старый коллекционер",
+   "string_id": 60233
+  },
+  "2276": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джексон Кёртис<Br>Волонтер Фонд спасения цивилизаци",
+   "string_id": 62779
+  },
+  "2279": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Точильный камень<Br>Вади-Хальфы",
+   "string_id": 51645
+  },
+  "2298": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Тьерри Сабин<Br>",
+   "string_id": 50410
+  },
+  "2315": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[21] Прототип<Br>Северный Альянс",
+   "string_id": 8998
+  },
+  "233": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Лора Крафт",
+   "string_id": 50283
+  },
+  "2372": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ущелье 1",
+   "string_id": 48871
+  },
+  "238": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Оружейник<Br>Винтовки",
+   "string_id": 48071
+  },
+  "239": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Оружейник<Br>Дробовики",
+   "string_id": 48072
+  },
+  "2391": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Хан Сэлл<Br>Контрабанда",
+   "string_id": 46643
+  },
+  "2395": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ущелье 2",
+   "string_id": 48872
+  },
+  "242": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Оружейник<Br>Пистолеты",
+   "string_id": 48074
+  },
+  "243": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Оружейник<Br>Пистолет-пулеметы",
+   "string_id": 48075
+  },
+  "2455": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Юкка",
+   "string_id": 48852
+  },
+  "2456": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Алоэ",
+   "string_id": 48853
+  },
+  "2457": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Астроблема",
+   "string_id": 48854
+  },
+  "2482": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Гомезз<Br>Воин Тефнут",
+   "string_id": 46638
+  },
+  "250": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Стрелок<Br>Новые колонисты",
+   "string_id": 8831
+  },
+  "251": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Штурмовик<Br>Новые колонисты",
+   "string_id": 8828
+  },
+  "2513": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Нак Чокисс<Br>Торговец военным снаряжением",
+   "string_id": 46639
+  },
+  "2514": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Алк Руунер<Br>Торговец военным снаряжением",
+   "string_id": 46640
+  },
+  "255": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Амир<Br>Джанджавиды",
+   "string_id": 50262
+  },
+  "258": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[0] Лазутчик<Br>Новые колонисты",
+   "string_id": 8824
+  },
+  "259": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Новобранец<Br>Новые колонисты",
+   "string_id": 8825
+  },
+  "260": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Налетчик<Br>Новые колонисты",
+   "string_id": 8826
+  },
+  "261": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Каратель<Br>Новые колонисты",
+   "string_id": 8827
+  },
+  "262": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Штурмовик<Br>Новые колонисты",
+   "string_id": 8828
+  },
+  "263": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Дозорный<Br>Новые колонисты",
+   "string_id": 8829
+  },
+  "264": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Боевик<Br>Новые колонисты",
+   "string_id": 8830
+  },
+  "265": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Стрелок<Br>Новые колонисты",
+   "string_id": 8831
+  },
+  "266": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Бригадир<Br>Новые колонисты",
+   "string_id": 8832
+  },
+  "267": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Боец<Br>Новые колонисты",
+   "string_id": 8833
+  },
+  "268": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Часовой<Br>Новые колонисты",
+   "string_id": 8834
+  },
+  "269": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Бугор Асмунд<Br>Новые колонисты",
+   "string_id": 8835
+  },
+  "270": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Пахан Агнес<Br>Новые колонисты",
+   "string_id": 8836
+  },
+  "271": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Послушник<Br>Секта Люшер",
+   "string_id": 8840
+  },
+  "272": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Исполнитель<Br>Секта Люшер",
+   "string_id": 8841
+  },
+  "273": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Проповедник<Br>Секта Люшер",
+   "string_id": 8842
+  },
+  "274": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Подмастерье<Br>Секта Люшер",
+   "string_id": 8843
+  },
+  "276": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Старший Исполнитель<Br>Секта Люшер",
+   "string_id": 8845
+  },
+  "277": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Мастер<Br>Секта Люшер",
+   "string_id": 8846
+  },
+  "278": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Проповедник<Br>Секта Люшер",
+   "string_id": 8842
+  },
+  "279": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Экзорцист<Br>Секта Люшер",
+   "string_id": 8851
+  },
+  "280": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Проповедник<Br>Секта Люшер",
+   "string_id": 8842
+  },
+  "281": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Инквизитор<Br>Секта Люшер",
+   "string_id": 8849
+  },
+  "282": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Послушник Люшера",
+   "string_id": 10599
+  },
+  "283": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Магистр Дитрих<Br>Секта Люшер",
+   "string_id": 8853
+  },
+  "284": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[5] Блаженный Лука<Br>Секта Люшер",
+   "string_id": 8852
+  },
+  "285": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Послушник Люшера",
+   "string_id": 10600
+  },
+  "287": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Разведчик<Br>Джанджавиды",
+   "string_id": 8856
+  },
+  "288": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Грабитель<Br>Джанджавиды",
+   "string_id": 8857
+  },
+  "289": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Боевик<Br>Джанджавиды",
+   "string_id": 8858
+  },
+  "290": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Диверсант<Br>Джанджавиды",
+   "string_id": 50259
+  },
+  "291": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[5] Диверсант<Br>Джанджавиды",
+   "string_id": 8860
+  },
+  "292": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[5] Боевик<Br>Джанджавиды",
+   "string_id": 8861
+  },
+  "293": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[5] Дозорный<Br>Джанджавиды",
+   "string_id": 8862
+  },
+  "294": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Мародер<Br>Джанджавиды",
+   "string_id": 8864
+  },
+  "295": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Мародер<Br>Джанджавиды",
+   "string_id": 8864
+  },
+  "296": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Стрелок<Br>Джанджавиды",
+   "string_id": 8865
+  },
+  "297": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Саботажник<Br>Джанджавиды",
+   "string_id": 8866
+  },
+  "298": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Ветеран<Br>Джанджавиды",
+   "string_id": 8867
+  },
+  "299": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Лидер Ашрам<Br>Джанджавиды",
+   "string_id": 8869
+  },
+  "30": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Демир",
+   "string_id": 9649
+  },
+  "300": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Руководитель Рашад<Br>Джанджавиды",
+   "string_id": 8868
+  },
+  "301": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Спецназ<Br>Союз арабского Магриба",
+   "string_id": 8872
+  },
+  "302": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Часовой<Br>Союз арабского Магриба",
+   "string_id": 8873
+  },
+  "303": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Лейтенант<Br>Союз арабского Магриба",
+   "string_id": 8874
+  },
+  "304": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Рядовой<Br>Союз арабского Магриба",
+   "string_id": 8875
+  },
+  "305": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Спецназ<Br>Союз арабского Магриба",
+   "string_id": 8876
+  },
+  "306": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Дозорный<Br>Союз арабского Магриба",
+   "string_id": 8877
+  },
+  "307": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Капитан<Br>Союз арабского Магриба",
+   "string_id": 8878
+  },
+  "308": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Рядовой<Br>Союз арабского Магриба",
+   "string_id": 8879
+  },
+  "309": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Спецназ<Br>Союз арабского Магриба",
+   "string_id": 8880
+  },
+  "310": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Стрелок<Br>Союз арабского Магриба",
+   "string_id": 8881
+  },
+  "311": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Майор<Br>Союз арабского Магриба",
+   "string_id": 8882
+  },
+  "312": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Ефрейтор<Br>Союз арабского Магриба",
+   "string_id": 8883
+  },
+  "313": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[10] Мукаддам Ихсан<Br>Союз арабского Магриба",
+   "string_id": 8885
+  },
+  "314": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[9] Раид Кайс<Br>Союз арабского Магриба",
+   "string_id": 8884
+  },
+  "315": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Караванщик<Br>Работорговцы",
+   "string_id": 50274
+  },
+  "316": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Смотритель<Br>Работорговцы",
+   "string_id": 8892
+  },
+  "317": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Громила<Br>Работорговцы",
+   "string_id": 8893
+  },
+  "319": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[9] Караванщик<Br>Работорговцы",
+   "string_id": 8895
+  },
+  "320": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Смотритель<Br>Работорговцы",
+   "string_id": 50278
+  },
+  "321": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Громила<Br>Работорговцы",
+   "string_id": 50275
+  },
+  "323": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Караванщик<Br>Работорговцы",
+   "string_id": 50280
+  },
+  "324": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Смотритель<Br>Работорговцы",
+   "string_id": 50278
+  },
+  "325": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Громила<Br>Работорговцы",
+   "string_id": 50281
+  },
+  "3297": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Иван Груздь<Br>Ополченец Кермы</Br>",
+   "string_id": 60694
+  },
+  "336": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Неудачник<Br>Секта Люшер",
+   "string_id": 8839
+  },
+  "338": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Ицхак Уорнер<Br>улучшение пистолетов",
+   "string_id": 51649
+  },
+  "339": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Хаким<Br>улучшение дробовиков",
+   "string_id": 51650
+  },
+  "34": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Норман",
+   "string_id": 9652
+  },
+  "341": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Шон<Br>улучшение винтовок",
+   "string_id": 51651
+  },
+  "348": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Маньяк<Br>Живодеры Элфрида",
+   "string_id": 8912
+  },
+  "35": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Сейфул",
+   "string_id": 59979
+  },
+  "350": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Свежеватель<Br>Живодеры Элфрида",
+   "string_id": 8914
+  },
+  "351": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Садист<Br>Живодеры Элфрида",
+   "string_id": 8915
+  },
+  "3511": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Асланбек Садулаев<Br>Ополченец Кермы</Br>",
+   "string_id": 60695
+  },
+  "352": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Маньяк<Br>Живодеры Элфрида",
+   "string_id": 8912
+  },
+  "354": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Свежеватель<Br>Живодеры Элфрида",
+   "string_id": 8914
+  },
+  "355": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Садист<Br>Живодеры Элфрида",
+   "string_id": 8915
+  },
+  "356": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Маньяк<Br>Живодеры Элфрида",
+   "string_id": 8912
+  },
+  "358": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Свежеватель<Br>Живодеры Элфрида",
+   "string_id": 8914
+  },
+  "359": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Садист<Br>Живодеры Элфрида",
+   "string_id": 8915
+  },
+  "360": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Элфрид<Br>Живодеры Элфрида",
+   "string_id": 8922
+  },
+  "361": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Бетти<Br>Живодеры Элфрида",
+   "string_id": 8921
+  },
+  "362": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Командир<Br>ДСР",
+   "string_id": 8925
+  },
+  "363": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Ополченец<Br>ДСР",
+   "string_id": 8926
+  },
+  "364": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[5] Ветеран<Br>Джанджавиды",
+   "string_id": 10595
+  },
+  "365": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Боевик<Br>ДСР",
+   "string_id": 8928
+  },
+  "366": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Командир Группы<Br>ДСР",
+   "string_id": 8929
+  },
+  "368": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Ветеран<Br>ДСР",
+   "string_id": 8931
+  },
+  "370": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Полевой Командир<Br>ДСР",
+   "string_id": 8933
+  },
+  "372": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Ветеран<Br>Миротворцы",
+   "string_id": 46338
+  },
+  "373": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Боевик<Br>Beja Congress",
+   "string_id": 10603
+  },
+  "374": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[20] Командер<Br>Северный Альянс",
+   "string_id": 9005
+  },
+  "377": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Клара<Br>улучшение пистолетов",
+   "string_id": 51657
+  },
+  "378": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Сэм<Br>улучшение дробовиков",
+   "string_id": 51658
+  },
+  "380": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Азам<Br>улучшение винтовок",
+   "string_id": 51659
+  },
+  "388": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Агата",
+   "string_id": 48760
+  },
+  "389": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рамон",
+   "string_id": 48761
+  },
+  "395": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Ветеран<Br>Миротворцы",
+   "string_id": 46338
+  },
+  "397": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Солдат<Br>Миротворцы",
+   "string_id": 46340
+  },
+  "398": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Штурмовик<Br>Миротворцы",
+   "string_id": 46341
+  },
+  "399": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Ветеран<Br>Миротворцы",
+   "string_id": 46342
+  },
+  "4": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Зоричев<Br>Обучение специализациям",
+   "string_id": 9619
+  },
+  "40": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Нубийский защитник",
+   "string_id": 59981
+  },
+  "401": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Солдат<Br>Миротворцы",
+   "string_id": 46344
+  },
+  "4023": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4029": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "403": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Ветеран<Br>Миротворцы",
+   "string_id": 46345
+  },
+  "4036": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Ксенос<Br>СА",
+   "string_id": 9039
+  },
+  "4043": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Племяш Бари<Br>Астронавигатор в отставке",
+   "string_id": 62146
+  },
+  "405": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Солдат<Br>Миротворцы",
+   "string_id": 46346
+  },
+  "4059": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "406": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Штурмовик<Br>Миротворцы",
+   "string_id": 46347
+  },
+  "4063": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Раб",
+   "string_id": 48747
+  },
+  "4079": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Багира",
+   "string_id": 47010
+  },
+  "4087": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "я не бомба нет",
+   "string_id": 59985
+  },
+  "409": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Ящик<Br>Новые колонисты",
+   "string_id": 8837
+  },
+  "41": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Ящик с деньгами",
+   "string_id": 47949
+  },
+  "4102": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Думисани<Br>Вождь Племени",
+   "string_id": 10433
+  },
+  "4103": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Эсмеральда",
+   "string_id": 46936
+  },
+  "4108": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Гатера<Br>Авантюрист",
+   "string_id": 60592
+  },
+  "411": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Бомж",
+   "string_id": 49749
+  },
+  "4119": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Лана<Br>дочь Марка<Br>распаковка подарков",
+   "string_id": 59612
+  },
+  "4120": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "ЛАРВА",
+   "string_id": 10685
+  },
+  "4123": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Маниока",
+   "string_id": 9618
+  },
+  "4124": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "доктор Джордж Миллер",
+   "string_id": 10690
+  },
+  "4152": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Парашют д—5",
+   "string_id": 25137
+  },
+  "4153": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Парашют д—6",
+   "string_id": 25139
+  },
+  "4159": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Осмотр пирамиды",
+   "string_id": 47066
+  },
+  "4166": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Исмаил ат-Адиль<Br>Броня Апокалипсиса[20x2][P]",
+   "string_id": 10284
+  },
+  "4177": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Тотем",
+   "string_id": 46955
+  },
+  "4183": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Юкка",
+   "string_id": 48852
+  },
+  "4184": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Зула<Br>Целительница",
+   "string_id": 10390
+  },
+  "4191": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "На штурм бункера",
+   "string_id": 59647
+  },
+  "4210": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мочить бандита",
+   "string_id": 60650
+  },
+  "423": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ребенок",
+   "string_id": 59671
+  },
+  "4238": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Шакир ат-Фахим<Br>Броня легионера[6][P]",
+   "string_id": 9698
+  },
+  "425": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ребенок",
+   "string_id": 59671
+  },
+  "4275": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "однорукий Магриб",
+   "string_id": 10336
+  },
+  "4277": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Драцена",
+   "string_id": 10593
+  },
+  "431": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ольсен<Br>Амулеты и сувениры",
+   "string_id": 62122
+  },
+  "4324": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Космодром",
+   "string_id": 60073
+  },
+  "44": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Саид",
+   "string_id": 62765
+  },
+  "4400": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "4420": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[20] Крис Кайл<Br>Снайпер<Br>Северный Альянс",
+   "string_id": 9008
+  },
+  "46": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Генри мл.",
+   "string_id": 62766
+  },
+  "466": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вскрытие кейса КСП-14 за 1000 Афро",
+   "string_id": 50483
+  },
+  "4670": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Карен ван Бурен<Br>Пилот вертолета<Br>\\\"SE.313 Alouette II\\\"",
+   "string_id": 62147
+  },
+  "4689": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Бензоколонка",
+   "string_id": 59983
+  },
+  "47": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Кшиштоф",
+   "string_id": 62767
+  },
+  "4708": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Специализация дробовики 1",
+   "string_id": 49446
+  },
+  "4709": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Винтовки и патроны",
+   "string_id": 50658
+  },
+  "4714": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Специализация дробовики 2",
+   "string_id": 49448
+  },
+  "4719": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Пистолет-пулеметы<Br>и патроны",
+   "string_id": 50660
+  },
+  "4720": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Специализация дробовики 3",
+   "string_id": 49450
+  },
+  "4726": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Специализация дробовики 4",
+   "string_id": 49452
+  },
+  "4732": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Специализация дробовики 5",
+   "string_id": 49454
+  },
+  "474": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вскрытие кейса КСП-15 за 2000 Афро",
+   "string_id": 50487
+  },
+  "475": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вскрытие кейса КСП-16 за 3000 Афро",
+   "string_id": 50490
+  },
+  "48": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Назир",
+   "string_id": 62768
+  },
+  "480": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вскрытие кейса КСП-17 за 4000 Афро",
+   "string_id": 50493
+  },
+  "484": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "485": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "486": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "487": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "488": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "489": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "4898": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Казначей<Br>Джанджавиды",
+   "string_id": 8855
+  },
+  "49": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Каспар",
+   "string_id": 62769
+  },
+  "490": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "491": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "4912": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Казначей<Br>Живодеры Элфрида",
+   "string_id": 8907
+  },
+  "492": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "4926": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Казначей<Br>Миротворцы",
+   "string_id": 8941
+  },
+  "493": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "494": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "495": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "50": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Ящик<Br>Новые колонисты",
+   "string_id": 8837
+  },
+  "51": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Новобранец <Br>ДСР",
+   "string_id": 10615
+  },
+  "5114": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Ябир ибн Хайянс<Br>Улучшение пулеметов",
+   "string_id": 9629
+  },
+  "5122": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Кондрат<Br>Пилот",
+   "string_id": 9637
+  },
+  "5125": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Казначей<Br>Джанджавиды",
+   "string_id": 8855
+  },
+  "5140": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ибн Сина<Br>Лекарь",
+   "string_id": 10389
+  },
+  "5146": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ирже Котунц<Br>Жрец Тефнут",
+   "string_id": 9640
+  },
+  "5158": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Торговец<Br>Снаряжение Легионера<Br>0-6 ур",
+   "string_id": 10407
+  },
+  "5159": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Торговец<Br>Снаряжение Красное Эхо<Br>7-10 ур",
+   "string_id": 10408
+  },
+  "5160": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Торговец<Br>Снаряжение Темное Эхо<Br>10-14 ур",
+   "string_id": 10409
+  },
+  "5161": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Торговец<Br>Снаряжение Штурм-М<Br>15-16 ур",
+   "string_id": 10410
+  },
+  "5181": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Торговец<Br>Шахтерская одежда",
+   "string_id": 10430
+  },
+  "5185": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Амина",
+   "string_id": 9641
+  },
+  "5186": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Муад",
+   "string_id": 9642
+  },
+  "5187": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джек Гарард",
+   "string_id": 9643
+  },
+  "5188": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Берт Гаммер",
+   "string_id": 9644
+  },
+  "5189": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Сорванец",
+   "string_id": 9645
+  },
+  "5190": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Салех<Br>Нубиец",
+   "string_id": 9646
+  },
+  "5191": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Самсон",
+   "string_id": 9647
+  },
+  "5192": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Точильный камень<Br>Нубийской долины",
+   "string_id": 9648
+  },
+  "5193": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Демир",
+   "string_id": 9649
+  },
+  "5194": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Крысолов",
+   "string_id": 9650
+  },
+  "5195": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корова",
+   "string_id": 9651
+  },
+  "5196": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Норман",
+   "string_id": 9652
+  },
+  "5198": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Фая<Br>Аренда транспорта",
+   "string_id": 10386
+  },
+  "520": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "5200": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Зула<Br>Целительница",
+   "string_id": 10390
+  },
+  "5201": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Гамаль Ар-Рази<Br>Медик",
+   "string_id": 10391
+  },
+  "5202": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Наби ал-Асад<Br>Лекарь",
+   "string_id": 10392
+  },
+  "5205": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Говард Хаксли<Br>Антиквариат и колониальные товары",
+   "string_id": 10431
+  },
+  "5206": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джеррах ал-Хакам<Br>Староста поселка",
+   "string_id": 10432
+  },
+  "5207": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Думисани<Br>Вождь Племени",
+   "string_id": 10433
+  },
+  "5209": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рихтер<Br>Бывший наемник",
+   "string_id": 10434
+  },
+  "521": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "5210": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ибрахим<Br>Прапорщик",
+   "string_id": 10435
+  },
+  "5211": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Морис<Br>Еда и Медикаменты",
+   "string_id": 10436
+  },
+  "5212": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Борис<Br>Пистолеты и патроны",
+   "string_id": 10437
+  },
+  "5213": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Локсли<Br>Одежда и Броня",
+   "string_id": 10438
+  },
+  "5215": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Доктор Гофус<Br>Специальное снаряжение",
+   "string_id": 10440
+  },
+  "5216": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Адам<Br>старший помощник",
+   "string_id": 10441
+  },
+  "5217": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Хасани<Br>Торговец Едой",
+   "string_id": 10442
+  },
+  "5218": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Бомани<Br>Торговец Патронами",
+   "string_id": 10443
+  },
+  "5219": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ро-А-Ким<Br>Торговец Патронами",
+   "string_id": 10444
+  },
+  "522": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "5221": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Шульц<Br>Пистолеты и патроны",
+   "string_id": 10446
+  },
+  "5222": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Одноглазый<Br>Торговец ножами",
+   "string_id": 10447
+  },
+  "5223": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Абдула<Br>Одежда и броня",
+   "string_id": 10448
+  },
+  "5224": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Эрикесэм<Br>Еда и Медикаменты",
+   "string_id": 10449
+  },
+  "5225": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Торговец Йонас<Br>Патроны и лекарства",
+   "string_id": 10450
+  },
+  "5226": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Святой Бенкур<Br>жрец Тефнут<Br>легенды и новости",
+   "string_id": 10451
+  },
+  "5228": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Хранилище<Br>личных вещей",
+   "string_id": 10520
+  },
+  "523": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "5230": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Сержант Чугункин",
+   "string_id": 9653
+  },
+  "5231": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Раненый солдат",
+   "string_id": 9654
+  },
+  "5232": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Аюб",
+   "string_id": 9655
+  },
+  "5233": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Доктор Корбен",
+   "string_id": 9656
+  },
+  "5234": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Фермер Хрущ",
+   "string_id": 9657
+  },
+  "524": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "525": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "526": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "527": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "544": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "545": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "546": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "547": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "548": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "549": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "562": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "563": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "564": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "565": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "5685": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Лейтенант О’Нилл<Br>Армия ЦСЦ",
+   "string_id": 9665
+  },
+  "5686": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рядовой Беккет<Br>Армия ЦСЦ",
+   "string_id": 9666
+  },
+  "5693": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Др. Генри<Br>Археолог",
+   "string_id": 9673
+  },
+  "5694": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рядовой Дуэйн Доберман<Br>Армия ЦСЦ",
+   "string_id": 9674
+  },
+  "5695": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Техник Джеймс Хэтфилд<Br>Армия ЦСЦ",
+   "string_id": 9675
+  },
+  "5705": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джон док Нильсон<Br>Лекарства и еда",
+   "string_id": 10456
+  },
+  "5706": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Иван змей Сидоркин<Br>Торговец патронами",
+   "string_id": 10457
+  },
+  "5707": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Раф профессор Лю<Br>Специальное снаряжение",
+   "string_id": 10455
+  },
+  "5744": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "5745": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "5746": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Грузовой контейнер<Br>Снаряжение",
+   "string_id": 9664
+  },
+  "5747": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Лейтенант О’Нилл<Br>Армия ЦСЦ",
+   "string_id": 9665
+  },
+  "5767": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Тамим бин Хамад Аль Тани<Br>Казначей местных ремесленников",
+   "string_id": 9688
+  },
+  "5768": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мухаммед бин Рашид Аль Мактум<Br>Казначей местных ремесленников",
+   "string_id": 9689
+  },
+  "5769": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мохаммед Хусейн Али Аль Амуди<Br>Казначей местных ремесленников",
+   "string_id": 9690
+  },
+  "5770": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "5771": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Аббас ибн Заглюль<Br>Обмен экзоодежды [6-8]",
+   "string_id": 10484
+  },
+  "5775": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Абид ибн Заки<Br>Обмен одежды [6-8]",
+   "string_id": 10488
+  },
+  "5779": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Вафи ибн Имам<Br>Обмен одежды [6-8]",
+   "string_id": 10492
+  },
+  "578": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Азам<Br>улучшение винтовок",
+   "string_id": 51659
+  },
+  "5783": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Мишари ат-Хайям<Br>Шлем легионера[6][G]",
+   "string_id": 9691
+  },
+  "5784": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Аскар аль-Шади<Br>Шлем легионера[6][P]",
+   "string_id": 9692
+  },
+  "5785": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Файхан ат-Муаммаль<Br>Шлем легионера[6][A]",
+   "string_id": 9693
+  },
+  "5786": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Захид ибн Фади<Br>Плащ легионера[6][G]",
+   "string_id": 9694
+  },
+  "5787": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Маъмун аль-Хидр<Br>Плащ легионера[6][P]",
+   "string_id": 9695
+  },
+  "5788": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Шейбан ат-Ханбаль<Br>Плащ легионера[6][A]",
+   "string_id": 9696
+  },
+  "5789": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Салах ибн Низам<Br>Броня легионера[6][G]",
+   "string_id": 9697
+  },
+  "5790": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Шакир ат-Фахим<Br>Броня легионера[6][P]",
+   "string_id": 9698
+  },
+  "5791": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Шакур аль-Идрис<Br>Броня легионера[6][A]",
+   "string_id": 9699
+  },
+  "5792": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Шукри ат-Раджих<Br>Штаны легионера[6][G]",
+   "string_id": 9700
+  },
+  "5793": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Латаиф ат-Мааруф<Br>Штаны легионера[6][P]",
+   "string_id": 9701
+  },
+  "5794": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Хайри аш-Джалил<Br>Штаны легионера[6][A]",
+   "string_id": 9702
+  },
+  "5795": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Наим аш-Асаф<Br>Ботинки легионера[6][G]",
+   "string_id": 9703
+  },
+  "5796": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Шариф ибн Муктади<Br>Ботинки легионера[6][P]",
+   "string_id": 9704
+  },
+  "5797": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Наджиб аш-Магсум<Br>Ботинки легионера[6][A]",
+   "string_id": 9705
+  },
+  "5828": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Марсад аш-Тураб<Br>Шлем Красное ЭXO[7][G]",
+   "string_id": 9736
+  },
+  "5829": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Набиль ар-Захид<Br>Шлем Красное ЭXO[7][P]",
+   "string_id": 9737
+  },
+  "5830": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Мабрур ат-Дахдах<Br>Шлем Красное ЭXO[7][A]",
+   "string_id": 9738
+  },
+  "5831": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Юсри аль-Кусай<Br>Поддоспешник Красное ЭXO[7][G]",
+   "string_id": 9739
+  },
+  "5832": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Баррак ат-Мурад<Br>Поддоспешник Красное ЭXO[7][P]",
+   "string_id": 9740
+  },
+  "5833": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Мубарак аш-Халис<Br>Поддоспешник Красное ЭXO[7][A]",
+   "string_id": 9741
+  },
+  "5834": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Захир аль-Латиф<Br>Корпус Красное ЭXO[7][G]",
+   "string_id": 9742
+  },
+  "5835": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Насиб ат-Маъмун<Br>Корпус Красное ЭXO[7][P]",
+   "string_id": 9743
+  },
+  "5836": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Вали ат-Баррак<Br>Корпус Красное ЭXO[7][A]",
+   "string_id": 9744
+  },
+  "5837": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Дани аль-Насих<Br>Моторика Красное ЭXO[7][G]",
+   "string_id": 9745
+  },
+  "5838": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Сарват ибн Салих<Br>Моторика Красное ЭXO[7][P]",
+   "string_id": 9746
+  },
+  "5839": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Гани аш-Сирадж<Br>Моторика Красное ЭXO[7][A]",
+   "string_id": 9747
+  },
+  "5840": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Мусир аль-Насиф<Br>Боты Красное ЭXO[7][G]",
+   "string_id": 9748
+  },
+  "5841": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Сарван ар-Мунзир<Br>Боты Красное ЭXO[7][P]",
+   "string_id": 9749
+  },
+  "5842": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Сахир аль-Билял<Br>Боты Красное ЭXO[7][A]",
+   "string_id": 9750
+  },
+  "586": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Казначей<Br>Новые колонисты",
+   "string_id": 8823
+  },
+  "587": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Казначей<Br>Секта Люшер",
+   "string_id": 8838
+  },
+  "5873": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Джалил аш-Муниф<Br>Шлем Красное ЭXO[8][G]",
+   "string_id": 9781
+  },
+  "5874": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Джасим ибн Залиль<Br>Шлем Красное ЭXO[8][P]",
+   "string_id": 9782
+  },
+  "5875": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Муджалид аль-Джамиг<Br>Шлем Красное ЭXO[8][A]",
+   "string_id": 9783
+  },
+  "5876": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Рами аш-Имад<Br>Поддоспешник Красное ЭXO[8][G]",
+   "string_id": 9784
+  },
+  "5877": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Махди ибн Курбан<Br>Поддоспешник Красное ЭXO[8][P]",
+   "string_id": 9785
+  },
+  "5878": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Муджахид ибн Надр<Br>Поддоспешник Красное ЭXO[8][A]",
+   "string_id": 9786
+  },
+  "5879": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Кабир ибн Ияс<Br>Корпус Красное ЭXO[8][G]",
+   "string_id": 9787
+  },
+  "588": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Казначей<Br>Джанджавиды",
+   "string_id": 8855
+  },
+  "5880": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Азим ат-Мумин<Br>Корпус Красное ЭXO[8][P]",
+   "string_id": 9788
+  },
+  "5881": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Джалал аш-Ханиф<Br>Корпус Красное ЭXO[8][A]",
+   "string_id": 9789
+  },
+  "5882": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Джарир ар-Усман<Br>Моторика Красное ЭXO[8][G]",
+   "string_id": 9790
+  },
+  "5883": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Вафи ар-Икрам<Br>Моторика Красное ЭXO[8][P]",
+   "string_id": 9791
+  },
+  "5884": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Амин ат-Шахир<Br>Моторика Красное ЭXO[8][A]",
+   "string_id": 9792
+  },
+  "5885": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Мумин аль-Макин<Br>Боты Красное ЭXO[8][G]",
+   "string_id": 9793
+  },
+  "5886": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Рабиг ар-Талиб<Br>Боты Красное ЭXO[8][P]",
+   "string_id": 9794
+  },
+  "5887": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ученик Башир аш-Джасим<Br>Боты Красное ЭXO[8][A]",
+   "string_id": 9795
+  },
+  "589": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Казначей<Br>Союз арабского Магриба",
+   "string_id": 8871
+  },
+  "591": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Казначей<Br>ДСР",
+   "string_id": 8924
+  },
+  "60": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Бандит",
+   "string_id": 10597
+  },
+  "62": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Ополченец<Br>ДСР",
+   "string_id": 10611
+  },
+  "625": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Цветущий куст",
+   "string_id": 59673
+  },
+  "634": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Фонтан",
+   "string_id": 59675
+  },
+  "641": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Ящик<Br>Секта Люшер",
+   "string_id": 8854
+  },
+  "642": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Ящик<Br>Джанджавиды",
+   "string_id": 8870
+  },
+  "646": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Техномастер",
+   "string_id": 48763
+  },
+  "649": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Завхоз",
+   "string_id": 60224
+  },
+  "650": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рияд<Br>Магриб",
+   "string_id": 60225
+  },
+  "6512": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ямка",
+   "string_id": 10326
+  },
+  "652": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Техногик<Br>расшифровка чертежей",
+   "string_id": 46942
+  },
+  "6520": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Бари",
+   "string_id": 10327
+  },
+  "6521": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ящик с деньгами<Br>Ангары Северного Альянса",
+   "string_id": 10357
+  },
+  "6522": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "«Саморез» Мауризио",
+   "string_id": 10328
+  },
+  "653": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Шихаб<Br>Аренда транспорта",
+   "string_id": 10387
+  },
+  "654": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рияд<Br>Магриб",
+   "string_id": 60225
+  },
+  "656": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Спецназ<Br>Союз арабского Магриба",
+   "string_id": 8872
+  },
+  "657": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Часовой<Br>Магриб",
+   "string_id": 10630
+  },
+  "660": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Нуман<Br>Аренда верблюдов и ослов",
+   "string_id": 50409
+  },
+  "664": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Бандит",
+   "string_id": 10597
+  },
+  "665": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Шахтер",
+   "string_id": 50266
+  },
+  "666": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Водитель Тиля",
+   "string_id": 62777
+  },
+  "668": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Винс",
+   "string_id": 62778
+  },
+  "67": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Рахат",
+   "string_id": 62770
+  },
+  "671": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Фанатик<Br>Люшер",
+   "string_id": 50301
+  },
+  "6763": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Эддай<Br>Местный житель",
+   "string_id": 10351
+  },
+  "6764": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Бюльбюль-Оглы<Br>Пилигрим",
+   "string_id": 10352
+  },
+  "6765": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Чарльз МакКалок<Br>Сумасшедший паталогоанатом",
+   "string_id": 10496
+  },
+  "68": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "жена Рахата",
+   "string_id": 62771
+  },
+  "6824": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ящик с деньгами<Br>Северный склад",
+   "string_id": 10353
+  },
+  "6825": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ящик с деньгами<Br>Восточный склад",
+   "string_id": 10354
+  },
+  "6826": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Ящик с деньгами<Br>Южный склад",
+   "string_id": 10355
+  },
+  "6832": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6843": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6846": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6847": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6848": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6849": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6855": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6876": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6877": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6878": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6879": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6880": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6891": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Лаура Принсипе",
+   "string_id": 10360
+  },
+  "69": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Бандит-охранник",
+   "string_id": 59982
+  },
+  "693": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Негодяй",
+   "string_id": 10602
+  },
+  "694": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Нильсон",
+   "string_id": 62780
+  },
+  "695": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Грабитель",
+   "string_id": 10605
+  },
+  "696": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[5] Главарь бандитов",
+   "string_id": 10610
+  },
+  "6960": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Лазутчик<Br>Северный Альянс",
+   "string_id": 10370
+  },
+  "697": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мария",
+   "string_id": 62781
+  },
+  "698": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Фрэнк",
+   "string_id": 47429
+  },
+  "7021": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Корщунд<Br>Аццкий обмен",
+   "string_id": 10498
+  },
+  "704": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Азам<Br>улучшение винтовок",
+   "string_id": 51659
+  },
+  "717": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Механик<Br>ДСР",
+   "string_id": 50321
+  },
+  "718": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Прапорщик Касим<Br>Магриб",
+   "string_id": 62782
+  },
+  "719": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Механик Сейид<Br>Магриб",
+   "string_id": 62783
+  },
+  "72": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Часовой<Br>Магриб",
+   "string_id": 48431
+  },
+  "722": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Грабитель",
+   "string_id": 10605
+  },
+  "723": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Озверевшая собака",
+   "string_id": 10636
+  },
+  "7234": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Пулеметы и патроны",
+   "string_id": 50655
+  },
+  "7235": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Автоматы и патроны",
+   "string_id": 50656
+  },
+  "7236": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Пистолеты и патроны",
+   "string_id": 50657
+  },
+  "7309": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Сэм<Br>улучшение дробовиков",
+   "string_id": 51658
+  },
+  "7310": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Азам<Br>улучшение винтовок",
+   "string_id": 51659
+  },
+  "7311": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Ракин<Br>улучшение пистолет-пулеметов",
+   "string_id": 51660
+  },
+  "7341": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Зияд<Br>улучшение винтовок",
+   "string_id": 51675
+  },
+  "7342": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Имран<Br>улучшение автоматов",
+   "string_id": 51676
+  },
+  "7343": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Подмастерье Камаль<Br>улучшение пулеметов",
+   "string_id": 51677
+  },
+  "74": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Отшельник",
+   "string_id": 59984
+  },
+  "7448": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Хозяин склада<Br>Северный склад",
+   "string_id": 9610
+  },
+  "7449": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Хозяин склада<Br>Восточный склад",
+   "string_id": 9611
+  },
+  "7450": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Хозяин склада<Br>Южный склад",
+   "string_id": 9612
+  },
+  "75": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "я не бомба нет",
+   "string_id": 59985
+  },
+  "7532": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Козел<Br>Дикое животное",
+   "string_id": 9542
+  },
+  "7533": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Козел<Br>Дикое животное",
+   "string_id": 9543
+  },
+  "7534": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Козел<Br>Дикое животное",
+   "string_id": 9543
+  },
+  "7535": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Козел<Br>Дикое животное",
+   "string_id": 9544
+  },
+  "7536": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Козел<Br>Дикое животное",
+   "string_id": 9544
+  },
+  "7537": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Козел<Br>Дикое животное",
+   "string_id": 9545
+  },
+  "7538": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Козел<Br>Дикое животное",
+   "string_id": 9545
+  },
+  "7548": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Жозеф де Гобино<Br>Оружейный механик<Br>С Веселого Праздника",
+   "string_id": 10507
+  },
+  "7549": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Майор Глиняный<Br>ПДС",
+   "string_id": 9635
+  },
+  "764": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[18] Казначей<Br>Пираты Сомали",
+   "string_id": 8961
+  },
+  "765": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Боцман<Br>Пираты Сомали",
+   "string_id": 8962
+  },
+  "767": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Капитан<Br>Пират контрабандист",
+   "string_id": 10619
+  },
+  "768": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Матрос<Br>Пират контрабандист",
+   "string_id": 10620
+  },
+  "769": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Боцман<Br>Пират контрабандист",
+   "string_id": 10621
+  },
+  "772": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Матрос<Br>Пираты",
+   "string_id": 10627
+  },
+  "773": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Боцман<Br>Пираты",
+   "string_id": 10624
+  },
+  "775": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Капитан<Br>Пираты",
+   "string_id": 10629
+  },
+  "776": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[18] Матрос<Br>Пираты Сомали",
+   "string_id": 8973
+  },
+  "777": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[20] Коммодор Марабу<Br>Пираты Сомали",
+   "string_id": 8976
+  },
+  "778": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[19] Капитан Нгоро<Br>Пираты Сомали",
+   "string_id": 8975
+  },
+  "780": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
+   "string_id": 9163
+  },
+  "784": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Боцман<Br>Пираты",
+   "string_id": 10624
+  },
+  "785": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Капитан<Br>Союз арабского Магриба",
+   "string_id": 8878
+  },
+  "787": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Матрос<Br>Пираты",
+   "string_id": 10627
+  },
+  "800": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[11] Рамирес",
+   "string_id": 50303
+  },
+  "803": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[12] Еретик Альберт<Br>Люшер",
+   "string_id": 50306
+  },
+  "804": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джонни Вышибала",
+   "string_id": 10329
+  },
+  "807": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Танцовщица Анабель",
+   "string_id": 10330
+  },
+  "808": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Посетитель Джей",
+   "string_id": 10331
+  },
+  "81": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Бартоломью<Br>Продукты",
+   "string_id": 62125
+  },
+  "810": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Рич",
+   "string_id": 10333
+  },
+  "811": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Черный Абдула<Br>Контрабандист",
+   "string_id": 10334
+  },
+  "812": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Таможенник Магриба",
+   "string_id": 10335
+  },
+  "813": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "однорукий Магриб",
+   "string_id": 10336
+  },
+  "814": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Погонщик верблюдов<Br>Джанджавиды",
+   "string_id": 10607
+  },
+  "815": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[13] Охранник каравана",
+   "string_id": 50307
+  },
+  "816": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Останки Горбика",
+   "string_id": 62784
+  },
+  "817": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Мастер Люшера",
+   "string_id": 10609
+  },
+  "82": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Голодная собака",
+   "string_id": 10634
+  },
+  "826": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Мастер Люшера Сэмир",
+   "string_id": 48768
+  },
+  "8287": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Оружие",
+   "string_id": 62153
+  },
+  "8288": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Торговец патронами",
+   "string_id": 62154
+  },
+  "829": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Сакиб",
+   "string_id": 48770
+  },
+  "83": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Дикая собака",
+   "string_id": 10635
+  },
+  "832": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Огневая установка",
+   "string_id": 10590
+  },
+  "833": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[6] Трусливый грабитель",
+   "string_id": 10606
+  },
+  "834": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "агроном Климов",
+   "string_id": 62785
+  },
+  "836": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[1] Слабый Мародёр",
+   "string_id": 50267
+  },
+  "837": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Мародёр",
+   "string_id": 50268
+  },
+  "838": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Шахтер<Br>Союз арабского Магриба",
+   "string_id": 8887
+  },
+  "839": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[9] Шахтер<Br>Союз арабского Магриба",
+   "string_id": 8888
+  },
+  "851": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[2] Бандит",
+   "string_id": 10597
+  },
+  "852": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[3] Курьер",
+   "string_id": 50247
+  },
+  "853": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Лидер бандитов",
+   "string_id": 50261
+  },
+  "854": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[4] Послушник Люшера",
+   "string_id": 10600
+  },
+  "855": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Скотовод Халид",
+   "string_id": 50323
+  },
+  "856": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Пастух",
+   "string_id": 50324
+  },
+  "858": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Медик Умар<Br>Магриб",
+   "string_id": 62786
+  },
+  "859": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Офицер Раис<Br>Магриб",
+   "string_id": 62787
+  },
+  "86": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Инсар",
+   "string_id": 62772
+  },
+  "860": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Лейла",
+   "string_id": 62788
+  },
+  "8620": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[22] Генерал Шерхан<Br>Северный Альянс",
+   "string_id": 9010
+  },
+  "87": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[8] Диверсант<Br>ДСР",
+   "string_id": 10612
+  },
+  "876": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Томас<Br>Выход из тюрьмы",
+   "string_id": 62317
+  },
+  "877": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Джеф<Br>Патологоанатом",
+   "string_id": 62318
+  },
+  "878": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Аль-Назир<Br>Коронер",
+   "string_id": 62319
+  },
+  "879": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Томпсон<Br>Судмедэксперт",
+   "string_id": 62320
+  },
+  "883": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Хафиз<Br>Аукционер",
+   "string_id": 9621
+  },
+  "893": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Самуэль<Br>патроны по талонам",
+   "string_id": 47958
+  },
+  "90": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[7] Боевик<Br>ДСР",
+   "string_id": 10613
+  },
+  "918": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Ветеран<Br>Миротворцы",
+   "string_id": 46338
+  },
+  "920": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Солдат<Br>Миротворцы",
+   "string_id": 46340
+  },
+  "921": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[14] Штурмовик<Br>Миротворцы",
+   "string_id": 46341
+  },
+  "922": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Ветеран<Br>Миротворцы",
+   "string_id": 46342
+  },
+  "924": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[15] Солдат<Br>Миротворцы",
+   "string_id": 46344
+  },
+  "926": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Ветеран<Br>Миротворцы",
+   "string_id": 46345
+  },
+  "928": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Солдат<Br>Миротворцы",
+   "string_id": 46346
+  },
+  "929": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[16] Штурмовик<Br>Миротворцы",
+   "string_id": 46347
+  },
+  "94": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[20] Военный патруль<Br>«Delta Force»",
+   "string_id": 9109
+  },
+  "977": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Порода",
+   "string_id": 48065
+  },
+  "978": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Равшан<Br>Владелец каменоломни",
+   "string_id": 62789
+  },
+  "979": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Большой Сэм<Br>Прораб",
+   "string_id": 62790
+  }
+ },
+ "suggest": {
+  "1012": {
+   "confidence": "medium",
+   "name": "Ёлка",
+   "string_id": 59677
+  },
+  "1013": {
+   "confidence": "medium",
+   "name": "Доктор Гофус<Br>Специальное снаряжение",
+   "string_id": 10440
+  },
+  "1018": {
+   "confidence": "medium",
+   "name": "Бамбук<Br>Местный пьяница",
+   "string_id": 48774
+  },
+  "1025": {
+   "confidence": "medium",
+   "name": "[16] Рекрут<Br>Северный Альянс",
+   "string_id": 8981
+  },
+  "1026": {
+   "confidence": "medium",
+   "name": "[16] Рядовой<Br>Северный Альянс",
+   "string_id": 8982
+  },
+  "1027": {
+   "confidence": "medium",
+   "name": "[16] Капрал<Br>Северный Альянс",
+   "string_id": 8983
+  },
+  "1028": {
+   "confidence": "medium",
+   "name": "[16] Стрелок<Br>Северный Альянс",
+   "string_id": 8984
+  },
+  "1030": {
+   "confidence": "medium",
+   "name": "[17] Мастер-сержант<Br>Северный Альянс",
+   "string_id": 8986
+  },
+  "1032": {
+   "confidence": "medium",
+   "name": "[17] Скаут<Br>Северный Альянс",
+   "string_id": 8988
+  },
+  "1034": {
+   "confidence": "medium",
+   "name": "[18] Сержант<Br>Северный Альянс",
+   "string_id": 8990
+  },
+  "1035": {
+   "confidence": "medium",
+   "name": "[18] Капитан<Br>Северный Альянс",
+   "string_id": 8991
+  },
+  "1036": {
+   "confidence": "medium",
+   "name": "[18] Снайпер<Br>Северный Альянс",
+   "string_id": 8992
+  },
+  "106": {
+   "confidence": "medium",
+   "name": "Послушник Натти",
+   "string_id": 62775
+  },
+  "1078": {
+   "confidence": "medium",
+   "name": "Таможенник Магриба",
+   "string_id": 10335
+  },
+  "1079": {
+   "confidence": "medium",
+   "name": "Таможенник Магриба",
+   "string_id": 10335
+  },
+  "109": {
+   "confidence": "medium",
+   "name": "Раб",
+   "string_id": 48747
+  },
+  "1110": {
+   "confidence": "medium",
+   "name": "Салех<Br>Нубиец",
+   "string_id": 9646
+  },
+  "1128": {
+   "confidence": "medium",
+   "name": "Амина",
+   "string_id": 9641
+  },
+  "1131": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1132": {
+   "confidence": "medium",
+   "name": "Чарльз МакКалок<Br>Сумасшедший паталогоанатом",
+   "string_id": 10496
+  },
+  "1140": {
+   "confidence": "medium",
+   "name": "Бомани<Br>Торговец Патронами",
+   "string_id": 10443
+  },
+  "1141": {
+   "confidence": "medium",
+   "name": "Хасани<Br>Торговец Едой",
+   "string_id": 10442
+  },
+  "1144": {
+   "confidence": "medium",
+   "name": "Ибн Сина<Br>Лекарь",
+   "string_id": 10389
+  },
+  "1148": {
+   "confidence": "medium",
+   "name": "Раф профессор Лю<Br>Специальное снаряжение",
+   "string_id": 10455
+  },
+  "1153": {
+   "confidence": "medium",
+   "name": "Одноногий<Br>Торговец ножами",
+   "string_id": 62137
+  },
+  "1161": {
+   "confidence": "medium",
+   "name": "Винтовки и патроны",
+   "string_id": 50658
+  },
+  "1162": {
+   "confidence": "medium",
+   "name": "Дробовики и патроны",
+   "string_id": 50659
+  },
+  "1164": {
+   "confidence": "medium",
+   "name": "Одноухий<Br>Торговец ножами",
+   "string_id": 46941
+  },
+  "1165": {
+   "confidence": "medium",
+   "name": "Алима<Br>Броня, одежда, пояса",
+   "string_id": 62155
+  },
+  "1166": {
+   "confidence": "medium",
+   "name": "Гали<Br>Торговец комплектами",
+   "string_id": 62156
+  },
+  "1169": {
+   "confidence": "medium",
+   "name": "Техногик<Br>расшифровка чертежей",
+   "string_id": 46942
+  },
+  "1170": {
+   "confidence": "medium",
+   "name": "Мурат<Br>Банкир",
+   "string_id": 46944
+  },
+  "1177": {
+   "confidence": "medium",
+   "name": "[12] Амазонка<Br>Дети цветов",
+   "string_id": 9049
+  },
+  "1190": {
+   "confidence": "medium",
+   "name": "Доктор Гофус<Br>Специальное снаряжение",
+   "string_id": 10440
+  },
+  "1192": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "1200": {
+   "confidence": "medium",
+   "name": "Пистолеты и патроны",
+   "string_id": 50657
+  },
+  "1201": {
+   "confidence": "medium",
+   "name": "Дробовики и патроны",
+   "string_id": 50659
+  },
+  "1202": {
+   "confidence": "medium",
+   "name": "Винтовки и патроны",
+   "string_id": 50658
+  },
+  "1210": {
+   "confidence": "medium",
+   "name": "Винтовки и патроны",
+   "string_id": 50658
+  },
+  "1213": {
+   "confidence": "medium",
+   "name": "Дари<Br>Торговец комплектами",
+   "string_id": 62160
+  },
+  "1218": {
+   "confidence": "medium",
+   "name": "Винтовки и патроны",
+   "string_id": 50658
+  },
+  "1219": {
+   "confidence": "medium",
+   "name": "Марат<Br>Одежда, разгрузки и пояса",
+   "string_id": 62163
+  },
+  "1223": {
+   "confidence": "medium",
+   "name": "Симона<Br>Торговец комплектами",
+   "string_id": 62164
+  },
+  "1230": {
+   "confidence": "medium",
+   "name": "Торговец патронами",
+   "string_id": 62154
+  },
+  "1232": {
+   "confidence": "medium",
+   "name": "Торговец патронами",
+   "string_id": 62154
+  },
+  "130": {
+   "confidence": "medium",
+   "name": "[12] Крокодил<Br>Дикое животное",
+   "string_id": 9532
+  },
+  "136": {
+   "confidence": "medium",
+   "name": "Раб",
+   "string_id": 48747
+  },
+  "138": {
+   "confidence": "medium",
+   "name": "Грегори<Br>Лекарь",
+   "string_id": 50006
+  },
+  "1380": {
+   "confidence": "medium",
+   "name": "Ущелье 1",
+   "string_id": 48871
+  },
+  "1382": {
+   "confidence": "medium",
+   "name": "Ущелье 1",
+   "string_id": 48871
+  },
+  "1383": {
+   "confidence": "medium",
+   "name": "Производство патронов",
+   "string_id": 10530
+  },
+  "1395": {
+   "confidence": "medium",
+   "name": "Гатера<Br>Авантюрист",
+   "string_id": 60592
+  },
+  "1396": {
+   "confidence": "medium",
+   "name": "Улучшение сетов",
+   "string_id": 62249
+  },
+  "140": {
+   "confidence": "medium",
+   "name": "Печурка",
+   "string_id": 48751
+  },
+  "1407": {
+   "confidence": "medium",
+   "name": "Лаборант СА<Br>Перебежчик",
+   "string_id": 50515
+  },
+  "1408": {
+   "confidence": "medium",
+   "name": "Тир Берта Гаммера",
+   "string_id": 41446
+  },
+  "1417": {
+   "confidence": "medium",
+   "name": "Небольшая ямка",
+   "string_id": 46935
+  },
+  "142": {
+   "confidence": "medium",
+   "name": "Мелкий хулиган",
+   "string_id": 48753
+  },
+  "1427": {
+   "confidence": "medium",
+   "name": "Навык медицины 1",
+   "string_id": 49396
+  },
+  "143": {
+   "confidence": "medium",
+   "name": "Ящик с кошками",
+   "string_id": 48754
+  },
+  "144": {
+   "confidence": "medium",
+   "name": "Могила",
+   "string_id": 48755
+  },
+  "148": {
+   "confidence": "medium",
+   "name": "Автомобиль",
+   "string_id": 48759
+  },
+  "1563": {
+   "confidence": "medium",
+   "name": "[10] Санденс Кид<Br>Работорговцы",
+   "string_id": 8903
+  },
+  "1632": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1636": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1640": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1642": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1644": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1645": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1648": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1650": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "1653": {
+   "confidence": "medium",
+   "name": "Дед Кузин <Br>Фермер",
+   "string_id": 46950
+  },
+  "1654": {
+   "confidence": "medium",
+   "name": "доктор Джордж Миллер",
+   "string_id": 10690
+  },
+  "1656": {
+   "confidence": "medium",
+   "name": "Кукуруза",
+   "string_id": 46953
+  },
+  "1695": {
+   "confidence": "medium",
+   "name": "Партизан",
+   "string_id": 46708
+  },
+  "1697": {
+   "confidence": "medium",
+   "name": "[12] Крыса<Br>Дикое животное",
+   "string_id": 9498
+  },
+  "1700": {
+   "confidence": "medium",
+   "name": "мсье Фурнье<Br>Пекарь",
+   "string_id": 48777
+  },
+  "1728": {
+   "confidence": "medium",
+   "name": "[19] РядовойIкласса<Br>Северный Альянс",
+   "string_id": 8994
+  },
+  "1731": {
+   "confidence": "medium",
+   "name": "[19] Элитный снайпер<Br>Северный Альянс",
+   "string_id": 8997
+  },
+  "1762": {
+   "confidence": "medium",
+   "name": "Грязный ящик<Br>Райнхольда Вюрта",
+   "string_id": 47255
+  },
+  "1764": {
+   "confidence": "medium",
+   "name": "[19] Матрос<Br>Пират контрабандист",
+   "string_id": 10620
+  },
+  "1770": {
+   "confidence": "medium",
+   "name": "Полковник Дарт Соренсен<Br>Барон бомжей",
+   "string_id": 48778
+  },
+  "179": {
+   "confidence": "medium",
+   "name": "[14] Погонщик<Br>Работорговцы",
+   "string_id": 50293
+  },
+  "1797": {
+   "confidence": "medium",
+   "name": "Посланник Смерти ч.3 - Амулет",
+   "string_id": 47531
+  },
+  "180": {
+   "confidence": "medium",
+   "name": "[14] Смотритель<Br>Работорговцы",
+   "string_id": 50294
+  },
+  "181": {
+   "confidence": "medium",
+   "name": "[14] Преследователь<Br>Работорговцы",
+   "string_id": 50295
+  },
+  "182": {
+   "confidence": "medium",
+   "name": "[14] Караванщик<Br>Работорговцы",
+   "string_id": 50296
+  },
+  "1826": {
+   "confidence": "medium",
+   "name": "Интендант МКС<Br>Обмен экипировки",
+   "string_id": 48445
+  },
+  "183": {
+   "confidence": "medium",
+   "name": "[14] Громила<Br>Работорговцы",
+   "string_id": 50297
+  },
+  "1830": {
+   "confidence": "medium",
+   "name": "[16] 1-ый лейтенант Д. Терри<Br>«Delta Force»",
+   "string_id": 9132
+  },
+  "1842": {
+   "confidence": "medium",
+   "name": "Генри Джонс",
+   "string_id": 46956
+  },
+  "1843": {
+   "confidence": "medium",
+   "name": "Генри Джонс",
+   "string_id": 46956
+  },
+  "1869": {
+   "confidence": "medium",
+   "name": "Корован",
+   "string_id": 50354
+  },
+  "1870": {
+   "confidence": "medium",
+   "name": "Корован",
+   "string_id": 50354
+  },
+  "1875": {
+   "confidence": "medium",
+   "name": "Эльза<Br>Ведунья",
+   "string_id": 50547
+  },
+  "1877": {
+   "confidence": "medium",
+   "name": "Светлана<Br>Скаут",
+   "string_id": 50573
+  },
+  "1888": {
+   "confidence": "medium",
+   "name": "информация",
+   "string_id": 10377
+  },
+  "1935": {
+   "confidence": "medium",
+   "name": "[12] Наемник<Br>Корован работорговцев",
+   "string_id": 9057
+  },
+  "1936": {
+   "confidence": "medium",
+   "name": "[12] Погонщик<Br>Корован работорговцев",
+   "string_id": 9058
+  },
+  "1940": {
+   "confidence": "medium",
+   "name": "[16] Наемник<Br>Военный корован",
+   "string_id": 9062
+  },
+  "1941": {
+   "confidence": "medium",
+   "name": "[16] Погонщик<Br>Военный корован",
+   "string_id": 9063
+  },
+  "1945": {
+   "confidence": "medium",
+   "name": "[18] Наемник<Br>Корован особого назначения",
+   "string_id": 9067
+  },
+  "1946": {
+   "confidence": "medium",
+   "name": "[18] Погонщик<Br>Корован особого назначения",
+   "string_id": 9068
+  },
+  "197": {
+   "confidence": "medium",
+   "name": "[9] Головорез<Br>Работорговцы",
+   "string_id": 8897
+  },
+  "1978": {
+   "confidence": "medium",
+   "name": "Добрый беженец",
+   "string_id": 59670
+  },
+  "2014": {
+   "confidence": "medium",
+   "name": "Доктор Гофус<Br>Специальное снаряжение",
+   "string_id": 10440
+  },
+  "2016": {
+   "confidence": "medium",
+   "name": "Доктор Гофус<Br>Специальное снаряжение",
+   "string_id": 10440
+  },
+  "2017": {
+   "confidence": "medium",
+   "name": "Доктор Гофус<Br>Специальное снаряжение",
+   "string_id": 10440
+  },
+  "2018": {
+   "confidence": "medium",
+   "name": "Доктор Гофус<Br>Специальное снаряжение",
+   "string_id": 10440
+  },
+  "2021": {
+   "confidence": "medium",
+   "name": "Финиковая пальма",
+   "string_id": 49110
+  },
+  "2065": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "2066": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "2070": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "2071": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "2073": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "2074": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "2075": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "2076": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "2082": {
+   "confidence": "medium",
+   "name": "Одежда туарега",
+   "string_id": 49591
+  },
+  "213": {
+   "confidence": "medium",
+   "name": "Аарон<Br>Банкир",
+   "string_id": 47816
+  },
+  "2139": {
+   "confidence": "medium",
+   "name": "Ущелье 1",
+   "string_id": 48871
+  },
+  "214": {
+   "confidence": "medium",
+   "name": "Давид<Br>Банкир",
+   "string_id": 47817
+  },
+  "2143": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "2147": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "2151": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "2153": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "2154": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "2155": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "2156": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "2159": {
+   "confidence": "medium",
+   "name": "Вести",
+   "string_id": 49984
+  },
+  "2182": {
+   "confidence": "medium",
+   "name": "[16] Крыса<Br>Дикое животное",
+   "string_id": 9500
+  },
+  "2195": {
+   "confidence": "medium",
+   "name": "Кучка песка",
+   "string_id": 49111
+  },
+  "2228": {
+   "confidence": "medium",
+   "name": "Ёлка",
+   "string_id": 59677
+  },
+  "2244": {
+   "confidence": "medium",
+   "name": "Богиня Тефнут",
+   "string_id": 46635
+  },
+  "2254": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "2255": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "2274": {
+   "confidence": "medium",
+   "name": "Шрам<Br>Торговец ножами",
+   "string_id": 62138
+  },
+  "230": {
+   "confidence": "medium",
+   "name": "[13] Песчаная Кобра",
+   "string_id": 50304
+  },
+  "2312": {
+   "confidence": "medium",
+   "name": "[18] Сержант<Br>Северный Альянс",
+   "string_id": 8990
+  },
+  "2313": {
+   "confidence": "medium",
+   "name": "[18] Капитан<Br>Северный Альянс",
+   "string_id": 8991
+  },
+  "2318": {
+   "confidence": "medium",
+   "name": "[20] Полковник<Br>Северный Альянс",
+   "string_id": 9001
+  },
+  "2319": {
+   "confidence": "medium",
+   "name": "[19] Элитный снайпер<Br>Северный Альянс",
+   "string_id": 8997
+  },
+  "232": {
+   "confidence": "medium",
+   "name": "Муаз<Br>Обмен одежды на вырост",
+   "string_id": 62324
+  },
+  "2320": {
+   "confidence": "medium",
+   "name": "[20] Крыса<Br>Дикое животное",
+   "string_id": 9501
+  },
+  "236": {
+   "confidence": "medium",
+   "name": "Демир",
+   "string_id": 9649
+  },
+  "2408": {
+   "confidence": "medium",
+   "name": "[7] Антилопа<Br>Дикое животное",
+   "string_id": 9503
+  },
+  "2409": {
+   "confidence": "medium",
+   "name": "[11] Антилопа<Br>Дикое животное",
+   "string_id": 9505
+  },
+  "2410": {
+   "confidence": "medium",
+   "name": "[15] Антилопа<Br>Дикое животное",
+   "string_id": 9507
+  },
+  "2411": {
+   "confidence": "medium",
+   "name": "[19] Антилопа<Br>Дикое животное",
+   "string_id": 9509
+  },
+  "2418": {
+   "confidence": "medium",
+   "name": "[8] Крокодил",
+   "string_id": 10639
+  },
+  "2420": {
+   "confidence": "medium",
+   "name": "[20] Крокодил<Br>Дикое животное",
+   "string_id": 9536
+  },
+  "244": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Сборка винтовок",
+   "string_id": 10669
+  },
+  "2453": {
+   "confidence": "medium",
+   "name": "Маниока",
+   "string_id": 9618
+  },
+  "246": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Сборка пистолет-пулеметов",
+   "string_id": 10671
+  },
+  "2466": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "2467": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "2468": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "2469": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "2470": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "2471": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "2491": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "2492": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "2493": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "2494": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "2495": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "2496": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "318": {
+   "confidence": "medium",
+   "name": "[12] Погонщик<Br>Работорговцы",
+   "string_id": 50277
+  },
+  "322": {
+   "confidence": "medium",
+   "name": "[11] Головорез",
+   "string_id": 50276
+  },
+  "3303": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "3304": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "3305": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "3306": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "3307": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "3308": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "349": {
+   "confidence": "medium",
+   "name": "[11] Охотник<Br>Живодеры Элфрида",
+   "string_id": 8913
+  },
+  "353": {
+   "confidence": "medium",
+   "name": "[12] Зверь<Br>Живодеры Элфрида",
+   "string_id": 8917
+  },
+  "357": {
+   "confidence": "medium",
+   "name": "[13] Бетти<Br>Живодеры Элфрида",
+   "string_id": 8921
+  },
+  "36": {
+   "confidence": "medium",
+   "name": "Доктор Корбен",
+   "string_id": 9656
+  },
+  "367": {
+   "confidence": "medium",
+   "name": "[12] Ополченец<Br>ДСР",
+   "string_id": 8926
+  },
+  "369": {
+   "confidence": "medium",
+   "name": "[12] Боевик<Br>ДСР",
+   "string_id": 8928
+  },
+  "371": {
+   "confidence": "medium",
+   "name": "[12] Ополченец<Br>ДСР",
+   "string_id": 8926
+  },
+  "38": {
+   "confidence": "medium",
+   "name": "Мертвая антилопа",
+   "string_id": 59980
+  },
+  "39": {
+   "confidence": "medium",
+   "name": "[2] Ящик<Br>Новые колонисты",
+   "string_id": 8837
+  },
+  "390": {
+   "confidence": "medium",
+   "name": "сын Агаты",
+   "string_id": 48762
+  },
+  "391": {
+   "confidence": "medium",
+   "name": "[4] Лидер бандитов",
+   "string_id": 50261
+  },
+  "3922": {
+   "confidence": "medium",
+   "name": "Багги-перехватчик \\\"Шериф\\\"<Br>Аренда транспорта",
+   "string_id": 46392
+  },
+  "3923": {
+   "confidence": "medium",
+   "name": "Багги",
+   "string_id": 10764
+  },
+  "3924": {
+   "confidence": "medium",
+   "name": "Багги",
+   "string_id": 10764
+  },
+  "3925": {
+   "confidence": "medium",
+   "name": "Багги",
+   "string_id": 10764
+  },
+  "3952": {
+   "confidence": "medium",
+   "name": "Цветущий куст",
+   "string_id": 59673
+  },
+  "396": {
+   "confidence": "medium",
+   "name": "[14] Снайпер<Br>Миротворцы",
+   "string_id": 46339
+  },
+  "3995": {
+   "confidence": "medium",
+   "name": "Мастер Зухейр ибн Макин<Br>Очки налетчика[8][G]",
+   "string_id": 9796
+  },
+  "3996": {
+   "confidence": "medium",
+   "name": "Подмастерье Захи ат-Сулейман<Br>Очки налетчика[8][P]",
+   "string_id": 9797
+  },
+  "3997": {
+   "confidence": "medium",
+   "name": "Ученик Шафи ибн Синан<Br>Очки налетчика[8][A]",
+   "string_id": 9798
+  },
+  "3998": {
+   "confidence": "medium",
+   "name": "Мастер Газван ар-Шадид<Br>Куртка налетчика[8][G]",
+   "string_id": 9799
+  },
+  "400": {
+   "confidence": "medium",
+   "name": "[15] Снайпер<Br>Миротворцы",
+   "string_id": 46343
+  },
+  "402": {
+   "confidence": "medium",
+   "name": "[16] Элитный Штурмовик<Br>Миротворцы",
+   "string_id": 8953
+  },
+  "4024": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4025": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4026": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4027": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4028": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4030": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4031": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4032": {
+   "confidence": "medium",
+   "name": "[10] Ксенос<Br>СА",
+   "string_id": 9022
+  },
+  "4033": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4034": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4035": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4037": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4038": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4039": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4040": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4041": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4042": {
+   "confidence": "medium",
+   "name": "[15] Ксенос<Br>СА",
+   "string_id": 9030
+  },
+  "4060": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4062": {
+   "confidence": "medium",
+   "name": "Алоэ",
+   "string_id": 48853
+  },
+  "4081": {
+   "confidence": "medium",
+   "name": "Мелкий хулиган",
+   "string_id": 48753
+  },
+  "4083": {
+   "confidence": "medium",
+   "name": "Ящик с кошками",
+   "string_id": 48754
+  },
+  "4084": {
+   "confidence": "medium",
+   "name": "БОМЖ",
+   "string_id": 48766
+  },
+  "4088": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "4097": {
+   "confidence": "medium",
+   "name": "Desert Eagle: урон",
+   "string_id": 51721
+  },
+  "4099": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "4115": {
+   "confidence": "medium",
+   "name": "Хаммер",
+   "string_id": 10684
+  },
+  "4117": {
+   "confidence": "medium",
+   "name": "Дверь",
+   "string_id": 46937
+  },
+  "4125": {
+   "confidence": "medium",
+   "name": "Сейф",
+   "string_id": 46940
+  },
+  "4127": {
+   "confidence": "medium",
+   "name": "Отход",
+   "string_id": 60638
+  },
+  "4130": {
+   "confidence": "medium",
+   "name": "Альфред<Br>сын Фреи<Br>упаковка подарков",
+   "string_id": 59614
+  },
+  "4132": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4133": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4134": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4135": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4136": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4137": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4138": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4139": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4140": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4141": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4142": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4143": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4144": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4145": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4146": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4147": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4148": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4149": {
+   "confidence": "medium",
+   "name": "Открыть подарок",
+   "string_id": 59634
+  },
+  "4154": {
+   "confidence": "medium",
+   "name": "Партизан",
+   "string_id": 46708
+  },
+  "4161": {
+   "confidence": "medium",
+   "name": "Выход через рампу<Br>Ил-76</Br>",
+   "string_id": 60704
+  },
+  "4163": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "4167": {
+   "confidence": "medium",
+   "name": "Агент Смитх<Br>\\\"Liberty\\\"<Br>Аукцион",
+   "string_id": 61967
+  },
+  "4176": {
+   "confidence": "medium",
+   "name": "Терминал",
+   "string_id": 46949
+  },
+  "4179": {
+   "confidence": "medium",
+   "name": "Тумба<Br>Объявления</Br><Br>Военной Администрации</Br>",
+   "string_id": 46499
+  },
+  "4187": {
+   "confidence": "medium",
+   "name": "Сержант Хэншоу<Br>Армия ЦСЦ",
+   "string_id": 9680
+  },
+  "4188": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4220": {
+   "confidence": "medium",
+   "name": "Телохранитель Рой",
+   "string_id": 10332
+  },
+  "4234": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4237": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4241": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4242": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4243": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4244": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4249": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4258": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4260": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4261": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4262": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4263": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4264": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4265": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4266": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4267": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4268": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4269": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4272": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4273": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4274": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "428": {
+   "confidence": "medium",
+   "name": "Ребенок",
+   "string_id": 59671
+  },
+  "4280": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4281": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4282": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4283": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4284": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4285": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4286": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4288": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4289": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4290": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4291": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4292": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4293": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4294": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4295": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4296": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4297": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4298": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4299": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "430": {
+   "confidence": "medium",
+   "name": "Ребенок",
+   "string_id": 59671
+  },
+  "4300": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4301": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4302": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4303": {
+   "confidence": "medium",
+   "name": "Ли Си Цын<Br>Лётчик",
+   "string_id": 10678
+  },
+  "4313": {
+   "confidence": "medium",
+   "name": "Мастер Исмаил ат-Адиль<Br>Моторика Дредноута[17][G]",
+   "string_id": 10105
+  },
+  "4401": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "4410": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "4417": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "4585": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "4594": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "4631": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "4633": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "4707": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Разборка и сборка<Br>пистолетов",
+   "string_id": 41593
+  },
+  "4779": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Разборка и сборка<Br>дробовиков",
+   "string_id": 41594
+  },
+  "4780": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Разборка и сборка<Br>винтовок",
+   "string_id": 41595
+  },
+  "4781": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Разборка и сборка<Br>автоматов",
+   "string_id": 41596
+  },
+  "4782": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Разборка и сборка<Br>пистолет-пулеметов",
+   "string_id": 41597
+  },
+  "4783": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Разборка и сборка<Br>пулеметов",
+   "string_id": 41598
+  },
+  "4784": {
+   "confidence": "medium",
+   "name": "Верстак<Br>Разборка сломанного оружия",
+   "string_id": 41599
+  },
+  "4838": {
+   "confidence": "medium",
+   "name": "Лифтер",
+   "string_id": 46354
+  },
+  "4892": {
+   "confidence": "medium",
+   "name": "Мотоцикл М-72<Br>Аренда транспорта",
+   "string_id": 46388
+  },
+  "5010": {
+   "confidence": "medium",
+   "name": "Непонятная машина<Br>Сделано в России",
+   "string_id": 9625
+  },
+  "5055": {
+   "confidence": "medium",
+   "name": "Банкир",
+   "string_id": 46358
+  },
+  "5057": {
+   "confidence": "medium",
+   "name": "Банкир",
+   "string_id": 46358
+  },
+  "5058": {
+   "confidence": "medium",
+   "name": "Банкир",
+   "string_id": 46358
+  },
+  "5059": {
+   "confidence": "medium",
+   "name": "Банкир",
+   "string_id": 46358
+  },
+  "5082": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "5099": {
+   "confidence": "medium",
+   "name": "Банкир",
+   "string_id": 46358
+  },
+  "5109": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Водитель",
+   "string_id": 9626
+  },
+  "5110": {
+   "confidence": "medium",
+   "name": "Мастер Ибн Аббас Фирас<Br>Улучшение пулеметов",
+   "string_id": 9627
+  },
+  "5111": {
+   "confidence": "medium",
+   "name": "Мастер Ибн аль-Хайтам<Br>Улучшение пулеметов",
+   "string_id": 9628
+  },
+  "5115": {
+   "confidence": "medium",
+   "name": "Техногик Аль-Калкашанди<Br>Изучение излучателей",
+   "string_id": 9630
+  },
+  "5116": {
+   "confidence": "medium",
+   "name": "Вертолет",
+   "string_id": 9631
+  },
+  "5117": {
+   "confidence": "medium",
+   "name": "Иван Кольт<Br>Сотрудник ЦСЦ",
+   "string_id": 9632
+  },
+  "5118": {
+   "confidence": "medium",
+   "name": "Прапорщик Иванов<Br>ПДС",
+   "string_id": 9633
+  },
+  "5119": {
+   "confidence": "medium",
+   "name": "Прапорщик Сидоренко<Br>ПДС",
+   "string_id": 9634
+  },
+  "5120": {
+   "confidence": "medium",
+   "name": "Майор Глиняный<Br>ПДС",
+   "string_id": 9635
+  },
+  "5121": {
+   "confidence": "medium",
+   "name": "Подполковник Иванча<Br>ГРУ",
+   "string_id": 9636
+  },
+  "5123": {
+   "confidence": "medium",
+   "name": "Георгий Кауфман<Br>Сотрудник ЦСЦ",
+   "string_id": 9638
+  },
+  "5124": {
+   "confidence": "medium",
+   "name": "Кир<Br>Подгонка снаряжения",
+   "string_id": 9639
+  },
+  "5204": {
+   "confidence": "medium",
+   "name": "Зоричев<Br>Обучение специализациям",
+   "string_id": 9619
+  },
+  "5214": {
+   "confidence": "medium",
+   "name": "Равен<Br>Странник",
+   "string_id": 10439
+  },
+  "5220": {
+   "confidence": "medium",
+   "name": "Наби-странник",
+   "string_id": 10445
+  },
+  "5229": {
+   "confidence": "medium",
+   "name": "[20] Военный патруль<Br>Лаборатория доктора «D»",
+   "string_id": 9609
+  },
+  "5243": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "5261": {
+   "confidence": "medium",
+   "name": "Эван<Br>местный барыга и авторитет",
+   "string_id": 10452
+  },
+  "5271": {
+   "confidence": "medium",
+   "name": "Старшина Миринков<Br>Фонд спасения цивилизаци<Br>Боеприпасы",
+   "string_id": 10453
+  },
+  "5285": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "5286": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "5287": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "5288": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "5306": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "5328": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "5329": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "5330": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "5331": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "5332": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "5333": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "5336": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "5337": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "5338": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "5339": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "5345": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "5346": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "5347": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "5348": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "5349": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "5364": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "5365": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "56": {
+   "confidence": "medium",
+   "name": "[4] Лидер бандитов",
+   "string_id": 50261
+  },
+  "5672": {
+   "confidence": "medium",
+   "name": "Раф профессор Лю<Br>Специальное снаряжение",
+   "string_id": 10455
+  },
+  "5704": {
+   "confidence": "medium",
+   "name": "Ополченец Френк<Br>Боевые дробовики",
+   "string_id": 9660
+  },
+  "5743": {
+   "confidence": "medium",
+   "name": "Верстак<Br>для разборки оружия",
+   "string_id": 9661
+  },
+  "576": {
+   "confidence": "medium",
+   "name": "Мастер Сэм<Br>улучшение дробовиков",
+   "string_id": 51658
+  },
+  "5766": {
+   "confidence": "medium",
+   "name": "Говард Хаксли<Br>Антиквариат и колониальные товары",
+   "string_id": 10431
+  },
+  "580": {
+   "confidence": "medium",
+   "name": "Мастер Самир<Br>улучшение автоматов",
+   "string_id": 51661
+  },
+  "584": {
+   "confidence": "medium",
+   "name": "Мастер Умар<Br>улучшение винтовок",
+   "string_id": 51663
+  },
+  "59": {
+   "confidence": "medium",
+   "name": "[4] Лидер бандитов",
+   "string_id": 50261
+  },
+  "630": {
+   "confidence": "medium",
+   "name": "Цветущий куст",
+   "string_id": 59673
+  },
+  "639": {
+   "confidence": "medium",
+   "name": "Ваккас<Br>Броня, одежда, пояса",
+   "string_id": 62149
+  },
+  "648": {
+   "confidence": "medium",
+   "name": "Контейнер",
+   "string_id": 60223
+  },
+  "651": {
+   "confidence": "medium",
+   "name": "Техногик<Br>расшифровка чертежей",
+   "string_id": 46942
+  },
+  "6513": {
+   "confidence": "medium",
+   "name": "Полковник Шеппрад<Br>Армия ЦСЦ",
+   "string_id": 9671
+  },
+  "6514": {
+   "confidence": "medium",
+   "name": "Рядовой Макгиллион<Br>Армия ЦСЦ",
+   "string_id": 9672
+  },
+  "6523": {
+   "confidence": "medium",
+   "name": "Терминал<Br>Гермодвери в бункер доктора Д",
+   "string_id": 10359
+  },
+  "6524": {
+   "confidence": "medium",
+   "name": "Лаура Принсипе",
+   "string_id": 10360
+  },
+  "6525": {
+   "confidence": "medium",
+   "name": "Весенний цветок",
+   "string_id": 10361
+  },
+  "6526": {
+   "confidence": "medium",
+   "name": "Лейтенант из СМЕРШа",
+   "string_id": 10362
+  },
+  "6527": {
+   "confidence": "medium",
+   "name": "Старший лейтенант Васильев",
+   "string_id": 10363
+  },
+  "6528": {
+   "confidence": "medium",
+   "name": "Лейтенант Коновалов",
+   "string_id": 10364
+  },
+  "6529": {
+   "confidence": "medium",
+   "name": "Старшина Никулин",
+   "string_id": 10365
+  },
+  "6530": {
+   "confidence": "medium",
+   "name": "Рядовой  Еленин",
+   "string_id": 10366
+  },
+  "6531": {
+   "confidence": "medium",
+   "name": "Майор медслужбы Харитонов",
+   "string_id": 10367
+  },
+  "6532": {
+   "confidence": "medium",
+   "name": "Медсестра Дёмина",
+   "string_id": 10368
+  },
+  "6533": {
+   "confidence": "medium",
+   "name": "Полковник Шиповаленко",
+   "string_id": 10369
+  },
+  "6534": {
+   "confidence": "medium",
+   "name": "Лазутчик<Br>Северный Альянс",
+   "string_id": 10370
+  },
+  "6537": {
+   "confidence": "medium",
+   "name": "Мина<Br>ППМ-06-08С",
+   "string_id": 10371
+  },
+  "6538": {
+   "confidence": "medium",
+   "name": "Мина<Br>ППМ-06-08В",
+   "string_id": 10372
+  },
+  "6539": {
+   "confidence": "medium",
+   "name": "Мина<Br>ППМ-06-12Ю",
+   "string_id": 10373
+  },
+  "6540": {
+   "confidence": "medium",
+   "name": "Мина<Br>ППМ-06-12С",
+   "string_id": 10374
+  },
+  "6541": {
+   "confidence": "medium",
+   "name": "Мина<Br>ППМ-06-16В",
+   "string_id": 10375
+  },
+  "6542": {
+   "confidence": "medium",
+   "name": "Мина<Br>ППМ-06-16Ю",
+   "string_id": 10376
+  },
+  "6543": {
+   "confidence": "medium",
+   "name": "информация",
+   "string_id": 10377
+  },
+  "6544": {
+   "confidence": "medium",
+   "name": "товар за документы",
+   "string_id": 10378
+  },
+  "6545": {
+   "confidence": "medium",
+   "name": "чертежи, улучшение",
+   "string_id": 10379
+  },
+  "6546": {
+   "confidence": "medium",
+   "name": "добыча ресурсов",
+   "string_id": 10380
+  },
+  "6547": {
+   "confidence": "medium",
+   "name": "череп",
+   "string_id": 10381
+  },
+  "6548": {
+   "confidence": "medium",
+   "name": "перелет",
+   "string_id": 10382
+  },
+  "6549": {
+   "confidence": "medium",
+   "name": "Внимание",
+   "string_id": 10383
+  },
+  "658": {
+   "confidence": "medium",
+   "name": "[9] Офицер<Br>Интервент",
+   "string_id": 9460
+  },
+  "659": {
+   "confidence": "medium",
+   "name": "[6] Рядовой<Br>Союз арабского Магриба",
+   "string_id": 8875
+  },
+  "6708": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "6709": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "6710": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "6711": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "6718": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "6719": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "6720": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "6721": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "6722": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "6723": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "6736": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "6737": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "675": {
+   "confidence": "medium",
+   "name": "Тариф<Br>полицейский",
+   "string_id": 48764
+  },
+  "677": {
+   "confidence": "medium",
+   "name": "Ящик с деталями оружия",
+   "string_id": 48767
+  },
+  "6833": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6834": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6835": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6836": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6837": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6838": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6839": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6840": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6841": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6842": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6844": {
+   "confidence": "medium",
+   "name": "[9] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9572
+  },
+  "6850": {
+   "confidence": "medium",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6851": {
+   "confidence": "medium",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6852": {
+   "confidence": "medium",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6853": {
+   "confidence": "medium",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6854": {
+   "confidence": "medium",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6856": {
+   "confidence": "medium",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6857": {
+   "confidence": "medium",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6858": {
+   "confidence": "medium",
+   "name": "[12] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9585
+  },
+  "6868": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6869": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6870": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6871": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6881": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6882": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6883": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6884": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6885": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6886": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "6887": {
+   "confidence": "medium",
+   "name": "[19] Лаборант<Br>Лаборатория доктора «D»",
+   "string_id": 9599
+  },
+  "702": {
+   "confidence": "medium",
+   "name": "Мастер Сэм<Br>улучшение дробовиков",
+   "string_id": 51658
+  },
+  "7022": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Водитель",
+   "string_id": 9626
+  },
+  "7023": {
+   "confidence": "medium",
+   "name": "Мастер Ибн Аббас Фирас<Br>Улучшение пулеметов",
+   "string_id": 9627
+  },
+  "7024": {
+   "confidence": "medium",
+   "name": "Мастер Ибн аль-Хайтам<Br>Улучшение пулеметов",
+   "string_id": 9628
+  },
+  "7025": {
+   "confidence": "medium",
+   "name": "Подмастерье Ябир ибн Хайянс<Br>Улучшение пулеметов",
+   "string_id": 9629
+  },
+  "7026": {
+   "confidence": "medium",
+   "name": "Техногик Аль-Калкашанди<Br>Изучение излучателей",
+   "string_id": 9630
+  },
+  "7027": {
+   "confidence": "medium",
+   "name": "Вертолет",
+   "string_id": 9631
+  },
+  "7028": {
+   "confidence": "medium",
+   "name": "Иван Кольт<Br>Сотрудник ЦСЦ",
+   "string_id": 9632
+  },
+  "7029": {
+   "confidence": "medium",
+   "name": "Прапорщик Иванов<Br>ПДС",
+   "string_id": 9633
+  },
+  "7048": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "7049": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "7050": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "7051": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "7052": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "7053": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "7208": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "7209": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "7210": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "7211": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "7212": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "7213": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "729": {
+   "confidence": "medium",
+   "name": "Давид<Br>Банкир",
+   "string_id": 47817
+  },
+  "7327": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "7328": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "7329": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "7330": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "7331": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "7332": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "7359": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "7360": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "7361": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "7362": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "7363": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "7364": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "7400": {
+   "confidence": "medium",
+   "name": "Мастер Гуго Борхардт<Br>улучшение пистолетов [Q]<Br>чертежи [0у], [2у] и [15у]",
+   "string_id": 10395
+  },
+  "7401": {
+   "confidence": "medium",
+   "name": "Мастер Элифалет Ремингтон<Br>улучшение дробовиков [Q]<Br>чертежи [6у]",
+   "string_id": 10396
+  },
+  "7402": {
+   "confidence": "medium",
+   "name": "Мастер Сэмюэл Кольт<Br>улучшение винтовок [Q]<Br>чертежи [10у]",
+   "string_id": 10397
+  },
+  "7403": {
+   "confidence": "medium",
+   "name": "Мастер Алексей Судаев<Br>улучшение ПП [Q]<Br>чертежи [10у]",
+   "string_id": 10398
+  },
+  "7404": {
+   "confidence": "medium",
+   "name": "Мастер Аймо Лахти<Br>улучшение автоматов [Q]<Br>чертежи [14у]",
+   "string_id": 10399
+  },
+  "7405": {
+   "confidence": "medium",
+   "name": "Мастер Фердинанд Манлихер<Br>улучшение пулеметов [Q]<Br>чертежи [16у]",
+   "string_id": 10400
+  },
+  "7419": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "7420": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "7421": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "7422": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "7431": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "7432": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "7434": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "7435": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "7436": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "7437": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "7446": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "7447": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "748": {
+   "confidence": "medium",
+   "name": "Мастер Гияс<Br>улучшение автоматов",
+   "string_id": 51673
+  },
+  "751": {
+   "confidence": "medium",
+   "name": "Мастер Заки<Br>улучшение пулеметов",
+   "string_id": 51674
+  },
+  "752": {
+   "confidence": "medium",
+   "name": "Мастер Зияд<Br>улучшение винтовок",
+   "string_id": 51675
+  },
+  "7539": {
+   "confidence": "medium",
+   "name": "[7] Верблюд<Br>Дикое животное",
+   "string_id": 9546
+  },
+  "7540": {
+   "confidence": "medium",
+   "name": "[11] Верблюд<Br>Дикое животное",
+   "string_id": 9547
+  },
+  "7542": {
+   "confidence": "medium",
+   "name": "[15] Верблюд<Br>Дикое животное",
+   "string_id": 9548
+  },
+  "7544": {
+   "confidence": "medium",
+   "name": "[19] Верблюд<Br>Дикое животное",
+   "string_id": 9549
+  },
+  "76": {
+   "confidence": "medium",
+   "name": "Одноглазый<Br>Торговец ножами",
+   "string_id": 10447
+  },
+  "7856": {
+   "confidence": "medium",
+   "name": "Тьерри Сабин<Br>",
+   "string_id": 50410
+  },
+  "7858": {
+   "confidence": "medium",
+   "name": "Тьерри Сабин<Br>",
+   "string_id": 50410
+  },
+  "7896": {
+   "confidence": "medium",
+   "name": "Мастер Зухейр ибн Макин<Br>Очки налетчика[8][G]",
+   "string_id": 9796
+  },
+  "7899": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "7900": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "7901": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "7902": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "7903": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "7904": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "7921": {
+   "confidence": "medium",
+   "name": "Подмастерье Захи ат-Сулейман<Br>Очки налетчика[8][P]",
+   "string_id": 9797
+  },
+  "7922": {
+   "confidence": "medium",
+   "name": "Ученик Шафи ибн Синан<Br>Очки налетчика[8][A]",
+   "string_id": 9798
+  },
+  "7923": {
+   "confidence": "medium",
+   "name": "Мастер Газван ар-Шадид<Br>Куртка налетчика[8][G]",
+   "string_id": 9799
+  },
+  "7924": {
+   "confidence": "medium",
+   "name": "Подмастерье Хайям ибн Зубейр<Br>Куртка налетчика[8][P]",
+   "string_id": 9800
+  },
+  "7925": {
+   "confidence": "medium",
+   "name": "Ученик Дагман аш-Рафик<Br>Куртка налетчика[8][A]",
+   "string_id": 9801
+  },
+  "7926": {
+   "confidence": "medium",
+   "name": "Мастер Расим аш-Насир<Br>Бронежилет налетчика[8][G]",
+   "string_id": 9802
+  },
+  "7927": {
+   "confidence": "medium",
+   "name": "Подмастерье Назих ар-Насир<Br>Бронежилет налетчика[8][P]",
+   "string_id": 9803
+  },
+  "7931": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "7932": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "7933": {
+   "confidence": "medium",
+   "name": "Тьерри Сабин<Br>",
+   "string_id": 50410
+  },
+  "7935": {
+   "confidence": "medium",
+   "name": "Тьерри Сабин<Br>",
+   "string_id": 50410
+  },
+  "7947": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>База №1",
+   "string_id": 41600
+  },
+  "7948": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №1",
+   "string_id": 41601
+  },
+  "7949": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №2",
+   "string_id": 41602
+  },
+  "7950": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №3",
+   "string_id": 41603
+  },
+  "7951": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №4",
+   "string_id": 41604
+  },
+  "7952": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №5",
+   "string_id": 41605
+  },
+  "7953": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №6",
+   "string_id": 41606
+  },
+  "7954": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №7",
+   "string_id": 41607
+  },
+  "7955": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №8",
+   "string_id": 41608
+  },
+  "7956": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №9",
+   "string_id": 41609
+  },
+  "7957": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №10",
+   "string_id": 41610
+  },
+  "7958": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №11",
+   "string_id": 41611
+  },
+  "7959": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №12",
+   "string_id": 41612
+  },
+  "796": {
+   "confidence": "medium",
+   "name": "Техногик<Br>расшифровка чертежей",
+   "string_id": 46942
+  },
+  "7960": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №13",
+   "string_id": 41613
+  },
+  "7961": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №14",
+   "string_id": 41614
+  },
+  "7962": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №15",
+   "string_id": 41615
+  },
+  "7963": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №16",
+   "string_id": 41616
+  },
+  "7964": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №17",
+   "string_id": 41617
+  },
+  "7965": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №18",
+   "string_id": 41618
+  },
+  "7966": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №19",
+   "string_id": 41619
+  },
+  "7967": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №20",
+   "string_id": 41620
+  },
+  "7968": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №21",
+   "string_id": 41621
+  },
+  "7969": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №22",
+   "string_id": 41622
+  },
+  "7970": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №23",
+   "string_id": 41623
+  },
+  "7971": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №24",
+   "string_id": 41624
+  },
+  "7972": {
+   "confidence": "medium",
+   "name": "Инспектор Рей Фавел<Br>«Врачи Без Границ»",
+   "string_id": 41625
+  },
+  "7973": {
+   "confidence": "medium",
+   "name": "Том Скайрэй<Br>Пилот<Br>База №1",
+   "string_id": 41626
+  },
+  "7974": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "7975": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "7976": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "7977": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "7996": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "7997": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "8000": {
+   "confidence": "medium",
+   "name": "Тьерри Сабин<Br>",
+   "string_id": 50410
+  },
+  "8012": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>База №1",
+   "string_id": 41600
+  },
+  "8013": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №1",
+   "string_id": 41601
+  },
+  "8014": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №2",
+   "string_id": 41602
+  },
+  "8015": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №3",
+   "string_id": 41603
+  },
+  "8016": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №4",
+   "string_id": 41604
+  },
+  "8017": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №5",
+   "string_id": 41605
+  },
+  "8018": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №6",
+   "string_id": 41606
+  },
+  "8019": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №7",
+   "string_id": 41607
+  },
+  "802": {
+   "confidence": "medium",
+   "name": "[11] Наемник Кобры",
+   "string_id": 50305
+  },
+  "8020": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №8",
+   "string_id": 41608
+  },
+  "8021": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №9",
+   "string_id": 41609
+  },
+  "8022": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №10",
+   "string_id": 41610
+  },
+  "8023": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №11",
+   "string_id": 41611
+  },
+  "8024": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №12",
+   "string_id": 41612
+  },
+  "8025": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №13",
+   "string_id": 41613
+  },
+  "8026": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №14",
+   "string_id": 41614
+  },
+  "8027": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №15",
+   "string_id": 41615
+  },
+  "8028": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №16",
+   "string_id": 41616
+  },
+  "8029": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №17",
+   "string_id": 41617
+  },
+  "8030": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №18",
+   "string_id": 41618
+  },
+  "8031": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №19",
+   "string_id": 41619
+  },
+  "8032": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №20",
+   "string_id": 41620
+  },
+  "8033": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №21",
+   "string_id": 41621
+  },
+  "8034": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №22",
+   "string_id": 41622
+  },
+  "8035": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №23",
+   "string_id": 41623
+  },
+  "8036": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №24",
+   "string_id": 41624
+  },
+  "8037": {
+   "confidence": "medium",
+   "name": "Инспектор Рей Фавел<Br>«Врачи Без Границ»",
+   "string_id": 41625
+  },
+  "8038": {
+   "confidence": "medium",
+   "name": "Том Скайрэй<Br>Пилот<Br>База №1",
+   "string_id": 41626
+  },
+  "8039": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "8040": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "8041": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "8042": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "805": {
+   "confidence": "medium",
+   "name": "Джонни Вышибала",
+   "string_id": 10329
+  },
+  "806": {
+   "confidence": "medium",
+   "name": "Бармен Чакки",
+   "string_id": 10460
+  },
+  "8061": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "8062": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "809": {
+   "confidence": "medium",
+   "name": "Телохранитель Рой",
+   "string_id": 10332
+  },
+  "8103": {
+   "confidence": "medium",
+   "name": "Мастер Зухейр ибн Макин<Br>Очки налетчика[8][G]",
+   "string_id": 9796
+  },
+  "8104": {
+   "confidence": "medium",
+   "name": "Подмастерье Захи ат-Сулейман<Br>Очки налетчика[8][P]",
+   "string_id": 9797
+  },
+  "8105": {
+   "confidence": "medium",
+   "name": "Ученик Шафи ибн Синан<Br>Очки налетчика[8][A]",
+   "string_id": 9798
+  },
+  "8106": {
+   "confidence": "medium",
+   "name": "Мастер Газван ар-Шадид<Br>Куртка налетчика[8][G]",
+   "string_id": 9799
+  },
+  "8107": {
+   "confidence": "medium",
+   "name": "Подмастерье Хайям ибн Зубейр<Br>Куртка налетчика[8][P]",
+   "string_id": 9800
+  },
+  "8108": {
+   "confidence": "medium",
+   "name": "Ученик Дагман аш-Рафик<Br>Куртка налетчика[8][A]",
+   "string_id": 9801
+  },
+  "8109": {
+   "confidence": "medium",
+   "name": "Мастер Расим аш-Насир<Br>Бронежилет налетчика[8][G]",
+   "string_id": 9802
+  },
+  "8110": {
+   "confidence": "medium",
+   "name": "Подмастерье Назих ар-Насир<Br>Бронежилет налетчика[8][P]",
+   "string_id": 9803
+  },
+  "8111": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "8112": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "8113": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "8114": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "8116": {
+   "confidence": "medium",
+   "name": "Фая<Br>Аренда транспорта",
+   "string_id": 10386
+  },
+  "8117": {
+   "confidence": "medium",
+   "name": "Шихаб<Br>Аренда транспорта",
+   "string_id": 10387
+  },
+  "8131": {
+   "confidence": "medium",
+   "name": "Ученик Шараф ибн Бади<Br>Бронежилет налетчика[8][A]",
+   "string_id": 9804
+  },
+  "8150": {
+   "confidence": "medium",
+   "name": "Тьерри Сабин<Br>",
+   "string_id": 50410
+  },
+  "8152": {
+   "confidence": "medium",
+   "name": "Тьерри Сабин<Br>",
+   "string_id": 50410
+  },
+  "8164": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>База №1",
+   "string_id": 41600
+  },
+  "8165": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №1",
+   "string_id": 41601
+  },
+  "8166": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №2",
+   "string_id": 41602
+  },
+  "8167": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №3",
+   "string_id": 41603
+  },
+  "8168": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №4",
+   "string_id": 41604
+  },
+  "8169": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №5",
+   "string_id": 41605
+  },
+  "8170": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №6",
+   "string_id": 41606
+  },
+  "8171": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №7",
+   "string_id": 41607
+  },
+  "8172": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №8",
+   "string_id": 41608
+  },
+  "8173": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №9",
+   "string_id": 41609
+  },
+  "8174": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №10",
+   "string_id": 41610
+  },
+  "8175": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №11",
+   "string_id": 41611
+  },
+  "8176": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №12",
+   "string_id": 41612
+  },
+  "8177": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №13",
+   "string_id": 41613
+  },
+  "8178": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №14",
+   "string_id": 41614
+  },
+  "8179": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №15",
+   "string_id": 41615
+  },
+  "8180": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №16",
+   "string_id": 41616
+  },
+  "8181": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №17",
+   "string_id": 41617
+  },
+  "8182": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №18",
+   "string_id": 41618
+  },
+  "8183": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №19",
+   "string_id": 41619
+  },
+  "8184": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №20",
+   "string_id": 41620
+  },
+  "8185": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №21",
+   "string_id": 41621
+  },
+  "8186": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №22",
+   "string_id": 41622
+  },
+  "8187": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №23",
+   "string_id": 41623
+  },
+  "8188": {
+   "confidence": "medium",
+   "name": "Абрам Васильевич<Br>Пилот<Br>Блок-пост №24",
+   "string_id": 41624
+  },
+  "8189": {
+   "confidence": "medium",
+   "name": "Инспектор Рей Фавел<Br>«Врачи Без Границ»",
+   "string_id": 41625
+  },
+  "8190": {
+   "confidence": "medium",
+   "name": "Том Скайрэй<Br>Пилот<Br>База №1",
+   "string_id": 41626
+  },
+  "8191": {
+   "confidence": "medium",
+   "name": "Ослик Панург",
+   "string_id": 10680
+  },
+  "8192": {
+   "confidence": "medium",
+   "name": "Верблюд",
+   "string_id": 10681
+  },
+  "8193": {
+   "confidence": "medium",
+   "name": "Мотоцикл",
+   "string_id": 10682
+  },
+  "8194": {
+   "confidence": "medium",
+   "name": "УАЗ",
+   "string_id": 10683
+  },
+  "8207": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Оружие",
+   "string_id": 9662
+  },
+  "8208": {
+   "confidence": "medium",
+   "name": "Грузовой контейнер<Br>Патроны",
+   "string_id": 9663
+  },
+  "835": {
+   "confidence": "medium",
+   "name": "Джонни Вышибала",
+   "string_id": 10329
+  },
+  "919": {
+   "confidence": "medium",
+   "name": "[14] Снайпер<Br>Миротворцы",
+   "string_id": 46339
+  },
+  "923": {
+   "confidence": "medium",
+   "name": "[15] Снайпер<Br>Миротворцы",
+   "string_id": 46343
+  },
+  "925": {
+   "confidence": "medium",
+   "name": "[16] Элитный Штурмовик<Br>Миротворцы",
+   "string_id": 8953
+  },
+  "939": {
+   "confidence": "medium",
+   "name": "Чарльз МакКалок<Br>Сумасшедший паталогоанатом",
+   "string_id": 10496
+  },
+  "940": {
+   "confidence": "medium",
+   "name": "Чарльз МакКалок<Br>Сумасшедший паталогоанатом",
+   "string_id": 10496
+  },
+  "941": {
+   "confidence": "medium",
+   "name": "Чарльз МакКалок<Br>Сумасшедший паталогоанатом",
+   "string_id": 10496
+  },
+  "942": {
+   "confidence": "medium",
+   "name": "Чарльз МакКалок<Br>Сумасшедший паталогоанатом",
+   "string_id": 10496
+  },
+  "943": {
+   "confidence": "medium",
+   "name": "Чарльз МакКалок<Br>Сумасшедший паталогоанатом",
+   "string_id": 10496
+  },
+  "982": {
+   "confidence": "medium",
+   "name": "Джамшут<Br>Владелец каменоломни",
+   "string_id": 48771
+  },
+  "983": {
+   "confidence": "medium",
+   "name": "Олег<Br>Прораб",
+   "string_id": 48772
+  },
+  "985": {
+   "confidence": "medium",
+   "name": "Гюнтер<Br>Прораб",
+   "string_id": 47250
+  }
+ }
+}

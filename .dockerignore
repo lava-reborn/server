@@ -11,9 +11,9 @@ data/wiki_world/
 
 # The database belongs on a volume. Copying a development one in would have it
 # shadowed by the mount at best, and shipped with accounts in it at worst.
-data/lava.db
-data/lava.db-wal
-data/lava.db-shm
+# A wildcard, not three names: the copies kept beside it before a risky step
+# (lava.db.before-archivist and its -wal/-shm) went into the image otherwise.
+data/lava.db*
 
 **/__pycache__/
 **/*.pyc

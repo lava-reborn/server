@@ -51,7 +51,9 @@ SKILL_MAX = 20
 SPEC_MAX = 5
 ATTRIB_MAX = 20                 # wiki: an attribute without gear stays <= 20
 START_ATTRIB = 5
-START_AFRO = 1000
+# Settable so an integration suite can afford the gear its scenario needs;
+# a player still starts with the thousand.
+START_AFRO = int(os.environ.get("LAVA_START_AFRO", "1000"))
 SKILL_XP_START = 100
 SPEC_XP_START = 1250
 
@@ -81,6 +83,25 @@ ERR_SKILL = 45          # "У вас не хватает навыков для �
 # every frame carries. So a price of 10 is 1000 in the purse; charging 10
 # took a hundredth of what the window asked for.
 GOLD_OUNCE = 100
+
+# The one rate of gold to afro, afro per WHOLE ounce: what the constants
+# frame tells the client (gold_to_afro_rate, «G 1 = A <rate>» in
+# GoldToAfroInterface), what c_ga converts at (server.py Session.cmd_c_ga),
+# what the auction sorts mixed currencies by (auction.py), what a stall pays
+# for a thing priced in gold alone (inventory.Inventory.sell) and what a gold
+# ingot is worth in afro (items.GOLD_INGOTS). 50 000 (owner, 2026-09-28: «как
+# минимум 1 к 40к», derived from the original's prices): where the original
+# converts one currency into the other it asks 40 000-50 000 -- the wiki's
+# «официальный курс 1 голд – 40000 афро», the gold coin at 40 000, the
+# set-upgrade surcharges (706 of 756 rows at 40 000), «Купить золото»
+# (texts 49828: 500 000 afro for 10 ounces), the reagents (8 of 8 at
+# 50 000) -- and a G twin is better than its afro one (damage x1.2, effect
+# x1.14-1.2), which puts the ounce above the bare ratio: the consumable
+# pairs corrected for effect meet at 50 000. The G columns of the gear
+# price lists (4000 to the ounce in data/sets.json and the wiki's wear and
+# blueprints) are a price ladder, not a rate. Change it here and nowhere
+# else.
+GOLD_TO_AFRO_RATE = 50000
 
 SPEC_COST = {0: (0, 0), 1: (1000, 0), 2: (0, 10 * GOLD_OUNCE),
              3: (0, 30 * GOLD_OUNCE), 4: (0, 55 * GOLD_OUNCE)}
@@ -176,9 +197,12 @@ class Character:
     """One character's progression, loaded from and saved to the Store.
 
     Base values live in the lists; everything derived is computed on demand
-    so it can never drift from them. Bonuses from equipment and effects are
-    kept apart (all zero until those exist) because the client shows
-    a_* and f_* separately and the card's formulas use the f_* ones.
+    so it can never drift from them. Bonuses are kept apart because the
+    client shows a_* and f_* separately and the card's formulas use the f_*
+    ones. Today they are the gear's alone -- what is worn and held, and the
+    sets among it -- recounted by inventory.gear_bonus and handed over with
+    set_gear; effects do not exist yet. They are never saved: the items are,
+    and the next load counts them again.
     """
 
     def __init__(self):
@@ -197,9 +221,22 @@ class Character:
         self.bg_rep = 0
         self.bg_pen = 0
         self.max_specs = 1        # free specialisations; wiki: the first is free
+        # skill -> the fraction of a point hits on mobs left over
+        # (carry_xp); a session's worth at most, never saved
+        self.xp_carry = {}
         self.bonus_attribs = [0] * ATTRIBS
         self.bonus_skills = [0] * SKILLS
         self.bonus_specs = [0] * SPECS
+        # health, stamina, action points, crit and anti-crit from the gear
+        self.bonus_hp = 0
+        self.bonus_st = 0
+        self.bonus_od = 0
+        self.bonus_cp = 0
+        self.bonus_ce = 0
+        # crit and anti-crit the card counts a second time for a firearm
+        # (inventory.card_repeat): crit_chance adds them, melee does not
+        self.card_cp = 0
+        self.card_ce = 0
 
     # --- persistence -----------------------------------------------------
     @classmethod
@@ -272,17 +309,48 @@ class Character:
 
     @property
     def hp_max(self):
-        return 4 * self.attr(STRENGTH) + 20 * self.attr(CONSTITUTION)
+        """The gear's health on top: the client adds it nowhere by itself,
+        so the maximum usrUp carries has to hold it already."""
+        return 4 * self.attr(STRENGTH) + 20 * self.attr(CONSTITUTION) + self.bonus_hp
 
     @property
     def sp_max(self):
-        return 4 * self.attr(AGILITY) + 20 * self.attr(CONSTITUTION)
+        return 4 * self.attr(AGILITY) + 20 * self.attr(CONSTITUTION) + self.bonus_st
 
     @property
     def ap_max(self):
         """Without item, set or effect bonuses: the card adds those itself
-        (CharInterface.showOD), so putting them here would count them twice."""
+        (CharInterface.showOD), so putting them here would count them twice.
+        This is the figure for rp_info and nothing else; see ap_ceiling."""
         return 50 + 5 * self.level
+
+    @property
+    def ap_ceiling(self):
+        """The ОД the card shows: ap_max plus the bonus_od of everything
+        worn and held and the od of every set (showOD). The bar is filled
+        to this -- lenter;amax is its only source (APManager.setAP) -- and
+        the fight spends from it, so what the player reads is what he has."""
+        return self.ap_max + self.bonus_od
+
+    def set_gear(self, b, repeat=(0, 0)):
+        """Take on what the gear adds, in inventory.gear_bonus's shape, and
+        the (crit, anti-crit) the card repeats (inventory.card_repeat).
+
+        Returns the indexes whose card value moved, as gain_xp does, ready
+        for a partial rp_info. Only a change is worth pushing: SkillObject
+        and SpecObject announce every new value_bonus as "повышен до N".
+        """
+        self.card_cp, self.card_ce = repeat
+        changed = {"attribs": set(), "skills": set(), "specs": set()}
+        for kind, have in (("attribs", self.bonus_attribs), ("skills", self.bonus_skills),
+                           ("specs", self.bonus_specs)):
+            for i, value in enumerate(b[kind]):
+                if have[i] != value:
+                    have[i] = value
+                    changed[kind].add(i)
+        self.bonus_hp, self.bonus_st = b["hp"], b["st"]
+        self.bonus_od, self.bonus_cp, self.bonus_ce = b["od"], b["cp"], b["ce"]
+        return changed
 
     @property
     def armor(self):
@@ -435,7 +503,17 @@ class Character:
         return 0
 
     # --- experience ------------------------------------------------------
-    def gain_xp(self, skill_idx, base, spec_idx=None):
+    def carry_xp(self, skill_idx, xp):
+        """The whole points of `xp`, this skill's leftover fraction added in;
+        the new fraction waits for the next hit. A kill arrives as several
+        hits and each is a share of a 20-point price, so flooring every hit
+        on its own would lose a good part of the reward."""
+        xp += self.xp_carry.get(skill_idx, 0.0)
+        whole = int(xp + 1e-9)
+        self.xp_carry[skill_idx] = max(0.0, xp - whole)
+        return whole
+
+    def gain_xp(self, skill_idx, base, spec_idx=None, spec_on_top=False):
         """Award experience for an action. Returns the indexes changed, as
         {"skills": set, "specs": set, "attribs": set}, ready for a push.
 
@@ -444,13 +522,22 @@ class Character:
         to the skill and half to the specialisation (wiki "Начисление опыта
         по мобу"); the remainder past a threshold carries into the next
         level. An attribute gains one per specialisation level up to 20.
+
+        spec_on_top: the skill takes the whole total and a learned
+        specialisation the same again. Mob kills use it, so that opening a
+        specialisation does not halve the pace mob_xp is built around;
+        healing keeps the wiki's halves.
         """
         total = int(base * (1 + PREMIUM_XP_BONUS[self.premium_level()]))
         changed = {"skills": set(), "specs": set(), "attribs": set()}
         if total <= 0:
             return changed
-        to_spec = total // 2 if spec_idx is not None and self.spec[spec_idx][0] >= 0 else 0
-        to_skill = total - to_spec
+        spec_on = spec_idx is not None and self.spec[spec_idx][0] >= 0
+        if spec_on_top:
+            to_skill, to_spec = total, (total if spec_on else 0)
+        else:
+            to_spec = total // 2 if spec_on else 0
+            to_skill = total - to_spec
         old_level = self.level
 
         s = self.skill[skill_idx]
@@ -464,24 +551,40 @@ class Character:
         changed["skills"].add(skill_idx)
 
         if to_spec:
-            sp = self.spec[spec_idx]
-            sp[1] += to_spec
-            while sp[0] < SPEC_MAX and sp[1] >= sp[2]:
-                sp[1] -= sp[2]
-                sp[0] += 1
-                sp[2] = spec_xp_max(sp[0])
-                a = SPEC_ATTRIB[spec_idx]
-                if a is not None and self.attrib[a] < ATTRIB_MAX:
-                    self.attrib[a] += 1
-                    changed["attribs"].add(a)
-            if sp[0] >= SPEC_MAX:
-                sp[1] = min(sp[1], sp[2])
-            changed["specs"].add(spec_idx)
+            self._spec_up(spec_idx, to_spec, changed)
 
         if self.level != old_level:
             self.recalc()
             changed["attribs"].add(CONSTITUTION)
         return changed
+
+    def gain_spec_xp(self, spec_idx, base):
+        """Experience into a specialisation alone, none into its skill: a
+        quest's rew_spec_xp (the wiki's «опыт спецу», «требуется открытая
+        специализация»). The premium share on top, as gain_xp's. A
+        specialisation not learned takes nothing. Returns the indexes
+        changed, as gain_xp does."""
+        changed = {"skills": set(), "specs": set(), "attribs": set()}
+        total = int(base * (1 + PREMIUM_XP_BONUS[self.premium_level()]))
+        if total > 0 and 0 <= spec_idx < SPECS and self.spec[spec_idx][0] >= 0:
+            self._spec_up(spec_idx, total, changed)
+        return changed
+
+    def _spec_up(self, spec_idx, xp, changed):
+        """xp into a learned specialisation, its levels and its attribute."""
+        sp = self.spec[spec_idx]
+        sp[1] += xp
+        while sp[0] < SPEC_MAX and sp[1] >= sp[2]:
+            sp[1] -= sp[2]
+            sp[0] += 1
+            sp[2] = spec_xp_max(sp[0])
+            a = SPEC_ATTRIB[spec_idx]
+            if a is not None and self.attrib[a] < ATTRIB_MAX:
+                self.attrib[a] += 1
+                changed["attribs"].add(a)
+        if sp[0] >= SPEC_MAX:
+            sp[1] = min(sp[1], sp[2])
+        changed["specs"].add(spec_idx)
 
 
 # --- the card's formulas, CharInterface.as verbatim -------------------------
@@ -513,10 +616,16 @@ _CRIT = {
 }
 
 
-def crit_chance(ch, weapon_type):
+def crit_chance(ch, weapon_type, card=True):
     """(crit %, anti-crit %) for a firearm of this type, showKrit 184-231,
-    before item, set and effect bonuses. None for anything the card does
-    not compute, which is every non-firearm."""
+    with the gear's bonus_cp/bonus_ce on top as showKrit adds them (the
+    items in the eight slots, then the sets). Effects would come next; none
+    exist. None for anything the card does not compute, which is every
+    non-firearm.
+
+    card: the set the card counts twice counted twice (Character.card_cp),
+    for the firearm in hand, whose figure the player reads. False for a row
+    the card never shows -- the anti-crit of somebody with no firearm."""
     row = _CRIT.get(weapon_type)
     if row is None:
         return None
@@ -525,7 +634,9 @@ def crit_chance(ch, weapon_type):
     sp = ch.spec_level(spec)
     cp = (ch.attr(a) * wa + ch.attr(b) * wb) / 4 + shooting / 4 + sp
     ce = (ch.attr(AGILITY) + ch.attr(PERCEPTION)) / 2 + shooting / 2 + sp
-    return cp, ce
+    if card:
+        cp, ce = cp + ch.card_cp, ce + ch.card_ce
+    return cp + ch.bonus_cp, ce + ch.bonus_ce
 
 
 def level_gap(a, b):
@@ -533,3 +644,95 @@ def level_gap(a, b):
     both the frame over a mob's head and the wiki's experience multiplier
     minus four."""
     return max(-4, min(4, a - b))
+
+
+# --- experience from mobs: the owner's rule (2026-09-24), not the original's --
+# The original paid k * damage, k = clamp(mob - player, -4, 4) + 4, against
+# thresholds that double from 100. The first colonist took a new character
+# from Стрельба 0 straight to 2, while level 19 to 20 would have cost 34 500
+# kills: the threshold doubles every level and a mob's health barely grows.
+#
+# The rule instead sets the pace in kills and prices a mob from it:
+#
+#   kills_per_level(L) = 5 * 1.5^L, rounded: 5, 8, 11, 17, 25, 38 ... 11 084
+#                        mobs one level above the player, each level half as
+#                        long again as the one before
+#   mob_price(m)       = what a level-m mob pays a player one level below it,
+#                        T(m - 1) / kills_per_level(m - 1) rounded up:
+#                        20 for the colonist (level 1), 267 at 10, 4 731 at 20
+#   by the gap:  mob above the player   the price (as one level up, no more)
+#                same level             half
+#                one level below        a quarter
+#                two or more below      nothing
+#
+# At one's own level a level takes 10, 20, 32, 44, 67 ... 29 555 kills. Zero
+# to twenty is some 33 000 kills of mobs above, 88 000 at one's own level.
+# A growth of 2 instead would have made every mob worth the same 20 and the
+# last level cost millions; 1.5 was chosen with the owner for that reason.
+KILLS_START = 5
+KILLS_GROWTH = 1.5
+GAP_SHARE = {0: 0.5, -1: 0.25}
+GREY_GAP = 2
+
+
+def kills_per_level(level):
+    """How many mobs one level above the player a level takes."""
+    return max(1, round(KILLS_START * KILLS_GROWTH ** level))
+
+
+def mob_price(mob_level):
+    """What a mob of this level pays a player one level below it: the most
+    one kill of it is ever worth. Levels 0 and 1 share the colonist's 20."""
+    m = max(1, mob_level)
+    return -(-skill_xp_max(m - 1) // kills_per_level(m - 1))
+
+
+def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
+    """Experience for `share` of a kill -- the part of the mob's health this
+    player took -- as a float, so the caller can carry what a hit leaves
+    over.
+
+    A mob above the player is priced as one level up however far above it
+    stands: kills_per_level is then a floor no lucky kill can beat, and one
+    kill is never worth more than a fifth of a level. The mob's xp_mult
+    counts once: a boss at 3.0 is three kills, an animal at 0.7 a little
+    less than one.
+    """
+    gap = mob_level - player_level
+    if gap > 0:
+        return mob_price(player_level + 1) * share * xp_mult
+    if gap <= -GREY_GAP:
+        return 0.0
+    return mob_price(mob_level) * GAP_SHARE[gap] * share * xp_mult
+
+
+# --- the fighter's skill from a kill of a player: DESIGNED ---------------------
+# «Навык бойца» (rep, RANKS) has no source in anything that survived: the
+# client only shows it and announces its rise, and the wiki leaves the article
+# empty but for the thresholds. It is paid when the killer registers the
+# trophy the kill left (trophies.Collection.register), over the two levels
+# the trophy wrote down at the kill -- and a trophy falls only for a killer at
+# the victim's level or below, so of the lines below only the first two are
+# ever paid now. The owner's shape for mobs is reused, on a flat price,
+# because the ranks are fixed numbers rather than a curve that grows with the
+# level:
+#
+#   by the gap:  victim above the killer    the price
+#                same level                 half
+#                one level below            a quarter
+#                two or more below          nothing
+#
+# At twenty a kill, Следопыт (100) is five kills of a stronger player or ten
+# of an equal, Ассасин (12 800) 640 or 1 280 of them. Nothing for beating
+# somebody two levels down keeps the newcomers from being anybody's rank.
+PVP_REP_PRICE = 20
+
+
+def pvp_rep(victim_level, killer_level):
+    """Fighter's skill for killing a player of victim_level, whole points."""
+    gap = victim_level - killer_level
+    if gap > 0:
+        return PVP_REP_PRICE
+    if gap <= -GREY_GAP:
+        return 0
+    return int(PVP_REP_PRICE * GAP_SHARE[gap])

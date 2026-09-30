@@ -14,9 +14,18 @@ or b for a door into an interior (recon/analysis/world.md §5, tabulated in
 data/exits_sides.json). A side 1..4 needs no data at all: the exit leads to
 the neighbouring cell of the global map, and the player arrives at the
 opposite edge of whatever stands there, a settlement out of
-data/settlements.json or open desert. A door is a lookup in data/exits.json,
+data/settlements.json or open desert -- but for the interiors that open into
+each other by their sides, the quarry's pits, which data/passages.json
+'sides' lists (side_way). A door is a lookup in data/exits.json,
 and only entries recovered with some confidence are followed; the rest are
-refused with a word in chat rather than sent somewhere wrong.
+refused with a word in chat rather than sent somewhere wrong. Where the
+client's own files know better than that table's guess, data/passages.json
+corrects it. It also lists the two kinds of way that have no zone at all:
+walk-ins, cells a file draws as a way somewhere without marking them as
+zones, which the server acts on when a walk ends there, since the client
+will not; and quest ways, where an inhabitant's quest is the way -- Рудо's
+down into the Nubian mine, Камал's back up -- and handing it in moves the
+player.
 
 The rim of the world is a ring of rock scenes standing on the rim cells
 themselves (data/borders.json, world.borders): a wall is a location with no
@@ -154,15 +163,209 @@ def side_at(loc, pos):
     return exit_sides(loc).get(int(pos))
 
 
+_PASSAGES = None
+
+
+def passages_path():
+    """Where the ways kept by hand are read from: data/passages.json, or
+    the file LAVA_PASSAGES names. The variable is for a test that needs a
+    way the world does not have -- test_walk_in keeps the walk-in mechanism
+    running on a table of its own, now that no place uses one -- and it
+    replaces the table rather than adding to it, so what a run follows is
+    exactly one file."""
+    return (os.environ.get("LAVA_PASSAGES")
+            or os.path.join(HERE, "data", "passages.json"))
+
+
+def _passages():
+    """The ways kept by hand, read once.
+
+    Missing or broken, it is simply empty: every door falls back to
+    data/exits.json and no cell or quest leads anywhere its file does not
+    say, which is how the world stood before the table existed.
+    """
+    global _PASSAGES
+    if _PASSAGES is None:
+        try:
+            with open(passages_path(), encoding="utf-8") as fh:
+                doc = json.load(fh)
+            _PASSAGES = doc if isinstance(doc, dict) else {}
+        except (OSError, ValueError):
+            _PASSAGES = {}
+    return _PASSAGES
+
+
 def door(loc_id, side):
-    """The data/exits.json record for door a or b of a location, or None."""
+    """The record for door a or b of a location, or None.
+
+    data/exits.json guessed most doors from file names, and where the
+    client's own files say better -- the Nubian mine signs its ladders "up"
+    and "down" -- data/passages.json corrects it. The correction keeps the
+    door's cells from exits.json, or reads them off outzones when that table
+    has no row, since door_arrival needs them to put a player beside it.
+    """
+    rec = None
     entry = _table("exits.json", "doors").get(str(loc_id))
-    if not entry:
-        return None
-    for rec in entry.get("doors", ()):
-        if rec.get("side") == side:
+    for r in (entry or {}).get("doors", ()):
+        if r.get("side") == side:
+            rec = r
+            break
+    fixed = ((_passages().get("doors") or {}).get(str(loc_id)) or {}).get(side)
+    if not fixed:
+        return rec
+    # Only the cells survive from the guess: its target_title, target_fn and
+    # alternatives describe the place it guessed, not this one.
+    out = dict(fixed, side=side, cells=list((rec or {}).get("cells") or ()))
+    if not out["cells"]:
+        out["cells"] = sorted(c for c, s in exit_sides(world.location(loc_id)).items()
+                              if s == side)
+    return out
+
+
+def side_way(loc_id, side):
+    """The record for side W, N, E or S of a location that data/passages.json
+    'sides' leads into another interior, or None: the files of one place
+    that open into each other by their sides -- the quarry's five pits --
+    and have no cells of their own on the map to lead to. Only the
+    locations listed there; every other side exit leads to the neighbouring
+    map cell (plan_exit)."""
+    rec = ((_passages().get("sides") or {}).get(str(loc_id)) or {}).get(side)
+    return rec if isinstance(rec, dict) and rec.get("target_loc_id") else None
+
+
+def no_map(loc_id):
+    """Whether data/passages.json 'no_map' lists the location: an interior
+    left only by its own ways -- the quest ways out of Берт's bunker, the
+    quarry's way out and its sides -- and never straight onto the global
+    map. The client is told it is a sublocation (geo_id) and greys both map
+    buttons out, and the server refuses chWorld to the map and /home from
+    it (server.py Session.cmd_chWorld, cmd_userMsg): a course that is
+    walked once, or a tool that is lent for one place (quests.json
+    stay_in), is not left behind by a button. A death still sends the
+    player home (and stay_in takes the tool back on arrival)."""
+    return isinstance((_passages().get("no_map") or {}).get(str(int(loc_id))), dict)
+
+
+_WAYS = {}
+
+
+def _ways(section, loc):
+    """[(cells, record)] of one section of the table for a location, the
+    cells numbered y * width + x as the client numbers them; those off the
+    grid are dropped."""
+    key = (section, loc.id)
+    found = _WAYS.get(key)
+    if found is None:
+        found = []
+        for rec in (_passages().get(section) or {}).get(str(loc.id)) or ():
+            cells = frozenset(int(y) * loc.width + int(x)
+                              for x, y in rec.get("cells") or ()
+                              if 0 <= int(x) < loc.width
+                              and 0 <= int(y) < loc.height)
+            found.append((cells, rec))
+        _WAYS[key] = found
+    return found
+
+
+def walk_ins(loc):
+    """[(cells, record)] of the walk-in passages of a location.
+
+    A walk-in is a way the location file draws but does not mark: the client
+    only opens its exit window on a cell with the zone flag
+    (Location.finishMove). The server moves the player itself once their
+    walk ends on one of these cells (server.py, Session.arm_passage). Cells
+    come as [x, y] of the location's own grid. A row with none leads from
+    nowhere and is left out.
+
+    No place has one now: the Nubian mine's mouth and its EXIT sign were
+    walk-ins until the quests of Рудо and Камал took over (quest_ways).
+    """
+    return [(cells, rec) for cells, rec in _ways("walk_in", loc) if cells]
+
+
+def quest_ways(loc):
+    """[(cells, record)] of the ways a quest of this location's inhabitants
+    takes a player: record["quest"] is the quest type, target_loc_id where
+    it leads.
+
+    The client has no way to go anywhere through a quest except the one the
+    server makes: taking it is a q_st, a cmdAck and the q_di that journals
+    it; handing it in to the same inhabitant is a q_co and a cmdAck
+    (QuestInspector.takeQuest), and the lcall that follows is ours
+    (server.py, Session.hand_in_way). The cells are not a trigger --
+    nothing happens on them -- but where the file draws the way: a player
+    coming the other way arrives beside them (door_arrival), at the mouth
+    of the mine or under its EXIT sign.
+    """
+    return _ways("quest", loc)
+
+
+def quest_way(loc, quest_type):
+    """The quest way of this location that quest_type is, or None."""
+    for _cells, rec in quest_ways(loc):
+        try:
+            if int(rec.get("quest")) == int(quest_type):
+                return rec
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def is_quest_way(quest_type):
+    """Whether the table makes quest_type a way from anywhere at all.
+
+    Such a quest is journalled like any other and its hand-in is the way:
+    nothing paid, nothing counted against the day (server.py,
+    Session.hand_in_way). Asked of the whole table, not of one location's
+    rows, so that wherever it is given or handed in, the question of where
+    it leads from there is asked (plan_quest_way) and a place the table has
+    not caught up with -- an inhabitant who gives it standing somewhere else
+    -- is refused rather than taken for an ordinary quest.
+    """
+    for rows in (_passages().get("quest") or {}).values():
+        for rec in rows or ():
+            try:
+                if int(rec.get("quest")) == int(quest_type):
+                    return True
+            except (TypeError, ValueError, AttributeError):
+                continue
+    return False
+
+
+def walk_in_at(loc, pos):
+    """The walk-in record whose cells include pos, or None."""
+    for cells, rec in walk_ins(loc):
+        if int(pos) in cells:
             return rec
     return None
+
+
+def off_walk_in(loc, pos):
+    """pos, or where to stand instead when pos is on a walk-in passage:
+    beside it, where one comes out of it (door_arrival).
+
+    For a character put back where the last session left it. Standing on
+    a walk-in is not a way to take it -- only the end of a walk is, and the
+    client sends no walk to the cell its figure is already on -- so a
+    player left there would stand on the way through unable to use it
+    until they stepped off and back on.
+    """
+    rec = walk_in_at(loc, pos)
+    if rec is None:
+        return pos
+    return door_arrival(loc, rec.get("target_loc_id"))
+
+
+def walk_seconds(path_len):
+    """How long the client takes to walk a path of path_len cells.
+
+    Every figure goes at 200 ms a hex whatever it is (LocWalker.startMove,
+    the number mobs.HEX_MS cites too), and a walk-in waits that long before
+    it moves the player, so the figure is seen to reach the way through
+    before the next location starts loading. The small margin covers
+    the frame the client needs to act on the last step.
+    """
+    return 0.2 * max(0, int(path_len) - 1) + 0.3
 
 
 # --- the map ---------------------------------------------------------------
@@ -187,6 +390,19 @@ def neighbour(gx, gy, side):
 # stopping position inside the last open cell whichever way the client rounds
 # its own float.
 CLEARANCE = 0.02
+
+# A ceiling on how many cell boundaries one move may cross. The traversal
+# below ends when the ray reaches t = 1, and for any honest move it does --
+# but t is measured in units of the move itself, so a move of 1e30 cells
+# advances t by 1e-30 per boundary and the loop never finishes. That is not
+# hypothetical: a destination outside the map, or a float the client rounded
+# oddly, reaches walk() before travel clamps anything, and the server then
+# spins inside a coroutine with nobody to interrupt it -- every player on the
+# process stops, not just the one who clicked.
+#
+# The diagonal of the world is the most boundaries any real move can cross;
+# twice that, plus a few, is past anything legitimate and still finite.
+MAX_STEPS = 2 * ((MAP_X[1] - MAP_X[0]) + (MAP_Y[1] - MAP_Y[0])) + 4
 
 
 def walk(gx, gy, dx, dy):
@@ -215,7 +431,7 @@ def walk(gx, gy, dx, dy):
     next_y = (y + 1 - gy) / dy if dy > 0 else (y - gy) / dy if dy < 0 else inf
     span_x = abs(1.0 / dx) if dx else inf
     span_y = abs(1.0 / dy) if dy else inf
-    while True:
+    for _ in range(MAX_STEPS):
         if next_x < next_y:
             t, x = next_x, x + step_x
             next_x += span_x
@@ -231,6 +447,9 @@ def walk(gx, gy, dx, dy):
             continue                    # still walking out of the rock
         back = max(0.0, t - CLEARANCE / math.hypot(dx, dy))
         return gx + dx * back, gy + dy * back
+    # Out of steps, which only a move no player can make gets to. Stay put
+    # rather than guess: the caller clamps and the client asks again.
+    return gx, gy
 
 
 def deadloc_id(exit_side):
@@ -284,6 +503,30 @@ def room_key(loc, gx, gy):
     if loc.id in SCENE_IDS or is_deadloc(loc.id):
         return (loc.id, int(gx), int(gy))
     return loc.id
+
+
+def newbie_ground(loc, gx, gy):
+    """Whether standing in this location on map cell gx, gy is standing on
+    the Nubian valley's ground, where no player may attack another.
+
+    The valley's own tiles are lost (world.NOOB_VALLEY), and two kinds of
+    file stand in for them: open desert for its wasteland (world.Location.
+    newbies), and the scenes of rock for its walls -- a side exit of a valley
+    cell into the owner's wall ends in a pocket (dead_end), and the rock
+    around the valley was NoPvP_* in the original, pvp="0" all of it. The
+    pocket files say otherwise or nothing, being the rim's (14 even says
+    pvp="1"), and the map cell is the only thing that knows where the
+    pocket is: the same cell the room is filed under (room_key), so everyone
+    in one room is under one rule. A settlement or an interior has a file of
+    its own and keeps what that says -- "Арена Нубии" included.
+
+    Nothing is, unless the valley is kept peaceful (world.NOOB_VALLEY_SAFE).
+    """
+    if not world.NOOB_VALLEY_SAFE:
+        return False
+    if loc.newbies:
+        return True
+    return loc.id in SCENE_IDS and world.in_noob_valley(int(gx), int(gy))
 
 
 def rock_for(side, gx, gy):
@@ -349,11 +592,14 @@ def geo_id(loc, gx, gy):
     window's map button and the panel's exit button both go dark
     (ExitLocationInterface.init, LocationInterface :704), and the only way
     out is the one zone leading back onto the map -- which is what a dead
-    end at the world's edge is for. Bit 31 stays clear: that is a
-    battleground to Location.isBGLocation.
+    end at the world's edge is for. An interior of data/passages.json
+    'no_map' gets the same bit, and the same dark buttons; its x and y are
+    still the cell's, which the panel prints beside the name
+    (Location.locationName). Bit 31 stays clear: that is a battleground to
+    Location.isBGLocation.
     """
     packed = world.pack(round(gx), round(gy))
-    if is_deadloc(loc.id):
+    if is_deadloc(loc.id) or no_map(loc.id):
         packed |= 1 << 26
     return packed
 
@@ -423,18 +669,38 @@ def door_arrival(loc, from_loc_id):
     """A cell inside an interior entered through a door: beside the door
     that leads back where the player came from when the table knows it,
     otherwise any free entry cell. Doors sit anywhere, so "beside" is by
-    grid distance rather than by edge."""
+    grid distance rather than by edge.
+
+    A walk-in passage back counts as a door here, and its cells are never
+    arrived on: standing on one is what sends a player through, and coming
+    out of a passage onto its far mouth would read as the server bouncing
+    them. So does a quest way back: someone Камал has brought up comes out
+    at the end of the rails, where the way down is drawn, and someone Рудо
+    has sent down arrives under the EXIT sign.
+    """
     sides = exit_sides(loc)
-    free = [c for c in loc.entries if c not in loc.obstacles and c not in sides]
+    passing = set()
+    for cells, _rec in walk_ins(loc):
+        passing |= cells
+    free = [c for c in loc.entries if c not in loc.obstacles
+            and c not in sides and c not in passing]
     if not free:
         return loc.entry_cell()
+    back = None
     for side in ("a", "b"):
         rec = door(loc.id, side)
         if rec and rec.get("target_loc_id") == from_loc_id and rec.get("cells"):
-            cells = rec["cells"]
-            cx = sum(c % loc.width for c in cells) / float(len(cells))
-            cy = sum(c // loc.width for c in cells) / float(len(cells))
-            return _nearest(loc, free, (cx, cy))
+            back = rec["cells"]
+            break
+    if back is None:
+        for cells, rec in walk_ins(loc) + quest_ways(loc):
+            if rec.get("target_loc_id") == from_loc_id and cells:
+                back = sorted(cells)
+                break
+    if back:
+        cx = sum(c % loc.width for c in back) / float(len(back))
+        cy = sum(c // loc.width for c in back) / float(len(back))
+        return _nearest(loc, free, (cx, cy))
     return _nearest(loc, free, (loc.width / 2.0, loc.height / 2.0))
 
 
@@ -452,6 +718,20 @@ def plan_exit(loc, pos, gx, gy):
     side = side_at(loc, pos)
     if side is None:
         raise Refused("Здесь нет выхода")
+    inner = side_way(loc.id, side) if side in SIDES else None
+    if inner is not None:
+        # One interior into the next (data/passages.json 'sides'): arrived
+        # at over the opposite edge, the map cell kept -- the place is the
+        # cell it was entered from -- unless the far side has a cell of
+        # its own.
+        try:
+            dest = world.location(int(inner["target_loc_id"]))
+        except (KeyError, OSError, TypeError, ValueError):
+            raise Refused("Локации %s за этим проходом нет" % inner["target_loc_id"])
+        cell = world.cell_of(dest.id)
+        if cell is not None:
+            gx, gy = cell
+        return Exit(dest.id, arrival_cell(dest, OPPOSITE[side]), int(gx), int(gy))
     if side in SIDES:
         nx, ny = neighbour(gx, gy, side)
         # What a location's own file says about its sides is never argued
@@ -475,14 +755,59 @@ def plan_exit(loc, pos, gx, gy):
         dest = world.location(int(target))
     except (KeyError, OSError):
         raise Refused("Локации %s за этим проходом нет" % target)
-    # An interior belongs to the cell its entrance stands on.
+    # An interior belongs to the cell its entrance stands on -- unless the
+    # door's record says own_cell (data/passages.json): a door up into one of
+    # several entrances above one interior (the Вади-Хальфа mine's three)
+    # arrives on that entrance's own cell, whichever it went down by.
+    cell = world.cell_of(dest.id) if rec.get("own_cell") else None
+    if cell is not None:
+        gx, gy = cell
     return Exit(dest.id, door_arrival(dest, loc.id), int(gx), int(gy))
+
+
+def _beyond(loc, rec, gx, gy):
+    """The Exit at the far end of a walk-in or a quest way.
+
+    A place that stands on the map is arrived at on its own cell, whatever
+    cell the player had: someone put into the mine by /goto comes out at
+    the mine's mouth, and the map then shows them there. An interior keeps
+    the cell of whatever it was entered from, as behind a door.
+    """
+    target = rec.get("target_loc_id")
+    try:
+        dest = world.location(int(target))
+    except (KeyError, OSError, TypeError, ValueError):
+        raise Refused("Локации %s за этим проходом нет" % target)
+    cell = world.cell_of(dest.id)
+    if cell is not None:
+        gx, gy = cell
+    return Exit(dest.id, door_arrival(dest, loc.id), int(gx), int(gy))
+
+
+def plan_walk_in(loc, pos, gx, gy):
+    """Where the walk-in passage under pos leads. Raises Refused off any, or
+    when its far side is no file."""
+    rec = walk_in_at(loc, pos)
+    if rec is None:
+        raise Refused("Здесь нет прохода")
+    return _beyond(loc, rec, gx, gy)
+
+
+def plan_quest_way(loc, quest_type, gx, gy):
+    """Where handing quest_type in here leads. Raises Refused when it is not a
+    quest way of this location, or its far side is no file."""
+    rec = quest_way(loc, quest_type)
+    if rec is None:
+        raise Refused("Это задание никуда не ведёт")
+    return _beyond(loc, rec, gx, gy)
 
 
 def home(row, start):
     """(loc_id, gx, gy) of where a character wakes up: the location
-    registered with on_conv;op=0 and its cell, or the start when none was,
-    or the registered one no longer resolves to a file.
+    registered with on_conv;op=0 and its cell -- or the start it was made
+    in, which creation writes as its home (accounts.create_character) --
+    or the start when none was, or the registered one no longer resolves
+    to a file.
 
     row is the characters row (or None); start is (loc_id, gx, gy). A home
     saved before its cell was stored takes the cell of the settlement it

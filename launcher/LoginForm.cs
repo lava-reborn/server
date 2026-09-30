@@ -157,6 +157,14 @@ class LoginForm : Form
 
     void Go()
     {
+        // A fresh attempt clears the last failure.
+        errorShown = false;
+        // A gate turns this button into the thing that has to happen instead.
+        if (gated)
+        {
+            if (gateAction != null) gateAction();
+            return;
+        }
         if (!enter.Enabled) return;
         string l = login.Value.Trim();
         string p = pass.Value;
@@ -178,10 +186,18 @@ class LoginForm : Form
 
     public bool PasswordRemembered { get { return pass.Hint; } }
 
+    // Whether the line under the fields is an error rather than a remark.
+    // Background threads finish in an order nobody controls, and without this
+    // the last one to speak wins -- which is how the reason the game will not
+    // start gets replaced by a note that the resources are fine.
+    bool errorShown;
+    public bool ErrorShown { get { return errorShown; } }
+
     public void Error(string text)
     {
         message = text;
         messageColor = Theme.Danger;
+        errorShown = true;
         Busy(false, "Войти");
         Invalidate();
     }
@@ -193,8 +209,57 @@ class LoginForm : Form
         Invalidate();
     }
 
+    // --- the gate ---------------------------------------------------------
+    //
+    // While an update is outstanding the form will not submit, and the primary
+    // button stops saying "Войти". A button greyed out beside a line of text
+    // is how a player decides the launcher is broken; a button that says what
+    // has to happen instead is how they get out of it.
+    string gateLabel;
+    Action gateAction;
+    bool gated, gateLocks;
+
+    public void Gate(string text, string buttonLabel, Action action, bool lockFields)
+    {
+        // A gate is the loudest thing the form can say, so it takes the line.
+        errorShown = false;
+        gated = true;
+        gateLabel = buttonLabel;
+        gateAction = action;
+        gateLocks = lockFields;
+        message = text;
+        messageColor = action != null ? Theme.Danger : Theme.InkMuted;
+        ApplyGate();
+    }
+
+    public void Ungate()
+    {
+        if (!gated) return;
+        gated = false;
+        gateAction = null;
+        gateLabel = null;
+        Busy(false, "Войти");
+    }
+
+    void ApplyGate()
+    {
+        enter.Label = gateLabel;
+        // No action means there is nothing for the player to do but wait.
+        enter.Enabled = gateAction != null;
+        // Typing a login while the check runs is harmless, so the fields are
+        // only frozen when the way in is barred for good.
+        login.Box.ReadOnly = gateLocks;
+        pass.Box.ReadOnly = gateLocks;
+        remember.Enabled = !gateLocks;
+        enter.Invalidate();
+        Invalidate();
+    }
+
     public void Busy(bool on, string label)
     {
+        // The gate outranks any busy state. Error() unwinds Busy on its way
+        // out, and without this a mistyped password would lift an update gate.
+        if (gated) { ApplyGate(); return; }
         enter.Label = label;
         enter.Enabled = !on;
         login.Box.ReadOnly = on;

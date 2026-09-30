@@ -41,6 +41,44 @@ USERINFO = {
     AUCTIONER: "userInfo_Auctioneer",
 }
 
+# Where a trophy is registered (trophies.py). The six «Сумасшедший живодер»
+# of «Мясники» (VH_Butchers, location 164, the map's "Мясники, скупка
+# трофеев" at 5979,1721 in Вади-Хальфа) -- собиратель пальцев, ушей, рук,
+# скальпов, черепов, рогов и копыт (texts.xml 60521..60526) -- and the
+# original's own "Регистрация трофеев", Tr_registr_cor/_a/_b (Одноглазый Джо,
+# Михалыч, Герцль, texts.xml 50639..50641) and _c, which no location puts
+# down. mobs.xml makes the butchers Commoners, but a trophy is registered in
+# a trade session (Trade.regTrophy, ss_upd 6), and the client opens one only
+# with a Trader (Gamer.proposeContact) and offers "regTrophy" only for a
+# Trader's can_trophy (NPCService.openService): so they are built as
+# Traders (entity_root) that sell and repair nothing.
+# And one DESIGNED, where the owner put him (2026-09-25: «унеси сохранение
+# трофея от адама к демиру»): Демир (5193), the valley's taxi driver, in
+# «Караван» (186, 6271,1829). Every character starts inside the walled
+# Nubian valley and the butchers are out of its reach, so without him
+# «Навык бойца» could not rise at all. mobs.xml makes him a Commoner, and
+# a Commoner's only service here was «Прописка»; as a Trader he cannot keep
+# it -- NPCService.openService gives a Trader trade, repair and regTrophy
+# and never the "support" tab, and a Commoner never gets the Trade session
+# RegTrophyInterface works in (Gamer.proposeContact) -- so the caravan's
+# «Прописка» is Крысолов's and the Точильный камень's (5194, 5192), both
+# Commoners standing in the same location; home is the location, not the
+# person. His quests (none given here yet; the wiki's «В Хальфу!» and
+# «Добро пожаловать в Хальфу») would still show: the quests tab is every
+# class's. Адам (5216, Нубийский рынок), who stood in for him before, is an
+# ordinary Trader again. And Хассир (105) at the station of Вади-Хальфы,
+# whose map label says he registers trophies; a Trader already, he keeps his
+# stall and his repairs besides (trophies.KEEPS_STALL).
+TROPHY_REGISTRARS = frozenset({939, 940, 941, 942, 943, 1132,
+                               2033, 2034, 2035, 2036,
+                               5193, 105})
+
+
+def entity_root(type_id, root):
+    """The class an inhabitant is built as on the client (lch rtype): the
+    root of mobs.xml, but a trophy registrar is a Trader."""
+    return TRADER if type_id in TROPHY_REGISTRARS else root
+
 
 def _read(path):
     """Location files are UTF-8 despite declaring windows-1251."""
@@ -81,8 +119,10 @@ GEO_MASK = 0x1FFF
 #
 # West and north are the client's own word. The captions on gx=5833 and
 # gy=1600 read "Западные Предгорья" and "Северные Предгорья", and the two
-# locations standing there -- 182 on 5833,1607 and 322 on 5840,1600 -- have no
-# outzone pointing outward at all (recon/analysis/borders.md §8).
+# locations the placer stood there -- 182 on 5833,1607 and 322 on 5840,1600
+# -- have no outzone pointing outward at all (recon/analysis/borders.md §8).
+# 182 has since moved to the valley's «Поля и Пастбища» (6268,1818, data/
+# settlements_verified.json), the cows' place it is; the captions stay.
 #
 # East and south are not that: 5833..6305 by 1600..2110 is the bounding box of
 # the 414 map captions, and the settlements on its east and south rim (303
@@ -94,6 +134,92 @@ GEO_MASK = 0x1FFF
 # those exits leading onto drawn ground instead of into a refusal.
 MAP_X = (5833, 6335)
 MAP_Y = (1600, 2143)
+
+# The Nubian valley, where every new character starts: gx0, gy0, gx1, gy1,
+# inclusive. Open ground inside it is no place to attack another player.
+#
+# The original made it so with its own tiles. The valley's wasteland was
+# Noob_000_n..Noob_026 (static 1334..1360, all "Пустошь", all pvp="0"), its
+# inner walls NoPvP_UpSide1/2 and NoPvP_LeftSide2 (pvp="0" copies of the rim's
+# rock), and every settlement in it is pvp="0" but the one built for the
+# purpose, "Арена Нубии" (167, pvp="1"). Which cell held which of those tiles
+# lived in the serverdata node and is gone, so here the valley's open cells
+# fall to the generic desert templates like any other -- and those carry no
+# pvp attribute, which the client reads as "allowed" (see Location.pvp).
+#
+# DESIGNED: the rectangle is the wiki's own coordinates for the valley's
+# places -- Поля и Пастбища 6268x1818 and Северный поселок 6268x1819 to the
+# north, Захоронения предков 6261x1825 to the west, Лагерь Бандитов 6272x1840
+# to the south, Старая шахта 6273x1829 to the east, fifteen in all -- grown by
+# one cell on each side, so that the ground right around the outermost of
+# them is the valley's too. The wall the owner drew round the valley
+# (data/terrain_verified.json) shuts in 112 cells, 6261..6274 by 1818..1841,
+# and every one of them is inside this; it is kept as a rectangle of its own
+# so that the rule does not move if the wall one day opens.
+#
+# But the wall is no rectangle, and 39 open cells of this one lie on its far
+# side -- 6260,1828..1833, 6261,1838..1841, 6274,1818..1820 and so on, the
+# common wasteland one step from anybody walking past. Counted in, they were
+# a strip of the open world where nobody could be attacked, told "Нубийская
+# долина" about it. So those are carved out (valley_outskirts), for as long
+# as the wall keeps them out: once the valley itself can be walked into from
+# outside, the rectangle is the valley again, whole.
+NOOB_VALLEY = (6260, 1817, 6274, 1841)
+# A cell the wall shuts in: the Нубийское поселение, where everyone starts.
+NOOB_VALLEY_HEART = (6268, 1819)
+# Whether the valley keeps the original's peace between players. The owner
+# turned it off (2026-09-24): players fight on the valley's open ground as
+# anywhere else in the wasteland. LAVA_NOOB_VALLEY_SAFE=1 brings the rule
+# back -- in the valley only «Арена Нубии» then.
+NOOB_VALLEY_SAFE = os.environ.get("LAVA_NOOB_VALLEY_SAFE", "0") == "1"
+
+_OUTSKIRTS = None
+
+
+def valley_outskirts():
+    """The open cells of NOOB_VALLEY that lie outside the owner's wall.
+
+    Walked from the ground around the rectangle, over passable cells only
+    and a side at a time (travel.neighbour, as a player walks the map), and
+    empty if that walk reaches NOOB_VALLEY_HEART: then there is no wall to
+    speak of, and nothing is carved out of the valley.
+    """
+    global _OUTSKIRTS
+    if _OUTSKIRTS is None:
+        x0, y0, x1, y1 = NOOB_VALLEY
+
+        def inside(c):
+            return x0 <= c[0] <= x1 and y0 <= c[1] <= y1
+
+        steps = ((1, 0), (-1, 0), (0, 1), (0, -1))
+        todo = []
+        for x in range(x0 - 1, x1 + 2):
+            for y in range(y0 - 1, y1 + 2):
+                if inside((x, y)) or not passable(x, y):
+                    continue
+                for dx, dy in steps:
+                    n = (x + dx, y + dy)
+                    if inside(n) and passable(*n):
+                        todo.append(n)
+        seen = set(todo)
+        while todo:
+            c = todo.pop()
+            for dx, dy in steps:
+                n = (c[0] + dx, c[1] + dy)
+                if n not in seen and inside(n) and passable(*n):
+                    seen.add(n)
+                    todo.append(n)
+        _OUTSKIRTS = frozenset(() if NOOB_VALLEY_HEART in seen else seen)
+    return _OUTSKIRTS
+
+
+def in_noob_valley(gx, gy):
+    """Whether a map cell is the Nubian valley's: in NOOB_VALLEY, and not on
+    the outer side of its wall."""
+    x0, y0, x1, y1 = NOOB_VALLEY
+    if not (x0 <= gx <= x1 and y0 <= gy <= y1):
+        return False
+    return (int(gx), int(gy)) not in valley_outskirts()
 
 
 def pack(gx, gy):
@@ -150,9 +276,33 @@ class Location:
         self.width = int(attrs["width"])
         self.height = int(attrs["height"])
         self.war = int(attrs.get("war", 0))
-        self.pvp = int(attrs.get("pvp", 0))
+        # Whether a player may be attacked here, read exactly as the client
+        # reads it (LDParser: pvpEnabled = attributes.pvp != "0"): a file
+        # that does not say is open to it. That is the whole wasteland -- the
+        # desert templates, the deadloc rim, 24 rock and coast tiles and four
+        # quest places -- and the client acts on it, sending the shot or the
+        # blow instead of showing its own "В этой локации Вы не можете
+        # нападать на других игроков". A server that read the silence as "no"
+        # answered every one of them with res=3, which the client words as
+        # "Сервер не отвечает", on 272 847 of the map's 273 632 cells: the
+        # open world had no fighting between players at all, and the 828
+        # files with pvp="1" were the only places it was left.
+        self.pvp = int(attrs.get("pvp") != "0")
+        # Open desert inside the Nubian valley stands in for the valley's own
+        # lost tiles, which said pvp="0" (NOOB_VALLEY). The client still reads
+        # the template and lets the blow go, so the refusal is the server's,
+        # and combat.Fighter.refuse_pvp says in chat why -- while the valley
+        # is kept peaceful at all (NOOB_VALLEY_SAFE).
+        self.newbies = (NOOB_VALLEY_SAFE and self.file.startswith("desert/")
+                        and in_noob_valley(*unpack(loc_id)))
+        if self.newbies:
+            self.pvp = 0
 
         self.obstacles = {self._cell(c) for c in _chunks(txt, "obstacles", 5)}
+        # The counter of a range, shot over but not walked over (SHOOT_OVER).
+        self.shoot_over = frozenset(
+            self._cell(c) for c in _chunks(txt, "obstacles", 5)
+            if c[4] == "1") if loc_id in SHOOT_OVER else frozenset()
         self.entries = [self._cell(c) for c in _chunks(txt, "inzones", 4)]
         self.spawns = [(self._cell(c), int(c[4:8], 16))
                        for c in _chunks(txt, "mobs", 8)]
@@ -491,6 +641,36 @@ def substitute(type_id):
     return _SUBSTITUTES.get(type_id)
 
 
+_CAMP_FILL = None
+
+
+def camp_fill(loc_id):
+    """Who stands in a location's empty spawn slots, in the file's order:
+    the types of data/camp_fill.json, or () for a file it does not list.
+
+    DESIGNED, not recovered. A spawn of type 0 names nobody -- the dead
+    server chose who stood there -- and Вади-Хальфа's camps are made of
+    them: Bandit_Camp1..4 held their chief and their ammunition boxes and
+    nothing else that fights. data/build_spawn_substitutes.py (CAMP_FILL)
+    gives each slot of those files, and of a few quest places beside them, a
+    fighter of the camp's faction and level band, and says why. rooms.Room
+    asks here only in war=1 locations; any other file's empty slot stays
+    empty, as it always was.
+    """
+    global _CAMP_FILL
+    if _CAMP_FILL is None:
+        _CAMP_FILL = {}
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        try:
+            with open(os.path.join(here, "data", "camp_fill.json"),
+                      encoding="utf-8") as fh:
+                for k, v in json.load(fh)["fill"].items():
+                    _CAMP_FILL[int(k)] = tuple(int(t) for t in v["types"])
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+    return _CAMP_FILL.get(loc_id, ())
+
+
 # Spawn entries that belong to a season, a clan or the developers rather than
 # to the place. The location files still carry the New Year lottery stall,
 # the Victory Day trader and clan-event vendors, and wasteland templates were
@@ -499,6 +679,71 @@ def substitute(type_id):
 EVENT_TOKENS = {"vov", "vbg", "lemon", "ny", "9may", "presents", "lotery",
                 "lottery", "hw", "xmas", "valentine", "valentines", "admin",
                 "test", "event", "prazdnik"}
+
+# Вади-Хальфа's own people whom a token of their name took for a season's,
+# kept where they stand -- the owner's default (2026-09-28): the lottery
+# sellers wh_lotery (662, both markets) and wh_lotery_g (711, the black
+# market) of the town's lotteries (texts.xml 50446-50451), the Добрый беженец
+# (1977) and the two children wh_ny_Kid1/3 (423, 425, «Ребенок», 59671). By
+# location: the same types in other cities' files (431 in Донгола's market
+# and warehouse) stay out, and so do Савин's presents (636) and the
+# developers' stand-ins (7234-7236) beside them.
+#
+# Ольсен ny_trader (431, «Ольсен<Br>Амулеты и сувениры», 62122; the old
+# market's tooltip promises «Торговец сувенирами») is in the default too, but
+# waits for his goods: with no row of his own in data/npcs.json his stall is
+# the wiki's low-confidence one of Донгола's «Генрих» -- Анестетик and Салюс
+# МК V-VII at 33 600-50 400 afro, two of them sold nowhere else. Once a
+# 'stock' row of his is written, add 431 back to rows 35 and 104.
+SEASON_KEPT = {
+    35: frozenset({662}),           # Вади Хальфа: рынок
+    104: frozenset({662}),          # Портовый рынок
+    102: frozenset({711}),          # Черный рынок
+    36: frozenset({1977, 423}),     # жилой квартал
+    41: frozenset({425}),           # Причал
+}
+
+# The objects that do stand, by location: the things of Вади-Хальфа's quests,
+# camps and schools that are there to be broken -- the owner's default
+# (2026-09-28). Henry Jr.'s chest m05_Box (41) in «Генри Мл.» (43); the box
+# of «Перехват» (50 in 46); the «ящик спирта» of Люшер's sectarians (102 in
+# 64); each camp's ammunition boxes nc/lu/ja/mg_box_ammo (409, 641, 642,
+# 2162 in 80, 81, 84, 85); the targets nz_Target1..6 (1397-1402) of Берт
+# Гаммер's range TIR_01..06; and the stones Stone_WH (977) of the quarry's
+# four pits. Such a thing stands where its file puts it and never moves or
+# strikes (mobs.MobStats: role "object"); it takes damage, dies, rolls its
+# loot, respawns, and its kill counts for a quest like anybody's. Everywhere
+# else -- the Nubian valley, the other cities, the old copies of the range
+# (670, 1037 ...) and the quarry's control panel (2022) -- objects stay out.
+STANDING_OBJECTS = {
+    43: frozenset({41}),
+    46: frozenset({50}),
+    64: frozenset({102}),
+    80: frozenset({409}),
+    81: frozenset({641}),
+    84: frozenset({642}),
+    85: frozenset({2162}),
+    1048: frozenset({1397, 1398}),  # TIR_01
+    1233: frozenset({1398}),        # TIR_02
+    1260: frozenset({1398, 1399}),  # TIR_03
+    1276: frozenset({1400}),        # TIR_04
+    1280: frozenset({1401}),        # TIR_05
+    1282: frozenset({1402}),        # TIR_06
+    626: frozenset({977}),          # WH_Stone_Mine_C
+    628: frozenset({977}),          # WH_Stone_Mine_S
+    629: frozenset({977}),          # WH_Stone_Mine_W2
+    630: frozenset({977}),          # WH_Stone_Mine_E2
+}
+
+# The ranges where a shot goes over the booth's counter. In TIR_01..06 the
+# player stands in a booth closed off by a two-hex barrier and the targets
+# stand beyond it: every one of them out of a fist's reach and behind that
+# barrier from every cell he can walk to. The barrier's cells carry the
+# obstacle code 1 where the walls carry f (the fifth character, which the
+# client drops: it only walks), so the range reads code 1 as a counter --
+# not to be stepped over, to be shot over (Location.shoot_over,
+# combat.RoomCombat.burst). Anywhere else every obstacle stops a bullet.
+SHOOT_OVER = frozenset({1048, 1233, 1260, 1276, 1280, 1282})
 
 _ROLES = None
 
@@ -526,23 +771,89 @@ def _name_tokens(name):
     return {t for t in re.split(r"[^A-Za-z]+", name.lower()) if t}
 
 
-def belongs_here(type_id, name, root, war):
+def belongs_here(type_id, name, root, war, loc_id=None):
     """Whether a spawn from the location file should stand in the room.
 
     Three kinds are left out. Seasonal, clan and developer entries, by the
-    tokens of their name. Loot containers and other "objects", which the
-    client would draw as creatures with a health bar and which need loot
-    logic that does not exist yet. And hostile creatures (root 0) in a
+    tokens of their name, but for the town's own people SEASON_KEPT keeps
+    in loc_id. Loot containers and other "objects", which the client draws
+    as creatures with a health bar, but for the ones STANDING_OBJECTS lets
+    stand in loc_id to be broken. And hostile creatures (root 0) in a
     peaceful location: a market with war=0 had them in its file for events
-    and quests, and a player cannot fight there anyway.
+    and quests, and a player cannot fight there anyway. And, before all of
+    them, whoever a timed window of data/schedule.json stands in and sends
+    away itself, or keeps out for good (events.owns): not the room's.
     """
-    if _name_tokens(name) & EVENT_TOKENS:
+    import events                   # late: it imports this module
+    if events.owns(loc_id, type_id):
         return False
-    if creature_role(type_id) == "object":
+    if _name_tokens(name) & EVENT_TOKENS \
+            and type_id not in SEASON_KEPT.get(loc_id, ()):
         return False
+    if creature_role(type_id) == "object" \
+            and type_id not in STANDING_OBJECTS.get(loc_id, ()):
+        import production        # the mines' ore rocks (production.ORE_ROCKS)
+        if not production.stands(type_id, loc_id):
+            return False
     if root == MOB and not war:
         return False
     return True
+
+
+# Inhabitants put down by hand, beside the ones a location's own file spawns:
+# the tools box of the Nubian valley's «Забрать инструменты», which mobs.xml
+# has (nz_Box, 1135) and no file puts down. data/placements.json keeps them
+# with the evidence for each; rooms.Room stands them after the file's own,
+# and rooms.check_placements is what the server asks of the table before its
+# first socket.
+_PLACEMENTS = None
+
+
+def placements_path():
+    """data/placements.json, or the file LAVA_PLACEMENTS names. The variable
+    is for a suite that needs an inhabitant the world does not have -- a
+    creature to fight in a room it tests -- and, like LAVA_PASSAGES, it
+    replaces the table rather than adding to it."""
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return (os.environ.get("LAVA_PLACEMENTS")
+            or os.path.join(here, "data", "placements.json"))
+
+
+def placements():
+    """location id -> [row] of the table, read once: {type, cell: [x, y],
+    home, why}. No file is no placements, and the world stands as its files
+    say; a file that does not parse raises, and the server does not start
+    on it (rooms.check_placements)."""
+    global _PLACEMENTS
+    if _PLACEMENTS is None:
+        path = placements_path()
+        table = {}
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as fh:
+                doc = json.load(fh)
+            for k, rows in (doc.get("locations") or {}).items():
+                table[int(k)] = list(rows or ())
+        _PLACEMENTS = table
+    return _PLACEMENTS
+
+
+def placed_in(loc_id):
+    """The rows put down by hand in one location, in table order."""
+    return placements().get(int(loc_id), [])
+
+
+def offers_home(type_id):
+    """Whether a Commoner (or a healer) of this type registers a home
+    («Прописка»), as every one does -- home is the location, not the person
+    -- unless the type is a thing (data/npcs.json 'no_home': a bomb box, a
+    rock, a fountain, a hole) or a placement of the type says home: false. A
+    box is a thing: talked to, it gives its quest and nothing else. Per
+    type, since the frame is."""
+    import npcs                      # no imports of its own
+    if npcs.no_home(int(type_id)):
+        return False
+    return not any(int(r.get("type", 0)) == int(type_id) and r.get("home") is False
+                   for rows in placements().values() for r in rows)
 
 
 def mob_types():

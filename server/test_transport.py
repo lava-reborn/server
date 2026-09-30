@@ -21,7 +21,6 @@ machine can stall for a second at a time reading the client's files.
 """
 import os
 import socket
-import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -43,6 +42,7 @@ PORT = free_port()
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
 import progression  # noqa: E402
+import storage  # noqa: E402
 import transport  # noqa: E402
 import world  # noqa: E402
 from protocol import decode  # noqa: E402
@@ -356,9 +356,9 @@ try:
     # --- and gone when it runs out ------------------------------------------
     c.send("logout;")
     c.frames()
-    db = sqlite3.connect(DB)
-    db.execute("UPDATE characters SET transport_until = ?",
-               (int(time.time()) - 10,))
+    db = storage.connect(DB)
+    db.execute("UPDATE characters SET transport_until = ? WHERE name = ?",
+               (int(time.time()) - 10, "Каюр"))
     db.commit()
     db.close()
 
@@ -402,9 +402,10 @@ try:
     c.send("logout;")
     c.frames()
 
-    db = sqlite3.connect(DB)
+    db = storage.connect(DB)
     row = db.execute("SELECT transport_type, transport_until"
-                     " FROM characters").fetchone()
+                     " FROM characters WHERE name = ?", ("Каюр",)).fetchone()
+    row = (row["transport_type"], row["transport_until"])
     db.close()
     check("the expired rental is cleared from the table", row, (None, None))
 except Exception:

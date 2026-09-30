@@ -6,7 +6,9 @@ the "other location" button sends chWorld;to=1, and the client expects
 cmdAck;res=0 followed by an lcall it will then confirm with lenter. Which
 exit and where it leads is the server's to know (recon/analysis/world.md
 §5); the tests pin the rules travel.py recovered: a side leads to the
-neighbouring map cell and arrives at the opposite edge, a door follows
+neighbouring map cell and arrives at the opposite edge -- or, where
+data/passages.json 'sides' lists it (the quarry's pits), into the interior
+beyond, the map cell kept -- a door follows
 data/exits.json or is refused, the rim of the world is a cell with rocks
 standing on it and no exit facing out, and a way that does run out -- an
 exit pointing into the lake -- ends in a pocket the player backs out of.
@@ -51,6 +53,10 @@ CRED = accounts.credential("tester", "secret")
 # for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
            LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730")
+# The lines the server says by itself (Session.say) are off on a served
+# server; this suite reads them as the server's reasons, so it asks for
+# them by name.
+env["LAVA_SERVER_CHAT"] = "1"
 
 # The server's log goes to a file, not a pipe. This replay walks into the
 # market half a dozen times, and each entry logs the whole snapshot, some
@@ -178,10 +184,16 @@ try:
     got = c.frames()
     check("called into the market", "id=102;" in got[1], True)
     _, frames = enter(c)
-    commoners = [int(param(f, "newUser")) for f in frames
-                 if f.startswith("lch") and "rtype=4;" in f]
+    # "Прописка" is on the menu of a commoner whose userInfo says
+    # can_set_home=1 (NPC.as, Attendance.SET_HOME). Not every rtype=4 is one:
+    # the market's safe (2424) is a bank and says can_set_home=0.
+    homes = [int(param(f, "id")) for f in frames
+             if f.startswith("userInfo_Commoner;") and ";can_set_home=1;" in f]
     check("the market has someone to register a home with",
-          len(commoners) > 0, True)
+          len(homes) > 0, True)
+    check("and it is not the bank",
+          [param(f, "can_set_home") for f in frames
+           if f.startswith("userInfo_Commoner;") and ";name=2424;" in f], ["0"])
 
     # --- a side exit ---------------------------------------------------------
     # Cell 638 is (62, 9) of the 64-wide market, coded 3 = east in outzones.
@@ -254,6 +266,48 @@ try:
     check("and its own door leads back",
           [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
           and "id=671;" in got[1], True)
+    enter(c)
+
+    # --- sides that lead into another interior -------------------------------
+    # The quarry's pits have no map cells and open into each other by their
+    # sides (data/passages.json 'sides'): the north pit's south side is the
+    # centre's north, not the map cell south of wherever the player came in.
+    pit, centre = world.location(627), world.location(626)
+    check("the table sends the north pit's south side into the centre",
+          (travel.side_way(627, travel.S) or {}).get("target_loc_id"), 626)
+    check("and names no side of a place it does not list",
+          (travel.side_way(102, travel.E), travel.side_way(626, "a")), (None, None))
+    goto(c, "627")
+    enter(c)
+    stand_on(c, exit_cell(pit, travel.S))
+    c.send("chWorld;to=1;")
+    got = c.frames()
+    check("a side the table lists opens the interior beyond it",
+          [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
+          and "id=626;" in got[1], True)
+    g_id = int(param(got[1], "g_id"))
+    check("keeping the map cell, as a door into an interior does, and told a sublocation:"
+          " the quarry has no way to the map (data/passages.json 'no_map')",
+          (g_id & 0x3FFFFFF, g_id >> 26), (CELL_102, 1))
+    lenter, _ = enter(c)
+    pos = int(param(lenter, "pos"))
+    check("arriving at its northern edge, having come from the north",
+          (pos // centre.width <= travel.EDGE_BAND, pos in centre.obstacles), (True, False))
+    c.send("chWorld;")
+    got = c.frames()
+    check("and the map, which the client's buttons no longer offer there, is refused to the"
+          " hotkey too: one cmdAck, nothing else", got, ["cmdAck;res=4;"])
+    stand_on(c, exit_cell(centre, travel.N))
+    c.send("chWorld;to=1;")
+    got = c.frames()
+    check("and its north side leads back into the pit",
+          [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
+          and "id=627;" in got[1], True)
+    lenter, _ = enter(c)
+    pos = int(param(lenter, "pos"))
+    check("arriving at the pit's southern edge",
+          pit.height - 1 - pos // pit.width <= travel.EDGE_BAND, True)
+    goto(c, "102")
     enter(c)
 
     # 1000 "Штаб": a door nobody has traced. Refused with a word in chat;
@@ -438,7 +492,7 @@ try:
           and "id=102;" in got[1] and "g_id=%d;" % CELL_102 in got[1], True)
     enter(c)
     # on_conv;op=0 at anyone with can_set_home=1 (Attendance.SET_HOME).
-    c.send("on_conv;mob=%d;op=0;" % commoners[0])
+    c.send("on_conv;mob=%d;op=0;" % homes[0])
     check("home registered", c.frames(), ["cmdAck;res=0;"])
     row = accounts.Store(DB).character(1)
     check("with the location and its cell",

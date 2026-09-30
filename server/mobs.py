@@ -19,6 +19,7 @@ firing cursor by exactly this distance, so the server has to agree with it
 to the decimal, or "green" shots come back refused.
 """
 import json
+import logging
 import math
 import os
 from collections import deque
@@ -26,7 +27,10 @@ from collections import deque
 import inventory
 import items
 import progression
+import quests
 import world
+
+log = logging.getLogger("lava")
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -73,8 +77,23 @@ HEX_MS = 200
 # Hexes a mob is sent per userMove: short legs, so it re-aims at a moving
 # target every second or so instead of finishing a stale path.
 LEG = 5
-# How far from its spawn a mob will chase before it gives up and walks home.
-LEASH = 24
+# A target, once taken, is kept for as long as the player is in the room
+# and alive -- the owner's rule (2026-09-25): «агр не должен сниматься в
+# локации сам по себе, пока игрок не выйдет после истечения таймера». There
+# is no leash and no giving up: a creature chases anywhere in the location,
+# and one that cannot get at its target waits where it got closest and keeps
+# trying. What lets the player go is leaving the room, which the exit timer
+# allows (combat.Fighter.in_combat); then the creature walks home and heals
+# there (Mob.homing). The leash of 24 hexes it replaces reset the creature
+# whole on the spot and let it take the same player again a tick later:
+# lch;ws flapped every AI tick, and the creature never went down.
+#
+# How many hexes one path search looks at. A target further off than it
+# reaches is walked towards by the explored hex nearest to it (find_path's
+# `toward`), so this bounds the work of a tick, not the chase.
+SEARCH_LIMIT = 2500
+# Seconds a creature that found no step to take waits before looking again.
+STUCK_WAIT = 1.0
 # Seconds between two attacks of one mob, on top of its action points: the
 # animation of the previous swing or burst has to end on the client first.
 ATTACK_PAUSE = 1.5
@@ -154,19 +173,37 @@ def adjacent(a, b, loc):
     return a != b and progression.within_reach(a, b, loc.width, loc.height)
 
 
-def find_path(loc, start, goal, blocked=(), limit=2500):
+def find_path(loc, start, goal, blocked=(), limit=SEARCH_LIMIT, toward=None):
     """Breadth-first over the hex grid to the nearest cell satisfying goal.
 
     Obstacles come from the location file, blocked from whoever stands
     where; the limit keeps a mob that cannot reach its target from
     searching the whole 64x128 grid every tick. Returns the cells from
     start inclusive, or None.
+
+    With `toward`, a search that finds no goal within the limit -- the
+    target is further off than it looks, or cannot be reached at all --
+    returns the way to the hex it did explore that is nearest to that cell,
+    if that one is nearer than the start: a creature chasing across the
+    whole location gets there leg by leg, and one that cannot reach its
+    target at all comes as close as the ground lets it. None when no hex
+    is nearer.
     """
     if goal(start):
         return [start]
     prev = {start: None}
     queue = deque([start])
     seen = 0
+    best = start
+    best_d = hex_distance(start, toward, loc.width) if toward is not None else None
+
+    def way(cell):
+        path = [cell]
+        while prev[path[-1]] is not None:
+            path.append(prev[path[-1]])
+        path.reverse()
+        return path
+
     while queue and seen < limit:
         cur = queue.popleft()
         seen += 1
@@ -175,13 +212,13 @@ def find_path(loc, start, goal, blocked=(), limit=2500):
                 continue
             prev[nb] = cur
             if goal(nb):
-                path = [nb]
-                while prev[path[-1]] is not None:
-                    path.append(prev[path[-1]])
-                path.reverse()
-                return path
+                return way(nb)
+            if toward is not None:
+                d = hex_distance(nb, toward, loc.width)
+                if d < best_d:
+                    best, best_d = nb, d
             queue.append(nb)
-    return None
+    return way(best) if best != start else None
 
 
 # --- what a type is ------------------------------------------------------
@@ -210,6 +247,8 @@ class MobStats:
         self.armor = float(row["armor"])
         self.ap_max = int(row["ap"])
         self.xp_mult = float(role["xp_mult"])
+        # The curve's 4 * hp, kept for its record only: what a kill pays is
+        # progression.mob_xp, priced by level (the owner's rule, 2026-09-24).
         self.xp_pool = int(row["xp_pool"] * self.xp_mult)
         self.aggro = float(role["aggro"])
         self.range = int(weapon["range"])
@@ -249,33 +288,338 @@ class MobStats:
         return inventory.oid(VIRTUAL_BASE + entity_id, self.weapon_type_id, root)
 
 
-# What a corpse leaves behind (designed; the wiki's loot edges in
-# data/loot_wiki.json are not linked to item types yet). An animal always
-# has its meat and sometimes its skin or fang -- objects.xml's own DogMeat/
-# DogFang/DogSkin, RatTail, AntilopeMeat/Skin, CrocodileMeat, Hyena_Skin;
-# an armed man drops a few of the rounds his gun takes; anyone else a
-# cigarette (41), so a bag always has something in it and never nothing.
+# --- what a corpse leaves behind -----------------------------------------
+#
+# Two parts. Until the owner's complaint (2026-09-24: "от мобов падают только
+# патроны") there was only the first, and in it a man with a gun had nothing
+# on him but his rounds; the table beside it was never read.
+#
+# What the body certainly had on it, designed. An animal its meat, and on a
+# coin toss each its skin or fang -- objects.xml's own DogMeat/DogFang/
+# DogSkin, RatTail, AntilopeMeat/Skin, CrocodileMeat, Hyena_Skin. An armed
+# man a few of the rounds his gun takes. And every man, armed or not, a
+# piece of the original's junk of about his level: objects.xml numbers the
+# series itself, TrashLoot_LvL_0 to _24 (Консервная банка, Алюминиевая
+# ложка ... Лунный сахар, 20 to 500 afro at a trader), and it is what the
+# wiki's loot lists of the camps are made of. That piece took the place of
+# the cigarette (41) the unarmed used to carry so that a bag was never empty;
+# the cigarette is left to a creature that is neither.
+#
+# Then what the kind drops by the wiki, rolled row by row: loot_table.
 ANIMAL_LOOT = [("dog", [216, 217, 218]), ("rat", [3216]), ("antilope", [224, 225]),
                ("crocodile", [1752]), ("hyena", [3923])]
 FALLBACK_LOOT = 41
+# Who carries the junk: the fighting kinds of data/mob_types.json, not the
+# animals, and not the "object" boxes and ore, which never stand in a room.
+HUMAN_ROLES = ("mob", "boss")
+TRASH_SERIES = "TrashLoot_LvL_%d"
+VALUABLE_SERIES = "ValuableLoot_LvL_%d"
+# A man's piece of junk is of his own level or up to this many below, so a
+# camp of one level does not leave the same spoon in every bag.
+JUNK_SPREAD = 2
+
+# The table (data/loot_wiki.json, built by data/build_loot_wiki.py): the
+# wiki's edges from a group of creatures to an item page, with a chance per
+# tier that the file itself calls designed. Rows are item page titles; their
+# type ids are resolved here through items.resolve_title, the same linker
+# (data/wiki_links.json) the stalls' wiki lists go through -- the file's own
+# item_type_ids column was never filled, its builder reading an older layout
+# of wiki_links.json.
+#
+# Only the tiers a mob page's own "Лут" section gives, valuable or not. An
+# "unknown" row comes off an item page's "Мобы-хранители", which names the
+# townsman who hands a quest item over as readily as a creature that drops
+# something -- a 100 000-afro Алмаз at 15 % from level-1 raiders came that
+# way. The wiki's "Квестовый" rows are left out too: loot only while a quest
+# is open, and the wiki's say who holds a quest thing no better than its
+# "unknown" ones. The same tier in data/loot_manual.json is the owner's, and
+# rolls only for a quest that asks for the thing (QUEST_TIER, quest_roll).
+#
+# Beside it, data/loot_manual.json: rows the owner decided for creatures the
+# wiki is silent about -- the Nubian mine's marauders (836, 837) and their
+# gold sand and emeralds, and the Nubian valley's boss (2103) and its ingot
+# of 5 ounces of gold, 2026-09-25. Same tiers, same roll, same cap; a row
+# names its item by type id, the linker tying the emerald and the ingot to
+# no type. Hand-made rather than written into the generated file, which
+# its builder would take them out of on the next run.
+LOOT_TIERS = {"Ценный": True, "Обычный": False}      # tier -> valuable
+# The design the file states (its "design" block, which test_loot holds this
+# to): one roll per row, valuables first, at most this many that came up kept.
+MAX_DROPS = 2
+# A row at this chance is no roll but a certainty: the valley boss's ingot
+# (data/loot_manual.json, 2103), which the owner wants on every kill. It
+# goes into the bag whatever else came up and takes none of the MAX_DROPS
+# places, so no table the wiki may give the boss one day, and no order of
+# the rows, can push it out; the rows that are rolled keep their two.
+SURE = 1.0
+# Every man's valuable of his level: objects.xml's ValuableLoot_LvL_0 to _24,
+# as a row of the table at the "Ценный" chance.
+VALUABLE_CHANCE = 0.06
+# A quest's thing, the wiki's own word for the tier: a row of data/
+# loot_manual.json under it rolls only while somebody who brought the
+# creature down has a quest open that asks for the thing and does not yet
+# have as many as it asks (quests.wanted_things, RoomCombat.kill) -- the
+# courier's letter for «Пути информации», the medicaments of the colonists
+# for «Одолжить аптечку». The original's rule, «loot only while the quest
+# is open», and the least surprising one: nobody else finds a quest's
+# litter in a bag, and a thing with no price or with the quest flag, which
+# droppable() keeps out of every other row, is let in here -- it belongs to
+# the quest that asked for it. Such a row is rolled on its own, outside
+# MAX_DROPS, so it neither pushes the ordinary loot out nor is pushed out
+# by it; at SURE it is certain.
+QUEST_TIER = "Квестовый"
 
 
-def loot_for(st, rng):
-    """[(type_id, count)] for a corpse of this type."""
+def _series(fmt):
+    """Type ids of a level series, index = level, off objects.xml's names."""
+    by_name = {}
+    for t, (_root, name) in sorted(items.catalogue().items()):
+        by_name.setdefault(name, t)
+    out = []
+    while fmt % len(out) in by_name:
+        out.append(by_name[fmt % len(out)])
+    return out
+
+
+_SERIES = {}
+
+
+def series(fmt):
+    got = _SERIES.get(fmt)
+    if got is None:
+        got = _SERIES[fmt] = _series(fmt)
+    return got
+
+
+def level_piece(fmt, level):
+    """The piece of a series that is a creature's own level, the top of the
+    series standing in for anything above it. None without the series."""
+    s = series(fmt)
+    return s[max(0, min(len(s) - 1, level))] if s else None
+
+
+def junk(level, rng):
+    """A piece of TrashLoot_LvL_* for a man of this level: his own level or
+    up to JUNK_SPREAD below it."""
+    s = series(TRASH_SERIES)
+    if not s:
+        return None
+    top = max(0, min(len(s) - 1, level))
+    return s[rng.randint(max(0, top - JUNK_SPREAD), top)]
+
+
+def droppable(type_id):
+    """Whether a type may lie in a corpse's bag. Not premium, which is out of
+    the game (items.premium); not a quest item, which belongs to its quest;
+    and something a trader pays for -- a thing that can be neither used nor
+    sold would be litter the player cannot even get rid of (the blueprints
+    in the table have no price: the upgrader they are for does not exist)."""
+    si = items.params_of(type_id)
+    return bool(si) and not items.premium(type_id) and not si.get("quest") \
+        and si.get("cost", 0) > 0
+
+
+_LOOT_WIKI = None
+
+
+def _loot_wiki():
+    """type id (str) -> the file's rows for it. A table that cannot be read
+    leaves every corpse with what it carried, and says so once."""
+    global _LOOT_WIKI
+    if _LOOT_WIKI is None:
+        try:
+            _LOOT_WIKI = _load("loot_wiki.json").get("by_type") or {}
+        except (OSError, ValueError) as exc:
+            log.warning("  !!    loot table unreadable, corpses keep what they carry: %s", exc)
+            _LOOT_WIKI = {}
+    return _LOOT_WIKI
+
+
+_LOOT_MANUAL = None
+
+
+def _loot_manual():
+    """type id (str) -> the hand-made rows of data/loot_manual.json. Read
+    like the wiki's table: unreadable, it leaves those corpses with what
+    they carried, and says so once."""
+    global _LOOT_MANUAL
+    if _LOOT_MANUAL is None:
+        try:
+            _LOOT_MANUAL = _load("loot_manual.json").get("by_type") or {}
+        except (OSError, ValueError) as exc:
+            log.warning("  !!    hand-made loot unreadable, left out: %s", exc)
+            _LOOT_MANUAL = {}
+    return _LOOT_MANUAL
+
+
+def animal_parts(st):
+    """An animal's line of ANIMAL_LOOT, meat first, or () for anything else
+    or an animal it has no line for."""
+    if st.role != "animal":
+        return ()
     name = st.name.lower()
+    for word, types in ANIMAL_LOOT:
+        if word in name:
+            return tuple(types)
+    return ()
+
+
+_TABLES = {}
+
+
+def loot_table(type_id):
+    """[(item type, chance, valuable)] a corpse of this type rolls for, in
+    the order it rolls: valuables first, then by type id.
+
+    The wiki's rows that resolve to something droppable and the hand-made
+    ones of data/loot_manual.json, the higher chance kept where an item is
+    listed twice; and for a man, the valuable of his level. Built once per
+    type.
+    """
+    rows = _TABLES.get(type_id)
+    if rows is not None:
+        return rows
+    st = stats(type_id)
+    got = {}
+
+    def add(t, chance, valuable):
+        if t is None or chance <= 0 or not droppable(t):
+            return
+        # Listed twice, an item keeps the better chance and the tier of the
+        # row that gave it. The one case in the data is on purpose: twelve
+        # colonist kinds (258..268, 586) whose wiki list names their own
+        # level's ValuableLoot among its "Обычный" rows at 0.30 -- the camp's
+        # own page is better evidence than the rule that every man has one
+        # at 0.06, and an ordinary row rolls in its place by type id, behind
+        # the valuables. Kept valuable, it would roll first and get past the
+        # cap of two nearly every time: +21 % afro a kill of a level-2
+        # colonist, the kind that already pays the most (UNDONE,
+        # лут-баланс).
+        if t not in got or chance > got[t][0]:
+            got[t] = (chance, valuable)
+
+    for rec in _loot_wiki().get(str(type_id), []):
+        valuable = LOOT_TIERS.get(rec.get("tier"))
+        if valuable is None or rec.get("quest_only"):
+            continue
+        # The standard (A) variant: a page that lists several is one item
+        # in several qualities, and the first is the ordinary one.
+        for t in items.resolve_title(rec.get("item", ""))[:1]:
+            add(t, float(rec.get("chance", 0)), valuable)
+    for rec in _loot_manual().get(str(type_id), []):
+        valuable = LOOT_TIERS.get(rec.get("tier"))
+        if valuable is not None and rec.get("type"):
+            add(int(rec["type"]), float(rec.get("chance", 0)), valuable)
+    if st.role in HUMAN_ROLES:
+        add(level_piece(VALUABLE_SERIES, st.level), VALUABLE_CHANCE, True)
+    # What the body has anyway is not rolled for a second time: the dog's
+    # page lists its fang and skin, which carried() already tosses for.
+    for t in animal_parts(st):
+        got.pop(t, None)
+    rows = _TABLES[type_id] = sorted(
+        ((t, c, v) for t, (c, v) in got.items()), key=lambda r: (not r[2], r[0]))
+    return rows
+
+
+def roll_table(type_id, rng):
+    """[(type_id, 1)] off loot_table: every row rolled, so the dice spent do
+    not depend on what came up, and the first MAX_DROPS successes kept. A
+    row at SURE is certain: in the bag every time, without a die and
+    outside the cap."""
+    out = []
+    kept = 0
+    for t, chance, _valuable in loot_table(type_id):
+        if chance >= SURE:
+            out.append((t, 1))
+        elif rng.random() < chance and kept < MAX_DROPS:
+            out.append((t, 1))
+            kept += 1
+    return out
+
+
+_QUEST_TABLES = {}
+
+
+def quest_droppable(type_id):
+    """Whether a quest row may put a type in a bag: a thing the game has
+    and not a premium one. Price and the quest flag do not count here
+    (QUEST_TIER): the thing belongs to the quest that asks for it."""
+    return bool(items.params_of(type_id)) and not items.premium(type_id)
+
+
+def quest_table(type_id):
+    """[(item type, chance)] of the QUEST_TIER rows of data/loot_manual.json
+    for a creature, by type id, and of the quest rows' own drops -- a slot
+    of data/quests.json that names this creature with a "drop" chance
+    (quests.quest_drops) -- the higher chance where both name a thing;
+    built once per type. The ordinary table (loot_table) never holds them."""
+    rows = _QUEST_TABLES.get(type_id)
+    if rows is None:
+        got = {}
+        for rec in _loot_manual().get(str(type_id), []):
+            if rec.get("tier") != QUEST_TIER or not rec.get("type"):
+                continue
+            t, chance = int(rec["type"]), float(rec.get("chance", 0))
+            if chance > 0 and quest_droppable(t):
+                got[t] = max(chance, got.get(t, 0.0))
+        for t, chance in quests.quest_drops(type_id):
+            if quest_droppable(t):
+                got[t] = max(chance, got.get(t, 0.0))
+        rows = _QUEST_TABLES[type_id] = sorted(got.items())
+    return rows
+
+
+def quest_roll(type_id, wanted, rng):
+    """[(type_id, 1)] of the quest rows that came up for a corpse, given the
+    things a quest of those who brought it down still asks for (wanted, as
+    RoomCombat.kill works it out). A row for a thing nobody wants is not
+    rolled at all, so the dice spent on the ordinary table do not depend on
+    who has which quest; at SURE a wanted thing is certain. The wanted
+    things of a group (quests.drop_group, a slot's "one_of") come one at
+    most: the group rolled once at its highest chance, one of them drawn."""
+    out, groups = [], {}
+    for t, chance in quest_table(type_id):
+        if t not in wanted:
+            continue
+        group = quests.drop_group(t)
+        if group is not None:
+            best, members = groups.get(group, (0.0, []))
+            groups[group] = (max(best, chance), members + [t])
+        elif chance >= SURE or rng.random() < chance:
+            out.append((t, 1))
+    for group, (chance, members) in sorted(groups.items()):
+        if chance >= SURE or rng.random() < chance:
+            out.append((rng.choice(members), 1))
+    return out
+
+
+def carried(st, rng):
+    """[(type_id, count)]: what the body certainly had on it."""
     if st.role == "animal":
-        for word, types in ANIMAL_LOOT:
-            if word in name:
-                out = [(types[0], 1)]
-                out += [(t, 1) for t in types[1:] if rng.random() < 0.5]
-                return out
-        return [(FALLBACK_LOOT, 1)]
+        parts = animal_parts(st)
+        if not parts:
+            return [(FALLBACK_LOOT, 1)]
+        return [(parts[0], 1)] + [(t, 1) for t in parts[1:] if rng.random() < 0.5]
+    out = []
     si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
     if si and st.ranged and si.get("comp_array"):
-        return [(si["comp_array"][0], rng.randint(3, 10))]
-    if "ammo" in name:
-        return [(items.AMMO_9MM[0], items.AMMO_PACK)]
-    return [(FALLBACK_LOOT, 1)]
+        out.append((si["comp_array"][0], rng.randint(3, 10)))
+    elif "ammo" in st.name.lower():
+        out.append((items.AMMO_9MM[0], items.AMMO_PACK))
+    if st.role in HUMAN_ROLES:
+        piece = junk(st.level, rng)
+        if piece is not None:
+            out.append((piece, 1))
+    return out or [(FALLBACK_LOOT, 1)]
+
+
+def loot_for(st, rng, wanted=()):
+    """[(type_id, count)] for a corpse of this type: what it carried, then
+    what its kind's table rolled, then the quest rows for what those who
+    brought it down still need (quest_roll; wanted, the types). combat.
+    drop_loot still turns away anything premium, whatever a list says."""
+    return carried(st, rng) + roll_table(st.type_id, rng) + \
+        quest_roll(st.type_id, wanted, rng)
 
 
 _STATS = {}
@@ -327,10 +671,26 @@ class Mob:
         self.ap = self.stats.ap_max
         self.alive = True
         self.target = None          # a combat.Fighter, once provoked
+        # Let go of a target (RoomCombat.mob_release) and not yet back home:
+        # it heals when it gets there, and not before.
+        self.homing = False
         self.busy_until = 0.0       # walking: the client is still animating
         self.next_attack = 0.0
         self.aim = None             # TimerHandle of a burst or swing in flight
         self.regen_at = 0.0
+        # combat.Fighter -> [harm done, share of the kill already paid,
+        # skill, spec]: what a kill is settled from (RoomCombat.settle_xp)
+        self.xp_ledger = {}
+        # The things a quest of those who brought it down still asks for,
+        # set at the kill (RoomCombat.kill): the quest rows of its loot that
+        # may come up in its bag (quest_roll).
+        self.quest_wants = frozenset()
+        # A boss's hours (bosses.py, RoomCombat.keep_hours): the window it
+        # last came for, whether it is gone until the next one, and whether
+        # its stay is over and it is only finishing the fight it is in.
+        self.slot = None
+        self.away = False
+        self.leaving = False
 
     # --- the numbers the resolver asks a target for ------------------------
     @property
@@ -391,8 +751,12 @@ class Mob:
         self.ap = self.stats.ap_max
         self.alive = True
         self.target = None
+        self.homing = False
+        self.xp_ledger = {}
+        self.quest_wants = frozenset()
         self.busy_until = 0.0
         self.next_attack = 0.0
+        self.leaving = False
 
     # --- behaviour ----------------------------------------------------------
     def think(self, rc, now):
@@ -403,32 +767,34 @@ class Mob:
         lch;enemy) -> chase by short legs of userMove until in reach (next to
         the target for a blade or fist, within the weapon's range with a
         clear line for a gun) -> attack while action points last, one
-        burst or swing per ATTACK_PAUSE -> the target leaving the room,
-        dying, or being chased past LEASH hexes from home drops it, and the
-        mob walks back and recovers.
+        burst or swing per ATTACK_PAUSE -> and so on, anywhere in the
+        location, for as long as the target is here and alive (the owner's
+        rule, see SEARCH_LIMIT above). Only the target leaving the room or
+        dying drops it; then the mob walks back and recovers at home.
         """
         if not self.alive or self.aim is not None:
             return
         loc = rc.room.loc
         if self.target is not None and not self.target.present(rc):
-            rc.mob_reset(self)
+            rc.mob_release(self)
         if self.target is None:
             if now < self.busy_until:
                 return
-            if self.stats.can_attack:
+            # A boss past its stay picks no new fight: the one it was in is
+            # what kept it here (RoomCombat.keep_hours).
+            if self.stats.can_attack and not self.leaving:
                 found = rc.nearest_fighter(self.cell, self.stats.aggro)
                 if found is not None:
                     rc.aggro(self, found)
                     return
             if self.cell != self.home and self.stats.moves:
                 rc.mob_walk(self, lambda c: c == self.home, now)
+            elif self.homing:
+                rc.mob_recover(self)
             return
         if now < self.busy_until or now < self.next_attack:
             return
         target = self.target
-        if hex_distance(self.home, self.cell, loc.width) > LEASH:
-            rc.mob_reset(self)
-            return
         if self.stats.ranged:
             in_reach = (hex_distance(self.cell, target.cell, loc.width) <= self.stats.range
                         and line_of_fire(loc, self.cell, target.cell) is None)
