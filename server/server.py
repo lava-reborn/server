@@ -3470,6 +3470,14 @@ async def main():
         except PermissionError:
             log.warning("no permission for port %d; policy served inline only",
                         POLICY_PORT)
+        except OSError as e:
+            # Taken, by another server of ours as a rule: on Linux a second
+            # one is refused 843 as non-root and lands above; on Windows
+            # anybody may bind it, so the first holds it and the rest came
+            # down here and died at start, with every suite on the machine.
+            # The policy is answered inline on the game port regardless.
+            log.warning("port %d is taken (%s); policy served inline only",
+                        POLICY_PORT, e.strerror or e)
     # run.sh stop sends SIGTERM and a terminal sends SIGINT. Either one only
     # raises the flag; the leaving is done below, on the loop, so a handler
     # in the middle of a frame finishes it first. Without this the loop just
@@ -3479,7 +3487,15 @@ async def main():
     loop = asyncio.get_running_loop()
     stopping = asyncio.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
-        loop.add_signal_handler(sig, stopping.set)
+        try:
+            loop.add_signal_handler(sig, stopping.set)
+        except NotImplementedError:
+            # Windows: the proactor loop has no signal handlers, and the
+            # process used to die right here before it had served a frame.
+            # A plain handler raises the same flag from the loop's thread;
+            # Ctrl-C reaches it, a TerminateProcess from outside does not
+            # and takes the loop with it, as it does any process.
+            signal.signal(sig, lambda *_a: loop.call_soon_threadsafe(stopping.set))
     await stopping.wait()
     admin_task.cancel()
     auction_task.cancel()

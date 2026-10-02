@@ -82,6 +82,22 @@ python3 tools/test_wrapper.py
 bash tools/run_suite.sh . /tmp/lava_suite 8
 ```
 
+То же из PowerShell, без WSL (сервер стартует и под Windows: обработчик
+сигналов и порт 843 обходятся сами; `python` берётся из PATH, папка клиента
+из `-Res` или `LAVA_RES`, по умолчанию `..\lava-online\res` рядом с
+репозиторием). Около пятнадцати минут в 8 потоков:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\run_suite.ps1 -Out D:\lava_suite -Jobs 8
+powershell -ExecutionPolicy Bypass -File tools\run_suite.ps1 -Out D:\lava_suite -Only test_combat,test_death
+```
+
+Итог обоих лежит в `summary.txt` в папке результатов: код выхода, секунды, имя
+набора, ноль впереди значит зелёный; вывод каждого набора в `<имя>.out`. Под
+Windows к двум известным падениям добавляются `test_shutdown` (SIGTERM там
+означает TerminateProcess, сервер не успевает ни сказать, ни сохранить) и
+`data/test_orig_npcs` на чекауте с CRLF.
+
 Переменные: `LAVA_START=181` или `183` — все новые персонажи просыпаются в
 этом из двух стартовых посёлков (без неё — в случайном, см. «Где просыпается
 новичок»), `LAVA_GX`/`LAVA_GY` — одна стартовая клетка карты для всех (так

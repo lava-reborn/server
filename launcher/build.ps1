@@ -62,16 +62,35 @@ if (-not (Test-Path $icon)) { throw "Icon not found at $icon" }
 
 # The string table has to hold every id this server can send, so it is
 # regenerated here rather than taken from whatever dist/ happens to hold.
-# Python lives in WSL on this machine (the Windows one is the Store stub).
 # Into a build directory, not into dist/ itself: what lands beside the exe is
 # what a player is handed, and a loose copy of a file the exe already carries
 # is only there to be picked up by mistake.
+#
+# The exporters read the client's res folder (LAVA_RES, or ..\lava-online\res
+# beside the repository) and run on whichever Python this machine has: the
+# Windows one when "python" on PATH is a real interpreter, else the WSL one
+# (the Windows "python" used to be the Store stub on the owner's machine).
 $build = Join-Path $repo "dist\.build"
 New-Item -ItemType Directory -Force $build | Out-Null
+$res = $env:LAVA_RES
+if (-not $res) { $res = Join-Path (Split-Path -Parent $repo) "lava-online\res" }
+if (-not (Test-Path (Join-Path $res "database\objects.xml"))) { throw "no client at $res (database\objects.xml missing); set LAVA_RES" }
+$winPython = $false
+try { $null = & python -c "import sys; sys.exit(0)" 2>$null; $winPython = ($LASTEXITCODE -eq 0) } catch { $winPython = $false }
+function Run-Export([string]$script, [string]$out) {
+  if ($winPython) {
+    $env:LAVA_RES = $res; $env:PYTHONUTF8 = "1"
+    Push-Location $repo
+    try { & python $script -o $out } finally { Pop-Location }
+  } else {
+    $repoWsl = "/mnt/" + $repo.Substring(0,1).ToLower() + $repo.Substring(2).Replace('\','/')
+    $resWsl = "/mnt/" + $res.Substring(0,1).ToLower() + $res.Substring(2).Replace('\','/')
+    & wsl.exe -e bash -lc "cd '$repoWsl' && LAVA_RES='$resWsl' python3 $script -o $out"
+  }
+}
 $texts = Join-Path $build "texts.xml"
-$repoWsl = "/mnt/" + $repo.Substring(0,1).ToLower() + $repo.Substring(2).Replace('\','/')
 Write-Host "==> string table"
-& wsl.exe -e bash -lc "cd '$repoWsl' && python3 tools/export_texts.py -o dist/.build/texts.xml"
+Run-Export "tools/export_texts.py" "dist/.build/texts.xml"
 if ($LASTEXITCODE -ne 0) { throw "export_texts.py failed" }
 if (-not (Test-Path $texts)) { throw "export_texts.py produced nothing at $texts" }
 
@@ -79,7 +98,7 @@ if (-not (Test-Path $texts)) { throw "export_texts.py produced nothing at $texts
 # which LocalServer lays over the player's own res/database/locations.xml.
 $labels = Join-Path $build "map_labels.txt"
 Write-Host "==> map labels"
-& wsl.exe -e bash -lc "cd '$repoWsl' && python3 tools/export_map_labels.py -o dist/.build/map_labels.txt"
+Run-Export "tools/export_map_labels.py" "dist/.build/map_labels.txt"
 if ($LASTEXITCODE -ne 0) { throw "export_map_labels.py failed" }
 if (-not (Test-Path $labels)) { throw "export_map_labels.py produced nothing at $labels" }
 
