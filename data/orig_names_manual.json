@@ -1550,6 +1550,11 @@
    "string_id": 60386,
    "text": "Макисе Курису",
    "why": "zapadlist_dvor, the guard at the foot of the ladders of the western and southern blocks 644/645: 60386 'Макисе Курису', the first of the prison's run 60386-60391, and the wiki's page of the name ('злобный охранник, который наносит неприятные удары при помощи костыля', in «Южный блок» and «Западный блок», where the gates lead). Named though data/schedule.json keeps it out for now (held_out: a level-20 figure by the Абу-Хамед prison it also stands in). Вади-Хальфа's prison (Prison_1..5_WH, 644-648, under the yard 176), opened by the events package (data/schedule.json, data/passages.json)."
+  },
+  "566": {
+   "string_id": 50334,
+   "text": "Головорез",
+   "why": "olm_safeguard1_lvl_4, Большой Мвамба's guards in his camp 31 (data/placements.json, the owner's of 2026-10-02: «Мвамба это головорез афроамериканец, соратники похожие должны быть»). The same art as Мвамба (mob-m20), level 4, an assault rifle, and no location puts the type down. 'Головорез' (50334) is the original's own word for the slave traders' thugs drawn in that art ([9] Головорез 8897, [11]..[14] Головорез 50276-50298); this row is the one without a level, which server/orig_texts.py gives the level 4 the type fights at."
   }
  },
  "none": {

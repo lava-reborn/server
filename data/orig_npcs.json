@@ -4,9 +4,9 @@
    "creature_types": 5987,
    "dropped_test_high": 85,
    "dropped_test_medium": 18,
-   "manual": 309,
-   "npcs": 697,
-   "npcs_mob": 320,
+   "manual": 310,
+   "npcs": 698,
+   "npcs_mob": 321,
    "npcs_npc": 377,
    "suggest": 665,
    "verified_promoted_to_high": 1
@@ -2836,6 +2836,12 @@
    "kind": "mob",
    "name": "[7] Фиолетовый Лорд<Br>Банда Лоры Крафт",
    "string_id": 9163
+  },
+  "566": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Головорез",
+   "string_id": 50334
   },
   "5685": {
    "confidence": "high",
