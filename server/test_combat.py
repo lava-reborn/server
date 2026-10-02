@@ -397,6 +397,20 @@ _first.last_pvp = _second.last_pvp = _T - combat.LEAVE_COMBAT_TIMEOUT + 1
 check("and a duel inside leave_combat_timeout", _rc.hostilities(_T), True)
 check("but not one past it", _rc.hostilities(_T + 2), False)
 
+# --- what a burst takes off the gun ----------------------------------------------
+check("half a point a round by default: a Walther's 500 last a thousand rounds",
+      combat.WEAR_PER_ROUND, 0.5)
+_r = random.Random(3)
+check("a whole rate takes whole points and rolls nothing",
+      [combat.round_wear(n, 1, _r) for n in (0, 1, 2, 5)], [0, 1, 2, 5])
+check("  ..and two rounds at half a point are one point exactly",
+      {combat.round_wear(2, 0.5, _r) for _ in range(50)}, {1})
+_one = [combat.round_wear(1, 0.5, _r) for _ in range(4000)]
+check("a single round at half a point is 0 or 1, a point every other round on average",
+      (set(_one), 1800 < sum(_one) < 2200), ({0, 1}, True))
+check("  ..so a thousand rounds take about the P99's 500",
+      400 < sum(combat.round_wear(1, 0.5, _r) for _ in range(1000)) < 600, True)
+
 # --- the server -----------------------------------------------------------------
 # AP regeneration is raised so the bar never throttles the fight, the respawn
 # is shortened, and the dice are seeded. The exit timer is left at the game's
@@ -413,7 +427,9 @@ check("but not one past it", _rc.hostilities(_T + 2), False)
 # for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
            LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT="30", LAVA_RESPAWN="4",
-           LAVA_SEED="7", LAVA_START_AFRO="20000")
+           LAVA_SEED="7", LAVA_START_AFRO="20000",
+           # A point a round, so that one shot is one point the check can see.
+           LAVA_WEAR_PER_ROUND="1")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 _log = []

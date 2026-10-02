@@ -215,6 +215,32 @@ SPEC_FIST, SPEC_BLADE, SPEC_FIRST_AID, SPEC_SURGERY = 0, 1, 8, 9
 RNG = (random.Random(int(os.environ["LAVA_SEED"])) if os.environ.get("LAVA_SEED")
        else random.Random())
 
+# What a round that leaves the barrel takes off the gun's durability. The
+# wiki gives a Walther P99 a ceiling of 500 and players of the original
+# remember a thousand rounds and more through one without a break, so a
+# point a round wore guns out two or three times as fast as the game they
+# played. Half a point brings the P99 to a thousand rounds; every gun keeps
+# its own ceiling (max_break_abs), this one figure is the rate for all of
+# them. LAVA_WEAR_PER_ROUND moves it (1 is the old point a round).
+WEAR_PER_ROUND = float(os.environ.get("LAVA_WEAR_PER_ROUND", "0.5"))
+# A generator of its own for the share of a point a burst leaves over, so
+# that changing the rate leaves the seeded fight (RNG) as it was.
+WEAR_RNG = (random.Random(int(os.environ["LAVA_SEED"])) if os.environ.get("LAVA_SEED")
+            else random.Random())
+
+
+def round_wear(rounds, rate=None, rng=None):
+    """The whole points rounds of fire take off a gun. Durability is stored
+    in whole points (accounts.Store writes it through int()), so the share
+    of a point is rounded up with its own chance: half a point a round is a
+    point every other round on average, and never a bar that does not move."""
+    exact = rounds * (WEAR_PER_ROUND if rate is None else rate)
+    whole = int(math.floor(exact))
+    if (WEAR_RNG if rng is None else rng).random() < exact - whole:
+        whole += 1
+    return whole
+
+
 # What one trigger pull is resolved with. cone is how wide the bullets
 # scatter per hex of flight (cone_of); crit is a chance in percent before the
 # target's evasion; opt_lo..opt_hi is the optimal band where crits are
@@ -1208,15 +1234,14 @@ class Fighter:
         pool = target.hp if target is not None and not target.is_player else 0
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live)
         if row is not None:
-            # A point of durability per round that left the barrel. The starter
-            # pistol holds 120 of them, a median firearm 500, so a gun is good
-            # for some fifteen magazines before it wants a gunsmith -- and the
-            # refusal when it reaches nothing is already written and waiting
-            # (res=16, at the top of fire()). A gun a quest lends does not
+            # WEAR_PER_ROUND of durability per round that left the barrel. The
+            # starter pistol holds 120 points, a median firearm 1000 -- and
+            # the refusal when it reaches nothing is already written and
+            # waiting (res=16, at the top of fire()). A gun a quest lends does not
             # wear: Берт's training pistol holds 120 and a level-0 cadet can
             # spend more than that on one lesson's targets, and a gun broken
             # halfway would lock the lesson until the next day (quests.lent).
-            wear = 0 if quests.lent(row["type_id"]) else live
+            wear = 0 if quests.lent(row["type_id"]) else round_wear(live)
             self.store.update_item(uniq, ammo_count=row["ammo_count"] - live,
                                    brk=max(0, row["brk"] - wear))
         if rc.room.ws:
