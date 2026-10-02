@@ -68,8 +68,9 @@ def at(h, m=0, s=0, day=24):
 
 
 # --- the windows ------------------------------------------------------------------
-check("the owner's hours are the default: 18:00 and 20:00, for an hour, in Moscow",
-      (bosses.HOURS, bosses.STAY, bosses.TZ_NAME), ([18 * 60, 20 * 60], 3600.0, "Europe/Moscow"))
+check("the owner's hours are the default: 14:00, 18:00 and 20:00, for an hour, in Moscow",
+      (bosses.HOURS, bosses.STAY, bosses.TZ_NAME),
+      ([14 * 60, 18 * 60, 20 * 60], 3600.0, "Europe/Moscow"))
 check("six in the evening in Moscow is three in the afternoon UTC",
       at(18), datetime(2026, 9, 24, 15, tzinfo=timezone.utc).timestamp())
 check("a second before six: no window", bosses.slot(at(17, 59, 59)), None)
@@ -118,7 +119,7 @@ def imported(**settings):
 # The settings are read at import, and an import that raises is a server
 # that does not start; a setting that turns the rule off is every boss
 # standing all day. Only "off" may do that.
-OWNERS = "[1080, 1200] 3600.0"
+OWNERS = "[840, 1080, 1200] 3600.0"
 check("a stay that is not a number is the default stay, not a server that "
       "will not start", imported(LAVA_BOSS_STAY="час"), OWNERS)
 check("nor is a stay of nothing, which would be bosses that never come",

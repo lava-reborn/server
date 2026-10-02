@@ -168,8 +168,8 @@ SCANNED = sorted(set().union(*WHERE.values()) | {
 # The two starts that name the owner's boss hours (18 and 20) where the
 # original says 18 and 22: the only lines of the story that are not the
 # original's.
-HOURS = {131: (47391, "в 18:00 и 22:00", "в 18:00 и 20:00"),
-         132: (47395, "в 18 и 22 часа.", "в 18 и 20 часов.")}
+HOURS = {131: (47391, "в 18:00 и 22:00", "в 14:00, 18:00 и 20:00"),
+         132: (47395, "в 18 и 22 часа.", "в 14, 18 и 20 часов.")}
 
 
 def pack(gx, gy):
