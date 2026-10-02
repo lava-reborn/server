@@ -18,6 +18,7 @@ to keep the whole thing under a minute.
 import asyncio
 import json
 import os
+import random
 import socket
 import subprocess
 import sys
@@ -91,6 +92,38 @@ check("missing stamina spills into HP", combat.split_damage(100, 60, 0, False, 2
 check("a crit ignores armour", combat.split_damage(100, 60, 0, True, 1000), (100, 0))
 check("piercing eats into the armour", combat.split_damage(100, 60, 10, False, 1000), (50, 50))
 check("a blow lands on stamina first", combat.melee_split(10, False, 4), (6, 4))
+# Wiki "Расчет углового отклонения": the bracket of МР runs from 2.5 for
+# nobody to 1.1 for Стрельба 20 and spec 5; a gun's target_size is its
+# scatter at max_range, so the cone is that over the range per hex; the
+# target is 0.3 wide, and a shot hits as often as the target fits the cone.
+check("spread factor: a novice 2.5, a master 1.1, out of range clamped",
+      [round(combat.spread_factor(s, p), 3) for s, p in ((0, 0), (20, 5), (10, 2), (99, 9), (-3, -1))],
+      [2.5, 1.1, 1.875, 1.1, 2.5])
+WALTHER = combat.cone_of(combat.spread_factor(0, 0), 0.8, 1, 10)      # P99, first mode
+check("a Walther's cone in a novice's hands is 0.2 a hex", round(WALTHER, 3), 0.2)
+check("  ..a hit every time inside the target's width, then the target over the cone",
+      [round(combat.hit_probability(WALTHER, d), 2) for d in (1, 2, 3, 5, 10)],
+      [1.0, 0.75, 0.5, 0.3, 0.15])
+check("  ..a master at five hexes two times in three, at ten one in three",
+      [round(combat.hit_probability(combat.cone_of(1.1, 0.8, 1, 10), d), 2) for d in (5, 10)],
+      [0.68, 0.34])
+check("  ..and a precise round tightens it",
+      combat.hit_probability(combat.cone_of(2.5, 0.8, 0.8, 10), 5) > combat.hit_probability(WALTHER, 5), True)
+check("the admin gun never misses across a location",
+      combat.hit_probability(combat.cone_of(2.5, 0.01, 1, 64), 64), 1.0)
+_rng = random.Random(7)
+_offsets = [combat.bullet_offset(WALTHER, 5, _rng) for _ in range(2000)]
+check("a bullet lands inside the cone, either side of the line",
+      (max(abs(o) for o in _offsets) <= 0.5, min(_offsets) < 0 < max(_offsets)), (True, True))
+check("  ..and on target about as often as the probability says (30% at five hexes)",
+      abs(sum(combat.on_target(o) for o in _offsets) / 2000.0 - 0.3) < 0.04, True)
+# A designed gun stands beside a wiki one: the training pistol (3728, CLASS_SHAPE
+# PISTOL, 14/10/6 hexes) shows the class's 8 at a hundred metres, a burst
+# mode 1.5 and 2 times that (items.MODE_SPREAD).
+_training = items.designed_info(3728)[1]
+check("a designed pistol scatters like the wiki's: 8, 12 and 16 at a hundred metres",
+      [round(100 * ts / r, 1) for ts, r in zip(_training["target_size"], _training["max_range"])],
+      [8.0, 12.0, 16.0])
 check("target BigUINT: one type digit then eight of id", combat.parse_target("10000002a"), (1, 42))
 check("a hex target has type 0", combat.parse_target("000000f3c"), (0, 3900))
 W = 64
@@ -886,7 +919,10 @@ try:
     check("the dog died within sixty shots", dead_frames is not None, True)
     check("and the door was tried while the timer ran", exit_tried, [True])
     check("the dog came and bit", bites > 0, True)
-    check("the player's own bars followed a bite", hits_on_me > 0, True)
+    # Whether one of its bites landed is the dog's luck: with the scatter
+    # (combat.cone_of) the pistol hits every time this close, and the dog is
+    # dead within three shots, one or two bites in. A bite that did land was
+    # checked above for the usrUp behind it; the one that kills, below.
     check("every burst kept its shape", tracker.finish(), [])
     names_ = [n for n, _ in dead_frames]
     i_dead = [i for i, (n, p) in enumerate(dead_frames) if n == "lch" and p.get("dead") == dog][0]
@@ -1197,14 +1233,20 @@ try:
     got = c.until(lambda f: f[0] == "lch" and f[1].get("dead") == 0, 30)
     check("the dog kills the wounded player: lch;dead=0",
           [p for n, p in got if n == "lch" and "dead" in p], [{"dead": 0}])
-    bitten = [p for n, p in got if n == "caHit" and p.get("id") == dog]
+    bitten = [i for i, (n, p) in enumerate(got) if n == "caHit" and p.get("id") == dog]
     check("with a bite", len(bitten) >= 1, True)
+    check("and the player's own bars followed the bite at once",
+          [(got[i + 1][0], got[i + 1][1].get("id")) for i in bitten[-1:]], [("usrUp", 0)])
     c.send("ss_use;type=16;obj=x%s;target=%s;" % (pistol, entity(dog)))
     got = c.frames(0.5)
     check("dead: a shot is refused with an ack and nothing follows",
           [(n, p) for n, p in got if n in ("cmdAck", "faAim")], [("cmdAck", {"res": 3})])
     c.send("moveTo;path=|%d|%d|;" % (pos, pos + 1))
-    check("dead: a walk is dropped", [n for n, _ in c.frames(0.4) if n in ("cmdAck", "userMove", "breakMv")], [])
+    # The dog's own walk home after the kill (userMove;id=<dog>) is not the
+    # dead player's; only his would be the fault.
+    check("dead: a walk is dropped",
+          [n for n, p in c.frames(0.4)
+           if n in ("cmdAck", "breakMv") or (n == "userMove" and p.get("id") == 0)], [])
     # "Частичное восстановление", pressed the moment the body falls: the
     # window's countdown is only there to press it for whoever does not.
     c.send("resurrect;res_type=0;")
