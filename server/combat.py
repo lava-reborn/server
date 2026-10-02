@@ -660,6 +660,10 @@ class Fighter:
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
         self.loot = None        # cell of the bag the loot window is open on
+        # Index sets of an rp_info being held back (hold_stats): a burst
+        # that kills is paid twice in one breath, for the harm and at the
+        # kill, and the client prints a «+N» for each rp_info it gets.
+        self.held_stats = None
         # Things that ran out of that bag while its window was open, as
         # (uniq, type_id, root) rows: the window still shows them, since
         # nothing can tell it otherwise (RoomCombat.expire_bag), and a
@@ -1220,14 +1224,20 @@ class Fighter:
         self.c_ap()
         if row is not None:
             self.sess.inv.push_di(self.store.item(uniq))
-        if target is not None and not target.is_player:
-            # Health up to what the mob had, and the stamina the armour
-            # turned the rest into (burst never takes more than there is):
-            # both are harm done, see award_xp.
-            self.award_xp(weapon.skill, weapon.spec, min(h, pool) + s, target)
-        rc.after_hostile(self, target)
-        if killed:
-            rc.kill(target, self)
+        # The burst's pay and the kill's settlement in one rp_info
+        # (hold_stats); release even if the kill raises.
+        self.hold_stats()
+        try:
+            if target is not None and not target.is_player:
+                # Health up to what the mob had, and the stamina the armour
+                # turned the rest into (burst never takes more than there is):
+                # both are harm done, see award_xp.
+                self.award_xp(weapon.skill, weapon.spec, min(h, pool) + s, target)
+            rc.after_hostile(self, target)
+            if killed:
+                rc.kill(target, self)
+        finally:
+            self.release_stats()
 
     def strike_with(self, row, target, hexcell):
         """A swing: fist (5 AP, damage from strength) or the blade in hand."""
@@ -1302,22 +1312,29 @@ class Fighter:
         # make flailing free.
         if uniq is not None:
             self.sess.inv.wear_uniq(uniq, 1)
-        if hit and not target.is_player:
-            # A blow that does not crit lands on stamina first, and a mob has
-            # as much of it as of health: counting the health alone left the
-            # first half of every knife fight training nothing. melee_split
-            # never takes more stamina than there is; health is capped here.
-            self.award_xp(progression.MELEE, spec, min(h, pool) + s, target)
-        # A swing at a player who was never within reach opens no duel. The
-        # client strikes only a neighbour (Gamer.strike: isSiblings), so this
-        # is one who stepped away while the blade was coming down -- or a
-        # modified client swinging from across the room, which would
-        # otherwise hold its mark there (res=39) for as long as it kept
-        # throwing a fist every half minute.
-        if reach or target is None or not target.is_player:
-            rc.after_hostile(self, target)
-        if killed:
-            rc.kill(target, self)
+        # The blow's pay and the kill's settlement in one rp_info
+        # (hold_stats), as for a burst.
+        self.hold_stats()
+        try:
+            if hit and not target.is_player:
+                # A blow that does not crit lands on stamina first, and a mob
+                # has as much of it as of health: counting the health alone
+                # left the first half of every knife fight training nothing.
+                # melee_split never takes more stamina than there is; health
+                # is capped here.
+                self.award_xp(progression.MELEE, spec, min(h, pool) + s, target)
+            # A swing at a player who was never within reach opens no duel.
+            # The client strikes only a neighbour (Gamer.strike: isSiblings),
+            # so this is one who stepped away while the blade was coming
+            # down -- or a modified client swinging from across the room,
+            # which would otherwise hold its mark there (res=39) for as long
+            # as it kept throwing a fist every half minute.
+            if reach or target is None or not target.is_player:
+                rc.after_hostile(self, target)
+            if killed:
+                rc.kill(target, self)
+        finally:
+            self.release_stats()
 
     # --- healing: ss_use 2 (self) and 4 (another) -----------------------------
     def use_heal(self, p, kind):
@@ -1464,9 +1481,31 @@ class Fighter:
         old_level = ch.level
         changed = ch.gain_xp(skill, xp, spec, spec_on_top=True)
         if any(changed.values()):
-            self.sess.push_stats(**changed)
+            self.stats_changed(changed)
         if ch.level != old_level:
             self.sess.push_vitals()
+
+    # --- one rp_info for a burst that kills ---------------------------------
+    def hold_stats(self):
+        """Keep the rp_info of what follows until release_stats: the harm of
+        a killing blow and the rest of the kill's price (settle_xp) arrive
+        in one breath, and the client prints «Стрельба +5» twice for one
+        shot, once per frame, where one «+10» is what happened."""
+        if self.held_stats is None:
+            self.held_stats = {"skills": set(), "specs": set(), "attribs": set()}
+
+    def stats_changed(self, changed):
+        """What gain_xp moved: pushed now, or kept for release_stats."""
+        if self.held_stats is None:
+            self.sess.push_stats(**changed)
+            return
+        for group, idxs in changed.items():
+            self.held_stats[group] |= idxs
+
+    def release_stats(self):
+        held, self.held_stats = self.held_stats, None
+        if held and any(held.values()):
+            self.sess.push_stats(**held)
 
     def count_kill(self, mob_type):
         """A mob died by this player's hand: kill quests advance and the
@@ -2247,6 +2286,12 @@ class RoomCombat:
         # who its quest rows of loot are rolled for (quest_wants).
         mob.quest_wants = self.quest_wants(mob, killer)
         self.settle_xp(mob)
+        # The killer's held rp_info goes out here, before calm() below can
+        # end the war: the client keeps the awards of a fight and prints
+        # them as one line on lch;ws=0, and an award that lands after that
+        # frame is printed on its own (a player read «+5» then «+4»).
+        if killer is not None and killer.is_player:
+            killer.release_stats()
         # Out of the room's inhabitants until it respawns, so an arrival in
         # the meantime is not handed a corpse as a newUser.
         self.room.npcs.pop(mob.eid, None)

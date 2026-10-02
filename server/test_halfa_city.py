@@ -485,6 +485,10 @@ class _Killer(object):
     def count_kill(self, type_id):
         pass
 
+    def release_stats(self):
+        """The kill pushes the killer's held rp_info (Fighter.hold_stats);
+        nothing is held here."""
+
 
 async def _the_chief(open_types, have):
     combat.CORPSE_DELAY, combat.RESPAWN_DELAY = 0.05, 0.2
