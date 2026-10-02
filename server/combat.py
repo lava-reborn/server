@@ -696,7 +696,13 @@ class Fighter:
 
     @property
     def cell(self):
-        return self.sess.pos
+        """Where the figure is now, not where it is going: a walk takes
+        HEX_MS a hex on the client, and a creature must not bite, nor take
+        for a target, a player still running towards it from across the
+        room (Session.live_cell). A seat without walks (the suites' own
+        sessions) stands on its pos."""
+        live = getattr(self.sess, "live_cell", None)
+        return live() if live is not None else self.sess.pos
 
     @property
     def alive(self):
@@ -1182,7 +1188,7 @@ class Fighter:
                         cone=cone, crit=crit[0] if crit else 0,
                         skill=progression.SHOOTING, spec=spec)
         rc.room.broadcast(("faAim", dict(id=self.eid,
-                                         ang=mobs.direction(sess.pos, aim_cell, width),
+                                         ang=mobs.direction(self.cell, aim_cell, width),
                                          num_shots=weapon.num_shots)))
         # The aim bar on the client runs fire_times[cur_mode] from faAim to
         # the first faShot (WeaponPan.aim); the burst waits the same.
@@ -1278,7 +1284,7 @@ class Fighter:
         aim_cell = target.cell if target is not None else hexcell
         killed = False
         reach = (target is not None and target.present(rc)
-                 and mobs.adjacent(sess.pos, target.cell, loc))
+                 and mobs.adjacent(self.cell, target.cell, loc))
         hit = reach and roll(melee_hit_chance(ch, spec) - target.dodge_melee())
         if hit:
             crit = roll(melee_crit(ch, spec) - target.crit_evade_melee())
@@ -1341,7 +1347,7 @@ class Fighter:
                 self.ack(inventory.RES_NOT_FOUND)
                 return
             if other is not self and not progression.within_reach(
-                    sess.pos, other.cell, sess.loc.width, sess.loc.height):
+                    self.cell, other.cell, sess.loc.width, sess.loc.height):
                 self.ack(RES_TOO_FAR)
                 return
             target = other
@@ -1584,14 +1590,17 @@ class Fighter:
                 off_body = off_body or row["slot"] in inventory.WEAR_SLOTS
             else:
                 inv.push_di(dict(row, count=row["count"] - part))
-        rc.add_to_bag(self.cell, ground)
+        # On the cell the walk was going to: the client does not stop a
+        # figure that dies on its way (DisplayLocScene.dead only plays the
+        # fall), so the corpse lies where the path ends.
+        rc.add_to_bag(self.sess.pos, ground)
         if off_body:
             inv.refresh_gear()
         self.sess.say(lost_line(plan))
         log.info("  ..    %s drops %s on cell %d", self.sess.nick,
                  ", ".join("%d%s (type %d)" % (row["uniq"], "" if part is None
                                                else "/%d" % part, row["type_id"])
-                           for row, part in plan), self.cell)
+                           for row, part in plan), self.sess.pos)
 
     def resurrect(self, p):
         """resurrect;res_type=0|1|2 -- the buttons of the regeneration window
@@ -2069,7 +2078,10 @@ class RoomCombat:
         ends; busy_until keeps it from acting before that."""
         loc = self.room.loc
         blocked = {m.cell for m in self.mobs.values() if m.alive and m is not mob}
+        # A player's hex now and the one his walk ends on: neither is free
+        # to step onto while he is on the way.
         blocked |= {s.pos for s in self.room.players}
+        blocked |= {f.cell for f in self.fighters()}
         # Where it is going, for a goal beyond the search's reach: the
         # target's cell while it chases, its spawn on the way home.
         toward = mob.target.cell if mob.target is not None else mob.home

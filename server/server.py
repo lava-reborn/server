@@ -37,6 +37,7 @@ import inventory
 import items
 import keepsakes
 import mail
+import mobs
 import names
 import npcs
 import party
@@ -767,6 +768,37 @@ class Session:
         self.combat.restore(row)
         kind = row["transport_type"] if row is not None else None
         self.transport = (int(kind), int(row["transport_until"] or 0))             if kind else None
+
+    # --- where the figure stands -------------------------------------------
+    # pos is where the player is going: the cell the last walk ends on, the
+    # one lenter, a save, a barter or a bag ask about. The figure gets there
+    # one hex every mobs.HEX_MS after the echo (LocWalker.startMove), and
+    # until then a creature has to meet it where it is -- live_cell, what
+    # the fight sees through Fighter.cell. Any other way the player is put
+    # on a cell (a door, /goto, a resurrection) is instant, and drops the
+    # walk with it.
+    @property
+    def pos(self):
+        return self._pos
+
+    @pos.setter
+    def pos(self, cell):
+        self._pos = cell
+        self.walk = None
+
+    def live_cell(self):
+        """The last hex the figure has finished stepping onto: the client's
+        own walker.numPos, which it moves only at the end of each step
+        (LocWalker.finishPathPart) and which the next moveTo starts from."""
+        walk = self.walk
+        if walk is None:
+            return self._pos
+        cells, began = walk
+        step = int((asyncio.get_running_loop().time() - began) * 1000 // mobs.HEX_MS)
+        if step >= len(cells) - 1:
+            self.walk = None
+            return self._pos
+        return cells[max(0, step)]
 
     def character(self):
         """The loaded character, or a newborn's numbers for a socket that
@@ -3167,8 +3199,12 @@ class Session:
             self.send("breakMv", id=0, pos=self.pos)
             return
         self.send("cmdAck", res=0)
-        self.pos = int(path[-1])
         cells = [int(c) for c in path]
+        self.pos = cells[-1]
+        # The figure starts from cells[0] on the echo below and is not at
+        # pos for another HEX_MS a step (live_cell).
+        if len(cells) > 1:
+            self.walk = (cells, asyncio.get_running_loop().time())
         try:
             # Walking drops the aim (the client cancels its own bar on this
             # userMove) and costs a point a hex while the room is at war.
