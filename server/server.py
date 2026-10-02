@@ -1343,7 +1343,8 @@ class Session:
         # queue would test the queue instead of what the suite is about.
         # LAVA_CHEATS is set by no script that serves anybody: not run.sh,
         # not the compose file, not the deployment.
-        if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money"):
+        if CHEATS and text.split(" ")[0] in ("/goto", "/give", "/money",
+                                             "/skill", "/spec"):
             args = text.split()[1:]
             try:
                 if text.startswith("/goto"):
@@ -1359,6 +1360,10 @@ class Session:
                 elif text.startswith("/give"):
                     out = self.admin_give(args[0], args[1] if len(args) > 1
                                           else 1)
+                elif text.startswith("/skill"):
+                    out = self.admin_skill(args[0], args[1])
+                elif text.startswith("/spec"):
+                    out = self.admin_spec(args[0], args[1])
                 else:
                     out = self.admin_money(args[0] if args else 1000,
                                            args[1] if len(args) > 1 else 0)
@@ -1445,6 +1450,41 @@ class Session:
     # Each returns a line for the panel's log. They run against a character
     # that is online, so the change goes through the objects holding it --
     # money added behind Character's back is written over at logout.
+
+    # Skills and specialisations set outright: /skill <0..4> <0..20> and
+    # /spec <0..14> <-1..5>, chat cheats only (LAVA_CHEATS), never the
+    # panel's. For a test of what a level changes -- the scatter of a shot
+    # (combat.spread_factor), the card's crit, the action-point ceiling --
+    # without the hours of play that raise it. Skills: 0 ближний бой,
+    # 1 стрельба, 2 медицина, 3 промышленность, 4 производство;
+    # specialisations as PersAttributes.specMatrix numbers them (2 пистолеты,
+    # 3 дробовики, 4 автоматы, 5 винтовки, 6 пулемёты, 7 ПП).
+    SKILL_NAMES = ("ближний бой", "стрельба", "медицина", "промышленность",
+                   "производство")
+
+    def admin_skill(self, idx, level):
+        if not self.char_id:
+            return "персонаж не выбран"
+        ch = self.character()
+        old_level = ch.level
+        changed = ch.set_skill(int(idx), int(level))
+        ch.save(STORE)
+        self.push_stats(**changed)
+        if ch.level != old_level:
+            self.push_vitals()
+        return "%s: %s теперь %d" % (self.nick, self.SKILL_NAMES[int(idx)],
+                                     ch.skill[int(idx)][0])
+
+    def admin_spec(self, idx, level):
+        if not self.char_id:
+            return "персонаж не выбран"
+        ch = self.character()
+        changed = ch.set_spec(int(idx), int(level))
+        ch.save(STORE)
+        self.push_stats(**changed)
+        lvl = ch.spec[int(idx)][0]
+        return "%s: специализация %d %s" % (
+            self.nick, int(idx), "забыта" if lvl < 0 else "теперь %d" % lvl)
 
     def admin_money(self, afro=0, gold=0):
         if not self.char_id:
