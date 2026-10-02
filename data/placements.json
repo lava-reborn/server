@@ -4,9 +4,38 @@
   "184": [
    {
     "type": 1135,
-    "cell": [56, 88],
+    "cell": [
+     56,
+     88
+    ],
     "home": false,
     "why": "RECOVERED creature and place, DESIGNED cell. The tools box of Ибрахим's «Друзья I» (texts.xml 59797-59799: «принести инструменты из ящика в соседней локации (Захоронения предков)», west of the Западный поселок 183, which is 184 on 6261,1825) and of its own quest «Забрать инструменты» (59800-59802: «Ящик не закрыт, внутри лежат несколько инструментов... возьмите квест и сразу его сдайте здесь же»). mobs.xml has the box as nz_Box (1135, a Commoner drawn as 1f_Minibox), and no location file puts it down. The cell is ours: seven steps in from the east edge the player arrives by from 183, on open ground clear of the dogs' and rats' spawns. A box registers nobody's home, so it offers no «Прописка»."
+   }
+  ],
+  "31": [
+   {
+    "type": 566,
+    "cell": [
+     34,
+     65
+    ],
+    "why": "DESIGNED, the owner's (2026-10-02): «соратников к мамбе добавить можно будет?», then «Мвамба это головорез афроамериканец, соратники похожие должны быть». Three guards around Большой Мвамба (1406, on [34, 67]) in his camp 31 (Q_IV_pustina3, «Лагерь Большого Мвамбы»), two hexes off, north, south-west and south-east: olm_safeguard1_lvl_4 (566), drawn in Мвамба's own art (mob-m20), level 4, an assault rifle, named «[4] Головорез» (data/orig_names_manual.json, 50334). No location file puts the type down. Three for Шульц's «Экипировка к пистолету», a quest for a party of three (party_size 3): the boss is no longer a lone target. They come back on the ordinary respawn timer, not at the boss hours."
+   },
+   {
+    "type": 566,
+    "cell": [
+     33,
+     68
+    ],
+    "why": "as the first row of 31"
+   },
+   {
+    "type": 566,
+    "cell": [
+     36,
+     68
+    ],
+    "why": "as the first row of 31"
    }
   ]
  }
