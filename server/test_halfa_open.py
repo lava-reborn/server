@@ -1,10 +1,9 @@
 """Вади-Хальфа open (the owner's «займись фулл восстановлением Вади-Хальфы»,
-2026-09-28): a newcomer's first steps in the town walked end to end on the
-real tables -- the shipped data/passages.json and data/placements.json, and
-data/quests.json with «В Хальфу!» (43) switched on in a copy (the shipped row
-is off again since the same evening, «закрой хальфу обратно», and the suite
-checks that first) -- no other knob of the suite's own but the cheats that
-stand in for the walking.
+2026-09-28; open again since 2026-10-03, «открой хальфу»): «В Хальфу!» (43)
+switched on, and a newcomer's first steps in the town walked end to end on
+the real tables -- the shipped data/quests.json (with its questgen
+companions), data/passages.json and data/placements.json, no knob of the
+suite's own but the cheats that stand in for the walking.
 
   valley   the story up to Наби's farewell (42) behind him, as
            test_valley_story walks it; Демир's «В Хальфу!» from the
@@ -35,9 +34,9 @@ lent kit, the certificate, the self-teacher's parts and the coin -- and every
 string id of its quests is in the launcher's table (a missing one sends the
 client back to the login).
 
-In process first: row 43 off in the shipped table and on in the copy (Демир of
-the caravan gives and takes it), its
-way in data/passages.json, and the rows the path takes in the order their
+In process first: row 43 on in the shipped table (Демир of the caravan gives
+and takes it) and the suite on that very table, its way in
+data/passages.json, and the rows the path takes in the order their
 givers list them.
 
     LAVA_RES=.../lava/res python3 server/test_halfa_open.py
@@ -59,24 +58,15 @@ for _knob in ("LAVA_QUESTS", "LAVA_PLACEMENTS", "LAVA_PASSAGES", "LAVA_WEAR_DROP
               "LAVA_GX", "LAVA_GY", "LAVA_LOC"):
     os.environ.pop(_knob, None)
 
-# «В Хальфу!» (43) is off again in the shipped table since the evening of
-# 2026-09-28 (the owner: «закрой хальфу обратно»): nobody gives or takes it,
-# which is checked first. The path below plays on a copy of the table with
-# 43 switched on (Демир of the caravan, 5193, both lists) -- the one-line
-# change a switch-on makes -- so the newcomer's way into the town stays
-# walked for the day it is opened again. LAVA_QUESTS reaches this process's
-# quests module and the server's; everything else is the shipped data.
+# «В Хальфу!» (43) is on in the shipped table again since 2026-10-03 (the
+# owner: «открой хальфу»; off from 2026-09-26, on 2026-09-28 once the town
+# was restored, off again the same evening, «закрой хальфу обратно»):
+# Демир of the caravan (5193) gives and takes it, which is checked first.
+# The path below plays on that table itself, with the questgen companions a
+# table LAVA_QUESTS names would not have (the knob is popped above).
 _REAL = os.path.join(os.path.dirname(HERE), "data", "quests.json")
 with open(_REAL, encoding=ENC) as _fh:
-    _TABLE = json.load(_fh)
-HALFA_OFF = [(r["give"], r["take"]) for r in _TABLE["quests"] if r["type"] == 43]
-for _row in _TABLE["quests"]:
-    if _row["type"] == 43:
-        _row["give"], _row["take"] = [5193], [5193]
-_ON = os.path.join(tempfile.mkdtemp(), "quests.json")
-with open(_ON, "w", encoding=ENC) as _fh:
-    json.dump(_TABLE, _fh, ensure_ascii=False)
-os.environ["LAVA_QUESTS"] = _ON
+    HALFA_ON = [(r["give"], r["take"]) for r in json.load(_fh)["quests"] if r["type"] == 43]
 
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
@@ -123,10 +113,13 @@ with open(os.path.join(os.path.dirname(HERE), "data", "orig_names_manual.json"),
 
 # --- in process ------------------------------------------------------------------------
 try:
-    check("«В Хальфу!» is off in the shipped table: nobody gives or takes it",
-          HALFA_OFF, [([], [])])
+    check("«В Хальфу!» is on in the shipped table: Демир of the caravan gives and takes it",
+          HALFA_ON, [([DEMIR_V], [DEMIR_V])])
+    check("  ..and the suite walks that very table, its companions with it (no LAVA_QUESTS)",
+          (os.path.abspath(quests.quests_path()) == os.path.abspath(_REAL),
+           bool(quests.companion_paths(quests.quests_path()))), (True, True))
     to_halfa = quests.get(TO_HALFA)
-    check("«В Хальфу!» switched on (the copy): Демир of the caravan gives and takes it,"
+    check("«В Хальфу!» as the server reads it: Демир of the caravan gives and takes it,"
           " a repeatable ride open at any level",
           (to_halfa.give, to_halfa.take, to_halfa.repeatable, to_halfa.level,
            to_halfa.max_level or 0), ([DEMIR_V], [DEMIR_V], 1, 0, 0))

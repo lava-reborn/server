@@ -158,9 +158,10 @@ for (key, qtype), rec in sorted(WAYS.items()):
     check("%s: quest %d is in the quest table" % (key, qtype), q is not None, True)
     if q is None:
         continue
-    # A way switched off in the table -- nobody gives or takes it, as
-    # «В Хальфу!» since 2026-09-26 -- keeps its row here for the day it is
-    # switched back on, and is nobody's to stand beside.
+    # A way switched off in the table -- nobody gives or takes it, as the
+    # boat to Заречье (412), or «В Хальфу!» while the owner kept the town
+    # closed -- keeps its row here for the day it is switched back on, and
+    # is nobody's to stand beside.
     if not q.give and not q.take:
         continue
     here = {s for _, s in loc.spawns}

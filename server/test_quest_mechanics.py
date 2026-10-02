@@ -176,8 +176,9 @@ with open(os.path.join(os.path.dirname(HERE), "data", "quests.json"),
           encoding="utf-8") as fh:
     TABLE = json.load(fh)
 # «В Хальфу!» (43) switched on here: the ride has to repeat, back and forth,
-# now that a way is handed in like any quest. The real table has it on since
-# 2026-09-28; this suite holds the ride whatever the owner's switch says.
+# now that a way is handed in like any quest. The real table has it on again
+# since 2026-10-03 (on 2026-09-28, off the same evening); this suite holds
+# the ride whatever the owner's switch says.
 for _row in TABLE["quests"]:
     if _row["type"] == TO_HALFA:
         _row["give"], _row["take"] = [DEMIR_VALLEY], [DEMIR_VALLEY]

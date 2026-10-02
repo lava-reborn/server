@@ -4002,8 +4002,8 @@
       "start": "%имя%, если захочешь поехать в Вади Хальфу, то я могу тебя отвезти. Но учти, что там гораздо опаснее, чем здесь, а жизнь в поселении помогла бы тебе подготовиться к тяготам новой жизни. <br/><br/>Но, конечно, это тебе решать. <br/><br/><b>Задача:</b> поговорить с Демиром снова, если захотите вернуться назад.<Br><Br><hint><i><u>Подсказка</u>: Ты не сможешь вернуться назад, если твои навыки воина будут слишком сильны. Мы опасаемся таких сильных и непредсказуемых людей как ты.</i></hint><Br><b>ВНИМАНИЕ! Квест на возвращение будет недоступен после достижения третьего уровня любого навыка!</b>",
       "notfinish": "",
       "finish": "Пойдем, отвезу тебя в город.",
-      "give": [],
-      "take": [],
+      "give": [5193],
+      "take": [5193],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
@@ -4011,7 +4011,7 @@
       "repeatable": 1,
       "level": 0,
       "q_type": 0,
-      "why": "OFF again since 2026-09-28 (owner: «закрой хальфу обратно»): nobody gives or takes it; to switch it back on, put 5193 back in both. Before that: ON again since 2026-09-28: the owner switched it off on 2026-09-26 («пока отключаем квест в Хальфу») until Вади-Хальфа was ready, and the town is restored now (the halfa packages, gated by the whole suite, tools/export_texts.py with no id missing and data/test_borders.py's stranded list unchanged; server/test_halfa_open.py walks a newcomer from here to Тиль). To switch it off again, empty give and take. RECOVERED texts, DESIGNED workings. Демир's «В Хальфу!» (24434-24436, the only copies; no notfinish). The owner's decision (2026-09-26): this is the ride out of the walled valley to Вади-Хальфа, a way like Рудо's (7). Taken, it enters the journal complete. Handed back to Демир (5193, 186), who says 'Пойдем, отвезу тебя в город.', it moves the player to Причал (41, 5965,1728), where Демир (30) stands at his car (data/passages.json 'quest'). Nothing is paid; the hand-in is written into the history like any way's since 2026-09-28 (Session.hand_in_way), but no daily limit is spent, and it is offered again at once. It is open to anyone at any level (DESIGNED: the start offers the ride to whoever wants it). The start warns about the cap on the way back («Назад, в долину», 44)."
+      "why": "ON again since 2026-10-03 (owner: «открой хальфу»): Демир of the caravan (5193) gives and takes it, both lists as they were deployed on 2026-09-28; to switch it off again, empty give and take. The switches so far: OFF from 2026-09-26 (owner: «пока отключаем квест в Хальфу») until Вади-Хальфа was ready; ON on 2026-09-28, once the town was restored (the halfa packages, gated by the whole suite, tools/export_texts.py with no id missing and data/test_borders.py's stranded list unchanged); OFF again the same evening (owner: «закрой хальфу обратно»); ON again since 2026-10-03. server/test_halfa_open.py walks a newcomer from here to Тиль on this table, and server/test_valley_story.py rides it back and forth. RECOVERED texts, DESIGNED workings. Демир's «В Хальфу!» (24434-24436, the only copies; no notfinish). The owner's decision (2026-09-26): this is the ride out of the walled valley to Вади-Хальфа, a way like Рудо's (7). Taken, it enters the journal complete. Handed back to Демир (5193, 186), who says 'Пойдем, отвезу тебя в город.', it moves the player to Причал (41, 5965,1728), where Демир (30) stands at his car (data/passages.json 'quest'). Nothing is paid; the hand-in is written into the history like any way's since 2026-09-28 (Session.hand_in_way), but no daily limit is spent, and it is offered again at once. It is open to anyone at any level (DESIGNED: the start offers the ride to whoever wants it). The start warns about the cap on the way back («Назад, в долину», 44)."
     },
     {
       "type": 44,

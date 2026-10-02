@@ -63,10 +63,10 @@ USERINFO = {
 # RegTrophyInterface works in (Gamer.proposeContact) -- so the caravan's
 # «Прописка» is Крысолов's and the Точильный камень's (5194, 5192), both
 # Commoners standing in the same location; home is the location, not the
-# person. His quests (none given here yet; the wiki's «В Хальфу!» and
-# «Добро пожаловать в Хальфу») would still show: the quests tab is every
-# class's. Адам (5216, Нубийский рынок), who stood in for him before, is an
-# ordinary Trader again. And Хассир (105) at the station of Вади-Хальфы,
+# person. His quests («Нет больше покоя» and the valley's way out,
+# «В Хальфу!») still show: the quests tab is every class's. Адам (5216,
+# Нубийский рынок), who stood in for him before, is an ordinary Trader
+# again. And Хассир (105) at the station of Вади-Хальфы,
 # whose map label says he registers trophies; a Trader already, he keeps his
 # stall and his repairs besides (trophies.KEEPS_STALL).
 TROPHY_REGISTRARS = frozenset({939, 940, 941, 942, 943, 1132,
