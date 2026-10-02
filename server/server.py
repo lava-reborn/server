@@ -1498,6 +1498,12 @@ class Session:
         ch.save(STORE)
         self.push_stats(**changed)
         if ch.level != old_level:
+            # rp_info carries the level too, but the client leaves a zero in
+            # it alone (Character.rp_info: if(param) on every scalar), so a
+            # skill set back to 0 left the card on the old level;
+            # userInfo_Player's setter takes a 0.
+            self.send_player_info()
+        if progression.moves_vitals(changed):
             self.push_vitals()
         return "%s: %s теперь %d" % (self.nick, self.SKILL_NAMES[int(idx)],
                                      ch.skill[int(idx)][0])
@@ -1509,6 +1515,9 @@ class Session:
         changed = ch.set_spec(int(idx), int(level))
         ch.save(STORE)
         self.push_stats(**changed)
+        # Strength or agility moves a bar's maximum, and only usrUp says so.
+        if progression.moves_vitals(changed):
+            self.push_vitals()
         lvl = ch.spec[int(idx)][0]
         return "%s: специализация %d %s" % (
             self.nick, int(idx), "забыта" if lvl < 0 else "теперь %d" % lvl)
@@ -2875,9 +2884,9 @@ class Session:
         Character.gain_spec_xp), where it is learned. The card and the
         client's own «Медицина: +20 опыта» follow from the rp_info pushed
         for the indexes that moved (SpecSkillMessages); a level gained moves
-        constitution and the bars, which go by usrUp."""
+        constitution and the bars, which go by usrUp, and so does a level of
+        a strength or agility specialisation (progression.moves_vitals)."""
         ch = self.character()
-        old_level = ch.level
         changed = {"skills": set(), "specs": set(), "attribs": set()}
         for skill, xp in rewards:
             for group, idxs in ch.gain_xp(skill, xp).items():
@@ -2888,7 +2897,7 @@ class Session:
         ch.save(STORE)
         if any(changed.values()):
             self.push_stats(**changed)
-        if ch.level != old_level:
+        if progression.moves_vitals(changed):
             self.push_vitals()
 
     def hand_in_way(self, q_id, quest):

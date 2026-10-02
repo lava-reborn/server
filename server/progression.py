@@ -37,6 +37,20 @@ SPEC_ATTRIB = [STRENGTH, AGILITY, PERCEPTION, STRENGTH, AGILITY, PERCEPTION,
                STRENGTH, AGILITY, INTELLECT, AGILITY, PERCEPTION, AGILITY,
                None, None, None]
 
+# What the bars are made of (Character.hp_max, sp_max). A change to any of
+# them moves a maximum that only usrUp carries -- rp_info has no health or
+# stamina -- and a level is one of them: it moves constitution, which
+# gain_xp and set_skill report among the attributes.
+VITAL_ATTRIBS = frozenset((STRENGTH, AGILITY, CONSTITUTION))
+
+
+def moves_vitals(changed):
+    """Whether the indexes gain_xp, set_skill or set_spec say they changed
+    move a bar's maximum, so that usrUp has to follow the rp_info: a level,
+    or a specialisation of strength or agility (four hit points or four of
+    stamina a level of it)."""
+    return bool(changed["attribs"] & VITAL_ATTRIBS)
+
 # The skill level a specialisation needs, PersAttributes.as:111-125. The
 # client stores this table and never checks it: the teacher's window reads
 # minSkill out of spec.xml instead, where every entry says 0. So the gate is

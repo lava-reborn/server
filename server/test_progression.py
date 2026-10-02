@@ -72,6 +72,16 @@ check("  ..set down to 2: three back", (_c.set_spec(2, 2)["attribs"], _c.attrib[
 check("  ..forgotten at -1: the rest back, never below the birth value",
       (_c.set_spec(2, -1)["specs"], _c.spec[2][0], _c.attrib[progression.PERCEPTION]), ({2}, -1, 5))
 check("  ..a production specialisation raises nothing", _c.set_spec(12, 3)["attribs"], set())
+# What moves a bar's maximum, so that usrUp has to follow the rp_info: a
+# level (constitution), and a level of a strength or agility specialisation
+# -- four hit points or four of stamina each, the gap a plain spec level-up
+# left on the client's bars until the next usrUp.
+_v = Character()
+check("the bars move with a level, and with strength or agility; not with perception",
+      [progression.moves_vitals(_v.set_skill(progression.MELEE, 3)),
+       progression.moves_vitals(_v.set_spec(0, 2)), progression.moves_vitals(_v.set_spec(1, 2)),
+       progression.moves_vitals(_v.set_spec(2, 2))],
+      [True, True, True, False])
 
 # Experience from mobs, the owner's rule (progression.mob_xp): a price by the
 # mob's level, halved at the player's level, quartered one below, nothing two
@@ -500,6 +510,35 @@ try:
     check("and the queue is still in step", [n for n, _p in c.until("q_list")], ["q_list"])
     c.send("ss_upd;obj=x1;s_status=2;")
     check("outside a session ss_upd is the generic ack", [n for n, _p in c.until("cmdAck")], ["cmdAck"])
+
+    # --- the /skill and /spec cheats (LAVA_CHEATS) ---------------------------
+    # One ack each, and the card and the bars told: the level by
+    # userInfo_Player as well, since the client drops a zero in rp_info; the
+    # maximum of a bar by usrUp, the only frame that carries it.
+    c.send("userMsg;entry=@/skill 1 20@;group=0;")
+    got = c.until("userMsg")
+    check("/skill 1 20: one ack, the card, the level, the bars",
+          ([n for n, _p in got].count("cmdAck"), one(got, "userInfo_Player")["lvl"],
+           one(got, "usrUp")["hmax"]), (1, 20, 420))
+    c.send("userMsg;entry=@/skill 1 0@;group=0;")
+    got = c.until("userMsg")
+    check("/skill 1 0: the level back to 0 by userInfo_Player, which takes a zero",
+          ([n for n, _p in got].count("cmdAck"), one(got, "userInfo_Player")["lvl"],
+           one(got, "usrUp")["hmax"]), (1, 0, 120))
+    c.send("userMsg;entry=@/spec 0 5@;group=0;")
+    got = c.until("userMsg")
+    check("/spec 0 5: strength five up, and the health bar's maximum with it",
+          ([n for n, _p in got].count("cmdAck"), one(got, "usrUp")["hmax"]), (1, 140))
+    c.send("userMsg;entry=@/spec 0 -1@;group=0;")
+    got = c.until("userMsg")
+    check("/spec 0 -1: forgotten, strength and the bar back",
+          (one(got, "rp_info")["a_specs"], one(got, "usrUp")["hmax"]), ([-1], 120))
+    c.send("userMsg;entry=@/spec 2 1@;group=0;")
+    got = c.until("userMsg")
+    check("/spec 2 1: perception moves no bar, and no usrUp goes",
+          "usrUp" in [n for n, _p in got], False)
+    c.send("userMsg;entry=@/spec 2 0@;group=0;")
+    c.until("userMsg")
 
     # --- log back in -----------------------------------------------------
     c.send("logout;")

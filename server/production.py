@@ -117,11 +117,10 @@ def mined_by(fighter, mob):
         mob.level, ch.skill_level(progression.INDUSTRY), 1.0, getattr(st, "xp_mult", 1)))
     if xp <= 0:
         return
-    old_level = ch.level
     changed = ch.gain_xp(progression.INDUSTRY, xp, MINING_SPEC, spec_on_top=True)
     if any(changed.values()):
         fighter.sess.push_stats(**changed)
-    if ch.level != old_level:
+    if progression.moves_vitals(changed):
         fighter.sess.push_vitals()
 
 

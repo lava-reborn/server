@@ -1469,6 +1469,8 @@ class Fighter:
             changed = ch.gain_xp(progression.MEDICINE, int(healed * mo), spec)
             if any(changed.values()):
                 self.sess.push_stats(**changed)
+            if progression.moves_vitals(changed):
+                self.sess.push_vitals()
 
     # --- experience ---------------------------------------------------------
     def award_xp(self, skill, spec, dealt, target):
@@ -1509,9 +1511,10 @@ class Fighter:
         spec_on_top), so that opening one does not halve the pace the rule
         is built around. The fraction a hit leaves over carries to the next.
         The client prints "+N опыта" from the difference in the next
-        rp_info, pushed for the indexes that moved; a level-up moves
-        constitution and with it hp_max, which travels by usrUp. An object
-        pays nothing (OBJECTS_PAY_XP)."""
+        rp_info, pushed for the indexes that moved; a level-up (constitution)
+        and a level of a strength or agility specialisation move a bar's
+        maximum, which travels by usrUp (progression.moves_vitals). An
+        object pays nothing (OBJECTS_PAY_XP)."""
         if share <= 0:
             return
         ch = self.character()
@@ -1522,11 +1525,10 @@ class Fighter:
             target.level, ch.skill_level(skill), share, getattr(st, "xp_mult", 1)))
         if xp <= 0:
             return
-        old_level = ch.level
         changed = ch.gain_xp(skill, xp, spec, spec_on_top=True)
         if any(changed.values()):
             self.stats_changed(changed)
-        if ch.level != old_level:
+        if progression.moves_vitals(changed):
             self.sess.push_vitals()
 
     # --- one rp_info for a burst that kills ---------------------------------
