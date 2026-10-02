@@ -13,11 +13,14 @@ That makes it a plain md5 of the cp1251 bytes of password + login.
 import contextlib
 import hashlib
 import json
+import logging
 import os
 import time
 
 import progression
 import storage
+
+log = logging.getLogger("lava")
 
 DB_PATH = os.environ.get(
     "LAVA_DB",
@@ -615,6 +618,24 @@ def migrate(db):
     run_once(db, "heal-relink-2026-09-23", relink_heals)
     run_once(db, "retire-black-market-placeholders-2026-09-28", retire_placeholders)
     run_once(db, "money-ledger-opening-2026-09-28", open_ledger)
+    run_once(db, RETIRED_PLACES_FIX, relocate_retired_places)
+    # Only with the client's tables to tell a premium thing by: a process
+    # without them (a tool run outside the container) leaves the fix for
+    # the next start that has them, rather than writing it down as done
+    # with nothing found.
+    if not ran(db, PREMIUM_THINGS_FIX):
+        premium = premium_test()
+        if premium is None:
+            log.warning("  ..    %s waits: the client's objects.xml is not here to tell"
+                        " a premium thing by", PREMIUM_THINGS_FIX)
+        else:
+            run_once(db, PREMIUM_THINGS_FIX,
+                     lambda d: retire_premium_things(d, premium))
+
+
+def ran(db, name):
+    """Whether the fix of this name has run on this database (run_once)."""
+    return db.execute("SELECT 1 FROM migrations WHERE name = ?", (name,)).fetchone() is not None
 
 
 def run_once(db, name, fix):
@@ -626,7 +647,7 @@ def run_once(db, name, fix):
     Looked up before it is tried: the registration page opens a Store for
     every request, and on Postgres each INSERT that runs into the key is an
     ERROR in the server's log -- one per page view, forever."""
-    if db.execute("SELECT 1 FROM migrations WHERE name = ?", (name,)).fetchone():
+    if ran(db, name):
         return False
     try:
         with db:
@@ -646,7 +667,9 @@ def run_once(db, name, fix):
 # one). What was bought is what is kept: every instance, in a bag, a bank, a
 # letter or a lot, moves to the type that now holds what was paid for, its
 # use_count as it is. Once per database, not at every start: premium things
-# are out of the game, but an admin can still hand out a 6067 today.
+# are out of the game, and an admin could still hand out a 6067 then (no
+# longer since the cut of (P), 2026-10-02: retire_premium_things, below,
+# runs after this one and takes what is left).
 HEAL_RELINK = {t: t + 837 for t in range(6067, 6073)}
 
 
@@ -705,6 +728,152 @@ def open_ledger(db):
                " ON l.char_id = c.id"
                " WHERE c.afro - COALESCE(l.afro, 0) <> 0"
                " OR c.gold - COALESCE(l.gold, 0) <> 0", (int(time.time()),))
+
+
+# The owner's cut of (P) (2026-09-30, «удали всё, что связано с (P), в том
+# числе и локации»). The premium masters' camps 124 (Вади-Хальфа), 125
+# (Донгола) and 130 (Абу-Хамед) are off the map (data/retired.json places),
+# and the craftsmen's quarter 447 lost its only ways in and out with 124
+# (quests.json 414/415 OFF). Their files stay, so a character saved inside
+# one would still come in -- to a place with nobody in it and, from 447, no
+# way out but the map button onto a walled cell -- and a home registered in
+# one would send a death back there. So whoever is in one, or calls one
+# home, goes to Причал (41, on 5965,1728), the town's pier, once per
+# database. A read-only census of production (2026-09-30) found nobody
+# there; this is for the database that has somebody.
+RETIRED_PLACES_FIX = "retire-premium-places-2026-10-02"
+RETIRED_PLACES = (124, 125, 130, 447)
+RETIRED_PLACES_TO = (41, 5965, 1728)
+
+
+def relocate_retired_places(db):
+    loc, gx, gy = RETIRED_PLACES_TO
+    marks = ", ".join("?" * len(RETIRED_PLACES))
+    inside = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE loc IN (%s) ORDER BY id" % marks,
+        RETIRED_PLACES).fetchall()]
+    homes = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE home_loc IN (%s) ORDER BY id" % marks,
+        RETIRED_PLACES).fetchall()]
+    # The cell inside the old file means nothing in Причал's (pos NULL: the
+    # login picks the entry beside its people, Session.restore), and a
+    # character left on the map beside the old place starts in Причал too.
+    db.execute("UPDATE characters SET loc = ?, pos = NULL, gx = ?, gy = ?, on_map = 0"
+               " WHERE loc IN (%s)" % marks, (loc, gx, gy) + RETIRED_PLACES)
+    db.execute("UPDATE characters SET home_loc = ?, home_gx = ?, home_gy = ?"
+               " WHERE home_loc IN (%s)" % marks, (loc, gx, gy) + RETIRED_PLACES)
+    # A warning, not info: the game server opens its Store at import, before
+    # main() sets the log's level, and a one-off change to the players'
+    # rows is worth the line wherever it runs.
+    log.warning("  ..    %s: %d character(s) moved out of %s to %d %s, %d home(s) moved",
+                RETIRED_PLACES_FIX, len(inside), "/".join(map(str, RETIRED_PLACES)), loc,
+                inside, len(homes))
+
+
+# The same cut for the things: a premium thing (items.premium, 6 860 types)
+# is out of the game -- no stall, loot, quest or admin hands one out, no
+# letter, lot or barter passes one on -- and any that got into the game
+# before goes, once per database: from the bags, the banks, the bodies and
+# the ground (items rows, and the ground's rows of nobody's), from the
+# auction (the lot with it, its standing bid back to the bidder by letter,
+# as a lot taken off pays it), and out of the letters (the snapshot alone;
+# the letter stays, and a trade letter left with nothing in it asks
+# nothing for it either). The names of the types stay in the string table
+# -- an unknown id sends a client to the login screen -- so nothing that is
+# missed here can break a client. The counts go to the log. A read-only
+# census of production (2026-09-30) found 0 in items, lots and letters.
+PREMIUM_THINGS_FIX = "retire-premium-things-2026-10-02"
+# mail.TRADE and TRADE_EXPRESS, and mail.SYSTEM_SENDER, mail.LETTER: mail
+# imports this module, so the numbers are repeated here (test_premium_cut).
+_TRADE_LETTERS = (4, 5)
+_SYSTEM_SENDER, _LETTER = 0, 0
+
+
+def premium_test():
+    """items.premium, when the client's tables are there to tell a premium
+    thing by; None when they are not. Late: items imports half the server
+    and reads res/database/objects.xml, which a tool run outside the
+    container may not have."""
+    try:
+        import items
+        if not items.catalogue():
+            return None
+    except (ImportError, OSError) as exc:
+        log.warning("  ..    no item tables for %s: %s", PREMIUM_THINGS_FIX, exc)
+        return None
+    return items.premium
+
+
+def retire_premium_things(db, premium=None):
+    """Every premium thing out of the database (the comment above); returns
+    the counts it logs."""
+    premium = premium or premium_test()
+    if premium is None:
+        raise RuntimeError("%s: no item tables to tell a premium thing by" % PREMIUM_THINGS_FIX)
+    counts = dict(items=0, types=0, ground=0, lots=0, bids=0, letters=0, parcels=0)
+
+    types = sorted(t for t in (int(r["type_id"]) for r in db.execute(
+        "SELECT DISTINCT type_id FROM items").fetchall()) if premium(t))
+    if types:
+        marks = ", ".join("?" * len(types))
+        uniqs = [r["uniq"] for r in db.execute(
+            "SELECT uniq FROM items WHERE type_id IN (%s)" % marks, types).fetchall()]
+        for i in range(0, len(uniqs), 500):
+            part = uniqs[i:i + 500]
+            counts["ground"] += len(db.execute(
+                "SELECT uniq FROM ground WHERE uniq IN (%s)" % ", ".join("?" * len(part)),
+                part).fetchall())
+            db.execute("DELETE FROM ground WHERE uniq IN (%s)" % ", ".join("?" * len(part)),
+                       part)
+        db.execute("DELETE FROM items WHERE type_id IN (%s)" % marks, types)
+        counts["items"], counts["types"] = len(uniqs), len(types)
+
+    now = int(time.time())
+    for lot in db.execute("SELECT id, type_id, bidder, bid, currency FROM auction_lots"
+                          " ORDER BY id").fetchall():
+        if not premium(int(lot["type_id"])):
+            continue
+        if lot["bidder"] and lot["bid"]:
+            gold = int(lot["currency"]) == 1          # auction.GOLD, as money_text
+            what = ("%.2f G" % (lot["bid"] / 100.0)) if gold else ("%d афро" % lot["bid"])
+            db.execute(
+                "INSERT INTO mail (to_char, from_char, type, subject, body, sent_at,"
+                " afro, gold, items_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (lot["bidder"], _SYSTEM_SENDER, _LETTER, "Аукцион: ставка возвращена",
+                 "Лот снят: вещи (P) выведены из игры. Возвращаем вашу ставку %s." % what,
+                 now, 0 if gold else lot["bid"], lot["bid"] if gold else 0, "[]"))
+            counts["bids"] += 1
+        db.execute("DELETE FROM auction_lots WHERE id = ?", (lot["id"],))
+        counts["lots"] += 1
+
+    for row in db.execute("SELECT id, type, items_json FROM mail"
+                          " WHERE items_json <> '[]' ORDER BY id").fetchall():
+        try:
+            snaps = json.loads(row["items_json"] or "[]")
+        except ValueError:
+            continue
+        if not isinstance(snaps, list):
+            continue
+        kept = [s for s in snaps
+                if not (isinstance(s, dict) and premium(int(s.get("type_id") or 0)))]
+        if len(kept) == len(snaps):
+            continue
+        if not kept and int(row["type"]) in _TRADE_LETTERS:
+            db.execute("UPDATE mail SET items_json = ?, afro = 0, gold = 0 WHERE id = ?",
+                       ("[]", row["id"]))
+        else:
+            db.execute("UPDATE mail SET items_json = ? WHERE id = ?",
+                       (json.dumps(kept), row["id"]))
+        counts["letters"] += 1
+        counts["parcels"] += len(snaps) - len(kept)
+
+    # A warning for the reason relocate_retired_places' is one.
+    log.warning("  ..    %s: %d premium thing(s) of %d type(s) gone from bags, banks and the"
+                " ground (%d of them lying there), %d lot(s) (%d bid(s) sent back), %d"
+                " out of %d letter(s)", PREMIUM_THINGS_FIX, counts["items"], counts["types"],
+                counts["ground"], counts["lots"], counts["bids"], counts["parcels"],
+                counts["letters"])
+    return counts
 
 
 def book(db, char_id, afro=None, gold=None, source=None, ref=0, level=None, when=None):

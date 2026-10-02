@@ -771,19 +771,63 @@ def _name_tokens(name):
     return {t for t in re.split(r"[^A-Za-z]+", name.lower()) if t}
 
 
+# Creatures taken out of the game on purpose: data/retired.json 'creatures',
+# type id -> why. The owner's cut of (P) (2026-09-30, «удали всё, что связано
+# с (P), в том числе и локации») put every premium creature the location
+# files spawn there -- the _pm masters of the three premium masters' camps
+# and of the camp 94, the fifteen «Подмастерье …[P]» of the craftsmen's
+# quarters, the premium bar's people (the bouncer in Донгола's quarter 79,
+# the customs officer in its port 445) and the premium quest places' mobs --
+# and a room never stands one, wherever a file or a hand-kept row puts it:
+# belongs_here refuses it before anything else, rooms.Room leaves it out of
+# data/placements.json's rows, rooms.check_placements and events.check turn
+# away a row naming it. By type and everywhere, rather than place by place
+# (the schedule's held_out): a premium master is premium in any file. The
+# type's name stays in the string table all the same -- names are never
+# taken away, since an unknown id sends the client to the login screen.
+_RETIRED_CREATURES = None
+
+
+def retired_creatures():
+    """type id -> why, of data/retired.json 'creatures', read once. No file is
+    nobody retired: the world stands as its files say."""
+    global _RETIRED_CREATURES
+    if _RETIRED_CREATURES is None:
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        out = {}
+        try:
+            with open(os.path.join(here, "data", "retired.json"), encoding="utf-8") as fh:
+                for k, why in (json.load(fh).get("creatures") or {}).items():
+                    if not str(k).startswith("_"):
+                        out[int(k)] = str(why)
+        except OSError:
+            pass
+        _RETIRED_CREATURES = out
+    return _RETIRED_CREATURES
+
+
+def retired_creature(type_id):
+    """Whether this creature type is out of the game (retired_creatures)."""
+    return int(type_id) in retired_creatures()
+
+
 def belongs_here(type_id, name, root, war, loc_id=None):
     """Whether a spawn from the location file should stand in the room.
 
-    Three kinds are left out. Seasonal, clan and developer entries, by the
-    tokens of their name, but for the town's own people SEASON_KEPT keeps
-    in loc_id. Loot containers and other "objects", which the client draws
-    as creatures with a health bar, but for the ones STANDING_OBJECTS lets
-    stand in loc_id to be broken. And hostile creatures (root 0) in a
-    peaceful location: a market with war=0 had them in its file for events
-    and quests, and a player cannot fight there anyway. And, before all of
-    them, whoever a timed window of data/schedule.json stands in and sends
-    away itself, or keeps out for good (events.owns): not the room's.
+    Never a creature out of the game (retired_creatures), wherever the file
+    has it. Then three kinds are left out. Seasonal, clan and developer
+    entries, by the tokens of their name, but for the town's own people
+    SEASON_KEPT keeps in loc_id. Loot containers and other "objects", which
+    the client draws as creatures with a health bar, but for the ones
+    STANDING_OBJECTS lets stand in loc_id to be broken. And hostile
+    creatures (root 0) in a peaceful location: a market with war=0 had them
+    in its file for events and quests, and a player cannot fight there
+    anyway. And, before those three, whoever a timed window of
+    data/schedule.json stands in and sends away itself, or keeps out for
+    good (events.owns): not the room's.
     """
+    if retired_creature(type_id):
+        return False
     import events                   # late: it imports this module
     if events.owns(loc_id, type_id):
         return False

@@ -136,7 +136,15 @@ does):
                 draws rew_obj alone, and more than one icon there is a
                 choice of one), so only «Вы получили: …» names them, which
                 lists every thing that came into the bag between the q_co
-                and its ack (QuestInspector.getRewardItem).
+                and its ack (QuestInspector.getRewardItem);
+  own_texts     a list of the four texts' keys ("name", "start",
+                "notfinish", "finish") the row keeps as written, where the
+                original's own would otherwise be laid over it
+                (_lay_original): a line of the original this server cannot
+                stand behind -- 158's «у вас должен быть вид на жительство
+                или гражданство», a premium of the dead server's, the
+                owner's cut of (P) of 2026-09-30 -- is taken out of the row
+                and stays out.
 
 A slot of objs may carry "drop": a chance. Its mobs then drop the thing,
 the way a «Квестовый» row of data/loot_manual.json does (mobs.QUEST_TIER):
@@ -175,6 +183,8 @@ KINDS = (KILL_MOBS, BRING_L_OBJ, DEL_OBJ)
 STRING_BASE = 2_000_000
 STRINGS_PER_QUEST = 4
 NAME, START, NOTFINISH, FINISH = range(STRINGS_PER_QUEST)
+# The row's keys of the four, in the same order (own_texts, _lay_original).
+TEXT_KEYS = ("name", "start", "notfinish", "finish")
 # The one shared empty string, for a description a quest does not have.
 EMPTY_STRING_ID = 5_000_000
 
@@ -322,6 +332,12 @@ class Quest:
         # Exactly four texts, in string-id order.
         self.texts = (row["name"], row.get("start", ""),
                       row.get("notfinish", ""), row.get("finish", ""))
+        # The texts the original's are not laid over (the docstring's
+        # own_texts, _lay_original).
+        self.own_texts = frozenset(row.get("own_texts") or ())
+        unknown = sorted(self.own_texts - set(TEXT_KEYS))
+        if unknown:
+            raise ValueError("quest %d: own_texts names no text %s" % (self.type, unknown))
         self.give = [int(x) for x in row.get("give", [])]
         self.take = [int(x) for x in row.get("take", [])]
         self.rew_afro = int(row.get("rew_afro", 0))
@@ -696,8 +712,9 @@ QUESTS = load()
 
 
 def check_items(table=None):
-    """Every thing a quest row names is one the game has (items.params_of),
-    and what one hands over at the take is worth nothing away from it
+    """Every thing a quest row names is one the game has (items.params_of)
+    and no premium one (items.premium, out of the game since the owner's
+    cut of (P)), and what one hands over at the take is worth nothing away from it
     (START_OBJ_WORTHLESS_ONLY): of this module's table, or of the one given
     (type -> Quest, as load returns it).
 
@@ -730,6 +747,14 @@ def check_items(table=None):
         if unknown:
             raise ValueError("quest %d names things the game does not have: %s"
                              % (q.type, ", ".join(unknown)))
+        # Nor a premium one, given or asked for, on a row switched on or
+        # off: (P) is out of the game (items.premium; the owner's cut of
+        # (P), 2026-09-30), and a row switched on later must not bring one
+        # back past the stalls' and the loot's filters.
+        premium = ["%s %d" % (field, t) for field, t in q.things() if items.premium(t)]
+        if premium:
+            raise ValueError("quest %d names premium things, out of the game: %s"
+                             % (q.type, ", ".join(premium)))
         on_sale = ["%d (trader %d)" % (t, sold[t]) for t in sorted(q.lent) if t in sold]
         if on_sale:
             raise ValueError("quest %d lends what a stall sells: %s"
@@ -755,18 +780,20 @@ def check_items(table=None):
 def _lay_original():
     """The original's texts of our quests, over the ones we had.
 
-    Only where the original has the text: a slot it leaves empty keeps ours.
-    orig_texts has already cleaned them -- the doubled "%sex??" that would
-    show a man "гол?ым", the escaped quotes -- and kept the <hint> numbers and
-    the %имя% macros, which the client fills in itself (Quest.as:169-181).
+    Only where the original has the text: a slot it leaves empty keeps ours,
+    and so does one the row names in own_texts (the module's docstring),
+    whose words were changed from the original's on purpose. orig_texts has
+    already cleaned them -- the doubled "%sex??" that would show a man
+    "гол?ым", the escaped quotes -- and kept the <hint> numbers and the
+    %имя% macros, which the client fills in itself (Quest.as:169-181).
     """
     import orig_texts                  # no imports of its own; safe at load
     for qtype, texts in orig_texts.quests().items():
         q = QUESTS.get(qtype)
         if q is None:
             continue
-        q.texts = tuple(texts.get(key) or old for key, old in
-                        zip(("name", "start", "notfinish", "finish"), q.texts))
+        q.texts = tuple(old if key in q.own_texts else texts.get(key) or old
+                        for key, old in zip(TEXT_KEYS, q.texts))
 
 
 _lay_original()

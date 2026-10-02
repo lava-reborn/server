@@ -430,8 +430,7 @@
   "645": {"why": "DESIGNED. The prison's southern block (Prison_2_WH), entered by the southern gate (162): as 644."},
   "646": {"why": "DESIGNED. The prison's centre block (Prison_3_WH): Томас (876) and his «Выход» (163) back to the yard, the godfather and the medics of the uprising; its four sides lead to the other four files."},
   "647": {"why": "DESIGNED. The prison's northern cells (Prison_4_WH): the prisoners of the uprising; its one side back to the centre."},
-  "648": {"why": "DESIGNED. The prison's eastern cells (Prison_5_WH): the prisoners of the uprising; its one side back to the centre."},
-  "447": {"why": "DESIGNED. The Квартал ремесленников (WH_Masters_01), whose map cell 5968,1719 is inside the owner's wall: reached only by Мастер Азам's way from the masters' camp (quests.json 414), left only by the way back (415) -- a button to the map would put the player on the walled cell."}
+  "648": {"why": "DESIGNED. The prison's eastern cells (Prison_5_WH): the prisoners of the uprising; its one side back to the centre."}
  },
  "walk_in": {},
  "quest": {
@@ -699,22 +698,6 @@
     "cells": [[30, 74], [31, 73], [31, 75], [32, 74]],
     "target_loc_id": 176,
     "why": "RECOVERED way and giver, DESIGNED place. 646 «Тюрьма: Центральный блок.» (Prison_3_WH): «Томас<Br>Выход из тюрьмы» (876, uf_ExitMan, 62317; the wiki: «безопасно выводит из тюрьмы. При выходе отбирает все повязки») at (31,74), and his «Выход» (62276-62278, «Там еще кто-нибудь выходить будет?»), handed back to him, leads up to the yard (176) at any time; the armbands stay below (data/schedule.json keep_in). The cells are the ground at his feet."
-   }
-  ],
-  "124": [
-   {
-    "quest": 414,
-    "cells": [[19, 58], [19, 59], [20, 59], [21, 58]],
-    "target_loc_id": 447,
-    "why": "DESIGNED way, RECOVERED place. 124 «лагерь мастеров» (Upgraders_VH_P, 5968,1726), the town's masters' camp next to the quarter: Мастер Азам (704) stands at (20,58), and «Квартал ремесленников» takes the player to 447 (WH_Masters_01, 5968,1719), whose own map cell is inside the owner's wall, to the quarter's masters of the [Q] guns (its map label: «Ремесленники, Мастера улучшения: -Оружия [Q] \"Веселый праздник\"»). The wall is not touched. The cells are the ground beside him, where a player coming back arrives."
-   }
-  ],
-  "447": [
-   {
-    "quest": 415,
-    "cells": [[43, 101], [44, 101], [44, 102], [45, 102]],
-    "target_loc_id": 124,
-    "why": "DESIGNED way, RECOVERED place. 447 «Квартал ремесленников»: its weapons' master (5771) stands at (45,101), and «Назад, в лагерь мастеров» takes the player back to the masters' camp (124), the quarter's only way out (passages.json 'no_map'). The cells are the ground beside him, where a player led in by Мастер Азам arrives."
    }
   ]
  }

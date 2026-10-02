@@ -30,6 +30,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
 ADMIN_LOGIN = "tester"
 ADMIN_PASSWORD = "secret"
+# hermit_mask_pm, «Маска отшельника (P)»: tradable but for its (P), and the
+# answer the game server writes for it (server.PREMIUM_REFUSED).
+MASK_P = 6511
+REFUSED_P = "предмет %d — (P), выведен из игры, не выдаётся" % MASK_P
 
 
 def free_port():
@@ -329,6 +333,21 @@ try:
                     f.get("use_count", 0)) for t, f in fresh.items()})
     check("  ..это и в самом деле не нули",
           [got[t] for t in GIFTS], [(500, 500, 0, 0), (400, 400, 2, 0), (0, 0, 0, 10)])
+    # (P) выведены из игры, и для админа тоже (решение владельца 2026-09-30,
+    # «можно ли админу выдавать (P)? Нельзя»): маска отшельника (P) не
+    # ложится в рюкзак, а в журнале панели сказано почему.
+    post(HTTP_PORT, "/admin/do",
+         {"kind": "item", "char_id": str(_char_id), "type_id": str(MASK_P),
+          "count": "1"}, cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    db = storage.connect(DB)
+    said = db.execute("SELECT result FROM admin_actions WHERE kind = 'item'"
+                      " ORDER BY id DESC").fetchone()["result"]
+    owned = db.execute("SELECT COUNT(*) c FROM items WHERE type_id = ?",
+                       (MASK_P,)).fetchone()["c"]
+    db.close()
+    check("вещь (P) не в игре -- не выдаётся, и сказано почему",
+          (said, owned), (REFUSED_P, 0))
 
     print("\nперсонаж в игре")
     cl = Client()
@@ -341,6 +360,18 @@ try:
     frames = cl.frames(1.0)
     check("игроку пришёл кошелёк, не дожидаясь перезахода",
           any(f.startswith("userInfo_Player") for f in frames), True)
+    post(HTTP_PORT, "/admin/do",
+         {"kind": "item", "char_id": str(_char_id), "type_id": str(MASK_P),
+          "count": "1"}, cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    frames = cl.frames(1.0)
+    db = storage.connect(DB)
+    said = db.execute("SELECT result FROM admin_actions WHERE kind = 'item'"
+                      " ORDER BY id DESC").fetchone()["result"]
+    db.close()
+    check("и в игре вещь (P) не выдаётся: ни строки в рюкзак, ни ss_obj_status",
+          (said, [f for f in frames if f.startswith("ss_obj_status")]),
+          (REFUSED_P, []))
     # The point of the whole queue: the session holds this character, and its
     # save() at logout must not write the pre-change number back over it.
     cl.close()

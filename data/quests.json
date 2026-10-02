@@ -3222,8 +3222,8 @@
       "start": "Мастера оружия [Q] «Веселого праздника» живут за скалами, в квартале ремесленников. Чужих туда не водят, но тебя проведу. Обратно выведет их мастер.<Br><Br><b>Задача:</b> Пройти в квартал ремесленников.",
       "notfinish": "",
       "finish": "Пришли. Спроси мастеров о своём оружии.",
-      "give": [704],
-      "take": [704],
+      "give": [],
+      "take": [],
       "obj": 0,
       "rew_obj": [],
       "num_rew_obj": [],
@@ -3233,7 +3233,7 @@
       "repeatable": 1,
       "level": 0,
       "q_type": 0,
-      "why": "DESIGNED, texts and workings (the original leads nobody into the quarter: its cell, 5968,1719, is inside the owner's wall, and the wall is not touched). Мастер Азам (704, «лагерь мастеров» 124, 5968,1726, the nearest place of the town) leads the player into 447 «Квартал ремесленников» (WH_Masters_01), whose map label reads «Ремесленники, Мастера улучшения: -Оружия [Q] \"Веселый праздник\"»: a way (data/passages.json 'quest' 124), repeatable, no level asked; the quarter is left by its own way back (415) and by no map button (passages.json 'no_map' 447)."
+      "why": "OFF (give/take [], was [704]), the owner's cut of (P), 2026-09-30 («удали всё, что связано с (P), в том числе и локации»): Мастер Азам (704, wh_trmodif_rifle_pm) is a premium master and stands nowhere now (data/retired.json creatures), and his camp 124 is off the map (retired.json places), so the way has neither giver nor start; its row in data/passages.json 'quest' went with it, and so did the quarter's 'no_map', which only its two ways made sense of. 447 is unreachable again, as it was before this way: its cell, 5968,1719, is inside the owner's wall, and its fate belongs to the mods decision. Kept in the table for the journals that hold it (the run_once «retire-premium-places-2026-10-02» moves whoever is in 124, 125, 130 or 447 to Причал). Was: DESIGNED, texts and workings (the original leads nobody into the quarter). Мастер Азам (704, «лагерь мастеров» 124, 5968,1726, the nearest place of the town) led the player into 447 «Квартал ремесленников» (WH_Masters_01), whose map label reads «Ремесленники, Мастера улучшения: -Оружия [Q] \"Веселый праздник\"»: a way, repeatable, no level asked; the quarter was left by its own way back (415) and by no map button."
     },
     {
       "type": 415,
@@ -3242,8 +3242,8 @@
       "start": "Уходишь? Выведу той же тропой, к лагерю мастеров.<Br><Br><b>Задача:</b> Вернуться в лагерь мастеров.",
       "notfinish": "",
       "finish": "Иди. Приходи с новым оружием.",
-      "give": [5771],
-      "take": [5771],
+      "give": [],
+      "take": [],
       "obj": 0,
       "rew_obj": [],
       "num_rew_obj": [],
@@ -3253,7 +3253,7 @@
       "repeatable": 1,
       "level": 0,
       "q_type": 0,
-      "why": "DESIGNED, texts and workings. The quarter's weapons' master (5771, standing at (45,101) of 447) leads the player back to the masters' camp (124): a way (data/passages.json 'quest' 447), repeatable, no level asked, so nobody is shut in the quarter."
+      "why": "OFF (give/take [], was [5771]), with the way in (414), the owner's cut of (P), 2026-09-30: it led back to the premium masters' camp 124, which is off the map (data/retired.json places), and nobody can get into the quarter to need it; its row in data/passages.json 'quest' and the quarter's 'no_map' went with it, so a player put in 447 by an admin leaves it by the map button or /home, as from any place. Was: DESIGNED, texts and workings. The quarter's weapons' master (5771, standing at (45,101) of 447) led the player back to the masters' camp (124): a way, repeatable, no level asked, so nobody was shut in the quarter."
     },
     {
       "type": 11,
@@ -5265,7 +5265,8 @@
       "type": 158,
       "kind": "del_obj",
       "name": "Охранник санатория особого режима",
-      "start": "Привет, %имя%. Тюрьма забита заключенными - бандиты, грабители, убийцы, каннибалы и прочие отбросы, от одного взгляда на которых рука тянется за пистолетом, а лучше огнеметом. Но и этих мразей приходится выводить прогуляться на чистый воздух.<Br> И каждый! Каждый раз! Не обходится без приключений. Пожалуйста, отправляйся в тюрьму, каждый день в  <b> 12:00, 16:00 и 23:00 </b>  заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа. Это работа для серьезных людей с серьезными пушками. В общем, как раз по тебе.<Br><Br><b>Задача:</b> В <b>12:00, 16:00 или 23:00</b> отправиться в тюрьму помочь с охраной заключенных.<Br><Br><i>Подсказка: наверняка дело не обойдется без приключений, захватите оружие. \\\"Охранять\\\" заключенных нужно в течение 30 минут.</i><Br><Br><b>Если вы хотите быстро добраться до тюрьмы, у вас должен быть вид на жительство или гражданство.</b>",
+      "start": "Привет, %имя%. Тюрьма забита заключенными - бандиты, грабители, убийцы, каннибалы и прочие отбросы, от одного взгляда на которых рука тянется за пистолетом, а лучше огнеметом. Но и этих мразей приходится выводить прогуляться на чистый воздух.<Br> И каждый! Каждый раз! Не обходится без приключений. Пожалуйста, отправляйся в тюрьму, каждый день в  <b> 12:00, 16:00 и 23:00 </b>  заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа. Это работа для серьезных людей с серьезными пушками. В общем, как раз по тебе.<Br><Br><b>Задача:</b> В <b>12:00, 16:00 или 23:00</b> отправиться в тюрьму помочь с охраной заключенных.<Br><Br><i>Подсказка: наверняка дело не обойдется без приключений, захватите оружие. \\\"Охранять\\\" заключенных нужно в течение 30 минут.</i>",
+      "own_texts": ["start"],
       "notfinish": "",
       "finish": "Доброволец? Охранять зэков помочь решил? Отлично, мы тебя ждали. Сейчас этот зоопарк полезет наружу, держи пушку наготове.",
       "give": [105],
@@ -5279,7 +5280,7 @@
       "q_type": 0,
       "loc": 48883391,
       "finish_loc": 49030864,
-      "why": "RECOVERED texts and time, DESIGNED giver, taker, level and reward. «Охранник санатория особого режима» (62257-62259): 'отправляйся в тюрьму, каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана ... Это работа для серьезных людей с серьезными пушками'. DESIGNED: given by Хассир (105), the station's driver (37), whose ride «Поехали!» (159) goes there; handed in to the southern gate's guard (1794) in the yard (176) -- 'Доброволец? Охранять зэков помочь решил? Отлично, мы тебя ждали. Сейчас этот зоопарк полезет наружу' -- only while the gates are open (data/schedule.json quests, gate hand_in); level 6, the m8 prison's band; +20 Медицина, as the town's other talks. The start's line on a residence permit is the original's; this server grants none (the owner's default 15), and the ride is free for all. A one-off."
+      "why": "RECOVERED texts and time, DESIGNED giver, taker, level and reward. «Охранник санатория особого режима» (62257-62259): 'отправляйся в тюрьму, каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана ... Это работа для серьезных людей с серьезными пушками'. DESIGNED: given by Хассир (105), the station's driver (37), whose ride «Поехали!» (159) goes there; handed in to the southern gate's guard (1794) in the yard (176) -- 'Доброволец? Охранять зэков помочь решил? Отлично, мы тебя ждали. Сейчас этот зоопарк полезет наружу' -- only while the gates are open (data/schedule.json quests, gate hand_in); level 6, the m8 prison's band; +20 Медицина, as the town's other talks. The start is the original's but for its last line, «Если вы хотите быстро добраться до тюрьмы, у вас должен быть вид на жительство или гражданство», the premium of the dead server's: out by the owner's cut of (P) (2026-09-30), since this server grants no residence permit (the owner's default 15) and the ride is free for all; own_texts keeps the original's from being laid back over it (server/quests.py _lay_original). A one-off."
     },
     {
       "type": 159,

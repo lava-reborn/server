@@ -67,6 +67,14 @@ def main():
                 key, loc_id, table.get(key))
     print("verified cells reproduced: %d" % len(fixed))
 
+    # --- a place out of the game opens on no cell (data/retired.json) -------
+    # The exact difference the cut made is data/test_retired_places.py's,
+    # which runs the placer; this is only that none of them is on the map.
+    retired = {int(k) for k in load("retired.json").get("places", {})}
+    on_map = sorted((k, v) for k, v in table.items() if v in retired)
+    assert not on_map, "settlements: places out of the game are on the map: %s" % on_map
+    print("places out of the game on no cell: %s" % sorted(retired))
+
     # --- every binding is a real map cell leading to a real file ------------
     tooltips = set()
     txt = open(os.path.join(world.RES, "database", "locations.xml"), "rb").read().decode("utf-8", "replace")

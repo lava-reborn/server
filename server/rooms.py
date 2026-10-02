@@ -139,11 +139,15 @@ class Room:
         # were put here on purpose, so belongs_here is not asked of them;
         # what it guards against -- a box that is loot, a fighter in a place
         # at peace -- check_placements refuses before the server starts.
-        # One the client cannot draw or name is still left out, as above.
+        # One the client cannot draw or name is still left out, as above,
+        # and so is a creature out of the game (world.retired_creatures),
+        # which check_placements refuses too: a row naming one would have
+        # to get past both.
         placed = 0
         for rec in world.placed_in(loc.id):
             type_id = int(rec.get("type", 0))
-            if type_id not in mob_types or not names.known(type_id):
+            if type_id not in mob_types or not names.known(type_id) \
+                    or world.retired_creature(type_id):
                 skipped += 1
                 continue
             x, y = rec["cell"]
@@ -275,10 +279,12 @@ def placement_problems(mob_types, table=None):
     the login screen); not a loot box or a heap of ore (world.creature_role
     "object"), which the client would draw with a health bar and nothing
     would loot; not a hostile creature in a location at peace, where nobody
-    can fight it (world.belongs_here leaves those out of the files too). Its
-    cell is on the grid, walkable, and not an exit, where it would stand in
-    the way out, nor where the file or another row already has somebody.
-    And it says why it is there, the way every hand-kept row does.
+    can fight it (world.belongs_here leaves those out of the files too); not
+    a creature out of the game (data/retired.json, world.retired_creatures:
+    the premium masters and the rest of the owner's cut of (P)). Its cell is
+    on the grid, walkable, and not an exit, where it would stand in the way
+    out, nor where the file or another row already has somebody. And it
+    says why it is there, the way every hand-kept row does.
     """
     out = []
     table = world.placements() if table is None else table
@@ -302,6 +308,8 @@ def placement_problems(mob_types, table=None):
                 out.append("%s: a creature the client has no record or name of" % what)
                 continue
             root = mob_types[type_id][0]
+            if world.retired_creature(type_id):
+                out.append("%s: a creature out of the game (data/retired.json)" % what)
             if world.creature_role(type_id) == "object":
                 out.append("%s: a loot box or a heap of ore, not an inhabitant" % what)
             if root == world.MOB and not loc.war:

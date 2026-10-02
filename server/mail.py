@@ -157,9 +157,12 @@ def postable(type_id):
     got into a letter all the same would be out of the reach of the quest
     that handed it over, which takes back only what the character carries
     or banks (Inventory.reclaim_pieces): Аюб's notes, posted, were a new set
-    at every take of «Новые вопросы» (quests.START_OBJ_NOT_ON_GROUND)."""
+    at every take of «Новые вопросы» (quests.START_OBJ_NOT_ON_GROUND). And
+    never a premium thing (items.premium), which is out of the game and
+    does not change hands, as at the barter and the auction (the owner's
+    cut of (P), 2026-09-30)."""
     si = items.params_of(type_id) or {}
-    return bool(si.get("exchang")) and not si.get("quest")
+    return bool(si.get("exchang")) and not si.get("quest") and not items.premium(type_id)
 
 
 def stamp(when):

@@ -6,12 +6,12 @@ before the town is opened:
     markets, quarters, arenas and airfield, the camps and warehouses, the
     quest places around it, the mountain paths and the recycling plant,
     Берт's range, the quarry, the ore mines and the VH mine with their
-    tiers, the oases, the prison yard, the craftsmen's quarter 447 (the
-    weapon craft's way leads in) and Заречье -- shows his mobs.xml
-    name. Read straight from the client's location files, whether or not a
-    room stands them yet (a type the client has no record of stands only as
-    world.substitute's kin, and that one is checked), and from
-    data/placements.json. The one exception is the remainder
+    tiers, the oases, the prison yard, the craftsmen's quarter 447 (behind
+    the owner's wall; its way in went with the cut of (P)) and Заречье --
+    shows his mobs.xml name. Read straight from the client's location
+    files, whether or not a room stands them yet (a type the client has
+    no record of stands only as world.substitute's kin, and that one is
+    checked), and from data/placements.json. The one exception is the remainder
     data/orig_names_manual.json lists under "none", each with its reason,
     and it is small;
   * those places are all there is: every settlement of data/settlements.json
@@ -73,8 +73,9 @@ with open(os.path.join(ROOT, "data", "orig_names_manual.json"), encoding="utf-8"
 REMAINDER = {int(k) for k in MANUAL["none"]}
 MAX_REMAINDER = 8
 
-# The places the restoration opens.
-TOWN = [41, 52, 37, 104, 124, 35, 94, 36, 95, 102, 100, 70, 164, 468, 452, 456, 457, 60,
+# The places the restoration opens. Not the premium masters' camp 124, off the
+# map since the owner's cut of (P) (2026-09-30, data/retired.json).
+TOWN = [41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 468, 452, 456, 457, 60,
         176, 107, 528, 59, 78]
 QUEST_PLACES = [43, 48, 65, 119, 120, 140, 62, 61, 47, 64, 63, 117, 137, 138, 139, 141, 142,
                 122, 108, 45, 46, 44, 116, 121, 250]
@@ -90,9 +91,11 @@ ORE_MINES = [200, 201, 202, 657, 658, 659, 1025, 1218, 1255, 1027, 1220, 1257,
 VH_MINE = [154, 158, 160, 613, 617, 1012, 1016, 1024, 1215, 1017, 1018, 1019]
 ZARECHYE = [429, 433, 522, 508]
 PRISON = [644, 645, 646, 647, 648]      # the blocks under the yard 176 (events package)
-# The craftsmen's quarter, inside the owner's wall on the map, and reached by the
-# weapon craft's way «Квартал ремесленников» (414) from the masters' camp 124:
-# its trader 5770 is named since the integration of 2026-09-28.
+# The craftsmen's quarter, inside the owner's wall on the map. The weapon craft's
+# way «Квартал ремесленников» (414) led in from the premium masters' camp 124
+# until the owner's cut of (P) (2026-09-30) took both away; its people keep
+# their names all the same: its trader 5770 is named since the integration of
+# 2026-09-28.
 QUARTER_447 = [447]
 PLACES = (TOWN + QUEST_PLACES + CAMPS + OUTSKIRTS + RANGE + QUARRY + ORE_MINES + VH_MINE
           + ZARECHYE + PRISON + QUARTER_447)
@@ -168,7 +171,7 @@ NEIGHBOURS = {
     239: "Оружейник<br>Дробовики", 242: "Оружейник<br>Пистолеты",
     243: "Оружейник<br>Пистолет-пулеметы", 1371: "Производство пуль",
     1375: "Производство пороха", 1379: "Производство гильз", 1011: "Флаг",
-    # The craftsmen's quarter 447 the weapon craft's way 414 leads into: its
+    # The craftsmen's quarter 447 the weapon craft's way 414 led into: its
     # trader by the first [Q] master's row (medium, the manual file says why),
     # and the exchanger the craft makes its [Q] upgrader by his own.
     5770: "Мастер Гуго Борхардт<br>улучшение пистолетов [Q]<br>чертежи [0у], [2у] и [15у]",

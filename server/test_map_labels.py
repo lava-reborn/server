@@ -45,9 +45,54 @@ tree = rows_at(raw, 6266, 1822, "Новогодняя Елка")
 check("the farm's New Year label is gone", rows_at(out, 6266, 1822, "Новогодняя Елка"), [])
 check("the farm's own name is still there, and is now the cell's only one",
       len(rows_at(out, 6266, 1822, "Ферма Говарда Хаксли <BR>Здесь можно найти задания.")), 1)
-check("nothing else moved: the file less that one row", out, raw.replace(tree[0], b"", 1))
+want = raw
+for x, y, was, new in edits:
+    row = rows_at(raw, x, y, was)[0]
+    if new is None:
+        want = want.replace(row, b"", 1)
+    else:
+        old = dict((k.decode(), v) for k, v in M.ATTR.findall(row))["text"]
+        want = want.replace(row, row.replace(b'text="' + old + b'"',
+                                             b'text="' + M.escape(new).encode("utf-8") + b'"', 1), 1)
+check("nothing else moved: the file less the hidden rows, the retexted ones retexted in place",
+      out, want)
 check("the other New Year trees, inside other places' names, stay",
       out.count("Новогодняя Елка".encode()), raw.count("Новогодняя Елка".encode()) - 1)
+
+# The owner's cut of (P) (2026-09-30): the premium masters' camps 124, 125 and
+# 130 are off the map (data/retired.json), and no name over a cell promises a
+# premium thing or place any more -- the camps', the factories' calibres, the
+# bar of Донгола's quarter, the machine guns of its masters' camp 96.
+print("the cut of (P)")
+CAMPS = {(5968, 1726): 124, (5876, 2012): 125, (6182, 1975): 130}
+
+
+def texts_at(doc, x, y):
+    import html
+    out_ = []
+    for m in M.ROW.finditer(doc):
+        a = {k.decode(): v for k, v in M.ATTR.findall(m.group(0))}
+        if (a.get("x"), a.get("y")) == (str(x).encode(), str(y).encode()):
+            out_.append(html.unescape(a["text"].decode("utf-8")))
+    return out_
+
+
+PREMIUM_WORD = re.compile(r"\((?:P|Р)\)|\[(?:P|Р)\]|\bA,P\b")
+check("the three premium masters' camps have no name over their cells any more",
+      {c: texts_at(out, *c) for c in CAMPS}, {c: [] for c in CAMPS})
+check("  ..where each had «Лагерь мастеров: улучшение оружия (Р)», with a Cyrillic Р",
+      {c: texts_at(raw, *c) for c in CAMPS},
+      {c: ["Лагерь мастеров: улучшение оружия (Р)"] for c in CAMPS})
+check("no name left on the map promises (P), in Latin or Cyrillic",
+      [m.group(0).decode("utf-8") for m in M.ROW.finditer(out)
+       if PREMIUM_WORD.search(M.html.unescape(m.group(0).decode("utf-8")))], [])
+check("  ..while the file had ten",
+      len([m for m in M.ROW.finditer(raw)
+           if PREMIUM_WORD.search(M.html.unescape(m.group(0).decode("utf-8")))]), 10)
+check("  ..the factories keep their calibres, Вади-Хальфа's as its plant makes them",
+      texts_at(out, 6017, 1726), ["Производство боеприпасов Вади Хальфы:<br>12-й калибр<br>СП-10"])
+check("  ..Донгола's quarter its quests and the ingots, not the premium bar",
+      texts_at(out, 5877, 2011), ["Жилой квартал Донголы:<BR>Задания.<BR>Обмен золотых слитков"])
 
 print("the rule itself")
 doc = ('\ufeff<?xml version=\'1.0\'?>\n<data>\n'

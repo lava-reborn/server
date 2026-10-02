@@ -64,6 +64,10 @@ POLICY_PORT = int(os.environ.get("LAVA_POLICY_PORT", "843"))
 # they would be a purse and an armoury for anyone who can type.
 CHEATS = os.environ.get("LAVA_CHEATS", "").strip().lower() not in (
     "", "0", "no", "off", "false")
+# What an admin's gift of a premium thing comes back as, in the chat and in
+# the panel's log (Session.admin_give, apply_admin_action): (P) is out of the
+# game, for an admin too (the owner's cut of (P), 2026-09-30).
+PREMIUM_REFUSED = "предмет %d — (P), выведен из игры, не выдаётся"
 # The lines of chat the server says by itself, signed «Сервер» (Session.say):
 # a refusal's reason, what fell on death, how a barter ended, a trophy
 # registered, a fight holding a move. The owner took them out of the game's
@@ -1426,12 +1430,19 @@ class Session:
         Everything a purchase does on the server happens here too -- the
         instance, the ss_obj_status that adds it to the bag, and the ss_di_*
         the client asks for next -- because the client adds nothing itself.
+
+        Never a premium thing (items.premium): (P) is out of the game, and
+        this -- with the panel's offline path in apply_admin_action -- was
+        the one way left for one to reach a bag (the owner's cut of (P),
+        2026-09-30, «можно ли админу выдавать (P)? Нельзя»).
         """
         if not self.char_id:
             return "персонаж не выбран"
         type_id, count = int(type_id), int(count)
         if items.params_of(type_id) is None:
             return "предмета %d нет в каталоге" % type_id
+        if items.premium(type_id):
+            return PREMIUM_REFUSED % type_id
         if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
             count = 1
         count = max(1, min(count, 999))
@@ -3574,6 +3585,8 @@ def apply_admin_action(row):
         type_id = int(args["type_id"])
         if items.params_of(type_id) is None:
             return "предмета %d нет в каталоге" % type_id
+        if items.premium(type_id):            # as Session.admin_give
+            return PREMIUM_REFUSED % type_id
         count = int(args.get("count", 1))
         if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
             count = 1

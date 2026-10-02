@@ -13,15 +13,18 @@ blueprints dropping only off the camps of their own level and one a corpse
 at most, the stalls' stock (every whetstone's knife and blueprint on sale in
 its town), the modified guns' frames, the salvage (each class's levels
 holding a gun its bench takes), knife, assembly (each part drawn by a
-salvage row) and decode rows, the ways 414/415. On a socket: a recipe walked
+salvage row) and decode rows, the ways 414/415 switched off with the
+premium masters' camp 124 they started from (the owner's cut of (P),
+2026-09-30). On a socket: a recipe walked
 (gun + blueprint -> Mod) and the upgraded gun refused a second time, the
 upgrader's window at Жозеф де Гобино (62) turning the very gun dragged in,
 refusing what came out and refusing once the player has left, a broken
 pistol taken apart at the gunsmith's bench (the unbroken one refused; the
 cheapest first, never a gold or modified one), a rifle of the 6th level and
 a sub-machine gun of the 8th on their benches of the 1st class, a knife
-sharpened, a blueprint decoded, a gun assembled, the way into the
-Квартал ремесленников and back, and the wear an upgrade keeps: a broken gun
+sharpened, a blueprint decoded, a gun assembled, the quarter's [Q]
+upgrader in the Квартал ремесленников (reached by an admin's /goto, the
+way in being gone), and the wear an upgrade keeps: a broken gun
 handed in comes out a broken modification (its rounds back in the bag), a
 worn one in the window a worn one, a worn knife sharpened a worn sharp one
 (in process too: at the gun's price, never a share of the ceiling more).
@@ -75,7 +78,10 @@ RAKIN = 7311
 GUNSMITHS = {"rifle": 238, "shotgun": 239, "pistol": 242, "smg": 243}
 WHETSTONES = {5192: (2, 4), 2279: (6, 8)}
 DECODER = 652
-STALLS = {"shotgun": (576, 7309, 702), "rifle": (578, 7310, 704), "smg": (7311, 705)}
+# The blueprints' stalls. The premium masters 702, 704 and 705, whose stalls
+# repeated these, stand nowhere since the owner's cut of (P) (2026-09-30,
+# data/retired.json), and their lists are gone from data/npcs.json.
+STALLS = {"shotgun": (576, 7309), "rifle": (578, 7310), "smg": (7311,)}
 Q_STALL = 5770
 CAMPS = [((0, 2), (80, 82)), ((3, 4), (81, 83)), ((5, 6), (84, 86)), ((7, 8), (85, 87))]
 WAY_IN, WAY_OUT = 414, 415
@@ -360,7 +366,7 @@ try:
     g_only = sorted(t for t, lines in asked.items() if lines == {"G"})
     gold_named = sorted(t for t, (_r, n) in items.catalogue().items()
                         if re.match(r"^bp[gb]_.*_gold_", n))
-    on_sale = sorted({t for s in (576, 578, 7311, 7309, 7310, 702, 704, 705)
+    on_sale = sorted({t for s in (576, 578, 7311, 7309, 7310)
                       for t in items.stock_for(s)} & set(gold_named))
     check("the gold line's own blueprints (asked only by the (G) guns' rows, all of the"
           " gold line's name) on sale in Вади-Хальфа for gold alone: no afro price, a gold"
@@ -439,16 +445,18 @@ try:
                 for o in r["rew_random"])) for r in family("decode")],
           [([DECODER], n, True, True) for n in range(1, 9)])
 
-    # The way into the quarter and back.
-    check("the way: Мастер Азам (124) into the Квартал ремесленников, its master back; the"
-          " quarter left by no map button; both givers stand where the way starts",
-          (travel.quest_way(world.location(MASTERS_CAMP), WAY_IN)["target_loc_id"],
-           travel.quest_way(world.location(QUARTER), WAY_OUT)["target_loc_id"],
+    # The way into the quarter and back went with the premium masters' camp
+    # 124 it started from (the owner's cut of (P), 2026-09-30): Мастер Азам
+    # stands nowhere, neither row has a giver, no passage is left, and the
+    # quarter is no no_map place any more -- its people stay (test_premium_cut).
+    check("the ways off: Мастер Азам (124) gone, 414 and 415 given and taken by nobody, no"
+          " passage left, the quarter no no_map place; its master still stands there",
+          (travel.quest_way(world.location(MASTERS_CAMP), WAY_IN),
+           travel.quest_way(world.location(QUARTER), WAY_OUT),
            travel.no_map(QUARTER), AZAM_P in stood(MASTERS_CAMP),
            QUARTER_MASTER in stood(QUARTER),
-           [(quests.get(t).give, quests.get(t).repeatable, quests.get(t).level)
-            for t in (WAY_IN, WAY_OUT)]),
-          (QUARTER, MASTERS_CAMP, True, True, True, [([AZAM_P], 1, 0), ([QUARTER_MASTER], 1, 0)]))
+           [(quests.get(t).give, quests.get(t).take) for t in (WAY_IN, WAY_OUT)]),
+          (None, None, False, False, True, [([], [])] * 2))
     check("the upgrader's window at the [Q] masters: the Маузер in, its twelve out; empty"
           " anywhere else",
           (craft.upgrader_lists(JOSEPH)["in_types"] == [MAUSER_Q] * 12,
@@ -848,26 +856,18 @@ try:
     c.send("ss_upd;s_status=0;obj=x0;")
     c.frames(0.3)
 
-    # --- into the quarter and back ---------------------------------------------------------------
+    # --- the quarter ------------------------------------------------------------------------------
+    # The ways in and out went with the cut of (P); an admin's /goto is what
+    # is left, and the quarter's master is still an upgrader there.
     here = goto(c, MASTERS_CAMP)
-    got, q_id = take(c, here, AZAM_P, WAY_IN)
-    got = hand_in(c, here, AZAM_P, q_id)
-    call = first(got, "lcall") or first(c.until(lambda f: f[0] == "lcall", 8), "lcall")
-    check("«Квартал ремесленников»: Мастер Азам leads into 447, told as a sublocation",
-          (acks(got), call.get("id"), call.get("g_id", 0) >> 26), ([0], QUARTER, 1))
-    here = inhabitants(arrive(c))
-    check("  ..where the quarter's master stands, an upgrader with the [Q] recipes",
+    check("the premium masters' camp 124, gone to by /goto: nobody stands in it",
+          sorted(here), [])
+    here = goto(c, QUARTER)
+    check("the Квартал ремесленников by /goto: its master stands there, an upgrader with the"
+          " [Q] recipes",
           (here.get(QUARTER_MASTER, (0, ""))[1], len(here.get(QUARTER_MASTER, (0, "", {}))[2]
                                                        .get("in_types", []))),
           ("userInfo_Upgrader", 12))
-    c.send("chWorld;")
-    check("  ..no way out by the map", acks(c.frames(0.8)), [4])
-    got, q_id = take(c, here, QUARTER_MASTER, WAY_OUT)
-    got = hand_in(c, here, QUARTER_MASTER, q_id)
-    call = first(got, "lcall") or first(c.until(lambda f: f[0] == "lcall", 8), "lcall")
-    check("  ..and back to the masters' camp by his way", (acks(got), call.get("id")),
-          ([0], MASTERS_CAMP))
-    arrive(c)
 
     # --- an upgrade keeps the wear --------------------------------------------------------------
     # At a hand-in: the take takes the oldest Беретта in the bag (Inventory.

@@ -77,6 +77,17 @@ a name-less clue alone. data/settlements_verified.json overrides everything
 and must be reproduced; the report says whether the clues would have found
 each verified cell on their own.
 
+A place taken out of the game (data/retired.json 'places': the premium
+masters' camps 124, 125 and 130, the owner's cut of 2026-09-30) is no
+candidate at all, and its old cell is nulled in settlements_verified.json.
+Both are needed. A null alone frees the file to win the next cell that
+names it -- 125 simply moved to 5878,2012 -- and a file still in the
+running bends its neighbours' margins even where it loses: nulling 124,
+125 and 130 alone took 447, 429 and 432 off their cells too. Dropped from
+the candidates, together with its clones, it changes nothing but its own
+cells (data/test_retired_places.py runs the placer both ways and holds
+the difference to exactly those).
+
     wsl.exe -e python3 data/place_settlements.py
 """
 import collections
@@ -708,6 +719,13 @@ def verified():
     return (load_json("settlements_verified.json", {}) or {}).get("cells", {})
 
 
+def retired_places():
+    """Location ids taken out of the game on purpose (data/retired.json
+    'places'): no candidate for any cell. See the module's docstring."""
+    places = (load_json("retired.json", {}) or {}).get("places", {}) or {}
+    return {int(k) for k in places if not str(k).startswith("_")}
+
+
 # --- the placer --------------------------------------------------------------
 def cheb(a, b):
     return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
@@ -722,7 +740,11 @@ EVIDENCE = ("name", "wiki", "npc", "resident", "services", "region", "calm",
 
 
 class Placer:
-    def __init__(self):
+    def __init__(self, fixed=None, retired=None):
+        """fixed (cell "x,y" -> id or None) and retired (location ids) stand
+        in for settlements_verified.json's cells and retired.json's places
+        when given: data/test_retired_places.py runs the placer without the
+        cut to see what it changed."""
         self.files = static_files()
         usable = {i: f for i, f in self.files.items()
                   if not f["test"] and f["ntitle"] not in GENERIC_TITLES
@@ -738,6 +760,11 @@ class Placer:
             else:
                 seen[key] = i
         dropped = {j for js in self.clones.values() for j in js}
+        # A place out of the game goes after the clones are known, so that a
+        # clone of it does not step up as the group's representative and
+        # take its cell after all; its clones go with it.
+        self.retired = retired_places() if retired is None else set(retired)
+        dropped |= self.retired | {j for i in self.retired for j in self.clones.get(i, ())}
         self.usable = {i: f for i, f in usable.items() if i not in dropped}
         # Twins: one place drawn twice (peaceful and war, day and night),
         # recognised by background and library. Only hand-drawn files
@@ -782,7 +809,7 @@ class Placer:
         self.wloc = wiki_locations()
         self.wnpc = wiki_npcs(world.mob_types())
         self.fixed = {tuple(int(v) for v in k.split(",")): v2
-                      for k, v2 in verified().items()}
+                      for k, v2 in (verified() if fixed is None else fixed).items()}
 
     def city_centres(self):
         """Where each city's cores are: among the tooltips naming the city,
@@ -1168,6 +1195,11 @@ class Placer:
         lines.append("Ядра городов по подсказкам: " + "; ".join(
             "%s %s" % (c, ", ".join("%d×%d" % k for k in cores))
             for c, cores in sorted(self.centres.items())) + ".\n")
+        if self.retired:
+            lines.append("Выведены из игры (`data/retired.json` places), не кандидаты ни на одну "
+                         "клетку: " + ", ".join(
+                             "%d «%s» %s" % (i, f[i]["title"].strip(), f[i]["fn"]) if i in f
+                             else str(i) for i in sorted(self.retired)) + ".\n")
         if self.clones:
             lines.append("Файлы-клоны (одинаковые заголовок, fn, фон, war и выходы), представлены "
                          "младшим id: " + "; ".join("%d = %s" % (i, ", ".join(map(str, js)))

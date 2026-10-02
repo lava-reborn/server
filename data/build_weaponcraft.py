@@ -230,8 +230,11 @@ CITIES = [
 ]
 
 # The blueprint stalls the stock is written for (data/npcs.json 'stock', the
-# owner's file: --stock prints it), by the class their master upgrades.
-STALLS = {"shotgun": (576, 7309, 702), "rifle": (578, 7310, 704), "smg": (7311, 705)}
+# owner's file: --stock prints it), by the class their master upgrades. Not
+# the premium masters 702, 704 and 705 of the camp 124, whose stalls repeated
+# these one for one: they stand nowhere since the owner's cut of (P)
+# (2026-09-30, data/retired.json), and their lists left data/npcs.json.
+STALLS = {"shotgun": (576, 7309), "rifle": (578, 7310), "smg": (7311,)}
 # What the craft adds to a stall with no list of the owner's (the table's
 # "stock", server/craft.py stock_extra, after the wiki's list): the
 # quarter's trader (5770) the [Q] line's blueprints; Однопальцый (1152, the

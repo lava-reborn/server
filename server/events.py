@@ -313,6 +313,12 @@ class Schedule:
                 for t in _types(rec.get("types")):
                     if t not in files:
                         out.append("%s: %d is not in the location's file" % (what, t))
+                    elif key == "spawns" and world.retired_creature(t):
+                        # The window stands its creatures itself, past
+                        # world.belongs_here: out of the game is out of it
+                        # at every hour (data/retired.json).
+                        out.append("%s: %d is a creature out of the game (data/retired.json)"
+                                   % (what, t))
                     elif key == "spawns" and (t not in mob_types or not names.known(t)):
                         out.append("%s: %d is a creature the client has no record or name of"
                                    % (what, t))

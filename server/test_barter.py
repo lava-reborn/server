@@ -395,7 +395,13 @@ try:
 
     # The things on the table.
     beretta = given(chat(a, "/give %d" % BERETTA))
-    premium = given(chat(a, "/give %d" % PREMIUM))
+    # Not by /give, which refuses a premium thing since the owner's cut of
+    # (P) (server.PREMIUM_REFUSED): written into Alice's bag behind the
+    # session's back, as a thing from before the cut would lie there -- the
+    # barter looks it up in the database (Inventory.find), as every verb does.
+    _st = accounts.Store(DB)
+    premium = inventory.oid_of(_st.create_item(A_ID, PREMIUM, items.root_of(PREMIUM)))
+    _st.close()
     paper = given(chat(a, "/give %d" % PAPER))
     a.send("ss_get;target=0;slot=11;")
     kit_a = [str(x) for x in named(a.frames(), "ss_ack")[0]["o_list"]]

@@ -37,7 +37,10 @@
   "5957,1733": 44,
   "5987,1729": 250,
   "5867,1844": null,
-  "5838,1603": null
+  "5838,1603": null,
+  "5968,1726": null,
+  "5876,2012": null,
+  "6182,1975": null
  },
  "why": {
   "6268,1818": "RECOVERED. The map's own tooltip on this cell is «Поля и Пастбища» (res/database/locations.xml), and 182 «Предгорья» (NoobZone_Cow, library Noob_Zone_Nord like the Нубийское поселение 181 on 6268,1819 below it) is the file with the cows: Корова 5195 three times and the grazing cows 115/116/120. Its one exit is south (outzones side 4 only), which from here is 181; and Зула's quest in 181 sends the player to the cows «в соседней локации, наверху» (texts.xml 59789). The placer had put 182 on 5833,1607 by its title, the tooltip «западные предгорья» of the north-west corner's second drawing of the valley.",
@@ -73,6 +76,9 @@
   "5957,1733": "DESIGNED, the owner's default (2026-09-28): no tooltip here. The map's tooltip «Пастбище» is on 5956,1733, which the owner's wall (data/terrain_verified.json) closes, so 44 «Прибрежное пастбище.» (Q_IV_pastuhi: Халид m510_Khalid_lvl4 855, four shepherds 856 and the cows) stands on the open cell east of it. The file has no west exit, the side the wall is on; «Назидание» sends the player to Халид by the river (texts.xml 62683-62693).",
   "5987,1729": "RECOVERED, medium: «Сокровища Зубери». The map's own tooltip on this cell is «Легенда гласит, что именно тут Зубери спрятал свой Шлем пустынника (G)», and the wiki has five maps of Зубери's treasure, one per dig, «Карта 5987.1729» among them (objects.xml qMap_Full1, 3892, whose picture is qMap_Full1.png). The client has five dig places, Q_Tresure1..5 (250-253, 256, all «Пустошь»), each a hole 1f_SmallHole (6512, 6516-6519) among empty guard slots; the first file goes with the first map. DESIGNED, that pairing by number: nothing else ties a file to a cell. The other four maps (5870.1838, 5865.1859, 5892.1866, 5899.2003) are Абри's and Донгола's, outside the Вади-Хальфа region, and their files stay unplaced. The digs are quests (data/quests.json 250-259).",
   "5867,1844": "Kept wasteland, as the placer had it until 5972,1738 went to the hermit (61). 283 «Оазис» (Apoc_Oasis, war=0: Карло Меони, the UAZ and the campfire of a later event) is left without a cell, and the placer would put it on this Abri tooltip «Оазис» by the title alone (слабо, 7.5): nothing says it stood here.",
-  "5838,1603": "Kept wasteland, as the placer had it: see 5867,1844 (283 Apoc_Oasis would drift here on the title alone)."
+  "5838,1603": "Kept wasteland, as the placer had it: see 5867,1844 (283 Apoc_Oasis would drift here on the title alone).",
+  "5968,1726": "Wasteland, the owner's cut of (P) (2026-09-30): the premium masters' camp 124 (Upgraders_VH_P) stood here and is out of the game (data/retired.json places, which also keeps it from every other cell); this null keeps any other file off its tooltip «Лагерь мастеров: улучшение оружия (Р)», which the map hides now (data/map_labels.json). data/test_retired_places.py holds the placer's table to exactly these three cells changed.",
+  "5876,2012": "Wasteland, the owner's cut of (P) (2026-09-30): the premium masters' camp 125 (Upgraders_DN_P, Донгола), out of the game as 124 on 5968,1726 is. With the null alone the placer moved 125 one cell over, to 5878,2012; retired, it is no candidate anywhere.",
+  "6182,1975": "Wasteland, the owner's cut of (P) (2026-09-30): the premium masters' camp 130 (Upgraders_AH_P, Абу-Хамед), out of the game as 124 on 5968,1726 is. With the null alone the placer took 432 off 6160,1975; retired, 130 bends no neighbour."
  }
 }

@@ -865,4 +865,86 @@ ok([fields(s) for s in json.loads(store.mail_letter(letter["id"])["items_json"])
    "и в письме, и на аукционе")
 store.close()
 
+# --- чистка (P): места и вещи -----------------------------------------------
+# Два run_once от 2026-10-02 (accounts.relocate_retired_places,
+# retire_premium_things; README «Чистка (P)»): кто стоит в (P)-лагерях
+# 124/125/130 или в отрезанном квартале 447 или прописан там -- на Причал;
+# вещи (P) -- из рюкзака, банка, с земли, с аукциона (ставка письмом назад)
+# и из писем. Здесь -- что те же IN, DELETE, UPDATE и INSERT письма идут в
+# Postgres и что вторым открытием ничего не повторяется. Полный набор на
+# SQLite -- server/test_premium_cut.py.
+import items  # noqa: E402
+import mail  # noqa: E402
+
+MASK_P, BERETTA = 6511, 25586                   # hermit_mask_pm (P); Беретта 92
+store = fresh_store()
+aid, _ = store.register("премиум", "пароль")
+who = {}
+for name, loc in (("в124", 124), ("в447", 447), ("в125", 125), ("в130", 130), ("на причале", 41)):
+    c, _ = store.create_character(aid, name, 0, 1)
+    store.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5968, gy = 1726, on_map = 0,"
+                     " home_loc = ? WHERE id = ?", (loc, 124 if name == "в130" else 41, c))
+    who[name] = c
+store.db.commit()
+keeper, bidder = who["на причале"], who["в130"]
+in_bag = store.create_item(keeper, MASK_P, 1)
+in_bank = store.create_item(keeper, MASK_P, 1, slot=inventory.BANK)
+kept = store.create_item(keeper, BERETTA, 3)
+lying = store.create_item(0, MASK_P, 1)
+store.lay_down({lying["uniq"]: 9e9}, (36, None, None), 100)
+selling = store.create_item(keeper, MASK_P, 1)
+psnap = {"uniq": selling["uniq"], "type_id": MASK_P, "root": 1}
+plot = store.auction_list(selling["uniq"], keeper, dict(
+    type_id=MASK_P, root=1, item_json=json.dumps(psnap), seller=keeper, seller_name="на причале",
+    currency=1, start_bid=100, buyout=0, fee=0, hours=24, created_at=int(time.time()),
+    ends_at=time.time() + 86400))
+store.db.execute("UPDATE auction_lots SET bid = 250, bidder = ?, bidder_name = 'в130'"
+                 " WHERE id = ?", (bidder, plot["id"]))
+mixed = store.mail_send(bidder, keeper, mail.LETTER, "смешанное", "", 10, 0, json.dumps(
+    [{"uniq": 900, "type_id": MASK_P, "root": 1}, {"uniq": 901, "type_id": BERETTA, "root": 3}]))
+trade = store.mail_send(bidder, keeper, mail.TRADE, "торговое", "", 500, 0, json.dumps(
+    [{"uniq": 902, "type_id": MASK_P, "root": 1}]))
+store.db.execute("DELETE FROM migrations WHERE name IN (?, ?)",
+                 (accounts.RETIRED_PLACES_FIX, accounts.PREMIUM_THINGS_FIX))
+store.db.commit()
+store.close()
+
+up = accounts.Store()
+rows = {n: up.character(c) for n, c in who.items()}
+ok({n: (r["loc"], r["gx"], r["gy"], r["on_map"], r["pos"]) for n, r in rows.items()}
+   == dict({n: (41, 5965, 1728, 0, None) for n in ("в124", "в447", "в125", "в130")},
+           **{"на причале": (41, 5968, 1726, 0, 77)}),
+   "из 124/447/125/130 -- на Причал, на его клетку, без клетки старого файла: %s"
+   % {n: (r["loc"], r["pos"]) for n, r in rows.items()})
+ok((rows["в130"]["home_loc"], rows["в130"]["home_gx"], rows["в130"]["home_gy"]) == (41, 5965, 1728),
+   "прописка в 124 -- теперь Причал")
+ok([up.item(r["uniq"]) is None for r in (in_bag, in_bank, lying)] == [True] * 3
+   and up.item(kept["uniq"]) is not None
+   and up.db.execute("SELECT COUNT(*) c FROM ground").fetchone()["c"] == 0,
+   "вещи (P) ушли из рюкзака, банка и с земли, Беретта осталась")
+ok(up.db.execute("SELECT COUNT(*) c FROM auction_lots").fetchone()["c"] == 0, "лот (P) снят")
+back = [dict(r) for r in up.db.execute(
+    "SELECT to_char, afro, gold, items_json FROM mail WHERE subject = ?",
+    ("Аукцион: ставка возвращена",)).fetchall()]
+ok(back == [{"to_char": bidder, "afro": 0, "gold": 250, "items_json": "[]"}],
+   "ставка 2,50 G вернулась письмом в золоте: %s" % back)
+letters = {r["subject"]: r for r in up.db.execute("SELECT * FROM mail")}
+ok((json.loads(letters["смешанное"]["items_json"]), letters["смешанное"]["afro"],
+    json.loads(letters["торговое"]["items_json"]), letters["торговое"]["afro"])
+   == ([{"uniq": 901, "type_id": BERETTA, "root": 3}], 10, [], 0),
+   "из писем -- только (P); торговое без вещей ничего не просит")
+ok(sorted(r["name"] for r in up.db.execute(
+    "SELECT name FROM migrations WHERE name IN (?, ?)",
+    (accounts.RETIRED_PLACES_FIX, accounts.PREMIUM_THINGS_FIX)))
+   == sorted([accounts.RETIRED_PLACES_FIX, accounts.PREMIUM_THINGS_FIX]), "обе отмечены")
+up.create_item(keeper, MASK_P, 1)
+up.db.execute("UPDATE characters SET loc = 124 WHERE id = ?", (keeper,))
+up.db.commit()
+up.close()
+up = accounts.Store()
+ok((up.character(keeper)["loc"], [r["type_id"] for r in up.items_of(keeper)].count(MASK_P))
+   == (124, 1), "второе открытие ничего не повторяет")
+ok(items.premium(MASK_P), "маска отшельника -- в самом деле (P)")
+up.close()
+
 print("storage(pg): %d проверок, все зелёные" % checks)
