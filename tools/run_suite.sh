@@ -2,12 +2,21 @@
 # Every suite, N at a time, longest first (README «Запуск»):
 #
 #   bash tools/run_suite.sh [options] . /tmp/lava_suite 8
+#   bash tools/run_suite.sh . /tmp/lava_suite 8 --affected
+#   bash tools/run_suite.sh . /tmp/lava_suite 8 --only test_combat,test_death
 #
-# $1 the repository, $2 the output directory, $3 how many at once. One output
-# file per suite in $2, and summary.txt with a line per suite: exit code,
-# seconds, name; a zero in front is a green suite. The suites that wait on
-# game time share the clock, so one that depends on it can fail under load:
-# run it alone before taking the failure for real.
+# $1 the repository, $2 the output directory, $3 how many at once; options
+# may come before or after them. One output file per suite in $2, and
+# summary.txt with a line per suite: exit code, seconds, name; a zero in
+# front is a green suite. The suites that wait on game time share the clock,
+# so one that depends on it can fail under load: run it alone before taking
+# the failure for real.
+#
+# Every check a suite makes through server/testkit.py also goes, one JSON
+# line each, to <name>.jsonl (LAVA_TEST_REPORT), and tools/suite_report.py
+# makes report.html of the run at its end: mechanic, test, check, status and
+# time, failed suites first (README «Запуск»). The report is for reading; it
+# never changes the exit status.
 #
 # LAVA_RES names the client's res folder (default: ../lava-online/res beside
 # the repository); LAVA_ORIG_TEXTS the original texts.xml for
@@ -35,29 +44,71 @@
 #                   servers at once can make a suite miss a window it makes
 #                   alone; a real failure fails twice.
 #   --summary FILE  append the outcome as Markdown to FILE (the job summary).
+#
+# OPTIONS for a run by hand, never in CI: CI and with it every deploy run
+# every suite, so under GitHub Actions (GITHUB_ACTIONS set) the runner
+# refuses these two and exits 2 rather than run part of the set.
+#
+#   --only A,B      only these suites, by name (test_combat).
+#   --affected      only the suites the change since --base (origin/main)
+#                   touches, by the map --record-map writes (tools/suite.py
+#                   picks them and says why; no map runs everything).
+#   --base REF      what --affected compares with.
+#   --list          say which suites, in which order, and run nothing.
+#   --record-map    run, and remember which functions of server/ each suite
+#                   runs (tools/impact/sitecustomize.py on the path of every
+#                   process): tools/impact_map.json, the map of --affected.
 set -u
 
 KNOWN=
 RERUN=0
 SUMMARY=
+ONLY=
+AFFECTED=0
+BASE=origin/main
+LIST=0
+RECORD=0
+POS=()
 while [ $# -gt 0 ]; do
   case $1 in
-    --known)   KNOWN=$2; shift 2 ;;
-    --rerun)   RERUN=1; shift ;;
-    --summary) SUMMARY=$2; shift 2 ;;
-    --)        shift; break ;;
-    -*)        echo "run_suite: unknown option $1" >&2; exit 2 ;;
-    *)         break ;;
+    --known)      KNOWN=$2; shift 2 ;;
+    --rerun)      RERUN=1; shift ;;
+    --summary)    SUMMARY=$2; shift 2 ;;
+    --only)       ONLY=$2; shift 2 ;;
+    --affected)   AFFECTED=1; shift ;;
+    --base)       BASE=$2; shift 2 ;;
+    --list)       LIST=1; shift ;;
+    --record-map) RECORD=1; shift ;;
+    --)           shift; POS+=("$@"); break ;;
+    -*)           echo "run_suite: unknown option $1" >&2; exit 2 ;;
+    *)            POS+=("$1"); shift ;;
   esac
 done
+SELECT=0
+if [ -n "$ONLY" ] || [ "$AFFECTED" = 1 ]; then
+  SELECT=1
+fi
+if [ "$SELECT" = 1 ] && [ -n "${GITHUB_ACTIONS:-}" ]; then
+  echo "run_suite: CI runs every suite; --only and --affected are for a run by hand" >&2
+  exit 2
+fi
 if [ -n "$KNOWN" ]; then
   [ -f "$KNOWN" ] || { echo "run_suite: no $KNOWN" >&2; exit 2; }
   KNOWN=$(cd "$(dirname "$KNOWN")" && pwd)/$(basename "$KNOWN")
 fi
 
-ROOT=$(cd "${1:-.}" && pwd)
-OUT=${2:-/tmp/lava_suite}
-N=${3:-8}
+ROOT=$(cd "${POS[0]:-.}" && pwd)
+OUT=${POS[1]:-/tmp/lava_suite}
+N=${POS[2]:-8}
+
+# Which suites --only and --affected ask for: tools/suite.py picks them (the
+# map, git diff against --base) and prints the paths, after its reasons.
+pick_args=(--list --base "$BASE")
+[ -n "$ONLY" ] && pick_args+=(--only "$ONLY")
+[ "$AFFECTED" = 1 ] && pick_args+=(--affected)
+if [ "$LIST" = 1 ]; then
+  exec python3 "$ROOT/tools/suite.py" "${pick_args[@]}"
+fi
 export LAVA_RES=${LAVA_RES:-$ROOT/../lava-online/res}
 export LAVA_ORIG_TEXTS=${LAVA_ORIG_TEXTS:-$LAVA_RES/xml/texts.xml}
 export PYTHONUTF8=1
@@ -69,6 +120,17 @@ export PYTHONUTF8=1
 mkdir -p "$OUT"
 OUT=$(cd "$OUT" && pwd)
 cd "$ROOT"
+
+PICKED=
+if [ "$SELECT" = 1 ]; then
+  picked=$(python3 tools/suite.py "${pick_args[@]}") || { echo "$picked" >&2; exit 2; }
+  printf '%s\n' "$picked" | grep -vE '^(server|data|tools)/test_[^/]*\.py$'
+  PICKED=$(printf '%s\n' "$picked" | grep -E '^(server|data|tools)/test_[^/]*\.py$')
+  if [ -z "$PICKED" ]; then
+    echo "nothing to run"
+    exit 0
+  fi
+fi
 
 # The previous run's durations, before this run starts writing its own.
 PREV=$OUT/summary.prev.txt
@@ -91,6 +153,21 @@ else
   cp "$OUT/list.static" "$OUT/list.txt"
 fi
 rm -f "$OUT/list.static"
+if [ -n "$PICKED" ]; then
+  # In the order above, only what was picked.
+  printf '%s\n' "$PICKED" | grep -xF -f - "$OUT/list.txt" > "$OUT/list.picked"
+  mv "$OUT/list.picked" "$OUT/list.txt"
+fi
+
+# --record-map: every Python process of the run loads the hook, which writes
+# what it runs of server/ to a file of its own in IMPACT; tools/suite.py
+# --save-map makes the map of them once the run is over.
+IMPACT=
+if [ "$RECORD" = 1 ]; then
+  IMPACT=$(mktemp -d /tmp/lava_impact.XXXXXX)
+  export LAVA_IMPACT_OUT=$IMPACT LAVA_IMPACT_ROOT=$ROOT
+  export PYTHONPATH=$ROOT/tools/impact${PYTHONPATH:+:$PYTHONPATH}
+fi
 
 # Each suite gets a database file and a TMPDIR of its own, empty at its start,
 # under a folder named after the output directory: two runs side by side
@@ -105,6 +182,9 @@ run_one() {
   rm -rf "${RUNTMP:?}/$name"
   mkdir -p "$RUNTMP/$name/tmp"
   export LAVA_DB=$RUNTMP/$name/lava.db TMPDIR=$RUNTMP/$name/tmp
+  # Its checks, one JSON line each (server/testkit.py), for report.html.
+  export LAVA_TEST_REPORT=$OUT/$name${SUFFIX:-}.jsonl LAVA_IMPACT_SUITE=$name
+  rm -f "$LAVA_TEST_REPORT"
   start=$(date +%s)
   ( cd "$dir" && timeout 1500 python3 "$(basename "$t")" ) > "$OUT/$name${SUFFIX:-}.out" 2>&1
   echo "$? $(( $(date +%s) - start ))s $name" >> "${SUMMARY_FILE:-$OUT/summary.txt}"
@@ -121,7 +201,26 @@ nfailed=$(grep -c -v -e '^0 ' -e DONE "$OUT/summary.txt")
 echo "$(wc -l < "$OUT/list.txt") suites, $nfailed failed (${total}s, $N at once)"
 grep -v -e '^0 ' -e DONE "$OUT/summary.txt"
 
+# Once the run is over, reruns and all: the map --record-map was asked for,
+# and report.html (tools/suite_report.py). The report is for reading, so
+# whatever becomes of it, the exit status is the runner's own.
+finish() {
+  if [ -n "$IMPACT" ]; then
+    python3 tools/suite.py --save-map "$IMPACT" \
+      --only "$(xargs -n1 basename < "$OUT/list.txt" | sed 's/[.]py$//' | paste -sd,)"
+    rm -rf "$IMPACT"
+  fi
+  rm -f "$OUT/report.html"
+  python3 tools/suite_report.py "$OUT" > "$OUT/report.txt" 2>&1
+  if [ -s "$OUT/report.html" ]; then
+    echo "report: $OUT/report.html"
+  else
+    echo "run_suite: no report.html (see $OUT/report.txt)"
+  fi
+}
+
 if [ -z "$KNOWN" ] && [ "$RERUN" = 0 ] && [ -z "$SUMMARY" ]; then
+  finish
   [ "$nfailed" = 0 ]
   exit
 fi
@@ -178,7 +277,12 @@ if [ -n "$KNOWN" ]; then
   while IFS='|' read -r t _; do
     t=$(echo "$t" | sed 's/^[ \t]*//; s/[ \t]*$//')
     case $t in ''|'#'*) continue ;; esac
-    grep -qxF "$t" "$OUT/list.txt" || { stale+=("$t (no such suite)"); continue; }
+    if ! grep -qxF "$t" "$OUT/list.txt"; then
+      # Not run: gone from the tree -- or left out of a run by hand (--only,
+      # --affected), which says nothing about it.
+      [ -n "$PICKED" ] && [ -f "$t" ] || stale+=("$t (no such suite)")
+      continue
+    fi
     grep -q "^0 [0-9]*s $(basename "$t" .py)$" "$OUT/summary.txt" && stale+=("$t")
   done < "$KNOWN"
 fi
@@ -198,6 +302,7 @@ else
   hard=("${real[@]}")
 fi
 
+finish
 out_of() { echo "$OUT/$(basename "$1" .py)${2:-}.out"; }
 passed=$(grep -c '^0 ' "$OUT/summary.txt")
 echo "=== passed: $passed"

@@ -11,7 +11,17 @@ The output directory (--out, default %TEMP%/lava_suite) gets, per suite,
 <name>.out and <name>.err (what it printed) and <name>.jsonl (one line per
 check, server/testkit.py); then summary.txt (exit code, seconds, name; a zero
 in front is a green suite) and report.html: mechanic, test, check, status,
-time (tools/suite_report.py). tools/run_suite.ps1 and run_suite.sh call this.
+time (tools/suite_report.py). tools/run_suite.ps1 runs the suites through
+this. tools/run_suite.sh, the runner CI uses, keeps its own loop (known
+failures, reruns, the job summary) and asks this only which suites --only
+and --affected pick (--list) and to write the map of its --record-map
+(--save-map); it writes the same .jsonl and report.html.
+
+As in run_suite.sh: longest first by the summary.txt a previous run left in
+--out (a suite it does not know goes first), and each suite on a database
+and a TMPDIR of its own, empty at its start. Under GitHub Actions only the
+whole set runs: --only and --affected are refused there (exit 2), so that no
+push is ever tested, and deployed, on part of it.
 
 --affected compares the working tree with --base (origin/main) and runs:
 
@@ -40,6 +50,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import zlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -50,7 +61,8 @@ MAP = os.path.join(HERE, "impact_map.json")
 LEFT_OUT = {"test_storage_pg"}            # wants Postgres
 FIRST = "test_halfa_training"             # the longest: started first
 EVERYTHING = ("server/testkit.py", "tools/suite.py", "tools/run_suite.ps1",
-              "tools/run_suite.sh", "tools/impact/sitecustomize.py", "tools/suite_report.py")
+              "tools/run_suite.sh", "tools/impact/sitecustomize.py", "tools/suite_report.py",
+              "tools/known_failures.txt")
 
 
 def suites():
@@ -301,11 +313,35 @@ def save_map(record_dir, names):
 
 
 # --- the run -------------------------------------------------------------------------
+def by_last_run(paths, out):
+    """Longest first by the durations of the run before in out, the way
+    tools/run_suite.sh orders them: its summary.txt becomes summary.prev.txt,
+    a suite it does not know goes first, the rest keep the order given."""
+    summary = os.path.join(out, "summary.txt")
+    prev = os.path.join(out, "summary.prev.txt")
+    if os.path.exists(summary) and os.path.getsize(summary) > 0:
+        os.replace(summary, prev)
+    took = {n: s["seconds"] for n, s in suite_report.read_summary(out, "summary.prev.txt").items()}
+    if not took:
+        return list(paths)
+    return sorted(paths, key=lambda p: -took.get(name_of(p), 99999))
+
+
 def run(paths, out, jobs, res, stagger, record_dir=None, timeout=1500):
     os.makedirs(out, exist_ok=True)
     summary = os.path.join(out, "summary.txt")
     open(summary, "w", encoding="utf-8").close()
-    orig = os.path.join(res, "xml", "texts.xml")
+    try:
+        # A rerun record tools/run_suite.sh left here is not this run's.
+        os.remove(os.path.join(out, "summary.rerun.txt"))
+    except OSError:
+        pass
+    orig = os.environ.get("LAVA_ORIG_TEXTS") or os.path.join(res, "xml", "texts.xml")
+    # A database file and a TMPDIR per suite, empty at its start, under a
+    # folder named after the output directory: two runs side by side do not
+    # share a file, and no suite starts on what an earlier run left.
+    runtmp = os.path.join(tempfile.gettempdir(), "lava_suite_tmp.%d"
+                          % zlib.crc32(os.path.abspath(out).encode("utf-8")))
     queue, running = list(paths), {}
     last_start = 0.0
     while queue or running:
@@ -323,9 +359,13 @@ def run(paths, out, jobs, res, stagger, record_dir=None, timeout=1500):
                     os.remove(os.path.join(out, n + ext))
                 except OSError:
                     pass
+            own = os.path.join(runtmp, n)
+            shutil.rmtree(own, ignore_errors=True)
+            os.makedirs(os.path.join(own, "tmp"), exist_ok=True)
             env = dict(os.environ, LAVA_RES=res, LAVA_ORIG_TEXTS=orig, PYTHONUTF8="1",
                        PYTHONIOENCODING="utf-8",
-                       LAVA_DB=os.path.join(tempfile.gettempdir(), "lava_%s.db" % n),
+                       LAVA_DB=os.path.join(own, "lava.db"),
+                       TMPDIR=os.path.join(own, "tmp"),
                        LAVA_TEST_REPORT=os.path.join(out, n + ".jsonl"))
             if record_dir:
                 env.update(LAVA_IMPACT_OUT=record_dir, LAVA_IMPACT_ROOT=ROOT, LAVA_IMPACT_SUITE=n,
@@ -366,6 +406,9 @@ def main(argv=None):
     ap.add_argument("--base", default="origin/main")
     ap.add_argument("--list", action="store_true", help="say which suites, run nothing")
     ap.add_argument("--record-map", action="store_true")
+    ap.add_argument("--save-map", metavar="DIR",
+                    help="write the map from the files a recorded run left in DIR"
+                         " (tools/run_suite.sh --record-map), for --only's suites or all")
     ap.add_argument("--stagger", type=float, default=4.0 if os.name == "nt" else 1.0)
     a = ap.parse_args(argv)
     for stream in (sys.stdout, sys.stderr):
@@ -393,12 +436,22 @@ def main(argv=None):
         for p in chosen:
             print(rel(p))
         return 0
+    if a.save_map:
+        save_map(a.save_map, [name_of(p) for p in chosen])
+        print("map: %s" % MAP)
+        return 0
+    if os.environ.get("GITHUB_ACTIONS") and (a.only or a.affected):
+        print("CI runs every suite; --only and --affected are for a run by hand")
+        return 2
     if not chosen:
         print("nothing to run")
         return 0
-    if not os.path.exists(os.path.join(a.res, "main.swf")):
-        print("no client at %s (main.swf missing); pass --res or set LAVA_RES" % a.res)
+    # objects.xml, not main.swf, as tools/run_suite.sh: CI carries the slice
+    # of res/ the server reads, and no main.swf.
+    if not os.path.exists(os.path.join(a.res, "database", "objects.xml")):
+        print("no client at %s (database/objects.xml missing); pass --res or set LAVA_RES" % a.res)
         return 2
+    chosen = by_last_run(chosen, a.out)
     record_dir = None
     if a.record_map:
         record_dir = tempfile.mkdtemp(prefix="lava_impact_")

@@ -9,7 +9,8 @@ tools/*
 !tools/run_suite.ps1
 # Also ours: the list of failures CI is told to expect (tools/run_suite.sh --known).
 !tools/known_failures.txt
-# The hook tools/suite.py --record-map puts on the path of every process.
+# Also ours: the hook --record-map (tools/run_suite.sh, tools/suite.py) puts
+# on the path of every process of the run.
 !tools/impact/
 dist/
 .env

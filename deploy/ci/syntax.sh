@@ -22,7 +22,8 @@ done < <(find deploy tools -name '*.sh' -type f | sort)
 python3 - <<'EOF' || bad=1
 import glob, json, sys
 bad = 0
-for path in sorted(glob.glob("server/*.py") + glob.glob("data/*.py") + glob.glob("tools/*.py")):
+for path in sorted(glob.glob("server/*.py") + glob.glob("data/*.py") + glob.glob("tools/*.py")
+                   + glob.glob("tools/impact/*.py")):
     try:
         with open(path, "rb") as fh:
             compile(fh.read(), path, "exec")
@@ -40,6 +41,6 @@ sys.exit(bad)
 EOF
 
 if [ "$bad" = 0 ]; then
-  echo "syntax: every .sh under deploy/ and tools/, every .py under server/, data/ and tools/, every data/*.json parses"
+  echo "syntax: every .sh under deploy/ and tools/, every .py under server/, data/, tools/ and tools/impact/, every data/*.json parses"
 fi
 exit "$bad"

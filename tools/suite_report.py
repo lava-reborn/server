@@ -10,7 +10,9 @@ the same table, shorter, to the terminal.
 
 A suite's status is its exit code: a check can pass and the suite still
 fail after it (a crash, a server that did not start), and the report says
-so rather than showing a column of green.
+so rather than showing a column of green. A suite tools/run_suite.sh --rerun
+ran again alone (summary.rerun.txt) is shown by that second run, its checks
+from <suite>.rerun.jsonl, as the runner's verdict counts it.
 """
 import html
 import json
@@ -19,9 +21,9 @@ import sys
 from collections import OrderedDict
 
 
-def read_summary(out):
+def read_summary(out, name="summary.txt"):
     rows = OrderedDict()
-    path = os.path.join(out, "summary.txt")
+    path = os.path.join(out, name)
     if not os.path.exists(path):
         return rows
     for line in open(path, encoding="utf-8-sig"):
@@ -31,8 +33,8 @@ def read_summary(out):
     return rows
 
 
-def read_checks(out, name):
-    path = os.path.join(out, name + ".jsonl")
+def read_checks(out, name, suffix=""):
+    path = os.path.join(out, name + suffix + ".jsonl")
     if not os.path.exists(path):
         return []
     out_rows = []
@@ -58,13 +60,19 @@ def tail(out, name, n=40):
 
 def collect(out):
     suites = []
+    reruns = read_summary(out, "summary.rerun.txt")
     for name, s in read_summary(out).items():
-        checks = read_checks(out, name)
+        first = None
+        if name in reruns:
+            first, s = s["code"], reruns[name]
+        checks = read_checks(out, name, "" if first is None else ".rerun")
         sections = OrderedDict()
         for c in checks:
             sections.setdefault(c.get("section") or "(без раздела)", []).append(c)
         failed = [c for c in checks if not c.get("ok")]
         mech = checks[0]["mechanic"] if checks else name
+        if first is not None:
+            mech += " (повтор в одиночку; в общем прогоне код %d)" % first
         suites.append(dict(name=name, code=s["code"], seconds=s["seconds"], mechanic=mech,
                            checks=checks, sections=sections, failed=failed))
     suites.sort(key=lambda x: (x["code"] == 0, -x["seconds"]))
