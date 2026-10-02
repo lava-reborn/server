@@ -2205,6 +2205,12 @@ class RoomCombat:
         # who its quest rows of loot are rolled for (quest_wants).
         mob.quest_wants = self.quest_wants(mob, killer)
         self.settle_xp(mob)
+        # The killer's held rp_info goes out here, before calm() below can
+        # end the war: the client keeps the awards of a fight and prints
+        # them as one line on lch;ws=0, and an award that lands after that
+        # frame is printed on its own (a player read «+5» then «+4»).
+        if killer is not None and killer.is_player:
+            killer.release_stats()
         # Out of the room's inhabitants until it respawns, so an arrival in
         # the meantime is not handed a corpse as a newUser.
         self.room.npcs.pop(mob.eid, None)

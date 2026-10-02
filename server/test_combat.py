@@ -922,6 +922,16 @@ try:
         tail += c.until(ws_off, 1.5)
     check("the room leaves the war state as its last hunter falls",
           [p for n, p in tail if n == "lch" and "ws" in p], [{"ws": 0}])
+    # The client keeps a fight's awards and prints them as one line on
+    # lch;ws=0; the kill's own rp_info has to be in before that frame, or it
+    # is printed on its own behind the line (RoomCombat.kill releases it
+    # before calm()).
+    _names = [n for n, _ in tail]
+    check("the kill's experience is pushed before the war ends, and only once after the kill",
+          (_names.index("rp_info", i_dead) < _names.index("lch", _names.index("rp_info", i_dead))
+           if "rp_info" in _names[i_dead:] else None,
+           sum(1 for n in _names[i_dead:_names.index("lch", i_dead + 1) + 1] if n == "rp_info")),
+          (True, 1))
     got = c.until(lambda f: f[0] == "ss_loot", 4)
     check("the corpse fades and a bag appears where it fell",
           only(got, "lch", "ss_loot"),
