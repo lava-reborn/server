@@ -1,0 +1,307 @@
+# CI and CD for the server: the suites on every push and pull request, and a
+# deploy to production after green suites on every push to main.
+#
+#   preflight  always: are the server's secrets here (if not, says so and
+#              the jobs below are skipped -- grey, not red), and does every
+#              script, module and JSON table parse.
+#   assets     asks the production server's gate for the digest of the test
+#              assets (the server's slice of the client, the extras the
+#              suites read, the original texts.xml), restores them from the
+#              cache under that digest or fetches them, forgets the key, and
+#              checks the string table.
+#   suite      every server/, data/ and tools/ suite on SQLite, twelve at
+#              once, with the known failures of tools/known_failures.txt and
+#              one rerun, alone, for anything else that fails.
+#   postgres   the suites that honour LAVA_DB_URL, each on its own fresh
+#              database in a postgres:16-alpine service -- production's
+#              database, which the SQLite run does not exercise.
+#   deploy     push to main only, after all of them: packs the tree as
+#              deploy/deploy.sh would rsync it and hands it to the gate,
+#              which backs up, swaps, rebuilds, checks and rolls back on any
+#              failure (deploy/remote/lava-gate.sh). One at a time, never
+#              cancelled.
+#
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   DEPLOY_SSH_KEY      the private half of the CI key; its public half sits
+#                       in root's authorized_keys tied to the gate
+#   DEPLOY_KNOWN_HOSTS  the server's host-key line, printed by install.sh
+# Optional variable DEPLOY_HOST, if the server ever moves.
+#
+# Everything this file runs lives in deploy/ci/ and tools/, where it can be run
+# by hand and read with its comments; the steps below only call it.
+
+name: ci
+
+on:
+  push:
+    # Branches only: a pushed tag is a name for a commit some branch's run
+    # has already tested.
+    branches: ["**"]
+    # Prose only: no suite reads these files, and none of them changes what
+    # the server runs. A push that touches anything else runs everything.
+    # deploy/ci/still_head.sh reads this very list (the first paths-ignore
+    # in this file): keep it first, one "- item" a line.
+    paths-ignore:
+      - README.md
+      - TASKS.md
+      - UNDONE.md
+      - ROADMAP.md
+      - PROTOCOL.md
+      - recon/**
+  pull_request:
+    paths-ignore:
+      - README.md
+      - TASKS.md
+      - UNDONE.md
+      - ROADMAP.md
+      - PROTOCOL.md
+      - recon/**
+
+# A newer push to a branch makes the run for the older one moot: cancel it,
+# and save the minutes. Not on main, where every run may end in a deploy:
+# there runs queue up (a third push replaces the one still waiting, never the
+# one running).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+# bash -eo pipefail (what "shell: bash" means to the runner) rather than sh:
+# a failing ssh on the left of a pipe has to fail the step.
+defaults:
+  run:
+    shell: bash
+
+env:
+  DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '159.194.247.90' }}
+
+jobs:
+  preflight:
+    name: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      gate: ${{ steps.keys.outputs.gate }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Whether the secrets are set, as "true"/"false" -- an expression over
+      # a secret yields only that, never the secret. A job-level "if:" may
+      # not read secrets at all; the jobs below read this output instead.
+      - name: the server's secrets
+        id: keys
+        run: bash deploy/ci/preflight.sh
+        env:
+          HAVE_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' }}
+          HAVE_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS != '' }}
+
+      - name: every script, module and table parses
+        run: bash deploy/ci/syntax.sh
+
+  assets:
+    name: assets and string table
+    needs: preflight
+    if: needs.preflight.outputs.gate == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      key: ${{ steps.hash.outputs.key }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: gate access
+        run: bash deploy/ci/ssh_setup.sh
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+
+      - name: digest of the assets on the server
+        id: hash
+        run: |
+          h=$(ssh lava-gate assets-hash)
+          if ! [[ $h =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error title=Assets::the gate answered '$h'"
+            exit 1
+          fi
+          echo "hash=$h" >> "$GITHUB_OUTPUT"
+          echo "key=lava-assets-$h" >> "$GITHUB_OUTPUT"
+
+      - name: cached copy
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/lava-assets
+          key: ${{ steps.hash.outputs.key }}
+
+      - name: fetch from the gate
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: bash deploy/ci/fetch_assets.sh "$HOME/lava-assets" "$HASH"
+        env:
+          HASH: ${{ steps.hash.outputs.hash }}
+
+      - name: keep them for the other jobs and later runs
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/lava-assets
+          key: ${{ steps.hash.outputs.key }}
+
+      # The key has done its work here. The repository's own code runs next
+      # (export_texts.py), and nothing it does needs the server.
+      - name: forget the key
+        if: always()
+        run: rm -f "$HOME/.ssh/lava_gate"
+
+      # export_texts.py exits non-zero if any id the server may put on the
+      # wire is missing from the table (PROTOCOL.md 9): a missing row is a
+      # player sent back to the login screen, not a blank label. The table's
+      # sha256 is what the launcher compares (launcher/Updater.cs); the
+      # deploy's report says whether the published launcher still carries it.
+      - name: string table, every id on the wire in it
+        run: |
+          export LAVA_RES=$HOME/lava-assets/res
+          out=$(python3 tools/export_texts.py -o "$RUNNER_TEMP/texts.xml")
+          echo "$out"
+          echo "string table: ${out##*/}, 0 ids missing, sha256 $(sha256sum < "$RUNNER_TEMP/texts.xml" | cut -c1-16)" >> "$GITHUB_STEP_SUMMARY"
+
+  suite:
+    name: suites on SQLite
+    needs: assets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/lava-assets
+          key: ${{ needs.assets.outputs.key }}
+          fail-on-cache-miss: true
+
+      # The runner orders suites longest first by the summary.txt of the last
+      # run in its output folder; this hands it the last run's, so the
+      # seven-minute ones (test_halfa_training, _open, _production) do not
+      # start last and become the whole wait.
+      - name: durations of the last run
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/suite/summary.txt
+          key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: suite-durations-
+
+      # Twelve at once, measured on two pinned cores: the suites wait on game
+      # clocks, not on the processor (README «CI/CD», «Минуты»).
+      - name: all suites, twelve at once, longest first
+        run: |
+          export LAVA_RES=$HOME/lava-assets/res LAVA_ORIG_TEXTS=$HOME/lava-assets/texts.xml
+          bash tools/run_suite.sh --known tools/known_failures.txt --rerun \
+            --summary "$GITHUB_STEP_SUMMARY" . "$RUNNER_TEMP/suite" 12
+
+      - name: keep the durations for the next run
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/suite/summary.txt
+          key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: output of every suite
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-logs
+          path: ${{ runner.temp }}/suite/
+          retention-days: 7
+
+  postgres:
+    name: suites on Postgres
+    needs: assets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lava
+          POSTGRES_PASSWORD: lavatest
+          POSTGRES_DB: lava_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lava -d lava_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # The image's own driver, at the image's own version (Dockerfile).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet "psycopg[binary]==3.2.3"
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/lava-assets
+          key: ${{ needs.assets.outputs.key }}
+          fail-on-cache-miss: true
+
+      - name: each suite on a database of its own
+        run: |
+          export LAVA_RES=$HOME/lava-assets/res LAVA_ORIG_TEXTS=$HOME/lava-assets/texts.xml
+          bash deploy/ci/pg_suites.sh "$RUNNER_TEMP/pg" 8
+        env:
+          LAVA_PG: postgresql://lava:lavatest@127.0.0.1:5432
+
+      - name: output of every suite
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: postgres-logs
+          path: ${{ runner.temp }}/pg/
+          retention-days: 7
+
+  deploy:
+    name: deploy to production
+    # preflight among the needs only for its output; a skipped assets (no
+    # key) skips suite and postgres, and with them this job.
+    needs: [preflight, assets, suite, postgres]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.preflight.outputs.gate == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # One deploy at a time, and one that has begun is never cancelled: the
+    # gate holds its own lock as well, and finishes a deploy -- or rolls it
+    # back -- even if this job goes away.
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      # A rerun of an old run, or a run that waited behind a newer one, would
+      # otherwise put older code over newer -- unless what is newer is prose
+      # alone, which starts no run of its own (the script says how).
+      - name: still what main runs?
+        id: head
+        run: bash deploy/ci/still_head.sh
+
+      - name: gate access
+        if: steps.head.outputs.go == 'true'
+        run: bash deploy/ci/ssh_setup.sh
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+
+      - name: pack the tree as deploy.sh would send it
+        if: steps.head.outputs.go == 'true'
+        run: bash deploy/ci/pack.sh "$RUNNER_TEMP/lava.tgz"
+
+      - name: deploy through the gate
+        if: steps.head.outputs.go == 'true'
+        run: bash deploy/ci/send.sh "$RUNNER_TEMP/lava.tgz" "$GITHUB_SHA"
+
+      - name: forget the key
+        if: always()
+        run: rm -f "$HOME/.ssh/lava_gate"

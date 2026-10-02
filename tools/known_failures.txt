@@ -1,0 +1,17 @@
+# Suites CI expects to fail, and why. Read by tools/run_suite.sh --known.
+#
+#   suite | pattern | reason
+#
+# A listed suite that fails is reported and not counted ONLY if its output
+# matches the pattern (grep -E, no '|' inside it; several joined by " && "
+# must each match a line): failing for any other reason, or for this one and
+# another besides, is a failure like any other. A listed suite that passes is
+# reported as such -- then its line goes. Nothing is listed here to make a red
+# run green; every line names a decision still open.
+#
+# Not here: server/test_bootstrap.py, which fails on a full client (main.swf
+# is the owner's patched one, 1 745 201 bytes, and the suite pins the
+# original's 1 749 720). CI carries no main.swf, the suite skips those two
+# checks and says so, and everything else in it runs and has to pass.
+
+data/test_borders.py | ^AssertionError: borders: 20 settlements belong to neither side of the wall | the owner's hand-drawn wall strands 20 settlements; his decision is pending, and the count may not grow

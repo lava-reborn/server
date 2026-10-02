@@ -7,6 +7,8 @@ tools/*
 !tools/*.py
 !tools/run_suite.sh
 !tools/run_suite.ps1
+# Also ours: the list of failures CI is told to expect (tools/run_suite.sh --known).
+!tools/known_failures.txt
 dist/
 .env
 data/lava.db

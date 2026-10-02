@@ -185,9 +185,18 @@ try:
     check("a name with a space is decoded", spaced[:3], b"CWS")
     check("and served whole", len(spaced) > 1000000, True)
 
-    swf = get("/res/main.swf")
-    check("main.swf served", swf[:3], b"CWS")
-    check("main.swf size", len(swf), 1749720)
+    # CI carries the slice of res/ the server reads and no client code
+    # (deploy/ci/make_test_extras.sh): without main.swf on disk these two
+    # are skipped, and say so, as tools/test_wrapper.py does -- decided by
+    # the disk, not by the answer, so a server that stops serving a file it
+    # has still fails here.
+    import world
+    if os.path.isfile(os.path.join(world.RES, "main.swf")):
+        swf = get("/res/main.swf")
+        check("main.swf served", swf[:3], b"CWS")
+        check("main.swf size", len(swf), 1749720)
+    else:
+        print("  --  no main.swf in %s; its two checks are skipped" % world.RES)
     check("crossdomain", b"allow-access-from" in get("/res/crossdomain.xml"), True)
     # directory traversal must not escape the res root
     traversal_code = None

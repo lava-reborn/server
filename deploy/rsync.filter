@@ -1,0 +1,44 @@
+# What goes up to the server, as rsync filter rules: the one list behind every
+# way the tree reaches /opt/lava.
+#
+#   deploy/deploy.sh         rsync --filter="merge deploy/rsync.filter" ...
+#   deploy/ci/pack.sh        the same rsync into a staging copy, then a tarball
+#   deploy/remote/lava-gate.sh  the same rules (its installed copy) when it
+#                            swaps the tarball into /opt/lava
+#
+# On the receiving side an excluded path is also a protected one: rsync
+# --delete leaves alone whatever these rules exclude, which is how .env, res/
+# and anything else that lives only on the server survive every deploy.
+#
+# First match wins, so order matters: the tools/ include has to come before its
+# exclude, or rsync never sees the scripts. tools/ holds ~80 MB of downloaded
+# players; only its Python scripts are ours.
+#
+# recon/ is the decompiled client: our reading material, no business on a
+# public host. .github/ is the CI that sends this tree, and is no business of
+# the tree once it is there. The image itself takes only server/ and data/
+# (.dockerignore).
+#
+# The two wiki excludes name directories, not a data/wiki* glob: the glob also
+# takes wiki_links.json and wiki_items.json, which are run-time tables the
+# server refuses to start without. Same two lines as .dockerignore, and they
+# should stay the same two.
+#
+# .git without the slash: in a `git worktree` checkout it is a file, not a
+# directory, and a directory-only rule would let it through.
+- .git
+- .github/
+- .claude/
+- res/
+- dist/
+- logs/
+- recon/
++ tools/
++ tools/*.py
+- tools/*
+- data/wiki/
+- data/wiki_world/
+- data/lava.db*
+- __pycache__/
+- *.pyc
+- .env

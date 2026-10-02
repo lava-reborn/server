@@ -48,31 +48,17 @@ echo "==> $HOST:$DEST"
 
 if [ "$data_only" = 0 ]; then
   echo "==> code"
-  # tools/ holds ~80 MB of downloaded players; only its scripts are ours, and
-  # the include has to come before the exclude or rsync never sees them.
-  # recon/ is the decompiled client: our reading material, no business on a
-  # public host. The image itself takes only server/ and data/ (.dockerignore).
+  # What goes up and what stays behind is deploy/rsync.filter, one list for
+  # this script, for CI's tarball (deploy/ci/pack.sh) and for the gate that
+  # swaps that tarball in on the server (deploy/remote/lava-gate.sh): tools/
+  # scripts but not the downloaded players beside them, no recon/, no wiki
+  # dumps, no database, no .env. The reasons are written there, rule by rule.
   #
-  # The two wiki excludes name directories, not a data/wiki* glob: the glob
-  # also takes wiki_links.json and wiki_items.json, which are run-time tables
-  # the server refuses to start without. Same two lines as .dockerignore, and
-  # they should stay the same two.
+  # A push to main deploys by itself now (README, "CI/CD"); this script stays
+  # for the first install and for a deploy by hand. Not while CI deploys: the
+  # gate's lock does not cover it.
   rsync -a --delete --info=stats1 \
-    --exclude '.git/' \
-    --exclude '.claude/' \
-    --exclude 'res/' \
-    --exclude 'dist/' \
-    --exclude 'logs/' \
-    --exclude 'recon/' \
-    --include 'tools/' \
-    --include 'tools/*.py' \
-    --exclude 'tools/*' \
-    --exclude 'data/wiki/' \
-    --exclude 'data/wiki_world/' \
-    --exclude 'data/lava.db*' \
-    --exclude '__pycache__/' \
-    --exclude '*.pyc' \
-    --exclude '.env' \
+    --filter="merge $HERE/deploy/rsync.filter" \
     -e "${SSH[*]}" \
     "$HERE/" "$HOST:$DEST/"
 fi

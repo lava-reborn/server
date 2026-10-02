@@ -8,3 +8,8 @@ deploy/Caddyfile.lava text eol=lf
 Dockerfile text eol=lf
 docker-compose.yml text eol=lf
 *.py text eol=lf
+# Read by rsync and by the suite runner in WSL: a CR would end every rule
+# and every reason.
+deploy/rsync.filter text eol=lf
+tools/known_failures.txt text eol=lf
+.github/** text eol=lf
