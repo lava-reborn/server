@@ -859,6 +859,28 @@ def _say_per_day():
 _say_per_day()
 
 
+# What a start writes where the boss hours go: the starts of 10, 131 and 132
+# tell the player when the boss is there, and the hours are LAVA_BOSS_HOURS's
+# (bosses.py), so the text is made from them rather than written down and
+# left behind when they change.
+BOSS_HOURS_MARKS = {"{boss_hours}": False, "{boss_hours_short}": True}
+
+
+def _say_boss_hours():
+    import bosses                      # world only; safe at load
+    for q in QUESTS.values():
+        texts = list(q.texts)
+        for k, text in enumerate(texts):
+            for mark, short in BOSS_HOURS_MARKS.items():
+                if text and mark in text:
+                    text = text.replace(mark, bosses.say_hours(short))
+            texts[k] = text
+        q.texts = tuple(texts)
+
+
+_say_boss_hours()
+
+
 def get(quest_type):
     return QUESTS.get(int(quest_type))
 
