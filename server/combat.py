@@ -1205,6 +1205,9 @@ class Fighter:
             row = None
         live = min(weapon.num_shots, row["ammo_count"]) if row else 0
         pool = target.hp if target is not None and not target.is_player else 0
+        # Asked before the burst, which may kill it: whether the rounds could
+        # have got there at all. Only then is the shot a provocation.
+        reached = rc.within_fire(self, target, weapon.max_range)
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live)
         if row is not None:
             # A point of durability per round that left the barrel. The starter
@@ -1228,7 +1231,12 @@ class Fighter:
             # turned the rest into (burst never takes more than there is):
             # both are harm done, see award_xp.
             self.award_xp(weapon.skill, weapon.spec, min(h, pool) + s, target)
-        rc.after_hostile(self, target)
+        # A burst that fell short of the mark, or into a wall on the way,
+        # turns no creature on the shooter and opens no duel: every round
+        # dropped on the ground, and nothing out there felt it. A miss within
+        # reach does provoke -- the bullets went past its ears.
+        if reached:
+            rc.after_hostile(self, target)
         if killed:
             rc.kill(target, self)
 
@@ -1311,13 +1319,14 @@ class Fighter:
             # first half of every knife fight training nothing. melee_split
             # never takes more stamina than there is; health is capped here.
             self.award_xp(progression.MELEE, spec, min(h, pool) + s, target)
-        # A swing at a player who was never within reach opens no duel. The
-        # client strikes only a neighbour (Gamer.strike: isSiblings), so this
-        # is one who stepped away while the blade was coming down -- or a
-        # modified client swinging from across the room, which would
-        # otherwise hold its mark there (res=39) for as long as it kept
-        # throwing a fist every half minute.
-        if reach or target is None or not target.is_player:
+        # A swing at anything that was never within reach provokes nothing:
+        # no duel with a player, no creature turned on him. The client
+        # strikes only a neighbour (Gamer.strike: isSiblings), so this is one
+        # who stepped away while the blade was coming down -- or a modified
+        # client swinging from across the room, which would otherwise hold
+        # its mark there (res=39) for as long as it kept throwing a fist
+        # every half minute, or pull a creature to him from where it stood.
+        if reach:
             rc.after_hostile(self, target)
         if killed:
             rc.kill(target, self)
@@ -2015,6 +2024,17 @@ class RoomCombat:
                 f.last_hit = -1e9
         for mob in self.mobs.values():
             mob.ap = mob.ap_max
+
+    def within_fire(self, shooter, target, max_range):
+        """Whether a burst from shooter can reach target at all: it is here,
+        no farther than max_range, and no obstacle stands between (shot_wall,
+        the line burst itself flies). Nothing about the scatter: a round that
+        flies past within reach still flew past."""
+        if target is None or not target.present(self):
+            return False
+        width = self.room.loc.width
+        return (mobs.hex_distance(shooter.cell, target.cell, width) <= max_range
+                and shot_wall(self.room.loc, shooter.cell, target.cell) is None)
 
     def after_hostile(self, attacker, target):
         """Bookkeeping after any shot or swing: the duel timer of two players
