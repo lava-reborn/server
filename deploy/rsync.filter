@@ -26,7 +26,12 @@
 #
 # .git without the slash: in a `git worktree` checkout it is a file, not a
 # directory, and a directory-only rule would let it through.
+#
+# /lava_ci*: the CI deploy key, should it be generated in the repository
+# root after all (README «CI/CD» puts it in ~/lava_ci) -- a key that can
+# deploy has no business on the server it deploys to.
 - .git
+- /lava_ci*
 - .github/
 - .claude/
 - res/

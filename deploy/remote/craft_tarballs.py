@@ -50,6 +50,13 @@ make("dotenv_deep", lambda tf: add_bytes(tf, "./deploy/.env", b"x\n"))
 make("database", lambda tf: add_bytes(tf, "./data/lava.db", b"SQLite format 3\0"))
 make("res", lambda tf: add_bytes(tf, "./res/database/mobs.xml", b"<x/>"))
 make("newline_name", lambda tf: add_bytes(tf, "./server/a\nb.py", b"x"))
+# The gate lets the bytes of a UTF-8 letter through (\200..\377 in tar's
+# escaped listing) and nothing else that comes out with a backslash: not a
+# backslash in the name, not one followed by digits that look like such a
+# byte, not a control character.
+make("backslash_name", lambda tf: add_bytes(tf, "./data/a\\b.json", b"{}"))
+make("backslash_octal", lambda tf: add_bytes(tf, "./data/a\\320\\267.json", b"{}"))
+make("control_name", lambda tf: add_bytes(tf, "./data/a\x01b.json", b"{}"))
 make("oversize", lambda tf: add_bytes(tf, "./data/noise.bin", os.urandom(9 * 1024 * 1024)))
 make("bomb", lambda tf: add_bytes(tf, "./data/zeros.bin", b"\0" * (100 * 1024 * 1024)))
 make("setuid", lambda tf: add_bytes(tf, "./server/su", b"#!/bin/sh\n", mode=0o4755))

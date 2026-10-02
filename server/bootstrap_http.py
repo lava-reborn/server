@@ -1080,6 +1080,29 @@ class Handler(BaseHTTPRequestHandler):
         self._dispatch(body)
 
 
+class Server(ThreadingHTTPServer):
+    """ThreadingHTTPServer with a quieter word for a visitor who hung up.
+
+    A launcher closed halfway through the string table, or a browser tab
+    shut while a page loads, raises ConnectionResetError or
+    BrokenPipeError out of the handler, and socketserver answers any
+    exception there with a full traceback on stderr. That is the client
+    leaving, not this process failing, and a traceback is what the CI deploy
+    gate (deploy/remote/lava-gate.sh) and anyone reading the log take for
+    the second. So a dropped connection is one access-log line, in the
+    "  HTTP " form log_message writes, and every other exception still gets
+    socketserver's traceback.
+    """
+
+    def handle_error(self, request, client_address):
+        exc = sys.exc_info()[1]
+        if isinstance(exc, (ConnectionError, TimeoutError)):
+            print("  HTTP %s dropped the connection (%s)"
+                  % (client_address[0], type(exc).__name__), flush=True)
+            return
+        super().handle_error(request, client_address)
+
+
 if __name__ == "__main__":
     print("res root : %s" % RES_ROOT)
     print("game srv : %s:%s" % (GAME_HOST, GAME_PORT))
@@ -1087,13 +1110,20 @@ if __name__ == "__main__":
     print("res serve: %s" % ("on" if SERVE_RES else "off (registration only)"))
     # Build the 1.9 MB string table before the client can ask for it.
     names.document()
-    httpd = ThreadingHTTPServer((HTTP_HOST, HTTP_PORT), Handler)
+    httpd = Server((HTTP_HOST, HTTP_PORT), Handler)
     # docker stop sends SIGTERM, whose default action kills the process where
     # it stands. Nothing here is worth saving, but the listener should close
     # and the log should say so rather than the container reporting 143.
     for _sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(_sig, lambda *_a: threading.Thread(
             target=httpd.shutdown, daemon=True).start())
+    # The line that ends start-up. Nothing above it can have come from a
+    # visitor -- requests are only read from serve_forever on -- and the CI
+    # deploy gate rolls a deploy back for a traceback above it, while one
+    # below it may be anyone's doing (lava-gate.sh, HTTP_READY;
+    # server/test_http_log.py holds the two to each other). Flushed, so the
+    # lines printed before it come out with it and in order.
+    print("http serving on %s:%d" % (HTTP_HOST, HTTP_PORT), flush=True)
     try:
         httpd.serve_forever()
     finally:

@@ -18,4 +18,8 @@ data/lava.db.before-*
 __pycache__/
 *.pyc
 .claude/
+# The CI deploy key, should it be made here after all (README «CI/CD»: it
+# belongs in ~/lava_ci). Also kept out of every deploy by deploy/rsync.filter.
+/lava_ci
+/lava_ci.pub
 data/map_editor_base.png

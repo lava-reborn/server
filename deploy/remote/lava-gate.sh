@@ -67,8 +67,10 @@
 #   7. docker compose up -d --build;
 #   8. wait until both containers run, have not restarted, answer the same
 #      check their compose healthcheck runs (twice in a row), and have
-#      written no traceback; then wait SETTLE seconds more and look again,
-#      and count the log lines since step 7 that match ERROR_PATTERN;
+#      written no traceback while starting; then wait SETTLE seconds more
+#      and look again, and count the log lines since step 7 that match
+#      ERROR_PATTERN -- those of the start-up roll back, the later ones are
+#      reported ("THE LOGS", below);
 #   9. compare the key files in /opt/lava and inside the running image with
 #      the tarball's;
 #  10. report, record the commit as deployed, prune old backups.
@@ -104,14 +106,20 @@
 # the real .env, from /opt/lava as the project directory -- exactly what "up"
 # will read) and the result has to stay inside what this server needs:
 #
-#   - services may not ask for privileged, cap_add, devices, gpus,
-#     pid/ipc/uts/network_mode/userns_mode/cgroup, security_opt,
-#     volumes_from, a runtime, secrets or configs;
+#   - services may not ask for privileged, cap_add, devices (nor GPUs under
+#     deploy), pid/ipc/uts/network_mode/userns_mode/cgroup, security_opt,
+#     volumes_from, external_links, a runtime, secrets or configs;
 #   - a bind mount only of RES_DIR, read-only; named volumes only as declared
 #     at the top, and those with no driver or driver_opts; tmpfs;
-#   - a build only of /opt/lava itself, its Dockerfile inside it, with none
-#     of additional_contexts, secrets, ssh, network, privileged, entitlements
-#     or cache_from/cache_to;
+#   - a build only of /opt/lava itself, its Dockerfile inside it, the image
+#     it makes named IMAGE and nothing else (no build tags), with none of
+#     additional_contexts, secrets, ssh, network, privileged, entitlements or
+#     cache_from/cache_to; and no pull_policy that pulls on its own (always,
+#     daily, ...), since a pull lays a registry's image over a local name;
+#   - the project the one that runs now (PROJECT), and every volume and
+#     network the project's own, "<project>_<key>" -- a "name:" is how a
+#     compose file reaches a volume or network of another stack on this
+#     host (the database's, the site's) without saying "external";
 #   - networks only bridge, nothing external; no top-level secrets/configs;
 #   - and in the file as written: no env_file, extends or include (they read
 #     other files of the host, and the first is gone from the normalised
@@ -123,29 +131,56 @@
 # the server needs something it does not allow; the owner's decision, made
 # on the server.
 #
-# The deploy's health checks read the services' logs, and the http service
-# writes every request line into its own -- the path included, which anyone
-# on the internet chooses. So the access lines ("  HTTP ...") are not read,
-# and what counts as an error is what only the server itself writes: a
-# traceback, the exception line that ends one, or its "  !!    " marker for a
-# failure it caught (ERROR_PATTERN).
+# What the policy does not take away, because deploying is running code:
+# the game's own processes, its database password from .env, and a build
+# that may start FROM, or COPY --from, any image this host holds. The key
+# that deploys is a key to the game and its data, not to the machine.
+#
+# THE LOGS
+#
+# The health watch reads the services' logs, and much of what lands there is
+# anyone's to choose: the http service writes every request line, path
+# included; the game writes every frame a client sends ("  C->S  ..."), a
+# full traceback for one it cannot decode ("  bad frame"), and a handler
+# that a frame makes fail is a traceback too. None of that may decide a
+# deploy, or anybody with a socket could roll back a good one and kick the
+# players a second time. So each service's log is cut at the line it writes
+# once it listens (GAME_READY, HTTP_READY): above it is the server starting,
+# where nobody else can have written anything, and a traceback, an exception
+# line or the "  !!    " marker there rolls the deploy back. Below it the
+# same lines are counted and the first few shown in the report, and roll
+# nothing back: whether the new version works is for the containers'
+# states and the probes to say. The http request lines ("  HTTP ...") are
+# not read at all. A container compose did not recreate has no start-up in
+# the window. server/test_http_log.py holds both ready lines and the
+# patterns to what the server writes.
 #
 # MEASURED, NOT ASSUMED (deploy/remote/test_gate.sh: a throwaway /opt with
 # its own containers, image and Postgres, installed by install.sh, driven
 # through a stand-in for sshd): requests outside the
 # list refused; bad tarballs refused before anything was touched -- "..", an
-# absolute path, a symlink, a hard link, a fifo, a newline in a name, .env at
-# the top and deeper, data/lava.db, res/, an unknown top directory, no
-# Dockerfile, over the size limit, a zip bomb, a sparse member, a setuid
-# bit, an override compose file, compose files that break the policy, not
-# gzip at all, a wrong sha256 and a cut-short stream; a good deploy with .env
-# and res/ kept and the new code inside the running image; a crash at start,
-# a build that fails and a caught failure in the log each rolled back to the
-# image that ran before, tree byte for byte; request lines naming Traceback
-# and Error during the watch not taken for errors; a second deploy refused
-# while the lock was held; a deploy whose client vanished after the first
-# line finished on its own; pruning to KEEP. The launcher's table as read
-# here agrees with GetManifestResourceStream on the published exe.
+# absolute path, a symlink, a hard link, a fifo, a newline, a backslash or a
+# control character in a name, .env at the top and deeper, data/lava.db,
+# res/, an unknown top directory, no Dockerfile, over the size limit, a zip
+# bomb, a sparse member, a setuid bit, an override compose file, compose
+# files that break the policy (another stack's volume, network or image
+# among them, which stayed as they were), not gzip at all, a wrong sha256
+# and a cut-short stream; the project held to the running one, by name in
+# the file and by PROJECT; a good deploy with .env and res/ kept, a
+# Cyrillic file name under data/, and the new code inside the running image;
+# a crash at start, a build that fails and a caught failure logged while
+# starting each rolled back to the image that ran before, tree byte for
+# byte; during the watch, request lines naming Traceback and Error, a frame
+# the game cannot decode (its traceback), a frame carrying "  !!    " and
+# launchers hanging up mid-download, none of which rolled the deploy back;
+# a second deploy refused while the lock was held; a deploy whose client
+# vanished after the first line finished on its own; pruning to KEEP. The
+# launcher's table as read here agrees with GetManifestResourceStream on
+# the published exe.
+#
+# The game's ready line is logged at INFO. With LAVA_LOG_LEVEL above that
+# there is none, all of its log counts as start-up, and the report says so
+# ("no ready line from lava-game").
 #
 # Every build gets a new image id, even when every step comes from cache, so
 # compose recreates both containers on every deploy -- as deploy.sh's own
@@ -175,6 +210,7 @@ PG_CONTAINER=lava-pg-db-1     # empty: no pg_dump (a server on SQLite)
 GAME=lava-game
 HTTP=lava-http
 IMAGE=lava-server             # the image name docker-compose.yml builds
+PROJECT=                      # the compose project; empty: the one $GAME is in
 LAUNCHER_EXE=/opt/lava-site/download/LavaReborn.exe
 MAX_TGZ_MB=64                 # the tarball as sent (the tree packs to ~2 MB)
 MAX_RAW_MB=256                # the tarball unpacked
@@ -187,13 +223,19 @@ ALLOWED_DIRS="server data tools deploy launcher"
 REQUIRED="Dockerfile docker-compose.yml server/server.py server/healthcheck.py"
 KEY_FILES="server/server.py server/accounts.py server/storage.py server/names.py server/bootstrap_http.py data/quests.json"
 COMPOSE_POLICY=1              # 0: docker-compose.yml is not policed (see above)
-# What only the server writes when something goes wrong: a traceback's first
-# line, the exception line that ends one, and the marker the server puts on a
-# failure it caught (log.exception("  !!    ...")). Read over both services'
-# logs since the build, with the http service's request lines left out --
-# their paths are anyone's to choose. CRASH_PATTERN is the part that ends the
-# wait for health at once.
-ERROR_PATTERN='^Traceback \(most recent call last\)|^[A-Za-z_][A-Za-z0-9_.]*(Error|Exception)(: |$)|  !!    '
+# The line each service writes once it listens: before it no visitor can
+# have reached the process, so what is above it is the server's own start-up
+# ("THE LOGS", above). The game logs through logging with the asctime in
+# front ("%(asctime)s %(message)s", server.py main); bootstrap_http prints.
+STAMP='[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}'
+GAME_READY="^$STAMP game server on "
+HTTP_READY='^http serving on '
+# What the server writes when something goes wrong: a traceback's first
+# line, the exception line that ends one, and the marker it puts on a
+# failure it caught (log.exception("  !!    ...")) -- the last right after
+# the asctime, where only the server's own format string can put it.
+# CRASH_PATTERN is the part that ends the wait for health at once.
+ERROR_PATTERN="^Traceback \\(most recent call last\\)|^[A-Za-z_][A-Za-z0-9_.]*(Error|Exception)(: |\$)|^$STAMP   !!    "
 CRASH_PATTERN='^Traceback \(most recent call last\)'
 
 CONF=$CI_DIR/gate.conf
@@ -211,6 +253,7 @@ FILTER=$CI_DIR/rsync.filter
 LOG_DIR=$CI_DIR/log
 STATE_DIR=$CI_DIR/state
 STAGE=$CI_DIR/stage
+LOGS=$STAGE/logs
 mkdir -p "$LOG_DIR" "$STATE_DIR"
 
 # --- the request log --------------------------------------------------------
@@ -370,8 +413,12 @@ check_tarball() {
   # Names, and the long listing of the same archive, line for line. The
   # escape quoting keeps one member per line whatever its name holds: a
   # newline or any byte outside printable ASCII comes out as a backslash
-  # sequence, and a backslash is refused below. --numeric-owner keeps the
-  # owner one field wide, so the size is always the third.
+  # sequence. Below, \200..\377 -- the bytes of a UTF-8 letter, a Cyrillic
+  # file name under data/ -- are let through, and any other backslash is
+  # refused: a control character, or a backslash in the name itself (which
+  # comes out doubled, so no octal-looking text in a name passes either).
+  # --numeric-owner keeps the owner one field wide, so the size is always
+  # the third.
   names=$STAGE/names
   listing=$STAGE/listing
   tar -tzf "$tgz" --quoting-style=escape > "$names" 2>/dev/null \
@@ -406,9 +453,11 @@ check_tarball() {
     [ -z "$path" ] && continue           # the "./" of the root itself
     isdir=0
     case $path in */) isdir=1; path=${path%/} ;; esac
+    case ${path//\\[23][0-7][0-7]/} in
+      *\\*)                     refuse "unprintable or escaped name: $name" ;;
+    esac
     case $path in
       /*)                       refuse "absolute path: $name" ;;
-      *\\*)                     refuse "unprintable or escaped name: $name" ;;
       ..|../*|*/..|*/../*)      refuse "path climbs out: $name" ;;
       .|./*|*/.|*/./*|*//*)     refuse "odd path: $name" ;;
     esac
@@ -470,19 +519,44 @@ policy_python() {
 COMPOSE_POLICY_PY='
 import json, os, sys
 
+# A bug in here is not a verdict: status 3, which the caller reports as the
+# check failing to run, never 1 with an empty reason.
+def crashed(*exc):
+    import traceback
+    traceback.print_exception(*exc)
+    sys.stderr.flush()
+    os._exit(3)
+sys.excepthook = crashed
+
 cfg = json.load(sys.stdin)
 app, res = os.path.normpath(sys.argv[1]), os.path.normpath(sys.argv[2])
+project, image = sys.argv[3], sys.argv[4]
 why = []
 
 for k, v in cfg.items():
     if k not in ("name", "services", "networks", "volumes") and v:
         why.append("top-level %s" % k)
 
+# The project is the one that runs now: under another name the same file
+# would be a second stack -- or, named after an existing one, that stack.
+if cfg.get("name") != project:
+    why.append("project %s, not %s" % (cfg.get("name"), project))
+
+# A volume or network belongs to the project only under the name compose
+# gives it, "<project>_<key>". Any other "name:" is a volume or network of
+# this host by that name -- the data of another stack, the network of the
+# database.
+def own(kind, key, v):
+    want = "%s_%s" % (project, key)
+    if (v or {}).get("name", want) != want:
+        why.append("%s %s is named %s, not %s" % (kind, key, v["name"], want))
+
 volumes = cfg.get("volumes") or {}
 for name, v in volumes.items():
     extra = sorted(set(v or {}) - {"name"})
     if extra:
         why.append("volume %s has %s" % (name, ", ".join(extra)))
+    own("volume", name, v)
 
 for name, n in (cfg.get("networks") or {}).items():
     n = n or {}
@@ -491,24 +565,40 @@ for name, n in (cfg.get("networks") or {}).items():
         why.append("network %s has %s" % (name, ", ".join(extra)))
     if n.get("driver", "bridge") != "bridge":
         why.append("network %s uses driver %s" % (name, n.get("driver")))
+    own("network", name, n)
 
 DENY = ("privileged", "cap_add", "devices", "device_cgroup_rules", "gpus",
         "pid", "ipc", "uts", "network_mode", "userns_mode", "cgroup",
-        "cgroup_parent", "security_opt", "volumes_from", "runtime",
-        "isolation", "secrets", "configs", "credential_spec",
+        "cgroup_parent", "security_opt", "volumes_from", "external_links",
+        "runtime", "isolation", "secrets", "configs", "credential_spec",
         "use_api_socket", "post_start", "pre_stop", "provider")
+# No "tags": each one is a second name the build is written under, and the
+# name may be the image of another stack, which that stack then runs.
 BUILD = {"context", "dockerfile", "args", "target", "labels", "pull",
-         "no_cache", "tags", "platforms", "shm_size"}
+         "no_cache", "platforms", "shm_size"}
+# The pull policies that never pull an image by themselves. The others pull
+# whatever the registry holds under the image name of the service, and a
+# local name pulled over is that name changed for every stack that uses it.
+PULL = (None, "missing", "if_not_present", "never", "build")
 
 for name, s in (cfg.get("services") or {}).items():
     for k in DENY:
         if s.get(k) not in (None, False, "", [], {}):
             why.append("%s: %s" % (name, k))
+    res_ = ((s.get("deploy") or {}).get("resources") or {}).get("reservations") or {}
+    if res_.get("devices") or res_.get("generic_resources"):
+        why.append("%s: devices under deploy.resources" % name)
+    if s.get("pull_policy") not in PULL:
+        why.append("%s: pull_policy %s" % (name, s.get("pull_policy")))
     b = s.get("build")
     if b is not None:
         extra = sorted(set(b) - BUILD)
         if extra:
             why.append("%s: build has %s" % (name, ", ".join(extra)))
+        # What compose builds is written under the image name of the
+        # service: only IMAGE, the name this gate backs up and rolls back.
+        if s.get("image") not in (image, image + ":latest"):
+            why.append("%s: builds an image named %s, not %s" % (name, s.get("image"), image))
         ctx = os.path.normpath(str(b.get("context", "")))
         if ctx != app:
             why.append("%s: builds from %s, not %s" % (name, ctx, app))
@@ -533,8 +623,20 @@ print("; ".join(why))
 sys.exit(1 if why else 0)
 '
 
+# The compose project a deploy has to stay in: PROJECT from gate.conf, else
+# the one the game container is part of now.
+want_project() {
+  local p=$PROJECT
+  if [ -z "$p" ]; then
+    p=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$GAME" 2>/dev/null) || p=
+    [ "$p" = "<no value>" ] && p=
+  fi
+  [ -n "$p" ] || return 1
+  printf '%s\n' "$p"
+}
+
 compose_policy() {  # the staged docker-compose.yml -> 0 within, else POLICY_WHY
-  local file=$1 w out rc
+  local file=$1 w out rc project
   if grep -q '\\' "$file"; then
     POLICY_WHY="a backslash in it (escapes can spell any key)"; return 1
   fi
@@ -553,12 +655,17 @@ compose_policy() {  # the staged docker-compose.yml -> 0 within, else POLICY_WHY
          -f "$file" config --format json > "$json" 2>> "$DLOG"; then
     POLICY_WHY="docker compose config failed"; return 1
   fi
-  out=$(policy_python -c "$COMPOSE_POLICY_PY" "$APP_DIR" "$RES_DIR" < "$json" 2>> "$DLOG")
+  if ! project=$(want_project); then
+    POLICY_WHY="no compose project to hold it to: no $GAME container to read it from, and no PROJECT in gate.conf"
+    return 1
+  fi
+  out=$(policy_python -c "$COMPOSE_POLICY_PY" "$APP_DIR" "$RES_DIR" "$project" "$IMAGE" \
+          < "$json" 2>> "$DLOG")
   rc=$?
   case $rc in
     0) return 0 ;;
     1) POLICY_WHY=$out; return 1 ;;
-    *) POLICY_WHY="the policy check could not run (no python3 here and no running $GAME image)"; return 1 ;;
+    *) POLICY_WHY="the policy check could not run (status $rc: no python3 here and no $GAME image, or a fault in it -- see $DLOG)"; return 1 ;;
   esac
 }
 
@@ -580,42 +687,79 @@ probe() {    # container kind
   timeout 20 docker exec "$1" python3 healthcheck.py "$2" > /dev/null 2>&1
 }
 
-# Both services' logs since T0, without the http service's request lines:
-# "  HTTP <request line> <code>", whose path is whatever a visitor asked for
-# (bootstrap_http.Handler.log_message). A request for /Traceback is not the
-# server failing.
-fresh_logs() {
-  local c
-  for c in "$GAME" "$HTTP"; do
-    docker logs --since "$T0" "$c" 2>&1 | grep -v '^  HTTP '
-  done
+# A service's log since T0, in two files ("THE LOGS", in the header):
+# $LOGS/<container>.start, what the process wrote before its ready line (that
+# line included), and $LOGS/<container>.after, the rest. The http request
+# lines ("  HTTP <request line> <code>", bootstrap_http.Handler.log_message)
+# are in neither. A container that was already running at T0 -- compose did
+# not recreate it -- started before the window, and all of it is "after".
+split_log() {  # container ready-pattern
+  local c=$1 ready=$2 all started n
+  all=$LOGS/$c.all
+  mkdir -p "$LOGS"
+  docker logs --since "$T0" "$c" 2>&1 | grep -v '^  HTTP ' > "$all"
+  started=$(docker inspect -f '{{.State.StartedAt}}' "$c" 2>/dev/null) || started=
+  if [ -n "$started" ]; then
+    started=$(date -d "$started" +%s 2>/dev/null) || started=0
+  else
+    started=0
+  fi
+  if [ "$started" -lt "$T0_EPOCH" ]; then
+    echo old > "$LOGS/$c.mode"
+    : > "$LOGS/$c.start"
+    cp "$all" "$LOGS/$c.after"
+    return 0
+  fi
+  echo new > "$LOGS/$c.mode"
+  n=$(grep -nE -m 1 "$ready" "$all" | cut -d: -f1)
+  if [ -n "$n" ]; then
+    head -n "$n" "$all" > "$LOGS/$c.start"
+    tail -n "+$((n + 1))" "$all" > "$LOGS/$c.after"
+  else
+    # Not listening yet: everything so far is start-up.
+    cp "$all" "$LOGS/$c.start"
+    : > "$LOGS/$c.after"
+  fi
 }
 
-fresh_count() {  # pattern -> matching lines in fresh_logs
+split_logs() {
+  split_log "$GAME" "$GAME_READY"
+  split_log "$HTTP" "$HTTP_READY"
+}
+
+count_in() {  # pattern part(start|after) -> lines of both services matching
   local k
-  k=$(fresh_logs | grep -cE "$1")
+  k=$(cat "$LOGS/$GAME.$2" "$LOGS/$HTTP.$2" | grep -cE "$1")
   echo "${k:-0}"
 }
 
 # Up means: both running, neither restarted since we started watching, both
-# answer their probe twice in a row, and no traceback since the deploy began.
+# answer their probe twice in a row, and -- with "logs" -- no traceback in
+# either start-up. The rollback leaves the logs out: it brings back what
+# ran before, whose http may predate the ready line, and whether that is up
+# is the probes' to say.
 WHY=
+declare -A BASE_RC=()
 wait_up() {
-  local limit=$1 start=$SECONDS streak=0 c st rc
-  local -A base=()
+  local limit=$1 logs=${2:-} start=$SECONDS streak=0 c st rc
   for c in "$GAME" "$HTTP"; do
     read -r st rc <<< "$(cstate "$c")"
-    base[$c]=$rc
+    BASE_RC[$c]=$rc
   done
   while :; do
     for c in "$GAME" "$HTTP"; do
       read -r st rc <<< "$(cstate "$c")"
       [ "$st" = running ] || { WHY="$c is $st"; return 1; }
-      [ "$rc" = "${base[$c]}" ] || { WHY="$c restarted (restart count $rc)"; return 1; }
+      [ "$rc" = "${BASE_RC[$c]}" ] || { WHY="$c restarted (restart count $rc)"; return 1; }
     done
-    if [ "$(fresh_count "$CRASH_PATTERN")" != 0 ]; then
-      WHY="a traceback in the log"
-      return 1
+    if [ -n "$logs" ]; then
+      split_logs
+      for c in "$GAME" "$HTTP"; do
+        if grep -qE "$CRASH_PATTERN" "$LOGS/$c.start"; then
+          WHY="a traceback in $c's log while it was starting"
+          return 1
+        fi
+      done
     fi
     if probe "$GAME" game && probe "$HTTP" http; then
       streak=$((streak + 1))
@@ -730,7 +874,8 @@ rollback() {
     (cd "$APP_DIR" && quiet timeout 1200 docker compose up -d --build) \
       || { add "rollback: FAILED: docker compose up --build"; return 1; }
   fi
-  T0=$(date -u +%FT%TZ)
+  T0_EPOCH=$(date +%s)
+  T0=$(date -u -d "@$T0_EPOCH" +%FT%TZ)
   if ! wait_up "$HEALTH_TIMEOUT"; then
     add "rollback: the old version did not come up either: $WHY"
     return 1
@@ -772,7 +917,7 @@ fail() {
 cmd_deploy() {
   SHA=$1
   local sum=$2 got size max prev_sha prev_texts new_texts exe_sha img_before img_after
-  local f want host inside errs h st rc free
+  local f want host inside errs after ready h st rc free
 
   exec 9> "$CI_DIR/deploy.lock"
   if ! flock -w "$LOCK_WAIT" 9; then
@@ -884,7 +1029,8 @@ cmd_deploy() {
 
   # 7. build and start
   PHASE=build
-  T0=$(date -u +%FT%TZ)
+  T0_EPOCH=$(date +%s)
+  T0=$(date -u -d "@$T0_EPOCH" +%FT%TZ)
   (cd "$APP_DIR" && quiet timeout 1200 docker compose up -d --build) \
     || fail "docker compose up -d --build"
   img_after=$(docker inspect --format '{{.Image}}' "$GAME" 2>/dev/null) || img_after=
@@ -897,22 +1043,46 @@ cmd_deploy() {
   # 8. up, settled, and quiet
   PHASE=up
   say "gate: waiting for $GAME and $HTTP"
-  wait_up "$HEALTH_TIMEOUT" || fail "$WHY"
+  wait_up "$HEALTH_TIMEOUT" logs || fail "$WHY"
   say "gate: both answer; watching ${SETTLE}s more"
   sleep "$SETTLE"
   for c in "$GAME" "$HTTP"; do
     read -r st rc <<< "$(cstate "$c")"
     [ "$st" = running ] || fail "$c is $st after settling"
+    [ "$rc" = "${BASE_RC[$c]}" ] || fail "$c restarted while settling (restart count $rc)"
   done
   probe "$GAME" game || fail "$GAME stopped answering after settling"
   probe "$HTTP" http || fail "$HTTP stopped answering after settling"
-  errs=$(fresh_count "$ERROR_PATTERN")
   add "health:   $GAME up (docker: $(dhealth "$GAME")), $HTTP up (docker: $(dhealth "$HTTP"))"
-  add "errors:   $errs log lines matching /$ERROR_PATTERN/ since $T0"
+  # The logs, cut where each service began to listen ("THE LOGS").
+  split_logs
+  errs=$(count_in "$ERROR_PATTERN" start)
+  after=$(count_in "$ERROR_PATTERN" after)
+  add "errors:   $errs in the start-up logs, $after after the services listened (a visitor can cause those: shown, not rolled back)"
+  for c in "$GAME" "$HTTP"; do
+    ready=$HTTP_READY
+    [ "$c" = "$GAME" ] && ready=$GAME_READY
+    if [ "$(cat "$LOGS/$c.mode")" = old ]; then
+      add "start-up: $c was not restarted by this deploy, so all of its log is after"
+    elif ! grep -qE "$ready" "$LOGS/$c.start"; then
+      add "start-up: no ready line from $c -- all of its log was read as start-up"
+    fi
+  done
   if [ "$errs" != 0 ]; then
-    docker logs --since "$T0" "$GAME" 2>&1 | grep -E "$ERROR_PATTERN" | head -n 5 \
-      | while IFS= read -r l; do say "  | $l"; done
-    fail "$errs error line(s) in the fresh logs"
+    for c in "$GAME" "$HTTP"; do
+      grep -E "$ERROR_PATTERN" "$LOGS/$c.start" | head -n 5 \
+        | while IFS= read -r l; do say "  | $c: $l"; done
+    done
+    fail "$errs error line(s) in the start-up logs"
+  fi
+  if [ "$after" != 0 ]; then
+    # Shown cut short and without control characters: the text may be a
+    # visitor's, and it goes on into the job log and the job summary.
+    while IFS= read -r l; do
+      add "  | $l"
+    done < <(for c in "$GAME" "$HTTP"; do
+               grep -E "$ERROR_PATTERN" "$LOGS/$c.after" | sed "s/^/$c: /"
+             done | head -n 5 | tr -d '\000-\010\013-\037\177' | cut -c1-200)
   fi
 
   # 9. the key files: in /opt/lava, and inside the image that is running

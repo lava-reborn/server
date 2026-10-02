@@ -12,7 +12,8 @@
 #   LAUNCHER_EXE    a published LavaReborn.exe, for the string-table line
 #
 # Everything docker here is named cicdtest-* (containers, compose project,
-# volume, image) and removed at the end (KEEP_DOCKER=1 keeps it). The gate is
+# volume, image), or cicdvictim* for the stand-ins of another stack's volume,
+# network and image, and removed at the end (KEEP_DOCKER=1 keeps it). The gate is
 # installed by install.sh into WORK/opt/lava-ci; a stand-in "ssh" on PATH runs
 # it the way sshd runs a forced command, so deploy/ci/fetch_assets.sh and
 # send.sh are exercised as CI runs them. The trees deployed are this
@@ -38,9 +39,9 @@ check() { if [ "$2" = "$3" ]; then ok "$1 ($2)"; else bad "$1: got '$2', want '$
 
 cleanup_docker() {
   docker rm -f cicdtest-game cicdtest-http cicdtest-pg > /dev/null 2>&1
-  docker volume rm cicdtest_lava-db > /dev/null 2>&1
-  docker network rm cicdtest_default > /dev/null 2>&1
-  for t in $(docker images cicdtest-lava-server --format '{{.Repository}}:{{.Tag}}'); do
+  docker volume rm cicdtest_lava-db cicdvictim_data > /dev/null 2>&1
+  docker network rm cicdtest_default cicdvictim_net > /dev/null 2>&1
+  for t in $(docker images cicdtest-lava-server --format '{{.Repository}}:{{.Tag}}') cicdvictim-img:1; do
     docker rmi "$t" > /dev/null 2>&1
   done
 }
@@ -123,6 +124,7 @@ PG_CONTAINER=cicdtest-pg
 GAME=cicdtest-game
 HTTP=cicdtest-http
 IMAGE=cicdtest-lava-server
+PROJECT=
 LAUNCHER_EXE=$T/opt/lava-site/download/LavaReborn.exe
 MAX_TGZ_MB=8
 MAX_RAW_MB=64
@@ -212,6 +214,33 @@ check "the running docker-compose.yml is within the policy" \
   "$(grep -c 'is within the compose policy' "$T/install2.out")" 1
 check "a second install keeps gate.conf" "$(grep -c '^KEEP=2$' "$T/opt/lava-ci/gate.conf")" 1
 
+echo "== the compose project is held to the one that runs"
+# The test's .env names the project (COMPOSE_PROJECT_NAME), which outranks a
+# "name:" in the file; production's may not. So a second app directory, with
+# an .env that does not: there the file's own "name:" decides, as it would
+# on a server whose .env leaves it out.
+policy_only() {  # compose-file -> the gate's policy-only verdict, "rc first-reason"
+  local out rc
+  out=$(env -u SSH_CONNECTION -u SSH_ORIGINAL_COMMAND LAVA_GATE_POLICY_ONLY="$1" \
+          SSH_CLIENT="test 0 0" "$GATE" 2>&1)
+  rc=$?
+  echo "$rc ${out%%;*}"
+}
+mkdir -p "$T/opt/lava2"
+printf 'LAVA_RES_DIR=%s\nLAVA_BIND=127.0.0.1\n' "$T/opt/lava/res" > "$T/opt/lava2/.env"
+cp "$T/opt/lava/docker-compose.yml" "$T/opt/lava2/plain.yml"
+{ echo "name: cicdtest"; cat "$T/opt/lava/docker-compose.yml"; } > "$T/opt/lava2/same.yml"
+{ echo "name: cicdvictim"; cat "$T/opt/lava/docker-compose.yml"; } > "$T/opt/lava2/other.yml"
+echo "APP_DIR=$T/opt/lava2" >> "$T/opt/lava-ci/gate.conf"
+check "no name, so the directory's: refused" "$(policy_only "$T/opt/lava2/plain.yml")" "1 project lava2, not cicdtest"
+check "name: the running project -> within" "$(policy_only "$T/opt/lava2/same.yml")" "0 "
+check "name: another project -> refused" "$(policy_only "$T/opt/lava2/other.yml")" "1 project cicdvictim, not cicdtest"
+sed -i '$d' "$T/opt/lava-ci/gate.conf"
+echo "PROJECT=cicdother" >> "$T/opt/lava-ci/gate.conf"
+check "PROJECT in gate.conf outranks the container" "$(policy_only "$T/opt/lava/docker-compose.yml")" "1 project cicdtest, not cicdother"
+sed -i '$d' "$T/opt/lava-ci/gate.conf"
+check "and without it the running file is within again" "$(policy_only "$T/opt/lava/docker-compose.yml")" "0 "
+
 # --- bad tarballs -----------------------------------------------------------------
 echo "== bad tarballs"
 rsync -a --filter="merge $T/trees/v0/deploy/rsync.filter" "$T/trees/v0/" "$T/trees/v0.packed/"
@@ -250,6 +279,16 @@ edits = {
     "backslash": lambda t: t.replace(game, game + "    labels: {\"x\": \"a\\tb\"}\n", 1),
     "volumes_from": lambda t: t.replace(game, game + "    volumes_from: [\"container:cicdtest-pg\"]\n", 1),
     "secrets": lambda t: t.replace(game, game + "    secrets: [s]\n", 1) + "secrets:\n  s:\n    file: /etc/hostname\n",
+    # Another stack's things by their names: its volume, its network, its
+    # image (a build tag, or the build's own image name), a pull over a
+    # local name.
+    "volume_alias": lambda t: t.replace("\n  lava-db:\n", "\n  lava-db:\n    name: cicdvictim_data\n", 1),
+    "network_alias": lambda t: t + "networks:\n  default:\n    name: cicdvictim_net\n",
+    "build_tags": lambda t: t.replace("    build: .\n", "    build:\n      context: .\n      tags: [\"cicdvictim-img:1\"]\n", 1),
+    "image_retag": lambda t: t.replace("    image: cicdtest-lava-server\n", "    image: cicdvictim-img:1\n", 1),
+    "pull_always": lambda t: t.replace("    pull_policy: never\n", "    pull_policy: always\n", 1),
+    "gpu": lambda t: t.replace(game, game + "    deploy:\n      resources:\n        reservations:\n          devices:\n            - capabilities: [gpu]\n", 1),
+    "external_links": lambda t: t.replace(game, game + "    external_links: [\"cicdtest-pg\"]\n", 1),
 }
 new = edits[edit](text)
 assert new != text, edit
@@ -258,11 +297,19 @@ PY
   bash "$d/deploy/ci/pack.sh" "$T/bad/policy_$1.tgz" "$d" > /dev/null
   rm -rf "$d"
 }
-POLICY="privileged cap_add pid_host host_root docker_sock res_writable volume_driver build_context build_extra env_file backslash volumes_from secrets"
+POLICY="privileged cap_add pid_host host_root docker_sock res_writable volume_driver build_context build_extra env_file backslash volumes_from secrets
+        volume_alias network_alias build_tags image_retag pull_always gpu external_links"
 for p in $POLICY; do policy_tree "$p" "$p"; done
+# What the aliases would reach: a volume, a network and an image of a stack
+# that is not this one. None of it may change.
+docker volume create cicdvictim_data > /dev/null
+docker network create cicdvictim_net > /dev/null
+docker tag postgres:16-alpine cicdvictim-img:1
+VICTIM_IMG=$(docker image inspect -f '{{.Id}}' cicdvictim-img:1)
 
 for b in traversal traversal_deep absolute symlink hardlink fifo topdir dotenv dotenv_deep database res \
-         newline_name oversize bomb setuid sticky_dir override compose_yaml no_dockerfile garbage \
+         newline_name backslash_name backslash_octal control_name \
+         oversize bomb setuid sticky_dir override compose_yaml no_dockerfile garbage \
          sparse_gnu sparse_pax $(for p in $POLICY; do echo "policy_$p"; done); do
   out=$(SSH_ORIGINAL_COMMAND="deploy $(fake_sha "$b") $(sum_of "$T/bad/$b.tgz")" gate < "$T/bad/$b.tgz" 2>&1)
   check "bad tarball '$b' refused" "$?" 2
@@ -279,12 +326,18 @@ check "and the game still runs v0" "$(game_img)" "$V0_IMG"
 check "and no .bak, no dump" "$(ndumps)" 0
 [ ! -e /tmp/cicdtest-evil.txt ] && [ ! -e "$T/opt/lava-ci/evil.txt" ] && [ ! -e "$T/opt/evil.txt" ] \
   && ok "nothing written outside the stage" || bad "something escaped"
+check "the other stack's image still is what it was" "$(docker image inspect -f '{{.Id}}' cicdvictim-img:1)" "$VICTIM_IMG"
+check "and no container mounts its volume" "$(docker ps -aq --filter volume=cicdvictim_data | wc -l)" 0
+check "or sits on its network" "$(docker ps -aq --filter network=cicdvictim_net | wc -l)" 0
 
 # --- a good deploy through the CI end (pack.sh + send.sh) --------------------------
-echo "== v1: good deploy through send.sh; request lines and a player called Terror while it is watched"
+echo "== v1: good deploy through send.sh; while it is watched: request lines, a player called Terror,"
+echo "   a frame the game cannot read, a frame carrying the marker, launchers hanging up mid-download"
 check "the Postgres stand-in is still up" "$(pg_up)" up
 mk_tree "$T/trees/v1"
 mark "$T/trees/v1" v1
+# A file named in Cyrillic: the gate lets UTF-8 names through below the top.
+echo "заметка" > "$T/trees/v1/data/заметки-cicd.txt"
 # A line a player's name could put in the log: not an error.
 sed -i '1i import logging, threading; threading.Timer(4, lambda: logging.getLogger("lava").info("cicd test: Terror connects, ErrorBoy too")).start()' \
   "$T/trees/v1/server/server.py"
@@ -307,8 +360,44 @@ for p in /Traceback "/x?Error=1" "/%0ATraceback%20(most%20recent%20call%20last):
 done
 check "the injected request lines reached the http log" \
   "$(docker logs cicdtest-http 2>&1 | grep -c '^  HTTP .*Traceback')" 2
+# And what an anonymous client can make the services write about themselves:
+# a frame the game cannot decode is a full traceback in its log, a frame may
+# carry the marker's characters, and a launcher closing in the middle of the
+# string table was a traceback in the http log. None of it is the new
+# version failing.
+python3 - 19775 "$HTTP_PORT" <<'PY'
+import socket, struct, sys, time
+game, http = int(sys.argv[1]), int(sys.argv[2])
+for frame in (b"x;a=@oops\0", b"hello;a=@  !!    @;\0"):
+    s = socket.create_connection(("127.0.0.1", game), 5)
+    s.sendall(frame)
+    time.sleep(0.5)
+    s.close()
+for _ in range(3):
+    s = socket.socket()
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+    s.connect(("127.0.0.1", http))
+    s.sendall(b"GET /exe/lavaclient/texts.xml HTTP/1.1\r\nHost: x\r\n\r\n")
+    s.recv(1024)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+    s.close()
+    time.sleep(0.5)
+PY
 wait $SP
 check "v1 deployed (send.sh exit)" "$?" 0
+check "the game wrote a traceback for the bad frame" \
+  "$(docker logs cicdtest-game 2>&1 | grep -c '^Traceback (most recent call last)' | sed 's/^[1-9][0-9]*$/some/')" some
+check "and logged the frame with the marker in it" \
+  "$(docker logs cicdtest-game 2>&1 | grep -c "C->S  hello {'a': '  !!    '}")" 1
+check "the http service wrote the hang-ups as access lines" \
+  "$(docker logs cicdtest-http 2>&1 | grep -c 'dropped the connection' | sed 's/^[1-9][0-9]*$/some/')" some
+check "and no traceback at all" "$(docker logs cicdtest-http 2>&1 | grep -c '^Traceback')" 0
+check "the report counts them after start, none in start-up" \
+  "$(grep -cE '^errors:   0 in the start-up logs, [1-9][0-9]* after' "$T/v1.out")" 1
+check "send.sh warns of them" "$(grep -c '^::warning title=Errors after start::' "$T/v1.out")" 1
+check "the gate's words came with workflow commands off" \
+  "$(sed -n 's/^::stop-commands::\([0-9a-f]\{32\}\)$/\1/p' "$T/v1.out" | head -n 1 | xargs -I{} grep -c '^::{}::$' "$T/v1.out")" 1
+check "the Cyrillic file is in /opt/lava" "$(cat "$T/opt/lava/data/заметки-cicd.txt")" "заметка"
 echo "    took $(( $(date +%s) - s ))s; report:"
 sed -n '/^=== report/,/^=== end/p' "$T/v1.out" | sed 's/^/    /'
 check "v1 server.py in /opt/lava" "$(tail -n 1 "$T/opt/lava/server/server.py")" "# cicd test: v1"
@@ -325,7 +414,6 @@ check "the pre- tag is the v0 image" "$(docker inspect -f '{{.Id}}' "cicdtest-la
 check "dump restores (has the marker row)" "$(docker exec -i cicdtest-pg pg_restore -f - < "$(ls "$T"/opt/lava-pg-backup-*-ci.dump | head -n 1)" | grep -c '^before$')" 1
 check "deployed state records v1" "$(cut -d' ' -f1 "$T/opt/lava-ci/state/deployed")" "$SHA1"
 check "summary written" "$(grep -c '^### Deploy' "$T/summary1.md")" 1
-check "errors: 0 in the report" "$(grep -c '^errors:   0 ' "$T/v1.out")" 1
 grep -q '^launcher: ' "$T/v1.out" && ok "launcher line: $(grep '^launcher: ' "$T/v1.out" | cut -c1-110)" || bad "no launcher line"
 grep -q '^texts: ' "$T/v1.out" && ok "texts line: $(grep '^texts: ' "$T/v1.out")" || bad "no texts line"
 V1_IMG=$(game_img)
@@ -358,11 +446,13 @@ check "tree back to v1" "$(tree_sum)" "$SUM1"
 check "game still on the v1 image" "$(game_img)" "$V1_IMG"
 check "and answering" "$(probes)" up
 
-echo "== v4: a failure the server caught and logged, no crash -> rollback"
+echo "== v4: a failure the server caught and logged while starting, no crash -> rollback"
 mk_tree "$T/trees/v4"
 mark "$T/trees/v4" v1
-sed -i '1i import logging, threading; threading.Timer(4, lambda: logging.getLogger("lava").error("  !!    cicd test: failed on purpose")).start()' \
+sed -i 's/^    game = await asyncio.start_server(handle_client, HOST, PORT)$/    log.error("  !!    cicd test: failed on purpose")\n&/' \
   "$T/trees/v4/server/server.py"
+check "v4 logs the marker before it listens" \
+  "$(grep -B1 '^    game = await asyncio.start_server' "$T/trees/v4/server/server.py" | grep -c 'cicd test: failed on purpose')" 1
 bash "$T/trees/v4/deploy/ci/pack.sh" "$T/v4.tgz" "$T/trees/v4" > /dev/null
 SSH_ORIGINAL_COMMAND="deploy $(fake_sha v4) $(sum_of "$T/v4.tgz")" gate < "$T/v4.tgz" > "$T/v4.out" 2>&1
 check "v4 fails with status 1" "$?" 1

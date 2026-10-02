@@ -87,6 +87,11 @@ else
   res=${res:-$APP_DIR/res}
   # compose reads a relative LAVA_RES_DIR from the project directory.
   case $res in /*) ;; *) res=$APP_DIR/${res#./} ;; esac
+  # The compose project the game runs in now, which every deploy has to stay
+  # in (the compose policy). Empty when nothing runs yet: the gate then reads
+  # it off the game container at each deploy.
+  project=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' lava-game 2>/dev/null || true)
+  [ "$project" = "<no value>" ] && project=
   umask 077
   cat > "$CI_DIR/gate.conf" <<EOF
 # Settings of $CI_DIR/lava-gate.sh, sourced by it as root. Written once by
@@ -100,6 +105,8 @@ PG_CONTAINER=lava-pg-db-1
 GAME=lava-game
 HTTP=lava-http
 IMAGE=lava-server
+# The compose project a deploy may not leave; empty: the one GAME is part of.
+PROJECT=$project
 LAUNCHER_EXE=/opt/lava-site/download/LavaReborn.exe
 MAX_TGZ_MB=64
 MAX_RAW_MB=256
@@ -111,7 +118,7 @@ ALLOWED_DIRS="server data tools deploy launcher"
 # whoever can deploy (lava-gate.sh, "THE COMPOSE POLICY").
 COMPOSE_POLICY=1
 EOF
-  echo "    gate.conf written (RES_DIR=$res)"
+  echo "    gate.conf written (RES_DIR=$res, PROJECT=${project:-the one of lava-game at each deploy})"
 fi
 
 echo "==> checks"
