@@ -173,6 +173,19 @@ check("the empty string is served as an element, not dropped",
 check("hint markup is escaped in texts.xml",
       "&lt;hint&gt;" in doc and "<hint>" not in doc, True)
 check("client macros survive untouched", "%имя%" in doc, True)
+# A daily quest says so in its start, in the original's words, whether the
+# row carried the note (the original's dailies) or the server appended it
+# (quests._say_per_day); and the count is declined as the note declines it.
+check("every per_day quest says «не чаще N раз в сутки» in its start",
+      [q.type for q in quests.QUESTS.values() if q.per_day
+       and ("не чаще %s в сутки" % quests.per_day_times(q.per_day))
+       not in q.texts[quests.START]], [])
+check("  ..and a one-off or a plain repeatable one does not",
+      [q.type for q in quests.QUESTS.values() if not q.per_day
+       and "в сутки" in q.texts[quests.START]], [])
+check("  ..declined: 1 раза, 3 раз, 11 раз, 21 раза",
+      [quests.per_day_times(n) for n in (1, 3, 11, 21)],
+      ["1 раза", "3 раз", "11 раз", "21 раза"])
 check("give order follows the table", quests.given_by(652), [1, 5])
 check("take list by NPC type", quests.taken_by(2424), [1])
 # QuestInterface numbers reward icons n-1-i, so obj_idx counts from the end.
