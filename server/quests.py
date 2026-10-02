@@ -142,9 +142,11 @@ does):
                 original's own would otherwise be laid over it
                 (_lay_original): a line of the original this server cannot
                 stand behind -- 158's «у вас должен быть вид на жительство
-                или гражданство», a premium of the dead server's, the
-                owner's cut of (P) of 2026-09-30 -- is taken out of the row
-                and stays out.
+                или гражданство», Мортимер's cashing (301-303) «Как для лица
+                не имеющего гражданства или вида на жительство», a premium
+                of the dead server's, the owner's cut of (P) of 2026-09-30
+                -- is taken out of the row and stays out. The row's own text
+                is still cleaned as the original's would be (orig_texts.text).
 
 A slot of objs may carry "drop": a chance. Its mobs then drop the thing,
 the way a «Квестовый» row of data/loot_manual.json does (mobs.QUEST_TIER):
@@ -786,13 +788,21 @@ def _lay_original():
     already cleaned them -- the doubled "%sex??" that would show a man
     "гол?ым", the escaped quotes -- and kept the <hint> numbers and the
     %имя% macros, which the client fills in itself (Quest.as:169-181).
+
+    An own text gets the same cleaning (orig_texts.text). It is the
+    original's line with a sentence taken out, and the rows were copied from
+    texts.xml before that cleaning existed: 158's start went out with the
+    original's '\\"Охранять\\"', which the tooltip never unescapes -- the
+    ВНЖ sentence gone, and the line reading worse than the original's
+    (2026-10-02). The rows are written clean now; this is the net under the
+    next one copied by hand.
     """
     import orig_texts                  # no imports of its own; safe at load
-    for qtype, texts in orig_texts.quests().items():
-        q = QUESTS.get(qtype)
-        if q is None:
-            continue
-        q.texts = tuple(old if key in q.own_texts else texts.get(key) or old
+    originals = orig_texts.quests()
+    for q in QUESTS.values():
+        texts = originals.get(q.type) or {}
+        q.texts = tuple(orig_texts.text(old) if key in q.own_texts
+                        else texts.get(key) or old
                         for key, old in zip(TEXT_KEYS, q.texts))
 
 

@@ -232,6 +232,27 @@ def main():
     assert "не чаще 1 раза в сутки" in qs["62"]["start"], qs["62"]["start"]
     assert qs["56"]["ids"][2] == qs["55"]["ids"][2] == 59919
     assert qs["58"]["ids"] == [24341, 59832, 59833, 24344], qs["58"]["ids"]
+    # The rows' own texts (server/quests.py own_texts, the cut of (P)): the
+    # original's line with one passage out, nothing written in -- 158 lost
+    # its last sentence, Мортимер's cashing (301-303) its opening words --
+    # and the ids still the hand-checked ones, though no line of the file
+    # folds to a start of 301's any more.
+    cut = builder.one_passage_out
+    assert cut("Раз два три", "Раз три") and cut("Раз два три", "раз два")
+    assert cut("Раз два три", "Раз два три") and cut("Раз, два", "раз два")
+    assert cut("Раз два три четыре", "Раз три четыре")       # one passage out: «два»
+    assert not cut("Раз два три", "Раз пять три")            # written in
+    assert not cut("Раз два", "Раз два три")                 # added
+    assert not cut("Раз два три четыре", "Раз три")          # two passages out
+    for t, ids in (("301", [49800, 49802, None, None]), ("302", [49796, 49807, None, None]),
+                   ("303", [49798, 49812, None, None])):
+        assert qs[t]["ids"] == ids, (t, qs[t]["ids"])
+        assert "гражданства или вида на жительство" in qs[t]["start"], t
+    by_type = {str(r["type"]): r for r in load("quests.json")["quests"]}
+    for t in ("158", "301", "302", "303"):
+        assert by_type[t].get("own_texts") == ["start"], (t, by_type[t].get("own_texts"))
+        assert cut(qs[t]["start"], by_type[t]["start"]), t
+        assert "жительств" not in by_type[t]["start"], t
     print("quests: %d written (%s), %d of ours left alone"
           % (len(qs), ", ".join(sorted(qs, key=int)), len(OWN_QUESTS)))
 

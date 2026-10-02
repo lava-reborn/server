@@ -68,6 +68,9 @@ CHEATS = os.environ.get("LAVA_CHEATS", "").strip().lower() not in (
 # the panel's log (Session.admin_give, apply_admin_action): (P) is out of the
 # game, for an admin too (the owner's cut of (P), 2026-09-30).
 PREMIUM_REFUSED = "предмет %d — (P), выведен из игры, не выдаётся"
+# And of a premium vehicle (transport.premium: 8 «Газ 67 Б (P)», 12 «Летающая
+# тарелка»), from Session.admin_transport and the panel's offline path.
+PREMIUM_TRANSPORT_REFUSED = "транспорт %d — (P), выведен из игры, не выдаётся"
 # The lines of chat the server says by itself, signed «Сервер» (Session.say):
 # a refusal's reason, what fell on death, how a barter ended, a trophy
 # registered, a fight holding a move. The owner took them out of the game's
@@ -1457,7 +1460,10 @@ class Session:
 
         This is the only way to the nine the lessors do not stock, the
         winged manatee among them -- a hundred times walking pace, where
-        nothing else in the table passes five.
+        nothing else in the table passes five. Never the two premium ones
+        of those nine (transport.premium: 8 «Газ 67 Б (P)», 12 «Летающая
+        тарелка»): (P) is out of the game, for an admin too, as in
+        admin_give (the owner's cut of (P), 2026-09-30).
         """
         if not self.char_id:
             return "персонаж не выбран"
@@ -1471,6 +1477,8 @@ class Session:
         vehicle = transport.get(type_id)
         if vehicle is None:
             return "транспорта %d нет в таблице" % type_id
+        if transport.premium(type_id):
+            return PREMIUM_TRANSPORT_REFUSED % type_id
         # Clamped rather than refused: valid_days answers whether the client
         # could have sent it, and this does not come from the client.
         days = transport.MAX_DAYS if days is None else int(days)
@@ -3604,6 +3612,8 @@ def apply_admin_action(row):
             return "транспорт снят (не в игре)"
         if transport.get(type_id) is None:
             return "транспорта %d нет в таблице" % type_id
+        if transport.premium(type_id):        # as Session.admin_transport
+            return PREMIUM_TRANSPORT_REFUSED % type_id
         days = max(1, min(int(args.get("days") or transport.MAX_DAYS),
                           transport.MAX_DAYS))
         STORE.save_character_state(

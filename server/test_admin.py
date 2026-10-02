@@ -34,6 +34,10 @@ ADMIN_PASSWORD = "secret"
 # answer the game server writes for it (server.PREMIUM_REFUSED).
 MASK_P = 6511
 REFUSED_P = "предмет %d — (P), выведен из игры, не выдаётся" % MASK_P
+# The premium vehicles, «Газ 67 Б (P)» and «Летающая тарелка»
+# (transport.premium), and the answer for them (server.PREMIUM_TRANSPORT_REFUSED).
+GAZ_P, SAUCER_P = 8, 12
+REFUSED_TR = "транспорт %d — (P), выведен из игры, не выдаётся"
 
 
 def free_port():
@@ -261,6 +265,11 @@ try:
     check("без запроса карточек нет", "Начислить" in body, False)
     code, body = get(HTTP_PORT, "/admin?q=tes", cookie=COOKIE)
     check("часть ника находит персонажа", "Начислить" in body, True)
+    check("в списке транспорта нет (P): ни Газа 67 Б (P), ни тарелки; ламантин есть",
+          ['<option value="%d">' % t in body for t in (GAZ_P, SAUCER_P, 16)],
+          [False, False, True])
+    check("  ..и сам транспорт помечен премиальным только у этих двух",
+          sorted(t for t in transport.TABLE if transport.premium(t)), [GAZ_P, SAUCER_P])
     code, body = get(HTTP_PORT, "/admin?q=TES", cookie=COOKIE)
     check("регистр не важен", "Начислить" in body, True)
     code, body = get(HTTP_PORT, "/admin?q=" + urllib.parse.quote("такогонет"),
@@ -348,6 +357,18 @@ try:
     db.close()
     check("вещь (P) не в игре -- не выдаётся, и сказано почему",
           (said, owned), (REFUSED_P, 0))
+    # Так же транспорт (P): панель его не предлагает, а запрос в обход
+    # формы game server отклоняет и вне игры.
+    post(HTTP_PORT, "/admin/do",
+         {"kind": "transport", "char_id": str(_char_id), "type_id": str(GAZ_P),
+          "days": "5"}, cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    db = storage.connect(DB)
+    said = db.execute("SELECT result FROM admin_actions WHERE kind = 'transport'"
+                      " ORDER BY id DESC").fetchone()["result"]
+    db.close()
+    check("транспорт (P) не в игре -- не выдаётся, и сказано почему",
+          (said, row(_char_id)["transport_type"]), (REFUSED_TR % GAZ_P, None))
 
     print("\nперсонаж в игре")
     cl = Client()
@@ -382,6 +403,19 @@ try:
     print("\nтранспорт")
     cl = Client()
     cl.enter()
+    post(HTTP_PORT, "/admin/do",
+         {"kind": "transport", "char_id": str(_char_id), "type_id": str(SAUCER_P),
+          "days": "5"}, cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    frames = cl.frames(1.0)
+    db = storage.connect(DB)
+    said = db.execute("SELECT result FROM admin_actions WHERE kind = 'transport'"
+                      " ORDER BY id DESC").fetchone()["result"]
+    db.close()
+    check("и в игре транспорт (P) не выдаётся: летающей тарелки нет, userInfo_Player не пришёл",
+          (said, row(_char_id)["transport_type"],
+           [f for f in frames if f.startswith("userInfo_Player")]),
+          (REFUSED_TR % SAUCER_P, None, []))
     post(HTTP_PORT, "/admin/do",
          {"kind": "transport", "char_id": str(_char_id), "type_id": "16",
           "days": "5"}, cookie=COOKIE)

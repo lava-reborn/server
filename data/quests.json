@@ -90,7 +90,8 @@
       "type": 301,
       "kind": "bring_l_obj",
       "name": "Обналичить 1 унцию золота",
-      "start": "Вы можете обналичить имеющиеся в наличии золотой слиток номиналом 1 унция золота. Как для лица не имеющего гражданства или вида на жительство, будет взята комиссия при конвертации равная 0,05 унции золота<Br><Br><B>Задача:</B> иметь в наличии слиток номиналом 1 унция.<Br><Br><b>Внимание:</b> при сдаче задания на ваш счет будет начисленно 0,95 унции золота!",
+      "start": "Вы можете обналичить имеющиеся в наличии золотой слиток номиналом 1 унция золота. Будет взята комиссия при конвертации равная 0,05 унции золота<Br><Br><B>Задача:</B> иметь в наличии слиток номиналом 1 унция.<Br><Br><b>Внимание:</b> при сдаче задания на ваш счет будет начисленно 0,95 унции золота!",
+      "own_texts": ["start"],
       "give": [1188],
       "take": [1188],
       "objs": [
@@ -104,13 +105,14 @@
       "service": true,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts (texts.xml 49800 name, 49802 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 95 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in."
+      "why": "RECOVERED texts (texts.xml 49800 name, 49802 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 95 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in. The start is the original's but for its opening words, «Как для лица не имеющего гражданства или вида на жительство, будет», which said that a citizen or a holder of a residence permit -- the premium of the dead server's -- would cash without the commission: out by the owner's cut of (P) (2026-09-30), since this server grants neither and charges the 0.05 to everybody; «Будет» opens the sentence instead, and own_texts keeps the original's from being laid back over it (server/quests.py _lay_original)."
     },
     {
       "type": 302,
       "kind": "bring_l_obj",
       "name": "Обналичить 5 унций золота",
-      "start": "Вы можете обналичить имеющиеся в наличии золотые слитки номиналом 5 унций. Как для лица не имеющего гражданства или вида на жительство, будет взята комиссия при конвертации равная 0,05 унции золота<Br><Br><B>Задача:</B> иметь в наличии слиток номиналом 5 унций.<Br><Br><b>Внимание:</b> при сдаче задания на ваш счет будет начисленно 4,95 унции золота!",
+      "start": "Вы можете обналичить имеющиеся в наличии золотые слитки номиналом 5 унций. Будет взята комиссия при конвертации равная 0,05 унции золота<Br><Br><B>Задача:</B> иметь в наличии слиток номиналом 5 унций.<Br><Br><b>Внимание:</b> при сдаче задания на ваш счет будет начисленно 4,95 унции золота!",
+      "own_texts": ["start"],
       "give": [1188],
       "take": [1188],
       "objs": [
@@ -124,13 +126,14 @@
       "service": true,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts (texts.xml 49796 name, 49807 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 495 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in."
+      "why": "RECOVERED texts (texts.xml 49796 name, 49807 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 495 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in. The start is the original's but for its opening words, «Как для лица не имеющего гражданства или вида на жительство, будет», which said that a citizen or a holder of a residence permit -- the premium of the dead server's -- would cash without the commission: out by the owner's cut of (P) (2026-09-30), since this server grants neither and charges the 0.05 to everybody; «Будет» opens the sentence instead, and own_texts keeps the original's from being laid back over it (server/quests.py _lay_original)."
     },
     {
       "type": 303,
       "kind": "bring_l_obj",
       "name": "Обналичить 10 унций золота",
-      "start": "Вы можете обналичить имеющиеся в наличии золотые слитки номиналом 10 унций. Как для лица не имеющего гражданства или вида на жительство, будет взята комиссия при конвертации равная 0,05 унции золота<Br><Br><B>Задача:</B> иметь в наличии слиток номиналом 10 унций золота.<Br><Br><b>Внимание:</b> при сдаче задания на ваш счет будет начисленно 9,95 унции золота!",
+      "start": "Вы можете обналичить имеющиеся в наличии золотые слитки номиналом 10 унций. Будет взята комиссия при конвертации равная 0,05 унции золота<Br><Br><B>Задача:</B> иметь в наличии слиток номиналом 10 унций золота.<Br><Br><b>Внимание:</b> при сдаче задания на ваш счет будет начисленно 9,95 унции золота!",
+      "own_texts": ["start"],
       "give": [1188],
       "take": [1188],
       "objs": [
@@ -144,7 +147,7 @@
       "service": true,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts (texts.xml 49798 name, 49812 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 995 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in."
+      "why": "RECOVERED texts (texts.xml 49798 name, 49812 start: the no-residence copy, «комиссия ... 0,05 унции золота»; the file has no notfinish or finish for it), DESIGNED workings. Мортимер (1188, ow_GoldExchange, жилой квартал 36), the money-changer of the wiki's «Мортимер» («если нужно золотишко то Мортимер поможет»): bring the ingot, get its ounces on the account less the 0.05 the start names -- rew_gold 995 in hundredths (hscan decision 10). A service (service: true): repeatable, and neither counted nor refused by the daily limit. The ingot is taken from the bag at the hand-in. The start is the original's but for its opening words, «Как для лица не имеющего гражданства или вида на жительство, будет», which said that a citizen or a holder of a residence permit -- the premium of the dead server's -- would cash without the commission: out by the owner's cut of (P) (2026-09-30), since this server grants neither and charges the 0.05 to everybody; «Будет» opens the sentence instead, and own_texts keeps the original's from being laid back over it (server/quests.py _lay_original)."
     },
     {
       "type": 304,
@@ -5265,7 +5268,7 @@
       "type": 158,
       "kind": "del_obj",
       "name": "Охранник санатория особого режима",
-      "start": "Привет, %имя%. Тюрьма забита заключенными - бандиты, грабители, убийцы, каннибалы и прочие отбросы, от одного взгляда на которых рука тянется за пистолетом, а лучше огнеметом. Но и этих мразей приходится выводить прогуляться на чистый воздух.<Br> И каждый! Каждый раз! Не обходится без приключений. Пожалуйста, отправляйся в тюрьму, каждый день в  <b> 12:00, 16:00 и 23:00 </b>  заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа. Это работа для серьезных людей с серьезными пушками. В общем, как раз по тебе.<Br><Br><b>Задача:</b> В <b>12:00, 16:00 или 23:00</b> отправиться в тюрьму помочь с охраной заключенных.<Br><Br><i>Подсказка: наверняка дело не обойдется без приключений, захватите оружие. \\\"Охранять\\\" заключенных нужно в течение 30 минут.</i>",
+      "start": "Привет, %имя%. Тюрьма забита заключенными - бандиты, грабители, убийцы, каннибалы и прочие отбросы, от одного взгляда на которых рука тянется за пистолетом, а лучше огнеметом. Но и этих мразей приходится выводить прогуляться на чистый воздух.<Br> И каждый! Каждый раз! Не обходится без приключений. Пожалуйста, отправляйся в тюрьму, каждый день в  <b> 12:00, 16:00 и 23:00 </b>  заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа. Это работа для серьезных людей с серьезными пушками. В общем, как раз по тебе.<Br><Br><b>Задача:</b> В <b>12:00, 16:00 или 23:00</b> отправиться в тюрьму помочь с охраной заключенных.<Br><Br><i>Подсказка: наверняка дело не обойдется без приключений, захватите оружие. \"Охранять\" заключенных нужно в течение 30 минут.</i>",
       "own_texts": ["start"],
       "notfinish": "",
       "finish": "Доброволец? Охранять зэков помочь решил? Отлично, мы тебя ждали. Сейчас этот зоопарк полезет наружу, держи пушку наготове.",
@@ -5280,7 +5283,7 @@
       "q_type": 0,
       "loc": 48883391,
       "finish_loc": 49030864,
-      "why": "RECOVERED texts and time, DESIGNED giver, taker, level and reward. «Охранник санатория особого режима» (62257-62259): 'отправляйся в тюрьму, каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана ... Это работа для серьезных людей с серьезными пушками'. DESIGNED: given by Хассир (105), the station's driver (37), whose ride «Поехали!» (159) goes there; handed in to the southern gate's guard (1794) in the yard (176) -- 'Доброволец? Охранять зэков помочь решил? Отлично, мы тебя ждали. Сейчас этот зоопарк полезет наружу' -- only while the gates are open (data/schedule.json quests, gate hand_in); level 6, the m8 prison's band; +20 Медицина, as the town's other talks. The start is the original's but for its last line, «Если вы хотите быстро добраться до тюрьмы, у вас должен быть вид на жительство или гражданство», the premium of the dead server's: out by the owner's cut of (P) (2026-09-30), since this server grants no residence permit (the owner's default 15) and the ride is free for all; own_texts keeps the original's from being laid back over it (server/quests.py _lay_original). A one-off."
+      "why": "RECOVERED texts and time, DESIGNED giver, taker, level and reward. «Охранник санатория особого режима» (62257-62259): 'отправляйся в тюрьму, каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана ... Это работа для серьезных людей с серьезными пушками'. DESIGNED: given by Хассир (105), the station's driver (37), whose ride «Поехали!» (159) goes there; handed in to the southern gate's guard (1794) in the yard (176) -- 'Доброволец? Охранять зэков помочь решил? Отлично, мы тебя ждали. Сейчас этот зоопарк полезет наружу' -- only while the gates are open (data/schedule.json quests, gate hand_in); level 6, the m8 prison's band; +20 Медицина, as the town's other talks. The start is the original's but for its last line, «Если вы хотите быстро добраться до тюрьмы, у вас должен быть вид на жительство или гражданство», the premium of the dead server's: out by the owner's cut of (P) (2026-09-30), since this server grants no residence permit (the owner's default 15) and the ride is free for all; own_texts keeps the original's from being laid back over it (server/quests.py _lay_original). Written exactly as the original's cleaned start up to that line, its quotes plain (\"Охранять\") as orig_texts makes them -- an own text gets the same cleaning, but the row should not need it. A one-off."
     },
     {
       "type": 159,

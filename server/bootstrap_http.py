@@ -442,11 +442,15 @@ CLAN_QUEUED = {"rename": "Переименование поставлено в �
                "kick": "Исключение поставлено в очередь",
                "disband": "Роспуск поставлен в очередь"}
 
-# Built once: the table is loaded at import and never changes.
+# Built once: the table is loaded at import and never changes. Without the
+# premium two (transport.premium, 8 and 12): the game server refuses them
+# since the owner's cut of (P) (2026-09-30), and a choice the panel offers
+# only to log a refusal is no choice.
 TRANSPORT_OPTIONS = "".join(
     '<option value="%d">%d · %s (x%s)</option>'
     % (int(v["type"]), int(v["type"]), v["name"], v["speed_mod"])
     for v in sorted(transport.TABLE.values(), key=lambda v: int(v["type"]))
+    if not transport.premium(v["type"])
 ) + '<option value="0">0 · снять транспорт</option>'
 
 

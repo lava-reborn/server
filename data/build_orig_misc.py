@@ -381,7 +381,10 @@ VERIFIED = {
     # nor citizenship («комиссия ... 0,05 унции золота», 49802, 49807,
     # 49812: 0.95, 4.95 and 9.95 ounces paid); the name lines 49800, 49796,
     # 49798 are the plain ones, the «с видом на жительство» and «с
-    # гражданством» lines being names of their own. The change of ingots,
+    # гражданством» lines being names of their own. Our rows' starts are
+    # their own since the cut of (P) (2026-10-02): the opening «Как для лица
+    # не имеющего гражданства или вида на жительство» is out, everybody
+    # pays the commission here (build_quests, one_passage_out). The change of ingots,
     # 49817-49824, name and start in a row. The lotteries (308, 309) are not
     # here: their starts are cut of the (P) guns, and ours.
     301: (49800, 49802, None, None),
@@ -956,6 +959,29 @@ def match_quest(index, row):
     return [name_id, start_id, notfinish_id, finish_id]
 
 
+def one_passage_out(original, own):
+    """Whether our text is the original's with one passage taken out and
+    nothing written in, compared folded (letters and digits, any case).
+
+    What a row's own_texts (server/quests.py) may do to the original's line:
+    cut what this server cannot stand behind -- 158's «Если вы хотите быстро
+    добраться до тюрьмы, у вас должен быть вид на жительство или
+    гражданство», Мортимер's cashing's «Как для лица не имеющего гражданства
+    или вида на жительство» (301-303), the owner's cut of (P) -- and not
+    rewrite it. Case is not a rewrite: 301's «будет» opens the sentence now.
+    """
+    a, b = fold(original), fold(own)
+    if len(b) > len(a):
+        return False
+    head = 0
+    while head < len(b) and a[head] == b[head]:
+        head += 1
+    tail = 0
+    while tail < len(b) - head and a[len(a) - 1 - tail] == b[len(b) - 1 - tail]:
+        tail += 1
+    return head + tail == len(b)
+
+
 def build_quests(texts, rows):
     index = QuestIndex(texts)
     out, unverified = {}, {}
@@ -967,7 +993,22 @@ def build_quests(texts, rows):
             if row.get("wiki_type") or row.get("source"):
                 raise SystemExit("quest %d is listed as our own but carries a wiki source" % qtype)
             continue
+        own = frozenset(row.get("own_texts") or ())
         ids = match_quest(index, row)
+        if ids is None and "start" in own and qtype in VERIFIED:
+            # The matcher finds a row by its start, and a start of the row's
+            # own is not the original's on purpose: 301-303 lost their
+            # opening words to the cut of (P) (2026-10-02), and no line of
+            # the file folds to what is left (158's cut sentence came after
+            # its task line, which the fold drops anyway). The ids checked by
+            # hand stand, held to what the row still shares with the file:
+            # its name, word for word, and its own start, the original's but
+            # for one passage (below).
+            ids = list(VERIFIED[qtype])
+            name_id = ids[0]
+            if name_id is None or fold(texts[name_id]) != fold(row["name"]):
+                raise SystemExit("quest %d: own start, and the name is not the original's %r"
+                                 % (qtype, name_id))
         if qtype not in VERIFIED:
             if ids is not None:
                 unverified[qtype] = ids
@@ -975,6 +1016,10 @@ def build_quests(texts, rows):
         if ids is None or tuple(ids) != VERIFIED[qtype]:
             raise SystemExit("quest %d: verified %r, matcher found %r"
                              % (qtype, VERIFIED[qtype], ids))
+        for key, i in zip(QUEST_KEYS, ids):
+            if key in own and i is not None and not one_passage_out(texts[i], row.get(key) or ""):
+                raise SystemExit("quest %d: its own %s is not the original's %d with one"
+                                 " passage taken out" % (qtype, key, i))
         rec = {k: (texts[i] if i is not None else None) for k, i in zip(QUEST_KEYS, ids)}
         rec["ids"] = ids
         rec["confidence"] = "high"

@@ -84,6 +84,20 @@ def get(type_id):
     return TABLE.get(int(type_id))
 
 
+def premium(type_id):
+    """Whether this vehicle is the dead server's premium: «Газ 67 Б (P)» (8)
+    and «Летающая тарелка» (12).
+
+    No lessor lets either out (LESSORS, DEFAULT_SET), and since the owner's
+    cut of (P) (2026-09-30) no admin hands one over either -- the panel does
+    not offer them and Session.admin_transport, with the panel's offline path
+    (server.apply_admin_action), refuses them, as it refuses a (P) thing.
+    The rows stay: their names are string ids the client may still be shown.
+    """
+    rec = get(type_id)
+    return bool(rec and int(rec.get("premium") or 0))
+
+
 def offered_by(npc_type_id):
     """What a lessor of this creature type lets out.
 

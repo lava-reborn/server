@@ -19,7 +19,10 @@ What the cut is, each part held here:
   3. the ways: Мастер Азам's «Квартал ремесленников» (414) and the way back
      (415) are off, their passages and the quarter's no_map gone;
   4. quest 158 no longer promises a ride for holders of a residence
-     permit: the row's own start, kept by own_texts over the original's;
+     permit, nor Мортимер's cashing (301-303) a free one: the rows' own
+     starts, kept by own_texts over the original's and cleaned as the
+     original's are -- no escaped quote shows, and no quest speaks of a
+     residence permit or citizenship at all;
   5. no premium thing changes hands or comes from a quest: not in a letter,
      not at the auction, not at the barter, no quest row names one;
   6. the database: whoever is in 124, 125, 130 or 447, or calls one home,
@@ -229,10 +232,11 @@ except Exception:
     fails.append("the ways broke:\n" + traceback.format_exc())
 
 
-# --- 4. quest 158 -----------------------------------------------------------------------
-print("quest 158")
+# --- 4. quest 158, Мортимер's cashing -------------------------------------------------
+print("quest 158, Мортимер's cashing")
 try:
     PERMIT = "вид на жительство или гражданство"
+    PERMIT_RE = re.compile(r"гражданств|на жительств|ВНЖ", re.IGNORECASE)
     q158 = quests.get(158)
     row158 = {int(r["type"]): r for r in quests.table_rows()}[158]
     check("«Охранник санатория особого режима» no longer asks for a residence permit",
@@ -245,6 +249,52 @@ try:
           orig_texts.quests()[158]["finish"])
     check("  ..ending on the guarding's half hour, not on a dangling break",
           q158.texts[quests.START].endswith("нужно в течение 30 минут.</i>"), True)
+    # Word for word the original's start, cleaned, up to the cut sentence: the
+    # row was once copied from texts.xml with the original's '\"Охранять\"',
+    # which orig_texts unescapes and an own text kept, and the tooltip
+    # showed the backslashes (2026-10-02).
+    START158 = orig_texts.quests()[158]["start"]
+    CUT158 = "<Br><Br><b>Если вы хотите быстро добраться до тюрьмы"
+    check("  ..and up to it the original's start, word for word, quotes plain",
+          (CUT158 in START158, q158.texts[quests.START] == START158[:START158.index(CUT158)],
+           '"Охранять"' in q158.texts[quests.START]),
+          (True, True, True))
+    check("  ..the row itself written clean, not cleaned at load",
+          '\\"' in row158["start"], False)
+    check("no quest's text carries an escaped quote the tooltip would show",
+          sorted((t, i) for t, q in quests.QUESTS.items()
+                 for i, s in enumerate(q.texts) if s and '\\"' in s), [])
+
+    # An own text is cleaned as the original's would be: a row copied by hand
+    # from texts.xml cannot bring its escaped quotes or doubled "%sex??" back.
+    _mock = quests.Quest({"type": 1, "kind": "del_obj", "name": "x", "own_texts": ["start"],
+                          "start": 'a \\"b\\" %sex??:а%', "finish": "f"})
+    _saved = dict(quests.QUESTS)
+    try:
+        quests.QUESTS.clear()
+        quests.QUESTS[1] = _mock
+        quests._lay_original()
+    finally:
+        quests.QUESTS.clear()
+        quests.QUESTS.update(_saved)
+    check("  ..an own text gets orig_texts' cleaning", _mock.texts[quests.START],
+          'a "b" %sex?:а%')
+
+    # Мортимер's cashing (301-303), the only other quests that spoke of the
+    # residence permit: «Как для лица не имеющего гражданства или вида на
+    # жительство, будет взята комиссия» -- a citizen cashed for free. Here
+    # everybody pays the 0.05 (rew_gold 95/495/995), so the start says that.
+    CASH_WAS = "Как для лица не имеющего гражданства или вида на жительство, будет"
+    for t, ounces in ((301, 95), (302, 495), (303, 995)):
+        q, o = quests.get(t), orig_texts.quests()[t]["start"]
+        check("Мортимер's %d: no residence permit, the original's start but for it" % t,
+              (q.own_texts, PERMIT_RE.search(q.texts[quests.START]) is None,
+               CASH_WAS in o, q.texts[quests.START] == o.replace(CASH_WAS, "Будет"),
+               q.rew_gold),
+              (frozenset({"start"}), True, True, True, ounces))
+    check("no quest's text speaks of a residence permit or citizenship",
+          sorted(t for t, q in quests.QUESTS.items()
+                 if any(s and PERMIT_RE.search(s) for s in q.texts)), [])
     try:
         quests.Quest({"type": 1, "kind": "del_obj", "name": "x", "own_texts": ["title"]})
         bad = None
