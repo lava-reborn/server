@@ -17,6 +17,7 @@ to keep the whole thing under a minute.
 """
 import asyncio
 import json
+import math
 import os
 import random
 import socket
@@ -124,6 +125,22 @@ _training = items.designed_info(3728)[1]
 check("a designed pistol scatters like the wiki's: 8, 12 and 16 at a hundred metres",
       [round(100 * ts / r, 1) for ts, r in zip(_training["target_size"], _training["max_range"])],
       [8.0, 12.0, 16.0])
+# A bullet at a mark the gun does not reach drops at max_range along the line
+# of aim (combat.stray), on open ground: no wall, a faMiss that far out. The
+# dump (100): the farthest cell with a clear line from one near the middle,
+# and a gun that reaches half way.
+_open = world.location(100)
+_mid = (_open.height // 2) * _open.width + _open.width // 2
+_from = min((c for c in range(_open.width * _open.height) if c not in _open.obstacles),
+            key=lambda c: mobs.hex_distance(c, _mid, _open.width))
+_clear = [c for c in range(_open.width * _open.height) if c not in _open.obstacles
+          and mobs.line_of_fire(_open, _from, c) is None]
+_at = max(_clear, key=lambda c: mobs.hex_distance(c, _from, _open.width))
+_reach = max(1, int(mobs.hex_distance(_from, _at, _open.width) // 2))
+_kind, _where = combat.stray(_open, _from, _at, 0.0, _reach)
+_fx, _fy = mobs.real(_from, _open.width)
+check("a shot at a mark twice the gun's reach away lands at the reach, short of the mark",
+      (_kind, abs(math.hypot(_where["x"] - _fx, _where["y"] - _fy) - _reach) < 0.3), ("faMiss", True))
 check("target BigUINT: one type digit then eight of id", combat.parse_target("10000002a"), (1, 42))
 check("a hex target has type 0", combat.parse_target("000000f3c"), (0, 3900))
 W = 64

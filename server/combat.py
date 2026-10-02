@@ -1153,9 +1153,12 @@ class Fighter:
             return
         aim_cell = target.cell if target is not None else hexcell
         width = sess.loc.width
-        if mobs.hex_distance(sess.pos, aim_cell, width) > si["max_range"][mode]:
-            self.ack(RES_TOO_FAR)
-            return
+        # A mark beyond max_range is not refused: the shot goes, the rounds
+        # and the action points go with it, and every bullet drops at the
+        # range (RoomCombat.burst). The refusal used to be res=8, which the
+        # client prints as «Невозможно пройти», its own words for a path it
+        # cannot walk, and nothing in its table says «too far»; a player who
+        # sees the bullets fall short needs no words.
         cost = si["fire_costs"][mode]
         if rc.room.ws and self.ap < cost:
             self.refuse_no_ap()
@@ -2184,8 +2187,9 @@ class RoomCombat:
                 frames.append(("faMiss", miss_at(tx, ty)))
             elif wall is not None:
                 frames.append(("faWall", dict(hex=wall)))
-            elif target is None or not on_target(offset):
-                # Aimed at the ground, or past the mark: on to where it lands.
+            elif target is None or dist > weapon.max_range or not on_target(offset):
+                # Aimed at the ground, at a mark the gun does not reach, or
+                # past the mark: on to where it lands, max_range at the most.
                 frames.append(stray(loc, shooter.cell, aim, offset, weapon.max_range))
             else:
                 optimal = weapon.opt_lo <= dist <= weapon.opt_hi
