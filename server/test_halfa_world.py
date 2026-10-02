@@ -287,6 +287,10 @@ class _Killer(object):
     def count_kill(self, type_id):
         self.kills.append(type_id)
 
+    def release_stats(self):
+        """The kill pushes the killer's held rp_info (Fighter.hold_stats);
+        nothing is held here."""
+
 
 class _Shooter(object):
     is_player = False
