@@ -520,6 +520,8 @@ def loot_table(type_id):
         for t in items.resolve_title(rec.get("item", ""))[:1]:
             add(t, float(rec.get("chance", 0)), valuable)
     for rec in _loot_manual().get(str(type_id), []):
+        if rec.get(ONE_OF):
+            continue
         valuable = LOOT_TIERS.get(rec.get("tier"))
         if valuable is not None and rec.get("type"):
             add(int(rec["type"]), float(rec.get("chance", 0)), valuable)
@@ -538,7 +540,7 @@ def roll_table(type_id, rng):
     """[(type_id, 1)] off loot_table: every row rolled, so the dice spent do
     not depend on what came up, and the first MAX_DROPS successes kept. A
     row at SURE is certain: in the bag every time, without a die and
-    outside the cap."""
+    outside the cap. Then one thing of each ONE_OF group (one_of_groups)."""
     out = []
     kept = 0
     for t, chance, _valuable in loot_table(type_id):
@@ -547,7 +549,48 @@ def roll_table(type_id, rng):
         elif rng.random() < chance and kept < MAX_DROPS:
             out.append((t, 1))
             kept += 1
+    for group in one_of_groups(type_id):
+        pick = rng.random() * sum(w for _t, w in group)
+        for t, w in group:
+            pick -= w
+            if pick < 0:
+                break
+        out.append((t, 1))
     return out
+
+
+# A group of data/loot_manual.json rows of which exactly one lies in the bag
+# on every kill, picked by their weights: Большой Мвамба's two gold belts
+# (1406, the owner's of 2026-10-02: «какой-то один точно выпадает»). Outside
+# the cap and the ordinary table, like a SURE row; one die a kill.
+ONE_OF = "one_of"
+_ONE_OF_GROUPS = {}
+
+
+def one_of_droppable(type_id):
+    """A thing a ONE_OF row may put in a bag: one the game has, not premium
+    and not a quest's. Unlike droppable(), a thing priced in gold alone is
+    welcome: the gold belts are worn, not litter, though no trader pays
+    afro for them."""
+    si = items.params_of(type_id)
+    return bool(si) and not items.premium(type_id) and not si.get("quest")
+
+
+def one_of_groups(type_id):
+    """[[(item type, weight)]]: the ONE_OF groups of a creature, each in
+    the file's order, built once per type."""
+    groups = _ONE_OF_GROUPS.get(type_id)
+    if groups is None:
+        by_name = {}
+        for rec in _loot_manual().get(str(type_id), []):
+            name = rec.get(ONE_OF)
+            if not name or not rec.get("type"):
+                continue
+            t, w = int(rec["type"]), float(rec.get("weight", 1))
+            if w > 0 and one_of_droppable(t):
+                by_name.setdefault(name, []).append((t, w))
+        groups = _ONE_OF_GROUPS[type_id] = list(by_name.values())
+    return groups
 
 
 _QUEST_TABLES = {}

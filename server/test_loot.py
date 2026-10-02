@@ -146,7 +146,8 @@ with open(os.path.join(os.path.dirname(HERE), "data", "loot_manual.json"), encod
     MANUAL = json.load(fh)["by_type"]
 wrong = []
 for tid in mobs.TYPES:
-    own = {(int(r["type"]), r["chance"]) for r in MANUAL.get(str(tid), [])}
+    own = {(int(r["type"]), r["chance"]) for r in MANUAL.get(str(tid), [])
+           if not r.get(mobs.ONE_OF)}
     for t, chance, _v in loot_table(int(tid)):
         si = items.params_of(t) or {}
         if (items.premium(t) or si.get("quest") or si.get("cost", 0) <= 0
@@ -198,6 +199,24 @@ bum = [mobs.loot_for(mobs.stats(BUM), rng) for _ in range(300)]
 check("an unarmed man always carries a piece of junk of his level or up to two below",
       all(any(t in TRASH[1:4] for t, _n in drop) for drop in bum), True)
 check("and no longer a cigarette", any(t == CIGARETTE for drop in bum for t, _n in drop), False)
+
+# Большой Мвамба (1406): one of his two gold belts on every kill, the pistol
+# belt three times in four (data/loot_manual.json, mobs.ONE_OF; the owner's
+# of 2026-10-02). Gold-priced, so not in the ordinary table, which wants an
+# afro price; outside its cap.
+MVAMBA, PISTOL_BELT, HUNTER_BELT = 1406, 3604, 3603
+check("Большой Мвамба: one group, his two gold belts, 3 to 1",
+      mobs.one_of_groups(MVAMBA), [[(PISTOL_BELT, 3.0), (HUNTER_BELT, 1.0)]])
+check("  ..and neither in his ordinary table",
+      [t for t, _c, _v in loot_table(MVAMBA) if t in (PISTOL_BELT, HUNTER_BELT)], [])
+rng = random.Random(1406)
+belts = [[t for t, _n in mobs.loot_for(mobs.stats(MVAMBA), rng) if t in (PISTOL_BELT, HUNTER_BELT)]
+         for _ in range(4000)]
+check("  ..exactly one in every bag", sorted({len(b) for b in belts}), [1])
+pistol = sum(b == [PISTOL_BELT] for b in belts) / 4000.0
+check("  ..the pistol belt about three times in four (%.3f)" % pistol, abs(pistol - 0.75) < 0.03, True)
+check("no other creature has a group", [t for t in mobs.TYPES if int(t) != MVAMBA
+                                        and mobs.one_of_groups(int(t))], [])
 rounds = (items.params_of(mobs.stats(COURIER).weapon_type_id) or {}).get("comp_array", [0])[0]
 courier = [mobs.loot_for(mobs.stats(COURIER), rng) for _ in range(300)]
 check("a gunman leaves his rounds and a piece of junk as well, every time",
