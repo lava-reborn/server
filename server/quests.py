@@ -824,14 +824,19 @@ def per_day_times(n):
 
 
 def per_day_start(start, per_day):
-    """A start as the player reads it: the daily note appended unless it says it."""
+    """A start as the player reads it: as written for a quest that is not
+    daily or whose start says «в сутки» already, else with PER_DAY_NOTE in
+    place of its trailing breaks."""
     if not per_day or "в сутки" in start:
         return start
     return _TRAILING_BREAKS.sub("", start) + PER_DAY_NOTE % per_day_times(per_day)
 
 
 def served(q, k, line):
-    """An original line as q serves it at texts[k]: a daily start with its note."""
+    """The original's line for slot k of quest q (NAME..FINISH) as this
+    server serves it: the same line, but for a daily quest's start, which
+    carries the daily note (_say_per_day). What the suites hold the laid
+    texts to (every «laid over the table's» check)."""
     return per_day_start(line, q.per_day) if k == START else line
 
 
