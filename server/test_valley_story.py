@@ -58,25 +58,17 @@ for _knob in ("LAVA_QUESTS", "LAVA_PLACEMENTS", "LAVA_PASSAGES", "LAVA_WEAR_DROP
               "LAVA_BOSS_CLOCK"):
     os.environ.pop(_knob, None)
 
-# «В Хальфу!» (43) is switched off in the real table: from 2026-09-26 (the
-# owner: «пока отключаем квест в Хальфу»), on for a few hours on 2026-09-28
-# once Вади-Хальфа was restored, and off again the same day («закрой хальфу
-# обратно») -- nobody gives or takes it. That it is off is checked first; the
-# walk below plays on a copy of the table with 43 switched back on (Демир of
-# the caravan, 5193, both lists), the one-line change a switch-on makes, so
-# the ride stays tested for the day it is wanted again. LAVA_QUESTS reaches
-# this process's quests module (imported below) and the server's.
+# «В Хальфу!» (43) is on in the real table again since 2026-10-03 (the owner:
+# «открой хальфу»): Демир of the caravan (5193) gives and takes it. Before
+# that it was off from 2026-09-26 («пока отключаем квест в Хальфу»), on for a
+# few hours on 2026-09-28 once Вади-Хальфа was restored, and off again the
+# same evening («закрой хальфу обратно»). That it is on is checked first, and
+# the walk below plays on the shipped table itself -- with its questgen
+# companions, which a table LAVA_QUESTS names would not have (popped above).
 _REAL = os.path.join(os.path.dirname(HERE), "data", "quests.json")
 with open(_REAL, encoding="utf-8") as _fh:
     _TABLE = json.load(_fh)
-HALFA_OFF = [(r["give"], r["take"]) for r in _TABLE["quests"] if r["type"] == 43]
-for _row in _TABLE["quests"]:
-    if _row["type"] == 43:
-        _row["give"], _row["take"] = [5193], [5193]
-_ON = os.path.join(tempfile.mkdtemp(), "quests.json")
-with open(_ON, "w", encoding="utf-8") as _fh:
-    json.dump(_TABLE, _fh, ensure_ascii=False)
-os.environ["LAVA_QUESTS"] = _ON
+HALFA_ON = [(r["give"], r["take"]) for r in _TABLE["quests"] if r["type"] == 43]
 
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
@@ -104,8 +96,11 @@ def check(label, got, want):
         print("  ok  %s" % label)
 
 
-check("«В Хальфу!» is off in the real table: nobody gives or takes it",
-      HALFA_OFF, [([], [])])
+check("«В Хальфу!» is on in the real table: Демир of the caravan gives and takes it",
+      HALFA_ON, [([5193], [5193])])
+check("  ..and the suite plays on that table, its companions with it (no LAVA_QUESTS)",
+      (os.path.abspath(quests.quests_path()) == os.path.abspath(_REAL),
+       bool(quests.companion_paths(quests.quests_path()))), (True, True))
 
 
 # The quests, by type.
