@@ -586,6 +586,51 @@ class Character:
             sp[1] = min(sp[1], sp[2])
         changed["specs"].add(spec_idx)
 
+    # --- set outright, for a test run (server.py /skill, /spec) ---------------
+    def set_skill(self, idx, level):
+        """A skill put at a level, its experience at the level's start, with
+        what a level-up carries: constitution follows the best skill. Returns
+        the indexes changed, as gain_xp does."""
+        if not 0 <= idx < SKILLS:
+            raise ValueError("skill index")
+        level = max(0, min(SKILL_MAX, int(level)))
+        changed = {"skills": {idx}, "specs": set(), "attribs": set()}
+        old_level = self.level
+        self.skill[idx] = [level, 0, skill_xp_max(level)]
+        if self.level != old_level:
+            self.recalc()
+            changed["attribs"].add(CONSTITUTION)
+        return changed
+
+    def set_spec(self, idx, level):
+        """A specialisation put at a level, learned for nothing if it was
+        not, with what its levels carry: one point of its attribute per
+        level up (ATTRIB_MAX holds), one back per level down (START_ATTRIB
+        holds, as forget_spec). -1 forgets it. Returns the indexes changed,
+        as gain_xp does."""
+        if not 0 <= idx < SPECS:
+            raise ValueError("spec index")
+        level = max(-1, min(SPEC_MAX, int(level)))
+        changed = {"skills": set(), "specs": {idx}, "attribs": set()}
+        if level < 0:
+            if self.spec[idx][0] >= 0:
+                self.forget_spec(idx)
+                if SPEC_ATTRIB[idx] is not None:
+                    changed["attribs"].add(SPEC_ATTRIB[idx])
+            return changed
+        old = max(0, self.spec[idx][0])
+        a = SPEC_ATTRIB[idx]
+        if a is not None and level != old:
+            before = self.attrib[a]
+            if level > old:
+                self.attrib[a] = min(ATTRIB_MAX, before + (level - old))
+            else:
+                self.attrib[a] = max(START_ATTRIB, before - (old - level))
+            if self.attrib[a] != before:
+                changed["attribs"].add(a)
+        self.spec[idx] = [level, 0, spec_xp_max(level)]
+        return changed
+
 
 # --- the card's formulas, CharInterface.as verbatim -------------------------
 # These are what the player reads off the character card, so the combat

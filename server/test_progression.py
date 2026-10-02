@@ -59,6 +59,26 @@ check("action points = 50 + 5*best skill", ch.ap_max, 50)
 check("weight = (30 + 2*strength) kg, in grams", ch.max_weight(), 40000)
 check("base armour is the card's (3*agility + perception)/4", ch.armor, 5.0)
 check("level is the best skill", ch.level, 0)
+# Set outright (the /skill and /spec cheats): a skill at its level with the
+# experience at the level's start and constitution following the best skill;
+# a specialisation learned for nothing, its attribute one per level up to 20
+# and back down to the birth value, forgotten at -1.
+_c = Character()
+check("a skill set to 20: level, xp at the start, threshold of the level, and the change set",
+      (_c.set_skill(progression.SHOOTING, 20), _c.skill[progression.SHOOTING]),
+      ({"skills": {progression.SHOOTING}, "specs": set(),
+        "attribs": {progression.CONSTITUTION}}, [20, 0, progression.skill_xp_max(20)]))
+check("  ..constitution and the ceilings followed", (_c.attrib[progression.CONSTITUTION], _c.hp_max, _c.ap_max),
+      (20, 420, 150))
+check("  ..clamped to the skill's range", _c.set_skill(progression.MELEE, 99)["skills"] and _c.skill[progression.MELEE][0], 20)
+check("a specialisation set to 5 from unlearned: its attribute five up, learned at 5 with the next threshold",
+      (_c.set_spec(2, 5), _c.spec[2], _c.attrib[progression.PERCEPTION]),
+      ({"skills": set(), "specs": {2}, "attribs": {progression.PERCEPTION}}, [5, 0, progression.spec_xp_max(5)], 10))
+check("  ..set down to 2: three back", (_c.set_spec(2, 2)["attribs"], _c.attrib[progression.PERCEPTION]),
+      ({progression.PERCEPTION}, 7))
+check("  ..forgotten at -1: the rest back, never below the birth value",
+      (_c.set_spec(2, -1)["specs"], _c.spec[2][0], _c.attrib[progression.PERCEPTION]), ({2}, -1, 5))
+check("  ..a production specialisation raises nothing", _c.set_spec(12, 3)["attribs"], set())
 
 # Experience from mobs, the owner's rule (progression.mob_xp): a price by the
 # mob's level, halved at the player's level, quartered one below, nothing two
