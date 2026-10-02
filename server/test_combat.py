@@ -316,6 +316,23 @@ _grc.settle_xp(_gdog)
 check("a gun's shots pay half the dog, its death the other half: 14, as for a knife",
       (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (7, [0, 14]))
 check("and the ledger is closed with the kill", _gdog.xp_ledger, {})
+# Paid in two frames, and the client prints a «+7» for each; a burst that
+# kills holds its rp_info (Fighter.hold_stats) so the harm and the settlement
+# arrive as one «+14».
+check("  ..the two payments went out as two rp_info", len(_gun.sess.pushed), 2)
+_one = progression.Character()
+_onegun = combat.Fighter(_XpSession(_one))
+_odog = mobs.Mob(4, 82, 10)
+_onegun.hold_stats()
+_onegun.award_xp(progression.SHOOTING, 2, dog_stats.hp_max, _odog)
+_grc.room.players = {_onegun.sess: None}
+_grc.settle_xp(_odog)
+check("  ..held through the kill: nothing yet", _onegun.sess.pushed, [])
+_onegun.release_stats()
+check("  ..released: one rp_info for the shooting skill, the whole 14 in it",
+      (_onegun.sess.pushed, _one.skill[progression.SHOOTING][:2]),
+      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 14]))
+check("  ..and a release with nothing held pushes nothing", (_onegun.release_stats(), _onegun.sess.pushed[1:]), (None, []))
 
 
 # --- what keeps a room at war -----------------------------------------------------
