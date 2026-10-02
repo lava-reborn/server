@@ -807,6 +807,33 @@ class Session:
             return self._pos
         return cells[max(0, step)]
 
+    def walk_of(self, cells):
+        """The walk live_cell is to follow for a moveTo of these cells, or
+        None: the player on its last cell at once, as before there was a
+        walk to follow. Asked before pos moves.
+
+        Only a path the client's own Location.movePlayer could have sent:
+        from the hex its walker stands on (numPos -- the server's live cell,
+        or one it passed on the way, since a re-route is sent from where
+        the client has got to and the echo it walks by reached it later
+        than it left here), one neighbour to the next, no hex twice. Any
+        other path is a modified client's -- [start] * 300 + [beside the
+        dog], a jump -- and followed, it held the figure, for the fight, on
+        a cell the player had left: pos was already at the end for the bags,
+        the saves and the doors, while nothing that stood there could take
+        him for a minute."""
+        if len(cells) < 2 or len(set(cells)) != len(cells):
+            return None
+        loc = self.loc
+        if not all(mobs.adjacent(a, b, loc) for a, b in zip(cells, cells[1:])):
+            return None
+        here = self.live_cell()
+        passed = self.walk[0] if self.walk is not None else ()
+        if not (cells[0] in passed or cells[0] == self._pos
+                or progression.within_reach(cells[0], here, loc.width, loc.height)):
+            return None
+        return (cells, asyncio.get_running_loop().time())
+
     def character(self):
         """The loaded character, or a newborn's numbers for a socket that
         asks before selecting one, so an early getInfo cannot fail."""
@@ -3259,11 +3286,11 @@ class Session:
             return
         self.send("cmdAck", res=0)
         cells = [int(c) for c in path]
+        walk = self.walk_of(cells)
         self.pos = cells[-1]
         # The figure starts from cells[0] on the echo below and is not at
         # pos for another HEX_MS a step (live_cell).
-        if len(cells) > 1:
-            self.walk = (cells, asyncio.get_running_loop().time())
+        self.walk = walk
         try:
             # Walking drops the aim (the client cancels its own bar on this
             # userMove) and costs a point a hex while the room is at war.

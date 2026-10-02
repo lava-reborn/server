@@ -134,6 +134,51 @@ _kind, _where = combat.stray(_open, _from, _at, 0.0, _reach)
 _fx, _fy = mobs.real(_from, _open.width)
 check("a shot at a mark twice the gun's reach away lands at the reach, short of the mark",
       (_kind, abs(math.hypot(_where["x"] - _fx, _where["y"] - _fy) - _reach) < 0.3), ("faMiss", True))
+
+
+# The same through the burst itself (RoomCombat.burst), where the line to the
+# mark was asked for a wall before the reach was: a rock far past the gun's
+# reach, on the line to a mark farther still, took every bullet -- the client
+# drew the rounds flying twenty hexes into it. A mark on the ground (no
+# creature to stand in the way) three to four reaches off in the dump, the
+# first rock on the line more than two reaches off: every bullet comes down
+# on the way, within reach, and none hits that rock.
+class _Ground(object):
+    def __init__(self, loc):
+        self.loc, self.npcs, self.sent = loc, {}, []
+
+    def broadcast(self, frame, exclude=None):
+        self.sent.append(frame)
+
+
+_SHORT = 4
+_line = None
+for _a in sorted(c for c in range(_open.width * _open.height) if c not in _open.obstacles):
+    for _b in range(_a % 5, _open.width * _open.height, 5):
+        if _b in _open.obstacles or not \
+                3 * _SHORT <= mobs.hex_distance(_a, _b, _open.width) <= 4 * _SHORT:
+            continue
+        _w = combat.shot_wall(_open, _a, _b)
+        if _w is not None and mobs.hex_distance(_a, _w, _open.width) > 2 * _SHORT:
+            _line = (_a, _b, _w)
+            break
+    if _line:
+        break
+_a, _b, _w = _line
+_ground = _Ground(_open)
+_rc = combat.RoomCombat(_ground, None)
+_shooter = type("Shooter", (), {"cell": _a, "eid": 1, "is_player": True})()
+_rc.burst(_shooter, None, _b, combat.Weapon(
+    num_shots=5, dmin=1, dmax=1, opt_lo=1, opt_hi=2, max_range=_SHORT, piercing=1,
+    cone=0.05, crit=0, skill=progression.SHOOTING, spec=None), 5)
+_fates = [(n, p) for n, p in _ground.sent if n in ("faHit", "faMiss", "faWall")]
+_sx, _sy = mobs.real(_a, _open.width)
+check("a burst at a mark past the gun's reach: every bullet comes down within reach, "
+      "none into the rock beyond it",
+      ([n for n, _p in _fates],
+       all(math.hypot(p["x"] - _sx, p["y"] - _sy) <= _SHORT + 0.3
+           for n, p in _fates if n == "faMiss")),
+      (["faMiss"] * 5, True))
 check("target BigUINT: one type digit then eight of id", combat.parse_target("10000002a"), (1, 42))
 check("a hex target has type 0", combat.parse_target("000000f3c"), (0, 3900))
 W = 64

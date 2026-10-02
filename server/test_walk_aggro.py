@@ -17,6 +17,10 @@ What is held to here:
     outside takes nobody; a dog beside his pos but not beside his figure
     does not bite and goes after the figure instead, and does not step on
     the hex the figure stands on;
+  * in process, on a real Session: only a path the client could have sent
+    is followed (Session.walk_of) -- not one padded with repeats, not a
+    jump, not one that starts away from the figure; a turn sent from a hex
+    the figure has passed is;
   * on a socket, in the dump (100): a walk of nineteen hexes into a dog's
     radius, crossed on the seventeenth. The dog takes him (lch;enemy) and
     first goes for him no sooner than the figure is inside its radius, not
@@ -163,6 +167,57 @@ try:
 except Exception:
     import traceback
     fails.append("the in-process part broke:\n" + traceback.format_exc())
+
+
+# --- in process: only a walk the client could have sent is followed ---------------
+# A moveTo padded with repeats ([start] * 300 + [beside the dog]) put pos
+# beside the dog at once while the fight kept the figure on start for a
+# minute: nothing there could take him (Session.walk_of). Such a path, and a
+# jump, are taken as every walk was before the walk was followed -- the
+# player at its end at once.
+class _Writer(object):
+    def write(self, data):
+        pass
+
+    def close(self):
+        pass
+
+    def get_extra_info(self, _name, default=None):
+        return default
+
+
+accounts.DB_PATH = os.path.join(tempfile.mkdtemp(), "walk_of.db")
+import server        # noqa: E402  (its Store opens at import: a file of its own)
+
+
+async def _walk_of():
+    start = next(c for c in range(W * LOC.height)
+                 if _open(c) and AGGRO + 6 <= mobs.hex_distance(c, DOG_HOME, W) <= AGGRO + 9
+                 and mobs.find_path(LOC, c, lambda x: mobs.hex_distance(x, DOG_HOME, W) <= 2))
+    honest = mobs.find_path(LOC, start, lambda x: mobs.hex_distance(x, DOG_HOME, W) <= 2)
+    end = honest[-1]
+    sess = server.Session(_Writer(), "walker")
+    sess.loc = LOC
+    sess.pos = start
+    check("an honest walk of %d hexes is followed" % (len(honest) - 1),
+          sess.walk_of(honest) is not None, True)
+    check("[start] * 300 + [the end] is not: the player is at the end at once",
+          sess.walk_of([start] * 300 + [end]), None)
+    check("  ..nor a path that jumps", sess.walk_of([start, honest[1], end]), None)
+    far = next(c for c in honest if mobs.hex_distance(c, start, W) >= 4)
+    check("  ..nor one that starts away from the figure", sess.walk_of(honest[honest.index(far):]), None)
+    sess.walk = sess.walk_of(honest)
+    await asyncio.sleep(STEP * 3 + 0.05)
+    behind = honest[1]
+    check("a turn sent from a hex the figure has already passed is followed",
+          sess.walk_of(mobs.find_path(LOC, behind, lambda x: x == start)) is not None, True)
+
+
+try:
+    asyncio.run(_walk_of())
+except Exception:
+    import traceback
+    fails.append("the walk_of part broke:\n" + traceback.format_exc())
 
 
 # --- on a socket: the dump, a long walk into a dog's radius -------------------------

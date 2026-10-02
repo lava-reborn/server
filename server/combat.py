@@ -2270,8 +2270,13 @@ class RoomCombat:
         aim = target.cell if target is not None else hexcell
         if aim is None or not (0 <= aim < width * loc.height):
             aim = shooter.cell
-        wall = shot_wall(loc, shooter.cell, aim)
         dist = mobs.hex_distance(shooter.cell, aim, width)
+        # The line to the mark is the bullets' line only as far as the gun
+        # reaches: past max_range they come down (stray), and a wall beyond
+        # that is nothing to them. stray finds one within reach on each
+        # bullet's own line; asking the whole line drew the rounds flying 30
+        # hexes into a rock the gun could never reach.
+        wall = shot_wall(loc, shooter.cell, aim) if dist <= weapon.max_range else None
         tx, ty = mobs.real(aim, width)
         total_h = total_s = hits = 0
         sp_left = target.sp_now() if target is not None else 0
