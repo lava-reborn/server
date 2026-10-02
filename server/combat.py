@@ -1183,9 +1183,12 @@ class Fighter:
             return
         aim_cell = target.cell if target is not None else hexcell
         width = sess.loc.width
-        if mobs.hex_distance(sess.pos, aim_cell, width) > si["max_range"][mode]:
-            self.ack(RES_TOO_FAR)
-            return
+        # A mark beyond max_range is not refused: the shot goes, the rounds
+        # and the action points go with it, and every bullet drops at the
+        # range (RoomCombat.burst). The refusal used to be res=8, which the
+        # client prints as «Невозможно пройти», its own words for a path it
+        # cannot walk, and nothing in its table says «too far»; a player who
+        # sees the bullets fall short needs no words.
         cost = si["fire_costs"][mode]
         if rc.room.ws and self.ap < cost:
             self.refuse_no_ap()
@@ -1232,6 +1235,9 @@ class Fighter:
             row = None
         live = min(weapon.num_shots, row["ammo_count"]) if row else 0
         pool = target.hp if target is not None and not target.is_player else 0
+        # Asked before the burst, which may kill it: whether the rounds could
+        # have got there at all. Only then is the shot a provocation.
+        reached = rc.within_fire(self, target, weapon.max_range)
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live)
         if row is not None:
             # WEAR_PER_ROUND of durability per round that left the barrel. The
@@ -1258,7 +1264,12 @@ class Fighter:
                 # turned the rest into (burst never takes more than there is):
                 # both are harm done, see award_xp.
                 self.award_xp(weapon.skill, weapon.spec, min(h, pool) + s, target)
-            rc.after_hostile(self, target)
+            # A burst that fell short of the mark, or into a wall on the way,
+            # turns no creature on the shooter and opens no duel: every round
+            # dropped on the ground, and nothing out there felt it. A miss
+            # within reach does provoke -- the bullets went past its ears.
+            if reached:
+                rc.after_hostile(self, target)
             if killed:
                 rc.kill(target, self)
         finally:
@@ -1348,13 +1359,15 @@ class Fighter:
                 # melee_split never takes more stamina than there is; health
                 # is capped here.
                 self.award_xp(progression.MELEE, spec, min(h, pool) + s, target)
-            # A swing at a player who was never within reach opens no duel.
-            # The client strikes only a neighbour (Gamer.strike: isSiblings),
-            # so this is one who stepped away while the blade was coming
-            # down -- or a modified client swinging from across the room,
-            # which would otherwise hold its mark there (res=39) for as long
-            # as it kept throwing a fist every half minute.
-            if reach or target is None or not target.is_player:
+            # A swing at anything that was never within reach provokes
+            # nothing: no duel with a player, no creature turned on him. The
+            # client strikes only a neighbour (Gamer.strike: isSiblings), so
+            # this is one who stepped away while the blade was coming down --
+            # or a modified client swinging from across the room, which would
+            # otherwise hold its mark there (res=39) for as long as it kept
+            # throwing a fist every half minute, or pull a creature to him
+            # from where it stood.
+            if reach:
                 rc.after_hostile(self, target)
             if killed:
                 rc.kill(target, self)
@@ -2077,6 +2090,17 @@ class RoomCombat:
         for mob in self.mobs.values():
             mob.ap = mob.ap_max
 
+    def within_fire(self, shooter, target, max_range):
+        """Whether a burst from shooter can reach target at all: it is here,
+        no farther than max_range, and no obstacle stands between (shot_wall,
+        the line burst itself flies). Nothing about the scatter: a round that
+        flies past within reach still flew past."""
+        if target is None or not target.present(self):
+            return False
+        width = self.room.loc.width
+        return (mobs.hex_distance(shooter.cell, target.cell, width) <= max_range
+                and shot_wall(self.room.loc, shooter.cell, target.cell) is None)
+
     def after_hostile(self, attacker, target):
         """Bookkeeping after any shot or swing: the duel timer of two players
         who exchanged it, and a mob that was attacked turns on its attacker.
@@ -2248,8 +2272,9 @@ class RoomCombat:
                 frames.append(("faMiss", miss_at(tx, ty)))
             elif wall is not None:
                 frames.append(("faWall", dict(hex=wall)))
-            elif target is None or not on_target(offset):
-                # Aimed at the ground, or past the mark: on to where it lands.
+            elif target is None or dist > weapon.max_range or not on_target(offset):
+                # Aimed at the ground, at a mark the gun does not reach, or
+                # past the mark: on to where it lands, max_range at the most.
                 frames.append(stray(loc, shooter.cell, aim, offset, weapon.max_range))
             else:
                 optimal = weapon.opt_lo <= dist <= weapon.opt_hi

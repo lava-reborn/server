@@ -91,8 +91,16 @@ class _Room(object):
         self.sent.append(frame)
 
 
+class _Store(object):
+    """No gun row anywhere: a burst fired through it clicks every chamber,
+    a miss each, which is all the provocation test below needs."""
+
+    def item(self, uniq):
+        return None
+
+
 class _Inv(object):
-    store = None
+    store = _Store()
 
     def wear_worn(self, n):
         pass
@@ -295,11 +303,54 @@ async def _timer():
     check("and a new location has none: the one it ran in keeps it", me.last_hit, -1e9)
 
 
+async def _shot_short():
+    """A burst provokes only what it could reach: within the gun's range and
+    with a clear line (RoomCombat.within_fire). Every round here is a miss
+    (the store holds no gun, so the chambers click), which is the point: a
+    miss within reach still turns the dog, one that falls short or into a
+    wall does not. A fist from across the room provokes nothing either."""
+    gun = combat.Weapon(num_shots=1, dmin=1, dmax=1, opt_lo=1, opt_hi=3, max_range=6,
+                        piercing=1, cone=0, crit=0, skill=progression.SHOOTING, spec=None)
+    clear = lambda c, lo, hi: (_open(c) and lo <= mobs.hex_distance(DOG_HOME, c, W) <= hi
+                               and combat.shot_wall(LOC, c, DOG_HOME) is None
+                               and mobs.hex_distance(BUM_HOME, c, W) > 10)
+    beyond = next(c for c in range(W * LOC.height) if clear(c, 9, 12))
+    within = max((c for c in range(W * LOC.height) if clear(c, 5, 6)),
+                 key=lambda c: mobs.hex_distance(DOG_HOME, c, W))
+    walled = next((c for c in range(W * LOC.height)
+                   if _open(c) and mobs.stats(DOG).aggro < mobs.hex_distance(DOG_HOME, c, W) <= 6
+                   and combat.shot_wall(LOC, c, DOG_HOME) is not None), None)
+
+    def fire_from(cell):
+        room, rc, seat = _scene(cell)
+        dog = _mob(rc, 1, DOG, DOG_HOME)
+        seat.combat.fire_now(0, dog, dog.cell, gun, 3)
+        return dog.target is seat.combat, [p for n, p in seat.sent if n == "lch"]
+
+    check("a shot at a dog %.0f hexes off, the gun reaching %d: it falls short and the"
+          " dog does not turn" % (mobs.hex_distance(DOG_HOME, beyond, W), gun.max_range),
+          fire_from(beyond), (False, []))
+    check("a miss %.1f hexes off, inside the gun's %d, does turn it"
+          % (mobs.hex_distance(DOG_HOME, within, W), gun.max_range),
+          fire_from(within), (True, [{"enemy": 1}]))
+    check("there is a cell in range with a wall in the way", walled is not None, True)
+    if walled is not None:
+        check("a burst into the wall in between does not turn it either",
+              fire_from(walled), (False, []))
+    room, rc, seat = _scene(within)
+    seat.loc = LOC
+    dog = _mob(rc, 1, DOG, DOG_HOME)
+    seat.combat.strike_now(dog, dog.cell, (1, 1), combat.SPEC_FIST, 5)
+    check("a fist thrown at a dog that far off turns nothing on him",
+          (dog.target, [p for n, p in seat.sent if n == "lch"]), (None, []))
+
+
 async def _in_process():
     got = await _pulled_far()
     await _goes_home(*got)
     await _unreachable()
     await _timer()
+    await _shot_short()
 
 
 try:
