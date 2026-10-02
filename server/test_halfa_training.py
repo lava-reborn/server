@@ -197,7 +197,7 @@ try:
     check("  ..laid over the table's",
           [t for t in pinned if t in ALL + [COURSE] for k, key in
            enumerate(("name", "start", "notfinish", "finish"))
-           if orig.get(t, {}).get(key) and quests.get(t).texts[k] != orig[t][key]], [])
+           if orig.get(t, {}).get(key) and quests.get(t).texts[k] != quests.as_laid(quests.get(t), k, orig[t][key])], [])
     check("  ..the course the newest edition's: free, for levels 0-5, no letter",
           (pinned[COURSE], "0- 5 Уровня" in quests.get(COURSE).texts[1],
            "письма" in "".join(quests.get(COURSE).texts), quests.get(COURSE).texts[2]),

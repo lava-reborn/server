@@ -800,12 +800,30 @@ def _say_per_day():
     and a row the overlay replaces (118) is read as the player will see it.
     """
     for q in QUESTS.values():
-        if not q.per_day or "в сутки" in q.texts[START]:
+        if not q.per_day:
             continue
         texts = list(q.texts)
-        start = _TRAILING_BREAKS.sub("", texts[START])
-        texts[START] = start + PER_DAY_NOTE % per_day_times(q.per_day)
+        texts[START] = per_day_start(texts[START], q.per_day)
         q.texts = tuple(texts)
+
+
+def per_day_start(start, per_day):
+    """A daily quest's start as the player reads it: as written if it says
+    «в сутки» already, else with PER_DAY_NOTE in place of its trailing
+    breaks."""
+    if "в сутки" in start:
+        return start
+    return _TRAILING_BREAKS.sub("", start) + PER_DAY_NOTE % per_day_times(per_day)
+
+
+def as_laid(q, k, text):
+    """The original's text for slot k of quest q (NAME..FINISH) as this
+    server serves it: the same text, but for a daily quest's start, which
+    carries the daily note (_say_per_day). What the suites hold the laid
+    texts to."""
+    if k == START and q.per_day:
+        return per_day_start(text, q.per_day)
+    return text
 
 
 _say_per_day()

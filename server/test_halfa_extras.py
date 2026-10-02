@@ -248,7 +248,7 @@ try:
     orig = orig_texts.quests()
     check("  ..laid over the table's",
           [t for t in WILD for k, key in enumerate(("name", "start", "notfinish", "finish"))
-           if orig.get(t, {}).get(key) and rows[t].texts[k] != orig[t][key]], [])
+           if orig.get(t, {}).get(key) and rows[t].texts[k] != quests.as_laid(rows[t], k, orig[t][key])], [])
     blob = names.document_bytes()
     check("every string id of theirs is in the preload and the launcher's table",
           [sid for q in rows.values() for sid in q.string_ids()

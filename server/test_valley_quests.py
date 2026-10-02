@@ -137,7 +137,7 @@ try:
           " them", [t for t in VALLEY if t not in pinned], [])
     check("  ..laid over the table's",
           [t for t in VALLEY for k, key in enumerate(("name", "start", "notfinish", "finish"))
-           if orig[t].get(key) and quests.get(t).texts[k] != orig[t][key]], [])
+           if orig[t].get(key) and quests.get(t).texts[k] != quests.as_laid(quests.get(t), k, orig[t][key])], [])
     check("  ..the newest edition: no line carries the 2012 number label",
           [t for t in VALLEY if any("№" in x for x in quests.get(t).texts)], [])
     check("  ..and the names the file has no line for are ours: «Провиант», «Доклад»",

@@ -298,7 +298,7 @@ try:
           [])
     check("  ..laid over the table's",
           [t for t in ALL for k, key in enumerate(("name", "start", "notfinish", "finish"))
-           if orig.get(t, {}).get(key) and rows[t].texts[k] != orig[t][key]], [])
+           if orig.get(t, {}).get(key) and rows[t].texts[k] != quests.as_laid(rows[t], k, orig[t][key])], [])
     check("  ..each step's own lines: «Медик Умар» the Вади-Хальфа copy, the guns their names",
           (pinned[182], [pinned[t][0] for t in sorted(GUNS)], pinned[184][1]),
           ([41396, 41397, 41398, 41399], [47336, 47340, 47342, 47344, 47346, 47348, 47350], 47401))
