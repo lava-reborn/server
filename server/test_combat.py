@@ -918,11 +918,12 @@ try:
                 break
     check("the dog died within sixty shots", dead_frames is not None, True)
     check("and the door was tried while the timer ran", exit_tried, [True])
-    check("the dog came and bit", bites > 0, True)
-    # Whether one of its bites landed is the dog's luck: with the scatter
-    # (combat.cone_of) the pistol hits every time this close, and the dog is
-    # dead within three shots, one or two bites in. A bite that did land was
-    # checked above for the usrUp behind it; the one that kills, below.
+    # The dog comes for him; whether it gets a bite in, let alone lands one,
+    # is its luck: with the scatter (combat.cone_of) the pistol hits every
+    # time this close, and two good rolls kill the dog on its way. A bite
+    # that did land was checked above for the usrUp behind it; the one that
+    # kills, in the death scene below, where a bite is certain.
+    check("the dog came for him, or bit before it fell", bites > 0 or dog_cell != DOG_HOME, True)
     check("every burst kept its shape", tracker.finish(), [])
     names_ = [n for n, _ in dead_frames]
     i_dead = [i for i, (n, p) in enumerate(dead_frames) if n == "lch" and p.get("dead") == dog][0]
