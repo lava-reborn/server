@@ -92,8 +92,29 @@ powershell -ExecutionPolicy Bypass -File tools\run_suite.ps1 -Out D:\lava_suite 
 powershell -ExecutionPolicy Bypass -File tools\run_suite.ps1 -Out D:\lava_suite -Only test_combat,test_death
 ```
 
-Итог обоих лежит в `summary.txt` в папке результатов: код выхода, секунды, имя
-набора, ноль впереди значит зелёный; вывод каждого набора в `<имя>.out`. Под
+Оба вызывают `tools/suite.py`, его же можно звать напрямую (`python
+tools/suite.py --help`). Итог лежит в папке результатов: `summary.txt` (код
+выхода, секунды, имя набора, ноль впереди значит зелёный), вывод каждого
+набора в `<имя>.out` и `report.html`: механика, тест, проверка, статус и
+время каждой проверки, упавшие наборы первыми. Каждая проверка пишется через
+`server/testkit.py` (`check` наборов); механика набора берётся из его
+`MECHANIC` или первой строки docstring, тест из заголовка `# --- имя ---` над
+проверкой.
+
+Только затронутое правкой:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\run_suite.ps1 -Out D:\lava_suite -Affected
+python tools/suite.py --affected --list      # какие и почему, без запуска
+```
+
+`--affected` сравнивает рабочее дерево с `origin/main` и берёт: изменённый
+набор; для изменённой функции `server/` наборы, которые её исполняли; для
+строки вне функций (настройка, таблица) наборы, исполнявшие функции с этим
+именем; для файла `data/` наборы, чей код называет этот файл. Карта
+«набор → функции» пишется полным прогоном с `-RecordMap` (`--record-map`) в
+`tools/impact_map.json`, вне git. Без карты, а также при правке самой
+запускалки или `testkit`, гоняется всё. Под
 Windows к двум известным падениям добавляются `test_shutdown` (SIGTERM там
 означает TerminateProcess, сервер не успевает ни сказать, ни сохранить) и
 `data/test_orig_npcs` на чекауте с CRLF.
@@ -3981,8 +4002,11 @@ tools/
                           переводы с казнами кланов отдельно, раздел казны (clan_ledger)
   run_suite.sh            все наборы разом, по N одновременно, самые долгие первыми;
                           --known/--rerun/--summary — как в CI
-  run_suite.ps1           то же из PowerShell, без WSL
+  run_suite.ps1           то же из PowerShell, без WSL (через suite.py)
   known_failures.txt      падения, которые CI ждёт: набор, строка из его вывода, причина
+  suite.py                наборы из Python: --affected только затронутые, --list какие,
+                          --record-map карта «набор → функции»
+  suite_report.py         report.html по папке прогона: каждая проверка, её время
   npc_editor.py           имена жителей и ассортимент торговцев → data/npcs.json
   map_editor.py           границы карты кистью поверх тайлов → data/terrain_verified.json
   make_client_package.py  пакет игрока в dist/: texts.xml, lava.bat, README.txt

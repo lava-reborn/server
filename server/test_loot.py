@@ -59,14 +59,7 @@ DOG = 82
 KNIFE = 6229                # knife_lvl1_A, a stall's first blade
 CIGARETTE = mobs.FALLBACK_LOOT
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 cat = items.catalogue()

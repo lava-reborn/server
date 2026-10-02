@@ -74,14 +74,7 @@ import travel  # noqa: E402
 import world  # noqa: E402
 from protocol import decode  # noqa: E402
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def at(h, m=0, s=0, day=28, month=9, year=2026):

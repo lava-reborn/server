@@ -61,14 +61,7 @@ import server  # noqa: E402  (after LAVA_DB: it opens its Store at import)
 
 STORE = server.STORE
 CLANS = server.CLANS
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def nick(base):

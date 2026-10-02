@@ -48,14 +48,7 @@ NAMES = {l: l.capitalize() + RUN for l in ("alice", "bob", "carol")}
 CLAN = "Волки %s" % RUN
 R_AFRO, R_CHAT = 0x400, 0x2
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def free_port():

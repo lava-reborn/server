@@ -8,14 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import map_labels as M  # noqa: E402
 
-fails = []
-
-
-def check(label, got, want):
-    ok = got == want
-    print("  %s  %s" % ("ok" if ok else "FAIL", label))
-    if not ok:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
+from testkit import check, fails  # noqa: E402
 
 
 RES = os.environ.get("LAVA_RES", "/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res")

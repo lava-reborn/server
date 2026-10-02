@@ -27,14 +27,8 @@ import swf_actions as sa  # noqa: E402
 
 RES = os.environ.get("LAVA_RES", "/mnt/c/Users/gmkrt/OneDrive/Desktop/lava/res")
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+sys.path.insert(0, os.path.join(ROOT, "server"))
+from testkit import check, fails  # noqa: E402
 
 
 def blocks(data):

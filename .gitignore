@@ -9,6 +9,8 @@ tools/*
 !tools/run_suite.ps1
 # Also ours: the list of failures CI is told to expect (tools/run_suite.sh --known).
 !tools/known_failures.txt
+# The hook tools/suite.py --record-map puts on the path of every process.
+!tools/impact/
 dist/
 .env
 data/lava.db

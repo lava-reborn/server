@@ -49,14 +49,7 @@ import sets  # noqa: E402
 from inventory import ARMOR, BAG, BELT, BOOTS, CAMO, HEAD, LEGS, PRIMARY, SET_SLOTS  # noqa: E402
 from protocol import decode  # noqa: E402
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 FIG = 11167            # Колонист (A): a set with a figure of its own
