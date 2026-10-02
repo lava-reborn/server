@@ -147,15 +147,25 @@ WEAPON_CLASS = {
 }
 
 # Rough per-class shape: damage at tier one, range, action points per shot,
-# magazine, and how long a burst runs in each of the three fire modes.
+# magazine, how long a burst runs in each of the three fire modes, and the
+# spread the tooltip shows («разброс на 100 метров», the client's 100 *
+# target_size / max_range) -- the median of the class's wiki guns in their
+# first mode (pistols 8.3 over 333 guns, shotguns 7.1, assault rifles 11.4,
+# rifles 10, machine guns 2.9, SMGs 4.6), because the server now scatters
+# bullets by it (combat.cone_of) and a designed gun has to stand beside a
+# wiki one, not five times wider.
 CLASS_SHAPE = {
-    PISTOL:     dict(dmg=(12, 26), rng=14, ap=10, clip=8,  modes=(1, 0, 0)),
-    SHOTGUN:    dict(dmg=(24, 52), rng=9,  ap=18, clip=6,  modes=(1, 2, 0)),
-    ASSAULT:    dict(dmg=(18, 40), rng=22, ap=15, clip=30, modes=(1, 3, 6)),
-    RIFLE:      dict(dmg=(30, 66), rng=30, ap=20, clip=10, modes=(1, 0, 0)),
-    MACHINEGUN: dict(dmg=(20, 44), rng=20, ap=22, clip=50, modes=(1, 5, 9)),
-    SMG:        dict(dmg=(14, 30), rng=12, ap=12, clip=25, modes=(1, 3, 5)),
+    PISTOL:     dict(dmg=(12, 26), rng=14, ap=10, clip=8,  modes=(1, 0, 0), acc=8),
+    SHOTGUN:    dict(dmg=(24, 52), rng=9,  ap=18, clip=6,  modes=(1, 2, 0), acc=7),
+    ASSAULT:    dict(dmg=(18, 40), rng=22, ap=15, clip=30, modes=(1, 3, 6), acc=11),
+    RIFLE:      dict(dmg=(30, 66), rng=30, ap=20, clip=10, modes=(1, 0, 0), acc=10),
+    MACHINEGUN: dict(dmg=(20, 44), rng=20, ap=22, clip=50, modes=(1, 5, 9), acc=3),
+    SMG:        dict(dmg=(14, 30), rng=12, ap=12, clip=25, modes=(1, 3, 5), acc=5),
 }
+# A burst scatters wider than a single shot: the wiki's second and third
+# modes run 1.5 and 2 times the first's spread (a pistol's 8.3 -> 14, an
+# SMG's 4.6 -> 6.8 -> 6.8).
+MODE_SPREAD = (1.0, 1.5, 2.0)
 
 # What each class chambers. This is comp_array on the wire, and the client
 # checks it itself before asking to load (FireArm.compare): a weapon with an
@@ -697,12 +707,14 @@ ADMIN_OVERRIDES = {
         h_damage_max=[999, 999, 999],
         st_damage_min=[99, 99, 99],
         st_damage_max=[99, 99, 99],
-        # Reaches across any location and never misses for spread: the
-        # client divides by target_size, so it may be small but never zero.
+        # Reaches across any location and never misses for spread: a
+        # scatter of 0.01 over 64 hexes stays inside the target at any
+        # distance a location has (combat.cone_of); the client divides by
+        # target_size, so it may be small but never zero.
         max_range=[64, 64, 64],
         opt_range=[1, 1, 1],
         end_opt_range=[64, 64, 64],
-        target_size=[1, 1, 1],
+        target_size=[0.01, 0.01, 0.01],
         piercing=[99, 99, 99],
         clip_size=99,
         reload_time=200,
@@ -869,8 +881,11 @@ def designed_info(type_id):
             max_range=[sh["rng"], max(1, sh["rng"] - 4), max(1, sh["rng"] - 8)],
             opt_range=[2, 2, 1],
             end_opt_range=[sh["rng"] - 2, sh["rng"] - 6, max(2, sh["rng"] - 10)],
-            # Never zero: the client divides by it to show the spread.
-            target_size=[4, 5, 7],
+            # The class's spread at each mode's range (CLASS_SHAPE acc,
+            # MODE_SPREAD); never zero, the client divides by it.
+            target_size=[max(0.05, round(sh["acc"] * r / 100.0 * m, 2))
+                         for r, m in zip([sh["rng"], max(1, sh["rng"] - 4),
+                                          max(1, sh["rng"] - 8)], MODE_SPREAD)],
             piercing=[t, t, t],
             fire_costs=[sh["ap"], sh["ap"] + 4, sh["ap"] + 8],
             fire_times=[700, 800, 900],

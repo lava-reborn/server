@@ -305,7 +305,7 @@ async def _the_box():
     near = next(c for c in progression.hex_neighbours(box.cell, loc.width, loc.height)
                 if c not in loc.obstacles)
     gun = combat.Weapon(num_shots=1, dmin=10, dmax=10, opt_lo=0, opt_hi=0, max_range=10,
-                        piercing=100, hit=1000, crit=0, skill=None, spec=None)
+                        piercing=100, cone=0, crit=0, skill=None, spec=None)
     h, _s, hits, killed = rc.burst(_Shooter(near), box, box.cell, gun, 1)
     check("the «ящик спирта» of 64 takes a shot: 10 off its %d hit points" % box.hp_max,
           (hits, h, box.hp, killed), (1, 10, box.hp_max - 10, False))
@@ -345,7 +345,7 @@ async def _the_target():
         check("TIR_01: a cell of the booth to shoot the target from", spot is not None, True)
         return
     gun = combat.Weapon(num_shots=1, dmin=10, dmax=10, opt_lo=0, opt_hi=0, max_range=10,
-                        piercing=100, hit=1000, crit=0, skill=None, spec=None)
+                        piercing=100, cone=0, crit=0, skill=None, spec=None)
     killer = _Killer()
     outcomes = []
     killed = False

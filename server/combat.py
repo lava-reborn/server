@@ -33,6 +33,7 @@ Character's back, and HP travels only as usrUp.
 """
 import asyncio
 import logging
+import math
 import os
 import random
 import re
@@ -214,12 +215,13 @@ SPEC_FIST, SPEC_BLADE, SPEC_FIRST_AID, SPEC_SURGERY = 0, 1, 8, 9
 RNG = (random.Random(int(os.environ["LAVA_SEED"])) if os.environ.get("LAVA_SEED")
        else random.Random())
 
-# What one trigger pull is resolved with. hit and crit are chances in
-# percent before the target's evasion; opt_lo..opt_hi is the optimal band
-# where crits are possible and the damage floor rises (wiki); skill and spec
-# say where the experience goes (None for a mob).
+# What one trigger pull is resolved with. cone is how wide the bullets
+# scatter per hex of flight (cone_of); crit is a chance in percent before the
+# target's evasion; opt_lo..opt_hi is the optimal band where crits are
+# possible and the damage floor rises (wiki); skill and spec say where the
+# experience goes (None for a mob).
 Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
-                              "piercing hit crit skill spec")
+                              "piercing cone crit skill spec")
 
 
 def now():
@@ -461,21 +463,93 @@ def spec_or_zero(ch, idx):
     return max(0, ch.spec_level(idx)) if idx is not None else 0
 
 
-def ranged_hit_chance(ch, spec):
-    """Wiki: 49 + skill * 1.25 + specialisation * 5, applied to shooting."""
-    return 49 + 1.25 * ch.skill_level(progression.SHOOTING) + 5 * spec_or_zero(ch, spec)
-
-
 def melee_hit_chance(ch, spec):
     return 49 + 1.25 * ch.skill_level(progression.MELEE) + 5 * spec_or_zero(ch, spec)
 
 
-def ranged_evade(ch):
-    """The wiki gives no dodge against bullets (the design simulates the
-    flight instead); this is the shape of its evasion formulas at half
-    weight, so an agile character is harder to hit but never untouchable."""
-    return (ch.attr(progression.AGILITY) + ch.attr(progression.PERCEPTION)) / 2.0 \
-        + ch.skill_level(progression.SHOOTING) / 4.0
+# --- a bullet's flight, wiki "Расчет углового отклонения" ---------------------
+#
+# No dodge against a bullet: the design scatters the shot and lets the ground
+# decide. Spread modifier МР = (1 + (0.7 - 0.65/20 * Стрельба) + (0.8 - 0.75/5
+# * spec)) * TargetSize * Ammo.Precision_Mod, a random direction inside it,
+# a flight simulated hex by hex, the target 0.3 m wide. The gun's TargetSize
+# is read as the client reads it (FireArm.countAccuracy: the tooltip's
+# «разброс на 100 метров» = 100 * target_size / max_range): the width the
+# scatter has grown to at max_range, in hexes, a hex being a metre. So the
+# scatter is a cone, cone_of() wide per hex of flight, and a bullet that
+# lands within TARGET_SIZE of its line hits. «Наиточнейшее оружие имеет
+# разброс равный площади цели»: a 0.3 gun in a master's hands (factor 1.1)
+# at its full range is 0.33 wide, the target itself. A novice's factor is
+# 2.5, so the same gun hits every time inside 0.9 of its range, a Walther
+# (0.8 over 10 hexes) past two hexes one time in three at five.
+TARGET_SIZE = 0.3
+
+
+def spread_factor(skill, spec):
+    """The МР bracket: 2.5 for nobody, 1.1 at Стрельба 20 and spec 5."""
+    skill = max(0, min(progression.SKILL_MAX, skill))
+    spec = max(0, min(progression.SPEC_MAX, spec))
+    return 1 + (0.7 - 0.65 / 20.0 * skill) + (0.8 - 0.75 / 5.0 * spec)
+
+
+def cone_of(factor, target_size, acc_mod, max_range):
+    """How wide the scatter is per hex of flight: a bullet's sideways reach
+    at distance d is cone * d / 2 either way."""
+    if max_range <= 0:
+        return 0.0
+    return factor * target_size * acc_mod / float(max_range)
+
+
+def hit_probability(cone, dist):
+    """What the scatter leaves of a shot at this distance, 0..1: the
+    target's width over the cone's, once the cone is wider than it."""
+    width = cone * dist
+    return 1.0 if width <= TARGET_SIZE else TARGET_SIZE / width
+
+
+def bullet_offset(cone, dist, rng=None):
+    """Where in the cone this bullet went: a sideways distance from the line
+    of aim, at the target's distance, signed."""
+    half = cone * dist / 2.0
+    return (RNG if rng is None else rng).uniform(-half, half)
+
+
+def on_target(offset):
+    return abs(offset) <= TARGET_SIZE / 2.0
+
+
+def stray(loc, a, aim, offset, max_range):
+    """Where a bullet that passed its mark comes down: faWall at the first
+    obstacle on its way, else faMiss where it runs out at max_range. The
+    bullet's own line goes through the point offset sideways at the aim; it
+    stops for the ground and for nothing alive -- that is the second step
+    (UNDONE.md «линия-огня»), and a stray that brought down a bystander
+    before the rule for it is written would be a rule nobody chose."""
+    w, h = loc.width, loc.height
+    ax, ay = mobs.real(a, w)
+    tx, ty = mobs.real(aim, w)
+    dx, dy = tx - ax, ty - ay
+    d = math.hypot(dx, dy)
+    if d == 0:
+        return ("faMiss", miss_at(tx, ty))
+    ux, uy = dx / d, dy / d
+    px, py = tx - uy * offset, ty + ux * offset
+    bx, by = px - ax, py - ay
+    b = math.hypot(bx, by)
+    bx, by = bx / b, by / b
+    ground = _Sights(loc) if getattr(loc, "shoot_over", None) else loc
+    x, y = tx, ty
+    steps = max(1, int(math.ceil(max_range * 2)))
+    for i in range(1, steps + 1):
+        t = min(max_range, i / 2.0)
+        nx, ny = ax + bx * t, ay + by * t
+        if not (-0.5 <= nx < w and -mobs.ROW_H / 2 <= ny <= (h - 0.5) * mobs.ROW_H):
+            break
+        x, y = nx, ny
+        c = mobs.cell_at(x, y, w, h)
+        if c != a and c in ground.obstacles:
+            return ("faWall", dict(hex=c))
+    return ("faMiss", dict(x=round(x, 2), y=round(y, 2)))
 
 
 def melee_crit(ch, spec):
@@ -677,9 +751,6 @@ class Fighter:
 
     def dodge_melee(self):
         return progression.melee_evade(self.character())
-
-    def dodge_ranged(self):
-        return ranged_evade(self.character())
 
     def crit_evade_melee(self):
         return melee_crit_evade(self.character())
@@ -1099,12 +1170,16 @@ class Fighter:
         spec = SPEC_OF_WEAPON.get(wt)
         crit = progression.crit_chance(ch, wt)
         ammo_si = items.params_of(row["ammo_type"]) or {}
+        cone = cone_of(spread_factor(ch.skill_level(progression.SHOOTING),
+                                     spec_or_zero(ch, spec)),
+                       si["target_size"][mode], ammo_si.get("acc_mod", 1) or 1,
+                       si["max_range"][mode])
         weapon = Weapon(num_shots=min(modes[mode], row["ammo_count"]),
                         dmin=si["h_damage_min"][mode], dmax=si["h_damage_max"][mode],
                         opt_lo=si["opt_range"][mode], opt_hi=si["end_opt_range"][mode],
                         max_range=si["max_range"][mode],
                         piercing=ammo_si.get("piercing", 1),
-                        hit=ranged_hit_chance(ch, spec), crit=crit[0] if crit else 0,
+                        cone=cone, crit=crit[0] if crit else 0,
                         skill=progression.SHOOTING, spec=spec)
         rc.room.broadcast(("faAim", dict(id=self.eid,
                                          ang=mobs.direction(sess.pos, aim_cell, width),
@@ -2037,9 +2112,12 @@ class RoomCombat:
             self.room.broadcast(("faAim", dict(
                 id=mob.eid, ang=mobs.direction(mob.cell, target.cell, width),
                 num_shots=st.shots)))
+            # A creature shoots with its level for Стрельба and the curve's
+            # spec (mobs.Stats), through the scatter of the gun in its hand.
+            cone = spread_factor(st.level, st.spec) * st.scatter
             weapon = Weapon(num_shots=st.shots, dmin=st.dmg_min, dmax=st.dmg_max,
                             opt_lo=1, opt_hi=st.range, max_range=st.range, piercing=1,
-                            hit=st.hit, crit=st.crit, skill=None, spec=None)
+                            cone=cone, crit=st.crit, skill=None, spec=None)
             mob.aim = loop.call_later(st.attack_time, self.mob_burst, mob, target, weapon)
         elif st.attack_time:
             mob.aim = loop.call_later(st.attack_time, self.mob_strike, mob, target)
@@ -2100,11 +2178,16 @@ class RoomCombat:
         frames = []
         for k in range(weapon.num_shots):
             frames.append(("faShot", dict(id=shooter.eid, status=1)))
-            if k >= live or target is None:
+            offset = bullet_offset(weapon.cone, dist)
+            if k >= live:
+                # An empty chamber: the pair was counted from faAim already.
                 frames.append(("faMiss", miss_at(tx, ty)))
             elif wall is not None:
                 frames.append(("faWall", dict(hex=wall)))
-            elif roll(weapon.hit - target.dodge_ranged()):
+            elif target is None or not on_target(offset):
+                # Aimed at the ground, or past the mark: on to where it lands.
+                frames.append(stray(loc, shooter.cell, aim, offset, weapon.max_range))
+            else:
                 optimal = weapon.opt_lo <= dist <= weapon.opt_hi
                 crit = optimal and roll(weapon.crit - target.crit_evade_ranged())
                 lo, hi = weapon.dmin, weapon.dmax
@@ -2118,8 +2201,6 @@ class RoomCombat:
                 hits += 1
                 frames.append(("faHit", dict(target=target.eid, dmg=h, sdmg=s,
                                              crit=int(crit))))
-            else:
-                frames.append(("faMiss", miss_at(tx, ty)))
             frames.append(("faShot", dict(id=shooter.eid, status=0)))
         for frame in frames:
             self.room.broadcast(frame)

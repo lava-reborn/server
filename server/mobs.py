@@ -97,6 +97,9 @@ STUCK_WAIT = 1.0
 # Seconds between two attacks of one mob, on top of its action points: the
 # animation of the previous swing or burst has to end on the client first.
 ATTACK_PAUSE = 1.5
+# The scatter of a creature with no gun of its own to read it from: a
+# pistol's, CLASS_SHAPE acc 8 at a hundred metres (combat.cone_of).
+DEFAULT_SCATTER = 0.08
 
 ROW_H = 0.8660254037844386
 
@@ -275,6 +278,16 @@ class MobStats:
             self.attack_time = si.get("strike_time", 0) / 1000.0
         else:
             self.attack_time = 0.0
+        # What its bullets scatter by (combat.spread_factor, cone_of): the
+        # level for Стрельба, the spec the curve's dodge already implies, and
+        # the gun in its hand read as the client reads it, target_size over
+        # max_range of the first mode -- a pistol's 0.08 where it has none.
+        self.spec = s
+        self.scatter = DEFAULT_SCATTER
+        if si and self.ranged:
+            ts, rng = si.get("target_size", [0])[0], si.get("max_range", [0])[0]
+            if ts > 0 and rng > 0:
+                self.scatter = ts / float(rng)
 
     def weapon_oid(self, entity_id):
         """The oid of the weapon in this mob's primary hand, or None. Virtual:
@@ -724,9 +737,6 @@ class Mob:
         return self.hp <= 0
 
     def dodge_melee(self):
-        return self.stats.dodge
-
-    def dodge_ranged(self):
         return self.stats.dodge
 
     def crit_evade_melee(self):

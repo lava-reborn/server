@@ -508,6 +508,17 @@ try:
     pos = min(near, key=lambda cell: mobs.hex_distance(cell, pos, tier1.width))
     c.send("moveTo;path=|%d|;" % pos)
     c.until(lambda f: f[0] == "lch" and f[1].get("enemy") == target, 4)
+    # It comes for him with a knife (mobs.stats: range 1): wait for it at his
+    # side, so that it falls there and its bag lies a step away, never within
+    # another marauder's reach. Shot on its way it would drop where the
+    # others stand guard: the scatter (combat.cone_of) lets a shot land at
+    # five hexes as well as at one.
+    for _ in range(25):
+        if progression.within_reach(bandits[target], pos, tier1.width, tier1.height):
+            break
+        for n, p in c.frames(0.2):
+            if n == "userMove" and p.get("id") == target and p.get("path"):
+                bandits[target] = p["path"][-1]
     dead = None
     for attempt in range(40):
         c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(target)))
