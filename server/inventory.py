@@ -160,7 +160,14 @@ SMOD = 0.7
 SELL_GOLD_ONLY = False
 # The repair multiplier, likewise sent and likewise obeyed:
 # RepairInterface.repairCostCount draws floor(rmod * (1-q) * cost * repair_mod).
-RMOD = 1
+# At 1 a thing worn to nothing cost its whole price to mend, a Walther P99
+# 2800 afro, and came back with nine tenths of its ceiling (REPAIR_KEEPS):
+# never cheaper than a new one, so nobody had a reason to mend anything.
+# Neither rmod nor any type's repair_mod survives from the original; this
+# one figure, sent with every trader, sets the price for every thing:
+# three tenths of the price for a gun mended from broken, 840 afro for the
+# P99. LAVA_REPAIR_MOD moves it.
+RMOD = float(os.environ.get("LAVA_REPAIR_MOD", "0.3"))
 # What a repair leaves of the ceiling (max_break_cur), whichever currency
 # pays for it. The original says so in its own words, the hint of «Мертвые
 # беззащитны» (texts.xml 59813; quest 23 here, Ибрахим's in the valley,

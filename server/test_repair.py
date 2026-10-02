@@ -184,6 +184,10 @@ check("  ..never dearer than the afro it stands for, from 0.01 G up",
       [])
 check("a repair keeps nine tenths of the ceiling (the original's hint, texts.xml 59813)",
       inventory.REPAIR_KEEPS, 0.9)
+check("a repair costs three tenths of the price: a Walther mended from broken for 840 afro,"
+      " from half worn for 420, against 2800 for a new one",
+      (inventory.RMOD, inventory.repair_prices(items.params_of(WALTHER), 0, 500)[0],
+       inventory.repair_prices(items.params_of(WALTHER), 250, 500)[0]), (0.3, 840, 420))
 
 # --- in process: Inventory.repair on a character ---------------------------------------------
 print()
@@ -262,11 +266,11 @@ REP, GOLD, RESTORE = inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD, inventory.
 OK, BROKEN = inventory.RES_OK, inventory.RES_BROKEN
 MENDED = ["ss_di_firearm", "userInfo_Player"]
 gun = thing(WALTHER, W_ABS // 2, W_ABS)
-check("Walther half worn, for afro: the window's 1400, back to 450 of 450 -- the ceiling"
-      " down a tenth; the ack, the thing, the money",
-      press(gun, REP), ([OK], MENDED, (450, 450), (1400, 0)))
+check("Walther half worn, for afro: the window's 420 (rmod 0.3), back to 450 of 450 -- the"
+      " ceiling down a tenth; the ack, the thing, the money",
+      press(gun, REP), ([OK], MENDED, (450, 450), (420, 0)))
 rstore.update_item(gun["uniq"], brk=100)
-want_gold = inventory.repair_gold(int(math.floor((1 - 100 / 450.0) * 2800)))
+want_gold = inventory.repair_gold(int(math.floor(inventory.RMOD * (1 - 100 / 450.0) * 2800)))
 check("  ..worn to 100 again, for gold: 0.%02d G, and the ceiling falls the same way, to 405"
       % want_gold, press(gun, GOLD), ([OK], MENDED, (405, 405), (0, want_gold)))
 rstore.update_item(gun["uniq"], brk=380)
@@ -274,7 +278,7 @@ want_light = inventory.repair_prices(items.params_of(WALTHER), 380, 405)[0]
 check("  ..at 380 of 405, worn less than a tenth (364): made whole where it stands, 380 of"
       " 380, for the window's %d afro -- no durability taken away, and no refusal the"
       " window has no words for" % want_light,
-      (want_light, press(gun, REP)), (172, ([OK], MENDED, (380, 380), (172, 0))))
+      (want_light, press(gun, REP)), (51, ([OK], MENDED, (380, 380), (51, 0))))
 check("  ..whole, a repair has nothing to do: 0, nothing paid, nothing moves -- what takes"
       " a thing «Отремонтировать все» mended out of the slot",
       press(gun, REP), ([OK], MENDED, (380, 380), (0, 0)))
@@ -296,7 +300,8 @@ check("  ..which the chat says, with no restore to offer for a thing with no gol
       [("исчерпана" in t, "золото" in t) for t in said()], [(True, False)])
 check("  ..and its restore is refused: the window offers none", press(dead, RESTORE)[0],
       [inventory.RES_REFUSED])
-check("short of the price: 21, nothing moves", short(thing(WALTHER, 0, W_ABS), REP, afro=1000),
+check("short of the price, 839 for 840: 21, nothing moves",
+      short(thing(WALTHER, 0, W_ABS), REP, afro=839),
       ([inventory.RES_NO_MONEY], [], (0, W_ABS), (0, 0)))
 
 vest = thing(GVEST, G_ABS // 2, G_ABS)
@@ -332,8 +337,8 @@ book = [(r["source"], r["ref"], r["afro"], r["gold"]) for r in rstore.ledger(rci
 check("the ledger: every repair and restore paid for, under «repair» and the thing's type;"
       " the vest's free repairs and the presses with nothing to do write nothing",
       (book[:3], len(book), sorted(set(b[0] for b in book)), [b for b in book if b[1] == GVEST]),
-      ([("repair", WALTHER, -1400, 0), ("repair", WALTHER, 0, -want_gold),
-        ("repair", WALTHER, -172, 0)],
+      ([("repair", WALTHER, -420, 0), ("repair", WALTHER, 0, -want_gold),
+        ("repair", WALTHER, -51, 0)],
        3 + len(tops) + 1 + 3, ["repair"], [("repair", GVEST, 0, -300)] * 3))
 rstore.close()
 
@@ -592,8 +597,8 @@ try:
           (K.get("gold_repair_mod"), K.get("gold_repair_price_mod"), K.get("gold_to_afro_rate")),
           (RATE, 1, RATE))
     shop = [p for p in named(arrival, "userInfo_Trader") if p.get("res") == PISTOLS]
-    check("«Пистолеты и патроны» on the black market trades and mends, rmod 1",
-          [(p.get("can_trade"), p.get("can_repair"), p.get("rmod")) for p in shop], [(1, 1, 1)])
+    check("«Пистолеты и патроны» on the black market trades and mends, rmod 0.3",
+          [(p.get("can_trade"), p.get("can_repair"), p.get("rmod")) for p in shop], [(1, 1, 0.3)])
     shop = shop[0] if shop else {}
     si = {}
     for t in (WALTHER, GVEST, SHOCK, OT):
@@ -635,9 +640,9 @@ try:
         wants[label] = ([0], pay, [new])
     check("each press charged what the window computes from the frames, and the thing came"
           " back as the rule says", results, wants)
-    check("  ..in figures: 1400 afro, 0.01 G, 112 afro (made whole at 480), nothing, nothing,"
+    check("  ..in figures: 420 afro, 0.01 G, 33 afro (made whole at 480), nothing, nothing,"
           " 3.00 G, 3.00 G", [results[label][1] for label, *_r in CASES],
-          [(1400, 0), (0, 1), (112, 0), (0, 0), (0, 0), (0, 300), (0, 300)])
+          [(420, 0), (0, 1), (33, 0), (0, 0), (0, 0), (0, 300), (0, 300)])
 
     # «Отремонтировать все», as the client sends it: every listed thing's
     # ss_upd at once, then one repAck per answer, each a 0 or the list
@@ -703,10 +708,10 @@ try:
     st.close()
     check("the ledger has each of them, and no row for the vest's free repairs or a press"
           " with nothing to do",
-          book, [("repair", WALTHER, -1400, 0), ("repair", WALTHER, 0, -1),
-                 ("repair", WALTHER, -112, 0),
+          book, [("repair", WALTHER, -420, 0), ("repair", WALTHER, 0, -1),
+                 ("repair", WALTHER, -33, 0),
                  ("repair", GVEST, 0, -300), ("repair", GVEST, 0, -300),
-                 ("repair", WALTHER, -112, 0), ("repair", WALTHER, -2240, 0),
+                 ("repair", WALTHER, -33, 0), ("repair", WALTHER, -672, 0),
                  ("shop_buy", SHOCK, 0, -100), ("shop_buy", OT, 0, -20)])
 except Exception:
     import traceback
