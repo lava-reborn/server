@@ -84,14 +84,7 @@ closed = subprocess.Popen([sys.executable, "bootstrap_http.py"], cwd=HERE,
 _clog = []
 threading.Thread(target=lambda: _clog.extend(closed.stdout), daemon=True).start()
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def wait_http(port, timeout=15):

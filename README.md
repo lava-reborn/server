@@ -92,8 +92,29 @@ powershell -ExecutionPolicy Bypass -File tools\run_suite.ps1 -Out D:\lava_suite 
 powershell -ExecutionPolicy Bypass -File tools\run_suite.ps1 -Out D:\lava_suite -Only test_combat,test_death
 ```
 
-Итог обоих лежит в `summary.txt` в папке результатов: код выхода, секунды, имя
-набора, ноль впереди значит зелёный; вывод каждого набора в `<имя>.out`. Под
+Оба вызывают `tools/suite.py`, его же можно звать напрямую (`python
+tools/suite.py --help`). Итог лежит в папке результатов: `summary.txt` (код
+выхода, секунды, имя набора, ноль впереди значит зелёный), вывод каждого
+набора в `<имя>.out` и `report.html`: механика, тест, проверка, статус и
+время каждой проверки, упавшие наборы первыми. Каждая проверка пишется через
+`server/testkit.py` (`check` наборов); механика набора берётся из его
+`MECHANIC` или первой строки docstring, тест из заголовка `# --- имя ---` над
+проверкой.
+
+Только затронутое правкой:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\run_suite.ps1 -Out D:\lava_suite -Affected
+python tools/suite.py --affected --list      # какие и почему, без запуска
+```
+
+`--affected` сравнивает рабочее дерево с `origin/main` и берёт: изменённый
+набор; для изменённой функции `server/` наборы, которые её исполняли; для
+строки вне функций (настройка, таблица) наборы, исполнявшие функции с этим
+именем; для файла `data/` наборы, чей код называет этот файл. Карта
+«набор → функции» пишется полным прогоном с `-RecordMap` (`--record-map`) в
+`tools/impact_map.json`, вне git. Без карты, а также при правке самой
+запускалки или `testkit`, гоняется всё. Под
 Windows к двум известным падениям добавляются `test_shutdown` (SIGTERM там
 означает TerminateProcess, сервер не успевает ни сказать, ни сохранить) и
 `data/test_orig_npcs` на чекауте с CRLF.
@@ -3458,7 +3479,10 @@ tools/
   export_texts.py         таблица строк в файл — байт в байт как ответ на ?all=1
   money_report.py         журнал денег: приход и расход по источникам, поясам и дням;
                           переводы с казнами кланов отдельно, раздел казны (clan_ledger)
-  run_suite.sh            все наборы разом, по N одновременно, самые долгие первыми
+  suite.py                все наборы разом, по N одновременно, самые долгие первыми;
+                          --affected только затронутые, report.html по проверкам
+  run_suite.sh/.ps1       то же из bash и PowerShell
+  suite_report.py         report.html по папке прогона
   npc_editor.py           имена жителей и ассортимент торговцев → data/npcs.json
   map_editor.py           границы карты кистью поверх тайлов → data/terrain_verified.json
   make_client_package.py  пакет игрока в dist/: texts.xml, lava.bat, README.txt

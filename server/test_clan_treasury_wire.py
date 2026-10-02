@@ -39,14 +39,7 @@ _st.close()
 CRED = {l: accounts.credential(l + RUN, "secret") for l in ("alice", "bob", "carol")}
 ALICE, BOB, CAROL = "Alice" + RUN, "Bob" + RUN, "Carol" + RUN
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def free_port():

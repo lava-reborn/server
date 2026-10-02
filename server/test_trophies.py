@@ -62,14 +62,7 @@ try:
 except ImportError:
     trophies = None
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 EAR, FINGER, SCALP, SKULL, HAND = 1495, 1494, 1493, 1492, 1496

@@ -4,13 +4,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from protocol import (decode, encode, frame, FrameReader, Str, Hex,
                       BigUInt, Repeated, every, escape, unescape)
 
-fails = []
+from testkit import check, fails  # noqa: E402
 
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
 
 # --- decoding, per SCDataParser.getData dispatch ---
 check("digit", decode("cmdAck;res=0;"), ("cmdAck", {"res": 0}))

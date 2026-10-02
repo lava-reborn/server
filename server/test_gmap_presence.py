@@ -47,14 +47,7 @@ ENC = "utf-8"
 import accounts   # noqa: E402
 import rooms      # noqa: E402
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def parse(frame):

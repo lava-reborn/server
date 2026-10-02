@@ -107,14 +107,7 @@ HEAVY = 4160                   # a 40 kg crate: two of them overload anybody
 PISTOL = inventory.STARTER_PISTOL
 ROUNDS = inventory.STARTER_AMMO
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 # --- in process: the table, and the strings it puts on the wire -------------

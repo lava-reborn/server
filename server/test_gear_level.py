@@ -50,14 +50,7 @@ import sets  # noqa: E402
 from inventory import BAG, CAMO, HEAD, PRIMARY, SECONDARY  # noqa: E402
 from protocol import decode  # noqa: E402
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 KIT = inventory.STARTER_PISTOL    # Самострел, asks for nothing

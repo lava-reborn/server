@@ -14,15 +14,7 @@ sys.path.insert(0, HERE)
 
 import orig_texts as O  # noqa: E402
 
-fails = []
-
-
-def check(label, got, want):
-    if got == want:
-        print("  ok  %s" % label)
-    else:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-        print("  BAD %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 BS = chr(92)

@@ -134,14 +134,7 @@ _store.register("tester", "secret")
 _store.close()
 CRED = accounts.credential("tester", "secret")
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 # --- the table and its strings, in process --------------------------------

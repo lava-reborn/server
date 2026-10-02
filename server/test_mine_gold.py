@@ -89,14 +89,7 @@ DAILY_MAX = 10                      # server.DAILY_MAX
 OUNCE = 100                         # gold travels in hundredths (progression.GOLD_OUNCE)
 DESIGNED = {WEAK: {SAND: 0.5, EMERALD: 0.1}, BANDIT: {SAND: 0.5, EMERALD: 0.1}}
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 # Read through getattr: on the code before this change it does not exist,

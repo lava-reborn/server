@@ -48,14 +48,7 @@ TARGET = 1397                 # nz_Target1
 CROSSBOW, BOLTS = 25562, 6188  # the kit's Самострел and its 9 mm
 RESPAWN = 3                   # LAVA_RESPAWN for the scene
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 LOC = world.location(RANGE)

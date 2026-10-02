@@ -80,14 +80,7 @@ _store.register("miner", "secret")
 _store.close()
 CRED = accounts.credential("miner", "secret")
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 MOUTH, TIER1, TIER2, TIER3 = 153, 612, 1011, 1217

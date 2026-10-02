@@ -52,14 +52,7 @@ DOG_HOME, BUM_HOME = 4551, 4363       # mStarvingDog_lvl1 and m05_bich
 DOG, BUM, BOX = 82, 411, 409          # the types
 KNIFE = 6229                          # knife_lvl1_A, a stall's first blade
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 # --- the rule, in process -------------------------------------------------------

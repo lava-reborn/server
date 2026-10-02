@@ -97,14 +97,7 @@ SOLD = int(math.floor(PRICE * inventory.SMOD))
 NOT_READY = 3                       # server.RES_NOT_READY
 DAILY_MAX = 10                      # server.DAILY_MAX
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 # Read through getattr: on the code before this change they do not exist,

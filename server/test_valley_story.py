@@ -94,14 +94,7 @@ import travel  # noqa: E402
 import world  # noqa: E402
 from protocol import decode  # noqa: E402
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 check("«В Хальфу!» is off in the real table: nobody gives or takes it",

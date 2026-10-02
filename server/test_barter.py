@@ -76,14 +76,7 @@ SETTLE = 0.5                    # LAVA_BARTER_SETTLE for this run
 WAIT = 6.0                      # LAVA_BARTER_WAIT
 LEFTOVERS = 0.3                 # LAVA_BARTER_LEFTOVERS
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 # --- in process: the rules the server applies before anything moves -----------

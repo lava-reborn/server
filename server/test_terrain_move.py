@@ -69,14 +69,7 @@ _log = []
 _drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
 _drain.start()
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def connect(timeout=10):

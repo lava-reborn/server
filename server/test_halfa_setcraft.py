@@ -51,14 +51,7 @@ from protocol import decode  # noqa: E402
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "data"))
 import build_setcraft  # noqa: E402
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 HENRY, OLD_HENRY, TIL = 93, 5104, 5

@@ -7,6 +7,8 @@ tools/*
 !tools/*.py
 !tools/run_suite.sh
 !tools/run_suite.ps1
+# The hook tools/suite.py --record-map puts on the path of every process.
+!tools/impact/
 dist/
 .env
 data/lava.db

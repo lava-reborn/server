@@ -14,14 +14,7 @@ sys.path.insert(0, HERE)
 import names
 import world
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def name(loc_id):

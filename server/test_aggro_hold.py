@@ -66,14 +66,7 @@ DOG, BOX = 82, 409                    # the types
 HOLD = 3                              # LAVA_LEAVE_COMBAT for the socket part
 OLD_LEASH, OLD_GIVE_UP = 24, 15.0     # what the code before the rule let go at
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 # --- in process: a real RoomCombat on a room with nobody on a socket ------------------
