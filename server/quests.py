@@ -786,6 +786,18 @@ def per_day_times(n):
     return "%d раза" % n if n % 10 == 1 and n % 100 != 11 else "%d раз" % n
 
 
+def per_day_start(start, per_day):
+    """A start as the player reads it: the daily note appended unless it says it."""
+    if not per_day or "в сутки" in start:
+        return start
+    return _TRAILING_BREAKS.sub("", start) + PER_DAY_NOTE % per_day_times(per_day)
+
+
+def served(q, k, line):
+    """An original line as q serves it at texts[k]: a daily start with its note."""
+    return per_day_start(line, q.per_day) if k == START else line
+
+
 def _say_per_day():
     """The daily note on every per_day quest whose start does not carry it.
 
@@ -800,12 +812,11 @@ def _say_per_day():
     and a row the overlay replaces (118) is read as the player will see it.
     """
     for q in QUESTS.values():
-        if not q.per_day or "в сутки" in q.texts[START]:
-            continue
-        texts = list(q.texts)
-        start = _TRAILING_BREAKS.sub("", texts[START])
-        texts[START] = start + PER_DAY_NOTE % per_day_times(q.per_day)
-        q.texts = tuple(texts)
+        start = per_day_start(q.texts[START], q.per_day)
+        if start != q.texts[START]:
+            texts = list(q.texts)
+            texts[START] = start
+            q.texts = tuple(texts)
 
 
 _say_per_day()

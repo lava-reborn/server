@@ -218,7 +218,7 @@ try:
           [t for t in MARKET_Q if t not in pinned], [])
     check("  ..laid over the table's",
           [t for t in MARKET_Q for k, key in enumerate(("name", "start", "notfinish", "finish"))
-           if orig.get(t, {}).get(key) and quests.get(t).texts[k] != orig[t][key]], [])
+           if orig.get(t, {}).get(key) and quests.get(t).texts[k] != quests.served(quests.get(t), k, orig[t][key])], [])
     check("  ..the newest edition: no line carries the 2012 number label",
           [t for t in MARKET_Q if any(TASK_LABEL.search(x) for x in quests.get(t).texts)], [])
     check("  ..«Еда»'s start and notfinish told apart by their task lines",

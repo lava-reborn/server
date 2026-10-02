@@ -228,7 +228,7 @@ try:
           " name the boss hours", [t for t in STORY if t not in pinned], sorted(HOURS))
     check("  ..laid over the table's",
           [t for t in STORY for k, key in enumerate(("name", "start", "notfinish", "finish"))
-           if orig.get(t, {}).get(key) and rows[t].texts[k] != orig[t][key]], [])
+           if orig.get(t, {}).get(key) and rows[t].texts[k] != quests.served(rows[t], k, orig[t][key])], [])
     texts_xml = {}
     try:
         sys.path.insert(0, os.path.join(os.path.dirname(HERE), "data"))
