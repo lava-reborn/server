@@ -25,14 +25,24 @@ push is ever tested, and deployed, on part of it.
 
 --affected compares the working tree with --base (origin/main) and runs:
 
-  * a suite that changed, itself;
-  * for a changed function of server/, every suite that ran it (the map);
-  * for a changed line outside any function -- a constant, a table -- every
-    suite that ran a function naming what the line assigns;
-  * for a changed file of data/, every suite that ran a function whose
-    source names the file, and the suites of data/ that name it;
-  * everything, for a change to the runner, testkit, or a file the map has
-    never seen run, and when there is no map at all.
+  * a suite that changed, itself, and a suite the map does not know yet;
+  * for a changed function of server/, every suite that ran it (the map) --
+    and for a line taken away, the function of the base that held it, so a
+    deleted line or a deleted function counts as much as a written one;
+  * for a changed assignment outside any function -- a constant, a table --
+    every suite that ran a function naming what it assigns; for any other
+    statement there (a call such as ALL.update(...), an if, a try, a with:
+    what it does is known only by running the module), every suite that ran
+    anything of the module;
+  * for a tool, tools/test_<it>.py and every suite that names it; for a
+    file of data/, every suite that ran a function whose source names the
+    file, and the suites that name it; for any other file, the suites that
+    name it -- and when nobody does, everything, unless it is the docs
+    (*.md, recon/, .github/);
+  * everything, for a change to the runner, testkit or the known list,
+    when git cannot say what changed, and when there is no map at all.
+
+Renames are read as a file gone and a file new (git diff --no-renames).
 
 The map is tools/impact_map.json, written by --record-map (a full run, with
 tools/impact/sitecustomize.py on the path of every process of it) and kept
@@ -88,53 +98,100 @@ def rel(path):
 
 
 # --- what a change touches ------------------------------------------------------------
+class GitFailed(Exception):
+    """git could not answer: no such base, or not a checkout git can read
+    from here (WSL git in a worktree whose .git names a Windows path)."""
+
+
 def git(*args):
-    return subprocess.run(["git"] + list(args), cwd=ROOT, capture_output=True,
-                          text=True, encoding="utf-8", errors="replace").stdout
+    """git's output, or GitFailed: an answer git did not give is never taken
+    for «nothing changed»."""
+    try:
+        p = subprocess.run(["git", "-c", "core.quotepath=off"] + list(args), cwd=ROOT,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+    except OSError as exc:
+        raise GitFailed("git %s: %s" % (args[0], exc))
+    if p.returncode != 0:
+        raise GitFailed("git %s: %s" % (" ".join(args), (p.stderr or p.stdout).strip()[:300]))
+    return p.stdout
 
 
-def changed_lines(base):
-    """{path: set of changed line numbers in the working tree, or None for a
-    file that is new or gone}: the commits since base and what is not
-    committed yet, together."""
+# A whole file: new, gone, binary, or a change with no lines to read.
+WHOLE = "whole"
+
+
+def parse_diff(diff):
+    """{path: (new, old)} of `git diff -U0 --no-renames`: the lines of the
+    working tree a hunk wrote, and the lines of the base it took away, each
+    a set -- or WHOLE for a file that is new or gone (a rename is both: the
+    old name gone, the new one new), and for one whose change has no lines
+    (binary, a mode)."""
     out = {}
-    merge_base = git("merge-base", base, "HEAD").strip() or base
-    diff = git("diff", "-U0", "--no-color", merge_base, "--")
-    path = None
+    cur = None
     for line in diff.splitlines():
-        if line.startswith("+++ "):
-            p = line[4:].strip()
-            path = None if p == "/dev/null" else p[2:] if p.startswith("b/") else p
-            if path is not None:
-                out.setdefault(path, set())
-        elif line.startswith("--- ") and path is None:
+        if line.startswith("diff --git "):
+            m = re.match(r"diff --git a/(.*) b/(.*)$", line)
+            cur = None
+            if m:
+                cur = m.group(2)
+                out[cur] = (WHOLE, WHOLE)
+        elif cur is None:
             continue
-        elif line.startswith("@@") and path is not None:
-            m = re.match(r"@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", line)
-            start, n = int(m.group(1)), int(m.group(2) or 1)
-            # A pure deletion (n == 0) still touches the line it was cut beside.
-            out[path].update(range(start, start + max(n, 1)))
-    for p in git("ls-files", "--others", "--exclude-standard").splitlines():
-        out[p] = None
-    for line in diff.splitlines():
-        if line.startswith("--- a/"):
-            p = line[6:].strip()
-            if p not in out:
-                out[p] = None                     # deleted
+        elif line.startswith("new file mode") or line.startswith("deleted file mode"):
+            continue
+        elif line.startswith("--- "):
+            gone_before = line[4:].strip() == "/dev/null"
+            out[cur] = (out[cur][0], WHOLE if gone_before else set())
+        elif line.startswith("+++ "):
+            gone_now = line[4:].strip() == "/dev/null"
+            out[cur] = (WHOLE if gone_now else set(), out[cur][1])
+        elif line.startswith("@@"):
+            m = re.match(r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@", line)
+            if not m:
+                continue
+            a, k = int(m.group(1)), int(m.group(2) if m.group(2) is not None else 1)
+            b, n = int(m.group(3)), int(m.group(4) if m.group(4) is not None else 1)
+            new, old = out[cur]
+            if new is not WHOLE:
+                new.update(range(b, b + n))
+            if old is not WHOLE:
+                old.update(range(a, a + k))
     return out
 
 
-class Source(object):
-    """One file of server/ read with ast: its functions by qualname with
-    their lines, and the names each function's body uses."""
+def changed_lines(base):
+    """(merge base, {path: (new, old)}): the commits since base and what is
+    not committed yet, together (parse_diff), and the files git does not
+    know yet as new. GitFailed if git cannot say."""
+    merge_base = git("merge-base", base, "HEAD").strip()
+    if not merge_base:
+        raise GitFailed("git merge-base %s HEAD: no answer" % base)
+    out = parse_diff(git("diff", "-U0", "--no-color", "--no-renames", "--no-ext-diff",
+                         merge_base, "--"))
+    for p in git("ls-files", "--others", "--exclude-standard").splitlines():
+        if p.strip():
+            out[p.strip()] = (WHOLE, WHOLE)
+    return merge_base, out
 
-    def __init__(self, path):
+
+class Source(object):
+    """One file of server/ read with ast -- the working tree's, or the text
+    given (the base's): its functions by qualname with their lines, the
+    names each function's body uses, and its module-level statements."""
+
+    def __init__(self, path, text=None):
         self.functions = {}       # qualname -> (first, last)
         self.names = {}           # qualname -> set of names used
+        self.lines = []           # the text, line by line
+        self.body = []            # module-level statements
         try:
-            tree = ast.parse(open(os.path.join(ROOT, path), encoding="utf-8").read())
+            if text is None:
+                text = open(os.path.join(ROOT, path), encoding="utf-8").read()
+            self.lines = text.splitlines()
+            tree = ast.parse(text)
         except (OSError, SyntaxError, ValueError):
             return
+        self.body = tree.body
         self._walk(tree, "")
 
     def _walk(self, node, prefix):
@@ -165,41 +222,72 @@ class Source(object):
                 best = q
         return best
 
+    def code(self, lines):
+        """The lines that are code: a comment or a blank line changes
+        nothing a suite could see."""
+        return {n for n in lines if 1 <= n <= len(self.lines) and self.lines[n - 1].strip()
+                and not self.lines[n - 1].strip().startswith("#")}
 
-def assigned_names(path, lines):
-    """The names module-level statements on these lines bind."""
-    try:
-        tree = ast.parse(open(os.path.join(ROOT, path), encoding="utf-8").read())
-    except (OSError, SyntaxError, ValueError):
-        return set()
-    names = set()
-    for stmt in tree.body:
-        if not any(stmt.lineno <= n <= stmt.end_lineno for n in lines):
-            continue
-        targets = []
-        if isinstance(stmt, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
-            targets = stmt.targets if isinstance(stmt, ast.Assign) else [stmt.target]
-        elif isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            names.add(stmt.name)
-        elif isinstance(stmt, (ast.Import, ast.ImportFrom)):
-            names.update((a.asname or a.name).split(".")[0] for a in stmt.names)
-        for t in targets:
-            for n in ast.walk(t):
-                if isinstance(n, ast.Name):
-                    names.add(n.id)
-    return names
+    def module_names(self, lines):
+        """(names, whole): the names the module-level statements on these
+        lines bind -- an assignment's targets, a def's or a class's name, an
+        import's -- and whether any of them is something else, a call or a
+        block (ALL.update(...), an if, a try, a with): what that does is
+        known only by running the module, so the whole of it is touched."""
+        names, whole = set(), False
+        for stmt in self.body:
+            if not any(stmt.lineno <= n <= stmt.end_lineno for n in lines):
+                continue
+            if isinstance(stmt, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+                targets = stmt.targets if isinstance(stmt, ast.Assign) else [stmt.target]
+                for t in targets:
+                    for n in ast.walk(t):
+                        if isinstance(n, ast.Name):
+                            names.add(n.id)
+                        elif isinstance(n, ast.Attribute):
+                            names.add(n.attr)
+            elif isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                names.add(stmt.name)
+            elif isinstance(stmt, (ast.Import, ast.ImportFrom)):
+                names.update((a.asname or a.name).split(".")[0] for a in stmt.names)
+            elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant):
+                continue                          # a docstring
+            else:
+                whole = True
+        return names, whole
+
+
+# Paths a suite never reads unless one names them: the docs and the
+# decompiled client's notes. Anything else nobody names runs every suite.
+INERT_PREFIXES = ("recon/", ".github/")
+INERT_SUFFIXES = (".md",)
 
 
 def affected(base, impact):
-    """(suite names, why): what the change since base asks to run."""
+    """(suite names, why): what the change since base asks to run.
+
+    Whatever cannot be told runs: no map, git failing, a file nobody is
+    known to read. A run of too much costs minutes; one of too little is a
+    change that looked tested and was not."""
     every = {name_of(p): p for p in suites()}
     if impact is None:
         return sorted(every), {"*": "no map (python tools/suite.py --record-map)"}
+    try:
+        merge_base, changes = changed_lines(base)
+    except GitFailed as exc:
+        return sorted(every), {"*": "git cannot say what changed, so everything: %s" % exc}
     ran = {s: set(keys) for s, keys in impact["suites"].items()}
     by_key = {}
     for s, keys in ran.items():
         for k in keys:
             by_key.setdefault(k, set()).add(s)
+    texts = {}
+
+    def text_of(n):
+        if n not in texts:
+            texts[n] = open(every[n], encoding="utf-8").read()
+        return texts[n]
+
     sources = {}
 
     def src(path):
@@ -207,10 +295,23 @@ def affected(base, impact):
             sources[path] = Source(path)
         return sources[path]
 
+    def old_src(path):
+        key = (merge_base, path)
+        if key not in sources:
+            try:
+                sources[key] = Source(path, git("show", "%s:%s" % (merge_base, path)))
+            except GitFailed:
+                sources[key] = None
+        return sources[key]
+
     # A function nearly every suite runs -- read at import, the way a
     # setting is (bosses.stay_from), or the session's own dispatch -- says
     # nothing about which mechanic a name belongs to.
     common = len(ran) * 3 // 4
+
+    def naming(words):
+        """Suites whose own source names any of these words."""
+        return {n for n in every if any(w in text_of(n) for w in words)}
 
     def users_of(names, path=None):
         """Suites that ran a function of server/ whose body uses any of names,
@@ -224,13 +325,17 @@ def affected(base, impact):
                 out |= who
         if out:
             return out
-        words = set(names)
         stem = os.path.splitext(os.path.basename(path))[0] if path else None
-        for n, p in every.items():
-            text = open(p, encoding="utf-8").read()
-            if (stem in text) if stem else any(w in text for w in words):
-                out.add(n)
-        return out
+        return naming([stem] if stem else names)
+
+    def whole_module(path):
+        """Every suite that ran any function of the file, else every one
+        that names it, else all of them."""
+        hit = set()
+        for k, who in by_key.items():
+            if k.startswith(path + ":"):
+                hit |= who
+        return hit or naming([os.path.splitext(os.path.basename(path))[0]]) or set(every)
 
     picked, why = set(), {}
 
@@ -240,54 +345,72 @@ def affected(base, impact):
                 picked.add(n)
                 why[n] = reason
 
-    for path, lines in sorted(changed_lines(base).items()):
+    # A suite the map has never seen run (added since it was recorded) is
+    # never anyone's user: it runs, whatever changed.
+    take(sorted(set(every) - set(ran)), "not in the map yet")
+
+    def server_lines(path, source, lines, side):
+        module = set()
+        for n in source.code(lines):
+            q = source.owner(n)
+            if q is None:
+                module.add(n)
+                continue
+            key = "%s:%s" % (path, q)
+            if key in by_key:
+                take(by_key[key], "ran %s%s" % (key, side))
+            else:
+                # Nobody ran it yet (new, or renamed): whoever runs a
+                # function that calls it by name.
+                take(users_of({q.split(".")[-1]}) or whole_module(path),
+                     "calls %s%s (not in the map)" % (key, side))
+        if module:
+            names, whole = source.module_names(module)
+            if whole:
+                take(whole_module(path), "%s runs at import%s" % (path, side))
+            elif names:
+                take(users_of(names, path) or whole_module(path),
+                     "uses %s of %s%s" % (", ".join(sorted(names)), path, side))
+
+    for path, (new, old) in sorted(changes.items()):
         if path in EVERYTHING:
             return sorted(every), {"*": "the runner or testkit changed: %s" % path}
         base_name = os.path.basename(path)
+        stem = os.path.splitext(base_name)[0]
         if base_name.startswith("test_") and base_name.endswith(".py"):
             take([name_of(path)], "the suite itself changed")
             continue
         if path.startswith("server/") and path.endswith(".py"):
-            s = src(path)
-            if lines is None:
-                hit = set()
-                for k, who in by_key.items():
-                    if k.startswith(path + ":"):
-                        hit |= who
-                if not hit and not s.functions:
-                    continue                        # gone, and nobody ran it
-                take(hit or every, "%s is new or gone" % path)
+            if new is WHOLE or old is WHOLE:
+                take(whole_module(path), "%s is new or gone" % path)
                 continue
-            text = open(os.path.join(ROOT, path), encoding="utf-8").read().splitlines()
-            # A comment or a blank line changes nothing a suite could see.
-            lines = {n for n in lines if n <= len(text) and text[n - 1].strip()
-                     and not text[n - 1].strip().startswith("#")}
-            module_lines = set()
-            for n in lines:
-                q = s.owner(n)
-                if q is None:
-                    module_lines.add(n)
-                    continue
-                key = "%s:%s" % (path, q)
-                if key in by_key:
-                    take(by_key[key], "ran %s" % key)
-                else:
-                    # Nobody ran it yet (new, or renamed): whoever runs a
-                    # function that calls it by name.
-                    take(users_of({q.split(".")[-1]}), "calls %s (not in the map)" % key)
-            if module_lines:
-                names = assigned_names(path, module_lines)
-                if names:
-                    take(users_of(names, path), "uses %s of %s" % (", ".join(sorted(names)), path))
+            server_lines(path, src(path), new, "")
+            # What was taken away, by the base's own lines: a deleted line
+            # (or a whole function) belongs to what held it there, not to
+            # the line the cut now stands beside.
+            before = old_src(path)
+            if before is None:
+                take(whole_module(path), "%s: the base cannot be read" % path)
+            else:
+                server_lines(path, before, old, " (taken away)")
+            continue
+        if path.startswith("tools/") and path.endswith(".py"):
+            # A tool runs in its own suite (tools/test_X.py), and in any
+            # suite that names it (test_clan_admin_wire runs admin_account).
+            hit = {n for n in ("test_" + stem,) if n in every} | naming([stem])
+            take(hit or set(every), "runs %s" % path)
             continue
         if path.startswith("data/"):
-            stem = os.path.splitext(base_name)[0]
-            take(users_of({base_name, stem}), "reads %s" % path)
-            for n, p in every.items():
-                if p.startswith(os.path.join(ROOT, "data")) and base_name in open(p, encoding="utf-8").read():
-                    take([n], "names %s" % path)
+            hit = users_of({base_name, stem}) | naming([base_name])
+            take(hit or set(every), "reads %s" % path)
             continue
-        # Docs, the launcher, the client patcher: nothing a suite runs.
+        hit = naming([base_name, path])
+        if hit:
+            take(hit, "names %s" % path)
+        elif not (path.startswith(INERT_PREFIXES) or path.endswith(INERT_SUFFIXES)):
+            # Nobody names it, and it is not the docs: whether a suite reads
+            # it cannot be told from here.
+            take(set(every), "%s: no suite names it, so everything" % path)
     return sorted(picked), why
 
 
@@ -325,6 +448,30 @@ def by_last_run(paths, out):
     if not took:
         return list(paths)
     return sorted(paths, key=lambda p: -took.get(name_of(p), 99999))
+
+
+# Each suite in a process group of its own, so that a timeout takes the
+# servers it started along with it, as GNU timeout does for run_suite.sh: a
+# server left behind keeps its port and a CPU for the rest of the run.
+OWN_GROUP = (dict(creationflags=subprocess.CREATE_NEW_PROCESS_GROUP) if os.name == "nt"
+             else dict(start_new_session=True))
+
+
+def kill_group(p):
+    """The suite and everything it started."""
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)],
+                           capture_output=True)
+        else:
+            import signal
+            os.killpg(p.pid, signal.SIGKILL)
+    except OSError:
+        pass
+    try:
+        p.kill()
+    except OSError:
+        pass
 
 
 def run(paths, out, jobs, res, stagger, record_dir=None, timeout=1500):
@@ -374,7 +521,7 @@ def run(paths, out, jobs, res, stagger, record_dir=None, timeout=1500):
             fo = open(os.path.join(out, n + ".out"), "w", encoding="utf-8")
             fe = open(os.path.join(out, n + ".err"), "w", encoding="utf-8")
             p = subprocess.Popen([sys.executable, os.path.basename(path)], cwd=os.path.dirname(path),
-                                 env=env, stdout=fo, stderr=fe)
+                                 env=env, stdout=fo, stderr=fe, **OWN_GROUP)
             running[p.pid] = (p, n, time.time(), fo, fe)
             last_start = time.time()
         time.sleep(0.5)
@@ -382,7 +529,7 @@ def run(paths, out, jobs, res, stagger, record_dir=None, timeout=1500):
             p, n, t0, fo, fe = running[pid]
             code = p.poll()
             if code is None and time.time() - t0 > timeout:
-                p.kill()
+                kill_group(p)
                 code = p.wait()
             if code is not None:
                 fo.close()
