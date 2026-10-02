@@ -5,6 +5,8 @@ logs/
 # a file whose parent directory is excluded.
 tools/*
 !tools/*.py
+!tools/run_suite.sh
+!tools/run_suite.ps1
 dist/
 .env
 data/lava.db
