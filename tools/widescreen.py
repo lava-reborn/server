@@ -35,6 +35,20 @@ Two changes, both in the client's own bytecode, and nothing else in the file:
    LEventDispatcher.addEventListener stores handler[event] at the moment of
    registration, not a name to look up later.
 
+3. The doubled «+N опыта». SpecSkillMessages, the service that prints a
+   skill's experience, is built with every Gamer and subscribes to the
+   skills five seconds later, on a Timeout nobody cancels
+   (SpecSkillMessages.as:13-30). A Gamer killed inside those five seconds --
+   a location left for the map within them -- kills a service that has not
+   subscribed yet, so its kill() removes nothing; the Timeout then fires and
+   subscribes the orphan to the skills of whoever is master.gamer by then,
+   for good. Every such quick visit adds one more listener, and one more
+   copy of every «Медицина: +74 опыта» from then on (a player counted three).
+
+   The same wrapping as the frame's, on SpecSkillMessages.prototype.init:
+   the original runs only while master.gamer.ssMessages is this very
+   service, which a Gamer's kill() has already deleted for an orphan.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -504,6 +518,21 @@ def fn_wrapper(call):
     return a
 
 
+def fn_messages():
+    """SpecSkillMessages.init(): the original, unless this service is an
+    orphan -- not the one master.gamer holds, because the Gamer it was made
+    with is dead and deleted it (Gamer.as:361-368). Written as
+    `if (Master.getInstance().gamer.ssMessages == this) this.__wideOrig()`."""
+    a = Asm()
+    a.var("this")
+    a.push(0).var("lol").member("core", "Master").push("getInstance").op("callmethod")
+    a.member("gamer", "ssMessages")
+    a.op("equals2").op("not").iftrue("out")
+    a.push(0).var("this").push("__wideOrig").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
 def injected():
     a = Asm()
     for name, fn, params in (
@@ -523,6 +552,8 @@ def injected():
          ("obj",), fn_wrapper(MARK)),
         (("services", "ChatPan"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper("__wideChat")),
+        (("services", "SpecSkillMessages"), "init", "__wideOrig",
+         (), fn_messages()),
     )
     for path, method, keep, params, body in wraps:
         cls = path[-1]
