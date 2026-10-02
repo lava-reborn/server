@@ -37,7 +37,7 @@ gets; the bandit chief's head falling from his body only for somebody whose
 «Быть или не быть»'s two rows shutting each other.
 
 On a socket, on a copy of the table with the two-drop row switched on (the
-way test_valley_story holds «В Хальфу!»): «Выборы» walked end to end --
+way test_quest_mechanics holds «В Хальфу!»): «Выборы» walked end to end --
 every take and hand-in through the server, the things put in the bag with
 /give, the kills credited through quests.kill_progress on the server's own
 database, as a fight's count_kill does --; Каспар's fee refused while the
