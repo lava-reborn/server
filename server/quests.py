@@ -51,7 +51,12 @@ does):
                 original's «данное задание можно выполнять не чаще 1 раза в
                 сутки» is per_day 1 («На сегодня это всё. Приходи завтра.»).
                 The day is the daily limit's (server.py DAILY_RESET_TIME),
-                and the hand-in still counts against that limit too;
+                and the hand-in still counts against that limit too. The
+                player is told: a start that does not say «в сутки» gets
+                the original's note appended (_say_per_day), because the
+                client prints «Задание является повторяемым» off the
+                repeatable flag alone and the spent quest just leaves the
+                giver's list, with no word why;
   cooldown      seconds: a repeatable quest handed in less than this long
                 ago is not offered again yet -- the plant's lines, «Цикл
                 закончен. Повторное использование возможно через 20 минут»
@@ -159,6 +164,7 @@ socket instead.
 import json
 import os
 import random
+import re
 
 import progression                 # no imports of its own; safe at load
 
@@ -764,6 +770,45 @@ def _lay_original():
 
 
 _lay_original()
+
+
+# The note the original writes at the end of a daily quest's start, in the
+# words of «В поисках артефактов» (405) and nine others of its rows.
+PER_DAY_NOTE = "<Br><Br><b>Примечание:</b> данное задание можно выполнять не чаще %s в сутки."
+# Breaks a start ends on (181 «Курьер» on <Br>, 182 «Медик Умар» on </Br><Br>):
+# the note brings its own two, and a blank line between would be a third.
+_TRAILING_BREAKS = re.compile(r"(?:\s|</?br\s*/?>)+$", re.IGNORECASE)
+
+
+def per_day_times(n):
+    """«1 раза», «3 раз»: the count as the note declines it."""
+    n = int(n)
+    return "%d раза" % n if n % 10 == 1 and n % 100 != 11 else "%d раз" % n
+
+
+def _say_per_day():
+    """The daily note on every per_day quest whose start does not carry it.
+
+    The original's own dailies say it in their text; the rows this server
+    made daily (DESIGNED per_day: «Золотоискатель», the prison's armbands,
+    the quarry's stones) did not, and the client has no flag to say it for
+    them: Quest.repeatable alone makes it print «Задание является
+    повторяемым», and a quest handed in today is simply not offered
+    (server.py Session.quest_available), so a player read «повторяемым»,
+    found the quest gone, and reported a fault (2026-10-02). After the
+    original's texts are laid, so that an original start keeps its own note
+    and a row the overlay replaces (118) is read as the player will see it.
+    """
+    for q in QUESTS.values():
+        if not q.per_day or "в сутки" in q.texts[START]:
+            continue
+        texts = list(q.texts)
+        start = _TRAILING_BREAKS.sub("", texts[START])
+        texts[START] = start + PER_DAY_NOTE % per_day_times(q.per_day)
+        q.texts = tuple(texts)
+
+
+_say_per_day()
 
 
 def get(quest_type):
