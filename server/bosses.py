@@ -203,3 +203,31 @@ def describe():
         return "bosses keep no hours (LAVA_BOSS_HOURS is off)"
     return "bosses come at %s %s and stay %g min" % (
         ", ".join("%d:%02d" % divmod(m, 60) for m in HOURS), TZ_NAME, STAY / 60.0)
+
+
+def _and(parts):
+    """«14, 18 и 20»: a Russian list."""
+    return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " и " + parts[-1]
+
+
+def _hours_word(n):
+    """«час», «часа», «часов» for the hour a list ends on."""
+    if n % 10 == 1 and n % 100 != 11:
+        return "час"
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return "часа"
+    return "часов"
+
+
+def say_hours(short=False):
+    """The hours as a quest's start names them (quests._say_boss_hours):
+    «в 14:00, 18:00 и 20:00», or short, «в 14, 18 и 20 часов», which falls
+    back to the long one where an hour has minutes. A text that tells a
+    player when to come must say what the server does, whatever
+    LAVA_BOSS_HOURS is; with the rule off a boss stands all day."""
+    if not HOURS:
+        return "в любое время"
+    if short and not any(m % 60 for m in HOURS):
+        last = HOURS[-1] // 60
+        return "в %s %s" % (_and([str(m // 60) for m in HOURS]), _hours_word(last))
+    return "в " + _and(["%d:%02d" % divmod(m, 60) for m in HOURS])

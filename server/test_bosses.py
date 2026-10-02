@@ -71,6 +71,24 @@ def at(h, m=0, s=0, day=24):
 check("the owner's hours are the default: 14:00, 18:00 and 20:00, for an hour, in Moscow",
       (bosses.HOURS, bosses.STAY, bosses.TZ_NAME),
       ([14 * 60, 18 * 60, 20 * 60], 3600.0, "Europe/Moscow"))
+check("  ..as the quests' starts name them, long and short",
+      (bosses.say_hours(), bosses.say_hours(short=True)),
+      ("в 14:00, 18:00 и 20:00", "в 14, 18 и 20 часов"))
+_hours = bosses.HOURS
+try:
+    bosses.HOURS = [18 * 60, 22 * 60]
+    _two = bosses.say_hours(short=True)
+    bosses.HOURS = [21 * 60]
+    _one = bosses.say_hours(short=True)
+    bosses.HOURS = [18 * 60 + 30]
+    _half = bosses.say_hours(short=True)
+    bosses.HOURS = []
+    _off = bosses.say_hours()
+finally:
+    bosses.HOURS = _hours
+check("  ..the hour's word agrees with the last, minutes keep the long form, no hours"
+      " is any time", (_two, _one, _half, _off),
+      ("в 18 и 22 часа", "в 21 час", "в 18:30", "в любое время"))
 check("six in the evening in Moscow is three in the afternoon UTC",
       at(18), datetime(2026, 9, 24, 15, tzinfo=timezone.utc).timestamp())
 check("a second before six: no window", bosses.slot(at(17, 59, 59)), None)
