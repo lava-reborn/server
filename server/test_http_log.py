@@ -39,14 +39,7 @@ ROOT = os.path.dirname(HERE)
 GATE = os.path.join(ROOT, "deploy", "remote", "lava-gate.sh")
 sys.path.insert(0, HERE)
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 def free_port():

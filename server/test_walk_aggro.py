@@ -50,14 +50,7 @@ DUMP = 100
 DOG_HOME, DOG = 4551, 82              # mStarvingDog_lvl1
 STEP = mobs.HEX_MS / 1000.0
 
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
+from testkit import check, fails  # noqa: E402
 
 
 LOC = world.location(DUMP)
