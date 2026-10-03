@@ -828,7 +828,12 @@ class Session:
         if not all(mobs.adjacent(a, b, loc) for a, b in zip(cells, cells[1:])):
             return None
         here = self.live_cell()
-        passed = self.walk[0] if self.walk is not None else ()
+        passed = ()
+        if self.walk is not None:
+            # Up to the hex the figure is on, not beyond: a turn from a hex
+            # still ahead would put it there before it got there.
+            walking = self.walk[0]
+            passed = walking[:walking.index(here) + 1] if here in walking else ()
         if not (cells[0] in passed or cells[0] == self._pos
                 or progression.within_reach(cells[0], here, loc.width, loc.height)):
             return None

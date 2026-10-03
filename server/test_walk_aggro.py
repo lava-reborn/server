@@ -206,11 +206,17 @@ async def _walk_of():
     check("  ..nor a path that jumps", sess.walk_of([start, honest[1], end]), None)
     far = next(c for c in honest if mobs.hex_distance(c, start, W) >= 4)
     check("  ..nor one that starts away from the figure", sess.walk_of(honest[honest.index(far):]), None)
-    sess.walk = sess.walk_of(honest)
-    await asyncio.sleep(STEP * 3 + 0.05)
+    # Three steps and a bit into the walk, the figure on its fourth hex: the
+    # walk begun that long ago rather than waited for, so that no load on
+    # the machine can carry it to its end in the meantime.
+    sess.walk = (honest, asyncio.get_running_loop().time() - STEP * 3.5)
+    check("  ..the figure on the fourth hex of it", sess.live_cell(), honest[3])
     behind = honest[1]
     check("a turn sent from a hex the figure has already passed is followed",
           sess.walk_of(mobs.find_path(LOC, behind, lambda x: x == start)) is not None, True)
+    ahead = honest[-2]
+    check("  ..not one from a hex still ahead of it",
+          sess.walk_of(mobs.find_path(LOC, ahead, lambda x: x == start)), None)
 
 
 try:
