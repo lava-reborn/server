@@ -30,7 +30,7 @@ def _load():
         with open(PATH, encoding="utf-8") as fh:
             doc = json.load(fh)
     except FileNotFoundError:
-        return {}, {}, {}, frozenset()
+        return {}, {}, {}, {}
     except (OSError, ValueError) as e:
         # Deliberately loud, like the wiki tables in items.py: a file that is
         # there but unreadable is a mistake someone just made, and starting
@@ -46,13 +46,20 @@ def _load():
     # none takes server.MEDIC_PRICE.
     healer = {int(k): int(v) for k, v in (doc.get("healer_price") or {}).items()
               if not str(k).startswith("_")}
-    # Types that register nobody's home: things, not people -- a box, a
-    # rock, a fountain -- whatever class mobs.xml gives them (world.offers_home).
-    no_home = frozenset(int(t) for t in (doc.get("no_home") or {}).get("types", ()))
-    return names, stock, healer, no_home
+    # Healers register homes by default; other eligible NPCs need an
+    # explicit decision with its source. False can also disable a healer.
+    home = {}
+    for key, row in (doc.get("home") or {}).items():
+        if str(key).startswith("_"):
+            continue
+        if not isinstance(row, dict) or type(row.get("home")) is not bool \
+                or not str(row.get("why") or "").strip():
+            raise RuntimeError("data/npcs.json home %s needs a boolean home and a why" % key)
+        home[int(key)] = row["home"]
+    return names, stock, healer, home
 
 
-NAMES, STOCK, HEALER_PRICE, NO_HOME = _load()
+NAMES, STOCK, HEALER_PRICE, HOME = _load()
 
 
 def name(type_id):
@@ -74,6 +81,6 @@ def healer_price(type_id, default):
     return HEALER_PRICE.get(type_id, default)
 
 
-def no_home(type_id):
-    """Whether this type is a thing that registers nobody's home."""
-    return type_id in NO_HOME
+def home(type_id):
+    """An explicit registration decision, or None to use the NPC's class."""
+    return HOME.get(type_id)

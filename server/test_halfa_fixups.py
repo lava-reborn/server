@@ -291,9 +291,8 @@ combat.OBJECTS_PAY_XP = False
 # --- 7. things register nobody's home -------------------------------------------------------
 check("Rahat's dead wife (68, 47) and the skull of treasure island (2099, 139) register"
       " nobody's home", (world.offers_home(68), world.offers_home(2099)), (False, False))
-check("  ..the hermit, Джо, the children, the refugee, Тиль's driver do; so do the cows,"
-      " the valley's decision",
-      [world.offers_home(t) for t in (74, 103, 423, 425, 1977, 666, 115)], [True] * 7)
+check("  ..unlisted residents and cows no longer register homes either",
+      [world.offers_home(t) for t in (74, 103, 423, 425, 1977, 666, 115)], [False] * 7)
 # Not the premium masters' camp 124: off the map since the owner's cut of (P)
 # (2026-09-30, data/retired.json), and nobody stands in it.
 PLACES = ([41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 468, 452, 456, 457, 60,
@@ -305,17 +304,17 @@ PLACES = ([41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 468, 452, 456, 45
           + [200, 201, 202, 657, 658, 659, 1025, 1218, 1255, 1027, 1220, 1257, 1026, 1219, 1256]
           + [154, 158, 160, 613, 617, 1012, 1016, 1024])
 MT = world.mob_types()
-THING_ARTS = {MT[t][2] for t in npcs.NO_HOME if t in MT}
+THING_ARTS = {MT[t][2] for t in (68, 75, 104, 625, 634, 816, 2099, 2279, 1135)}
 homes = {}
 for loc_id in PLACES:
     room = rooms.Room(world.location(loc_id), rooms.IdAllocator(), MT)
     for npc in room.npcs.values():
         t = npc.type_id
         if MT[t][0] in (world.COMMONER, world.HEALER) and not inventory.is_bank(t) \
-                and world.offers_home(t):
+                and world.offers_home(t, MT[t][0]):
             homes.setdefault(t, loc_id)
 check("no Commoner of Halfa's places that registers a home is drawn as a thing is"
-      " (the art of a no_home type: a box, a terminal, a corpse, a skull ...)",
+      " (a box, a corpse, a skull, a fountain or a grindstone)",
       sorted((t, MT[t][2], homes[t]) for t in homes if MT[t][2] in THING_ARTS), [])
 
 # --- the retired quests leave the journals once ---------------------------------------------

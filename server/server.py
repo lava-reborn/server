@@ -2015,11 +2015,9 @@ class Session:
             # client would put the support tab first (NPCService.openService),
             # and leaving the bank tab kills the bank (BankInterface.kill ->
             # Bank.kill clears gamer.bank) until the NPC is clicked again.
-            # Anyone else here is where a home is registered -- but for a
-            # thing put down by hand that says it registers nobody's
-            # (world.offers_home): the valley's tools box gives its quest and
-            # nothing else, and with no quest left clicking it opens nothing
-            # (NPCService.openService has no tab to show).
+            # Other Commoners register homes only when explicitly listed
+            # in npcs.json. An inhabitant with no service or quest opens
+            # nothing (NPCService.openService has no tab to show).
             if inventory.is_bank(type_id):
                 params.update(can_banking=1)
             elif self.home_here(type_id):
@@ -3098,14 +3096,11 @@ class Session:
     @staticmethod
     def offers_home(type_id):
         """Whether an inhabitant of this type registers a home («Прописка»,
-        on_conv;op=0): a Commoner of mobs.xml that is no bank, or a healer,
-        and not a thing (world.offers_home: data/npcs.json 'no_home', a
-        placement's home: false). By mobs.xml's class, so Демир, a Commoner
-        built as a Trader for his trophies (world.entity_root), still takes
-        it as he did (test_trophies), though his frame no longer offers it:
-        the frames offer it by the class they are built as (send_npc_info)."""
+        on_conv;op=0): a healer or an explicitly listed Commoner, never a
+        bank. The same rule governs the advertised service and the command,
+        including NPCs built as Traders for their trophies."""
         root = MOB_TYPES.get(type_id, (None,))[0]
-        return root in (world.COMMONER, world.HEALER)             and not inventory.is_bank(type_id) and world.offers_home(type_id)
+        return not inventory.is_bank(type_id) and world.offers_home(type_id, root)
 
     def home_here(self, type_id):
         """offers_home, where a home can be: not in a place left only by its
@@ -3158,9 +3153,8 @@ class Session:
         (Rent.getTransport: p1 type, p2 days). Each expects one cmdAck and
         nothing else from the client's side; the effect is all ours. A
         non-zero answer to op=2 is what the client reports as the rental
-        failing. op=0 only at a Commoner that is no bank, or a healer, and
-        not a thing (offers_home) -- only a modified client asks a Trader or
-        a fountain -- and not where the map is out of reach (home_here);
+        failing. op=0 only at a healer or an explicitly listed Commoner
+        (offers_home), and not where the map is out of reach (home_here);
         op=1 costs the healer's own fee (npcs.healer_price,
         MEDIC_PRICE where the file names none).
         """

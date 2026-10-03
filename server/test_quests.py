@@ -463,14 +463,9 @@ try:
     check("a repeatable quest stays available", "status=1;" in c.frames()[0], True)
 
     # --- services without a fight -------------------------------------------
-    # Home is registered with a commoner that offers "Прописка"; Aaron's
-    # safe is a bank and does not (can_set_home=0, test_bank).
+    # Giving quests alone does not make a commoner a home registrar.
     c.send("on_conv;mob=%d;op=0;" % TECHNOGEEK)
-    check("registering home is acknowledged", c.frames()[0], "cmdAck;res=0;")
-    store = accounts.Store(DB)
-    home = store.db.execute("SELECT home_loc FROM characters").fetchone()["home_loc"]
-    store.close()
-    check("home is this location", home, 102)
+    check("the technogeek refuses home registration", c.frames(), ["cmdAck;res=2;"])
     c.send("on_conv;p2=1;p1=1;mob=%d;op=2;" % SHIHAB)
     got = c.frames()
     check("renting is refused, not ignored",
@@ -491,6 +486,12 @@ try:
     medic = [f for f in got if f.startswith("lch") and "rtype=5;" in f]
     check("the station has a medic", len(medic) > 0, True)
     MEDIC = int(field(medic[0], "newUser"))
+    c.send("on_conv;mob=%d;op=0;" % MEDIC)
+    check("the healer registers a home with one ack", c.frames(), ["cmdAck;res=0;"])
+    store = accounts.Store(DB)
+    home = store.db.execute("SELECT home_loc FROM characters").fetchone()["home_loc"]
+    store.close()
+    check("home is the healer's station", home, 37)
     c.send("on_conv;mob=%d;op=1;" % MEDIC)
     got = c.frames()
     check("healing: purse, bars, then the ack",

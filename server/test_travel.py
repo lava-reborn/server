@@ -177,13 +177,10 @@ try:
     got = c.frames()
     check("called into the market", "id=102;" in got[1], True)
     _, frames = enter(c)
-    # "Прописка" is on the menu of a commoner whose userInfo says
-    # can_set_home=1 (NPC.as, Attendance.SET_HOME). Not every rtype=4 is one:
-    # the market's safe (2424) is a bank and says can_set_home=0.
+    # Ordinary commoners no longer register homes, even outside a bank.
     homes = [int(param(f, "id")) for f in frames
              if f.startswith("userInfo_Commoner;") and ";can_set_home=1;" in f]
-    check("the market has someone to register a home with",
-          len(homes) > 0, True)
+    check("the market's unlisted commoners offer no home registration", homes, [])
     check("and it is not the bank",
           [param(f, "can_set_home") for f in frames
            if f.startswith("userInfo_Commoner;") and ";name=2424;" in f], ["0"])
@@ -484,23 +481,30 @@ try:
           [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
           and "id=102;" in got[1] and "g_id=%d;" % CELL_102 in got[1], True)
     enter(c)
-    # on_conv;op=0 at anyone with can_set_home=1 (Attendance.SET_HOME).
-    c.send("on_conv;mob=%d;op=0;" % homes[0])
+    # Said is explicitly listed as a registrar in the residential quarter.
+    goto(c, "36")
+    _, frames = enter(c)
+    said = [f for f in frames if f.startswith("userInfo_Commoner;") and ";name=44;" in f]
+    check("Said offers home registration", [param(f, "can_set_home") for f in said], ["1"])
+    c.send("on_conv;mob=%d;op=0;" % int(param(said[0], "id")))
     check("home registered", c.frames(), ["cmdAck;res=0;"])
     row = accounts.Store(DB).character(1)
     check("with the location and its cell",
-          (row["home_loc"], row["home_gx"], row["home_gy"]), (102, 5970, 1730))
+          (row["home_loc"], row["home_gx"], row["home_gy"]), (36,) + world.cell_of(36))
     goto(c, "6000 1800")
     enter(c)
     c.send("userMsg;entry=@/home@;group=0;")
     got = c.frames()
-    check("home from the desert is the market on its own cell",
+    check("home from the desert is the residential quarter on its own cell",
           [f.split(";")[0] for f in got] == ["cmdAck", "lcall"]
-          and "id=102;" in got[1] and "g_id=%d;" % CELL_102 in got[1], True)
+          and "id=36;" in got[1] and "g_id=%d;" % world.pack(*world.cell_of(36)) in got[1], True)
     enter(c)
     c.send("chWorld;")
     got = c.frames()
-    check("and the map cell is the market's", "x=5970;y=1730;" in got[1], True)
+    check("and the map cell is the quarter's", "x=%d;y=%d;" % world.cell_of(36) in got[1], True)
+    # Keep the bookmark scene at its original reference cell.
+    goto(c, "102")
+    enter(c)
 
     # --- marks survive a relogin ---------------------------------------------
     c.send("logout;")

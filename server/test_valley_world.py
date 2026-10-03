@@ -154,9 +154,9 @@ except Exception:
 placed_in = getattr(world, "placed_in", lambda _loc: [])
 problems = getattr(rooms, "placement_problems", None)
 try:
-    check("the table puts the tools box in 184, on 56,88, with no «Прописка»",
-          [(r.get("type"), list(r.get("cell", ())), r.get("home")) for r in placed_in(BOX_LOC)],
-          [(BOX, list(BOX_XY), False)])
+    check("the table puts the tools box in 184, on 56,88",
+          [(r.get("type"), list(r.get("cell", ()))) for r in placed_in(BOX_LOC)],
+          [(BOX, list(BOX_XY))])
     check("and every row of it can stand", problems(MT) if problems else None, [])
     bad = {BOX_LOC: [dict(type=39, cell=[40, 90], why="a box of loot"),
                      dict(type=BOX, cell=[63, 81], why="on the way out"),
@@ -175,9 +175,8 @@ try:
     check("the room of 184 holds the box, a commoner, on its cell",
           [(n.cell, n.root) for n in boxes],
           [(BOX_XY[1] * 64 + BOX_XY[0], world.COMMONER)])
-    check("the box registers nobody's home; a cow does",
-          (getattr(world, "offers_home", lambda _t: True)(BOX),
-           getattr(world, "offers_home", lambda _t: True)(5195)), (False, True))
+    check("neither the tools box nor a cow registers a home",
+          (world.offers_home(BOX), world.offers_home(5195)), (False, False))
     # A creature put down by hand fights like the file's own: in a table of
     # this process only, a dog beside the box.
     saved = getattr(world, "_PLACEMENTS", None)

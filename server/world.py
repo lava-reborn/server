@@ -61,9 +61,9 @@ USERINFO = {
 # it -- NPCService.openService gives a Trader trade, repair and regTrophy
 # and never the "support" tab, and a Commoner never gets the Trade session
 # RegTrophyInterface works in (Gamer.proposeContact) -- so the caravan's
-# «Прописка» is Крысолов's and the Точильный камень's (5194, 5192), both
-# Commoners standing in the same location; home is the location, not the
-# person. His quests («Нет больше покоя» and the valley's way out,
+# «Прописка» is the healer Наби ал-Асад's (5202) in the same location.
+# Крысолов and the Точильный камень no longer register homes (the owner's
+# decision, 2026-10-03). His quests («Нет больше покоя» and the valley's way out,
 # «В Хальфу!») still show: the quests tab is every class's. Адам (5216,
 # Нубийский рынок), who stood in for him before, is an ordinary Trader
 # again. And Хассир (105) at the station of Вади-Хальфы,
@@ -886,18 +886,22 @@ def placed_in(loc_id):
     return placements().get(int(loc_id), [])
 
 
-def offers_home(type_id):
-    """Whether a Commoner (or a healer) of this type registers a home
-    («Прописка»), as every one does -- home is the location, not the person
-    -- unless the type is a thing (data/npcs.json 'no_home': a bomb box, a
-    rock, a fountain, a hole) or a placement of the type says home: false. A
-    box is a thing: talked to, it gives its quest and nothing else. Per
-    type, since the frame is."""
-    import npcs                      # no imports of its own
-    if npcs.no_home(int(type_id)):
+def offers_home(type_id, root=None):
+    """Healers and explicitly listed Commoners register homes (npcs.json).
+
+    Use the class the client builds, so a trophy Trader cannot offer a
+    service its window cannot show. The caller also excludes banks and
+    enclosed locations. Pass a known root to avoid reading mobs.xml again.
+    """
+    import npcs
+    type_id = int(type_id)
+    if root is None:
+        root = mob_types().get(type_id, (None,))[0]
+    root = entity_root(type_id, root)
+    if root not in (COMMONER, HEALER):
         return False
-    return not any(int(r.get("type", 0)) == int(type_id) and r.get("home") is False
-                   for rows in placements().values() for r in rows)
+    decision = npcs.home(type_id)
+    return root == HEALER if decision is None else decision
 
 
 def mob_types():

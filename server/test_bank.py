@@ -421,8 +421,8 @@ try:
           (safe["_cmd"], safe["can_banking"], safe["can_set_home"]),
           ("userInfo_Commoner", 1, 0))
     muad = people[5186][2]
-    check("an ordinary commoner (5186 Муад) keeps Прописка and does not bank",
-          (muad["can_banking"], muad["can_set_home"]), (0, 1))
+    check("an ordinary commoner (5186 Муад) neither registers homes nor banks",
+          (muad["can_banking"], muad["can_set_home"]), (0, 0))
 
     a.send("ss_get;target=0;slot=11;")
     lst = oids(a.frames())
@@ -621,8 +621,8 @@ try:
           (aaron["_cmd"], aaron["can_banking"], aaron["can_set_home"],
            aaron["give_quests"], aaron["take_quests"]),
           ("userInfo_Commoner", 1, 0, [2], [1]))
-    check("the technogeek beside it is where a home is registered",
-          people[652][2]["can_set_home"], 1)
+    check("the technogeek beside it offers quests, not home registration",
+          people[652][2]["can_set_home"], 0)
     a.send("q_st;mob=%d;q_idx=0;" % techno_id)
     got = a.frames()
     check("the delivery for Aaron taken from the technogeek",

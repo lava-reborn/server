@@ -326,8 +326,6 @@ def placement_problems(mob_types, table=None):
             taken.add(cell)
             if not str(rec.get("why") or "").strip():
                 out.append("%s: no why" % what)
-            if "home" in rec and not isinstance(rec["home"], bool):
-                out.append("%s: home is true or false, not %r" % (what, rec["home"]))
     return out
 
 

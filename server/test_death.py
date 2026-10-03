@@ -261,17 +261,19 @@ try:
     MARKET = named(got, "lcall")[0]["id"]
     arrival, pos = enter(v)
     npc = {p["name"]: p["id"] for n, p in arrival if n.startswith("userInfo")}
-    # "Прописка" is offered by a commoner whose userInfo says can_set_home
-    # (Attendance.SET_HOME). The safe on this market (2424) is a bank and
-    # offers none, so the home is registered with the technogeek.
+    # Neither bank nor technogeek can register a new home. A home saved
+    # before that restriction still works for every resurrection below.
     info = {p["name"]: p for n, p in arrival if n.startswith("userInfo")}
-    check("the market's bank offers no Прописка, the technogeek does",
-          (info[2424]["can_set_home"], info[652]["can_set_home"]), (0, 1))
+    check("the market's bank and technogeek offer no home registration",
+          (info[2424]["can_set_home"], info[652]["can_set_home"]), (0, 0))
     v.send("on_conv;mob=%d;op=0;" % npc[652])
-    check("home registered on the market", v.frames(), [("cmdAck", {"res": 0})])
-    VICTIM_ID = store().db.execute(
+    check("the technogeek refuses registration", v.frames(), [("cmdAck", {"res": 2})])
+    st = store()
+    VICTIM_ID = st.db.execute(
         "SELECT id FROM characters WHERE name = 'victim'").fetchone()["id"]
-    check("and written down with its cell",
+    st.set_home(VICTIM_ID, MARKET, 5970, 1730)
+    st.close()
+    check("a previously registered market home is kept in the table",
           (row_of(VICTIM_ID)["home_loc"], row_of(VICTIM_ID)["death"]), (MARKET, 0))
 
     # Two more things that could fall off a corpse go into the bank first,
