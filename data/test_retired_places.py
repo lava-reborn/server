@@ -28,17 +28,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
 import place_settlements  # noqa: E402
+from testkit import check, fails  # noqa: E402
 
 # The cut, cell by cell: what stood there before, and nothing now.
 INTENDED = {"5968,1726": 124, "5876,2012": 125, "6182,1975": 130}
-fails = []
-
-
-def check(label, got, want):
-    if got != want:
-        fails.append("%s\n   got  %r\n   want %r" % (label, got, want))
-    else:
-        print("  ok  %s" % label)
 
 
 def load(name):
