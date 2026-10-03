@@ -292,6 +292,89 @@ except Exception:
     fails.append("the room on a hand-turned clock:\n" + traceback.format_exc())
 
 
+# --- a boss's escort comes with the boss --------------------------------------------
+# Большой Мвамба's three thugs in his camp (data/placements.json "escort", the
+# owner's of 2026-10-03: «рес только в момент появления босса»): killed, a thug
+# is not back on the respawn delay but with Мвамба's next arrival; the living
+# stay where they are when he leaves.
+MVAMBA_CAMP, MVAMBA, THUG = 31, 1406, 566
+
+
+async def _escort():
+    loc = world.location(MVAMBA_CAMP)
+    store = accounts.Store(os.path.join(tempfile.mkdtemp(), "escort.db"))
+    combat.CORPSE_DELAY, combat.RESPAWN_DELAY = 0.05, 0.05
+    real_clock, real_hours = bosses.clock, bosses.HOURS
+    bosses.clock = lambda: NOW[0]
+    try:
+        NOW[0] = at(14, 10)
+        room = rooms.Room(loc, rooms.IdAllocator(), world.mob_types())
+        rc = combat.RoomCombat(room, store)
+        boss = [m for m in rc.mobs.values() if m.type_id == MVAMBA][0]
+        thugs = sorted((m for m in rc.mobs.values() if m.type_id == THUG), key=lambda m: m.eid)
+        check("the camp's three thugs are its boss's escort",
+              (len(thugs), sorted(m.eid for m in rc.escorts)), (3, [m.eid for m in thugs]))
+        check("  ..standing apart from him, not at his elbow",
+              all(mobs.hex_distance(m.home, boss.home, loc.width) >= 4 for m in thugs), True)
+        rc.keep_hours()
+        seat = _Seat()
+        room.players[seat] = True
+
+        first, second = thugs[0], thugs[1]
+        rc.kill(first, None)
+        await asyncio.sleep(0.4)          # the corpse fades, the respawn delay passes
+        seat.take()
+        check("a thug killed is not back after the respawn delay",
+              (first.eid in room.npcs, first.away), (False, True))
+
+        NOW[0] = at(15)
+        rc.keep_hours()
+        check("Мвамба's stay over, he leaves; the living thugs stay put",
+              ([p.get("lostUser") for n, p in seat.take() if n == "lch"],
+               second.eid in room.npcs, first.eid in room.npcs),
+              ([boss.eid], True, False))
+
+        NOW[0] = at(17, 59, 59)
+        rc.keep_hours()
+        check("between his hours nobody comes back", seat.take(), [])
+
+        NOW[0] = at(18)
+        rc.keep_hours()
+        back = [p.get("newUser") for n, p in seat.take() if n == "lch" and "newUser" in p]
+        check("at his next hour he arrives, and the killed thug with him, whole",
+              (back, first.hp == first.hp_max, second.eid in back),
+              ([boss.eid, first.eid], True, False))
+
+        # The rule off (LAVA_BOSS_HOURS=off): no boss keeps hours, and the
+        # escort is ordinary again, back on the respawn delay.
+        bosses.HOURS = ()
+        room2 = rooms.Room(loc, rooms.IdAllocator(), world.mob_types())
+        rc2 = combat.RoomCombat(room2, store)
+        thug2 = [m for m in rc2.mobs.values() if m.type_id == THUG][0]
+        rc2.kill(thug2, None)
+        await asyncio.sleep(0.4)
+        check("with the hours off, a thug comes back on the respawn delay",
+              (thug2.eid in room2.npcs, thug2.away), (True, False))
+        for bag in list(rc.loot.values()) + list(rc2.loot.values()):
+            if bag.expiry is not None:
+                bag.expiry.cancel()
+    finally:
+        bosses.clock, bosses.HOURS = real_clock, real_hours
+        store.close()
+
+
+try:
+    asyncio.run(_escort())
+except Exception:
+    fails.append("the boss's escort:\n" + traceback.format_exc())
+
+check("a row marked escort in a location with no boss is refused before the server starts",
+      [p.split(": ", 1)[1] for p in rooms.placement_problems(
+          world.mob_types(), {100: [dict(type=THUG, cell=[30, 30], escort=True, why="x")]})
+       if "escort" in p],
+      ["566 on 30,30: an escort in a location with no boss to come with"])
+
+
 # --- the server -------------------------------------------------------------------
 def free_port():
     with socket.socket() as probe:

@@ -1932,6 +1932,11 @@ class RoomCombat:
         # The ones that keep hours instead of the respawn timer (bosses.py):
         # keep_hours brings them in and sends them away.
         self.bosses = [m for m in self.mobs.values() if bosses.keeps_hours(m.type_id)]
+        # A boss's escort (data/placements.json "escort", rooms.Room.escorts):
+        # while the room has a boss keeping hours, one killed waits for its
+        # next arrival rather than the respawn timer.
+        escorts = getattr(room, "escorts", ())
+        self.escorts = [m for m in self.mobs.values() if m.eid in escorts]
         self.loot = {}          # cell -> LootBag
         # The combat state of the room that took this one's ground over when
         # a pack's room was taken away (hand_over): a corpse still fading
@@ -2429,6 +2434,10 @@ class RoomCombat:
         self.add_to_bag(mob.cell, self.drop_loot(mob))
         if bosses.keeps_hours(mob.type_id):
             mob.away = True
+        elif mob in self.escorts and self.bosses:
+            # The boss's escort: back with the boss's next arrival
+            # (keep_hours), not on the respawn timer.
+            mob.away = True
         elif getattr(self.room, "ambush", None) is not None:
             # A pack met on the map (encounters.py) is met once: nothing of
             # it comes back.
@@ -2644,6 +2653,12 @@ class RoomCombat:
                     self.respawn(mob)
                     log.info("  ..    boss %d (%s) arrives in %s",
                              mob.eid, mob.stats.name, self.room.loc.title)
+                    # Its escort comes with it: whoever of them was killed
+                    # since is back now, and only now. The living stay put.
+                    for guard in self.escorts:
+                        if guard.away:
+                            guard.away = False
+                            self.respawn(guard)
             elif not mob.alive:
                 continue
             elif due is not None:
