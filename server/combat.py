@@ -47,6 +47,7 @@ import items
 import mobs
 import names
 import orig_texts
+import pace
 import production
 import progression
 import quests
@@ -1226,7 +1227,7 @@ class Fighter:
         # The aim bar on the client runs fire_times[cur_mode] from faAim to
         # the first faShot (WeaponPan.aim); the burst waits the same.
         self.aim = asyncio.get_running_loop().call_later(
-            si.get("fire_times", [700])[mode] / 1000.0,
+            pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
             self.fire_now, row["uniq"], target, hexcell, weapon, cost)
 
     def fire_now(self, uniq, target, hexcell, weapon, cost):
@@ -1315,7 +1316,7 @@ class Fighter:
             # The strike bar runs strike_time from the send to caHit/caMiss
             # (WeaponPan.strike); a fist has none and lands at once.
             self.strike = asyncio.get_running_loop().call_later(
-                delay, self.strike_now, *args)
+                pace.paced(delay), self.strike_now, *args)
         else:
             self.strike_now(*args)
 
@@ -1425,7 +1426,8 @@ class Fighter:
         if rc is not None and rc.room.ws:
             self.ap = max(0, self.ap - cost)
         self.healing = asyncio.get_running_loop().call_later(
-            si.get("heal_time", 0) / 1000.0, self.heal_now, row["uniq"], target)
+            pace.paced(si.get("heal_time", 0) / 1000.0),
+            self.heal_now, row["uniq"], target)
 
     def heal_now(self, uniq, target):
         self.healing = None
@@ -2220,9 +2222,10 @@ class RoomCombat:
             weapon = Weapon(num_shots=st.shots, dmin=st.dmg_min, dmax=st.dmg_max,
                             opt_lo=1, opt_hi=st.range, max_range=st.range, piercing=1,
                             cone=cone, crit=st.crit, skill=None, spec=None)
-            mob.aim = loop.call_later(st.attack_time, self.mob_burst, mob, target, weapon)
+            mob.aim = loop.call_later(pace.paced(st.attack_time),
+                                      self.mob_burst, mob, target, weapon)
         elif st.attack_time:
-            mob.aim = loop.call_later(st.attack_time, self.mob_strike, mob, target)
+            mob.aim = loop.call_later(pace.paced(st.attack_time), self.mob_strike, mob, target)
         else:
             self.mob_strike(mob, target)
 
@@ -2365,7 +2368,8 @@ class RoomCombat:
         # the meantime is not handed a corpse as a newUser.
         self.room.npcs.pop(mob.eid, None)
         witnesses = list(self.room.players)
-        asyncio.get_running_loop().call_later(CORPSE_DELAY, self.corpse_gone, mob, witnesses)
+        asyncio.get_running_loop().call_later(pace.paced(CORPSE_DELAY),
+                                              self.corpse_gone, mob, witnesses)
         log.info("  ..    mob %d (%s) killed by %s", mob.eid, mob.stats.name,
                  "nobody" if killer is None else killer.eid)
         # If it was the last one after anybody here, the fight is over now.

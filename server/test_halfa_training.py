@@ -495,8 +495,17 @@ for _login in ("cadet", "quitter", "worker", "scholar", "rival"):
     _store.register(_login, "secret")
 _store.close()
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
-           LAVA_CHEATS="1", LAVA_START="181", LAVA_AP_REGEN="50", LAVA_RESPAWN="3",
-           LAVA_SEED="11", LAVA_LEAVE_COMBAT="2")
+           LAVA_CHEATS="1", LAVA_START="181", LAVA_RESPAWN="3",
+           LAVA_SEED="11", LAVA_LEAVE_COMBAT="2",
+           # The aims at the Tir's targets are some four hundred: at a
+           # twentieth of the client's 0.7 s they are seconds, not minutes.
+           LAVA_ACTION_SCALE="0.05",
+           # The AP come back on the creatures' beat (RoomCombat._step, every
+           # AI_TICK), which the scale leaves alone. Fifty a tick kept up with
+           # aims of 0.7 s; with aims twenty times quicker the bar runs dry
+           # between beats, so one beat has to fill it whole, and shoot()
+           # waits out a refusal for want of AP (res=11) as a player would.
+           LAVA_AP_REGEN="1000")
 LOG = os.path.join(os.path.dirname(DB), "server.log")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=open(LOG, "w"), stderr=subprocess.STDOUT, text=True)
@@ -796,7 +805,8 @@ def shoot(c, arrival, loc_id, want, gun, cid, mode=0):
                 c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
                 out += c.frames(0.3 + 0.25 * len(path or [goal]))
                 pos = goal
-            for _ in range(80):
+            tries = waited = 0
+            while tries < 80:
                 c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(eid)))
                 got = c.until(lambda f: f[0] == "ss_di_firearm" or (f[0] == "lch" and f[1].get(
                     "dead") == eid) or (f[0] == "cmdAck" and f[1]["res"]), 3)
@@ -804,6 +814,18 @@ def shoot(c, arrival, loc_id, want, gun, cid, mode=0):
                 # later is still seen, in the frames of the next shot.
                 got += c.frames(0.05)
                 out += got
+                # Out of AP, a player waits for the bar. The AP come back on
+                # the creatures' beat (RoomCombat._step), and the server's
+                # LAVA_ACTION_SCALE aims come quicker than that beat; one
+                # beat is a full bar at this suite's LAVA_AP_REGEN, and the
+                # refusal costs no try.
+                if inventory.RES_NO_AP in acks(got):
+                    waited += 1
+                    if waited > 400:            # the bar never came back
+                        return out, felled, shots
+                    out += c.frames(combat.AI_TICK + 0.05)
+                    continue
+                tries += 1
                 if inventory.RES_NO_AMMO in acks(got):
                     rounds = oid(cid, ROUNDS)
                     if rounds is None:
