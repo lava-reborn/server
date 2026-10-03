@@ -20,8 +20,10 @@
 
 In process: the rule, the part by level, the words as ss_di_trophy carries
 them, and every Store method on a real SQLite database (the Postgres run is
-test_storage_pg's). Over sockets, with nothing falling off the body but a
-stack's third (LAVA_WEAR_DROP=0, LAVA_BAG_DROP=0): two newcomers, a hunter
+test_storage_pg's); and a quarry killed half way through a walk, whose
+trophy goes into the one bag the death leaves where the walk ends. Over
+sockets, with nothing falling off the body but a stack's third
+(LAVA_WEAR_DROP=0, LAVA_BAG_DROP=0): two newcomers, a hunter
 and a quarry, three kills in the open desert (the last of the quarry as a
 member of a clan, which the trophy's «Клан жертвы» keeps), the hunter's
 show looked at by
@@ -30,6 +32,7 @@ dump's dog.
 
     LAVA_RES=.../lava/res python3 server/test_trophies.py
 """
+import asyncio
 import os
 import socket
 import subprocess
@@ -282,6 +285,114 @@ if trophies is not None and hasattr(trophies, "clan_of"):
     check("  ..and '' again once the clan is no more", trophies.clan_of(st, V), "")
 else:
     fails.append("no trophies.clan_of")
+
+
+# --- in process: a quarry killed on its way ---------------------------------------
+# The client does not stop a figure that dies walking (DisplayLocScene.dead
+# only plays the fall): the corpse finishes the walk and lies where the path
+# ends, and so does what fell off it (Fighter.drop_on_death, on pos). The
+# trophy goes into that bag -- not into a second one on the hex the figure
+# was crossing when the blow landed (Fighter.cell, the live cell), with the
+# killer told it lies «на месте гибели».
+class _Room(object):
+    combat = None
+    ws = False
+
+    def __init__(self, loc):
+        self.loc = loc
+        self.npcs = {}
+        self.players = {}
+        self.sent = []
+
+    def broadcast(self, frame, exclude=None):
+        self.sent.append(frame)
+
+
+class _Inv(object):
+    """What a death asks of a session's Inventory, on the real store."""
+    locked = frozenset()
+
+    def __init__(self, sess):
+        self.sess, self.store = sess, st
+
+    def rows(self):
+        return st.items_of(self.sess.char_id)
+
+    def forget_reload(self, uniq):
+        pass
+
+    def push_status(self, row, status):
+        pass
+
+    def push_di(self, row):
+        pass
+
+    def refresh_gear(self):
+        pass
+
+
+class _Seat(object):
+    """A player in that room: pos is where its walk ends, live the hex its
+    figure has reached (what server.Session.live_cell answers)."""
+
+    def __init__(self, room, char_id, nick, pos, live):
+        self.room, self.char_id, self.nick = room, char_id, nick
+        self.pos, self.live = pos, live
+        self.pid = rooms.player_id(char_id)
+        self.inv = _Inv(self)
+        self.char = progression.Character()
+        self.said = []
+        self.combat = combat.Fighter(self)
+        room.players[self] = None
+
+    def live_cell(self):
+        return self.live
+
+    def character(self):
+        return self.char
+
+    def send(self, *cmd, **params):
+        pass
+
+    def say(self, text):
+        self.said.append(text)
+
+
+async def _killed_walking():
+    loc = world.location(world.location_at(5992, 1760))     # the desert below
+    path = [next(c for c in range(loc.width * loc.height) if c not in loc.obstacles
+                 and len(progression.hex_neighbours(c, loc.width, loc.height)) == 6)]
+    while len(path) < 5:
+        path.append(next(n for n in progression.hex_neighbours(path[-1], loc.width, loc.height)
+                         if n not in loc.obstacles and n not in path))
+    room = _Room(loc)
+    hunter = _Seat(room, K, "Killer", path[0], path[0])
+    quarry = _Seat(room, V, "Victim", path[-1], path[1])
+    stack = st.create_item(V, AMMO, items.root_of(AMMO), slot=BAG, count=9)
+    check("the quarry's figure on the second hex of its walk, the walk ending three on",
+          (quarry.combat.cell, quarry.pos), (path[1], path[-1]))
+    rc = combat.room_combat(room, st)
+    rc.kill(quarry.combat, hunter.combat)
+    lying = {cell: list(bag.uniqs) for cell, bag in rc.loot.items()}
+    trophy = [u for u in lying.get(path[-1], ()) if (st.item(u) or {}).get("root") == items.TROPHY]
+    check("killed walking: one bag, where the walk ends -- the corpse's",
+          ([p["hex"] for n, p in room.sent if n == "ss_loot"], list(lying)),
+          ([[path[-1]]], [path[-1]]))
+    check("  ..a third of the stack in it, and the trophy with it",
+          (sorted((st.item(u) or {}).get("type_id") for u in lying.get(path[-1], ())),
+           len(trophy), (st.item(stack["uniq"]) or {}).get("count")),
+          (sorted([AMMO, EAR]), 1, 6))
+    for bag in rc.loot.values():
+        if bag.expiry is not None:
+            bag.expiry.cancel()
+
+
+AMMO = 6188
+try:
+    asyncio.run(_killed_walking())
+except Exception:
+    import traceback
+    fails.append("the walker's death broke:\n" + traceback.format_exc())
 st.close()
 
 # --- the server -----------------------------------------------------------------

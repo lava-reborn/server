@@ -303,8 +303,11 @@ def drop(killer, victim, owner, slot):
     """A player killed another (combat.Fighter.pvp_kill): the trophy, if the
     killer stood at the victim's level or below, into the bag the death
     left on the victim's cell -- the same bag, as combat.RoomCombat.
-    add_to_bag adds to one already lying there. Returns the items row, or
-    None when nothing fell."""
+    add_to_bag adds to one already lying there. That cell is the victim's
+    pos, as Fighter.drop_on_death has it: the end of a walk the blow cut
+    short, where the client lets the corpse finish it -- not Fighter.cell,
+    the hex the figure was crossing. Returns the items row, or None when
+    nothing fell."""
     kc, vc = killer.sess.char_id, victim.sess.char_id
     rc = victim.rc
     if not kc or not vc or rc is None:
@@ -319,13 +322,14 @@ def drop(killer, victim, owner, slot):
         owner, slot, type_id, items.TROPHY,
         record(kc, killer.sess.nick, k_lvl, vc, victim.sess.nick, v_lvl,
                victim_clan=clan_of(killer.store, vc)))
-    rc.add_to_bag(victim.cell, [row])
+    cell = victim.sess.pos
+    rc.add_to_bag(cell, [row])
     killer.sess.say("С %s снят трофей «%s» — он в мешке на месте гибели. "
                     "Зарегистрировать его можно %s: так растёт навык бойца."
                     % (victim.sess.nick, name_of(type_id), WHERE))
     log.info("  ..    %s (%d) kills %s (%d): trophy %d (%s) on cell %d",
              killer.sess.nick, k_lvl, victim.sess.nick, v_lvl, row["uniq"],
-             name_of(type_id), victim.cell)
+             name_of(type_id), cell)
     return row
 
 
