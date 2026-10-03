@@ -298,18 +298,19 @@ try:
           (world.cell_of(CAMP_M), world.settlements().get((6274, 1833)),
            world.creature_role(MVAMBA), mobs.stats(MVAMBA).level, names.ALL.get(MVAMBA)),
           ((6274, 1833), CAMP_M, "boss", 5, "[5] Большой Мвамба<br>Новые колонисты"))
-    # His guards (data/placements.json, the owner's of 2026-10-02): three
-    # thugs in his own art, two hexes round him, on the ordinary respawn.
+    # His guards (data/placements.json, the owner's of 2026-10-02 and
+    # 2026-10-03): three thugs in his own art, five hexes round him, his
+    # escort -- back with his arrival, not on the respawn (test_bosses).
     _camp = rooms.Room(world.location(CAMP_M), rooms.IdAllocator(), MT)
     _home = next(n.cell for n in _camp.npcs.values() if n.type_id == MVAMBA)
-    _guards = [n for n in _camp.npcs.values() if n.type_id != MVAMBA]
     _art = MT
-    check("  ..and three guards round him: «[4] Головорез», his art, two hexes off,"
-          " not at the boss hours",
+    check("  ..and three guards round him: «[4] Головорез», his art, five hexes off,"
+          " his escort",
           sorted((names.ALL.get(n.type_id), _art[n.type_id][2], mobs.stats(n.type_id).level,
                   round(mobs.hex_distance(n.cell, _home, world.location(CAMP_M).width)),
-                  world.creature_role(n.type_id)) for n in _guards),
-          [("[4] Головорез", _art[MVAMBA][2], 4, 2, "mob")] * 3)
+                  world.creature_role(n.type_id), eid in _camp.escorts)
+                 for eid, n in _camp.npcs.items() if n.type_id != MVAMBA),
+          [("[4] Головорез", _art[MVAMBA][2], 4, 5, "mob", True)] * 3)
     check("the old chip by the original's name and description, and in its frame",
           (names.ALL.get(items.STRING_ID_OFFSET + CHIP), names.ALL.get(items.DESC_ID_OFFSET + CHIP),
            items.static_info(CHIP)[1].get("desc")),

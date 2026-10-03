@@ -91,6 +91,10 @@ class Room:
         # entity id -> NPC, allocated once: every player in this room sees the
         # same trader under the same id, and a second visit finds it unchanged.
         self.npcs = {}
+        # The entity ids of a boss's escort (data/placements.json "escort"):
+        # killed, they come back with the boss's next arrival, not on the
+        # respawn timer (combat.RoomCombat.keep_hours).
+        self.escorts = set()
         # sessions present, in order of arrival (dict as an ordered set)
         self.players = {}
         # War state and the fight itself live in combat.RoomCombat, made on
@@ -152,8 +156,11 @@ class Room:
                 continue
             x, y = rec["cell"]
             root = mob_types[type_id][0]
-            self.npcs[ids.npc()] = NPC(int(y) * loc.width + int(x), type_id,
-                                       world.entity_root(type_id, root))
+            eid = ids.npc()
+            self.npcs[eid] = NPC(int(y) * loc.width + int(x), type_id,
+                                 world.entity_root(type_id, root))
+            if rec.get("escort"):
+                self.escorts.add(eid)
             placed += 1
         log.info("  ..    room %s (%s) holds %d inhabitants%s%s%s%s",
                  loc.title, loc.file, len(self.npcs),
@@ -283,8 +290,9 @@ def placement_problems(mob_types, table=None):
     a creature out of the game (data/retired.json, world.retired_creatures:
     the premium masters and the rest of the owner's cut of (P)). Its cell is
     on the grid, walkable, and not an exit, where it would stand in the way
-    out, nor where the file or another row already has somebody. And it
-    says why it is there, the way every hand-kept row does.
+    out, nor where the file or another row already has somebody. A row
+    marked escort is a fighter in a location whose file has a boss to come
+    with. And it says why it is there, the way every hand-kept row does.
     """
     out = []
     table = world.placements() if table is None else table
@@ -328,6 +336,14 @@ def placement_problems(mob_types, table=None):
                 out.append("%s: no why" % what)
             if "home" in rec and not isinstance(rec["home"], bool):
                 out.append("%s: home is true or false, not %r" % (what, rec["home"]))
+            if "escort" in rec:
+                if not isinstance(rec["escort"], bool):
+                    out.append("%s: escort is true or false, not %r" % (what, rec["escort"]))
+                elif rec["escort"] and root != world.MOB:
+                    out.append("%s: an escort that does not fight" % what)
+                elif rec["escort"] and not any(world.creature_role(t) == "boss"
+                                               for _c, t in loc.spawns):
+                    out.append("%s: an escort in a location with no boss to come with" % what)
     return out
 
 

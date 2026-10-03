@@ -1,5 +1,5 @@
 {
- "_": "Inhabitants put down by hand, beside the ones a location's own file spawns (its mobs node). Read by server/world.py (placements) and stood in the room by server/rooms.py (Room), after the file's own and under the same kind of entity id, so the client builds them from the same lch;newUser and userInfo_* frames: a Commoner is talked to, a Trader trades, a hostile creature fights, dies and comes back on its cell. Keyed by location id; each row is {type: the creature's type id in mobs.xml, cell: [x, y] of the location's own grid, home: false to offer no «Прописка» (a Commoner that is a thing, not a person), why: RECOVERED or DESIGNED and the evidence}. The server checks every row before its first socket (rooms.check_placements) and does not start on one that cannot stand: a type the client has no record or name of, a loot box or heap of ore (role object), a hostile creature in a location at peace, a cell off the grid, on an obstacle, on an exit or on somebody else's spawn. LAVA_PLACEMENTS replaces the table, for a suite that needs one of its own (server/test_valley_world.py).",
+ "_": "Inhabitants put down by hand, beside the ones a location's own file spawns (its mobs node). Read by server/world.py (placements) and stood in the room by server/rooms.py (Room), after the file's own and under the same kind of entity id, so the client builds them from the same lch;newUser and userInfo_* frames: a Commoner is talked to, a Trader trades, a hostile creature fights, dies and comes back on its cell. Keyed by location id; each row is {type: the creature's type id in mobs.xml, cell: [x, y] of the location's own grid, home: false to offer no «Прописка» (a Commoner that is a thing, not a person), escort: true for a boss's escort, which once killed comes back with the boss's next arrival rather than on the respawn timer (a hostile creature in a location whose file has a boss), why: RECOVERED or DESIGNED and the evidence}. The server checks every row before its first socket (rooms.check_placements) and does not start on one that cannot stand: a type the client has no record or name of, a loot box or heap of ore (role object), a hostile creature in a location at peace, a cell off the grid, on an obstacle, on an exit or on somebody else's spawn. LAVA_PLACEMENTS replaces the table, for a suite that needs one of its own (server/test_valley_world.py).",
  "locations": {
   "184": [
    {
@@ -17,25 +17,28 @@
     "type": 566,
     "cell": [
      34,
-     65
+     61
     ],
-    "why": "DESIGNED, the owner's (2026-10-02): «соратников к мамбе добавить можно будет?», then «Мвамба это головорез афроамериканец, соратники похожие должны быть». Three guards around Большой Мвамба (1406, on [34, 67]) in his camp 31 (Q_IV_pustina3, «Лагерь Большого Мвамбы»), two hexes off, north, south-west and south-east: olm_safeguard1_lvl_4 (566), drawn in Мвамба's own art (mob-m20), level 4, an assault rifle, named «[4] Головорез» (data/orig_names_manual.json, 50334). No location file puts the type down. Three for Шульц's «Экипировка к пистолету», a quest for a party of three (party_size 3): the boss is no longer a lone target. They come back on the ordinary respawn timer, not at the boss hours."
+    "why": "DESIGNED, the owner's (2026-10-02): «соратников к мамбе добавить можно будет?», then «Мвамба это головорез афроамериканец, соратники похожие должны быть». Three guards round Большой Мвамба (1406, on [34, 67]) in his camp 31 (Q_IV_pustina3, «Лагерь Большого Мвамбы»): olm_safeguard1_lvl_4 (566), drawn in Мвамба's own art (mob-m20), level 4, an assault rifle, named «[4] Головорез» (data/orig_names_manual.json, 50334). No location file puts the type down. Three for Шульц's «Экипировка к пистолету», a quest for a party of three (party_size 3): the boss is no longer a lone target. Where and when, the owner's of 2026-10-03: «головорезы появляться должны чуть более разбросанно подальше от босса» -- six steps off him rather than two, north, south-west and south-east, nine cells from each other -- and «рес только в момент появления босса»: escort, so a guard killed is back with Мвамба's next arrival at his hours (bosses.py), not on the respawn timer.",
+    "escort": true
    },
    {
     "type": 566,
     "cell": [
-     33,
-     68
+     30,
+     70
     ],
-    "why": "as the first row of 31"
+    "why": "as the first row of 31",
+    "escort": true
    },
    {
     "type": 566,
     "cell": [
-     36,
-     68
+     39,
+     70
     ],
-    "why": "as the first row of 31"
+    "why": "as the first row of 31",
+    "escort": true
    }
   ]
  }
