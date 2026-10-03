@@ -539,6 +539,20 @@ try:
           "usrUp" in [n for n, _p in got], False)
     c.send("userMsg;entry=@/spec 2 0@;group=0;")
     c.until("userMsg")
+    # Strength 5 up again, and forgotten at the teacher this time: the
+    # training window's reset is the other way down, and the bar follows it.
+    c.send("userMsg;entry=@/spec 0 5@;group=0;")
+    c.until("userMsg")
+    c.send("ss_create;s_type=4;target=%d;" % teacher["newUser"])
+    c.until("cmdAck")
+    c.send("ss_upd;obj=x0;s_status=1;")
+    got = c.until("userInfo_Player")
+    check("hand-to-hand 5 reset at the teacher: strength five down, and the health"
+          " bar's maximum by usrUp, between the card and the purse",
+          ([n for n, _p in got], one(got, "rp_info")["a_attribs"],
+           [p["hmax"] for n, p in got if n == "usrUp"]),
+          (["cmdAck", "rp_info", "usrUp", "userInfo_Player"], [5], [120]))
+    c.send("ss_upd;obj=x0;s_status=0;")
 
     # --- log back in -----------------------------------------------------
     c.send("logout;")

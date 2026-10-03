@@ -2107,6 +2107,7 @@ class Session:
                 why = "Не хватает %s" % ("%d афро" % afro if afro
                                          else "%d голда" % gold)
         elif status == progression.UPD_FORGET:
+            bars = (char.hp_max, char.sp_max)
             res = char.forget_spec(idx)
         else:
             res = progression.ERR_STATE
@@ -2122,6 +2123,11 @@ class Session:
         attribs = ({progression.SPEC_ATTRIB[idx]}
                    if progression.SPEC_ATTRIB[idx] is not None else set())
         self.push_stats(attribs=attribs, skills=set(), specs={idx})
+        if status == progression.UPD_FORGET and (char.hp_max, char.sp_max) != bars:
+            # Forgetting a strength or agility specialisation takes its levels
+            # off the attribute, and four of a bar's maximum with each: only
+            # usrUp carries that (progression.moves_vitals).
+            self.push_vitals()
         self.push_money()
 
     def cmd_ss_get_si(self, p):
