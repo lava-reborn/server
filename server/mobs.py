@@ -747,6 +747,10 @@ class Mob:
         self.slot = None
         self.away = False
         self.leaving = False
+        # A boss's escort whose boss arrived while its corpse was still
+        # fading (RoomCombat.escort_back): back as soon as the corpse is
+        # gone, not at the arrival after (corpse_gone).
+        self.recalled = False
 
     # --- the numbers the resolver asks a target for ------------------------
     @property

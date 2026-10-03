@@ -2436,8 +2436,13 @@ class RoomCombat:
             mob.away = True
         elif mob in self.escorts and self.bosses:
             # The boss's escort: back with the boss's next arrival
-            # (keep_hours), not on the respawn timer.
-            mob.away = True
+            # (keep_hours, escort_back), not on the respawn timer -- or now,
+            # if the boss arrived while this corpse was still fading.
+            if mob.recalled:
+                mob.recalled = False
+                self.respawn(mob)
+            else:
+                mob.away = True
         elif getattr(self.room, "ambush", None) is not None:
             # A pack met on the map (encounters.py) is met once: nothing of
             # it comes back.
@@ -2641,6 +2646,14 @@ class RoomCombat:
         stays until the fight is over and starts no new one meanwhile
         (Mob.leaving). A corpse is corpse_gone's to put away. The timed
         windows of events.py are kept the same way, first.
+
+        A boss still standing here when a window it has not come for opens
+        was not sent away when the last one shut: the room was empty then
+        (an empty room has no tick), or a fight kept it, or the two windows
+        overlap. Nobody here now and no fight on, it is taken to have left
+        and come back -- whole, on its own cell, its escort with it -- as it
+        would have with anybody watching. With somebody here it stays as it
+        is, and only its escort comes.
         """
         events.keep(self)
         if not self.bosses:
@@ -2649,19 +2662,17 @@ class RoomCombat:
         for mob in self.bosses:
             if mob.away:
                 if due is not None and due != mob.slot:
-                    mob.slot, mob.away = due, False
-                    self.respawn(mob)
-                    log.info("  ..    boss %d (%s) arrives in %s",
-                             mob.eid, mob.stats.name, self.room.loc.title)
-                    # Its escort comes with it: whoever of them was killed
-                    # since is back now, and only now. The living stay put.
-                    for guard in self.escorts:
-                        if guard.away:
-                            guard.away = False
-                            self.respawn(guard)
+                    self.boss_arrives(mob, due)
             elif not mob.alive:
                 continue
             elif due is not None:
+                if due != mob.slot:
+                    if (mob.slot is not None and not self.room.players
+                            and mob.target is None and mob.aim is None):
+                        self.boss_leaves(mob)
+                        self.boss_arrives(mob, due)
+                    else:
+                        self.escort_back()
                 # Standing here in a window counts as having come for it,
                 # whether it arrived just now or the room was made in it.
                 mob.slot, mob.leaving = due, False
@@ -2669,6 +2680,27 @@ class RoomCombat:
                 self.boss_leaves(mob)
             else:
                 mob.leaving = True
+
+    def boss_arrives(self, mob, due):
+        """Its window open: back on its own cell, whole, the way a respawn
+        does it, and its escort with it (escort_back)."""
+        mob.slot, mob.away = due, False
+        self.respawn(mob)
+        log.info("  ..    boss %d (%s) arrives in %s",
+                 mob.eid, mob.stats.name, self.room.loc.title)
+        self.escort_back()
+
+    def escort_back(self):
+        """A boss's escort comes with it: whoever of them was killed since
+        is back now, and only now -- one whose corpse is still fading, as
+        soon as it is gone (Mob.recalled, corpse_gone). The living stay
+        put."""
+        for guard in self.escorts:
+            if guard.away:
+                guard.away = False
+                self.respawn(guard)
+            elif not guard.alive:
+                guard.recalled = True
 
     def boss_leaves(self, mob):
         """Its stay is over: gone from every screen here (Location.lch ->

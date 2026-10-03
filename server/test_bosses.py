@@ -345,6 +345,60 @@ async def _escort():
               (back, first.hp == first.hp_max, second.eid in back),
               ([boss.eid, first.eid], True, False))
 
+        # The room empties in his hour with a thug dead and Мвамба worn down
+        # and off his cell: no tick sends him away at seven, so whoever walks
+        # in at ten past eight (Session.enter_room asks keep_hours first)
+        # finds him standing. He has come for this hour all the same.
+        NOW[0] = at(18, 10)
+        rc.kill(first, None)
+        await asyncio.sleep(0.4)
+        boss.hp = 1
+        boss.cell = boss.home + 1
+        room.npcs[boss.eid] = room.npcs[boss.eid]._replace(cell=boss.cell)
+        del room.players[seat]
+        seat.take()
+        NOW[0] = at(20, 10)
+        rc.keep_hours()
+        check("a thug killed before the room emptied is back for Мвамба's next hour, "
+              "though nothing sent Мвамба away in between",
+              (first.eid in room.npcs, first.away), (True, False))
+        check("  ..and Мвамба is whole, on his own cell, as an arrival leaves him",
+              (boss.hp == boss.hp_max, room.npcs[boss.eid].cell, boss.slot),
+              (True, boss.home, at(20)))
+
+        # A thug killed a moment before Мвамба arrives is still a fading
+        # corpse at the arrival (CORPSE_DELAY): he is back as soon as it is
+        # gone, not at the hour after.
+        room.players[seat] = True
+        NOW[0] = at(21)
+        rc.keep_hours()
+        NOW[0] = at(13, 59, 59, day=25)
+        rc.kill(second, None)
+        NOW[0] = at(14, day=25)
+        rc.keep_hours()
+        await asyncio.sleep(0.4)
+        got = [(n, p) for n, p in seat.take() if n == "lch" and ("newUser" in p or "lostUser" in p)]
+        check("a thug whose corpse was fading when Мвамба arrived is back once it fades",
+              ([sorted(p.items())[0] for n, p in got], second.eid in room.npcs, second.away),
+              ([("lostUser", boss.eid), ("newUser", boss.eid), ("lostUser", second.eid),
+                ("newUser", second.eid)], True, False))
+
+        # Watched, in a fight that outlasts the gap, he is not made whole by
+        # the clock at the next hour; his escort comes all the same.
+        boss.target, boss.hp = object(), 7
+        NOW[0] = at(15, day=25)
+        rc.keep_hours()
+        rc.kill(first, None)
+        await asyncio.sleep(0.4)
+        seat.take()
+        NOW[0] = at(18, day=25)
+        rc.keep_hours()
+        check("still fighting when his next hour opens: he stays as he is, the thug comes",
+              ([p.get("newUser") for n, p in seat.take() if n == "lch" and "newUser" in p],
+               boss.hp, boss.leaving, boss.slot),
+              ([first.eid], 7, False, at(18, day=25)))
+        boss.target = None
+
         # The rule off (LAVA_BOSS_HOURS=off): no boss keeps hours, and the
         # escort is ordinary again, back on the respawn delay.
         bosses.HOURS = ()
