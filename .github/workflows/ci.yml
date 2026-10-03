@@ -34,9 +34,12 @@ name: ci
 
 on:
   push:
-    # Branches only: a pushed tag is a name for a commit some branch's run
-    # has already tested.
-    branches: ["**"]
+    # main only: its run is the one that deploys. A working branch is tested
+    # by its pull request's run, which also checks the merge with main; a
+    # push run beside it would test the same code twice, and a branch
+    # without a pull request is not on its way to main. A pushed tag is a
+    # name for a commit main's run has already tested.
+    branches: [main]
     # Prose only: no suite reads these files, and none of them changes what
     # the server runs. A push that touches anything else runs everything.
     # deploy/ci/still_head.sh reads this very list (the first paths-ignore

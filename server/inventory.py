@@ -74,6 +74,7 @@ import os
 import random
 
 import items
+import pace
 import progression
 import quests
 import sets
@@ -1636,7 +1637,7 @@ class Inventory:
             self.push_di(stack)
         self.store.update_item(gun["uniq"], ammo_count=gun["ammo_count"] + take,
                                ammo_type=stack["type_id"])
-        delay = si.get("reload_time", 0) / 1000.0
+        delay = pace.paced(si.get("reload_time", 0) / 1000.0)
         loop = asyncio.get_running_loop()
         self.reloads[gun["uniq"]] = loop.call_later(delay, self.reloaded,
                                                     gun["uniq"])

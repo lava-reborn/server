@@ -63,6 +63,8 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 ENC = "utf-8"
+# A quest type no table has: Client.sync's beacon.
+BEACON = 999999
 for _knob in ("LAVA_QUESTS", "LAVA_PLACEMENTS", "LAVA_PASSAGES", "LAVA_WEAR_DROP",
               "LAVA_BAG_DROP", "LAVA_START_AFRO"):
     os.environ.pop(_knob, None)
@@ -495,8 +497,17 @@ for _login in ("cadet", "quitter", "worker", "scholar", "rival"):
     _store.register(_login, "secret")
 _store.close()
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
-           LAVA_CHEATS="1", LAVA_START="181", LAVA_AP_REGEN="50", LAVA_RESPAWN="3",
-           LAVA_SEED="11", LAVA_LEAVE_COMBAT="2")
+           LAVA_CHEATS="1", LAVA_START="181", LAVA_RESPAWN="3",
+           LAVA_SEED="11", LAVA_LEAVE_COMBAT="2",
+           # The aims at the Tir's targets are some four hundred: at a
+           # twentieth of the client's 0.7 s they are seconds, not minutes.
+           LAVA_ACTION_SCALE="0.05",
+           # The AP come back on the creatures' beat (RoomCombat._step, every
+           # AI_TICK), which the scale leaves alone. Fifty a tick kept up with
+           # aims of 0.7 s; with aims twenty times quicker the bar runs dry
+           # between beats, so one beat has to fill it whole, and shoot()
+           # waits out a refusal for want of AP (res=11) as a player would.
+           LAVA_AP_REGEN="1000")
 LOG = os.path.join(os.path.dirname(DB), "server.log")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=open(LOG, "w"), stderr=subprocess.STDOUT, text=True)
@@ -546,6 +557,18 @@ class Client:
                 break
         return self._drain()
 
+    def sync(self, wait=5.0):
+        """Everything the server sent for the commands so far, and no more
+        waiting than that takes. The server answers one command at a time,
+        each handler to its end, so the reply to one more command is behind
+        every frame of the ones before it: q_status of a type no table has,
+        which changes nothing and is owed a frame (server.cmd_q_status).
+        That reply is left out. A frame a timer sends later is not caught
+        here: wait for it by name with until()."""
+        self.send("q_status;q_type=%d;" % BEACON)
+        got = self.until(lambda f: f[0] == "q_status" and f[1].get("type") == BEACON, wait)
+        return [f for f in got if not (f[0] == "q_status" and f[1].get("type") == BEACON)]
+
     def until(self, pred, wait=3.0):
         out = []
         deadline = time.time() + wait
@@ -594,7 +617,7 @@ def positions(frames):
 
 def arrive(c):
     c.send("lenter;accept=1;")
-    return c.frames(wait=2)
+    return c.sync()
 
 
 def goto(c, loc_id):
@@ -605,7 +628,7 @@ def goto(c, loc_id):
 
 def give(c, type_id, n=1):
     c.send("userMsg;entry=@/give %d %d@;group=0;" % (type_id, n))
-    got = c.until(lambda f: f[0] == "userMsg") + c.frames(0.3)
+    got = c.until(lambda f: f[0] == "userMsg") + c.sync()
     new = named(got, "ss_obj_status")
     return (str(new[0]["obj"]) if new else None), got
 
@@ -620,15 +643,15 @@ def take(c, here, npc_type, qtype):
     npc = here.get(npc_type, [0])[0]
     offered = quests.given_by(npc_type)
     c.send("q_st;mob=%d;q_idx=%d;" % (npc, offered.index(qtype) if qtype in offered else 99))
-    got = c.frames(0.8)
+    got = c.sync()
     ids = [p["q_id"] for n, p in got if n.startswith("q_di_")]
     return got, (ids[0] if ids else 0)
 
 
-def hand_in(c, here, npc_type, q_id, obj_idx=0, wait=0.9):
+def hand_in(c, here, npc_type, q_id, obj_idx=0):
     npc = here.get(npc_type, [0])[0]
     c.send("q_co;obj_idx=%d;mob=%d;q_id=%d;" % (obj_idx, npc, q_id))
-    return c.frames(wait)
+    return c.sync()
 
 
 def moved(c, got, wait=8):
@@ -724,12 +747,12 @@ def oid(cid, type_id):
 def wield(c, thing):
     """Into the hand (primary), whatever was there back into the bag."""
     c.send("ss_get;target=0;slot=11;")
-    held_ = [str(x) for x in first(c.frames(), "ss_ack").get("o_list", [])]
+    held_ = [str(x) for x in first(c.sync(), "ss_ack").get("o_list", [])]
     if len(held_) > 6 and held_[6] not in ("0", thing):
         c.send("ss_move;obj=x%s;to=2048;from=512;" % held_[6])
-        c.frames()
+        c.sync()
     c.send("ss_move;obj=x%s;to=512;from=2048;" % thing)
-    return acks(c.frames())
+    return acks(c.sync())
 
 
 def arm(c):
@@ -745,7 +768,7 @@ def load(c, gun, rounds):
     """Load the gun from the stack: the ack (and the magazine report)."""
     c.send("ss_use;target=x%s;obj=x%s;type=1;" % (rounds, gun))
     got = c.until(lambda f: f[0] == "ss_di_firearm" or (f[0] == "cmdAck" and f[1]["res"]), 3)
-    return got + c.frames(0.3)
+    return got + c.sync()
 
 
 def more_rounds(c, arrival, loc_id):
@@ -796,14 +819,30 @@ def shoot(c, arrival, loc_id, want, gun, cid, mode=0):
                 c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
                 out += c.frames(0.3 + 0.25 * len(path or [goal]))
                 pos = goal
-            for _ in range(80):
+            tries = waited = 0
+            while tries < 80:
                 c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(eid)))
                 got = c.until(lambda f: f[0] == "ss_di_firearm" or (f[0] == "lch" and f[1].get(
                     "dead") == eid) or (f[0] == "cmdAck" and f[1]["res"]), 3)
-                # The kill follows the magazine's report; one that comes
-                # later is still seen, in the frames of the next shot.
-                got += c.frames(0.05)
+                # The kill follows the magazine's report, in the same step
+                # of the server (Fighter.fire_now); one that came later would
+                # still be seen, in the frames of the next shot.
+                got += c.sync()
                 out += got
+                # Out of AP, a player waits for the bar. The AP come back on
+                # the creatures' beat (RoomCombat._step), and the server's
+                # LAVA_ACTION_SCALE aims come quicker than that beat; one
+                # beat is a full bar at this suite's LAVA_AP_REGEN, and the
+                # refusal costs no try.
+                if inventory.RES_NO_AP in acks(got):
+                    waited += 1
+                    if waited > 2000:           # the bar never came back
+                        return out, felled, shots
+                    # Short looks rather than a whole beat: the refill lands
+                    # somewhere inside one, and a refusal costs a round trip.
+                    out += c.frames(0.1)
+                    continue
+                tries += 1
                 if inventory.RES_NO_AMMO in acks(got):
                     rounds = oid(cid, ROUNDS)
                     if rounds is None:
@@ -818,7 +857,7 @@ def shoot(c, arrival, loc_id, want, gun, cid, mode=0):
                 if any(nm == "lch" and p.get("dead") == eid for nm, p in got):
                     felled.append(t)
                     break
-    return out + c.frames(0.5), felled, shots
+    return out + c.sync(), felled, shots
 
 
 try:
@@ -884,7 +923,7 @@ try:
             mode = 1 if items.params_of(GUNS[k - 1])["fire_mods"][1] else 0
             if mode:
                 c.send("ss_use;target=x%x;obj=x%s;type=64;" % (mode, gun))
-                check("  ..switched to its burst", acks(c.frames(0.5)), [0])
+                check("  ..switched to its burst", acks(c.sync()), [0])
             got = hand_in(c, here, BERT_TI[k], q)
             check("  ..not handed in before the targets", acks(got), [3])
             want = dict(zip(quests.get(t).mobs_kill, quests.get(t).num_kill))
@@ -904,7 +943,7 @@ try:
             check("lesson 1 taken: the theory, complete at once",
                   (acks(got), first(got, "q_di_del_obj").get("complete")), ([0], 1))
         before = held(CADET)
-        got = hand_in(c, here, BERT_TI[k], q, wait=1.2)
+        got = hand_in(c, here, BERT_TI[k], q)
         call, arrival = moved(c, got)
         after = held(CADET)
         nxt = RANGE[k + 1] if k + 1 < len(RANGE) else MARKET
@@ -981,7 +1020,7 @@ try:
     c.send("q_ca;q_id=%d;" % q_lesson)
     check("  ..dropped: nothing more to give back (the lesson itself stays his to take, in a"
           " range nothing leads to any more)",
-          (acks(c.frames(0.8)), held(QUITTER)[GUNS[0]], held(QUITTER)[ROUNDS],
+          (acks(c.sync()), held(QUITTER)[GUNS[0]], held(QUITTER)[ROUNDS],
            status(c, LESSONS[1])), ([0], 0, 0, 1))
     logout(c)
 
@@ -1101,7 +1140,7 @@ try:
         c.send("ss_use;type=16;obj=x%s;target=%s;" % (pick, entity(stone)))
         blows += c.until(lambda f: f[0] in ("caHit", "caMiss") or (f[0] == "cmdAck"
                                                                    and f[1]["res"]), 3)
-        blows += c.frames(0.3)
+        blows += c.sync()
         if any(n == "lch" and p.get("dead") == stone for n, p in blows):
             break
     check("  ..a stone of the pit it breaks in one blow that lands, for 8 action points (the"
@@ -1132,7 +1171,7 @@ try:
     for _ in range(40):
         r.send("ss_use;type=16;obj=x0;target=%s;" % entity(rooms.player_id(WORKER)))
         r.until(lambda f: f[0] in ("caHit", "caMiss") or (f[0] == "cmdAck" and f[1]["res"]), 3)
-        fell += [p for n, p in c.frames(0.3) if n == "lch" and p.get("dead") == 0]
+        fell += [p for n, p in c.sync() if n == "lch" and p.get("dead") == 0]
         if fell:
             break
     check("  ..the rival's fist is let fight there: the worker falls", bool(fell), True)
@@ -1154,7 +1193,7 @@ try:
           (call.get("id"), BLOCKS_30 in journal(WORKER), held(WORKER)[PICK]),
           (QUARRY_N, True, 0))
     c.send("q_ca;q_id=%d;" % q30)
-    got_ca = c.frames(0.8)
+    got_ca = c.sync()
     got, q = take(c, here, SAM, BLOCKS_10)
     check("  ..the work dropped and another taken: the pick lent again",
           (acks(got_ca), acks(got), held(WORKER)[PICK]), ([0], [0], 1))
@@ -1202,7 +1241,7 @@ try:
     check("the pistols exam for afro, the book in the bag: not complete while the purse is short",
           (acks(got), first(got, "q_di_bring_l_obj").get("complete")), ([0], 0))
     c.send("userMsg;entry=@/money 30000@;group=0;")
-    got = c.frames(0.8)
+    got = c.sync()
     check("  ..complete once it covers the 25 000",
           [p.get("complete") for p in named(got, "q_di_bring_l_obj")][-1:], [1])
     st_ = accounts.Store(DB)
@@ -1222,7 +1261,7 @@ try:
            ch0.skill[progression.SHOOTING][:2]))
     give(c, PISTOLS_BOOK)
     c.send("userMsg;entry=@/money 0 100@;group=0;")
-    c.frames(0.5)
+    c.sync()
     ch0 = ch1
     ch0.gain_spec_xp(quests.SPEC_KEYS["pistols"], 80000)
     got, q = take(c, here, KASIM, EXAMS_G[2])
