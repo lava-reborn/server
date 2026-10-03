@@ -595,7 +595,8 @@ cmdAck;res=0;
 Житель, поставленный руками (`data/placements.json`), для клиента ничем не
 отличается от своих жителей файла: `lch;newUser;pos;rtype` и `userInfo_*`
 в том же порядке (`rooms.Room.snapshot_for`), id из того же счётчика. У
-вещи-жителя с `home: false` (ящик с инструментами в 184) в
+вещи-жителя (ящик с инструментами в 184: Commoner, которого `data/npcs.json`
+не прописывает, `world.offers_home`) в
 `userInfo_Commoner` `can_set_home=0` и `can_banking=0`: клиент рисует только
 вкладку квестов, а без квестов щелчок по нему не открывает ничего
 (`NPCService.openService`).

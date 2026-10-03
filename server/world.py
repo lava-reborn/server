@@ -865,9 +865,10 @@ def placements_path():
 
 def placements():
     """location id -> [row] of the table, read once: {type, cell: [x, y],
-    home, why}. No file is no placements, and the world stands as its files
-    say; a file that does not parse raises, and the server does not start
-    on it (rooms.check_placements)."""
+    why}, and escort: true on a boss's escort (rooms.Room.escorts). No file
+    is no placements, and the world stands as its files say; a file that
+    does not parse raises, and the server does not start on it
+    (rooms.check_placements)."""
     global _PLACEMENTS
     if _PLACEMENTS is None:
         path = placements_path()
