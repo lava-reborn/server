@@ -208,8 +208,8 @@ def save(doc):
         "names": {str(k): v for k, v in sorted(kept_names.items())},
         "stock": {str(k): v for k, v in sorted(kept_stock.items())},
     }
-    # The keys this page does not edit -- a healer's fee, the things that
-    # register nobody's home (server/npcs.py) -- stay as the file has them.
+    # The keys this page does not edit, including healer fees and home
+    # registration decisions (server/npcs.py), stay as the file has them.
     try:
         with io.open(OUT, encoding="utf-8") as fh:
             for key, value in json.load(fh).items():

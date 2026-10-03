@@ -705,6 +705,9 @@ try:
     ch.skill[progression.INDUSTRY] = [LEVEL, 0, progression.skill_xp_max(LEVEL)]
     ch.recalc()
     ch.save(store)
+    # A home registered before registration was restricted stays valid.
+    # This fight checks resurrection there; test_home checks new registration.
+    store.set_home(char_id, 102, 5970, 1730)
     store.close()
     c = Client(connect())
     login(c)
@@ -763,9 +766,9 @@ try:
     check("the dog quest is taken", got,
           [("cmdAck", {"res": 0}),
            ("q_di_kill_mobs", dict(q_id=FIRST_Q, q_type=5, complete=0, kill_num=[0]))])
-    # With the technogeek, who offers "Прописка"; Aaron's safe is a bank.
+    # The old home survives, but the technogeek cannot register a new one.
     c.send("on_conv;mob=%d;op=0;" % TECHNOGEEK)
-    check("home registered on the market", c.frames(), [("cmdAck", {"res": 0})])
+    check("the technogeek refuses home registration", c.frames(), [("cmdAck", {"res": 2})])
 
     # --- no fighting on the market: one refusal, nothing else --------------------
     c.send("ss_use;type=16;obj=x%s;target=%s;" % (pistol, hexcell(pos + 1)))

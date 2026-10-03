@@ -771,20 +771,21 @@ try:
           (demir.get("name"), demir.get("res"), demir.get("ally"), demir.get("give_quests"),
            demir.get("take_quests")),
           (DEMIR, DEMIR, 1, quests.given_by(DEMIR), quests.taken_by(DEMIR)))
-    # What he offered as a Commoner was «Прописка», and the client gives a
-    # Trader no "support" tab (NPCService.openService): the caravan keeps it
-    # with the Commoners standing beside him.
+    # Home registration belongs to the caravan's healer, not its commoners
+    # or the trophy registrar, whose Trader window has no support tab.
     rat = next((p for p in named(arrival, "userInfo_Commoner") if p["name"] == RATCATCHER), {})
     h.send("on_conv;mob=%d;op=0;" % rat.get("id", 0))
-    home = acks(h.frames())
-    check("  ..the caravan's «Прописка» stays: Крысолов beside him offers it and"
-          " registers «Караван» as home",
-          (rat.get("can_set_home"), home,
+    check("  ..the ratcatcher neither offers nor accepts home registration",
+          (rat.get("can_set_home"), acks(h.frames())), (0, [2]))
+    healer = next((p for p in named(arrival, "userInfo_Medic") if p["name"] == 5202), {})
+    h.send("on_conv;mob=%d;op=0;" % healer.get("id", 0))
+    check("  ..the healer offers registration and registers the caravan as home",
+          (healer.get("can_set_home"), acks(h.frames()),
            db_rows("SELECT home_loc FROM characters WHERE id = ?", (H,))[0]["home_loc"]),
           (1, [0], CARAVAN))
     h.send("on_conv;mob=%d;op=0;" % eid)
-    check("  ..and the server still takes it from Демир himself as before",
-          acks(h.frames()), [0])
+    check("  ..the trophy registrar refuses home registration too",
+          acks(h.frames()), [2])
     opened, got = register(h, eid, OID1)
     check("the stall opens; the registration is answered 0",
           (opened, acks(got)), ([0], [0]))

@@ -5,7 +5,7 @@ a thing priced in gold alone sold for afro, Хассир registering trophies
 beside his stall, the stalls' goods, and Мортимер's and the lotteries'
 service quests.
 
-In process: the tables -- data/npcs.json 'healer_price', 'no_home' and
+In process: the tables -- data/npcs.json 'healer_price', 'home' and
 'stock', the one rate (progression.GOLD_TO_AFRO_RATE) where the auction and
 the ingots read it, the gun stalls of the black market with the wiki's
 models and no assault rifle, the clothing market by the owner's ladder
@@ -99,8 +99,9 @@ try:
           " the valley's keep the old fee",
           [npcs.healer_price(t, 10) for t in (HEALER, OASIS_HEALER, PRISON_HEALER, VALLEY_HEALER)],
           [150, 150, 250, 10])
-    check("things register nobody's home; a person does",
-          ([t for t in NO_HOME if world.offers_home(t)], world.offers_home(TECHNOGEEK)), ([], True))
+    check("things and an unlisted commoner register nobody's home; Said and healers do",
+          ([t for t in NO_HOME if world.offers_home(t)], world.offers_home(TECHNOGEEK),
+           world.offers_home(44), world.offers_home(HEALER)), ([], False, True, True))
     check("Хассир registers trophies and keeps his stall; the butchers do not trade",
           (trophies.is_registrar(HASSIR), trophies.keeps_stall(HASSIR),
            world.entity_root(HASSIR, world.TRADER), trophies.keeps_stall(939)),
