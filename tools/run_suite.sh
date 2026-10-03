@@ -206,9 +206,13 @@ grep -v -e '^0 ' -e DONE "$OUT/summary.txt"
 # whatever becomes of it, the exit status is the runner's own.
 finish() {
   if [ -n "$IMPACT" ]; then
-    python3 tools/suite.py --save-map "$IMPACT" \
-      --only "$(xargs -n1 basename < "$OUT/list.txt" | sed 's/[.]py$//' | paste -sd,)"
-    rm -rf "$IMPACT"
+    if python3 tools/suite.py --save-map "$IMPACT" \
+        --only "$(xargs -n1 basename < "$OUT/list.txt" | sed 's/[.]py$//' | paste -sd,)"; then
+      rm -rf "$IMPACT"
+    else
+      # A whole run's records are not thrown away with a map that failed.
+      echo "run_suite: no map written; the records are kept in $IMPACT"
+    fi
   fi
   rm -f "$OUT/report.html"
   python3 tools/suite_report.py "$OUT" > "$OUT/report.txt" 2>&1

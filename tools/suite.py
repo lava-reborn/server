@@ -36,9 +36,11 @@ push is ever tested, and deployed, on part of it.
     anything of the module;
   * for a tool, tools/test_<it>.py and every suite that names it; for a
     file of data/, every suite that ran a function whose source names the
-    file, and the suites that name it; for any other file, the suites that
-    name it -- and when nobody does, everything, unless it is the docs
-    (*.md, recon/, .github/);
+    file or a name a module's top level binds from it, even a function
+    nearly every suite runs (the table's loader), every suite that imported
+    a module whose top level reads it, and the suites that name it; for
+    any other file, the suites that name it -- and when nobody does,
+    everything, unless it is the docs (*.md, recon/, .github/);
   * everything, for a change to the runner, testkit or the known list,
     when git cannot say what changed, and when there is no map at all.
 
@@ -52,6 +54,7 @@ nobody has run yet is found through the names its callers use.
 """
 import argparse
 import ast
+import glob
 import json
 import os
 import re
@@ -262,6 +265,11 @@ class Source(object):
 INERT_PREFIXES = ("recon/", ".github/")
 INERT_SUFFIXES = (".md",)
 
+# Calls that only build a path: a module's top level naming a table through
+# nothing else has not read it yet (craft.TABLE, transport._PATH).
+PATH_CALLS = frozenset(("join", "dirname", "abspath", "realpath", "normpath", "get",
+                        "getenv"))
+
 
 def affected(base, impact):
     """(suite names, why): what the change since base asks to run.
@@ -327,6 +335,53 @@ def affected(base, impact):
             return out
         stem = os.path.splitext(os.path.basename(path))[0] if path else None
         return naming([stem] if stem else names)
+
+    def table_readers(base_name, stem):
+        """Suites that read a table of data/, common or not: a table's loader
+        is often what nearly every suite runs (world.placements, for every
+        room), and then every one of them is fed by it.
+
+          * every suite that ran a function naming the file, or its family
+            -- its name up to an underscore, as quests.companion_paths lists
+            every questgen_*.json;
+          * every suite that ran a function naming what the top level of a
+            module binds from it (a path, items.WIKI_ITEMS_PATH; a table read
+            there, mobs.TYPES): a function of that module, or one naming the
+            module as well;
+          * every suite that imported a module whose top level reads it
+            there and then (mobs.TYPES = _load("mob_types.json")).
+
+        Nobody found: the suites that name the file."""
+        names = {base_name, stem}
+        names.update(base_name[:i + 1] for i, ch in enumerate(base_name) if ch == "_" and i >= 3)
+        bound, at_import = {}, set()
+        for p in sorted(glob.glob(os.path.join(ROOT, "server", "*.py"))):
+            mod = rel(p)
+            if os.path.basename(mod).startswith("test_"):
+                continue
+            for stmt in src(mod).body:
+                if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    continue
+                nodes = list(ast.walk(stmt))
+                if not any(isinstance(n, ast.Constant) and n.value == base_name for n in nodes):
+                    continue
+                bound.setdefault(mod, set()).update(
+                    n.id for n in nodes if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store))
+                calls = {getattr(n.func, "attr", getattr(n.func, "id", None))
+                         for n in nodes if isinstance(n, ast.Call)}
+                if calls - PATH_CALLS:
+                    at_import.add(mod)
+        out = set()
+        for key, who in by_key.items():
+            p, q = key.split(":", 1)
+            used = src(p).names.get(q, set())
+            if used & names or any(
+                    used & ns and (p == mod or os.path.splitext(os.path.basename(mod))[0] in used)
+                    for mod, ns in bound.items()):
+                out |= who
+        for mod in at_import:
+            out |= by_key.get("%s:<module>" % mod, set())
+        return out or naming([base_name, stem])
 
     def whole_module(path):
         """Every suite that ran any function of the file, else every one
@@ -401,7 +456,7 @@ def affected(base, impact):
             take(hit or set(every), "runs %s" % path)
             continue
         if path.startswith("data/"):
-            hit = users_of({base_name, stem}) | naming([base_name])
+            hit = table_readers(base_name, stem) | naming([base_name])
             take(hit or set(every), "reads %s" % path)
             continue
         hit = naming([base_name, path])
@@ -429,7 +484,13 @@ def save_map(record_dir, names):
             if f.startswith(n + "-") and f[len(n) + 1:-4].isdigit():
                 keys.update(l.strip() for l in open(os.path.join(record_dir, f), encoding="utf-8") if l.strip())
         impact["suites"][n] = sorted(keys)
-    impact["commit"] = git("rev-parse", "HEAD").strip()
+    try:
+        impact["commit"] = git("rev-parse", "HEAD").strip()
+    except GitFailed:
+        # A worktree made by Windows git, run from WSL: the records are no
+        # less true for git not saying which commit they were made on, and a
+        # full run's worth of them is not thrown away for it.
+        impact["commit"] = None
     impact["recorded"] = time.strftime("%Y-%m-%d %H:%M")
     with open(MAP, "w", encoding="utf-8") as fh:
         json.dump(impact, fh, ensure_ascii=False, indent=0)

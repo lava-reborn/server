@@ -13,12 +13,21 @@ tree and handed to suite.affected, as `--affected` would:
     the module -- it used to be no suite at all, since it assigns no name;
   * a constant: the suites that ran a function naming it;
   * a tool: its own tools/test_<it>.py;
+  * a table read by a loader nearly every suite runs: every suite that ran
+    the loader -- it used to be left out as «common», and only the suite
+    naming the file ran; a table named by a path a module's top level
+    binds: the suites that ran a function using the path (it used to be
+    only the suite naming the file); a table read at the top of a module:
+    every suite that imported it;
   * a table renamed: the suites naming its old name (a rename used to show
     no lines at all);
   * the docs: nothing; a file nobody names: everything;
   * a base git does not know, and a folder git cannot read: everything, with
     the reason -- it used to say «nothing to run» and exit 0;
   * a suite the map has never seen: always.
+
+And the map of a recorded run is written where git cannot say the commit
+(a worktree of Windows git read from WSL) -- it used to be lost, run and all.
 
 And a suite that runs past its timeout is killed with what it started.
 """
@@ -40,9 +49,14 @@ import suite  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 MODULE = '''"""A module."""
+import json
+import os
+
 TABLE = {"a": 1}
 ALL = {}
 ALL.update(TABLE)
+KINDS_PATH = os.path.join("data", "kinds.json")
+NAMES = json.load(open(os.path.join("data", "names.json")))
 
 
 def used_by_a():
@@ -57,22 +71,38 @@ def used_by_b():
 
 def gone_soon():
     return 2
+
+
+def load_table():
+    return open(os.path.join("data", "table.json")).read()
+
+
+def sorts():
+    return open(KINDS_PATH).read()
 '''
 
 TREE = {
     "server/mod.py": MODULE,
     "server/test_a.py": "import mod\nmod.used_by_a()\n",
-    "server/test_b.py": "import mod\nmod.used_by_b()\nopen('../data/table.json')\n",
-    "server/test_c.py": "import mod\nmod.gone_soon()\n",
+    "server/test_b.py": ("import mod\nmod.used_by_b()\nopen('../data/table.json')\n"
+                         "open('../data/kinds.json')\n"),
+    "server/test_c.py": "import mod\nmod.gone_soon()\nmod.sorts()\n",
     "data/table.json": "{}\n",
+    "data/kinds.json": "{}\n",
+    "data/names.json": "{}\n",
     "tools/helper.py": "def run():\n    return 1\n",
     "tools/test_helper.py": "import helper\nhelper.run()\n",
     "README.md": "# docs\n",
     "Dockerfile": "FROM scratch\n",
 }
-MAP = {"suites": {"test_a": ["server/mod.py:used_by_a"],
-                  "test_b": ["server/mod.py:used_by_b"],
-                  "test_c": ["server/mod.py:gone_soon"],
+# load_table is run by three suites of four: nearly every one (suite.affected's
+# «common»), as world.placements is. Only test_a is noted as importing the
+# module, so that an import's read of names.json is told from the rest.
+MAP = {"suites": {"test_a": ["server/mod.py:<module>", "server/mod.py:used_by_a",
+                             "server/mod.py:load_table"],
+                  "test_b": ["server/mod.py:used_by_b", "server/mod.py:load_table"],
+                  "test_c": ["server/mod.py:gone_soon", "server/mod.py:load_table",
+                             "server/mod.py:sorts"],
                   "test_helper": []}}
 EVERY = ["test_a", "test_b", "test_c", "test_helper"]
 
@@ -136,6 +166,14 @@ check("a constant: the suite that ran a function naming it",
       picked(lambda: edit(ROOT, "server/mod.py", '{"a": 1}', '{"a": 2}'))[0], ["test_b"])
 check("a tool: its own suite",
       picked(lambda: edit(ROOT, "tools/helper.py", "return 1", "return 7"))[0], ["test_helper"])
+check("a table read by a loader nearly every suite runs: every suite that ran it",
+      picked(lambda: edit(ROOT, "data/table.json", "{}", '{"a": 1}'))[0],
+      ["test_a", "test_b", "test_c"])
+check("a table a module's top level names by a path: the suites that ran a function"
+      " using the path, and the one naming the file",
+      picked(lambda: edit(ROOT, "data/kinds.json", "{}", '{"a": 1}'))[0], ["test_b", "test_c"])
+check("a table a module's top level reads: every suite that imported the module",
+      picked(lambda: edit(ROOT, "data/names.json", "{}", '{"a": 1}'))[0], ["test_a"])
 _renamed = picked(lambda: git(ROOT, "mv", "data/table.json", "data/table2.json"))[0]
 check("a table renamed: the suite naming its old name is run", "test_b" in _renamed, True)
 check("the docs: nothing", picked(lambda: edit(ROOT, "README.md", "docs", "the docs"))[0], [])
@@ -160,6 +198,24 @@ finally:
     suite.ROOT = ROOT
 check("not a checkout git can read: everything, and why",
       (sorted(_names), "git" in _why.get("*", "")), (EVERY, True))
+
+# A recorded run there: the map is still written, the commit unknown.
+_rec, _maps = tempfile.mkdtemp(prefix="suite_rec_"), tempfile.mkdtemp(prefix="suite_map_")
+write(_rec, "test_a-1.txt", "server/mod.py:used_by_a")
+write(_rec, "test_a-2.txt", "server/mod.py:load_table")
+_map_was, suite.MAP, suite.ROOT = suite.MAP, os.path.join(_maps, "impact_map.json"), _bare
+try:
+    suite.save_map(_rec, ["test_a"])
+    _saved = json.load(open(suite.MAP, encoding="utf-8"))
+except Exception as exc:
+    _saved = {"error": repr(exc)}
+finally:
+    suite.MAP, suite.ROOT = _map_was, ROOT
+check("a recorded run git cannot name the commit of: its map written all the same",
+      (_saved.get("suites"), _saved.get("commit", "none written"), _saved.get("error")),
+      ({"test_a": ["server/mod.py:load_table", "server/mod.py:used_by_a"]}, None, None))
+shutil.rmtree(_rec, ignore_errors=True)
+shutil.rmtree(_maps, ignore_errors=True)
 
 check("a binary file in a diff is a whole file",
       suite.parse_diff("diff --git a/x.png b/x.png\nindex 1..2 100644\n"
