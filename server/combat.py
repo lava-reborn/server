@@ -242,6 +242,23 @@ def round_wear(rounds, rate=None, rng=None):
     return whole
 
 
+def pull(si, mode, ammo):
+    """What one trigger pull fires and what it takes from the magazine:
+    (bullets or pellets, rounds). A shotgun's mode counts pellets, not
+    rounds: Сайга-12 has «длина очереди 6» and a magazine of 5, ИЖ-27 six
+    from two barrels, the Излучатель «в разном режиме генерирует разное
+    кол-во поражающих элементов» from a cell of ten. The client says the
+    same: a shotgun's burst is one shot, one animation and one sound
+    (DisplayLocScene.shotgunFireAck, Location.as:372). So a shotgun spends
+    one round on its full charge of shot, whatever is left behind it; every
+    other gun spends a round a bullet and fires what it holds."""
+    shots = si["fire_mods"][mode]
+    if si.get("weapon_type") == items.SHOTGUN:
+        return shots, 1
+    shots = min(shots, ammo)
+    return shots, shots
+
+
 # What one trigger pull is resolved with. cone is how wide the bullets
 # scatter per hex of flight (cone_of); crit is a chance in percent before the
 # target's evasion; opt_lo..opt_hi is the optimal band where crits are
@@ -1281,7 +1298,8 @@ class Fighter:
                                      spec_or_zero(ch, spec)),
                        si["target_size"][mode], ammo_si.get("acc_mod", 1) or 1,
                        si["max_range"][mode])
-        weapon = Weapon(num_shots=min(modes[mode], row["ammo_count"]),
+        num_shots, rounds = pull(si, mode, row["ammo_count"])
+        weapon = Weapon(num_shots=num_shots,
                         dmin=si["h_damage_min"][mode], dmax=si["h_damage_max"][mode],
                         opt_lo=si["opt_range"][mode], opt_hi=si["end_opt_range"][mode],
                         max_range=si["max_range"][mode],
@@ -1297,11 +1315,14 @@ class Fighter:
         # the first faShot (WeaponPan.aim); the burst waits the same.
         self.aim = asyncio.get_running_loop().call_later(
             pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
-            self.fire_now, row["uniq"], target, hexcell, weapon, cost)
+            self.fire_now, row["uniq"], target, hexcell, weapon, cost, rounds)
 
-    def fire_now(self, uniq, target, hexcell, weapon, cost):
+    def fire_now(self, uniq, target, hexcell, weapon, cost, rounds=None):
         """The burst, after the aim. num_shots pairs go out come what may:
-        the client has already counted them from faAim."""
+        the client has already counted them from faAim. rounds is what the
+        pull takes from the magazine (one for a shotgun's charge of shot,
+        num_shots for a burst); what the magazine lost meanwhile leaves its
+        share of the pairs empty."""
         self.aim = None
         rc = self.rc
         if rc is None or self.dead:
@@ -1309,7 +1330,10 @@ class Fighter:
         row = self.store.item(uniq)
         if row is not None and row["char_id"] != self.sess.char_id:
             row = None
-        live = min(weapon.num_shots, row["ammo_count"]) if row else 0
+        if rounds is None:
+            rounds = weapon.num_shots
+        spent = min(rounds, row["ammo_count"]) if row else 0
+        live = weapon.num_shots * spent // rounds if rounds else 0
         pool = target.hp if target is not None and not target.is_player else 0
         # Asked before the burst, which may kill it: whether the rounds could
         # have got there at all. Only then is the shot a provocation.
@@ -1324,8 +1348,8 @@ class Fighter:
             # wear: Берт's training pistol holds 120 and a level-0 cadet can
             # spend more than that on one lesson's targets, and a gun broken
             # halfway would lock the lesson until the next day (quests.lent).
-            wear = 0 if quests.lent(row["type_id"]) else round_wear(live)
-            self.store.update_item(uniq, ammo_count=row["ammo_count"] - live,
+            wear = 0 if quests.lent(row["type_id"]) else round_wear(spent)
+            self.store.update_item(uniq, ammo_count=row["ammo_count"] - spent,
                                    brk=max(0, row["brk"] - wear))
         if rc.room.ws:
             self.ap = max(0, self.ap - cost)

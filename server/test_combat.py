@@ -182,6 +182,67 @@ check("a burst at a mark past the gun's reach: every bullet comes down within re
       (["faMiss"] * 5, True))
 
 
+# --- a shotgun's charge and ammunition ---------------------------------------
+# A shotgun's mode counts pellets, not rounds (combat.pull): one pull spends
+# one round on the full charge of shot. It used to spend a round a pellet,
+# so Сайга-12 (5 rounds, 6 pellets) emptied on one pull, and the damage
+# shrank with what was left (the last round fired one pellet in six).
+class _Mag(object):
+    def __init__(self, type_id, ammo):
+        self.row = dict(uniq=7, char_id=1, type_id=type_id, ammo_count=ammo, brk=500)
+
+    def item(self, uniq):
+        return dict(self.row)
+
+    def update_item(self, uniq, **fields):
+        self.row.update(fields)
+
+
+class _PullFighter(combat.Fighter):
+    rc = None
+
+
+def _pull(type_id, mode, ammo, drop=0):
+    """One pull of the real gun through Fighter.fire_now: (pellets the client
+    is told of, pellets that fly, rounds left, durability lost). drop is
+    what the magazine loses during the aim."""
+    si = items.params_of(type_id)
+    shots, rounds = combat.pull(si, mode, ammo)
+    mag = _Mag(type_id, ammo - drop)
+    flew = []
+    rc = type("RC", (), {"room": type("R", (), {"ws": False})(),
+                         "within_fire": lambda *a: False,
+                         "burst": lambda _rc, _sh, _t, _c, _w, live, *_a:
+                         flew.append(live) or (0, 0, 0, False)})()
+    sess = type("S", (), {"char_id": 1, "send": lambda *a, **k: None,
+                          "character": lambda *a: None,
+                          "inv": type("I", (), {"store": mag,
+                                                "push_di": lambda *a: None})()})()
+    fighter = _PullFighter(sess)
+    fighter.rc = rc
+    fighter.fire_now(7, None, 0, combat.Weapon(
+        num_shots=shots, dmin=1, dmax=1, opt_lo=0, opt_hi=0, max_range=1, piercing=1,
+        cone=0, crit=0, skill=progression.SHOOTING, spec=None), 0, rounds)
+    return shots, flew[0], mag.row["ammo_count"], 500 - mag.row["brk"]
+
+
+_wear = combat.WEAR_PER_ROUND
+combat.WEAR_PER_ROUND = 1
+check("a shotgun's pull spends one round on its full charge of shot: Сайга-12 full, "
+      "then on its last round, ИЖ-27, КС-12's third mode, the Излучатель's third",
+      [_pull(25899, 0, 5), _pull(25899, 0, 1), _pull(25876, 0, 2),
+       _pull(7072, 2, 4), _pull(1570, 2, 10)],
+      [(6, 6, 4, 1), (6, 6, 0, 1), (6, 6, 1, 1), (12, 12, 3, 1), (9, 9, 9, 1)])
+check("a burst still spends a round a bullet, and a short magazine fires what it holds",
+      [_pull(25636, 1, 16), _pull(25636, 1, 1), _pull(5842, 0, 14)],
+      [(2, 2, 14, 2), (1, 1, 0, 1), (1, 1, 13, 1)])
+check("a magazine emptied during the aim: the shotgun's pairs all go out empty, "
+      "the burst's spent share too",
+      [_pull(25899, 0, 1, drop=1), _pull(25636, 1, 2, drop=1)],
+      [(6, 0, 0, 0), (2, 1, 0, 1)])
+combat.WEAR_PER_ROUND = _wear
+
+
 # --- the line of fire: strays, cover, a rifle's round going through ------------
 # A row of the dump clear for eight hexes, the shooter at its west end, dogs
 # (they fight back, so a round may hit them) on it. Where each round lands
