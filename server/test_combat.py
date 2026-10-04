@@ -678,9 +678,8 @@ check("  ..so a thousand rounds take about the P99's 500",
 # --- the server -----------------------------------------------------------------
 # AP regeneration is raised so the bar never throttles the fight, the respawn
 # is shortened, and the dice are seeded. The exit timer is left at the game's
-# own thirty seconds: a chWorld inside it has to be refused, and a room
-# still at war half a minute after its last creature fell is exactly what
-# the checks below have to be able to see. The wait a
+# own fifteen seconds: a chWorld inside it has to be refused, while killing
+# the last aggressive creature must end the war immediately. The wait a
 # free resurrection costs goes to zero: that it is charged at all is
 # test_death's business, and here it would only add fifteen seconds.
 # The start cell is a server default and has moved since; these
@@ -690,10 +689,11 @@ check("  ..so a thousand rounds take about the P99's 500",
 # the admin panel; this suite uses them to set a scene, so it asks
 # for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
-           LAVA_AP_REGEN="25", LAVA_LEAVE_COMBAT="30", LAVA_RESPAWN="4",
+           LAVA_AP_REGEN="25", LAVA_RESPAWN="4",
            LAVA_SEED="7", LAVA_START_AFRO="20000",
            # A point a round, so that one shot is one point the check can see.
            LAVA_WEAR_PER_ROUND="1")
+env.pop("LAVA_LEAVE_COMBAT", None)
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 _log = []
@@ -799,8 +799,10 @@ check("the knife is a cold arm", items.root_of(KNIFE), items.COLD_ARM)
 def login(c, first=False):
     c.send("hello;minor=2;major=0;")
     c.send("login;hash=@%s@;" % CRED)
-    c.frames()
+    got = c.frames()
     if first:
+        check("the default exit countdown sent to the client is fifteen seconds",
+              [p["leave_combat_timeout"] for p in named(got, "constants")], [15])
         c.send("newPers;res=1;sex=0;name=@gunner@;")
         c.frames()
         c.send("actPlayer;")
@@ -1089,7 +1091,7 @@ try:
     # The dog took the shooter as its target above and keeps him, but that is
     # not what shuts the exit: the exit timer is, which every hit given or
     # taken starts (the client's own countdown, LocationInterface.
-    # startExitTimer), and which runs thirty seconds here. A bullet that found
+    # startExitTimer), and which runs fifteen seconds here. A bullet that found
     # the dog has started it; one that missed has not, and then the way out
     # is still open -- so the door is tried at the first hit of the fight,
     # the player's or the dog's, whichever comes first (try_exit).

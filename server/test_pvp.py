@@ -192,6 +192,7 @@ env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
 # server; this suite reads them as the server's reasons, so it asks for
 # them by name.
 env["LAVA_SERVER_CHAT"] = "1"
+env.pop("LAVA_LEAVE_COMBAT", None)
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 _log = []
@@ -545,6 +546,24 @@ try:
     seen += b.frames(0.6)
     check("the room stays at war through the duel",
           [f for f in named(seen, "lch") if "ws=0" in f], [])
+
+    # No further attacks: the default fifteen-second tail must end on both
+    # clients, and each chWorld must receive exactly one success ack.
+    rested = []
+    deadline = time.monotonic() + 16
+    while time.monotonic() < deadline:
+        rested += b.frames(0.3)
+        if any(param(f, "ws") == "0" for f in named(rested, "lch")):
+            break
+    check("the idle duel ends on the default timeout without waiting thirty seconds",
+          [param(f, "ws") for f in named(rested, "lch") if param(f, "ws") == "0"], ["0"])
+    for who, client in (("quarry", b), ("hunter", a)):
+        client.send("chWorld;")
+        got = client.frames(0.8)
+        check("after the duel the %s can leave with one ack" % who,
+              [(f.split(";")[0], param(f, "res")) for f in got
+               if f.split(";")[0] in ("cmdAck", "gmap", "lcall")],
+              [("cmdAck", "0"), ("gmap", None)])
 
     # --- the open desert: where the owner found no fighting at all ----------
     arrived, apart, _cell = meet(DESERT, pid_b)
