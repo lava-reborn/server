@@ -49,6 +49,25 @@ Two changes, both in the client's own bytecode, and nothing else in the file:
    the original runs only while master.gamer.ssMessages is this very
    service, which a Gamer's kill() has already deleted for an orphan.
 
+4. The doubled services. NPC.userInfo pushes «Прописка» onto supportList
+   whenever can_set_home is set, and Healer.userInfo pushes «Лечение» after
+   it, but the list is made once, in the constructor (NPC.as:19-24, 44-50,
+   Healer.as:13-20). The server answers every getInfo with a fresh
+   userInfo, so Ибн Сина seen on entering the market and clicked once
+   offered two of each.
+
+   The same wrapping again, on NPC.prototype.userInfo: the list starts
+   empty, then the original fills it from this frame alone. Healer's
+   super.userInfo lands in the wrapper, so its «Лечение» still comes after
+   «Прописка», once.
+
+5. A silent «Прописка». Attendance.cmdAck is empty (Attendance.as:46-48):
+   the server registers the home and acks it, and the player sees nothing.
+   A refusal already shows, through ErrorReport's own cmdAck listener. The
+   wrapper on Attendance.prototype.cmdAck puts up the top line the client
+   uses for its own notices (ItemActivator.as:82-84), for two seconds, when
+   a SET_HOME comes back with res=0.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -184,6 +203,7 @@ OPS = {
     "getvar": 0x1C, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
     "add2": 0x47, "less2": 0x48, "equals2": 0x49, "getmember": 0x4E,
     "setmember": 0x4F, "callmethod": 0x52, "newmethod": 0x53,
+    "initarray": 0x42,
 }
 
 
@@ -533,6 +553,37 @@ def fn_messages():
     return a
 
 
+def fn_services():
+    """NPC.userInfo(obj): `this.supportList = []; this.__wideOrig(obj)`,
+    so a repeated userInfo rebuilds the services instead of adding to them."""
+    a = Asm()
+    a.var("this").push("supportList").push(0).op("initarray").op("setmember")
+    a.var("obj").push(1).var("this").push("__wideOrig").op("callmethod").op("pop")
+    return a
+
+
+HOME_SET = "Теперь вы будете возрождаться в этой локации"
+
+
+def fn_home_ack():
+    """Attendance.cmdAck(obj): the original, then for a home registered
+    (`this.id == Attendance.SET_HOME && obj.param.res == 0`) the same top
+    line ItemActivator raises, closed by the same Timeout."""
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__wideOrig").op("callmethod").op("pop")
+    a.var("this").member("id").var("lol").member("core", "player", "Attendance", "SET_HOME")
+    a.op("equals2").op("not").iftrue("out")
+    a.var("obj").member("param", "res").push(0).op("equals2").op("not").iftrue("out")
+    a.push("topSimple", 1).var("lol").member("core", "SceneShifter")
+    a.push("openNewAlert").op("callmethod")
+    a.push("label", HOME_SET).op("setmember")
+    a.push("topQuery", 2000).var("lol").member("core", "SceneShifter", "closeAlert")
+    a.var("lol").member("core", "SceneShifter")
+    new(a, ("lol", "utils"), "Timeout", 4).op("pop")
+    a.label("out")
+    return a
+
+
 def injected():
     a = Asm()
     for name, fn, params in (
@@ -554,6 +605,10 @@ def injected():
          ("obj",), fn_wrapper("__wideChat")),
         (("services", "SpecSkillMessages"), "init", "__wideOrig",
          (), fn_messages()),
+        (("core", "player", "NPC"), "userInfo", "__wideOrig",
+         ("obj",), fn_services()),
+        (("core", "player", "Attendance"), "cmdAck", "__wideOrig",
+         ("obj",), fn_home_ack()),
     )
     for path, method, keep, params, body in wraps:
         cls = path[-1]
