@@ -30,8 +30,8 @@ Both are gone, and what is held to here is what replaces them:
 The character on the socket has Ближний бой 50: his fist lands every time
 and crits, and the dog's teeth never get through his evasion (its 50 hit
 against his 59), so the only hits in the scene are the ones he throws and
-the timer is his to read. The timer itself is cut to three seconds
-(LAVA_LEAVE_COMBAT).
+the timer is his to read. This scene uses the default fifteen seconds,
+without a LAVA_LEAVE_COMBAT override.
 
 Written against the code before the rule, the in-process part fails on the
 leash's flapping (the ws edges and the heal), on the give-up, on the heal
@@ -47,11 +47,13 @@ import sys
 import tempfile
 import threading
 import time
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
 
 sys.path.insert(0, HERE)
+os.environ.pop("LAVA_LEAVE_COMBAT", None)
 import accounts      # noqa: E402
 import combat        # noqa: E402
 import mobs          # noqa: E402
@@ -63,7 +65,7 @@ from protocol import decode   # noqa: E402
 DUMP = 100
 DOG_HOME, BUM_HOME = 4551, 4363       # mStarvingDog_lvl1 and m05_bich
 DOG, BOX = 82, 409                    # the types
-HOLD = 3                              # LAVA_LEAVE_COMBAT for the socket part
+HOLD = 15                             # the default, also sent in constants
 OLD_LEASH, OLD_GIVE_UP = 24, 15.0     # what the code before the rule let go at
 
 import testkit  # noqa: E402
@@ -339,12 +341,59 @@ async def _shot_short():
           (dog.target, [p for n, p in seat.sent if n == "lch"]), (None, []))
 
 
+async def _timer_boundary():
+    """Real damage frames with a controlled clock: stamina hits count too."""
+    room, rc, seat = _scene(NEAR)
+    neighbour = next(c for c in progression.hex_neighbours(NEAR, W, LOC.height)
+                     if _open(c))
+    other = _Seat(room, neighbour, char_id=2)
+    spectator = _Seat(room, NEAR, char_id=3)
+    me, target = seat.combat, other.combat
+    target.armor = lambda: 100
+    gun = combat.Weapon(num_shots=1, dmin=1, dmax=1, opt_lo=0, opt_hi=0,
+                        max_range=6, piercing=0, cone=0, crit=0,
+                        skill=progression.SHOOTING, spec=None, at_players=False)
+    with patch.object(combat, "now", return_value=100.0) as clock:
+        result = rc.burst(me, target, target.cell, gun, 1)
+        check("a stamina-only bullet lands", result, (0, 1, 1, False))
+        check("its faHit carries no health damage",
+              [(p["dmg"], p["sdmg"]) for n, p in room.sent if n == "faHit"], [(0, 1)])
+        check("both participants start fifteen seconds, the spectator none",
+              (me.exit_timer_left(), target.exit_timer_left(),
+               spectator.combat.in_combat()), (15.0, 15.0, False))
+        clock.return_value = 114.99
+        seat.sent = []
+        check("just before fifteen seconds there is exactly one refusal ack",
+              (me.refuse_leave(), seat.sent), (True, [("cmdAck", {"res": 39})]))
+        clock.return_value = 115.0
+        seat.sent = []
+        check("at exactly fifteen seconds both are free, no refusal ack",
+              (me.refuse_leave(), target.in_combat(), seat.sent), (False, False, []))
+        rc.burst(me, target, target.cell, gun, 1)
+        check("another stamina hit restarts the full timer for both",
+              (me.exit_timer_left(), target.exit_timer_left()), (15.0, 15.0))
+        clock.return_value = 120.0
+        room.sent = []
+        rc.burst(me, target, target.cell, gun, 0)
+        with patch.object(combat, "shot_wall", return_value=target.cell):
+            rc.burst(me, target, target.cell, gun, 1)
+        check("a miss and a wall strike emit no hit",
+              [n for n, p in room.sent if n in ("faMiss", "faWall", "faHit")],
+              ["faMiss", "faWall"])
+        check("neither resets the timer",
+              (me.exit_timer_left(), target.exit_timer_left()), (10.0, 10.0))
+        me.last_pvp = target.last_pvp = 115.0
+        check("the PvP room tail lasts fifteen seconds too",
+              (rc.hostilities(129.99), rc.hostilities(130.0)), (True, False))
+
+
 async def _in_process():
     got = await _pulled_far()
     await _goes_home(*got)
     await _unreachable()
     await _timer()
     await _shot_short()
+    await _timer_boundary()
 
 
 try:
@@ -371,7 +420,7 @@ CRED = accounts.credential("brawler", "secret")
 
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
            LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
-           LAVA_LEAVE_COMBAT=str(HOLD), LAVA_RESPAWN="600", LAVA_AP_REGEN="25",
+           LAVA_RESPAWN="600", LAVA_AP_REGEN="25",
            LAVA_SEED="7")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)

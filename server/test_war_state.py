@@ -170,7 +170,7 @@ asyncio.run(_rule())
 
 
 # --- the server -------------------------------------------------------------------
-# The exit timer is the game's own thirty seconds, said out loud so that no
+# The exit timer is explicitly overridden to thirty seconds, so that no
 # environment shortens the very tail this suite exists to catch. Nothing
 # respawns for the length of the scene, the AP bar never throttles, and the
 # dice are seeded.
@@ -265,8 +265,10 @@ def entity(eid):
 def login(c, first=False):
     c.send("hello;minor=2;major=0;")
     c.send("login;hash=@%s@;" % CRED)
-    c.frames()
+    got = c.frames()
     if first:
+        check("an explicit exit-timeout override reaches the client",
+              [p["leave_combat_timeout"] for p in named(got, "constants")], [30])
         c.send("newPers;res=1;sex=0;name=@wanderer@;")
         c.frames()
         c.send("actPlayer;")

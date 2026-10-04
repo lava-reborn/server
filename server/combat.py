@@ -78,7 +78,7 @@ SESSION_LOOT = 0
 # The same length keeps a room at war after a blow between two players,
 # landed or not (RoomCombat.hostilities); a fight with creatures has no such
 # tail: it lasts while one of them is after somebody.
-LEAVE_COMBAT_TIMEOUT = int(os.environ.get("LAVA_LEAVE_COMBAT", "30"))
+LEAVE_COMBAT_TIMEOUT = int(os.environ.get("LAVA_LEAVE_COMBAT", "15"))
 # A dead mob lies for this long before lch;lostUser fades it and the bag
 # appears; then it comes back after RESPAWN_DELAY. The bag stays LOOT_LIFETIME.
 CORPSE_DELAY = 2.5
