@@ -2359,6 +2359,11 @@ class Session:
         for the roster and is not acknowledged; see expects_ack."""
         PARTIES.op(self, int(p.get("op", -1) or 0), int(p.get("id", 0) or 0))
 
+    def party(self):
+        """This player's party, or None: combat asks it whom a stray round
+        passes by (Fighter.allied)."""
+        return PARTIES.party_of(self)
+
     # --- clans (clans.py) ----------------------------------------------------
     # Each of the four answers exactly one cmdAck whatever happens inside
     # (clans.Clans.command); the purse a founding or the treasury writes is
