@@ -52,6 +52,7 @@ IL4, IL4_12 = 539, 547                 # "Сбитый ИЛ-4", level-6 and leve
 BOSS, BOSS_12 = 6897, 6907             # fash_boss_6_1, fash_boss_12_1
 DOG = 82
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -471,14 +472,8 @@ def est():
     return START + (time.time() - _launched)
 
 
-def connect(timeout=15):
-    end = time.time() + timeout
-    while time.time() < end:
-        try:
-            return socket.create_connection(("127.0.0.1", PORT), 0.5)
-        except OSError:
-            time.sleep(0.1)
-    raise SystemExit("server did not start")
+def connect(timeout=None):
+    return testkit.connect(PORT, srv, _log, timeout)
 
 
 class Client:

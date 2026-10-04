@@ -48,6 +48,7 @@ NAMES = {l: l.capitalize() + RUN for l in ("alice", "bob", "carol")}
 CLAN = "Волки %s" % RUN
 R_AFRO, R_CHAT = 0x400, 0x2
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -149,7 +150,7 @@ def sign_in():
 
 
 def wait_http(proc, log):
-    end = time.time() + 20
+    end = time.time() + testkit.START_WAIT
     while time.time() < end:
         if proc.poll() is not None:
             raise SystemExit("panel exited:\n" + "".join(log)[-2000:])
@@ -193,17 +194,9 @@ panel, panel_log = spawn("bootstrap_http.py", LAVA_HTTP_PORT=str(HTTP_PORT),
 clients = []
 try:
     def connect():
-        end = time.time() + 15
-        while time.time() < end:
-            if game.poll() is not None:
-                raise SystemExit("server exited:\n" + "".join(game_log)[-2000:])
-            try:
-                c = Client(socket.create_connection(("127.0.0.1", PORT), 0.5))
-                clients.append(c)
-                return c
-            except OSError:
-                time.sleep(0.1)
-        raise SystemExit("server did not start")
+        c = Client(testkit.connect(PORT, game, game_log))
+        clients.append(c)
+        return c
 
     def enter(c, login):
         c.send("hello;minor=2;major=0;")

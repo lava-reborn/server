@@ -107,6 +107,7 @@ HEAVY = 4160                   # a 40 kg crate: two of them overload anybody
 PISTOL = inventory.STARTER_PISTOL
 ROUNDS = inventory.STARTER_AMMO
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -296,14 +297,8 @@ _drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
 _drain.start()
 
 
-def connect(timeout=10):
-    end = time.time() + timeout
-    while time.time() < end:
-        try:
-            return socket.create_connection(("127.0.0.1", PORT), 0.5)
-        except OSError:
-            time.sleep(0.1)
-    raise SystemExit("server did not start")
+def connect(timeout=None):
+    return testkit.connect(PORT, srv, _log, timeout)
 
 
 class Client:

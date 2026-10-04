@@ -91,7 +91,9 @@ _drain.start()
 base = "http://127.0.0.1:%d" % port
 try:
     up = False
-    for _ in range(150):
+    # As long as a suite waits for its server (server/testkit.py START_WAIT).
+    end = time.time() + float(os.environ.get("LAVA_START_WAIT") or 120)
+    while time.time() < end:
         try:
             urllib.request.urlopen(base + "/", timeout=1).read()
             up = True

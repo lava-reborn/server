@@ -39,10 +39,16 @@
 #                   way is failing. A known suite that passes is reported too,
 #                   so the list does not outlive its reasons.
 #   --rerun         a failure that is not known is run again once the crowd
-#                   has finished, alone, and counts only if it fails again
-#                   (output in <name>.rerun.out). On a 2-vCPU runner a dozen
-#                   servers at once can make a suite miss a window it makes
-#                   alone; a real failure fails twice.
+#                   has finished, in a smaller crowd, and counts only if it
+#                   fails again (output in <name>.rerun.out). On a 2-vCPU
+#                   runner a dozen servers at once can make a suite miss a
+#                   window it makes with fewer beside it; a real failure fails
+#                   twice.
+#   --rerun-jobs N  how many reruns at once (4). One at a time they used to
+#                   outlast the job: two dozen suites of two to ten minutes.
+#   --rerun-max M   more than M failures in the crowd (10) are not rerun: so
+#                   many is a break, not a crowd, and the run fails at once
+#                   rather than spend half an hour proving it.
 #   --summary FILE  append the outcome as Markdown to FILE (the job summary).
 #
 # OPTIONS for a run by hand, never in CI: CI and with it every deploy run
@@ -62,6 +68,8 @@ set -u
 
 KNOWN=
 RERUN=0
+RERUN_JOBS=4
+RERUN_MAX=10
 SUMMARY=
 ONLY=
 AFFECTED=0
@@ -73,6 +81,8 @@ while [ $# -gt 0 ]; do
   case $1 in
     --known)      KNOWN=$2; shift 2 ;;
     --rerun)      RERUN=1; shift ;;
+    --rerun-jobs) RERUN_JOBS=$2; shift 2 ;;
+    --rerun-max)  RERUN_MAX=$2; shift 2 ;;
     --summary)    SUMMARY=$2; shift 2 ;;
     --only)       ONLY=$2; shift 2 ;;
     --affected)   AFFECTED=1; shift ;;
@@ -291,11 +301,18 @@ if [ -n "$KNOWN" ]; then
   done < "$KNOWN"
 fi
 
-if [ "$RERUN" = 1 ] && [ ${#real[@]} -gt 0 ]; then
-  echo "=== ${#real[@]} failed in the crowd; running each again, alone"
+norerun=
+if [ "$RERUN" = 1 ] && [ ${#real[@]} -gt "$RERUN_MAX" ]; then
+  norerun="${#real[@]} failed in the crowd, more than --rerun-max $RERUN_MAX: not rerun"
+  echo "=== $norerun"
+  hard=("${real[@]}")
+elif [ "$RERUN" = 1 ] && [ ${#real[@]} -gt 0 ]; then
+  echo "=== ${#real[@]} failed in the crowd; running each again, $RERUN_JOBS at once"
+  : > "$OUT/summary.rerun.txt"
+  printf '%s\n' "${real[@]}" \
+    | SUMMARY_FILE="$OUT/summary.rerun.txt" SUFFIX=.rerun xargs -P "$RERUN_JOBS" -I{} bash -c 'run_one {}'
+  cat "$OUT/summary.rerun.txt"
   for t in "${real[@]}"; do
-    SUMMARY_FILE="$OUT/summary.rerun.txt" SUFFIX=.rerun run_one "$t"
-    tail -n 1 "$OUT/summary.rerun.txt"
     if grep -q "^0 [0-9]*s $(basename "$t" .py)$" "$OUT/summary.rerun.txt"; then
       flaky+=("$t")
     else
@@ -312,9 +329,9 @@ passed=$(grep -c '^0 ' "$OUT/summary.txt")
 echo "=== passed: $passed"
 for i in "${!allowed[@]}"; do echo "=== known failure (allowed): ${allowed[$i]} -- ${allowed_why[$i]}"; done
 for t in "${stale[@]}"; do echo "=== on the known list but PASSED or GONE: $t -- take it off $KNOWN"; done
-for t in "${flaky[@]}"; do echo "=== failed in the crowd, passed alone: $t ($(out_of "$t"), $(out_of "$t" .rerun))"; done
+for t in "${flaky[@]}"; do echo "=== failed in the crowd, passed on rerun: $t ($(out_of "$t"), $(out_of "$t" .rerun))"; done
 for t in "${hard[@]}"; do
-  if [ "$RERUN" = 1 ]; then
+  if [ "$RERUN" = 1 ] && [ -z "$norerun" ]; then
     echo "=== FAILED twice: $t ($(out_of "$t"), $(out_of "$t" .rerun))"
   else
     echo "=== FAILED: $t ($(out_of "$t"))"
@@ -325,10 +342,11 @@ if [ -n "$SUMMARY" ]; then
   {
     echo "### Suites: $(wc -l < "$OUT/list.txt") in ${total}s, $N at once"
     echo
+    [ -n "$norerun" ] && { echo "$norerun."; echo; }
     echo "| outcome | suite | note |"
     echo "|---|---|---|"
-    for t in "${hard[@]}"; do echo "| **failed** | \`$t\` | $( [ "$RERUN" = 1 ] && echo "failed again alone" ) |"; done
-    for t in "${flaky[@]}"; do echo "| passed on rerun | \`$t\` | failed among the others, passed alone |"; done
+    for t in "${hard[@]}"; do echo "| **failed** | \`$t\` | $( [ "$RERUN" = 1 ] && [ -z "$norerun" ] && echo "failed again on rerun" ) |"; done
+    for t in "${flaky[@]}"; do echo "| passed on rerun | \`$t\` | failed among the others, passed on rerun |"; done
     for i in "${!allowed[@]}"; do echo "| known failure | \`${allowed[$i]}\` | ${allowed_why[$i]} |"; done
     for t in "${stale[@]}"; do echo "| known, but passed or gone | \`$t\` | take it off the list |"; done
     echo "| passed | $passed suites | |"
@@ -337,7 +355,7 @@ if [ -n "$SUMMARY" ]; then
     echo
     echo '```'
     grep -v DONE "$OUT/summary.txt" | sort -k2,2rn
-    [ -f "$OUT/summary.rerun.txt" ] && { echo "-- rerun alone:"; cat "$OUT/summary.rerun.txt"; }
+    [ -s "$OUT/summary.rerun.txt" ] && { echo "-- rerun, $RERUN_JOBS at once:"; cat "$OUT/summary.rerun.txt"; }
     echo '```'
     echo "</details>"
   } >> "$SUMMARY"

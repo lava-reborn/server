@@ -83,6 +83,7 @@ import world         # noqa: E402
 from inventory import BAG, PRIMARY  # noqa: E402
 from protocol import decode  # noqa: E402
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -370,14 +371,8 @@ def stop():
     _drain.join(timeout=5)
 
 
-def connect(timeout=15):
-    end = time.time() + timeout
-    while time.time() < end:
-        try:
-            return socket.create_connection(("127.0.0.1", PORT), 0.5)
-        except OSError:
-            time.sleep(0.1)
-    raise SystemExit("server did not start")
+def connect(timeout=None):
+    return testkit.connect(PORT, srv, _log, timeout)
 
 
 class Client:

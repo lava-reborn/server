@@ -61,6 +61,7 @@ import server  # noqa: E402  (after LAVA_DB: it opens its Store at import)
 
 STORE = server.STORE
 CLANS = server.CLANS
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -345,15 +346,7 @@ def wire():
     threading.Thread(target=lambda: log.extend(proc.stdout), daemon=True).start()
 
     def connect():
-        end = time.time() + 15
-        while time.time() < end:
-            if proc.poll() is not None:
-                raise SystemExit("server exited:\n" + "".join(log)[-2000:])
-            try:
-                return Client(socket.create_connection(("127.0.0.1", port), 0.5))
-            except OSError:
-                time.sleep(0.1)
-        raise SystemExit("server did not start")
+        return Client(testkit.connect(port, proc, log))
 
     def enter(c, login_name, new=True):
         c.send("hello;minor=2;major=0;")

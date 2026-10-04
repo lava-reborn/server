@@ -39,6 +39,7 @@ CRED = {l: accounts.credential(l + RUN, "secret") for l in ("alice", "bob", "car
 ALICE, BOB, CAROL = "Alice" + RUN, "Bob" + RUN, "Carol" + RUN
 WOLVES, FOXES = "Волки %s" % RUN, "Лисы %s" % RUN
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -61,16 +62,8 @@ class Server:
         self.log = []
         threading.Thread(target=lambda: self.log.extend(self.proc.stdout), daemon=True).start()
 
-    def connect(self, timeout=15):
-        end = time.time() + timeout
-        while time.time() < end:
-            if self.proc.poll() is not None:
-                raise SystemExit("server exited:\n" + "".join(self.log)[-2000:])
-            try:
-                return Client(socket.create_connection(("127.0.0.1", self.port), 0.5))
-            except OSError:
-                time.sleep(0.1)
-        raise SystemExit("server did not start")
+    def connect(self, timeout=None):
+        return Client(testkit.connect(self.port, self.proc, self.log, timeout))
 
     def stop(self):
         self.proc.send_signal(signal.SIGTERM)

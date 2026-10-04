@@ -80,6 +80,7 @@ _store.register("miner", "secret")
 _store.close()
 CRED = accounts.credential("miner", "secret")
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -233,14 +234,8 @@ srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=open(LOG, "w"), stderr=subprocess.STDOUT, text=True)
 
 
-def connect(timeout=10):
-    end = time.time() + timeout
-    while time.time() < end:
-        try:
-            return socket.create_connection(("127.0.0.1", PORT), 0.5)
-        except OSError:
-            time.sleep(0.1)
-    raise SystemExit("server did not start")
+def connect(timeout=None):
+    return testkit.connect(PORT, srv, LOG, timeout)
 
 
 class Client:

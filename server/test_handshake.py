@@ -24,6 +24,7 @@ PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts
+import testkit
 accounts.DB_PATH = DB
 _store = accounts.Store(DB)
 _store.register("tester", "secret")
@@ -48,15 +49,8 @@ _log = []
 _drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
 _drain.start()
 
-def wait_port(port, timeout=10):
-    end = time.time() + timeout
-    while time.time() < end:
-        try:
-            s = socket.create_connection(("127.0.0.1", port), 0.5)
-            return s
-        except OSError:
-            time.sleep(0.1)
-    raise SystemExit("server did not start")
+def wait_port(port, timeout=None):
+    return testkit.connect(port, srv, _log, timeout)
 
 ok = True
 try:

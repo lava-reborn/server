@@ -125,24 +125,19 @@ def safe_tags(text):
     only the "<Br>" and keeps the stray "<B.", while the launcher sees "<B."
     as a tag, finds it on no list, and refuses every row of the table with it.
     """
-    out = []
-    i, n = 0, len(text)
-    while i < n:
-        if text[i] != "<":
-            out.append(text[i])
-            i += 1
-            continue
-        j = i + 1
-        while j < n and text[j] not in "<>":
-            j += 1
-        closed = j < n and text[j] == ">"
-        if closed and tag_ok(text[i + 1:j]):
-            out.append(text[i:j + 1])
-            i = j + 1
-        else:
-            # Not a tag the launcher knows: gone, fragment and all.
-            i = j + 1 if closed else j
-    return "".join(out)
+    return _SCAN.sub(_keep_tag, text)
+
+
+# The walk, as one pattern: a "<", everything up to the next "<" or ">", and
+# the ">" if that is what it met. A closed tag on the list stays; anything
+# else goes, an unclosed fragment up to (not including) the "<" after it.
+# The same as stepping through it a character at a time, which cost a
+# quarter of the server's start over the 26 000 rows that carry a bracket.
+_SCAN = re.compile(r"<([^<>]*)(>?)")
+
+
+def _keep_tag(m):
+    return m.group(0) if m.group(2) and tag_ok(m.group(1)) else ""
 
 
 def launcher_ok(value):
@@ -268,14 +263,27 @@ DOUBTFUL_STRINGS = frozenset((9163,))
 _MISC = _load("orig_misc.json")
 
 
+# Both tables are cleaned once a process: _ITEMS does not change after the
+# load, and the server asked for each of them twice at start (items, names,
+# combat), over 23 000 rows apiece. A copy goes out, so no caller can change
+# what the next one gets.
+_CLEANED = {}
+
+
+def _cleaned(field, fix):
+    if field not in _CLEANED:
+        _CLEANED[field] = {int(t): fix(r[field]) for t, r in _ITEMS.items() if r.get(field)}
+    return dict(_CLEANED[field])
+
+
 def item_names():
     """type_id -> the original's name for it, cleaned."""
-    return {int(t): item_name(r["name"]) for t, r in _ITEMS.items() if r.get("name")}
+    return _cleaned("name", item_name)
 
 
 def item_descs():
     """type_id -> the original's description for it, cleaned."""
-    return {int(t): item_desc(r["desc"]) for t, r in _ITEMS.items() if r.get("desc")}
+    return _cleaned("desc", item_desc)
 
 
 def person_names(level_of=None):

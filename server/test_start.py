@@ -47,6 +47,7 @@ import quests  # noqa: E402
 import world  # noqa: E402
 from protocol import decode  # noqa: E402
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -211,14 +212,8 @@ class Server:
                                      stdout=open(self.log, "w"),
                                      stderr=subprocess.STDOUT, text=True)
 
-    def connect(self, timeout=10):
-        end = time.time() + timeout
-        while time.time() < end:
-            try:
-                return socket.create_connection(("127.0.0.1", self.port), 0.5)
-            except OSError:
-                time.sleep(0.1)
-        raise SystemExit("server did not start")
+    def connect(self, timeout=None):
+        return testkit.connect(self.port, self.proc, self.log, timeout)
 
     def login(self, login):
         c = Client(self.connect())

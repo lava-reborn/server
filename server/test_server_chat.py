@@ -26,6 +26,7 @@ import accounts
 import travel
 import world
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
@@ -91,16 +92,7 @@ def scene(chat):
                            stdout=open(log_path, "w"), stderr=subprocess.STDOUT,
                            text=True)
     try:
-        end = time.time() + 10
-        while True:
-            try:
-                sock = socket.create_connection(("127.0.0.1", port), 0.5)
-                break
-            except OSError:
-                if time.time() > end:
-                    raise SystemExit("server did not start")
-                time.sleep(0.1)
-        c = Client(sock)
+        c = Client(testkit.connect(port, srv, log_path))
         c.send("hello;minor=2;major=0;")
         c.send("login;hash=@%s@;" % cred)
         c.frames()

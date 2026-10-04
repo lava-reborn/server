@@ -92,10 +92,11 @@ closed = subprocess.Popen([sys.executable, "bootstrap_http.py"], cwd=HERE,
 _clog = []
 threading.Thread(target=lambda: _clog.extend(closed.stdout), daemon=True).start()
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 
-def wait_http(port, timeout=15):
+def wait_http(port, timeout=testkit.START_WAIT):
     end = time.time() + timeout
     while time.time() < end:
         try:
@@ -174,17 +175,7 @@ def wait_done(n=1, timeout=10):
 
 class Client:
     def __init__(self):
-        end = time.time() + 10
-        while True:
-            if srv.poll() is not None:
-                raise SystemExit("server exited:\n" + "".join(_log)[-1500:])
-            try:
-                self.s = socket.create_connection(("127.0.0.1", PORT), 0.5)
-                break
-            except OSError:
-                if time.time() > end:
-                    raise SystemExit("server did not start")
-                time.sleep(0.1)
+        self.s = testkit.connect(PORT, srv, _log)
         self.s.settimeout(2)
         self.buf = b""
         self.eof = False

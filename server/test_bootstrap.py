@@ -36,13 +36,15 @@ _log = []
 _drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
 _drain.start()
 
+import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 def get(path):
     return urllib.request.urlopen(BASE + path, timeout=5).read()
 
 def port_up():
-    for _ in range(100):
+    end = time.time() + testkit.START_WAIT
+    while time.time() < end:
         try:
             urllib.request.urlopen(BASE + "/", timeout=1).read(); return True
         except urllib.error.URLError:
@@ -241,7 +243,8 @@ def code_of(url, data=None):
 
 try:
     up = False
-    for _ in range(150):
+    end = time.time() + testkit.START_WAIT
+    while time.time() < end:
         try:
             urllib.request.urlopen(BASE2 + "/", timeout=1).read(); up = True; break
         except urllib.error.URLError:

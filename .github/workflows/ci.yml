@@ -11,7 +11,8 @@
 #              checks the string table.
 #   suite      every server/, data/ and tools/ suite on SQLite, twelve at
 #              once, with the known failures of tools/known_failures.txt and
-#              one rerun, alone, for anything else that fails.
+#              one rerun, four at once, for anything else that fails
+#              (none past ten failures: that many is a break, not a crowd).
 #   postgres   the suites that honour LAVA_DB_URL, each on its own fresh
 #              database in a postgres:16-alpine service -- production's
 #              database, which the SQLite run does not exercise.
