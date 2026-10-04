@@ -16,6 +16,7 @@ regeneration and the combat timeouts are shortened through the environment
 to keep the whole thing under a minute.
 """
 import asyncio
+import copy
 import json
 import math
 import os
@@ -26,6 +27,8 @@ import sys
 import tempfile
 import threading
 import time
+from types import SimpleNamespace
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
@@ -79,13 +82,20 @@ from testkit import check, fails  # noqa: E402
 
 # --- the formulas and the geometry, in process --------------------------------
 # Wiki "Броня": 100 damage against armour 60 -> 40 HP, 60 SP; 120 -> 0/100;
-# 0 -> 100/0. Stamina that is not there spills into HP; a crit skips it all.
+# 0 -> 100/0, for a weapon with no separate stamina damage. Missing stamina
+# spills into HP; a crit bypasses armour.
 check("armour turns damage into stamina loss", combat.split_damage(100, 60, 0, False, 1000), (40, 60))
 check("armour above the damage absorbs everything", combat.split_damage(100, 120, 0, False, 1000), (0, 100))
 check("no armour, all HP", combat.split_damage(100, 0, 0, False, 1000), (100, 0))
 check("missing stamina spills into HP", combat.split_damage(100, 60, 0, False, 20), (80, 20))
 check("a crit ignores armour", combat.split_damage(100, 60, 0, True, 1000), (100, 0))
 check("piercing eats into the armour", combat.split_damage(100, 60, 10, False, 1000), (50, 50))
+check("a gun's stamina component adds to the health damage redirected by armour",
+      combat.split_damage(15, 11, 1, False, 1000, st_dmg=15), (5, 25))
+check("a critical bullet keeps H in health and S in stamina, ignoring armour",
+      combat.split_damage(15, 100, 1, True, 1000, st_dmg=15), (15, 15))
+check("a crit's separate stamina damage still spills into health when stamina runs out",
+      combat.split_damage(15, 100, 1, True, 5, st_dmg=15), (25, 5))
 check("a blow lands on stamina first", combat.melee_split(10, False, 4), (6, 4))
 # Wiki "Расчет углового отклонения": the bracket of МР runs from 2.5 for
 # nobody to 1.1 for Стрельба 20 and spec 5; a gun's target_size is its
@@ -263,12 +273,13 @@ def _scene(**at):
     return rc, ground, out
 
 
-def _fire(rc, target, offsets, through=False):
+def _fire(rc, target, offsets, through=False, gun=None, live=None):
     shooter = type("Shooter", (), {"cell": _row, "eid": 1, "is_player": True,
                                    "hit_exchanged": lambda self, t: None})()
-    gun = combat.Weapon(num_shots=len(offsets), dmin=10, dmax=10, opt_lo=0,
-                        opt_hi=0, max_range=10, piercing=1, cone=0.1, crit=0,
-                        skill=None, spec=None, through=through)
+    if gun is None:
+        gun = combat.Weapon(num_shots=len(offsets), dmin=10, dmax=10, opt_lo=0,
+                            opt_hi=0, max_range=10, piercing=1, cone=0.1, crit=0,
+                            skill=None, spec=None, through=through)
     left = list(offsets)
     keep = combat.bullet_offset
     combat.bullet_offset = lambda cone, dist, rng=None: left.pop(0)
@@ -276,7 +287,8 @@ def _fire(rc, target, offsets, through=False):
         others = []
 
         async def shoot():      # hit_landed reads the loop's clock
-            return rc.burst(shooter, target, target.cell, gun, gun.num_shots, others)
+            return rc.burst(shooter, target, target.cell, gun,
+                            gun.num_shots if live is None else live, others)
         res = asyncio.run(shoot())
     finally:
         combat.bullet_offset = keep
@@ -363,6 +375,101 @@ _dog = _d["dog"]
 check("a creature's round may hit any player, and no creature",
       _who(type("M", (), {"cell": _dog.cell, "eid": _dog.eid, "is_player": False})()),
       [1, 2, 3])
+
+
+# --- firearm health and stamina damage, from aiming to the wire ---------------
+# FireArm.initialize and Annotation read two ranges from ss_si_firearm. The
+# owner's rule (2026-10-05): both apply; armour redirects H on ordinary hits,
+# while a crit keeps H in health and S in stamina. Missing SP spills to HP.
+# Capture the real use_fire timer payload, then resolve it against a durable
+# body with known armour. Fix the rolls, not the damage parameters, so losing
+# st_damage on the way from the item to Weapon or faHit fails these checks.
+async def _aimed_weapon(type_id, mode=0):
+    shot = asyncio.get_running_loop().create_future()
+    row = dict(uniq=7, root=items.FIRE_ARM, slot=inventory.PRIMARY,
+               type_id=type_id, cur_mode=mode, ammo_count=10, brk=500, ammo_type=0)
+    ground = _Ground(_open)
+    ground.ws = False
+    rc = SimpleNamespace(room=ground, set_ws=lambda ws: setattr(ground, "ws", ws))
+    ch = progression.Character()
+    sess = SimpleNamespace(on_map=False, loc=_open, pos=_row, pid=1,
+                           character=lambda: ch, send=lambda *a, **k: None,
+                           inv=SimpleNamespace(find=lambda obj: row))
+    fighter = _PullFighter(sess)
+    fighter.rc = rc
+    fighter.fire_now = lambda uniq, target, cell, gun, cost, rounds: shot.set_result(gun)
+    # Aiming duration is covered by the live suite; here only its payload matters.
+    with patch.object(combat.pace, "paced", return_value=0):
+        fighter.use_fire(dict(obj="7", target="0%08x" % (_row + 4)))
+        return await asyncio.wait_for(shot, 1)
+
+
+def _damage_target(body, stamina=1000):
+    body.stats = copy.copy(body.stats)
+    body.stats.hp_max = body.stats.sp_max = 1000
+    body.stats.armor = 11             # ten redirected after piercing=1
+    body.stats.crit_evade = 0
+    body.hp, body.sp = 1000, stamina
+
+
+def _damage_frames(gun, distance=4, stamina=1000, crit=False, live=None):
+    rc, ground, bodies = _scene(mark=(distance, DOG))
+    body = bodies["mark"]
+    _damage_target(body, stamina)
+    gun = gun._replace(crit=1000 if crit else 0)
+    # Every pellet hits and rolls the bottom of its eligible damage range.
+    with patch.object(combat.RNG, "randint", side_effect=lambda lo, hi: lo):
+        _fire(rc, body, [0.0] * gun.num_shots, gun=gun, live=live)
+    hits = [p for n, p in ground.sent if n == "faHit"]
+    bars = [p for n, p in ground.sent if n == "usrUp"]
+    return ([(p["dmg"], p["sdmg"], p["crit"]) for p in hits],
+            (body.hp, body.sp), (bars[-1]["hcur"], bars[-1]["scur"]) if bars else None,
+            len([n for n, p in ground.sent if n == "faShot"]))
+
+
+_izh = asyncio.run(_aimed_weapon(25876))
+check("IZH-27 on its optimal range: six hits at H=15/S=15 give 30 HP and 150 SP",
+      _damage_frames(_izh), ([(5, 25, 0)] * 6, (970, 850), (970, 850), 12))
+check("IZH-27 critical pellets retain both components: 90 HP and 90 SP",
+      _damage_frames(_izh, crit=True), ([(15, 15, 1)] * 6, (910, 910), (910, 910), 12))
+check("IZH-27 outside optimal range uses both full ranges, starting at H=4/S=4",
+      _damage_frames(_izh, distance=2), ([(0, 8, 0)] * 6, (1000, 952), (1000, 952), 12))
+check("stamina runs out mid-charge: later pellets spill to HP and bars match faHit",
+      _damage_frames(_izh, stamina=40),
+      ([(5, 25, 0), (15, 15, 0)] + [(30, 0, 0)] * 4, (860, 0), (860, 0), 12))
+check("on critical pellets the exhausted stamina component spills to HP too",
+      _damage_frames(_izh, stamina=20, crit=True),
+      ([(15, 15, 1), (25, 5, 1)] + [(30, 0, 1)] * 4, (840, 0), (840, 0), 12))
+check("an empty charge still closes all pairs and deals neither component",
+      _damage_frames(_izh, live=0), ([], (1000, 1000), None, 12))
+_walther = asyncio.run(_aimed_weapon(25636, mode=1))
+check("a Walther burst with zero stamina damage still deals only its H component",
+      _damage_frames(_walther), ([(19, 10, 0)] * 2, (962, 980), (962, 980), 4))
+_ksg = asyncio.run(_aimed_weapon(5842))
+check("a single projectile with both components also retains its stamina damage",
+      _damage_frames(_ksg, crit=True), ([(39, 39, 1)], (961, 961), (961, 961), 2))
+
+_rc, _gr, _d = _scene(mark=(2, DOG), behind=(4, DOG))
+for _body in _d.values():
+    _damage_target(_body)
+_through = _izh._replace(num_shots=1, dmin=15, dmax=15, sdmin=9, sdmax=9,
+                         opt_lo=0, opt_hi=0, through=True)
+(_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.0], gun=_through)
+check("penetration halves H and S before the second body's armour, rounding down",
+      ((_h, _s), [(h, s) for _b, h, s, _dead, _pool in _oth]), ((5, 19), [(0, 11)]))
+check("zero health damage remains zero when a gun deals only stamina damage",
+      _damage_frames(_izh._replace(dmin=0, dmax=0, sdmin=15, sdmax=15), crit=True),
+      ([(0, 15, 1)] * 6, (1000, 910), (1000, 910), 12))
+_rc, _gr, _d = _scene(mark=(3, DOG), behind=(5, DOG))
+for _body in _d.values():
+    _damage_target(_body)
+(_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.2],
+                                gun=_through._replace(through=False))
+check("a stray pellet carries both components to the body behind its mark",
+      ((_h, _s, _hits), [(h, s) for _b, h, s, _dead, _pool in _oth]),
+      ((0, 0, 0), [(5, 19)]))
+
+
 check("target BigUINT: one type digit then eight of id", combat.parse_target("10000002a"), (1, 42))
 check("a hex target has type 0", combat.parse_target("000000f3c"), (0, 3900))
 W = 64

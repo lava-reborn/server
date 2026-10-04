@@ -266,9 +266,11 @@ def pull(si, mode, ammo):
 # experience goes (None for a mob). through: a round that hits goes on into
 # the next body on its line (THROUGH_TYPES); at_players: a round may hit a
 # player it was not aimed at (not with a gun a quest lends, quests.lent).
+# sdmin/sdmax are the gun's independent stamina damage. Creature curves
+# define only health damage, so their extra stamina component stays zero.
 Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
-                              "piercing cone crit skill spec through at_players",
-                    defaults=(False, True))
+                              "piercing cone crit skill spec through at_players sdmin sdmax",
+                    defaults=(False, True, 0, 0))
 
 
 def now():
@@ -672,15 +674,16 @@ def melee_crit_evade(ch):
         + ch.bonus_ce
 
 
-def split_damage(dmg, armor, piercing, crit, sp_left):
-    """(to HP, to SP) of a bullet, wiki "Броня": the armour class less the
-    round's piercing is absorbed by stamina, the rest hurts; what stamina
-    cannot absorb spills into HP. A crit ignores armour entirely."""
-    if crit:
-        return dmg, 0
-    comp = max(0, int(armor - piercing))
-    s = min(dmg, comp)
-    h = dmg - s
+def split_damage(dmg, armor, piercing, crit, sp_left, st_dmg=0):
+    """(to HP, to SP) of a bullet. The owner's rule (2026-10-05): the
+    weapon has independent health and stamina damage; a crit sends H to
+    health and S to stamina. On an ordinary hit armour redirects part of H
+    to stamina, as in wiki "Броня", on top of S. Whatever stamina cannot
+    absorb spills into health, including on a crit."""
+    comp = 0 if crit else max(0, int(armor - piercing))
+    redirected = min(dmg, comp)
+    s = st_dmg + redirected
+    h = dmg - redirected
     if s > sp_left:
         h += s - max(0, sp_left)
         s = max(0, sp_left)
@@ -1301,6 +1304,8 @@ class Fighter:
         num_shots, rounds = pull(si, mode, row["ammo_count"])
         weapon = Weapon(num_shots=num_shots,
                         dmin=si["h_damage_min"][mode], dmax=si["h_damage_max"][mode],
+                        sdmin=si.get("st_damage_min", [0, 0, 0])[mode],
+                        sdmax=si.get("st_damage_max", [0, 0, 0])[mode],
                         opt_lo=si["opt_range"][mode], opt_hi=si["end_opt_range"][mode],
                         max_range=si["max_range"][mode],
                         piercing=ammo_si.get("piercing", 1),
@@ -1361,8 +1366,8 @@ class Fighter:
         self.hold_stats()
         try:
             if target is not None and not target.is_player:
-                # Health up to what the mob had, and the stamina the armour
-                # turned the rest into (burst never takes more than there is):
+                # Health up to what the mob had, and the stamina lost to
+                # the weapon and armour (burst takes no more SP than there is):
                 # both are harm done, see award_xp.
                 self.award_xp(weapon.skill, weapon.spec, min(h, pool) + s, target)
             for body, oh, os_, _dead, opool in others:
@@ -2472,12 +2477,16 @@ class RoomCombat:
                 optimal = weapon.opt_lo <= d <= weapon.opt_hi
                 crit = optimal and roll(weapon.crit - body.crit_evade_ranged())
                 lo, hi = weapon.dmin, weapon.dmax
+                slo, shi = weapon.sdmin, weapon.sdmax
                 if optimal:
                     lo = (hi - lo) // 2 + lo
+                    slo = (shi - slo) // 2 + slo
                 dmg = RNG.randint(lo, max(lo, hi))
+                st_dmg = RNG.randint(slo, max(slo, shi)) if shi > 0 else 0
                 if n:
-                    dmg = max(1, int(dmg * THROUGH_SHARE))
-                h, s = split_damage(dmg, body.armor(), weapon.piercing, crit, rec[3])
+                    dmg = max(1, int(dmg * THROUGH_SHARE)) if dmg > 0 else 0
+                    st_dmg = max(1, int(st_dmg * THROUGH_SHARE)) if st_dmg > 0 else 0
+                h, s = split_damage(dmg, body.armor(), weapon.piercing, crit, rec[3], st_dmg)
                 rec[0] += h
                 rec[1] += s
                 rec[2] += 1
