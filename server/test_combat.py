@@ -325,6 +325,31 @@ check("a level-1 dog has the curve's HP times the animal share",
       (dog_stats.level, dog_stats.hp_max, dog_stats.ranged, dog_stats.can_attack),
       (1, 84, False, True))
 check("a box is an object: shot at, never shooting", mobs.stats(409).can_attack, False)
+
+
+# A blade against a creature of one's own level (mobs.MELEE_DODGE_CUT): a
+# fighter trained level by level (Ближний бой L, the spec L // 4) lands
+# about seven blows in ten at every level; the curve's dodge alone left him
+# at 39-44%.
+class _Trained(object):
+    def __init__(self, level):
+        self.level = level
+
+    def skill_level(self, i):
+        return self.level
+
+    def spec_level(self, i):
+        return self.level // 4
+
+
+def _parity(level):
+    mob = mobs.Mob.__new__(mobs.Mob)
+    mob.stats = type("S", (), {"dodge": float(mobs.LEVELS[str(level)]["dodge"])})()
+    return combat.melee_hit_chance(_Trained(level), combat.SPEC_BLADE) - mob.dodge_melee()
+
+
+check("a knife against a creature of one's own level lands 65-75% of blows at every level",
+      [lv for lv in (1, 4, 8, 12, 16, 20) if not 65 <= _parity(lv) <= 75], [])
 check("an armed bandit carries a pistol of his own",
       mobs.stats(17).weapon_type_id, 4380)
 

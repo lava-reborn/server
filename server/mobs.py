@@ -101,6 +101,18 @@ ATTACK_PAUSE = 1.5
 # pistol's, CLASS_SHAPE acc 8 at a hundred metres (combat.cone_of).
 DEFAULT_SCATTER = 0.08
 
+# How much less a creature dodges a blade or a fist than its curve says,
+# DESIGNED (2026-10-04). The wiki's blow (combat.melee_hit_chance) is
+# 49 + 1.25 * Ближний бой + 5 * spec less the target's dodge, and the curve
+# gives a creature the dodge of a player of its level (mob_curves.json
+# formulas.dodge). Between two players that is the wiki's duel; against a
+# creature of one's own level it left a fighter trained level by level
+# hitting 39-44% at every level (a player counted 46% of his knife's blows),
+# while a gun, since the scatter cone, hits most of its rounds. 30 less
+# puts parity at about 70% at every level and keeps every point of the
+# skill and the spec worth what the wiki says. Bullets meet no dodge at all.
+MELEE_DODGE_CUT = 30
+
 ROW_H = 0.8660254037844386
 
 # getDirection's table (LocationGrid.as:15-22): the sign pair of (dx, dy)
@@ -784,7 +796,7 @@ class Mob:
         return self.hp <= 0
 
     def dodge_melee(self):
-        return self.stats.dodge
+        return self.stats.dodge - MELEE_DODGE_CUT
 
     def crit_evade_melee(self):
         return self.stats.crit_evade
