@@ -9,10 +9,15 @@
 #              suites read, the original texts.xml), restores them from the
 #              cache under that digest or fetches them, forgets the key, and
 #              checks the string table.
-#   suite      every server/, data/ and tools/ suite on SQLite, twelve at
-#              once, with the known failures of tools/known_failures.txt and
-#              one rerun, four at once, for anything else that fails
-#              (none past ten failures: that many is a break, not a crowd).
+#   suite      every server/, data/ and tools/ suite on SQLite, in three
+#              shards on three runners, cut by the last run's durations
+#              (job durations hands the same ones to all three); twelve at
+#              once on each, with the known failures of
+#              tools/known_failures.txt and one rerun, four at once, for
+#              anything else that fails (none past ten failures: that many
+#              is a break, not a crowd).
+#   suites     one status for the shards, and the check that between them
+#              they ran every suite exactly once (deploy/ci/merge_shards.sh).
 #   postgres   the suites that honour LAVA_DB_URL, each on its own fresh
 #              database in a postgres:16-alpine service -- production's
 #              database, which the SQLite run does not exercise.
@@ -170,11 +175,42 @@ jobs:
           echo "$out"
           echo "string table: ${out##*/}, 0 ids missing, sha256 $(sha256sum < "$RUNNER_TEMP/texts.xml" | cut -c1-16)" >> "$GITHUB_STEP_SUMMARY"
 
-  suite:
-    name: suites on SQLite
+  # The cut into shards needs the same durations on every shard (a suite
+  # could otherwise fall between two cuts), so they are read here, once, and
+  # handed to all of them as an artifact of this run.
+  durations:
+    name: durations of the last run
     needs: assets
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 5
+    steps:
+      # The summary.txt the last run's shards made together (job suites).
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/suite/summary.txt
+          key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: suite-durations-
+
+      # None at all on a first run: every shard then cuts the static order.
+      - run: mkdir -p "$RUNNER_TEMP/suite" && touch "$RUNNER_TEMP/suite/summary.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: suite-durations
+          path: ${{ runner.temp }}/suite/summary.txt
+          retention-days: 1
+
+  suite:
+    name: suites on SQLite, shard ${{ matrix.shard }}/3
+    needs: [assets, durations]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      # The other shards finish even when one fails: their durations are
+      # the next run's cut, and their failures are worth seeing at once.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
 
@@ -184,39 +220,78 @@ jobs:
           key: ${{ needs.assets.outputs.key }}
           fail-on-cache-miss: true
 
-      # The runner orders suites longest first by the summary.txt of the last
-      # run in its output folder; this hands it the last run's, so the
-      # seven-minute ones (test_halfa_training, _open, _production) do not
-      # start last and become the whole wait.
-      - name: durations of the last run
-        uses: actions/cache/restore@v4
+      # The runner cuts the set and orders its part longest first by the
+      # summary.txt in its output folder: the same file on every shard.
+      - uses: actions/download-artifact@v4
         with:
-          path: ${{ runner.temp }}/suite/summary.txt
-          key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: suite-durations-
+          name: suite-durations
+          path: ${{ runner.temp }}/suite
 
-      # Twelve at once, measured on two pinned cores: the suites wait on game
-      # clocks, not on the processor (README «CI/CD», «Минуты»).
-      - name: all suites, twelve at once, longest first
+      # A third of the set on each of three runners, longest first, twelve at
+      # once, measured on two pinned cores: the suites wait on game clocks,
+      # not on the processor (README «CI/CD», «Минуты»).
+      - name: a third of the suites, twelve at once, longest first
         run: |
           export LAVA_RES=$HOME/lava-assets/res LAVA_ORIG_TEXTS=$HOME/lava-assets/texts.xml
           bash tools/run_suite.sh --known tools/known_failures.txt --rerun \
+            --shard ${{ matrix.shard }}/3 \
             --summary "$GITHUB_STEP_SUMMARY" . "$RUNNER_TEMP/suite" 12
 
-      - name: keep the durations for the next run
+      - name: this shard's durations
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/upload-artifact@v4
         with:
+          name: suite-summary-${{ matrix.shard }}
           path: ${{ runner.temp }}/suite/summary.txt
-          key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 1
 
       - name: output of every suite
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: suite-logs
+          name: suite-logs-${{ matrix.shard }}
           path: ${{ runner.temp }}/suite/
           retention-days: 7
+
+  # One status for the three shards, and the check that between them they
+  # ran every suite exactly once; their durations together are the next
+  # run's cut.
+  suites:
+    name: suites on SQLite
+    needs: [assets, suite]
+    if: ${{ !cancelled() && needs.assets.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: suite-summary-*
+          path: ${{ runner.temp }}/shards
+
+      - name: every suite ran, and once
+        id: merge
+        run: |
+          mkdir -p "$RUNNER_TEMP/suite"
+          trap '[ -s "$RUNNER_TEMP/suite/summary.txt" ] && echo "durations=yes" >> "$GITHUB_OUTPUT"' EXIT
+          bash deploy/ci/merge_shards.sh "$RUNNER_TEMP/shards" "$RUNNER_TEMP/suite/summary.txt"
+
+      - name: keep the durations for the next run
+        if: ${{ !cancelled() && steps.merge.outputs.durations == 'yes' }}
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/suite/summary.txt
+          key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: all three shards green
+        run: |
+          if [ "$SHARDS" != success ]; then
+            echo "::error title=Suites::a shard failed ($SHARDS); its summary says which suites"
+            exit 1
+          fi
+        env:
+          SHARDS: ${{ needs.suite.result }}
 
   postgres:
     name: suites on Postgres
@@ -271,7 +346,7 @@ jobs:
     name: deploy to production
     # preflight among the needs only for its output; a skipped assets (no
     # key) skips suite and postgres, and with them this job.
-    needs: [preflight, assets, suite, postgres]
+    needs: [preflight, assets, suite, suites, postgres]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.preflight.outputs.gate == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30

@@ -50,6 +50,14 @@
 #                   many is a break, not a crowd, and the run fails at once
 #                   rather than spend half an hour proving it.
 #   --summary FILE  append the outcome as Markdown to FILE (the job summary).
+#   --shard I/N     only the I-th of N parts of the set, for N runners side by
+#                   side (CI's shards). The parts are cut by the durations of
+#                   the previous run, longest first, each suite to the part
+#                   with the least so far (a suite it does not know counts as
+#                   two minutes); every part of one run must see the same
+#                   summary.txt, or a suite could fall between two of them.
+#                   deploy/ci/merge_shards.sh checks afterwards that every
+#                   suite ran exactly once.
 #
 # OPTIONS for a run by hand, never in CI: CI and with it every deploy run
 # every suite, so under GitHub Actions (GITHUB_ACTIONS set) the runner
@@ -71,6 +79,7 @@ RERUN=0
 RERUN_JOBS=4
 RERUN_MAX=10
 SUMMARY=
+SHARD=
 ONLY=
 AFFECTED=0
 BASE=origin/main
@@ -84,6 +93,7 @@ while [ $# -gt 0 ]; do
     --rerun-jobs) RERUN_JOBS=$2; shift 2 ;;
     --rerun-max)  RERUN_MAX=$2; shift 2 ;;
     --summary)    SUMMARY=$2; shift 2 ;;
+    --shard)      SHARD=$2; shift 2 ;;
     --only)       ONLY=$2; shift 2 ;;
     --affected)   AFFECTED=1; shift ;;
     --base)       BASE=$2; shift 2 ;;
@@ -101,6 +111,15 @@ fi
 if [ "$SELECT" = 1 ] && [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "run_suite: CI runs every suite; --only and --affected are for a run by hand" >&2
   exit 2
+fi
+if [ -n "$SHARD" ]; then
+  case $SHARD in
+    *[!0-9/]*|*/*/*|/*|*/) echo "run_suite: --shard wants I/N, got $SHARD" >&2; exit 2 ;;
+  esac
+  SHARD_I=${SHARD%/*}; SHARD_N=${SHARD#*/}
+  if [ "$SHARD_N" -lt 1 ] || [ "$SHARD_I" -lt 1 ] || [ "$SHARD_I" -gt "$SHARD_N" ]; then
+    echo "run_suite: --shard wants I/N with 1 <= I <= N, got $SHARD" >&2; exit 2
+  fi
 fi
 if [ -n "$KNOWN" ]; then
   [ -f "$KNOWN" ] || { echo "run_suite: no $KNOWN" >&2; exit 2; }
@@ -163,6 +182,26 @@ else
   cp "$OUT/list.static" "$OUT/list.txt"
 fi
 rm -f "$OUT/list.static"
+if [ -n "$SHARD" ]; then
+  # Longest first, each to the part with the least so far: the parts end
+  # close together. Every shard computes the same cut from the same list and
+  # the same durations, and keeps its own.
+  while read -r t; do
+    d=
+    [ -s "$PREV" ] && d=$(awk -v n="$(basename "$t" .py)" '$3 == n { sub(/s$/, "", $2); print $2; exit }' "$PREV")
+    echo "${d:-120} $t"
+  done < "$OUT/list.txt" | awk -v i="$SHARD_I" -v n="$SHARD_N" '
+    { best = 0
+      for (k = 1; k < n; k++) if (load[k] < load[best]) best = k
+      load[best] += $1
+      if (best == i - 1) print $2 }' > "$OUT/list.shard"
+  mv "$OUT/list.shard" "$OUT/list.txt"
+  if [ ! -s "$OUT/list.txt" ]; then
+    echo "shard $SHARD: nothing to run"
+    : > "$OUT/summary.txt"
+    exit 0
+  fi
+fi
 if [ -n "$PICKED" ]; then
   # In the order above, only what was picked.
   printf '%s\n' "$PICKED" | grep -xF -f - "$OUT/list.txt" > "$OUT/list.picked"
@@ -293,8 +332,8 @@ if [ -n "$KNOWN" ]; then
     case $t in ''|'#'*) continue ;; esac
     if ! grep -qxF "$t" "$OUT/list.txt"; then
       # Not run: gone from the tree -- or left out of a run by hand (--only,
-      # --affected), which says nothing about it.
-      [ -n "$PICKED" ] && [ -f "$t" ] || stale+=("$t (no such suite)")
+      # --affected) or to another shard, which says nothing about it.
+      { [ -n "$PICKED" ] || [ -n "$SHARD" ]; } && [ -f "$t" ] || stale+=("$t (no such suite)")
       continue
     fi
     grep -q "^0 [0-9]*s $(basename "$t" .py)$" "$OUT/summary.txt" && stale+=("$t")
@@ -340,7 +379,7 @@ done
 
 if [ -n "$SUMMARY" ]; then
   {
-    echo "### Suites: $(wc -l < "$OUT/list.txt") in ${total}s, $N at once"
+    echo "### Suites${SHARD:+, shard $SHARD}: $(wc -l < "$OUT/list.txt") in ${total}s, $N at once"
     echo
     [ -n "$norerun" ] && { echo "$norerun."; echo; }
     echo "| outcome | suite | note |"
