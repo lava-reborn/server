@@ -146,7 +146,7 @@ check("a shot at a mark twice the gun's reach away lands at the reach, short of 
 # on the way, within reach, and none hits that rock.
 class _Ground(object):
     def __init__(self, loc):
-        self.loc, self.npcs, self.sent = loc, {}, []
+        self.loc, self.npcs, self.sent, self.players = loc, {}, [], []
 
     def broadcast(self, frame, exclude=None):
         self.sent.append(frame)
@@ -180,6 +180,189 @@ check("a burst at a mark past the gun's reach: every bullet comes down within re
        all(math.hypot(p["x"] - _sx, p["y"] - _sy) <= _SHORT + 0.3
            for n, p in _fates if n == "faMiss")),
       (["faMiss"] * 5, True))
+
+
+# --- a shotgun's charge and ammunition ---------------------------------------
+# A shotgun's mode counts pellets, not rounds (combat.pull): one pull spends
+# one round on the full charge of shot. It used to spend a round a pellet,
+# so Сайга-12 (5 rounds, 6 pellets) emptied on one pull, and the damage
+# shrank with what was left (the last round fired one pellet in six).
+class _Mag(object):
+    def __init__(self, type_id, ammo):
+        self.row = dict(uniq=7, char_id=1, type_id=type_id, ammo_count=ammo, brk=500)
+
+    def item(self, uniq):
+        return dict(self.row)
+
+    def update_item(self, uniq, **fields):
+        self.row.update(fields)
+
+
+class _PullFighter(combat.Fighter):
+    rc = None
+
+
+def _pull(type_id, mode, ammo, drop=0):
+    """One pull of the real gun through Fighter.fire_now: (pellets the client
+    is told of, pellets that fly, rounds left, durability lost). drop is
+    what the magazine loses during the aim."""
+    si = items.params_of(type_id)
+    shots, rounds = combat.pull(si, mode, ammo)
+    mag = _Mag(type_id, ammo - drop)
+    flew = []
+    rc = type("RC", (), {"room": type("R", (), {"ws": False})(),
+                         "within_fire": lambda *a: False,
+                         "burst": lambda _rc, _sh, _t, _c, _w, live, *_a:
+                         flew.append(live) or (0, 0, 0, False)})()
+    sess = type("S", (), {"char_id": 1, "send": lambda *a, **k: None,
+                          "character": lambda *a: None,
+                          "inv": type("I", (), {"store": mag,
+                                                "push_di": lambda *a: None})()})()
+    fighter = _PullFighter(sess)
+    fighter.rc = rc
+    fighter.fire_now(7, None, 0, combat.Weapon(
+        num_shots=shots, dmin=1, dmax=1, opt_lo=0, opt_hi=0, max_range=1, piercing=1,
+        cone=0, crit=0, skill=progression.SHOOTING, spec=None), 0, rounds)
+    return shots, flew[0], mag.row["ammo_count"], 500 - mag.row["brk"]
+
+
+_wear = combat.WEAR_PER_ROUND
+combat.WEAR_PER_ROUND = 1
+check("a shotgun's pull spends one round on its full charge of shot: Сайга-12 full, "
+      "then on its last round, ИЖ-27, КС-12's third mode, the Излучатель's third",
+      [_pull(25899, 0, 5), _pull(25899, 0, 1), _pull(25876, 0, 2),
+       _pull(7072, 2, 4), _pull(1570, 2, 10)],
+      [(6, 6, 4, 1), (6, 6, 0, 1), (6, 6, 1, 1), (12, 12, 3, 1), (9, 9, 9, 1)])
+check("a burst still spends a round a bullet, and a short magazine fires what it holds",
+      [_pull(25636, 1, 16), _pull(25636, 1, 1), _pull(5842, 0, 14)],
+      [(2, 2, 14, 2), (1, 1, 0, 1), (1, 1, 13, 1)])
+check("a magazine emptied during the aim: the shotgun's pairs all go out empty, "
+      "the burst's spent share too",
+      [_pull(25899, 0, 1, drop=1), _pull(25636, 1, 2, drop=1)],
+      [(6, 0, 0, 0), (2, 1, 0, 1)])
+combat.WEAR_PER_ROUND = _wear
+
+
+# --- the line of fire: strays, cover, a rifle's round going through ------------
+# A row of the dump clear for eight hexes, the shooter at its west end, dogs
+# (they fight back, so a round may hit them) on it. Where each round lands
+# is set by hand (bullet_offset), the damage is 10 and never a crit.
+_row = next(a for a in range(_open.width * _open.height)
+            if a % _open.width < _open.width - 8
+            and not any(c in _open.obstacles for c in range(a, a + 8)))
+
+
+def _scene(**at):
+    """A room on the dump with a creature of the given type on each cell
+    named (offset from the shooter): returns rc, the bodies by name."""
+    ground = _Ground(_open)
+    rc = combat.RoomCombat(ground, None)
+    out = {}
+    for n, (name, (dx, type_id)) in enumerate(sorted(at.items())):
+        out[name] = rc.mobs[100 + n] = mobs.Mob(100 + n, type_id, _row + dx)
+    return rc, ground, out
+
+
+def _fire(rc, target, offsets, through=False):
+    shooter = type("Shooter", (), {"cell": _row, "eid": 1, "is_player": True,
+                                   "hit_exchanged": lambda self, t: None})()
+    gun = combat.Weapon(num_shots=len(offsets), dmin=10, dmax=10, opt_lo=0,
+                        opt_hi=0, max_range=10, piercing=1, cone=0.1, crit=0,
+                        skill=None, spec=None, through=through)
+    left = list(offsets)
+    keep = combat.bullet_offset
+    combat.bullet_offset = lambda cone, dist, rng=None: left.pop(0)
+    try:
+        others = []
+
+        async def shoot():      # hit_landed reads the loop's clock
+            return rc.burst(shooter, target, target.cell, gun, gun.num_shots, others)
+        res = asyncio.run(shoot())
+    finally:
+        combat.bullet_offset = keep
+    return res, others
+
+
+def _fates(ground):
+    return [(n, p.get("target"), p.get("dmg", 0) + p.get("sdmg", 0) if n == "faHit" else None)
+            for n, p in ground.sent if n in ("faShot", "faHit", "faMiss", "faWall")]
+
+
+def _player_shooter():
+    """A player's round, for the rule of who is a body: Fighter's own
+    methods over seats that only answer them."""
+    class _F(object):
+        is_player = True
+
+        def __init__(self, cell, eid, mate=False):
+            self.cell, self.eid, self.mate = cell, eid, mate
+            self.sess = type("S", (), {"combat": self})()
+
+        def present(self, rc):
+            return True
+
+        def newbie_ground(self):
+            return False
+    return _F
+
+
+DOG = 82
+_rc, _gr, _d = _scene(mark=(3, DOG), behind=(5, DOG))
+(_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.2])
+check("a round past its mark hits the creature behind it, not the mark",
+      (_hits, [(b.eid, h + s) for b, h, s, _dead, _p in _oth]),
+      (0, [(_d["behind"].eid, 10)]))
+_rc, _gr, _d = _scene(mark=(3, DOG), behind=(5, 409))
+_fire(_rc, _d["mark"], [0.2])
+check("  ..but a box behind it is no body: the round flies on past",
+      [n for n, _t, _x in _fates(_gr) if n != "faShot"] in (["faMiss"], ["faWall"]), True)
+_rc, _gr, _d = _scene(cover=(2, DOG), mark=(4, DOG))
+(_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.12, 0.05])
+check("a creature in front takes a third off the window: 0.12 off the line hits it, "
+      "0.05 still hits the mark",
+      (_hits, [b.eid for b, *_r in _oth]), (1, [_d["cover"].eid]))
+check("  ..and the window behind three in front is nothing", combat.cover_window(3), 0.0)
+_rc, _gr, _d = _scene(mark=(2, DOG), behind=(4, DOG))
+(_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.0], through=True)
+check("a rifle's round through its mark hits the one behind for half",
+      (_h + _s, [(b.eid, h + s) for b, h, s, _dead, _p in _oth]), (10, [(_d["behind"].eid, 5)]))
+check("  ..in one pair, the one behind first and with no damage shown, the mark "
+      "last with it (endOfShot shows the last body hit only)",
+      _fates(_gr), [("faShot", None, None), ("faHit", _d["behind"].eid, 0),
+                    ("faHit", _d["mark"].eid, 10), ("faShot", None, None)])
+_rc, _gr, _d = _scene(mark=(2, DOG), behind=(4, DOG))
+_fire(_rc, _d["mark"], [0.0, 0.2, 0.2])
+check("a burst that hit its mark once and strays twice: the mark's pair goes last",
+      [t for n, t, _x in _fates(_gr) if n == "faHit"],
+      [_d["behind"].eid, _d["behind"].eid, _d["mark"].eid])
+check("  ..and the stray hits carry no damage the client would pile up",
+      [x for n, t, x in _fates(_gr) if n == "faHit" and t == _d["behind"].eid], [0, 0])
+
+_rc, _gr, _d = _scene(dog=(6, DOG))
+_F = _player_shooter()
+_me, _mate, _stranger = _F(_row, 1), _F(_row + 2, 2, mate=True), _F(_row + 4, 3)
+_me.pvp_allowed = lambda: True
+_me.allied = lambda f: f.mate
+_gr.players = [_me.sess, _mate.sess, _stranger.sess]
+_gun = combat.Weapon(num_shots=1, dmin=1, dmax=1, opt_lo=0, opt_hi=0, max_range=10,
+                     piercing=1, cone=0, crit=0, skill=None, spec=None)
+
+
+def _who(shooter, gun=_gun):
+    return sorted(b.eid for b in _rc.bodies(shooter, None, gun).values())
+
+
+check("a player's round may hit a creature and a stranger, never his party",
+      _who(_me), [3, _d["dog"].eid])
+_me.pvp_allowed = lambda: False
+check("  ..and no player where players may not be attacked", _who(_me), [_d["dog"].eid])
+_me.pvp_allowed = lambda: True
+check("  ..nor with a gun a quest lends", _who(_me, _gun._replace(at_players=False)),
+      [_d["dog"].eid])
+_dog = _d["dog"]
+check("a creature's round may hit any player, and no creature",
+      _who(type("M", (), {"cell": _dog.cell, "eid": _dog.eid, "is_player": False})()),
+      [1, 2, 3])
 check("target BigUINT: one type digit then eight of id", combat.parse_target("10000002a"), (1, 42))
 check("a hex target has type 0", combat.parse_target("000000f3c"), (0, 3900))
 W = 64
@@ -203,6 +386,31 @@ check("a level-1 dog has the curve's HP times the animal share",
       (dog_stats.level, dog_stats.hp_max, dog_stats.ranged, dog_stats.can_attack),
       (1, 84, False, True))
 check("a box is an object: shot at, never shooting", mobs.stats(409).can_attack, False)
+
+
+# A blade against a creature of one's own level (mobs.MELEE_DODGE_CUT): a
+# fighter trained level by level (Ближний бой L, the spec L // 4) lands
+# about seven blows in ten at every level; the curve's dodge alone left him
+# at 39-44%.
+class _Trained(object):
+    def __init__(self, level):
+        self.level = level
+
+    def skill_level(self, i):
+        return self.level
+
+    def spec_level(self, i):
+        return self.level // 4
+
+
+def _parity(level):
+    mob = mobs.Mob.__new__(mobs.Mob)
+    mob.stats = type("S", (), {"dodge": float(mobs.LEVELS[str(level)]["dodge"])})()
+    return combat.melee_hit_chance(_Trained(level), combat.SPEC_BLADE) - mob.dodge_melee()
+
+
+check("a knife against a creature of one's own level lands 65-75% of blows at every level",
+      [lv for lv in (1, 4, 8, 12, 16, 20) if not 65 <= _parity(lv) <= 75], [])
 check("an armed bandit carries a pistol of his own",
       mobs.stats(17).weapon_type_id, 4380)
 

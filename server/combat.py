@@ -242,13 +242,33 @@ def round_wear(rounds, rate=None, rng=None):
     return whole
 
 
+def pull(si, mode, ammo):
+    """What one trigger pull fires and what it takes from the magazine:
+    (bullets or pellets, rounds). A shotgun's mode counts pellets, not
+    rounds: Сайга-12 has «длина очереди 6» and a magazine of 5, ИЖ-27 six
+    from two barrels, the Излучатель «в разном режиме генерирует разное
+    кол-во поражающих элементов» from a cell of ten. The client says the
+    same: a shotgun's burst is one shot, one animation and one sound
+    (DisplayLocScene.shotgunFireAck, Location.as:372). So a shotgun spends
+    one round on its full charge of shot, whatever is left behind it; every
+    other gun spends a round a bullet and fires what it holds."""
+    shots = si["fire_mods"][mode]
+    if si.get("weapon_type") == items.SHOTGUN:
+        return shots, 1
+    shots = min(shots, ammo)
+    return shots, shots
+
+
 # What one trigger pull is resolved with. cone is how wide the bullets
 # scatter per hex of flight (cone_of); crit is a chance in percent before the
 # target's evasion; opt_lo..opt_hi is the optimal band where crits are
 # possible and the damage floor rises (wiki); skill and spec say where the
-# experience goes (None for a mob).
+# experience goes (None for a mob). through: a round that hits goes on into
+# the next body on its line (THROUGH_TYPES); at_players: a round may hit a
+# player it was not aimed at (not with a gun a quest lends, quests.lent).
 Weapon = namedtuple("Weapon", "num_shots dmin dmax opt_lo opt_hi max_range "
-                              "piercing cone crit skill spec")
+                              "piercing cone crit skill spec through at_players",
+                    defaults=(False, True))
 
 
 def now():
@@ -541,17 +561,68 @@ def bullet_offset(cone, dist, rng=None):
     return (RNG if rng is None else rng).uniform(-half, half)
 
 
-def on_target(offset):
-    return abs(offset) <= TARGET_SIZE / 2.0
+# --- the line of fire: who else stands on it, DESIGNED (2026-10-04) ----------
+#
+# The wiki kept the scatter and lost the rest, so these three are the
+# owner's choice. A round that misses flies on and hits the first body on
+# its way (a stray). A rifle's or a machine gun's round that hits goes on
+# into the next body on its line for half the damage, and stops there. A
+# body on the line between the shooter and the mark is cover: each one
+# takes a third of the target's width off the window a round has to land
+# in, and a round that would have hit but for the cover hits the cover.
+#
+# A body is what a round may hit (RoomCombat.bodies): for a player's round
+# a creature that fights (MobStats.can_attack -- a box, a heap of ore or a
+# Tir target is not one, nor are the traders, who are no mobs at all) and
+# where players may be attacked any player outside the shooter's party;
+# for a creature's round any player. Whoever cannot be hit is no cover
+# either: a round passes a party member as if he were not there.
+THROUGH_TYPES = frozenset((items.RIFLE, items.MACHINEGUN))
+THROUGH_SHARE = 0.5
+COVER_SHARE = 1.0 / 3
+
+
+def on_target(offset, window=TARGET_SIZE):
+    return abs(offset) <= window / 2.0
+
+
+def cover_window(covers):
+    """The width a round has to land in with this many bodies in front of
+    the mark: a third of the target off for each, nothing left at three."""
+    return TARGET_SIZE * max(0.0, 1.0 - COVER_SHARE * covers)
+
+
+def bodies_between(loc, a, b, bodies):
+    """The bodies (cell -> body) on the straight line strictly between two
+    hexes, nearest first: the hexes line_of_fire samples for a wall."""
+    w = loc.width
+    ax, ay = mobs.real(a, w)
+    bx, by = mobs.real(b, w)
+    steps = max(1, int(math.ceil(mobs.hex_distance(a, b, w) * 2)))
+    out = []
+    for i in range(1, steps):
+        t = i / float(steps)
+        c = mobs.cell_at(ax + (bx - ax) * t, ay + (by - ay) * t, w, loc.height)
+        body = bodies.get(c) if c not in (a, b) else None
+        if body is not None and body not in out:
+            out.append(body)
+    return out
 
 
 def stray(loc, a, aim, offset, max_range):
-    """Where a bullet that passed its mark comes down: faWall at the first
-    obstacle on its way, else faMiss where it runs out at max_range. The
-    bullet's own line goes through the point offset sideways at the aim; it
-    stops for the ground and for nothing alive -- that is the second step
-    (UNDONE.md «линия-огня»), and a stray that brought down a bystander
-    before the rule for it is written would be a rule nobody chose."""
+    """Where a bullet that passed its mark comes down: flight() over an
+    empty room."""
+    return flight(loc, a, aim, offset, max_range)[1]
+
+
+def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0):
+    """A round's way out from hex a: (the bodies it passes through, nearest
+    first, and faWall at the first obstacle or else faMiss where it runs out
+    at max_range). Its line goes through the point offset sideways at the
+    aim. bodies is cell -> body; a body is passed when its hex is, and only
+    farther out than past hexes (a round that hit its mark goes on from
+    there)."""
+    bodies = bodies or {}
     w, h = loc.width, loc.height
     ax, ay = mobs.real(a, w)
     tx, ty = mobs.real(aim, w)
@@ -566,6 +637,7 @@ def stray(loc, a, aim, offset, max_range):
     bx, by = bx / b, by / b
     ground = _Sights(loc) if getattr(loc, "shoot_over", None) else loc
     x, y = tx, ty
+    crossed = []
     steps = max(1, int(math.ceil(max_range * 2)))
     for i in range(1, steps + 1):
         t = min(max_range, i / 2.0)
@@ -574,9 +646,14 @@ def stray(loc, a, aim, offset, max_range):
             break
         x, y = nx, ny
         c = mobs.cell_at(x, y, w, h)
-        if c != a and c in ground.obstacles:
-            return ("faWall", dict(hex=c))
-    return ("faMiss", dict(x=round(x, 2), y=round(y, 2)))
+        if c == a:
+            continue
+        if c in ground.obstacles:
+            return crossed, ("faWall", dict(hex=c))
+        body = bodies.get(c)
+        if body is not None and body not in crossed                 and mobs.hex_distance(a, c, w) > past:
+            crossed.append(body)
+    return crossed, ("faMiss", dict(x=round(x, 2), y=round(y, 2)))
 
 
 def melee_crit(ch, spec):
@@ -1017,6 +1094,13 @@ class Fighter:
         valley's ground whatever the file says."""
         return bool(self.sess.loc.pvp) and not self.newbie_ground()
 
+    def allied(self, other):
+        """In one party with another player: a round of his passes him by
+        (RoomCombat.bodies)."""
+        party = getattr(self.sess, "party", None)
+        mine = party() if party is not None else None
+        return mine is not None and other.is_player             and other.sess.char_id in mine.members
+
     def refuse_pvp(self):
         """A shot or a blow at another player where that is not allowed.
 
@@ -1214,13 +1298,16 @@ class Fighter:
                                      spec_or_zero(ch, spec)),
                        si["target_size"][mode], ammo_si.get("acc_mod", 1) or 1,
                        si["max_range"][mode])
-        weapon = Weapon(num_shots=min(modes[mode], row["ammo_count"]),
+        num_shots, rounds = pull(si, mode, row["ammo_count"])
+        weapon = Weapon(num_shots=num_shots,
                         dmin=si["h_damage_min"][mode], dmax=si["h_damage_max"][mode],
                         opt_lo=si["opt_range"][mode], opt_hi=si["end_opt_range"][mode],
                         max_range=si["max_range"][mode],
                         piercing=ammo_si.get("piercing", 1),
                         cone=cone, crit=crit[0] if crit else 0,
-                        skill=progression.SHOOTING, spec=spec)
+                        skill=progression.SHOOTING, spec=spec,
+                        through=wt in THROUGH_TYPES,
+                        at_players=not quests.lent(row["type_id"]))
         rc.room.broadcast(("faAim", dict(id=self.eid,
                                          ang=mobs.direction(self.cell, aim_cell, width),
                                          num_shots=weapon.num_shots)))
@@ -1228,11 +1315,14 @@ class Fighter:
         # the first faShot (WeaponPan.aim); the burst waits the same.
         self.aim = asyncio.get_running_loop().call_later(
             pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
-            self.fire_now, row["uniq"], target, hexcell, weapon, cost)
+            self.fire_now, row["uniq"], target, hexcell, weapon, cost, rounds)
 
-    def fire_now(self, uniq, target, hexcell, weapon, cost):
+    def fire_now(self, uniq, target, hexcell, weapon, cost, rounds=None):
         """The burst, after the aim. num_shots pairs go out come what may:
-        the client has already counted them from faAim."""
+        the client has already counted them from faAim. rounds is what the
+        pull takes from the magazine (one for a shotgun's charge of shot,
+        num_shots for a burst); what the magazine lost meanwhile leaves its
+        share of the pairs empty."""
         self.aim = None
         rc = self.rc
         if rc is None or self.dead:
@@ -1240,12 +1330,16 @@ class Fighter:
         row = self.store.item(uniq)
         if row is not None and row["char_id"] != self.sess.char_id:
             row = None
-        live = min(weapon.num_shots, row["ammo_count"]) if row else 0
+        if rounds is None:
+            rounds = weapon.num_shots
+        spent = min(rounds, row["ammo_count"]) if row else 0
+        live = weapon.num_shots * spent // rounds if rounds else 0
         pool = target.hp if target is not None and not target.is_player else 0
         # Asked before the burst, which may kill it: whether the rounds could
         # have got there at all. Only then is the shot a provocation.
         reached = rc.within_fire(self, target, weapon.max_range)
-        h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live)
+        others = []
+        h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others)
         if row is not None:
             # WEAR_PER_ROUND of durability per round that left the barrel. The
             # starter pistol holds 120 points, a median firearm 1000 -- and
@@ -1254,8 +1348,8 @@ class Fighter:
             # wear: Берт's training pistol holds 120 and a level-0 cadet can
             # spend more than that on one lesson's targets, and a gun broken
             # halfway would lock the lesson until the next day (quests.lent).
-            wear = 0 if quests.lent(row["type_id"]) else round_wear(live)
-            self.store.update_item(uniq, ammo_count=row["ammo_count"] - live,
+            wear = 0 if quests.lent(row["type_id"]) else round_wear(spent)
+            self.store.update_item(uniq, ammo_count=row["ammo_count"] - spent,
                                    brk=max(0, row["brk"] - wear))
         if rc.room.ws:
             self.ap = max(0, self.ap - cost)
@@ -1271,14 +1365,26 @@ class Fighter:
                 # turned the rest into (burst never takes more than there is):
                 # both are harm done, see award_xp.
                 self.award_xp(weapon.skill, weapon.spec, min(h, pool) + s, target)
+            for body, oh, os_, _dead, opool in others:
+                if not body.is_player:
+                    self.award_xp(weapon.skill, weapon.spec, min(oh, opool) + os_, body)
             # A burst that fell short of the mark, or into a wall on the way,
             # turns no creature on the shooter and opens no duel: every round
             # dropped on the ground, and nothing out there felt it. A miss
             # within reach does provoke -- the bullets went past its ears.
+            # Whatever else a round hit was hit: it turns, or it is a duel.
             if reached:
                 rc.after_hostile(self, target)
+            for body, _h, _s, _dead, _pool in others:
+                rc.after_hostile(self, body)
             if killed:
                 rc.kill(target, self)
+            for body, _h, _s, dead, _pool in others:
+                if dead:
+                    # kill() lets the held rp_info go; each kill's price in
+                    # one frame of its own.
+                    self.hold_stats()
+                    rc.kill(body, self)
         finally:
             self.release_stats()
 
@@ -2238,11 +2344,16 @@ class RoomCombat:
         mob.aim = None
         if not mob.alive:
             return
-        h, s, hits, killed = self.burst(mob, target, target.cell, weapon, weapon.num_shots)
+        others = []
+        h, s, hits, killed = self.burst(mob, target, target.cell, weapon,
+                                        weapon.num_shots, others)
         mob.ap = max(0, mob.ap - mob.stats.attack_ap)
         self.after_hostile(mob, target)
         if killed:
             self.kill(target, mob)
+        for body, _h, _s, dead, _pool in others:
+            if dead:
+                self.kill(body, mob)
 
     def mob_strike(self, mob, target):
         mob.aim = None
@@ -2268,10 +2379,39 @@ class RoomCombat:
             self.kill(target, mob)
 
     # --- the shot resolver, shared -------------------------------------------------------
-    def burst(self, shooter, target, hexcell, weapon, live):
+    def bodies(self, shooter, target, weapon):
+        """cell -> body: whoever else a round of this burst may hit, the
+        shooter and the mark left out (the rule over THROUGH_TYPES). One
+        body a hex; a creature and a player never share one."""
+        out = {}
+        if shooter.is_player:
+            for mob in self.mobs.values():
+                if mob is not target and mob.present(self) and mob.stats.can_attack:
+                    out.setdefault(mob.cell, mob)
+        if not weapon.at_players:
+            return out
+        for f in self.fighters():
+            if f is shooter or f is target or not f.present(self):
+                continue
+            if shooter.is_player and (not shooter.pvp_allowed() or f.newbie_ground()
+                                      or shooter.allied(f)):
+                continue
+            out.setdefault(f.cell, f)
+        return out
+
+    def burst(self, shooter, target, hexcell, weapon, live, others=None):
         """num_shots pairs of faShot around what each bullet did, then usrUp
-        of the target. live is how many chambers held a round; the rest
-        click (a miss). Returns (hp damage, sp damage, hits, killed)."""
+        of everyone hit. live is how many chambers held a round; the rest
+        click (a miss). Returns (hp damage, sp damage, hits, killed) of the
+        target; every other body a round hit (a stray, a cover, the one
+        behind) goes into others as (body, hp, sp, killed, hp before).
+
+        The client shows the damage of one body a burst: endOfShot reads
+        what faHit piled on the last body hit (Location.as endOfShot,
+        LocWalker.damageWalker) and clears that one only. So the pairs that
+        hit the mark go last, and every other body's faHit carries no
+        damage -- what was piled on it would have been shown with its next
+        burst. Its health is in its usrUp all the same."""
         loc = self.room.loc
         width = loc.width
         if target is not None and not target.present(self):
@@ -2288,44 +2428,89 @@ class RoomCombat:
         # hexes into a rock the gun could never reach.
         wall = shot_wall(loc, shooter.cell, aim) if dist <= weapon.max_range else None
         tx, ty = mobs.real(aim, width)
-        total_h = total_s = hits = 0
-        sp_left = target.sp_now() if target is not None else 0
-        frames = []
+        reach = target is not None and wall is None and dist <= weapon.max_range
+        bodies = self.bodies(shooter, target, weapon) if live and wall is None else {}
+        covers = bodies_between(loc, shooter.cell, aim, bodies) if reach else []
+        window = cover_window(len(covers))
+        depth = 2 if weapon.through else 1
+        struck = {}                 # body -> [hp, sp, hits, sp left]
+        pairs = []
         for k in range(weapon.num_shots):
-            frames.append(("faShot", dict(id=shooter.eid, status=1)))
             offset = bullet_offset(weapon.cone, dist)
             if k >= live:
                 # An empty chamber: the pair was counted from faAim already.
-                frames.append(("faMiss", miss_at(tx, ty)))
-            elif wall is not None:
-                frames.append(("faWall", dict(hex=wall)))
-            elif target is None or dist > weapon.max_range or not on_target(offset):
-                # Aimed at the ground, at a mark the gun does not reach, or
-                # past the mark: on to where it lands, max_range at the most.
-                frames.append(stray(loc, shooter.cell, aim, offset, weapon.max_range))
+                pairs.append((("faMiss", miss_at(tx, ty)), []))
+                continue
+            if wall is not None:
+                pairs.append((("faWall", dict(hex=wall)), []))
+                continue
+            if reach and on_target(offset, window):
+                behind, _end = flight(loc, shooter.cell, aim, offset,
+                                      weapon.max_range, bodies, past=dist)
+                chain = [target] + [b for b in behind if b not in covers]
+            elif reach and on_target(offset):
+                # It would have hit, and the cover took it; through the
+                # cover it goes on along the line to the mark.
+                chain = covers + [target]
+                _end = None
             else:
-                optimal = weapon.opt_lo <= dist <= weapon.opt_hi
-                crit = optimal and roll(weapon.crit - target.crit_evade_ranged())
+                # Aimed at the ground, at a mark the gun does not reach, or
+                # past the mark: on to where it lands, max_range at the
+                # most, and into the first body on the way. Not into a
+                # cover: what it had to give the cover is the window above.
+                passed, _end = flight(loc, shooter.cell, aim, offset,
+                                      weapon.max_range, bodies)
+                chain = [b for b in passed if b not in covers]
+            chain = chain[:depth]
+            if not chain:
+                pairs.append((_end, []))
+                continue
+            fates = []
+            for n, body in enumerate(chain):
+                rec = struck.setdefault(body, [0, 0, 0, body.sp_now()])
+                d = mobs.hex_distance(shooter.cell, body.cell, width)
+                optimal = weapon.opt_lo <= d <= weapon.opt_hi
+                crit = optimal and roll(weapon.crit - body.crit_evade_ranged())
                 lo, hi = weapon.dmin, weapon.dmax
                 if optimal:
                     lo = (hi - lo) // 2 + lo
                 dmg = RNG.randint(lo, max(lo, hi))
-                h, s = split_damage(dmg, target.armor(), weapon.piercing, crit, sp_left)
-                sp_left -= s
-                total_h += h
-                total_s += s
-                hits += 1
-                frames.append(("faHit", dict(target=target.eid, dmg=h, sdmg=s,
-                                             crit=int(crit))))
-            frames.append(("faShot", dict(id=shooter.eid, status=0)))
-        for frame in frames:
-            self.room.broadcast(frame)
-        killed = False
-        if target is not None and hits:
-            self.hit_landed(shooter, target)
-            killed = target.apply_damage(total_h, total_s)
-            self.push_vitals(target)
-        return total_h, total_s, hits, killed
+                if n:
+                    dmg = max(1, int(dmg * THROUGH_SHARE))
+                h, s = split_damage(dmg, body.armor(), weapon.piercing, crit, rec[3])
+                rec[0] += h
+                rec[1] += s
+                rec[2] += 1
+                rec[3] -= s
+                fates.append((body, h, s, crit))
+            pairs.append((None, fates))
+        # The body the client is shown the damage of: the mark if it was
+        # hit, else whoever took the most.
+        shown = target if target in struck else max(
+            struck, key=lambda b: struck[b][0] + struck[b][1], default=None)
+        pairs.sort(key=lambda pair: any(f[0] is shown for f in pair[1]))
+        for end, fates in pairs:
+            self.room.broadcast(("faShot", dict(id=shooter.eid, status=1)))
+            if end is not None:
+                self.room.broadcast(end)
+            for body, h, s, crit in sorted(fates, key=lambda f: f[0] is shown):
+                mine = body is shown
+                self.room.broadcast(("faHit", dict(target=body.eid,
+                                                   dmg=h if mine else 0,
+                                                   sdmg=s if mine else 0,
+                                                   crit=int(crit))))
+            self.room.broadcast(("faShot", dict(id=shooter.eid, status=0)))
+        result = (0, 0, 0, False)
+        for body, (h, s, hits, _sp) in struck.items():
+            pool = 0 if body.is_player else body.hp
+            self.hit_landed(shooter, body)
+            killed = body.apply_damage(h, s)
+            self.push_vitals(body)
+            if body is target:
+                result = (h, s, hits, killed)
+            elif others is not None:
+                others.append((body, h, s, killed, pool))
+        return result
 
     def hit_landed(self, attacker, target):
         """A faHit or a caHit has just gone out: the exit timer restarts for
