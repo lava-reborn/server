@@ -85,6 +85,7 @@ MARKET_Q = list(range(46, 68))
 DAILY = [MATCHES_Q, CHIP_Q, TAILS, KING_Q, FOOD]
 ONE_OFF = [t for t in MARKET_Q if t not in DAILY]
 MINE_DOWN = 7                       # Рудо's way down, after «Старые штольни»
+PREPARATION = 68                    # Schulz's talk before the boss, base Shooting 3
 # Who gives and takes them.
 MUAD, SET, FAYA, SORVANETS, GOFUS = 5186, 1187, 5198, 5189, 5215
 RATCATCHER, KHRUSCH, EDDAI, SCHULZ, RUDO, KAMAL = 5194, 5234, 6763, 5221, 1133, 1134
@@ -114,7 +115,7 @@ GIVE_TAKE = {GEAR: (MUAD, SET), WIND: (MUAD, FAYA), STONE: (MUAD, MUAD),
              WHERE_SEIFUL: (HASANI, SEIFUL), WHERE_CORBEN: (HASANI, CORBEN)}
 CHAIN = {GEAR: [], WIND: [GEAR], STONE: [GEAR], FANGS: [GEAR], SON: [GEAR], MATCHES_Q: [],
          CHIP_Q: [], RAT_RIOT: [], TAILS: [], KING_Q: [RAT_RIOT], ELIXIR: [KING_Q], ADITS: [],
-         PISTOL_KIT: [], EMERALDS_Q: [], ANTELOPE1: [], ANTELOPE2: [ANTELOPE1],
+         PISTOL_KIT: [PREPARATION], EMERALDS_Q: [], ANTELOPE1: [], ANTELOPE2: [ANTELOPE1],
          FOOD: [ANTELOPE2], HUNT_Q: [ANTELOPE2], WHERE_ANT: [ANTELOPE2], WHERE_NORMAN: [30],
          WHERE_SEIFUL: [33], WHERE_CORBEN: [35]}
 # Where each giver and taker stands (Фая in the caravan and on the market).
@@ -728,7 +729,7 @@ try:
     arrive(c)
     CID = char_id()
     AFRO = 1000
-    OFFERED = [GEAR, MATCHES_Q, CHIP_Q, RAT_RIOT, TAILS, ADITS, PISTOL_KIT, EMERALDS_Q,
+    OFFERED = [GEAR, MATCHES_Q, CHIP_Q, RAT_RIOT, TAILS, ADITS, EMERALDS_Q,
                ANTELOPE1]
     check("a newcomer: the first of each line is offered, nothing that waits for another",
           [status(c, t) for t in MARKET_Q], [1 if t in OFFERED else 0 for t in MARKET_Q])
@@ -755,11 +756,27 @@ try:
     # in the table, so it is his q_idx 0 (test_halfa_story).
     check("  ..their frames list what they give and take, in the order q_idx counts",
           [quest_lists(c, here, n) for n in (SCHULZ, RATCATCHER)],
-          [([101, ADITS, PISTOL_KIT], [PISTOL_KIT]), ([RAT_RIOT, TAILS], [TAILS])])
+          [([101, ADITS, PREPARATION, PISTOL_KIT], [PREPARATION, PISTOL_KIT]),
+           ([RAT_RIOT, TAILS], [TAILS])])
     got, q_adits = take(c, here, ADITS)
     check("«Старые штольни» taken from Шульц, complete at once",
           (order(got), first(got, "q_di_del_obj").get("complete")),
           (["cmdAck", "q_di_del_obj"], 1))
+    c.send("q_st;mob=%d;q_idx=%d;" %
+           (here[SCHULZ][0], quests.given_by(SCHULZ).index(PREPARATION)))
+    got = c.frames()
+    prep = first(got, "q_di_del_obj")
+    check("Schulz's preparation is taken at level 0, still incomplete",
+          (acks(got), prep.get("complete")), ([0], 0))
+    c.send("userMsg;group=0;entry=@/skill 1 3@;")
+    got = c.frames()
+    check("base Shooting 3 updates the carried preparation without a journal request",
+          [(p["q_id"], p["complete"]) for p in named(got, "q_di_del_obj")],
+          [(prep["q_id"], 1)])
+    c.send("q_co;mob=%d;q_id=%d;obj_idx=0;" % (here[SCHULZ][0], prep["q_id"]))
+    got = c.frames()
+    check("handing the preparation in pays nothing and opens the boss quest",
+          (order(got), acks(got), status(c, PISTOL_KIT)), (["cmdAck"], [0], 1))
     got, q_kit = take(c, here, PISTOL_KIT)
     check("«Экипировка к пистолету» taken: nought of one", counts(got, quests.KILL_MOBS),
           [([0], 0)])

@@ -5764,6 +5764,27 @@
       "why": "RECOVERED texts and giver, DESIGNED reward. Шульц's «Старые штольни» (59924-59927). The wiki's Шульц page lists it; Шульц (5221, the caravan 186) sends the player to the mine, where bandits sit, and Рудо (1133, at the mine's mouth 153) answers 'Ага, подмога, отлично! Послушай, у меня для тебя будет задание...' -- his own «Отправка в шахту» (7) follows, whose start goes on 'Ага, тебе уже рассказали про бандитов', so 7 is offered after this (need_quest 57 on 7). No reward in the texts: DESIGNED +20 Медицина, as the valley's other talk steps. A one-off. Map mark: the mine's mouth."
     },
     {
+      "type": 68,
+      "kind": "del_obj",
+      "name": "Как стать круче",
+      "start": "Хочешь получить замечательную экипировку для улучшения стрельбы из пистолета? Для этого необходимо сразиться с негодяем Большим Мвамбой и одолеть его. Мвамба сильный, крепкий, в одиночку его не одолеть. Очень поможет броня Странника и три-четыре друга! Без них к Мвамбе даже не суйся. Приходи, когда дорастешь до 3-4-го уровня, не раньше.",
+      "notfinish": "Поговори со мной еще раз, когда будешь 3-го уровня",
+      "finish": "Уже увереннее держишь оружие. Теперь можно поговорить о Большом Мвамбе всерьёз. Только не путай меткость с неуязвимостью: собери людей, запасись патронами и проверь броню. Будешь готов, подходи, расскажу подробности.",
+      "give": [5221],
+      "take": [5221],
+      "obj": 0,
+      "rew_afro": 0,
+      "rew_gold": 0,
+      "repeatable": 0,
+      "level": 0,
+      "q_type": 0,
+      "complete_skills": {"shooting": 3},
+      "excludes": [58],
+      "loc": 51373861,
+      "finish_loc": 51373861,
+      "why": "RECOVERED name, start and unfinished reply: texts.xml 59944-59946; the wiki lists this quest at Schulz. DESIGNED completion and chain, approved by the owner on 2026-10-05: take at any level, return with base Shooting at least 3, then unlock Equipment for the Pistol (58). The source names level 3 but no skill; Shooting is our choice. No reward, one-off, no daily hand-in spent. The finish is newly written: no original finish survives. The loaded start appends the explicit skill objective after the original overlay. Excludes 58 hides this introduction from characters carrying or having finished the boss quest. Carried 58 stays available through the existing grandfathering rule."
+    },
+    {
       "type": 58,
       "kind": "kill_mobs",
       "name": "Экипировка к пистолету",
@@ -5781,9 +5802,10 @@
       "level": 0,
       "q_type": 0,
       "party_size": 3,
+      "need_quest": 68,
       "loc": 51398441,
       "finish_loc": 51373861,
-      "why": "RECOVERED texts, target and party, DESIGNED workings and reward. Шульц's «Экипировка к пистолету» (24341; the newest edition's start and notfinish 59832/59833 -- 24342/24343 are the 2012 copies, with en dashes, and 45366/45367 a later one; 24344). Kill Большой Мвамба (nubia_boss 1406, «Большой Мвамба<Br>Новые колонисты» 10536), who stands in his camp 31 («Лагерь Большого Мвамбы», 6274,1833, data/settlements_verified.json) as a boss does, at the boss hours of server/bosses.py, with a DESIGNED level of 5 (data/build_mob_types.py). 'В одиночку с ним не справиться ... отряд как минимум из трех человек': party_size 3, which the client prints under the quest ('Количество человек, на которых рассчитано задание'). The equipment is what Мвамба carries ('Есть экипировка у Большого Мвамбы ... кто из вас по очереди экипировку получит'): his own loot, not the quest's. Шульц pays in teaching ('научу всему, что знаю'): DESIGNED +200 Стрельба. The kill counts for the one who fells him, as every kill quest's. A one-off. Its companion «Как стать круче» (59944-59946) has no finish in the file and is left out. Map marks: the camp, then the caravan."
+      "why": "RECOVERED texts, target and party, DESIGNED workings and reward. Шульц's «Экипировка к пистолету» (24341; the newest edition's start and notfinish 59832/59833 -- 24342/24343 are the 2012 copies, with en dashes, and 45366/45367 a later one; 24344). Kill Большой Мвамба (nubia_boss 1406, «Большой Мвамба<Br>Новые колонисты» 10536), who stands in his camp 31 («Лагерь Большого Мвамбы», 6274,1833, data/settlements_verified.json) as a boss does, at the boss hours of server/bosses.py, with a DESIGNED level of 5 (data/build_mob_types.py). 'В одиночку с ним не справиться ... отряд как минимум из трех человек': party_size 3, which the client prints under the quest ('Количество человек, на которых рассчитано задание'). The equipment is what Мвамба carries ('Есть экипировка у Большого Мвамбы ... кто из вас по очереди экипировку получит'): his own loot, not the quest's. Шульц pays in teaching ('научу всему, что знаю'): DESIGNED +200 Стрельба. The kill counts for the one who fells him, as every kill quest's. A one-off. Since 2026-10-05 its introduction (68) must be completed first; characters already carrying this quest keep it. Map marks: the camp, then the caravan."
     },
     {
       "type": 59,
