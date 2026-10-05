@@ -663,11 +663,13 @@ class Quest:
     def reward_item(self, obj_idx):
         """The reward chosen by obj_idx, or None.
 
-        QuestInterface.buildRewardItems numbers the icons id = n - 1 - i, so
-        the index the client sends counts from the end of rew_obj.
+        Quest.createRewardItems first reverses rew_obj: AS2 for..in walks
+        array indexes backwards and pushes each prototype into a new array.
+        QuestInterface.buildRewardItems assigns id = n - 1 - i in that
+        reversed array, so the wire index is back in the original order.
         """
         n = len(self.rew_obj)
-        i = n - 1 - int(obj_idx)
+        i = int(obj_idx)
         if 0 <= i < n:
             return self.rew_obj[i], self.num_rew_obj[i]
         return None

@@ -5,7 +5,7 @@
     python3 tools/widescreen.py <main.swf> <out.swf> [--max 3840x2160]
     python3 tools/widescreen.py <main.swf> --check
 
-Two changes, both in the client's own bytecode, and nothing else in the file:
+Client patches applied without altering the original artwork:
 
 1. The layout ceiling. SceneShifter.setMCSize clamps the size it hands every
    interface to maxW x maxH = 1280 x 1024 (SceneShifter.as:43-44). Past that
@@ -68,12 +68,22 @@ Two changes, both in the client's own bytecode, and nothing else in the file:
    uses for its own notices (ItemActivator.as:82-84), for two seconds, when
    a SET_HOME comes back with res=0.
 
+6. Online players. A compact riveted plate with a people icon and live count
+   just left of the exit button. Its PNG is embedded in the SWF and reused
+   on both world interfaces. XMLConnection.Send opts in with hello;online=1;
+   sendNotification caches online;count=N before a scene exists and refreshes
+   its value when players enter or leave. Resize builds the counter once and
+   anchors it to the right edge. Below 1100 pixels it uses the upper lip
+   of the bar, clear of the gold balance. No timers or
+   per-scene connection listeners survive a scene change.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
 main.swf.
 """
 import argparse
+from pathlib import Path
 import struct
 import sys
 import zlib
@@ -520,6 +530,7 @@ def fn_frame():
                       ("frame_left", "__wideSide"),
                       ("frame_right", "__wideSide")):
         a.var("h").var("w").var("ui").member(piece).push(3, fn).op("callfunc").op("pop")
+    a.var("w").var("ui").push(2, "__onlinePanel").op("callfunc").op("pop")
     return a
 
 
@@ -564,6 +575,121 @@ def fn_services():
 
 HOME_SET = "Теперь вы будете возрождаться в этой локации"
 
+ONLINE_WIDTH = 76
+ONLINE_BITMAP = "__lavaOnlinePlate"
+ONLINE_ASSET = Path(__file__).resolve().parent.parent / "data/client/online-panel.png"
+ONLINE_RIGHT = 150             # ten pixels before the exit at w - 140
+ONLINE_INLINE_MIN = 1100        # gold controls end around w / 2 + 313
+
+
+def fn_online_refresh():
+    """Draw the live count separately from the plate, without padded zeroes."""
+    a = Asm()
+    a.push("panel").var("ui").member("__onlinePanel").op("definelocal")
+    a.var("panel").push(UNDEF).op("equals2").iftrue("out")
+    a.push("value", "...").op("definelocal")
+    a.var("_global").member("__onlineCount").push(UNDEF).op("equals2").iftrue("draw")
+    a.push("value").var("_global").member("__onlineCount").op("definelocal")
+    a.label("draw")
+    a.var("panel").push("hintTitle_str", "Игроков в сети: ").var("value").op("add2").op("setmember")
+    a.push("label").var("panel").member("label").op("definelocal")
+    a.var("label").push("text").var("value").op("setmember")
+    # AutoSize geometry is delayed by a frame in AVM1. Fit by digit count,
+    # not stale _width, and keep the field centered between icon and rivet.
+    a.push("digits").var("value").push(1, "String").op("callfunc").member("length").op("definelocal")
+    a.push("fmt", 0).var("label").push("getTextFormat").op("callmethod").op("definelocal")
+    a.var("fmt").push("size", 13).op("setmember")
+    a.push(3).var("digits").op("less2").op("not").iftrue("format")
+    a.var("fmt").push("size", 36).var("digits").op("divide").op("setmember")
+    a.label("format")
+    a.var("fmt")
+    call_method(a, "label", "setTextFormat", 1)
+    a.var("label").push("_y", 4, 13).var("fmt").member("size").op("subtract")
+    a.push(2).op("divide").op("add2").op("setmember")
+    a.label("out")
+    return a
+
+
+def fn_online_panel():
+    """Embedded plate, live text and scene-local tooltip callbacks."""
+    a = Asm()
+    a.var("ui").member("__onlinePanel").push(UNDEF).op("equals2").op("not").iftrue("place")
+    a.push("panel")
+    a.push(0).var("ui").push("getNextHighestDepth").op("callmethod")
+    a.push("__onlinePanel", 2).var("ui").push("createEmptyMovieClip").op("callmethod")
+    a.op("definelocal")
+    a.var("_global").member("__onlineBitmap").push(UNDEF).op("equals2").op("not").iftrue("bitmap")
+    a.var("_global").push("__onlineBitmap", ONLINE_BITMAP, 1)
+    a.var("flash").member("display", "BitmapData").push("loadBitmap").op("callmethod").op("setmember")
+    a.label("bitmap")
+    a.push(0).var("_global").member("__onlineBitmap")
+    call_method(a, "panel", "attachBitmap", 2)
+    a.push(21, 32, 4, 34, 1, "label")
+    call_method(a, "panel", "createTextField", 6)
+    a.push("label").var("panel").member("label").op("definelocal")
+    for key, value in (("selectable", False), ("embedFonts", False),
+                       ("autoSize", False), ("wordWrap", False)):
+        a.var("label").push(key, value).op("setmember")
+    a.push("fmt")
+    new(a, ("_global",), "TextFormat", 0).op("definelocal")
+    for key, value in (("font", "Tahoma"), ("size", 13), ("bold", True),
+                       ("color", 0xDED5BC), ("align", "center")):
+        a.var("fmt").push(key, value).op("setmember")
+    a.var("fmt")
+    call_method(a, "label", "setNewTextFormat", 1)
+    a.var("panel").push("useHandCursor", False).op("setmember")
+    a.var("panel").push("tabEnabled", False).op("setmember")
+    over = Asm()
+    over.var("this").push("__hover", True).op("setmember")
+    over.push(28).var("this").member("_ymouse").op("subtract")
+    over.var("this").member("_ymouse").var("this").member("hintTitle_str").push(3)
+    over.var("lol").member("gpui", "HintManager").push("showHint").op("callmethod").op("pop")
+    out = Asm()
+    out.var("this").member("__hover").op("not").iftrue("done")
+    out.var("this").push("__hover", False).op("setmember")
+    out.push(0).var("lol").member("gpui", "HintManager").push("closeHint").op("callmethod").op("pop")
+    out.label("done")
+    for event, handler in (("onRollOver", over), ("onRollOut", out), ("onUnload", out)):
+        a.var("panel").push(event).function((), handler).op("setmember")
+    a.label("place")
+    a.push("panel").var("ui").member("__onlinePanel").op("definelocal")
+    # Narrow windows have only the 22-pixel lip above the gold controls.
+    for key, value in (("_xscale", 70), ("_yscale", 70), ("_y", 0)):
+        a.var("panel").push(key, value).op("setmember")
+    a.var("w").push(ONLINE_INLINE_MIN).op("less2").iftrue("anchor")
+    for key, value in (("_xscale", 80), ("_yscale", 80), ("_y", 21)):
+        a.var("panel").push(key, value).op("setmember")
+    a.label("anchor")
+    a.var("ui").member("__onlinePanel").push("_x")
+    a.var("w").push(ONLINE_RIGHT).op("subtract").var("panel").member("_width").op("subtract")
+    a.push(1).var("Math").push("round").op("callmethod").op("setmember")
+    a.var("ui").push(1, "__onlineRefresh").op("callfunc").op("pop")
+    return a
+
+
+def fn_online_send():
+    """Opt in on hello; keep Send's boolean result and its normal filtering."""
+    a = Asm()
+    a.var("mess").member("name").push("hello").op("equals2").op("not").iftrue("send")
+    a.var("_global").push("__onlineCount", UNDEF).op("setmember")
+    a.push(1, "online")
+    call_method(a, "mess", "addProp", 2)
+    a.label("send")
+    a.var("mess").push(1).var("this").push("__onlineSendOrig").op("callmethod").op("return")
+    return a
+
+
+def fn_online_notification():
+    """Cache the push independently of either location/map scene's lifetime."""
+    a = Asm()
+    a.var("cmd").member("messID").push("online").op("equals2").op("not").iftrue("dispatch")
+    a.var("_global").push("__onlineCount").var("cmd").member("params", "count").op("setmember")
+    a.var("lol").member("core", "SceneShifter", "_ref", "currentScene")
+    a.push(1, "__onlineRefresh").op("callfunc").op("pop")
+    a.label("dispatch")
+    a.var("cmd").push(1).var("this").push("__onlineNotifyOrig").op("callmethod").op("pop")
+    return a
+
 
 def fn_home_ack():
     """Attendance.cmdAck(obj): the original, then for a home registered
@@ -594,6 +720,8 @@ def injected():
             ("__wideCorner", fn_corner, ("host", "w", "h")),
             ("__wideSide", fn_side, ("host", "w", "h")),
             ("__wideChat", fn_chat, ("chat", "w")),
+            ("__onlineRefresh", fn_online_refresh, ("ui",)),
+            ("__onlinePanel", fn_online_panel, ("ui", "w")),
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
@@ -609,6 +737,10 @@ def injected():
          ("obj",), fn_services()),
         (("core", "player", "Attendance"), "cmdAck", "__wideOrig",
          ("obj",), fn_home_ack()),
+        (("server", "XMLConnection"), "Send", "__onlineSendOrig",
+         ("mess",), fn_online_send()),
+        (("server", "XMLConnection"), "sendNotification", "__onlineNotifyOrig",
+         ("cmd",), fn_online_notification()),
     )
     for path, method, keep, params, body in wraps:
         cls = path[-1]
@@ -627,11 +759,50 @@ def injected():
     return a.assemble()
 
 
+def without_online_art(tags):
+    """Remove only our dedicated bitmap/export pair when repatching."""
+    name = ONLINE_BITMAP.encode() + b"\0"
+    exports = [t for t in tags if t[0] == 56 and t[1][:2] == b"\1\0"
+               and t[1][4:] == name]
+    if len(exports) > 1:
+        raise ValueError("duplicate online plate exports")
+    if not exports:
+        return list(tags)
+    ident = exports[0][1][2:4]
+    return [t for t in tags if t != exports[0]
+            and not (t[0] == 21 and t[1][:2] == ident)]
+
+
+def online_art(tags):
+    """PNG in DefineBitsJPEG2 (Flash 8+), exported for BitmapData.loadBitmap."""
+    definitions = {2, 6, 7, 10, 11, 14, 20, 21, 22, 32, 33, 34, 35, 36,
+                   37, 39, 46, 48, 60, 75, 83, 84, 87, 90, 91}
+    used = set()
+
+    def collect(items):
+        for code, payload, _ in items:
+            if code in definitions:
+                used.add(struct.unpack_from("<H", payload)[0])
+            if code == 39:
+                # A sprite's tag stream follows its ID and frame count.
+                collect(split_tags(b"\x08\0\0\0\0\0" + payload[4:]))
+
+    collect(tags)
+    ident = next(i for i in range(1, 65536) if i not in used)
+    png = ONLINE_ASSET.read_bytes()
+    if png[:8] != b"\x89PNG\r\n\x1a\n" or struct.unpack_from(">II", png, 16) != (ONLINE_WIDTH, 28):
+        raise ValueError("online panel must be a 76x28 PNG")
+    bitmap = (21, struct.pack("<H", ident) + png, True)
+    export = (56, struct.pack("<HH", 1, ident) + ONLINE_BITMAP.encode() + b"\0", False)
+    return [bitmap, export]
+
+
 def inject(tags):
     """Put the DoAction before the first ShowFrame, replacing an earlier one."""
     tags = [t for t in tags if not (t[0] == 12 and MARK.encode() in t[1])]
+    tags = without_online_art(tags)
     at = next(k for k, t in enumerate(tags) if t[0] == 1)
-    tags.insert(at, (12, injected(), True))
+    tags[at:at] = online_art(tags) + [(12, injected(), True)]
     return tags
 
 
@@ -662,6 +833,8 @@ def verify(path, max_w, max_h):
         raise SystemExit("verify: expected one injected DoAction, found %d" % len(mine))
     if mine[0] != injected():
         raise SystemExit("verify: the DoAction in the file is not the one assembled")
+    if inject(tags) != tags:
+        raise SystemExit("verify: online artwork is missing, changed or duplicated")
     ops = disassemble(mine[0])
     unknown = [o for o in ops if o.startswith("0x")]
     if unknown:

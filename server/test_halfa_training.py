@@ -963,8 +963,8 @@ try:
           (acks(got), first(got, "q_di_bring_l_obj").get("complete")), ([0], 1))
     got = hand_in(c, here, TIL, q, obj_idx=0)
     have = held(CADET)
-    check("  ..handed in: the certificate out, the part chosen (the last of the six) and the coin"
-          " in", (acks(got), have[CERT], have[SHOTGUN_PARTS[-1]], have[COIN]), ([0], 0, 1, 1))
+    check("  ..handed in: the certificate out, the part chosen (the first of the six) and the coin"
+          " in", (acks(got), have[CERT], have[SHOTGUN_PARTS[0]], have[COIN]), ([0], 0, 1, 1))
     check("the ore mines' gate refuses a level-0 player, carried or not",
           [status(c, t) for t in MINES_IN], [0, 0, 0])
     check("an exam is not offered without «Самоучители» and the specialisation",
