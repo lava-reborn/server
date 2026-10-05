@@ -196,7 +196,7 @@ RMOD = float(os.environ.get("LAVA_REPAIR_MOD", "0.3"))
 REPAIR_KEEPS = 0.9
 # What the client divides an afro repair by to price it in gold, sent in the
 # constants frame (server.py, gold_repair_mod; GConstatns falls back to
-# 10000 when it is missing): the gold button asks floor(afro / this * 100)
+# 10000 when it is missing): the patched button asks round(afro / this * 100)
 # hundredths of an ounce. The intent is par -- the same repair paid in the
 # other currency, at the game's one rate (progression.GOLD_TO_AFRO_RATE):
 #
@@ -215,17 +215,10 @@ REPAIR_KEEPS = 0.9
 #     and pressing the afro button, 10 000 (GConstatns' own default) five
 #     times as much.
 #
-# The window rounds the gold down, so at par it is never dearer than the
-# afro figure changed at the rate, and never under 0.01. Rounded down, it
-# can be as much as half cheaper, a whole hundredth for a repair of 999
-# afro; and a stall buys a thing by its durability over its ceiling
-# (Inventory.sell, as ItemContainer.showCost draws it), which a repair
-# makes whole. So a worn afro thing mended for gold and then sold fetches
-# more than the gold is worth at the rate: a Walther at 290/450, mended for
-# 0.01 G, sells for 696 afro more -- once per worn thing, the wear itself
-# the stake, and no loop (a new one is bought for more than it sells).
-# Accepted as the client's arithmetic; a divisor under the rate would close
-# it only by making every gold repair dearer than par.
+# Round to the nearest hundredth, positive halves up, with a 0.01 minimum.
+# The original floor nearly halved some prices: 975 afro is 0.0195 G,
+# formerly displayed and charged as 0.01 G. The owner's rule (2026-10-05)
+# makes it 0.02 G in both the slot and repair-all, on client and server.
 GOLD_REPAIR_MOD = progression.GOLD_TO_AFRO_RATE
 # The restore button's price, sent as gold_repair_price_mod (GConstatns
 # keeps it as gold_restore_price_mod): the window shows
@@ -765,11 +758,12 @@ def as_sent(v):
 
 
 def repair_gold(afro):
-    """RepairInterface.calcGoldCostFromAfroCost in hundredths of an ounce:
-    floor(afro / gold_repair_mod * 100) / 100, and 0.01 where that is less.
-    Rounded down: the server used to round it up, a hundredth over the
-    window whenever the division was not whole."""
-    return max(1, int(math.floor(afro / float(GOLD_REPAIR_MOD) * 100)))
+    """Patched RepairInterface price in hundredths of G, nearest hundredth.
+
+    Math.round rounds positive halves up; Python round would use ties to
+    even. Keep the client's minimum of 0.01 G.
+    """
+    return max(1, int(js_round(afro / float(GOLD_REPAIR_MOD) * 100)))
 
 
 def repair_base_price(si):

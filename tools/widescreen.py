@@ -81,7 +81,8 @@ Client patches applied without altering the original artwork:
    when RepairInterface is open and the requested afro cost is zero. This
    fixes the slot, drag preview, bag labels and both repair-all totals.
    Outside repair, the zero afro price still prevents buying or selling
-   gold-only equipment for afro. No item data is modified.
+   gold-only equipment for afro. No item data is modified. Gold payment
+   uses Math.round to the nearest hundredth, with the original 0.01 minimum.
 
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
@@ -604,6 +605,19 @@ def fn_repair_cost():
     return a
 
 
+def fn_repair_gold():
+    """RepairInterface.calcGoldCostFromAfroCost: nearest cent, at least one."""
+    a = Asm()
+    a.push("gold").var("afro_cost")
+    a.var("lol").member("core", "GConstatns", "gold_repair_mod")
+    a.op("divide").push(100).op("multiply")
+    a.push(1).var("Math").push("round").op("callmethod").op("definelocal")
+    a.var("gold").push(1).op("less2").op("not").iftrue("out")
+    a.push("gold", 1).op("definelocal")
+    a.label("out").var("gold").push(100).op("divide").op("return")
+    return a
+
+
 HOME_SET = "Теперь вы будете возрождаться в этой локации"
 
 ONLINE_WIDTH = 76
@@ -756,6 +770,8 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("gpui", "RepairInterface"), "calcGoldCostFromAfroCost", "__repairGoldOrig",
+         ("afro_cost",), fn_repair_gold()),
         (("core", "objects", "Item"), "getProp", "__repairGetPropOrig",
          ("prop",), fn_repair_cost()),
         (("gpui", "LocationInterface"), "resizeStage", "__wideOrig",

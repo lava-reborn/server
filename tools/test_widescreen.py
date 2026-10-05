@@ -6,6 +6,7 @@ twice: no accumulated wrappers, altered art or unrelated class changes.
 CI intentionally carries no main.swf (deploy/ci/make_test_extras.sh).
 When the real client is available, run the same checks on it as well.
 """
+import math
 import os
 import struct
 import sys
@@ -58,17 +59,13 @@ check("every HUD and frame branch lands inside its own function",
       validate(w.injected()), [])
 
 
-def run_repair_getprop(props, prop, mode, rate=50000):
+def execute_repair(code, env):
     """Execute the emitted AVM1 wrapper with the original getter as a stub.
 
     This catches stack order, branches and returns that container checks
     alone cannot exercise. Opcodes follow the AVM1 stack convention.
     """
-    code = w.fn_repair_cost().assemble()
     stack, at = [], 0
-    env = dict(prop=prop, this={"__repairGetPropOrig": lambda key: props.get(key)},
-               lol=dict(gpui=dict(StaffInterface=dict(ssType=mode)),
-                        core=dict(GConstatns=dict(gold_repair_mod=rate))))
     while at < len(code):
         op = code[at]
         at += 1
@@ -105,9 +102,9 @@ def run_repair_getprop(props, prop, mode, rate=50000):
             env[key] = value
         elif op == 0x12:
             stack.append(not stack.pop())
-        elif op in (0x49, 0x0C, 0x0D):
+        elif op in (0x49, 0x48, 0x0C, 0x0D):
             right, left = stack.pop(), stack.pop()
-            stack.append(left == right if op == 0x49 else
+            stack.append(left == right if op == 0x49 else left < right if op == 0x48 else
                          left * right if op == 0x0C else left / right)
         elif op == 0x9D:
             if stack.pop():
@@ -117,6 +114,21 @@ def run_repair_getprop(props, prop, mode, rate=50000):
         else:
             raise AssertionError("unexpected opcode: %02x" % op)
     raise AssertionError("missing return")
+
+
+def run_repair_getprop(props, prop, mode, rate=50000):
+    env = dict(prop=prop, this={"__repairGetPropOrig": lambda key: props.get(key)},
+               lol=dict(gpui=dict(StaffInterface=dict(ssType=mode)),
+                        core=dict(GConstatns=dict(gold_repair_mod=rate))))
+    return execute_repair(w.fn_repair_cost().assemble(), env)
+
+
+check("gold repair bytecode rounds to nearest cent, halves up, with a one-cent minimum",
+      [execute_repair(w.fn_repair_gold().assemble(),
+                      dict(afro_cost=a, Math=dict(round=lambda x: math.floor(x + 0.5)),
+                           lol=dict(core=dict(GConstatns=dict(gold_repair_mod=50000)))))
+       for a in (0, 1, 749, 750, 751, 975, 1249, 1250, 1251)],
+      [0.01, 0.01, 0.01, 0.02, 0.02, 0.02, 0.02, 0.03, 0.03])
 
 
 check("gold Walther has a 6500 afro repair valuation only while repair is open",

@@ -86,7 +86,7 @@ def js_round(x):
 
 def calc_gold(afro_cost, K):
     """calcGoldCostFromAfroCost."""
-    g = math.floor(afro_cost / float(K["gold_repair_mod"]) * 100) / 100
+    g = js_round(afro_cost / float(K["gold_repair_mod"]) * 100) / 100
     if g < 0.01:
         g = 0.01
     return g
@@ -169,8 +169,8 @@ g_vest = items.params_of(GVEST)
 check("a broken 3 G vest costs 45000 afro or 0.90 G to repair in the slot and bulk sum",
       (inventory.repair_window(g_vest, 0, 1250), inventory.repair_prices(g_vest, 0, 1250)),
       (((45000, 90, 300), (45000, 90)), (45000, 90, 300)))
-check("half-worn gold Walther: 975 afro, or 0.01 G after rounding down; restore 0.13 G",
-      inventory.repair_prices(items.params_of(GWALTHER), 250, 500), (975, 1, 13))
+check("half-worn gold Walther: 975 afro, or 0.02 G rounded to nearest; restore 0.13 G",
+      inventory.repair_prices(items.params_of(GWALTHER), 250, 500), (975, 2, 13))
 check("repair valuation does not enable afro purchases or sales of gold weapons",
       (items.params_of(GWALTHER)["cost"], items.params_of(GWALTHER)["g_cost"]), (0, 13))
 check("  ..a repair under one afro: no afro (the slot's 1, the sum's 0), the 0.01 G both print",
@@ -178,12 +178,15 @@ check("  ..a repair under one afro: no afro (the slot's 1, the sum's 0), the 0.0
 
 check("the gold button is at par: gold_repair_mod is the one rate",
       (inventory.GOLD_REPAIR_MOD, RATE), (RATE, RATE))
-check("  ..so a gold repair is the afro one changed at the rate, rounded down, 0.01 at least",
+check("  ..so a gold repair is the afro one changed at the rate, nearest hundredth, 0.01 at least",
       [(a, inventory.repair_gold(a)) for a in (1, 499, 500, 999, 1400, 12200, 50000, 233000)],
-      [(1, 1), (499, 1), (500, 1), (999, 1), (1400, 2), (12200, 24), (50000, 100), (233000, 466)])
-check("  ..never dearer than the afro it stands for, from 0.01 G up",
-      [a for a in range(RATE // 100, 3 * RATE, 37) if inventory.repair_gold(a) * RATE // 100 > a],
+      [(1, 1), (499, 1), (500, 1), (999, 2), (1400, 3), (12200, 24), (50000, 100), (233000, 466)])
+check("  ..within half a hundredth of the exact conversion, from 0.01 G up",
+      [a for a in range(RATE // 100, 3 * RATE, 37)
+       if abs(inventory.repair_gold(a) * RATE / 100 - a) > RATE / 200],
       [])
+check("half-cent ties round up; values immediately below and above keep the nearest cent",
+      [inventory.repair_gold(a) for a in (749, 750, 751, 1249, 1250, 1251)], [1, 2, 2, 2, 3, 3])
 check("a repair keeps nine tenths of the ceiling (the original's hint, texts.xml 59813)",
       inventory.REPAIR_KEEPS, 0.9)
 check("a repair costs three tenths of the price: a Walther mended from broken for 840 afro,"
@@ -650,9 +653,9 @@ try:
     check("each press charged what the window computes from the frames, and the thing came"
           " back as the rule says", results, wants)
     check("  ..in figures: 420 afro, 0.01 G, 33 afro (made whole at 480), 22500 afro, 0.45 G,"
-          " 3.00 G, 3.00 G, 975 afro, 0.01 G", [results[label][1] for label, *_r in CASES],
+          " 3.00 G, 3.00 G, 975 afro, 0.02 G", [results[label][1] for label, *_r in CASES],
           [(420, 0), (0, 1), (33, 0), (22500, 0), (0, 45), (0, 300), (0, 300),
-           (975, 0), (0, 1)])
+           (975, 0), (0, 2)])
 
     # «Отремонтировать все», as the client sends it: every listed thing's
     # ss_upd at once, then one repAck per answer, each a 0 or the list
@@ -723,7 +726,7 @@ try:
                  ("repair", WALTHER, -33, 0),
                  ("repair", GVEST, -22500, 0), ("repair", GVEST, 0, -45),
                  ("repair", GVEST, 0, -300), ("repair", GVEST, 0, -300),
-                 ("repair", GWALTHER, -975, 0), ("repair", GWALTHER, 0, -1),
+                 ("repair", GWALTHER, -975, 0), ("repair", GWALTHER, 0, -2),
                  ("repair", WALTHER, -33, 0), ("repair", WALTHER, -672, 0),
                  ("repair", GWALTHER, -975, 0),
                  ("repair", GVEST, -45000, 0),
