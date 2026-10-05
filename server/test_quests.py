@@ -182,9 +182,18 @@ check("  ..declined: 1 раза, 3 раз, 11 раз, 21 раза",
       ["1 раза", "3 раз", "11 раз", "21 раза"])
 check("give order follows the table", quests.given_by(652), [1, 5])
 check("take list by NPC type", quests.taken_by(2424), [1])
-# QuestInterface numbers reward icons n-1-i, so obj_idx counts from the end.
+# Quest.createRewardItems reverses the wire list via AS2 for..in + push.
+# QuestInterface.buildRewardItems then assigns n-1-i to those prototypes.
 q4 = quests.get(4)
-check("reward index counts from the end", q4.reward_item(0), (5052, 1))
+check("reward index zero selects the first part", q4.reward_item(0), (5047, 1))
+for q in (quests.get(52), q4):
+    prototypes = list(reversed(q.rew_obj))
+    for i, item in enumerate(prototypes):
+        wire_index = len(prototypes) - 1 - i
+        check("quest %d: selecting icon %d pays the item shown" % (q.type, item),
+              q.reward_item(wire_index), (item, 1))
+    check("quest %d: indexes outside the choice are refused" % q.type,
+          [q.reward_item(i) for i in (-1, len(prototypes))], [None, None])
 check("delivery with no item completes on take",
       quests.get(1).is_complete(quests.get(1).fresh_progress()), True)
 check("kill quest does not", quests.get(5).is_complete(
@@ -550,10 +559,10 @@ try:
     check("acknowledged", got[-1], "cmdAck;res=0;")
     store = accounts.Store(DB)
     kept = sorted((r["type_id"], r["count"]) for r in store.items_of(me)
-                  if r["type_id"] in (3742, 5052, 46652))
+                  if r["type_id"] in (3742, 46652) or r["type_id"] in q4.rew_obj)
     store.close()
-    check("and the bag holds the part chosen (obj_idx 0: the last, «Пистолеты 6 часть») and the"
-          " coin, not the certificate", kept, [(5052, 1), (46652, 1)])
+    check("and the bag holds the part chosen (obj_idx 0: «Пистолеты 1 часть») and the"
+          " coin, not the certificate", kept, [(5047, 1), (46652, 1)])
 
     c.send("logout;")
 except Exception:

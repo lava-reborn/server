@@ -2805,7 +2805,7 @@ class Session:
         (quests.check_items).
 
         The reward, in this order, all before the ack: the thing chosen
-        (rew_obj[n-1-obj_idx], Quest.reward_item) as num_rew_obj pieces into
+        (rew_obj[obj_idx], Quest.reward_item) as num_rew_obj pieces into
         the bag -- ss_obj_status 1 and its dynamic info each, which is what
         the client's «Вы получили: <...>» is made of (Inventory.give_pieces)
         -- and after it what the row gives beside it (rew_also: the rounds
