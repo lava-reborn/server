@@ -84,6 +84,16 @@ Client patches applied without altering the original artwork:
    SourceLibrary parks its artwork at y=1800; hide the library explicitly
    so large windows cannot expose the stored copies below the interface.
 
+   A location entered straight from another one (a quest way, a caravan,
+   /goto) loses its map mask. SceneShifter.locationScene removes the old
+   panel and attaches the new one as the same "lp" on the same depth in one
+   call; the new ViewFrame's setMask runs, yet by the next frame the player
+   no longer clips cont_mc, and the whole map covers the lower-depth chat.
+   The script still sees the mask in place. Through the global map the new
+   panel comes 100 ms later and keeps its mask. Measured in Flash 32: a
+   setMask repeated right after locationScene is lost as well, the same
+   call one frame later holds. The wrapper repeats it for two frames.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -610,6 +620,30 @@ def fn_source_library():
     return a
 
 
+def fn_location_scene():
+    """SceneShifter.locationScene(): the original, then the mask again."""
+    tick = Asm()
+    tick.push("f").var("this").member("_parent", "locationFrame").op("definelocal")
+    tick.var("f").member("mask_mc").push(1).var("f").member("cont_mc")
+    tick.push("setMask").op("callmethod").op("pop")
+    tick.var("this").push("left").var("this").member("left").push(1)
+    tick.op("subtract").op("setmember")
+    tick.push(0).var("this").member("left").op("less2").iftrue("out")
+    call_method(tick, "this", "removeMovieClip", 0)
+    tick.label("out")
+    a = Asm()
+    call_method(a, "this", "__wideSceneOrig", 0)
+    a.push("ui").var("this").member("locationScreen").op("definelocal")
+    a.var("ui").push(UNDEF).op("equals2").iftrue("out")
+    a.push("mc", 0).var("ui").push("getNextHighestDepth").op("callmethod")
+    a.push("__wideRemask", 2).var("ui").push("createEmptyMovieClip").op("callmethod")
+    a.op("definelocal")
+    a.var("mc").push("left", 2).op("setmember")
+    a.var("mc").push("onEnterFrame").function((), tick).op("setmember")
+    a.label("out")
+    return a
+
+
 def fn_wrapper(call):
     """resizeStage(obj): the original first, then the fill."""
     a = Asm()
@@ -844,6 +878,14 @@ def injected():
     a.var("__wideLibrary").push("__wideCreateOrig").var("__wideLibrary").member("create").op("setmember")
     a.var("__wideLibrary").push("create").function((), fn_source_library()).op("setmember")
     a.label("library_done")
+    # So is SceneShifter.locationScene.
+    a.push("__wideShifter").var("lol").member("core", "SceneShifter").op("definelocal")
+    a.var("__wideShifter").push(UNDEF).op("equals2").iftrue("scene_done")
+    a.var("__wideShifter").member("__wideSceneOrig").push(UNDEF).op("equals2")
+    a.op("not").iftrue("scene_done")
+    a.var("__wideShifter").push("__wideSceneOrig").var("__wideShifter").member("locationScene").op("setmember")
+    a.var("__wideShifter").push("locationScene").function((), fn_location_scene()).op("setmember")
+    a.label("scene_done")
     a.op("end")
     return a.assemble()
 
