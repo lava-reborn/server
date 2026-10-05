@@ -758,8 +758,6 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
-        (("core", "player", "PersAttributes"), "rp_info", "__progressInfoOrig",
-         ("obj",), fn_progress_snapshot()),
         (("gpui", "LocationInterface"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper(MARK)),
         (("gpui", "GlobalMapInterface"), "resizeStage", "__wideOrig",
@@ -768,6 +766,8 @@ def injected():
          ("obj",), fn_wrapper("__wideChat")),
         (("services", "SpecSkillMessages"), "init", "__wideOrig",
          (), fn_messages()),
+        (("core", "player", "PersAttributes"), "rp_info", "__progressInfoOrig",
+         ("obj",), fn_progress_snapshot()),
         (("core", "player", "NPC"), "userInfo", "__wideOrig",
          ("obj",), fn_services()),
         (("core", "player", "Attendance"), "cmdAck", "__wideOrig",
