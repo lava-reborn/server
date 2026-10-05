@@ -77,6 +77,13 @@ Client patches applied without altering the original artwork:
    of the bar, clear of the gold balance. No timers or
    per-scene connection listeners survive a scene change.
 
+7. Location viewports larger than the map. The original ViewFrame bounds
+   leave small scenes free to drift outside the viewport. Location frames
+   center a short axis and clamp a long one to the declared map bounds.
+   An opaque backing keeps the launcher's loading screen out of the gaps.
+   SourceLibrary parks its artwork at y=1800; hide the library explicitly
+   so large windows cannot expose the stored copies below the interface.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -524,6 +531,7 @@ def fn_chat():
 def fn_frame():
     """_global.__wideFrame(ui, w, h): every piece of one interface."""
     a = Asm()
+    a.var("h").var("w").var("ui").push(3, "__wideLocationBack").op("callfunc").op("pop")
     for piece, fn in (("frame_top_left", "__wideStrip"),
                       ("frame_top_right", "__wideStrip"),
                       ("frame_right_corner", "__wideCorner"),
@@ -531,6 +539,67 @@ def fn_frame():
                       ("frame_right", "__wideSide")):
         a.var("h").var("w").var("ui").member(piece).push(3, fn).op("callfunc").op("pop")
     a.var("w").var("ui").push(2, "__onlinePanel").op("callfunc").op("pop")
+    return a
+
+
+def fn_location_back():
+    """Opaque scene backing ending above the chat, which has a lower depth."""
+    a = Asm()
+    a.var("ui").member("locationFrame").push(UNDEF).op("equals2").iftrue("out")
+    a.push("h").var("h").push(144).op("subtract").op("definelocal")
+    a.push("mc", -16384, "__wideLocationBack", 2).var("ui")
+    a.push("createEmptyMovieClip").op("callmethod").op("definelocal")
+    a.push(100, 0x10151B)
+    call_method(a, "mc", "beginFill", 2)
+    a.push(0, 0)
+    call_method(a, "mc", "moveTo", 2)
+    for x, y in (("w", None), ("w", "h"), (None, "h"), (None, None)):
+        a.var(y) if y else a.push(0)
+        a.var(x) if x else a.push(0)
+        call_method(a, "mc", "lineTo", 2)
+    call_method(a, "mc", "endFill", 0)
+    a.label("out")
+    return a
+
+
+def fn_location_bound(axis):
+    """Clamp by map bounds, centering maps smaller than the view on each axis.
+
+    Only LocationInterface.locationFrame opts in. Other ViewFrame users
+    retain the original behavior, including windows and the global map.
+    """
+    low, high = ("left", "right") if axis == "X" else ("top", "bottom")
+    prop = "_x" if axis == "X" else "_y"
+    a = Asm()
+    a.var("this").member("_parent", "locationFrame").var("this").op("equals2")
+    a.op("not").iftrue("original")
+    a.var("this").member("setArea").op("not").iftrue("original")
+    a.push("lo").var("this").member(low).op("definelocal")
+    a.push("hi").var("this").member(high).op("definelocal")
+    a.push("pos").var("this").member("cont_mc", prop).op("definelocal")
+    a.var("lo").var("hi").op("less2").iftrue("clamp")
+    a.push("pos").var("lo").var("hi").op("add2").push(2).op("divide").op("definelocal")
+    a.push(True).iftrue("apply")
+    a.label("clamp")
+    # A previous zero scroll span makes ViewFrame.x/yPosition return NaN.
+    a.var("pos").push(1, "isNaN").op("callfunc").op("not").iftrue("finite")
+    a.push("pos").var("hi").op("definelocal")
+    a.label("finite")
+    a.push("pos").var("pos").var("hi").push(2).var("Math").push("min").op("callmethod")
+    a.var("lo").push(2).var("Math").push("max").op("callmethod").op("definelocal")
+    a.label("apply")
+    a.var("this").member("cont_mc").push(prop).var("pos").op("setmember")
+    a.push(UNDEF).op("return")
+    a.label("original")
+    call_method(a, "this", "__wideBound" + axis + "Orig", 0)
+    return a
+
+
+def fn_source_library():
+    """The hidden source clips remain usable by BitmapData.draw/loadBitmap."""
+    a = Asm()
+    call_method(a, "this", "__wideCreateOrig", 0)
+    a.var("this").member("_lib").push("_visible", False).op("setmember")
     return a
 
 
@@ -722,9 +791,14 @@ def injected():
             ("__wideChat", fn_chat, ("chat", "w")),
             ("__onlineRefresh", fn_online_refresh, ("ui",)),
             ("__onlinePanel", fn_online_panel, ("ui", "w")),
+            ("__wideLocationBack", fn_location_back, ("ui", "w", "h")),
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("gpui", "view", "ExtViewFrame"), "boundOX", "__wideBoundXOrig",
+         (), fn_location_bound("X")),
+        (("gpui", "view", "ExtViewFrame"), "boundOY", "__wideBoundYOrig",
+         (), fn_location_bound("Y")),
         (("gpui", "LocationInterface"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper(MARK)),
         (("gpui", "GlobalMapInterface"), "resizeStage", "__wideOrig",
@@ -755,6 +829,14 @@ def injected():
         a.var(pvar).push(keep).var(pvar).push(method).op("getmember").op("setmember")
         a.var(pvar).push(method).function(params, body).op("setmember")
         a.label(skip)
+    # SourceLibrary.create is static, unlike the prototype methods above.
+    a.push("__wideLibrary").var("lol").member("display", "SourceLibrary").op("definelocal")
+    a.var("__wideLibrary").push(UNDEF).op("equals2").iftrue("library_done")
+    a.var("__wideLibrary").member("__wideCreateOrig").push(UNDEF).op("equals2")
+    a.op("not").iftrue("library_done")
+    a.var("__wideLibrary").push("__wideCreateOrig").var("__wideLibrary").member("create").op("setmember")
+    a.var("__wideLibrary").push("create").function((), fn_source_library()).op("setmember")
+    a.label("library_done")
     a.op("end")
     return a.assemble()
 
