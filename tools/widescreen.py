@@ -601,12 +601,14 @@ ONLINE_ICON = (12, 5, 18, 18)   # the people icon inside the plate: x, y, w, h
 ONLINE_RIGHT = 150             # ten pixels before the exit at w - 140
 ONLINE_INLINE_MIN = 1100        # gold controls end around w / 2 + 313
 ONLINE_TEXT_RGB = 0xCFC6AE      # muted beige, the icon's own tone
-# The plate is the popup's frame in two rows: 17 from the top corners (the
-# top edge and a whole rivet), 14 from the bottom ones (the bottom edge),
-# so each rivet sits halfway up the 31 pixels; the middle columns repeat.
-# Its visible part runs y 5..21, the rest is the frame's shadow.
-ONLINE_H, ONLINE_TOP, ONLINE_BOTTOM = 31, 17, 22
-ONLINE_LABEL_X, ONLINE_ARROW_W, ONLINE_CAP = 44, 10, 22
+# The plate is the popup's frame cut inside its shadow (the plate runs
+# x 8..488, y 5..462 of the art), in five rows: the top edge, some plain
+# plate, the band with the corner rivets, plain plate again, the bottom
+# edge, so each rivet sits halfway up its end. (key suffix, art y, height):
+ONLINE_ROWS = (("t", 5, 4), ("f", 400, 3), ("r", 9, 8), ("f", 400, 3), ("b", 458, 4))
+ONLINE_H = sum(h for _, _, h in ONLINE_ROWS)      # 22, the narrow bar's lip
+ONLINE_LABEL_X, ONLINE_ARROW_W, ONLINE_CAP = 33, 10, 22
+ONLINE_COLUMNS = (("l", 8), ("m", 40), ("r", 466))    # (suffix, art x)
 
 
 def fn_online_art():
@@ -650,34 +652,40 @@ def fn_online_refresh():
     a.push("lw").var("value").push(1, "String").op("callfunc").member("length")
     a.push(8).op("multiply").push(4).op("add2").op("definelocal")
     a.var("label").push("_width").var("lw").op("setmember")
-    a.push("ax").var("lw").push(ONLINE_LABEL_X + 4).op("add2").op("definelocal")
-    a.push("W").var("ax").push(ONLINE_ARROW_W + ONLINE_CAP).op("add2").op("definelocal")
+    a.push("ax").var("lw").push(ONLINE_LABEL_X + 3).op("add2").op("definelocal")
+    # The right rivet starts 11 in from the edge; the arrow stops 5 before.
+    a.push("W").var("ax").push(ONLINE_ARROW_W + 16).op("add2").op("definelocal")
     a.var("panel").member("__w").var("W").op("equals2").iftrue("drawn")
     a.var("panel").push("__w").var("W").op("setmember")
     a.push("S").var("ui").push(1, "__onlineArt").op("callfunc").op("definelocal")
     a.push("mc", 0, "bg", 2).var("panel").push("createEmptyMovieClip").op("callmethod").op("definelocal")
-    T, H = ONLINE_TOP, ONLINE_H
-    for key, box in (("ct", (E, 0, R, T)), ("cb", (E, T, R, H)),
-                     ("ctl", (0, 0, E, T)), ("ctr", (R, 0, expr("W"), T)),
-                     ("cbl", (0, T, E, H)), ("cbr", (R, T, expr("W"), H))):
-        fill_call(a, key, *box, src="S")
+    y0 = 0
+    for row, _, h in ONLINE_ROWS:
+        for col, box in (("m", (E, y0, R, y0 + h)), ("l", (0, y0, E, y0 + h)),
+                         ("r", (R, y0, expr("W"), y0 + h))):
+            fill_call(a, "c" + row + col, *box, src="S")
+        y0 += h
     a.label("drawn")
     # The arrow says what a click does: down opens, up closes.
     a.push("mc", 3, "arrow", 2).var("panel").push("createEmptyMovieClip").op("callmethod").op("definelocal")
     a.var("mc").push("_x").var("ax").op("setmember")
+    a.var("mc").push("_y", ONLINE_H // 2 - 2).op("setmember")
+    # Whole pixel rows, 10 to 2 wide: an antialiased triangle and its mirror
+    # image do not rasterize alike, rows do. Up is the same rows reversed.
     a.push(100, ONLINE_TEXT_RGB)
     call_method(a, "mc", "beginFill", 2)
     a.var("ui").member("__onlineOpen", "_name").push(UNDEF).op("equals2").iftrue("down")
-    for label, (base, tip) in (("up", (16, 11)), ("down", (11, 16))):
+    for label, order in (("up", (4, 3, 2, 1, 0)), ("down", (0, 1, 2, 3, 4))):
         if label == "down":
             a.label("down")
-        aw = ONLINE_ARROW_W
-        for k, (x, y) in enumerate(((0, base), (aw, base), (aw // 2, tip), (0, base))):
-            a.push(y, x)
-            call_method(a, "mc", "moveTo" if k == 0 else "lineTo", 2)
+        for y, i in enumerate(order):
+            x0, x1 = i, ONLINE_ARROW_W - i
+            for k, (x, yy) in enumerate(((x0, y), (x1, y), (x1, y + 1), (x0, y + 1), (x0, y))):
+                a.push(yy, x)
+                call_method(a, "mc", "moveTo" if k == 0 else "lineTo", 2)
         if label == "up":
-            a.push(True).iftrue("traced")
-    a.label("traced")
+            a.push(True).iftrue("drawn_arrow")
+    a.label("drawn_arrow")
     call_method(a, "mc", "endFill", 0)
     a.var("panel").push("_x").var("panel").member("__right").var("W").op("subtract")
     a.push(1).var("Math").push("round").op("callmethod").op("setmember")
@@ -702,9 +710,9 @@ def fn_online_panel():
     call_method(a, "icon", "attachBitmap", 2)
     # The icon's own pixels start a pixel into its square: just past the
     # left rivet, centred on the plate.
-    a.var("icon").push("_x", 24).op("setmember")
-    a.var("icon").push("_y", 5).op("setmember")
-    a.push(18, 12, 4, ONLINE_LABEL_X, 2, "label")
+    a.var("icon").push("_x", 14).op("setmember")
+    a.var("icon").push("_y", 3).op("setmember")
+    a.push(18, 12, 2, ONLINE_LABEL_X, 2, "label")
     call_method(a, "panel", "createTextField", 6)
     a.push("label").var("panel").member("label").op("definelocal")
     for key, value in (("selectable", False), ("embedFonts", False),
@@ -720,7 +728,7 @@ def fn_online_panel():
     a.var("panel").push("tabEnabled", False).op("setmember")
     over = Asm()
     over.var("this").push("__hover", True).op("setmember")
-    over.push(ONLINE_BOTTOM).var("this").member("_ymouse").op("subtract")
+    over.push(ONLINE_H).var("this").member("_ymouse").op("subtract")
     over.var("this").member("_ymouse").var("this").member("hintTitle_str").push(3)
     over.var("lol").member("gpui", "HintManager").push("showHint").op("callmethod").op("pop")
     out = Asm()
@@ -738,9 +746,9 @@ def fn_online_panel():
     a.push("panel").var("ui").member("__onlinePanel").op("definelocal")
     # Narrow windows have only the 22-pixel lip above the gold controls;
     # wide ones centre the plate where the bar is tallest.
-    a.var("panel").push("_y", -4).op("setmember")
+    a.var("panel").push("_y", 0).op("setmember")
     a.var("w").push(ONLINE_INLINE_MIN).op("less2").iftrue("anchor")
-    a.var("panel").push("_y", 19).op("setmember")
+    a.var("panel").push("_y", 21).op("setmember")
     a.label("anchor")
     a.var("panel").push("__right").var("w").push(ONLINE_RIGHT).op("subtract").op("setmember")
     a.var("ui").push(1, "__onlineRefresh").op("callfunc").op("pop")
@@ -782,9 +790,9 @@ LIST_ART = ((LIST_FRAME, 581), (LIST_INNER, 596))
 LIST_EDGE = 22                      # frame border: plate, rivet and shadow
 LIST_PAD = 4
 LIST_ROW_W, LIST_ROW_H, LIST_PITCH = 176, 23, 27    # SettingsInterface rows
-LIST_BAR = 20                       # scrollPan2's vBar
+LIST_BAR = 19                       # scrollPan2's vBar draws x -1..15, 3 from the rows
 LIST_ROWS = (3, 8)                  # visible rows: fewest, most
-LIST_W = 2 * LIST_EDGE + 2 * LIST_PAD + LIST_ROW_W + LIST_BAR
+LIST_W = 2 * LIST_EDGE + LIST_PAD + LIST_ROW_W + LIST_BAR + 3
 LIST_ROW_RGB, LIST_TEXT_RGB, LIST_KANT_RGB = 0x6D6B65, 0x3A3936, 0x524F49
 # (key, art, x, y, w, h): slices of the 496x471 frame art. Its plate runs
 # x 8..488, y 5..464 with a rivet in each corner; the edges come from the
@@ -794,10 +802,10 @@ LIST_SLICES = (("tl", LIST_FRAME, 0, 0, 22, 22), ("tr", LIST_FRAME, 474, 0, 22, 
                ("t", LIST_FRAME, 40, 0, 16, 22), ("b", LIST_FRAME, 40, 449, 16, 22),
                ("l", LIST_FRAME, 0, 400, 22, 16), ("r", LIST_FRAME, 474, 400, 22, 16),
                ("in", LIST_INNER, 300, 90, 200, 200),
-               # the counter's plate: whole rivet on top, bottom edge below
-               ("ctl", LIST_FRAME, 0, 0, 22, 17), ("ct", LIST_FRAME, 40, 0, 16, 17),
-               ("ctr", LIST_FRAME, 474, 0, 22, 17), ("cbl", LIST_FRAME, 0, 457, 22, 14),
-               ("cb", LIST_FRAME, 40, 457, 16, 14), ("cbr", LIST_FRAME, 474, 457, 22, 14))
+               # the counter's plate, row by row and column by column
+               ) + tuple(("c" + row + col, LIST_FRAME, x, y, 16 if col == "m" else 22, h)
+                         for row, y, h in ONLINE_ROWS
+                         for col, x in ONLINE_COLUMNS)
 
 
 def emit(a, v):
@@ -813,7 +821,8 @@ def rect(a, clip, w, h, rgb, alpha=100):
     a.push(alpha, rgb)
     call_method(a, clip, "beginFill", 2)
     for k, (x, y) in enumerate(((0, 0), (w, 0), (w, h), (0, h), (0, 0))):
-        a.push(y, x)
+        emit(a, y)
+        emit(a, x)
         call_method(a, clip, "moveTo" if k == 0 else "lineTo", 2)
     call_method(a, clip, "endFill", 0)
 
@@ -847,6 +856,9 @@ def fn_online_close():
     a.var("ui").push("__onlineOpen", UNDEF).op("setmember")
     a.var("p").member("_name").push(UNDEF).op("equals2").iftrue("out")
     a.var("p").member("__watch").push("wheel").var("p").member("pan", "mouseListener").op("setmember")
+    a.var("p").member("__watch", "inside").op("not").iftrue("cursor")
+    a.push(False).var("ui").push(2, "__onlineCursor").op("callfunc").op("pop")
+    a.label("cursor")
     # While the references are live: a removed clip's reference equals
     # every other dead one, and would take other listeners with it.
     a.var("p").member("__watch").push(1, "__onlineForget").op("callfunc").op("pop")
@@ -904,6 +916,40 @@ def fn_online_watch():
     return a
 
 
+def fn_online_watch_move():
+    """watch.onMouseMove: the location's own cursor is off over the popup.
+
+    CursorManager finds sprites under the mouse from a Mouse listener, past
+    any clip on top; the client's modal windows switch it off through
+    sceneEnabled. The popup does the same while the mouse is over it, and
+    gives it back on leaving unless a modal window holds the scene."""
+    a = Asm()
+    a.push("p").var("this").member("p").op("definelocal")
+    a.var("p").member("_name").push(UNDEF).op("equals2").iftrue("out")
+    a.push("inside").push(True).var("_root").member("_ymouse").var("_root").member("_xmouse")
+    a.push(3).var("p").push("hitTest").op("callmethod").op("definelocal")
+    a.var("inside").var("this").member("inside").op("equals2").iftrue("out")
+    a.var("this").push("inside").var("inside").op("setmember")
+    a.var("inside").var("p").member("_parent").push(2, "__onlineCursor").op("callfunc").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_online_cursor():
+    """_global.__onlineCursor(ui, hidden): the location's cursor off or back."""
+    a = Asm()
+    a.push("cm").var("ui").member("displayLoc", "cursorManager").op("definelocal")
+    a.var("cm").push(UNDEF).op("equals2").iftrue("out")
+    a.var("hidden").op("not").iftrue("back")
+    a.push(False, 1).var("cm").push("activate").op("callmethod").op("pop")
+    a.push(UNDEF).op("return")
+    a.label("back")
+    a.var("lol").member("core", "SceneShifter", "_ref", "flagSceneEnabled").iftrue("out")
+    a.push(True, 1).var("cm").push("activate").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
 def fn_online_pick():
     """Envelope or nick: close the list and prepare a private in the chat."""
     a = Asm()
@@ -957,7 +1003,8 @@ def fn_online_show():
         a.label("sorted%d" % k)
     a.push("n").var("list").member("length").op("definelocal")
     # As many rows as fit between the counter and the chat.
-    a.push("top").var("panel").member("_y").push(ONLINE_BOTTOM + 2).op("add2").op("definelocal")
+    # The frame's own shadow is 5 above its plate and 8 right of it.
+    a.push("top").var("panel").member("_y").push(ONLINE_H + 3 - 5).op("add2").op("definelocal")
     a.push("rows", LIST_ROWS[1]).op("definelocal")
     a.push("room").var("lol").member("core", "SceneShifter", "chat", "_y").var("top").op("subtract")
     a.push(2 * E + 2 * LIST_PAD + 4).op("subtract").push(LIST_PITCH).op("divide")
@@ -967,9 +1014,16 @@ def fn_online_show():
     a.var("rows").push(LIST_ROWS[0]).op("less2").op("not").iftrue("fits")
     a.push("rows", LIST_ROWS[0]).op("definelocal")
     a.label("fits")
+    # Rows run to the right edge when there is nothing to scroll.
+    a.push("rw", LIST_ROW_W).op("definelocal")
+    a.push("pw", LIST_ROW_W + 3).op("definelocal")
     a.var("n").var("rows").op("less2").op("not").iftrue("many")
     a.push("rows").var("n").op("definelocal")
     a.label("many")
+    a.var("rows").var("n").op("less2").iftrue("scrolls")
+    a.push("rw", LIST_ROW_W + LIST_BAR).op("definelocal")
+    a.push("pw").var("rw").op("definelocal")
+    a.label("scrolls")
     a.push("lh").var("rows").push(LIST_PITCH).op("multiply")
     a.push(LIST_PITCH - LIST_ROW_H).op("subtract").op("definelocal")
     a.push("W", LIST_W).op("definelocal")
@@ -985,8 +1039,8 @@ def fn_online_show():
     a.push("__onlinePopup").var("_global").member("__onlineSeq").op("add2")
     a.push(2).var("ui").push("createEmptyMovieClip").op("callmethod").op("definelocal")
     a.var("ui").push("__onlineOpen").var("p").op("setmember")
-    a.push("x").var("panel").member("_x").var("panel").member("_width").op("add2")
-    a.var("W").op("subtract").op("definelocal")
+    a.push("x").var("panel").member("_x").var("panel").member("__w").op("add2")
+    a.var("W").op("subtract").push(8).op("add2").op("definelocal")
     a.var("x").push(8).op("less2").op("not").iftrue("left")
     a.push("x", 8).op("definelocal")
     a.label("left")
@@ -1007,12 +1061,19 @@ def fn_online_show():
         emit(a, x)
         call_method(a, "mc", "moveTo" if k == 0 else "lineTo", 2)
     call_method(a, "mc", "lineStyle", 0)
+    # The frame takes the clicks that miss a row or button, so the map
+    # under it gets none (its ground answers onPress, GlobalMapInterface's
+    # map too); the location's sprites listen to Mouse instead, see
+    # __onlineWatchMove.
+    a.var("mc").push("onPress").var("_global").member("__onlineNothing").op("setmember")
+    a.var("mc").push("useHandCursor", False).op("setmember")
     # What the popup registers, kept apart from it for __onlineForget.
     a.push("watch")
     new(a, ("_global",), "Object", 0).op("definelocal")
     a.var("watch").push("p").var("p").op("setmember")
     a.var("watch").push("buttons", 0).op("initarray").op("setmember")
     a.var("watch").push("onMouseDown").var("_global").member("__onlineWatch").op("setmember")
+    a.var("watch").push("onMouseMove").var("_global").member("__onlineWatchMove").op("setmember")
     a.var("p").push("__watch").var("watch").op("setmember")
     # The hotkey list's scroll pane.
     a.push("pan", 2, "pan", "scrollPan2", 3).var("p").push("attachMovie").op("callmethod").op("definelocal")
@@ -1038,11 +1099,11 @@ def fn_online_show():
     a.push("createEmptyMovieClip").op("callmethod").op("definelocal")
     a.var("r").push("_y").var("i").push(LIST_PITCH).op("multiply").op("setmember")
     a.push("mc", 0, "bg", 2).var("r").push("createEmptyMovieClip").op("callmethod").op("definelocal")
-    rect(a, "mc", LIST_ROW_W, LIST_ROW_H, LIST_ROW_RGB)
+    rect(a, "mc", expr("rw"), LIST_ROW_H, LIST_ROW_RGB)
     a.push("hi", 1, "hi", 2).var("r").push("createEmptyMovieClip").op("callmethod").op("definelocal")
-    rect(a, "hi", LIST_ROW_W, LIST_ROW_H, 0xFFFFFF, 12)
+    rect(a, "hi", expr("rw"), LIST_ROW_H, 0xFFFFFF, 12)
     a.var("hi").push("_visible", False).op("setmember")
-    a.push(LIST_ROW_H - 4, LIST_ROW_W - 36, 3, 6, 2, "t", 6)
+    a.push(LIST_ROW_H - 4).var("rw").push(34).op("subtract").push(3, 6, 2, "t", 6)
     a.var("r").push("createTextField").op("callmethod").op("pop")
     a.push("t").var("r").member("t").op("definelocal")
     a.var("t").push("selectable", False).op("setmember")
@@ -1050,7 +1111,7 @@ def fn_online_show():
     call_method(a, "t", "setNewTextFormat", 1)
     a.var("t").push("text").var("nick").op("setmember")
     a.push("m", 3, "m", "mail_btn", 3).var("r").push("attachMovie").op("callmethod").op("definelocal")
-    a.var("m").push("_x", LIST_ROW_W - 27).op("setmember")
+    a.var("m").push("_x").var("rw").push(25).op("subtract").op("setmember")
     a.var("m").push(1).var("watch").member("buttons").push("push").op("callmethod").op("pop")
     a.var("nick").var("me").op("equals2").op("not").iftrue("other")
     a.var("t").push("text").var("nick").push(" (вы)").op("add2").op("setmember")
@@ -1071,7 +1132,7 @@ def fn_online_show():
     a.push("i").var("i").push(1).op("add2").op("definelocal")
     a.push(True).iftrue("row")
     a.label("rows_done")
-    a.var("lh").push(LIST_ROW_W, 2)
+    a.var("lh").var("pw").push(2)
     a.var("pan").push("setSize").op("callmethod").op("pop")
     a.var("y").push(UNDEF).op("equals2").iftrue("scrolled")
     a.var("y").push(0, 2)
@@ -1170,6 +1231,9 @@ def injected():
             ("__onlineClose", fn_online_close, ("ui",)),
             ("__onlineForget", fn_online_forget, ("watch",)),
             ("__onlineWatch", fn_online_watch, ()),
+            ("__onlineWatchMove", fn_online_watch_move, ()),
+            ("__onlineCursor", fn_online_cursor, ("ui", "hidden")),
+            ("__onlineNothing", Asm, ()),
             ("__onlinePick", fn_online_pick, ()),
             ("__onlineCross", fn_online_cross, ()),
             ("__onlineOver", lambda: fn_online_hover(True), ()),

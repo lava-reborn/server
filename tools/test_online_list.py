@@ -122,6 +122,24 @@ def probe(url):
         a.var("r").push("picture_" + name).var("px").op("setmember")
         w.call_method(a, "bm", "dispose", 0)
 
+    # 16: a short list (two names) fills its rows to the right edge; the
+    # frame takes clicks; the location's cursor goes off and comes back.
+    at(16, "s16short")
+    a.push("saved").var("_global").member("__onlineNames").op("definelocal")
+    a.var("_global").push("__onlineNames").push("Archivist", "Probe", 2).op("initarray").op("setmember")
+    toggle()
+    for key, path in (("short_row_w", ("p", "pan", "_content", "r0", "bg", "_width")),
+                      ("short_mail_x", ("p", "pan", "_content", "r0", "m", "_x")),
+                      ("short_bar", ("p", "pan", "vBar", "_visible")),
+                      ("short_guard", ("p", "frame", "onPress"))):
+        asm_report(a, key, *path)
+    a.push(True).var("ui").push(2, "__onlineCursor").op("callfunc").op("pop")
+    asm_report(a, "cursor_hidden", "ui", "displayLoc", "cursorManager", "sfManager", "activated")
+    a.push(False).var("ui").push(2, "__onlineCursor").op("callfunc").op("pop")
+    asm_report(a, "cursor_back", "ui", "displayLoc", "cursorManager", "sfManager", "activated")
+    toggle()
+    a.var("_global").push("__onlineNames").var("saved").op("setmember")
+    a.label("s16short")
     # 18: wide by now (the runner resizes from 13 on): the counter opens the list.
     at(18, "s12")
     a.var("r").push("before_mouse").var("Mouse").member("_listeners", "length").op("setmember")
@@ -129,6 +147,7 @@ def probe(url):
     a.var("r").push("before_dclicks").var("lol").member("utils", "EMouse", "refDispatcher",
                                                          "__q_onDoubleClick", "length").op("setmember")
     a.push("cp").var("ui").member("__onlinePanel").op("definelocal")
+    asm_report(a, "panel_h", "cp", "_height")
     snapshot("closed", "cp", 10)
     a.push(0).var("ui").member("__onlinePanel").push("onRelease").op("callmethod").op("pop")
     a.push("p").var("ui").member("__onlineOpen").op("definelocal")
@@ -385,9 +404,17 @@ try:
               [first["a_enabled%d" % i] for i in range(3)], ["false", "true", "true"])
         check("a long list scrolls inside a bounded popup",
               (first["a_bar"], int(float(first["a_h"])) <= 2 * 22 + 8 + 8 * 27), ("true", True))
-        check("the popup hangs under the counter, right edges aligned",
-              abs(float(first["a_x"]) + float(first["a_w"])
+        check("the popup hangs under the counter, plate edges aligned",
+              abs(float(first["a_x"]) + float(first["a_w"]) - 8
                   - float(first["a_panel_x"]) - float(first["a_panel_w"])) <= 1, True)
+        short = by[16]
+        check("a short list runs its rows to the edge, envelope flush, no bar",
+              (short["short_row_w"], short["short_mail_x"], short["short_bar"]),
+              (str(w.LIST_ROW_W + w.LIST_BAR), str(w.LIST_ROW_W + w.LIST_BAR - 25), "false"))
+        check("the popup's frame takes the clicks that miss its rows",
+              short["short_guard"].startswith("[type Function]"), True)
+        check("the location's cursor goes off over the popup and comes back",
+              (short["cursor_hidden"], short["cursor_back"]), ("false", "true"))
         nick = sorted(BOTS, key=str.casefold)[0]
         check("an envelope closes the list and prepares a private, keeping the draft",
               (second["open"], second["input"]), ("undefined", "private %s: hello there" % nick))
@@ -419,21 +446,28 @@ try:
         def lit(rgb):
             return min(rgb) > 140
 
-        # The counter: the popup's plate (rivets 22 in from each end), the
-        # icon, a two-digit count and the arrow 44 + 20 + 4 = 68 in. The
-        # arrow is a triangle 10 wide between rows 11 and 16; one row in
-        # from its base it is wide, one row in from its tip narrow.
-        width = 68 + 10 + 22
+        # The counter: the popup's plate without its shadow, 22 high, the
+        # icon, a two-digit count and the arrow 33 + 20 + 3 = 56 in. The
+        # arrow is five pixel rows, 10 to 2 wide, rows 9 to 13; up is the
+        # same rows reversed.
+        ax = 56
+        width = ax + 10 + 16
         closed = lambda x, y: pixel(by[18], 10 + x, 10 + y, "closed")
-        opened = lambda x, y: pixel(by[19], 10 + w.LIST_W - width + x, TOP - 24 + y)
+        opened = lambda x, y: pixel(by[19], 10 + w.LIST_W - 8 - width + x,
+                                    TOP - (w.ONLINE_H + 3 - 5) + y)
         check("the counter is the popup's dark plate, no light inset",
-              [max(closed(x, 14)) < 90 for x in (12, 43, width - 12)], [True, True, True])
+              [max(closed(x, 17)) < 90 for x in (5, 32, width - 5)], [True, True, True])
+        check("no shadow hangs under the counter: it is exactly the plate",
+              by[18]["panel_h"], str(w.ONLINE_H))
         check("the counter keeps the original people icon",
-              any(lit(closed(x, y)) for x in range(25, 41) for y in range(6, 21)), True)
+              any(lit(closed(x, y)) for x in range(14, 33) for y in range(3, 21)), True)
         check("the arrow points down while the list is closed",
-              (lit(closed(68 + 2, 12)), lit(closed(68 + 2, 15))), (True, False))
-        check("the arrow points up while the list is open",
-              (lit(opened(68 + 2, 12)), lit(opened(68 + 2, 15))), (False, True))
+              (lit(closed(ax + 2, 9)), lit(closed(ax + 2, 12))), (True, False))
+        check("the arrow points up while the list is open, the same arrow mirrored",
+              (lit(opened(ax + 2, 9)), lit(opened(ax + 2, 12))), (False, True))
+        check("both arrows have the same pixels, mirrored",
+              [lit(closed(ax + x, 11 - d)) for x in range(10) for d in range(-2, 3)],
+              [lit(opened(ax + x, 11 + d)) for x in range(10) for d in range(-2, 3)])
 
         # The popup sits at 10,10 in the picture. The frame's left plate,
         # then the first row's face, which must be the settings rows' grey.
