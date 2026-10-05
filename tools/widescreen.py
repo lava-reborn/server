@@ -77,6 +77,13 @@ Client patches applied without altering the original artwork:
    of the bar, clear of the gold balance. No timers or
    per-scene connection listeners survive a scene change.
 
+7. The old site's links. «Пополнить счет» (frame_top.gold_btn) opened a
+   profile page on lava-online.ru, which is gone: the button is hidden on
+   both world interfaces, and so is the hint that pointed at it once a
+   session (showTooltip); the «Помощь» hint that followed it comes at once.
+   «Форум» on the bottom bar (goToForum) and in the help menu
+   (HelpDropList.forum) open FORUM_URL.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -521,6 +528,28 @@ def fn_chat():
     return a
 
 
+FORUM_URL = "https://forum.lava-reborn.ru/"
+
+
+def fn_open_forum(close_menu=False):
+    """this.getURL(FORUM_URL, "_blank"); the help menu closes itself first."""
+    a = Asm()
+    if close_menu:
+        call_method(a, "this", "openClose", 0)
+    a.push("_blank", FORUM_URL, 2).var("this").push("getURL").op("callmethod").op("pop")
+    return a
+
+
+def fn_no_gold_tooltip():
+    """showTooltip without its «Пополнить счет» hint: the help hint at once."""
+    a = Asm()
+    a.var("lol").member("core", "SceneShifter", "_ref", "addGoldTooltip_bool").op("not").iftrue("out")
+    a.var("lol").member("core", "SceneShifter", "_ref").push("addGoldTooltip_bool", False).op("setmember")
+    call_method(a, "this", "showHelpTooltip", 0)
+    a.label("out")
+    return a
+
+
 def fn_frame():
     """_global.__wideFrame(ui, w, h): every piece of one interface."""
     a = Asm()
@@ -531,6 +560,8 @@ def fn_frame():
                       ("frame_right", "__wideSide")):
         a.var("h").var("w").var("ui").member(piece).push(3, fn).op("callfunc").op("pop")
     a.var("w").var("ui").push(2, "__onlinePanel").op("callfunc").op("pop")
+    # «Пополнить счет» led to the old site.
+    a.var("ui").member("frame_top", "gold_btn").push("_visible", False).op("setmember")
     return a
 
 
@@ -727,6 +758,16 @@ def injected():
     wraps = (
         (("gpui", "LocationInterface"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper(MARK)),
+        (("gpui", "LocationInterface"), "goToForum", "__siteForumOrig",
+         (), fn_open_forum()),
+        (("gpui", "GlobalMapInterface"), "goToForum", "__siteForumOrig",
+         (), fn_open_forum()),
+        (("gpui", "HelpDropList"), "forum", "__siteForumOrig",
+         (), fn_open_forum(close_menu=True)),
+        (("gpui", "LocationInterface"), "showTooltip", "__siteTooltipOrig",
+         (), fn_no_gold_tooltip()),
+        (("gpui", "GlobalMapInterface"), "showTooltip", "__siteTooltipOrig",
+         (), fn_no_gold_tooltip()),
         (("gpui", "GlobalMapInterface"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper(MARK)),
         (("services", "ChatPan"), "resizeStage", "__wideOrig",
