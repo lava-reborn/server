@@ -469,6 +469,8 @@ class Session:
         # with a fee (fee_gate), so a change of purse tells it again only
         # where the answer moved (fee_recount).
         self.fee_shown = {}
+        # Base skill requirements on carried talks, last shown to this client.
+        self.skill_shown = {}
         # Items, slots and the open stall: inventory.py. Reads the character
         # off this session, so it needs no update when the character changes.
         self.inv = inventory.Inventory(self, STORE)
@@ -509,9 +511,11 @@ class Session:
         Every q_di_* passes fee_gate on its way out, whoever built it -- the
         kills combat counts (quests.kill_progress), the bag's count, a take,
         the journal's own ask -- so a quest with a fee is complete on the
-        client only while the purse covers it."""
+        client only while the purse covers it. skill_gate also keeps a
+        talk incomplete until its base skill goals have been reached."""
         if _cmd[0].startswith("q_di_"):
             params = self.fee_gate(params)
+            params = self.skill_gate(params)
         data = frame(_cmd[0], **params)
         log.info("  S->C  %s", data[:-1].decode("utf-8", "replace"))
         self.writer.write(data)
@@ -1903,6 +1907,7 @@ class Session:
         attribs=/skills=/specs=. The client asks for this frame once per
         session and never again, so every change is pushed from here."""
         self.send("rp_info", **self.character().rp_info(**groups))
+        self.skill_recount()
 
     def send_other_player_info(self, pid):
         """Answer getInfo;type=0 about another player.
@@ -2572,6 +2577,39 @@ class Session:
                                              row["complete"])
                 self.send(cmd, **params)
 
+    def skills_ready(self, quest):
+        """Only trained base levels count, never equipment bonuses or other skills."""
+        return all(self.character().skill[i][0] >= level
+                   for i, level in quest.complete_skills)
+
+    def skill_gate(self, params):
+        """A talk can be taken before its skill goal, but not handed in.
+
+        The stored flag remains the mission's own, as with fee_gate. Track
+        skill readiness separately so purse changes cannot cause duplicate
+        journal updates. The client shows the unfinished reply on complete=0.
+        """
+        quest = quests.get(params.get("q_type", 0) or 0)
+        if quest is None or not quest.complete_skills or not self.char_id:
+            return params
+        ready = self.skills_ready(quest)
+        self.skill_shown[int(params.get("q_id", 0) or 0)] = ready
+        return dict(params, complete=int(bool(params.get("complete")) and ready))
+
+    def skill_recount(self):
+        """A skill changed: tell the journal only when its level goal crosses."""
+        if not self.skill_shown or self.closed or not self.char_id:
+            return
+        for row in STORE.quests(self.char_id):
+            quest = quests.get(row["type"])
+            if row["q_id"] not in self.skill_shown or quest is None \
+                    or not quest.complete_skills:
+                continue
+            if self.skills_ready(quest) != self.skill_shown[row["q_id"]]:
+                cmd, params = quest.di_frame(row["q_id"], json.loads(row["progress_json"]),
+                                             row["complete"])
+                self.send(cmd, **params)
+
     def npc_type(self, npc_id):
         """type_id of an inhabitant of this location, or None."""
         # The room owns the inhabitants; the record is still (cell, type, root).
@@ -2643,7 +2681,8 @@ class Session:
 
         On success the ack is followed at once by the instance's q_di_*,
         which is what puts it in the journal. A delivery with no item is
-        complete the moment it is taken, and a quest that asks for things
+        complete the moment it is taken unless complete_skills keeps its
+        hand-in pending, and a quest that asks for things
         starts from what the bag already holds. What the giver hands over
         (start_obj: a parcel, a bucket) is in the bag before the ack, so a
         delivery of the parcel starts found and complete. A quest that is a
@@ -2823,6 +2862,11 @@ class Session:
                 STORE.update_quest(q_id, progress, complete)
                 cmd, params = quest.di_frame(q_id, progress, complete)
                 self.send(cmd, **params)
+        if not self.skills_ready(quest):
+            cmd, params = quest.di_frame(q_id, progress, complete)
+            self.send(cmd, **params)
+            self.send("cmdAck", res=RES_NOT_READY)
+            return
         if not complete:
             self.send("cmdAck", res=RES_NOT_READY)
             return
@@ -2855,6 +2899,7 @@ class Session:
         craft.hand_in(self, quest)
         STORE.finish_quest(q_id, self.char_id, quest.type)
         self.fee_shown.pop(q_id, None)
+        self.skill_shown.pop(q_id, None)
         for obj, num in reward:
             given = self.inv.give_pieces(obj, num)
             setcraft.keep_wear(worn, given, self.inv)
@@ -3085,6 +3130,7 @@ class Session:
         quest = quests.get(row["type"])
         STORE.drop_quest(q_id)
         self.fee_shown.pop(q_id, None)
+        self.skill_shown.pop(q_id, None)
         short = False
         for obj, num in (quest.start_obj if quest else ()):
             back = self.inv.reclaim_pieces(obj, num)

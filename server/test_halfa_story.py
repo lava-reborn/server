@@ -211,8 +211,8 @@ try:
             rows[t].rew_obj, rows[t].rew_afro, rows[t].rew_xp) for t in WAYS],
           [(quests.DEL_OBJ, 0, [], 1, [], [], 0, [])] * 2)
     check("«Обучение» hangs off «Назад, в большой мир», while Шульц is still at hand; he"
-          " gives it before his own two (the table's order)",
-          (rows[101].need_all, quests.given_by(SCHULZ)), ([42], [101, 57, 58]))
+          " gives it before his own three, including preparation for Mwamba (the table's order)",
+          (rows[101].need_all, quests.given_by(SCHULZ)), ([42], [101, 57, 68, 58]))
     check("Тиль's «Пистолетчик» keeps its q_idx 0", quests.given_by(TIL)[0], 4)
 
     orig = orig_texts.quests()
@@ -793,8 +793,8 @@ try:
 
     # --- «Обучение»: Шульц in the valley, Зоричев in the city ----------------------------
     here = inhabitants(goto(c, VILLAGE))
-    check("the caravan: Шульц lists «Обучение» first, then his own two",
-          quest_lists(c, here, SCHULZ), ([101, 57, 58], [58]))
+    check("the caravan: Шульц lists «Обучение» first, and accepts preparation and the boss quest",
+          quest_lists(c, here, SCHULZ), ([101, 57, 68, 58], [68, 58]))
     got, q = take(c, here, 101)
     check("«Обучение» taken from Шульц: the ack, then the journal, complete",
           (order(got), first(got, "q_di_del_obj").get("complete")),

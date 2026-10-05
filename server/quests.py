@@ -46,6 +46,11 @@ does):
   max_level     offered only while the best skill is at most this: the
                 original's «недоступен после достижения третьего уровня
                 любого навыка» is max_level 2;
+  complete_skills
+                base skill levels needed to hand in a talk, not to take it,
+                e.g. {"shooting": 3}. Only del_obj with no item: the journal
+                stays incomplete until the skills reach these levels. The
+                requirement is appended after the original text is laid over;
   per_day       a repeatable quest handed in this many times since the
                 day's reset is not offered again before the next one: the
                 original's «данное задание можно выполнять не чаще 1 раза в
@@ -452,6 +457,15 @@ class Quest:
             if o.get("one_of"):
                 self.drop_groups[int(o["obj"])] = str(o["one_of"])
         self.obj = int(row.get("obj", 0))
+        goals = row.get("complete_skills") or {}
+        if set(goals) - set(SKILL_KEYS):
+            raise ValueError("quest %d: complete_skills names an unknown skill" % self.type)
+        self.complete_skills = [(SKILL_KEYS[k], int(v)) for k, v in goals.items()]
+        if self.complete_skills and (self.kind != DEL_OBJ or self.obj
+                                     or any(not 1 <= v <= progression.SKILL_MAX
+                                            for _, v in self.complete_skills)):
+            raise ValueError("quest %d: complete_skills needs a talk and levels 1..20"
+                             % self.type)
 
     @property
     def name(self):
@@ -834,14 +848,23 @@ def per_day_start(start, per_day):
 
 def served(q, k, line):
     """The original's line for slot k of quest q (NAME..FINISH) as this
-    server serves it: the same line, but for a daily quest's start, which
-    carries the daily note (_say_per_day). What the suites hold the laid
+    server serves it: the start carries its daily note and any skill goal
+    after the original overlay (_say_per_day). What the suites hold the laid
     texts to (every «laid over the table's» check)."""
-    return per_day_start(line, q.per_day) if k == START else line
+    if k != START:
+        return line
+    line = per_day_start(line, q.per_day)
+    if q.complete_skills:
+        labels = ("Ближний бой", "Стрельба", "Медицина", "Промышленность")
+        goals = "; ".join("%s: %d-й уровень" % (labels[i], level)
+                          for i, level in q.complete_skills)
+        line += ("<Br><Br><b>Задача:</b> Развить навык до указанного уровня "
+                 "и вернуться к персонажу, выдавшему задание. " + goals + ".")
+    return line
 
 
 def _say_per_day():
-    """The daily note on every per_day quest whose start does not carry it.
+    """Append daily notes and skill goals after the original overlay.
 
     The original's own dailies say it in their text; the rows this server
     made daily (DESIGNED per_day: «Золотоискатель», the prison's armbands,
@@ -854,7 +877,7 @@ def _say_per_day():
     and a row the overlay replaces (118) is read as the player will see it.
     """
     for q in QUESTS.values():
-        start = per_day_start(q.texts[START], q.per_day)
+        start = served(q, START, q.texts[START])
         if start != q.texts[START]:
             texts = list(q.texts)
             texts[START] = start

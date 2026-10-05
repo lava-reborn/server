@@ -618,9 +618,10 @@ VERIFIED = {
     57: (59924, 59925, 59926, 59927),
     # «Экипировка к пистолету», Большой Мвамба: 24341; the newest start and
     # notfinish 59832/59833 (24342/24343 have en dashes, 45366/45367 are a
-    # later copy); 24344, the only finish. «Как стать круче» (59944-59946)
-    # has no finish in the file and is not ours.
+    # later copy); 24344, the only finish. Its introduction is type 68.
     58: (24341, 59832, 59833, 24344),
+    # Schulz's preparation: the original has no finish; ours completes the talk.
+    68: (59944, 59945, 59946, None),
     # Камал's «Изумруды»: four in a row.
     59: (59936, 59937, 59938, 59939),
     # Сабир's «Любимая антилопа»: four in a row; part 2 by its own name
