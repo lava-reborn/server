@@ -422,6 +422,9 @@ class Session:
         self.since = int(time.time())
         self.hash = None
         self.logged_in = False
+        # Patched clients opt into the HUD counter in hello. Old clients
+        # keep their original frame sequence, but still count as players.
+        self.online_counter = False
         self.account = None
         self.characters = []
         self.char_id = None
@@ -589,6 +592,7 @@ class Session:
     def cmd_hello(self, p):
         # The client ignores these params; it only needs a frame named "hello"
         # within 20s, or Session.helloTimeOutFunction drops the connection.
+        self.online_counter = p.get("online") == 1
         self.send("hello", minor=2, major=0)
 
     def cmd_login(self, p):
@@ -685,7 +689,10 @@ class Session:
             # that covers every way out.
             self.leave_room()
             GMAP.leave(self)
+            was_online = ONLINE.by_char.get(self.char_id) is self
             ONLINE.remove(self)
+            if was_online:
+                broadcast_online_count()
             # The party keeps the seat and tells the others "отключился";
             # the same character on a new socket takes it back.
             PARTIES.disconnected(self)
@@ -1023,7 +1030,10 @@ class Session:
         # builds a new LocGen), so whoever shared the old room is told now,
         # before the new one is even loading.
         self.leave_room()
+        was_online = ONLINE.by_char.get(self.char_id) is self
         ONLINE.add(self)
+        if not was_online:
+            broadcast_online_count()
         # A party member back on a socket: the others hear "в сети" and
         # this client gets the roster. A no-op on every later lcall.
         PARTIES.online(self)
@@ -3804,6 +3814,19 @@ def apply_admin_action(row):
         STORE.db.commit()
         return "перенесён (войдёт там)"
     return "неизвестное действие: %s" % kind
+
+
+def broadcast_online_count():
+    """HUD presence: entered characters, including people on the map.
+
+    Directory membership survives room changes and excludes the login and
+    character creation screens. Only hello;online=1 clients receive this
+    unsolicited frame; it never participates in the cmdAck queue.
+    """
+    count = len(ONLINE.by_char)
+    for sess in ONLINE:
+        if sess.online_counter and not sess.closed:
+            sess.send("online", count=count)
 
 
 def publish_online():
