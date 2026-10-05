@@ -737,6 +737,102 @@ class LootBag:
         self.expiry = None
 
 
+INTERCEPT_PREPARE = 15.0
+
+
+def interception_positions(room, occupied=(), rng=None):
+    """Random free cells 8..15 hexes apart, connected without crossing exits.
+
+    A bounded breadth-first search also keeps the walking distance at most
+    fifteen steps. If the map has no such pair, the catch must not force
+    two players into an adjacent or disconnected fight.
+    """
+    rng = RNG if rng is None else rng
+    loc = room.loc
+    blocked = set(loc.obstacles) | set(travel.exit_sides(loc)) | set(occupied)
+    blocked.update(s.pos for s in room.players)
+    for cells, _rec in travel.walk_ins(loc):
+        blocked.update(cells)
+    if room.combat is None:
+        blocked.update(n.cell for n in room.npcs.values())
+    else:
+        blocked.update(n.cell for n in room.npcs.values() if n.root != world.MOB)
+        blocked.update(m.cell for m in room.combat.mobs.values() if m.alive)
+    starts = [c for c in range(loc.width * loc.height) if c not in blocked]
+    rng.shuffle(starts)
+    for start in starts:
+        seen, fringe, choices = {start}, [start], []
+        for _step in range(15):
+            next_fringe = []
+            for cell in fringe:
+                for nb in progression.hex_neighbours(cell, loc.width, loc.height):
+                    if nb in seen or nb in blocked:
+                        continue
+                    seen.add(nb)
+                    next_fringe.append(nb)
+                    if 8 <= mobs.hex_distance(start, nb, loc.width) <= 15:
+                        choices.append(nb)
+            fringe = next_fringe
+            if not fringe:
+                break
+        if choices:
+            return start, rng.choice(choices)
+    return None
+
+
+class Interception:
+    """One shared loading grace period, followed by a duel without a shot."""
+
+    def __init__(self, first, second):
+        self.fighters = (first, second)
+        self.until = now() + INTERCEPT_PREPARE
+        for fighter in self.fighters:
+            if fighter.interception is not None:
+                fighter.interception.cancel()
+            fighter.interception = self
+        self.timer = asyncio.get_running_loop().call_later(INTERCEPT_PREPARE, self.finish)
+
+    def finish(self):
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
+        remaining = self.until - now()
+        if remaining > 0:
+            self.timer = asyncio.get_running_loop().call_later(remaining, self.finish)
+            return
+        first, second = self.fighters
+        # A slow loader gets no new countdown. Start the duel when both
+        # lenter handshakes have arrived; unloading or disconnect cancels it.
+        rc = first.rc
+        if (rc is None or second.rc is not rc
+                or not first.present(rc) or not second.present(rc)):
+            for fighter in self.fighters:
+                fighter.show_prepare(0)
+            return
+        self.cancel()
+        if not all(f.sess.loc.war and f.pvp_allowed() for f in self.fighters):
+            return
+        first.last_pvp = second.last_pvp = now()
+        rc.mark_foe(first, second)
+        rc.mark_foe(second, first)
+        rc.set_ws(True)
+
+    def cancel(self):
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
+        for fighter in self.fighters:
+            if fighter.interception is self:
+                fighter.interception = None
+                fighter.show_prepare(0)
+
+
+def prepare_interception(first, second):
+    """Only a location permitting PvP can turn a map catch into a duel."""
+    if all(not f.dead and f.sess.loc.war and f.pvp_allowed() for f in (first, second)):
+        Interception(first, second)
+
+
 # --- one player -----------------------------------------------------------
 
 class Fighter:
@@ -762,6 +858,7 @@ class Fighter:
         # walker in the client, so it is good until either of them walks in
         # afresh and the figure is built again.
         self.foes = set()
+        self.interception = None
         self.dead = False
         self.aim = None         # TimerHandle: a burst waiting for fire_times
         self.strike = None      # TimerHandle: a swing waiting for strike_time
@@ -893,7 +990,23 @@ class Fighter:
         return progression.armor_class(self.character(), worn)
 
     def present(self, rc):
-        return not self.dead and self.sess in rc.room.players
+        return not self.dead and not self.preparing() and self.sess in rc.room.players
+
+    def preparing(self):
+        grace = getattr(self, "interception", None)
+        return grace is not None and now() < grace.until
+
+    def show_prepare(self, seconds, viewer=None):
+        """Player.prepare subtracts two; time=0 must clear its stored flag."""
+        room = self.sess.room
+        if room is None or self.sess not in room.players:
+            return
+        params = dict(id=self.eid, time=math.ceil(seconds) + 2 if seconds > 0 else 0)
+        if viewer is None:
+            room.broadcast(("prepare", params))
+        else:
+            cmd, fields = rooms.viewer_frame("prepare", params)(viewer)
+            viewer.send(cmd, **fields)
 
     def primary(self):
         return self.sess.inv.in_slot(inventory.PRIMARY)
@@ -945,6 +1058,8 @@ class Fighter:
         and the exit timer and a duel stay with the room they ran in. A duel
         whose last blow missed no longer holds anybody (in_combat), so the
         one who walks out of it must not carry its war into the next room."""
+        if self.interception is not None:
+            self.interception.cancel()
         self.cancel_timers()
         self.loot = None
         self.last_hit = -1e9
@@ -995,6 +1110,8 @@ class Fighter:
         where a corpse was left.
         """
         try:
+            if self.interception is not None:
+                self.interception.cancel()
             self.cancel_timers()
             self.loot = None
         except Exception:
@@ -1039,8 +1156,8 @@ class Fighter:
         return max(0.0, LEAVE_COMBAT_TIMEOUT - (now() - self.last_hit))
 
     def in_combat(self):
-        """Whether this player is barred from walking out: while the exit
-        timer runs, and only then (the owner's rule, 2026-09-25).
+        """Whether this player is barred from walking out: during interception
+        preparation, then while the hit-based exit timer runs.
 
         The question is not who is after you. A creature that has taken you
         as its target keeps you for as long as you stay (mobs.Mob.think),
@@ -1064,7 +1181,7 @@ class Fighter:
         Asked and not answered, for a caller that has already acknowledged the
         command in hand (/home) and must not ack twice.
         """
-        return self.exit_timer_left() > 0
+        return self.preparing() or self.exit_timer_left() > 0
 
     def acting(self):
         """Whether a shot, a swing or a heal of this player's is still in
@@ -1208,6 +1325,9 @@ class Fighter:
         if rc is None or sess.on_map or self.dead:
             self.ack(inventory.RES_REFUSED)
             return
+        if self.preparing():
+            self.ack(inventory.RES_NOT_READY)
+            return
         if not sess.loc.war:
             # The client refuses this itself in a peaceful location
             # (ItemActivator.fire: locInfo.battle); a modified one is refused here.
@@ -1227,6 +1347,9 @@ class Fighter:
             target = rc.actor(tid)
             if target is None:
                 self.ack(inventory.RES_NOT_FOUND)
+                return
+            if target.is_player and target.preparing():
+                self.ack(inventory.RES_NOT_READY)
                 return
             if target is self:
                 # The client never aims at its own figure (ItemActivator:
@@ -2075,7 +2198,7 @@ class RoomCombat:
         width = self.room.loc.width
         best, best_d = None, radius
         for f in self.fighters():
-            if f.dead:
+            if not f.present(self):
                 continue
             d = mobs.hex_distance(cell, f.cell, width)
             if d <= best_d:
@@ -2093,6 +2216,12 @@ class RoomCombat:
         # "neutral"), so a mark it carried from an earlier visit is gone.
         for f in self.fighters():
             f.foes.discard(fighter.eid)
+            if f is not fighter and f.preparing():
+                f.show_prepare(f.interception.until - now(), viewer=fighter.sess)
+        if fighter.preparing():
+            fighter.show_prepare(fighter.interception.until - now())
+        elif fighter.interception is not None:
+            fighter.interception.finish()
         if self.timer is None:
             self.ap_last = now()
             self._arm()
@@ -2272,6 +2401,8 @@ class RoomCombat:
         """A mob picks a player: the room goes to war and the player's client
         paints the mob red (lch;enemy -> Location.setEnemy) and remembers it
         for autofire."""
+        if fighter.preparing():
+            return
         t = now() if t is None else t
         mob.target = fighter
         mob.next_attack = max(mob.next_attack, t + 0.3)
