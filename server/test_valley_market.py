@@ -752,7 +752,7 @@ try:
     here = inhabitants(goto(c, VILLAGE))
     check("the caravan: Шульц, Крысолов and Фая",
           [len(here.get(n, [])) for n in (SCHULZ, RATCATCHER, FAYA)], [1, 1, 1])
-    # Шульц's «Обучение» (101, Вади-Хальфа's story) stands before his own two
+    # Шульц's «Обучение» (101, Вади-Хальфа's story) stands before his own three
     # in the table, so it is his q_idx 0 (test_halfa_story).
     check("  ..their frames list what they give and take, in the order q_idx counts",
           [quest_lists(c, here, n) for n in (SCHULZ, RATCATCHER)],
