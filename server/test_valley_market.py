@@ -10,7 +10,7 @@ the real data/quests.json: twenty-two quests, types 46-67.
   Гофус     «Сгоревшая микросхема» (an old chip: Салюс МК I or Анестетик МК
             I, the player's choice, once a day)
   Крысолов  «Крысиный переполох» (to Фермер Хрущ at his barn); «Крысиные
-            хвосты» (twenty tails, 300 afro, once a day)
+            хвосты» (twenty tails, 700 afro, once a day)
   Хрущ      «Крысиный король» (the rat king, 200 afro, once a day);
             «Королевский Элексир» (a rat king to Эддай in Вади-Хальфа, 500)
   Шульц     «Старые штольни» (to Рудо, whose way down comes after it);
@@ -128,7 +128,7 @@ MED20 = {"medicine": 20}
 PAYS = {GEAR: ([], 0, {"shooting": 5}), WIND: ([], 0, {"shooting": 5}),
         STONE: ([], 50, {}), FANGS: ([], 150, {}), SON: ([], 200, {}),
         MATCHES_Q: ([], 300, {}), CHIP_Q: ([(SALUS, 1), (ANESTHETIC, 1)], 0, {}),
-        RAT_RIOT: ([], 0, MED20), TAILS: ([], 300, {}), KING_Q: ([], 200, {}),
+        RAT_RIOT: ([], 0, MED20), TAILS: ([], 700, {}), KING_Q: ([], 200, {}),
         ELIXIR: ([], 500, {}), ADITS: ([], 0, MED20), PISTOL_KIT: ([], 0, {"shooting": 200}),
         EMERALDS_Q: ([], 0, {"shooting": 100}), ANTELOPE1: ([], 0, MED20),
         ANTELOPE2: ([], 0, MED20), FOOD: ([], 100, {}), HUNT_Q: ([], 150, {"shooting": 30}),
@@ -909,10 +909,15 @@ try:
     check("«Крысиный переполох» and «Крысиные хвосты» taken; twenty tails in the bag",
           counts(got, quests.BRING_L_OBJ), [([0], 0), ([20], 1)])
     got = hand_in(c, here, TAILS, q_tails)
-    AFRO += 300
-    check("  ..the tails handed in to Крысолов: out, three hundred afro, the day's count",
+    AFRO += 700
+    check("  ..the tails handed in to Крысолов: out, seven hundred afro, the day's count",
           (upto_ack(got), acks(got), purse(got), owned(CID).get(TAIL)),
           (["ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"], [0], AFRO, None))
+    check("  ..twenty tails paid, no extra item reward, not offered again today",
+          (new_things(got), status(c, TAILS)), ([], 0))
+    got, _q = take(c, here, TAILS)
+    check("  ..a second request for the daily tails quest is refused",
+          (order(got), acks(got)), (["cmdAck"], [4]))
     here = inhabitants(goto(c, BARN))
     check("the barn: Фермер Хрущ among his grey rats",
           (quest_lists(c, here, KHRUSCH), len(here.get(GREY_RAT, [])) > 0),
