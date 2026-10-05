@@ -6,7 +6,8 @@ the real data/quests.json: twenty-two quests, types 46-67.
             ветер» (to Фая in the caravan, +5); «Точильный камень» (the
             grindstone off the colonists, 50 afro); «Клык за Клык» (ten dog
             fangs, 150); «Раненый сын» (medicaments, 200)
-  Сорванец  «Спички детям» (five boxes of matches, 300 afro, once a day)
+  Сорванец  «Спички детям» (five boxes collected even without the quest:
+            700 afro and three health/stamina consumables to choose, once a day)
   Гофус     «Сгоревшая микросхема» (an old chip: Салюс МК I or Анестетик МК
             I, the player's choice, once a day)
   Крысолов  «Крысиный переполох» (to Фермер Хрущ at his barn); «Крысиные
@@ -96,6 +97,7 @@ MARAUDER1, MARAUDER2, MVAMBA = 836, 837, 1406
 # The things.
 GRINDSTONE, FANG, MEDS, MATCHES, CHIP, TAIL, KING = 3217, 217, 232, 6915, 3179, 3216, 3218
 EMERALD, MEAT, FILLET, SALUS, ANESTHETIC = 3159, 260, 3059, 4918, 4938
+RAG, CARAVANEER = 6055, 6062
 # The places.
 MARKET, VILLAGE, BARN, ADITS_LOC, ARENA, MOUTH, TIER1 = 185, 186, 166, 643, 167, 153, 612
 NORTH, ANTELOPES, BURIALS, TRUCK, SQUAD, SCOUT_LOC = 181, 25, 184, 26, 29, 33
@@ -127,7 +129,8 @@ MED20 = {"medicine": 20}
 # What each quest pays: [(thing, pieces)] to choose from, afro, experience.
 PAYS = {GEAR: ([], 0, {"shooting": 5}), WIND: ([], 0, {"shooting": 5}),
         STONE: ([], 50, {}), FANGS: ([], 150, {}), SON: ([], 200, {}),
-        MATCHES_Q: ([], 300, {}), CHIP_Q: ([(SALUS, 1), (ANESTHETIC, 1)], 0, {}),
+        MATCHES_Q: ([(RAG, 3), (CARAVANEER, 3)], 700, {}),
+        CHIP_Q: ([(SALUS, 1), (ANESTHETIC, 1)], 0, {}),
         RAT_RIOT: ([], 0, MED20), TAILS: ([], 700, {}), KING_Q: ([], 200, {}),
         ELIXIR: ([], 500, {}), ADITS: ([], 0, MED20), PISTOL_KIT: ([], 0, {"shooting": 200}),
         EMERALDS_Q: ([], 0, {"shooting": 100}), ANTELOPE1: ([], 0, MED20),
@@ -141,7 +144,7 @@ PAYS = {GEAR: ([], 0, {"shooting": 5}), WIND: ([], 0, {"shooting": 5}),
 BRINGS = {STONE: (GRINDSTONE, 1, [SHOOTER, STORMER], "quest"),
           FANGS: (FANG, 10, [DOG], "animal"),
           SON: (MEDS, 1, [SHOOTER, STORMER], "quest"),
-          MATCHES_Q: (MATCHES, 5, [SHOOTER, STORMER], "quest"),
+          MATCHES_Q: (MATCHES, 5, [SHOOTER, STORMER], "loot"),
           CHIP_Q: (CHIP, 1, [SHOOTER, STORMER], "quest"),
           TAILS: (TAIL, 20, [GREY_RAT, BLACK_RAT], "animal"),
           KING_Q: (KING, 1, [BLACK_RAT], "quest"),
@@ -272,6 +275,23 @@ try:
     check("  ..the old chip off a colonist only for a quest that wants it, about one in four",
           (mobs.quest_roll(SHOOTER, set(), random.Random(0)),
            80 <= sum(1 for g in got if (CHIP, 1) in g) <= 120), ([], True))
+    for carrier in (SHOOTER, STORMER):
+        rng = random.Random(51)
+        plain = [mobs.loot_for(mobs.stats(carrier), rng) for _ in range(1000)]
+        rng = random.Random(51)
+        wanted = [mobs.loot_for(mobs.stats(carrier), rng, {MATCHES}) for _ in range(1000)]
+        boxes = [sum(n for t, n in drop if t == MATCHES) for drop in plain]
+        check("colonist %d: matches drop without a quest, including after five boxes,"
+              " about three in ten kills" % carrier,
+              (250 <= sum(boxes) <= 350, max(boxes)), (True, 1))
+        check("  ..asking for matches neither enables nor doubles the ordinary drop",
+              wanted, plain)
+    check("matches rewards are single-use health or stamina restoration, usable"
+          " without Medicine",
+          [(items.root_of(t), items.params_of(t)["use_count"],
+            items.params_of(t)[key] > 0, any(items.params_of(t).get("need_skills", [])))
+           for t, key in ((RAG, "min_h_rest"), (CARAVANEER, "min_st_rest"))],
+          [(items.HEAL, 1, True, False)] * 2)
     check("  ..the antelope's meat certain for a quest that wants it, the fillet one in two",
           ([mobs.quest_roll(ANTELOPE, {MEAT}, random.Random(s)) for s in range(3)],
            dict(mobs.quest_table(ANTELOPE))), ([[(MEAT, 1)]] * 3, {MEAT: 1.0, FILLET: 0.5}))
@@ -863,17 +883,34 @@ try:
 
     # --- the day's quests of the market: Сорванец and Доктор Гофус ----------------------
     here = inhabitants(goto(c, MARKET))
+    # Stock two days' matches before taking the quest, including any already
+    # found on the colonists during the earlier errands.
+    stock = max(10, owned(CID).get(MATCHES, 0))
+    if owned(CID).get(MATCHES, 0) < stock:
+        give(c, MATCHES, stock - owned(CID).get(MATCHES, 0))
     got, q = take(c, here, MATCHES_Q)
-    _, more = give(c, MATCHES, 5)
-    got += more + c.frames(0.4)
-    check("«Спички детям» taken from Сорванец; five boxes in the bag: complete",
-          counts(got, quests.BRING_L_OBJ), [([0], 0), ([5], 1)])
+    check("«Спички детям» accepts matches collected in advance: complete on take",
+          counts(got, quests.BRING_L_OBJ), [([5], 1)])
+    before_rewards = owned(CID)
+    got = hand_in(c, here, MATCHES_Q, q, obj_idx=2)
+    check("an invalid reward choice gives nothing and keeps the matches",
+          (acks(got), new_things(got), purse(got), owned(CID)),
+          ([1], [], None, before_rewards))  # RES_NO_SUCH: no reward at that index
     got = hand_in(c, here, MATCHES_Q, q)
-    AFRO += 300
-    check("  ..handed in: the matches out, three hundred afro, the day's count, the ack",
-          (upto_ack(got), acks(got), purse(got), [p["daily_available"] for p in
-                                                   named(got, "q_sys")]),
-          (["ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"], [0], AFRO, [9]))
+    AFRO += 700
+    check("  ..handed in: five boxes spent, 700 afro and three rags awarded",
+          (upto_ack(got), acks(got), purse(got), new_things(got), owned(CID).get(MATCHES),
+           owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
+           owned(CID).get(CARAVANEER, 0) - before_rewards.get(CARAVANEER, 0),
+           [p["daily_available"] for p in named(got, "q_sys")]),
+          (["ss_di_heap"] + ["ss_obj_status", "ss_di_heal"] * 3
+           + ["userInfo_Player", "q_sys", "cmdAck"],
+           [0], AFRO, [RAG] * 3, stock - 5, 3, 0, [9]))
+    before_rewards = owned(CID)
+    got = hand_in(c, here, MATCHES_Q, q, obj_idx=1)
+    check("replaying the hand-in cannot claim the other reward or spend more matches",
+          (acks(got), new_things(got), purse(got), owned(CID)),
+          ([1], [], None, before_rewards))  # the completed instance is gone
     check("  ..not offered again today", status(c, MATCHES_Q), 0)
     got, _q = take(c, here, MATCHES_Q)
     check("  ..nor given", (order(got), acks(got)), (["cmdAck"], [4]))
@@ -1094,6 +1131,22 @@ try:
     got = goto(c, MARKET)
     check("the day's repeatable hand-ins: the second chip, the tails, the king, the meat --"
           " six left", [p["daily_available"] for p in named(got, "q_sys")][-1:], [6])
+    here = inhabitants(got)
+    before_rewards = owned(CID)
+    got, q = take(c, here, MATCHES_Q)
+    check("the next day's matches can also be handed in from the stored supply",
+          counts(got, quests.BRING_L_OBJ), [([5], 1)])
+    got = hand_in(c, here, MATCHES_Q, q, obj_idx=1)
+    AFRO += 700
+    check("choosing the other icon gives 700 afro and three Caravaneers",
+          (acks(got), purse(got), new_things(got),
+           owned(CID).get(MATCHES, 0),
+           owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
+           owned(CID).get(CARAVANEER, 0) - before_rewards.get(CARAVANEER, 0),
+           [p["daily_available"] for p in named(got, "q_sys")]),
+          ([0], AFRO, [CARAVANEER] * 3, before_rewards.get(MATCHES, 0) - 5, 0, 3, [5]))
+    check("  ..the second day also allows only one matches hand-in",
+          status(c, MATCHES_Q), 0)
     logout(c)
 except Exception:
     import traceback
