@@ -40,7 +40,8 @@ OUT = os.environ.get("LAVA_ONLINE_LIST_OUT", "")
 BOTS = ["Archivist", "bandit", "Ccc", "Delta", "echo", "Foxtrot", "Golf",
         "hotel", "India", "Juliet", "kilo"]
 LEAVES = "Delta"
-SNAP = 300, 380        # the picture's size: wider and taller than any popup
+SNAP = 300, 420        # the picture's size: the counter and any popup under it
+TOP = 50               # where the popup's top goes in a picture, below the counter
 
 
 def asm_report(a, key, *path):
@@ -94,15 +95,15 @@ def probe(url):
         a.label(prefix + "counted")
         a.var("r").push(prefix + "rows").var("k").op("setmember")
 
-    def snapshot(name):
-        # The popup and what surrounds it, as the stage shows it.
+    def snapshot(name, clip="p", top=TOP):
+        # The clip at (10, top) and what surrounds it, as the stage shows it.
         a.push("bm", 0, False, SNAP[1], SNAP[0])
         w.new(a, ["flash", "display"], "BitmapData", 4).op("definelocal")
         a.push("pt", 0, 0)
         w.new(a, ["flash", "geom"], "Point", 2).op("definelocal")
         a.var("pt")
-        w.call_method(a, "p", "localToGlobal", 1)
-        a.push("mx").push(10).var("pt").member("y").op("subtract").push(10).var("pt").member("x")
+        w.call_method(a, clip, "localToGlobal", 1)
+        a.push("mx").push(top).var("pt").member("y").op("subtract").push(10).var("pt").member("x")
         a.op("subtract").push(1, 0, 0, 1)
         w.new(a, ["flash", "geom"], "Matrix", 6).op("definelocal")
         a.var("mx").var("_root")
@@ -127,6 +128,8 @@ def probe(url):
     a.var("r").push("before_keys").var("Key").member("_listeners", "length").op("setmember")
     a.var("r").push("before_dclicks").var("lol").member("utils", "EMouse", "refDispatcher",
                                                          "__q_onDoubleClick", "length").op("setmember")
+    a.push("cp").var("ui").member("__onlinePanel").op("definelocal")
+    snapshot("closed", "cp", 10)
     a.push(0).var("ui").member("__onlinePanel").push("onRelease").op("callmethod").op("pop")
     a.push("p").var("ui").member("__onlineOpen").op("definelocal")
     describe("a_")
@@ -409,19 +412,38 @@ try:
               (narrow["stage_w"], float(narrow["n_x"]) >= 0,
                float(narrow["n_y"]) + float(narrow["n_h"]) <= float(narrow["chat_y"])),
               ("950", True, True))
-        def pixel(report, x, y):
-            v = int(report["picture_location"].split(",")[y * SNAP[0] + x])
+        def pixel(report, x, y, name="location"):
+            v = int(report["picture_" + name].split(",")[y * SNAP[0] + x])
             return (v >> 16) & 255, (v >> 8) & 255, v & 255
+
+        def lit(rgb):
+            return min(rgb) > 140
+
+        # The counter: the popup's plate (rivets 22 in from each end), the
+        # icon, a two-digit count and the arrow 44 + 20 + 4 = 68 in. The
+        # arrow is a triangle 10 wide between rows 11 and 16; one row in
+        # from its base it is wide, one row in from its tip narrow.
+        width = 68 + 10 + 22
+        closed = lambda x, y: pixel(by[18], 10 + x, 10 + y, "closed")
+        opened = lambda x, y: pixel(by[19], 10 + w.LIST_W - width + x, TOP - 24 + y)
+        check("the counter is the popup's dark plate, no light inset",
+              [max(closed(x, 14)) < 90 for x in (12, 43, width - 12)], [True, True, True])
+        check("the counter keeps the original people icon",
+              any(lit(closed(x, y)) for x in range(25, 41) for y in range(6, 21)), True)
+        check("the arrow points down while the list is closed",
+              (lit(closed(68 + 2, 12)), lit(closed(68 + 2, 15))), (True, False))
+        check("the arrow points up while the list is open",
+              (lit(opened(68 + 2, 12)), lit(opened(68 + 2, 15))), (False, True))
 
         # The popup sits at 10,10 in the picture. The frame's left plate,
         # then the first row's face, which must be the settings rows' grey.
-        plate = pixel(by[19], 10 + 14, 10 + 60)
-        face = pixel(by[19], 10 + 22 + 4 + 60, 10 + 22 + 4 + 4)
+        plate = pixel(by[19], 10 + 14, TOP + 60)
+        face = pixel(by[19], 10 + 22 + 4 + 60, TOP + 22 + 4 + 4)
         check("the frame is drawn from the settings window's dark plate",
               max(plate) < 90 and max(plate) - min(plate) < 10, True)
         check("rows have the settings rows' face", face, (0x6D, 0x6B, 0x65))
-        for name in ("location", "map", "narrow"):
-            save(by[{"location": 19, "map": 37, "narrow": 13}[name]], name)
+        for name in ("closed", "location", "map", "narrow"):
+            save(by[{"closed": 18, "location": 19, "map": 37, "narrow": 13}[name]], name)
     else:
         print("  --  set LAVA_FLASH_PLAYER and LAVA_RES on Windows for real Flash checks")
 except Exception:

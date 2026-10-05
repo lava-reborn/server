@@ -68,14 +68,18 @@ Client patches applied without altering the original artwork:
    uses for its own notices (ItemActivator.as:82-84), for two seconds, when
    a SET_HOME comes back with res=0.
 
-6. Online players. A compact riveted plate with a people icon and live count
-   just left of the exit button. Its PNG is embedded in the SWF and reused
-   on both world interfaces. XMLConnection.Send opts in with hello;online=2;
-   sendNotification caches online;count=N;names=|..| before a scene exists and refreshes
-   its value when players enter or leave. Resize builds the counter once and
-   anchors it to the right edge. Below 1100 pixels it uses the upper lip
-   of the bar, clear of the gold balance. No timers or
-   per-scene connection listeners survive a scene change.
+6. Online players. A compact plate with a people icon, the live count and
+   an arrow, just left of the exit button, on both world interfaces. The
+   plate is the popup's own dark frame (below), two rows of it with a rivet
+   at either end; the icon is the one of data/client/online-panel.png, cut
+   out at build time with its plate made transparent; count and arrow are
+   muted beige, the arrow down while the list is closed and up while open.
+   XMLConnection.Send opts in with hello;online=2; sendNotification caches
+   online;count=N;names=|..| before a scene exists and refreshes the count
+   when players enter or leave. Resize builds the counter once and anchors
+   its right edge; it widens with the count. Below 1100 pixels it uses the
+   upper lip of the bar, clear of the gold balance. No timers or per-scene
+   connection listeners survive a scene change.
 
    A click on the counter drops the list of everybody online under it:
    hello;online=2 asks the server for the names with each count. The popup
@@ -590,14 +594,48 @@ def fn_services():
 HOME_SET = "Теперь вы будете возрождаться в этой локации"
 
 ONLINE_WIDTH = 76
-ONLINE_BITMAP = "__lavaOnlinePlate"
+ONLINE_BITMAP = "__lavaOnlineIcon"
+ONLINE_OLD_BITMAPS = ("__lavaOnlinePlate",)    # what earlier patches exported
 ONLINE_ASSET = Path(__file__).resolve().parent.parent / "data/client/online-panel.png"
+ONLINE_ICON = (12, 5, 18, 18)   # the people icon inside the plate: x, y, w, h
 ONLINE_RIGHT = 150             # ten pixels before the exit at w - 140
 ONLINE_INLINE_MIN = 1100        # gold controls end around w / 2 + 313
+ONLINE_TEXT_RGB = 0xCFC6AE      # muted beige, the icon's own tone
+# The plate is the popup's frame in two rows: 17 from the top corners (the
+# top edge and a whole rivet), 14 from the bottom ones (the bottom edge),
+# so each rivet sits halfway up the 31 pixels; the middle columns repeat.
+# Its visible part runs y 5..21, the rest is the frame's shadow.
+ONLINE_H, ONLINE_TOP, ONLINE_BOTTOM = 31, 17, 22
+ONLINE_LABEL_X, ONLINE_ARROW_W, ONLINE_CAP = 44, 10, 22
+
+
+def fn_online_art():
+    """_global.__onlineArt(host): the settings window's frame and texture as
+    BitmapData slices, made once a session from art attached for a moment."""
+    a = Asm()
+    a.var("_global").member("__onlineSlices").push(UNDEF).op("equals2").op("not").iftrue("done")
+    a.push("S")
+    new(a, ("_global",), "Object", 0).op("definelocal")
+    for name, _ in LIST_ART:
+        a.push(0).var("host").push("getNextHighestDepth").op("callmethod")
+        a.push(name, name, 3).var("host").push("attachMovie").op("callmethod").op("pop")
+    for key, art, x, y, w, h in LIST_SLICES:
+        a.push("bd", 0, True, h, w)
+        new(a, ("flash", "display"), "BitmapData", 4).op("definelocal")
+        a.push(h, w, 0, 0, -y, -x, 1, 1).var("host").member(art).var("bd")
+        a.push(10, "__wideDraw").op("callfunc").op("pop")
+        a.var("S").push(key).var("bd").op("setmember")
+    for name, _ in LIST_ART:
+        a.push(0).var("host").member(name).push("removeMovieClip").op("callmethod").op("pop")
+    a.var("_global").push("__onlineSlices").var("S").op("setmember")
+    a.label("done")
+    a.var("_global").member("__onlineSlices").op("return")
+    return a
 
 
 def fn_online_refresh():
-    """Draw the live count separately from the plate, without padded zeroes."""
+    """The count, the arrow and a plate as wide as they need, right-anchored."""
+    E, R = ONLINE_CAP, expr("W", "-", ONLINE_CAP)
     a = Asm()
     a.push("panel").var("ui").member("__onlinePanel").op("definelocal")
     a.var("panel").push(UNDEF).op("equals2").iftrue("out")
@@ -608,24 +646,47 @@ def fn_online_refresh():
     a.var("panel").push("hintTitle_str", "Игроков в сети: ").var("value").op("add2").op("setmember")
     a.push("label").var("panel").member("label").op("definelocal")
     a.var("label").push("text").var("value").op("setmember")
-    # AutoSize geometry is delayed by a frame in AVM1. Fit by digit count,
-    # not stale _width, and keep the field centered between icon and rivet.
-    a.push("digits").var("value").push(1, "String").op("callfunc").member("length").op("definelocal")
-    a.push("fmt", 0).var("label").push("getTextFormat").op("callmethod").op("definelocal")
-    a.var("fmt").push("size", 13).op("setmember")
-    a.push(3).var("digits").op("less2").op("not").iftrue("format")
-    a.var("fmt").push("size", 36).var("digits").op("divide").op("setmember")
-    a.label("format")
-    a.var("fmt")
-    call_method(a, "label", "setTextFormat", 1)
-    a.var("label").push("_y", 4, 13).var("fmt").member("size").op("subtract")
-    a.push(2).op("divide").op("add2").op("setmember")
+    # AutoSize geometry is delayed by a frame in AVM1: size by digit count.
+    a.push("lw").var("value").push(1, "String").op("callfunc").member("length")
+    a.push(8).op("multiply").push(4).op("add2").op("definelocal")
+    a.var("label").push("_width").var("lw").op("setmember")
+    a.push("ax").var("lw").push(ONLINE_LABEL_X + 4).op("add2").op("definelocal")
+    a.push("W").var("ax").push(ONLINE_ARROW_W + ONLINE_CAP).op("add2").op("definelocal")
+    a.var("panel").member("__w").var("W").op("equals2").iftrue("drawn")
+    a.var("panel").push("__w").var("W").op("setmember")
+    a.push("S").var("ui").push(1, "__onlineArt").op("callfunc").op("definelocal")
+    a.push("mc", 0, "bg", 2).var("panel").push("createEmptyMovieClip").op("callmethod").op("definelocal")
+    T, H = ONLINE_TOP, ONLINE_H
+    for key, box in (("ct", (E, 0, R, T)), ("cb", (E, T, R, H)),
+                     ("ctl", (0, 0, E, T)), ("ctr", (R, 0, expr("W"), T)),
+                     ("cbl", (0, T, E, H)), ("cbr", (R, T, expr("W"), H))):
+        fill_call(a, key, *box, src="S")
+    a.label("drawn")
+    # The arrow says what a click does: down opens, up closes.
+    a.push("mc", 3, "arrow", 2).var("panel").push("createEmptyMovieClip").op("callmethod").op("definelocal")
+    a.var("mc").push("_x").var("ax").op("setmember")
+    a.push(100, ONLINE_TEXT_RGB)
+    call_method(a, "mc", "beginFill", 2)
+    a.var("ui").member("__onlineOpen", "_name").push(UNDEF).op("equals2").iftrue("down")
+    for label, (base, tip) in (("up", (16, 11)), ("down", (11, 16))):
+        if label == "down":
+            a.label("down")
+        aw = ONLINE_ARROW_W
+        for k, (x, y) in enumerate(((0, base), (aw, base), (aw // 2, tip), (0, base))):
+            a.push(y, x)
+            call_method(a, "mc", "moveTo" if k == 0 else "lineTo", 2)
+        if label == "up":
+            a.push(True).iftrue("traced")
+    a.label("traced")
+    call_method(a, "mc", "endFill", 0)
+    a.var("panel").push("_x").var("panel").member("__right").var("W").op("subtract")
+    a.push(1).var("Math").push("round").op("callmethod").op("setmember")
     a.label("out")
     return a
 
 
 def fn_online_panel():
-    """Embedded plate, live text and scene-local tooltip callbacks."""
+    """The popup's frame as a plate, the original icon, live text and tooltip."""
     a = Asm()
     a.var("ui").member("__onlinePanel").push(UNDEF).op("equals2").op("not").iftrue("place")
     a.push("panel")
@@ -636,9 +697,14 @@ def fn_online_panel():
     a.var("_global").push("__onlineBitmap", ONLINE_BITMAP, 1)
     a.var("flash").member("display", "BitmapData").push("loadBitmap").op("callmethod").op("setmember")
     a.label("bitmap")
+    a.push("icon", 1, "icon", 2).var("panel").push("createEmptyMovieClip").op("callmethod").op("definelocal")
     a.push(0).var("_global").member("__onlineBitmap")
-    call_method(a, "panel", "attachBitmap", 2)
-    a.push(21, 32, 4, 34, 1, "label")
+    call_method(a, "icon", "attachBitmap", 2)
+    # The icon's own pixels start a pixel into its square: just past the
+    # left rivet, centred on the plate.
+    a.var("icon").push("_x", 24).op("setmember")
+    a.var("icon").push("_y", 5).op("setmember")
+    a.push(18, 12, 4, ONLINE_LABEL_X, 2, "label")
     call_method(a, "panel", "createTextField", 6)
     a.push("label").var("panel").member("label").op("definelocal")
     for key, value in (("selectable", False), ("embedFonts", False),
@@ -647,14 +713,14 @@ def fn_online_panel():
     a.push("fmt")
     new(a, ("_global",), "TextFormat", 0).op("definelocal")
     for key, value in (("font", "Tahoma"), ("size", 13), ("bold", True),
-                       ("color", 0xDED5BC), ("align", "center")):
+                       ("color", ONLINE_TEXT_RGB), ("align", "center")):
         a.var("fmt").push(key, value).op("setmember")
     a.var("fmt")
     call_method(a, "label", "setNewTextFormat", 1)
     a.var("panel").push("tabEnabled", False).op("setmember")
     over = Asm()
     over.var("this").push("__hover", True).op("setmember")
-    over.push(28).var("this").member("_ymouse").op("subtract")
+    over.push(ONLINE_BOTTOM).var("this").member("_ymouse").op("subtract")
     over.var("this").member("_ymouse").var("this").member("hintTitle_str").push(3)
     over.var("lol").member("gpui", "HintManager").push("showHint").op("callmethod").op("pop")
     out = Asm()
@@ -670,16 +736,13 @@ def fn_online_panel():
         a.var("panel").push(event).function((), handler).op("setmember")
     a.label("place")
     a.push("panel").var("ui").member("__onlinePanel").op("definelocal")
-    # Narrow windows have only the 22-pixel lip above the gold controls.
-    for key, value in (("_xscale", 70), ("_yscale", 70), ("_y", 0)):
-        a.var("panel").push(key, value).op("setmember")
+    # Narrow windows have only the 22-pixel lip above the gold controls;
+    # wide ones centre the plate where the bar is tallest.
+    a.var("panel").push("_y", -4).op("setmember")
     a.var("w").push(ONLINE_INLINE_MIN).op("less2").iftrue("anchor")
-    for key, value in (("_xscale", 80), ("_yscale", 80), ("_y", 21)):
-        a.var("panel").push(key, value).op("setmember")
+    a.var("panel").push("_y", 19).op("setmember")
     a.label("anchor")
-    a.var("ui").member("__onlinePanel").push("_x")
-    a.var("w").push(ONLINE_RIGHT).op("subtract").var("panel").member("_width").op("subtract")
-    a.push(1).var("Math").push("round").op("callmethod").op("setmember")
+    a.var("panel").push("__right").var("w").push(ONLINE_RIGHT).op("subtract").op("setmember")
     a.var("ui").push(1, "__onlineRefresh").op("callfunc").op("pop")
     return a
 
@@ -730,7 +793,11 @@ LIST_SLICES = (("tl", LIST_FRAME, 0, 0, 22, 22), ("tr", LIST_FRAME, 474, 0, 22, 
                ("bl", LIST_FRAME, 0, 449, 22, 22), ("br", LIST_FRAME, 474, 449, 22, 22),
                ("t", LIST_FRAME, 40, 0, 16, 22), ("b", LIST_FRAME, 40, 449, 16, 22),
                ("l", LIST_FRAME, 0, 400, 22, 16), ("r", LIST_FRAME, 474, 400, 22, 16),
-               ("in", LIST_INNER, 300, 90, 200, 200))
+               ("in", LIST_INNER, 300, 90, 200, 200),
+               # the counter's plate: whole rivet on top, bottom edge below
+               ("ctl", LIST_FRAME, 0, 0, 22, 17), ("ct", LIST_FRAME, 40, 0, 16, 17),
+               ("ctr", LIST_FRAME, 474, 0, 22, 17), ("cbl", LIST_FRAME, 0, 457, 22, 14),
+               ("cb", LIST_FRAME, 40, 457, 16, 14), ("cbr", LIST_FRAME, 474, 457, 22, 14))
 
 
 def emit(a, v):
@@ -784,6 +851,7 @@ def fn_online_close():
     # every other dead one, and would take other listeners with it.
     a.var("p").member("__watch").push(1, "__onlineForget").op("callfunc").op("pop")
     call_method(a, "p", "removeMovieClip", 0)
+    a.var("ui").push(1, "__onlineRefresh").op("callfunc").op("pop")
     a.label("out")
     return a
 
@@ -889,8 +957,7 @@ def fn_online_show():
         a.label("sorted%d" % k)
     a.push("n").var("list").member("length").op("definelocal")
     # As many rows as fit between the counter and the chat.
-    a.push("top").var("panel").member("_y").var("panel").member("_height").op("add2")
-    a.push(2).op("add2").op("definelocal")
+    a.push("top").var("panel").member("_y").push(ONLINE_BOTTOM + 2).op("add2").op("definelocal")
     a.push("rows", LIST_ROWS[1]).op("definelocal")
     a.push("room").var("lol").member("core", "SceneShifter", "chat", "_y").var("top").op("subtract")
     a.push(2 * E + 2 * LIST_PAD + 4).op("subtract").push(LIST_PITCH).op("divide")
@@ -925,23 +992,7 @@ def fn_online_show():
     a.label("left")
     a.var("p").push("_x").var("x").push(1).var("Math").push("round").op("callmethod").op("setmember")
     a.var("p").push("_y").var("top").push(1).var("Math").push("round").op("callmethod").op("setmember")
-    # The original art, sliced once per session.
-    a.var("_global").member("__onlineSlices").push(UNDEF).op("equals2").op("not").iftrue("sliced")
-    a.push("S")
-    new(a, ("_global",), "Object", 0).op("definelocal")
-    for k, (name, _) in enumerate(LIST_ART):
-        a.push(10 + k, name, name, 3).var("p").push("attachMovie").op("callmethod").op("pop")
-    for key, art, x, y, w, h in LIST_SLICES:
-        a.push("bd", 0, True, h, w)
-        new(a, ("flash", "display"), "BitmapData", 4).op("definelocal")
-        a.push(h, w, 0, 0, -y, -x, 1, 1).var("p").member(art).var("bd")
-        a.push(10, "__wideDraw").op("callfunc").op("pop")
-        a.var("S").push(key).var("bd").op("setmember")
-    for name, _ in LIST_ART:
-        a.push(0).var("p").member(name).push("removeMovieClip").op("callmethod").op("pop")
-    a.var("_global").push("__onlineSlices").var("S").op("setmember")
-    a.label("sliced")
-    a.push("S").var("_global").member("__onlineSlices").op("definelocal")
+    a.push("S").var("p").push(1, "__onlineArt").op("callfunc").op("definelocal")
     a.push("mc", 0, "frame", 2).var("p").push("createEmptyMovieClip").op("callmethod").op("definelocal")
     for key, box in (("in", (E, E, W_E, H_E)), ("t", (E, 0, W_E, E)),
                      ("b", (E, H_E, W_E, expr("H"))), ("l", (0, E, E, H_E)),
@@ -1036,6 +1087,7 @@ def fn_online_show():
     a.var("_global").member("__onlineCross").var("x").push("release", 3)
     a.var("x").push("addEventListener").op("callmethod").op("pop")
     a.var("watch").push(1).var("Mouse").push("addListener").op("callmethod").op("pop")
+    a.var("ui").push(1, "__onlineRefresh").op("callfunc").op("pop")
     a.label("out")
     return a
 
@@ -1112,6 +1164,7 @@ def injected():
             ("__wideChat", fn_chat, ("chat", "w")),
             ("__onlineRefresh", fn_online_refresh, ("ui",)),
             ("__onlinePanel", fn_online_panel, ("ui", "w")),
+            ("__onlineArt", fn_online_art, ("host",)),
             ("__onlineToggle", fn_online_toggle, ("ui",)),
             ("__onlineUpdate", fn_online_update, ("ui",)),
             ("__onlineClose", fn_online_close, ("ui",)),
@@ -1162,7 +1215,7 @@ def injected():
 def without_online_art(tags):
     """Remove only our own exports and what they define, when repatching."""
     out = list(tags)
-    for name in [ONLINE_BITMAP] + [n for n, _ in LIST_ART]:
+    for name in [ONLINE_BITMAP, *ONLINE_OLD_BITMAPS] + [n for n, _ in LIST_ART]:
         name = name.encode() + b"\0"
         exports = [t for t in out if t[0] == 56 and t[1][:2] == b"\1\0"
                    and t[1][4:] == name]
@@ -1174,6 +1227,70 @@ def without_online_art(tags):
         out = [t for t in out if t != exports[0]
                and not (t[0] in (21, 39) and t[1][:2] == ident)]
     return out
+
+
+def png_pixels(png):
+    """8-bit RGBA PNG -> (width, height, rows of RGBA bytes); no PIL here."""
+    if png[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("not a PNG")
+    at, data, head = 8, b"", None
+    while at < len(png):
+        size, kind = struct.unpack_from(">I4s", png, at)
+        body = png[at + 8:at + 8 + size]
+        if kind == b"IHDR":
+            head = struct.unpack(">IIBBBBB", body)
+        elif kind == b"IDAT":
+            data += body
+        at += 12 + size
+    width, height, depth, colour, _, _, interlace = head
+    if (depth, colour, interlace) != (8, 6, 0):
+        raise ValueError("online panel must be 8-bit RGBA, not interlaced")
+    raw, stride, rows, prev = zlib.decompress(data), width * 4, [], bytearray(width * 4)
+    for y in range(height):
+        kind, line = raw[y * (stride + 1)], bytearray(raw[y * (stride + 1) + 1:(y + 1) * (stride + 1)])
+        for i in range(stride):
+            left = line[i - 4] if i >= 4 else 0
+            up, corner = prev[i], (prev[i - 4] if i >= 4 else 0)
+            if kind == 1:
+                line[i] = (line[i] + left) & 255
+            elif kind == 2:
+                line[i] = (line[i] + up) & 255
+            elif kind == 3:
+                line[i] = (line[i] + (left + up) // 2) & 255
+            elif kind == 4:
+                p = left + up - corner
+                pa, pb, pc = abs(p - left), abs(p - up), abs(p - corner)
+                line[i] = (line[i] + (left if pa <= pb and pa <= pc else up if pb <= pc else corner)) & 255
+        rows.append(line)
+        prev = line
+    return width, height, rows
+
+
+def online_icon():
+    """The people icon out of the counter's PNG, its plate made transparent.
+
+    The pixels are the PNG's own; only the alpha is new, from how far each
+    one stands out of the dark plate, so the icon keeps its soft edges and
+    does not carry a square of the old plate onto the new one."""
+    width, height, rows = png_pixels(ONLINE_ASSET.read_bytes())
+    if (width, height) != (ONLINE_WIDTH, 28):
+        raise ValueError("online panel must be a 76x28 PNG")
+    x0, y0, w, h = ONLINE_ICON
+    raw = b""
+    for y in range(y0, y0 + h):
+        line = bytearray(b"\0")
+        for x in range(x0, x0 + w):
+            r, g, b, alpha = rows[y][x * 4:x * 4 + 4]
+            light = (r + g + b) // 3
+            alpha = alpha * max(0, min(95, light - 55)) // 95
+            line += bytes((r, g, b, alpha))
+        raw += line
+
+    def chunk(kind, body):
+        return (struct.pack(">I", len(body)) + kind + body
+                + struct.pack(">I", zlib.crc32(kind + body) & 0xFFFFFFFF))
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
 
 
 def online_art(tags):
@@ -1193,10 +1310,7 @@ def online_art(tags):
     collect(tags)
     ident = next(i for i in range(1, 65536) if i not in used)
     used.add(ident)
-    png = ONLINE_ASSET.read_bytes()
-    if png[:8] != b"\x89PNG\r\n\x1a\n" or struct.unpack_from(">II", png, 16) != (ONLINE_WIDTH, 28):
-        raise ValueError("online panel must be a 76x28 PNG")
-    bitmap = (21, struct.pack("<H", ident) + png, True)
+    bitmap = (21, struct.pack("<H", ident) + online_icon(), True)
     export = (56, struct.pack("<HH", 1, ident) + ONLINE_BITMAP.encode() + b"\0", False)
     return [bitmap, export] + online_list_art(tags, used)
 
