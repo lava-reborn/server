@@ -588,6 +588,13 @@ def fn_location_bound(axis):
     a.push("pos").var("pos").var("hi").push(2).var("Math").push("min").op("callmethod")
     a.var("lo").push(2).var("Math").push("max").op("callmethod").op("definelocal")
     a.label("apply")
+    # A slide targeting a point outside the camera range never reaches its
+    # endpoint. Stop it when clamping, or it pulls every manual scroll back
+    # to the boundary on the next frame (ViewFrame.slideContX/slideContY).
+    a.var("this").member("cont_mc", prop).var("pos").op("equals2").iftrue("position")
+    a.push("slideCont" + axis)
+    call_method(a, "this", "deleteEnterFrame", 1)
+    a.label("position")
     a.var("this").member("cont_mc").push(prop).var("pos").op("setmember")
     a.push(UNDEF).op("return")
     a.label("original")

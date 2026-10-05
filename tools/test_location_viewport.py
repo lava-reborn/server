@@ -1,7 +1,9 @@
 """Real Flash: small maps stay centered, large maps stay inside their bounds.
 
 Uses the shipped locationFrame symbol and its actual ViewFrame methods,
-including mask rendering. The unpatched client is a regression control.
+including mask rendering and EFBeacon camera callbacks. Manual scrolling
+must remain effective after centering at map edges (ViewFrame.slideContX/Y).
+The unpatched client is a regression control.
 Set LAVA_FLASH_PLAYER to a standalone Flash projector and LAVA_RES to the
 client resources. Without either asset this optional runtime suite skips;
 test_widescreen still validates generated code and SWF containers in CI.
@@ -9,6 +11,7 @@ The projector runs hidden, serves only a synthetic scene on localhost and
 never connects to the game or accesses accounts.
 """
 import os
+import math
 from pathlib import Path
 import struct
 import subprocess
@@ -54,6 +57,7 @@ def probe(url):
     a.push("content", 0, "content", 2).var("frame").member("cont_mc")
     a.push("createEmptyMovieClip").op("callmethod").op("definelocal")
     a.var("frame").push("_content").var("content").op("setmember")
+    a.push("beacon").var("frame").member("___oEnterFrameBeacon").op("definelocal")
     # 528: 32x64 cells, 41: 64x128 cells; cells are 40x15 pixels.
     cases = ((1280, 960, 1856, 843), (2560, 1920, 1856, 843),
              (1280, 960, 3776, 1923), (1280, 960, 1280, 960),
@@ -78,6 +82,23 @@ def probe(url):
         w.call_method(a, "frame", "scrollY", 1)
         field(a, "%d_scroll_x" % i, "frame", "cont_mc", "_x")
         field(a, "%d_scroll_y" % i, "frame", "cont_mc", "_y")
+        # Run the real camera callbacks across multiple ticks. Geometry-only
+        # calls miss an unfinished slide that undoes scrolling every frame.
+        for j, (x, y) in enumerate(((0, 0), (mw, mh), (mw / 2, mh / 2))):
+            a.push(int(y), int(x))
+            w.call_method(a, "frame", "slideToCenter", 2)
+            for _ in range(3):
+                w.call_method(a, "beacon", "applyOEF", 0)
+            field(a, "%d_%d_pending" % (i, j), "beacon", "OEFF_arr", "length")
+            for axis, prop in (("X", "_x"), ("Y", "_y")):
+                field(a, "%d_%d_slide_%s" % (i, j, axis), "frame", "cont_mc", prop)
+                a.push(100 if j == 1 else -100)
+                w.call_method(a, "frame", "scroll" + axis, 1)
+                field(a, "%d_%d_manual_%s" % (i, j, axis), "frame", "cont_mc", prop)
+            for _ in range(3):
+                w.call_method(a, "beacon", "applyOEF", 0)
+            for axis, prop in (("X", "_x"), ("Y", "_y")):
+                field(a, "%d_%d_later_%s" % (i, j, axis), "frame", "cont_mc", prop)
     # Opaque margins, with the real clip mask stopping scene pixels.
     w.call_method(a, "content", "clear", 0)
     rectangle(a, "content", 1280, 960)
@@ -207,6 +228,20 @@ try:
                 check("scene %dx%d, view %.0fx%.0f, target %d: bounded camera" % (mw, mh, vw, vh, j),
                       abs(float(after["%d_%d_x" % (i, j)]) - want_x) < .06
                       and abs(float(after["%d_%d_y" % (i, j)]) - want_y) < .06, True)
+                # ViewFrame.cx/cy round their targets before scheduling a slide.
+                slide_x = (vw - mw) / 2 if vw >= mw else max(vw - mw, min(0, math.floor(vw / 2 - x + .5)))
+                slide_y = (vh - mh) / 2 if vh >= mh else max(vh - mh, min(0, math.floor(vh / 2 - y + .5)))
+                check("scene %d, target %d: automatic centering finishes at the camera bounds" % (i, j),
+                      after["%d_%d_pending" % (i, j)] == "0"
+                      and abs(float(after["%d_%d_slide_X" % (i, j)]) - slide_x) < .06
+                      and abs(float(after["%d_%d_slide_Y" % (i, j)]) - slide_y) < .06, True)
+                delta = 100 if j == 1 else -100
+                manual_x = (vw - mw) / 2 if vw >= mw else max(vw - mw, min(0, slide_x + delta))
+                manual_y = (vh - mh) / 2 if vh >= mh else max(vh - mh, min(0, slide_y + delta))
+                check("scene %d, target %d: manual scrolling survives subsequent camera ticks" % (i, j),
+                      all(abs(float(after["%d_%d_%s_%s" % (i, j, stage, axis)]) - want) < .06
+                          for stage in ("manual", "later")
+                          for axis, want in (("X", manual_x), ("Y", manual_y))), True)
             want_x = (vw - mw) / 2 if vw >= mw else vw - mw
             want_y = (vh - mh) / 2 if vh >= mh else 0
             check("scene %d: edge scrolling cannot leave the map" % i,
