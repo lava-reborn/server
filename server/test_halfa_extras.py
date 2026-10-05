@@ -766,7 +766,8 @@ try:
     d.send("q_st;mob=%d;q_idx=%d;" % (here[BARI][0], quests.given_by(BARI).index(250)))
     took = d.frames(0.8)
     map_id = [p["q_id"] for n, p in took if n.startswith("q_di_")]
-    d.send("q_co;obj_idx=1;mob=%d;q_id=%d;" % (here[BARI][0], map_id[0] if map_id else 0))
+    # Zuberi's map is first in rew_obj; the client sends its original index.
+    d.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (here[BARI][0], map_id[0] if map_id else 0))
     bought = d.frames(1.0)
     have = owned("Digger")
     check("Бари sells Зубери's map of 5987,1729 with a sapper shovel, for 0,20 G",
