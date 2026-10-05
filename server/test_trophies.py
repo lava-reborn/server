@@ -18,8 +18,8 @@
     (ss_upd 3), and anybody inspecting sees the show (ss_get;slot=32) and
     what each trophy says.
 
-In process: the rule, the part by level, the words as ss_di_trophy carries
-them, and every Store method on a real SQLite database (the Postgres run is
+In process: eligibility, weighted parts at every level, ss_di_trophy words,
+and every Store method on a real SQLite database (the Postgres run is
 test_storage_pg's); and a quarry killed half way through a walk, whose
 trophy goes into the one bag the death leaves where the walk ends. Over
 sockets, with nothing falling off the body but a stack's third
@@ -40,6 +40,9 @@ import sys
 import tempfile
 import threading
 import time
+from collections import Counter
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
@@ -79,10 +82,6 @@ else:
     check("a trophy falls for a killer at the victim's level or below, never above",
           [trophies.falls(k, v) for k, v in ((0, 0), (3, 5), (7, 7), (5, 4), (1, 0))],
           [True, True, True, False, False])
-    check("the part by the victim's level, four levels a step: ear, finger, scalp,"
-          " skull, hand",
-          [trophies.kind_for(v) for v in (0, 3, 4, 7, 8, 11, 12, 15, 16, 25)],
-          [EAR, EAR, FINGER, FINGER, SCALP, SCALP, SKULL, SKULL, HAND, HAND])
     check("the original's names", [trophies.name_of(t) for t in (EAR, FINGER, SCALP, SKULL, HAND)],
           ["Ухо", "Палец", "Скальп", "Череп", "Кисть"])
     check("the fee is the trophy's price, as the registration window draws it",
@@ -373,7 +372,9 @@ async def _killed_walking():
     check("the quarry's figure on the second hex of its walk, the walk ending three on",
           (quarry.combat.cell, quarry.pos), (path[1], path[-1]))
     rc = combat.room_combat(room, st)
-    rc.kill(quarry.combat, hunter.combat)
+    with patch.object(trophies, "random") as draw:
+        draw.randrange.return_value = 0
+        rc.kill(quarry.combat, hunter.combat)
     lying = {cell: list(bag.uniqs) for cell, bag in rc.loot.items()}
     trophy = [u for u in lying.get(path[-1], ()) if (st.item(u) or {}).get("root") == items.TROPHY]
     check("killed walking: one bag, where the walk ends -- the corpse's",
@@ -394,6 +395,41 @@ try:
 except Exception:
     import traceback
     fails.append("the walker's death broke:\n" + traceback.format_exc())
+
+
+# --- in process: every rarity through the real drop and store --------------------
+# Exhaust every integer draw, including all boundaries, without sampling noise.
+# Level 5 reproduces the report of fingers only; newcomers and veterans must
+# have the same distribution. Only the source of randomness is replaced.
+for level in (0, 5, 20):
+    killer = SimpleNamespace(level=level, store=st,
+                             sess=SimpleNamespace(char_id=K, nick="Killer", say=Mock()))
+    victim = SimpleNamespace(level=level, rc=Mock(),
+                             sess=SimpleNamespace(char_id=V, nick="Victim", pos=42))
+    parts, records_ok, bags_ok = [], [], []
+    with patch.object(trophies, "random") as draw:
+        draw.randrange.side_effect = range(100)
+        for _ in range(100):
+            row = trophies.drop(killer, victim, combat.LOOT_OWNER, BAG)
+            parts.append(row["type_id"])
+            rec = st.trophy(row["uniq"])
+            records_ok.append((rec["type_id"], rec["killer_lvl"], rec["victim_lvl"],
+                               rec["kills"]) == (row["type_id"], level, level, 1))
+            bags_ok.append(victim.rc.add_to_bag.call_args.args == (42, [row]))
+        check("level %d: all five parts, ear 40%%, finger 30%%, scalp 18%%,"
+              " hand 10%%, skull 2%%" % level, Counter(parts),
+              {EAR: 40, FINGER: 30, SCALP: 18, HAND: 10, SKULL: 2})
+        check("  ..one uniform draw per kill, with 100 possible outcomes",
+              [c.args for c in draw.randrange.call_args_list], [(100,)] * 100)
+    check("  ..each part is recorded with the actual levels and put in the death bag",
+          (all(records_ok), all(bags_ok), victim.rc.add_to_bag.call_count),
+          (True, True, 100))
+    killer.level = level + 1
+    with patch.object(trophies, "random") as draw:
+        victim.rc.reset_mock()
+        check("  ..a stronger killer gets no trophy and makes no rarity draw",
+              (trophies.drop(killer, victim, combat.LOOT_OWNER, BAG),
+               draw.randrange.called, victim.rc.add_to_bag.called), (None, False, False))
 st.close()
 
 # --- the server -----------------------------------------------------------------
@@ -424,7 +460,17 @@ env["LAVA_SERVER_CHAT"] = "1"
 # database: its client here never asks for a roster, and the line telling
 # it to reload the page (clans.DEAF_LINE) is not what this suite reads.
 env["LAVA_CLAN_DEAF_CHECK"] = "0"
-srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
+# Two ears exercise collection merging; a skull then exercises a different
+# rarity's pickup, description and fee. Patch only trophy randomness so combat
+# keeps its seeded rolls and the production selection/drop path still runs.
+_boot = """import runpy
+from unittest.mock import patch
+import trophies
+with patch.object(trophies, 'random') as draw:
+    draw.randrange.side_effect = [0, 39, 99]
+    runpy.run_path('server.py', run_name='__main__')
+"""
+srv = subprocess.Popen([sys.executable, "-c", _boot], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 _log = []
 _drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
@@ -973,7 +1019,9 @@ try:
     seen_h, seen_q, cell = kill(h, q, QP)
     rows = db_rows("SELECT * FROM trophies WHERE registered_at IS NULL")
     T3 = rows[0]["uniq"] if rows else 0
-    OID3 = inventory.oid(T3, EAR, items.TROPHY)
+    check("a level-zero victim can leave the rarest part, a skull",
+          [r["type_id"] for r in rows], [SKULL])
+    OID3 = inventory.oid(T3, SKULL, items.TROPHY)
     _o, _inside, took = take_from_bag(h, cell, OID3)
     check("a quarry killed as a member of a clan: the trophy's words keep the clan"
           " (v_clan, «Клан жертвы»)",
@@ -986,7 +1034,7 @@ try:
           " pay mark, so the fee is paid and the skill stays",
           (took, acks(got), [(p["afro"], p["rep"]) for p in mine(got)],
            db_rows("SELECT afro, rep FROM characters WHERE id = ?", (H,))[0]["rep"]),
-          ([0], [0], [(START["afro"] - 75, [1])], 1))
+          ([0], [0], [(START["afro"] - 50 - 200, [1])], 1))
     check("  ..and the chat says why", [("не чаще раза в час" in t) for t in said(got)],
           [True])
     check("  ..a new entry of its own: nothing is joined to a deleted one",

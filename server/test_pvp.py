@@ -765,9 +765,10 @@ try:
     split_rows = [st.item(inventory.parse_oid(o)[0]) for o in split]
     won_words = [st.trophy(inventory.parse_oid(o)[0]) for o in won]
     st.close()
-    check("with the trophy of the kill: an ear, the hunter's off the quarry",
-          [(inventory.parse_oid(o)[1], w["killer_id"], w["victim_id"])
-           for o, w in zip(won, won_words)], [(1495, 1, 2)])
+    check("with one of the five PvP trophies, the hunter's off the quarry",
+          [(inventory.parse_oid(o)[1] in (1492, 1493, 1494, 1495, 1496),
+            inventory.parse_oid(o)[1] == w["type_id"], w["killer_id"], w["victim_id"])
+           for o, w in zip(won, won_words)], [(True, True, 1, 2)])
     check("and finds the quarry's things in it, and a third of its rounds as"
           " a row of their own",
           (sorted(o for o in inside if o in dropping),
