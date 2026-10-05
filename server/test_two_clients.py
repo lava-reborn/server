@@ -232,6 +232,15 @@ try:
           b.frames(), ["userMsg;group=6;nick=@Alice@;entry=@всем@;from=%d;"
                        % pid_a])
 
+    # Trade retains its own group, including the long-message chunk markers.
+    for raw in ("selling", "^0^first", "^1^middle", "^2L^last"):
+        a.send("userMsg;entry=@%s@;group=4;" % raw)
+        check("trade: one ack and no duplicate to the speaker", a.frames(),
+              ["cmdAck;res=0;"])
+        check("trade: the listener receives the exact text in channel 4",
+              b.frames(), ["userMsg;group=4;nick=@Alice@;entry=@%s@;from=%d;"
+                           % (raw, pid_a)])
+
     # Server answers to our own commands still come back to the asker.
     a.send("userMsg;entry=@/where@;group=0;")
     got = a.frames()
@@ -365,6 +374,13 @@ try:
     check("Alice keeps hearing about Bob", len(beats_a) >= 1, True)
     check("Bob keeps hearing about Alice", len(beats_b) >= 1, True)
 
+    a.send("userMsg;entry=@map neighbours@;group=0;")
+    check("location chat on the map: one ack and no echo",
+          [f for f in a.frames() if not f.startswith("userMove")], ["cmdAck;res=0;"])
+    check("location chat on the map reaches a nearby player",
+          [f for f in b.frames() if f.startswith("userMsg")],
+          ["userMsg;group=0;nick=@Alice@;entry=@map neighbours@;from=%d;" % pid_a])
+
     # A leg of travel reaches the other side at once, with the velocity.
     a.send("moveTo;dy=0;dx=-100;")
     got = a.frames()
@@ -443,6 +459,25 @@ try:
     check("the wasteland has no other player in it",
           any("rtype=-1;" in f for f in got), False)
 
+    # Bob is still on the map above Alice's cell. Location chat does not
+    # cross between the map and a local scene; trade/world do, both ways.
+    for speaker, listener, nick, pid in ((a, b, "Alice", pid_a), (b, a, "Bob", pid_b)):
+        speaker.send("userMsg;entry=@only neighbours@;group=0;")
+        check("map and local scene do not share location chat: ack only",
+              [f for f in speaker.frames() if not f.startswith("userMove")],
+              ["cmdAck;res=0;"])
+        check("  ..the other scene hears nothing",
+              [f for f in listener.frames() if f.startswith("userMsg")], [])
+        for group in (4, 6):
+            speaker.send("userMsg;entry=@across scenes@;group=%d;" % group)
+            check("trade/world between map and scene: one ack, no echo",
+                  [f for f in speaker.frames() if not f.startswith("userMove")],
+                  ["cmdAck;res=0;"])
+            check("  ..delivered with the original channel, id and nick",
+                  [f for f in listener.frames() if f.startswith("userMsg")],
+                  ["userMsg;group=%d;nick=@%s@;entry=@across scenes@;from=%d;"
+                   % (group, nick, pid)])
+
     # --- one leaves, the other lives on ---------------------------------------
     a.send("logout;")
     a.s.close()
@@ -495,6 +530,11 @@ try:
     check("но Алисы там нет", any("rtype=-1;" in f for f in got), False)
     check("и Алисе о Бобе не сказали",
           any(f.startswith("newUser") for f in a.frames(wait=1)), False)
+    a.send("userMsg;entry=@distant trade@;group=4;")
+    check("trade reaches a distant room: the sender gets only its ack",
+          a.frames(), ["cmdAck;res=0;"])
+    check("  ..two hundred cells away the listener still gets the trade line",
+          b.frames(), ["userMsg;group=4;nick=@Alice@;entry=@distant trade@;from=%d;" % pid_a])
     a.send("logout;")
     b.send("logout;")
 finally:
