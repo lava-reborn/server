@@ -882,8 +882,8 @@ try:
     got += more + c.frames(0.4)
     check("«Сгоревшая микросхема» taken from Доктор Гофус; the old chip in the bag: complete",
           counts(got, quests.BRING_L_OBJ), [([0], 0), ([1], 1)])
-    got = hand_in(c, here, CHIP_Q, q, obj_idx=0)
-    check("  ..handed in choosing the first icon (it counts from the end): the chip out,"
+    got = hand_in(c, here, CHIP_Q, q, obj_idx=1)
+    check("  ..handed in choosing Анестетик (wire index 1): the chip out,"
           " the Анестетик МК I in, the day's count, the ack",
           (upto_ack(got), acks(got), new_things(got), owned(CID).get(CHIP),
            [p["daily_available"] for p in named(got, "q_sys")]),
@@ -896,7 +896,7 @@ try:
     got, q = take(c, here, CHIP_Q)
     give(c, CHIP)
     c.frames(0.4)
-    got = hand_in(c, here, CHIP_Q, q, obj_idx=1)
+    got = hand_in(c, here, CHIP_Q, q, obj_idx=0)
     check("  ..the chip again, choosing the other icon: the Салюс МК I",
           (acks(got), new_things(got)), ([0], [SALUS]))
 
