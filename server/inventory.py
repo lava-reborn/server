@@ -772,6 +772,19 @@ def repair_gold(afro):
     return max(1, int(math.floor(afro / float(GOLD_REPAIR_MOD) * 100)))
 
 
+def repair_base_price(si):
+    """Afro valuation for repairs only; gold prices are hundredths of G.
+
+    The client patch supplies this value from Item.getProp("cost") while
+    the repair window is open. Trade prices and sale eligibility stay intact.
+    """
+    cost = as_sent(si.get("cost", 0) or 0)
+    if not cost:
+        cost = (as_sent(si.get("g_cost", 0) or 0)
+                * as_sent(GOLD_REPAIR_MOD) / 100)
+    return cost
+
+
 def repair_window(si, brk, max_break_cur, rmod=RMOD):
     """Every figure the repair window prints for one thing, the gold ones in
     hundredths of an ounce: ((afro, gold, restore) in its slot, (afro, gold)
@@ -791,12 +804,11 @@ def repair_window(si, brk, max_break_cur, rmod=RMOD):
     The two sums, countAllRepairAfroCost and countAllRepairGoldCost, go
     over the same broken things and add floor(cost * (rmod * repair_mod) *
     (1 - q)) and repair_gold of that: no 1 for a 0, and nothing at all for
-    a thing with no afro cost (their `if (cost)`). A thing priced in gold
-    alone has none on the wire (items._overlay: a cost there would put it
-    up for sale, TradeInterface.checkSellItem), so its slot reads 1 afro and
-    0.01 G however worn it is, and the sums leave it out.
+    a thing with no valuation (their `if (cost)`). Gold-only things use
+    their gold price converted at the repair rate, in the slot and sums.
+    tools/widescreen.py supplies that valuation only in the repair UI.
     """
-    cost = as_sent(si.get("cost", 0) or 0)
+    cost = repair_base_price(si)
     g_cost = as_sent(si.get("g_cost", 0) or 0)
     rmod = as_sent(rmod)
     repair_mod = as_sent(si.get("repair_mod", 1))
@@ -824,10 +836,7 @@ def repair_prices(si, brk, max_break_cur, rmod=RMOD):
     (Trade.repairItem), so the server cannot tell which the player read.
     Where the two part, the lower is charged:
 
-      * a thing with no afro price -- one priced in gold alone -- is mended
-        for nothing: the slot says 1 afro or 0.01 G, the sums leave it out.
-        Its gold price is paid by the ceiling every repair takes
-        (REPAIR_KEEPS) and by the restore that buys it back as new;
+      * a thing with neither an afro nor a gold price is mended for nothing;
       * a repair that comes to under one afro costs no afro (the slot says
         1, the sum adds 0) and 0.01 G, which both print;
       * anywhere else they agree but for a double's last bit at a floor,

@@ -58,6 +58,82 @@ check("every HUD and frame branch lands inside its own function",
       validate(w.injected()), [])
 
 
+def run_repair_getprop(props, prop, mode, rate=50000):
+    """Execute the emitted AVM1 wrapper with the original getter as a stub.
+
+    This catches stack order, branches and returns that container checks
+    alone cannot exercise. Opcodes follow the AVM1 stack convention.
+    """
+    code = w.fn_repair_cost().assemble()
+    stack, at = [], 0
+    env = dict(prop=prop, this={"__repairGetPropOrig": lambda key: props.get(key)},
+               lol=dict(gpui=dict(StaffInterface=dict(ssType=mode)),
+                        core=dict(GConstatns=dict(gold_repair_mod=rate))))
+    while at < len(code):
+        op = code[at]
+        at += 1
+        payload = b""
+        if op >= 0x80:
+            size, = struct.unpack_from("<H", code, at)
+            at += 2
+            payload = code[at:at + size]
+            at += size
+        if op == 0x96:
+            p = 0
+            while p < len(payload):
+                kind = payload[p]
+                p += 1
+                if kind == 0:
+                    end = payload.index(b"\0", p)
+                    stack.append(payload[p:end].decode())
+                    p = end + 1
+                elif kind == 7:
+                    stack.append(struct.unpack_from("<i", payload, p)[0])
+                    p += 4
+                else:
+                    raise AssertionError("unexpected push type: %s" % kind)
+        elif op == 0x1C:
+            stack.append(env[stack.pop()])
+        elif op == 0x4E:
+            key, obj = stack.pop(), stack.pop()
+            stack.append(obj.get(key))
+        elif op == 0x52:
+            method, obj, count = stack.pop(), stack.pop(), stack.pop()
+            stack.append(obj[method](*[stack.pop() for _ in range(count)]))
+        elif op == 0x3C:
+            value, key = stack.pop(), stack.pop()
+            env[key] = value
+        elif op == 0x12:
+            stack.append(not stack.pop())
+        elif op in (0x49, 0x0C, 0x0D):
+            right, left = stack.pop(), stack.pop()
+            stack.append(left == right if op == 0x49 else
+                         left * right if op == 0x0C else left / right)
+        elif op == 0x9D:
+            if stack.pop():
+                at += struct.unpack("<h", payload)[0]
+        elif op == 0x3E:
+            return stack.pop()
+        else:
+            raise AssertionError("unexpected opcode: %02x" % op)
+    raise AssertionError("missing return")
+
+
+check("gold Walther has a 6500 afro repair valuation only while repair is open",
+      [run_repair_getprop(dict(cost=0, g_cost=13), "cost", mode)
+       for mode in ("repair", "trade", "barter", None)], [6500, 0, 0, 0])
+check("repair valuation follows the server's currency rate",
+      run_repair_getprop(dict(cost=0, g_cost=300), "cost", "repair", 40000), 120000)
+check("ordinary and dual-priced items keep their afro price in repairs",
+      [run_repair_getprop(dict(cost=2800, g_cost=g), "cost", "repair")
+       for g in (0, 13)], [2800, 2800])
+check("gold price, repair modifier and genuinely unpriced items are unchanged",
+      [run_repair_getprop(dict(cost=0, g_cost=13, repair_mod=1), p, "repair")
+       for p in ("g_cost", "repair_mod", "absent")]
+      + [run_repair_getprop(dict(cost=0, g_cost=0), "cost", "repair")],
+      [13, 1, None, 0])
+
+
 def check_container(label, version, body):
     """The same file round trip for the fixture and the optional real client."""
     original = w.split_tags(body)

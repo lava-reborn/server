@@ -19,7 +19,7 @@ In process:
     in either currency, and a thing worn less than that made whole where
     it stands; a press with nothing to do answered 0 for nothing; the one
     refusal a listed thing gets, past mending at 0 of 1; a thing priced in
-    gold alone mended for nothing and restored for its gold price, as new;
+    gold alone repaired from its gold valuation and restored for its price;
     a registrar that mends nothing; the money ledger;
   * the admin panel's gifts to players not in the game, given bare before
     (inventory.OFFLINE_GIFTS_FIX): filled once, in the bag, in a letter and
@@ -69,6 +69,7 @@ cat = items.catalogue()
 by_name = {v[1]: k for k, v in cat.items()}
 RATE = progression.GOLD_TO_AFRO_RATE
 WALTHER = 25636                                     # Walther P99 (A), 2800 afro
+GWALTHER = 25637                                    # Walther P99 (G), 0.13 G
 GVEST = by_name["armor_Set_M_LVL_8_G_mod00"]        # Бронежилет налетчика (G), 3 G
 DEMIR, HASSIR = 5193, 105                           # a registrar alone; one with a stall
 PISTOLS, MARKET_CELL = 1200, (5970, 1730)           # «Пистолеты и патроны», Чёрный рынок
@@ -95,6 +96,10 @@ def window(si, brk, top, rmod, K):
     """((afro, gold, restore) of repairCostCount, (afro, gold) of this thing
     in countAllRepairAfroCost / countAllRepairGoldCost or None where their
     `if (cost)` leaves it out). getCurQuality is break / max_break_cur."""
+    # Item.getProp("cost") in the patched repair UI, including bulk sums.
+    si = dict(si)
+    if not si["cost"] and si.get("g_cost"):
+        si["cost"] = si["g_cost"] * K["gold_repair_mod"] / 100
     q = brk / float(top)
     loc7 = rmod if not q else rmod * (1 - q)
     loc6 = si.get("repair_mod")
@@ -161,10 +166,13 @@ check("  ..below it only for a thing with no afro price, a repair under one afro
       " the client's two floors themselves part", parted.get("unexplained", 0), 0)
 
 g_vest = items.params_of(GVEST)
-check("a thing priced in gold alone: the slot says 1 afro and 0.01 G, the sums leave it out,"
-      " and it is mended for nothing; its restore is its gold price",
+check("a broken 3 G vest costs 45000 afro or 0.90 G to repair in the slot and bulk sum",
       (inventory.repair_window(g_vest, 0, 1250), inventory.repair_prices(g_vest, 0, 1250)),
-      (((1, 1, 300), (0, 0)), (0, 0, 300)))
+      (((45000, 90, 300), (45000, 90)), (45000, 90, 300)))
+check("half-worn gold Walther: 975 afro, or 0.01 G after rounding down; restore 0.13 G",
+      inventory.repair_prices(items.params_of(GWALTHER), 250, 500), (975, 1, 13))
+check("repair valuation does not enable afro purchases or sales of gold weapons",
+      (items.params_of(GWALTHER)["cost"], items.params_of(GWALTHER)["g_cost"]), (0, 13))
 check("  ..a repair under one afro: no afro (the slot's 1, the sum's 0), the 0.01 G both print",
       inventory.repair_prices(dict(cost=9, g_cost=0, repair_mod=1), 90, 100), (0, 1, None))
 
@@ -299,11 +307,17 @@ check("short of the price, 839 for 840: 21, nothing moves",
       ([inventory.RES_NO_MONEY], [], (0, W_ABS), (0, 0)))
 
 vest = thing(GVEST, G_ABS // 2, G_ABS)
-check("the G vest half worn, for afro: mended for nothing (the slot's 1, the sums' nothing),"
+check("gold repairs refuse insufficient afro without changing money or durability",
+      short(vest, REP, afro=22499),
+      ([inventory.RES_NO_MONEY], [], (625, 1250), (0, 0)))
+check("gold repairs refuse insufficient gold without changing money or durability",
+      short(vest, GOLD, gold=44),
+      ([inventory.RES_NO_MONEY], [], (625, 1250), (0, 0)))
+check("the G vest half worn, for afro: 22500,"
       " to 1125 of 1125", press(vest, REP), ([OK], ["ss_di_wear", "userInfo_Player"],
-                                             (1125, 1125), (0, 0)))
+                                             (1125, 1125), (22500, 0)))
 rstore.update_item(vest["uniq"], brk=100)
-check("  ..for gold the same, to 1012", press(vest, GOLD)[2:], ((1012, 1012), (0, 0)))
+check("  ..for gold: 0.82 G, to 1012", press(vest, GOLD)[2:], ((1012, 1012), (0, 82)))
 check("  ..restored for its gold price, 3.00 G, as new: break and ceiling the factory's",
       press(vest, RESTORE), ([OK], ["ss_di_wear", "userInfo_Player"], (G_ABS, G_ABS), (0, 300)))
 check("  ..as new, a restore has nothing to do: 0, nothing paid",
@@ -329,11 +343,13 @@ minv.trade = inventory.TradeSession(1, PISTOLS)
 book = [(r["source"], r["ref"], r["afro"], r["gold"]) for r in rstore.ledger(rcid)
         if r["source"] != "start" and r["ref"] != 0]
 check("the ledger: every repair and restore paid for, under «repair» and the thing's type;"
-      " the vest's free repairs and the presses with nothing to do write nothing",
+      " presses with nothing to do write nothing",
       (book[:3], len(book), sorted(set(b[0] for b in book)), [b for b in book if b[1] == GVEST]),
       ([("repair", WALTHER, -420, 0), ("repair", WALTHER, 0, -want_gold),
         ("repair", WALTHER, -51, 0)],
-       3 + len(tops) + 1 + 3, ["repair"], [("repair", GVEST, 0, -300)] * 3))
+       3 + len(tops) + 1 + 5, ["repair"],
+       [("repair", GVEST, -22500, 0), ("repair", GVEST, 0, -82)]
+       + [("repair", GVEST, 0, -300)] * 3))
 rstore.close()
 
 # --- in process: the admin panel's offline gifts ------------------------------------------------
@@ -553,7 +569,9 @@ try:
              ("G vest half worn, afro", GVEST, G_ABS // 2, G_ABS, REP),
              ("G vest half worn, gold", GVEST, G_ABS // 2, G_ABS, GOLD),
              ("G vest sagged, restore", GVEST, G_ABS // 3, G_ABS - G_ABS // 5, RESTORE),
-             ("G vest 0 of 1, restore", GVEST, 0, 1, RESTORE)]
+             ("G vest 0 of 1, restore", GVEST, 0, 1, RESTORE),
+             ("G Walther half worn, afro", GWALTHER, 250, 500, REP),
+             ("G Walther half worn, gold", GWALTHER, 250, 500, GOLD)]
     made = []
     for label, t, brk, top, code in CASES:
         f = inventory.new_fields(t)
@@ -566,6 +584,9 @@ try:
         f = inventory.new_fields(WALTHER)
         f.update(brk=brk, max_break_cur=top)
         burst.append(st.create_item(cid, WALTHER, f.pop("root"), **f))
+    f = inventory.new_fields(GWALTHER)
+    f.update(brk=250, max_break_cur=500)
+    bulk_gold = st.create_item(cid, GWALTHER, f.pop("root"), **f)
     # On the body: Налетчик (G)'s helmet whole and its vest broken, one
     # piece of the set that counts (a broken one does not, sets.pieces).
     body = {}
@@ -589,7 +610,7 @@ try:
           [(p.get("can_trade"), p.get("can_repair"), p.get("rmod")) for p in shop], [(1, 1, 0.3)])
     shop = shop[0] if shop else {}
     si = {}
-    for t in (WALTHER, GVEST, SHOCK, OT):
+    for t in (WALTHER, GWALTHER, GVEST, SHOCK, OT):
         cmd = SI_OF[items.root_of(t)]
         c.send("ss_get_si;type=%d;" % t)
         si[t] = (named(c.until(cmd), cmd) or [{}])[0]
@@ -628,9 +649,10 @@ try:
         wants[label] = ([0], pay, [new])
     check("each press charged what the window computes from the frames, and the thing came"
           " back as the rule says", results, wants)
-    check("  ..in figures: 420 afro, 0.01 G, 33 afro (made whole at 480), nothing, nothing,"
-          " 3.00 G, 3.00 G", [results[label][1] for label, *_r in CASES],
-          [(420, 0), (0, 1), (33, 0), (0, 0), (0, 0), (0, 300), (0, 300)])
+    check("  ..in figures: 420 afro, 0.01 G, 33 afro (made whole at 480), 22500 afro, 0.45 G,"
+          " 3.00 G, 3.00 G, 975 afro, 0.01 G", [results[label][1] for label, *_r in CASES],
+          [(420, 0), (0, 1), (33, 0), (22500, 0), (0, 45), (0, 300), (0, 300),
+           (975, 0), (0, 1)])
 
     # «Отремонтировать все», as the client sends it: every listed thing's
     # ss_upd at once, then one repAck per answer, each a 0 or the list
@@ -638,16 +660,17 @@ try:
     # mended like the rest; the sum charged is the dialog's.
     shares = [window(si[WALTHER], r["brk"], r["max_break_cur"], shop["rmod"], K)[1][0]
               for r in burst[:2]]
+    shares.append(window(si[GWALTHER], 250, 500, shop["rmod"], K)[1][0])
     a0, g0 = purse()
-    for r in burst[:2]:
+    for r in burst[:2] + [bulk_gold]:
         c.send("ss_upd;s_status=3;obj=x%s;" % inventory.oid_of(r))
     got = c.frames(1.2)
     a1, g1 = purse()
-    check("«Отремонтировать все» over a gun at %d of %d and one at 100: 0 and 0, the dialog's"
-          " %d afro, both whole" % (W_ABS - 20, W_ABS, sum(shares)),
+    check("«Отремонтировать все» over guns at %d of %d and 100, plus half-worn gold Walther:"
+          " three acks, the dialog's %d afro, all whole" % (W_ABS - 20, W_ABS, sum(shares)),
           ([p.get("res") for p in named(got, "cmdAck")], (a0 - a1, g0 - g1),
            [(p["break"], p["max_break_cur"]) for p in named(got, "ss_di_firearm")]),
-          ([0, 0], (sum(shares), 0), [(W_ABS - 20, W_ABS - 20), (450, 450)]))
+          ([0, 0, 0], (sum(shares), 0), [(W_ABS - 20, W_ABS - 20), (450, 450), (450, 450)]))
     c.send("ss_upd;s_status=3;obj=x%s;" % inventory.oid_of(burst[1]))
     got = c.frames(0.8)
     check("  ..pressed again from a list left standing: 0, nothing charged",
@@ -694,12 +717,16 @@ try:
     book = [(r["source"], r["ref"], r["afro"], r["gold"]) for r in st.ledger(cid)
             if r["source"] in ("repair", "shop_buy")]
     st.close()
-    check("the ledger has each of them, and no row for the vest's free repairs or a press"
+    check("the ledger has each of them, and no row for a press"
           " with nothing to do",
           book, [("repair", WALTHER, -420, 0), ("repair", WALTHER, 0, -1),
                  ("repair", WALTHER, -33, 0),
+                 ("repair", GVEST, -22500, 0), ("repair", GVEST, 0, -45),
                  ("repair", GVEST, 0, -300), ("repair", GVEST, 0, -300),
+                 ("repair", GWALTHER, -975, 0), ("repair", GWALTHER, 0, -1),
                  ("repair", WALTHER, -33, 0), ("repair", WALTHER, -672, 0),
+                 ("repair", GWALTHER, -975, 0),
+                 ("repair", GVEST, -45000, 0),
                  ("shop_buy", SHOCK, 0, -100), ("shop_buy", OT, 0, -20)])
 except Exception:
     import traceback
