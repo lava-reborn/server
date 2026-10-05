@@ -1670,6 +1670,7 @@ class Session:
 
     def intercept(self, pid):
         """Start running down another player on the map."""
+        self.stop_chase()
         other = ONLINE.by_pid(pid) if pid else None
         if other is None or other is self or not other.on_map:
             # Gone into a location, logged out, or never there. The client
@@ -1691,7 +1692,7 @@ class Session:
         loop = asyncio.get_running_loop()
         other = ONLINE.by_pid(pid)
         if (other is None or not other.on_map
-                or loop.time() > self.chase_until):
+                or loop.time() >= self.chase_until):
             return
         x, y = self.current_pos()
         ox, oy = other.current_pos()
@@ -1701,7 +1702,62 @@ class Session:
             return
         self.chase = pid
         self.step_on_map(dx, dy)
-        self.chase_timer = loop.call_later(self.CHASE_BEAT, self.pursue)
+        self.schedule_chase()
+
+    def schedule_chase(self):
+        """Re-aim on the beat, but catch at first contact between the beats.
+
+        Both legs are linear until an arrival or a new movement order. Solve
+        their relative motion only over that interval; a changed leg calls
+        this again. The contact callback keeps the predicted point even if
+        the event loop wakes after the two figures have already crossed.
+        """
+        other = ONLINE.by_pid(self.chase) if self.chase else None
+        if other is None or not self.on_map or not other.on_map:
+            return
+        loop = asyncio.get_running_loop()
+        now = loop.time()
+        delay = min(self.CHASE_BEAT, max(0.0, self.chase_until - now))
+        if self.chase_timer is not None:
+            delay = min(delay, max(0.0, self.chase_timer.when() - now))
+            self.chase_timer.cancel()
+        for walker in (self, other):
+            if walker.arrival is not None:
+                delay = min(delay, max(0.0, walker.arrival.when() - now))
+        x, y = self.current_pos()
+        ox, oy = other.current_pos()
+        vx, vy = self.leg[3:] if self.leg else (0.0, 0.0)
+        ovx, ovy = other.leg[3:] if other.leg else (0.0, 0.0)
+        dx, dy, dvx, dvy = ox - x, oy - y, ovx - vx, ovy - vy
+        a = dvx * dvx + dvy * dvy
+        b = dx * dvx + dy * dvy
+        c = dx * dx + dy * dy - self.CHASE_CAUGHT ** 2
+        hit = 0.0 if c <= 0 else None
+        discriminant = b * b - a * c
+        if hit is None and a > 0 and b < 0 and discriminant >= 0:
+            hit = c / (-b + math.sqrt(discriminant))
+        if hit is not None and hit <= delay:
+            state = (self.leg, self.gx, self.gy, other.leg, other.gx, other.gy)
+            self.chase_timer = loop.call_later(
+                hit, self.chase_contact, other, state, ox + ovx * hit, oy + ovy * hit)
+        else:
+            self.chase_timer = loop.call_later(delay, self.pursue)
+
+    def chase_contact(self, other, state, x, y):
+        """A predicted contact is valid only while both movements still match."""
+        self.chase_timer = None
+        if (self.chase == other.pid and ONLINE.by_pid(other.pid) is other
+                and self.on_map and other.on_map and not self.closed and not other.closed
+                and state == (self.leg, self.gx, self.gy, other.leg, other.gx, other.gy)):
+            self.caught(other, x, y)
+        else:
+            self.pursue()
+
+    def update_chasers(self):
+        """A changed vector can move contact ahead of a pursuer's next beat."""
+        for pursuer in ONLINE:
+            if pursuer is not self and pursuer.chase == self.pid:
+                pursuer.schedule_chase()
 
     def caught(self, other, ox, oy):
         """Run down: both of them go into the location under that cell.
@@ -1834,6 +1890,7 @@ class Session:
         # Whoever sees us on the map gets the new vector at once, not on the
         # next heartbeat.
         GMAP.moved(self)
+        self.update_chasers()
 
     def travel_speed(self):
         """The multiplier on map travel: the vehicle's, or 1 on foot."""
@@ -1855,6 +1912,7 @@ class Session:
         # zero speed is how the client is told to stop; it has no other signal
         self.send("userMove", id=0, dx=self.gx, dy=self.gy, vx=0, vy=0, t=0)
         GMAP.moved(self)
+        self.update_chasers()
         # Deliberately no automatic entry here. Settlements occupy a whole
         # cell, so any short hop near one landed inside it and the map became
         # impossible to stay on. Going in is the button's job.
