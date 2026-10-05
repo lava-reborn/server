@@ -598,7 +598,7 @@ ONLINE_BITMAP = "__lavaOnlineIcon"
 ONLINE_OLD_BITMAPS = ("__lavaOnlinePlate",)    # what earlier patches exported
 ONLINE_ASSET = Path(__file__).resolve().parent.parent / "data/client/online-panel.png"
 ONLINE_ICON = (12, 5, 18, 18)   # the people icon inside the plate: x, y, w, h
-ONLINE_RIGHT = 150             # ten pixels before the exit at w - 140
+ONLINE_RIGHT = 160             # twenty pixels before the exit at w - 140
 ONLINE_INLINE_MIN = 1100        # gold controls end around w / 2 + 313
 ONLINE_TEXT_RGB = 0xCFC6AE      # muted beige, the icon's own tone
 # The plate is the popup's frame cut inside its shadow (the plate runs
