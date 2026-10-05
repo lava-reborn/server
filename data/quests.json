@@ -5624,7 +5624,9 @@
       "objs": [
         {"obj": 6915, "num": 5, "mobs": [250, 251]}
       ],
-      "rew_afro": 300,
+      "rew_obj": [1075, 6066],
+      "num_rew_obj": [1, 1],
+      "rew_afro": 700,
       "rew_gold": 0,
       "repeatable": 1,
       "per_day": 1,
@@ -5632,7 +5634,7 @@
       "q_type": 0,
       "loc": 51390251,
       "finish_loc": 51349281,
-      "why": "RECOVERED texts, reward and once a day. Сорванец's «Спички детям» (59895-59898). The wiki's article: given and taken by Сорванец (5189, the market 185), 'Раздобыть 5 коробков спичек' (Коробка спичек 6915), '300 Афро', 'не чаще 1 раза в сутки', the matches off the New Colonists of the third and fourth level ('Мобы: Новые Колонисты'). The valley's colonists 250/251 carry them while this quest wants them (data/loot_manual.json, 0.30). Repeatable, once a day (per_day 1): the finish says 'На сегодня хватит, а к завтрашнему дню, надеюсь, ты еще достанешь'. A hand-in against the daily limit too. Map marks: the colonists by the wounded scout (33), then the market."
+      "why": "RECOVERED texts, holders and once a day. Сорванец's «Спички детям» (59895-59898): five Коробка спичек 6915, given and taken by Сорванец (5189, market 185), off Новые Колонисты (250/251). The original reward was 300 afro. DESIGNED reward, owner approved 2026-10-05: 700 afro and one consumable of the player's choice, Ламантинка 1075 for health or «Красная Буря» 6066 for stamina, one use each, neither requiring Medicine. This pays more than selling five boxes for 420 afro. Matches are ordinary loot at a base chance of 0.30 (data/loot_manual.json), regardless of quest state or how many the player holds, and can be saved ahead of time. Repeatable once a day (per_day 1), also subject to the daily hand-in limit. Map marks: the colonists by the wounded scout (33), then the market."
     },
     {
       "type": 52,
