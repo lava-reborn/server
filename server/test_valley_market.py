@@ -7,7 +7,7 @@ the real data/quests.json: twenty-two quests, types 46-67.
             grindstone off the colonists, 50 afro); «Клык за Клык» (ten dog
             fangs, 150); «Раненый сын» (medicaments, 200)
   Сорванец  «Спички детям» (five boxes collected even without the quest:
-            700 afro and a health/stamina consumable to choose, once a day)
+            700 afro and three health/stamina consumables to choose, once a day)
   Гофус     «Сгоревшая микросхема» (an old chip: Салюс МК I or Анестетик МК
             I, the player's choice, once a day)
   Крысолов  «Крысиный переполох» (to Фермер Хрущ at his barn); «Крысиные
@@ -97,7 +97,7 @@ MARAUDER1, MARAUDER2, MVAMBA = 836, 837, 1406
 # The things.
 GRINDSTONE, FANG, MEDS, MATCHES, CHIP, TAIL, KING = 3217, 217, 232, 6915, 3179, 3216, 3218
 EMERALD, MEAT, FILLET, SALUS, ANESTHETIC = 3159, 260, 3059, 4918, 4938
-LAMANTINKA, RED_STORM = 1075, 6066
+RAG, CARAVANEER = 6055, 6062
 # The places.
 MARKET, VILLAGE, BARN, ADITS_LOC, ARENA, MOUTH, TIER1 = 185, 186, 166, 643, 167, 153, 612
 NORTH, ANTELOPES, BURIALS, TRUCK, SQUAD, SCOUT_LOC = 181, 25, 184, 26, 29, 33
@@ -129,7 +129,7 @@ MED20 = {"medicine": 20}
 # What each quest pays: [(thing, pieces)] to choose from, afro, experience.
 PAYS = {GEAR: ([], 0, {"shooting": 5}), WIND: ([], 0, {"shooting": 5}),
         STONE: ([], 50, {}), FANGS: ([], 150, {}), SON: ([], 200, {}),
-        MATCHES_Q: ([(LAMANTINKA, 1), (RED_STORM, 1)], 700, {}),
+        MATCHES_Q: ([(RAG, 3), (CARAVANEER, 3)], 700, {}),
         CHIP_Q: ([(SALUS, 1), (ANESTHETIC, 1)], 0, {}),
         RAT_RIOT: ([], 0, MED20), TAILS: ([], 300, {}), KING_Q: ([], 200, {}),
         ELIXIR: ([], 500, {}), ADITS: ([], 0, MED20), PISTOL_KIT: ([], 0, {"shooting": 200}),
@@ -290,7 +290,7 @@ try:
           " without Medicine",
           [(items.root_of(t), items.params_of(t)["use_count"],
             items.params_of(t)[key] > 0, any(items.params_of(t).get("need_skills", [])))
-           for t, key in ((LAMANTINKA, "min_h_rest"), (RED_STORM, "min_st_rest"))],
+           for t, key in ((RAG, "min_h_rest"), (CARAVANEER, "min_st_rest"))],
           [(items.HEAL, 1, True, False)] * 2)
     check("  ..the antelope's meat certain for a quest that wants it, the fillet one in two",
           ([mobs.quest_roll(ANTELOPE, {MEAT}, random.Random(s)) for s in range(3)],
@@ -898,13 +898,14 @@ try:
           ([1], [], None, before_rewards))  # RES_NO_SUCH: no reward at that index
     got = hand_in(c, here, MATCHES_Q, q)
     AFRO += 700
-    check("  ..handed in: five boxes spent, 700 afro and only Ламантинка awarded",
+    check("  ..handed in: five boxes spent, 700 afro and three rags awarded",
           (upto_ack(got), acks(got), purse(got), new_things(got), owned(CID).get(MATCHES),
-           owned(CID).get(LAMANTINKA, 0) - before_rewards.get(LAMANTINKA, 0),
-           owned(CID).get(RED_STORM, 0) - before_rewards.get(RED_STORM, 0),
+           owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
+           owned(CID).get(CARAVANEER, 0) - before_rewards.get(CARAVANEER, 0),
            [p["daily_available"] for p in named(got, "q_sys")]),
-          (["ss_di_heap", "ss_obj_status", "ss_di_heal", "userInfo_Player",
-            "q_sys", "cmdAck"], [0], AFRO, [LAMANTINKA], stock - 5, 1, 0, [9]))
+          (["ss_di_heap"] + ["ss_obj_status", "ss_di_heal"] * 3
+           + ["userInfo_Player", "q_sys", "cmdAck"],
+           [0], AFRO, [RAG] * 3, stock - 5, 3, 0, [9]))
     before_rewards = owned(CID)
     got = hand_in(c, here, MATCHES_Q, q, obj_idx=1)
     check("replaying the hand-in cannot claim the other reward or spend more matches",
@@ -1132,13 +1133,13 @@ try:
           counts(got, quests.BRING_L_OBJ), [([5], 1)])
     got = hand_in(c, here, MATCHES_Q, q, obj_idx=1)
     AFRO += 700
-    check("choosing the other icon gives 700 afro and only Красная Буря",
+    check("choosing the other icon gives 700 afro and three Caravaneers",
           (acks(got), purse(got), new_things(got),
            owned(CID).get(MATCHES, 0),
-           owned(CID).get(LAMANTINKA, 0) - before_rewards.get(LAMANTINKA, 0),
-           owned(CID).get(RED_STORM, 0) - before_rewards.get(RED_STORM, 0),
+           owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
+           owned(CID).get(CARAVANEER, 0) - before_rewards.get(CARAVANEER, 0),
            [p["daily_available"] for p in named(got, "q_sys")]),
-          ([0], AFRO, [RED_STORM], before_rewards.get(MATCHES, 0) - 5, 0, 1, [5]))
+          ([0], AFRO, [CARAVANEER] * 3, before_rewards.get(MATCHES, 0) - 5, 0, 3, [5]))
     check("  ..the second day also allows only one matches hand-in",
           status(c, MATCHES_Q), 0)
     logout(c)
