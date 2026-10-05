@@ -77,7 +77,7 @@ Client patches applied without altering the original artwork:
    XMLConnection.Send opts in with hello;online=2; sendNotification caches
    online;count=N;names=|..| before a scene exists and refreshes the count
    when players enter or leave. Resize builds the counter once and anchors
-   its right edge; it widens with the count. Below 1100 pixels it uses the
+   its right edge; it widens with the count. Below 1200 pixels it uses the
    upper lip of the bar, clear of the gold balance. No timers or per-scene
    connection listeners survive a scene change.
 
@@ -598,8 +598,9 @@ ONLINE_BITMAP = "__lavaOnlineIcon"
 ONLINE_OLD_BITMAPS = ("__lavaOnlinePlate",)    # what earlier patches exported
 ONLINE_ASSET = Path(__file__).resolve().parent.parent / "data/client/online-panel.png"
 ONLINE_ICON = (12, 5, 18, 18)   # the people icon inside the plate: x, y, w, h
-ONLINE_RIGHT = 160             # twenty pixels before the exit at w - 140
-ONLINE_INLINE_MIN = 1100        # gold controls end around w / 2 + 313
+ONLINE_RIGHT = 190             # 50 pixels before the exit at w - 140
+ONLINE_INLINE_MIN = 1200        # gold controls end around w / 2 + 313; a 90-pixel
+                                # plate ending at w - 190 clears them from 1196
 ONLINE_TEXT_RGB = 0xCFC6AE      # muted beige, the icon's own tone
 # The plate is the popup's frame cut inside its shadow (the plate runs
 # x 8..488, y 5..462 of the art), in five rows: the top edge, some plain
