@@ -6,6 +6,8 @@
   "edit": "Add or change an edit, then rebuild the launcher (launcher/build.ps1) and publish it; a local run picks it up on restart."
  },
  "labels": [
+  {"x": 6265, "y": 1821, "was": "Кимберлитовая трубка<br>Добыча алмазов", "hide": true,
+   "why": "Owner 2026-10-05: remove the kimberlite pipe / diamond mining label at 6265,1821 from the map."},
   {"x": 6266, "y": 1822, "was": "Новогодняя Елка", "hide": true,
    "why": "Owner 2026-09-24: the farm reads 'Новогодняя Елка'. The cell carries two rows -- the farm's own, 'Ферма Говарда Хаксли <BR>Здесь можно найти задания.' (row 24), and a New Year one added at the very end of the file (row 416) -- and the later one is what the map shows. Hiding it lets the farm's own name through."},
   {"x": 5968, "y": 1726, "was": "Лагерь мастеров: улучшение оружия (Р)", "hide": true,
