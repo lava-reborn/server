@@ -1017,7 +1017,7 @@ try:
     c.frames(0.3)
     got = hand_in(c, here, 140, q, obj_idx=0)
     check("«Золотая лихорадка»: the bag of gold to Винс, fifty ЭК rounds of the one chosen",
-          (acks(got), new_things(got), owned(CID).get(EK[-1])), ([0], [EK[-1]], 50))
+          (acks(got), new_things(got), owned(CID).get(EK[0])), ([0], [EK[0]], 50))
     _t, got, here = talk(c, 141, OLD_MARKET, BLACK_MARKET, here)
     check("  ..Винс sends the player to Тиль", acks(got), [0])
     check("  ..Тиль's frame: «Пистолетчик» first, his step and «К шахте» after his trainings",

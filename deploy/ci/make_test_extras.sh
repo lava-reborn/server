@@ -39,6 +39,8 @@
 # it when it is there (every opcode the wrapper emits must be one main.swf
 # uses). Without it test_wrapper skips that comparison and test_bootstrap its
 # two main.swf checks, each saying so.
+# test_widescreen always checks a small SWF fixture and its bytecode; it
+# additionally checks the real client when main.swf is installed locally.
 set -euo pipefail
 
 [ $# -eq 2 ] || { echo "usage: $0 <client res/> <out.tgz>" >&2; exit 2; }

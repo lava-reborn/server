@@ -1046,7 +1046,8 @@ try:
     check("  ..an ounce in the purse and the journal is told complete",
           [p["complete"] for n, p in got if n.startswith("q_di_") and p.get("q_id") == q2], [1])
     afro1, gold1 = srv.purse()
-    got = hand_in(c, black[TIL], q2, obj_idx=0)
+    # Wire indexes follow rew_obj: choose the last of the six calibres.
+    got = hand_in(c, black[TIL], q2, obj_idx=5)
     check("  ..handed in: the ounce taken, ten rounds of the calibre chosen, no afro",
           (acks(got), srv.purse(), srv.owned().get(EK_G[-1])), ([0], (afro1, gold1 - 100), 10))
     check("  ..and never again", status(c, LATE_2), [0])
@@ -1055,7 +1056,7 @@ try:
     got = take(c, black[SAMUEL], TALON_Q, SAMUEL)
     check("Самуэль takes a talon: complete with one in the bag", (acks(got), complete_of(got)),
           ([0], [1]))
-    got = hand_in(c, black[SAMUEL], q_id_of(got), obj_idx=11)
+    got = hand_in(c, black[SAMUEL], q_id_of(got), obj_idx=0)
     check("  ..for 500 rounds of the calibre chosen (the first of the list), no q_sys (a service)",
           (acks(got), srv.owned().get(TALON), srv.owned().get(6140), "q_sys" in [n for n, _p in got]),
           ([0], None, 500, False))
