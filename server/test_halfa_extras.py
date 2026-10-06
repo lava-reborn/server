@@ -433,12 +433,13 @@ try:
         def lay_down(self, things, place, cell):
             pass
 
-    class Newcomer:
+    class Newcomer(combat.Fighter):
         """What RoomCombat.player_entered and aggro read of a combat.Fighter."""
         dead, eid = False, 7
 
         def __init__(self):
-            self.foes, self.sent, self.sess = set(), [], self
+            super().__init__(self)
+            self.sent = []
 
         def send(self, name, **params):
             self.sent.append((name, params))

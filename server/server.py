@@ -1029,6 +1029,8 @@ class Session:
         # An lcall makes the client drop its current Location (Master.lcall
         # builds a new LocGen), so whoever shared the old room is told now,
         # before the new one is even loading.
+        if self.combat.interception is not None:
+            self.combat.interception.cancel()
         self.leave_room()
         was_online = ONLINE.by_char.get(self.char_id) is self
         ONLINE.add(self)
@@ -1450,21 +1452,25 @@ class Session:
         # reassembles them by (group, from) -- with the nick, since a
         # listener who has never seen the sender's entity would otherwise
         # print *** (Chat.getName).
-        if group == 0 and self.room is not None:
-            self.room.broadcast(("userMsg", dict(
-                group=0, nick=Str(self.nick), entry=Str(raw),
-                **{"from": self.pid})), exclude=self)
+        if group == 0:
+            if self.on_map:
+                GMAP.chat(self, raw)
+            elif self.room is not None:
+                self.room.broadcast(("userMsg", dict(
+                    group=0, nick=Str(self.nick), entry=Str(raw),
+                    **{"from": self.pid})), exclude=self)
         elif group == 1:
             # The party channel: ChatPan only opens it once a p_m or a
             # join has arrived, so a line here without a party is a
             # modified client's, and goes nowhere.
             if not PARTIES.chat(self, raw):
                 log.info("  ..    party chat from %s, who has no party", self.nick)
-        elif group == 6:
-            # The world channel: everyone online, wherever they stand.
+        elif group in (4, 6):
+            # Trade and world: everyone online, wherever they stand. Keep
+            # the channel id so Chat.userMsg applies the matching tab/filter.
             for other in ONLINE:
                 if other is not self:
-                    other.send("userMsg", group=6, nick=Str(self.nick),
+                    other.send("userMsg", group=group, nick=Str(self.nick),
                                entry=Str(raw), **{"from": self.pid})
         elif group == 2:
             # The clan's channel, to the members holding its right (clans.py).
@@ -1777,6 +1783,20 @@ class Session:
         then уход от врага по локациям) -- and in the Nubian valley they
         cannot, which this does not overrule either.
         """
+        gx, gy = math.floor(ox), math.floor(oy)
+        loc = world.location(world.location_at(gx, gy))
+        positions = None
+        if loc.war and loc.pvp and not travel.newbie_ground(loc, gx, gy):
+            room = ROOMS.get(travel.room_key(loc, gx, gy))
+            # Include clients still loading: their reserved starting cells
+            # are not in room.players until lenter arrives.
+            occupied = {s.pos for s in ONLINE if s not in (self, other)
+                        and not s.on_map and s.room_key() == room.key}
+            positions = combat.interception_positions(room, occupied)
+            if positions is None:
+                self.stop_chase()
+                log.info("  ..    no free interception pair in %s", loc.file)
+                return
         self.stop_chase()
         self.cancel_travel()
         self.arrive(ox, oy)
@@ -1791,6 +1811,9 @@ class Session:
             other.on_map = False
             GMAP.leave(other)
             other.go_to(self.loc.id)
+            if positions is not None:
+                self.pos, other.pos = positions
+            combat.prepare_interception(self.combat, other.combat)
 
     def stop_chase(self):
         if self.chase_timer is not None:

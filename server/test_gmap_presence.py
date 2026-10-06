@@ -161,6 +161,7 @@ class Stand:
 
     def __init__(self, pid, x, y, clock):
         self.pid, self.gx, self.gy, self.clock = pid, x, y, clock
+        self.nick = "player%d" % pid
         self.leg, self.on_map, self.closed = None, True, False
         self.got = []
 
@@ -264,6 +265,55 @@ try:
 except Exception:
     import traceback
     fails.append("in-process part broke:\n" + traceback.format_exc())
+
+
+# --- in process: map chat follows current visibility ----------------------------
+try:
+    chat_room = rooms.GlobalMapRoom(8)
+    clock = [0.0]
+    talker = Stand(rooms.player_id(10), 100, 100, clock)
+    near = Stand(rooms.player_id(11), 101, 100, clock)
+    edge = Stand(rooms.player_id(12), 108, 100, clock)
+    far = Stand(rooms.player_id(13), 108.01, 100, clock)
+    diagonal = Stand(rooms.player_id(14), 106, 106, clock)
+    inside = Stand(rooms.player_id(15), 100, 100, clock)
+    closed = Stand(rooms.player_id(16), 100, 100, clock)
+    inside.on_map = False
+    closed.closed = True
+    peers = (talker, near, edge, far, diagonal, inside, closed)
+    # Deliberately stale membership: a heartbeat has not cleaned it yet.
+    chat_room.seen = {p: set(peers) for p in peers}
+    raw = "^0^map message"
+    chat_room.chat(talker, raw)
+    check("map chat reaches neighbours and the radius boundary, not distant,"
+          " local-scene or closed players; no echo to the sender",
+          [len(p.got) for p in peers], [0, 1, 1, 0, 0, 0, 0])
+    check("  ..the location channel carries the exact chunk, nick and player id",
+          near.got, [(0.0, "userMsg;group=0;nick=%s;entry=%s;from=%d;"
+                      % (talker.nick, raw, talker.pid))])
+    # Current movement can differ from gx/gy and the cached visibility set.
+    near.current_pos = lambda: (108.01, 100)
+    chat_room.chat(talker, "out of range")
+    check("a listener already beyond the radius hears no more before the next beat",
+          len(near.got), 1)
+    near.current_pos = lambda: (107.99, 100)
+    chat_room.seen[talker].clear()
+    chat_room.chat(talker, "back in range")
+    check("a listener back in range hears the next line without waiting for a beat",
+          len(near.got), 2)
+    before = [len(p.got) for p in peers]
+    talker.on_map = False
+    chat_room.chat(talker, "left the map")
+    talker.on_map, talker.closed = True, True
+    chat_room.chat(talker, "closed")
+    talker.closed = False
+    chat_room.seen.pop(talker)
+    chat_room.chat(talker, "not on the map")
+    check("departed, closed and unregistered senders cannot speak through the map",
+          [len(p.got) for p in peers], before)
+except Exception:
+    import traceback
+    fails.append("map chat in process broke:\n" + traceback.format_exc())
 
 
 # --- on sockets ----------------------------------------------------------------------------------

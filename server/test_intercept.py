@@ -67,6 +67,7 @@ class Walker(server.Session):
         self.char_id, self.active = ident, {"name": "walker%d" % ident}
         self.gx, self.gy, self.speed = x, y, speed
         self.on_map, self.closed = True, False
+        self.combat = None  # Combat preparation has its own real-Session suite.
         self.leg = self.arrival = self.chase = self.chase_timer = None
         self.chase_until = 0.0
         self.sent = []
@@ -102,6 +103,7 @@ try:
                                                          leave=lambda s: None)), \
             patch.object(server, "ENCOUNTERS", SimpleNamespace(arm=lambda *a: None,
                                                                disarm=lambda s: None)), \
+            patch.object(server.combat, "prepare_interception", lambda *a: None), \
             patch.object(server.travel, "walk", lambda x, y, dx, dy: (x + dx, y + dy)):
         clock = Clock()
         with patch.object(server.asyncio, "get_running_loop", return_value=clock):

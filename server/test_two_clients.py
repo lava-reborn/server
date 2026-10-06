@@ -34,6 +34,7 @@ PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts
+import mobs
 accounts.DB_PATH = DB
 _store = accounts.Store(DB)
 _store.register("alice", "secret")
@@ -232,6 +233,15 @@ try:
           b.frames(), ["userMsg;group=6;nick=@Alice@;entry=@всем@;from=%d;"
                        % pid_a])
 
+    # Trade retains its own group, including the long-message chunk markers.
+    for raw in ("selling", "^0^first", "^1^middle", "^2L^last"):
+        a.send("userMsg;entry=@%s@;group=4;" % raw)
+        check("trade: one ack and no duplicate to the speaker", a.frames(),
+              ["cmdAck;res=0;"])
+        check("trade: the listener receives the exact text in channel 4",
+              b.frames(), ["userMsg;group=4;nick=@Alice@;entry=@%s@;from=%d;"
+                           % (raw, pid_a)])
+
     # Server answers to our own commands still come back to the asker.
     a.send("userMsg;entry=@/where@;group=0;")
     got = a.frames()
@@ -365,6 +375,13 @@ try:
     check("Alice keeps hearing about Bob", len(beats_a) >= 1, True)
     check("Bob keeps hearing about Alice", len(beats_b) >= 1, True)
 
+    a.send("userMsg;entry=@map neighbours@;group=0;")
+    check("location chat on the map: one ack and no echo",
+          [f for f in a.frames() if not f.startswith("userMove")], ["cmdAck;res=0;"])
+    check("location chat on the map reaches a nearby player",
+          [f for f in b.frames() if f.startswith("userMsg")],
+          ["userMsg;group=0;nick=@Alice@;entry=@map neighbours@;from=%d;" % pid_a])
+
     # A leg of travel reaches the other side at once, with the velocity.
     a.send("moveTo;dy=0;dx=-100;")
     got = a.frames()
@@ -400,11 +417,30 @@ try:
     check("and pulled in after him, without being asked",
           [f.split(";")[0] for f in got if f.startswith("lcall")], ["lcall"])
     b.send("lenter;accept=1;")
-    b.frames(wait=2)
+    entered_b = b.frames(wait=2)
+    check("the intercepted pair gets a visible preparation countdown",
+          any(f.startswith("prepare;") and param(f, "id") == "0"
+              and 2 < int(param(f, "time")) <= 17 for f in entered_b), True)
     a.send("lenter;accept=1;")
-    a.frames(wait=2)
+    entered_a = a.frames(wait=2)
+    entry_a = int(param(next(f for f in entered_a if f.startswith("lenter;")), "pos"))
+    entry_b = int(param(next(f for f in entered_b if f.startswith("lenter;")), "pos"))
+    check("interception places the clients 8..15 hexes apart in the desert",
+          8 <= mobs.hex_distance(entry_a, entry_b, 64) <= 15, True)
+    check("a later loader receives the remaining shared countdown",
+          any(f.startswith("prepare;") and param(f, "id") == "0"
+              and 2 < int(param(f, "time")) < 17 for f in entered_a), True)
     check("into the same location",
           [f for f in b.frames(1.5) if "rtype=-1;" in f] != [], True)
+    got = a.frames(15)
+    check("the real timer starts the duel without either player attacking",
+          (any(f.startswith("lch;") and param(f, "ws") == "1" for f in got),
+           any(f.startswith("lch;") and param(f, "enemy") == str(pid_b) for f in got),
+           any(f.startswith("prepare;") and param(f, "id") == "0"
+               and param(f, "time") == "0" for f in got)), (True, True, True))
+    got = b.frames(0.1)
+    check("both sides see each other as enemies after preparation",
+          any(f.startswith("lch;") and param(f, "enemy") == str(pid_a) for f in got), True)
     # Back out to the map, where the rest of the scene expects them.
     for who in (a, b):
         who.send("chWorld;")
@@ -442,6 +478,25 @@ try:
     got = a.frames(wait=2)
     check("the wasteland has no other player in it",
           any("rtype=-1;" in f for f in got), False)
+
+    # Bob is still on the map above Alice's cell. Location chat does not
+    # cross between the map and a local scene; trade/world do, both ways.
+    for speaker, listener, nick, pid in ((a, b, "Alice", pid_a), (b, a, "Bob", pid_b)):
+        speaker.send("userMsg;entry=@only neighbours@;group=0;")
+        check("map and local scene do not share location chat: ack only",
+              [f for f in speaker.frames() if not f.startswith("userMove")],
+              ["cmdAck;res=0;"])
+        check("  ..the other scene hears nothing",
+              [f for f in listener.frames() if f.startswith("userMsg")], [])
+        for group in (4, 6):
+            speaker.send("userMsg;entry=@across scenes@;group=%d;" % group)
+            check("trade/world between map and scene: one ack, no echo",
+                  [f for f in speaker.frames() if not f.startswith("userMove")],
+                  ["cmdAck;res=0;"])
+            check("  ..delivered with the original channel, id and nick",
+                  [f for f in listener.frames() if f.startswith("userMsg")],
+                  ["userMsg;group=%d;nick=@%s@;entry=@across scenes@;from=%d;"
+                   % (group, nick, pid)])
 
     # --- one leaves, the other lives on ---------------------------------------
     a.send("logout;")
@@ -495,6 +550,11 @@ try:
     check("но Алисы там нет", any("rtype=-1;" in f for f in got), False)
     check("и Алисе о Бобе не сказали",
           any(f.startswith("newUser") for f in a.frames(wait=1)), False)
+    a.send("userMsg;entry=@distant trade@;group=4;")
+    check("trade reaches a distant room: the sender gets only its ack",
+          a.frames(), ["cmdAck;res=0;"])
+    check("  ..two hundred cells away the listener still gets the trade line",
+          b.frames(), ["userMsg;group=4;nick=@Alice@;entry=@distant trade@;from=%d;" % pid_a])
     a.send("logout;")
     b.send("logout;")
 finally:

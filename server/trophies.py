@@ -88,12 +88,11 @@ WHAT IS DESIGNED HERE
     the bag the death leaves (combat.Fighter.pvp_kill, after die() has put
     down what fell off the body). Not for a mob's kill, not for a stronger
     killer.
-  * Which part: by the victim's level, four levels a step -- Ухо, Палец,
-    Скальп, Череп, Кисть (BY_VICTIM_LEVEL). The original's rule did not
-    survive. A newcomer's ear agrees with its quests ("Принеси мне ухо
-    убитого противника", from the Nubian arena), and as the fee is the
-    trophy's price, registering a strong victim costs what a strong
-    fighter can pay.
+  * Which part: a weighted draw, independent of either player's level.
+    The owner's rule of 2026-10-05: all five PvP parts can fall, with
+    different rarities and the skull rarest. KIND_WEIGHTS sets the balance:
+    ear 40%, finger 30%, scalp 18%, hand 10%, skull 2%. These percentages
+    are designed here, not recovered from the original game.
   * Only the killer's own trophy is registered: one bought, found or
     picked up is refused, so that a rank cannot be bought.
   * The skill is paid at the registration, not at the kill:
@@ -125,6 +124,7 @@ WHAT IS DESIGNED HERE
     is only a place its next ss_get;slot=32 draws as it really is.
 """
 import logging
+import random
 import time
 
 import inventory
@@ -138,8 +138,8 @@ from protocol import BigUInt, Str
 log = logging.getLogger("lava")
 
 SKULL, SCALP, FINGER, EAR, HAND = 1492, 1493, 1494, 1495, 1496
-# The part by the victim's level: (from this level on, type), highest first.
-BY_VICTIM_LEVEL = ((16, HAND), (12, SKULL), (8, SCALP), (4, FINGER), (0, EAR))
+# Relative chances among eligible PvP kills; exactly one part falls.
+KIND_WEIGHTS = ((EAR, 40), (FINGER, 30), (SCALP, 18), (HAND, 10), (SKULL, 2))
 
 # StuffManager.SESSION_TROPHY, and TrophyManager's ss_upd codes.
 SESSION_TROPHY = 6
@@ -194,11 +194,13 @@ def falls(killer_level, victim_level):
     return killer_level <= victim_level
 
 
-def kind_for(victim_level):
-    for since, type_id in BY_VICTIM_LEVEL:
-        if victim_level >= since:
+def choose_kind():
+    """Any PvP part at any level, with the skull the rarest."""
+    roll = random.randrange(sum(weight for _, weight in KIND_WEIGHTS))
+    for type_id, weight in KIND_WEIGHTS:
+        if roll < weight:
             return type_id
-    return EAR
+        roll -= weight
 
 
 def name_of(type_id):
@@ -317,7 +319,7 @@ def drop(killer, victim, owner, slot):
         log.info("  ..    %s (%d) kills %s (%d): a stronger killer takes no trophy",
                  killer.sess.nick, k_lvl, victim.sess.nick, v_lvl)
         return None
-    type_id = kind_for(v_lvl)
+    type_id = choose_kind()
     row = killer.store.create_trophy(
         owner, slot, type_id, items.TROPHY,
         record(kc, killer.sess.nick, k_lvl, vc, victim.sess.nick, v_lvl,
