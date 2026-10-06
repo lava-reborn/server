@@ -1,0 +1,3 @@
+# Paths of the original game (client/base.txt) that players do not get, one
+# per line. The launcher leaves such a file alone on a player's disk but never
+# serves it to the game.
