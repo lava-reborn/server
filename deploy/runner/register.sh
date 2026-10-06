@@ -29,6 +29,10 @@ U=$(id -u ghrunner)
 H=/home/ghrunner
 FIRST=$H/actions-runner
 AS=(runuser -u ghrunner -- env "XDG_RUNTIME_DIR=/run/user/$U" "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$U/bus" "HOME=$H")
+# Where they register: the repository (the default), or the organisation when
+# the token is one from the organisation's settings (LAVA_RUNNER_URL=https://github.com/lvrbrn).
+URL=${LAVA_RUNNER_URL:-https://github.com/lvrbrn/server}
+[[ $URL =~ ^https://github[.]com/lvrbrn(/server)?$ ]] || { echo "LAVA_RUNNER_URL is not lvrbrn or lvrbrn/server: $URL"; exit 2; }
 
 NS=("$@")
 [ "${#NS[@]}" -gt 0 ] || NS=(1)
@@ -61,14 +65,16 @@ for n in "${NS[@]}"; do
       cp -RL --preserve=mode,timestamps "$e" "$R/"
     done
     chown -R ghrunner:ghrunner "$R"
-    echo "   program copied from $FIRST ($("$R/bin/Runner.Listener" --version 2> /dev/null || echo '?'))"
+    # The version as ghrunner: the program writes its _diag on any start, and
+    # one made by root would stop config.sh below.
+    echo "   program copied from $FIRST ($(cd "$R" && "${AS[@]}" ./bin/Runner.Listener --version 2> /dev/null || echo '?'))"
   fi
   if [ -f "$R/.runner" ]; then
     echo "   already configured: stopping and removing the old registration"
     "${AS[@]}" systemctl --user stop "$UNIT" 2> /dev/null || true
     (cd "$R" && "${AS[@]}" ./config.sh remove --token "$TOKEN") || true
   fi
-  (cd "$R" && "${AS[@]}" ./config.sh --unattended --url https://github.com/lvrbrn/server --token "$TOKEN" \
+  (cd "$R" && "${AS[@]}" ./config.sh --unattended --url "$URL" --token "$TOKEN" \
      --name "$NAME" --labels lava --work _work --replace)
   printf 'LANG=C.UTF-8\nDOCKER_HOST=unix:///run/user/%s/docker.sock\n' "$U" > "$R/.env"
   chown ghrunner:ghrunner "$R/.env"
