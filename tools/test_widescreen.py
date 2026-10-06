@@ -8,6 +8,7 @@ When the real client is available, run the same checks on it as well.
 """
 import math
 import os
+import re
 import struct
 import sys
 import tempfile
@@ -57,6 +58,26 @@ def validate(code):
 # --- bytecode, in process --------------------------------------------------
 check("every HUD and frame branch lands inside its own function",
       validate(w.injected()), [])
+
+# A merge of main into location-viewport (ec8cd46) once dropped the two
+# ExtViewFrame wraps from the table and left fn_location_bound defined and
+# never called: the code was valid and every check here passed, while the
+# camera clamp was simply not in the client. The real-Flash suites that
+# would see it skip without LAVA_FLASH_PLAYER. So: every patch body the
+# module defines is used, and every wrap leaves its saved original's name
+# in the injected code, which only a wired wrap puts there.
+WIRED = ("__wideBoundXOrig", "__wideBoundYOrig",       # location camera
+         "__repairGoldOrig", "__repairGetPropOrig",    # gold-only repairs
+         "__siteForumOrig", "__siteTooltipOrig",       # the old site's links
+         "__progressInfoOrig", "__progress_increase_spec_level_func",
+         "__onlineSendOrig", "__onlineNotifyOrig",     # online players
+         "__wideCreateOrig", "__wideSceneOrig")        # library, location mask
+_source = open(w.__file__, encoding="utf-8").read()
+check("every fn_* patch body in widescreen.py is used",
+      [name for name in re.findall(r"^def (fn_\w+)\(", _source, re.M)
+       if len(re.findall(r"\b%s\b" % name, _source)) < 2], [])
+check("every wrap is wired into the injected code",
+      [name for name in WIRED if name.encode() not in w.injected()], [])
 
 
 def execute_repair(code, env):
