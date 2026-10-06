@@ -83,6 +83,8 @@ def suites():
     found = []
     for sub in ("server", "data", "tools", "client"):
         d = os.path.join(ROOT, sub)
+        if not os.path.isdir(d):
+            continue
         for f in os.listdir(d):
             if f.startswith("test_") and f.endswith(".py") and f[:-3] not in LEFT_OUT:
                 found.append(os.path.join(d, f))
