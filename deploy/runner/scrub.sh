@@ -8,8 +8,12 @@
 #       in the runner's .env: before the job's containers start, and after
 #       they are gone ("Set up runner" and "Complete runner" in the job log)
 #   ExecStartPre=-/usr/local/lib/lava-runner/scrub.sh --idle
-#       in lava-runner.service.d/scrub.conf: whenever the runner starts,
-#       after a crash or a reboot as well
+#       in lava-runner[-N].service.d/scrub.conf: whenever the runner
+#       starts, after a crash or a reboot as well
+#
+# Several runners share the host (~ghrunner/actions-runner, actions-runner-2,
+# ...; deploy/runner/register.sh): each sweeps its own _work, and its own
+# containers only (below).
 #
 # A job (a hook): everything in _work goes but _actions and _temp, which the
 # runner renews itself (it deletes _actions and downloads the actions again
@@ -25,9 +29,13 @@
 #
 # --idle (the runner is not running): first whatever the unit's last run
 # left in its cgroup -- KillMode=process leaves a worker and its children
-# alive when the listener dies -- then every container, network and volume
-# of the runner's rootless Docker (nobody else uses it; the images stay, the
-# runner pulls them again for every job anyway), then all of _work.
+# alive when the listener dies -- then the containers and networks this
+# runner made in the rootless Docker the runners share: the runner labels
+# them with a key of its own ("--label 1d54aa"), which its worker logs name;
+# another runner's job keeps running. Then unused volumes, dangling images
+# and the build cache (what a running job uses is in use and stays), then
+# all of _work. The runner is the unit's WorkingDirectory (systemd starts
+# ExecStartPre there), else LAVA_RUNNER_DIR, else ~/actions-runner.
 #
 # Never follows a link: a job can leave one in _work pointing anywhere, and
 # rm -rf on a link removes the link. Always exits 0: a hook that fails fails
@@ -54,7 +62,14 @@ IDLE=
 [ "${1:-}" = --idle ] && IDLE=1
 
 if [ -n "$IDLE" ]; then
-  WORK=${LAVA_RUNNER_WORK:-$HOME/actions-runner/_work}
+  if [ -n "${LAVA_RUNNER_DIR:-}" ]; then
+    RDIR=$LAVA_RUNNER_DIR
+  elif [ -f "$PWD/.runner" ]; then
+    RDIR=$PWD
+  else
+    RDIR=$HOME/actions-runner
+  fi
+  WORK=${LAVA_RUNNER_WORK:-$RDIR/_work}
 elif [ -n "${RUNNER_TEMP:-}" ]; then
   WORK=$(dirname "$RUNNER_TEMP")
 else
@@ -70,9 +85,9 @@ if [ "${WORK##*/}" != _work ] || [ -L "$WORK" ] || [ ! -d "$WORK" ] || [ ! -O "$
 fi
 
 if [ -n "$IDLE" ]; then
-  unit=${LAVA_RUNNER_UNIT:-lava-runner.service}
   cg=$(sed -n 's/^0:://p' /proc/self/cgroup)
-  if [ "${cg##*/}" = "$unit" ]; then
+  unit=${LAVA_RUNNER_UNIT:-${cg##*/}}
+  if [[ ${cg##*/} == lava-runner*.service ]] && [ "${cg##*/}" = "$unit" ]; then
     # ExecStartPre of the unit: the listener is not started yet, so whatever
     # else is in the unit's cgroup is what its last run left behind.
     procs=()
@@ -83,16 +98,24 @@ if [ -n "$IDLE" ]; then
       kill -KILL "$p" 2> /dev/null && left=$((left + 1))
     done
     [ "$left" = 0 ] || say "killed $left process(es) the runner's last run left in $unit"
-  elif pgrep -u "$(id -u)" -f 'bin/Runner\.(Listener|Worker)' > /dev/null; then
-    say "the runner is running; stop it first (systemctl --user stop $unit), or let a job hook sweep"
+  elif pgrep -u "$(id -u)" -f "^$RDIR/bin/Runner\.(Listener|Worker)" > /dev/null; then
+    say "the runner in $RDIR is running; stop it first (systemctl --user stop its unit), or let a job hook sweep"
     exit 0
   fi
 
   export DOCKER_HOST=${DOCKER_HOST:-unix://${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/docker.sock}
   if docker info > /dev/null 2>&1; then
-    mapfile -t ids < <(docker ps -aq)
-    [ "${#ids[@]}" = 0 ] || docker rm -f -v "${ids[@]}" > /dev/null || say "docker rm failed"
-    docker network prune -f > /dev/null || say "docker network prune failed"
+    # This runner's own label, as its workers passed it to docker create and
+    # docker network create. None yet: it never made a container.
+    logs=("$RDIR"/_diag/Worker_*.log)
+    labels=()
+    [ "${#logs[@]}" = 0 ] || mapfile -t labels < <(grep -ohE -- '--label [0-9a-f]{6}( |$)' "${logs[@]}" 2> /dev/null \
+                                                     | awk '{ print $2 }' | sort -u)
+    for l in "${labels[@]}"; do
+      mapfile -t ids < <(docker ps -aq --filter "label=$l")
+      [ "${#ids[@]}" = 0 ] || docker rm -f -v "${ids[@]}" > /dev/null || say "docker rm failed"
+      docker network prune -f --filter "label=$l" > /dev/null || say "docker network prune failed"
+    done
     docker volume prune -af > /dev/null 2>&1 || docker volume prune -f > /dev/null || say "docker volume prune failed"
     docker image prune -f > /dev/null || say "docker image prune failed"
     docker builder prune -af > /dev/null 2>&1 || true

@@ -10,27 +10,32 @@
 #              suites read, the original texts.xml), restores them from the
 #              cache under that digest or fetches them, forgets the key, and
 #              checks the string table.
-#   suite      every server/, data/ and tools/ suite on SQLite, eight at
-#              once, longest first by the last run's durations, with the
-#              known failures of tools/known_failures.txt and one rerun, four
-#              at once, for anything else that fails (none past ten
-#              failures: that many is a break, not a crowd); then the check
-#              that every suite ran, and once (deploy/ci/merge_shards.sh).
+#   suite      every server/, data/, tools/ and client/ suite on SQLite,
+#              in three shards side by side, each four at once, longest
+#              first by the last run's durations, with the known failures of
+#              tools/known_failures.txt and one rerun, four at once, for
+#              anything else that fails (none past ten failures: that many is
+#              a break, not a crowd).
+#   suites     the shards as one: every suite ran, and once
+#              (deploy/ci/merge_shards.sh); their durations are the next
+#              run's cut.
 #   postgres   the suites that honour LAVA_DB_URL, each on its own fresh
 #              database in a postgres:16-alpine service -- production's
-#              database, which the SQLite run does not exercise.
+#              database, which the SQLite run does not exercise. Beside the
+#              shards.
 #   deploy     push to main only, after all of them: packs the tree as
 #              deploy/deploy.sh would rsync it and hands it to the gate,
 #              which backs up, swaps, rebuilds, checks and rolls back on any
 #              failure (deploy/remote/lava-gate.sh). One at a time, never
 #              cancelled.
 #
-# Where they run (README «CI/CD», «Раннер»): one self-hosted runner, labels
-# self-hosted and lava, on the production host itself -- the user ghrunner,
-# at most 4 of the host's 6 cores and 6 GB, below the game in priority, with
-# a rootless Docker of its own and no way into /opt or the host's private
-# addresses; the gate it reaches like any other machine, by the host's public
-# address. One runner: the jobs run one after another, never side by side.
+# Where they run (README «CI/CD», «Раннер»): four self-hosted runners,
+# labels self-hosted and lava, on the production host itself -- the user
+# ghrunner, all four together at most 4 of the host's 6 cores and 6 GB,
+# below the game in priority, with one rootless Docker of their own and no
+# way into /opt or the host's private addresses; the gate they reach like any
+# other machine, by the host's public address. Four jobs at a time, of one
+# run or of several: the three shards and Postgres side by side.
 #
 # Every job runs in a container of python:3.12-slim, the production image's
 # base (Dockerfile): the host has no Python 3.12. The image has no git, ssh
@@ -190,6 +195,7 @@ jobs:
     outputs:
       key: ${{ steps.hash.outputs.key }}
       hash: ${{ steps.hash.outputs.hash }}
+      durations: ${{ steps.durations.outputs.durations }}
     steps:
       - name: a clean work folder
         run: |
@@ -260,6 +266,29 @@ jobs:
         if: always()
         run: rm -f "$HOME/.ssh/lava_gate"
 
+      # The summary.txt the last run left (the "suites" job): the cut into
+      # shards and the order, longest first. Read here, once, and handed to
+      # every shard as this job's output -- a shard reading the cache itself
+      # could meet a newer entry another run saved in between, cut the set
+      # differently from its siblings, and leave a suite in no shard. None
+      # on a first run, and then every shard takes the static order.
+      - name: durations of the last run
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/suite/summary.txt
+          key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: suite-durations-
+
+      - name: the cut, for the shards
+        id: durations
+        run: |
+          if [ -s "$HOME/suite/summary.txt" ]; then
+            { echo "durations<<EOF_DURATIONS"; cat "$HOME/suite/summary.txt"; echo "EOF_DURATIONS"; } >> "$GITHUB_OUTPUT"
+            echo "durations of the last run: $(wc -l < "$HOME/suite/summary.txt") suites"
+          else
+            echo "no durations yet: the shards take the static order"
+          fi
+
       # export_texts.py exits non-zero if any id the server may put on the
       # wire is missing from the table (PROTOCOL.md 9): a missing row is a
       # player sent back to the login screen, not a blank label. The same
@@ -273,16 +302,27 @@ jobs:
           echo "$out"
           echo "string table: ${out##*/}, 0 ids missing, sha256 $(sha256sum < "$RUNNER_TEMP/texts.xml" | cut -c1-16)" >> "$GITHUB_STEP_SUMMARY"
 
+  # The SQLite suites in three shards side by side, on three runners: each
+  # cuts the same set the same way, by the durations assets handed over,
+  # and runs its part four at once, longest first. Four at once, three
+  # shards: twelve suites in all, about the 3.4 GB measured for twelve,
+  # beside Postgres's ~1.2 GB at four, within the runners' 6 GB.
   suite:
-    name: suites on SQLite
+    name: suites on SQLite, shard ${{ matrix.shard }}/3
     needs: assets
     runs-on: [self-hosted, lava]
     container:
       image: python:3.12-slim
       options: --init
-    # Measured at about 14 minutes green on four cores (README «Раннер»); a
-    # real failure adds its own length again, rerun.
-    timeout-minutes: 60
+    # A shard lasts about as long as its longest suite, test_halfa_open
+    # (~9 min); a real failure adds its own length again, rerun.
+    timeout-minutes: 45
+    strategy:
+      # The other shards finish even when one fails: their durations are
+      # the next run's cut, and their failures are worth seeing at once.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - name: a clean work folder
         run: |
@@ -313,39 +353,94 @@ jobs:
         env:
           HASH: ${{ needs.assets.outputs.hash }}
 
-      # The summary.txt the last run left (the merge step below): the order,
-      # longest first. None on a first run, and then the static order.
-      - name: durations of the last run
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/suite/summary.txt
-          key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: suite-durations-
-
-      # Eight at once on four cores: the suites wait on game clocks, half a
-      # core busy on average, and eight of them peak at about 2.3 GB of the
-      # 6 GB (twelve: 3.4 GB, two minutes sooner; README «Раннер»). The
-      # runner orders the set by the summary.txt in its output folder.
-      - name: every suite, eight at once, longest first
+      # The runner cuts the set and orders its part by the summary.txt in
+      # its output folder: the same text on every shard.
+      - name: a third of the suites, four at once, longest first
         id: run
         run: |
           export LAVA_RES=$HOME/lava-assets/res LAVA_ORIG_TEXTS=$HOME/lava-assets/texts.xml
-          mkdir -p "$HOME/suite/sqlite"
-          if [ -s "$HOME/suite/summary.txt" ]; then
-            cp "$HOME/suite/summary.txt" "$HOME/suite/sqlite/summary.txt"
+          out=$HOME/shards/${{ matrix.shard }}
+          mkdir -p "$out"
+          if [ -n "$DURATIONS" ]; then
+            printf '%s\n' "$DURATIONS" > "$out/summary.txt"
           fi
           bash tools/run_suite.sh --known tools/known_failures.txt --rerun \
-            --summary "$GITHUB_STEP_SUMMARY" . "$HOME/suite/sqlite" 8
+            --shard ${{ matrix.shard }}/3 \
+            --summary "$GITHUB_STEP_SUMMARY" . "$out" 4
+        env:
+          DURATIONS: ${{ needs.assets.outputs.durations }}
+
+      # This shard's record, for the "suites" job: a cache entry of this run
+      # alone (a job's own files do not outlive it on these runners).
+      - name: this shard's durations
+        if: ${{ !cancelled() && (steps.run.outcome == 'success' || steps.run.outcome == 'failure') }}
+        uses: actions/cache/save@v4
+        with:
+          path: ~/shards/${{ matrix.shard }}/summary.txt
+          key: suite-shard-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.shard }}
+
+      - name: output of every suite
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-logs-${{ matrix.shard }}
+          path: ~/shards/${{ matrix.shard }}/
+          retention-days: 7
+
+  # One status for the three shards, and the check that between them they
+  # ran every suite exactly once; their durations together are the next
+  # run's cut. Its name is the one the single job had.
+  suites:
+    name: suites on SQLite
+    needs: [assets, suite]
+    if: ${{ !cancelled() && needs.assets.result == 'success' }}
+    runs-on: [self-hosted, lava]
+    container:
+      image: python:3.12-slim
+      options: --init
+    timeout-minutes: 10
+    steps:
+      - name: a clean work folder
+        run: |
+          r=${GITHUB_REPOSITORY#*/}
+          find /__w -mindepth 1 -maxdepth 1 ! -name _actions ! -name _temp ! -name _tool -exec rm -rf {} +
+          mkdir -p "/__w/$r/$r"
+          if [ "$GITHUB_WORKSPACE" != "/__w/$r/$r" ]; then
+            echo "::error title=Work folder::the workspace is $GITHUB_WORKSPACE, not /__w/$r/$r: something rewrote the runner's tracking file"
+            exit 1
+          fi
+
+      - name: tools the image lacks
+        run: |
+          apt-get -o Acquire::Retries=3 update -qq
+          apt-get -o Acquire::Retries=3 install -qq -y --no-install-recommends \
+            ca-certificates git openssh-client rsync > /dev/null
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/shards/1/summary.txt
+          key: suite-shard-${{ github.run_id }}-${{ github.run_attempt }}-1
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/shards/2/summary.txt
+          key: suite-shard-${{ github.run_id }}-${{ github.run_attempt }}-2
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/shards/3/summary.txt
+          key: suite-shard-${{ github.run_id }}-${{ github.run_attempt }}-3
 
       # Every suite of the tree ran, and once: a green run without one would
-      # deploy what nothing tested. Its durations are the next run's order,
-      # so this runs after a red run as well.
+      # deploy what nothing tested.
       - name: every suite ran, and once
         id: merge
-        if: ${{ !cancelled() && (steps.run.outcome == 'success' || steps.run.outcome == 'failure') }}
         run: |
+          mkdir -p "$HOME/shards" "$HOME/suite"
           trap '[ -s "$HOME/suite/summary.txt" ] && echo "durations=yes" >> "$GITHUB_OUTPUT"' EXIT
-          bash deploy/ci/merge_shards.sh "$HOME/suite" "$HOME/suite/summary.txt"
+          bash deploy/ci/merge_shards.sh "$HOME/shards" "$HOME/suite/summary.txt"
 
       - name: keep the durations for the next run
         if: ${{ !cancelled() && steps.merge.outputs.durations == 'yes' }}
@@ -354,13 +449,14 @@ jobs:
           path: ~/suite/summary.txt
           key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: output of every suite
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: suite-logs
-          path: ~/suite/sqlite/
-          retention-days: 7
+      - name: all three shards green
+        run: |
+          if [ "$SHARDS" != success ]; then
+            echo "::error title=Suites::a shard failed ($SHARDS); its summary and its suite-logs artifact say which suites"
+            exit 1
+          fi
+        env:
+          SHARDS: ${{ needs.suite.result }}
 
   postgres:
     name: suites on Postgres
@@ -423,7 +519,7 @@ jobs:
       - name: each suite on a database of its own
         run: |
           export LAVA_RES=$HOME/lava-assets/res LAVA_ORIG_TEXTS=$HOME/lava-assets/texts.xml
-          bash deploy/ci/pg_suites.sh "$HOME/pg" 8
+          bash deploy/ci/pg_suites.sh "$HOME/pg" 4
         env:
           LAVA_PG: postgresql://lava:lavatest@postgres:5432
 
@@ -438,8 +534,8 @@ jobs:
   deploy:
     name: deploy to production
     # preflight among the needs only for its output; a skipped assets (no
-    # key) skips suite and postgres, and with them this job.
-    needs: [preflight, assets, suite, postgres]
+    # key) skips the suites and postgres, and with them this job.
+    needs: [preflight, assets, suites, postgres]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.preflight.outputs.gate == 'true'
     runs-on: [self-hosted, lava]
     # ~/.ssh on a tmpfs, as in assets: the key never on the runner's disk.

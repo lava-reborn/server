@@ -26,7 +26,7 @@
 #   * the internet answers (GitHub, PyPI, Debian), and so does the gate's
 #     sshd on the host's public address;
 #   * nothing written to ~/.ssh reaches the folder mounted as HOME.
-# Last, whether the job hooks and the unit's drop-in are in place. Prints
+# Last, whether every runner has the job hooks and its unit the drop-in. Prints
 # one line per check and exits 1 if any failed. Leaves nothing behind.
 #
 #   GATE=host:port            the gate's sshd, must answer (159.194.247.90:22)
@@ -215,14 +215,25 @@ else
   bad "the job's .ssh reached the disk: $(ls -A "$HOMEDIR/.ssh")"
 fi
 
-echo "== the runner's own setup ($R)"
+echo "== the runners' own setup"
 hook=/usr/local/lib/lava-runner/scrub.sh
 if [ -x "$hook" ] && [ "$(stat -c %u "$hook")" = 0 ]; then ok "$hook, root's"; else bad "$hook missing or not root's"; fi
-for k in ACTIONS_RUNNER_HOOK_JOB_STARTED ACTIONS_RUNNER_HOOK_JOB_COMPLETED; do
-  if grep -qx "$k=$hook" "$R/.env" 2> /dev/null; then ok "$k in .env"; else bad "$k=$hook not in $R/.env"; fi
+if [ -n "${LAVA_RUNNER_DIR:-}" ]; then
+  RS=("$R")
+else
+  RS=()
+  for d in "$HOME/actions-runner" "$HOME"/actions-runner-[0-9]*; do
+    [ -f "$d/.runner" ] && RS+=("$d")
+  done
+fi
+[ "${#RS[@]}" -gt 0 ] || bad "no registered runner under $HOME"
+for r in "${RS[@]}"; do
+  for k in ACTIONS_RUNNER_HOOK_JOB_STARTED ACTIONS_RUNNER_HOOK_JOB_COMPLETED; do
+    if grep -qx "$k=$hook" "$r/.env" 2> /dev/null; then ok "$k in $r/.env"; else bad "$k=$hook not in $r/.env"; fi
+  done
+  d=$HOME/.config/systemd/user/lava-runner${r##*/actions-runner}.service.d/scrub.conf
+  if grep -q 'scrub.sh --idle' "$d" 2> /dev/null; then ok "drop-in $d"; else bad "drop-in $d missing"; fi
 done
-d=$HOME/.config/systemd/user/lava-runner.service.d/scrub.conf
-if grep -q 'scrub.sh --idle' "$d" 2> /dev/null; then ok "drop-in $d"; else bad "drop-in $d missing"; fi
 
 echo "== $fails failed"
 [ "$fails" = 0 ]
