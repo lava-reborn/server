@@ -5691,7 +5691,7 @@
       "objs": [
         {"obj": 3216, "num": 20, "mobs": [1023, 1019]}
       ],
-      "rew_afro": 300,
+      "rew_afro": 700,
       "rew_gold": 0,
       "repeatable": 1,
       "per_day": 1,
@@ -5699,7 +5699,7 @@
       "q_type": 0,
       "loc": 51332895,
       "finish_loc": 51373861,
-      "why": "RECOVERED texts and once a day, DESIGNED reward. Крысолов's «Крысиные хвосты» (26273; the newest edition's start 59921 and notfinish 59922, where 26274/26275 carry №0000722; 26276, stored once). Bring twenty rat tails (RatTail 3216, which every rat carries: mobs.ANIMAL_LOOT) -- the grey rats of the barn (1023, seventeen in 166 and four in 184) and the black rats of the old adits behind it (1019). 'стандартную дневную плату крысолова' names no sum: DESIGNED 300 afro, the valley's other daily money quest's («Спички детям»), against 140 afro for the tails at a stall. Repeatable, once a day (per_day 1): 'не чаще 1 раза в сутки', 'На сегодня это всё. Приходи завтра.'. Map marks: the barn, then the caravan."
+      "why": "RECOVERED texts and once a day, DESIGNED reward. Крысолов's «Крысиные хвосты» (26273; the newest edition's start 59921 and notfinish 59922, where 26274/26275 carry №0000722; 26276, stored once). Bring twenty rat tails (RatTail 3216, which every rat carries: mobs.ANIMAL_LOOT) -- the grey rats of the barn (1023, seventeen in 166 and four in 184) and the black rats of the old adits behind it (1019). 'стандартную дневную плату крысолова' names no sum: DESIGNED 700 afro for twenty tails, raised from 300 on 2026-10-05 to make the daily collection quest more worthwhile; no item reward. Selling the tails at a stall pays 140 afro. Repeatable, once a day (per_day 1): 'не чаще 1 раза в сутки', 'На сегодня это всё. Приходи завтра.'. Map marks: the barn, then the caravan."
     },
     {
       "type": 55,
