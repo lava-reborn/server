@@ -216,7 +216,7 @@ try:
     # with the valley's third batch of quests (server/test_valley_market.py).
     check("the other quest things the valley's quests ask of its creatures",
           wanted_rows, {14: [228, 229, 230, 231, 232], 15: [228, 229, 230, 231, 232],
-                        250: [232, 3179, 3217, 6915], 251: [232, 3179, 3217, 6915],
+                        250: [232, 3179, 3217], 251: [232, 3179, 3217],
                         2103: [234], 1019: [3218], 12: [260, 3059]})
     check("  ..among them things no ordinary row may drop: unpriced, or a quest's own",
           [mobs.droppable(t) for t in (LETTER, 228, 3217, 3218, 234)], [False] * 5)
