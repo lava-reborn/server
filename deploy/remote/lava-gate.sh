@@ -89,6 +89,33 @@
 # script says goes to the log first and to the client only if it is still
 # there.
 #
+# THE CLIENT RELEASE (CLIENT_RELEASE=1 in gate.conf; off by default)
+#
+# Players' launchers install the game from this server and keep it what the
+# signed release says (client/FORMAT.md), and the release is made here, by
+# the same deploy, so that client and server always change together:
+#
+#   4b. before anything is backed up, client/build.py runs over the staged
+#       tree inside the game's image -- network off, the tree, the store and
+#       RES_DIR read-only, as nobody -- and writes the list of files and the
+#       bytes of every file it generated (main.swf through
+#       tools/widescreen.py, the string table, the map's names) into the
+#       stage. The installed client/publish.py checks that output; a release
+#       that does not build or check is a deploy that changes nothing;
+#   9b. once the new server is up and verified, the string table in the
+#       release must be the one the new server serves, byte for byte, and
+#       then publish.py puts the new files in the store, writes the manifest
+#       and signs the pointer with the resource key (CLIENT_KEY, which only
+#       root reads). The pointer is the last thing written; any failure up to
+#       it rolls the server back, and the players' launchers never see a
+#       release the server it belongs to did not survive.
+#
+# The repository's code computes files and nothing more: it runs in a
+# container with no network and no write access but to its own output, and
+# what it wrote is checked by the installed publish.py, which is the only
+# code here that holds the key. Keys, the store and the first import of the
+# original game are in client/README.md.
+#
 # Exit status: 0 deployed; 1 failed and rolled back (or failed before
 # anything changed); 2 refused; 3 failed and the rollback failed too -- the
 # server needs a human, and the log says where it stopped.
@@ -219,7 +246,15 @@ MIN_FREE_MB=2048              # free space a backup may not eat into
 HEALTH_TIMEOUT=240            # seconds for both services to come up
 SETTLE=20                     # seconds watched after they are up
 LOCK_WAIT=900                 # seconds a deploy waits for the one before it
-ALLOWED_DIRS="server data tools deploy launcher"
+ALLOWED_DIRS="server data tools deploy launcher client"
+# The client release ("THE CLIENT RELEASE"). Off unless gate.conf says 1:
+# a gate.conf written before this existed keeps deploying as it did.
+CLIENT_RELEASE=0
+CLIENT_ROOT=/opt/lava-site/download/client   # what nginx serves as /download/client/
+CLIENT_KEY=                   # empty: $CI_DIR/client/resource.pem
+CLIENT_IMAGE=                 # empty: $IMAGE, the game's own
+CLIENT_KEEP=8                 # manifests kept; the store keeps what they need
+CLIENT_TIMEOUT=900            # seconds for client/build.py
 REQUIRED="Dockerfile docker-compose.yml server/server.py server/healthcheck.py"
 KEY_FILES="server/server.py server/accounts.py server/storage.py server/names.py server/bootstrap_http.py data/quests.json"
 COMPOSE_POLICY=1              # 0: docker-compose.yml is not policed (see above)
@@ -248,6 +283,9 @@ if [ -e "$CONF" ]; then
   . "$CONF"
 fi
 RES_DIR=${RES_DIR:-$APP_DIR/res}
+CLIENT_KEY=${CLIENT_KEY:-$CI_DIR/client/resource.pem}
+CLIENT_IMAGE=${CLIENT_IMAGE:-$IMAGE}
+CLIENT_PY=$CI_DIR/client/publish.py
 TEXTS=$CI_DIR/texts.xml
 FILTER=$CI_DIR/rsync.filter
 LOG_DIR=$CI_DIR/log
@@ -809,6 +847,73 @@ while i != -1:
 sys.exit(1)' < "$LAUNCHER_EXE" 2>/dev/null
 }
 
+# --- deploy: the client release ("THE CLIENT RELEASE") -----------------------
+
+CLIENT_TEXTS=
+CLIENT_OUT=
+
+# 4b. client/build.py over the staged tree, in the game's image, as nobody,
+# with no network; then the installed publish.py checks what it wrote.
+client_build() {
+  CLIENT_OUT=$STAGE/client
+  WHY=
+  [ -f "$CLIENT_PY" ] || { WHY="$CLIENT_PY is missing -- re-run install.sh"; return 1; }
+  [ -f "$CLIENT_KEY" ] || { WHY="no resource key at $CLIENT_KEY -- install.sh makes one"; return 1; }
+  [ -d "$CLIENT_ROOT/store" ] \
+    || { WHY="no store at $CLIENT_ROOT/store -- import the original game first (client/README.md)"; return 1; }
+  [ -f "$STAGE/tree/client/build.py" ] || { WHY="the tree carries no client/build.py"; return 1; }
+  rm -rf -- "$CLIENT_OUT"
+  install -d -m 0755 "$CLIENT_OUT"
+  # nobody on the server; the test layout (test_gate.sh) runs the gate as
+  # its own user, who is who the container then runs as.
+  local uid=65534 name=lava-client-build-$ID
+  if [ "$(id -u)" = 0 ]; then chown 65534:65534 "$CLIENT_OUT"; else uid=$(id -u); fi
+  # --init: python as PID 1 would ignore the SIGTERM a timeout sends, and the
+  # deploy lock would be held for good. timeout -k, and docker rm -f after,
+  # for a container that does not go even then. fsize caps any one file it
+  # writes; the tree is the repository's, the deployer's to trust or not.
+  if ! timeout -k 30 "$CLIENT_TIMEOUT" docker run --rm --init --name "$name" \
+         --network none --user "$uid:$uid" \
+         --read-only --tmpfs /tmp:rw,size=1g --cap-drop ALL --security-opt no-new-privileges \
+         --memory 2g --pids-limit 256 --ulimit fsize=536870912:536870912 \
+         -v "$STAGE/tree:/src:ro" -v "$CLIENT_ROOT/store:/store:ro" \
+         -v "$RES_DIR:/res:ro" -v "$CLIENT_OUT:/out" \
+         -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -w /src --entrypoint python3 \
+         "$CLIENT_IMAGE" /src/client/build.py release --tree /src --store /store \
+         --res /res --out /out >> "$DLOG" 2>&1; then
+    docker rm -f "$name" > /dev/null 2>&1
+    WHY="client/build.py failed or ran past ${CLIENT_TIMEOUT}s (the deploy log has its output)"
+    return 1
+  fi
+  if ! python3 "$CLIENT_PY" check --out "$CLIENT_OUT" --root "$CLIENT_ROOT" >> "$DLOG" 2>&1; then
+    WHY="the client release built but does not check out (the deploy log says why)"
+    return 1
+  fi
+  CLIENT_TEXTS=$(awk -F '\t' '$3 == "database/texts.xml" { print $1 }' "$CLIENT_OUT/files.tsv")
+  [ -n "$CLIENT_TEXTS" ] || { WHY="the client release has no database/texts.xml"; return 1; }
+  return 0
+}
+
+# 9b. The release's string table must be the one the new server serves; then
+# the release is published, and the signed pointer is the last write.
+client_publish() {
+  local served
+  WHY=
+  served=$(served_texts) || served=
+  if [ "$served" != "$CLIENT_TEXTS" ]; then
+    WHY="the client release's string table (${CLIENT_TEXTS:0:16}) is not the one the new server serves (${served:0:16})"
+    return 1
+  fi
+  if ! python3 "$CLIENT_PY" publish --out "$CLIENT_OUT" --root "$CLIENT_ROOT" --key "$CLIENT_KEY" \
+         --state "$CI_DIR/client/state" --source "$SHA" --keep "$CLIENT_KEEP" \
+         > "$STAGE/client.report" 2>> "$DLOG"; then
+    WHY="publishing the client release failed (the deploy log says why)"
+    return 1
+  fi
+  cat "$STAGE/client.report" >> "$DLOG"
+  return 0
+}
+
 # --- deploy: backups ----------------------------------------------------------
 
 backup_ids() {   # every CI backup id that still has any part left, oldest first
@@ -984,6 +1089,14 @@ cmd_deploy() {
     add "filter:   the repository holds a different rsync.filter -- re-run install.sh to use it"
   fi
 
+  # 4b. the client release, built before anything changes
+  if [ "$CLIENT_RELEASE" = 1 ]; then
+    PHASE=client-build
+    say "gate: building the client release"
+    client_build || fail "$WHY"
+    say "gate: client release built: $(wc -l < "$CLIENT_OUT/files.tsv") files, string table ${CLIENT_TEXTS:0:16}"
+  fi
+
   prev_sha=$(cat "$STATE_DIR/deployed" 2>/dev/null | cut -d' ' -f1)
   add "previous: ${prev_sha:-unknown (no CI deploy recorded)}"
   prev_texts=$(served_texts) || prev_texts=
@@ -1102,6 +1215,15 @@ cmd_deploy() {
     esac
   done
 
+  # 9b. the client release, published once the server it belongs to is up
+  if [ "$CLIENT_RELEASE" = 1 ]; then
+    PHASE=client-publish
+    client_publish || fail "$WHY"
+    while IFS= read -r l; do add "client:   $l"; done < <(head -n 4 "$STAGE/client.report")
+  else
+    add "client:   no release (CLIENT_RELEASE is not 1 in gate.conf)"
+  fi
+
   PHASE=done
   SWAPPED=0
   OUTCOME="deployed"
@@ -1119,7 +1241,15 @@ cmd_deploy() {
     else
       add "texts:    served ${new_texts:0:16}, CHANGED by this deploy (was ${prev_texts:0:16})"
     fi
-    if exe_sha=$(exe_texts); then
+    if [ "$CLIENT_RELEASE" = 1 ]; then
+      # Self-updating launchers carry no table: they install the release's.
+      # The published exe is compared only while the old ones are around.
+      if exe_sha=$(exe_texts) && [ "$exe_sha" != "$new_texts" ]; then
+        add "launcher: $(basename "$LAUNCHER_EXE") carries ${exe_sha:0:16} -- an old launcher; players on it are asked to update"
+      else
+        add "launcher: the table reaches players in the client release"
+      fi
+    elif exe_sha=$(exe_texts); then
       if [ "$exe_sha" = "$new_texts" ]; then
         add "launcher: up to date -- $(basename "$LAUNCHER_EXE") carries the served table"
       else

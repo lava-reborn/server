@@ -41,6 +41,9 @@
 + tools/
 + tools/*.py
 - tools/*
+# A developer's release stand (client/devserve.py): test keys and a copy
+# of the whole game. Not a byte of it belongs on the server.
+- client/dev/
 - data/wiki/
 - data/wiki_world/
 - data/lava.db*

@@ -170,7 +170,7 @@ fi
 {
   echo server/test_halfa_training.py
   ls -S server/test_*.py | grep -v -e test_halfa_training -e test_storage_pg
-  ls data/test_*.py tools/test_*.py
+  ls data/test_*.py tools/test_*.py client/test_*.py
 } > "$OUT/list.static"
 if [ -s "$PREV" ]; then
   # "0 123s test_x" -> 123 for test_x; unknown ones 99999, so they go first,

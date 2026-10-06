@@ -262,9 +262,10 @@ jobs:
 
       # export_texts.py exits non-zero if any id the server may put on the
       # wire is missing from the table (PROTOCOL.md 9): a missing row is a
-      # player sent back to the login screen, not a blank label. The table's
-      # sha256 is what the launcher compares (launcher/Updater.cs); the
-      # deploy's report says whether the published launcher still carries it.
+      # player sent back to the login screen, not a blank label. The same
+      # exporter builds the table into the client release on the server
+      # (client/build.py), and the gate checks it equals what the new
+      # server serves before the release is signed.
       - name: string table, every id on the wire in it
         run: |
           export LAVA_RES=$HOME/lava-assets/res

@@ -11,6 +11,9 @@
 #   RES_EXTRA_TGZ   what deploy/ci/make_test_extras.sh made
 #   LAUNCHER_EXE    a published LavaReborn.exe, for the string-table line
 #
+# CLIENT_ORIG=DIR in the environment: a folder holding the original main.swf
+# and database/locations.xml; with it the client release is tested too.
+#
 # Everything docker here is named cicdtest-* (containers, compose project,
 # volume, image), or cicdvictim* for the stand-ins of another stack's volume,
 # network and image, and removed at the end (KEEP_DOCKER=1 keeps it). The gate is
@@ -487,6 +490,94 @@ echo "    backups before v5: $before; after: $(nbackups) dirs, $(ndumps) dumps, 
 check "pruned to KEEP=2 dirs" "$(nbackups)" 2
 check "pruned to KEEP=2 dumps" "$(ndumps)" 2
 check "pruned to KEEP=2 tags" "$(ntags)" 2
+
+# --- the client release (CLIENT_ORIG: a folder with the original main.swf and
+# database/locations.xml; without it this part is skipped) -----------------------
+if [ -n "${CLIENT_ORIG:-}" ]; then
+  echo "== client release"
+  CROOT=$T/opt/lava-site/download/client
+  CPY=$T/opt/lava-ci/client/publish.py
+  check "install.sh put the publisher in" "$( [ -f "$CPY" ] && echo yes || echo no)" yes
+  check "and made the resource key" "$( [ -f "$T/opt/lava-ci/client/resource.pem" ] && echo yes || echo no)" yes
+  grep -E 'resource key|resource.keys|CLIENT_RELEASE' "$T/install1.out" | sed 's/^/    /'
+  python3 "$T/opt/lava-ci/client/lavasig.py" pubkey "$T/opt/lava-ci/client/resource.pem" > "$T/resource.keys"
+  # A small original: the two files the generators start from and one more.
+  rm -rf "$T/orig"; mkdir -p "$T/orig/database" "$T/orig/locations/libs"
+  cp "$CLIENT_ORIG/main.swf" "$T/orig/main.swf"
+  cp "$CLIENT_ORIG/database/locations.xml" "$T/orig/database/locations.xml"
+  echo "a file of the original" > "$T/orig/locations/libs/Abu Hamad.swf"
+  client_tree() {  # name -> $T/trees/<name> with the small original as its base
+    mk_tree "$T/trees/$1"
+    mark "$T/trees/$1" v5
+    python3 "$REPO/client/build.py" base --dir "$T/orig" -o "$T/trees/$1/client/base.txt" > /dev/null
+  }
+  client_deploy() {  # name -> the gate's status; output in $T/<name>.out
+    bash "$T/trees/$1/deploy/ci/pack.sh" "$T/$1.tgz" "$T/trees/$1" > /dev/null
+    SSH_ORIGINAL_COMMAND="deploy $(fake_sha "$1") $(sum_of "$T/$1.tgz")" gate < "$T/$1.tgz" > "$T/$1.out" 2>&1
+  }
+  pointer() { cat "$CROOT/current.txt" 2>/dev/null | sha256sum | cut -c1-16; }
+
+  client_tree c0
+  python3 "$CPY" import-base --root "$CROOT" --base "$T/trees/c0/client/base.txt" --dir "$T/orig" > "$T/import.out" 2>&1
+  check "import-base: the original is in the store" "$?" 0
+  printf 'CLIENT_RELEASE=1\nCLIENT_ROOT=%s\n' "$CROOT" >> "$T/opt/lava-ci/gate.conf"
+
+  client_deploy c0
+  check "c0: a deploy with the client release" "$?" 0
+  grep -E '^client:' "$T/c0.out" | sed 's/^/    /'
+  check "c0: the pointer is signed by the server's resource key" \
+    "$(python3 "$REPO/client/lavasig.py" verify "$T/resource.keys" "$CROOT/current.txt" 2>&1)" "verify: ok"
+  M=$(sed -n 's/^manifest [0-9a-f]* [0-9]* //p' "$CROOT/current.txt")
+  check "c0: the manifest it names is there" "$( [ -f "$CROOT/$M" ] && echo yes || echo no)" yes
+  check "c0: main.swf in it is the patched one, not the original" \
+    "$(awk -F '\t' '$3 == "main.swf" { print $1 }' "$CROOT/$M" | grep -vc "$(sha256sum < "$T/orig/main.swf" | cut -c1-64)")" 1
+  check "c0: its string table is the one the server serves" \
+    "$(awk -F '\t' '$3 == "database/texts.xml" { print $1 }' "$CROOT/$M")" \
+    "$(docker exec cicdtest-http python3 -c 'import json,os,urllib.request; print(json.load(urllib.request.urlopen("http://127.0.0.1:%s/exe/lavaclient/manifest" % os.environ.get("LAVA_HTTP_PORT","8080")))["resources"][0]["sha256"])')"
+  check "c0: every file it lists is in the store" \
+    "$(awk -F '\t' 'NF == 3 { print $1 }' "$CROOT/$M" | while read -r s; do [ -f "$CROOT/store/${s:0:2}/$s" ] || echo missing; done | wc -l)" 0
+  P0=$(pointer)
+  SUMC0=$(tree_sum)
+  IMGC0=$(game_img)
+
+  client_tree c1
+  # At the top: the patcher's own last line is sys.exit(main()), so anything
+  # appended after it never runs.
+  sed -i '1a raise SystemExit("cicd test: the release does not build")' "$T/trees/c1/tools/widescreen.py"
+  client_deploy c1
+  check "c1: a release that does not build -> deploy fails" "$?" 1
+  grep -E '^(result|state):' "$T/c1.out" | sed 's/^/    /'
+  check "c1: nothing on the server changed" "$(tree_sum)" "$SUMC0"
+  check "c1: no backup was taken for it" "$(grep -c 'saved:' "$T/c1.out")" 0
+  check "c1: the pointer is the one before" "$(pointer)" "$P0"
+
+  client_tree c2
+  # The builder is the repository's own code: it may write whatever it likes
+  # into its output. A string table that is not the server's is caught.
+  sed -i 's/^    def gen_texts(self):$/    def gen_texts(self):\n        return b"not the table the server serves"\n\n    def gen_texts_unused(self):/' \
+    "$T/trees/c2/client/build.py"
+  client_deploy c2
+  check "c2: a string table the server does not serve -> rolled back" "$?" 1
+  grep -E '^(result|state|rollback):' "$T/c2.out" | sed 's/^/    /'
+  check "c2: the tree is back" "$(tree_sum)" "$SUMC0"
+  check "c2: the game is back on its image" "$(game_img)" "$IMGC0"
+  check "c2: the pointer is the one before" "$(pointer)" "$P0"
+
+  client_tree c3
+  # And it may not write anything else: the store and the tree are read-only
+  # to it, and there is no network.
+  sed -i 's/^    def run(self):$/    def run(self):\n        open("\/store\/evil", "w").write("x")/' "$T/trees/c3/client/build.py"
+  client_deploy c3
+  check "c3: a builder writing into the store -> deploy fails" "$?" 1
+  check "c3: and the store holds nothing it wrote" "$(find "$CROOT/store" -name evil | wc -l)" 0
+  check "c3: the pointer is the one before" "$(pointer)" "$P0"
+
+  sed -i '/^CLIENT_RELEASE=1$/d' "$T/opt/lava-ci/gate.conf"
+  client_deploy c0
+  check "client release off again: deploys as before" "$?" 0
+  check "and says so" "$(grep -c '^client:   no release' "$T/c0.out")" 1
+  check "and the pointer stays" "$(pointer)" "$P0"
+fi
 
 echo "== COMPOSE_POLICY=0 lets a policed file through (the owner's switch)"
 echo "COMPOSE_POLICY=0" >> "$T/opt/lava-ci/gate.conf"

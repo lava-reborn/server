@@ -19,9 +19,10 @@
 # never reads; it belongs to the player's own copy and travels no further
 # than their disk. So only that slice is pushed, into a read-only mount.
 #
-# This is a server, not a game distribution. A player brings their own client
-# and the package from tools/make_client_package.py, which is three text
-# files and no part of the game.
+# The game itself reaches players another way: the launcher installs it from
+# the client release the CI gate publishes (client/README.md), out of a store
+# that holds the original once. This script pushes the server, and the slice
+# is all the server reads.
 set -euo pipefail
 
 HOST=${LAVA_DEPLOY_HOST:-root@159.194.247.90}
