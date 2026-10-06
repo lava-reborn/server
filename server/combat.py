@@ -812,7 +812,7 @@ class Interception:
         self.cancel()
         if not all(f.sess.loc.war and f.pvp_allowed() for f in self.fighters):
             return
-        first.last_pvp = second.last_pvp = now()
+        first.engage_player(second)
         rc.mark_foe(first, second)
         rc.mark_foe(second, first)
         rc.set_ws(True)
@@ -842,12 +842,9 @@ class Fighter:
     def __init__(self, sess):
         self.sess = sess
         self.ap = 0
-        # loop time of the last blow exchanged with another player, either
-        # way round, landed or not. A duel keeps the room at war for
-        # leave_combat_timeout after it (RoomCombat.hostilities); what holds
-        # the two of them in it is the exit timer below, which a blow that
-        # lands starts for both.
-        self.last_pvp = -1e9
+        # Opponent -> last exchange time. A duel needs two living players;
+        # one timestamp per player kept the winner fighting a corpse.
+        self.duels = {}
         # loop time of the last hit this player gave or took -- a creature's
         # or a player's, his on anything -- from which the exit timer runs
         # (LEAVE_COMBAT_TIMEOUT, in_combat). Forgotten whenever the client
@@ -1063,7 +1060,7 @@ class Fighter:
         self.cancel_timers()
         self.loot = None
         self.last_hit = -1e9
-        self.last_pvp = -1e9
+        self.end_duels()
 
     def moved(self, cells):
         """The player walked. The client drops its aim bar and autofire on
@@ -1143,6 +1140,17 @@ class Fighter:
         caHit: the client has restarted its exit countdown on it, and so
         does the server (in_combat)."""
         self.last_hit = now() if t is None else t
+
+    def engage_player(self, other, t=None):
+        """Remember this pair, without refreshing unrelated opponents."""
+        t = now() if t is None else t
+        self.duels[other] = other.duels[self] = t
+
+    def end_duels(self):
+        """Death or departure ends only this player's exchanges."""
+        for other in self.duels:
+            other.duels.pop(self, None)
+        self.duels.clear()
 
     def exit_timer_left(self):
         """Seconds the exit timer still runs, 0 once it has run out -- the
@@ -1834,6 +1842,7 @@ class Fighter:
         if barter is not None:
             barter.died()
         self.dead = True
+        self.end_duels()
         self.cancel_timers()
         self.loot = None
         ch = self.character()
@@ -1974,7 +1983,7 @@ class Fighter:
         # Resurrection puts the character at their home, well away from
         # whoever killed them; carrying the duel's timer across would lock
         # them out of the map on arrival.
-        self.last_pvp = -1e9
+        self.end_duels()
         ch.save(self.store)
         if self.sess.char_id:
             self.store.save_character_state(self.sess.char_id, death=0)
@@ -2310,11 +2319,15 @@ class RoomCombat:
         for mob in self.mobs.values():
             if mob.alive and (mob.target is not None or mob.aim is not None):
                 return True
-        for f in self.fighters():
+        fighters = self.fighters()
+        living = {f for f in fighters if not f.dead}
+        for f in living:
             if f.aim is not None or f.strike is not None:
                 return True
-            if t - f.last_pvp < LEAVE_COMBAT_TIMEOUT:
-                return True
+            for other, exchanged in list(f.duels.items()):
+                if other in living and t - exchanged < LEAVE_COMBAT_TIMEOUT:
+                    return True
+                f.duels.pop(other, None)
         return False
 
     def calm(self, t=None):
@@ -2371,7 +2384,7 @@ class RoomCombat:
             if attacker.is_player:
                 # Both ends of a duel are held for the same timeout: the one
                 # who opened it cannot walk out of the answer.
-                attacker.last_pvp = target.last_pvp = t
+                attacker.engage_player(target, t)
                 self.mark_foe(target, attacker)
         elif (target.alive and attacker.is_player and target.stats.can_attack
               and target.target is not attacker):

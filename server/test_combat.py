@@ -764,9 +764,43 @@ _rc.mobs[1].target = None
 _first.aim = object()
 check("so does a burst still being aimed", _rc.hostilities(_T), True)
 _first.aim = None
-_first.last_pvp = _second.last_pvp = _T - combat.LEAVE_COMBAT_TIMEOUT + 1
+_first.engage_player(_second, _T - combat.LEAVE_COMBAT_TIMEOUT + 1)
 check("and a duel inside leave_combat_timeout", _rc.hostilities(_T), True)
 check("but not one past it", _rc.hostilities(_T + 2), False)
+
+_third_seat = _Seat()
+_room.players[_third_seat] = None
+_third = _third_seat.combat
+_first.engage_player(_second, _T)
+_second.dead = True
+check("a dead opponent cannot keep the winner at war, even with a spectator present",
+      _rc.hostilities(_T), False)
+_second.dead = False
+_first.engage_player(_second, _T)
+_first.engage_player(_third, _T)
+_second.dead = True
+_second.end_duels()
+check("one death leaves the duel with a different living opponent running",
+      _rc.hostilities(_T), True)
+_third.dead = True
+_third.end_duels()
+check("the final opponent's death ends the PvP tail immediately",
+      _rc.hostilities(_T), False)
+_rc.mobs[1].target = _first
+check("a creature still attacking the winner keeps the battle running",
+      _rc.hostilities(_T), True)
+_rc.mobs[1].target = None
+_second.dead = False
+_third.dead = False
+_first.engage_player(_second, _T - combat.LEAVE_COMBAT_TIMEOUT - 1)
+_first.engage_player(_third, _T)
+_third.end_duels()
+check("a fresh exchange with someone else does not extend an expired duel",
+      _rc.hostilities(_T), False)
+_first.engage_player(_second, _T)
+del _room.players[_second.sess]
+check("an opponent who left this room cannot hold it at war",
+      _rc.hostilities(_T), False)
 
 # --- what a burst takes off the gun ----------------------------------------------
 check("half a point a round by default: a Walther's 500 last a thousand rounds",

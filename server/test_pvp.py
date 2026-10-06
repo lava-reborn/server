@@ -732,6 +732,12 @@ try:
     check("the quarry falls: lch;dead about itself, once", dead, [{"dead": 0}])
     check("and the hunter sees it fall",
           [p for p in parsed(seen_a, "lch") if "dead" in p], [{"dead": pid_b}])
+    death_index = next((i for i, f in enumerate(seen_a)
+                        if f.startswith("lch;") and param(f, "dead") == str(pid_b)),
+                       len(seen_a))
+    check("the winner receives peace right after the last opponent falls",
+          any(f.startswith("lch;") and param(f, "ws") == "0"
+              for f in seen_a[death_index + 1:]), True)
     st = accounts.Store(DB)
     rows = {r["id"]: dict(r) for r in st.db.execute(
         "SELECT id, death, rep FROM characters").fetchall()}
@@ -785,6 +791,10 @@ try:
     owner = st.item(inventory.parse_oid(dropping[0])[0])["char_id"]
     st.close()
     check("it is the hunter's now", owner, 1)
+
+    a.send("chWorld;")
+    check("the winner can leave after looting without waiting for the PvP timeout",
+          bool(named(a.frames(0.5), "gmap")), True)
 
     a.send("logout;")
     b.send("logout;")
