@@ -445,6 +445,22 @@ class GlobalMapRoom:
             if sess in shown:
                 self._send_move(other, sess)
 
+    def chat(self, sess, raw):
+        """Location chat on the map reaches nearby map players only.
+
+        ChatPan.initialize lists globalMap.playerList while on the map.
+        Use the same radius as map visibility, with current interpolated
+        positions rather than the last heartbeat's cached seen sets. The
+        sender prints its own line on cmdAck, so never echo it here.
+        """
+        if sess not in self.seen or sess.closed or not sess.on_map:
+            return
+        for other in self.seen:
+            if (other is not sess and other.on_map and not other.closed
+                    and self._within(sess, other)):
+                other.send("userMsg", group=0, nick=Str(sess.nick),
+                           entry=Str(raw), **{"from": sess.pid})
+
     # --- internals -------------------------------------------------------
     def _within(self, a, b):
         ax, ay = a.current_pos()
