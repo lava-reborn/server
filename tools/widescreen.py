@@ -84,7 +84,14 @@ Client patches applied without altering the original artwork:
    of the bar, clear of the gold balance. No timers or
    per-scene connection listeners survive a scene change.
 
-7. Location viewports larger than the map. The original ViewFrame bounds
+7. Gold-only repairs. Item.getProp supplies the gold price converted to afro
+   when RepairInterface is open and the requested afro cost is zero. This
+   fixes the slot, drag preview, bag labels and both repair-all totals.
+   Outside repair, the zero afro price still prevents buying or selling
+   gold-only equipment for afro. No item data is modified. Gold payment
+   uses Math.round to the nearest hundredth, with the original 0.01 minimum.
+
+8. Location viewports larger than the map. The original ViewFrame bounds
    leave small scenes free to drift outside the viewport. Location frames
    center a short axis and clamp a long one to the declared map bounds.
    An opaque backing keeps the launcher's loading screen out of the gaps.
@@ -907,6 +914,10 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("gpui", "view", "ExtViewFrame"), "boundOX", "__wideBoundXOrig",
+         (), fn_location_bound("X")),
+        (("gpui", "view", "ExtViewFrame"), "boundOY", "__wideBoundYOrig",
+         (), fn_location_bound("Y")),
         (("gpui", "RepairInterface"), "calcGoldCostFromAfroCost", "__repairGoldOrig",
          ("afro_cost",), fn_repair_gold()),
         (("core", "objects", "Item"), "getProp", "__repairGetPropOrig",
