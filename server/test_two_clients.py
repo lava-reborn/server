@@ -34,6 +34,7 @@ PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts
+import mobs
 accounts.DB_PATH = DB
 _store = accounts.Store(DB)
 _store.register("alice", "secret")
@@ -400,11 +401,30 @@ try:
     check("and pulled in after him, without being asked",
           [f.split(";")[0] for f in got if f.startswith("lcall")], ["lcall"])
     b.send("lenter;accept=1;")
-    b.frames(wait=2)
+    entered_b = b.frames(wait=2)
+    check("the intercepted pair gets a visible preparation countdown",
+          any(f.startswith("prepare;") and param(f, "id") == "0"
+              and 2 < int(param(f, "time")) <= 17 for f in entered_b), True)
     a.send("lenter;accept=1;")
-    a.frames(wait=2)
+    entered_a = a.frames(wait=2)
+    entry_a = int(param(next(f for f in entered_a if f.startswith("lenter;")), "pos"))
+    entry_b = int(param(next(f for f in entered_b if f.startswith("lenter;")), "pos"))
+    check("interception places the clients 8..15 hexes apart in the desert",
+          8 <= mobs.hex_distance(entry_a, entry_b, 64) <= 15, True)
+    check("a later loader receives the remaining shared countdown",
+          any(f.startswith("prepare;") and param(f, "id") == "0"
+              and 2 < int(param(f, "time")) < 17 for f in entered_a), True)
     check("into the same location",
           [f for f in b.frames(1.5) if "rtype=-1;" in f] != [], True)
+    got = a.frames(15)
+    check("the real timer starts the duel without either player attacking",
+          (any(f.startswith("lch;") and param(f, "ws") == "1" for f in got),
+           any(f.startswith("lch;") and param(f, "enemy") == str(pid_b) for f in got),
+           any(f.startswith("prepare;") and param(f, "id") == "0"
+               and param(f, "time") == "0" for f in got)), (True, True, True))
+    got = b.frames(0.1)
+    check("both sides see each other as enemies after preparation",
+          any(f.startswith("lch;") and param(f, "enemy") == str(pid_a) for f in got), True)
     # Back out to the map, where the rest of the scene expects them.
     for who in (a, b):
         who.send("chWorld;")
