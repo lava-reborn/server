@@ -84,12 +84,22 @@ Client patches applied without altering the original artwork:
    of the bar, clear of the gold balance. No timers or
    per-scene connection listeners survive a scene change.
 
-7. Gold-only repairs. Item.getProp supplies the gold price converted to afro
-   when RepairInterface is open and the requested afro cost is zero. This
-   fixes the slot, drag preview, bag labels and both repair-all totals.
-   Outside repair, the zero afro price still prevents buying or selling
-   gold-only equipment for afro. No item data is modified. Gold payment
-   uses Math.round to the nearest hundredth, with the original 0.01 minimum.
+7. Location viewports larger than the map. The original ViewFrame bounds
+   leave small scenes free to drift outside the viewport. Location frames
+   center a short axis and clamp a long one to the declared map bounds.
+   An opaque backing keeps the launcher's loading screen out of the gaps.
+   SourceLibrary parks its artwork at y=1800; hide the library explicitly
+   so large windows cannot expose the stored copies below the interface.
+
+   A location entered straight from another one (a quest way, a caravan,
+   /goto) loses its map mask. SceneShifter.locationScene removes the old
+   panel and attaches the new one as the same "lp" on the same depth in one
+   call; the new ViewFrame's setMask runs, yet by the next frame the player
+   no longer clips cont_mc, and the whole map covers the lower-depth chat.
+   The script still sees the mask in place. Through the global map the new
+   panel comes 100 ms later and keeps its mask. Measured in Flash 32: a
+   setMask repeated right after locationScene is lost as well, the same
+   call one frame later holds. The wrapper repeats it for two frames.
 
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
@@ -539,6 +549,7 @@ def fn_chat():
 def fn_frame():
     """_global.__wideFrame(ui, w, h): every piece of one interface."""
     a = Asm()
+    a.var("h").var("w").var("ui").push(3, "__wideLocationBack").op("callfunc").op("pop")
     for piece, fn in (("frame_top_left", "__wideStrip"),
                       ("frame_top_right", "__wideStrip"),
                       ("frame_right_corner", "__wideCorner"),
@@ -546,6 +557,98 @@ def fn_frame():
                       ("frame_right", "__wideSide")):
         a.var("h").var("w").var("ui").member(piece).push(3, fn).op("callfunc").op("pop")
     a.var("w").var("ui").push(2, "__onlinePanel").op("callfunc").op("pop")
+    return a
+
+
+def fn_location_back():
+    """Opaque scene backing ending above the chat, which has a lower depth."""
+    a = Asm()
+    a.var("ui").member("locationFrame").push(UNDEF).op("equals2").iftrue("out")
+    a.push("h").var("h").push(144).op("subtract").op("definelocal")
+    a.push("mc", -16384, "__wideLocationBack", 2).var("ui")
+    a.push("createEmptyMovieClip").op("callmethod").op("definelocal")
+    a.push(100, 0x10151B)
+    call_method(a, "mc", "beginFill", 2)
+    a.push(0, 0)
+    call_method(a, "mc", "moveTo", 2)
+    for x, y in (("w", None), ("w", "h"), (None, "h"), (None, None)):
+        a.var(y) if y else a.push(0)
+        a.var(x) if x else a.push(0)
+        call_method(a, "mc", "lineTo", 2)
+    call_method(a, "mc", "endFill", 0)
+    a.label("out")
+    return a
+
+
+def fn_location_bound(axis):
+    """Clamp by map bounds, centering maps smaller than the view on each axis.
+
+    Only LocationInterface.locationFrame opts in. Other ViewFrame users
+    retain the original behavior, including windows and the global map.
+    """
+    low, high = ("left", "right") if axis == "X" else ("top", "bottom")
+    prop = "_x" if axis == "X" else "_y"
+    a = Asm()
+    a.var("this").member("_parent", "locationFrame").var("this").op("equals2")
+    a.op("not").iftrue("original")
+    a.var("this").member("setArea").op("not").iftrue("original")
+    a.push("lo").var("this").member(low).op("definelocal")
+    a.push("hi").var("this").member(high).op("definelocal")
+    a.push("pos").var("this").member("cont_mc", prop).op("definelocal")
+    a.var("lo").var("hi").op("less2").iftrue("clamp")
+    a.push("pos").var("lo").var("hi").op("add2").push(2).op("divide").op("definelocal")
+    a.push(True).iftrue("apply")
+    a.label("clamp")
+    # A previous zero scroll span makes ViewFrame.x/yPosition return NaN.
+    a.var("pos").push(1, "isNaN").op("callfunc").op("not").iftrue("finite")
+    a.push("pos").var("hi").op("definelocal")
+    a.label("finite")
+    a.push("pos").var("pos").var("hi").push(2).var("Math").push("min").op("callmethod")
+    a.var("lo").push(2).var("Math").push("max").op("callmethod").op("definelocal")
+    a.label("apply")
+    # A slide targeting a point outside the camera range never reaches its
+    # endpoint. Stop it when clamping, or it pulls every manual scroll back
+    # to the boundary on the next frame (ViewFrame.slideContX/slideContY).
+    a.var("this").member("cont_mc", prop).var("pos").op("equals2").iftrue("position")
+    a.push("slideCont" + axis)
+    call_method(a, "this", "deleteEnterFrame", 1)
+    a.label("position")
+    a.var("this").member("cont_mc").push(prop).var("pos").op("setmember")
+    a.push(UNDEF).op("return")
+    a.label("original")
+    call_method(a, "this", "__wideBound" + axis + "Orig", 0)
+    return a
+
+
+def fn_source_library():
+    """The hidden source clips remain usable by BitmapData.draw/loadBitmap."""
+    a = Asm()
+    call_method(a, "this", "__wideCreateOrig", 0)
+    a.var("this").member("_lib").push("_visible", False).op("setmember")
+    return a
+
+
+def fn_location_scene():
+    """SceneShifter.locationScene(): the original, then the mask again."""
+    tick = Asm()
+    tick.push("f").var("this").member("_parent", "locationFrame").op("definelocal")
+    tick.var("f").member("mask_mc").push(1).var("f").member("cont_mc")
+    tick.push("setMask").op("callmethod").op("pop")
+    tick.var("this").push("left").var("this").member("left").push(1)
+    tick.op("subtract").op("setmember")
+    tick.push(0).var("this").member("left").op("less2").iftrue("out")
+    call_method(tick, "this", "removeMovieClip", 0)
+    tick.label("out")
+    a = Asm()
+    call_method(a, "this", "__wideSceneOrig", 0)
+    a.push("ui").var("this").member("locationScreen").op("definelocal")
+    a.var("ui").push(UNDEF).op("equals2").iftrue("out")
+    a.push("mc", 0).var("ui").push("getNextHighestDepth").op("callmethod")
+    a.push("__wideRemask", 2).var("ui").push("createEmptyMovieClip").op("callmethod")
+    a.op("definelocal")
+    a.var("mc").push("left", 2).op("setmember")
+    a.var("mc").push("onEnterFrame").function((), tick).op("setmember")
+    a.label("out")
     return a
 
 
@@ -800,6 +903,7 @@ def injected():
             ("__wideChat", fn_chat, ("chat", "w")),
             ("__onlineRefresh", fn_online_refresh, ("ui",)),
             ("__onlinePanel", fn_online_panel, ("ui", "w")),
+            ("__wideLocationBack", fn_location_back, ("ui", "w", "h")),
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
@@ -844,6 +948,22 @@ def injected():
         a.var(pvar).push(keep).var(pvar).push(method).op("getmember").op("setmember")
         a.var(pvar).push(method).function(params, body).op("setmember")
         a.label(skip)
+    # SourceLibrary.create is static, unlike the prototype methods above.
+    a.push("__wideLibrary").var("lol").member("display", "SourceLibrary").op("definelocal")
+    a.var("__wideLibrary").push(UNDEF).op("equals2").iftrue("library_done")
+    a.var("__wideLibrary").member("__wideCreateOrig").push(UNDEF).op("equals2")
+    a.op("not").iftrue("library_done")
+    a.var("__wideLibrary").push("__wideCreateOrig").var("__wideLibrary").member("create").op("setmember")
+    a.var("__wideLibrary").push("create").function((), fn_source_library()).op("setmember")
+    a.label("library_done")
+    # So is SceneShifter.locationScene.
+    a.push("__wideShifter").var("lol").member("core", "SceneShifter").op("definelocal")
+    a.var("__wideShifter").push(UNDEF).op("equals2").iftrue("scene_done")
+    a.var("__wideShifter").member("__wideSceneOrig").push(UNDEF).op("equals2")
+    a.op("not").iftrue("scene_done")
+    a.var("__wideShifter").push("__wideSceneOrig").var("__wideShifter").member("locationScene").op("setmember")
+    a.var("__wideShifter").push("locationScene").function((), fn_location_scene()).op("setmember")
+    a.label("scene_done")
     a.op("end")
     return a.assemble()
 
