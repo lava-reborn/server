@@ -49,6 +49,13 @@ Client patches applied without altering the original artwork:
    the original runs only while master.gamer.ssMessages is this very
    service, which a Gamer's kill() has already deleted for an orphan.
 
+   Initial progress is silent too. PersAttributes.rp_info first loads the
+   saved values, then enables its four progress-event forwarders. A saved
+   specialization at level one otherwise looks like a gain from zero when
+   login takes longer than the service's five-second subscription delay.
+   Character redraws still run; subsequent gains and combat queues keep
+   their original handlers. Each new character object gets its own baseline.
+
 4. The doubled services. NPC.userInfo pushes «Прописка» onto supportList
    whenever can_set_home is set, and Healer.userInfo pushes «Лечение» after
    it, but the list is made once, in the constructor (NPC.as:19-24, 44-50,
@@ -572,6 +579,32 @@ def fn_messages():
     return a
 
 
+def fn_progress_snapshot():
+    """Load the initial rp_info silently before enabling progress events.
+
+    SpecObject starts value_bonus at zero, so a saved level of one emits
+    INCREASE_SPEC_LEVEL even on the first snapshot. The five-second delay
+    in SpecSkillMessages.init is not a loading barrier.
+    """
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__progressInfoOrig").op("callmethod").op("pop")
+    a.var("this").push("__progressLoaded", True).op("setmember")
+    return a
+
+
+def fn_progress_event(original):
+    """Forward progress only after this PersAttributes has a baseline.
+
+    Keep rp_info's assignments and UPDATE_PARAMS intact. Filtering at
+    showMessage would leave false login events in the combat queues.
+    """
+    a = Asm()
+    a.var("this").member("__progressLoaded").op("not").iftrue("out")
+    a.var("obj").push(1).var("this").push(original).op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
 def fn_services():
     """NPC.userInfo(obj): `this.supportList = []; this.__wideOrig(obj)`,
     so a repeated userInfo rebuilds the services instead of adding to them."""
@@ -782,6 +815,8 @@ def injected():
          ("obj",), fn_wrapper("__wideChat")),
         (("services", "SpecSkillMessages"), "init", "__wideOrig",
          (), fn_messages()),
+        (("core", "player", "PersAttributes"), "rp_info", "__progressInfoOrig",
+         ("obj",), fn_progress_snapshot()),
         (("core", "player", "NPC"), "userInfo", "__wideOrig",
          ("obj",), fn_services()),
         (("core", "player", "Attendance"), "cmdAck", "__wideOrig",
@@ -791,6 +826,11 @@ def injected():
         (("server", "XMLConnection"), "sendNotification", "__onlineNotifyOrig",
          ("cmd",), fn_online_notification()),
     )
+    for method in ("increase_skill_func", "increase_level_func",
+                   "increase_spec_func", "increase_spec_level_func"):
+        keep = "__progress_" + method
+        wraps += ((("core", "player", "PersAttributes"), method, keep,
+                   ("obj",), fn_progress_event(keep)),)
     for path, method, keep, params, body in wraps:
         cls = path[-1]
         skip = "skip_%s_%s" % (cls, method)
