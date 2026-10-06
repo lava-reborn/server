@@ -89,6 +89,56 @@
 # script says goes to the log first and to the client only if it is still
 # there.
 #
+# THE CLIENT RELEASE (CLIENT_RELEASE=1 in gate.conf; off by default)
+#
+# Players' launchers install the game from this server and keep it what the
+# signed release says (client/FORMAT.md), and the release is made here, by
+# the same deploy, so that client and server always change together:
+#
+#   4b. before anything is backed up, client/build.py runs over the staged
+#       tree inside the game's image -- network off, the tree, the store and
+#       RES_DIR read-only, as nobody -- and writes the list of files and the
+#       bytes of every file it generated (main.swf through
+#       tools/widescreen.py, the string table, the map's names) into the
+#       stage. The installed client/publish.py checks that output; a release
+#       that does not build or check is a deploy that changes nothing;
+#   9b. once the new server is up and verified, the string table in the
+#       release must be the one the new server serves, byte for byte, and
+#       then publish.py puts the new files in the store, writes the manifest
+#       and signs the pointer with the resource key (CLIENT_KEY, which only
+#       root reads). The pointer is the last thing written; any failure up to
+#       it rolls the server back, and the players' launchers never see a
+#       release the server it belongs to did not survive.
+#
+# The repository's code computes files and nothing more: it runs in a
+# container with no network and no write access but to its own output, and
+# what it wrote is checked by the installed publish.py, which is the only
+# code here that holds the key. Keys, the store and the first import of the
+# original game are in client/README.md.
+#
+# THE LAUNCHER (CLIENT_LAUNCHER=1 as well; off by default)
+#
+# The launcher is built here too, by the owner's choice: no hand step between
+# a merged pull request and the players' exe.
+#
+#   4c. a digest of everything the exe is made of (launcher/*.cs, build.sh,
+#       its assets, client/keys/, the projector, the address settings) is
+#       compared with the one last published; if they differ,
+#       launcher/build.sh builds it in the Mono image (LAUNCHER_IMAGE, by
+#       digest, never pulled here) with the same confinement as above, as
+#       the published version plus one. The tree's client/keys must list this
+#       server's own keys, or the deploy stops: such a launcher would refuse
+#       every update after itself;
+#   9c. after the release is out, the exe gets a statement signed with the
+#       launcher key (LAUNCHER_KEY, root's only) and publish.py launcher puts
+#       it in the pointer and at the site's link. A failure here is reported
+#       and rolls nothing back.
+#
+# The cost of that choice: whoever can deploy -- or take this host -- can ship
+# an exe that every player's launcher runs. The owner's own key, if it stays
+# in client/keys/launcher.keys beside this server's, can still sign a
+# launcher by hand (deploy/client/publish_launcher.sh).
+#
 # Exit status: 0 deployed; 1 failed and rolled back (or failed before
 # anything changed); 2 refused; 3 failed and the rollback failed too -- the
 # server needs a human, and the log says where it stopped.
@@ -219,7 +269,27 @@ MIN_FREE_MB=2048              # free space a backup may not eat into
 HEALTH_TIMEOUT=240            # seconds for both services to come up
 SETTLE=20                     # seconds watched after they are up
 LOCK_WAIT=900                 # seconds a deploy waits for the one before it
-ALLOWED_DIRS="server data tools deploy launcher"
+ALLOWED_DIRS="server data tools deploy launcher client"
+# The client release ("THE CLIENT RELEASE"). Off unless gate.conf says 1:
+# a gate.conf written before this existed keeps deploying as it did.
+CLIENT_RELEASE=0
+CLIENT_ROOT=/opt/lava-site/download/client   # what nginx serves as /download/client/
+CLIENT_KEY=                   # empty: $CI_DIR/client/resource.pem
+CLIENT_IMAGE=                 # empty: $IMAGE, the game's own
+CLIENT_KEEP=8                 # manifests kept; the store keeps what they need
+CLIENT_TIMEOUT=900            # seconds for client/build.py and launcher/build.sh
+# The launcher, built and published by the gate itself ("THE LAUNCHER"). Off
+# unless gate.conf says 1, and only together with CLIENT_RELEASE=1.
+CLIENT_LAUNCHER=0
+LAUNCHER_KEY=                 # empty: $CI_DIR/client/launcher.pem
+LAUNCHER_PROJECTOR=           # empty: $CI_DIR/client/fp32_sa.exe
+# Mono 6.12, by digest: install.sh pulls exactly this, and a deploy never
+# pulls anything (--pull never).
+LAUNCHER_IMAGE=mono@sha256:34d816779b1248b5cfd095770b64ecbaf1798e2aca693a91c11a018dce9c7ad5
+LAUNCHER_SITE=https://lava-reborn.ru
+LAUNCHER_HOST=lava-reborn.ru
+LAUNCHER_PORT=9775
+LAUNCHER_DOWNLOAD=/opt/lava-site/download   # the site's own link; empty: left alone
 REQUIRED="Dockerfile docker-compose.yml server/server.py server/healthcheck.py"
 KEY_FILES="server/server.py server/accounts.py server/storage.py server/names.py server/bootstrap_http.py data/quests.json"
 COMPOSE_POLICY=1              # 0: docker-compose.yml is not policed (see above)
@@ -248,6 +318,11 @@ if [ -e "$CONF" ]; then
   . "$CONF"
 fi
 RES_DIR=${RES_DIR:-$APP_DIR/res}
+CLIENT_KEY=${CLIENT_KEY:-$CI_DIR/client/resource.pem}
+CLIENT_IMAGE=${CLIENT_IMAGE:-$IMAGE}
+LAUNCHER_KEY=${LAUNCHER_KEY:-$CI_DIR/client/launcher.pem}
+LAUNCHER_PROJECTOR=${LAUNCHER_PROJECTOR:-$CI_DIR/client/fp32_sa.exe}
+CLIENT_PY=$CI_DIR/client/publish.py
 TEXTS=$CI_DIR/texts.xml
 FILTER=$CI_DIR/rsync.filter
 LOG_DIR=$CI_DIR/log
@@ -809,6 +884,175 @@ while i != -1:
 sys.exit(1)' < "$LAUNCHER_EXE" 2>/dev/null
 }
 
+# --- deploy: the client release ("THE CLIENT RELEASE") -----------------------
+
+CLIENT_TEXTS=
+CLIENT_OUT=
+
+# 4b. client/build.py over the staged tree, in the game's image, as nobody,
+# with no network; then the installed publish.py checks what it wrote.
+client_build() {
+  CLIENT_OUT=$STAGE/client
+  WHY=
+  [ -f "$CLIENT_PY" ] || { WHY="$CLIENT_PY is missing -- re-run install.sh"; return 1; }
+  [ -f "$CLIENT_KEY" ] || { WHY="no resource key at $CLIENT_KEY -- install.sh makes one"; return 1; }
+  [ -d "$CLIENT_ROOT/store" ] \
+    || { WHY="no store at $CLIENT_ROOT/store -- import the original game first (client/README.md)"; return 1; }
+  [ -f "$STAGE/tree/client/build.py" ] || { WHY="the tree carries no client/build.py"; return 1; }
+  rm -rf -- "$CLIENT_OUT"
+  install -d -m 0755 "$CLIENT_OUT"
+  # nobody on the server; the test layout (test_gate.sh) runs the gate as
+  # its own user, who is who the container then runs as.
+  local uid=65534 name=lava-client-build-$ID
+  if [ "$(id -u)" = 0 ]; then chown 65534:65534 "$CLIENT_OUT"; else uid=$(id -u); fi
+  # --init: python as PID 1 would ignore the SIGTERM a timeout sends, and the
+  # deploy lock would be held for good. timeout -k, and docker rm -f after,
+  # for a container that does not go even then. fsize caps any one file it
+  # writes; the tree is the repository's, the deployer's to trust or not.
+  if ! timeout -k 30 "$CLIENT_TIMEOUT" docker run --rm --init --name "$name" \
+         --network none --user "$uid:$uid" \
+         --read-only --tmpfs /tmp:rw,size=1g --cap-drop ALL --security-opt no-new-privileges \
+         --memory 2g --pids-limit 256 --ulimit fsize=536870912:536870912 \
+         -v "$STAGE/tree:/src:ro" -v "$CLIENT_ROOT/store:/store:ro" \
+         -v "$RES_DIR:/res:ro" -v "$CLIENT_OUT:/out" \
+         -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -w /src --entrypoint python3 \
+         "$CLIENT_IMAGE" /src/client/build.py release --tree /src --store /store \
+         --res /res --out /out >> "$DLOG" 2>&1; then
+    docker rm -f "$name" > /dev/null 2>&1
+    WHY="client/build.py failed or ran past ${CLIENT_TIMEOUT}s (the deploy log has its output)"
+    return 1
+  fi
+  if ! python3 "$CLIENT_PY" check --out "$CLIENT_OUT" --root "$CLIENT_ROOT" >> "$DLOG" 2>&1; then
+    WHY="the client release built but does not check out (the deploy log says why)"
+    return 1
+  fi
+  CLIENT_TEXTS=$(awk -F '\t' '$3 == "database/texts.xml" { print $1 }' "$CLIENT_OUT/files.tsv")
+  [ -n "$CLIENT_TEXTS" ] || { WHY="the client release has no database/texts.xml"; return 1; }
+  return 0
+}
+
+# 9b. The release's string table must be the one the new server serves; then
+# the release is published, and the signed pointer is the last write.
+client_publish() {
+  local served
+  WHY=
+  served=$(served_texts) || served=
+  if [ "$served" != "$CLIENT_TEXTS" ]; then
+    WHY="the client release's string table (${CLIENT_TEXTS:0:16}) is not the one the new server serves (${served:0:16})"
+    return 1
+  fi
+  if ! python3 "$CLIENT_PY" publish --out "$CLIENT_OUT" --root "$CLIENT_ROOT" --key "$CLIENT_KEY" \
+         --state "$CI_DIR/client/state" --source "$SHA" --keep "$CLIENT_KEEP" \
+         > "$STAGE/client.report" 2>> "$DLOG"; then
+    WHY="publishing the client release failed (the deploy log says why)"
+    return 1
+  fi
+  cat "$STAGE/client.report" >> "$DLOG"
+  return 0
+}
+
+# --- deploy: the launcher ("THE LAUNCHER") -----------------------------------
+
+LAUNCHER_NEW=0
+LAUNCHER_VERSION=
+LAUNCHER_DIGEST=
+LAUNCHER_SIGN=
+
+# Everything the exe is made of. The same as at the last publish: no new
+# launcher, and players are not made to download one for nothing.
+launcher_digest() {
+  (
+    cd "$STAGE/tree" || exit 1
+    {
+      for f in launcher/build.sh launcher/*.cs launcher/assets/hero.jpg launcher/assets/lava.ico \
+               launcher/assets/wrapper.swf launcher/assets/wrapper_plain.swf \
+               client/keys/resource.keys client/keys/launcher.keys; do
+        [ -f "$f" ] && printf '%s  %s\n' "$(sha256sum < "$f" | cut -c1-64)" "$f"
+      done
+      printf '%s  projector\n' "$(sha256sum < "$LAUNCHER_PROJECTOR" | cut -c1-64)"
+      printf '%s %s %s %s\n' "$LAUNCHER_SITE" "$LAUNCHER_HOST" "$LAUNCHER_PORT" "$LAUNCHER_IMAGE"
+    } | sha256sum | cut -c1-64
+  )
+}
+
+# 4c. If the launcher's sources changed, launcher/build.sh in the Mono image,
+# with the same confinement as client/build.py; the exe it leaves is copied
+# into a folder of root's own before anything reads it again.
+launcher_build() {
+  WHY=
+  LAUNCHER_NEW=0
+  local kid rid last uid=65534 name=lava-launcher-build-$ID out=$STAGE/launcher-build exe
+  [ -f "$LAUNCHER_KEY" ] || { WHY="no launcher key at $LAUNCHER_KEY -- install.sh makes one"; return 1; }
+  [ -f "$LAUNCHER_PROJECTOR" ] || { WHY="no Flash projector at $LAUNCHER_PROJECTOR (client/README.md)"; return 1; }
+  [ -f "$STAGE/tree/launcher/build.sh" ] || { WHY="the tree carries no launcher/build.sh"; return 1; }
+  # A launcher that does not list the keys this server signs with would
+  # refuse every release and every launcher after itself.
+  kid=$(python3 "$CI_DIR/client/lavasig.py" pubkey "$LAUNCHER_KEY" | cut -d' ' -f1)
+  rid=$(python3 "$CI_DIR/client/lavasig.py" pubkey "$CLIENT_KEY" | cut -d' ' -f1)
+  grep -q "^$kid " "$STAGE/tree/client/keys/launcher.keys" 2>/dev/null \
+    || { WHY="client/keys/launcher.keys does not list this server's launcher key $kid"; return 1; }
+  grep -q "^$rid " "$STAGE/tree/client/keys/resource.keys" 2>/dev/null \
+    || { WHY="client/keys/resource.keys does not list this server's resource key $rid"; return 1; }
+  LAUNCHER_DIGEST=$(launcher_digest) || { WHY="the launcher's sources cannot be read"; return 1; }
+  last=$(cat "$CI_DIR/client/state/launcher.source" 2>/dev/null) || last=
+  [ "$LAUNCHER_DIGEST" != "$last" ] || return 0
+  LAUNCHER_VERSION=$(python3 "$CLIENT_PY" launcher-version --state "$CI_DIR/client/state") \
+    || { WHY="the published launcher's version cannot be read"; return 1; }
+  LAUNCHER_VERSION=$((LAUNCHER_VERSION + 1))
+  rm -rf -- "$out"
+  install -d -m 0755 "$out"
+  if [ "$(id -u)" = 0 ]; then chown 65534:65534 "$out"; else uid=$(id -u); fi
+  if ! timeout -k 30 "$CLIENT_TIMEOUT" docker run --rm --init --name "$name" --pull never \
+         --network none --user "$uid:$uid" --read-only --tmpfs /tmp:rw,size=1g \
+         --cap-drop ALL --security-opt no-new-privileges --memory 2g --pids-limit 256 \
+         --ulimit fsize=134217728:134217728 \
+         -v "$STAGE/tree:/src:ro" -v "$LAUNCHER_PROJECTOR:/projector.exe:ro" -v "$out:/out" \
+         -e HOME=/tmp "$LAUNCHER_IMAGE" bash /src/launcher/build.sh --out /out \
+         --build "$LAUNCHER_VERSION" --projector /projector.exe --commit "$SHA" \
+         --site "$LAUNCHER_SITE" --host "$LAUNCHER_HOST" --port "$LAUNCHER_PORT" >> "$DLOG" 2>&1; then
+    docker rm -f "$name" > /dev/null 2>&1
+    WHY="launcher/build.sh failed or ran past ${CLIENT_TIMEOUT}s (the deploy log has the compiler's words)"
+    return 1
+  fi
+  exe=$out/LavaReborn.exe
+  if [ -L "$exe" ] || [ ! -f "$exe" ] || [ "$(stat -c %s "$exe")" -gt $((64 * 1024 * 1024)) ] \
+       || [ "$(head -c 2 "$exe")" != MZ ]; then
+    WHY="launcher/build.sh did not leave an exe"
+    return 1
+  fi
+  LAUNCHER_SIGN=$STAGE/launcher-sign
+  rm -rf -- "$LAUNCHER_SIGN"
+  install -d -m 0700 "$LAUNCHER_SIGN"
+  cp --no-dereference -- "$exe" "$LAUNCHER_SIGN/LavaReborn.exe"
+  LAUNCHER_NEW=1
+  return 0
+}
+
+# 9c. After the release is out: the statement signed with the launcher key,
+# then publish.py launcher re-signs the pointer with it. A failure here does
+# not roll the server back -- the release that matches it is already out --
+# and is said in the report.
+launcher_publish() {
+  WHY=
+  [ "$LAUNCHER_NEW" = 1 ] || return 0
+  local exe=$LAUNCHER_SIGN/LavaReborn.exe
+  printf 'lava-launcher 1\nversion %d\nsha256 %s\nsize %d\ncreated %s\n' "$LAUNCHER_VERSION" \
+    "$(sha256sum < "$exe" | cut -c1-64)" "$(stat -c %s "$exe")" "$(date -u +%FT%TZ)" \
+    > "$LAUNCHER_SIGN/statement.body"
+  python3 "$CI_DIR/client/lavasig.py" sign "$LAUNCHER_KEY" "$LAUNCHER_SIGN/statement.body" \
+      -o "$LAUNCHER_SIGN/statement.txt" 2>> "$DLOG" \
+    || { WHY="signing the launcher statement failed"; return 1; }
+  python3 "$CLIENT_PY" launcher --root "$CLIENT_ROOT" --state "$CI_DIR/client/state" \
+      --key "$CLIENT_KEY" --launcher-keys "$CI_DIR/client/launcher.keys" \
+      --exe "$exe" --statement "$LAUNCHER_SIGN/statement.txt" \
+      ${LAUNCHER_DOWNLOAD:+--download "$LAUNCHER_DOWNLOAD"} \
+      > "$STAGE/launcher.report" 2>> "$DLOG" \
+    || { WHY="publishing launcher $LAUNCHER_VERSION failed (the deploy log says why)"; return 1; }
+  cat "$STAGE/launcher.report" >> "$DLOG"
+  printf '%s\n' "$LAUNCHER_DIGEST" > "$CI_DIR/client/state/launcher.source"
+  return 0
+}
+
 # --- deploy: backups ----------------------------------------------------------
 
 backup_ids() {   # every CI backup id that still has any part left, oldest first
@@ -984,6 +1228,23 @@ cmd_deploy() {
     add "filter:   the repository holds a different rsync.filter -- re-run install.sh to use it"
   fi
 
+  # 4b. the client release, built before anything changes
+  if [ "$CLIENT_RELEASE" = 1 ]; then
+    PHASE=client-build
+    say "gate: building the client release"
+    client_build || fail "$WHY"
+    say "gate: client release built: $(wc -l < "$CLIENT_OUT/files.tsv") files, string table ${CLIENT_TEXTS:0:16}"
+    if [ "$CLIENT_LAUNCHER" = 1 ]; then
+      PHASE=launcher-build
+      launcher_build || fail "$WHY"
+      if [ "$LAUNCHER_NEW" = 1 ]; then
+        say "gate: launcher $LAUNCHER_VERSION built ($(stat -c %s "$LAUNCHER_SIGN/LavaReborn.exe") bytes)"
+      else
+        say "gate: the launcher's sources are the published ones; no new launcher"
+      fi
+    fi
+  fi
+
   prev_sha=$(cat "$STATE_DIR/deployed" 2>/dev/null | cut -d' ' -f1)
   add "previous: ${prev_sha:-unknown (no CI deploy recorded)}"
   prev_texts=$(served_texts) || prev_texts=
@@ -1102,6 +1363,24 @@ cmd_deploy() {
     esac
   done
 
+  # 9b. the client release, published once the server it belongs to is up
+  if [ "$CLIENT_RELEASE" = 1 ]; then
+    PHASE=client-publish
+    client_publish || fail "$WHY"
+    while IFS= read -r l; do add "client:   $l"; done < <(head -n 4 "$STAGE/client.report")
+    if [ "$CLIENT_LAUNCHER" = 1 ]; then
+      if [ "$LAUNCHER_NEW" != 1 ]; then
+        add "launcher: unchanged, version $(python3 "$CLIENT_PY" launcher-version --state "$CI_DIR/client/state" 2>/dev/null)"
+      elif launcher_publish; then
+        while IFS= read -r l; do add "launcher: $l"; done < <(head -n 2 "$STAGE/launcher.report")
+      else
+        add "launcher: NOT PUBLISHED -- $WHY; players keep the one they have"
+      fi
+    fi
+  else
+    add "client:   no release (CLIENT_RELEASE is not 1 in gate.conf)"
+  fi
+
   PHASE=done
   SWAPPED=0
   OUTCOME="deployed"
@@ -1119,7 +1398,15 @@ cmd_deploy() {
     else
       add "texts:    served ${new_texts:0:16}, CHANGED by this deploy (was ${prev_texts:0:16})"
     fi
-    if exe_sha=$(exe_texts); then
+    if [ "$CLIENT_RELEASE" = 1 ]; then
+      # Self-updating launchers carry no table: they install the release's.
+      # The published exe is compared only while the old ones are around.
+      if exe_sha=$(exe_texts) && [ "$exe_sha" != "$new_texts" ]; then
+        add "launcher: $(basename "$LAUNCHER_EXE") carries ${exe_sha:0:16} -- an old launcher; players on it are asked to update"
+      else
+        add "launcher: the table reaches players in the client release"
+      fi
+    elif exe_sha=$(exe_texts); then
       if [ "$exe_sha" = "$new_texts" ]; then
         add "launcher: up to date -- $(basename "$LAUNCHER_EXE") carries the served table"
       else

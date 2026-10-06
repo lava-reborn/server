@@ -20,13 +20,21 @@
 #   - runs the gate with a request it must refuse, and the compose policy
 #     over the docker-compose.yml that runs now (it must pass, or the first
 #     CI deploy would be refused);
+#   - installs the client release's publisher (client/publish.py with
+#     lavasig.py and build.py, from a copy of client/ beside deploy/) into
+#     /opt/lava-ci/client, makes the resource key there the first time
+#     (resource.pem, root's only) and prints its line for
+#     client/keys/resource.keys; copies client/keys/launcher.keys beside it,
+#     the keys a launcher statement is checked with (client/README.md);
 #   - prints the line for the DEPLOY_KNOWN_HOSTS secret (this server's host
 #     key) and the line for root's authorized_keys -- and, with
 #     --assets-pubkey, the line for a second key that may only fetch the test
 #     assets (README «CI/CD», «Два ключа»).
 #
 # It does not touch authorized_keys, /opt/lava or any container: adding the
-# key is a separate, deliberate step, printed at the end.
+# key is a separate, deliberate step, printed at the end. Nor does it turn the
+# client release on: that is CLIENT_RELEASE=1 in gate.conf, once the original
+# game is in the store (client/README.md).
 set -euo pipefail
 
 # The two directories move only for a test run against a throwaway layout.
@@ -113,12 +121,89 @@ MAX_RAW_MB=256
 MIN_FREE_MB=2048
 HEALTH_TIMEOUT=240
 SETTLE=20
-ALLOWED_DIRS="server data tools deploy launcher"
+ALLOWED_DIRS="server data tools deploy launcher client"
 # 0 lets any docker-compose.yml through -- and with it root on this host to
 # whoever can deploy (lava-gate.sh, "THE COMPOSE POLICY").
 COMPOSE_POLICY=1
+# 1 builds and publishes the client release with every deploy (lava-gate.sh,
+# "THE CLIENT RELEASE"); only once the original game is in the store.
+CLIENT_RELEASE=0
+CLIENT_ROOT=/opt/lava-site/download/client
 EOF
   echo "    gate.conf written (RES_DIR=$res, PROJECT=${project:-the one of lava-game at each deploy})"
+fi
+# The repository carries client/ from the client release on, and a gate.conf
+# written before it lists ALLOWED_DIRS without it: every deploy of such a tree
+# would be refused. The one change made to an existing gate.conf, and said.
+if grep -qE '^ALLOWED_DIRS="[^"]*"' "$CI_DIR/gate.conf" \
+     && ! grep -qE '^ALLOWED_DIRS="([^"]* )?client( [^"]*)?"' "$CI_DIR/gate.conf"; then
+  sed -i -E 's/^ALLOWED_DIRS="([^"]*)"/ALLOWED_DIRS="\1 client"/' "$CI_DIR/gate.conf"
+  echo "    gate.conf: client added to ALLOWED_DIRS ($(grep -E '^ALLOWED_DIRS=' "$CI_DIR/gate.conf"))"
+fi
+
+echo "==> the client release"
+CSRC=$HERE/../../client
+if [ -f "$CSRC/publish.py" ] && [ -f "$CSRC/lavasig.py" ] && [ -f "$CSRC/build.py" ]; then
+  install -d -m 0700 "$CI_DIR/client" "$CI_DIR/client/state"
+  for f in publish.py lavasig.py build.py; do install -m 0644 "$CSRC/$f" "$CI_DIR/client/$f"; done
+  echo "    publish.py $(sha256sum < "$CI_DIR/client/publish.py" | cut -c1-16) installed"
+  command -v python3 > /dev/null || { echo "install.sh: python3 is needed for the client keys" >&2; exit 1; }
+  # The two keys this server signs with, made here once and never copied off.
+  for k in resource launcher; do
+    if [ ! -f "$CI_DIR/client/$k.pem" ]; then
+      (umask 077 && python3 "$CI_DIR/client/lavasig.py" genkey "$CI_DIR/client/$k.pem" > /dev/null)
+      echo "    $k key made: $CI_DIR/client/$k.pem (root's only; never copy it off this host)"
+    fi
+  done
+  RESLINE=$(python3 "$CI_DIR/client/lavasig.py" pubkey "$CI_DIR/client/resource.pem")
+  LNLINE=$(python3 "$CI_DIR/client/lavasig.py" pubkey "$CI_DIR/client/launcher.pem")
+  for pair in "resource:$RESLINE" "launcher:$LNLINE"; do
+    k=${pair%%:*}; line=${pair#*:}
+    if [ -f "$CSRC/keys/$k.keys" ] && grep -qF "${line%% *}" "$CSRC/keys/$k.keys"; then
+      echo "    the repository's client/keys/$k.keys holds this server's $k key ${line%% *}"
+    else
+      echo "    client/keys/$k.keys does NOT hold this server's $k key yet; commit this line to it:"
+      echo "        $line"
+    fi
+  done
+  # The keys a published statement is checked with: the repository's (the
+  # owner's own, for a launcher signed by hand) and this server's.
+  { [ -f "$CSRC/keys/launcher.keys" ] && grep -v '^\s*\(#\|$\)' "$CSRC/keys/launcher.keys"; echo "$LNLINE"; } \
+    | sort -u > "$CI_DIR/client/launcher.keys.new"
+  chmod 0644 "$CI_DIR/client/launcher.keys.new"
+  mv "$CI_DIR/client/launcher.keys.new" "$CI_DIR/client/launcher.keys"
+  echo "    launcher.keys: $(wc -l < "$CI_DIR/client/launcher.keys") key(s) a statement may be signed with"
+  # The launcher's build: the Mono image by digest, and the Flash projector.
+  # shellcheck source=/dev/null
+  limage=$( (. "$CI_DIR/gate.conf"; echo "${LAUNCHER_IMAGE:-}") )
+  limage=${limage:-$(sed -n 's/^LAUNCHER_IMAGE=//p' "$CI_DIR/lava-gate.sh" | head -n 1)}
+  if docker image inspect "$limage" > /dev/null 2>&1; then
+    echo "    launcher image present: $limage"
+  elif [ -n "${LAVA_CI_NO_PULL:-}" ]; then
+    echo "    launcher image NOT present: $limage (LAVA_CI_NO_PULL set, not pulled)"
+  else
+    docker pull -q "$limage" > /dev/null && echo "    launcher image pulled: $limage" \
+      || echo "    WARNING: could not pull $limage -- the launcher cannot be built"
+  fi
+  if [ -f "$CI_DIR/client/fp32_sa.exe" ]; then
+    echo "    Flash projector present ($(sha256sum < "$CI_DIR/client/fp32_sa.exe" | cut -c1-16))"
+  else
+    echo "    MISSING: $CI_DIR/client/fp32_sa.exe -- the launcher cannot be built without it:"
+    echo "        scp tools/flash/fp32_sa.exe root@$HOST:$CI_DIR/client/fp32_sa.exe"
+  fi
+  # shellcheck source=/dev/null
+  conf_release=$( (. "$CI_DIR/gate.conf"; echo "${CLIENT_RELEASE:-0} ${CLIENT_ROOT:-/opt/lava-site/download/client}") )
+  conf_launcher=$( (. "$CI_DIR/gate.conf"; echo "${CLIENT_LAUNCHER:-0}") )
+  croot=${conf_release#* }
+  if [ -d "$croot/store" ]; then
+    echo "    store: $(find "$croot/store" -type f ! -path '*/.incoming/*' | wc -l) files under $croot"
+  else
+    echo "    no store at $croot yet: import the original game (client/README.md)"
+  fi
+  echo "    CLIENT_RELEASE=${conf_release%% *} in gate.conf$([ "${conf_release%% *}" = 1 ] || echo ' -- the client release is off')"
+  echo "    CLIENT_LAUNCHER=$conf_launcher in gate.conf$([ "$conf_launcher" = 1 ] || echo ' -- the gate does not build the launcher')"
+else
+  echo "    no client/ beside deploy/ ($CSRC): the client release cannot be installed from this copy"
 fi
 
 echo "==> checks"

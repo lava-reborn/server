@@ -1,13 +1,29 @@
 # Build the one file a player gets: LavaReborn.exe.
 #
 #   powershell -ExecutionPolicy Bypass -File launcher\build.ps1
-#   powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -ServerHost 127.0.0.1 -Port 9775
+#   powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -SignKey C:\Users\me\.lava-keys\launcher.pem
+#   powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -Site http://127.0.0.1:8098 `
+#       -ResourceKeys dev\resource.keys -LauncherKeys dev\launcher.keys      (a developer's stand)
 #
 # Uses csc.exe out of the Windows .NET Framework, which is already on every
-# Windows that can run the game, so there is nothing to install. Three things
-# go in as embedded resources -- the Flash projector, the generated string
-# table and the window's photograph. The game itself does not, and never will:
-# that stays the player's own res/ folder.
+# Windows that can run the game, so there is nothing to install. What goes in:
+# the Flash projector, the window's photograph, the two wrapper films and the
+# public keys a release and a launcher must be signed with. The game does not:
+# the launcher installs it from the server (client/FORMAT.md), so building
+# needs no copy of it.
+#
+# The launchers players get are not built here: the gate on the server builds
+# one with launcher/build.sh whenever a deploy changes what the exe is made
+# of, numbers it one past the published one and signs it (client/README.md).
+# This script is for a developer's own copy, the stand, and the owner's
+# emergency launcher signed with the owner's key. -Build is its number
+# (default 1); a published launcher only replaces itself with a larger one, so
+# for one that will be published pass one more than the published version
+# (publish.py status prints it).
+#
+# With -SignKey, the statement the server publishes beside the exe
+# (dist/<version>.txt) is signed here with the launcher key; client/README.md
+# says how it goes on. Without it, dist/<version>.body is the unsigned text.
 #
 # ASCII only in this file. Windows PowerShell 5.1 reads a .ps1 saved as UTF-8
 # without a mark as cp1251, and one Cyrillic letter or long dash here is a
@@ -18,6 +34,11 @@ param(
   [string]$Site = "https://lava-reborn.ru",
   [string]$RegisterUrl = "",
   [string]$LostPasswordUrl = "",
+  [string]$ResourceKeys = "",
+  [string]$LauncherKeys = "",
+  [string]$SignKey = "",
+  [string]$Build = "1",
+  [switch]$AcceptKeys,
   [string]$Out = ""
 )
 
@@ -31,6 +52,8 @@ $repo = Split-Path -Parent $here
 if (-not $Out) { $Out = Join-Path $repo "dist\LavaReborn.exe" }
 if (-not $RegisterUrl) { $RegisterUrl = "$Site/register" }
 if (-not $LostPasswordUrl) { $LostPasswordUrl = "$Site/" }
+if (-not $ResourceKeys) { $ResourceKeys = Join-Path $repo "client\keys\resource.keys" }
+if (-not $LauncherKeys) { $LauncherKeys = Join-Path $repo "client\keys\launcher.keys" }
 
 $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 if (-not (Test-Path $csc)) { throw "csc.exe not found at $csc" }
@@ -43,15 +66,11 @@ if (-not (Test-Path $projector)) {
 $hero = Join-Path $here "assets\hero.jpg"
 if (-not (Test-Path $hero)) { throw "Window artwork not found at $hero" }
 
-# The film that scales the game: the projector is pointed at this rather than
-# at main.swf, which fixes its stage at 950x650 and forbids scaling. Built by
-# tools\make_wrapper.py, which also explains why it exists.
+# The film that scales the game, opt-in with LAVA_SCALE=1, and its unscaled
+# twin, opt-in with LAVA_PLAIN=1; both carry the ClanInspector mend. Built by
+# tools\make_wrapper.py, which also explains why they exist.
 $wrapper = Join-Path $here "assets\wrapper.swf"
 if (-not (Test-Path $wrapper)) { throw "Wrapper film not found at $wrapper -- build it with tools/make_wrapper.py" }
-# Its unscaled twin, 950x650 like main.swf, opt-in with LAVA_PLAIN=1: the
-# ClanInspector mend without the scaling, for working on why a game loaded
-# into either film stops taking clicks. Same script builds both;
-# tools/test_wrapper.py checks them.
 $plain = Join-Path $here "assets\wrapper_plain.swf"
 if (-not (Test-Path $plain)) { throw "Plain wrapper film not found at $plain -- build it with tools/make_wrapper.py" }
 
@@ -60,47 +79,59 @@ if (-not (Test-Path $plain)) { throw "Plain wrapper film not found at $plain -- 
 $icon = Join-Path $here "assets\lava.ico"
 if (-not (Test-Path $icon)) { throw "Icon not found at $icon" }
 
-# The string table has to hold every id this server can send, so it is
-# regenerated here rather than taken from whatever dist/ happens to hold.
-# Into a build directory, not into dist/ itself: what lands beside the exe is
-# what a player is handed, and a loose copy of a file the exe already carries
-# is only there to be picked up by mistake.
-#
-# The exporters read the client's res folder (LAVA_RES, or ..\lava-online\res
-# beside the repository) and run on whichever Python this machine has: the
-# Windows one when "python" on PATH is a real interpreter, else the WSL one
-# (the Windows "python" used to be the Store stub on the owner's machine).
-$build = Join-Path $repo "dist\.build"
-New-Item -ItemType Directory -Force $build | Out-Null
-$res = $env:LAVA_RES
-if (-not $res) { $res = Join-Path (Split-Path -Parent $repo) "lava-online\res" }
-if (-not (Test-Path (Join-Path $res "database\objects.xml"))) { throw "no client at $res (database\objects.xml missing); set LAVA_RES" }
-$winPython = $false
-try { $null = & python -c "import sys; sys.exit(0)" 2>$null; $winPython = ($LASTEXITCODE -eq 0) } catch { $winPython = $false }
-function Run-Export([string]$script, [string]$out) {
-  if ($winPython) {
-    $env:LAVA_RES = $res; $env:PYTHONUTF8 = "1"
-    Push-Location $repo
-    try { & python $script -o $out } finally { Pop-Location }
+# The build number, one integer.
+$buildNo = $Build.Trim()
+if ($buildNo -notmatch '^[1-9][0-9]{0,8}$') { throw "-Build must be one positive integer" }
+
+# The public keys, as C# string literals. A launcher without them could not
+# check a single update, so a missing or empty file stops the build.
+function Key-Literals([string]$path, [string]$what) {
+  if (-not (Test-Path $path)) { throw "no $what keys at $path (client\README.md, Keys)" }
+  $lines = @()
+  foreach ($l in [System.IO.File]::ReadAllLines($path)) {
+    $t = $l.Trim()
+    if ($t -eq "" -or $t.StartsWith("#")) { continue }
+    if ($t -notmatch '^[0-9a-f]{16} [0-9]+ [0-9a-f]+$') { throw "bad line in $path" }
+    $lines += '"' + $t + '"'
+  }
+  if ($lines.Count -eq 0) { throw "no $what keys in $path" }
+  return ($lines -join ", ")
+}
+$resLits = Key-Literals $ResourceKeys "resource"
+$lnLits = Key-Literals $LauncherKeys "launcher"
+
+# The keys come from the checkout, and anyone who can merge could add a line
+# to them; the next official build would then trust that person's signature.
+# So the owner pins the key ids he trusts in pinned.txt beside his own keys
+# (one "resource <id>" or "launcher <id>" per line), and a build whose keys
+# differ stops. -AcceptKeys overrides, for a deliberate change of keys; a
+# developer's stand (-ResourceKeys/-LauncherKeys given) is not checked.
+function Key-Ids([string]$lits) {
+  return @([regex]::Matches($lits, '"([0-9a-f]{16}) ') | ForEach-Object { $_.Groups[1].Value } | Sort-Object)
+}
+$pinned = Join-Path $env:USERPROFILE ".lava-keys\pinned.txt"
+$official = -not $PSBoundParameters.ContainsKey("ResourceKeys") -and -not $PSBoundParameters.ContainsKey("LauncherKeys")
+Write-Host ("==> keys: resource " + ((Key-Ids $resLits) -join ",") + "; launcher " + ((Key-Ids $lnLits) -join ","))
+if ($official) {
+  if (Test-Path $pinned) {
+    $pin = @{ resource = @(); launcher = @() }
+    foreach ($l in [System.IO.File]::ReadAllLines($pinned)) {
+      $t = $l.Trim()
+      if ($t -match '^(resource|launcher) ([0-9a-f]{16})$') { $pin[$Matches[1]] += $Matches[2] }
+    }
+    $okRes = ((@($pin.resource | Sort-Object) -join ",") -eq ((Key-Ids $resLits) -join ","))
+    $okLn = ((@($pin.launcher | Sort-Object) -join ",") -eq ((Key-Ids $lnLits) -join ","))
+    if (-not ($okRes -and $okLn)) {
+      if ($AcceptKeys) { Write-Host "==> keys differ from $pinned -- accepted by -AcceptKeys" }
+      else { throw "the keys in client\keys differ from the ones pinned in $pinned; check who changed them, then rebuild with -AcceptKeys and update the pin" }
+    } else { Write-Host "==> keys match $pinned" }
   } else {
-    $repoWsl = "/mnt/" + $repo.Substring(0,1).ToLower() + $repo.Substring(2).Replace('\','/')
-    $resWsl = "/mnt/" + $res.Substring(0,1).ToLower() + $res.Substring(2).Replace('\','/')
-    & wsl.exe -e bash -lc "cd '$repoWsl' && LAVA_RES='$resWsl' python3 $script -o $out"
+    Write-Host "==> WARNING: no $pinned -- the keys above are trusted as the repository has them"
   }
 }
-$texts = Join-Path $build "texts.xml"
-Write-Host "==> string table"
-Run-Export "tools/export_texts.py" "dist/.build/texts.xml"
-if ($LASTEXITCODE -ne 0) { throw "export_texts.py failed" }
-if (-not (Test-Path $texts)) { throw "export_texts.py produced nothing at $texts" }
 
-# The owner's edits to the names over the global map (data/map_labels.json),
-# which LocalServer lays over the player's own res/database/locations.xml.
-$labels = Join-Path $build "map_labels.txt"
-Write-Host "==> map labels"
-Run-Export "tools/export_map_labels.py" "dist/.build/map_labels.txt"
-if ($LASTEXITCODE -ne 0) { throw "export_map_labels.py failed" }
-if (-not (Test-Path $labels)) { throw "export_map_labels.py produced nothing at $labels" }
+$build = Join-Path $repo "dist\.build"
+New-Item -ItemType Directory -Force $build | Out-Null
 
 # What the window shows in its corner. The commit is what a bug report needs;
 # the date is what a player can actually read.
@@ -111,18 +142,20 @@ try {
   $sha = (& git rev-parse --short HEAD 2>$null)
   Pop-Location
 } catch { }
-$version = if ($sha) { "$stamp $sha" } else { $stamp }
-# Windows wants four numbers; the build date makes them, and they sort.
+$version = if ($sha) { "v$buildNo $stamp $sha" } else { "v$buildNo $stamp" }
+# Windows wants four numbers; the build number leads, so they sort.
 $now = Get-Date
-$fileVersion = "{0}.{1}.{2}.0" -f $now.Year, $now.Month, $now.Day
+$fileVersion = "{0}.{1}.{2}.{3}" -f $buildNo, $now.Year, ($now.Month * 100 + $now.Day), 0
 
-# The address and the links are compiled in, so the player has nothing to type
-# or edit anywhere.
+# The address, the links and the keys are compiled in, so the player has
+# nothing to type or edit anywhere.
 $src = Get-Content (Join-Path $here "Launcher.cs") -Raw -Encoding UTF8
 $src = $src.Replace("@HOST@", $ServerHost).Replace("@PORT@", $Port)
 $src = $src.Replace("@VERSION@", $version).Replace("@FILEVERSION@", $fileVersion)
 $src = $src.Replace("@REGISTER@", $RegisterUrl).Replace("@LOST@", $LostPasswordUrl)
-# Where updates are published. Trailing slash trimmed here rather than in the
+$src = $src.Replace("@BUILD@", $buildNo)
+$src = $src.Replace("@RESOURCE_KEYS@", $resLits).Replace("@LAUNCHER_KEYS@", $lnLits)
+# Where releases are published. Trailing slash trimmed here rather than in the
 # launcher, so the compiled-in string is already the origin it will be pasted
 # onto.
 $src = $src.Replace("@SITE@", $Site.TrimEnd("/"))
@@ -138,20 +171,19 @@ $sources = @(
   (Join-Path $here "GameProbe.cs"),
   (Join-Path $here "GameWindow.cs"),
   (Join-Path $here "LocalServer.cs"),
-  (Join-Path $here "MapLabels.cs"),
-  (Join-Path $here "Updater.cs"),
+  (Join-Path $here "Release.cs"),
+  (Join-Path $here "Sync.cs"),
+  (Join-Path $here "TextsCheck.cs"),
   $gen
 )
 
 New-Item -ItemType Directory -Force (Split-Path -Parent $Out) | Out-Null
 Write-Host "==> compile"
 & $csc /nologo /target:winexe /platform:anycpu /optimize+ /codepage:65001 `
-  /reference:System.dll /reference:System.Drawing.dll `
-  /reference:System.Windows.Forms.dll /reference:System.Security.dll `
+  /reference:System.dll /reference:System.Core.dll /reference:System.Numerics.dll `
+  /reference:System.Drawing.dll /reference:System.Windows.Forms.dll /reference:System.Security.dll `
   "/win32icon:$icon" `
   "/resource:$projector,fp32_sa.exe" `
-  "/resource:$texts,texts.xml" `
-  "/resource:$labels,map_labels.txt" `
   "/resource:$hero,hero.jpg" `
   "/resource:$icon,icon.ico" `
   "/resource:$wrapper,wrapper.swf" `
@@ -171,6 +203,36 @@ $readme = $readme.Replace("@REGISTER@", $RegisterUrl)
 [System.IO.File]::WriteAllText((Join-Path (Split-Path -Parent $Out) "README.txt"),
                                $readme, (New-Object System.Text.UTF8Encoding $true))
 
-$mb = [math]::Round((Get-Item $Out).Length / 1MB, 1)
-Write-Host "==> $Out  ($mb MB)  -> $ServerHost`:$Port  [$version]"
+# The statement the server publishes beside the exe (client/FORMAT.md).
+$exeSha = (Get-FileHash $Out -Algorithm SHA256).Hash.ToLower()
+$exeSize = (Get-Item $Out).Length
+$created = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+$body = "lava-launcher 1`nversion $buildNo`nsha256 $exeSha`nsize $exeSize`ncreated $created`n"
+$dist = Split-Path -Parent $Out
+$bodyPath = Join-Path $dist "$buildNo.body"
+[System.IO.File]::WriteAllText($bodyPath, $body, (New-Object System.Text.UTF8Encoding $false))
+$stPath = Join-Path $dist "$buildNo.txt"
+if (Test-Path $stPath) { Remove-Item $stPath -Force }
+
+if ($SignKey) {
+  if (-not (Test-Path $SignKey)) { throw "no key at $SignKey" }
+  # Python: the Windows one if "python" is a real interpreter, else WSL's.
+  $winPython = $false
+  try { $null = & python -c "import sys; sys.exit(0)" 2>$null; $winPython = ($LASTEXITCODE -eq 0) } catch { $winPython = $false }
+  $sig = Join-Path $repo "client\lavasig.py"
+  if ($winPython) {
+    & python $sig sign $SignKey $bodyPath -o $stPath
+  } else {
+    function ToWsl([string]$p) { $f = [System.IO.Path]::GetFullPath($p); return "/mnt/" + $f.Substring(0,1).ToLower() + $f.Substring(2).Replace('\','/') }
+    & wsl.exe -e python3 (ToWsl $sig) sign (ToWsl $SignKey) (ToWsl $bodyPath) -o (ToWsl $stPath)
+  }
+  if ($LASTEXITCODE -ne 0 -or -not (Test-Path $stPath)) { throw "signing failed" }
+  Remove-Item $bodyPath -Force
+  Write-Host "==> $stPath (signed)"
+} else {
+  Write-Host "==> $bodyPath (unsigned: pass -SignKey to sign it)"
+}
+
+$mb = [math]::Round($exeSize / 1MB, 1)
+Write-Host "==> $Out  ($mb MB)  build $buildNo -> $ServerHost`:$Port, updates from $Site/download/client/"
 Write-Host "==> README.txt"

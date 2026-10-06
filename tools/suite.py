@@ -81,7 +81,7 @@ EVERYTHING = ("server/testkit.py", "tools/suite.py", "tools/run_suite.ps1",
 def suites():
     """Every suite, longest first: the order a pool of N finishes soonest in."""
     found = []
-    for sub in ("server", "data", "tools"):
+    for sub in ("server", "data", "tools", "client"):
         d = os.path.join(ROOT, sub)
         for f in os.listdir(d):
             if f.startswith("test_") and f.endswith(".py") and f[:-3] not in LEFT_OUT:
@@ -458,6 +458,12 @@ def affected(base, impact):
         if path.startswith("data/"):
             hit = table_readers(base_name, stem) | naming([base_name])
             take(hit or set(every), "reads %s" % path)
+            continue
+        if path.startswith("client/"):
+            # The client release's code and lists: its own suite, and the
+            # string table's, whose whitelist the launcher shares.
+            take({n for n in ("test_client", "test_export_texts") if n in every},
+                 "client release: %s" % path)
             continue
         hit = naming([base_name, path])
         if hit:

@@ -52,7 +52,7 @@ check("row count matches the table",
 check("decodes as utf-8", isinstance(blob.decode("utf-8"), str), True)
 
 # --- what the launcher will say -------------------------------------------
-# Updater.Sane refuses a whole table for a single tag it does not know, and a
+# TextsCheck.Sane refuses a whole table for a single tag it does not know, and a
 # refused table leaves the player on the one he had -- whose missing ids are a
 # trip back to the login screen. So every row goes through a port of its check.
 import orig_texts                                     # noqa: E402
@@ -62,7 +62,7 @@ check("the launcher would accept every row", refused[:10], [])
 
 # The port is only worth anything while it checks against the launcher's own
 # list. Read the C# array and compare, so the two cannot drift apart unseen.
-_cs = io.open(os.path.join(ROOT, "launcher", "Updater.cs"), encoding="utf-8").read()
+_cs = io.open(os.path.join(ROOT, "launcher", "TextsCheck.cs"), encoding="utf-8").read()
 _arr = _re.search(r"ALLOWED_TAGS\s*=\s*\{(.*?)\};", _cs, _re.S).group(1)
 _cs_tags = set(_re.findall(r'"([^"]*)"', _arr))
 check("the Python whitelist is the launcher's", sorted(orig_texts.ALLOWED_TAGS),

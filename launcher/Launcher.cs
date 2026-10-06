@@ -1,16 +1,17 @@
 // LavaReborn.exe: the one file a player is handed.
 //
-// It carries what is not the game -- the Flash projector, our string table
-// and the window's photograph -- and it does the two things that are not the
-// player's job: it asks for the password itself, and it hands the client a
-// session so the client does not ask again. The game stays the player's own
-// res/ folder; this reads it and never writes to it.
+// It carries the Flash projector and the window's photograph, and it does
+// what is not the player's job: it installs the game into res/ beside itself
+// and keeps it the published release (Sync, client/FORMAT.md), it replaces
+// itself when a newer launcher is published, it asks for the password, and
+// it hands the client a session so the client does not ask again.
 //
 // The path in (see LocalServer for why it has to be HTTP):
 //
+//   launcher            res/ checked against the signed release, updated
 //   launcher            player types login and password
 //   launcher -> server  hello / login / cmdAck, on the game socket itself
-//   launcher            starts a web server on 127.0.0.1 over the player's res/
+//   launcher            starts a web server on 127.0.0.1 over the release
 //   launcher -> flash   projector opens http://127.0.0.1:<p>/res/main.swf?logged=1
 //   flash    -> launcher  GET /res/xmldocs/csettings_v1.xml   -> PATHTYPE = WEB
 //   flash    -> launcher  POST /exe/lavaclient/loaduser/?ajax -> host:port hash
@@ -56,18 +57,27 @@ static class Launcher
     const string REGISTER_URL = "@REGISTER@";
     const string LOST_URL = "@LOST@";
     const string TITLE = "Lava Reborn";
+    // This build's number (the gate counts them, launcher/build.sh): a
+    // published launcher with a larger one replaces this exe.
+    const int BUILD = @BUILD@;
+    // The keys a release and a launcher must be signed with (client/keys/).
+    static readonly string[] RESOURCE_KEYS = { @RESOURCE_KEYS@ };
+    static readonly string[] LAUNCHER_KEYS = { @LAUNCHER_KEYS@ };
 
-    static string here, res;
+    static string here, res, exe;
     static string player;                 // the unpacked projector
     static readonly ManualResetEvent playerReady = new ManualResetEvent(false);
     static LoginForm form;
     static LocalServer server;
+    static Sync sync;
+    static Mutex single;
     static string savedLogin, savedHash;
+    static int restarting;
 
     [STAThread]
-    static int Main()
+    static int Main(string[] args)
     {
-        try { return Run(); }
+        try { return Run(args); }
         catch (Exception e)
         {
             Notice.Show("Не удалось запустить игру", e.Message);
@@ -75,28 +85,53 @@ static class Launcher
         }
     }
 
-    static int Run()
+    static int Run(string[] args)
     {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Theme.Init();
 
-        here = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        exe = Assembly.GetExecutingAssembly().Location;
+        here = Path.GetDirectoryName(exe);
         res = Path.Combine(here, "res");
-        if (!File.Exists(Path.Combine(res, "main.swf")))
+        bool updated = Has(args, "--updated");
+
+        // One launcher per game folder: two would update the same files at
+        // once. A launcher that has just replaced itself starts the new one
+        // and exits, so the new one waits for the folder rather than give up.
+        bool mine;
+        single = new Mutex(true, @"Local\LavaReborn-" + Hashes.Sha256Hex(
+            Encoding.UTF8.GetBytes(here.ToLowerInvariant())).Substring(0, 16), out mine);
+        if (!mine)
         {
-            Notice.Show("Рядом нет папки res",
-                "Положите эту программу туда, где лежит ваша папка res, так " +
-                "чтобы получился путь:\n\n" + Path.Combine(res, "main.swf") + "\n\n" +
-                "Игра в раздачу не входит — это ваша собственная копия клиента.");
-            return 1;
+            try { mine = single.WaitOne(updated ? 15000 : 0); }
+            catch (AbandonedMutexException) { mine = true; }
+            if (!mine)
+            {
+                Notice.Show("Лаунчер уже запущен", "Для этой папки игры уже открыт лаунчер.");
+                return 1;
+            }
         }
+        Start(delegate { Sync.CleanOld(exe); });
+
+        sync = new Sync(here, SITE + "/download/client/", new KeySet(RESOURCE_KEYS),
+                        new KeySet(LAUNCHER_KEYS), BUILD, exe);
+        sync.FullVerify = Has(args, "--verify");
+        sync.ManualUrl = SITE + "/download/LavaReborn.exe";
 
         // An escape hatch for a machine where the web path does not work out:
-        // the old behaviour, client off the disk, its own login window.
-        // Documented in README.txt so it can be tried without a new build.
+        // the old behaviour, client off the disk, its own login window. It
+        // plays the release as installed, so the launcher has to have run
+        // the normal way once. Documented in README.txt.
         if (Flag("LAVA_LOCAL"))
         {
+            if (!File.Exists(Path.Combine(res, "main.swf")) ||
+                !File.Exists(Path.Combine(res, "database", "texts.xml")))
+            {
+                Notice.Show("Игра ещё не установлена",
+                    "Запустите лаунчер один раз обычным образом: он скачает игру в папку\n\n" + res);
+                return 1;
+            }
             LaunchLocal();
             return 0;
         }
@@ -139,12 +174,12 @@ static class Launcher
             });
         });
 
-        // The update check runs beside those two, and unlike them it owns the
-        // way in: until it says the table on hand is the table this server
-        // speaks, the button is not "Войти". Updater.Start returns at once and
-        // works on its own thread, so this costs the window nothing.
-        Updater.Changed = delegate { Say(ShowUpdate); };
-        Updater.Start(SITE, delegate { return Bytes("texts.xml"); });
+        // The release check runs beside those two, and unlike them it owns the
+        // way in: until every file of the game is the published one, the
+        // button is not "Войти". Sync.Start returns at once and works on its
+        // own thread, so this costs the window nothing.
+        sync.Changed = delegate { Say(ShowUpdate); };
+        sync.Start();
         ShowUpdate();
     }
 
@@ -152,20 +187,36 @@ static class Launcher
     static void ShowUpdate()
     {
         if (form == null || form.GameStarted) return;
-        switch (Updater.State)
+        long done, total;
+        int files, fileTotal;
+        sync.Progress(out done, out total, out files, out fileTotal);
+        switch (sync.State)
         {
-            case UpState.MustUpdate:
-                form.Gate(Updater.Note, "Скачать новую версию",
-                          delegate { Browse(Updater.DownloadUrl); }, true);
+            case SyncState.Checking:
+                form.Gate(sync.Note, "Проверяем обновления", null, false);
                 break;
-            case UpState.Checking:
-                form.Gate(Updater.Note, "Проверяем обновления", null, false);
+            case SyncState.Scanning:
+                form.Gate(sync.Note + ": " + Percent(done, total), "Проверяем файлы", null, false);
                 break;
-            case UpState.Downloading:
-                form.Gate(Updater.Note, "Обновляем ресурсы", null, false);
+            case SyncState.Downloading:
+                form.Gate(sync.Note + ": " + Mb(done) + " из " + Mb(total) + " МБ" +
+                          (fileTotal > 0 ? ", файлов " + files + " из " + fileTotal : ""),
+                          "Загрузка", null, false);
+                break;
+            case SyncState.Restarting:
+                form.Gate(sync.Note, "Перезапуск", null, true);
+                Restart();
+                break;
+            case SyncState.MustUpdate:
+                form.Gate(sync.Note, "Скачать новую версию",
+                          delegate { Browse(sync.ManualUrl); }, true);
+                break;
+            case SyncState.Failed:
+                form.Gate(sync.Note, "Повторить", delegate { sync.Start(); }, false);
                 break;
             default:
-                // Ready, or asked and not answered. Either way the way in is
+                // Ready, or the server could not be asked and the folder is
+                // still the release last accepted. Either way the way in is
                 // open -- refusing to start because a web server is down
                 // would lock every player out of a game that is running.
                 form.Ungate();
@@ -173,19 +224,43 @@ static class Launcher
                 // one is still on the network, and its message is the only
                 // account of why the game will not start -- an update line
                 // written over it leaves the player with nothing to read.
-                if (!form.ErrorShown) form.Note(Updater.Note);
+                if (!form.ErrorShown) form.Note(sync.Note);
                 break;
         }
+    }
+
+    static string Mb(long bytes)
+    {
+        return (bytes / 1048576.0).ToString("0.0", System.Globalization.CultureInfo.GetCultureInfo("ru-RU"));
+    }
+
+    static string Percent(long done, long total)
+    {
+        return total <= 0 ? "0%" : ((int)(100.0 * done / total)).ToString() + "%";
+    }
+
+    // The new exe is already in place under this one's name; start it and go.
+    // The mutex is let go first so the new one does not wait it out.
+    static void Restart()
+    {
+        if (Interlocked.Exchange(ref restarting, 1) != 0) return;
+        try
+        {
+            Process.Start(new ProcessStartInfo(exe, "--updated") { UseShellExecute = false, WorkingDirectory = here });
+        }
+        catch (Exception e)
+        {
+            Notice.Show("Лаунчер обновлён", "Запустите его ещё раз: " + e.Message);
+        }
+        try { single.ReleaseMutex(); } catch { }
+        Environment.Exit(0);
     }
 
     static void Submit(string login, string password, bool remember)
     {
         // The form will not call this while it is gated; this is the second
         // lock on the same door, for the day somebody wires up another way in.
-        // Named for the states that open the door rather than the ones that
-        // close it: Checking is where the launcher spends most of its life,
-        // and listing the closed states left that one standing open.
-        if (Updater.State != UpState.Ready && Updater.State != UpState.Unchecked)
+        if (!sync.Playable)
         {
             ShowUpdate();
             return;
@@ -335,14 +410,9 @@ static class Launcher
                                      out zoom) && zoom > 0.1)
                 GameWindow.Zoom = zoom;
         }
-        // If the check has not settled yet, wait a moment for it here rather
-        // than serve a table that may have fallen behind. The player is
-        // already looking at "Запускаем игру", so a second or two is invisible
-        // -- and the alternative is not a blank label but a session that ends
-        // by itself at the login screen. When there is nothing left to wait
-        // for, which is the usual case, this returns immediately.
-        Updater.Wait(4000);
-        server = new LocalServer(res, Updater.Texts(), film, HOST, PORT);
+        // The release the files were checked against. Submit only gets here
+        // when Sync says the folder is playable, so it is there.
+        server = new LocalServer(sync, film, HOST, PORT);
         server.Hash = hash;
         server.WorldLoading += delegate { Start(Settle); };
         server.Start();
@@ -453,17 +523,11 @@ static class Launcher
     }
 
     // The old way out, kept for a machine where the web path fails: the client
-    // runs off the disk in LOCAL mode and asks for the password itself. Then
-    // the two files it is missing have to be put in place by hand, and the
-    // folder has to be trusted, or Flash will not open a socket at all.
+    // runs off the disk in LOCAL mode and asks for the password itself. The
+    // files it needs are the release's, already in res/; the folder has to be
+    // trusted, or Flash will not open a socket at all.
     static void LaunchLocal()
     {
-        string texts = Path.Combine(res, "database", "texts.xml");
-        if (!File.Exists(texts))
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(texts));
-            File.WriteAllBytes(texts, Bytes("texts.xml"));
-        }
         Trust();
 
         string exe = Unpack();
@@ -519,6 +583,13 @@ static class Launcher
             GameWindow.SetArt((v[1] - v[0]) / 20, (v[3] - v[2]) / 20);
         }
         catch { /* the built-in 950x650 stands */ }
+    }
+
+    static bool Has(string[] args, string flag)
+    {
+        foreach (string a in args)
+            if (string.Equals(a, flag, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
     }
 
     static bool Flag(string name)

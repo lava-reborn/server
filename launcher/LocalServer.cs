@@ -1,5 +1,10 @@
-// A web server on the loopback, serving the player's own res/ folder to the
+// A web server on the loopback, serving the installed release to the
 // player's own Flash.
+//
+// Only the files the release lists, and each one hashed as it goes out
+// (Sync.Serve): a name the release does not hold is a 404 whatever lies on
+// the disk under it, and a file changed on the disk since the check is
+// mended from the store before Flash sees a byte of it.
 //
 // Why a client needs a web server at all: the client only skips its login
 // screen along one path, and that path is HTTP. Session.loadSBase
@@ -28,8 +33,8 @@ using System.Threading;
 
 class LocalServer
 {
-    readonly string root;          // the player's res/ folder, resolved
-    readonly byte[] texts;         // the string table we carry
+    readonly Sync sync;            // the release, and the only way to its files
+    readonly Manifest release;     // what this game is played with, fixed at start
     readonly byte[] wrapper;       // the film that loads the game (16:9 or plain), or null
     readonly string gameHost;
     readonly int gamePort;
@@ -52,11 +57,11 @@ class LocalServer
     // the game than any number of seconds guessed in advance.
     public volatile int LastRequest;
 
-    public LocalServer(string resDir, byte[] textsXml, byte[] wrapperSwf,
-                       string host, int port)
+    public LocalServer(Sync sync, byte[] wrapperSwf, string host, int port)
     {
-        root = Path.GetFullPath(resDir).TrimEnd(Path.DirectorySeparatorChar);
-        texts = textsXml;
+        this.sync = sync;
+        release = sync.Current;
+        if (release == null) throw new InvalidOperationException("игра не установлена");
         wrapper = wrapperSwf;
         gameHost = host;
         gamePort = port;
@@ -147,6 +152,7 @@ class LocalServer
         bool keep = parts.Length < 3 || parts[2].IndexOf("1.1", StringComparison.Ordinal) >= 0;
 
         int length = 0;
+        string host = null;
         while (true)
         {
             string h = ReadLine(inp);
@@ -154,9 +160,22 @@ class LocalServer
             if (h.Length == 0) break;
             if (h.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase))
                 int.TryParse(h.Substring(15).Trim(), out length);
+            else if (h.StartsWith("Host:", StringComparison.OrdinalIgnoreCase))
+                host = h.Substring(5).Trim();
             else if (h.StartsWith("Connection:", StringComparison.OrdinalIgnoreCase) &&
                      h.IndexOf("close", StringComparison.OrdinalIgnoreCase) >= 0)
                 keep = false;
+        }
+
+        // Only this machine's own names. A web page that points a name of its
+        // own at 127.0.0.1 (DNS rebinding) reaches this port with that name in
+        // Host, and must not read loaduser's answer -- the account's hash.
+        if (host != null &&
+            !string.Equals(host, "127.0.0.1:" + Port, StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(host, "localhost:" + Port, StringComparison.OrdinalIgnoreCase))
+        {
+            Send(outp, 403, "text/plain", Encoding.UTF8.GetBytes("forbidden"), false);
+            return false;
         }
 
         // The body has to be drained even when it is ignored, or the next
@@ -229,45 +248,30 @@ class LocalServer
         if (wrapper != null
             && rel.Equals("wrapper.swf", StringComparison.OrdinalIgnoreCase))
         {
-            // Ours, not the player's: it is served from here rather than
-            // written into their res/, which this launcher never touches.
+            // Carried in the exe and served from memory; not a file of the
+            // release.
             Send(outp, 200, "application/x-shockwave-flash", wrapper, keep);
             return;
         }
-        if (rel.Equals("database/texts.xml", StringComparison.OrdinalIgnoreCase))
-        {
-            // Always the whole table, whatever was asked. A string fetched
-            // after login re-enters SBase.onLoad and lands the player back on
-            // the login screen (PROTOCOL.md §9), so there is no such thing as
-            // a partial answer worth giving.
-            Send(outp, 200, "text/xml; charset=utf-8", texts, keep);
-            return;
-        }
-        if (rel.Equals("hints/hints.xml", StringComparison.OrdinalIgnoreCase))
-        {
-            // The second missing file. Empty is fine -- it costs the tooltips
-            // and nothing else -- but it has to be UTF-8 with a mark, like
-            // every other XML the client reads.
-            byte[] bom = { 0xEF, 0xBB, 0xBF };
-            byte[] doc = Encoding.UTF8.GetBytes("<?xml version='1.0'?><data/>");
-            byte[] all = new byte[bom.Length + doc.Length];
-            Buffer.BlockCopy(bom, 0, all, 0, bom.Length);
-            Buffer.BlockCopy(doc, 0, all, bom.Length, doc.Length);
-            Send(outp, 200, "text/xml; charset=utf-8", all, keep);
-            return;
-        }
 
-        if (rel.Equals("database/locations.xml", StringComparison.OrdinalIgnoreCase))
+        // Everything else is a file of the release or nothing. The string
+        // table, hints.xml and the map's names are files of the release too:
+        // the server builds them into it (client/build.py), so they are
+        // installed, checked and served like any other.
+        Entry e = release.Find(rel);
+        if (e == null)
         {
-            // The names over the global map's cells: the player's own file,
-            // with the owner's edits laid on (MapLabels). Unreadable, it falls
-            // through to File, which says so the usual way.
-            byte[] raw = ReadRes(rel);
-            if (raw != null)
+            if (rel.Equals("hints/hints.xml", StringComparison.OrdinalIgnoreCase))
             {
-                Send(outp, 200, Mime(rel), MapLabels.Apply(raw), keep);
+                // A release from before hints.xml was in it. Empty is fine --
+                // it costs the tooltips -- but UTF-8 with a mark, like every
+                // other XML the client reads.
+                byte[] doc = Encoding.UTF8.GetBytes("﻿<?xml version='1.0'?><data/>");
+                Send(outp, 200, "text/xml; charset=utf-8", doc, keep);
                 return;
             }
+            NotFound(outp, rel + " (нет в релизе)", keep);
+            return;
         }
 
         if (rel.StartsWith("locations/", StringComparison.OrdinalIgnoreCase) &&
@@ -277,58 +281,13 @@ class LocalServer
             if (f != null) try { f(); } catch { }
         }
 
-        File(rel, outp, keep);
-    }
-
-    /// <summary>A file of the player's res/ as bytes, or null if it is not
-    /// there or not inside res/ -- File's own checks, for a file that is
-    /// served changed rather than as it lies.</summary>
-    byte[] ReadRes(string rel)
-    {
-        try
+        byte[] served = sync.Serve(e);
+        if (served == null)
         {
-            string full = Path.GetFullPath(Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar)));
-            if (!full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                return null;
-            return System.IO.File.Exists(full) ? System.IO.File.ReadAllBytes(full) : null;
-        }
-        catch { return null; }
-    }
-
-    void File(string rel, Stream outp, bool keep)
-    {
-        string full;
-        try
-        {
-            full = Path.GetFullPath(Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar)));
-        }
-        catch { NotFound(outp, rel, keep); return; }
-
-        // Nothing outside res/ is ours to hand out, however the path was
-        // spelled on the way in.
-        if (!full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-        {
-            NotFound(outp, rel, keep);
+            NotFound(outp, rel + " (не сошёлся по хэшу и не восстановлен)", keep);
             return;
         }
-
-        FileInfo fi = new FileInfo(full);
-        if (!fi.Exists) { NotFound(outp, rel, keep); return; }
-
-        try
-        {
-            using (FileStream fs = fi.OpenRead())
-            {
-                byte[] head = Head(200, Mime(full), fs.Length, keep);
-                outp.Write(head, 0, head.Length);
-                byte[] buf = new byte[65536];
-                int n;
-                while ((n = fs.Read(buf, 0, buf.Length)) > 0)
-                    outp.Write(buf, 0, n);
-                outp.Flush();
-            }
-        }
-        catch { /* the socket went away mid-file */ }
+        Send(outp, 200, Mime(rel), served, keep);
     }
 
     string Csettings()
@@ -394,7 +353,7 @@ class LocalServer
     {
         StringBuilder sb = new StringBuilder();
         sb.Append("HTTP/1.1 ").Append(code)
-          .Append(code == 200 ? " OK" : " Not Found").Append("\r\n");
+          .Append(code == 200 ? " OK" : code == 403 ? " Forbidden" : " Not Found").Append("\r\n");
         sb.Append("Content-Type: ").Append(type).Append("\r\n");
         sb.Append("Content-Length: ").Append(length).Append("\r\n");
         sb.Append("Cache-Control: no-store\r\n");
@@ -438,15 +397,19 @@ static class Log
     static readonly object gate = new object();
     static int written;
 
+    // LAVA_LOG_DIR moves both files, so launcher/test leaves a player's own
+    // log alone.
+    static string Dir()
+    {
+        string d = Environment.GetEnvironmentVariable("LAVA_LOG_DIR");
+        return string.IsNullOrEmpty(d)
+            ? System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LavaOnline")
+            : d;
+    }
+
     public static string Path
     {
-        get
-        {
-            string dir = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "LavaOnline");
-            return System.IO.Path.Combine(dir, "missing.log");
-        }
+        get { return System.IO.Path.Combine(Dir(), "missing.log"); }
     }
 
     // Every request, not only the ones that failed. A client that hangs
@@ -467,12 +430,7 @@ static class Log
 
     public static string HitPath
     {
-        get
-        {
-            return System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "LavaOnline", "http.log");
-        }
+        get { return System.IO.Path.Combine(Dir(), "http.log"); }
     }
 
     public static void Hit(string method, string path, string query)

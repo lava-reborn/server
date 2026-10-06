@@ -1,0 +1,6 @@
+lava-extra 1
+# Big files of ours that live only in the server's store, not in git:
+#   sha256 TAB size TAB path under res/
+# A file goes into the store with
+#   python3 /opt/lava-ci/client/publish.py add --root /opt/lava-site/download/client FILE
+# on the server (root), which prints its sha256 and size (client/README.md).
