@@ -187,7 +187,11 @@ def fixture():
     bitmap = (21, b"\x02\x00" + w.ONLINE_ASSET.read_bytes(), True)
     sprite = b"\x01\x00\x01\x00" + w.join_tags(
         b"", [bitmap, (1, b"", False), (0, b"", False)])
-    tags = [(9, b"\x12\x34\x56", True),
+    # The settings window's frame and texture, which the online list
+    # borrows by ID: empty shapes with a one-bit RECT are enough here.
+    shapes = [(2, struct.pack("<H", ident) + b"\x08\x00\x00\x00\x00\x00", True)
+              for ident in (581, 596)]
+    tags = [(9, b"\x12\x34\x56", True)] + shapes + [
             (39, sprite, True),
             (56, b"\x01\x00\x02\x00fixtureIcon\x00", False),
             (59, b"\x01\x00" + actions, True),

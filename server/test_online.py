@@ -2,7 +2,9 @@
 
 The patched XMLConnection opts in through hello;online=1 and consumes a
 standalone online;count=N push, without registering a cmdAck handler.
-Unpatched clients count too, but keep their original frame sequence.
+hello;online=2 asks for the names too, for the list under the counter:
+the same frame with names=|@...@|. Unpatched clients count too, but keep
+their original frame sequence.
 """
 import asyncio
 import logging
@@ -24,7 +26,7 @@ from protocol import decode  # noqa: E402
 from testkit import check, connect, fails  # noqa: E402
 import server  # noqa: E402
 
-for login in ("alice", "bob", "legacy"):
+for login in ("alice", "bob", "legacy", "carol"):
     server.STORE.register(login, "secret")
 
 
@@ -34,6 +36,10 @@ def command(login):
 
 def counts(frames):
     return [p["count"] for n, p in frames if n == "online"]
+
+
+def names(frames):
+    return [p.get("names") for n, p in frames if n == "online"]
 
 
 class Writer:
@@ -101,11 +107,11 @@ clients = []
 
 
 class Client:
-    def __init__(self, login, feature=True):
+    def __init__(self, login, feature=True, level=1):
         self.sock = connect(PORT, srv, log)
         clients.append(self)
         self.buf = b""
-        self.send("hello;minor=2;major=0;" + ("online=1;" if feature else ""))
+        self.send("hello;minor=2;major=0;" + ("online=%d;" % level if feature else ""))
         self.send(command(login))
         self.frames()
 
@@ -175,6 +181,20 @@ try:
     check("the replaced connection was closed", bob2.sock.recv(1), b"")
     bob3.send("logout;")
     check("logout updates the remaining player", counts(alice.frames()), [2])
+
+    # --- the names behind the count, for hello;online=2 -------------------
+    carol = Client("carol", level=2)
+    entered = carol.enter("carol")
+    check("names change no ack: activation is still ack, count, location",
+          [n for n, _ in entered], ["cmdAck", "online", "lcall"])
+    check("a names client gets the count with every name, case aside",
+          (counts(entered), names(entered)), ([3], [["Alice", "carol", "Legacy"]]))
+    check("an online=1 client keeps the frame without names",
+          names(alice.frames()), [None])
+    legacy.sock.close()
+    left = carol.frames()
+    check("a player leaving updates the names", (counts(left), names(left)),
+          ([2], [["Alice", "carol"]]))
 except Exception:
     import traceback
     fails.append("socket crash:\n" + traceback.format_exc())

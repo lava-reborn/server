@@ -51,7 +51,7 @@ import travel
 import trophies
 import upgrader
 import world
-from protocol import BigUInt, FrameReader, decode, frame, Str
+from protocol import BigUInt, FrameReader, RawList, decode, frame, Str
 
 HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
 PORT = int(os.environ.get("LAVA_PORT", "9775"))
@@ -424,7 +424,9 @@ class Session:
         self.logged_in = False
         # Patched clients opt into the HUD counter in hello. Old clients
         # keep their original frame sequence, but still count as players.
+        # online=2 also asks for the names behind the count.
         self.online_counter = False
+        self.online_names = False
         self.account = None
         self.characters = []
         self.char_id = None
@@ -592,7 +594,8 @@ class Session:
     def cmd_hello(self, p):
         # The client ignores these params; it only needs a frame named "hello"
         # within 20s, or Session.helloTimeOutFunction drops the connection.
-        self.online_counter = p.get("online") == 1
+        self.online_counter = p.get("online") in (1, 2)
+        self.online_names = p.get("online") == 2
         self.send("hello", minor=2, major=0)
 
     def cmd_login(self, p):
@@ -3901,13 +3904,28 @@ def broadcast_online_count():
     """HUD presence: entered characters, including people on the map.
 
     Directory membership survives room changes and excludes the login and
-    character creation screens. Only hello;online=1 clients receive this
+    character creation screens. Only hello;online=1 or 2 clients receive this
     unsolicited frame; it never participates in the cmdAck queue.
+
+    hello;online=2 clients get the same frame with the names as well, for
+    the list under the counter: names=|@a@|@b@|, raw (protocol.RawList),
+    ordered without regard to case. The client offers each name for a
+    private message, which the server routes by the exact nick, so an
+    item is the nick itself; clans.list_safe only stands in for the few
+    characters a raw list cannot carry, which no nick should have anyway.
     """
     count = len(ONLINE.by_char)
+    names = None
     for sess in ONLINE:
-        if sess.online_counter and not sess.closed:
+        if not sess.online_counter or sess.closed:
+            continue
+        if not sess.online_names:
             sess.send("online", count=count)
+            continue
+        if names is None:
+            names = RawList(sorted((clans.list_safe(s.nick) for s in ONLINE),
+                                   key=lambda n: (n.casefold(), n)))
+        sess.send("online", count=count, names=names)
 
 
 def publish_online():
