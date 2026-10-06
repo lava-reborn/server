@@ -396,7 +396,7 @@ class _Seat(object):
 
     def __init__(self):
         self.sent = []
-        self.combat = type("F", (), {"aim": None, "strike": None, "last_pvp": -1e9,
+        self.combat = type("F", (), {"aim": None, "strike": None, "duels": {},
                                      "dead": False})()
 
     def send(self, cmd, **params):

@@ -284,8 +284,8 @@ async def _timer():
     # Peace cancels the client's countdown (battleMode -> deleteTimerLeaveLocation),
     # and a war that starts again does not bring it back.
     del room.players[other]
-    other.combat.last_pvp = -1e9
-    me.last_pvp = -1e9
+    other.combat.end_duels()
+    me.end_duels()
     room.sent = []
     rc.kill(dog, None)
     check("the dog down and nothing else after anybody: peace, and the timer with it",
@@ -382,7 +382,7 @@ async def _timer_boundary():
               ["faMiss", "faWall"])
         check("neither resets the timer",
               (me.exit_timer_left(), target.exit_timer_left()), (10.0, 10.0))
-        me.last_pvp = target.last_pvp = 115.0
+        me.engage_player(target, 115.0)
         check("the PvP room tail lasts fifteen seconds too",
               (rc.hostilities(129.99), rc.hostilities(130.0)), (True, False))
 
