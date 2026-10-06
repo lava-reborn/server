@@ -33,8 +33,9 @@ ssh-keygen -y -f "$HOME/.ssh/lava_gate" > /dev/null 2>&1 \
 # from $HOME, and in a container job the two differ: HOME is /github/home
 # (the runner's temp folder), root's home is /root. The key and the host key
 # stay under $HOME/.ssh -- where the jobs' "forget the key" step removes the
-# key, and the runner empties the folder after the job -- and the alias,
-# naming them by full path, goes where ssh will look for it.
+# key; in CI that folder is a tmpfs of the job's container (ci.yml), so the
+# key never reaches the runner's disk -- and the alias, naming them by full
+# path, goes where ssh will look for it.
 PW_HOME=$(getent passwd "$(id -u)" | cut -d: -f6) || PW_HOME=
 CONFIGS=("$HOME/.ssh/config")
 if [ -n "$PW_HOME" ] && [ "$PW_HOME" != "$HOME" ]; then

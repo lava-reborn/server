@@ -13,3 +13,5 @@ docker-compose.yml text eol=lf
 deploy/rsync.filter text eol=lf
 tools/known_failures.txt text eol=lf
 .github/** text eol=lf
+# A systemd drop-in: a CR would end up in the path ExecStartPre= runs.
+deploy/runner/scrub.conf text eol=lf
