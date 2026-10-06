@@ -40,10 +40,10 @@
 #                   so the list does not outlive its reasons.
 #   --rerun         a failure that is not known is run again once the crowd
 #                   has finished, in a smaller crowd, and counts only if it
-#                   fails again (output in <name>.rerun.out). On a 2-vCPU
-#                   runner a dozen servers at once can make a suite miss a
-#                   window it makes with fewer beside it; a real failure fails
-#                   twice.
+#                   fails again (output in <name>.rerun.out). On a busy
+#                   runner (CI's: four shared cores, eight at once) a crowd
+#                   of servers can make a suite miss a window it makes with
+#                   fewer beside it; a real failure fails twice.
 #   --rerun-jobs N  how many reruns at once (4). One at a time they used to
 #                   outlast the job: two dozen suites of two to ten minutes.
 #   --rerun-max M   more than M failures in the crowd (10) are not rerun: so
@@ -51,7 +51,8 @@
 #                   rather than spend half an hour proving it.
 #   --summary FILE  append the outcome as Markdown to FILE (the job summary).
 #   --shard I/N     only the I-th of N parts of the set, for N runners side by
-#                   side (CI's shards). The parts are cut by the durations of
+#                   side (CI ran three such shards while it had three
+#                   runners; on one it runs the whole set). The parts are cut by the durations of
 #                   the previous run, longest first, each suite to the part
 #                   with the least so far (a suite it does not know counts as
 #                   two minutes); every part of one run must see the same

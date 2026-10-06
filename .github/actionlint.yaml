@@ -1,0 +1,6 @@
+# actionlint's config (docker run --rm -v "$PWD":/repo -w /repo
+# rhysd/actionlint): "lava" is the label of the self-hosted runner on the
+# production host that every job of ci.yml runs on.
+self-hosted-runner:
+  labels:
+    - lava

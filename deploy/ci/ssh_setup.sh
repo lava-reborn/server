@@ -29,7 +29,20 @@ printf '%s\n' "$DEPLOY_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/lava_gate_known_h
 ssh-keygen -y -f "$HOME/.ssh/lava_gate" > /dev/null 2>&1 \
   || fail "DEPLOY_SSH_KEY is not a private key without a passphrase"
 
-cat >> "$HOME/.ssh/config" <<EOF
+# ssh reads its config from the home the passwd file gives the account, not
+# from $HOME, and in a container job the two differ: HOME is /github/home
+# (the runner's temp folder), root's home is /root. The key and the host key
+# stay under $HOME/.ssh -- where the jobs' "forget the key" step removes the
+# key, and the runner empties the folder after the job -- and the alias,
+# naming them by full path, goes where ssh will look for it.
+PW_HOME=$(getent passwd "$(id -u)" | cut -d: -f6) || PW_HOME=
+CONFIGS=("$HOME/.ssh/config")
+if [ -n "$PW_HOME" ] && [ "$PW_HOME" != "$HOME" ]; then
+  install -d -m 700 "$PW_HOME/.ssh"
+  CONFIGS+=("$PW_HOME/.ssh/config")
+fi
+for c in "${CONFIGS[@]}"; do
+  cat >> "$c" <<EOF
 Host lava-gate
   HostName $DEPLOY_HOST
   Port ${DEPLOY_PORT:-22}
@@ -43,4 +56,5 @@ Host lava-gate
   ServerAliveInterval 30
   ServerAliveCountMax 6
 EOF
+done
 echo "lava-gate -> root@$DEPLOY_HOST:${DEPLOY_PORT:-22}, host key pinned"

@@ -10,6 +10,10 @@
 # shard that saw other durations (or a list that differs) would leave a suite
 # out or run it twice, and this is where that shows: a missing suite fails the
 # job, since a green run without it would deploy what nothing tested.
+#
+# CI has one runner now and runs the whole set in one job, as a single folder
+# under DIR (ci.yml, job suite); the check is the same: every suite of the
+# tree ran, and once.
 set -uo pipefail
 
 DIR=$1

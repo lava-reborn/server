@@ -5,8 +5,9 @@
 #       bash deploy/ci/pg_suites.sh [out] [jobs]
 #
 # LAVA_PG is the server without a database name, as a role that may create
-# databases (the CI service's POSTGRES_USER is its superuser). Needs psycopg,
-# LAVA_RES, and the tree this script sits in.
+# databases (the CI service's POSTGRES_USER is its superuser; CI's job runs in
+# a container and reaches the service by its name, @postgres:5432). Needs
+# psycopg, LAVA_RES, and the tree this script sits in.
 #
 # Production runs on Postgres and every suite runs on SQLite by default, and
 # that gap is where a deploy broke before: rowcount, a schema race, run_once

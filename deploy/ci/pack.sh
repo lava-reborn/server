@@ -12,9 +12,10 @@ set -euo pipefail
 [ $# -ge 1 ] || { echo "usage: $0 OUT.tgz [TREE]" >&2; exit 2; }
 OUT=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 TREE=$(cd "${2:-.}" && pwd)
-# The ubuntu runner image has rsync; this is for one that does not.
+# CI's job container gets rsync in its first step (ci.yml); by hand, any
+# Linux with rsync. Nothing here installs it: a job runs as root without sudo.
 command -v rsync > /dev/null \
-  || { sudo apt-get update -qq && sudo apt-get install -y -qq rsync; } > /dev/null
+  || { echo "::error title=Pack::pack.sh needs rsync, and there is none here"; exit 1; }
 
 W=$(mktemp -d)
 trap 'rm -rf "$W"' EXIT
