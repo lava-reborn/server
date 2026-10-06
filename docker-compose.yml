@@ -102,6 +102,11 @@ services:
       # them out. Turning this on also serves csettings_v1.xml, which is what
       # takes the client off its own disk and onto this server for everything.
       LAVA_HTTP_RES: ${LAVA_HTTP_RES:-0}
+      # The client as a download for the launcher (server/client_dist.py):
+      # a path inside the container, so /res or a directory under it, the
+      # one mount there is. Empty: nothing is handed out.
+      LAVA_CLIENT_DIST: ${LAVA_CLIENT_DIST:-}
+      LAVA_CLIENT_VERSION: ${LAVA_CLIENT_VERSION:-}
       # Who may open the admin panel at /admin: game logins, comma
       # separated. Empty means there is no panel, and every /admin path
       # answers 404, so a server nobody set it up on does not announce that

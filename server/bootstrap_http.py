@@ -39,6 +39,7 @@ import time
 from urllib.parse import quote
 
 import accounts
+import client_dist
 import names
 import items
 import map_labels
@@ -476,7 +477,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def log_message(self, fmt, *args):
         print("  HTTP %s" % (fmt % args), flush=True)
@@ -594,6 +596,110 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Lava-Sha256", names.document_sha256())
         self.end_headers()
         self.wfile.write(blob)
+
+    # --- the client as a download (client_dist, issue #50) ---------------
+    #
+    # Its own manifest, not a row in the one above: the launchers already out
+    # there read that one with regular expressions and take the first sha256,
+    # size and url anywhere in it.
+
+    def _client_busy(self, why):
+        self.send_response(503)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Retry-After", "10")
+        body = why.encode("utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(body)
+
+    def _client_manifest(self):
+        dist = client_dist.DIST
+        if not dist.enabled():
+            self._send("not found", code=404)
+        elif dist.blob is None:
+            self._client_busy("manifest is being built")
+        elif "gzip" in (self.headers.get("Accept-Encoding") or ""):
+            blob = dist.blob_gz
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(blob)))
+            self.send_header("Vary", "Accept-Encoding")
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(blob)
+        else:
+            self._send(dist.blob, "application/json; charset=utf-8")
+
+    def _client_file(self, rel, pack=False):
+        """One file of the manifest, or one pack of them, whole or the Range
+        asked for.
+
+        Only paths and packs the manifest lists are served, so nothing
+        outside the reference copy, and nothing it leaves out, can be named
+        into reach. The ETag is the file's digest (the pack's id): a launcher
+        resuming with If-Range gets the rest of the same bytes or, if they
+        have changed since, the whole new file with 200, never a tail of one
+        version glued to the head of another.
+        """
+        dist = client_dist.DIST
+        if not dist.enabled():
+            self._send("not found", code=404)
+            return
+        if dist.blob is None:
+            self._client_busy("manifest is being built")
+            return
+        row = dist.pack(rel) if pack else dist.row(rel)
+        if row is None:
+            self._send("not found", code=404)
+            return
+        if row == "stale":
+            self._client_busy("file changed, manifest is being rebuilt")
+            return
+        segs, size, sha = row
+        etag = '"%s"' % sha
+        rng = client_dist.parse_range(self.headers.get("Range"), size)
+        if_range = self.headers.get("If-Range")
+        if rng is not None and if_range and if_range.strip() != etag:
+            rng = None
+        if rng == "bad":
+            self.send_response(416)
+            self.send_header("Content-Range", "bytes */%d" % size)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        start, end = rng if rng else (0, size - 1)
+        length = end - start + 1 if size else 0
+        self.send_response(206 if rng else 200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Length", str(length))
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("ETag", etag)
+        if not pack:
+            self.send_header("X-Lava-Sha256", sha)
+        if rng:
+            self.send_header("Content-Range",
+                             "bytes %d-%d/%d" % (start, end, size))
+        self.end_headers()
+        if self.command == "HEAD":
+            return
+        # Bytes start..end of the files laid end to end.
+        pos = 0
+        for full, fsize in segs:
+            lo, hi = max(start, pos), min(end + 1, pos + fsize)
+            pos += fsize
+            if lo >= hi:
+                continue
+            with open(full, "rb") as fh:
+                fh.seek(lo - (pos - fsize))
+                left = hi - lo
+                while left > 0:
+                    block = fh.read(min(client_dist.CHUNK, left))
+                    if not block:
+                        break
+                    self.wfile.write(block)
+                    left -= len(block)
 
     def _page(self, message=""):
         store = accounts.Store()
@@ -1018,6 +1124,17 @@ class Handler(BaseHTTPRequestHandler):
         if path.rstrip("/") == "/exe/lavaclient/texts.xml":
             self._texts_blob()
             return
+        if path == client_dist.MANIFEST_URL:
+            self._client_manifest()
+            return
+        if path.startswith(client_dist.FILES_URL):
+            # Matched against the manifest, which is in the same normal
+            # form, so ../ and doubled slashes simply are not listed.
+            self._client_file(path[len(client_dist.FILES_URL):])
+            return
+        if path.startswith(client_dist.PACKS_URL):
+            self._client_file(path[len(client_dist.PACKS_URL):], pack=True)
+            return
         if path == "/register":
             self._register(body)
             return
@@ -1075,6 +1192,17 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self._dispatch()
 
+    def do_HEAD(self):
+        # What a launcher asks before a download it might resume: the size
+        # and the digest, without the body. Only the client's addresses know
+        # how to leave the body out; everything else stays GET and POST.
+        path = posixpath.normpath(unquote(urlparse(self.path).path))
+        if path == client_dist.MANIFEST_URL or path.startswith(
+                (client_dist.FILES_URL, client_dist.PACKS_URL)):
+            self._dispatch()
+        else:
+            self.send_error(501, "Unsupported method ('HEAD')")
+
     def do_POST(self):
         # The client fetches every XML resource with LoadVars.sendAndLoad,
         # which issues a POST. Only the login handshake is a POST by intent;
@@ -1114,6 +1242,10 @@ if __name__ == "__main__":
     print("res serve: %s" % ("on" if SERVE_RES else "off (registration only)"))
     # Build the 1.9 MB string table before the client can ask for it.
     names.document()
+    # In the background: the listener must not wait out 2 GB of hashing.
+    client_dist.DIST.start()
+    print("client   : %s" % (client_dist.DIST.root
+                             if client_dist.DIST.enabled() else "off"))
     httpd = Server((HTTP_HOST, HTTP_PORT), Handler)
     # docker stop sends SIGTERM, whose default action kills the process where
     # it stands. Nothing here is worth saving, but the listener should close
