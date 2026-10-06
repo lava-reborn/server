@@ -3676,7 +3676,10 @@ async def handle_client(reader, writer):
             await writer.drain()
             if sess.closed:
                 break
-    except (ConnectionResetError, asyncio.IncompleteReadError):
+    # ConnectionError: a reset, and a broken pipe too -- a write to a socket
+    # the client has already shut (the online list going out while it
+    # quits) raises BrokenPipeError out of the next read.
+    except (ConnectionError, asyncio.IncompleteReadError):
         pass
     finally:
         # A link that simply breaks lands here too, with no logout before
