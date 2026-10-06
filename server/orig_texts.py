@@ -80,7 +80,7 @@ import re
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(HERE, "data")
 
-# The same list as launcher/Updater.cs ALLOWED_TAGS. The two are kept equal by
+# The same list as launcher/TextsCheck.cs ALLOWED_TAGS. The two are kept equal by
 # tools/test_export_texts.py, which runs this check over the whole table.
 ALLOWED_TAGS = frozenset(("br", "/br", "br/", "b", "/b", "b/", "i", "/i",
                           "u", "/u", "hint", "/hint"))

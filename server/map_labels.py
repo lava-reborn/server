@@ -1,16 +1,17 @@
 """The names over the global map's cells, with the owner's edits laid on.
 
-res/database/locations.xml is the player's own file: 414 rows of
-<location x="…" y="…" text="…" /> that the client reads and draws over the map
-itself. Nothing the server sends touches them, and the file is not ours to
-ship, so the owner's edits (data/map_labels.json: hide a row, or give it
-another text) are made at the moment the file is served:
+res/database/locations.xml holds 414 rows of <location x="…" y="…" text="…" />
+that the client reads and draws over the map itself. Nothing the server sends
+touches them, so the owner's edits (data/map_labels.json: hide a row, or give
+it another text) are laid on the file itself:
 
-  * by the player's launcher, launcher/MapLabels.cs, from the rules
-    tools/export_map_labels.py writes and the build embeds;
+  * by client/build.py, which puts the edited file into every client
+    release, so the launcher installs it as it is (client/FORMAT.md);
   * by bootstrap_http, for a local run over the owner's own res/.
 
-Both do the same thing, and both are tested against the same expectations:
+Launchers before the self-updating one did the same on the fly from the
+rules export_rules() writes; it stays for them and for its test. Every
+version is held to the same expectations:
 the row whose cell and current text match an edit is dropped or retexted,
 every other byte of the file stays as it was, and a row that does not match
 exactly is left alone -- so a different copy of the client is never edited
