@@ -77,6 +77,13 @@ Client patches applied without altering the original artwork:
    of the bar, clear of the gold balance. No timers or
    per-scene connection listeners survive a scene change.
 
+7. Gold-only repairs. Item.getProp supplies the gold price converted to afro
+   when RepairInterface is open and the requested afro cost is zero. This
+   fixes the slot, drag preview, bag labels and both repair-all totals.
+   Outside repair, the zero afro price still prevents buying or selling
+   gold-only equipment for afro. No item data is modified. Gold payment
+   uses Math.round to the nearest hundredth, with the original 0.01 minimum.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -209,6 +216,7 @@ class Reg(int):
 UNDEF = object()
 
 OPS = {
+    "multiply": 0x0C,
     "end": 0x00, "subtract": 0x0B, "divide": 0x0D, "not": 0x12, "pop": 0x17,
     "getvar": 0x1C, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
     "add2": 0x47, "less2": 0x48, "equals2": 0x49, "getmember": 0x4E,
@@ -573,6 +581,43 @@ def fn_services():
     return a
 
 
+def fn_repair_cost():
+    """Item.getProp: value gold-only items in afro in SS_REPAIR only.
+
+    All RepairInterface slot, drag, double-click and bulk calculations,
+    plus ItemContainer's bag prices, read cost through this method.
+    StaffInterface.kill clears ssType; shops keep the original zero cost
+    and therefore cannot buy or sell gold-only items for afro.
+    """
+    a = Asm()
+    a.push("value").var("prop").push(1).var("this")
+    a.push("__repairGetPropOrig").op("callmethod").op("definelocal")
+    a.var("prop").push("cost").op("equals2").op("not").iftrue("original")
+    a.var("value").iftrue("original")
+    a.var("lol").member("gpui", "StaffInterface", "ssType")
+    a.push("repair").op("equals2").op("not").iftrue("original")
+    a.push("gold").push("g_cost", 1).var("this")
+    a.push("__repairGetPropOrig").op("callmethod").op("definelocal")
+    a.var("gold").op("not").iftrue("original")
+    a.var("gold").var("lol").member("core", "GConstatns", "gold_repair_mod")
+    a.op("multiply").push(100).op("divide").op("return")
+    a.label("original").var("value").op("return")
+    return a
+
+
+def fn_repair_gold():
+    """RepairInterface.calcGoldCostFromAfroCost: nearest cent, at least one."""
+    a = Asm()
+    a.push("gold").var("afro_cost")
+    a.var("lol").member("core", "GConstatns", "gold_repair_mod")
+    a.op("divide").push(100).op("multiply")
+    a.push(1).var("Math").push("round").op("callmethod").op("definelocal")
+    a.var("gold").push(1).op("less2").op("not").iftrue("out")
+    a.push("gold", 1).op("definelocal")
+    a.label("out").var("gold").push(100).op("divide").op("return")
+    return a
+
+
 HOME_SET = "Теперь вы будете возрождаться в этой локации"
 
 ONLINE_WIDTH = 76
@@ -725,6 +770,10 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("gpui", "RepairInterface"), "calcGoldCostFromAfroCost", "__repairGoldOrig",
+         ("afro_cost",), fn_repair_gold()),
+        (("core", "objects", "Item"), "getProp", "__repairGetPropOrig",
+         ("prop",), fn_repair_cost()),
         (("gpui", "LocationInterface"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper(MARK)),
         (("gpui", "GlobalMapInterface"), "resizeStage", "__wideOrig",
