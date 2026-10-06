@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Build the folder a friend is handed, which holds no part of the game.
+"""Build the three-file fallback for a machine where the launcher cannot run.
 
-Three files: the string table the shipped client is missing, a launcher with
-the server's address baked in, and instructions. The client itself -- res/, the
-SWFs, the artwork -- is the player's own copy and never travels with this.
+The string table the shipped client is missing, a batch file with the
+server's address baked in, and instructions, for a player who already has
+the game. Players normally get the game and every update from the launcher,
+which installs the client release (client/README.md); this is for the day an
+antivirus or a policy will not let an unsigned exe run.
 
     python3 tools/make_client_package.py --host lava.example.org [--port 9775]
 
