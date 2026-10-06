@@ -115,9 +115,10 @@ def check(label, got, want):
 
 
 # How long a suite waits for its server to listen. Alone one starts in about
-# two seconds; CI starts a dozen at once on two cores, and a window of ten
-# made a quarter of the suites fail in the crowd and pass alone, the reruns
-# then outlasting the job. A server that died says so at once below, so a
+# two seconds; CI on GitHub's runners started a dozen at once on two cores,
+# and a window of ten made a quarter of the suites fail in the crowd and pass
+# alone, the reruns then outlasting the job (the self-hosted runner starts
+# eight at once on four). A server that died says so at once below, so a
 # long window costs nothing but on a server that hangs.
 START_WAIT = float(os.environ.get("LAVA_START_WAIT") or 120)
 
