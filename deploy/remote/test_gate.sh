@@ -12,7 +12,9 @@
 #   LAUNCHER_EXE    a published LavaReborn.exe, for the string-table line
 #
 # CLIENT_ORIG=DIR in the environment: a folder holding the original main.swf
-# and database/locations.xml; with it the client release is tested too.
+# and database/locations.xml; with it the client release is tested too. With
+# CLIENT_PROJECTOR=fp32_sa.exe as well (and the mono image of LAUNCHER_IMAGE
+# pulled), so is the launcher the gate builds and publishes.
 #
 # Everything docker here is named cicdtest-* (containers, compose project,
 # volume, image), or cicdvictim* for the stand-ins of another stack's volume,
@@ -571,6 +573,89 @@ if [ -n "${CLIENT_ORIG:-}" ]; then
   check "c3: a builder writing into the store -> deploy fails" "$?" 1
   check "c3: and the store holds nothing it wrote" "$(find "$CROOT/store" -name evil | wc -l)" 0
   check "c3: the pointer is the one before" "$(pointer)" "$P0"
+
+  # --- the launcher, built by the gate (CLIENT_PROJECTOR: the Flash projector;
+  # the mono image of LAUNCHER_IMAGE must be in docker already) -------------------
+  if [ -n "${CLIENT_PROJECTOR:-}" ]; then
+    echo "== launcher built and published by the gate"
+    cp "$CLIENT_PROJECTOR" "$T/opt/lava-ci/client/fp32_sa.exe"
+    python3 "$T/opt/lava-ci/client/lavasig.py" pubkey "$T/opt/lava-ci/client/launcher.pem" > "$T/launcher.keys"
+    check "install.sh made the launcher key and listed it" \
+      "$(grep -c "^$(cut -d' ' -f1 "$T/launcher.keys") " "$T/opt/lava-ci/client/launcher.keys")" 1
+    printf 'CLIENT_LAUNCHER=1\nLAUNCHER_DOWNLOAD=%s\n' "$T/opt/lava-site/download" >> "$T/opt/lava-ci/gate.conf"
+    keyed_tree() {  # name -> a client tree whose client/keys are this test server's
+      client_tree "$1"
+      cp "$T/resource.keys" "$T/trees/$1/client/keys/resource.keys"
+      cp "$T/launcher.keys" "$T/trees/$1/client/keys/launcher.keys"
+    }
+    lversion() { sed -n 's/^launcher \([0-9]*\) .*/\1/p' "$CROOT/current.txt"; }
+
+    keyed_tree l1
+    client_deploy l1
+    check "l1: the first launcher is built and published" "$?" 0
+    grep -E '^(launcher|client):' "$T/l1.out" | sed 's/^/    /'
+    check "l1: the pointer names launcher 1" "$(lversion)" 1
+    check "l1: its statement is signed by this server's launcher key" \
+      "$(python3 "$REPO/client/lavasig.py" verify "$T/launcher.keys" "$CROOT/launcher/1.txt" 2>&1)" "verify: ok"
+    check "l1: the site's link is the same exe" \
+      "$(cmp -s "$CROOT/launcher/1.exe" "$T/opt/lava-site/download/LavaReborn.exe" && echo same || echo differs)" same
+    check "l1: it is an exe" "$(head -c 2 "$CROOT/launcher/1.exe")" MZ
+
+    client_deploy l1
+    check "l1 again: the same sources build no new launcher" "$(lversion)" 1
+    check "l1 again: and the report says so" "$(grep -c '^launcher: unchanged, version 1' "$T/l1.out")" 1
+
+    keyed_tree l2
+    echo "// cicd test: a change to the launcher" >> "$T/trees/l2/launcher/Notice.cs"
+    client_deploy l2
+    check "l2: a changed launcher deploys" "$?" 0
+    check "l2: as version 2" "$(lversion)" 2
+    P2=$(pointer)
+    SUML2=$(tree_sum)
+
+    keyed_tree l3
+    echo "this is not C#" >> "$T/trees/l3/launcher/Notice.cs"
+    client_deploy l3
+    check "l3: a launcher that does not compile -> deploy fails" "$?" 1
+    grep -E '^(result|state):' "$T/l3.out" | sed 's/^/    /'
+    check "l3: nothing on the server changed" "$(tree_sum)" "$SUML2"
+    check "l3: the pointer is the one before" "$(pointer)" "$P2"
+
+    client_tree l4
+    echo "// cicd test: l4" >> "$T/trees/l4/launcher/Notice.cs"
+    client_deploy l4
+    check "l4: a tree whose keys are not this server's -> deploy fails" "$?" 1
+    check "l4: and says which key" "$(grep -c "^result: .*does not list this server's launcher key" "$T/l4.out")" 1
+    check "l4: the pointer is the one before" "$(pointer)" "$P2"
+
+    keyed_tree l5
+    cp "$T/launcher.keys" "$T/trees/l5/client/keys/resource.keys"
+    client_deploy l5
+    check "l5: resource keys that are not this server's -> deploy fails" "$?" 1
+    check "l5: and says which key" "$(grep -c "^result: .*does not list this server's resource key" "$T/l5.out")" 1
+    check "l5: the pointer is the one before" "$(pointer)" "$P2"
+
+    # The launcher cannot be published (its served folder is a link): the
+    # server and the release stay out, the report says so, and the next
+    # deploy of the same sources publishes it after all.
+    keyed_tree l6
+    echo "// cicd test: l6" >> "$T/trees/l6/launcher/Notice.cs"
+    mv "$CROOT/launcher" "$CROOT/launcher.real"
+    ln -s launcher.real "$CROOT/launcher"
+    client_deploy l6
+    check "l6: launcher not publishable -> the deploy still goes out" "$?" 0
+    check "l6: and the report says so" "$(grep -c '^launcher: NOT PUBLISHED' "$T/l6.out")" 1
+    check "l6: players keep launcher 2" "$(lversion)" 2
+    rm "$CROOT/launcher"
+    mv "$CROOT/launcher.real" "$CROOT/launcher"
+    client_deploy l6
+    check "l6 again: the same sources now publish it" "$?" 0
+    check "l6 again: as version 3" "$(lversion)" 3
+    P2=$(pointer)
+
+    sed -i -e '/^CLIENT_LAUNCHER=1$/d' -e '/^LAUNCHER_DOWNLOAD=/d' "$T/opt/lava-ci/gate.conf"
+    P0=$P2
+  fi
 
   sed -i '/^CLIENT_RELEASE=1$/d' "$T/opt/lava-ci/gate.conf"
   client_deploy c0

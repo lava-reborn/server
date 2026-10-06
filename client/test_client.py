@@ -320,6 +320,24 @@ try:
     os.unlink(os.path.join(sroot, "manifests", "1.txt"))
     p3 = p3b
 
+    # Whoever can write the site's folder leaves a link where .prev goes: the
+    # previous exe replaces the link, the file it pointed to stays as it was.
+    outside = os.path.join(W, "outside.txt")
+    write(outside, b"not the publisher's")
+    os.unlink(os.path.join(dl, "LavaReborn.exe.prev"))
+    os.symlink(outside, os.path.join(dl, "LavaReborn.exe.prev"))
+    write(exe, b"MZ launcher 6")
+    check("download: a link at .prev -> the launcher still goes out", publish_launcher(statement(6, read(exe), lkey)), 0)
+    check("download: the file the link named is untouched", read(outside), b"not the publisher's")
+    check("download: .prev is a plain file now", os.path.islink(os.path.join(dl, "LavaReborn.exe.prev")), False)
+    check("download: and holds the exe before", read(os.path.join(dl, "LavaReborn.exe.prev")), b"MZ launcher 5")
+    check("download: the link is the new exe", read(os.path.join(dl, "LavaReborn.exe")), b"MZ launcher 6")
+    p3 = publish.read_pointer(state)
+    check("launcher-version: what the gate counts on from",
+          quiet(publish.main, ["launcher-version", "--state", state])[1].strip(), "6")
+    check("launcher-version: 0 before any launcher",
+          quiet(publish.main, ["launcher-version", "--state", os.path.join(W, "no-state")])[1].strip(), "0")
+
     # A served folder replaced by a link is not written into.
     mdir = os.path.join(sroot, "manifests")
     os.rename(mdir, mdir + ".real")
@@ -327,7 +345,7 @@ try:
     rc, out = quiet(publish.main, ["publish", "--state", state, "--out", out1, "--root", sroot, "--key", keyfile,
                                    "--source", "e" * 40])
     check("a served folder that is a link: refused", rc, 2)
-    check("a served folder that is a link: the pointer did not move", publish.read_pointer(state)["serial"], p3b["serial"])
+    check("a served folder that is a link: the pointer did not move", publish.read_pointer(state)["serial"], p3["serial"])
     os.unlink(mdir)
     os.rename(mdir + ".real", mdir)
 

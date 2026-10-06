@@ -57,8 +57,8 @@ static class Launcher
     const string REGISTER_URL = "@REGISTER@";
     const string LOST_URL = "@LOST@";
     const string TITLE = "Lava Reborn";
-    // This build's number (launcher/VERSION): a published launcher with a
-    // larger one replaces this exe.
+    // This build's number (the gate counts them, launcher/build.sh): a
+    // published launcher with a larger one replaces this exe.
     const int BUILD = @BUILD@;
     // The keys a release and a launcher must be signed with (client/keys/).
     static readonly string[] RESOURCE_KEYS = { @RESOURCE_KEYS@ };

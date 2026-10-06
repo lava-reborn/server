@@ -15,6 +15,7 @@ never the one a deploy brings.
     publish.py rollback  --root ROOT --key KEY [--to SERIAL]
     publish.py status    --root ROOT
     publish.py gc        --root ROOT --base base.txt [--extra extra.txt] [--dry-run]
+    publish.py launcher-version                                the published launcher's, or 0
 
 Every command that reads or writes what is published also takes --state
 (default: state/ beside this script, /opt/lava-ci/client/state, root's
@@ -39,7 +40,6 @@ import argparse
 import hashlib
 import os
 import re
-import shutil
 import stat
 import sys
 import tempfile
@@ -515,21 +515,19 @@ def cmd_launcher(a):
     print("launcher %d published in pointer %d" % (version, serial))
     if a.download:
         # The site's own link and /api/client, which every launcher before the
-        # self-updating one compares itself with.
+        # self-updating one compares itself with. Both files go in through
+        # write_atomic: a folder that is not root's is refused, and a link left
+        # at either name is replaced, never written through.
         dest = os.path.join(a.download, "LavaReborn.exe")
         try:
             if os.path.isfile(dest) and not os.path.islink(dest):
                 with open_regular(dest, MAX_FILE) as fh:
-                    same = hashlib.sha256(fh.read()).hexdigest() == sha
-                if not same:
-                    shutil.copyfile(dest, dest + ".prev", follow_symlinks=False)
-            fd, tmp = tempfile.mkstemp(dir=a.download, prefix=".LavaReborn.exe.")
-            with os.fdopen(fd, "wb") as fh:
-                fh.write(exe)
-            os.chmod(tmp, 0o644)
-            os.replace(tmp, dest)
+                    old = fh.read()
+                if hashlib.sha256(old).hexdigest() != sha:
+                    write_atomic(dest + ".prev", old)
+            write_atomic(dest, exe)
             print("%s replaced (previous kept as LavaReborn.exe.prev)" % dest)
-        except OSError as e:
+        except (OSError, Refused) as e:
             print("warning: %s not replaced: %s -- the self-updating launcher is out anyway" % (dest, e))
 
 
@@ -561,6 +559,13 @@ def cmd_rollback(a):
         serial = next_serial(prev)
         put_pointer(a, make_pointer(key, serial, manifest, prev["launcher"]))
     print("pointer %d now names release %d (was %d)" % (serial, target, cur))
+
+
+def cmd_launcher_version(a):
+    """The published launcher's version, 0 if none: the gate builds the next."""
+    p = read_pointer(a.state)
+    print(p["launcher"][0] if p and p["launcher"] else 0)
+    return 0
 
 
 def cmd_status(a):
@@ -661,6 +666,8 @@ def main(argv=None):
     s = with_state(sub.add_parser("status"))
     s.add_argument("--root", required=True)
 
+    with_state(sub.add_parser("launcher-version"))
+
     gc = with_state(sub.add_parser("gc"))
     gc.add_argument("--root", required=True)
     gc.add_argument("--base")
@@ -673,7 +680,7 @@ def main(argv=None):
         rc = {
             "check": cmd_check, "publish": cmd_publish, "import-base": cmd_import_base,
             "add": cmd_add, "launcher": cmd_launcher, "rollback": cmd_rollback,
-            "status": cmd_status, "gc": cmd_gc,
+            "status": cmd_status, "gc": cmd_gc, "launcher-version": cmd_launcher_version,
         }[a.cmd](a)
     except Refused as e:
         print("publish: refused: %s" % e, file=sys.stderr)

@@ -3082,14 +3082,17 @@ compose, ни выкладка этот выключатель не ставят
 
 ### Пакет игрока: один файл
 
+**`LavaReborn.exe`** (16 МБ) для игроков собирает и публикует шлюз при
+выкатке, которая меняет код лаунчера: `launcher/build.sh` в контейнере Mono,
+номер на единицу больше опубликованного, подпись ключом лаунчера сервера
+(client/README.md, «Новый лаунчер»). Свою копию на Windows собирает
+
 ```powershell
-powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -SignKey C:\Users\<вы>\.lava-keys\launcher.pem
+powershell -ExecutionPolicy Bypass -File launcher\build.ps1
 ```
 
-Кладёт в `dist/` **`LavaReborn.exe`** (16 МБ), подписанное заявление о сборке
-`<N>.txt` и короткий `README.txt`; номер сборки — `launcher/VERSION`.
-Публикуется `deploy/client/publish_launcher.sh` (client/README.md). Игрок
-кладёт exe в любую свою папку и запускает: лаунчер сам скачает игру в `res`
+в `dist/` вместе с коротким `README.txt`. Игрок кладёт exe в любую свою
+папку и запускает: лаунчер сам скачает игру в `res`
 рядом с собой, а если там уже лежит оригинальная, докачает только отличия.
 
 Это не запускалка, а клиент: своё окно входа в дизайн-системе сайта

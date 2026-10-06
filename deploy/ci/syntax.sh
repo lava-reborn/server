@@ -17,7 +17,7 @@ bad=0
 
 while IFS= read -r f; do
   bash -n "$f" || { echo "::error file=$f::bash -n failed"; bad=1; }
-done < <(find deploy tools -name '*.sh' -type f | sort)
+done < <(find deploy tools launcher -name '*.sh' -type f | sort)
 
 python3 - <<'EOF' || bad=1
 import glob, json, sys
@@ -42,6 +42,6 @@ sys.exit(bad)
 EOF
 
 if [ "$bad" = 0 ]; then
-  echo "syntax: every .sh under deploy/ and tools/, every .py under server/, data/, tools/, tools/impact/, client/ and launcher/test/, every data/*.json parses"
+  echo "syntax: every .sh under deploy/, tools/ and launcher/, every .py under server/, data/, tools/, tools/impact/, client/ and launcher/test/, every data/*.json parses"
 fi
 exit "$bad"

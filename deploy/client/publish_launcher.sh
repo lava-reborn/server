@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Publish a launcher build: from the owner's machine, after build.ps1 -SignKey.
+# Publish a launcher by hand: from the owner's machine, after build.ps1 -Build N
+# -SignKey. The emergency path only -- the gate builds, signs and publishes a
+# launcher itself whenever a deploy changes it (lava-gate.sh, "THE LAUNCHER").
 #
 #   bash deploy/client/publish_launcher.sh dist/LavaReborn.exe dist/<N>.txt [root@159.194.247.90]
 #

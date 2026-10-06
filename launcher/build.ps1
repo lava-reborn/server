@@ -12,8 +12,14 @@
 # the launcher installs it from the server (client/FORMAT.md), so building
 # needs no copy of it.
 #
-# The build number is launcher/VERSION. A launcher only replaces itself with a
-# larger one, so raise it for every build that will be published.
+# The launchers players get are not built here: the gate on the server builds
+# one with launcher/build.sh whenever a deploy changes what the exe is made
+# of, numbers it one past the published one and signs it (client/README.md).
+# This script is for a developer's own copy, the stand, and the owner's
+# emergency launcher signed with the owner's key. -Build is its number
+# (default 1); a published launcher only replaces itself with a larger one, so
+# for one that will be published pass one more than the published version
+# (publish.py status prints it).
 #
 # With -SignKey, the statement the server publishes beside the exe
 # (dist/<version>.txt) is signed here with the launcher key; client/README.md
@@ -31,6 +37,7 @@ param(
   [string]$ResourceKeys = "",
   [string]$LauncherKeys = "",
   [string]$SignKey = "",
+  [string]$Build = "1",
   [switch]$AcceptKeys,
   [string]$Out = ""
 )
@@ -73,8 +80,8 @@ $icon = Join-Path $here "assets\lava.ico"
 if (-not (Test-Path $icon)) { throw "Icon not found at $icon" }
 
 # The build number, one integer.
-$buildNo = (Get-Content (Join-Path $here "VERSION") -Raw).Trim()
-if ($buildNo -notmatch '^[1-9][0-9]{0,8}$') { throw "launcher\VERSION must hold one positive integer" }
+$buildNo = $Build.Trim()
+if ($buildNo -notmatch '^[1-9][0-9]{0,8}$') { throw "-Build must be one positive integer" }
 
 # The public keys, as C# string literals. A launcher without them could not
 # check a single update, so a missing or empty file stops the build.

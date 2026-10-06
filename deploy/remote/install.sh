@@ -147,26 +147,53 @@ if [ -f "$CSRC/publish.py" ] && [ -f "$CSRC/lavasig.py" ] && [ -f "$CSRC/build.p
   install -d -m 0700 "$CI_DIR/client" "$CI_DIR/client/state"
   for f in publish.py lavasig.py build.py; do install -m 0644 "$CSRC/$f" "$CI_DIR/client/$f"; done
   echo "    publish.py $(sha256sum < "$CI_DIR/client/publish.py" | cut -c1-16) installed"
-  if [ -f "$CSRC/keys/launcher.keys" ]; then
-    install -m 0644 "$CSRC/keys/launcher.keys" "$CI_DIR/client/launcher.keys"
-    echo "    launcher.keys: $(grep -vc '^\s*\(#\|$\)' "$CI_DIR/client/launcher.keys") key(s)"
-  else
-    echo "    no client/keys/launcher.keys yet: a launcher cannot be published until it is there"
-  fi
-  if [ ! -f "$CI_DIR/client/resource.pem" ]; then
-    command -v python3 > /dev/null || { echo "install.sh: python3 is needed for the resource key" >&2; exit 1; }
-    (umask 077 && python3 "$CI_DIR/client/lavasig.py" genkey "$CI_DIR/client/resource.pem" > /dev/null)
-    echo "    resource key made: $CI_DIR/client/resource.pem (root's only; never copy it off this host)"
-  fi
+  command -v python3 > /dev/null || { echo "install.sh: python3 is needed for the client keys" >&2; exit 1; }
+  # The two keys this server signs with, made here once and never copied off.
+  for k in resource launcher; do
+    if [ ! -f "$CI_DIR/client/$k.pem" ]; then
+      (umask 077 && python3 "$CI_DIR/client/lavasig.py" genkey "$CI_DIR/client/$k.pem" > /dev/null)
+      echo "    $k key made: $CI_DIR/client/$k.pem (root's only; never copy it off this host)"
+    fi
+  done
   RESLINE=$(python3 "$CI_DIR/client/lavasig.py" pubkey "$CI_DIR/client/resource.pem")
-  if [ -f "$CSRC/keys/resource.keys" ] && grep -qF "${RESLINE%% *}" "$CSRC/keys/resource.keys"; then
-    echo "    the repository's client/keys/resource.keys holds this server's key ${RESLINE%% *}"
+  LNLINE=$(python3 "$CI_DIR/client/lavasig.py" pubkey "$CI_DIR/client/launcher.pem")
+  for pair in "resource:$RESLINE" "launcher:$LNLINE"; do
+    k=${pair%%:*}; line=${pair#*:}
+    if [ -f "$CSRC/keys/$k.keys" ] && grep -qF "${line%% *}" "$CSRC/keys/$k.keys"; then
+      echo "    the repository's client/keys/$k.keys holds this server's $k key ${line%% *}"
+    else
+      echo "    client/keys/$k.keys does NOT hold this server's $k key yet; commit this line to it:"
+      echo "        $line"
+    fi
+  done
+  # The keys a published statement is checked with: the repository's (the
+  # owner's own, for a launcher signed by hand) and this server's.
+  { [ -f "$CSRC/keys/launcher.keys" ] && grep -v '^\s*\(#\|$\)' "$CSRC/keys/launcher.keys"; echo "$LNLINE"; } \
+    | sort -u > "$CI_DIR/client/launcher.keys.new"
+  chmod 0644 "$CI_DIR/client/launcher.keys.new"
+  mv "$CI_DIR/client/launcher.keys.new" "$CI_DIR/client/launcher.keys"
+  echo "    launcher.keys: $(wc -l < "$CI_DIR/client/launcher.keys") key(s) a statement may be signed with"
+  # The launcher's build: the Mono image by digest, and the Flash projector.
+  # shellcheck source=/dev/null
+  limage=$( (. "$CI_DIR/gate.conf"; echo "${LAUNCHER_IMAGE:-}") )
+  limage=${limage:-$(sed -n 's/^LAUNCHER_IMAGE=//p' "$CI_DIR/lava-gate.sh" | head -n 1)}
+  if docker image inspect "$limage" > /dev/null 2>&1; then
+    echo "    launcher image present: $limage"
+  elif [ -n "${LAVA_CI_NO_PULL:-}" ]; then
+    echo "    launcher image NOT present: $limage (LAVA_CI_NO_PULL set, not pulled)"
   else
-    echo "    client/keys/resource.keys does NOT hold this server's key yet; commit this line to it:"
-    echo "        $RESLINE"
+    docker pull -q "$limage" > /dev/null && echo "    launcher image pulled: $limage" \
+      || echo "    WARNING: could not pull $limage -- the launcher cannot be built"
+  fi
+  if [ -f "$CI_DIR/client/fp32_sa.exe" ]; then
+    echo "    Flash projector present ($(sha256sum < "$CI_DIR/client/fp32_sa.exe" | cut -c1-16))"
+  else
+    echo "    MISSING: $CI_DIR/client/fp32_sa.exe -- the launcher cannot be built without it:"
+    echo "        scp tools/flash/fp32_sa.exe root@$HOST:$CI_DIR/client/fp32_sa.exe"
   fi
   # shellcheck source=/dev/null
   conf_release=$( (. "$CI_DIR/gate.conf"; echo "${CLIENT_RELEASE:-0} ${CLIENT_ROOT:-/opt/lava-site/download/client}") )
+  conf_launcher=$( (. "$CI_DIR/gate.conf"; echo "${CLIENT_LAUNCHER:-0}") )
   croot=${conf_release#* }
   if [ -d "$croot/store" ]; then
     echo "    store: $(find "$croot/store" -type f ! -path '*/.incoming/*' | wc -l) files under $croot"
@@ -174,6 +201,7 @@ if [ -f "$CSRC/publish.py" ] && [ -f "$CSRC/lavasig.py" ] && [ -f "$CSRC/build.p
     echo "    no store at $croot yet: import the original game (client/README.md)"
   fi
   echo "    CLIENT_RELEASE=${conf_release%% *} in gate.conf$([ "${conf_release%% *}" = 1 ] || echo ' -- the client release is off')"
+  echo "    CLIENT_LAUNCHER=$conf_launcher in gate.conf$([ "$conf_launcher" = 1 ] || echo ' -- the gate does not build the launcher')"
 else
   echo "    no client/ beside deploy/ ($CSRC): the client release cannot be installed from this copy"
 fi
