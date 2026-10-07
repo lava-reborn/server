@@ -54,6 +54,7 @@ import progression
 import quests
 import sets
 import setcraft
+import stopwarn
 import transport
 import travel
 import trophies
@@ -650,6 +651,10 @@ class Session:
                  row["login"], len(self.characters))
         self.send("cmdAck", res=0)
         self.send_account()
+        # A stop already announced (stopwarn.py) is news to whoever comes in
+        # during it: the time left, as an unsolicited frame outside the
+        # cmdAck queue.
+        STOP.greet(self)
 
     def send_account(self):
         """Push the account state the client waits for but never asks for.
@@ -3834,6 +3839,12 @@ async def main():
 
 ADMIN_POLL_SECONDS = float(os.environ.get("LAVA_ADMIN_POLL", "1.0"))
 
+# The stop announced ahead of a restart, and the frames that count it down
+# (stopwarn.py): to everyone logged in, the people a stop disconnects -- not
+# the healthcheck's probe nor a socket still at the login screen.
+STOP = stopwarn.Countdown(
+    lambda: [s for s in list(SESSIONS) if not s.closed and s.account], STORE)
+
 
 def session_for(char_id):
     """The live session playing that character, if any."""
@@ -3873,6 +3884,15 @@ def apply_admin_action(row):
     # question of one (clan_admin.py).
     if kind == "clan":
         return clan_admin.apply(row, CLANS)
+
+    # So does a stop announced ahead, and its calling off: the whole
+    # server's (stopwarn.py). Only an admin's row reaches here -- the panel
+    # behind its sign-in, or stopwarn.py inside the game's container.
+    if kind == "stop":
+        return STOP.start(args.get("seconds"), row["admin"], made_at=row["made_at"],
+                          skip_empty=bool(args.get("skip_empty")))
+    if kind == "stop_cancel":
+        return STOP.cancel(row["admin"])
 
     if row["char_id"] is None:
         return "действию нужен персонаж"
@@ -4022,6 +4042,9 @@ async def drain_admin_actions():
                 log.info("  ..    admin %s: %s -> %s",
                          row["admin"], row["kind"], result)
                 STORE.admin_done(row["id"], result)
+            # The stop's row, for the panel and the deploy (stopwarn.py):
+            # written only when it changes, who is logged in included.
+            STOP.publish()
         except Exception:                                # noqa: BLE001
             # A failure here must not take the game down with it.
             log.exception("admin queue")
@@ -4038,6 +4061,12 @@ async def shutdown(servers):
     log.info("shutting down, %d session(s) online", len(SESSIONS))
     for srv in servers:
         srv.close()
+    # The stop the players were told of, if one was announced: its row is
+    # cleared now, so nothing reads a countdown this process will not finish.
+    try:
+        STOP.forget()
+    except Exception:                                    # noqa: BLE001
+        log.exception("  ..    clearing the stop's row failed")
     live = list(SESSIONS)
     for sess in live:
         sess.shutdown()

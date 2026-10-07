@@ -64,11 +64,14 @@
 #   6. swap the tree into /opt/lava with rsync --delete under the same filter
 #      deploy.sh uses, which keeps .env, res/ and everything else that lives
 #      only on the server;
-#   7. docker compose up -d --build;
+#   7. docker compose build, the old containers still serving;
+#  7a. warn the players and wait the warning out (STOP_WARN_SEC; no wait
+#      with nobody logged in) -- "the players' warning", by stop_warn below;
+#  7b. docker compose up -d --no-build;
 #   8. wait until both containers run, have not restarted, answer the same
 #      check their compose healthcheck runs (twice in a row), and have
 #      written no traceback while starting; then wait SETTLE seconds more
-#      and look again, and count the log lines since step 7 that match
+#      and look again, and count the log lines since step 7b that match
 #      ERROR_PATTERN -- those of the start-up roll back, the later ones are
 #      reported ("THE LOGS", below);
 #   9. compare the key files in /opt/lava and inside the running image with
@@ -233,9 +236,8 @@
 # ("no ready line from lava-game").
 #
 # Every build gets a new image id, even when every step comes from cache, so
-# compose recreates both containers on every deploy -- as deploy.sh's own
-# "docker compose up -d --build" always has. The server saves everyone on the
-# way down.
+# compose recreates both containers on every deploy -- as deploy.sh always
+# has. The server saves everyone on the way down, after the warning (7a).
 
 set -uo pipefail
 umask 022
@@ -269,6 +271,8 @@ MIN_FREE_MB=2048              # free space a backup may not eat into
 HEALTH_TIMEOUT=240            # seconds for both services to come up
 SETTLE=20                     # seconds watched after they are up
 LOCK_WAIT=900                 # seconds a deploy waits for the one before it
+STOP_WARN_SEC=180             # seconds the players are warned before the restart; 0: none
+STOP_WARN_MAX=600             # the longest the gate waits on a countdown, one an admin began too
 ALLOWED_DIRS="server data tools deploy launcher client"
 # The client release ("THE CLIENT RELEASE"). Off unless gate.conf says 1:
 # a gate.conf written before this existed keeps deploying as it did.
@@ -1082,6 +1086,116 @@ prune() {
     | while IFS= read -r f; do rm -f -- "$f"; done
 }
 
+# --- deploy: the players' warning (a hook between build and restart) ---------
+#
+# Step 7a. The new image is built (7) and the old containers still serve.
+# The game that is running now tells everyone logged in that it stops in
+# STOP_WARN_SEC seconds and counts it down in the client's own alert
+# (server/stopwarn.py); the gate waits it out, then restarts (7b). The
+# answer of every call is one line, "LEFT PLAYERS" -- LEFT the seconds to
+# the stop, "-" with none announced -- and nothing else of what the
+# container says is believed: it is the game's, so the line has to be two
+# numbers, and the wait is capped by STOP_WARN_MAX whatever they say.
+#
+#   - nobody logged in: no countdown, no wait (start --skip-empty);
+#   - the running game cannot count down (an image from before stopwarn.py,
+#     the game down, an answer that is not the line): no wait, as before;
+#   - a countdown already running (an admin's, from the panel): its time
+#     stands, and the gate waits for that, up to STOP_WARN_MAX;
+#   - everybody gone before the end: the restart goes at once;
+#   - the countdown called off from the panel while the gate waits: the
+#     deploy fails here and rolls back -- nobody was restarted, and the
+#     tree and the image tag go back to what runs;
+#   - any failure before the restart (fail() below): the countdown is
+#     called off (stop_cancel), so the players are not told of a stop
+#     nobody is going to make.
+#
+# Self-contained on purpose: the settings STOP_WARN_SEC and STOP_WARN_MAX
+# (defaults above, gate.conf may override), this block, the three-step
+# build/warn/up in cmd_deploy's step 7, and one line in fail(). A gate of
+# another branch takes the same four pieces.
+
+STOP_WARNED=0
+# The answer line: two numbers of at most six digits, no leading zero (bash
+# arithmetic reads 08 as a bad octal), or "-" for the first.
+STOP_LINE='^(-|0|[1-9][0-9]{0,5}) (0|[1-9][0-9]{0,5})$'
+
+# One call to the game's stopwarn.py: its line on stdout, its complaints in
+# the deploy log, 30 seconds at most.
+stopwarn() {
+  timeout 30 docker exec "$GAME" python3 stopwarn.py "$@" 2>> "$DLOG"
+}
+
+stop_warn() {  # -> 0 restart now; 1 called off from the panel (WHY says so)
+  local out sec left players waited cap start
+  # Whole seconds (anything else is 0, off), within what the game takes
+  # (stopwarn.MIN_SECONDS, MAX_SECONDS) and the cap.
+  case $STOP_WARN_SEC in ''|*[!0-9]*|???????*) sec=0 ;; *) sec=$((10#$STOP_WARN_SEC)) ;; esac
+  case $STOP_WARN_MAX in ''|*[!0-9]*|???????*) STOP_WARN_MAX=600 ;; *) STOP_WARN_MAX=$((10#$STOP_WARN_MAX)) ;; esac
+  [ "$sec" -le "$STOP_WARN_MAX" ] || sec=$STOP_WARN_MAX
+  [ "$sec" -le 600 ] || sec=600
+  [ "$sec" = 0 ] || [ "$sec" -ge 10 ] || sec=10
+  if [ "$sec" = 0 ]; then
+    add "warning:  none (STOP_WARN_SEC=${STOP_WARN_SEC:-})"
+    return 0
+  fi
+  out=$(stopwarn start "$sec" --by CI --skip-empty)
+  if [[ ! $out =~ $STOP_LINE ]]; then
+    add "warning:  none -- the running server cannot count down"
+    return 0
+  fi
+  left=${BASH_REMATCH[1]}
+  players=${BASH_REMATCH[2]}
+  if [ "$players" = 0 ]; then
+    add "warning:  nobody online, no wait"
+    return 0
+  fi
+  if [ "$left" = - ]; then
+    add "warning:  none -- the game announced no stop (its answer is in the deploy log)"
+    return 0
+  fi
+  if [ "$left" = 0 ]; then
+    add "warning:  a countdown already over, no wait"
+    return 0
+  fi
+  STOP_WARNED=1
+  say "gate: $players player(s) warned: the restart in ${left}s"
+  start=$SECONDS
+  cap=$(( (left < STOP_WARN_MAX ? left : STOP_WARN_MAX) + 30 ))
+  while :; do
+    sleep $(( left < 10 ? left : 10 ))
+    waited=$((SECONDS - start))
+    out=$(stopwarn status)
+    if [[ ! $out =~ $STOP_LINE ]]; then
+      say "gate: the countdown does not answer; restarting now"
+      break
+    fi
+    left=${BASH_REMATCH[1]}
+    if [ "$left" = - ]; then
+      STOP_WARNED=0
+      WHY="the countdown was called off (the admin panel) after ${waited}s; nobody was restarted"
+      return 1
+    fi
+    players=${BASH_REMATCH[2]}
+    say "gate: ${left}s to the restart, $players online"
+    [ "$left" -le 0 ] && break
+    [ "$players" = 0 ] && { say "gate: nobody online any more"; break; }
+    [ "$waited" -ge "$cap" ] && { say "gate: waited ${waited}s, the cap; restarting"; break; }
+  done
+  add "warning:  players warned, waited $((SECONDS - start))s, $players online at the restart"
+  return 0
+}
+
+stop_cancel() {  # the countdown off, if this deploy began one
+  [ "$STOP_WARNED" = 1 ] || return 0
+  STOP_WARNED=0
+  if stopwarn cancel --by CI > /dev/null; then
+    add "warning:  the countdown was called off"
+  else
+    add "warning:  could not call the countdown off; it ends by itself"
+  fi
+}
+
 # --- deploy -------------------------------------------------------------------
 
 PHASE=start
@@ -1133,6 +1247,7 @@ fail() {
   local why=$1
   OUTCOME="failed ($PHASE): $why"
   say "!! $PHASE failed: $why"
+  stop_cancel   # the players' warning, if one runs (7a)
   case $PHASE in
     build)
       show_tail 40 ;;
@@ -1288,12 +1403,18 @@ cmd_deploy() {
       --filter="merge $FILTER" "$STAGE/tree/" "$APP_DIR/" \
     || fail "rsync into $APP_DIR"
 
-  # 7. build and start
+  # 7. build, warn the players (7a, the hook above), start (7b)
+  PHASE=build
+  (cd "$APP_DIR" && quiet timeout 1200 docker compose build) \
+    || fail "docker compose build"
+  PHASE=warn
+  stop_warn || fail "$WHY"
   PHASE=build
   T0_EPOCH=$(date +%s)
   T0=$(date -u -d "@$T0_EPOCH" +%FT%TZ)
-  (cd "$APP_DIR" && quiet timeout 1200 docker compose up -d --build) \
-    || fail "docker compose up -d --build"
+  (cd "$APP_DIR" && quiet timeout 600 docker compose up -d --no-build) \
+    || fail "docker compose up -d --no-build"
+  STOP_WARNED=0   # restarted: the countdown went with the old game
   img_after=$(docker inspect --format '{{.Image}}' "$GAME" 2>/dev/null) || img_after=
   if [ "$img_after" = "$img_before" ]; then
     add "image:    ${img_after:0:19} (unchanged: nothing the image takes changed)"

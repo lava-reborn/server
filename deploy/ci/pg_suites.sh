@@ -44,6 +44,9 @@ TREE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SUITES=(storage_pg clans clan_admin clan_diplomacy clan_mail clan_treasury ground
         accounts admin auction bank combat progression relogin email)
 
+# The stop announced ahead (server/stopwarn.py): its stop_plan table, and the
+# game, the panel and the command line meeting in one database.
+SUITES+=(stopwarn)
 mkdir -p "$OUT"
 : > "$OUT/results"
 rm -f "$OUT/results.rerun"

@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 # Put the LAVA server on the host that already runs Agile Quest.
 #
-#   bash deploy/deploy.sh               code only: rsync, rebuild, restart
+#   bash deploy/deploy.sh               code only: rsync, rebuild, warn, restart
 #   bash deploy/deploy.sh --with-data   also push the tables the server reads
 #   bash deploy/deploy.sh --data-only   only those, no rebuild
+#   bash deploy/deploy.sh --now         restart without warning the players
+#   bash deploy/deploy.sh --warn=300    warn them 300 seconds ahead (default
+#                                       LAVA_STOP_WARN_SEC, else 180)
+#
+# The players are warned before the restart (server/stopwarn.py): the new
+# image is built first, with the old containers still running; then the game
+# tells everyone logged in that it stops in N seconds and counts it down in
+# the client's own alert, and only when that is over -- or nobody is left --
+# are the containers recreated. With nobody logged in there is no wait. Ctrl-C
+# during the countdown calls it off and restarts nothing; so does a cancel
+# from the admin panel.
 #
 # The database lives in a named docker volume and is never touched here.
 # Addresses live in /opt/lava/.env on the server; this script creates it from
@@ -36,13 +47,25 @@ SSH=(ssh -o BatchMode=yes)
 
 with_data=0
 data_only=0
+# Seconds of warning before the restart; --now makes it none.
+warn=${LAVA_STOP_WARN_SEC:-180}
 for arg in "$@"; do
   case "$arg" in
     --with-data) with_data=1 ;;
     --data-only) with_data=1; data_only=1 ;;
+    --now) warn=0 ;;
+    --warn=*) warn=${arg#--warn=} ;;
     *) echo "unknown argument: $arg" >&2; exit 2 ;;
   esac
 done
+case "$warn" in
+  ''|*[!0-9]*) echo "--warn wants whole seconds, not '$warn'" >&2; exit 2 ;;
+esac
+# What the game takes (stopwarn.MIN_SECONDS, MAX_SECONDS).
+if [ "$warn" != 0 ] && { [ "$warn" -lt 10 ] || [ "$warn" -gt 600 ]; }; then
+  echo "--warn: from 10 to 600 seconds (or --now)" >&2
+  exit 2
+fi
 
 echo "==> $HOST:$DEST"
 "${SSH[@]}" "$HOST" "mkdir -p '$DEST' '$DEST/res'"
@@ -96,8 +119,79 @@ fi
 echo "==> env"
 "${SSH[@]}" "$HOST" "cd '$DEST' && if [ ! -f .env ]; then cp deploy/env.example .env && echo 'created .env from deploy/env.example -- check LAVA_PUBLIC_HOST'; else echo '.env kept as it is'; fi"
 
-echo "==> build and start"
-"${SSH[@]}" "$HOST" "cd '$DEST' && docker compose up -d --build"
+echo "==> build"
+# The new image first, while the old containers go on serving: a build that
+# fails stops the script here, and the players never notice it.
+"${SSH[@]}" "$HOST" "cd '$DEST' && docker compose build"
+
+# The countdown (server/stopwarn.py, run inside the running game). Each call
+# prints "LEFT PLAYERS": seconds to the stop, "-" with none announced. The
+# wait is on this side: a countdown waited out inside one long ssh would go
+# on after a dropped link with nobody left to restart.
+stopwarn() {   # its line on stdout; the game's own words on the terminal
+  "${SSH[@]}" "$HOST" "docker exec lava-game python3 stopwarn.py $*"
+}
+STOP_LINE='^(-|0|[1-9][0-9]{0,5}) (0|[1-9][0-9]{0,5})$'
+warned=0
+call_off() {
+  [ "$warned" = 1 ] || return 0
+  warned=0
+  stopwarn cancel --by deploy.sh > /dev/null \
+    && echo "    the countdown is called off" \
+    || echo "    could not call the countdown off: it ends by itself, two minutes after its time"
+}
+trap call_off EXIT
+trap 'echo; echo "==> interrupted: nothing restarted"; exit 130' INT TERM
+
+if [ "$warn" = 0 ]; then
+  echo "==> no warning (--now)"
+else
+  echo "==> warning the players: ${warn}s"
+  out=$(stopwarn start "$warn" --by deploy.sh --skip-empty) || out=
+  if [[ ! $out =~ $STOP_LINE ]]; then
+    # The first deploy that carries stopwarn.py lands here (the running image
+    # has none), and so does a game that is down: restart at once, as before.
+    echo "    the running server cannot count down; restarting now"
+  elif [ "${BASH_REMATCH[2]}" = 0 ]; then
+    echo "    nobody online, no wait"
+  elif [ "${BASH_REMATCH[1]}" = - ]; then
+    echo "    the game announced no stop; restarting now"
+  elif [ "${BASH_REMATCH[1]}" = 0 ]; then
+    echo "    a countdown already over; restarting now"
+  else
+    left=${BASH_REMATCH[1]}
+    warned=1
+    echo "    ${BASH_REMATCH[2]} player(s) told: the restart in ${left}s (Ctrl-C calls it off)"
+    while :; do
+      sleep $(( left < 10 ? left : 10 ))
+      out=$(stopwarn status) || out=
+      if [[ ! $out =~ $STOP_LINE ]]; then
+        echo "    the countdown does not answer; restarting now"
+        break
+      fi
+      left=${BASH_REMATCH[1]}
+      if [ "$left" = - ]; then
+        warned=0
+        echo "==> the countdown was called off (the admin panel?): nothing restarted"
+        echo "    $DEST already holds the new tree and the new image; the next"
+        echo "    'docker compose up' there starts them"
+        exit 1
+      fi
+      echo "    ${left}s to the restart, ${BASH_REMATCH[2]} online"
+      [ "$left" -le 0 ] && break
+      if [ "${BASH_REMATCH[2]}" = 0 ]; then
+        echo "    nobody online any more"
+        break
+      fi
+    done
+  fi
+fi
+
+echo "==> start"
+"${SSH[@]}" "$HOST" "cd '$DEST' && docker compose up -d --no-build"
+# Restarted: the countdown went with the old process.
+warned=0
+trap - INT TERM
 
 echo "==> state"
 "${SSH[@]}" "$HOST" "cd '$DEST' && docker compose ps && echo && docker compose logs --tail 5 game"

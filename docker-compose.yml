@@ -11,9 +11,11 @@ services:
     image: lava-server
     container_name: lava-game
     restart: unless-stopped
-    # Time for shutdown() to warn every session, save each character and let
-    # the writers drain. The default ten seconds is enough today and will not
-    # stay enough.
+    # Time for shutdown() to send every session its last frame, save each
+    # character and let the writers drain. The default ten seconds is enough
+    # today and will not stay enough. The players' warning is not in it: the
+    # deploy announces the stop minutes ahead (server/stopwarn.py) and only
+    # then sends the signal, so this covers the save alone.
     stop_grace_period: 30s
     # PID 1 ignores signals it has no handler for, and the reaper costs
     # nothing; server.py installs its own handlers, so this is belt and

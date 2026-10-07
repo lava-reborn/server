@@ -79,6 +79,47 @@ mark() {  # tree text -> the tree's server.py ends with that line
   echo "# cicd test: $2" >> "$1/server/server.py"
 }
 
+# A player on the game socket, for the warning before the restart (7a): an
+# account made in the running game, logged in, every frame written down as
+# "<seconds since login> <frame>" until the socket closes or LIMIT runs out.
+player_on() {  # name -> background player; frames in $T/<name>.frames
+  local name=$1
+  docker exec cicdtest-game python3 -c "import accounts; print(accounts.Store().register('$name', 'secret')[1] or 'ok')" \
+    > "$T/$name.reg" 2>&1
+  python3 - 19775 "$name" "$T/$name.frames" > "$T/$name.player.log" 2>&1 <<'PY' &
+import hashlib, socket, sys, time
+port, login, out = int(sys.argv[1]), sys.argv[2], sys.argv[3]
+cred = hashlib.md5(("secret" + login).encode("cp1251")).hexdigest()
+s = socket.create_connection(("127.0.0.1", port), 10)
+s.sendall(b"hello;minor=2;major=0;\0" + ("login;hash=@%s@;\0" % cred).encode())
+t0, buf = time.time(), b""
+s.settimeout(1)
+with open(out, "w") as f:
+    while time.time() - t0 < 300:
+        try:
+            chunk = s.recv(65536)
+        except socket.timeout:
+            continue
+        except OSError:
+            break
+        if not chunk:
+            break
+        buf += chunk
+        *done, buf = buf.split(b"\0")
+        for fr in done:
+            f.write("%.1f %s\n" % (time.time() - t0, fr.decode("utf-8", "replace")))
+            f.flush()
+    f.write("%.1f EOF\n" % (time.time() - t0))
+PY
+  PLAYER_PID=$!
+  for _ in $(seq 1 50); do grep -q ' accountInfo;' "$T/$name.frames" 2>/dev/null && return 0; sleep 0.2; done
+  echo "    (player $name did not get in: $(cat "$T/$name.reg" "$T/$name.player.log" 2>/dev/null | tail -n 3))"
+}
+stops_of() {  # name -> the shutdown frames it got, as "20 10 0"
+  sed -n 's/^[0-9.]* shutdown;seconds=\([0-9]*\);$/\1/p' "$T/$1.frames" | tr '\n' ' ' | sed 's/ $//'
+}
+started_at() { docker inspect -f '{{.State.StartedAt}}' cicdtest-game 2>/dev/null; }
+
 # --- the layout ---------------------------------------------------------------
 echo "== layout in $T"
 cleanup_docker
@@ -137,6 +178,7 @@ MIN_FREE_MB=1024
 HEALTH_TIMEOUT=180
 SETTLE=12
 LOCK_WAIT=5
+STOP_WARN_SEC=20
 EOF
 
 # The shared database's stand-in, with one row the dumps must carry.
@@ -390,6 +432,7 @@ for _ in range(3):
 PY
 wait $SP
 check "v1 deployed (send.sh exit)" "$?" 0
+check "v1: nobody online, so no warning and no wait" "$(grep -c '^warning:  nobody online, no wait$' "$T/v1.out")" 1
 check "the game wrote a traceback for the bad frame" \
   "$(docker logs cicdtest-game 2>&1 | grep -c '^Traceback (most recent call last)' | sed 's/^[1-9][0-9]*$/some/')" some
 check "and logged the frame with the marker in it" \
@@ -444,12 +487,20 @@ mk_tree "$T/trees/v3"
 mark "$T/trees/v3" v1
 echo 'RUN false' >> "$T/trees/v3/Dockerfile"
 bash "$T/trees/v3/deploy/ci/pack.sh" "$T/v3.tgz" "$T/trees/v3" > /dev/null
+# A player online: the build comes first, so a build that fails tells him
+# nothing and restarts nobody.
+player_on cicdp0
+ST3=$(started_at)
 SSH_ORIGINAL_COMMAND="deploy $(fake_sha v3) $(sum_of "$T/v3.tgz")" gate < "$T/v3.tgz" > "$T/v3.out" 2>&1
 check "v3 fails with status 1" "$?" 1
 grep -E '^(result|state|rollback):' "$T/v3.out" | sed 's/^/    /'
 check "tree back to v1" "$(tree_sum)" "$SUM1"
 check "game still on the v1 image" "$(game_img)" "$V1_IMG"
 check "and answering" "$(probes)" up
+check "v3: the player online was told nothing" "$(stops_of cicdp0)" ""
+check "v3: and the game was not restarted" "$(started_at)" "$ST3"
+check "v3: nor any countdown begun" "$(grep -c '^warning:' "$T/v3.out")" 0
+kill "$PLAYER_PID" 2> /dev/null; wait "$PLAYER_PID" 2> /dev/null
 
 echo "== v4: a failure the server caught and logged while starting, no crash -> rollback"
 mk_tree "$T/trees/v4"
@@ -473,6 +524,82 @@ SSH_ORIGINAL_COMMAND="deploy $SHA1 $(sum_of "$T/v1.tgz")" gate < "$T/v1.tgz" > "
 check "refused while locked" "$?" 2
 grep refused "$T/lock.out" | sed 's/^/    /'
 wait $LP
+
+# --- the players' warning before the restart (7a, STOP_WARN_SEC=20 here) -------------
+echo "== w1: a player online is warned, and the restart waits the warning out"
+mk_tree "$T/trees/w1"
+mark "$T/trees/w1" w1
+bash "$T/trees/w1/deploy/ci/pack.sh" "$T/w1.tgz" "$T/trees/w1" > /dev/null
+player_on cicdp1
+s=$(date +%s)
+SSH_ORIGINAL_COMMAND="deploy $(fake_sha w1) $(sum_of "$T/w1.tgz")" gate < "$T/w1.tgz" > "$T/w1.out" 2>&1
+check "w1 deployed" "$?" 0
+took=$(( $(date +%s) - s ))
+wait "$PLAYER_PID" 2> /dev/null
+grep -E '^(gate: .*(warned|restart|online)|warning:)' "$T/w1.out" | sed 's/^/    /'
+check "w1: the player was told 20, then 10, then the stop's own 0" "$(stops_of cicdp1)" "20 10 0"
+check "w1: and then the socket closed" "$(tail -n 1 "$T/cicdp1.frames" | cut -d' ' -f2)" EOF
+t20=$(sed -n 's/^\([0-9.]*\) shutdown;seconds=20;$/\1/p' "$T/cicdp1.frames")
+t0=$(sed -n 's/^\([0-9.]*\) shutdown;seconds=0;$/\1/p' "$T/cicdp1.frames")
+check "w1: the stop came no sooner than the 20 seconds told" \
+  "$(awk -v a="$t20" -v b="$t0" 'BEGIN { print (b - a >= 19.5) ? "yes" : "no (" b - a "s)" }')" yes
+check "w1: the report says the players were warned" "$(grep -c '^warning:  players warned, waited ' "$T/w1.out")" 1
+check "w1: the gate said how many" "$(grep -c '^gate: 1 player(s) warned: the restart in 2[01]s$' "$T/w1.out")" 1
+check "w1: running" "$(docker exec cicdtest-game tail -n 1 /app/server/server.py)" "# cicd test: w1"
+echo "    took ${took}s"
+SUMW1=$(tree_sum)
+IMGW1=$(game_img)
+
+echo "== w2: the countdown called off from the panel while the gate waits -> rolled back, nobody restarted"
+mk_tree "$T/trees/w2"
+mark "$T/trees/w2" w2
+bash "$T/trees/w2/deploy/ci/pack.sh" "$T/w2.tgz" "$T/trees/w2" > /dev/null
+player_on cicdp2
+ST=$(started_at)
+SSH_ORIGINAL_COMMAND="deploy $(fake_sha w2) $(sum_of "$T/w2.tgz")" gate < "$T/w2.tgz" > "$T/w2.out" 2>&1 &
+GP=$!
+for _ in $(seq 1 300); do
+  grep -q 'player(s) warned' "$T/w2.out" 2>/dev/null && break
+  sleep 1
+done
+sleep 3
+# What the panel's button queues, from inside the container.
+docker exec cicdtest-game python3 stopwarn.py cancel --by test > "$T/w2.cancel" 2>&1
+check "w2: the countdown is called off" "$(cat "$T/w2.cancel" | tail -n 1)" "- 1"
+wait $GP
+check "w2 fails with status 1" "$?" 1
+grep -E '^(result|state|rollback|warning):' "$T/w2.out" | sed 's/^/    /'
+check "w2: and says why" "$(grep -c '^result:   FAILED at warn: the countdown was called off' "$T/w2.out")" 1
+check "w2: the game was not restarted" "$(started_at)" "$ST"
+check "w2: still on its image" "$(game_img)" "$IMGW1"
+check "w2: the tree is back" "$(tree_sum)" "$SUMW1"
+check "w2: the player was told 20 and nothing after" "$(stops_of cicdp2)" "20"
+check "w2: and plays on" "$(grep -c ' EOF$' "$T/cicdp2.frames")" 0
+kill "$PLAYER_PID" 2> /dev/null; wait "$PLAYER_PID" 2> /dev/null
+
+echo "== w3, w4: a running game that cannot count down -> the restart at once, as before"
+mk_tree "$T/trees/w3"
+mark "$T/trees/w3" w3
+# An image from before stopwarn.py answers docker exec with an error; this
+# one's command line does the same, while the game itself still imports it.
+sed -i '1i import sys as _s; _s.exit("cicd test: no countdown here") if __name__ == "__main__" else None' \
+  "$T/trees/w3/server/stopwarn.py"
+bash "$T/trees/w3/deploy/ci/pack.sh" "$T/w3.tgz" "$T/trees/w3" > /dev/null
+SSH_ORIGINAL_COMMAND="deploy $(fake_sha w3) $(sum_of "$T/w3.tgz")" gate < "$T/w3.tgz" > "$T/w3.out" 2>&1
+check "w3 deployed (nobody online)" "$?" 0
+mk_tree "$T/trees/w4"
+mark "$T/trees/w4" w4
+bash "$T/trees/w4/deploy/ci/pack.sh" "$T/w4.tgz" "$T/trees/w4" > /dev/null
+player_on cicdp3
+s=$(date +%s)
+SSH_ORIGINAL_COMMAND="deploy $(fake_sha w4) $(sum_of "$T/w4.tgz")" gate < "$T/w4.tgz" > "$T/w4.out" 2>&1
+check "w4 deployed" "$?" 0
+wait "$PLAYER_PID" 2> /dev/null
+check "w4: the report says the old game could not count down" \
+  "$(grep -c '^warning:  none -- the running server cannot count down$' "$T/w4.out")" 1
+check "w4: the player got the stop's 0 only" "$(stops_of cicdp3)" "0"
+check "w4: running" "$(docker exec cicdtest-game tail -n 1 /app/server/server.py)" "# cicd test: w4"
+echo "    took $(( $(date +%s) - s ))s"
 
 echo "== v5: good deploy, the client goes away mid-way; pruning to KEEP=2"
 mk_tree "$T/trees/v5"

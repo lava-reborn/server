@@ -52,6 +52,7 @@ import accounts
 import email_flow
 import names
 import items
+import stopwarn
 import map_labels
 import transport
 import world
@@ -353,6 +354,8 @@ ADMIN_PAGE = '''<!doctype html><html lang=ru><meta charset=utf-8>
 {note}
 <h2>Сейчас в игре</h2>
 {online}
+<h2>Остановка сервера</h2>
+{stop}
 <h2>Найти игрока</h2>
 <div class=card><form method=get action="/admin"><div class=row>
  <input type=text name=q value="{query}" placeholder="ник или логин"
@@ -368,6 +371,47 @@ ADMIN_PAGE = '''<!doctype html><html lang=ru><meta charset=utf-8>
 разбирает очередь раз в секунду. Игроку в игре изменения приходят сразу,
 остальным — при следующем входе.</p>
 </div></html>''' % ADMIN_STYLE
+
+# «Остановка сервера» (stopwarn.py): a stop announced to the players ahead
+# of a restart, in one of three states -- none (the form), counting down or
+# due (the stop, and its calling off), or unknown (the game is not writing).
+# Both forms queue an admin_actions row like every other order; the page
+# waits a moment for the game's answer (STOP_ANSWER) and shows it. The time
+# left is as of the page's loading -- the page has no script -- so the hour
+# of the stop is shown beside it.
+ADMIN_STOP_FORM = '''<div class=card>
+<form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=stop>
+ <label>Остановка</label>
+ через <input type=number name=minutes value={minutes} min=1 max={most}> мин
+ <label style="min-width:0;text-transform:none;letter-spacing:0">
+ <input type=checkbox name=confirm value=1> да, предупредить игроков</label>
+ <button type=submit class=warn>Объявить остановку</button>
+</div></form>
+<p class=dim style="margin:10px 0 0">Каждый в игре сразу увидит окно игры
+«Сервер будет остановлен через N секунд», потом такое же каждую минуту и за
+30 и 10 секунд до конца; кто войдёт во время отсчёта, увидит остаток.
+Панель только предупреждает, перезапуск делает выкладка (CI или deploy.sh):
+она дождётся конца этого отсчёта и своего не начнёт. Без выкладки отсчёт
+кончится ничем и через две минуты забудется.</p>
+</div>'''
+
+ADMIN_STOP_RUNNING = '''<div class=card>
+<h3>{headline}</h3>
+<div class=dim>объявил <b>{admin}</b> в {made} МСК · в игре сейчас <span class=num>{players}</span></div>
+<form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=stop_cancel>
+ <button type=submit class=ghost>Отменить остановку</button>
+ <a href="/admin">обновить</a>
+</div></form>
+<p class=dim style="margin:10px 0 0">{hint} Отмену игроки не увидят: окно
+отсчёта, уже открытое у игрока, останется, пока он его не закроет, новых не
+будет. Выкладка, которая ждёт этот отсчёт, после отмены никого не
+перезапускает.</p>
+</div>'''
+
+# How long the page waits for the game to answer a stop or its calling off.
+STOP_ANSWER = 5
 
 # The clans: one row each on the main page, and a page of its own with the
 # members, the treasury's journal and the five orders the client has no
@@ -734,10 +778,12 @@ class Handler(BaseHTTPRequestHandler):
             online = [dict(r) for r in online]
             recent = [dict(r) for r in store.admin_recent(25)]
             clan_rows = self._clan_rows(store)
+            plan = store.stop_plan()
         finally:
             store.close()
 
         now = int(time.time())
+        stop = self._stop_block(plan, beat, now)
         if beat is None:
             live = ('<p class="msg err">Игровой сервер ни разу не отмечался — '
                     'похоже, он не запущен.</p>')
@@ -778,10 +824,51 @@ class Handler(BaseHTTPRequestHandler):
 
         note_html = '<p class="msg ok">%s</p>' % escape(note) if note else ""
         self._send(ADMIN_PAGE.format(who=escape(who), note=note_html,
-                                     online=live, query=escape(query),
+                                     online=live, stop=stop, query=escape(query),
                                      results=results, clans=clans_html,
                                      log=log_rows),
                    "text/html; charset=utf-8")
+
+    @staticmethod
+    def _stop_block(plan, beat, now):
+        """«Остановка сервера»: the form, the stop under way, or why
+        neither can be had right now."""
+        if beat is None or now - beat > stopwarn.BEAT_FRESH or plan is None:
+            return ('<p class=dim>Игровой сервер не отмечается — объявить или '
+                    'отменить остановку сейчас нельзя.</p>')
+        if plan["stop_at"] is None:
+            return ADMIN_STOP_FORM.format(minutes=stopwarn.DEFAULT_SECONDS // 60,
+                                          most=stopwarn.MAX_SECONDS // 60)
+        left = int(plan["stop_at"]) - now
+        if left > 0:
+            headline = ('Сервер будет остановлен через <span class=num>%d</span> с'
+                        ' — в %s МСК' % (left, stopwarn.msk(plan["stop_at"])))
+            hint = "Остаток — на момент открытия страницы."
+        else:
+            headline = ('Время вышло в %s МСК — сервер ждёт перезапуска'
+                        % stopwarn.msk(plan["stop_at"]))
+            hint = ("Если выкладки нет, через %d минуты отсчёт забудется сам."
+                    % (stopwarn.DUE_GRACE // 60))
+        return ADMIN_STOP_RUNNING.format(
+            headline=headline, admin=escape(plan["admin"] or "?"),
+            made=stopwarn.msk(plan["made_at"]), players=int(plan["players"]),
+            hint=hint)
+
+    @staticmethod
+    def _stop_answer(store, action_id, queued):
+        """The game's answer to a stop order, waited for a moment: what the
+        page says after the button."""
+        end = time.time() + STOP_ANSWER
+        while True:
+            store.db.commit()                # a fresh snapshot each time
+            row = store.db.execute(
+                "SELECT done_at, result FROM admin_actions WHERE id = ?",
+                (action_id,)).fetchone()
+            if row is not None and row["done_at"] is not None:
+                return "Игровой сервер: %s" % row["result"]
+            if time.time() >= end:
+                return "%s — игровой сервер ещё не ответил, итог будет в таблице ниже" % queued
+            time.sleep(0.2)
 
     @staticmethod
     def _log_rows(recent):
@@ -796,6 +883,13 @@ class Handler(BaseHTTPRequestHandler):
                 except ValueError:
                     args = {}
                 what = "клан %s: %s" % (args.get("clan", "?"), args.get("op", "?"))
+            elif what in ("stop", "stop_cancel"):
+                try:
+                    args = json.loads(r["args_json"] or "{}")
+                except ValueError:
+                    args = {}
+                what = ("остановка через %s с" % args.get("seconds", "?")
+                        if what == "stop" else "отмена остановки")
             out.append("<tr><td>%s</td><td>%s</td><td>%s</td></tr>"
                        % (escape(r["admin"]), escape(str(what)),
                           escape(r["result"] or "ждёт очереди")))
@@ -946,6 +1040,21 @@ class Handler(BaseHTTPRequestHandler):
                 note = {"kick": "Игрок будет выкинут",
                         "ban": "Бан поставлен в очередь",
                         "unban": "Разбан поставлен в очередь"}[kind]
+            elif kind == "stop":
+                # The whole server's, so a tick to say so, as a clan's
+                # disbanding has; and minutes, within what the game takes.
+                minutes = num("minutes", stopwarn.DEFAULT_SECONDS // 60)
+                most = stopwarn.MAX_SECONDS // 60
+                if one("confirm") != "1":
+                    note = "Остановка не объявлена: отметьте «да, предупредить игроков»"
+                elif not 1 <= minutes <= most:
+                    note = "Остановка не объявлена: от 1 до %d минут" % most
+                else:
+                    action = store.admin_push(who, "stop", seconds=minutes * 60)
+                    note = self._stop_answer(store, action, "Остановка поставлена в очередь")
+            elif kind == "stop_cancel":
+                action = store.admin_push(who, "stop_cancel")
+                note = self._stop_answer(store, action, "Отмена поставлена в очередь")
             else:
                 note = "Неизвестное действие"
         finally:

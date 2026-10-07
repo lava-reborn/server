@@ -147,6 +147,19 @@ CREATE TABLE IF NOT EXISTS heartbeat (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS stop_plan (
+    -- A stop announced to the players ahead of time (server/stopwarn.py).
+    -- One row, written by the game server whenever what it says changes, and
+    -- read by the panel and by stopwarn.py status, which the deploy waits on;
+    -- the heartbeat says whether it is current. A table of its own and not
+    -- columns on heartbeat: the game and the panel run migrate() at the same
+    -- moment, and two ALTERs of one table race into "duplicate column".
+    id      INTEGER PRIMARY KEY CHECK (id = 1),
+    stop_at INTEGER,                      -- epoch second of the stop; NULL: none
+    made_at INTEGER NOT NULL DEFAULT 0,   -- when it was announced
+    admin   TEXT    NOT NULL DEFAULT '',  -- by whom: a panel login, CI, deploy.sh
+    players INTEGER NOT NULL DEFAULT 0    -- logged-in sessions, as last counted
+);
 CREATE TABLE IF NOT EXISTS admin_actions (
     -- The admin panel runs in the HTTP process and the game runs in another,
     -- with only this database between them. A panel that wrote to characters
@@ -1204,6 +1217,24 @@ class Store:
         beat = self.db.execute("SELECT at FROM heartbeat WHERE id = 1"
                                ).fetchone()
         return rows, (beat["at"] if beat else None)
+
+    # --- a stop announced ahead (stopwarn.py) ----------------------------
+    def set_stop_plan(self, stop_at, made_at, admin, players):
+        """The game's word on the stop it has announced: stop_at None when
+        there is none."""
+        with self.db:
+            self.db.execute(
+                "INSERT INTO stop_plan (id, stop_at, made_at, admin, players)"
+                " VALUES (1, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET"
+                " stop_at = excluded.stop_at, made_at = excluded.made_at,"
+                " admin = excluded.admin, players = excluded.players",
+                (None if stop_at is None else int(stop_at), int(made_at or 0),
+                 str(admin or ""), int(players)))
+
+    def stop_plan(self):
+        """stop_plan's row as a dict, or None before the game first wrote it."""
+        row = self.db.execute("SELECT * FROM stop_plan WHERE id = 1").fetchone()
+        return dict(row) if row else None
 
     # --- admin actions ---------------------------------------------------
     def admin_push(self, admin, kind, char_id=None, account_id=None, **args):
