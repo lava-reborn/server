@@ -28,6 +28,11 @@ services:
       LAVA_DB_URL: ${LAVA_DB_URL:-}
       LAVA_RES: /res
       LAVA_LOG_LEVEL: ${LAVA_LOG_LEVEL:-INFO}
+      # Предупреждения и ошибки ещё и файлом на томе: его показывает
+      # админка (lava-admin видит этот том как /data, файл -- как
+      # /data/logs/game.err). Лог контейнера остаётся прежним
+      # (server/errlog.py, README «Журнал ошибок»).
+      LAVA_ERR_LOG: /var/lib/lava/logs/game.err
       # Flash asks for the socket policy on 843 before it will open the game
       # socket, and only falls back to asking on the game port when that
       # attempt ends. Whether it ends quickly is not ours to decide: on this
@@ -93,6 +98,9 @@ services:
       # задано -- и файл больше не открывается вовсе.
       LAVA_DB_URL: ${LAVA_DB_URL:-}
       LAVA_RES: /res
+      # Свой файл рядом с игровым: два процесса в один файл с ротацией не
+      # пишут. Админка показывает оба.
+      LAVA_ERR_LOG: /var/lib/lava/logs/http.err
       # The address and port the registration page tells people to connect to.
       # Not where this container listens: what the player types into the
       # client, so it has to be reachable from outside this machine.

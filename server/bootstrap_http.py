@@ -38,6 +38,13 @@ import hmac
 import time
 from urllib.parse import quote
 
+import errlog
+# Before the game's modules, as in server.py: a table that stops this
+# process as it is imported is a crash for the admin panel too (errlog.hook;
+# nothing without LAVA_ERR_LOG).
+if __name__ == "__main__":
+    errlog.hook()
+
 import accounts
 import email_flow
 import names
@@ -1181,7 +1188,9 @@ class Server(ThreadingHTTPServer):
     gate (deploy/remote/lava-gate.sh) and anyone reading the log take for
     the second. So a dropped connection is one access-log line, in the
     "  HTTP " form log_message writes, and every other exception still gets
-    socketserver's traceback.
+    socketserver's traceback -- and goes to the error log the admin panel
+    shows as well (errlog), from a logger that writes nowhere else, since
+    stderr has it already.
     """
 
     def handle_error(self, request, client_address):
@@ -1190,10 +1199,16 @@ class Server(ThreadingHTTPServer):
             print("  HTTP %s dropped the connection (%s)"
                   % (client_address[0], type(exc).__name__), flush=True)
             return
+        errlog.only("lava.http").error("request from %s failed",
+                                       client_address[0], exc_info=True)
         super().handle_error(request, client_address)
 
 
 if __name__ == "__main__":
+    # This process prints rather than logs; what does reach logging (the
+    # account store's warnings) goes to its LAVA_ERR_LOG, http.err, with
+    # the requests that failed and the uncaught exceptions.
+    errlog.install()
     print("res root : %s" % RES_ROOT)
     print("game srv : %s:%s" % (GAME_HOST, GAME_PORT))
     print("http     : http://%s:%d/" % (HTTP_HOST, HTTP_PORT))

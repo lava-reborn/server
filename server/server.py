@@ -23,6 +23,13 @@ import re
 import signal
 import time
 
+import errlog
+# Before the game's own modules: they read their tables as they are
+# imported, and one that stops the server there is a crash the admin panel
+# should show as well (errlog.hook; nothing without LAVA_ERR_LOG).
+if __name__ == "__main__":
+    errlog.hook()
+
 import accounts
 import auction
 import barter
@@ -3728,6 +3735,10 @@ async def handle_policy(reader, writer):
 async def main():
     logging.basicConfig(level=os.environ.get("LAVA_LOG_LEVEL", "INFO").upper(),
                         format="%(asctime)s %(message)s")
+    # WARNING and above to LAVA_ERR_LOG as well, the file the admin panel
+    # shows (errlog, README «Журнал ошибок»). What goes to stderr stays as
+    # it is: the deploy gate reads it.
+    errlog.install()
     # Content is read before the first socket is open, never inside a
     # handler: a lazy load of the wiki tables once stalled the loop for two
     # seconds on whichever request touched an item first.
