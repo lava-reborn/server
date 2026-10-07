@@ -39,6 +39,8 @@ static class GameWindow
     [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hwnd, IntPtr after,
                                                              int x, int y, int cx, int cy, uint flags);
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern bool IsIconic(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr w, IntPtr l);
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern bool SetWindowText(IntPtr hwnd, string text);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -191,10 +193,47 @@ static class GameWindow
         catch { }
     }
 
+    // To the front, from the tray: restored if it was minimised.
+    public static void Raise(IntPtr h)
+    {
+        if (h == IntPtr.Zero) return;
+        try
+        {
+            if (IsIconic(h)) ShowWindow(h, 9 /* SW_RESTORE */);
+            SetForegroundWindow(h);
+        }
+        catch { }
+    }
+
+    // Closed the way its own close box closes it.
+    public static void Close(IntPtr h)
+    {
+        if (h != IntPtr.Zero) PostMessage(h, 0x0010 /* WM_CLOSE */, IntPtr.Zero, IntPtr.Zero);
+    }
+
     // The projector titles its window after itself and offers no way to say
     // otherwise, so the name is set from out here. More than once, because the
     // player writes the title again during start-up and a single early rename
     // is simply overwritten.
+    // The launcher's flame instead of Adobe's red F, on the title bar, the
+    // task bar and Alt+Tab: WM_SETICON, the same way any program sets its
+    // own, so the projector's file is left as Adobe signed it. The icons are
+    // kept for the life of the process, the game window holds their handles.
+    static Icon bigIcon, smallIcon;
+
+    static void Brand(IntPtr h)
+    {
+        if (bigIcon == null)
+        {
+            Icon app = global::Brand.AppIcon();
+            if (app == null) return;
+            bigIcon = new Icon(app, SystemInformation.IconSize);
+            smallIcon = new Icon(app, SystemInformation.SmallIconSize);
+        }
+        PostMessage(h, 0x0080 /* WM_SETICON */, (IntPtr)1 /* ICON_BIG */, bigIcon.Handle);
+        PostMessage(h, 0x0080, IntPtr.Zero /* ICON_SMALL */, smallIcon.Handle);
+    }
+
     public static void Title(IntPtr h, string text, Process game)
     {
         if (h == IntPtr.Zero) return;
@@ -203,10 +242,76 @@ static class GameWindow
             for (int i = 0; i < 12; i++)
             {
                 SetWindowText(h, text);
+                Brand(h);
                 Thread.Sleep(500);
                 if (game.HasExited) return;
             }
         }
         catch { /* a window with the wrong name above it is still a working game */ }
+    }
+}
+
+// A still of the whole screen, laid over all of it for the moment the game's
+// window would otherwise show itself white. The player sees nothing change.
+// It never takes the focus, never shows in the task bar or Alt+Tab, and is
+// revealed only once it has painted, for the same reason as the dialogs.
+class Cover : Form
+{
+    readonly Bitmap shot;
+
+    Cover()
+    {
+        FormBorderStyle = FormBorderStyle.None;
+        ShowInTaskbar = false;
+        StartPosition = FormStartPosition.Manual;
+        TopMost = true;
+        Bounds = SystemInformation.VirtualScreen;
+        BackColor = Color.Black;
+        Opacity = 0;
+        SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+                 ControlStyles.OptimizedDoubleBuffer, true);
+        shot = new Bitmap(Bounds.Width, Bounds.Height);
+        using (Graphics g = Graphics.FromImage(shot))
+            g.CopyFromScreen(Bounds.Location, Point.Empty, Bounds.Size);
+    }
+
+    protected override bool ShowWithoutActivation { get { return true; } }
+
+    protected override CreateParams CreateParams
+    {
+        get
+        {
+            CreateParams p = base.CreateParams;
+            p.ExStyle |= 0x80 | 0x08000000;     // WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE
+            return p;
+        }
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        e.Graphics.DrawImageUnscaled(shot, 0, 0);
+    }
+
+    /// <summary>On the window's thread: the still, on screen.</summary>
+    public static Cover Lay()
+    {
+        Cover c = new Cover();
+        try
+        {
+            c.Show();
+            global::Modal.PaintNow(c);
+            // Kept layered: going to 1.0 drops the style and repaints.
+            c.Opacity = 254 / 255.0;
+        }
+        catch { }
+        return c;
+    }
+
+    /// <summary>On the window's thread, any number of times.</summary>
+    public void Lift()
+    {
+        if (IsDisposed) return;
+        Close();
+        shot.Dispose();
     }
 }

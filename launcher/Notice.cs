@@ -1,32 +1,34 @@
-// The window that says something went wrong.
+// The window that says something went wrong before there is a window.
 //
 // A MessageBox would do the job, and would look like it came from a different
-// program. There are only four of these -- no res/ folder, no projector, no
-// trust file, an unhandled fault -- and each one is the last thing the player
-// sees, so it may as well be the same window as everything else.
+// program. There are only a few of these -- no projector, no trust file, an
+// unhandled fault -- and each one is the last thing the player sees, so it
+// may as well be the same window as everything else.
 using System;
 using System.Drawing;
 using System.Windows.Forms;
 
 class Notice : Form
 {
-    const int W = 460, BAR = 40, PAD = 28;
+    const int W = 460, BAR = 54, PAD = 28;
 
     readonly string head, body;
-    readonly PrimaryButton ok = new PrimaryButton();
-    readonly WinButton close = new WinButton();
+    readonly DialogButton ok;
+    readonly IconButton close = new IconButton();
+    readonly Image logo;
     int bodyHeight;
 
     Notice(string title, string text)
     {
         head = title;
         body = text;
+        logo = LoadLogo();
 
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
                  ControlStyles.OptimizedDoubleBuffer, true);
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.CenterScreen;
-        BackColor = Theme.BgBase;
+        BackColor = Theme.Bg;
         Text = "Lava Reborn";
         KeyPreview = true;
         Icon = Brand.AppIcon();
@@ -35,25 +37,49 @@ class Notice : Form
         // The message is the only thing that varies, so the window is measured
         // around it rather than given a size and hoping.
         using (Graphics g = CreateGraphics())
-        {
-            // Logical units throughout: the font is logical and MeasureString
-            // does not see the paint transform.
-            SizeF s = g.MeasureString(body, Theme.Body(14, false), W - PAD * 2);
-            bodyHeight = (int)Math.Ceiling(s.Height) + 4;
-        }
+            bodyHeight = Lines(g).Count * LINE;
 
-        int h = BAR + 26 + 28 + bodyHeight + 28 + 40 + 28;
+        int h = BAR + 26 + 30 + bodyHeight + 28 + 42 + 28;
         ClientSize = new Size(Theme.S(W), Theme.S(h));
 
-        ok.Label = "Понятно";
-        ok.Bounds = Theme.R(W - PAD - 130, h - 28 - 40, 130, 40);
+        ok = new DialogButton("Понятно");
+        ok.BackColor = Theme.Bg;
+        ok.Bounds = Theme.R(W - PAD - 130, h - 28 - 42, 130, 42);
         ok.Click += delegate { Close(); };
         Controls.Add(ok);
 
+        close.Icon = "window-close";
         close.IsClose = true;
-        close.Bounds = Theme.R(W - 46, 0, 46, BAR);
+        close.BackColor = Theme.Bg;
+        close.Bounds = Theme.R(W - 10 - 34, (BAR - 34) / 2, 34, 34);
         close.Click += delegate { Close(); };
         Controls.Add(close);
+    }
+
+    // The message as lines: paragraphs split on blank lines, each wrapped
+    // to the window, with an empty line between them.
+    const int LINE = 20;
+
+    System.Collections.Generic.List<string> Lines(Graphics g)
+    {
+        System.Collections.Generic.List<string> lines = new System.Collections.Generic.List<string>();
+        foreach (string para in body.Replace("\r\n", "\n").Split('\n'))
+        {
+            if (para.Length == 0) { lines.Add(""); continue; }
+            lines.AddRange(Theme.Wrap(g, para, Theme.Body(13), W - PAD * 2));
+        }
+        return lines;
+    }
+
+    static Image LoadLogo()
+    {
+        try
+        {
+            using (System.IO.Stream s = System.Reflection.Assembly
+                       .GetExecutingAssembly().GetManifestResourceStream("logo.png"))
+                return s == null ? null : Image.FromStream(s);
+        }
+        catch { return null; }
     }
 
     public static void Show(string title, string text)
@@ -94,24 +120,19 @@ class Notice : Form
         int w = (int)(ClientSize.Width / Theme.Scale);
         int h = (int)(ClientSize.Height / Theme.Scale);
 
-        using (SolidBrush b = new SolidBrush(Theme.BgPanel))
-            g.FillRectangle(b, 0, 0, w, BAR);
-        using (SolidBrush b = new SolidBrush(Theme.Line))
-            g.FillRectangle(b, 0, BAR - 1, w, 1);
+        if (logo != null) g.DrawImage(logo, 25, (BAR - 34) / 2f, 94, 34);
+        Theme.HLine(g, 0, BAR - 1, w, Theme.Hairline);
 
-        Brand.Draw(g, 16, (BAR - 20) / 2f, 20);
-        Font mark = Theme.Display(14, true);
-        float x = 46, my = (BAR - mark.GetHeight(g)) / 2f;
-        x = Theme.Tracked(g, "LAVA", mark, Theme.Ink, x, my, 1.1f);
-        Theme.Tracked(g, "REBORN", Theme.Display(14, false), Theme.InkMuted, x + 5, my, 1.1f);
+        Theme.Line(g, head, Theme.DisplayTitle(23), Theme.Ink, PAD, BAR + 26, 30);
 
-        Theme.Text(g, head, Theme.Body(18, true), Theme.Ink, PAD, BAR + 26);
+        float y = BAR + 26 + 30;
+        foreach (string line in Lines(g))
+        {
+            Theme.Line(g, line, Theme.Body(13), Theme.InkDialog, PAD, y, LINE);
+            y += LINE;
+        }
 
-        using (SolidBrush b = new SolidBrush(Theme.InkMuted))
-            g.DrawString(body, Theme.Body(14, false), b,
-                         new RectangleF(PAD, BAR + 26 + 28, w - PAD * 2, bodyHeight + 8));
-
-        using (Pen p = new Pen(Theme.Line, 1))
+        using (Pen p = new Pen(Theme.WindowEdge, 1))
             g.DrawRectangle(p, 0, 0, w - 1, h - 1);
     }
 }

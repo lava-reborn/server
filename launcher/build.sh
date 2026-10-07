@@ -18,6 +18,8 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO=$(dirname "$HERE")
 OUT= BUILD= PROJECTOR= COMMIT=
 SITE=https://lava-reborn.ru
+FORUM=https://forum.lava-reborn.ru/
+NEWS=https://forum.lava-reborn.ru/forum/1-novosti
 HOST=lava-reborn.ru
 PORT=9775
 RES_KEYS=$REPO/client/keys/resource.keys
@@ -28,6 +30,8 @@ while [ $# -gt 0 ]; do
     --build) BUILD=$2; shift 2 ;;
     --projector) PROJECTOR=$2; shift 2 ;;
     --site) SITE=${2%/}; shift 2 ;;
+    --forum) FORUM=$2; shift 2 ;;
+    --news) NEWS=$2; shift 2 ;;
     --host) HOST=$2; shift 2 ;;
     --port) PORT=$2; shift 2 ;;
     --commit) COMMIT=$2; shift 2 ;;
@@ -41,9 +45,11 @@ done
 [[ $PORT =~ ^[0-9]{1,5}$ ]] || { echo "build.sh: bad --port" >&2; exit 2; }
 [[ $HOST =~ ^[A-Za-z0-9.-]+$ ]] || { echo "build.sh: bad --host" >&2; exit 2; }
 [[ $SITE =~ ^https?://[A-Za-z0-9.:-]+$ ]] || { echo "build.sh: bad --site" >&2; exit 2; }
+[[ $FORUM =~ ^https?://[A-Za-z0-9./:_-]+$ ]] || { echo "build.sh: bad --forum" >&2; exit 2; }
+[[ $NEWS =~ ^https?://[A-Za-z0-9./:_-]+$ ]] || { echo "build.sh: bad --news" >&2; exit 2; }
 [[ -z $COMMIT || $COMMIT =~ ^[0-9a-f]{7,40}$ ]] || { echo "build.sh: bad --commit" >&2; exit 2; }
 
-for f in "$PROJECTOR" "$HERE/assets/hero.jpg" "$HERE/assets/wrapper.swf" \
+for f in "$PROJECTOR" "$HERE/assets/hero.jpg" "$HERE/assets/logo.png" "$HERE/assets/wrapper.swf" \
          "$HERE/assets/wrapper_plain.swf" "$HERE/assets/lava.ico"; do
   [ -f "$f" ] || { echo "build.sh: missing $f" >&2; exit 1; }
 done
@@ -74,7 +80,8 @@ trap 'rm -rf "$W"' EXIT
 # sed with | as its separator cannot be broken by them.
 sed -e "s|@HOST@|$HOST|g" -e "s|@PORT@|$PORT|g" \
     -e "s|@VERSION@|$VERSION|g" -e "s|@FILEVERSION@|$FILEVERSION|g" \
-    -e "s|@REGISTER@|$SITE/register|g" -e "s|@LOST@|$SITE/|g" \
+    -e "s|@REGISTER@|$SITE/register|g" -e "s|@WIKI@|$SITE/wiki|g" -e "s|@CABINET@|$SITE/cabinet|g" \
+    -e "s|@FORUM@|$FORUM|g" -e "s|@NEWS@|$NEWS|g" \
     -e "s|@BUILD@|$BUILD|g" -e "s|@SITE@|$SITE|g" \
     -e "s|@RESOURCE_KEYS@|$RES_LITS|g" -e "s|@LAUNCHER_KEYS@|$LN_LITS|g" \
     "$HERE/Launcher.cs" > "$W/Launcher.generated.cs"
@@ -100,11 +107,13 @@ csc -nologo -noconfig -nostdlib -deterministic -target:winexe -platform:anycpu -
   -win32icon:"$HERE/assets/lava.ico" \
   -resource:"$PROJECTOR",fp32_sa.exe \
   -resource:"$HERE/assets/hero.jpg",hero.jpg \
+  -resource:"$HERE/assets/logo.png",logo.png \
   -resource:"$HERE/assets/lava.ico",icon.ico \
   -resource:"$HERE/assets/wrapper.swf",wrapper.swf \
   -resource:"$HERE/assets/wrapper_plain.swf",wrapper_plain.swf \
   -out:"$OUT/LavaReborn.exe" \
-  "$HERE/Theme.cs" "$HERE/Controls.cs" "$HERE/LoginForm.cs" "$HERE/Notice.cs" \
+  "$HERE/Theme.cs" "$HERE/Icons.cs" "$HERE/Controls.cs" "$HERE/Panels.cs" "$HERE/MainForm.cs" \
+  "$HERE/Dialogs.cs" "$HERE/Prefs.cs" "$HERE/Notice.cs" \
   "$HERE/Creds.cs" "$HERE/GameProbe.cs" "$HERE/GameWindow.cs" "$HERE/LocalServer.cs" \
   "$HERE/Release.cs" "$HERE/Sync.cs" "$HERE/TextsCheck.cs" "$W/Launcher.generated.cs"
 echo "build.sh: $OUT/LavaReborn.exe, build $BUILD ($VERSION), $(stat -c %s "$OUT/LavaReborn.exe") bytes, sha256 $(sha256sum < "$OUT/LavaReborn.exe" | cut -c1-16)"

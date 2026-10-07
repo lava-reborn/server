@@ -41,6 +41,28 @@ enum SyncState
     Ready,         // the folder is the published release
     Offline,       // the server could not be asked; the folder is the last accepted release
     Failed,        // there is nothing playable here
+    Setup,         // nothing installed, AskFirst set: waiting for Begin()
+    Paused,        // a download stopped by Pause(); what is staged is kept
+    NoSpace,       // the drive cannot take what the download needs
+}
+
+// What a Failed run ran into, for the window to name: the line under it is
+// the note, the title comes from this.
+enum SyncFailure
+{
+    Other,         // the folder, the path, a refused release
+    Network,       // a download that could not be completed
+    Corrupt,       // a file that came down and did not match its hash
+}
+
+// Why an Offline run plays the installed release instead of the published
+// one, for the window to name.
+enum OfflineCause
+{
+    Unreachable,   // the update server did not answer
+    Refused,       // what it offered failed the signature or is older than ours
+    Download,      // the update did not come down whole
+    Launcher,      // a new launcher exists and could not be put in place
 }
 
 class Sync
@@ -52,6 +74,10 @@ class Sync
     readonly string exePath;               // null: never replace the exe (tests)
     public bool FullVerify;                // --verify: hash every file, trust no index
     public string ManualUrl = "";          // where a player downloads the launcher by hand
+    // Ask before a first install: the run stops at Setup with the size of
+    // the download, and Begin() goes on. A folder that already holds a game
+    // is updated without asking, as before.
+    public bool AskFirst;
 
     readonly object gate = new object();
     SyncState state = SyncState.Checking;
@@ -62,6 +88,17 @@ class Sync
     Manifest manifest;
     Index index;
     readonly ManualResetEvent settled = new ManualResetEvent(false);
+    bool confirmed;                        // Begin() was pressed for this folder
+    volatile bool pausing;                 // Pause() asked the download to stop
+    bool fresh;                            // the run found no game in res/
+    long needBytes, freeBytes;
+    SyncFailure failure;
+    OfflineCause offline;
+    const long SPARE = 64L * 1024 * 1024;  // headroom asked of the drive beyond the download
+    const string PAUSED = "paused";
+    const string HASH_MISMATCH = "файл не сошёлся по хэшу";
+    const string TOO_LONG = "файл длиннее обещанного";
+    const string TOO_SHORT = "файл короче обещанного";
 
     public Action Changed;                 // raised on the worker thread; the UI marshals it
     public int NewVersion;                 // set with Restarting
@@ -89,6 +126,36 @@ class Sync
     public string Note { get { lock (gate) return note; } }
     public Manifest Current { get { lock (gate) return manifest; } }
     public bool Playable { get { SyncState s = State; return s == SyncState.Ready || s == SyncState.Offline; } }
+    /// <summary>Whether the last run started on a folder with no game:
+    /// an install, as against an update.</summary>
+    public bool Fresh { get { lock (gate) return fresh; } }
+    public long NeedBytes { get { lock (gate) return needBytes; } }
+    public long FreeBytes { get { lock (gate) return freeBytes; } }
+    public SyncFailure Failure { get { lock (gate) return failure; } }
+    public OfflineCause Cause { get { lock (gate) return offline; } }
+    public string GameDir { get { return gameDir; } }
+
+    /// <summary>"Начать загрузку": the install AskFirst stopped at goes on.</summary>
+    public void Begin()
+    {
+        lock (gate) confirmed = true;
+        Start();
+    }
+
+    /// <summary>Stops a download between blocks. What is fully staged stays
+    /// and is not fetched again; Start() goes on from there.</summary>
+    public void Pause()
+    {
+        if (State == SyncState.Downloading) pausing = true;
+    }
+
+    /// <summary>Stops the run at its next safe point, whatever it is doing:
+    /// a download between blocks, a check before anything is fetched. For
+    /// the window moving the folder away under it.</summary>
+    public void Hold()
+    {
+        if (Interlocked.CompareExchange(ref running, 0, 0) != 0) pausing = true;
+    }
 
     public void Progress(out long done, out long total, out int files, out int fileTotal)
     {
@@ -124,11 +191,15 @@ class Sync
     {
         if (Interlocked.CompareExchange(ref running, 1, 0) != 0) return;
         settled.Reset();
+        pausing = false;
+        lock (gate) failure = SyncFailure.Other;
         Thread t = new Thread(delegate ()
         {
             try { Run(); }
             catch (Exception e) { Move(SyncState.Failed, Short(e)); }
-            finally { Interlocked.Exchange(ref running, 0); }
+            // --verify and "Проверить файлы" are one run each; the next
+            // goes back to trusting the index.
+            finally { FullVerify = false; Interlocked.Exchange(ref running, 0); }
             settled.Set();
             Raise();
         });
@@ -160,6 +231,7 @@ class Sync
             return;
         }
         index = Index.Load(Path.Combine(stateDir, "index.tsv"));
+        lock (gate) fresh = !File.Exists(Path.Combine(resDir, "main.swf"));
 
         // What this folder last accepted, re-checked: a file someone edited
         // in .lava/ is no better than one fetched from a stranger.
@@ -185,10 +257,11 @@ class Sync
         Pointer remote = null;
         byte[] remoteDoc = null;
         string why = null;
+        OfflineCause cause = OfflineCause.Refused;
         try
         {
             remoteDoc = Fetch(root + "current.txt?t=" + DateTime.UtcNow.Ticks, 64 * 1024);
-            if (remoteDoc == null) why = "сервер обновлений не ответил";
+            if (remoteDoc == null) { why = "сервер обновлений не ответил"; cause = OfflineCause.Unreachable; }
             else
             {
                 remote = Pointer.Read(resourceKeys, remoteDoc);
@@ -205,8 +278,11 @@ class Sync
         {
             // Nothing new can be trusted. The folder as last accepted is still
             // the game, if every file of it is still what it was.
-            if (!PlayLocal(localM, "Обновления проверить не удалось (" + why + ")"))
+            if (!PlayLocal(localM, cause, "Обновления проверить не удалось (" + why + ")"))
+            {
+                if (cause == OfflineCause.Unreachable) lock (gate) failure = SyncFailure.Network;
                 Move(SyncState.Failed, "Не удалось получить игру с сервера: " + why + ".");
+            }
             return;
         }
 
@@ -215,7 +291,7 @@ class Sync
             if (SelfUpdate(remote)) return;
             // Not a reason to keep anyone out of a game that is installed and
             // whole: the old launcher plays it, and says where the new one is.
-            if (PlayLocal(localM, "Вышла новая версия лаунчера, и поставить её самостоятельно не вышло. Скачайте её с сайта"))
+            if (PlayLocal(localM, OfflineCause.Launcher, "Вышла новая версия лаунчера, и поставить её самостоятельно не вышло. Скачайте её с сайта"))
                 return;
             Move(SyncState.MustUpdate, "Вышла новая версия лаунчера, и поставить её самостоятельно не вышло. Скачайте её с сайта.");
             return;
@@ -236,7 +312,7 @@ class Sync
             }
             catch (ReleaseException e)
             {
-                if (PlayLocal(localM, "Обновление не скачалось (" + e.Message + ")")) return;
+                if (PlayLocal(localM, OfflineCause.Download, "Обновление не скачалось (" + e.Message + ")")) return;
                 throw;
             }
         }
@@ -257,12 +333,36 @@ class Sync
         List<Entry> need = Scan(m, true);
         if (need.Count > 0)
         {
+            long bytes = Bytes(need), free = FreeSpace();
+            lock (gate) { needBytes = bytes; freeBytes = free; }
+            bool ask;
+            lock (gate) ask = fresh && AskFirst && !confirmed;
+            if (ask)
+            {
+                Move(SyncState.Setup, "Установить игру");
+                return;
+            }
+            if (free < bytes + SPARE)
+            {
+                Move(SyncState.NoSpace, "Не хватает места на диске");
+                return;
+            }
+            if (pausing)
+            {
+                Move(SyncState.Paused, "Загрузка приостановлена");
+                return;
+            }
             // Until the first file is put in place the installed release is
             // untouched, and a failed download leaves it playable.
             try { Download(need); }
+            catch (PausedException)
+            {
+                Move(SyncState.Paused, "Загрузка приостановлена");
+                return;
+            }
             catch (Exception e)
             {
-                if (localM != null && localM != m && PlayLocal(localM, "Обновление не скачалось (" + Short(e) + ")")) return;
+                if (localM != null && localM != m && PlayLocal(localM, OfflineCause.Download, "Обновление не скачалось (" + Short(e) + ")")) return;
                 throw;
             }
             Apply(need);
@@ -286,11 +386,11 @@ class Sync
     /// <summary>Play the release this folder last accepted, if it is still
     /// whole: Offline, with why in the note. False if there is none or it
     /// is not whole any more.</summary>
-    bool PlayLocal(Manifest localM, string why)
+    bool PlayLocal(Manifest localM, OfflineCause cause, string why)
     {
         if (localM == null) return false;
         if (Scan(localM, false).Count != 0) return false;
-        lock (gate) manifest = localM;
+        lock (gate) { manifest = localM; offline = cause; }
         SaveIndex();
         Move(SyncState.Offline, why + ". Играем на установленной версии.");
         return true;
@@ -362,6 +462,23 @@ class Sync
         return Path.Combine(resDir, rel.Replace('/', Path.DirectorySeparatorChar));
     }
 
+    // What a download of these entries costs: each blob once, however many
+    // paths share it.
+    static long Bytes(List<Entry> need)
+    {
+        Dictionary<string, long> blobs = new Dictionary<string, long>();
+        foreach (Entry e in need) blobs[e.Sha] = e.Size;
+        long n = 0;
+        foreach (long v in blobs.Values) n += v;
+        return n;
+    }
+
+    long FreeSpace()
+    {
+        try { return new DriveInfo(Path.GetPathRoot(gameDir)).AvailableFreeSpace; }
+        catch { return long.MaxValue; }
+    }
+
     // --- downloading ---------------------------------------------------------------------
 
     void Download(List<Entry> need)
@@ -396,6 +513,7 @@ class Sync
                     lock (qlock)
                     {
                         if (failure != null || queue.Count == 0) return;
+                        if (pausing) { failure = PAUSED; return; }
                         e = queue.Dequeue();
                     }
                     string err = FetchBlob(e);
@@ -412,6 +530,7 @@ class Sync
             workers[i].Start();
         }
         foreach (Thread t in workers) t.Join();
+        if (failure == PAUSED) throw new PausedException();
         if (failure != null) throw new ReleaseException(failure);
     }
 
@@ -439,8 +558,13 @@ class Sync
         {
             if (attempt > 0) Thread.Sleep(1000 * attempt);
             last = FetchToFile(BlobUrl(e.Sha), Staged(e.Sha), e.Size, e.Sha, true);
-            if (last == null) return null;
+            if (last == null || last == PAUSED) return last;
         }
+        // The kind of the last try is the kind of the failure: a file that
+        // keeps arriving with the wrong bytes, or the wrong number of them,
+        // is not a dead line.
+        bool wrong = last == HASH_MISMATCH || last == TOO_LONG || last == TOO_SHORT;
+        lock (gate) failure = wrong ? SyncFailure.Corrupt : SyncFailure.Network;
         return "не удалось скачать " + e.Path + ": " + last;
     }
 
@@ -463,14 +587,19 @@ class Sync
                 while ((n = s.Read(buf, 0, buf.Length)) > 0)
                 {
                     got += n;
-                    if (got > size) return "файл длиннее обещанного";
+                    if (got > size) return TOO_LONG;
                     h.TransformBlock(buf, 0, n, null, 0);
                     fo.Write(buf, 0, n);
                     if (count) { lock (gate) doneBytes += n; Tick(); }
+                    if (count && pausing)
+                    {
+                        lock (gate) doneBytes -= got;
+                        return PAUSED;
+                    }
                 }
                 h.TransformFinalBlock(buf, 0, 0);
-                if (got != size) return "файл короче обещанного";
-                if (Hex.Encode(h.Hash) != sha) return "файл не сошёлся по хэшу";
+                if (got != size) return TOO_SHORT;
+                if (Hex.Encode(h.Hash) != sha) return HASH_MISMATCH;
             }
             if (File.Exists(path)) File.Delete(path);
             File.Move(part, path);
@@ -805,6 +934,9 @@ class Sync
         return m.Length > 160 ? m.Substring(0, 160) + "…" : m;
     }
 }
+
+// A download stopped by Sync.Pause(): not a failure, a state.
+class PausedException : Exception { }
 
 // What the launcher has hashed: path, size, modification time and sha256,
 // and whether that sha256 was a release's. A file whose size and time are

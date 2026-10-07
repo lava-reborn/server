@@ -33,7 +33,10 @@ param(
   [string]$Port = "9775",
   [string]$Site = "https://lava-reborn.ru",
   [string]$RegisterUrl = "",
-  [string]$LostPasswordUrl = "",
+  [string]$WikiUrl = "",
+  [string]$CabinetUrl = "",
+  [string]$ForumUrl = "https://forum.lava-reborn.ru/",
+  [string]$NewsUrl = "https://forum.lava-reborn.ru/forum/1-novosti",
   [string]$ResourceKeys = "",
   [string]$LauncherKeys = "",
   [string]$SignKey = "",
@@ -50,8 +53,13 @@ $repo = Split-Path -Parent $here
 # player reads -- window, taskbar, Explorer details, SmartScreen -- is set by
 # AssemblyTitle in Launcher.cs, and that one does say "Lava Reborn".
 if (-not $Out) { $Out = Join-Path $repo "dist\LavaReborn.exe" }
+# The links in the window follow the site's own map: /register, /wiki and
+# /cabinet are its pages, the forum and the patch notes topic live on the
+# forum. A forgotten password has no page: the window explains in place
+# that the administrator issues a new one.
 if (-not $RegisterUrl) { $RegisterUrl = "$Site/register" }
-if (-not $LostPasswordUrl) { $LostPasswordUrl = "$Site/" }
+if (-not $WikiUrl) { $WikiUrl = "$Site/wiki" }
+if (-not $CabinetUrl) { $CabinetUrl = "$Site/cabinet" }
 if (-not $ResourceKeys) { $ResourceKeys = Join-Path $repo "client\keys\resource.keys" }
 if (-not $LauncherKeys) { $LauncherKeys = Join-Path $repo "client\keys\launcher.keys" }
 
@@ -65,6 +73,10 @@ if (-not (Test-Path $projector)) {
 
 $hero = Join-Path $here "assets\hero.jpg"
 if (-not (Test-Path $hero)) { throw "Window artwork not found at $hero" }
+# The wordmark, drawn at 338x121 on the artwork and 94x34 on the title bar;
+# the file is three times the larger of those, for high-dpi screens.
+$logo = Join-Path $here "assets\logo.png"
+if (-not (Test-Path $logo)) { throw "Logo not found at $logo" }
 
 # The film that scales the game, opt-in with LAVA_SCALE=1, and its unscaled
 # twin, opt-in with LAVA_PLAIN=1; both carry the ClanInspector mend. Built by
@@ -152,7 +164,8 @@ $fileVersion = "{0}.{1}.{2}.{3}" -f $buildNo, $now.Year, ($now.Month * 100 + $no
 $src = Get-Content (Join-Path $here "Launcher.cs") -Raw -Encoding UTF8
 $src = $src.Replace("@HOST@", $ServerHost).Replace("@PORT@", $Port)
 $src = $src.Replace("@VERSION@", $version).Replace("@FILEVERSION@", $fileVersion)
-$src = $src.Replace("@REGISTER@", $RegisterUrl).Replace("@LOST@", $LostPasswordUrl)
+$src = $src.Replace("@REGISTER@", $RegisterUrl).Replace("@WIKI@", $WikiUrl)
+$src = $src.Replace("@CABINET@", $CabinetUrl).Replace("@FORUM@", $ForumUrl).Replace("@NEWS@", $NewsUrl)
 $src = $src.Replace("@BUILD@", $buildNo)
 $src = $src.Replace("@RESOURCE_KEYS@", $resLits).Replace("@LAUNCHER_KEYS@", $lnLits)
 # Where releases are published. Trailing slash trimmed here rather than in the
@@ -165,7 +178,11 @@ $gen = Join-Path $build "Launcher.generated.cs"
 $sources = @(
   (Join-Path $here "Theme.cs"),
   (Join-Path $here "Controls.cs"),
-  (Join-Path $here "LoginForm.cs"),
+  (Join-Path $here "Icons.cs"),
+  (Join-Path $here "Panels.cs"),
+  (Join-Path $here "MainForm.cs"),
+  (Join-Path $here "Dialogs.cs"),
+  (Join-Path $here "Prefs.cs"),
   (Join-Path $here "Notice.cs"),
   (Join-Path $here "Creds.cs"),
   (Join-Path $here "GameProbe.cs"),
@@ -185,6 +202,7 @@ Write-Host "==> compile"
   "/win32icon:$icon" `
   "/resource:$projector,fp32_sa.exe" `
   "/resource:$hero,hero.jpg" `
+  "/resource:$logo,logo.png" `
   "/resource:$icon,icon.ico" `
   "/resource:$wrapper,wrapper.swf" `
   "/resource:$plain,wrapper_plain.swf" `

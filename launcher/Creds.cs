@@ -40,14 +40,18 @@ static class Creds
     // it is the whole credential. So it goes through DPAPI under the current
     // user -- another account on the same machine cannot read it back, and it
     // is useless on any other machine.
-    public static void Save(string login, string hash)
+    //
+    // The character's name rides along as a third line, in the clear: it is
+    // what the account card shows before the server has been asked again,
+    // and it is no more secret than the login above it.
+    public static void Save(string login, string hash, string name)
     {
         try
         {
             byte[] blob = ProtectedData.Protect(Encoding.UTF8.GetBytes(hash), null,
                                                 DataProtectionScope.CurrentUser);
-            File.WriteAllText(Path(), login + "\n" + Convert.ToBase64String(blob),
-                              new UTF8Encoding(false));
+            File.WriteAllText(Path(), login + "\n" + Convert.ToBase64String(blob) +
+                              "\n" + (name ?? ""), new UTF8Encoding(false));
         }
         catch { /* not being able to remember is not a reason to not play */ }
     }
@@ -58,10 +62,12 @@ static class Creds
         catch { }
     }
 
-    // Returns the saved login, or null. The digest comes back through hash.
-    public static string Load(out string hash)
+    // Returns the saved login, or null. The digest comes back through hash,
+    // the character's name (possibly empty) through name.
+    public static string Load(out string hash, out string name)
     {
         hash = null;
+        name = "";
         try
         {
             string p = Path();
@@ -71,6 +77,7 @@ static class Creds
             byte[] blob = Convert.FromBase64String(lines[1].Trim());
             hash = Encoding.UTF8.GetString(
                 ProtectedData.Unprotect(blob, null, DataProtectionScope.CurrentUser));
+            if (lines.Length > 2) name = lines[2].Trim();
             return lines[0].Trim();
         }
         catch

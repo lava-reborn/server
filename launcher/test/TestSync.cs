@@ -224,20 +224,24 @@ static class TestSync
         s = Start(game, 99, null, false);
         Check("stranger's pointer: not taken, the installed release plays", s.State, SyncState.Offline);
         Check("stranger's pointer: the note says why", s.Note.Contains("подписи"), true);
+        Check("stranger's pointer: named as refused", s.Cause, OfflineCause.Refused);
         Check("stranger's pointer: nothing downloaded", web.StoreHits, 0);
 
         web.Root = Served("r1again");
         s = Start(game, 99, null, false);
         Check("an older release after a newer one: not taken", s.State, SyncState.Offline);
         Check("an older release: the files stay release 2's", SameFiles(game, "v2"), true);
+        Check("an older release: named as refused", s.Cause, OfflineCause.Refused);
 
         web.Root = null;
         s = Start(game, 99, null, false);
         Check("no server: the installed release plays", s.State, SyncState.Offline);
+        Check("no server: named as unreachable", s.Cause, OfflineCause.Unreachable);
 
         string fresh = Fresh("nothing");
         s = Start(fresh, 99, null, false);
         Check("no server and nothing installed: cannot play", s.State, SyncState.Failed);
+        Check("no server and nothing installed: named as the network", s.Failure, SyncFailure.Network);
 
         string g2 = Fresh("badblob");
         web.Root = Served("r1");
@@ -246,9 +250,61 @@ static class TestSync
         s = Start(g2, 99, null, false);
         Check("a store file that is not what the release says: the installed release plays", s.State, SyncState.Offline);
         Check("a store file that is not what the release says: nothing half-applied", SameFiles(g2, "v1"), true);
+        Check("a store file that is not what the release says: named as a failed download", s.Cause, OfflineCause.Download);
         string g5 = Fresh("badblob-fresh");
         s = Start(g5, 99, null, false);
         Check("a store file that is not what the release says, nothing installed: failed", s.State, SyncState.Failed);
+        Check("a store file that is not what the release says: named as corrupt", s.Failure, SyncFailure.Corrupt);
+        s = Start(Fresh("nothing-kind"), 99, null, false);
+        web.Root = Served("r1");
+
+        // --- asking before a first install (the window's "Начать загрузку") -------------------
+        string g6 = Fresh("ask");
+        s = new Sync(g6, web.Url + "download/client/", resource, launcher, 99, null);
+        s.AskFirst = true;
+        web.StoreHits = 0;
+        s.Start();
+        if (!s.Wait(120000)) throw new Exception("sync did not settle");
+        Check("ask first: stops at setup", s.State, SyncState.Setup);
+        Check("ask first: nothing downloaded", web.StoreHits, 0);
+        Check("ask first: it is an install", s.Fresh, true);
+        Check("ask first: the size is known", s.NeedBytes > 0, true);
+        s.Begin();
+        Thread.Sleep(50);
+        if (!s.Wait(120000)) throw new Exception("sync did not settle");
+        Check("ask first, begun: ready", s.State, SyncState.Ready);
+        Check("ask first, begun: release 1's files", SameFiles(g6, "v1"), true);
+        s = new Sync(g6, web.Url + "download/client/", resource, launcher, 99, null);
+        s.AskFirst = true;
+        s.Start();
+        s.Wait(120000);
+        Check("ask first, installed: no question the next time", s.State, SyncState.Ready);
+
+        // --- a pause the moment the download starts, and going on --------------------------------
+        string g7 = Fresh("pause");
+        Sync ps = new Sync(g7, web.Url + "download/client/", resource, launcher, 99, null);
+        ps.Changed = delegate { if (ps.State == SyncState.Downloading) ps.Pause(); };
+        web.StoreHits = 0;
+        ps.Start();
+        if (!ps.Wait(120000)) throw new Exception("sync did not settle");
+        Check("pause: paused", ps.State, SyncState.Paused);
+        Check("pause: not playable", ps.Playable, false);
+        ps.Changed = null;
+        ps.Start();
+        Thread.Sleep(50);
+        if (!ps.Wait(120000)) throw new Exception("sync did not settle");
+        Check("pause, going on: ready", ps.State, SyncState.Ready);
+        Check("pause, going on: release 1's files", SameFiles(g7, "v1"), true);
+
+        // --- held before anything is fetched (the window moving the folder) ----------------------
+        string g8 = Fresh("hold");
+        Sync hs = new Sync(g8, web.Url + "download/client/", resource, launcher, 99, null);
+        web.StoreHits = 0;
+        hs.Start();
+        hs.Hold();
+        if (!hs.Wait(120000)) throw new Exception("sync did not settle");
+        Check("hold: stops before the download", hs.State, SyncState.Paused);
+        Check("hold: nothing downloaded", web.StoreHits, 0);
 
         // --- a new launcher ----------------------------------------------------------------------
         string g3 = Fresh("selfupdate");

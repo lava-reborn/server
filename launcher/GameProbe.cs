@@ -15,6 +15,14 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 
+// One character of the account, as persInfo lists it: the card shows the
+// first. Level 0 and an empty place are "not said" (an older server).
+class Pers
+{
+    public string Name = "", Place = "";
+    public int Level;
+}
+
 enum Verdict
 {
     Ok,
@@ -106,6 +114,16 @@ static class GameProbe
 
     public static Verdict Check(string host, int port, string hash)
     {
+        Pers[] chars;
+        return Check(host, port, hash, out chars);
+    }
+
+    // The same question, and on a yes the account's characters as well: the
+    // server follows cmdAck with one persInfo per character and then
+    // accountInfo, unasked, and the card in the window shows the first.
+    public static Verdict Check(string host, int port, string hash, out Pers[] chars)
+    {
+        chars = new Pers[0];
         TcpClient c = null;
         try
         {
@@ -133,6 +151,7 @@ static class GameProbe
 
                 string res;
                 if (!Params(frame).TryGetValue("res", out res)) return Verdict.Unexpected;
+                if (res == "0") chars = Characters(s);
                 try { Send(s, "logout;"); } catch { }
                 switch (res)
                 {
@@ -148,5 +167,65 @@ static class GameProbe
         catch (SocketException) { return Verdict.Unreachable; }
         catch { return Verdict.Unexpected; }
         finally { if (c != null) try { c.Close(); } catch { } }
+    }
+
+    // Read on to accountInfo, which closes the account state, and keep the
+    // persInfo frames on the way: name, level and the place the character
+    // comes back to (server.py, Session.login). Strings on the wire are
+    // wrapped in @...@ and escaped. Any trouble here is not a failed login:
+    // the card is a nicety.
+    static Pers[] Characters(NetworkStream s)
+    {
+        List<Pers> chars = new List<Pers>();
+        try
+        {
+            s.ReadTimeout = 3000;
+            for (int i = 0; i < 32; i++)
+            {
+                string frame = Read(s);
+                if (frame == null) break;
+                string name = Name(frame);
+                if (name == "accountInfo") break;
+                if (name != "persInfo") continue;
+                Dictionary<string, string> p = Params(frame);
+                string v;
+                if (!p.TryGetValue("name", out v)) continue;
+                Pers c = new Pers();
+                c.Name = Text(v);
+                if (c.Name.Length == 0) continue;
+                if (p.TryGetValue("level", out v)) int.TryParse(v, out c.Level);
+                if (p.TryGetValue("loc", out v)) c.Place = Text(v);
+                chars.Add(c);
+            }
+        }
+        catch { }
+        return chars.ToArray();
+    }
+
+    // A string off the wire: @...@ taken off and XMLString.escape undone, in
+    // one left-to-right pass, as protocol.unescape does it.
+    static readonly string[,] ESCAPES = {
+        { "%25", "%" }, { "%3C", "<" }, { "%3E", ">" }, { "%27", "'" },
+        { "%5C", "\"" }, { "%26", "&" }, { "%40", "@" } };
+
+    static string Text(string v)
+    {
+        if (v.Length >= 2 && v[0] == '@' && v[v.Length - 1] == '@') v = v.Substring(1, v.Length - 2);
+        StringBuilder b = new StringBuilder(v.Length);
+        for (int i = 0; i < v.Length; i++)
+        {
+            bool done = false;
+            if (v[i] == '%' && i + 3 <= v.Length)
+                for (int k = 0; k < ESCAPES.GetLength(0); k++)
+                    if (string.CompareOrdinal(v, i, ESCAPES[k, 0], 0, 3) == 0)
+                    {
+                        b.Append(ESCAPES[k, 1]);
+                        i += 2;
+                        done = true;
+                        break;
+                    }
+            if (!done) b.Append(v[i]);
+        }
+        return b.ToString().Trim();
     }
 }
