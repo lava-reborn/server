@@ -564,8 +564,8 @@ for _ in $(seq 1 300); do
 done
 sleep 3
 # What the panel's button queues, from inside the container.
-docker exec cicdtest-game python3 stopwarn.py cancel --by test > "$T/w2.cancel" 2>&1
-check "w2: the countdown is called off" "$(cat "$T/w2.cancel" | tail -n 1)" "- 1"
+docker exec cicdtest-game python3 stopwarn.py cancel --by test > "$T/w2.cancel" 2> "$T/w2.cancel.err"
+check "w2: the countdown is called off" "$(cat "$T/w2.cancel")" "- 1"
 wait $GP
 check "w2 fails with status 1" "$?" 1
 grep -E '^(result|state|rollback|warning):' "$T/w2.out" | sed 's/^/    /'
