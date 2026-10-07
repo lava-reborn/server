@@ -285,6 +285,27 @@ def default_character():
     return {"name": "Бродяга", "sex": sex, "res": res}
 
 
+def saved_place(c):
+    """The title of the location a saved character would wake up in, or ""
+    when nothing resolves.
+
+    The launcher's account card shows it beside the level (persInfo;loc).
+    It is the location file's title, what the client writes over its own
+    minimap (Location.locationName, less the cell). Resolved the way
+    Session.restore does: one that left on the map is in the location of
+    its cell, one never placed is at home.
+    """
+    loc_id = c["loc"]
+    if c["on_map"] and c["gx"] is not None and c["gy"] is not None:
+        loc_id = travel.destination(int(round(c["gx"])), int(round(c["gy"])))
+    if loc_id is None:
+        loc_id = travel.home(c, (START_LOC, GLOBAL_X, GLOBAL_Y))[0]
+    try:
+        return world.location(loc_id).title
+    except (KeyError, OSError):
+        return ""
+
+
 # The map is a plain grid (world.MAP_X by world.MAP_Y) and the client labels
 # its cells from res/database/locations.xml on its own. Every cell can be
 # entered: 262 of them hold a settlement recovered into data/settlements.json,
@@ -654,9 +675,14 @@ class Session:
             # Master.lenter and Master.gmap check to open the regeneration
             # window once the character is standing somewhere. A character
             # that logged out dead must come back to it.
+            # level and loc are the launcher's, for its account card
+            # (GameProbe.Characters). The client copies the five fields it
+            # knows by name out of obj.param and never looks at the rest.
             self.send("persInfo", num=pers["slot"], name=Str(pers["name"]),
                       sex=pers["sex"], death=int(bool(pers["death"])),
-                      res=Str(str(pers["res"])))
+                      res=Str(str(pers["res"])),
+                      level=int(pers["level"] or 0),
+                      loc=Str(saved_place(pers)))
         # can_create must be falsy once the account has someone, or the client
         # opens the creation screen instead of selecting: PersGenerator acts on
         # the flag alone and never looks at how many characters arrived.
