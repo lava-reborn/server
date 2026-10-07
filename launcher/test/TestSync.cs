@@ -217,6 +217,21 @@ static class TestSync
               StatusLine(ls.Port, "/exe/lavaclient/loaduser/?ajax", "evil.example:" + ls.Port), "HTTP/1.1 403 Forbidden");
         Check("serve: the same request naming this machine is answered",
               StatusLine(ls.Port, "/exe/lavaclient/loaduser/?ajax", "127.0.0.1:" + ls.Port), "HTTP/1.1 200 OK");
+
+        // The client's goodbye (tools/widescreen.py, patch 10): a form posted
+        // as the patched main.swf posts it, UTF-8 percent-encoded.
+        Goodbye heard = null;
+        ls.Bye += delegate(Goodbye g) { heard = g; };
+        string form = "why=kick&admin=Lava%20Reborn&seconds=0&reason=" +
+                      Uri.EscapeDataString("Пароль аккаунта сменён.");
+        Check("bye: answered", Post("http://127.0.0.1:" + ls.Port + "/exe/lavaclient/bye", form), "ok=1");
+        Check("bye: heard as a kick, with who and why",
+              heard != null ? heard.Why + "|" + heard.Admin + "|" + heard.Seconds + "|" + heard.Reason : null,
+              "kick|Lava Reborn|0|Пароль аккаунта сменён.");
+        Check("bye: a client sending its code page is read too (cp1251)",
+              Goodbye.Parse(Encoding.ASCII.GetBytes("why=kick&reason=%CF%E0%F0%EE%EB%FC")).Reason, "Пароль");
+        Check("bye: anything but a kick is a lost connection",
+              Goodbye.Parse(Encoding.ASCII.GetBytes("why=whatever")).Why, "lost");
         ls.Stop();
 
         // --- what is refused -------------------------------------------------------------------
@@ -366,6 +381,22 @@ static class TestSync
             while ((ch = s.ReadByte()) >= 0 && ch != '\n') sb.Append((char)ch);
             return sb.ToString().TrimEnd('\r');
         }
+    }
+
+    static string Post(string url, string form)
+    {
+        try
+        {
+            HttpWebRequest rq = (HttpWebRequest)WebRequest.Create(url);
+            rq.Method = "POST";
+            rq.ContentType = "application/x-www-form-urlencoded";
+            rq.Timeout = 30000;
+            byte[] b = Encoding.ASCII.GetBytes(form);
+            using (Stream st = rq.GetRequestStream()) st.Write(b, 0, b.Length);
+            using (WebResponse rs = rq.GetResponse())
+            using (StreamReader r = new StreamReader(rs.GetResponseStream())) return r.ReadToEnd();
+        }
+        catch (WebException) { return null; }
     }
 
     static byte[] Get(string url)

@@ -132,6 +132,27 @@ Client patches applied without altering the original artwork:
    «Форум» on the bottom bar (goToForum) and in the help menu
    (HelpDropList.forum) open FORUM_URL.
 
+   The right-click menu: the first frame hides Flash's own items and puts
+   one of its own there, «www.lava-online.ru», which opens the old site.
+   The injected code runs after it in the same frame and empties
+   _level0.menu.customItems; the built-in items stay hidden.
+
+10. No old login screen after the game. When the connection closes -- a
+   kick from the panel or a reset password, the server restarting, the
+   network -- Master.onClose runs finish(), and finish() ends in
+   SceneShifter.enterScene(): the original's login frame, with fields for a
+   password the launcher has already given. Started by the launcher (the
+   film comes from its own server, LAUNCHER_ORIGIN), the client instead
+   tells it why -- BYE_URL, why=kick with the panel's admin, seconds and
+   reason as Session.kickban received them, or why=lost -- and closes
+   (fscommand quit, BYE_QUIT_AFTER at the latest, whatever the launcher
+   answers). The launcher, waiting on the projector, comes back and says
+   it (launcher/Launcher.cs, Goodbye). The text goes as UTF-8: the client
+   runs with System.useCodepage on, which would send the system's code
+   page, so it is switched off around the one sendAndLoad. Anywhere else
+   -- a projector opened by hand, a browser -- the original's onClose runs
+   as before, since its login frame is all there is to go back to.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -269,7 +290,7 @@ OPS = {
     "getvar": 0x1C, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
     "add2": 0x47, "less2": 0x48, "equals2": 0x49, "getmember": 0x4E,
     "setmember": 0x4F, "callmethod": 0x52, "newmethod": 0x53,
-    "initarray": 0x42,
+    "initarray": 0x42, "newobject": 0x40,
 }
 
 
@@ -324,6 +345,14 @@ class Asm:
 
     def iftrue(self, label):
         self.parts.append(("branch", 0x9D, label))
+        return self
+
+    def geturl(self, url, target):
+        """GetURL (0x83): url and target, each NUL-terminated -- the form
+        the first frame's own «www.lava-online.ru» item uses.
+        fscommand(x) is GetURL("FSCommand:" + x, "")."""
+        p = url.encode("utf-8") + b"\0" + target.encode("utf-8") + b"\0"
+        self.parts.append(b"\x83" + struct.pack("<H", len(p)) + p)
         return self
 
     def function(self, params, body):
@@ -586,6 +615,64 @@ def fn_open_forum(close_menu=False):
     if close_menu:
         call_method(a, "this", "openClose", 0)
     a.push("_blank", FORUM_URL, 2).var("this").push("getURL").op("callmethod").op("pop")
+    return a
+
+
+# The launcher's own web server, which the film comes from when the launcher
+# started it (launcher/LocalServer.cs), and where it hears the client's last
+# word (patch 10).
+LAUNCHER_ORIGIN = "http://127.0.0.1:"
+BYE_URL = "/exe/lavaclient/bye"
+BYE_QUIT_AFTER = 3000
+
+
+def fn_bye_quit():
+    """fscommand("quit"): the projector closes, and the launcher waiting on
+    it comes back."""
+    a = Asm()
+    a.geturl("FSCommand:quit", "")
+    return a
+
+
+def fn_bye_kick():
+    """Session.kickban(obj): what the panel said is kept for the launcher
+    (fn_bye_close), then the original puts up its window as before."""
+    a = Asm()
+    a.var("_global").push("__byeKick").var("obj").member("param").op("setmember")
+    a.var("obj").push(1).var("this").push("__byeKickOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_bye_close():
+    """Master.onClose(): under the launcher, tell it why and close; else the
+    original (back to the login frame)."""
+    a = Asm()
+    a.push(LAUNCHER_ORIGIN, 1).var("_root").member("_url").push("indexOf").op("callmethod")
+    a.push(0).op("equals2").iftrue("ours")
+    a.push(0).var("this").push("__byeOrig").op("callmethod").op("pop")
+    a.push(True).iftrue("out")
+    a.label("ours")
+    # Once: a socket that closes twice says goodbye once.
+    a.var("_global").member("__byeSent").iftrue("out")
+    a.var("_global").push("__byeSent", True).op("setmember")
+    a.push("__byeLv").push(0, "LoadVars").op("newobject").op("definelocal")
+    a.var("_global").member("__byeKick").push(UNDEF).op("equals2").iftrue("lost")
+    a.var("__byeLv").push("why", "kick").op("setmember")
+    for field in ("admin", "seconds", "reason"):
+        a.var("__byeLv").push(field).var("_global").member("__byeKick", field).op("setmember")
+    a.push(True).iftrue("send")
+    a.label("lost")
+    a.var("__byeLv").push("why", "lost").op("setmember")
+    a.label("send")
+    a.var("__byeLv").push("onLoad").var("_global").member("__byeQuit").op("setmember")
+    a.var("System").push("useCodepage", False).op("setmember")
+    a.push("POST").var("__byeLv").push(BYE_URL, 3).var("__byeLv").push("sendAndLoad")
+    a.op("callmethod").op("pop")
+    a.var("System").push("useCodepage", True).op("setmember")
+    # Closed whatever the launcher answers, or if it does not.
+    a.push(BYE_QUIT_AFTER).var("_global").member("__byeQuit").var("_global")
+    new(a, ("lol", "utils"), "Timeout", 3).op("pop")
+    a.label("out")
     return a
 
 
@@ -1459,6 +1546,7 @@ def injected():
             ("__onlineOver", lambda: fn_online_hover(True), ()),
             ("__onlineOut", lambda: fn_online_hover(False), ()),
             ("__onlineShow", fn_online_show, ("ui", "y")),
+            ("__byeQuit", fn_bye_quit, ()),
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
@@ -1498,6 +1586,10 @@ def injected():
          ("mess",), fn_online_send()),
         (("server", "XMLConnection"), "sendNotification", "__onlineNotifyOrig",
          ("cmd",), fn_online_notification()),
+        (("core", "Session"), "kickban", "__byeKickOrig",
+         ("obj",), fn_bye_kick()),
+        (("core", "Master"), "onClose", "__byeOrig",
+         (), fn_bye_close()),
     )
     for method in ("increase_skill_func", "increase_level_func",
                    "increase_spec_func", "increase_spec_level_func"):
@@ -1533,6 +1625,9 @@ def injected():
     a.var("__wideShifter").push("__wideSceneOrig").var("__wideShifter").member("locationScene").op("setmember")
     a.var("__wideShifter").push("locationScene").function((), fn_location_scene()).op("setmember")
     a.label("scene_done")
+    # The right-click menu without the old site's item (patch 9): the first
+    # frame set it up before this code runs.
+    a.var("_level0").member("menu").push("customItems", 0).op("initarray").op("setmember")
     a.op("end")
     return a.assemble()
 
@@ -1654,7 +1749,7 @@ def inject(tags):
 def disassemble(code):
     """Opcode names in order, descending into function bodies."""
     names = {v: k for k, v in OPS.items()}
-    names.update({0x96: "push", 0x9B: "function", 0x9D: "iftrue"})
+    names.update({0x96: "push", 0x9B: "function", 0x9D: "iftrue", 0x83: "geturl"})
     out, i = [], 0
     while i < len(code):
         op = code[i]

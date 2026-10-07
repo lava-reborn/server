@@ -40,6 +40,10 @@ def validate(code):
         if op == 0x9D:
             delta, = struct.unpack_from("<h", code, at)
             targets.append(end + delta)
+        elif op == 0x83:
+            # GetURL: url and target, two NUL-terminated strings, no more.
+            if code[at:end].count(b"\0") != 2 or code[end - 1] != 0:
+                errors.append("malformed GetURL")
         elif op == 0x9B:
             body_size, = struct.unpack_from("<H", code, end - 2)
             errors.extend(validate(code[end:end + body_size]))
@@ -71,7 +75,8 @@ WIRED = ("__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__siteForumOrig", "__siteTooltipOrig",       # the old site's links
          "__progressInfoOrig", "__progress_increase_spec_level_func",
          "__onlineSendOrig", "__onlineNotifyOrig",     # online players
-         "__wideCreateOrig", "__wideSceneOrig")        # library, location mask
+         "__wideCreateOrig", "__wideSceneOrig",        # library, location mask
+         "__byeKickOrig", "__byeOrig")                 # no old login screen
 _source = open(w.__file__, encoding="utf-8").read()
 check("every fn_* patch body in widescreen.py is used",
       [name for name in re.findall(r"^def (fn_\w+)\(", _source, re.M)

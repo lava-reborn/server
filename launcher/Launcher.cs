@@ -1162,6 +1162,7 @@ static class Launcher
         server = new LocalServer(sync, film, HOST, PORT);
         server.Hash = hash;
         server.WorldLoading += delegate { Start(Settle); };
+        server.Bye += delegate(Goodbye g) { lastBye = g; };
         server.Start();
 
         // Hidden, and kept off screen by GameWindow until there is a world in
@@ -1328,6 +1329,33 @@ static class Launcher
         // A session moves the character on: a new level, another place.
         if (signedIn) Start(Recheck);
         Render();
+        Goodbye g = lastBye;
+        lastBye = null;
+        if (g != null) SayBye(g);
+    }
+
+    // Why the game closed, said here instead of in the original's login frame
+    // (tools/widescreen.py, patch 10).
+    static volatile Goodbye lastBye;
+
+    static void SayBye(Goodbye g)
+    {
+        if (g.Why == "kick")
+        {
+            List<string> lines = new List<string>();
+            lines.Add("Администратор " + (g.Admin.Length > 0 ? g.Admin : "игры") +
+                      " ведёт работу над вашим аккаунтом.");
+            if (g.Seconds > 0)
+                lines.Add("Аккаунт будет недоступен " + g.Seconds + " с.");
+            if (g.Reason.Length > 0) lines.Add(g.Reason);
+            new TextDialog("Вас отключили от игры", lines.ToArray(), null, null).Open(form);
+        }
+        else
+        {
+            new TextDialog("Соединение прервано", new[] {
+                "Связь с сервером игры прервалась. Если сервер перезапускается, " +
+                "через минуту можно войти снова." }, null, null).Open(form);
+        }
     }
     // The launcher sits in the tray for as long as it is open. A click
     // brings up the game while it runs and the launcher otherwise; the menu

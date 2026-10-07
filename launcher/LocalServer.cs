@@ -52,6 +52,12 @@ class LocalServer
     public event Action WorldLoading;
     int worldSignalled;
 
+    // Raised when the client says why it is closing instead of going back to
+    // the original's login frame (tools/widescreen.py, patch 10): kicked by
+    // the panel or the connection lost. The launcher says it once the game
+    // is gone.
+    public event Action<Goodbye> Bye;
+
     // When the client last asked for anything. Quiet here means it has
     // finished putting the world together, which is a better moment to show
     // the game than any number of seconds guessed in advance.
@@ -182,12 +188,15 @@ class LocalServer
         // request on this connection starts mid-sentence. The client posts
         // for most XML: LoadVars.sendAndLoad and XML.sendAndLoad are both
         // POST, and real Flash downgrades to GET only when there is nothing
-        // to send. Method therefore decides nothing here.
+        // to send. Method therefore decides nothing here. The first few
+        // kilobytes are kept: the client's goodbye comes as a form.
+        MemoryStream kept = new MemoryStream();
         while (length > 0)
         {
             byte[] skip = new byte[Math.Min(length, 8192)];
             int n = inp.Read(skip, 0, skip.Length);
             if (n <= 0) break;
+            if (kept.Length < 4096) kept.Write(skip, 0, (int)Math.Min(n, 4096 - kept.Length));
             length -= n;
         }
 
@@ -198,14 +207,24 @@ class LocalServer
         try { path = Uri.UnescapeDataString(path); }
         catch { }
 
-        Route(method, path, query, outp, keep);
+        Route(method, path, query, kept.ToArray(), outp, keep);
         return keep;
     }
 
-    void Route(string method, string path, string query, Stream outp, bool keep)
+    void Route(string method, string path, string query, byte[] form, Stream outp, bool keep)
     {
         LastRequest = Environment.TickCount;
         Log.Hit(method, path, query);
+
+        if (path.StartsWith("/exe/lavaclient/bye", StringComparison.OrdinalIgnoreCase))
+        {
+            Goodbye g = Goodbye.Parse(form.Length > 0 ? form : Encoding.ASCII.GetBytes(query));
+            Log.Miss("клиент закрывается: " + g.Why);
+            Action<Goodbye> f = Bye;
+            if (f != null) try { f(g); } catch { }
+            Send(outp, 200, "application/x-www-form-urlencoded", Encoding.UTF8.GetBytes("ok=1"), keep);
+            return;
+        }
 
         if (path.StartsWith("/exe/lavaclient/loaduser", StringComparison.OrdinalIgnoreCase))
         {
@@ -478,3 +497,53 @@ static class Log
         }
     }
 }
+
+// Why the client closed (LocalServer.Bye): a form the patched main.swf posts
+// from Master.onClose. why is "kick" -- admin, seconds and reason as the
+// panel's kickban carried them -- or "lost". The client sends the text as
+// UTF-8 (it switches System.useCodepage off for this one request); should a
+// player of another build send its code page, cp1251 reads it.
+class Goodbye
+{
+    public string Why = "lost", Admin = "", Reason = "";
+    public int Seconds;
+
+    public static Goodbye Parse(byte[] form)
+    {
+        Goodbye g = new Goodbye();
+        foreach (string pair in Encoding.ASCII.GetString(form).Split('&'))
+        {
+            int eq = pair.IndexOf('=');
+            if (eq <= 0) continue;
+            string key = pair.Substring(0, eq);
+            string value = Text(pair.Substring(eq + 1));
+            if (key == "why") g.Why = value == "kick" ? "kick" : "lost";
+            else if (key == "admin") g.Admin = value;
+            else if (key == "reason") g.Reason = value;
+            else if (key == "seconds") int.TryParse(value, out g.Seconds);
+        }
+        return g;
+    }
+
+    // Percent-decoded to bytes first, then read: strict UTF-8, else cp1251.
+    static string Text(string raw)
+    {
+        List<byte> bytes = new List<byte>();
+        for (int i = 0; i < raw.Length; i++)
+        {
+            char c = raw[i];
+            if (c == '+') bytes.Add((byte)' ');
+            else if (c == '%' && i + 2 < raw.Length &&
+                     Uri.IsHexDigit(raw[i + 1]) && Uri.IsHexDigit(raw[i + 2]))
+            {
+                bytes.Add(Convert.ToByte(raw.Substring(i + 1, 2), 16));
+                i += 2;
+            }
+            else bytes.Add((byte)c);
+        }
+        byte[] b = bytes.ToArray();
+        try { return new UTF8Encoding(false, true).GetString(b).Trim(); }
+        catch (DecoderFallbackException) { return Encoding.GetEncoding(1251).GetString(b).Trim(); }
+    }
+}
+
