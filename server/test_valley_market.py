@@ -275,6 +275,12 @@ try:
     check("  ..the old chip off a colonist only for a quest that wants it, about one in four",
           (mobs.quest_roll(SHOOTER, set(), random.Random(0)),
            80 <= sum(1 for g in got if (CHIP, 1) in g) <= 120), ([], True))
+    rng = random.Random(64)
+    got = [mobs.quest_roll(BLACK_RAT, {KING}, rng) for _ in range(1000)]
+    check("  ..the rat king off a black rat only for a quest that wants it, one in five"
+          " (issue #64: one in ten left players 50-60 kills without one)",
+          (mobs.quest_roll(BLACK_RAT, set(), random.Random(0)), dict(mobs.quest_table(BLACK_RAT)),
+           150 <= sum(1 for g in got if (KING, 1) in g) <= 250), ([], {KING: 0.2}, True))
     for carrier in (SHOOTER, STORMER):
         rng = random.Random(51)
         plain = [mobs.loot_for(mobs.stats(carrier), rng) for _ in range(1000)]
@@ -529,6 +535,34 @@ def char_id():
     row = st.db.execute("SELECT id FROM characters WHERE name = 'Hunter'").fetchone()
     st.close()
     return row["id"]
+
+
+def ground_cells(type_id):
+    """The cells of the bags on the ground that hold a type: the item rows
+    of nobody's (combat.LOOT_OWNER), where drop_loot puts what a corpse
+    held, and the ground table's cell for each (Store.lay_down)."""
+    st = store()
+    rows = st.db.execute(
+        "SELECT g.cell FROM items i JOIN ground g ON g.uniq = i.uniq"
+        " WHERE i.char_id = ? AND i.type_id = ? ORDER BY i.uniq",
+        (combat.LOOT_OWNER, type_id)).fetchall()
+    st.close()
+    return [r["cell"] for r in rows]
+
+
+def alive_frames(frames):
+    """The frames without the userInfo_* of an inhabitant that died among
+    them (lch dead) and has not come back since (lch newUser): what hunt()
+    may still shoot at, so that a corpse is not shot at thirty times."""
+    alive = set()
+    for n, p in frames:
+        if n == "lch" and "newUser" in p:
+            alive.add(p["newUser"])
+        elif n == "lch" and "dead" in p:
+            alive.discard(p["dead"])
+    return [(n, p) for n, p in frames
+            if not (n.startswith("userInfo") and n != "userInfo_Player"
+                    and p.get("id") not in alive)]
 
 
 def owned(cid, slot=inventory.BAG):
@@ -967,9 +1001,32 @@ try:
           (["rp_info", "cmdAck"], [0], 20))
     got, q = take(c, here, KING_Q)
     check("«Крысиный король» taken: no king yet", counts(got, quests.BRING_L_OBJ), [([0], 0)])
-    _, more = give(c, KING)
-    more += c.frames(0.4)
-    check("  ..a king in the bag: complete", counts(more, quests.BRING_L_OBJ), [([1], 1)])
+    # The king is not given: it is shot out of the black rats of the old
+    # adits behind the barn, the way a player gets it, with the quest open
+    # (issue #64: at one in ten a player went 50-60 kills without one; the
+    # roll is honest, so the chance is one in five now). The server's dice
+    # are seeded (LAVA_SEED), so the count of kills is the same every run.
+    got = goto(c, ADITS_LOC)
+    pos = first(got, "lenter").get("pos")
+    kills, wary, deadline = 0, frozenset(), time.time() + 240
+    while not ground_cells(KING) and time.time() < deadline:
+        fight, killed, pos, _fell, wary = hunt(c, alive_frames(got), ADITS_LOC, [BLACK_RAT], pos)
+        got += fight
+        kills += len(killed)
+        if not killed:
+            got += c.frames(2.0)     # the adits shot empty: a rat comes back
+    cells = ground_cells(KING)
+    check("black rats shot in the adits with the quest open until a king falls:"
+          " within twenty-five kills (one in five), the king in one bag on the ground",
+          (1 <= kills <= 25, len(cells)), (True, 1))
+    held, took = loot(c, got, ADITS_LOC, pos, cells[0] if cells else pos, wary)
+    check("  ..the king's bag: the carcass beside the rat's tail; taken, «Крысиный король»"
+          " counts it, complete",
+          ((held or []).count(KING), (held or []).count(TAIL),
+           [p["obj_num"] for p in named(took, "q_di_bring_l_obj") if p["q_id"] == q],
+           counts(took, quests.BRING_L_OBJ)),
+          (1, 1, [[1]], [([1], 1)]))
+    here = inhabitants(goto(c, BARN))
     got = hand_in(c, here, KING_Q, q)
     AFRO += 200
     check("  ..handed in to Хрущ: the king out, two hundred afro, the day's count",

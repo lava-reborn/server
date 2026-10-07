@@ -314,9 +314,9 @@
     "type": 3218,
     "_name": "Крысиный король",
     "tier": "Квестовый",
-    "chance": 0.1,
+    "chance": 0.2,
     "_source": "RECOVERED item and holders: Фермер Хрущ's «Крысиный король», 'Искать Крысиного короля нужно в старых штольнях, где обитают Черные крысы' (texts.xml 59918); the wiki's article of the item names Черная крыса its holder. The black rats (mRat_3, 1019) stand in 643 'Старые штольни.' only, behind the barn's door (data/passages.json)",
-    "_designed": "the chance, 0.10: one king among seventeen rats, a quest of once a day"
+    "_designed": "the chance, 0.20: one king in five rats, a quest of once a day. Was 0.10 (one in seventeen rats, the adits' whole crowd) until 2026-10-07: a player reported 50-60 black rats without a king twice (issue #64); the roll itself was found honest (test_valley_market, in process and on the socket), so the chance was raised, the owner's «одна шкура на ~5 убитых крыс»"
    }
   ],
   "2103": [
