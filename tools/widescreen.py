@@ -126,11 +126,13 @@ Client patches applied without altering the original artwork:
    call one frame later holds. The wrapper repeats it for two frames.
 
 9. The old site's links. «Пополнить счет» (frame_top.gold_btn) opened a
-   profile page on lava-online.ru, which is gone: the button is hidden on
-   both world interfaces, and so is the hint that pointed at it once a
-   session (showTooltip); the «Помощь» hint that followed it comes at once.
-   «Форум» on the bottom bar (goToForum) and in the help menu
-   (HelpDropList.forum) open FORUM_URL.
+   profile page on lava-online.ru, which is gone, and «Помощь» (help_btn,
+   with its blinking helpAlert_mc) dropped a list of the old site's FAQ,
+   rules and forum pages: both buttons are hidden on both world
+   interfaces. So are the two hints that pointed at them once a session
+   (showTooltip, then showHelpTooltip five seconds later): showTooltip only
+   lowers the flag. «Форум» on the bottom bar (goToForum) and in the help
+   menu, should it ever open (HelpDropList.forum), open FORUM_URL.
 
    The right-click menu: the first frame hides Flash's own items and puts
    one of its own there, «www.lava-online.ru», which opens the old site.
@@ -677,12 +679,11 @@ def fn_bye_close():
 
 
 def fn_no_gold_tooltip():
-    """showTooltip without its «Пополнить счет» hint: the help hint at once."""
+    """showTooltip without its hints: «Пополнить счет» and «Помощь» point at
+    buttons that are hidden (fn_frame). The flag still goes down, as the
+    original lowers it, so nothing asks again."""
     a = Asm()
-    a.var("lol").member("core", "SceneShifter", "_ref", "addGoldTooltip_bool").op("not").iftrue("out")
     a.var("lol").member("core", "SceneShifter", "_ref").push("addGoldTooltip_bool", False).op("setmember")
-    call_method(a, "this", "showHelpTooltip", 0)
-    a.label("out")
     return a
 
 
@@ -697,8 +698,10 @@ def fn_frame():
                       ("frame_right", "__wideSide")):
         a.var("h").var("w").var("ui").member(piece).push(3, fn).op("callfunc").op("pop")
     a.var("w").var("ui").push(2, "__onlinePanel").op("callfunc").op("pop")
-    # «Пополнить счет» led to the old site.
+    # «Пополнить счет» and «Помощь» led to the old site.
     a.var("ui").member("frame_top", "gold_btn").push("_visible", False).op("setmember")
+    a.var("ui").member("help_btn").push("_visible", False).op("setmember")
+    a.var("ui").member("helpAlert_mc").push("_visible", False).op("setmember")
     return a
 
 
