@@ -39,11 +39,14 @@ import time
 from urllib.parse import quote
 
 import errlog
-# Before the game's modules, as in server.py: a table that stops this
-# process as it is imported is a crash for the admin panel too (errlog.hook;
+# Before the game's modules, as in server.py: what they warn of as they are
+# imported, and a table that stops this process there, are for the admin
+# panel too. This process prints rather than logs; what does reach logging
+# (the account store's warnings) goes to its LAVA_ERR_LOG, http.err, with
+# the requests that failed and the uncaught exceptions (errlog.install;
 # nothing without LAVA_ERR_LOG).
 if __name__ == "__main__":
-    errlog.hook()
+    errlog.install()
 
 import accounts
 import email_flow
@@ -1205,10 +1208,6 @@ class Server(ThreadingHTTPServer):
 
 
 if __name__ == "__main__":
-    # This process prints rather than logs; what does reach logging (the
-    # account store's warnings) goes to its LAVA_ERR_LOG, http.err, with
-    # the requests that failed and the uncaught exceptions.
-    errlog.install()
     print("res root : %s" % RES_ROOT)
     print("game srv : %s:%s" % (GAME_HOST, GAME_PORT))
     print("http     : http://%s:%d/" % (HTTP_HOST, HTTP_PORT))
@@ -1229,6 +1228,9 @@ if __name__ == "__main__":
     # server/test_http_log.py holds the two to each other). Flushed, so the
     # lines printed before it come out with it and in order.
     print("http serving on %s:%d" % (HTTP_HOST, HTTP_PORT), flush=True)
+    # A request that fails is a record with its traceback, and anybody can
+    # send them: twenty of a kind a minute from here on (errlog.serving).
+    errlog.serving()
     try:
         httpd.serve_forever()
     finally:

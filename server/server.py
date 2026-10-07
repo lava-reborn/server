@@ -24,11 +24,12 @@ import signal
 import time
 
 import errlog
-# Before the game's own modules: they read their tables as they are
-# imported, and one that stops the server there is a crash the admin panel
-# should show as well (errlog.hook; nothing without LAVA_ERR_LOG).
+# Before the game's own modules: they read their tables and the environment
+# as they are imported, and what they warn of there (a LAVA_BOSS_TZ with no
+# such zone, the account store's migrations) or stop on is for the admin
+# panel as well (errlog.install; nothing without LAVA_ERR_LOG).
 if __name__ == "__main__":
-    errlog.hook()
+    errlog.install()
 
 import accounts
 import auction
@@ -3733,6 +3734,10 @@ async def handle_policy(reader, writer):
 
 
 async def main():
+    # The error log's file is on the root since the imports (errlog.install
+    # above), and basicConfig does nothing to a root that has a handler: it
+    # comes off for it and goes back on after.
+    errlog.detach()
     logging.basicConfig(level=os.environ.get("LAVA_LOG_LEVEL", "INFO").upper(),
                         format="%(asctime)s %(message)s")
     # WARNING and above to LAVA_ERR_LOG as well, the file the admin panel
@@ -3774,6 +3779,10 @@ async def main():
                          inventory.fill_offline_gifts):
         log.info("filled the admin panel's offline gifts (%s)",
                  inventory.OFFLINE_GIFTS_FIX)
+    # From the first socket on, the error log takes no more than twenty
+    # records of one kind a minute: anybody can send unknown commands by
+    # the thousand. Everything above went in whole (errlog.serving).
+    errlog.serving()
     game = await asyncio.start_server(handle_client, HOST, PORT)
     log.info("game server on %s:%d", HOST, PORT)
     log.info("%s", bosses.describe())

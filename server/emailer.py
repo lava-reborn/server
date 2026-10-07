@@ -26,6 +26,7 @@ import email.utils
 import itertools
 import os
 import queue
+import re
 import smtplib
 import ssl
 import threading
@@ -59,6 +60,16 @@ def masked(address):
     """g.mkrtchyan.m@gmail.com -> g***@gmail.com, for the log."""
     local, _, domain = (address or "").partition("@")
     return "%s***@%s" % (local[:1], domain) if domain else "***"
+
+
+# An address anywhere in a line of text: what an SMTP refusal says names
+# the recipient, in its own words and in the server's reply.
+_ADDRESS = re.compile(r"[\w.%+-]+@[\w-]+(?:\.[\w-]+)+")
+
+
+def masked_in(text):
+    """text with every address in it masked()."""
+    return _ADDRESS.sub(lambda m: masked(m.group(0)), text)
 
 
 def build(to, subject, text, html=None):
@@ -109,14 +120,17 @@ def _run():
                 print("  MAIL sent: %s" % name, flush=True)
                 break
             except Exception as exc:  # anything the SMTP side throws is worth a retry
-                print("  MAIL try %d of %d failed: %s: %s: %s"
-                      % (attempt, len(PAUSES) + 1, name, type(exc).__name__, exc), flush=True)
+                # A refused recipient's address is in the exception twice
+                # (SMTPRecipientsRefused is a dict of them, and the reply
+                # repeats it): masked like the one in name.
+                why = masked_in("%s: %s" % (type(exc).__name__, exc))
+                print("  MAIL try %d of %d failed: %s: %s"
+                      % (attempt, len(PAUSES) + 1, name, why), flush=True)
                 # A failure is for the admin panel's error log as well
                 # (errlog), from a logger that writes only there: the line
                 # above stays as it was.
                 errlog.only("lava.mail").warning(
-                    "try %d of %d failed: %s: %s: %s",
-                    attempt, len(PAUSES) + 1, name, type(exc).__name__, exc)
+                    "try %d of %d failed: %s: %s", attempt, len(PAUSES) + 1, name, why)
         else:
             print("  MAIL gave up: %s" % name, flush=True)
             errlog.only("lava.mail").error("gave up: %s", name)

@@ -8,17 +8,24 @@ with a timestamp; UTF-8; rotated at a size into .1 and .2. This holds the
 real processes to it -- the game and the http service, started here with
 the variable set and without it:
 
+  * the contract's sizes, and compose giving each service a file of its own;
   * a warning and an error with its traceback sent down the wire land as
-    whole records, and nothing of INFO does;
+    whole records, and nothing of INFO does; a warning a module gives as it
+    is imported (LAVA_BOSS_TZ with no such zone) lands too;
   * stdout and stderr are what they are without the file, line for line:
     the deploy gate reads them (lava-gate.sh "THE LOGS");
   * a file too small rotates into .1 and .2, the newer in .1, no record cut
     and none lost but the ones past the last backup; LAVA_LOG_LEVEL=ERROR
     quiets stderr and not the file;
+  * a flood of unknown commands and bad frames from a socket that never
+    said hello is held to twenty of a kind a minute, counted, and leaves
+    what the server wrote at start where it was;
   * a crash -- at import, or in main once the file is open -- is in the
     file as well as on stderr, and on stderr once;
   * a file that cannot be opened is one warning, and the server serves;
-  * a letter the SMTP side refuses is in the file, try by try.
+    a log call with the wrong arguments is no failure of the file;
+  * a letter the SMTP side refuses is in the file, try by try, with no
+    address in full.
 """
 import contextlib
 import io
@@ -42,7 +49,8 @@ from testkit import check, fails  # noqa: E402
 
 # Whatever the shell running this has set, the in-process checks start
 # without the file, as every other suite runs.
-for _k in ("LAVA_ERR_LOG", "LAVA_ERR_LOG_BYTES"):
+ERR_VARS = ("LAVA_ERR_LOG", "LAVA_ERR_LOG_BYTES", "LAVA_ERR_LOG_RATE")
+for _k in ERR_VARS:
     os.environ.pop(_k, None)
 
 import errlog  # noqa: E402
@@ -144,6 +152,35 @@ check("format: no INFO, nothing before the first record, no stamped continuation
 check("format: the first line is FORMAT's", errlog.FORMAT,
       "%(asctime)s %(levelname)s %(name)s: %(message)s")
 
+# --- the contract's sizes, and compose -----------------------------------------
+#
+# The suites below shrink the file (LAVA_ERR_LOG_BYTES) and lift the limit
+# (LAVA_ERR_LOG_RATE); what production gets is pinned here.
+check("contract: 2 MiB a file and two backups",
+      (errlog.MAX_BYTES, errlog.BACKUPS, errlog.max_bytes()), (2 * 1024 * 1024, 2, 2 * 1024 * 1024))
+check("contract: twenty records of a kind a minute",
+      (errlog.RATE, errlog.WINDOW, errlog.rate()), (20, 60.0, 20))
+
+
+def compose_err_logs():
+    """{service: its LAVA_ERR_LOG} in docker-compose.yml."""
+    found, service = {}, None
+    for line in io.open(os.path.join(ROOT, "docker-compose.yml"), encoding="utf-8"):
+        m = re.match(r"^  ([A-Za-z0-9_-]+):\s*$", line)
+        if m or re.match(r"^\S", line):
+            service = m.group(1) if m else None
+            continue
+        m = re.match(r"^\s+LAVA_ERR_LOG:\s*(\S+)\s*$", line)
+        if m and service:
+            found[service] = m.group(1)
+    return found
+
+
+# Two processes cannot share one rotating file: each rotates the other's.
+check("compose: the game and http each write a file of their own on the volume",
+      compose_err_logs(), {"game": "/var/lib/lava/logs/game.err",
+                           "http": "/var/lib/lava/logs/http.err"})
+
 # --- a file that stops taking writes: one line on stderr per bout ---------------
 #
 # logging's own handleError prints a traceback for every record it could not
@@ -165,6 +202,103 @@ check("a failing file: one line on stderr for each bout of failures",
 check("a failing file: no traceback on stderr", [l for l in said if GATE_ERROR.search(l)], [])
 check("a failing file: the record after it is written", read(unit).count("WARNING errlog-test: back"), 1)
 h.close()
+
+# --- a log call with the wrong arguments: the call's fault, not the file's -------
+#
+# logging's handler on stderr prints its "--- Logging error ---" for it; the
+# file's must not add "cannot be written" to that, nor lose the record.
+bad_path = os.path.join(TMP, "unit", "bad.err")
+bh = errlog.FileHandler(bad_path)
+blg = logging.getLogger("errlog-bad")
+blg.propagate = False
+blg.addHandler(bh)
+err = io.StringIO()
+with contextlib.redirect_stderr(err):
+    blg.warning("  ??    count %d", "not a number")
+    blg.warning("a good one after it")
+bh.close()
+check("a bad log call: a record that shows the call, and the next one",
+      [(r["level"], r["msg"]) for r in parse(read(bad_path))[0]],
+      [("WARNING", "a log call that cannot be formatted (TypeError: %d format: a real number"
+        " is required, not str): '  ??    count %d' % ('not a number',)"),
+       ("WARNING", "a good one after it")])
+check("a bad log call: not a failing file, nothing on stderr from it",
+      (bh.failing, err.getvalue()), (False, ""))
+
+# --- the limit: twenty of a kind a minute, once the server serves -------------------
+#
+# On a clock of the test's own: Throttle.admit takes the time it is given.
+
+
+def rec(name, msg, *args):
+    return logging.makeLogRecord(dict(name=name, msg=msg, args=args,
+                                      levelno=logging.WARNING, levelname="WARNING"))
+
+
+UNKNOWN = "  ??    unimplemented command %r"
+t = errlog.Throttle(3)
+check("limit: not armed (the start), everything is written",
+      [t.admit(rec("lava", UNKNOWN, "c%d" % i), 1.0 + i)[1] for i in range(5)], [True] * 5)
+t.armed = True
+got = [t.admit(rec("lava", UNKNOWN, "c%d" % i), 10.0 + i) for i in range(6)]
+check("limit: three of a kind written, whatever the command, then held",
+      [keep for _n, keep in got], [True, True, True, False, False, False])
+check("limit: one record of the file's own when the holding starts",
+      [[(n.name, n.levelname, n.getMessage()) for n in notes] for notes, _k in got],
+      [[], [], [], [("lava", "WARNING", "  ..    more than 3 a minute of '  ??    unimplemented"
+                     " command %r': the rest of this minute's are not written here")], [], []])
+check("limit: another kind, or another logger, is counted apart",
+      [t.admit(rec("lava", "other %s", 1), 20.0)[1],
+       t.admit(rec("lava.http", UNKNOWN, "x"), 20.0)[1]], [True, True])
+notes, keep = t.admit(rec("lava", UNKNOWN, "again"), 70.5)
+check("limit: the minute over, its count comes first and the next one is written",
+      ([bool(re.match(r"^  \.\.    3 more of '  \?\?    unimplemented command %r' in the minute"
+                      r" from \d\d:\d\d:\d\d were not written here$", n.getMessage()))
+        for n in notes], keep), ([True], True))
+for i in range(3):
+    t.admit(rec("lava", "other %s", i), 71.0 + i)
+
+
+def clockless(text):
+    return re.sub(r"\b\d\d:\d\d:\d\d\b", "HH:MM:SS", text)
+
+
+check("limit: what is still owed is counted at the close",
+      [clockless(n.getMessage()) for n in t.owed()],
+      ["  ..    1 more of 'other %s' in the minute from HH:MM:SS were not written here"])
+check("limit: and only once", t.owed(), [])
+check("limit: a message that is no string is a kind by its type",
+      errlog.Throttle.kind_of(rec("lava", ValueError("x"))), ("lava", "ValueError"))
+kinds = errlog.KINDS
+errlog.KINDS = 2
+t = errlog.Throttle(1)
+t.armed = True
+got = [t.admit(rec("lava", m), 5.0) for m in ("a", "b", "c", "d")]
+errlog.KINDS = kinds
+check("limit: past KINDS kinds the rest are counted as one",
+      [(keep, [n.getMessage() for n in notes]) for notes, keep in got],
+      [(True, []), (True, []), (True, []),
+       (False, ["  ..    more than 1 a minute of records of any other kind: the rest of this"
+                " minute's are not written here"])])
+
+# The handler: held records are not written, and the count goes in at the
+# close -- the server's stop, through logging.shutdown.
+lim_path = os.path.join(TMP, "unit", "limit.err")
+lh = errlog.FileHandler(lim_path, rate=2)
+lh.throttle.armed = True
+llg = logging.getLogger("errlog-limit")
+llg.propagate = False
+llg.addHandler(lh)
+for i in range(5):
+    llg.warning(UNKNOWN, "c%d" % i)
+lh.close()
+check("limit: the file has two, the note, and the count from the close",
+      [clockless(r["msg"]) for r in parse(read(lim_path))[0]],
+      ["  ??    unimplemented command 'c0'", "  ??    unimplemented command 'c1'",
+       "  ..    more than 2 a minute of '  ??    unimplemented command %r': the rest of this"
+       " minute's are not written here",
+       "  ..    3 more of '  ??    unimplemented command %r' in the minute from HH:MM:SS"
+       " were not written here"])
 
 # --- without LAVA_ERR_LOG: nothing at all --------------------------------------
 roots, hooks = list(logging.getLogger().handlers), (sys.excepthook, threading.excepthook)
@@ -226,6 +360,27 @@ check("no logging of its own: the warning, the thread, asyncio's callback, in th
         ["KeyError: 'no such key'"])])
 check("no logging of its own: whole records", (orphans, stamped), ([], []))
 
+# A log call with the wrong arguments, where logging is set up: stderr has
+# logging's own "--- Logging error ---" for it, with the file as without.
+BADCALL = r"""
+import logging, sys
+sys.path.insert(0, sys.argv[1])
+import errlog
+logging.basicConfig(level="INFO", format="%(message)s")
+errlog.install()
+log = logging.getLogger("lava")
+log.warning("  ??    count %d", "not a number")
+log.warning("a good one after it")
+"""
+plain = snippet(BADCALL)[1]
+side = os.path.join(TMP, "badcall", "x.err")
+filed = snippet(BADCALL, LAVA_ERR_LOG=side)[1]
+check("a bad log call: stderr is the same with the file", filed.splitlines(), plain.splitlines())
+check("a bad log call: logging's own report is there", "--- Logging error ---" in filed, True)
+check("a bad log call: both records in the file",
+      [r["msg"][:36] for r in parse(read(side))[0]],
+      ["a log call that cannot be formatted ", "a good one after it"])
+
 # --- letters that do not leave -----------------------------------------------------
 #
 # emailer prints its "  MAIL " lines and logs nothing; a letter the SMTP side
@@ -260,6 +415,28 @@ check("mail: each failed try and the giving up, in the file",
       [("WARNING", "lava.mail", "try %d of 3 failed: %s: ConnectionRefusedError: "
         "[Errno 111] Connection refused" % (n, letter)) for n in (1, 2, 3)]
       + [("ERROR", "lava.mail", "gave up: %s" % letter)])
+
+# A recipient the server refuses: smtplib names the address in the
+# exception, and the reply repeats it. The log masks it everywhere, the
+# print and the file alike.
+REFUSED = MAIL.replace("""def refused(msg):
+    raise ConnectionRefusedError(111, "Connection refused")
+""", """import smtplib
+def refused(msg):
+    raise smtplib.SMTPRecipientsRefused({msg["To"]: (
+        550, b"5.1.1 <" + msg["To"].encode() + b">: Recipient address rejected")})
+""").replace("someone@example.com", "ivan.petrov.1990@example.com")
+plain = snippet(REFUSED)
+side = os.path.join(TMP, "refused", "http.err")
+filed = snippet(REFUSED, LAVA_ERR_LOG=side)
+text = read(side)
+check("mail refused: stdout is the same with the file", filed, plain)
+check("mail refused: the address in full nowhere",
+      ["ivan.petrov" in s for s in (filed[0], filed[1], text)], [False, False, False])
+check("mail refused: the try in the file, masked, with the server's code",
+      [r["msg"] for r in parse(text)[0]][:1],
+      ["try 1 of 3 failed: Подтверждение адреса to i***@example.com: SMTPRecipientsRefused: "
+       "{'i***@example.com': (550, b'5.1.1 <i***@example.com>: Recipient address rejected')}"])
 
 
 # --- the game, with and without the file ------------------------------------------
@@ -309,7 +486,7 @@ class Proc:
 
 def env_for(tag, **extra):
     env = {k: v for k, v in os.environ.items()
-           if k not in ("LAVA_ERR_LOG", "LAVA_ERR_LOG_BYTES", "LAVA_LOG_LEVEL", "LAVA_DB_URL")}
+           if k not in ERR_VARS + ("LAVA_LOG_LEVEL", "LAVA_DB_URL")}
     env.update(LAVA_HOST="127.0.0.1", LAVA_HTTP_HOST="127.0.0.1", LAVA_POLICY_PORT="0",
                LAVA_DB=os.path.join(TMP, "%s.db" % tag), PYTHONIOENCODING="utf-8")
     env.update({k: str(v) for k, v in extra.items()})
@@ -346,9 +523,12 @@ def norm(lines, port):
     return out
 
 
-port_a, plain = play("plain")
+# A zone that does not exist: bosses warns of it as it is imported, long
+# before main() sets logging up, and that warning is the file's too.
+NO_ZONE = "  !!    no time zone 'Mars/Olympus', boss hours are read in UTC"
+port_a, plain = play("plain", LAVA_BOSS_TZ="Mars/Olympus")
 game_err = os.path.join(TMP, "game", "logs", "game.err")
-port_b, filed = play("filed", LAVA_ERR_LOG=game_err)
+port_b, filed = play("filed", LAVA_ERR_LOG=game_err, LAVA_BOSS_TZ="Mars/Olympus")
 
 check("game: the directory is made and the file written", os.path.isfile(game_err), True)
 text = read(game_err) if os.path.isfile(game_err) else ""
@@ -359,6 +539,16 @@ warn = [r for r in recs if r["msg"] == "  ??    unimplemented command 'zz_nope'"
 check("game: the warning, one line", [(r["level"], r["name"], r["more"]) for r in warn],
       [("WARNING", "lava", [])])
 bad = [r for r in recs if r["msg"].startswith("  bad frame b'zz_bad;")]
+check("game: a warning given at import is in the file",
+      [(r["level"], r["name"], r["more"]) for r in recs if r["msg"] == NO_ZONE],
+      [("WARNING", "lava", [])])
+check("game: and on stderr, once, as it always was (no stamp: logging is not set up yet)",
+      [filed.err().count(NO_ZONE), plain.err().count(NO_ZONE)], [1, 1])
+# The traders' «stock: ...», one record per trader and all of one kind, are
+# more than the limit lets through in a minute: the start is written whole.
+check("game: every «stock:» line of the start is in the file, none held back",
+      sum(r["msg"].startswith("stock: ") for r in recs),
+      sum(bool(re.match(r"^%s stock: " % STAMP, l)) for l in filed.err()))
 check("game: the error, with its traceback under it",
       [(r["level"], r["name"], r["more"][:1], r["more"][-1:]) for r in bad],
       [("ERROR", "lava", [TRACEBACK], [BAD_END])])
@@ -373,11 +563,13 @@ check("game: stderr is the same with the file, line for line", norm(filed.err(),
 check("game: the ready line is still there for the gate",
       sum(bool(GATE_READY.search(l)) for l in filed.err()), 1)
 # The same record on both sides: the time, the message, the lines under it.
+# What came before main's basicConfig is on stderr bare, as logging prints
+# a record with no handler set up (logging.lastResort).
 missing = []
 lines = filed.err()
 for r in recs:
     head = "%s %s" % (r["stamp"], r["msg"])
-    at = [i for i, l in enumerate(lines) if l == head]
+    at = [i for i, l in enumerate(lines) if l in (head, r["msg"])]
     if not at or lines[at[0] + 1:at[0] + 1 + len(r["more"])] != r["more"]:
         missing.append(head)
 check("game: every record of the file is on stderr, same time, same lines", missing, [])
@@ -387,11 +579,12 @@ check("game: the traceback is on stderr once", lines.count(TRACEBACK), 1)
 #
 # 2 KiB instead of 2 MiB; the frames overflow it a few times over, and the
 # warnings they make are below what LAVA_LOG_LEVEL=ERROR lets on stderr.
+# All of them one kind, so without the limit (LAVA_ERR_LOG_RATE=0).
 N = 120
 rot_dir = os.path.join(TMP, "rot")
 rot = os.path.join(rot_dir, "game.err")
 port = free_port()
-proc = Proc("server.py", env_for("rot", LAVA_PORT=port, LAVA_ERR_LOG=rot,
+proc = Proc("server.py", env_for("rot", LAVA_PORT=port, LAVA_ERR_LOG=rot, LAVA_ERR_LOG_RATE=0,
                                  LAVA_ERR_LOG_BYTES=2048, LAVA_LOG_LEVEL="ERROR"))
 last = "'zz_rot_%03d'" % (N - 1)
 try:
@@ -421,6 +614,73 @@ check("rotation: no file far past its size",
 check("LAVA_LOG_LEVEL=ERROR: no warning on stderr, all of them in the file",
       [l for l in proc.err() if "zz_rot_" in l], [])
 
+# --- a flood: twenty of a kind a minute, and the start stays --------------------
+#
+# A socket that never says hello sends five thousand unknown commands and two
+# hundred frames that cannot be read, each a traceback. Without the limit
+# that is half a megabyte, the three files of 32 KiB many times over, and
+# what the server wrote at start would be gone from all of them.
+FLOOD, BAD = 5000, 200
+flood_dir = os.path.join(TMP, "flood")
+flood = os.path.join(flood_dir, "game.err")
+
+
+def records(where):
+    """Every record of the three files, oldest first."""
+    out = []
+    for name in ("game.err.2", "game.err.1", "game.err"):
+        out += parse(read(os.path.join(where, name)))[0]
+    return out
+
+
+port = free_port()
+proc = Proc("server.py", env_for("flood", LAVA_PORT=port, LAVA_ERR_LOG=flood,
+                                 LAVA_ERR_LOG_BYTES=32768, LAVA_BOSS_TZ="Mars/Olympus"))
+try:
+    s = testkit.connect(port, proc.p, proc._err)
+    # Listening: what the start wrote is in.
+    start = [(r["stamp"], r["msg"]) for r in records(flood_dir)]
+    s.sendall(b"".join(b"zz_flood_%d;\x00" % i for i in range(FLOOD))
+              + b"zz_bad;a=@x\x00" * BAD + b"zz_last;\x00")
+    proc.wait_for(lambda l: l.endswith("unimplemented command 'zz_last'"), timeout=120)
+    s.close()
+finally:
+    proc.stop()
+after = records(flood_dir)
+kept = {(r["stamp"], r["msg"]) for r in after}
+check("flood: the start was written (the zone warning among it)",
+      any(m == NO_ZONE for _s, m in start), True)
+check("flood: every record of the start is still in the files",
+      [m for st, m in start if (st, m) not in kept], [])
+check("flood: stderr has every one of them, as before",
+      [sum("unimplemented command 'zz_flood_" in l for l in proc.err()),
+       proc.err().count("ValueError: substring not found")], [FLOOD, BAD])
+
+
+def flood_kind(template, first):
+    """(written, holding notes, counted) of one kind in the files."""
+    written = [r for r in after if r["msg"].startswith(first)]
+    held = ("  ..    more than 20 a minute of %r: the rest of this minute's are not"
+            " written here" % template)
+    notes = [r for r in after if r["msg"] == held]
+    counted = [int(m.group(1)) for r in after for m in [re.match(
+        r"^  \.\.    (\d+) more of %s in the minute from \d\d:\d\d:\d\d were not"
+        r" written here$" % re.escape(repr(template)), r["msg"])] if m]
+    return written, notes, counted
+
+
+for what, template, first, sent in (
+        ("unknown commands", "  ??    unimplemented command %r", "  ??    unimplemented command", FLOOD + 1),
+        ("bad frames", "  bad frame %r", "  bad frame b'zz_bad", BAD)):
+    written, notes, counted = flood_kind(template, first)
+    # One minute as a rule; a runner slow enough to cross into a second
+    # one has a second twenty, a second note and a second count.
+    check("flood, %s: twenty a minute, a note and a count for each minute" % what,
+          (len(written) <= 20 * len(counted), len(notes), len(counted) >= 1),
+          (True, len(counted), True))
+    check("flood, %s: all accounted for, written or counted" % what,
+          len(written) + sum(counted), sent)
+
 # --- a file that cannot be opened --------------------------------------------------
 #
 # Its directory is a file: no permission bit is involved, so it fails for
@@ -447,7 +707,7 @@ finally:
     proc.stop()
 check("unopenable: the server serves", reply.split(b";", 1)[0], b"hello")
 check("unopenable: one warning that says so",
-      [bool(re.match(r"^%s error log .*game\.err cannot be opened \(\w+: " % STAMP, l))
+      [bool(re.match(r"^(%s )?error log .*game\.err cannot be opened \(\w+: " % STAMP, l))
        for l in proc.err() if "error log" in l], [True])
 check("unopenable: nothing the deploy gate takes for an error",
       [l for l in proc.err() if GATE_ERROR.search(l)], [])
