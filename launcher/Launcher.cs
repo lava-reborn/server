@@ -185,12 +185,9 @@ static class Launcher
 
         form.Auth.Submit += Submit;
         form.Auth.Register += delegate { Browse(REGISTER_URL); };
-        form.Auth.LostPassword += delegate
-        {
-            new TextDialog("Забыли пароль?", new[] {
-                "Если ты не помнишь пароль, обратись к администратору. Старый пароль " +
-                "восстановить нельзя, администратор выдаст новый." }, null, null).Open(form);
-        };
+        // The site's own form (?forgot=1 opens it): a link to a new password
+        // goes to the account's confirmed address (server/email_flow.py).
+        form.Auth.LostPassword += delegate { Browse(SITE + "/?forgot=1"); };
         form.Auth.Logout += Logout;
         form.Auth.About += delegate { Browse(SITE); };
         form.Auth.Wiki += delegate { Browse(WIKI_URL); };
