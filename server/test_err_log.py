@@ -17,7 +17,8 @@ the variable set and without it:
     quiets stderr and not the file;
   * a crash -- at import, or in main once the file is open -- is in the
     file as well as on stderr, and on stderr once;
-  * a file that cannot be opened is one warning, and the server serves.
+  * a file that cannot be opened is one warning, and the server serves;
+  * a letter the SMTP side refuses is in the file, try by try.
 """
 import contextlib
 import io
@@ -200,16 +201,17 @@ asyncio.run(main())
 """
 
 
-def snippet(**extra):
+def snippet(code=SNIPPET, **extra):
+    """(stdout, stderr) of code run in a process of its own."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8", **extra)
-    p = subprocess.run([sys.executable, "-c", SNIPPET, HERE], env=env, capture_output=True,
+    p = subprocess.run([sys.executable, "-c", code, HERE], env=env, capture_output=True,
                        encoding="utf-8", errors="replace", timeout=60)
-    return re.sub(r"0x[0-9a-f]+", "0x?", p.stderr)
+    return p.stdout, re.sub(r"0x[0-9a-f]+", "0x?", p.stderr)
 
 
-plain = snippet()
+plain = snippet()[1]
 side = os.path.join(TMP, "snippet", "x.err")
-filed = snippet(LAVA_ERR_LOG=side)
+filed = snippet(LAVA_ERR_LOG=side)[1]
 check("no logging of its own: stderr is the same with the file",
       filed.splitlines(), plain.splitlines())
 check("no logging of its own: the warning is still on stderr",
@@ -223,6 +225,41 @@ check("no logging of its own: the warning, the thread, asyncio's callback, in th
        ("ERROR", "asyncio", "Exception in callback main.<locals>.<lambda>()",
         ["KeyError: 'no such key'"])])
 check("no logging of its own: whole records", (orphans, stamped), ([], []))
+
+# --- letters that do not leave -----------------------------------------------------
+#
+# emailer prints its "  MAIL " lines and logs nothing; a letter the SMTP side
+# refuses is a fault the owner has to see (a wrong password for outside
+# programs), so each failed try and the giving up go to the file as well.
+MAIL = r"""
+import sys
+sys.path.insert(0, sys.argv[1])
+import errlog, emailer
+errlog.install()
+emailer.PAUSES = (0, 0)
+emailer.OUTBOX = "unused"            # enabled(): a letter leaves at all
+
+def refused(msg):
+    raise ConnectionRefusedError(111, "Connection refused")
+
+emailer._deliver = refused
+emailer.send("someone@example.com", "Подтверждение адреса", "text")
+emailer._queue.join()
+"""
+plain = snippet(MAIL)
+side = os.path.join(TMP, "mail", "http.err")
+filed = snippet(MAIL, LAVA_ERR_LOG=side)
+check("mail: stdout and stderr are the same with the file", filed, plain)
+check("mail: and stderr has nothing, as the prints never went there", filed[1], "")
+check("mail: the print is still there", "  MAIL gave up: Подтверждение адреса to s***@example.com"
+      in filed[0].splitlines(), True)
+recs, orphans, stamped = parse(read(side))
+letter = "Подтверждение адреса to s***@example.com"
+check("mail: each failed try and the giving up, in the file",
+      [(r["level"], r["name"], r["msg"]) for r in recs],
+      [("WARNING", "lava.mail", "try %d of 3 failed: %s: ConnectionRefusedError: "
+        "[Errno 111] Connection refused" % (n, letter)) for n in (1, 2, 3)]
+      + [("ERROR", "lava.mail", "gave up: %s" % letter)])
 
 
 # --- the game, with and without the file ------------------------------------------

@@ -31,6 +31,8 @@ import ssl
 import threading
 import time
 
+import errlog
+
 HOST = os.environ.get("LAVA_SMTP_HOST", "").strip()
 PORT = int(os.environ.get("LAVA_SMTP_PORT", "465") or 465)
 USER = os.environ.get("LAVA_SMTP_USER", "").strip()
@@ -109,8 +111,15 @@ def _run():
             except Exception as exc:  # anything the SMTP side throws is worth a retry
                 print("  MAIL try %d of %d failed: %s: %s: %s"
                       % (attempt, len(PAUSES) + 1, name, type(exc).__name__, exc), flush=True)
+                # A failure is for the admin panel's error log as well
+                # (errlog), from a logger that writes only there: the line
+                # above stays as it was.
+                errlog.only("lava.mail").warning(
+                    "try %d of %d failed: %s: %s: %s",
+                    attempt, len(PAUSES) + 1, name, type(exc).__name__, exc)
         else:
             print("  MAIL gave up: %s" % name, flush=True)
+            errlog.only("lava.mail").error("gave up: %s", name)
         _queue.task_done()
 
 
@@ -125,6 +134,8 @@ def send(to, subject, text, html=None):
         _queue.put_nowait(build(to, subject, text, html))
     except queue.Full:
         print("  MAIL queue full: not sent: %s to %s" % (subject, masked(to)), flush=True)
+        errlog.only("lava.mail").warning("queue full: not sent: %s to %s",
+                                         subject, masked(to))
         return False
     with _lock:
         if _worker is None or not _worker.is_alive():
