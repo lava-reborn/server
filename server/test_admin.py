@@ -244,6 +244,20 @@ try:
     check("и панель подписана именем администратора",
           ADMIN_LOGIN in body, True)
 
+    # Сменили пароль (ссылкой из письма, admin_account passwd): кука,
+    # выданная при прежнем, больше не пускает; вернули — пускает снова.
+    st = accounts.Store()
+    was = st.account_by_login(ADMIN_LOGIN)["hash"]
+    st.db.execute("UPDATE accounts SET hash = ? WHERE login = ?", ("другой-дайджест", ADMIN_LOGIN))
+    st.db.commit()
+    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    check("сменили пароль — кука прежнего не пускает", "name=password" in body, True)
+    st.db.execute("UPDATE accounts SET hash = ? WHERE login = ?", (was, ADMIN_LOGIN))
+    st.db.commit()
+    st.close()
+    code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
+    check("пароль прежний — та же кука пускает", "Сейчас в игре" in body, True)
+
     print("\nпоиск по нику")
     code, body = get(HTTP_PORT, "/admin", cookie=COOKIE)
     check("без запроса карточек нет", "Начислить" in body, False)

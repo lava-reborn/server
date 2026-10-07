@@ -268,6 +268,25 @@ with contextlib.redirect_stdout(io.StringIO()):
     code = admin_account.main(["delete", "oldie", "--db", OLD, "--yes"])
 check("a database without clan tables: the account is deleted all the same", code, 0)
 
+# passwd: a new digest, and whoever plays on the account is put out by the
+# game (a kick in the admin queue); the site, the forum and the panels end
+# their sessions by the password's mark.
+PW = os.path.join(tempfile.mkdtemp(), "pw.db")
+st = accounts.Store(PW)
+pw_acc, _ = st.register("forgetful", "secret9")
+before = st.account_by_id(pw_acc)["hash"]
+st.close()
+with contextlib.redirect_stdout(io.StringIO()):
+    code = admin_account.main(["passwd", "forgetful", "--db", PW, "--random"])
+check("passwd --random goes through", code, 0)
+st = accounts.Store(PW)
+check("the digest is another", st.account_by_id(pw_acc)["hash"] != before, True)
+kicks = st.db.execute("SELECT admin, kind, account_id FROM admin_actions").fetchall()
+check("and a kick for the account is queued for the game",
+      [(r["admin"], r["kind"], r["account_id"]) for r in kicks],
+      [("Lava Reborn", "kick", pw_acc)])
+st.close()
+
 print()
 if fails:
     print("FAILED %d:" % len(fails))

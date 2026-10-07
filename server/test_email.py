@@ -198,6 +198,12 @@ try:
           bool(s.by_credential(accounts.credential("Mailer", "newsecret"))), True)
     check("the old one no longer is",
           s.by_credential(accounts.credential("Mailer", "secret1")), None)
+    kicks = s.db.execute("SELECT admin, account_id, args_json FROM admin_actions"
+                         " WHERE kind = 'kick'").fetchall()
+    check("whoever plays on the account is put out, through the admin queue",
+          [(r["admin"], r["account_id"]) for r in kicks],
+          [("Lava Reborn", s.account_by_login("Mailer")["id"])])
+    check("  ..and told why", "Пароль аккаунта сменён" in kicks[0]["args_json"], True)
     s.close()
     code, reply = post(BASE, "/account/reset", t=rtoken, password="another1")
     check("a reset link is good once", (code, reply["ok"]), (400, False))

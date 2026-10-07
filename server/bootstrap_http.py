@@ -636,10 +636,19 @@ class Handler(BaseHTTPRequestHandler):
     # its own and no second thing to forget. Which logins may open it is
     # configuration, not data: LAVA_ADMINS.
 
-    def _admin_cookie(self, login):
-        """A cookie that says who, signed so it cannot say someone else."""
+    @staticmethod
+    def _pw_mark(pw_hash):
+        """The password's mark in the cookie: an HMAC of accounts.hash. A new
+        password is a new digest, so every cookie made under the old one
+        stops at once (_admin_login_of)."""
+        return hmac.new(ADMIN_SECRET, b"pw|" + str(pw_hash).encode("ascii", "replace"),
+                        hashlib.sha256).hexdigest()[:16]
+
+    def _admin_cookie(self, login, pw_hash):
+        """A cookie that says who, signed so it cannot say someone else, and
+        good only while the account's password is the one it was made under."""
         until = int(time.time()) + ADMIN_HOURS * 3600
-        raw = "%s|%d" % (login, until)
+        raw = "%s|%d|%s" % (login, until, self._pw_mark(pw_hash))
         sig = hmac.new(ADMIN_SECRET, raw.encode("utf-8"),
                        hashlib.sha256).hexdigest()
         return quote("%s|%s" % (raw, sig), safe="")
@@ -648,16 +657,23 @@ class Handler(BaseHTTPRequestHandler):
         """The login a cookie proves, or None."""
         try:
             raw = unquote(cookie_value)
-            login, until, sig = raw.rsplit("|", 2)
+            login, until, mark, sig = raw.rsplit("|", 3)
         except ValueError:
             return None
-        want = hmac.new(ADMIN_SECRET, ("%s|%s" % (login, until)).encode("utf-8"),
+        want = hmac.new(ADMIN_SECRET, ("%s|%s|%s" % (login, until, mark)).encode("utf-8"),
                         hashlib.sha256).hexdigest()
         if not hmac.compare_digest(sig, want):
             return None
-        if int(until) < time.time():
+        if int(until) < time.time() or login not in ADMINS:
             return None
-        return login if login in ADMINS else None
+        store = accounts.Store()
+        try:
+            row = store.account_by_login(login)
+        finally:
+            store.close()
+        if row is None or row["banned"] or not hmac.compare_digest(mark, self._pw_mark(row["hash"])):
+            return None
+        return login
 
     def _admin_who(self):
         cookie = self.headers.get("Cookie") or ""
@@ -691,7 +707,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Location", "/admin")
         self.send_header("Set-Cookie",
                          "lava_admin=%s; Path=/; HttpOnly; SameSite=Strict"
-                         % self._admin_cookie(login))
+                         % self._admin_cookie(login, row["hash"]))
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)

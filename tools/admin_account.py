@@ -422,8 +422,18 @@ def cmd_passwd(db, args):
     if clash:
         sys.exit("that password collides with account %r" % clash["login"])
     db.execute("UPDATE accounts SET hash = ? WHERE id = ?", (cred, row["id"]))
+    # Whoever is playing on it goes: the game's admin queue, as the panel
+    # and a reset by mail do it (server/email_flow.py kick_out). Sessions of
+    # the site, the forum and the panel carry a mark of the password and
+    # end by themselves.
+    db.execute(
+        "INSERT INTO admin_actions (made_at, admin, kind, char_id, account_id, args_json)"
+        " VALUES (?, ?, 'kick', NULL, ?, ?)",
+        (int(time.time()), "Lava Reborn", row["id"],
+         json.dumps({"reason": "Пароль аккаунта сменён. Войдите с новым паролем."},
+                    ensure_ascii=False)))
     db.commit()
-    print("password changed for %s" % args.login)
+    print("password changed for %s; anyone playing on it is put out" % args.login)
     if invented:
         print("password: %s" % password)
     return 0

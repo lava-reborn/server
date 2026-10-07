@@ -52,6 +52,9 @@ IP_HOUR = 10
 # through (.рф); what the server cannot reach, the confirm link tells.
 _EMAIL = re.compile(r"^[^@\s<>()\[\]\\,;:\"']{1,64}@[^@\s<>()\[\]\\,;:\"']{1,190}\.[^@\s<>()\[\]\\,;:\"'.]{2,63}$")
 
+# Who the kicked player is told is working on his account (kick_out).
+KICKER = "Lava Reborn"
+
 TOO_SOON = "Письмо уже отправлено, следующее можно запросить через минуту"
 TOO_MANY = "Слишком много писем подряд, попробуйте через час"
 NO_MAIL = "Почта на сервере ещё не настроена"
@@ -259,4 +262,16 @@ def reset(store, token, password, now=None):
     err = store.set_password(account["id"], password)
     if err:
         return None, err
+    kick_out(store, account["id"])
     return account["login"], None
+
+
+def kick_out(store, account_id):
+    """A new password ends every session the old one opened: the site's,
+    the forum's and the panel's carry a mark of the password and stop by
+    themselves; the game is told here, through the admin queue the panel
+    uses, to put out whoever is playing on the account (server.py
+    apply_admin_action, kind 'kick'). The player sees «Администратор
+    Lava Reborn ведет работу над вашим аккаунтом» and the reason."""
+    store.admin_push(KICKER, "kick", account_id=account_id,
+                     reason="Пароль аккаунта сменён. Войдите с новым паролем.")
