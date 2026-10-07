@@ -137,7 +137,17 @@ lg.warning("first\n2026-10-07 00:00:00,000 CRITICAL lava: forged\r"
            "2026-10-07 00:00:02,000 CRITICAL lava: after a LINE SEPARATOR\nlast")
 lg.error("one\n7 lines down")
 lg.warning("a lone surrogate \udcff and Кириллица")
+try:
+    raise ValueError("GET /account/reset?t=SeCrEt42abc&x=1 failed")
+except ValueError:
+    lg.exception("request /account/confirm?t=KeY99zz failed")
 recs, orphans, stamped = parse(read(unit))
+check("format: a link's token never reaches the file, the link does",
+      (any("SeCrEt42abc" in line or "KeY99zz" in line
+           for r in recs for line in [r["msg"]] + r["more"]),
+       recs[-1]["msg"], any("reset?t=...&x=1" in line for line in recs[-1]["more"])),
+      (False, "request /account/confirm?t=... failed", True))
+recs = recs[:-1]
 check("format: what came in, as records", [(r["level"], r["name"], r["msg"]) for r in recs],
       [("WARNING", "errlog-test", "first"), ("ERROR", "errlog-test", "one"),
        ("WARNING", "errlog-test", "a lone surrogate \\udcff and Кириллица")])

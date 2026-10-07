@@ -80,6 +80,9 @@ log = logging.getLogger("lava")
 # begins with any digit is pushed in, which keeps the rule simpler than any
 # pattern a reader might match a timestamp with.
 _DIGIT = re.compile(r"\d")
+# bootstrap_http.TOKEN_IN_QUERY, kept here so this module imports nothing of
+# the game's.
+_TOKEN_IN_QUERY = re.compile(r"([?&]t=)[^&\s\"]+")
 
 _state = dict(handler=None, tried=False, hooked=False, resort=False, serving=False)
 _only = {}
@@ -92,7 +95,11 @@ class Formatter(logging.Formatter):
         super().__init__(FORMAT)
 
     def format(self, record):
-        lines = super().format(record).splitlines() or [""]
+        # A link's token (?t=..., e-mail confirmation and password reset) is a
+        # key to an account: the file keeps the link, never the key -- the
+        # same cut bootstrap_http.log_message makes on the access lines.
+        text = _TOKEN_IN_QUERY.sub(r"\1...", super().format(record))
+        lines = text.splitlines() or [""]
         return "\n".join(lines[:1] + [" " + line if _DIGIT.match(line) else line
                                       for line in lines[1:]])
 
