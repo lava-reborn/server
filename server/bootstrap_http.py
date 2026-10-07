@@ -39,6 +39,7 @@ import time
 from urllib.parse import quote
 
 import accounts
+import email_flow
 import names
 import items
 import map_labels
@@ -73,6 +74,14 @@ def _flag(name, default="0"):
 # decision. Serving any of them means serving csettings_v1.xml, and that is
 # what puts the client in WEB mode.
 SERVE_RES = _flag("LAVA_HTTP_RES")
+
+# Registration without an e-mail address is refused (email_flow.py). Off by
+# default: a server with no mail set up, and the suites, register as before.
+REGISTER_EMAIL = _flag("LAVA_REGISTER_EMAIL")
+# The site's e-mail forms, POST only (email_flow.py).
+ACCOUNT_PATHS = ("/account/confirm", "/account/forgot", "/account/reset", "/account/email")
+# A link's token in a request line, cut out of the access log (log_message).
+TOKEN_IN_QUERY = re.compile(r"([?&]t=)[^&\s\"]+")
 
 # Which game logins may open the admin panel, comma separated. Empty means
 # there is no panel: every /admin path answers 404, the same as any address
@@ -479,7 +488,10 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def log_message(self, fmt, *args):
-        print("  HTTP %s" % (fmt % args), flush=True)
+        # A token in a query (t=...) is never written down: it would open an
+        # account to whoever reads the log. The site's own links carry it
+        # after a #, which no request line has; this is for one typed by hand.
+        print("  HTTP %s" % TOKEN_IN_QUERY.sub(r"\1...", fmt % args), flush=True)
 
     # --- routing ---------------------------------------------------------
     def _resource(self, path):
@@ -967,17 +979,72 @@ class Handler(BaseHTTPRequestHandler):
         form = parse_qs(body.decode("utf-8", "replace"))
         login = (form.get("login") or [""])[0]
         password = (form.get("password") or [""])[0]
+        given = (form.get("email") or [""])[0]
+        # An address given is checked before the account is made: a typo
+        # here would leave an account nobody can confirm. Without one the
+        # account is made as before, unless LAVA_REGISTER_EMAIL asks for it.
+        address = None
+        if given.strip() or REGISTER_EMAIL:
+            address, err = email_flow.clean_email(given)
+            if err:
+                self._page('<p class="msg err">%s</p>' % err)
+                return
+        note = ""
         store = accounts.Store()
         try:
-            _id, err = store.register(login, password)
+            new_id, err = store.register(login, password)
+            if new_id and address:
+                note = email_flow.on_register(store, new_id, address)
         finally:
             store.close()
         if err:
             self._page('<p class="msg err">%s</p>' % err)
         else:
-            self._page('<p class="msg ok">Аккаунт <b>%s</b> создан. '
+            self._page('<p class="msg ok">Аккаунт <b>%s</b> создан. %s'
                        'Запустите клиент и войдите этим логином.</p>'
-                       % login.replace("<", "&lt;"))
+                       % (login.replace("<", "&lt;"),
+                          (escape(note) + " ") if note else ""))
+
+    def _client_ip(self):
+        """The visitor's address. Behind Caddy every request comes from the
+        proxy, which puts the visitor last in X-Forwarded-For."""
+        forwarded = (self.headers.get("X-Forwarded-For") or "").split(",")[-1].strip()
+        return forwarded or self.client_address[0]
+
+    def _account(self, path, body):
+        """The site's e-mail forms (email_flow.py): JSON in reply, for the
+        page's script to show."""
+        if self.command != "POST" or path not in ACCOUNT_PATHS:
+            self._send("not found", code=404)
+            return
+        form = parse_qs(body.decode("utf-8", "replace"))
+
+        def one(key):
+            return (form.get(key) or [""])[0]
+
+        reply = {"ok": True}
+        store = accounts.Store()
+        try:
+            if path == "/account/confirm":
+                state = email_flow.confirm(store, one("t"))
+                reply = {"ok": state == "confirmed", "state": state}
+                err = None
+            elif path == "/account/forgot":
+                reply["message"], err = email_flow.forgot(store, one("who"), self._client_ip())
+            elif path == "/account/reset":
+                reply["login"], err = email_flow.reset(store, one("t"), one("password"))
+            else:
+                reply["message"], err = email_flow.change_email(
+                    store, one("login"), one("password"), one("email"), self._client_ip())
+        finally:
+            store.close()
+        code = 200
+        if err:
+            code = (429 if err in (email_flow.TOO_SOON, email_flow.TOO_MANY)
+                    else 503 if err == email_flow.NO_MAIL else 400)
+            reply = {"ok": False, "error": err}
+        self._send(json.dumps(reply, ensure_ascii=False),
+                   "application/json; charset=utf-8", code)
 
     def _send_xml(self, body):
         """Answer the way the client's own XML files are written.
@@ -1020,6 +1087,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/register":
             self._register(body)
+            return
+        if path.startswith("/account/"):
+            self._account(path, body)
             return
         if path == "/admin" or path.startswith("/admin/"):
             if not ADMINS:

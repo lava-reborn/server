@@ -15,6 +15,7 @@ import hashlib
 import json
 import logging
 import os
+import secrets
 import time
 
 import progression
@@ -352,6 +353,24 @@ CREATE TABLE IF NOT EXISTS ground (
     cell       INTEGER NOT NULL,      -- the hex the bag lies on
     expires_at REAL    NOT NULL       -- the epoch second it goes
 );
+CREATE TABLE IF NOT EXISTS email_tokens (
+    -- The links the mail sends (server/email_flow.py): one row per letter
+    -- that carries one. kind 'confirm' proves an address belongs to the
+    -- account (the address is this row's, not yet the account's), kind
+    -- 'reset' lets a new password be set. Only the token's sha256 is kept:
+    -- a copy of this table opens no account. A row is spent once (used),
+    -- and is good until expires; created is what the mail's own pace is
+    -- counted by.
+    id         INTEGER PRIMARY KEY,
+    account_id INTEGER NOT NULL,
+    kind       TEXT    NOT NULL,
+    digest     TEXT    NOT NULL UNIQUE,
+    email      TEXT    NOT NULL,
+    created    INTEGER NOT NULL,
+    expires    INTEGER NOT NULL,
+    used       INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS email_tokens_by_account ON email_tokens (account_id);
 """
 
 # The sources a row of the money ledger names (money_ledger.source). A
@@ -568,6 +587,18 @@ CHARACTER_COLUMNS = [
     ("seen_at", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
+# The same for the accounts table: the address the mail goes to
+# (server/email_flow.py), lower case, and whether a letter's link has proved
+# it the player's. email NULL is an account made before there was mail, or
+# made without an address; email_ok 0 with an address is one given at
+# registration and not yet confirmed. A changed address waits in its
+# token's row until it is confirmed, and only then lands here, so the
+# confirmed one keeps working until the new one does.
+ACCOUNT_COLUMNS = [
+    ("email", "TEXT"),
+    ("email_ok", "INTEGER NOT NULL DEFAULT 0"),
+]
+
 # The same for the trophies table (accounts.SCHEMA): shown is the place
 # (0, 1, ...) an entry of the collection stands on in its owner's show --
 # what another player inspecting him sees (ss_get;slot=32, trophies.py) --
@@ -604,7 +635,8 @@ def migrate(db):
     showed everyone the same fixed figures anyway.
     """
     for table, wanted in (("characters", CHARACTER_COLUMNS),
-                          ("trophies", TROPHY_COLUMNS)):
+                          ("trophies", TROPHY_COLUMNS),
+                          ("accounts", ACCOUNT_COLUMNS)):
         have = db.columns(table)
         for col, decl in wanted:
             if col not in have:
@@ -1001,6 +1033,126 @@ class Store:
     def account_by_login(self, login):
         return self.db.execute("SELECT * FROM accounts WHERE login = ?",
                                (login,)).fetchone()
+
+    # --- e-mail: confirming an address, a new password by a link ------------
+    # (server/email_flow.py). The token itself goes out in a letter and is
+    # never stored; email_tokens keeps its sha256.
+
+    def account_by_id(self, account_id):
+        return self.db.execute("SELECT * FROM accounts WHERE id = ?",
+                               (account_id,)).fetchone()
+
+    def account_by_login_loose(self, login):
+        """The account a person means by the login they typed: the exact one
+        first, else the one that differs only in letter case. Logins are
+        unique as typed; two that differ only in case leave the loose match
+        to nobody."""
+        login = (login or "").strip()
+        row = self.account_by_login(login)
+        if row or not login:
+            return row
+        folded = login.casefold()
+        found = [r for r in self.all_accounts() if r["login"].casefold() == folded]
+        return found[0] if len(found) == 1 else None
+
+    def accounts_by_email(self, email):
+        """The accounts whose confirmed address this is (a player may keep
+        several accounts on one address)."""
+        return self.db.execute(
+            "SELECT * FROM accounts WHERE email = ? AND email_ok = 1 ORDER BY id",
+            ((email or "").strip().lower(),)).fetchall()
+
+    def set_email_unconfirmed(self, account_id, email):
+        """Write an address the account has no confirmed one in place of:
+        shown in the cabinet as waiting. A confirmed address is left as it is
+        -- the new one waits in its token until its own link is opened."""
+        self.db.execute(
+            "UPDATE accounts SET email = ?, email_ok = 0 WHERE id = ? AND email_ok = 0",
+            ((email or "").strip().lower(), account_id))
+        self.db.commit()
+
+    def issue_email_token(self, account_id, kind, email, ttl, now=None):
+        """A new link's token for this account: the token, to go out in the
+        letter, while only its digest is kept."""
+        now = int(now if now is not None else time.time())
+        token = secrets.token_urlsafe(32)
+        self.db.insert(
+            "INSERT INTO email_tokens (account_id, kind, digest, email, created, expires)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (account_id, kind, hashlib.sha256(token.encode("ascii")).hexdigest(),
+             (email or "").strip().lower(), now, now + int(ttl)), returning="id")
+        self.db.commit()
+        return token
+
+    def email_tokens_since(self, account_id, since, kind):
+        """How many letters of this kind with a link this account was sent
+        from since on."""
+        return self.db.execute(
+            "SELECT COUNT(*) c FROM email_tokens"
+            " WHERE account_id = ? AND kind = ? AND created >= ?",
+            (account_id, kind, int(since))).fetchone()["c"]
+
+    def take_email_token(self, token, kind, now=None):
+        """Spend a link: the token's row if it was this kind, unspent and in
+        time -- spent by this very call, so a second opening of the same
+        link finds nothing -- else (None, why) with why one of 'unknown',
+        'used', 'expired'."""
+        now = int(now if now is not None else time.time())
+        if not token or len(token) > 200:
+            return None, "unknown"
+        digest = hashlib.sha256(token.encode("ascii", "replace")).hexdigest()
+        row = self.db.execute(
+            "SELECT * FROM email_tokens WHERE digest = ? AND kind = ?",
+            (digest, kind)).fetchone()
+        if not row:
+            return None, "unknown"
+        if row["used"]:
+            return None, "used"
+        if row["expires"] < now:
+            return None, "expired"
+        # Spent by an UPDATE that only one of two racing openings can win.
+        cur = self.db.execute(
+            "UPDATE email_tokens SET used = 1 WHERE id = ? AND used = 0", (row["id"],))
+        self.db.commit()
+        if cur.rowcount != 1:
+            return None, "used"
+        return row, None
+
+    def confirm_email(self, account_id, email):
+        """The address a confirm link carried becomes the account's own."""
+        self.db.execute("UPDATE accounts SET email = ?, email_ok = 1 WHERE id = ?",
+                        ((email or "").strip().lower(), account_id))
+        # Older confirm links of this account would put back an address it
+        # has moved away from.
+        self.db.execute(
+            "UPDATE email_tokens SET used = 1 WHERE account_id = ? AND kind = 'confirm'",
+            (account_id,))
+        self.db.commit()
+
+    def set_password(self, account_id, password):
+        """A new password for the account, by a reset link: its digest
+        replaced (credential), every other reset link of the account spent.
+        Returns None, or a message for the person."""
+        if not password:
+            return "Введите пароль"
+        if len(password) < 4:
+            return "Пароль короче четырёх символов"
+        row = self.account_by_id(account_id)
+        if not row:
+            return "Аккаунта больше нет"
+        try:
+            self.db.execute("UPDATE accounts SET hash = ? WHERE id = ?",
+                            (credential(row["login"], password), account_id))
+            self.db.commit()
+        except storage.IntegrityError:
+            # The digest is the account's key (register): the same password
+            # and login run together as another account's.
+            return "Выберите другой пароль"
+        self.db.execute(
+            "UPDATE email_tokens SET used = 1 WHERE account_id = ? AND kind = 'reset'",
+            (account_id,))
+        self.db.commit()
+        return None
 
     def find_characters(self, query, limit=40):
         """Characters whose name contains this, with the owning login.

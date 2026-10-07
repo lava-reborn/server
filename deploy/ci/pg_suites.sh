@@ -20,7 +20,7 @@
 #   clan and ground   test_clans, test_clan_admin, test_clan_diplomacy,
 #                     test_clan_mail, test_clan_treasury, test_ground
 #   the rest          accounts, admin, auction, bank, combat, progression,
-#                     relogin
+#                     relogin, email
 #
 # Not test_repair, though LAVA_DB_URL appears in it: it takes the variable
 # OUT of its server's environment, so that server runs on a SQLite file while
@@ -42,7 +42,7 @@ OUT=${1:-/tmp/lava_pg}
 JOBS=${2:-8}
 TREE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SUITES=(storage_pg clans clan_admin clan_diplomacy clan_mail clan_treasury ground
-        accounts admin auction bank combat progression relogin)
+        accounts admin auction bank combat progression relogin email)
 
 mkdir -p "$OUT"
 : > "$OUT/results"

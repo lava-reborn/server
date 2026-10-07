@@ -389,6 +389,10 @@ def cmd_delete(db, args):
                        (cid,) * repeats)
     if char_ids:
         db.execute("DELETE FROM characters WHERE account_id = ?", (row["id"],))
+    # The links the account was sent (email_tokens): useless without it,
+    # and an address of the player's besides.
+    if has_table(db, "email_tokens"):
+        db.execute("DELETE FROM email_tokens WHERE account_id = ?", (row["id"],))
     db.execute("DELETE FROM accounts WHERE id = ?", (row["id"],))
     db.commit()
     print("\ndeleted: 1 account, %s characters, %s dependent rows"
