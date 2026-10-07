@@ -550,6 +550,10 @@ try:
     c.send("ss_upd;obj=x0;s_status=0;")
 
     # --- log back in -----------------------------------------------------
+    # A level to carry out: the launcher's card reads it off persInfo, from
+    # the row the logout writes.
+    c.send("userMsg;entry=@/skill 1 7@;group=0;")
+    c.until("userMsg")
     c.send("logout;")
     c.close()
     c = Client(connect())
@@ -557,9 +561,14 @@ try:
     c.send("login;hash=@%s@;" % CRED)
     got = c.until("accountInfo")
     check("the character is listed again", "persInfo" in [n for n, _p in got], True)
+    listed = one(got, "persInfo")
     c.send("selPers;num=0;")
     got = c.until("lcall")
     check("selected without an ack", [n for n, _p in got], ["lcall"])
+    check("persInfo names the level and the place the character comes back to,"
+          " as the minimap titles it",
+          (listed["level"], listed["loc"]),
+          (7, world.location(one(got, "lcall")["id"]).title))
     c.send("lenter;accept=1;")
     c.until("lenter")
     c.send("rp_get_info;")
