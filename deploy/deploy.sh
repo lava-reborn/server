@@ -14,7 +14,8 @@
 # the client's own alert, and only when that is over -- or nobody is left --
 # are the containers recreated. With nobody logged in there is no wait. Ctrl-C
 # during the countdown calls it off and restarts nothing; so does a cancel
-# from the admin panel.
+# from the admin panel. A poll that gets no answer does not cut the wait
+# short, and a game that restarted by itself meanwhile is restarted at once.
 #
 # The database lives in a named docker volume and is never touched here.
 # Addresses live in /opt/lava/.env on the server; this script creates it from
@@ -147,6 +148,7 @@ if [ "$warn" = 0 ]; then
   echo "==> no warning (--now)"
 else
   echo "==> warning the players: ${warn}s"
+  asked=$SECONDS
   out=$(stopwarn start "$warn" --by deploy.sh --skip-empty) || out=
   if [[ ! $out =~ $STOP_LINE ]]; then
     # The first deploy that carries stopwarn.py lands here (the running image
@@ -162,20 +164,39 @@ else
     left=${BASH_REMATCH[1]}
     warned=1
     echo "    ${BASH_REMATCH[2]} player(s) told: the restart in ${left}s (Ctrl-C calls it off)"
+    # When the restart is due: as the game last said, and never past the
+    # longest countdown it takes (stopwarn.MAX_SECONDS) and half a minute. A
+    # poll that gets no answer -- one ssh that failed, a slow docker exec --
+    # leaves it where it is: the players were told that time.
+    start=$SECONDS
+    cap=$(( start + (left < 600 ? left : 600) + 30 ))
+    due=$(( start + left < cap ? start + left : cap ))
     while :; do
-      sleep $(( left < 10 ? left : 10 ))
+      sleep $(( due - SECONDS < 1 ? 1 : (due - SECONDS < 10 ? due - SECONDS : 10) ))
       out=$(stopwarn status) || out=
       if [[ ! $out =~ $STOP_LINE ]]; then
-        echo "    the countdown does not answer; restarting now"
-        break
+        if [ "$SECONDS" -ge "$due" ]; then
+          echo "    the countdown does not answer, and its time is up; restarting"
+          break
+        fi
+        echo "    the countdown does not answer; waiting out the $((due - SECONDS))s the players were told"
+        continue
       fi
       left=${BASH_REMATCH[1]}
       if [ "$left" = - ]; then
+        # Gone with an order that called it off, or gone with the game's
+        # process (a crash docker brought back, a stop by hand), whose
+        # players are cut off already. No clear answer: the first.
+        n=$(stopwarn cancelled $((SECONDS - asked + 2))) || n=
         warned=0
-        echo "==> the countdown was called off (the admin panel?): nothing restarted"
-        echo "    $DEST already holds the new tree and the new image; the next"
-        echo "    'docker compose up' there starts them"
-        exit 1
+        if [ "$n" != 0 ]; then
+          echo "==> the countdown was called off (the admin panel?): nothing restarted"
+          echo "    $DEST already holds the new tree and the new image; the next"
+          echo "    'docker compose up' there starts them"
+          exit 1
+        fi
+        echo "    the game restarted by itself (a crash?) and dropped the countdown; restarting now"
+        break
       fi
       echo "    ${left}s to the restart, ${BASH_REMATCH[2]} online"
       [ "$left" -le 0 ] && break
@@ -183,6 +204,11 @@ else
         echo "    nobody online any more"
         break
       fi
+      if [ "$SECONDS" -ge "$cap" ]; then
+        echo "    waited $((SECONDS - start))s, the most a countdown takes; restarting"
+        break
+      fi
+      due=$(( SECONDS + left < cap ? SECONDS + left : cap ))
     done
   fi
 fi

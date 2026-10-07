@@ -1103,9 +1103,17 @@ prune() {
 #   - a countdown already running (an admin's, from the panel): its time
 #     stands, and the gate waits for that, up to STOP_WARN_MAX;
 #   - everybody gone before the end: the restart goes at once;
+#   - a poll that gets no answer (a docker exec past 30 s, a heartbeat gone
+#     stale, the database blinking): the wait goes on to the time the last
+#     answer gave -- the players were told it -- and only an answer of the
+#     game's (nobody left, the time up) ends it sooner;
 #   - the countdown called off from the panel while the gate waits: the
 #     deploy fails here and rolls back -- nobody was restarted, and the
 #     tree and the image tag go back to what runs;
+#   - the countdown gone with no order that called it off (stopwarn.py
+#     cancelled): it went with the game's process -- a crash docker brought
+#     back, a stop by hand -- whose players are cut off already; the restart
+#     goes at once, and the report says so;
 #   - any failure before the restart (fail() below): the countdown is
 #     called off (stop_cancel), so the players are not told of a stop
 #     nobody is going to make.
@@ -1113,7 +1121,11 @@ prune() {
 # Self-contained on purpose: the settings STOP_WARN_SEC and STOP_WARN_MAX
 # (defaults above, gate.conf may override), this block, the three-step
 # build/warn/up in cmd_deploy's step 7, and one line in fail(). A gate of
-# another branch takes the same four pieces.
+# another branch takes the same four pieces. It asks the running game's
+# stopwarn.py for start, status, cancelled and cancel: a game whose
+# stopwarn.py lacks one of them answers it with an error, which is the
+# "cannot count down" case for start and the cautious case -- nobody
+# restarted -- for cancelled.
 
 STOP_WARNED=0
 # The answer line: two numbers of at most six digits, no leading zero (bash
@@ -1126,8 +1138,17 @@ stopwarn() {
   timeout 30 docker exec "$GAME" python3 stopwarn.py "$@" 2>> "$DLOG"
 }
 
+# Did an order -- the panel's button, a stopwarn.py cancel -- call the
+# countdown off in the last $1 seconds? 0: yes, or no clear answer, which
+# takes the cautious side (nobody restarted); 1: no order did.
+stop_called_off() {
+  local out
+  out=$(stopwarn cancelled "$1")
+  [ "$out" != 0 ]
+}
+
 stop_warn() {  # -> 0 restart now; 1 called off from the panel (WHY says so)
-  local out sec left players waited cap start
+  local out sec left players waited cap start asked due
   # Whole seconds (anything else is 0, off), within what the game takes
   # (stopwarn.MIN_SECONDS, MAX_SECONDS) and the cap.
   case $STOP_WARN_SEC in ''|*[!0-9]*|???????*) sec=0 ;; *) sec=$((10#$STOP_WARN_SEC)) ;; esac
@@ -1139,6 +1160,7 @@ stop_warn() {  # -> 0 restart now; 1 called off from the panel (WHY says so)
     add "warning:  none (STOP_WARN_SEC=${STOP_WARN_SEC:-})"
     return 0
   fi
+  asked=$SECONDS
   out=$(stopwarn start "$sec" --by CI --skip-empty)
   if [[ ! $out =~ $STOP_LINE ]]; then
     add "warning:  none -- the running server cannot count down"
@@ -1162,25 +1184,39 @@ stop_warn() {  # -> 0 restart now; 1 called off from the panel (WHY says so)
   say "gate: $players player(s) warned: the restart in ${left}s"
   start=$SECONDS
   cap=$(( (left < STOP_WARN_MAX ? left : STOP_WARN_MAX) + 30 ))
+  # When the restart is due: as the last answer said, never past the cap. A
+  # poll that gets no answer leaves it where it is.
+  due=$(( start + (left < cap ? left : cap) ))
   while :; do
-    sleep $(( left < 10 ? left : 10 ))
+    sleep $(( due - SECONDS < 1 ? 1 : (due - SECONDS < 10 ? due - SECONDS : 10) ))
     waited=$((SECONDS - start))
     out=$(stopwarn status)
     if [[ ! $out =~ $STOP_LINE ]]; then
-      say "gate: the countdown does not answer; restarting now"
-      break
+      if [ "$SECONDS" -ge "$due" ]; then
+        say "gate: the countdown does not answer, and its time is up; restarting"
+        break
+      fi
+      say "gate: the countdown does not answer; waiting out the $((due - SECONDS))s the players were told"
+      continue
     fi
     left=${BASH_REMATCH[1]}
-    if [ "$left" = - ]; then
-      STOP_WARNED=0
-      WHY="the countdown was called off (the admin panel) after ${waited}s; nobody was restarted"
-      return 1
-    fi
     players=${BASH_REMATCH[2]}
+    if [ "$left" = - ]; then
+      if stop_called_off $((SECONDS - asked + 2)); then
+        STOP_WARNED=0
+        WHY="the countdown was called off (the admin panel) after ${waited}s; nobody was restarted"
+        return 1
+      fi
+      STOP_WARNED=0
+      say "gate: the game restarted by itself and dropped the countdown; restarting now"
+      add "warning:  players warned; ${waited}s in, the game restarted by itself (a crash?) and cut them off -- the restart at once"
+      return 0
+    fi
     say "gate: ${left}s to the restart, $players online"
     [ "$left" -le 0 ] && break
     [ "$players" = 0 ] && { say "gate: nobody online any more"; break; }
     [ "$waited" -ge "$cap" ] && { say "gate: waited ${waited}s, the cap; restarting"; break; }
+    due=$(( SECONDS + left < start + cap ? SECONDS + left : start + cap ))
   done
   add "warning:  players warned, waited $((SECONDS - start))s, $players online at the restart"
   return 0

@@ -45,9 +45,11 @@ the database is:
     python3 stopwarn.py start SECONDS [--by WHO] [--skip-empty] [--wait S]
     python3 stopwarn.py cancel [--by WHO] [--wait S]
     python3 stopwarn.py status
+    python3 stopwarn.py cancelled SECONDS
 
-Each prints one line, "LEFT PLAYERS": the seconds to the stop announced (0
-once its time is up) or "-" when none is, and how many are logged in now.
+The first three print one line, "LEFT PLAYERS": the seconds to the stop
+announced (0 once its time is up) or "-" when none is, and how many are
+logged in now.
 start announces SECONDS from now, MIN_SECONDS to MAX_SECONDS; with
 --skip-empty it announces nothing when nobody is logged in, and the deploy
 then restarts at once. A countdown already running is left as it is --
@@ -56,6 +58,15 @@ of it. start and cancel wait up to --wait seconds for the game to carry
 the order out; one it never took up is withdrawn, so a game started later
 does not act on it, and the game refuses a stop order older than
 ORDER_FRESH seconds anyway.
+
+cancelled prints how many countdowns an order called off in the last
+SECONDS: stop_cancel orders the game carried out with one running (CANCELLED
+in their result). The deploy asks it when the countdown it waits on is gone:
+gone with such an order, somebody called it off and nothing is restarted;
+gone without one, it went with the game's process -- a crash docker brought
+back, a stop by hand, whose players are cut off already -- and the restart
+goes on. A process that ends drops its countdown (forget(), and the next one
+starts with none), so stop_plan alone cannot tell the two apart.
 
 Exit status: 0 done; 2 a wrong command line, or an order the game refused;
 3 a game that does not know the order (older than this file); 4 no answer
@@ -122,6 +133,9 @@ WAIT = 15.0
 # (server.apply_admin_action's own words, before and after this file).
 REFUSED = "отказ"
 UNKNOWN = ("действию нужен персонаж", "неизвестное действие")
+# And the start of the answer to a stop_cancel that found a countdown to call
+# off (Countdown.cancel), which `cancelled` counts.
+CANCELLED = "отменена"
 
 
 def marks(seconds):
@@ -215,7 +229,7 @@ class Countdown:
         self._clear()
         self.publish()
         log.info("  ..    stop called off by %s with %d s left", admin, left)
-        return "отменена (оставалось %d с)" % left
+        return "%s (оставалось %d с)" % (CANCELLED, left)
 
     def forget(self):
         """The game is going (server.shutdown): no countdown outlives it."""
@@ -338,6 +352,19 @@ def read_status(db, now=None):
     return left, int(row["players"])
 
 
+def cancels(db, within, now=None):
+    """How many countdowns an order called off in the last `within` seconds:
+    the stop_cancel orders the game carried out and that found one to call
+    off. An order withdrawn unanswered, or one with nothing to call off,
+    does not count, and nor does a countdown gone with its process."""
+    db.commit()
+    now = time.time() if now is None else now
+    rows = db.execute("SELECT result FROM admin_actions WHERE kind = ?"
+                      " AND done_at IS NOT NULL AND done_at >= ?",
+                      ("stop_cancel", int(now - within))).fetchall()
+    return sum(1 for r in rows if str(r["result"] or "").startswith(CANCELLED))
+
+
 def _order(db, who, kind, args, wait):
     """Queue one order and wait for the game's answer: its result, or None
     when it did not come (the row is then withdrawn)."""
@@ -384,13 +411,24 @@ def main(argv=None):
     p.add_argument("--by", default="console")
     p.add_argument("--wait", type=float, default=WAIT)
     sub.add_parser("status", help="the stop announced and who is logged in")
+    p = sub.add_parser("cancelled", help="how many countdowns an order called off"
+                                         " in the last SECONDS")
+    p.add_argument("seconds", type=int)
     args = ap.parse_args(argv)
 
     if args.cmd == "start" and not MIN_SECONDS <= args.seconds <= MAX_SECONDS:
         print("stopwarn: SECONDS from %d to %d" % (MIN_SECONDS, MAX_SECONDS), file=sys.stderr)
         return 2
+    if args.cmd == "cancelled" and args.seconds < 1:
+        print("stopwarn: SECONDS from 1", file=sys.stderr)
+        return 2
     db = _db()
     try:
+        if args.cmd == "cancelled":
+            # The orders' log, whether the game runs or not.
+            print(cancels(db, args.seconds))
+            sys.stdout.flush()
+            return 0
         status = read_status(db)
         if status is None:
             print("stopwarn: the game is not running (no fresh heartbeat or stop_plan)",

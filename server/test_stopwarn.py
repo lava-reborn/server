@@ -22,7 +22,11 @@ the players are real sockets:
   - a countdown to its end: the frames in order and on time, a player who
     logs in half-way told what is left once and not again; then the stop
     itself, its 0 to everyone, the position saved (test_shutdown's half);
-  - the game gone: the command line says so and withdraws its order.
+  - the game gone: the command line says so and withdraws its order;
+  - `cancelled`, which the deploy asks when the countdown it waits on is
+    gone: the orders that called one off count, and nothing else does -- a
+    cancel with nothing to call off, one withdrawn unanswered, a countdown
+    forgotten, or one gone with its process.
 
     LAVA_RES=.../lava/res python3 server/test_stopwarn.py
 """
@@ -346,6 +350,8 @@ try:
     check("none of them told alice anything", alice.stops(i), [])
     check("nor announced a stop", cli("status"), (0, "- 1"))
     check("a cancel with nothing to cancel says so", order("stop_cancel"), "отменять нечего")
+    check("cancelled: that one is not a countdown called off", cli("cancelled", 3600), (0, "0"))
+    check("cancelled wants a window of a second or more", cli("cancelled", 0)[0], 2)
 
     # --- the panel ------------------------------------------------------------------
     COOKIE = sign_in()
@@ -393,6 +399,7 @@ try:
                                          "<td>test</td><td>остановка через 300 с</td>" in body),
           (True, True, True))
     check("status: no stop", cli("status"), (0, "- 1"))
+    check("cancelled: the panel's calling off counts", cli("cancelled", 3600), (0, "1"))
 
     # --- called off: the frames stop, the game plays on -----------------------------
     i = alice.mark()
@@ -403,6 +410,7 @@ try:
     check("alice told 15", alice.stops(i), [15])
     t_start = time.time()
     check("called off from the command line", cli("cancel", "--by", "test"), (0, "- 1"))
+    check("cancelled: so does the command line's", cli("cancelled", 3600), (0, "2"))
     # The 10 would have come five seconds in.
     time.sleep(max(0.0, t_start + 7 - time.time()))
     check("no frame after the calling off", alice.stops(i), [15])
@@ -426,6 +434,8 @@ try:
           (rc, line, GRACE - 2 <= time.time() - t_due <= GRACE + 4), (0, "- 1", True))
     check("alice was told 10 and nothing more, and plays on", (alice.stops(i), alice.eof),
           ([10], False))
+    check("cancelled: a countdown forgotten is none called off, and the window is the window",
+          (cli("cancelled", 3600), cli("cancelled", 3)), ((0, "2"), (0, "0")))
 
     # --- a countdown to its end --------------------------------------------------------
     i = alice.mark()
@@ -486,6 +496,8 @@ try:
     check("alice's place saved where she walked during the countdown", loc["pos"], 493)
     check("the stop's row cleared on the way out",
           db_one("SELECT stop_at FROM stop_plan WHERE id = 1"), {"stop_at": None})
+    check("cancelled: a countdown gone with its process is none called off, game or no game",
+          cli("cancelled", 3600), (0, "2"))
 
     # --- the game gone: the command line says so ----------------------------------------
     def beat(ago):
@@ -510,6 +522,10 @@ try:
     check("with a stale heartbeat status says nothing: exit 4", cli("status"), (4, ""))
     check("start too, at once", cli("start", 20, "--by", "test")[0], 4)
     check("and queues nothing", orders(), n + 1)
+    # A cancel nobody carries out is withdrawn, and calls nothing off.
+    beat(0)
+    check("a cancel with no game to answer: exit 4, and not counted",
+          (cli("cancel", "--by", "test", "--wait", "1.5")[0], cli("cancelled", 3600)), (4, (0, "2")))
 finally:
     for c in clients:
         c.close()

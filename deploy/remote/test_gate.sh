@@ -526,6 +526,66 @@ grep refused "$T/lock.out" | sed 's/^/    /'
 wait $LP
 
 # --- the players' warning before the restart (7a, STOP_WARN_SEC=20 here) -------------
+echo "== w0: the wait against a stand-in game: the hook out of the gate, a clock that sleep() moves"
+# The game's stop 180 s from the start, 3 logged in, unless the scene says
+# otherwise; each run prints "status seconds-waited STOP_WARNED", then WHY
+# and the report's lines.
+cat > "$T/hook.sh" <<'EOF'
+set -uo pipefail
+GATE_FILE=$1 SCENE=$2
+DLOG=/dev/null GAME=stand-in WHY= REPORT=()
+add() { REPORT+=("$*"); }
+say() { :; }
+STOP_WARN_SEC=180 STOP_WARN_MAX=${MAX:-600}
+eval "$(sed -n '/^STOP_WARNED=0$/,/^# --- deploy ---/p' "$GATE_FILE" | sed '$d')"
+sleep() { SECONDS=$((SECONDS + $1)); }
+CNT=$(mktemp)
+echo 0 > "$CNT"
+T0=$SECONDS
+stopwarn() {
+  local n left
+  case $1 in
+    start) echo "${FIRST:-180} 3" ;;
+    cancelled)
+      case $SCENE in
+        gone-cancel) echo 1 ;;
+        gone-crash) echo 0 ;;
+        *) return 4 ;;
+      esac ;;
+    status)
+      n=$(( $(cat "$CNT") + 1 )); echo "$n" > "$CNT"
+      left=$(( T0 + 180 - SECONDS )); [ "$left" -ge 0 ] || left=0
+      case $SCENE in
+        blip) [ "$n" = 1 ] && return 4 ;;
+        silent) return 4 ;;
+        gone-*) [ "$SECONDS" -ge $((T0 + 30)) ] && { echo "- 3"; return 0; } ;;
+        empty) [ "$SECONDS" -ge $((T0 + 30)) ] && { echo "$left 0"; return 0; } ;;
+        liar) echo "999999 3"; return 0 ;;
+        liar-silent) [ "$n" = 1 ] && { echo "999999 3"; return 0; }; return 4 ;;
+      esac
+      echo "$left 3" ;;
+  esac
+}
+stop_warn
+rc=$?
+rm -f "$CNT"
+echo "$rc $((SECONDS - T0)) $STOP_WARNED"
+printf '%s\n' "$WHY" "${REPORT[@]}"
+EOF
+hook() { bash "$T/hook.sh" "$REPO/deploy/remote/lava-gate.sh" "$@"; }
+check "w0: a countdown answered to its end: the restart at 180 s" "$(hook plain | head -n 1)" "0 180 1"
+check "w0: one poll unanswered does not bring the restart forward" "$(hook blip | head -n 1)" "0 180 1"
+check "w0: and the report says so" "$(hook blip | grep -c '^warning:  players warned, waited 180s, 3 online at the restart$')" 1
+check "w0: no answer at all: still the 180 s the players were told" "$(hook silent | head -n 1)" "0 180 1"
+check "w0: everybody gone: the restart at once" "$(hook empty | head -n 1)" "0 30 1"
+check "w0: gone with a cancel ordered: called off, nobody restarted" "$(hook gone-cancel | head -n 2 | tr '\n' '|')" \
+  "1 30 0|the countdown was called off (the admin panel) after 30s; nobody was restarted|"
+check "w0: gone with none: the game restarted by itself, the restart at once" "$(hook gone-crash | head -n 1)" "0 30 0"
+check "w0: and the report says so" "$(hook gone-crash | grep -c '^warning:  players warned; 30s in, the game restarted by itself')" 1
+check "w0: gone, and no answer on why: the cautious side, nobody restarted" "$(hook gone-noanswer | head -n 1)" "1 30 0"
+check "w0: a game that says 999999 s: the cap (STOP_WARN_MAX 300 + 30)" "$(MAX=300 FIRST=999999 hook liar | head -n 1)" "0 330 1"
+check "w0: and once, then nothing: the cap as well" "$(MAX=300 FIRST=999999 hook liar-silent | head -n 1)" "0 330 1"
+
 echo "== w1: a player online is warned, and the restart waits the warning out"
 mk_tree "$T/trees/w1"
 mark "$T/trees/w1" w1
@@ -600,6 +660,81 @@ check "w4: the report says the old game could not count down" \
 check "w4: the player got the stop's 0 only" "$(stops_of cicdp3)" "0"
 check "w4: running" "$(docker exec cicdtest-game tail -n 1 /app/server/server.py)" "# cicd test: w4"
 echo "    took $(( $(date +%s) - s ))s"
+
+echo "== w5: the game crashes during the countdown and docker brings it back -> no cancel, the restart goes on"
+mk_tree "$T/trees/w5"
+mark "$T/trees/w5" w5
+bash "$T/trees/w5/deploy/ci/pack.sh" "$T/w5.tgz" "$T/trees/w5" > /dev/null
+# A longer warning this once, so the game is back well before its time.
+echo "STOP_WARN_SEC=60" >> "$T/opt/lava-ci/gate.conf"
+player_on cicdp4
+s=$(date +%s)
+SSH_ORIGINAL_COMMAND="deploy $(fake_sha w5) $(sum_of "$T/w5.tgz")" gate < "$T/w5.tgz" > "$T/w5.out" 2>&1 &
+GP=$!
+for _ in $(seq 1 300); do
+  grep -q 'player(s) warned' "$T/w5.out" 2>/dev/null && break
+  sleep 1
+done
+sleep 3
+# The crash: the game's process killed outright -- no shutdown(), no cancel
+# -- and the restart policy brings the same container back, whose new
+# process knows of no countdown.
+docker exec -i cicdtest-game python3 - <<'PY'
+import os, signal
+for p in os.listdir("/proc"):
+    if not p.isdigit():
+        continue
+    try:
+        argv = open("/proc/%s/cmdline" % p, "rb").read().split(b"\0")
+    except OSError:
+        continue
+    if argv[:2] == [b"python3", b"server.py"]:
+        os.kill(int(p), signal.SIGKILL)
+PY
+wait $GP
+check "w5 deployed" "$?" 0
+took=$(( $(date +%s) - s ))
+sed -i '$d' "$T/opt/lava-ci/gate.conf"
+wait "$PLAYER_PID" 2> /dev/null
+grep -E '^(gate: .*(warned|restart|online|answer)|warning:)' "$T/w5.out" | sed 's/^/    /'
+check "w5: the gate warned the player" "$(grep -c '^gate: 1 player(s) warned: the restart in 6[01]s$' "$T/w5.out")" 1
+check "w5: the report says the game restarted by itself" \
+  "$(grep -cE '^warning:  players warned; [0-9]+s in, the game restarted by itself' "$T/w5.out")" 1
+check "w5: and the gate did not wait the 60 s out for it" \
+  "$(sed -n 's/^warning:  players warned; \([0-9]*\)s in, .*/\1/p' "$T/w5.out" | awk '{ print ($1 < 55) ? "yes" : "no (" $1 "s)" }')" yes
+check "w5: nor took it for a cancel" "$(grep -c 'called off' "$T/w5.out")" 0
+check "w5: the player was told 60, then the crash cut him off" \
+  "$(stops_of cicdp4) $(tail -n 1 "$T/cicdp4.frames" | cut -d' ' -f2)" "60 EOF"
+check "w5: running" "$(docker exec cicdtest-game tail -n 1 /app/server/server.py)" "# cicd test: w5"
+echo "    took ${took}s"
+
+echo "== w6: the restart fails after the countdown began -> the gate calls the countdown off, rolls back"
+mk_tree "$T/trees/w6"
+mark "$T/trees/w6" w6
+# Under docker's 6 MB least: the file validates, is within the policy and
+# builds, and "up" fails making the new game container -- before the old one
+# is touched, as compose makes the new container first.
+sed -i 's/^    container_name: cicdtest-game$/&\n    mem_limit: 1m/' "$T/trees/w6/docker-compose.yml"
+check "w6: the limit is in the file" "$(grep -c '^    mem_limit: 1m$' "$T/trees/w6/docker-compose.yml")" 1
+bash "$T/trees/w6/deploy/ci/pack.sh" "$T/w6.tgz" "$T/trees/w6" > /dev/null
+player_on cicdp5
+ST=$(started_at)
+IMGW5=$(game_img)
+SUMW5=$(tree_sum)
+SSH_ORIGINAL_COMMAND="deploy $(fake_sha w6) $(sum_of "$T/w6.tgz")" gate < "$T/w6.tgz" > "$T/w6.out" 2>&1
+check "w6 fails with status 1" "$?" 1
+grep -E '^(result|state|rollback|warning):' "$T/w6.out" | sed 's/^/    /'
+check "w6: at the restart" "$(grep -c '^result:   FAILED at build: docker compose up -d --no-build$' "$T/w6.out")" 1
+check "w6: the gate called its countdown off" "$(grep -c '^warning:  the countdown was called off$' "$T/w6.out")" 1
+check "w6: the game has no stop announced (one run out and not called off would say 0)" \
+  "$(docker exec cicdtest-game python3 stopwarn.py status 2> /dev/null)" "- 1"
+sleep 2
+check "w6: the player was told 20 and 10, and no stop came" "$(stops_of cicdp5)" "20 10"
+check "w6: and plays on" "$(grep -c ' EOF$' "$T/cicdp5.frames")" 0
+check "w6: the game was not restarted" "$(started_at)" "$ST"
+check "w6: still on its image" "$(game_img)" "$IMGW5"
+check "w6: the tree is back" "$(tree_sum)" "$SUMW5"
+kill "$PLAYER_PID" 2> /dev/null; wait "$PLAYER_PID" 2> /dev/null
 
 echo "== v5: good deploy, the client goes away mid-way; pruning to KEEP=2"
 mk_tree "$T/trees/v5"

@@ -10,8 +10,12 @@ checked is the order of things and the waiting:
   - with nobody logged in there is no wait; with --now no countdown at all;
   - with a player in, the countdown goes out (20, 10) and "up" comes only
     once its time is up;
+  - a poll that gets no answer (one ssh that failed) does not bring "up"
+    forward: it still comes once the time the players were told is over;
   - called off from the panel while the script waits: exit 1, no "up";
   - Ctrl-C while it waits: the countdown is called off, no "up";
+  - the game restarted by itself while the script waits (a crash, its new
+    process with no countdown, no order calling it off): "up" at once;
   - --warn outside what the game takes is refused before anything is done.
 
     LAVA_RES=.../lava/res python3 tools/test_deploy_warn.py
@@ -52,10 +56,18 @@ CRED = accounts.credential("alice", "secret")
 
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
            LAVA_ADMIN_POLL="0.2", LAVA_POLICY_PORT="0")
-srv = subprocess.Popen([sys.executable, "server.py"], cwd=SERVER, env=env,
-                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 _log = []
-threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True).start()
+
+
+def start_game():
+    """The game server on PORT and DB; its output into _log."""
+    p = subprocess.Popen([sys.executable, "server.py"], cwd=SERVER, env=env,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    threading.Thread(target=lambda: _log.extend(p.stdout), daemon=True).start()
+    return p
+
+
+srv = start_game()
 
 # The stand-ins: ssh runs the remote command here, rsync does nothing.
 BIN = os.path.join(WORK, "bin")
@@ -70,6 +82,14 @@ cmd="$*"
 case $cmd in
   *"docker exec lava-game python3 stopwarn.py"*)
     echo "stopwarn ${cmd#*stopwarn.py }" >> "$STUB_LOG"
+    # The status polls listed in STUB_FAIL_STATUS (1,3: the first and the
+    # third) fail as an ssh that could not connect does.
+    if [ "${cmd#*stopwarn.py }" = status ]; then
+      n=$(grep -c '^stopwarn status$' "$STUB_LOG")
+      case ",$STUB_FAIL_STATUS," in
+        *",$n,"*) echo "ssh: connect to host stand-in port 22: Connection timed out" >&2; exit 255 ;;
+      esac
+    fi
     cd "$STUB_SERVER" && exec "$STUB_PYTHON" stopwarn.py ${cmd#*stopwarn.py } ;;
   *"docker compose build"*)
     echo build >> "$STUB_LOG"
@@ -87,13 +107,13 @@ for name in ("ssh", "rsync"):
 DEPLOY = os.path.join(ROOT, "deploy", "deploy.sh")
 
 
-def deploy(*args, fail_build=False, during=None):
+def deploy(*args, fail_build=False, fail_status="", during=None):
     """deploy.sh with the stand-ins: (exit status, its output, the remote
     log as a list, seconds it took). during(proc, out) runs while it does."""
     open(LOG, "w").close()
     denv = dict(env, PATH=BIN + os.pathsep + os.environ["PATH"], STUB_LOG=LOG,
                 STUB_SERVER=SERVER, STUB_PYTHON=sys.executable,
-                STUB_FAIL_BUILD="1" if fail_build else "",
+                STUB_FAIL_BUILD="1" if fail_build else "", STUB_FAIL_STATUS=fail_status,
                 LAVA_DEPLOY_HOST="stand-in", LAVA_DEPLOY_DIR=os.path.join(WORK, "opt"))
     denv.pop("LAVA_STOP_WARN_SEC", None)
     out_path = os.path.join(WORK, "deploy.out")
@@ -110,7 +130,7 @@ def deploy(*args, fail_build=False, during=None):
                              stderr=subprocess.STDOUT, start_new_session=True)
         if during:
             during(p, out_path)
-        p.wait(timeout=120)
+        p.wait(timeout=200)
     took = time.time() - t0
     with open(LOG) as f:
         remote = [l.strip() for l in f if l.strip()]
@@ -134,6 +154,7 @@ class Player:
         self.s = testkit.connect(PORT, srv, _log)
         self.s.settimeout(None)
         self.got = []
+        self.eof = False
         threading.Thread(target=self._read, daemon=True).start()
         self.s.sendall(b"hello;minor=2;major=0;\x00" + ("login;hash=@%s@;\x00" % CRED).encode())
         end = time.time() + 10
@@ -146,8 +167,10 @@ class Player:
             try:
                 chunk = self.s.recv(65536)
             except OSError:
+                self.eof = True
                 return
             if not chunk:
+                self.eof = True
                 return
             buf += chunk
             *done, buf = buf.split(b"\x00")
@@ -155,6 +178,12 @@ class Player:
 
     def stops(self):
         return [f for f in self.got if f.startswith("shutdown;")]
+
+    def wait_eof(self, timeout=10):
+        end = time.time() + timeout
+        while time.time() < end and not self.eof:
+            time.sleep(0.1)
+        return self.eof
 
     def close(self):
         self.s.close()
@@ -212,6 +241,18 @@ try:
                    env=env, capture_output=True, timeout=30)
     check("cleared for the next one", status(), "- 1")
 
+    # --- a poll that gets no answer -----------------------------------------------------
+    n = len(player.stops())
+    rc, out, remote, took = deploy("--warn=20", fail_status="1")
+    check("the first poll's ssh failed: the wait goes on, up once the 20 seconds are over",
+          (rc, remote[-1], took >= 20), (0, "up", True))
+    check("and says so", "the countdown does not answer; waiting out the" in out, True)
+    check("the player was told 20, then 10", player.stops()[n:],
+          ["shutdown;seconds=20;", "shutdown;seconds=10;"])
+    subprocess.run([sys.executable, "stopwarn.py", "cancel", "--by", "test"], cwd=SERVER,
+                   env=env, capture_output=True, timeout=30)
+    check("cleared again", status(), "- 1")
+
     # --- called off from the panel while it waits ---------------------------------------
     def call_off(p, out_path):
         wait_for(out_path, "player(s) told")
@@ -223,6 +264,8 @@ try:
     rc, out, remote, took = deploy("--warn=20", during=call_off)
     check("called off from the panel: exit 1, no up", (rc, "up" in remote), (1, False))
     check("and says nothing was restarted", "the countdown was called off" in out, True)
+    check("it asked the game whether an order called it off",
+          any(r.startswith("stopwarn cancelled ") for r in remote), True)
     check("the player was told 20 only", player.stops()[n:], ["shutdown;seconds=20;"])
 
     # --- Ctrl-C while it waits -----------------------------------------------------------
@@ -239,6 +282,32 @@ try:
     check("no countdown left", status(), "- 1")
     time.sleep(1)
     check("the player was told 20 only", player.stops()[n:], ["shutdown;seconds=20;"])
+
+    # --- the game restarted by itself while it waits -------------------------------------
+    # Past the window the next one asks about (`cancelled`), so the cancel
+    # just above is not taken for one of its own.
+    time.sleep(3)
+
+    def crash(p, out_path):
+        global srv
+        wait_for(out_path, "player(s) told")
+        time.sleep(1)
+        # Killed outright -- no shutdown(), no cancel -- and a new process on
+        # the same database, as docker's restart policy brings one back.
+        srv.kill()
+        srv.wait(timeout=10)
+        srv = start_game()
+
+    n = len(player.stops())
+    rc, out, remote, took = deploy("--warn=120", during=crash)
+    check("restarted by itself: no order called it off, so up at once",
+          (rc, remote[-1], took < 110), (0, "up", True))
+    check("and says so", "the game restarted by itself" in out, True)
+    check("not taken for a cancel", "called off" in out, False)
+    check("it asked the game whether an order called it off",
+          any(r.startswith("stopwarn cancelled ") for r in remote), True)
+    check("the player was told 120, then the crash cut him off",
+          (player.stops()[n:], player.wait_eof()), (["shutdown;seconds=120;"], True))
 finally:
     if player is not None:
         player.close()
