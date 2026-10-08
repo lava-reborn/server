@@ -5627,14 +5627,14 @@
       "rew_obj": [6055, 6062],
       "num_rew_obj": [3, 3],
       "rew_afro": 700,
-      "rew_gold": 0,
+      "rew_gold": 2,
       "repeatable": 1,
       "per_day": 1,
       "level": 0,
       "q_type": 0,
       "loc": 51390251,
       "finish_loc": 51349281,
-      "why": "RECOVERED texts, holders and once a day. Сорванец's «Спички детям» (59895-59898): five Коробка спичек 6915, given and taken by Сорванец (5189, market 185), off Новые Колонисты (250/251). The original reward was 300 afro. DESIGNED reward, owner approved 2026-10-05: 700 afro and the player's choice of three rags 6055 (68-90 health each) or three Caravaneers 6062 (156-195 stamina each). Each item is single-use and requires no Medicine. Smaller doses suit the reported level-6 character in the afro Wanderer set with 244 health and 367 stamina. This pays more than selling five boxes for 420 afro. Matches are ordinary loot at a base chance of 0.30 (data/loot_manual.json), regardless of quest state or how many the player holds, and can be saved ahead of time. Repeatable once a day (per_day 1), also subject to the daily hand-in limit. Map marks: the colonists by the wounded scout (33), then the market."
+      "why": "RECOVERED texts, holders and once a day. Сорванец's «Спички детям» (59895-59898): five Коробка спичек 6915, given and taken by Сорванец (5189, market 185), off Новые Колонисты (250/251). The original reward was 300 afro. DESIGNED reward, owner approved 2026-10-05: 700 afro and the player's choice of three rags 6055 (68-90 health each) or three Caravaneers 6062 (156-195 stamina each). Each item is single-use and requires no Medicine. Smaller doses suit the reported level-6 character in the afro Wanderer set with 244 health and 367 stamina. This pays more than selling five boxes for 420 afro. Matches are ordinary loot at a base chance of 0.30 (data/loot_manual.json), regardless of quest state or how many the player holds, and can be saved ahead of time. Repeatable once a day (per_day 1), also subject to the daily hand-in limit. Map marks: the colonists by the wounded scout (33), then the market. 2026-10-07, the owner (issue #63, the valley's economy): 0.02 G beside the 700 afro and the consumables. The valley's five dailies paid 1 700 afro a day between them against a mine that pays an ounce for twenty marauders (quest 9), so each fighting daily now pays a little gold on top -- 0.02 G, the king 0.05 G as the one hard errand (one carcass in five black rats of the adits) -- and the meat and the king more afro (100 to 300, 200 to 700): 0.11 G a day in all, nine times under «Золотоискатель», the owner's choice over the player's 0.1-0.2 G a quest, which would have equalled the mine and made the boss's ingot five days of rat tails. The chip (52) keeps its preparation alone."
     },
     {
       "type": 52,
@@ -5692,14 +5692,14 @@
         {"obj": 3216, "num": 20, "mobs": [1023, 1019]}
       ],
       "rew_afro": 700,
-      "rew_gold": 0,
+      "rew_gold": 2,
       "repeatable": 1,
       "per_day": 1,
       "level": 0,
       "q_type": 0,
       "loc": 51332895,
       "finish_loc": 51373861,
-      "why": "RECOVERED texts and once a day, DESIGNED reward. Крысолов's «Крысиные хвосты» (26273; the newest edition's start 59921 and notfinish 59922, where 26274/26275 carry №0000722; 26276, stored once). Bring twenty rat tails (RatTail 3216, which every rat carries: mobs.ANIMAL_LOOT) -- the grey rats of the barn (1023, seventeen in 166 and four in 184) and the black rats of the old adits behind it (1019). 'стандартную дневную плату крысолова' names no sum: DESIGNED 700 afro for twenty tails, raised from 300 on 2026-10-05 to make the daily collection quest more worthwhile; no item reward. Selling the tails at a stall pays 140 afro. Repeatable, once a day (per_day 1): 'не чаще 1 раза в сутки', 'На сегодня это всё. Приходи завтра.'. Map marks: the barn, then the caravan."
+      "why": "RECOVERED texts and once a day, DESIGNED reward. Крысолов's «Крысиные хвосты» (26273; the newest edition's start 59921 and notfinish 59922, where 26274/26275 carry №0000722; 26276, stored once). Bring twenty rat tails (RatTail 3216, which every rat carries: mobs.ANIMAL_LOOT) -- the grey rats of the barn (1023, seventeen in 166 and four in 184) and the black rats of the old adits behind it (1019). 'стандартную дневную плату крысолова' names no sum: DESIGNED 700 afro for twenty tails, raised from 300 on 2026-10-05 to make the daily collection quest more worthwhile; no item reward. Selling the tails at a stall pays 140 afro. Repeatable, once a day (per_day 1): 'не чаще 1 раза в сутки', 'На сегодня это всё. Приходи завтра.'. Map marks: the barn, then the caravan. 2026-10-07, the owner (issue #63, the valley's economy): 0.02 G beside the 700 afro. The valley's five dailies paid 1 700 afro a day between them against a mine that pays an ounce for twenty marauders (quest 9), so each fighting daily now pays a little gold on top -- 0.02 G, the king 0.05 G as the one hard errand (one carcass in five black rats of the adits) -- and the meat and the king more afro (100 to 300, 200 to 700): 0.11 G a day in all, nine times under «Золотоискатель», the owner's choice over the player's 0.1-0.2 G a quest, which would have equalled the mine and made the boss's ingot five days of rat tails. The chip (52) keeps its preparation alone."
     },
     {
       "type": 55,
@@ -5713,8 +5713,8 @@
       "objs": [
         {"obj": 3218, "num": 1, "mobs": [1019]}
       ],
-      "rew_afro": 200,
-      "rew_gold": 0,
+      "rew_afro": 700,
+      "rew_gold": 5,
       "repeatable": 1,
       "per_day": 1,
       "level": 0,
@@ -5722,7 +5722,7 @@
       "need_quest": 53,
       "loc": 51332895,
       "finish_loc": 51332895,
-      "why": "RECOVERED texts, workings and once a day, DESIGNED reward. Фермер Хрущ's «Крысиный король» (the wiki's name for it on Хрущ's page; the file's line of those words, 6344, is the thing's own name; start and notfinish of the newest edition 59918/59919, where 26266/26267 carry №0000720; 26268). Bring the carcass of the rat king (qRatKing 3218, worth nothing) from the old adits where the black rats live (643, behind the barn's door, data/passages.json): the black rats (1019) carry it while this quest wants it, one in five (data/loot_manual.json; one in ten until 2026-10-07, issue #64). 'золотом заплачу' and the finish's 'маленькую пачечку денег' name no sum: DESIGNED 200 afro. Repeatable, once a day (per_day 1): 'Данное задание можно выполнять не чаще 1 раза в сутки'. After «Крысиный переполох» (53), which sends the player to him. Map mark: the barn (the adits have no cell; their way in is its door)."
+      "why": "RECOVERED texts, workings and once a day, DESIGNED reward. Фермер Хрущ's «Крысиный король» (the wiki's name for it on Хрущ's page; the file's line of those words, 6344, is the thing's own name; start and notfinish of the newest edition 59918/59919, where 26266/26267 carry №0000720; 26268). Bring the carcass of the rat king (qRatKing 3218, worth nothing) from the old adits where the black rats live (643, behind the barn's door, data/passages.json): the black rats (1019) carry it while this quest wants it, one in five (data/loot_manual.json; one in ten until 2026-10-07, issue #64). 'золотом заплачу' and the finish's 'маленькую пачечку денег' name no sum: DESIGNED 200 afro. Repeatable, once a day (per_day 1): 'Данное задание можно выполнять не чаще 1 раза в сутки'. After «Крысиный переполох» (53), which sends the player to him. Map mark: the barn (the adits have no cell; their way in is its door). 2026-10-07, the owner (issue #63, the valley's economy): 700 afro, not 200, and 0.05 G. The valley's five dailies paid 1 700 afro a day between them against a mine that pays an ounce for twenty marauders (quest 9), so each fighting daily now pays a little gold on top -- 0.02 G, the king 0.05 G as the one hard errand (one carcass in five black rats of the adits) -- and the meat and the king more afro (100 to 300, 200 to 700): 0.11 G a day in all, nine times under «Золотоискатель», the owner's choice over the player's 0.1-0.2 G a quest, which would have equalled the mine and made the boss's ingot five days of rat tails. The chip (52) keeps its preparation alone."
     },
     {
       "type": 56,
@@ -5884,8 +5884,8 @@
       "objs": [
         {"obj": 260, "num": 3, "mobs": [12]}
       ],
-      "rew_afro": 100,
-      "rew_gold": 0,
+      "rew_afro": 300,
+      "rew_gold": 2,
       "repeatable": 1,
       "per_day": 1,
       "level": 0,
@@ -5893,7 +5893,7 @@
       "need_quest": 61,
       "loc": 51324702,
       "finish_loc": 51349275,
-      "why": "RECOVERED texts and once a day, DESIGNED count, text choice and reward. «Еда» (59874; start 59875 with 'не чаще 1 раза в сутки'; notfinish 59877, 'Прошу, найди еще мяса для деревни! ... отнести найденное мясо Сабиру'; finish 59878 'Спасибо, странник.'; 59876 'Еды не бывает слишком много.' is left out, one line too many for the four slots). More meat for the village: three pieces of the antelope's meat (260, as in 61), which the antelopes (12, eleven in 25) carry while this quest wants them (data/loot_manual.json, certain). DESIGNED three, and 100 afro. Given and taken by Хасани (Сабир's stand-in). Repeatable, once a day (per_day 1). After 61. Map marks: the antelopes, then the village."
+      "why": "RECOVERED texts and once a day, DESIGNED count, text choice and reward. «Еда» (59874; start 59875 with 'не чаще 1 раза в сутки'; notfinish 59877, 'Прошу, найди еще мяса для деревни! ... отнести найденное мясо Сабиру'; finish 59878 'Спасибо, странник.'; 59876 'Еды не бывает слишком много.' is left out, one line too many for the four slots). More meat for the village: three pieces of the antelope's meat (260, as in 61), which the antelopes (12, eleven in 25) carry while this quest wants them (data/loot_manual.json, certain). DESIGNED three, and 100 afro. Given and taken by Хасани (Сабир's stand-in). Repeatable, once a day (per_day 1). After 61. Map marks: the antelopes, then the village. 2026-10-07, the owner (issue #63, the valley's economy): 300 afro, not 100, and 0.02 G. The valley's five dailies paid 1 700 afro a day between them against a mine that pays an ounce for twenty marauders (quest 9), so each fighting daily now pays a little gold on top -- 0.02 G, the king 0.05 G as the one hard errand (one carcass in five black rats of the adits) -- and the meat and the king more afro (100 to 300, 200 to 700): 0.11 G a day in all, nine times under «Золотоискатель», the owner's choice over the player's 0.1-0.2 G a quest, which would have equalled the mine and made the boss's ingot five days of rat tails. The chip (52) keeps its preparation alone."
     },
     {
       "type": 63,
