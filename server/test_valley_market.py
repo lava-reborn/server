@@ -131,10 +131,10 @@ PAYS = {GEAR: ([], 0, {"shooting": 5}), WIND: ([], 0, {"shooting": 5}),
         STONE: ([], 50, {}), FANGS: ([], 150, {}), SON: ([], 200, {}),
         MATCHES_Q: ([(RAG, 3), (CARAVANEER, 3)], 700, {}),
         CHIP_Q: ([(SALUS, 1), (ANESTHETIC, 1)], 0, {}),
-        RAT_RIOT: ([], 0, MED20), TAILS: ([], 700, {}), KING_Q: ([], 200, {}),
+        RAT_RIOT: ([], 0, MED20), TAILS: ([], 700, {}), KING_Q: ([], 700, {}),
         ELIXIR: ([], 500, {}), ADITS: ([], 0, MED20), PISTOL_KIT: ([], 0, {"shooting": 200}),
         EMERALDS_Q: ([], 0, {"shooting": 100}), ANTELOPE1: ([], 0, MED20),
-        ANTELOPE2: ([], 0, MED20), FOOD: ([], 100, {}), HUNT_Q: ([], 150, {"shooting": 30}),
+        ANTELOPE2: ([], 0, MED20), FOOD: ([], 300, {}), HUNT_Q: ([], 150, {"shooting": 30}),
         WHERE_ANT: ([], 0, {}), WHERE_NORMAN: ([], 0, {}), WHERE_SEIFUL: ([], 0, {}),
         WHERE_CORBEN: ([], 0, {})}
 # What the quests that ask for things ask for, and who carries it: "quest"
@@ -188,11 +188,14 @@ try:
                     {key: xp for key, idx in quests.SKILL_KEYS.items()
                      for skill, xp in q.rew_xp if skill == idx})
            for q in rows}, PAYS)
-    check("  ..no gold, nothing beside the reward, no level, no cap; one party quest",
-          ([t for t in MARKET_Q if quests.get(t).rew_gold or quests.get(t).rew_also
+    check("  ..a little gold on the four fighting dailies alone (the owner's, issue #63:"
+          " 0.11 G a day, nine times under the mine's ounce); nothing beside the reward,"
+          " no level, no cap; one party quest",
+          ({t: quests.get(t).rew_gold for t in MARKET_Q if quests.get(t).rew_gold},
+           [t for t in MARKET_Q if quests.get(t).rew_also
             or quests.get(t).level or quests.get(t).max_level is not None],
            {t: quests.get(t).party_size for t in MARKET_Q if quests.get(t).party_size}),
-          ([], {PISTOL_KIT: 3}))
+          ({MATCHES_Q: 2, TAILS: 2, KING_Q: 5, FOOD: 2}, [], {PISTOL_KIT: 3}))
     check("  ..appended: Камал's way out and gold sand keep their q_idx 0 and 1",
           (quests.given_by(KAMAL), quests.given_by(RUDO), quests.taken_by(RUDO)),
           ([8, 9, EMERALDS_Q], [MINE_DOWN], [MINE_DOWN, ADITS]))
@@ -626,6 +629,12 @@ def purse(frames):
     return got[-1].get("afro") if got else None
 
 
+def gold(frames):
+    """The purse's gold, in hundredths, as the last userInfo_Player says."""
+    got = named(frames, "userInfo_Player")
+    return got[-1].get("gold") if got else None
+
+
 def counts(frames, kind):
     key = "kill_num" if kind == quests.KILL_MOBS else "obj_num"
     return [(p[key], p["complete"]) for p in named(frames, "q_di_" + kind)]
@@ -783,6 +792,7 @@ try:
     arrive(c)
     CID = char_id()
     AFRO = 1000
+    GOLD = 0
     OFFERED = [GEAR, MATCHES_Q, CHIP_Q, RAT_RIOT, TAILS, ADITS, EMERALDS_Q,
                ANTELOPE1]
     check("a newcomer: the first of each line is offered, nothing that waits for another",
@@ -932,6 +942,8 @@ try:
           ([1], [], None, before_rewards))  # RES_NO_SUCH: no reward at that index
     got = hand_in(c, here, MATCHES_Q, q)
     AFRO += 700
+    GOLD += 2
+    check("  ..and two hundredths of an ounce (issue #63)", gold(got), GOLD)
     check("  ..handed in: five boxes spent, 700 afro and three rags awarded",
           (upto_ack(got), acks(got), purse(got), new_things(got), owned(CID).get(MATCHES),
            owned(CID).get(RAG, 0) - before_rewards.get(RAG, 0),
@@ -981,9 +993,11 @@ try:
           counts(got, quests.BRING_L_OBJ), [([0], 0), ([20], 1)])
     got = hand_in(c, here, TAILS, q_tails)
     AFRO += 700
-    check("  ..the tails handed in to Крысолов: out, seven hundred afro, the day's count",
-          (upto_ack(got), acks(got), purse(got), owned(CID).get(TAIL)),
-          (["ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"], [0], AFRO, None))
+    GOLD += 2
+    check("  ..the tails handed in to Крысолов: out, seven hundred afro and 0.02 G, the day's"
+          " count",
+          (upto_ack(got), acks(got), purse(got), gold(got), owned(CID).get(TAIL)),
+          (["ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"], [0], AFRO, GOLD, None))
     check("  ..twenty tails paid, no extra item reward, not offered again today",
           (new_things(got), status(c, TAILS)), ([], 0))
     got, _q = take(c, here, TAILS)
@@ -1028,10 +1042,12 @@ try:
           (1, 1, [[1]], [([1], 1)]))
     here = inhabitants(goto(c, BARN))
     got = hand_in(c, here, KING_Q, q)
-    AFRO += 200
-    check("  ..handed in to Хрущ: the king out, two hundred afro, the day's count",
-          (upto_ack(got), acks(got), purse(got), owned(CID).get(KING)),
-          (["ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"], [0], AFRO, None))
+    AFRO += 700
+    GOLD += 5
+    check("  ..handed in to Хрущ: the king out, seven hundred afro and 0.05 G (issue #63:"
+          " the one hard daily), the day's count",
+          (upto_ack(got), acks(got), purse(got), gold(got), owned(CID).get(KING)),
+          (["ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"], [0], AFRO, GOLD, None))
     check("  ..not again today; his brother's errand is offered now",
           [status(c, t) for t in (KING_Q, ELIXIR)], [0, 1])
     got, q = take(c, here, ELIXIR)
@@ -1142,11 +1158,13 @@ try:
           [last.get(q_food), last.get(q_hunt)], [([3], 1), ([10], 1)])
     here = inhabitants(goto(c, NORTH))
     got = hand_in(c, here, FOOD, q_food)
-    AFRO += 100
-    check("«Еда» handed in to Хасани: the meat out, a hundred afro, the day's count",
-          (tail_after(upto_ack(got), "userInfo_Player"), acks(got), purse(got),
+    AFRO += 300
+    GOLD += 2
+    check("«Еда» handed in to Хасани: the meat out, three hundred afro and 0.02 G, the day's"
+          " count",
+          (tail_after(upto_ack(got), "userInfo_Player"), acks(got), purse(got), gold(got),
            owned(CID).get(MEAT), gone_things(got) >= 1),
-          (["userInfo_Player", "q_sys", "cmdAck"], [0], AFRO, None, True))
+          (["userInfo_Player", "q_sys", "cmdAck"], [0], AFRO, GOLD, None, True))
     sh0 = skill_seen(c, SHOOTING)
     got = hand_in(c, here, HUNT_Q, q_hunt)
     AFRO += 150
@@ -1195,6 +1213,8 @@ try:
           counts(got, quests.BRING_L_OBJ), [([5], 1)])
     got = hand_in(c, here, MATCHES_Q, q, obj_idx=1)
     AFRO += 700
+    GOLD += 2
+    check("  ..and the next day's two hundredths", gold(got), GOLD)
     check("choosing the other icon gives 700 afro and three Caravaneers",
           (acks(got), purse(got), new_things(got),
            owned(CID).get(MATCHES, 0),
