@@ -395,7 +395,9 @@ check("a bad log call: both records in the file",
 #
 # emailer prints its "  MAIL " lines and logs nothing; a letter the SMTP side
 # refuses is a fault the owner has to see (a wrong password for outside
-# programs), so each failed try and the giving up go to the file as well.
+# programs), so each failed try and the giving up go to the file as well --
+# except an address the server refuses, the player's typo, which is only
+# printed.
 MAIL = r"""
 import sys
 sys.path.insert(0, sys.argv[1])
@@ -427,8 +429,8 @@ check("mail: each failed try and the giving up, in the file",
       + [("ERROR", "lava.mail", "gave up: %s" % letter)])
 
 # A recipient the server refuses: smtplib names the address in the
-# exception, and the reply repeats it. The log masks it everywhere, the
-# print and the file alike.
+# exception, and the reply repeats it. One try, a masked print, and nothing
+# in the file: the panel's lamp is for the server, not for a player's typo.
 REFUSED = MAIL.replace("""def refused(msg):
     raise ConnectionRefusedError(111, "Connection refused")
 """, """import smtplib
@@ -443,10 +445,11 @@ text = read(side)
 check("mail refused: stdout is the same with the file", filed, plain)
 check("mail refused: the address in full nowhere",
       ["ivan.petrov" in s for s in (filed[0], filed[1], text)], [False, False, False])
-check("mail refused: the try in the file, masked, with the server's code",
-      [r["msg"] for r in parse(text)[0]][:1],
-      ["try 1 of 3 failed: Подтверждение адреса to i***@example.com: SMTPRecipientsRefused: "
+check("mail refused: one print, masked, with the server's code",
+      [s for s in filed[0].splitlines() if s.startswith("  MAIL ")],
+      ["  MAIL address refused: Подтверждение адреса to i***@example.com: SMTPRecipientsRefused: "
        "{'i***@example.com': (550, b'5.1.1 <i***@example.com>: Recipient address rejected')}"])
+check("mail refused: nothing in the file", parse(text)[0], [])
 
 
 # --- the game, with and without the file ------------------------------------------

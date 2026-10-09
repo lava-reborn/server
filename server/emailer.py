@@ -18,8 +18,16 @@ Configuration (docker-compose.yml passes it to the http service from .env):
 
 A letter goes from a queue, on a thread of its own: the page that asked for
 it answers at once, and an SMTP server that is slow or down holds no
-request. Three tries, 10 and 60 seconds apart. The log names a letter by its
+request. Three tries, 10 and 60 seconds apart, short of a final no (5xx):
+an address the server refuses is the player's typo or an invented one, said
+once on stdout and kept out of the admin panel's error log; any other final
+no stops the tries and is an error there. The log names a letter by its
 subject and a masked address, never by its link: the link opens the account.
+
+check_recipient asks the server about an address without sending anything
+(MAIL FROM, RCPT TO, RSET), so registration and the cabinet can turn away a
+domain that takes no mail while the player is still at the form
+(email_flow.takes_mail).
 """
 import email.message
 import email.utils
@@ -43,6 +51,7 @@ FROM = os.environ.get("LAVA_MAIL_FROM", "").strip() or (
 OUTBOX = os.environ.get("LAVA_MAIL_OUTBOX", "").strip()
 PAUSES = (10, 60)
 TIMEOUT = 30
+CHECK_TIMEOUT = 10
 
 _queue = queue.Queue(maxsize=500)
 _lock = threading.Lock()
@@ -88,6 +97,23 @@ def build(to, subject, text, html=None):
     return msg
 
 
+def _open(timeout):
+    """A logged-in SMTP session, for a with block."""
+    context = ssl.create_default_context()
+    if PORT == 465:
+        smtp = smtplib.SMTP_SSL(HOST, PORT, timeout=timeout, context=context)
+    else:
+        smtp = smtplib.SMTP(HOST, PORT, timeout=timeout)
+    try:
+        if PORT != 465:
+            smtp.starttls(context=context)
+        smtp.login(USER, PASSWORD)
+    except BaseException:
+        smtp.close()
+        raise
+    return smtp
+
+
 def _deliver(msg):
     if OUTBOX:
         os.makedirs(OUTBOX, exist_ok=True)
@@ -96,45 +122,100 @@ def _deliver(msg):
             fh.write(bytes(msg))
         os.replace(path + ".tmp", path)
         return
-    context = ssl.create_default_context()
-    if PORT == 465:
-        with smtplib.SMTP_SSL(HOST, PORT, timeout=TIMEOUT, context=context) as smtp:
-            smtp.login(USER, PASSWORD)
-            smtp.send_message(msg)
-    else:
-        with smtplib.SMTP(HOST, PORT, timeout=TIMEOUT) as smtp:
-            smtp.starttls(context=context)
-            smtp.login(USER, PASSWORD)
-            smtp.send_message(msg)
+    with _open(TIMEOUT) as smtp:
+        smtp.send_message(msg)
+
+
+def refused_recipient(exc):
+    """The server's final no for the address itself -- Mail.ru's 550
+    «non-local recipient verification failed» for a domain that takes no
+    mail. Trying again changes nothing, and it is the player's typo or an
+    invented address, not a fault here."""
+    return (isinstance(exc, smtplib.SMTPRecipientsRefused) and bool(exc.recipients)
+            and all(code >= 500 for code, _ in exc.recipients.values()))
+
+
+def permanent(exc):
+    """Any other final no (5xx): a password the server no longer takes, a
+    letter it will not carry. Trying again changes nothing either."""
+    return isinstance(exc, smtplib.SMTPResponseException) and exc.smtp_code >= 500
+
+
+def check_recipient(address):
+    """Whether the server takes letters for this address, asked before an
+    account depends on it: MAIL FROM, RCPT TO, RSET -- no letter is sent.
+    'refused' is a 5xx to RCPT TO; 'ok' a 2xx; 'unknown' anything else --
+    mail not set up, the server down or busy -- and lets the address
+    through: the confirm link will tell.
+
+    In the suites' folder mode (LAVA_MAIL_OUTBOX) a domain under .invalid,
+    the name RFC 2606 keeps from ever existing, is refused, and every other
+    taken."""
+    if OUTBOX:
+        return "refused" if (address or "").rpartition("@")[2].endswith(".invalid") else "ok"
+    if not enabled():
+        return "unknown"
+    try:
+        with _open(CHECK_TIMEOUT) as smtp:
+            code, _ = smtp.mail(USER)
+            if code >= 400:
+                return "unknown"
+            code, reply = smtp.rcpt(address)
+            smtp.rset()
+    except (smtplib.SMTPException, OSError) as exc:
+        print("  MAIL check of %s could not be made: %s" % (masked(address), type(exc).__name__),
+              flush=True)
+        return "unknown"
+    verdict = "refused" if code >= 500 else "ok" if code < 300 else "unknown"
+    print("  MAIL check of %s: %s (%d)" % (masked(address), verdict, code), flush=True)
+    return verdict
 
 
 def _run():
     while True:
         msg = _queue.get()
-        name = "%s to %s" % (msg["Subject"], masked(msg["To"]))
-        for attempt, pause in enumerate((0,) + PAUSES, 1):
-            if pause:
-                time.sleep(pause)
-            try:
-                _deliver(msg)
-                print("  MAIL sent: %s" % name, flush=True)
+        try:
+            attempt(msg)
+        finally:
+            _queue.task_done()
+
+
+def attempt(msg, pauses=None):
+    """One letter, tried until it goes or a final no: 'sent', 'refused' (the
+    address takes no mail) or 'failed'."""
+    pauses = PAUSES if pauses is None else tuple(pauses)
+    name = "%s to %s" % (msg["Subject"], masked(msg["To"]))
+    for n, pause in enumerate((0,) + pauses, 1):
+        if pause:
+            time.sleep(pause)
+        try:
+            _deliver(msg)
+            print("  MAIL sent: %s" % name, flush=True)
+            return "sent"
+        except Exception as exc:  # anything the SMTP side throws is worth a look
+            # A refused recipient's address is in the exception twice
+            # (SMTPRecipientsRefused is a dict of them, and the reply
+            # repeats it): masked like the one in name.
+            why = masked_in("%s: %s" % (type(exc).__name__, exc))
+            if refused_recipient(exc):
+                # The player's address, not a fault of ours: no retries, and
+                # nothing for the admin panel's error log, whose lamp is for
+                # the server (registration asks check_recipient first; this
+                # is what slips past it).
+                print("  MAIL address refused: %s: %s" % (name, why), flush=True)
+                return "refused"
+            print("  MAIL try %d of %d failed: %s: %s"
+                  % (n, len(pauses) + 1, name, why), flush=True)
+            # A failure is for the admin panel's error log as well
+            # (errlog), from a logger that writes only there: the line
+            # above stays as it was.
+            errlog.only("lava.mail").warning(
+                "try %d of %d failed: %s: %s", n, len(pauses) + 1, name, why)
+            if permanent(exc):
                 break
-            except Exception as exc:  # anything the SMTP side throws is worth a retry
-                # A refused recipient's address is in the exception twice
-                # (SMTPRecipientsRefused is a dict of them, and the reply
-                # repeats it): masked like the one in name.
-                why = masked_in("%s: %s" % (type(exc).__name__, exc))
-                print("  MAIL try %d of %d failed: %s: %s"
-                      % (attempt, len(PAUSES) + 1, name, why), flush=True)
-                # A failure is for the admin panel's error log as well
-                # (errlog), from a logger that writes only there: the line
-                # above stays as it was.
-                errlog.only("lava.mail").warning(
-                    "try %d of %d failed: %s: %s", attempt, len(PAUSES) + 1, name, why)
-        else:
-            print("  MAIL gave up: %s" % name, flush=True)
-            errlog.only("lava.mail").error("gave up: %s", name)
-        _queue.task_done()
+    print("  MAIL gave up: %s" % name, flush=True)
+    errlog.only("lava.mail").error("gave up: %s", name)
+    return "failed"
 
 
 def send(to, subject, text, html=None):

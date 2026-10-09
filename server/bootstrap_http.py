@@ -1121,6 +1121,9 @@ class Handler(BaseHTTPRequestHandler):
         address = None
         if given.strip() or REGISTER_EMAIL:
             address, err = email_flow.clean_email(given)
+            # And one the mail server takes: an invented domain is turned
+            # away here, where the player can still mend it.
+            err = err or email_flow.takes_mail(address)
             if err:
                 self._page('<p class="msg err">%s</p>' % err)
                 return
