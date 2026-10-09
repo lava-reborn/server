@@ -338,7 +338,29 @@ try:
     check("what is painted in is ground like the ground under it: luma off by %.1f on average, %d at most"
           % (sum(errors) / len(errors), max(errors)), (sum(errors) / len(errors) < 14, max(errors) < 70),
           (True, True))
+    def beyond(rr, margin=15):
+        """{a painted group's first pixel: how many of its pixels, as the new
+        tiles show them, are darker or brighter (Y, Cb or Cr) than every
+        pixel of the ground three around the group by more than margin}: the
+        ground less what is painted and the squares that stay."""
+        kept_px = set()
+        for sq in rr["kept"].values():
+            kept_px |= M.frame_pixels(sq)
+        out = {}
+        for g in M._groups(rr["painted"]):
+            ring = [rr["before"].original(*p) for p in sorted(M._ring(g, 3))
+                    if p not in rr["painted"] and p not in kept_px]
+            ring = [v for v in ring if v is not None]
+            lo = [min(v[i] for v in ring) - margin for i in range(3)]
+            hi = [max(v[i] for v in ring) + margin for i in range(3)]
+            n = sum(1 for p in g if any(not lo[i] <= rr["after"].original(*p)[i] <= hi[i] for i in range(3)))
+            if n:
+                out[g[0]] = n
+        return out
+
     check("  ..and no fill keeps its square's colour", colour_left(r), {c: 0 for c in r["found"]})
+    check("  ..nor brings in what the ground around it has not: no painted pixel darker or brighter than"
+          " its ground by more than 15", beyond(r), {})
     dark = [p for p in [(X, Y) for X in range(99, 141) for Y in range(59, 71)]
             if r["after"].original(*p)[0] < 100 and p not in protect]
     check("the caption's letters are gone, but under the square that stays", dark, [])
@@ -393,6 +415,47 @@ try:
     stray, count = only_painted(made420, r4)
     check("  ..and only blocks with a pixel painted change, a chroma block covering 16 x 16 (%d changed)"
           % count, (stray, count > 0), ({0: [], 1: []}, True))
+    check("  ..and no painted pixel darker or brighter than its ground by more than 15", beyond(r4), {})
+
+    # A square on a calm island in a striped field: every patch of
+    # photograph within reach is stripes, far darker and far brighter than
+    # the island, so none is taken (on Донгола's tile the patch first chosen
+    # carried the river's black line in) and the square is painted smooth
+    # from its edge.
+    def striped_tile():
+        planes = [[[128] * 256 for _ in range(256)] for _ in range(3)]
+        for Y in range(256):
+            for X in range(256):
+                island = 72 <= X < 96 and 72 <= Y < 96
+                planes[0][Y][X] = 120 if island else 50 if (X // 2) % 2 else 200
+        X0 = Y0 = 80
+        for k, (X, Y) in enumerate([(X0 + i, Y0) for i in range(9)] + [(X0 + 8, Y0 + j) for j in range(1, 9)]
+                                   + [(X0 + i, Y0 + 8) for i in range(7, -1, -1)]
+                                   + [(X0, Y0 + j) for j in range(7, 0, -1)]):
+            if k % 4:
+                for ci, v in enumerate(ycc(OUTLINE)):
+                    planes[ci][Y][X] = int(round(v))
+        for j_ in range(1, 8):
+            for i in range(1, 8):
+                for ci, v in enumerate(ycc(GREEN)):
+                    planes[ci][Y0 + j_][X0 + i] = int(round(v))
+        fine = tuple(tuple(max(1, (q + 2) // 4) for q in t) for t in (J.STD_LUMA, J.STD_CHROMA))
+        return {M.tile_path(0): J.make(256, 256, planes, qtables=fine)}
+
+    rs = run(striped_tile(), M.Plan({(10, 10): "t"}, [], {}))
+    island = [rs["after"].original(*p)[0] for p in sorted(rs["painted"])]
+    check("a square whose ground no patch of photograph within reach matches is painted smooth from its edge",
+          ([line.strip() for line in rs["report"] if "painted" in line],
+           rs["after_sq"].at(10, 10), beyond(rs), min(island) >= 105 and max(island) <= 135),
+          (["81 pixels from 80,80 painted smooth from its edge, no patch of photograph fitting"], None, {}, True))
+    bounds = M.ground_bounds(rs["before"], sorted(rs["painted"]), rs["painted"])
+    check("  ..its bounds are the island's own range (120, give or take the JPEG's ringing by the square)"
+          " and %d levels past it, and a pixel past them in any of Y, Cb, Cr is counted" % M.MARGIN,
+          (120 - M.MARGIN - 10 <= bounds[0][0] <= 120 - M.MARGIN
+           and 120 + M.MARGIN <= bounds[0][1] <= 120 + M.MARGIN + 10,
+           M.outside([(120, 128, 128), (90, 128, 128), (120, 128, 200)], [(108, 132), (116, 140), (116, 140)]),
+           M.outside([(0, 0, 0)], None)),
+          (True, 2, 0))
 
     # The local run: bootstrap_http serves res/ through map_cells.Served.
     res = os.path.join(W, "res")
@@ -468,6 +531,11 @@ try:
               % (dark_before, dark_after), (dark_before > 100, dark_after < 10), (True, True))
         check("no fill keeps its square's colour (Донгола's ground is red of its own)",
               colour_left(real), {c: 0 for c in real["found"]})
+        check("  ..nor brings in what its ground has not: no painted pixel darker or brighter than the ground"
+              " around it by more than 15 (Донгола's first patch carried in the river's black line, 2-3 pixels"
+              " wide; Хальфа's lake shore is really there)", beyond(real), {})
+        check("  ..and every square is painted from a patch of photograph",
+              [line.strip() for line in real["report"] if "smooth" in line], [])
         out_real, _report = M.apply(read)
         check("map_cells.apply gives these tiles", out_real == real["out"], True)
         check("a local run serves the same bytes (bootstrap_http)",

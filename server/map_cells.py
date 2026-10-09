@@ -16,7 +16,11 @@ listed there), the cells and captions data/map_cells.json adds, each with its
 why. On each such cell the square is found in the picture (Squares.at), and
 its pixels -- the fill and the outline, less any pixel a kept neighbour's own
 square covers -- are painted over with the photograph's texture from a spot
-near by, blended into what surrounds them (find_patch, fill). Only the 8 x 8
+near by, blended into what surrounds them (find_patch, solve), a spot taken
+only if the pixels it paints stay within the darkest and the brightest of
+the ground around (ground_bounds: Донгола's nearest fitting spot held the
+river's black line); where no spot near does, the pixels are painted smooth
+from what surrounds them. Only the 8 x 8
 blocks of the JPEG those pixels fall in are encoded anew (jpeg_blocks): every
 other block of every tile keeps its coefficients exactly, so nothing else on
 the map can move.
@@ -76,6 +80,12 @@ NEAR_DEFAULT = 40
 
 SEARCH = 48          # how far (pixels) a patch of photograph is looked for
 SEARCH_FAR = 112     # and, when nothing near will do, how far after that
+# How far (sample levels, each of Y, Cb, Cr) a painted pixel may go past the
+# darkest and the brightest of the ground around it (GROUND pixels deep, less
+# any square or caption): a patch that would bring in what is not there -- a
+# river's black line, a rock -- is not taken.
+GROUND = 3
+MARGIN = 12
 
 
 def tile_of(X, Y):
@@ -461,11 +471,32 @@ class Window:
         return s[j1 * W + i1] - s[j0 * W + i1] - s[j1 * W + i0] + s[j0 * W + i0] == 0
 
 
-def _cost(win, target, inner, spread_t, dx, dy):
+def ground_bounds(canvas, region, bad):
+    """[(lo, hi)] for Y, Cb and Cr: what a pixel painted in the region may
+    be, the ground GROUND pixels around it (less what is bad: a square, a
+    caption, a region) from its darkest less MARGIN to its brightest plus
+    MARGIN; None where no ground is left around."""
+    ground = [canvas.original(*p) for p in sorted(_ring(region, GROUND)) if p not in bad]
+    ground = [v for v in ground if v is not None]
+    if not ground:
+        return None
+    return [(min(v[i] for v in ground) - MARGIN, max(v[i] for v in ground) + MARGIN) for i in range(3)]
+
+
+def outside(values, bounds):
+    """How many of the values (Y, Cb, Cr each) fall outside the bounds."""
+    if bounds is None:
+        return 0
+    return sum(1 for v in values if any(not lo <= v[i] <= hi for i, (lo, hi) in enumerate(bounds)))
+
+
+def _cost(win, target, inner, spread_t, dx, dy, bounds=None):
     """How badly a patch moved by (dx, dy) fits: the spread of its
     differences with the region's surroundings (a constant difference costs
     little, Poisson blending takes it away), how far its own texture is from
-    theirs, and a little for distance."""
+    theirs, and a little for distance. None if the patch, moved by its mean
+    difference as blending moves it, would have a pixel outside the
+    ground's bounds."""
     n = len(target)
     sums = [0.0, 0.0, 0.0]
     sq = [0.0, 0.0, 0.0]
@@ -479,6 +510,13 @@ def _cost(win, target, inner, spread_t, dx, dy):
     for i in range(3):
         m = sums[i] / n
         cost += sq[i] / n - m * m + 0.25 * m * m
+    if bounds is not None:
+        shift = [s / n for s in sums]
+        for X, Y in inner:
+            g = win.get(X + dx, Y + dy)
+            for i, (lo, hi) in enumerate(bounds):
+                if not lo <= g[i] + shift[i] <= hi:
+                    return None
     ys = [win.get(X + dx, Y + dy)[0] for X, Y in inner]
     mean_i = sum(ys) / len(ys)
     spread_i = sum(abs(y - mean_i) for y in ys) / len(ys)
@@ -488,12 +526,14 @@ def _cost(win, target, inner, spread_t, dx, dy):
     return cost + (8.0 if busy > 0 else 2.0) * busy * busy + 0.02 * (dx * dx + dy * dy) ** 0.5
 
 
-def find_patch(canvas, region, bad, apart, reach):
-    """The offset of the patch of photograph that best fits the region's
+def find_patch(canvas, region, bad, apart, reach, bounds=None, best=6):
+    """The offsets of the patches of photograph that best fit the region's
     surroundings (the two pixels around it, less those apart: a kept square,
-    another region), from no further than reach pixels: none of its pixels,
-    nor the two around them, bad or off the map, and not over the region
-    itself. None if there is no such patch."""
+    another region), the best first, at most `best` of them, from no further
+    than reach pixels: none of its pixels, nor the two around them, bad or
+    off the map, not over the region itself, and none that would paint a
+    pixel outside the ground's bounds (ground_bounds). [] if there is no
+    such patch."""
     reg = set(region)
     ring = _ring(region, 2)
     xs = [p[0] for p in region]
@@ -503,10 +543,12 @@ def find_patch(canvas, region, bad, apart, reach):
     target = [(p, win.get(*p)) for p in sorted(ring) if p not in apart]
     target = [(p, v) for p, v in target if v is not None]
     if not target:
-        return None
+        return []
     # the ground's own texture, from a little further out: right next to the
-    # region lies a caption's halo or a square's shadow
-    around = [win.get(*p) for p in sorted(_ring(region, 6) - ring) if p not in apart]
+    # region lies a caption's halo or a square's shadow, and no other square
+    # or caption is ground (a cluster of squares around would read as a
+    # busy ground and bring in a busy patch)
+    around = [win.get(*p) for p in sorted(_ring(region, 6) - ring) if p not in bad]
     around = [v[0] for v in around if v is not None] or [v[0] for _, v in target]
     mean_t = sum(around) / len(around)
     spread_t = sum(abs(y - mean_t) for y in around) / len(around)
@@ -520,50 +562,64 @@ def find_patch(canvas, region, bad, apart, reach):
                 continue        # the patch would lie over the region itself
             if not win.clear(bx0 + dx, by0 + dy, bx1 + dx, by1 + dy):
                 continue
-            found.append((_cost(win, coarse_target, coarse_inner, spread_t, dx, dy), dx, dy))
-    if not found:
-        return None
+            c = _cost(win, coarse_target, coarse_inner, spread_t, dx, dy, bounds)
+            if c is not None:
+                found.append((c, dx, dy))
     found.sort()
-    best = None
+    fine = {}
     for _, cx, cy in found[:6]:
         for dy in (cy - 1, cy, cy + 1):
             for dx in (cx - 1, cx, cx + 1):
-                if abs(dx) < w and abs(dy) < h:
+                if (dx, dy) in fine or (abs(dx) < w and abs(dy) < h):
                     continue
                 if not win.clear(bx0 + dx, by0 + dy, bx1 + dx, by1 + dy):
                     continue
-                c = _cost(win, target, inner, spread_t, dx, dy)
-                if best is None or (c, dy, dx) < best[0]:
-                    best = ((c, dy, dx), dx, dy)
-    return best and (best[1], best[2])
+                fine[(dx, dy)] = _cost(win, target, inner, spread_t, dx, dy, bounds)
+    ranked = sorted((c, dy, dx) for (dx, dy), c in fine.items() if c is not None)
+    return [(dx, dy) for _, dy, dx in ranked[:best]]
 
 
-def fill(canvas, region, apart, donor_offset):
-    """Paint the region over with the patch at donor_offset, its seams taken
-    away: the region is solved for the patch's own differences, meeting what
-    surrounds it on every photograph pixel around (Poisson blending); a pixel
-    apart (a kept square) does not pull on it."""
-    dx, dy = donor_offset
+def solve(canvas, region, apart, donor_offset):
+    """{pixel: (Y, Cb, Cr)}: the region painted over with the patch at
+    donor_offset, its seams taken away: the region is solved for the patch's
+    own differences, meeting what surrounds it on every photograph pixel
+    around (Poisson blending); a pixel apart (a kept square) does not pull on
+    it. With no donor_offset the region is solved for no differences at all,
+    smooth from what surrounds it (a membrane), which never goes past the
+    darkest and the brightest of what it meets."""
+    dx, dy = donor_offset or (0, 0)
     order = sorted(region)
     index = {p: i for i, p in enumerate(order)}
-    donor = [canvas.original(X + dx, Y + dy) for X, Y in order]
+    zero = (0.0, 0.0, 0.0)
+
+    def patch(X, Y):
+        return zero if donor_offset is None else canvas.original(X + dx, Y + dy)
+    donor = [patch(X, Y) for X, Y in order]
     links = []
+    edge = []
     for k, (X, Y) in enumerate(order):
         inside, fixed = [], [0.0, 0.0, 0.0]
         count = 0
         for ddx, ddy in N4:
             q = (X + ddx, Y + ddy)
-            gq = canvas.original(q[0] + dx, q[1] + dy)
+            gq = patch(*q)
             if q in index:
                 inside.append((index[q], [donor[k][i] - gq[i] for i in range(3)]))
                 count += 1
             elif q not in apart and canvas.original(*q) is not None:
                 tq = canvas.original(*q)
+                edge.append(tq)
                 for i in range(3):
                     fixed[i] += tq[i] + donor[k][i] - gq[i]
                 count += 1
         links.append((inside, fixed, count))
-    f = [list(v) for v in donor]
+    if donor_offset is None:
+        # a membrane starts from the mean of what it meets (with nothing
+        # around to meet, the pixels stay as they are)
+        f = ([[sum(v[i] for v in edge) / len(edge) for i in range(3)] for _ in order] if edge
+             else [list(canvas.original(*p)) for p in order])
+    else:
+        f = [list(v) for v in donor]
     for _ in range(1000):
         change = 0.0
         for k, (inside, fixed, count) in enumerate(links):
@@ -580,8 +636,7 @@ def fill(canvas, region, apart, donor_offset):
                 fk[i] = new
         if change < 0.01:
             break
-    for p, v in zip(order, f):
-        canvas.put(p[0], p[1], v)
+    return dict(zip(order, f))
 
 
 def erase(canvas, plan):
@@ -640,7 +695,9 @@ def erase(canvas, plan):
         bad = apart | captions
         xs = [p[0] for p in g]
         ys = [p[1] for p in g]
-        offset = None
+        bounds = None
+        tried = set()
+        done = None
         for reach in (SEARCH, SEARCH_FAR):
             x0, y0 = (min(xs) - reach - 4) // CELL, (min(ys) - reach - 4) // CELL
             x1, y1 = (max(xs) + reach + 4) // CELL, (max(ys) + reach + 4) // CELL
@@ -650,14 +707,34 @@ def erase(canvas, plan):
                         sq = squares.at(x, y)
                         if sq is not None:
                             bad = bad | frame_pixels(sq)
-            offset = find_patch(canvas, g, bad, apart, reach)
-            if offset is not None:
+            if reach == SEARCH:
+                bounds = ground_bounds(canvas, g, bad)
+            # the patch that fits best and stays within the ground's bounds,
+            # the patch itself and the blend of it both
+            for offset in find_patch(canvas, g, bad, apart, reach, bounds):
+                if offset in tried:
+                    continue
+                tried.add(offset)
+                values = solve(canvas, g, apart, offset)
+                if not outside(values.values(), bounds):
+                    done = offset, values
+                    break
+            if done:
                 break
-        if offset is None:
-            raise ValueError("no patch of photograph to paint over %d pixels at %d,%d" % (len(g), g[0][0], g[0][1]))
-        fill(canvas, g, apart, offset)
+        if done:
+            offset, values = done
+            how = "from %+d,%+d" % offset
+        else:
+            # no patch of photograph near enough fits: smooth from the edge
+            values = solve(canvas, g, apart, None)
+            how = "smooth from its edge, no patch of photograph fitting"
+            off = outside(values.values(), bounds)
+            if off:
+                how += ", %d pixels past the ground's bounds" % off
+        for p, v in values.items():
+            canvas.put(p[0], p[1], v)
         painted |= set(g)
-        report.append("  %d pixels from %d,%d painted from %+d,%+d" % (len(g), g[0][0], g[0][1], offset[0], offset[1]))
+        report.append("  %d pixels from %d,%d painted %s" % (len(g), g[0][0], g[0][1], how))
     return found, kept, painted, report
 
 

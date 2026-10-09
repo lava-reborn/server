@@ -64,7 +64,9 @@
 `data/map_cells.json`), — `server/map_cells.py`: квадраты закрашены, остальные
 блоки плитки байт в байт оригинальные. В отчёте сборки это строки
 `generated: ... globalmap/full/<n>.jpg` и `map: N squares and M caption boxes
-painted over in K tiles`.
+painted over in K tiles`. На сервере отчёт сборки уходит в журнал выкатки; в
+отчёт выкатки попадают первые четыре строки публикации (`client: since ...:
+N changed` и до двух путей).
 
 ## Кто что делает
 
