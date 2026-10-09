@@ -221,33 +221,33 @@
    "b": {
     "confidence": "medium",
     "source": "designed",
-    "target_loc_id": 1012,
-    "why": "DESIGNED. VH_mine_lvl2: door b (north-east, 50-52, 20-22), down, to the second tier's east end, VH_mine_lvl4 (1012, «Шахта: Второй ярус»), whose door a comes up in the same corner."
+    "target_loc_id": 1016,
+    "why": "DESIGNED. VH_mine_lvl2: door b (north-east, 50-52, 20-22), down, to the second tier's west end, VH_mine_lvl5 (1016, «Шахта: Второй ярус»), whose door a comes up in the same corner (2026-10-09, the owner: 5983 and 5984 stand on the left of the map and 5988 on the right, so the right entrance comes down at the gallery's east end)."
    }
   },
   "160": {
    "b": {
     "confidence": "medium",
     "source": "designed",
-    "target_loc_id": 1016,
-    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance3 (5988,1735), the wiki's third entrance and «Индийское кино»'s own mark: its one door, b (14-17, 96-98), under a drawn door, DN_Backdoor04 (14,91). Down to the second tier's west end, VH_mine_lvl5 (1016, «Шахта: Второй ярус»), which has no other door: a shaft straight down, the one way left once each file's up-door has its tier above."
+    "target_loc_id": 1012,
+    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance3 (5988,1735), the wiki's third entrance and «Индийское кино»'s own mark: its one door, b (14-17, 96-98), under a drawn door, DN_Backdoor04 (14,91). Down to the second tier's east end, VH_mine_lvl4 (1012, «Шахта: Второй ярус»), which has no other door: a shaft straight down, the one way left once each first-tier file has an entrance above it -- the east one, as 5988 is the easternmost of the three (2026-10-09, the owner: 5983 and 5984 stand on the left of the map and 5988 on the right, so the right entrance comes down at the gallery's east end)."
    }
   },
   "1012": {
    "a": {
     "confidence": "medium",
+    "own_cell": true,
     "source": "designed",
-    "target_loc_id": 617,
-    "why": "DESIGNED. VH_mine_lvl4, «Шахта: Второй ярус»: its one door, a (north-east, 51-52, 21-23), up, to the first tier's file 617 it is entered from; its west side joins it to the rest of the tier ('sides')."
+    "target_loc_id": 160,
+    "why": "DESIGNED. VH_mine_lvl4, «Шахта: Второй ярус»: its one door, a (north-east, 51-52, 21-23), up, to the third entrance, 160, arrived at on its own cell (own_cell, travel.plan_exit); its west side joins it to the rest of the tier ('sides')."
    }
   },
   "1016": {
    "a": {
     "confidence": "medium",
-    "own_cell": true,
     "source": "designed",
-    "target_loc_id": 160,
-    "why": "DESIGNED. VH_mine_lvl5, «Шахта: Второй ярус»: its one door, a (north-east, 51-52, 21-23), up, to the third entrance, 160, arrived at on its own cell (own_cell, travel.plan_exit); its east side joins it to the rest of the tier ('sides')."
+    "target_loc_id": 617,
+    "why": "DESIGNED. VH_mine_lvl5, «Шахта: Второй ярус»: its one door, a (north-east, 51-52, 21-23), up, to the first tier's file 617 it is entered from; its east side joins it to the rest of the tier ('sides')."
    }
   },
   "1024": {
@@ -433,8 +433,8 @@
   "648": {"why": "DESIGNED. The prison's eastern cells (Prison_5_WH): the prisoners of the uprising; its one side back to the centre."},
   "613": {"why": "DESIGNED (2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту»). The Вади-Хальфа mine's first tier, VH_mine_lvl1: out only by its door up to the first entrance (154), or down. Every file under the three entrances is in this list: the mine is left by the doors it was entered by, never by the map button or /home in the middle of a raid, which would also land the player on whichever entrance's map cell he last stood on, not the one above him."},
   "617": {"why": "DESIGNED. VH_mine_lvl2, the first tier's other file: up to the second entrance (158), or down (see 613)."},
-  "1012": {"why": "DESIGNED. VH_mine_lvl4, the second tier's east end (see 613)."},
-  "1016": {"why": "DESIGNED. VH_mine_lvl5, the second tier's west end: up to the third entrance (160) (see 613)."},
+  "1012": {"why": "DESIGNED. VH_mine_lvl4, the second tier's east end: up to the third entrance (160) (see 613)."},
+  "1016": {"why": "DESIGNED. VH_mine_lvl5, the second tier's west end (see 613)."},
   "1024": {"why": "DESIGNED. VH_mine_lvl6, the second tier's middle file (see 613)."},
   "1215": {"why": "DESIGNED. VH_mine_lvl3, the third tier (see 613)."},
   "1017": {"why": "DESIGNED. VH_mine_tunel1_horizont, the second tier's tunnels (see 613)."},

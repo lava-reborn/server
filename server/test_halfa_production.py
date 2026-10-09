@@ -33,8 +33,8 @@ On a socket:
     Вади-Хальфа mine entered by the door of 154, the Ефрейторы and miners
     shot, the ring off a miner, five miners counted, the way back up; the
     second tier walked end to end by its sides, 1016 through the tunnels
-    and 1024 to 1012, and a door up into the third entrance landing on its
-    own cell; the raid and the ring handed in;
+    and 1024 to 1012, and its east end's door up into the third entrance
+    landing on its own cell, the west end's up through 617 to 158; the raid and the ring handed in;
   * a quarry worker: the polishing mix's components off the quarry's
     stones, the mix, the polished blocks at Большой Сэм, the foundation
     stones and the polished ones at Варон's building site, three a day.
@@ -93,8 +93,8 @@ VH_TOP = {154: (5983, 1735), 158: (5984, 1735), 160: (5988, 1735)}
 VH_TIERS = [613, 617, 1012, 1016, 1024, 1215]
 VH_TUNNELS = [1017, 1018, 1019]
 DOORS_WANT = {(154, "b"): 613, (613, "a"): 154, (613, "b"): 1024, (158, "b"): 617,
-              (617, "a"): 158, (617, "b"): 1012, (160, "b"): 1016, (1012, "a"): 617,
-              (1016, "a"): 160, (1024, "a"): 613, (1024, "b"): 1215, (1215, "a"): 1024}
+              (617, "a"): 158, (617, "b"): 1016, (160, "b"): 1012, (1012, "a"): 160,
+              (1016, "a"): 617, (1024, "a"): 613, (1024, "b"): 1215, (1215, "a"): 1024}
 # The second tier, one gallery west to east: 1016, the tunnels 1017-1019, 1024, 1012.
 VH_GALLERY = [1016, 1017, 1018, 1019, 1024, 1012]
 SIDES_WANT = {}
@@ -437,8 +437,8 @@ try:
     ex = travel.plan_exit(world.location(154), door_cell(154, "b"), *VH_TOP[154])
     check("down 154's door: the first tier, on 154's cell", (ex.loc_id, ex.gx, ex.gy),
           (613,) + VH_TOP[154])
-    ex = travel.plan_exit(world.location(1016), door_cell(1016, "a"), *VH_TOP[158])
-    check("up 1016's door from the side of 158: the third entrance, on its own cell"
+    ex = travel.plan_exit(world.location(1012), door_cell(1012, "a"), *VH_TOP[158])
+    check("up 1012's door from the side of 158: the third entrance, on its own cell"
           " (travel.plan_exit)", (ex.loc_id, ex.gx, ex.gy), (160,) + VH_TOP[160])
     ex = travel.plan_exit(world.location(613), door_cell(613, "a"), *VH_TOP[154])
     check("  ..and up 613's door into 154, where it came from: its cell",
@@ -472,7 +472,7 @@ try:
             if (ex.gx, ex.gy) != tuple(want):
                 shifted.append((lid, s, start, (ex.gx, ex.gy)))
     check("only the mine's three doors up into its entrances arrive on the far side's cell"
-          " (own_cell)", own, [(613, "a"), (617, "a"), (1016, "a")])
+          " (own_cell)", own, [(613, "a"), (617, "a"), (1012, "a")])
     check("  ..every other of the game's %d doors keeps the cell it is taken from" % len(taken),
           shifted, [])
     check("  ..among them the «Горные тропы» doors 598/162 and 623/53, as before the mine",
@@ -1073,17 +1073,18 @@ try:
     check("the second tier walked east by its sides, 1016 to 1012 through the tunnels and 1024",
           walked, [([0], t_) for t_ in VH_GALLERY[1:]])
     res, call, arrival = through(c, 1012, "a")
-    check("  ..whose door goes up to the first tier's other file", (res, call.get("id")),
+    check("  ..whose door goes up to the third, eastern entrance (5988), on its own cell,"
+          " though one came in by the first",
+          (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
+          ([0], 160, (VH_TOP[160][0] << 13) | VH_TOP[160][1]))
+    arrival = goto(c, 1016)
+    res, call, arrival = through(c, 1016, "a")
+    check("the gallery's west end goes up to the first tier's other file", (res, call.get("id")),
           ([0], 617))
     res, call, arrival = through(c, 617, "a")
     check("  ..and up to the second entrance, on its cell",
           (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
           ([0], 158, (VH_TOP[158][0] << 13) | VH_TOP[158][1]))
-    arrival = goto(c, 1016)
-    res, call, arrival = through(c, 1016, "a")
-    check("a door up into the third entrance lands on its own cell, whichever way one came",
-          (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
-          ([0], 160, (VH_TOP[160][0] << 13) | VH_TOP[160][1]))
     here = inhabitants(goto(c, MARKET))
     afro0, gold0 = purse(RAIDER)
     got = hand_in(c, here, FRANK, q_raid)
