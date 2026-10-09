@@ -1,5 +1,6 @@
 """data/map_labels.json against the client's own res/database/locations.xml,
 and the rule server/map_labels.py and launcher/MapLabels.cs both follow."""
+import json
 import os
 import re
 import sys
@@ -132,6 +133,37 @@ check("  ..so no name around Вади-Хальфа offers any of it, where the f
 check("  ..while Абри, Донгола and Абу-Хамед keep their clothing markets' and craftsmen's names",
       [texts_at(out, *c) for c in ((5865, 1836), (5878, 2013), (6183, 1974), (5860, 1836))],
       [["Торговцы одеждой"]] * 3 + [["Ремесленники по одежде 10 уровень"]])
+with open(os.path.join(os.path.dirname(HERE), "data", "map_labels.json"), encoding="utf-8") as _fh:
+    LABELS = json.load(_fh)["labels"]
+OLD_MARKET_CELL, PREMIUM_CAMP_CELL = (5968, 1727), (5968, 1726)
+check("the cut's own edits are its seven cells and no other: the six names hidden and the old"
+      " market's retext",
+      sorted((e["x"], e["y"]) for e in LABELS
+             if e.get("why", "").startswith("The owner's cut of Вади-Хальфа, 2026-10-09")),
+      sorted(list(HALFA_CUT) + [OLD_MARKET_CELL]))
+
+
+def rows_of(doc, box):
+    import html
+    x0, x1, y0, y1 = box
+    got = []
+    for m in M.ROW.finditer(doc):
+        a = {k.decode(): v for k, v in M.ATTR.findall(m.group(0))}
+        if x0 <= int(a["x"]) <= x1 and y0 <= int(a["y"]) <= y1:
+            got.append((int(a["x"]), int(a["y"]), html.unescape(a["text"].decode("utf-8"))))
+    return got
+
+
+kept = []
+for x, y, text in rows_of(raw, HALFA_BOX):
+    if (x, y) in HALFA_CUT or (x, y) == PREMIUM_CAMP_CELL:
+        continue
+    if (x, y) == OLD_MARKET_CELL and text == OLD_MARKET % "Обмен G комплектов<br>":
+        text = OLD_MARKET % ""
+    kept.append((x, y, text))
+check("  ..and every other name around Вади-Хальфа is the file's own, row for row (the (P) camp"
+      " 124's hidden since 2026-09-30)", rows_of(out, HALFA_BOX), kept)
+check("  ..of which there are dozens", len(kept) > 30, True)
 
 print("the rule itself")
 doc = ('\ufeff<?xml version=\'1.0\'?>\n<data>\n'

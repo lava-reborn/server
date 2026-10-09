@@ -68,6 +68,9 @@ check("  ..and settlements_verified.json nulls each one's old cell, with its why
       [(k, None, True) for k in sorted(INTENDED)])
 check("  ..so none of them opens on any cell of the table",
       sorted(k for k, v in on_disk.items() if v in INTENDED.values()), [])
+check("  ..and retired.json's cells name exactly those seven, each with the place it held: the"
+      " town's ground still for the encounters (world.retired_cells)",
+      {k: v for k, v in retired["cells"].items() if not k.startswith("_")}, INTENDED)
 
 now = cells(place_settlements.Placer().run())
 check("the table on disk is the placer's own output", now == on_disk, True)

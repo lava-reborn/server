@@ -93,7 +93,10 @@ generate() refuses a row naming a premium thing.
 OFF IN VADI-HALFA SINCE 2026-10-09. The owner's order «убери из хальфы ...
 улучшение сетов 6-8; ремесленники по одежде 6, 7 и 8» switched both of the
 town's services off (its slice's "off", one why a service): the windows of
-Генри, Генри ст and Тиль are empty again (entries), and the rows stay in
+Генри, Генри ст and Тиль are empty again (entries) -- by the type, so
+Тиль's in Донгола's black market 103 too, which is open to walkers like
+every region; keeping it there would take a window that looks at the room
+it stands in -- and the rows stay in
 data/questgen_setcraft.json, numbered and worded as they were, with give and
 take [] and the why saying so (generate) -- so no string id leaves the
 table and a journal that held one names a quest the server still knows.

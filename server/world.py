@@ -811,6 +811,32 @@ def retired_creature(type_id):
     return int(type_id) in retired_creatures()
 
 
+_RETIRED_CELLS = None
+
+
+def retired_cells():
+    """(gx, gy) -> location id, of data/retired.json 'cells': the map cells
+    the places taken out of the game stood on. Their settlements_verified.json
+    nulls make them wasteland (location_at, settlements), and they are still
+    the town's ground for whatever asks where a town is -- the encounters
+    (encounters.near_town), so that a cut never opens the town's own streets
+    to an ambush. No file is no cell."""
+    global _RETIRED_CELLS
+    if _RETIRED_CELLS is None:
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        out = {}
+        try:
+            with open(os.path.join(here, "data", "retired.json"), encoding="utf-8") as fh:
+                for k, loc_id in (json.load(fh).get("cells") or {}).items():
+                    if not str(k).startswith("_"):
+                        gx, gy = str(k).split(",")
+                        out[(int(gx), int(gy))] = int(loc_id)
+        except OSError:
+            pass
+        _RETIRED_CELLS = out
+    return _RETIRED_CELLS
+
+
 def belongs_here(type_id, name, root, war, loc_id=None):
     """Whether a spawn from the location file should stand in the room.
 

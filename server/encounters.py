@@ -24,9 +24,10 @@ Written once, for any town; a town is a row of REGIONS -- its camps, whose
 faction and band data/camp_fill.json already gives (Вади-Хальфа: Новые
 колонисты 0-2, Люшер 2-4, Джанджавиды 4-6, Магриб 6-8), and how far out from
 them the wasteland is theirs. Only open desert can hold an encounter: never a
-settlement's cell nor a cell beside one (the town and its doorsteps), never
-the rim's rocks, never the Nubian valley, never the first GRACE cells from
-where the player stepped onto the map. A cell entered while walking is one
+settlement's cell nor a cell beside one (the town and its doorsteps; the
+cell of a place taken out of the game still counts, world.retired_cells),
+never the rim's rocks, never the Nubian valley, never the first GRACE cells
+from where the player stepped onto the map. A cell entered while walking is one
 roll of CHANCE -- once a visit to the map, however often it is walked over --
 less under a vehicle by its aggro_mod (ts_si: «к агрессии мобов»); a band
 whose every creature is grey to the player (progression.
@@ -138,9 +139,16 @@ def bands():
 
 def near_town(gx, gy):
     """Whether a cell is a settlement's or touches one: the town and its
-    doorsteps, where nobody is waylaid."""
-    placed = world.settlements()
-    return any((gx + dx, gy + dy) in placed for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+    doorsteps, where nobody is waylaid. A place the owner took out of the
+    game counts as it stood (world.retired_cells): its cell is wasteland
+    now, and still the town's -- the cut of Вади-Хальфа (2026-10-09) took
+    the market and the craftsmen's quarters off the map, and their doorsteps
+    5968,1730, 5968,1731 and 5971,1733, on the walks from Причал to «Генри
+    Мл.» 43, the crates 108 and the prison yard 176, stay as safe as they
+    were."""
+    placed, former = world.settlements(), world.retired_cells()
+    return any((gx + dx, gy + dy) in placed or (gx + dx, gy + dy) in former
+               for dx in (-1, 0, 1) for dy in (-1, 0, 1))
 
 
 def band_at(gx, gy):

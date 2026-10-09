@@ -23,7 +23,10 @@ What the cut is, each part held here:
      quest anybody gives or takes speaks of a place or service of the cut;
   5. the rest of the town as it was: Причал on its cell and «В Хальфу!»
      (43) landing there, the black market's and the Magrib base's clothing
-     stalls, Генри's, Генри ст's and Тиль's other quests;
+     stalls, Генри's, Генри ст's and Тиль's other quests; and its streets
+     as safe: the cut's cells still the town's for the encounters
+     (world.retired_cells), so the wasteland around holds exactly the
+     ambush cells it held before;
   6. the clans: nothing of a clan stands on a place -- the tables have no
      column for one -- so a clan named KKND is a clan like any other;
   7. the database: whoever is in one of the cut's places, or calls one
@@ -56,6 +59,7 @@ for _knob in ("LAVA_PASSAGES", "LAVA_PLACEMENTS", "LAVA_QUESTS"):
 sys.path.insert(0, HERE)
 
 import accounts  # noqa: E402
+import encounters  # noqa: E402
 import events  # noqa: E402
 import items  # noqa: E402
 import names  # noqa: E402
@@ -276,9 +280,58 @@ try:
            sorted({4, 366, 1829, 1895, 1971, 2128, 142, 146, 157} - set(quests.given_by(5))),
            sorted({141, 156} - set(quests.taken_by(5)))),
           ([], [], True, [], []))
+    check("the set upgrade's window is off by the type: Тиль stands in Донгола's black market"
+          " 103 too, open to walkers, and his window is empty there as well -- no set upgrade"
+          " anywhere (a decision: keeping Донгола's would need a window by the room)",
+          (5 in standing(103), world.cell_of(103) is not None, setcraft.window(5)["in_types"]),
+          (True, True, []))
 except Exception:
     import traceback
     fails.append("the rest of the town broke:\n" + traceback.format_exc())
+
+# The town's streets: a cell beside a settlement holds no ambush
+# (encounters.near_town), and the cut's cells, wasteland now, still count
+# (world.retired_cells) -- left as plain wasteland they opened three cells
+# inside the town to the camps' packs, on the walks from Причал to «Генри
+# Мл.» 43, the crates 108 and the prison yard 176.
+print("the town's streets")
+try:
+    RING = [(x, y) for x in range(5930, 6030) for y in range(1690, 1775)]
+    OPENED = {(5968, 1730): (80, 0, 2), (5968, 1731): (80, 0, 2), (5971, 1733): (84, 4, 6)}
+
+    def ambush_cells():
+        out = {}
+        for x, y in RING:
+            band = encounters.band_at(x + 0.5, y + 0.5)
+            if band is not None:
+                out[(x, y)] = (band.camp, band.lo, band.hi)
+        return out
+
+    check("the cut's four cells are the town's ground still, with the (P) camp 124's",
+          sorted(c for c, i in world.retired_cells().items() if i in CELLS or i == 124),
+          sorted(list(CELLS.values()) + [(5968, 1726)]))
+    now_cells = ambush_cells()
+    check("no ambush on the doorsteps the cut left: 5968,1730, 5968,1731, 5971,1733",
+          [encounters.band_at(x + 0.5, y + 0.5) for x, y in sorted(OPENED)], [None] * 3)
+    saved = (world._SETTLEMENTS, world._RETIRED_CELLS)
+    try:
+        before = dict(saved[0])
+        before.update({c: i for i, c in CELLS.items()})
+        world._SETTLEMENTS = before
+        world._RETIRED_CELLS = {c: i for c, i in saved[1].items() if i not in CELLS}
+        was_cells = ambush_cells()
+        world._SETTLEMENTS = saved[0]
+        bare_cells = ambush_cells()
+    finally:
+        world._SETTLEMENTS, world._RETIRED_CELLS = saved
+    check("  ..the wasteland around the town holds exactly the ambush cells it held with the"
+          " market and the three quarters on the map", (len(now_cells) > 1500, now_cells == was_cells),
+          (True, True))
+    check("  ..which the cut's cells, counted as plain wasteland, would open by those three",
+          {c: v for c, v in bare_cells.items() if was_cells.get(c) != v}, OPENED)
+except Exception:
+    import traceback
+    fails.append("the town's streets broke:\n" + traceback.format_exc())
 
 
 # --- 6. the clans --------------------------------------------------------------------------
