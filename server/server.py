@@ -2252,10 +2252,16 @@ class Session:
             afro, gold = char.spec_cost()
             res = char.learn_spec(idx)
             if res == progression.ERR_SKILL:
-                why = "Нужен навык не ниже %d" % progression.SPEC_MIN_SKILL[idx]
+                skill = progression.SPEC_SKILL[idx]
+                why = 'Требует навык "%s" не ниже %d, у вас %d' % (
+                    progression.SKILL_TITLES[skill], progression.SPEC_MIN_SKILL[idx],
+                    char.skill_level(skill))
             elif res == progression.ERR_MONEY:
-                why = "Не хватает %s" % ("%d афро" % afro if afro
-                                         else "%d голда" % gold)
+                # The purse keeps gold in hundredths: 7500 is the window's 75.
+                cur = auction.AFRO if afro else auction.GOLD
+                why = "Специализация стоит %s, у вас %s" % (
+                    auction.money_text(afro or gold, cur),
+                    auction.money_text(char.afro if afro else char.gold, cur))
         elif status == progression.UPD_FORGET:
             bars = (char.hp_max, char.sp_max)
             res = char.forget_spec(idx)
@@ -2264,9 +2270,13 @@ class Session:
         self.send("cmdAck", res=res)
         if res != 0:
             # The window shows nothing on a refusal (trainingAck is empty),
-            # so the reason goes to the chat the player has open.
+            # and ErrorReport has a text for 45 alone -- «не хватает навыков
+            # для использования этого предмета» -- none for 20, the money.
+            # So the reason goes to the chat the player has open, whatever
+            # SERVER_CHAT says: it answers his own click on «Изучить», and
+            # without it the button just did nothing.
             if why:
-                self.say(why)
+                self.answer(why)
             return
         with STORE.booked_as("spec", idx):
             char.save(STORE)

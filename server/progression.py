@@ -53,9 +53,17 @@ def moves_vitals(changed):
 
 # The skill level a specialisation needs, PersAttributes.as:111-125. The
 # client stores this table and never checks it: the teacher's window reads
-# minSkill out of spec.xml instead, where every entry says 0. So the gate is
-# the server's alone.
+# minSkill out of spec.xml instead, where the original says 0 for every entry
+# -- the window then offered «Изучить» under «не ниже 0» and the server said
+# no. The release ships spec.xml with this table in it
+# (client/files/xmldocs/spec.xml, test_progression keeps the two equal), so
+# the window shows the real figure in red and hides the button, and the gate
+# here stays for a client without it.
 SPEC_MIN_SKILL = [0, 0, 0, 4, 12, 6, 16, 8, 0, 0, 0, 0, 0, 0, 0]
+
+# The skills as the teacher's window names them («Требует навык "Стрельбы"
+# не ниже 8»): PersAttributes.as:72-85.
+SKILL_TITLES = ["Ближнего боя", "Стрельбы", "Медицины", "Промышленность", "Производство"]
 
 # Specialisations 12-14 belong to the hidden fifth skill; a teacher does not
 # offer them and the server does not hand them out.
@@ -492,7 +500,10 @@ class Character:
             return ERR_STATE
         if self.spec[idx][0] >= 0:
             return ERR_STATE
-        if self.skill[SPEC_SKILL[idx]][0] < SPEC_MIN_SKILL[idx]:
+        # The skill with the gear's bonus, as the window compares it
+        # (SkillObject.level is value_bonus): a button it shows is one the
+        # server takes.
+        if self.skill_level(SPEC_SKILL[idx]) < SPEC_MIN_SKILL[idx]:
             return ERR_SKILL
         afro, gold = self.spec_cost()
         if not self.can_afford(afro, gold):
