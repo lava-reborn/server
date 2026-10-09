@@ -32,9 +32,9 @@ On a socket:
   * a raider (level 8): «Индийское кино» and Фрэнк's raid taken; the
     Вади-Хальфа mine entered by the door of 154, the Ефрейторы and miners
     shot, the ring off a miner, five miners counted, the way back up; the
-    second tier walked end to end by its sides, 1016 through the tunnels
-    and 1024 to 1012, and its east end's door up into the third entrance
-    landing on its own cell, the west end's up through 617 to 158; the raid and the ring handed in;
+    second tier walked end to end by its sides, 1016 through 1024 and the
+    tunnels to 1012, and its east end's door up into the third entrance
+    landing on its own cell, 1024's up through 613 to 158; the raid and the ring handed in;
   * a quarry worker: the polishing mix's components off the quarry's
     stones, the mix, the polished blocks at Большой Сэм, the foundation
     stones and the polished ones at Варон's building site, three a day.
@@ -92,11 +92,12 @@ MARKET = 104                    # Портовый рынок, Фрэнк's stal
 VH_TOP = {154: (5983, 1735), 158: (5984, 1735), 160: (5988, 1735)}
 VH_TIERS = [613, 617, 1012, 1016, 1024, 1215]
 VH_TUNNELS = [1017, 1018, 1019]
-DOORS_WANT = {(154, "b"): 613, (613, "a"): 154, (613, "b"): 1024, (158, "b"): 617,
-              (617, "a"): 158, (617, "b"): 1016, (160, "b"): 1012, (1012, "a"): 160,
+DOORS_WANT = {(154, "b"): 617, (617, "a"): 154, (613, "b"): 1024, (158, "b"): 613,
+              (613, "a"): 158, (617, "b"): 1016, (160, "b"): 1012, (1012, "a"): 160,
               (1016, "a"): 617, (1024, "a"): 613, (1024, "b"): 1215, (1215, "a"): 1024}
-# The second tier, one gallery west to east: 1016, the tunnels 1017-1019, 1024, 1012.
-VH_GALLERY = [1016, 1017, 1018, 1019, 1024, 1012]
+# The second tier, one gallery west to east (the owner's layout of 2026-10-09:
+# 154 - 617 - 1016 - 1024, 158 - 613 - 1024, 160 - 1012 - the tunnels - 1024).
+VH_GALLERY = [1016, 1024, 1017, 1018, 1019, 1012]
 SIDES_WANT = {}
 for _w, _e in zip(VH_GALLERY, VH_GALLERY[1:]):
     SIDES_WANT[(_w, "E")], SIDES_WANT[(_e, "W")] = _e, _w
@@ -425,7 +426,7 @@ try:
     check("  ..and every one's far side has a door back",
           [(k, s) for (k, s), t in DOORS_WANT.items()
            if not any((travel.door(t, b) or {}).get("target_loc_id") == k for b in "ab")], [])
-    check("the sides: the second tier one gallery, 1016 - the tunnels - 1024 - 1012",
+    check("the sides: the second tier one gallery, 1016 - 1024 - the tunnels - 1012",
           {k: travel.side_way(*k)["target_loc_id"] for k in SIDES_WANT}, SIDES_WANT)
     check("  ..each one back over the opposite edge",
           [k for k, t in SIDES_WANT.items()
@@ -436,12 +437,12 @@ try:
         return sorted(c for c, s in travel.exit_sides(loc).items() if s == side)[0]
     ex = travel.plan_exit(world.location(154), door_cell(154, "b"), *VH_TOP[154])
     check("down 154's door: the first tier, on 154's cell", (ex.loc_id, ex.gx, ex.gy),
-          (613,) + VH_TOP[154])
+          (617,) + VH_TOP[154])
     ex = travel.plan_exit(world.location(1012), door_cell(1012, "a"), *VH_TOP[158])
     check("up 1012's door from the side of 158: the third entrance, on its own cell"
           " (travel.plan_exit)", (ex.loc_id, ex.gx, ex.gy), (160,) + VH_TOP[160])
-    ex = travel.plan_exit(world.location(613), door_cell(613, "a"), *VH_TOP[154])
-    check("  ..and up 613's door into 154, where it came from: its cell",
+    ex = travel.plan_exit(world.location(617), door_cell(617, "a"), *VH_TOP[154])
+    check("  ..and up 617's door into 154, where it came from: its cell",
           (ex.loc_id, ex.gx, ex.gy), (154,) + VH_TOP[154])
     # Every door of the game a player can take (data/exits.json, corrected by
     # data/passages.json), from its location's own cell or, for an interior,
@@ -1002,7 +1003,7 @@ try:
           len(inhabitants(arrival).get(CORPORAL, [])), 5)
     res, call, arrival = through(c, 154, "b")
     check("  ..and its drawn door leads down to the first tier", (res, call.get("id")),
-          ([0], 613))
+          ([0], 617))
     check("  ..its miners told as no allies (ally=0), every dot on the minimap a mob's",
           sorted({str(p_.get("ally")) for p_ in named(arrival, "userInfo")
                   if str(p_.get("res")) == str(MINER)}), ["0"])
@@ -1010,24 +1011,24 @@ try:
     got = c.frames(0.8)
     check("  ..where the map is refused (no_map), «Невозможно перейти в локацию.», no move",
           (acks(got), named(got, "gmap"), named(got, "lcall")), ([7], [], []))
-    ring, kills, tier, done = False, 0, 613, set()
+    ring, kills, tier, done = False, 0, 617, set()
     pos = first(arrival, "lenter").get("pos")
     for _ in range(40):
         fight, eid, pos, fell, wary = hunt(c, arrival, tier, gun, MINER, pos, done)
         if not eid:
-            if tier == 613:
-                res, call, arrival = through(c, 613, "b")
-                check("  ..the first tier's door b down into the second tier's middle",
+            if tier == 617:
+                res, call, arrival = through(c, 617, "b")
+                check("  ..the first tier's door b down into the gallery's west end",
+                      (res, call.get("id")), ([0], 1016))
+                tier = 1016
+                pos = first(arrival, "lenter").get("pos")
+            elif tier == 1016:
+                # On east along the gallery rather than wait out the mine's
+                # slow respawn: 1024 has seven more.
+                res, call, arrival = through(c, 1016, "E")
+                check("  ..and on east by the gallery's side into 1024",
                       (res, call.get("id")), ([0], 1024))
                 tier = 1024
-                pos = first(arrival, "lenter").get("pos")
-            elif tier == 1024:
-                # On east along the gallery rather than wait out the mine's
-                # slow respawn: its east end, 1012, has seven more.
-                res, call, arrival = through(c, 1024, "E")
-                check("  ..and on east by the gallery's side into its east end",
-                      (res, call.get("id")), ([0], 1012))
-                tier = 1012
                 pos = first(arrival, "lenter").get("pos")
             else:
                 # the fallen are back (LAVA_RESPAWN, the mine's slower clock)
@@ -1052,16 +1053,16 @@ try:
     raid = [json.loads(r["progress_json"]) for r in st.quests(RAIDER) if r["type"] == RAID]
     st.close()
     check("  ..the raid counts them", raid[0]["kill_num"], [5])
-    if tier == 1012:
-        res, call, arrival = through(c, 1012, "W")
-        check("back west from the gallery's east end into its middle", (res, call.get("id")),
-              ([0], 1024))
-        tier = 1024
     if tier == 1024:
-        res, call, arrival = through(c, 1024, "a")
+        res, call, arrival = through(c, 1024, "W")
+        check("back west from 1024 into the gallery's west end", (res, call.get("id")),
+              ([0], 1016))
+        tier = 1016
+    if tier == 1016:
+        res, call, arrival = through(c, 1016, "a")
         check("up from the second tier by its door a, to the first", (res, call.get("id")),
-              ([0], 613))
-    res, call, arrival = through(c, 613, "a")
+              ([0], 617))
+    res, call, arrival = through(c, 617, "a")
     check("  ..and up the first tier's door a to the entrance, on its own cell",
           (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
           ([0], 154, (VH_TOP[154][0] << 13) | VH_TOP[154][1]))
@@ -1070,18 +1071,18 @@ try:
     for here_, nxt in zip(VH_GALLERY, VH_GALLERY[1:]):
         res, call, arrival = through(c, here_, "E")
         walked.append((res, call.get("id")))
-    check("the second tier walked east by its sides, 1016 to 1012 through the tunnels and 1024",
+    check("the second tier walked east by its sides, 1016 to 1012 through 1024 and the tunnels",
           walked, [([0], t_) for t_ in VH_GALLERY[1:]])
     res, call, arrival = through(c, 1012, "a")
     check("  ..whose door goes up to the third, eastern entrance (5988), on its own cell,"
           " though one came in by the first",
           (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
           ([0], 160, (VH_TOP[160][0] << 13) | VH_TOP[160][1]))
-    arrival = goto(c, 1016)
-    res, call, arrival = through(c, 1016, "a")
-    check("the gallery's west end goes up to the first tier's other file", (res, call.get("id")),
-          ([0], 617))
-    res, call, arrival = through(c, 617, "a")
+    arrival = goto(c, 1024)
+    res, call, arrival = through(c, 1024, "a")
+    check("1024's door a goes up to the first tier's other file", (res, call.get("id")),
+          ([0], 613))
+    res, call, arrival = through(c, 613, "a")
     check("  ..and up to the second entrance, on its cell",
           (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
           ([0], 158, (VH_TOP[158][0] << 13) | VH_TOP[158][1]))

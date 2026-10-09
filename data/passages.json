@@ -183,8 +183,8 @@
    "b": {
     "confidence": "medium",
     "source": "designed",
-    "target_loc_id": 613,
-    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance, «Шахта в пустыне» (5983,1735), the first of the three entrances the wiki gives «Шахты Вади-Хальфы» (5983x1735, 5984x1735, 5988x1735; «Под локации: несколько подземных ярусов шахты»). Its one door, b (53-55, 20-22), is under a drawn door, DN_Backdoor01 (52,19); no file of the mine carries a sign saying where. Down to the first tier, VH_mine_lvl1 (613, «Шахта: Первый ярус»), whose door a comes up in the same north-east corner. The mine's doors keep the letters the town's ore mines sign (data/passages.json above: a up, b down)."
+    "target_loc_id": 617,
+    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance, «Шахта в пустыне» (5983,1735), the first of the three entrances the wiki gives «Шахты Вади-Хальфы» (5983x1735, 5984x1735, 5988x1735; «Под локации: несколько подземных ярусов шахты»). Its one door, b (53-55, 20-22), is under a drawn door, DN_Backdoor01 (52,19); no file of the mine carries a sign saying where. Down to the first tier's file VH_mine_lvl2 (617, «Шахта: Первый ярус.»), whose door a leads back up (2026-10-09, the owner's layout: 154 - 617 - 1016 - 1024, 158 - 613 - 1024, 160 - 1012 - the tunnels - 1024)."
    }
   },
   "613": {
@@ -192,8 +192,8 @@
     "confidence": "medium",
     "own_cell": true,
     "source": "designed",
-    "target_loc_id": 154,
-    "why": "DESIGNED. VH_mine_lvl1, «Шахта: Первый ярус»: door a (north-east, 51-52, 21-23), up, back to the entrance it is entered from, 154, arrived at on its own cell (own_cell, travel.plan_exit: one of the mine's three entrances)."
+    "target_loc_id": 158,
+    "why": "DESIGNED. VH_mine_lvl1, «Шахта: Первый ярус»: door a (north-east, 51-52, 21-23), up, back to the second entrance, 158, arrived at on its own cell (own_cell, travel.plan_exit: the mine is one, entered by another entrance the player would otherwise stand on its cell) (2026-10-09, the owner's layout: 154 - 617 - 1016 - 1024, 158 - 613 - 1024, 160 - 1012 - the tunnels - 1024)."
    },
    "b": {
     "confidence": "medium",
@@ -206,8 +206,8 @@
    "b": {
     "confidence": "medium",
     "source": "designed",
-    "target_loc_id": 617,
-    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance2 (5984,1735), the wiki's second entrance: its one door, b (11-16, 96-101), with no sign and no door drawn over it: the file shows the player nothing there. Down to the first tier's other file, VH_mine_lvl2 (617, «Шахта: Первый ярус.»)."
+    "target_loc_id": 613,
+    "why": "DESIGNED target, RECOVERED door. VH_mine_entrance2 (5984,1735), the wiki's second entrance: its one door, b (11-16, 96-101), with no sign and no door drawn over it: the file shows the player nothing there. Down to the first tier's file VH_mine_lvl1 (613, «Шахта: Первый ярус») (2026-10-09, the owner's layout: 154 - 617 - 1016 - 1024, 158 - 613 - 1024, 160 - 1012 - the tunnels - 1024)."
    }
   },
   "617": {
@@ -215,8 +215,8 @@
     "confidence": "medium",
     "own_cell": true,
     "source": "designed",
-    "target_loc_id": 158,
-    "why": "DESIGNED. VH_mine_lvl2, «Шахта: Первый ярус.»: door a (south-west, 8-10, 114-116), up, back to the second entrance, 158, arrived at on its own cell (own_cell, travel.plan_exit: entered by the third entrance and the second tier's side, the player would otherwise stand on 160's)."
+    "target_loc_id": 154,
+    "why": "DESIGNED. VH_mine_lvl2, «Шахта: Первый ярус.»: door a (south-west, 8-10, 114-116), up, back to the first entrance, 154, arrived at on its own cell (own_cell, travel.plan_exit) (2026-10-09, the owner's layout: 154 - 617 - 1016 - 1024, 158 - 613 - 1024, 160 - 1012 - the tunnels - 1024)."
    },
    "b": {
     "confidence": "medium",
@@ -361,30 +361,30 @@
   },
   "1012": {
    "W": {
-    "target_loc_id": 1024,
-    "why": "VH_mine_lvl4, the gallery's east end: its mouth to the west (8-11, 30-32) into 1024, over its east edge. DESIGNED topology on the files' own sides (2026-10-09, the owner: the ring of tunnels and the 1012-1016 pair left the tier in two pieces). The second tier of the Вади-Хальфа mine, «Шахта: Второй ярус» and «Шахта: Тунели», is one gallery from west to east: VH_mine_lvl5 (1016), which opens only to the east (57-59, 30-32), the three tunnels VH_mine_tunel1..3_horizont (1017-1019), each open along its west and east edges and nothing else, VH_mine_lvl6 (1024), open along both edges (west 59-75, east 60-75), and VH_mine_lvl4 (1012), which opens only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge, so whichever entrance a player comes down by, the whole tier, the third tier below 1024 and the other two ways up are reachable underground."
+    "target_loc_id": 1019,
+    "why": "VH_mine_lvl4, the gallery's east end: its mouth to the west (8-11, 30-32) into the last tunnel, 1019, over its east edge. DESIGNED topology on the files' own sides (2026-10-09, the owner's layout: 154 - 617 - 1016 - 1024, 158 - 613 - 1024, 160 - 1012 - the tunnels - 1024). The second tier, «Шахта: Второй ярус» and «Шахта: Тунели», is one gallery from west to east: VH_mine_lvl5 (1016), open only to the east (57-59, 30-32), VH_mine_lvl6 (1024), open along both edges (west 59-75, east 60-75), the three tunnels VH_mine_tunel1..3_horizont (1017-1019), each open along its west and east edges and nothing else, and VH_mine_lvl4 (1012), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1024, under 613, is where 1016 (under 617) and the tunnels from 1012 (under 160) meet, and above the third tier."
    }
   },
   "1016": {
    "E": {
-    "target_loc_id": 1017,
-    "why": "DESIGNED topology on the files' own sides. VH_mine_lvl5, the gallery's west end: its mouth to the east (57-59, 30-32) into the first tunnel, 1017 (see 1012 W)."
+    "target_loc_id": 1024,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_lvl5, the gallery's west end: its mouth to the east (57-59, 30-32) into 1024, over its west edge (see 1012 W)."
    }
   },
   "1024": {
    "W": {
-    "target_loc_id": 1019,
-    "why": "DESIGNED topology on the files' own sides. VH_mine_lvl6: its west edge into the last tunnel, 1019 (see 1012 W)."
+    "target_loc_id": 1016,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_lvl6: its west edge into 1016, the gallery's west end (see 1012 W)."
    },
    "E": {
-    "target_loc_id": 1012,
-    "why": "DESIGNED topology on the files' own sides. VH_mine_lvl6: its east edge into 1012, the gallery's east end (see 1012 W)."
+    "target_loc_id": 1017,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_lvl6: its east edge into the first tunnel, 1017 (see 1012 W)."
    }
   },
   "1017": {
    "W": {
-    "target_loc_id": 1016,
-    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel1_horizont, «Шахта: Тунели»: its west edge into 1016, the gallery's west end (see 1012 W)."
+    "target_loc_id": 1024,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel1_horizont, «Шахта: Тунели»: its west edge into 1024 (see 1012 W)."
    },
    "E": {
     "target_loc_id": 1018,
@@ -407,8 +407,8 @@
     "why": "DESIGNED topology on the files' own sides. VH_mine_tunel3_horizont: its west edge back into the second tunnel, 1018."
    },
    "E": {
-    "target_loc_id": 1024,
-    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel3_horizont: its east edge into 1024, the second tier's middle file (see 1012 W)."
+    "target_loc_id": 1012,
+    "why": "DESIGNED topology on the files' own sides. VH_mine_tunel3_horizont: its east edge into 1012, the gallery's east end (see 1012 W)."
    }
   }
  },
@@ -431,10 +431,10 @@
   "646": {"why": "DESIGNED. The prison's centre block (Prison_3_WH): Томас (876) and his «Выход» (163) back to the yard, the godfather and the medics of the uprising; its four sides lead to the other four files."},
   "647": {"why": "DESIGNED. The prison's northern cells (Prison_4_WH): the prisoners of the uprising; its one side back to the centre."},
   "648": {"why": "DESIGNED. The prison's eastern cells (Prison_5_WH): the prisoners of the uprising; its one side back to the centre."},
-  "613": {"why": "DESIGNED (2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту»). The Вади-Хальфа mine's first tier, VH_mine_lvl1: out only by its door up to the first entrance (154), or down. Every file under the three entrances is in this list: the mine is left by the doors it was entered by, never by the map button or /home in the middle of a raid, which would also land the player on whichever entrance's map cell he last stood on, not the one above him."},
-  "617": {"why": "DESIGNED. VH_mine_lvl2, the first tier's other file: up to the second entrance (158), or down (see 613)."},
+  "613": {"why": "DESIGNED (2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту»). The Вади-Хальфа mine's first tier, VH_mine_lvl1: out only by its door up to the second entrance (158), or down. Every file under the three entrances is in this list: the mine is left by the doors it was entered by, never by the map button or /home in the middle of a raid, which would also land the player on whichever entrance's map cell he last stood on, not the one above him."},
+  "617": {"why": "DESIGNED. VH_mine_lvl2, the first tier's other file: up to the first entrance (154), or down (see 613)."},
   "1012": {"why": "DESIGNED. VH_mine_lvl4, the second tier's east end: up to the third entrance (160) (see 613)."},
-  "1016": {"why": "DESIGNED. VH_mine_lvl5, the second tier's west end (see 613)."},
+  "1016": {"why": "DESIGNED. VH_mine_lvl5, the second tier's west end: up to 617 (see 613)."},
   "1024": {"why": "DESIGNED. VH_mine_lvl6, the second tier's middle file (see 613)."},
   "1215": {"why": "DESIGNED. VH_mine_lvl3, the third tier (see 613)."},
   "1017": {"why": "DESIGNED. VH_mine_tunel1_horizont, the second tier's tunnels (see 613)."},

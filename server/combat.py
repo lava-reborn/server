@@ -92,7 +92,7 @@ RESPAWN_DEFAULT = 45.0
 SLOW_RESPAWN = {loc: 300.0 for loc in (
     154, 158, 160,                     # VH_mine_entrance, 2, 3
     613, 617,                          # the first tier
-    1016, 1017, 1018, 1019, 1024, 1012,  # the second tier, west to east
+    1016, 1024, 1017, 1018, 1019, 1012,  # the second tier, west to east
     1215,                              # the third
 )}
 
