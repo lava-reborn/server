@@ -417,6 +417,9 @@ RES_NO_SUCH = 1
 RES_WRONG_NPC = 2
 RES_NOT_READY = 3
 RES_NOT_AVAILABLE = 4
+# «Невозможно перейти в локацию.» (ErrorReport 7): the map asked for from a
+# place left only by its own ways (travel.no_map).
+RES_NO_WAY = 7
 RES_LOG_FULL = 5
 RES_NO_MONEY = 21
 RES_OVERLOAD = inventory.RES_OVERLOAD
@@ -1208,10 +1211,14 @@ class Session:
             return
         if not self.on_map and travel.no_map(self.loc.id):
             # An interior left only by its own ways (travel.no_map): the
-            # client greys both map buttons out there (travel.geo_id), and
-            # the hotkey that does not look is answered no -- a silent
-            # return to the location (Master.changeWorldAck).
-            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            # client greys both map buttons out there (travel.geo_id) -- but
+            # its LocationInterface.init lights the top one again, and its
+            # hotkey does not look (widescreen.py wraps both) -- and anything
+            # still asking is told no, staying in the location
+            # (Master.changeWorldAck). 7, «Невозможно перейти в локацию.»:
+            # the 4 it was printed «Аккаунт уже используется» (the owner,
+            # 2026-10-09, in the Вади-Хальфа mine).
+            self.send("cmdAck", res=RES_NO_WAY)
             return
         self.send("cmdAck", res=0)
         if self.on_map:
@@ -2085,7 +2092,13 @@ class Session:
         back the creature's internal name instead of a placeholder.
 
         ally must be truthy or every service this NPC offers is refused before
-        a single frame is exchanged.
+        a single frame is exchanged -- and false for a creature one fights
+        (root MOB): the client draws an ally among creatures as a friend,
+        green on the location's minimap, and one with no ally yet as a mob,
+        yellow (DisplayMM.addPlayer). Every creature's dot is drawn on lch;
+        newUser, before this frame, and redrawn later, so with ally=1 the
+        same miners of one room came out half yellow, half green (the owner,
+        2026-10-09, «Шахта: Третий ярус.»).
         """
         entry = self.room.npc(npc_id) if self.room is not None else None
         if not entry:
@@ -2105,7 +2118,8 @@ class Session:
         # m_hello is a dead field (NPC.createHelloStrings never assigns).
         params = dict(id=npc_id, name=type_id, sex=0, res=type_id,
                       ail=0,
-                      ally=1, lvl=1, rep=[0], bg_rep=0, bg_pen=0,
+                      ally=0 if root == world.MOB else 1, lvl=1, rep=[0], bg_rep=0,
+                      bg_pen=0,
                       give_quests=quests.given_by(type_id),
                       take_quests=quests.taken_by(type_id), m_hello=[],
                       can_set_home=0, can_banking=0, can_trophy=0,

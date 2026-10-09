@@ -1003,6 +1003,13 @@ try:
     res, call, arrival = through(c, 154, "b")
     check("  ..and its drawn door leads down to the first tier", (res, call.get("id")),
           ([0], 613))
+    check("  ..its miners told as no allies (ally=0), every dot on the minimap a mob's",
+          sorted({str(p_.get("ally")) for p_ in named(arrival, "userInfo")
+                  if str(p_.get("res")) == str(MINER)}), ["0"])
+    c.send("chWorld;")
+    got = c.frames(0.8)
+    check("  ..where the map is refused (no_map), «Невозможно перейти в локацию.», no move",
+          (acks(got), named(got, "gmap"), named(got, "lcall")), ([7], [], []))
     ring, kills, tier, done = False, 0, 613, set()
     pos = first(arrival, "lenter").get("pos")
     for _ in range(40):
