@@ -712,12 +712,15 @@ def melee_crit_evade(ch):
 
 
 def split_damage(dmg, armor, piercing, crit, sp_left, st_dmg=0):
-    """(to HP, to SP) of a bullet. The owner's rule (2026-10-05): the
-    weapon has independent health and stamina damage; a crit sends H to
-    health and S to stamina. On an ordinary hit armour redirects part of H
-    to stamina, as in wiki "Броня", on top of S. Whatever stamina cannot
-    absorb spills into health, including on a crit."""
-    comp = 0 if crit else max(0, int(armor - piercing))
+    """(to HP, to SP) of a bullet. On a critical hit, the owner's rule
+    (2026-10-10) is H to health and min(H, remaining SP) to stamina, with
+    no overflow into health and no additional weapon stamina component.
+    On an ordinary hit armour redirects part of H to stamina, as in wiki
+    "Броня", on top of the weapon's S; missing stamina spills into health.
+    """
+    if crit:
+        return dmg, min(dmg, max(0, sp_left))
+    comp = max(0, int(armor - piercing))
     redirected = min(dmg, comp)
     s = st_dmg + redirected
     h = dmg - redirected
