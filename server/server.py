@@ -3787,10 +3787,22 @@ async def handle_client(reader, writer):
 
 
 async def handle_policy(reader, writer):
+    """The socket policy, on its own port (LAVA_POLICY_PORT): whatever the
+    Flash player sends, the file goes back and the socket is closed.
+
+    A player that hangs up first -- the page closed or reloaded while it
+    asked, a scanner knocking, a link that died -- is no fault of ours: a
+    reset, a broken pipe or a read that timed out is one line of the log.
+    Raised out of here it was asyncio's «Unhandled exception in
+    client_connected_cb» with a traceback, an ERROR in the error log the
+    admin panel shows (production, 2026-10-09)."""
     try:
         await reader.read(64)
         writer.write(POLICY)
         await writer.drain()
+    except (ConnectionError, TimeoutError) as exc:
+        log.info("  policy %s hung up: %s", writer.get_extra_info("peername"),
+                 type(exc).__name__)
     finally:
         writer.close()
 

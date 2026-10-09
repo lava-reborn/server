@@ -652,7 +652,15 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0):
     at max_range). Its line goes through the point offset sideways at the
     aim. bodies is cell -> body; a body is passed when its hex is, and only
     farther out than past hexes (a round that hit its mark goes on from
-    there)."""
+    there).
+
+    A mark on the hex the round starts from -- a creature come back on its
+    spawn hex under the player, one he walked onto, the ground at his own
+    feet -- gives the line no direction: it passes nobody and lands about
+    the aim. That answer is the same pair as every other: when flight()
+    began to name the bodies (2026-10-04) this one kept the bare end, and
+    burst read the letters of "faMiss" as the bodies a round went through
+    (production, 2026-10-09: 'str' object has no attribute 'sp_now')."""
     bodies = bodies or {}
     w, h = loc.width, loc.height
     ax, ay = mobs.real(a, w)
@@ -660,7 +668,7 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0):
     dx, dy = tx - ax, ty - ay
     d = math.hypot(dx, dy)
     if d == 0:
-        return ("faMiss", miss_at(tx, ty))
+        return [], ("faMiss", miss_at(tx, ty))
     ux, uy = dx / d, dy / d
     px, py = tx - uy * offset, ty + ux * offset
     bx, by = px - ax, py - ay
@@ -2599,6 +2607,62 @@ class RoomCombat:
         aim = target.cell if target is not None else hexcell
         if aim is None or not (0 <= aim < width * loc.height):
             aim = shooter.cell
+        try:
+            pairs, struck = self.resolve(shooter, target, aim, weapon, live)
+        except Exception:
+            # faAim has told every client here how many pairs this burst is
+            # (Location.faAim, currNumOfShot), and only their last faShot
+            # lowers the gun, closes the aim bar and lets the autofire go
+            # again (AutoCommandManager.fireShotHandler). A fault in working
+            # out where the rounds went -- the zero-length line of
+            # 2026-10-09 was one -- sent none of them: the figure stood with
+            # its gun raised and the autofire stopped, shot after shot. It
+            # goes to the error log whole, and the burst goes out as the
+            # miss it has become, every pair of it, and is paid for as one
+            # (Fighter.fire_now): rounds, action points and the c_ap after.
+            log.exception("  !!    a burst of %s at hex %d of %s failed: its %d round(s)"
+                          " go out as misses", shooter.eid, aim, loc.title,
+                          weapon.num_shots)
+            tx, ty = mobs.real(aim, width)
+            pairs = [(("faMiss", miss_at(tx, ty)), []) for _ in range(weapon.num_shots)]
+            struck = {}
+        # The body the client is shown the damage of: the mark if it was
+        # hit, else whoever took the most.
+        shown = target if target in struck else max(
+            struck, key=lambda b: struck[b][0] + struck[b][1], default=None)
+        pairs.sort(key=lambda pair: any(f[0] is shown for f in pair[1]))
+        for end, fates in pairs:
+            self.room.broadcast(("faShot", dict(id=shooter.eid, status=1)))
+            if end is not None:
+                self.room.broadcast(end)
+            for body, h, s, crit in sorted(fates, key=lambda f: f[0] is shown):
+                mine = body is shown
+                self.room.broadcast(("faHit", dict(target=body.eid,
+                                                   dmg=h if mine else 0,
+                                                   sdmg=s if mine else 0,
+                                                   crit=int(crit))))
+            self.room.broadcast(("faShot", dict(id=shooter.eid, status=0)))
+        result = (0, 0, 0, False)
+        for body, (h, s, hits, _sp) in struck.items():
+            pool = 0 if body.is_player else body.hp
+            self.hit_landed(shooter, body)
+            killed = body.apply_damage(h, s)
+            self.push_vitals(body)
+            if body is target:
+                result = (h, s, hits, killed)
+            elif others is not None:
+                others.append((body, h, s, killed, pool))
+        return result
+
+    def resolve(self, shooter, target, aim, weapon, live):
+        """Where each round of a burst went, nothing sent and nothing
+        applied yet: (pairs, struck). A pair is (the faMiss or faWall it
+        ends in, or None, and its fates: (body, hp, sp, crit) for each body
+        it hit, nearest first); struck is body -> [hp, sp, hits, sp left]
+        over the whole burst. target is the mark, present, or None for the
+        ground at aim."""
+        loc = self.room.loc
+        width = loc.width
         dist = mobs.hex_distance(shooter.cell, aim, width)
         # The line to the mark is the bullets' line only as far as the gun
         # reaches: past max_range they come down (stray), and a wall beyond
@@ -2667,33 +2731,7 @@ class RoomCombat:
                 rec[3] -= s
                 fates.append((body, h, s, crit))
             pairs.append((None, fates))
-        # The body the client is shown the damage of: the mark if it was
-        # hit, else whoever took the most.
-        shown = target if target in struck else max(
-            struck, key=lambda b: struck[b][0] + struck[b][1], default=None)
-        pairs.sort(key=lambda pair: any(f[0] is shown for f in pair[1]))
-        for end, fates in pairs:
-            self.room.broadcast(("faShot", dict(id=shooter.eid, status=1)))
-            if end is not None:
-                self.room.broadcast(end)
-            for body, h, s, crit in sorted(fates, key=lambda f: f[0] is shown):
-                mine = body is shown
-                self.room.broadcast(("faHit", dict(target=body.eid,
-                                                   dmg=h if mine else 0,
-                                                   sdmg=s if mine else 0,
-                                                   crit=int(crit))))
-            self.room.broadcast(("faShot", dict(id=shooter.eid, status=0)))
-        result = (0, 0, 0, False)
-        for body, (h, s, hits, _sp) in struck.items():
-            pool = 0 if body.is_player else body.hp
-            self.hit_landed(shooter, body)
-            killed = body.apply_damage(h, s)
-            self.push_vitals(body)
-            if body is target:
-                result = (h, s, hits, killed)
-            elif others is not None:
-                others.append((body, h, s, killed, pool))
-        return result
+        return pairs, struck
 
     def hit_landed(self, attacker, target):
         """A faHit or a caHit has just gone out: the exit timer restarts for
