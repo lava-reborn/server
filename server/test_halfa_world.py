@@ -294,6 +294,7 @@ class _Shooter(object):
 
 async def _the_box():
     combat.CORPSE_DELAY, combat.RESPAWN_DELAY = 0.05, 0.2
+    combat.OBJECT_RESPAWN_DELAY = 0.2
     r = room(64)
     store = _Store()
     rc = r.combat = combat.RoomCombat(r, store)
@@ -327,6 +328,7 @@ async def _the_target():
     """A target of TIR_01 shot from the booth, over the counter, until it
     falls; the socket side of it is test_halfa_tir.py."""
     combat.CORPSE_DELAY, combat.RESPAWN_DELAY = 0.05, 0.2
+    combat.OBJECT_RESPAWN_DELAY = 0.2
     r = room(1048)
     store = _Store()
     rc = r.combat = combat.RoomCombat(r, store)
