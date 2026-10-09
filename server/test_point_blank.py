@@ -47,11 +47,17 @@ process, a real gun in the hand and ss_use as the client sends it:
   * a fault anywhere in working out where the rounds went (flight made to
     raise): the error log has it, with its traceback, and the burst still
     goes out -- every pair a miss, paid for as a miss -- for a player's
-    shot and for a creature's alike; the next shot goes as ever.
+    shot and for a creature's alike; the next shot goes as ever;
+  * a fault in the line of fire Fighter.fire_now asks about before the
+    burst (shot_wall made to raise): the same, every pair a miss and paid;
+  * a fault in applying the hits after the pairs went out (the dog's usrUp
+    made to raise once): the shot is paid all the same, and a dog the
+    burst brought down is killed, not left standing at 0.
 
 Written against the code before the fix, the point-blank shots and the
 two misses fail with the production record, and the fault's checks fail
-on the missing pairs and the exception at the loop.
+on the missing pairs, the unpaid shot, the unsettled kill and the
+exception at the loop.
 """
 import asyncio
 import logging
@@ -324,6 +330,74 @@ async def main():
                   (None, [("faShot", 1), ("faMiss", None), ("faShot", 0)] * 2))
             check("  ..logged once", [r.name for r in records.records
                                      if r.levelname == "ERROR"], ["lava"])
+
+            # --- the line of fire asked before the burst; the hits applied after ----------
+            # Fighter.fire_now asks whether the rounds could reach the mark at
+            # all (RoomCombat.within_fire, the same shot_wall the resolver
+            # walks) before the burst, and applies the hits after its pairs
+            # went out. A fault in either was outside the guard: the first
+            # sent no pair at all, the second left the shot unpaid and its
+            # kill unsettled.
+            row = gun(sess, MG, MG_MODE, 30)
+            records.records.clear()
+            with patch.object(combat, "shot_wall", fault):
+                got = await shoot(sess, row, dog.eid)
+            check("a fault in the line of fire asked before the burst: nothing reaches "
+                  "the loop", unhandled(), [])
+            check("  ..faAim's three pairs go out all the same, each a miss",
+                  pairs_of(got), [("faShot", 1), ("faMiss", None), ("faShot", 0)] * 3)
+            check("  ..paid as the miss it became: three rounds, 27 points, the c_ap",
+                  (last(got, "ss_di_firearm", "ammo_count"), last(got, "c_ap", "ap")),
+                  (27, sess.combat.ap_max - items.params_of(MG)["fire_costs"][MG_MODE]))
+            check("  ..the error log has it from the game, with its traceback: the "
+                  "question before the burst, then the burst's own line",
+                  [(r.name, r.exc_info is not None and r.exc_info[0].__name__)
+                   for r in records.records if r.levelname == "ERROR"],
+                  [("lava", "RuntimeError")] * 2)
+
+            def once(original):
+                """original, except that its first call raises."""
+                calls = []
+
+                def wrapped(*a, **k):
+                    if not calls:
+                        calls.append(1)
+                        raise RuntimeError("a fault of the test's own")
+                    return original(*a, **k)
+                return wrapped
+
+            sturdy(dog)
+            hp = dog.hp
+            row = gun(sess, MG, MG_MODE, 30)
+            records.records.clear()
+            with patch.object(rc, "push_vitals", once(rc.push_vitals)):
+                got = await shoot(sess, row, dog.eid)
+            check("a fault in applying the hits after the pairs went out (the dog's usrUp): "
+                  "nothing reaches the loop", unhandled(), [])
+            check("  ..the three pairs went out, hits on the dog, and it took them",
+                  (pairs_of(got), dog.hp < hp),
+                  ([("faShot", 1), ("faHit", dog.eid), ("faShot", 0)] * 3, True))
+            check("  ..the shot is paid: three rounds, 27 points, the c_ap",
+                  (last(got, "ss_di_firearm", "ammo_count"), last(got, "c_ap", "ap")),
+                  (27, sess.combat.ap_max - items.params_of(MG)["fire_costs"][MG_MODE]))
+            check("  ..and the error log has it once, from the game, with its traceback",
+                  [(r.name, r.exc_info is not None and r.exc_info[0].__name__)
+                   for r in records.records if r.levelname == "ERROR"],
+                  [("lava", "RuntimeError")])
+
+            dog.hp, dog.sp = 1, dog.sp_max
+            row = gun(sess, MG, MG_MODE, 30)
+            records.records.clear()
+            with patch.object(rc, "push_vitals", once(rc.push_vitals)):
+                got = await shoot(sess, row, dog.eid)
+            # (Whether it stands again by now is the respawn's business: the
+            # frame of its death is what tells.)
+            check("the same fault on the burst that brings the dog down: nothing at the "
+                  "loop, and the dog is killed (lch dead), not left standing at 0",
+                  (unhandled(), [p.get("dead") for p in named(got, "lch") if "dead" in p]),
+                  ([], [dog.eid]))
+            check("  ..paid as ever", last(got, "c_ap", "ap"),
+                  sess.combat.ap_max - items.params_of(MG)["fire_costs"][MG_MODE])
         finally:
             sess.close()
             logging.getLogger().removeHandler(records)

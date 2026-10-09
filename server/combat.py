@@ -1509,8 +1509,17 @@ class Fighter:
         live = weapon.num_shots * spent // rounds if rounds else 0
         pool = target.hp if target is not None and not target.is_player else 0
         # Asked before the burst, which may kill it: whether the rounds could
-        # have got there at all. Only then is the shot a provocation.
-        reached = rc.within_fire(self, target, weapon.max_range)
+        # have got there at all. Only then is the shot a provocation. It
+        # walks the line the burst walks (shot_wall), and a fault in it is
+        # no reason to keep the burst back: faAim has announced its pairs,
+        # and raised out of here none of them went and nothing was paid. The
+        # error log has it; the shot provokes nobody.
+        try:
+            reached = rc.within_fire(self, target, weapon.max_range)
+        except Exception:
+            log.exception("  !!    the line of fire of %s failed before its burst: it"
+                          " provokes nobody", self.eid)
+            reached = False
         others = []
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others)
         if row is not None:
@@ -2642,16 +2651,27 @@ class RoomCombat:
                                                    sdmg=s if mine else 0,
                                                    crit=int(crit))))
             self.room.broadcast(("faShot", dict(id=shooter.eid, status=0)))
+        # The pairs are out. What follows is the server's own account, and
+        # its caller settles the shot by it: pays the rounds and the action
+        # points, turns or kills whoever was hit. So each body's outcome is
+        # written down the moment its damage is applied, before the frames
+        # that tell of it, and a fault on the way ends the loop without
+        # taking the account with it: raised out of here, it left the shot
+        # unpaid and a body brought to 0 alive.
         result = (0, 0, 0, False)
-        for body, (h, s, hits, _sp) in struck.items():
-            pool = 0 if body.is_player else body.hp
-            self.hit_landed(shooter, body)
-            killed = body.apply_damage(h, s)
-            self.push_vitals(body)
-            if body is target:
-                result = (h, s, hits, killed)
-            elif others is not None:
-                others.append((body, h, s, killed, pool))
+        try:
+            for body, (h, s, hits, _sp) in struck.items():
+                pool = 0 if body.is_player else body.hp
+                killed = body.apply_damage(h, s)
+                if body is target:
+                    result = (h, s, hits, killed)
+                elif others is not None:
+                    others.append((body, h, s, killed, pool))
+                self.hit_landed(shooter, body)
+                self.push_vitals(body)
+        except Exception:
+            log.exception("  !!    applying the burst of %s at hex %d of %s failed after"
+                          " its pairs went out", shooter.eid, aim, loc.title)
         return result
 
     def resolve(self, shooter, target, aim, weapon, live):
