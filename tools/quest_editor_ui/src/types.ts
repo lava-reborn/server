@@ -131,6 +131,13 @@ export interface Generated {
   rows: Row[];
 }
 
+export interface CommitInfo {
+  sha: string;
+  date: string;
+  author: string;
+  subject: string;
+}
+
 export interface TableResp {
   rows: Row[];
   sha: string;
@@ -138,6 +145,63 @@ export interface TableResp {
   layout: Layout;
   order: string[];
   new_types: [number, number];
+  // "publish": the admin panel's editor, which pushes to the branch;
+  // "local": a checkout's data/quests.json, saved on disk.
+  mode?: "publish" | "local";
+  commit?: string;
+  branch?: string;
+  web?: string;
+  head?: CommitInfo;
+  stale?: string;
+}
+
+export interface Conflict {
+  type: number;
+  name: string;
+  ru?: string;
+}
+
+// What the page becomes if it takes main's version of the quests in
+// conflict and keeps the rest of its edits: main's commit as the new base.
+export interface Rebase {
+  commit: string;
+  head: CommitInfo;
+  rows: Row[];
+  layout: Layout;
+  // whether anything is left to publish against that commit
+  changed: boolean;
+}
+
+export interface PreviewResp {
+  head?: string;
+  summary?: string[];
+  conflicts?: Conflict[];
+  problems?: Problem[];
+  diff?: string;
+  layout_changed?: boolean;
+  nothing?: boolean;
+  // new quests whose numbers main took meanwhile: old -> the one they go out as
+  renumbered?: Record<string, number>;
+  rebase?: Rebase;
+  error?: string;
+  // a 502: git's own words, under error's
+  git?: string;
+}
+
+export interface PublishResp {
+  commit?: string;
+  head?: CommitInfo;
+  url?: string;
+  nothing?: boolean;
+  summary?: string[];
+  rows?: Row[];
+  layout?: Layout;
+  renumbered?: Record<string, number>;
+  conflicts?: Conflict[];
+  rebase?: Rebase;
+  problems?: Problem[];
+  error?: string;
+  git?: string;
 }
 
 export interface TextsResp {

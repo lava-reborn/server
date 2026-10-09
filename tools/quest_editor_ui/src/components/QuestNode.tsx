@@ -56,8 +56,8 @@ export const QuestNode = memo(({ data, selected }: NodeProps<QuestNodeT>) => {
         {r.way ? <span className="flag" title="Переход после сдачи">➜</span> : null}
         {readOnly ? <span className="flag" title={`Сгенерирован: ${data.source}`}>🔒</span> : null}
         <span className="grow" />
-        {data.errors > 0 && <span className="badge err" title="Ошибки">{data.errors}</span>}
-        {data.warns > 0 && <span className="badge warn" title="Предупреждения">{data.warns}</span>}
+        {data.errors > 0 && <span className="qbadge err" title="Ошибки">{data.errors}</span>}
+        {data.warns > 0 && <span className="qbadge warn" title="Предупреждения">{data.warns}</span>}
       </div>
       <div className="qname" title={plain(r.name)}>{plain(r.name) || "без названия"}</div>
       <div className="qwho">

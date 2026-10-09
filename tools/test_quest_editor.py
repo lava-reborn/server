@@ -10,7 +10,10 @@
     table with an error (422) and a file that moved since it was read (409,
     unless forced);
   * over HTTP: the table, the checks, a row's texts as a player reads them,
-    a new row.
+    a new row; a save is refused when it comes as anything but JSON (what
+    another site may post unasked), under a name other than 127.0.0.1 or
+    localhost (DNS rebinding), or with a row key that is no plain name; a
+    key is escaped when written all the same.
 """
 import json
 import os
@@ -18,6 +21,7 @@ import shutil
 import sys
 import tempfile
 import threading
+import urllib.error
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -165,6 +169,53 @@ check("POST /api/texts: what the server serves",
 made = call("/api/new", {"kind": "bring_l_obj", "rows": table["rows"]})["row"]
 check("POST /api/new: a bring quest with its objects", (made["kind"], made["objs"]),
       ("bring_l_obj", []))
+
+
+def raw_call(url, body=None, headers=None):
+    req = urllib.request.Request("http://127.0.0.1:%d%s" % (port, url), data=body,
+                                 headers=headers or {})
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return resp.status, resp.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read()
+
+
+# What another site open in the same browser could try while the editor
+# runs: on a copy of the table, never the worktree's.
+tmp = tempfile.mkdtemp(prefix="quest-editor-http-")
+real = qe.TABLE, qe.LAYOUT
+qe.TABLE, qe.LAYOUT = os.path.join(tmp, "quests.json"), os.path.join(tmp, "quest_layout.json")
+shutil.copyfile(real[0], qe.TABLE)
+before = qe.read_table()["sha"]
+forced = json.dumps({"rows": table["rows"], "force": True}).encode("utf-8")
+code, _ = raw_call("/api/save", forced, {"Content-Type": "text/plain;charset=UTF-8"})
+check("a save sent as text/plain (a form another site may post unasked) is refused",
+      (code, qe.read_table()["sha"]), (415, before))
+code, _ = raw_call("/api/save", forced, {"Content-Type": "application/json",
+                                         "Host": "evil.example:%d" % port})
+check("so is one under another site's name (DNS rebinding)", (code, qe.read_table()["sha"]),
+      (403, before))
+check("and a read under that name", raw_call("/api/table", headers={"Host": "evil.example:%d" % port})[0],
+      403)
+for key in ('x": 1, "kind": "dance', "a\nb", "имя"):
+    bad = json.loads(json.dumps(table["rows"]))
+    bad[0][key] = 0
+    code, _ = raw_call("/api/save", json.dumps({"rows": bad, "force": True}).encode("utf-8"),
+                       {"Content-Type": "application/json"})
+    check("a row key %r is refused (400), the file untouched" % key, (code, qe.read_table()["sha"]),
+          (400, before))
+code, out = raw_call("/api/save", forced, {"Content-Type": "application/json; charset=utf-8",
+                                           "Host": "localhost:%d" % port})
+check("JSON under localhost is saved", (code, json.loads(out.decode("utf-8")).get("ok")), (200, True))
+qe.TABLE, qe.LAYOUT = real
+shutil.rmtree(tmp)
+check("dumps_row escapes a key all the same",
+      json.loads(qe.dumps_row({"type": 1, 'a"b\nc': 2})), {"type": 1, 'a"b\nc': 2})
+check("and writes a plain one as it always did", qe.dumps_row({"type": 1, "name": "x"}),
+      '    {\n      "type": 1,\n      "name": "x"\n    }')
+check("so does dumps_layout", qe.dumps_layout({"positions": {"7": [1, 2]}}),
+      '{\n  "positions": {\n    "7": [1, 2]\n  }\n}\n')
 srv.shutdown()
 
 print()

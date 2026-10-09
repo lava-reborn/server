@@ -101,7 +101,7 @@ export function Inspector({ row, readOnly, texts, problems, onChange, onOpen, on
         )}
       </div>
       {readOnly && (
-        <div className="note">
+        <div className="qnote">
           Строка сгенерирована (<code>{readOnly}</code>) и здесь не правится: её сборщик перезапишет правку. Меняйте
           сборщик в <code>data/</code>.
         </div>
@@ -148,7 +148,7 @@ export function Inspector({ row, readOnly, texts, problems, onChange, onOpen, on
           </>
         )}
         <Field label="Служебный" hint="service: обмен, лотерея, экзамен — не считается в дневной лимит и в журнал">
-          <Check value={!!row.service} label="услуга, а не задание" onChange={(v) => setOpt("service", v)} />
+          <Check value={!!row.service} label="услуга: обмен, лотерея, экзамен" onChange={(v) => setOpt("service", v)} />
         </Field>
         <Field label="Группа" hint="party_size: на сколько игроков рассчитан (для текста и баланса)">
           <Num value={row.party_size || 0} min={0} onChange={(v) => setOpt("party_size", v)} />
@@ -188,7 +188,7 @@ export function Inspector({ row, readOnly, texts, problems, onChange, onOpen, on
 
       <Section title="Кто выдаёт и принимает">
         <Field label="Выдаёт" hint="give: у кого квест в списке. Пусто — квест выключен.">
-          <div className="chips">
+          <div className="qchips">
             {(row.give || []).map((t) => (
               <NpcChip key={t} t={t} onRemove={readOnly ? undefined : () => set({ give: row.give.filter((x) => x !== t) })} />
             ))}
@@ -196,7 +196,7 @@ export function Inspector({ row, readOnly, texts, problems, onChange, onOpen, on
           {!readOnly && <CreaturePicker who="npc" onPick={(t) => set({ give: Array.from(new Set([...(row.give || []), t])) })} />}
         </Field>
         <Field label="Принимает" hint="take: кому сдают">
-          <div className="chips">
+          <div className="qchips">
             {(row.take || []).map((t) => (
               <NpcChip key={t} t={t} onRemove={readOnly ? undefined : () => set({ take: row.take.filter((x) => x !== t) })} />
             ))}
@@ -293,7 +293,7 @@ export function Inspector({ row, readOnly, texts, problems, onChange, onOpen, on
           <Check value={!!row.lent} label="даётся на время" onChange={(v) => setOpt("lent", v)} />
         </Field>
         <Field label="Только в локациях" hint="stay_in: вне этих локаций выданное на время забирается">
-          <div className="chips">
+          <div className="qchips">
             {(row.stay_in || []).map((id) => (
               <LocChip key={id} id={id} onRemove={readOnly ? undefined : () => onChange(withList(row, "stay_in", (row.stay_in || []).filter((x) => x !== id)))} />
             ))}
@@ -413,7 +413,7 @@ function TextBlock({
         )}
       </div>
       {laid ? (
-        <div className="preview orig" dangerouslySetInnerHTML={{ __html: renderMarkup(original) }} />
+        <div className="qpreview orig" dangerouslySetInnerHTML={{ __html: renderMarkup(original) }} />
       ) : k === "name" ? (
         <input className="wide" value={value} disabled={readOnly} onChange={(e) => onText(e.target.value)} />
       ) : (
@@ -422,11 +422,11 @@ function TextBlock({
       {shown !== undefined && shown !== (laid ? original : value) && (
         <div className="tb-shown">
           <span className="muted small">Игрок увидит:</span>
-          <div className="preview" dangerouslySetInnerHTML={{ __html: renderMarkup(shown) }} />
+          <div className="qpreview" dangerouslySetInnerHTML={{ __html: renderMarkup(shown) }} />
         </div>
       )}
       {!laid && k !== "name" && value && (shown === undefined || shown === value) && (
-        <div className="preview" dangerouslySetInnerHTML={{ __html: renderMarkup(value) }} />
+        <div className="qpreview" dangerouslySetInnerHTML={{ __html: renderMarkup(value) }} />
       )}
     </div>
   );
@@ -514,9 +514,9 @@ function BringGoal({ row, set, readOnly }: { row: Row; set: SetFn; readOnly: boo
             </div>
             <div className="row-line small">
               <span className="muted">падает с:</span>
-              <span className="chips">
+              <span className="qchips">
                 {(o.mobs || []).map((m) => (
-                  <span className="chip" key={m}>
+                  <span className="qchip" key={m}>
                     {creatureName(lk, m)}
                     {!readOnly && (
                       <button className="x" title="Убрать" onClick={() => put(i, cleanSlot({ ...o, mobs: (o.mobs || []).filter((x) => x !== m) }))}>
@@ -701,7 +701,7 @@ function QuestList({
 }) {
   return (
     <div>
-      <div className="chips">
+      <div className="qchips">
         {list.map((t) => (
           <QuestChip key={t} t={t} onOpen={onOpen} onRemove={readOnly ? undefined : () => onChange(list.filter((x) => x !== t))} />
         ))}

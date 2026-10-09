@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import type { CreatureRef, ItemRef, LocRef, Row } from "../types";
 import { creatureName, itemName, npcRoleLabel, rootLabel, useLookup } from "../refs";
 import { plain } from "../markup";
+import { iconUrl } from "../api";
 
 // --- a search box with a list under it --------------------------------------
 
@@ -84,7 +85,7 @@ export function ItemIcon({ t, size = 26 }: { t: number; size?: number }) {
   const lk = useLookup();
   const it = lk.item(t);
   if (it && it.i) {
-    return <img className="item-icon" src={`/icon/${it.i}.png`} width={size} height={size} alt="" />;
+    return <img className="item-icon" src={iconUrl(it.i)} width={size} height={size} alt="" />;
   }
   return (
     <span className="item-icon glyph" style={{ width: size, height: size }}>
@@ -127,7 +128,7 @@ export function CreatureLine({ c }: { c: CreatureRef }) {
 
 export function Chip({ children, onRemove, title }: { children: React.ReactNode; onRemove?: () => void; title?: string }) {
   return (
-    <span className="chip" title={title}>
+    <span className="qchip" title={title}>
       {children}
       {onRemove && (
         <button className="x" onClick={onRemove} title="Убрать">

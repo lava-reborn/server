@@ -8,35 +8,56 @@ import {
   ReactFlowProvider,
   useNodesState,
   useReactFlow,
+  useStore,
   type Connection,
   type Edge,
   type NodeChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
-import { api } from "./api";
-import type { Generated, Kind, Layout, Pos, Problem, Refs, Row, TextsResp } from "./types";
+import { api, ApiError, config, onNotice, type Notice } from "./api";
+import type { CommitInfo, Generated, Kind, Layout, Pos, Problem, PublishResp, Rebase, Refs, Row, TextsResp } from "./types";
 import { KIND_LABEL } from "./types";
+import { count, plural } from "./words";
 import { anyOf, autoLayout, excludes, forget, links, needs, placeNear, withList, withNeeds, wouldCycle, type LinkKind } from "./graph";
 import { makeLookup, RefsContext, creatureName } from "./refs";
+import { token } from "./theme";
 import { QuestNode, type QuestNodeT } from "./components/QuestNode";
 import { Inspector } from "./components/Inspector";
 import { matches, NO_FILTERS, Sidebar, type Filters } from "./components/Sidebar";
 import { DiffModal, Problems } from "./components/Problems";
+import { PublishDialog } from "./components/Publish";
 
 const nodeTypes = { quest: QuestNode };
 
-const EDGE_STYLE: Record<LinkKind, Partial<Edge>> = {
-  need: { style: { stroke: "#6b9cff", strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: "#6b9cff" } },
-  any: {
-    style: { stroke: "#e6a23c", strokeWidth: 2, strokeDasharray: "7 5" },
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#e6a23c" },
-    label: "или",
-  },
-  excl: { style: { stroke: "#f56c6c", strokeWidth: 2, strokeDasharray: "2 5" }, label: "≠" },
-};
+// The panel's tokens (theme.ts): a prerequisite in steel, one of several in
+// the brand's amber, the other branch of a choice in danger red.
+function edgeStyles(): Record<LinkKind, Partial<Edge>> {
+  const need = token("--steel");
+  const any = token("--brand");
+  const excl = token("--danger");
+  return {
+    need: { style: { stroke: need, strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: need } },
+    any: {
+      style: { stroke: any, strokeWidth: 2, strokeDasharray: "7 5" },
+      markerEnd: { type: MarkerType.ArrowClosed, color: any },
+      label: "или",
+    },
+    excl: { style: { stroke: excl, strokeWidth: 2, strokeDasharray: "2 5" }, label: "≠" },
+  };
+}
 
-const KIND_COLOR: Record<string, string> = { kill_mobs: "#c0504d", bring_l_obj: "#4f9d69", del_obj: "#4f7fc0" };
+const KIND_TOKEN: Record<string, string> = { kill_mobs: "--danger", bring_l_obj: "--success", del_obj: "--steel" };
+
+// The minimap by the canvas's width. The panel on a 1366-1536 px screen
+// leaves the canvas 520-625 px: a smaller minimap fits there, the check bar
+// beside it on one line (styles.css, .canvas.mini-small); a canvas under
+// 480 px (the panel at 1280) goes without. The size goes in as the
+// minimap's style, which React Flow also scales a drag in it by, so the drag
+// keeps pace with the pointer (a CSS scale would not).
+const MINIMAP = { full: { width: 200, height: 150 }, small: { width: 120, height: 90 } };
+type Mini = keyof typeof MINIMAP | "none";
+const miniFor = (width: number): Mini => (width > 640 ? "full" : width >= 480 ? "small" : "none");
 
 interface EdgeMenu {
   id: string;
@@ -47,8 +68,22 @@ interface EdgeMenu {
   y: number;
 }
 
+interface Toast {
+  text: string;
+  links?: { href: string; label: string }[];
+}
+
+// Whether the rows are the ones last loaded, saved or published: the same
+// objects (an undo brings those back), or row by row the same values.
+function sameRows(a: Row[], b: Row[] | null): boolean {
+  if (a === b) return true;
+  if (!b || a.length !== b.length) return false;
+  return a.every((r, i) => r === b[i] || JSON.stringify(r) === JSON.stringify(b[i]));
+}
+
 function Editor() {
   const flow = useReactFlow();
+  const mini = useStore((s) => miniFor(s.width));
   const [rows, setRows] = useState<Row[]>([]);
   const [generated, setGenerated] = useState<Generated[]>([]);
   const [sha, setSha] = useState("");
@@ -59,26 +94,52 @@ function Editor() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [texts, setTexts] = useState<TextsResp | null>(null);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
-  const [dirty, setDirty] = useState(false);
+  // Unsaved is derived: rows other than the ones last loaded, saved or
+  // published (null: none of those is on the page), or a quest moved.
+  const [savedRows, setSavedRows] = useState<Row[] | null>(null);
+  const [layoutDirty, setLayoutDirty] = useState(false);
   const [past, setPast] = useState<Row[][]>([]);
   const [future, setFuture] = useState<Row[][]>([]);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
   const [diff, setDiff] = useState<string | null>(null);
   const [edgeMenu, setEdgeMenu] = useState<EdgeMenu | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  // Until the first table arrives the mode is not known: no editor yet, and
+  // no Save or Publish (the admin's page would flash local mode otherwise).
+  const [loaded, setLoaded] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [newMenu, setNewMenu] = useState(false);
+  // on a narrow editor the list is a drawer over the canvas (styles.css)
+  const [listOpen, setListOpen] = useState(false);
+  // publish mode (the admin panel): the commit the page's rows come from,
+  // and where to look at it
+  const [mode, setMode] = useState<"publish" | "local">("local");
+  const [base, setBase] = useState("");
+  const [branch, setBranch] = useState("main");
+  const [web, setWeb] = useState("");
+  const [head, setHead] = useState<CommitInfo | null>(null);
+  const [stale, setStale] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [pubNote, setPubNote] = useState("");
   const toastTimer = useRef<number | undefined>(undefined);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const publishMode = mode === "publish";
+  const dirty = useMemo(() => loaded && (layoutDirty || !sameRows(rows, savedRows)), [loaded, layoutDirty, rows, savedRows]);
 
-  const say = useCallback((text: string) => {
-    setToast(text);
+  useEffect(() => onNotice(setNotice), []);
+
+  const say = useCallback((text: string, links?: Toast["links"], ms = 4000) => {
+    setToast({ text, links });
     window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 4000);
+    toastTimer.current = window.setTimeout(() => setToast(null), ms);
   }, []);
 
   // --- loading ---------------------------------------------------------------
   const allRows = useMemo(() => [...rows, ...generated.flatMap((g) => g.rows)], [rows, generated]);
+  const genCount = useMemo(() => generated.reduce((n, g) => n + g.rows.length, 0), [generated]);
   const sourceOf = useMemo(() => {
     const m = new Map<number, string>();
     for (const g of generated) for (const r of g.rows) m.set(r.type, g.source);
@@ -95,17 +156,26 @@ function Editor() {
       setSha(t.sha);
       setLayout(t.layout || {});
       setPositions((t.layout && t.layout.positions) || {});
-      setDirty(false);
+      setMode(t.mode === "publish" ? "publish" : "local");
+      setBase(t.commit || "");
+      setBranch(t.branch || "main");
+      setWeb(t.web || "");
+      setHead(t.head || null);
+      setStale(t.stale || null);
+      setSavedRows(t.rows);
+      setLayoutDirty(false);
       setPast([]);
       setFuture([]);
+      setLoadError(null);
+      setLoaded(true);
     } catch (e) {
-      setLoadError(String(e));
+      setLoadError(e instanceof ApiError && e.status === 401 ? "" : e instanceof Error ? e.message : String(e));
     }
   }, []);
 
   useEffect(() => {
     load();
-    api.refs().then(setRefs).catch((e) => say("Справочники не загрузились: " + e));
+    api.refs().then(setRefs).catch((e) => say("Справочники не загрузились: " + (e instanceof Error ? e.message : e)));
   }, [load, say]);
 
   // Quests that have no place yet get one: the whole table laid out at once
@@ -137,8 +207,16 @@ function Editor() {
     const h = window.setTimeout(() => {
       api
         .check(rows)
-        .then(setProblems)
-        .catch(() => undefined)
+        .then((p) => {
+          setProblems(p);
+          setCheckError(null);
+        })
+        .catch((e) => {
+          // said, not swallowed: the marks on the cards are the last check's
+          const why = e instanceof Error ? e.message : String(e);
+          setCheckError(why);
+          say("Проверка не прошла: " + why);
+        })
         .finally(() => setChecking(false));
     }, 450);
     return () => window.clearTimeout(h);
@@ -178,7 +256,6 @@ function Editor() {
       setPast((p) => [...p.slice(-99), rows]);
       setFuture([]);
       setRows(next);
-      setDirty(true);
     },
     [rows],
   );
@@ -196,7 +273,6 @@ function Editor() {
     setFuture((f) => [rows, ...f]);
     setRows(past[past.length - 1]);
     setPast((p) => p.slice(0, -1));
-    setDirty(true);
   }, [past, rows]);
 
   const redo = useCallback(() => {
@@ -204,7 +280,6 @@ function Editor() {
     setPast((p) => [...p, rows]);
     setRows(future[0]);
     setFuture((f) => f.slice(1));
-    setDirty(true);
   }, [future, rows]);
 
   const focus = useCallback(
@@ -218,7 +293,10 @@ function Editor() {
 
   const addRow = useCallback(
     (row: Row, near: number | null) => {
-      const vp = flow.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      // the middle of the canvas, wherever the editor sits on the page
+      const box = canvasRef.current?.getBoundingClientRect();
+      const mid = box ? { x: box.left + box.width / 2, y: box.top + box.height / 2 } : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      const vp = flow.screenToFlowPosition(mid);
       const pos = placeNear(positions, near, { x: vp.x - 135, y: vp.y - 66 });
       setPositions((ps) => ({ ...ps, [String(row.type)]: pos }));
       commit([...rows, row]);
@@ -234,7 +312,7 @@ function Editor() {
       try {
         addRow(await api.newRow(kind, rows), null);
       } catch (e) {
-        say(String(e));
+        say(e instanceof Error ? e.message : String(e));
       }
     },
     [rows, addRow, say],
@@ -247,7 +325,7 @@ function Editor() {
       const row = withNeeds({ ...fresh, give: [...(selRow.take || [])], take: [...(selRow.take || [])] }, [selRow.type]);
       addRow(row, selRow.type);
     } catch (e) {
-      say(String(e));
+      say(e instanceof Error ? e.message : String(e));
     }
   }, [selRow, rows, addRow, say]);
 
@@ -260,7 +338,7 @@ function Editor() {
       delete copy.own_texts;
       addRow(copy, selRow.type);
     } catch (e) {
-      say(String(e));
+      say(e instanceof Error ? e.message : String(e));
     }
   }, [selRow, rows, addRow, say]);
 
@@ -271,7 +349,9 @@ function Editor() {
     );
     const msg =
       `Удалить квест #${selRow.type} «${selRow.name}»?` +
-      (dependents.length ? `\n\nОн упомянут в цепочках ${dependents.length} квестов (${dependents.map((d) => "#" + d.type).join(", ")}); оттуда он тоже уйдёт.` : "");
+      (dependents.length
+        ? `\n\nОн упомянут в цепочках ${count(dependents.length, "квеста", "квестов", "квестов")} (${dependents.map((d) => "#" + d.type).join(", ")}); оттуда он тоже уйдёт.`
+        : "");
     if (!window.confirm(msg)) return;
     commit(forget(rows.filter((r) => r.type !== selRow.type), selRow.type));
     setSelected(null);
@@ -309,8 +389,7 @@ function Editor() {
     // the rest.
     const top = placed.reduce((a, b) => (b.y < a.y || (b.y === a.y && b.x < a.x) ? b : a));
     const zoom = 0.75;
-    const canvas = document.querySelector(".canvas") as HTMLElement | null;
-    const w = canvas ? canvas.clientWidth : 900;
+    const w = canvasRef.current ? canvasRef.current.clientWidth : 900;
     window.setTimeout(() => flow.setViewport({ x: w / 2 - (top.x + 135) * zoom, y: 80 - top.y * zoom, zoom }), 60);
   }, [visible, positions, flow]);
 
@@ -321,13 +400,14 @@ function Editor() {
     [onNodesChangeBase],
   );
 
+  const styles = useMemo(edgeStyles, []);
   const edges = useMemo<Edge[]>(() => {
     const vis = new Set(visible.map((r) => r.type));
     return links(visible)
       .filter((l) => vis.has(l.source) && vis.has(l.target))
       .map((l) => {
         const hot = selected !== null && (l.source === selected || l.target === selected);
-        const base = EDGE_STYLE[l.kind];
+        const base = styles[l.kind];
         return {
           id: l.id,
           source: String(l.source),
@@ -336,11 +416,9 @@ function Editor() {
           ...base,
           style: { ...(base.style || {}), opacity: selected === null || hot ? 1 : 0.35, strokeWidth: hot ? 3 : 2 },
           data: { kind: l.kind },
-          labelBgStyle: { fill: "#1d2230" },
-          labelStyle: { fill: "#e6e9f0", fontSize: 11 },
         } as Edge;
       });
-  }, [visible, selected]);
+  }, [visible, selected, styles]);
 
   const onConnect = useCallback(
     (c: Connection) => {
@@ -389,11 +467,11 @@ function Editor() {
     const base = filters.generated ? allRows : rows;
     const pos = autoLayout(base, giverName);
     setPositions((p) => ({ ...p, ...pos }));
-    setDirty(true);
+    setLayoutDirty(true);
     window.setTimeout(() => flow.fitView({ duration: 400 }), 50);
   }, [filters.generated, allRows, rows, giverName, flow]);
 
-  // --- saving -------------------------------------------------------------------
+  // --- saving (local mode) ------------------------------------------------------
   const save = useCallback(
     async (force = false) => {
       setSaving(true);
@@ -403,7 +481,8 @@ function Editor() {
         if (status === 200 && data.sha) {
           setSha(data.sha);
           setLayout(lay);
-          setDirty(false);
+          setSavedRows(rows);
+          setLayoutDirty(false);
           say("Сохранено в data/quests.json");
         } else if (status === 409) {
           if (window.confirm("data/quests.json изменился на диске после загрузки (другая сессия, merge, другой редактор).\n\nОК — записать поверх, Отмена — ничего не делать (можно перезагрузить страницу, чтобы взять свежий файл).")) {
@@ -422,6 +501,79 @@ function Editor() {
     [rows, layout, positions, sha, say],
   );
 
+  // --- publishing (publish mode) ------------------------------------------------
+  const published = useCallback(
+    (d: PublishResp) => {
+      setPublishing(false);
+      if (d.rows) {
+        setRows(d.rows);
+        setSavedRows(d.rows);
+      }
+      if (d.layout) {
+        setLayout(d.layout);
+        setPositions(d.layout.positions || {});
+      }
+      if (d.commit) setBase(d.commit);
+      if (d.head) setHead(d.head);
+      setLayoutDirty(false);
+      setPast([]);
+      setFuture([]);
+      // a new quest that went out under another number: the selection follows it
+      const moved = d.renumbered || {};
+      setSelected((s) => (s !== null && moved[String(s)] ? moved[String(s)] : s));
+      if (d.nothing || !d.commit) {
+        say(`Публиковать нечего: всё это уже есть в ${branch}`);
+        return;
+      }
+      setPubNote("");
+      const out: Toast["links"] = [];
+      if (d.url) out.push({ href: d.url, label: "коммит" });
+      if (web) out.push({ href: `${web}/actions`, label: "проверки и выкатка" });
+      const renamed = Object.entries(moved).map(([a, b]) => `#${a} ушёл как #${b}`);
+      say(`Опубликовано ${d.commit.slice(0, 7)}` + (renamed.length ? ` · ${renamed.join(", ")}` : ""), out, 30000);
+    },
+    [branch, web, say],
+  );
+
+  // The preview found nothing to publish: the rows it was given are, as far
+  // as the page is concerned, published.
+  const nothing = useCallback((r: Row[]) => {
+    setSavedRows(r);
+    setLayoutDirty(false);
+  }, []);
+
+  // «Взять эти квесты из main»: main's commit becomes the page's base, the
+  // quests in conflict main's version, the other edits stay.
+  const rebased = useCallback(
+    (r: Rebase, types: number[]) => {
+      setPublishing(false);
+      setRows(r.rows);
+      setSavedRows(r.changed ? null : r.rows);
+      setLayoutDirty(false);
+      setLayout(r.layout || {});
+      setPositions((r.layout && r.layout.positions) || {});
+      setBase(r.commit);
+      setHead(r.head);
+      setPast([]);
+      setFuture([]);
+      say(`${types.map((t) => "#" + t).join(", ")} — как в ${branch}, остальные правки на месте`);
+    },
+    [branch, say],
+  );
+
+  const reloadFresh = useCallback(() => {
+    setPublishing(false);
+    setSelected(null);
+    setPubNote("");
+    load();
+  }, [load]);
+
+  const store = useCallback(() => {
+    if (publishMode) setPublishing(true);
+    else save();
+  }, [publishMode, save]);
+  const closePublish = useCallback(() => setPublishing(false), []);
+
   // keys
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -429,7 +581,12 @@ function Editor() {
       const typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        if (dirty && !saving) save();
+        if (dirty && !saving && !publishing) store();
+      } else if (publishing) {
+        // the dialog publishes the rows it opened with: nothing behind it
+        // changes while it is open (an undo there would be published, then
+        // dropped with the history)
+        return;
       } else if (!typing && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
         e.preventDefault();
         undo();
@@ -439,11 +596,12 @@ function Editor() {
       } else if (e.key === "Escape") {
         setEdgeMenu(null);
         setNewMenu(false);
+        setListOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [dirty, saving, save, undo, redo]);
+  }, [dirty, saving, publishing, store, undo, redo]);
 
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => {
@@ -456,121 +614,205 @@ function Editor() {
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
 
-  if (loadError) return <div className="fatal">Не загрузилась таблица: {loadError}</div>;
+  const banners = (
+    <>
+      {notice === "session" && (
+        <div className="qbanner err">
+          Сессия панели закончилась. <a href="/admin">Войти заново</a>
+        </div>
+      )}
+      {notice === "restarting" && <div className="qbanner">Редактор обновляется: подтягивает свежий {branch}…</div>}
+      {stale && notice !== "restarting" && (
+        <div className="qbanner">
+          GitHub не ответил ({stale}). Таблица взята с коммита {base.slice(0, 7)}; публикация всё равно сверится со свежим {branch}.
+        </div>
+      )}
+    </>
+  );
+
+  if (loadError !== null) {
+    return (
+      <div className="app">
+        {banners}
+        {loadError && <div className="fatal">Не загрузилась таблица: {loadError}</div>}
+      </div>
+    );
+  }
+
+  if (!loaded) {
+    return (
+      <div className="app">
+        {banners}
+        <div className="qloading">Загружаю квесты…</div>
+      </div>
+    );
+  }
+
+  const commitUrl = web && head ? `${web}/commit/${head.sha}` : "";
 
   return (
     <RefsContext.Provider value={lookup}>
       <div className="app">
-        <header className="topbar">
-          <b className="brand">Квесты LAVA</b>
-          <span className="muted">
-            {rows.length} своих · {generated.reduce((n, g) => n + g.rows.length, 0)} сгенерированных
-          </span>
-          {!refs && <span className="muted"> · справочники грузятся…</span>}
-          <span className="grow" />
-          <div className="menu-wrap">
-            <button className="primary" onClick={() => setNewMenu(!newMenu)}>
-              + Новый квест
+        {banners}
+        <div className="qframe">
+          <header className="topbar">
+            <button className="qlist-toggle" aria-pressed={listOpen} onClick={() => setListOpen(!listOpen)} title="Список квестов и поиск">
+              Список
             </button>
-            {newMenu && (
-              <div className="menu">
-                {(Object.keys(KIND_LABEL) as Kind[]).map((k) => (
-                  <div key={k} className="menu-item" onClick={() => newQuest(k)}>
-                    {KIND_LABEL[k]}
-                  </div>
-                ))}
-              </div>
+            <b className="qbrand">Квесты</b>
+            <span className="muted">
+              {rows.length} {plural(rows.length, "свой", "своих", "своих")} · {genCount}{" "}
+              {plural(genCount, "сгенерированный", "сгенерированных", "сгенерированных")}
+            </span>
+            {publishMode && head && (
+              <a
+                className="qcommit"
+                href={commitUrl || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`${head.subject}\n${head.author}, ${head.date.replace("T", " ").slice(0, 16)}`}
+              >
+                {branch} @ {head.sha.slice(0, 7)}
+              </a>
             )}
-          </div>
-          <button onClick={relayout} title="Разложить граф заново">Раскладка</button>
-          <button onClick={undo} disabled={!past.length} title="Ctrl+Z">↶</button>
-          <button onClick={redo} disabled={!future.length} title="Ctrl+Y">↷</button>
-          <button onClick={() => api.diff().then((d) => setDiff(d.diff))}>Изменения</button>
-          <span className={"status " + (errorCount ? "bad" : "good")}>
-            {checking ? "проверка…" : errorCount ? `${errorCount} ошибок` : "ошибок нет"}
-          </span>
-          <button className="primary" disabled={!dirty || saving || errorCount > 0} onClick={() => save()} title="Ctrl+S">
-            {saving ? "Сохранение…" : dirty ? "Сохранить" : "Сохранено"}
-          </button>
-        </header>
-        <div className="main">
-          <Sidebar
-            rows={rows}
-            visible={visible}
-            filters={filters}
-            setFilters={setFilters}
-            selected={selected}
-            onSelect={focus}
-            errorsOf={errorsOf}
-            warnsOf={warnsOf}
-            generatedCount={generated.reduce((n, g) => n + g.rows.length, 0)}
-          />
-          <div className="canvas">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              onNodesChange={onNodesChange}
-              onNodeDragStop={(_e, n) => {
-                setPositions((p) => ({ ...p, [n.id]: n.position }));
-                setDirty(true);
-              }}
-              onNodeClick={(_e, n) => setSelected(Number(n.id))}
-              onPaneClick={() => {
-                setSelected(null);
-                setEdgeMenu(null);
-                setNewMenu(false);
-              }}
-              onConnect={onConnect}
-              onEdgeClick={(e, edge) => {
-                const kind = (edge.data as { kind: LinkKind }).kind;
-                setEdgeMenu({ id: edge.id, kind, source: Number(edge.source), target: Number(edge.target), x: e.clientX, y: e.clientY });
-              }}
-              deleteKeyCode={null}
-              minZoom={0.05}
-              maxZoom={2}
-              onlyRenderVisibleElements
-              fitView
-              proOptions={{ hideAttribution: true }}
-            >
-              <Background gap={24} color="#2a3142" />
-              <MiniMap pannable zoomable nodeColor={(n) => KIND_COLOR[(n.data as { row: Row }).row.kind] || "#888"} maskColor="rgba(15,18,26,0.7)" />
-              <Controls showInteractive={false} />
-            </ReactFlow>
-            <Problems problems={problems} onSelect={focus} />
-            <div className="legend">
-              <span><i className="lg need" /> после</span>
-              <span><i className="lg any" /> после одного из</span>
-              <span><i className="lg excl" /> исключают друг друга</span>
-              <span className="muted">тяните от нижней точки квеста к верхней точке следующего</span>
+            {!refs && <span className="muted"> · справочники грузятся…</span>}
+            <span className="grow" />
+            <div className="menu-wrap">
+              <button className="primary" onClick={() => setNewMenu(!newMenu)}>
+                + Новый квест
+              </button>
+              {newMenu && (
+                <div className="menu">
+                  {(Object.keys(KIND_LABEL) as Kind[]).map((k) => (
+                    <div key={k} className="menu-item" onClick={() => newQuest(k)}>
+                      {KIND_LABEL[k]}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-          <div className="right">
-            {selRow ? (
-              <Inspector
-                key={selRow.type}
-                row={selRow}
-                readOnly={sourceOf.get(selRow.type)}
-                texts={texts}
-                problems={problems.filter((p) => p.type === selRow.type)}
-                onChange={updateRow}
-                onOpen={focus}
-                onFollowUp={followUp}
-                onDuplicate={duplicate}
-                onDelete={remove}
-              />
+            <button onClick={relayout} title="Разложить граф заново">Раскладка</button>
+            <button onClick={undo} disabled={!past.length} title="Ctrl+Z">↶</button>
+            <button onClick={redo} disabled={!future.length} title="Ctrl+Y">↷</button>
+            {!publishMode && <button onClick={() => api.diff().then((d) => setDiff(d.diff)).catch((e) => say(String(e)))}>Изменения</button>}
+            <span className={"status " + (errorCount || checkError ? "bad" : "good")} title={checkError || undefined}>
+              {checking
+                ? "проверка…"
+                : checkError
+                  ? "проверка не прошла"
+                  : errorCount
+                    ? count(errorCount, "ошибка", "ошибки", "ошибок")
+                    : "ошибок нет"}
+            </span>
+            {publishMode ? (
+              <button className="primary" disabled={!dirty || publishing} onClick={store} title={`Ctrl+S: правки уйдут в ${branch}`}>
+                Опубликовать
+              </button>
             ) : (
-              <div className="empty">
-                <h3>Квест-редактор</h3>
-                <p>Выберите квест на графе или в списке слева.</p>
-                <ul>
-                  <li>Стрелка от квеста к квесту: второй откроется после первого (<code>need_quest</code>).</li>
-                  <li>Щелчок по стрелке: сменить её на «после одного из» или «исключают друг друга», либо убрать.</li>
-                  <li>Всё, что меняете, сразу проверяется теми же проверками, что сервер делает при запуске.</li>
-                  <li>«Сохранить» пишет <code>data/quests.json</code>. В игру правки попадают коммитом в ветку и слиянием в main.</li>
-                </ul>
-              </div>
+              <button className="primary" disabled={!dirty || saving || errorCount > 0} onClick={store} title="Ctrl+S">
+                {saving ? "Сохранение…" : dirty ? "Сохранить" : "Сохранено"}
+              </button>
             )}
+          </header>
+          <div className={"main" + (listOpen ? " list-open" : "")}>
+            <Sidebar
+              rows={rows}
+              visible={visible}
+              filters={filters}
+              setFilters={setFilters}
+              selected={selected}
+              onSelect={(t) => {
+                focus(t);
+                setListOpen(false);
+              }}
+              errorsOf={errorsOf}
+              warnsOf={warnsOf}
+              generatedCount={genCount}
+            />
+            <div className={"canvas mini-" + mini} ref={canvasRef}>
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                nodeTypes={nodeTypes}
+                onNodesChange={onNodesChange}
+                onNodeDragStop={(_e, n) => {
+                  setPositions((p) => ({ ...p, [n.id]: n.position }));
+                  setLayoutDirty(true);
+                }}
+                onNodeClick={(_e, n) => setSelected(Number(n.id))}
+                onPaneClick={() => {
+                  setSelected(null);
+                  setEdgeMenu(null);
+                  setNewMenu(false);
+                  setListOpen(false);
+                }}
+                onConnect={onConnect}
+                onEdgeClick={(e, edge) => {
+                  const kind = (edge.data as { kind: LinkKind }).kind;
+                  setEdgeMenu({ id: edge.id, kind, source: Number(edge.source), target: Number(edge.target), x: e.clientX, y: e.clientY });
+                }}
+                deleteKeyCode={null}
+                minZoom={0.05}
+                maxZoom={2}
+                onlyRenderVisibleElements
+                fitView
+                colorMode="dark"
+                proOptions={{ hideAttribution: true }}
+              >
+                <Background gap={24} />
+                {mini !== "none" && (
+                  <MiniMap
+                    style={MINIMAP[mini]}
+                    pannable
+                    zoomable
+                    nodeColor={(n) => token(KIND_TOKEN[(n.data as { row: Row }).row.kind] || "--ink-faint")}
+                    maskColor={token("--overlay")}
+                  />
+                )}
+                <Controls showInteractive={false} />
+              </ReactFlow>
+              <Problems problems={problems} onSelect={focus} />
+              <div className="legend">
+                <span><i className="lg need" /> после</span>
+                <span><i className="lg any" /> после одного из</span>
+                <span><i className="lg excl" /> исключают друг друга</span>
+                <span className="muted">тяните от нижней точки квеста к верхней точке следующего</span>
+              </div>
+            </div>
+            <div className="qright">
+              {selRow ? (
+                <Inspector
+                  key={selRow.type}
+                  row={selRow}
+                  readOnly={sourceOf.get(selRow.type)}
+                  texts={texts}
+                  problems={problems.filter((p) => p.type === selRow.type)}
+                  onChange={updateRow}
+                  onOpen={focus}
+                  onFollowUp={followUp}
+                  onDuplicate={duplicate}
+                  onDelete={remove}
+                />
+              ) : (
+                <div className="qempty">
+                  <h3>Квест-редактор</h3>
+                  <p>Выберите квест на графе или в списке слева.</p>
+                  <ul>
+                    <li>Стрелка от квеста к квесту: второй откроется после первого (<code>need_quest</code>).</li>
+                    <li>Щелчок по стрелке: сменить её на «после одного из» или «исключают друг друга», либо убрать.</li>
+                    <li>Всё, что меняете, сразу проверяется теми же проверками, что сервер делает при запуске.</li>
+                    {publishMode ? (
+                      <li>
+                        «Опубликовать» (Ctrl+S) сверяет правки со свежим <code>{branch}</code> и отправляет их туда одним коммитом;
+                        после зелёных тестов CI выкатит их сам, обычно минут через 20.
+                      </li>
+                    ) : (
+                      <li>«Сохранить» пишет <code>data/quests.json</code>. В игру правки попадают коммитом в ветку и слиянием в main.</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         {edgeMenu && (
@@ -591,7 +833,41 @@ function Editor() {
           </div>
         )}
         {diff !== null && <DiffModal text={diff} onClose={() => setDiff(null)} />}
-        {toast && <div className="toast">{toast}</div>}
+        {publishing && (
+          <PublishDialog
+            rows={rows}
+            layout={{ ...layout, positions }}
+            base={base}
+            branch={branch}
+            who={config.who}
+            note={pubNote}
+            setNote={setPubNote}
+            onClose={closePublish}
+            onPublished={published}
+            onNothing={nothing}
+            onRebase={rebased}
+            onReload={reloadFresh}
+            onOpen={(t) => {
+              setPublishing(false);
+              focus(t);
+            }}
+          />
+        )}
+        {toast && (
+          <div className="toast">
+            <span>{toast.text}</span>
+            {(toast.links || []).map((l) => (
+              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer">
+                {l.label}
+              </a>
+            ))}
+            {toast.links && toast.links.length > 0 && (
+              <button className="x" title="Закрыть" onClick={() => setToast(null)}>
+                ✕
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </RefsContext.Provider>
   );

@@ -90,6 +90,10 @@ on:
     branches: [main]
     # Prose only: no suite reads these files, and none of them changes what
     # the server runs. A push that touches anything else runs everything.
+    # data/quest_layout.json counts as prose: it is where the quests stand on
+    # the quest editor's canvas, nothing but the editor reads it, and moving
+    # a card in the admin's editor (a commit of that file alone) must not
+    # restart the game.
     # deploy/ci/still_head.sh reads this very list (the first paths-ignore
     # in this file): keep it first, one "- item" a line.
     paths-ignore:
@@ -99,6 +103,7 @@ on:
       - ROADMAP.md
       - PROTOCOL.md
       - recon/**
+      - data/quest_layout.json
   pull_request:
     paths-ignore:
       - README.md
@@ -107,6 +112,7 @@ on:
       - ROADMAP.md
       - PROTOCOL.md
       - recon/**
+      - data/quest_layout.json
 
 # A newer push to a branch makes the run for the older one moot: cancel it,
 # and free the runner. Not on main, where every run may end in a deploy:

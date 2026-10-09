@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <label className="field">
+    <label className="qfield">
       <span className="flabel" title={hint}>
         {label}
         {hint ? <span className="hint-mark">?</span> : null}

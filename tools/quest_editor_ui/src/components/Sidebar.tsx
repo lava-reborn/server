@@ -88,11 +88,11 @@ export function Sidebar({ visible, filters, setFilters, selected, onSelect, erro
           const w = warnsOf(r.type);
           return (
             <div key={r.type} className={"qitem" + (r.type === selected ? " sel" : "")} onClick={() => onSelect(r.type)}>
-              <span className={`dot kind-${r.kind}`} />
+              <span className={`qdot kind-${r.kind}`} />
               <span className="muted">#{r.type}</span>
               <span className="grow ellipsis">{plain(r.name) || "без названия"}</span>
-              {e > 0 && <span className="badge err">{e}</span>}
-              {!e && w > 0 && <span className="badge warn">{w}</span>}
+              {e > 0 && <span className="qbadge err">{e}</span>}
+              {!e && w > 0 && <span className="qbadge warn">{w}</span>}
             </div>
           );
         })}

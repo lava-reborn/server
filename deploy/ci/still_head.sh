@@ -37,7 +37,7 @@ mapfile -t IGNORE < <(awk '
 [ ${#IGNORE[@]} -gt 0 ] || { echo "still_head: no paths-ignore list in $WF" >&2; exit 1; }
 
 # GitHub's globs as used there: "dir/**" is everything under dir/, anything
-# else a file name at the top.
+# else one file by its whole path (README.md, data/quest_layout.json).
 prose() {
   local f=$1 p
   for p in "${IGNORE[@]}"; do
