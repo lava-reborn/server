@@ -3834,8 +3834,9 @@ async def main():
     # died with every handle_client parked in read(), no finally ran, and
     # whoever was online came back wherever they had logged out the time
     # before.
+    global STOPPING
     loop = asyncio.get_running_loop()
-    stopping = asyncio.Event()
+    stopping = STOPPING = asyncio.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         try:
             loop.add_signal_handler(sig, stopping.set)
@@ -3853,6 +3854,9 @@ async def main():
 
 
 ADMIN_POLL_SECONDS = float(os.environ.get("LAVA_ADMIN_POLL", "1.0"))
+# The flag main() waits on to stop: a signal raises it, and so does an
+# admin's "halt" (apply_admin_action).
+STOPPING = None
 
 # The stop announced ahead of a restart, and the frames that count it down
 # (stopwarn.py): to everyone logged in, the people a stop disconnects -- not
@@ -3908,6 +3912,17 @@ def apply_admin_action(row):
                           skip_empty=bool(args.get("skip_empty")))
     if kind == "stop_cancel":
         return STOP.cancel(row["admin"])
+    # The stop itself, now, the way SIGTERM makes it (shutdown): everyone
+    # told, saved and dropped, then the process ends. For Windows, where no
+    # signal reaches a process from outside but TerminateProcess, which saves
+    # nobody: serve_local.ps1 queued this (stopwarn.py halt) and came back
+    # the next time wherever the last logout had left whoever was online
+    # (the owner, 2026-10-09).
+    if kind == "halt":
+        if STOPPING is None:
+            return "отказ: сервер ещё не запущен"
+        STOPPING.set()
+        return "сервер останавливается: места записаны при выходе каждого"
 
     if row["char_id"] is None:
         return "действию нужен персонаж"

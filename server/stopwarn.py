@@ -411,6 +411,10 @@ def main(argv=None):
     p.add_argument("--by", default="console")
     p.add_argument("--wait", type=float, default=WAIT)
     sub.add_parser("status", help="the stop announced and who is logged in")
+    p = sub.add_parser("halt", help="stop the game now, saving everyone online, as SIGTERM"
+                                    " does (for Windows, where no signal reaches it)")
+    p.add_argument("--by", default="console")
+    p.add_argument("--wait", type=float, default=WAIT)
     p = sub.add_parser("cancelled", help="how many countdowns an order called off"
                                          " in the last SECONDS")
     p.add_argument("seconds", type=int)
@@ -437,6 +441,14 @@ def main(argv=None):
         if args.cmd == "status":
             _say(status)
             return 0
+        if args.cmd == "halt":
+            result = _order(db, args.by, "halt", {}, args.wait)
+            if result is None:
+                print("stopwarn: no answer from the game in %gs; the order is withdrawn"
+                      % args.wait, file=sys.stderr)
+                return 4
+            print("stopwarn: the game says: %s" % result, file=sys.stderr)
+            return 2 if result.startswith(REFUSED) else 0
         if args.cmd == "start":
             order = {"seconds": args.seconds}
             if args.skip_empty:
