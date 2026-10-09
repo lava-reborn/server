@@ -7369,15 +7369,15 @@
       "start": "1. Новый комплект дает большие бонусы и необходим для получения трофеев.<Br>2. При обмене Вы получите новый комплект со скидкой.<Br>3. Вы получите новый комплект независимо от состояния старого.<Br><b>Как улучшить:</b><Br>1. Снимите вещь с персонажа и переложите ее в инвентарь.<Br>2. Подойдите к мастеру и кликните на нем левой кнопкой мыши.<Br>3. В левой части открывшегося окна будет список доступных для улучшения предметов.<Br><b>Внимание! Обменять можно только (G) вещи.</b><Br>4. Вещи меняются на аналогичные по типу, то есть, ботинки на ботинки, броня на броню и т.д.<Br>5. Нажмите на необходимый предмет: справа отобразится вещь, которую вы получите, разница в унциях и кнопка \"Улучшить\"<Br>6. При нажатии кнопки, выбранная вещь будет изъята из инвентаря, а со счета снята необходимая сумма, взамен Вы получите новую улучшенную вещь.",
       "notfinish": "",
       "finish": "Если есть вопросы обращайтесь в канал помощь, либо на прямую к Администрации, либо к другим игрокам.",
-      "give": [93, 5104],
-      "take": [93, 5104],
+      "give": [],
+      "take": [],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 0,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts (texts.xml 24572 name, 24573 start, 24574 finish, in a row; the start's escaped quotes as orig_texts cleans them) and givers: the wiki's «Генри» (93, the port market 104) and «Генри ст» (5104, the old market 35) list «Как менять старые комплекты» among their quests beside «Улучшение: ... улучшить свой сет на следующий уровень со скидкой в 40%». DESIGNED workings: a talk, taken and handed in at either Генри, one-off, no reward. What it tells is their window (server/setcraft.py): a (G) piece for the same piece of the next rung, «разница в унциях», «Обменять можно только (G) вещи» (setcraft.UPGRADE_VARIANTS)."
+      "why": "OFF (give/take [], was [93, 5104]) since 2026-10-09, the owner's order «убери из хальфы ... улучшение сетов 6-8»: the window this talk explains is gone -- Генри, Генри ст and Тиль upgrade no set any more (server/setcraft.py, the slice's off 'window'), and the map's «Улучшение сетов 6-8[G]» is hidden (data/map_labels.json). Kept in the table, words and string ids as they were; the run_once «retire-halfa-cut-2026-10-09» takes it out of the journals. To switch it on again, delete the slice's 'window' line and put 93 and 5104 back in give and take. Was: RECOVERED texts (texts.xml 24572 name, 24573 start, 24574 finish, in a row; the start's escaped quotes as orig_texts cleans them) and givers: the wiki's «Генри» (93, the port market 104) and «Генри ст» (5104, the old market 35) list «Как менять старые комплекты» among their quests beside «Улучшение: ... улучшить свой сет на следующий уровень со скидкой в 40%». DESIGNED workings: a talk, taken and handed in at either Генри, one-off, no reward. What it tells is their window (server/setcraft.py): a (G) piece for the same piece of the next rung, «разница в унциях», «Обменять можно только (G) вещи» (setcraft.UPGRADE_VARIANTS)."
     },
     {
       "type": 239,
@@ -7386,15 +7386,15 @@
       "start": "Покупая комплект G снаряжения, ты получаешь в последствии скидку на более лучший. У меня можно обменять mod10 на mod05 следующего уровня.<br>К обмену принимаются только части G комплектов (в любом состоянии). Новую часть комплекта вы получите со скидкой, равной 50% от стоимости новой части комплекта.",
       "notfinish": "",
       "finish": "Если есть вопросы обращайтесь в канал помощь, либо на прямую к Администрации, либо к другим игрокам.",
-      "give": [5104],
-      "take": [5104],
+      "give": [],
+      "take": [],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 0,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts (texts.xml 24376 name, 24377 start: «обменять mod10 на mod05 следующего уровня ... со скидкой, равной 50%»), DESIGNED finish, giver and workings. The file has no notfinish or finish of its own; the finish is 24574, the help line «Как менять старые комплекты» (238) ends with. Генри ст (5104) stands on the old market (35) at 5968,1727, the map's «Обмен G комплектов», and the wiki calls Генри «NPC по Обмену G Сетов» («Заказ»); his window exchanges (server/setcraft.py, EXCHANGE_*). A talk, one-off, no reward."
+      "why": "OFF (give/take [], was [5104]) since 2026-10-09, with «Как менять старые комплекты» (238), the owner's order «убери из хальфы ... улучшение сетов 6-8»: Генри ст's exchange of a mod10 for the next rung's mod05 is gone with the window (server/setcraft.py, the slice's off 'window'), and the old market's label no longer promises «Обмен G комплектов» (data/map_labels.json). Kept in the table, words and string ids as they were; the run_once «retire-halfa-cut-2026-10-09» takes it out of the journals. To switch it on again, delete the slice's 'window' line and put 5104 back in give and take. Was: RECOVERED texts (texts.xml 24376 name, 24377 start: «обменять mod10 на mod05 следующего уровня ... со скидкой, равной 50%»), DESIGNED finish, giver and workings. The file has no notfinish or finish of its own; the finish is 24574, the help line «Как менять старые комплекты» (238) ends with. Генри ст (5104) stands on the old market (35) at 5968,1727, the map's «Обмен G комплектов», and the wiki calls Генри «NPC по Обмену G Сетов» («Заказ»); his window exchanges (server/setcraft.py, EXCHANGE_*). A talk, one-off, no reward."
     }
   ]
 }

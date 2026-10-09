@@ -664,6 +664,7 @@ def migrate(db):
     run_once(db, "retire-black-market-placeholders-2026-09-28", retire_placeholders)
     run_once(db, "money-ledger-opening-2026-09-28", open_ledger)
     run_once(db, RETIRED_PLACES_FIX, relocate_retired_places)
+    run_once(db, HALFA_CUT_FIX, relocate_halfa_cut)
     # Only with the client's tables to tell a premium thing by: a process
     # without them (a tool run outside the container) leaves the fix for
     # the next start that has them, rather than writing it down as done
@@ -813,6 +814,55 @@ def relocate_retired_places(db):
     log.warning("  ..    %s: %d character(s) moved out of %s to %d %s, %d home(s) moved",
                 RETIRED_PLACES_FIX, len(inside), "/".join(map(str, RETIRED_PLACES)), loc,
                 inside, len(homes))
+
+
+# The owner's cut of Вади-Хальфа (2026-10-09, «убери из хальфы следующие
+# локации: торговцы одеждой, улучшение сетов 6-8, ремесленники по одежде 6, 7
+# и 8, а также кланбазу KKND»): the clothing market 468 and the craftsmen's
+# quarters 452, 456, 457 are off the map, and the KKND clan base's files
+# (297, 383, 384, 938, 961, 1189) are out of the game with them (data/
+# retired.json places). A character saved in one, or calling one home, goes
+# to Причал as the cut of (P) sent them -- the pier «В Хальфу!» (43) lands
+# newcomers on, the town's open door since 2026-10-03. And the quests that
+# went with them leave the journals, as the black market's placeholders did
+# (retire_placeholders): the talks about the set upgrade's window, 238 and
+# 239, and the clothing craftsmen's rows (setcraft.TYPE_RANGE, Вади-Хальфа's
+# block 11000-11499) -- nobody gives or takes them any more, and a journal
+# would keep them under a name nobody can hand in to. The history
+# (char_quests_done) and the money ledger keep what was done. Nothing in a
+# bag goes: the reworked pieces and the cheques stay their owners'.
+HALFA_CUT_FIX = "retire-halfa-cut-2026-10-09"
+HALFA_CUT_PLACES = (468, 452, 456, 457, 297, 383, 384, 938, 961, 1189)
+HALFA_CUT_QUESTS = (238, 239)
+HALFA_CUT_ROWS = (11000, 11500)          # setcraft SLICES['Вади-Хальфа'] types
+
+
+def relocate_halfa_cut(db):
+    """Whoever is in a place of the cut, or calls one home, to Причал (as
+    relocate_retired_places), and the cut's quests out of the journals;
+    returns the counts it logs."""
+    loc, gx, gy = RETIRED_PLACES_TO
+    marks = ", ".join("?" * len(HALFA_CUT_PLACES))
+    inside = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE loc IN (%s) ORDER BY id" % marks,
+        HALFA_CUT_PLACES).fetchall()]
+    homes = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE home_loc IN (%s) ORDER BY id" % marks,
+        HALFA_CUT_PLACES).fetchall()]
+    db.execute("UPDATE characters SET loc = ?, pos = NULL, gx = ?, gy = ?, on_map = 0"
+               " WHERE loc IN (%s)" % marks, (loc, gx, gy) + HALFA_CUT_PLACES)
+    db.execute("UPDATE characters SET home_loc = ?, home_gx = ?, home_gy = ?"
+               " WHERE home_loc IN (%s)" % marks, (loc, gx, gy) + HALFA_CUT_PLACES)
+    where = "type IN (%s) OR (type >= ? AND type < ?)" % ", ".join("?" * len(HALFA_CUT_QUESTS))
+    args = HALFA_CUT_QUESTS + HALFA_CUT_ROWS
+    journal = db.execute("SELECT COUNT(*) AS c FROM char_quests WHERE " + where,
+                         args).fetchone()["c"]
+    db.execute("DELETE FROM char_quests WHERE " + where, args)
+    # A warning for the reason relocate_retired_places' is one.
+    log.warning("  ..    %s: %d character(s) moved out of %s to %d %s, %d home(s) moved, %d"
+                " quest(s) out of the journals", HALFA_CUT_FIX, len(inside),
+                "/".join(map(str, HALFA_CUT_PLACES)), loc, inside, len(homes), journal)
+    return dict(moved=len(inside), homes=len(homes), journal=journal)
 
 
 # The same cut for the things: a premium thing (items.premium, 6 860 types)
