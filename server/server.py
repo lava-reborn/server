@@ -1139,6 +1139,19 @@ class Session:
                      taken, self.loc.file)
             self.inv.refresh_gear()
 
+    def save_place(self):
+        """Write down where the character stands, as close() does at the end:
+        on every arrival, in a location (lenter) or on the map. close() is
+        not reached when the process is killed -- serve_local.ps1 stops it
+        with Stop-Process -Force, a crash does the same -- and a login then
+        put the player back wherever the last logout left him, a mine's
+        tier or a town away (the owner, 2026-10-09). Now it puts him in the
+        location he last entered at worst; the cell within it and a walk on
+        the map are still close()'s."""
+        if self.char_id and self.loc is not None:
+            STORE.save_position(self.char_id, self.loc.id, self.pos,
+                                self.gx, self.gy, self.on_map)
+
     def cmd_lenter(self, p):
         """Answer the client's "I have loaded, let me in".
 
@@ -1165,6 +1178,7 @@ class Session:
         # (Entity.as:37), long before the location opens, so it lands.
         self.send("q_sys", daily_available=self.daily_available())
         self.enter_room()
+        self.save_place()
         # A member's client asks for its roster now that it stands in a
         # location; one that has stopped listening is told to reload.
         CLANS.entered(self)
@@ -1238,6 +1252,7 @@ class Session:
             # Only after gmap: newUser is an offset from the client's own
             # figure, which Master.gmap has just created.
             GMAP.enter(self)
+            self.save_place()
 
     def leave_through_exit(self):
         """chWorld;to=1: out through the exit the player is standing on.
@@ -3861,8 +3876,9 @@ async def main():
     # died with every handle_client parked in read(), no finally ran, and
     # whoever was online came back wherever they had logged out the time
     # before.
+    global STOPPING
     loop = asyncio.get_running_loop()
-    stopping = asyncio.Event()
+    stopping = STOPPING = asyncio.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         try:
             loop.add_signal_handler(sig, stopping.set)
@@ -3880,6 +3896,9 @@ async def main():
 
 
 ADMIN_POLL_SECONDS = float(os.environ.get("LAVA_ADMIN_POLL", "1.0"))
+# The flag main() waits on to stop: a signal raises it, and so does an
+# admin's "halt" (apply_admin_action).
+STOPPING = None
 
 # The stop announced ahead of a restart, and the frames that count it down
 # (stopwarn.py): to everyone logged in, the people a stop disconnects -- not
@@ -3935,6 +3954,17 @@ def apply_admin_action(row):
                           skip_empty=bool(args.get("skip_empty")))
     if kind == "stop_cancel":
         return STOP.cancel(row["admin"])
+    # The stop itself, now, the way SIGTERM makes it (shutdown): everyone
+    # told, saved and dropped, then the process ends. For Windows, where no
+    # signal reaches a process from outside but TerminateProcess, which saves
+    # nobody: serve_local.ps1 queued this (stopwarn.py halt) and came back
+    # the next time wherever the last logout had left whoever was online
+    # (the owner, 2026-10-09).
+    if kind == "halt":
+        if STOPPING is None:
+            return "отказ: сервер ещё не запущен"
+        STOPPING.set()
+        return "сервер останавливается: места записаны при выходе каждого"
 
     if row["char_id"] is None:
         return "действию нужен персонаж"
