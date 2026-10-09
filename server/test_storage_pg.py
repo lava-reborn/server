@@ -42,7 +42,8 @@ checks = 0
 TABLES = ("mail", "map_marks", "items", "char_quests_done", "char_quests",
           "char_stats", "online", "heartbeat", "admin_actions", "auction_lots",
           "migrations", "trophies", "clan_ledger", "clan_relations", "clan_members",
-          "clans", "characters", "accounts", "money_ledger", "char_lent", "ground")
+          "clans", "characters", "accounts", "money_ledger", "char_lent", "ground",
+          "boss_kills")
 RELINK = "heal-relink-2026-09-23"
 
 
@@ -503,6 +504,28 @@ for col, kind in (("expires_at", "double precision"), ("gx", "bigint"), ("uniq",
                         " 'ground' AND column_name = ?", (col,)).fetchone()["data_type"] == kind,
        "ground.%s — %s" % (col, kind))
 ok(store.characters(aid) is not None, "и соединение после земли живое")
+
+# --- боссы, убитые в своё окно часов (таблица boss_kills) ---------------------
+# Убитый босс ждёт следующего часа, и перезапуск посреди окна не должен
+# ставить его снова (со слитками в мешке): убийство записано строкой по
+# месту босса, окно — секунда его начала (DOUBLE PRECISION), повторное
+# убийство пишет поверх (ON CONFLICT по spot).
+KAIS, DOUGLAS = "87:-:-:4321:314", "34:-:-:99:2103"
+W18, W20 = 1_791_558_000.0, 1_791_565_200.0
+ok(store.boss_kills([KAIS, DOUGLAS]) == {}, "пока никто не убит — пусто")
+store.boss_killed(KAIS, W18)
+store.boss_killed(DOUGLAS, W18)
+store.boss_killed(KAIS, W20)
+ok(store.boss_kills([KAIS, DOUGLAS, "1:-:-:1:1"]) == {KAIS: W20, DOUGLAS: W18},
+   "записано по месту, второе убийство переписало первое: %s"
+   % store.boss_kills([KAIS, DOUGLAS]))
+ok(store.db.execute("SELECT COUNT(*) c FROM boss_kills").fetchone()["c"] == 2,
+   "по строке на босса, не задвоено")
+ok(store.boss_kills([]) == {}, "пустой список мест — пусто, без запроса")
+ok(store.db.execute("SELECT data_type FROM information_schema.columns WHERE table_name ="
+                    " 'boss_kills' AND column_name = 'slot'").fetchone()["data_type"]
+   == "double precision", "boss_kills.slot — double precision")
+ok(store.characters(aid) is not None, "и соединение после боссов живое")
 
 # --- очередь админки -------------------------------------------------------
 action = store.admin_push("Archivist", "money", char_id=char_id, account_id=aid,

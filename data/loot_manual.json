@@ -515,8 +515,8 @@
   },
   "4797": {
    "_name": "10 унций золота",
-   "_source": "RECOVERED. The type: as 4796 below (texts.xml 7640/7641, data/build_orig_items.py rule 7d). Numbers: the wiki article 10 унций золота (its icon 10.png is named after no type, so data/items_wiki.json has no record): 'Вес 10 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 10 G'; sold by Мортимер, and cashed in by his 'Обналичить 10 унций'. drop_on_death 1: loot, as 4796",
-   "_designed": "the prices, as 4796 below: the article's 10 G, for which Мортимер sells it, and its afro price at the game's one rate, both laid by server/items.py GOLD_INGOTS. Until then the frame's 150 g stood in, and the _Gold_ of its name made it a gold thing kept on death; the Maghreb's bosses drop it now (by_type 313, 314), and loot falls. The stack of 50 is the frame's",
+   "_source": "RECOVERED. The type: as 4796 above (texts.xml 7640/7641, data/build_orig_items.py rule 7d). Numbers: the wiki article 10 унций золота (its icon 10.png is named after no type, so data/items_wiki.json has no record): 'Вес 10 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 10 G'; sold by Мортимер, and cashed in by his 'Обналичить 10 унций'. drop_on_death 1: loot, as 4796",
+   "_designed": "the prices, as 4796 above: the article's 10 G, for which Мортимер sells it, and its afro price at the game's one rate, both laid by server/items.py GOLD_INGOTS. Until then the frame's 150 g stood in, and the _Gold_ of its name made it a gold thing kept on death; the Maghreb's bosses drop it now (by_type 313, 314), and loot falls. The stack of 50 is the frame's",
    "cost": 500000,
    "g_cost": 1000,
    "weight": 10,
@@ -525,8 +525,8 @@
   },
   "7620": {
    "_name": "1 унция золота",
-   "_source": "RECOVERED. The type: as 4796 below (texts.xml 7636/7637, data/build_orig_items.py rule 7d). Numbers: the wiki article 1 унция золота (its icon 1gold.png is named after no type, so data/items_wiki.json has no record): 'Вес 1 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 1 G'; cashed in by Мортимер's 'Обналичить 1 унцию золота'. drop_on_death 1: loot, as 4796",
-   "_designed": "the prices, as 4796 below: the article's 1 G, sold by Мортимер for gold at face value (the owner's of 2026-10-09: «добавь в черный рынок мортимера который обменивает слитки ... и продает их еще»; the article names no seller), and its afro price at the game's one rate, both laid by server/items.py GOLD_INGOTS. Until then the frame's 150 g stood in, and the _Gold_ of its name made it a gold thing kept on death; the bosses of Вади-Хальфа drop it now (by_type 269, 270, 299, 300), and loot falls. The stack of 50 is the frame's",
+   "_source": "RECOVERED. The type: as 4796 above (texts.xml 7636/7637, data/build_orig_items.py rule 7d). Numbers: the wiki article 1 унция золота (its icon 1gold.png is named after no type, so data/items_wiki.json has no record): 'Вес 1 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 1 G'; cashed in by Мортимер's 'Обналичить 1 унцию золота'. drop_on_death 1: loot, as 4796",
+   "_designed": "the prices, as 4796 above: the article's 1 G, sold by Мортимер for gold at face value (the owner's of 2026-10-09: «добавь в черный рынок мортимера который обменивает слитки ... и продает их еще»; the article names no seller), and its afro price at the game's one rate, both laid by server/items.py GOLD_INGOTS. Until then the frame's 150 g stood in, and the _Gold_ of its name made it a gold thing kept on death; the bosses of Вади-Хальфа drop it now (by_type 269, 270, 299, 300), and loot falls. The stack of 50 is the frame's",
    "cost": 50000,
    "g_cost": 100,
    "weight": 1,

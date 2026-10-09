@@ -366,6 +366,22 @@ CREATE TABLE IF NOT EXISTS ground (
     cell       INTEGER NOT NULL,      -- the hex the bag lies on
     expires_at REAL    NOT NULL       -- the epoch second it goes
 );
+CREATE TABLE IF NOT EXISTS boss_kills (
+    -- A boss that keeps the hours (server/bosses.py), killed in its window,
+    -- is gone until the next one (combat.RoomCombat.keep_hours). Kept in
+    -- the game server's memory alone, that was lost to a restart inside the
+    -- window -- a deploy, a crash -- and every boss killed in it stood
+    -- there again, its loot and its gold ingots with it. So the game server
+    -- writes a kill down (RoomCombat.boss_killed) and reads it back as it
+    -- makes the room (RoomCombat.recall_kills): killed in the window open
+    -- now, the boss starts away. One row a boss, its last kill: spot is the
+    -- room's place, the boss's spawn cell and its type (RoomCombat.
+    -- boss_spot), slot the epoch second its window opened (bosses.slot). A
+    -- row of a window long shut is harmless and is written over by the
+    -- next kill.
+    spot TEXT PRIMARY KEY,
+    slot REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS email_tokens (
     -- The links the mail sends (server/email_flow.py): one row per letter
     -- that carries one. kind 'confirm' proves an address belongs to the
@@ -1579,6 +1595,27 @@ class Store:
                 self.db.execute("DELETE FROM items WHERE uniq = ? AND char_id = ?",
                                 (int(u), owner))
                 self.db.execute("DELETE FROM ground WHERE uniq = ?", (int(u),))
+
+    # --- bosses killed in their window (the boss_kills table) --------------------------
+    def boss_killed(self, spot, slot):
+        """Write down that the boss at spot (combat.RoomCombat.boss_spot)
+        was killed in the window that opened at slot (bosses.slot). One row
+        a boss: a boss written down already is written over."""
+        self.db.replace("boss_kills", ("spot", "slot"), [(str(spot), float(slot))],
+                        conflict=("spot",))
+        self.db.commit()
+
+    def boss_kills(self, spots):
+        """{spot: the window of its last kill} for those of these spots
+        written down (boss_killed); the game server asks it as it makes a
+        room with bosses in it (combat.RoomCombat.recall_kills)."""
+        spots = sorted({str(s) for s in spots})
+        if not spots:
+            return {}
+        rows = self.db.execute(
+            "SELECT spot, slot FROM boss_kills WHERE spot IN (%s)"
+            % ", ".join("?" * len(spots)), spots).fetchall()
+        return {r["spot"]: float(r["slot"]) for r in rows}
 
     def add_money(self, char_id, afro=0, gold=0):
         """Credit (or, negative, debit) the purse; returns the new (afro, gold)."""

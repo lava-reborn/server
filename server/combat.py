@@ -2204,6 +2204,7 @@ class RoomCombat:
         # The ones that keep hours instead of the respawn timer (bosses.py):
         # keep_hours brings them in and sends them away.
         self.bosses = [m for m in self.mobs.values() if bosses.keeps_hours(m.type_id)]
+        self.recall_kills()
         # A boss's escort (data/placements.json "escort", rooms.Room.escorts):
         # while the room has a boss keeping hours, one killed waits for its
         # next arrival rather than the respawn timer.
@@ -2801,6 +2802,7 @@ class RoomCombat:
         self.add_to_bag(mob.cell, self.drop_loot(mob))
         if bosses.keeps_hours(mob.type_id):
             mob.away = True
+            self.boss_killed(mob)
         elif mob in self.escorts and self.bosses:
             # The boss's escort: back with the boss's next arrival
             # (keep_hours, escort_back), not on the respawn timer -- or now,
@@ -2908,9 +2910,17 @@ class RoomCombat:
 
     def drop_loot(self, mob):
         """Item rows on the ground, owned by nobody, made through the store
-        so they carry real serials the client can keep after picking up."""
+        so they carry real serials the client can keep after picking up.
+
+        A gold ingot (items.GOLD_INGOTS) comes only off a boss that keeps
+        the hours (bosses.keeps_hours): one kill a window, the window
+        remembered over a restart (boss_killed). With the rule off
+        (LAVA_BOSS_HOURS=off) a boss is back every respawn delay, and an
+        ingot on each of those kills would be gold without a limit, so its
+        bag holds the rest of its loot and no ingot."""
         rows = []
         thing = mob.stats.role == "object"
+        gold_ok = bosses.keeps_hours(mob.type_id)
         # What a timed event puts on top, by place (events.loot): a
         # prisoner's red armband in the uprising. An ore rock leaves its ore
         # beside the loot (production.yield_of).
@@ -2919,6 +2929,8 @@ class RoomCombat:
                 + production.yield_of(mob.type_id):
             if items.premium(type_id):
                 continue            # out of the game; see items.premium
+            if type_id in items.GOLD_INGOTS and not gold_ok:
+                continue            # gold off the hours' bosses only, above
             if thing and type_id == mobs.FALLBACK_LOOT:
                 # A box, a target or a stone (world.STANDING_OBJECTS) holds
                 # what its table rolls and what a quest wants of it -- and an
@@ -3081,6 +3093,57 @@ class RoomCombat:
         self.room.broadcast(("lch", dict(lostUser=mob.eid)))
         log.info("  ..    boss %d (%s) leaves %s", mob.eid, mob.stats.name,
                  self.room.loc.title)
+
+    def boss_spot(self, mob):
+        """What a boss is written down by over a restart (the boss_kills
+        table): the room's place, the boss's spawn cell and its type, which
+        stay the same whatever ids the next run's room hands out."""
+        return ":".join("-" if v is None else str(int(v))
+                        for v in tuple(self.place) + (mob.home, mob.type_id))
+
+    def boss_killed(self, mob):
+        """The window a boss keeping the hours was killed in, written down
+        (Store.boss_killed): a restart before the window shuts -- a deploy,
+        a crash -- must not stand it up again with its loot and its gold
+        ingots (recall_kills). mob.slot is the window it came for
+        (keep_hours); with none there is nothing to write. A database that
+        will not take the row costs the record and a line in the log, never
+        the kill."""
+        write = getattr(self.store, "boss_killed", None)
+        if write is None or mob.slot is None:
+            return
+        try:
+            write(self.boss_spot(mob), mob.slot)
+        except Exception:
+            log.exception("  !!    boss %d (%s) killed in %s: not written down",
+                          mob.eid, mob.stats.name, self.room.loc.title)
+
+    def recall_kills(self):
+        """The room's bosses as a restart finds them, before anybody is
+        shown the room (Session.enter_room makes this object first): one
+        written down as killed in the window open now (boss_killed) starts
+        away, as corpse_gone left it, and comes at the next window
+        (keep_hours). Unreadable, the record is skipped with a line in the
+        log, and the bosses stand as they did before there was one."""
+        read = getattr(self.store, "boss_kills", None)
+        if not self.bosses or read is None:
+            return
+        due = bosses.slot(bosses.clock())
+        if due is None:
+            return
+        try:
+            killed = read([self.boss_spot(m) for m in self.bosses])
+        except Exception:
+            log.exception("  !!    the bosses killed in %s could not be read",
+                          self.room.loc.title)
+            return
+        for mob in self.bosses:
+            if killed.get(self.boss_spot(mob)) == due:
+                mob.alive, mob.away, mob.slot = False, True, due
+                self.room.npcs.pop(mob.eid, None)
+                log.info("  ..    boss %d (%s) of %s was killed in this window before"
+                         " the restart: away until the next", mob.eid, mob.stats.name,
+                         self.room.loc.title)
 
 
 def room_combat(room, store):

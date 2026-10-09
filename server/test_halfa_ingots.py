@@ -27,7 +27,11 @@ an ingot on the account less the original's 0.05 an ingot, and both go into
 the money ledger. Buying and cashing never makes gold.
 
 In process: the bosses, their tables and seeded rolls, a hundred bags each
-through RoomCombat and a real database, nobody else's table, the frames and
+through RoomCombat and a real database, nobody else's table; with the rule
+off (LAVA_BOSS_HOURS=off) no boss's bag holding an ingot, Кайс killed and
+back on the respawn delay included; a boss killed in his window written
+down (the boss_kills table) and away through a restart until the next
+window, standing again in a window he was not killed in; the frames and
 the death rule, the stall, the rooms of 102 and 36, every quest that takes
 an ingot against the stall's price. On a socket, the clock at six in the
 evening (LAVA_BOSS_CLOCK): Мортимер on the black market with his price list,
@@ -220,6 +224,144 @@ check("%d kills each leave a bag with his ingots, a stack per kind" % KILLS,
       asyncio.run(_bags()),
       {t: [tuple(sorted((i, n, items.TRASH) for i, n in b.items()))]
        for t, (_f, _w, b) in sorted(BOSSES.items())})
+
+
+# --- the gold is the hours' --------------------------------------------------------------
+# With the rule off (LAVA_BOSS_HOURS=off) a boss is an ordinary mob, back on
+# the respawn delay, and a certain ingot on every one of those kills would be
+# gold without a limit: his bag holds the rest of his loot and no ingot.
+WHERE = {t: where for t, (_f, where, _b) in BOSSES.items()}
+WHERE[VALLEY_BOSS] = 34                 # the valley's camp, test_boss_ingot
+
+
+def _cancel(*rcs):
+    for rc in rcs:
+        for bag in rc.loot.values():
+            if bag.expiry is not None:
+                bag.expiry.cancel()
+
+
+async def _rule_off():
+    store = accounts.Store(DB0)
+    real = (bosses.HOURS, combat.CORPSE_DELAY, combat.respawn_delay)
+    bosses.HOURS = ()
+    out = {}
+    try:
+        for t, where in sorted(WHERE.items()):
+            rc = combat.RoomCombat(_Room(where), store)
+            mob = mobs.Mob(1, t, 10)
+            rc.corpse_gone(mob, [])
+            rows = [store.item(u) for u in rc.loot[mob.cell].uniqs] if mob.cell in rc.loot else []
+            out[t] = (bosses.keeps_hours(t), len(rows) > 0,
+                      sorted(r["type_id"] for r in rows if r["type_id"] in INGOTS))
+            _cancel(rc)
+        # Раид Кайс in his own room, killed and back on the delay five times
+        # (the real 45 seconds stood in for by a twentieth of one).
+        combat.CORPSE_DELAY = 0.05
+        combat.respawn_delay = lambda loc_id: 0.05
+        room = rooms.Room(world.location(87), rooms.IdAllocator(), MT, 87)
+        rc = combat.RoomCombat(room, store)
+        kais = [m for m in rc.mobs.values() if m.type_id == 314][0]
+        back = 0
+        for _ in range(5):
+            if kais.alive:
+                back += 1
+                rc.kill(kais, None)
+            await asyncio.sleep(0.3)
+        got = [store.item(u)["type_id"] for bag in rc.loot.values() for u in bag.uniqs]
+        out["kais"] = (rc.bosses, back, len(got) > 0, [i for i in got if i in INGOTS])
+        _cancel(rc)
+    finally:
+        bosses.HOURS, combat.CORPSE_DELAY, combat.respawn_delay = real
+        store.close()
+    return out
+
+
+def _run(coro, what):
+    """A section run to its end, or what broke it as a failure: the code
+    before this change has no boss_spot, and the suite says so rather than
+    stopping at it."""
+    try:
+        return asyncio.run(coro)
+    except Exception:
+        import traceback
+        fails.append(what + ":\n" + traceback.format_exc())
+        return None
+
+
+check("with the rule off, every boss's bag holds his loot and no ingot; Кайс killed and back"
+      " on the delay five times leaves none",
+      _run(_rule_off(), "the rule off"),
+      dict({t: (False, True, []) for t in WHERE}, kais=([], 5, True, [])))
+
+
+# A boss killed in his window is gone until the next one, and the game server
+# writes that down (the boss_kills table): a restart inside the window -- a
+# deploy, a crash -- makes the room afresh, and the boss starts away rather
+# than standing there with his ingots a second time.
+def _msk(h, m=0, s=0):
+    return datetime(2026, 10, 9, h, m, s, tzinfo=bosses.ZONE).timestamp()
+
+
+async def _restart():
+    db = os.path.join(tempfile.mkdtemp(), "restart.db")
+    now = [_msk(18, 0, 5)]
+    real = (bosses.clock, combat.CORPSE_DELAY)
+    bosses.clock = lambda: now[0]
+    combat.CORPSE_DELAY = 0.05
+    out = {}
+
+    def room_87(store):
+        room = rooms.Room(world.location(87), rooms.IdAllocator(), MT, 87)
+        rc = combat.RoomCombat(room, store)
+        return room, rc, [m for m in rc.mobs.values() if m.type_id == 314][0]
+
+    try:
+        store = accounts.Store(db)
+        room, rc, kais = room_87(store)
+        rc.keep_hours()
+        out["stands at six"] = kais.eid in room.npcs
+        rc.kill(kais, None)
+        await asyncio.sleep(0.3)
+        out["his bag"] = sorted(ingots_of(
+            (store.item(u)["type_id"], store.item(u)["count"])
+            for bag in rc.loot.values() for u in bag.uniqs).items())
+        out["written down"] = store.boss_kills([rc.boss_spot(kais)]) == {
+            rc.boss_spot(kais): _msk(18)}
+        _cancel(rc)
+        store.close()
+
+        # The restart at half past six: a new process, the same database.
+        now[0] = _msk(18, 30)
+        store = accounts.Store(db)
+        room, rc, kais = room_87(store)
+        rc.keep_hours()
+        out["after a restart in the window"] = (kais.eid in room.npcs, kais.away,
+                                                rc.actor(kais.eid))
+        now[0] = _msk(20, 0, 5)
+        rc.keep_hours()
+        out["at eight he comes"] = (kais.eid in room.npcs, kais.alive)
+        store.close()
+
+        # Another restart in the eight o'clock window, nobody having killed
+        # him in it: he stands.
+        store = accounts.Store(db)
+        room, rc, kais = room_87(store)
+        rc.keep_hours()
+        out["a restart in a window he was not killed in"] = kais.eid in room.npcs
+        store.close()
+    finally:
+        bosses.clock, combat.CORPSE_DELAY = real
+    return out
+
+
+check("a boss killed in his window stays away through a restart until the next one",
+      _run(_restart(), "a restart in the window"),
+      {"stands at six": True, "his bag": [(I10, 1)], "written down": True,
+       "after a restart in the window": (False, True, None),
+       "at eight he comes": (True, True),
+       "a restart in a window he was not killed in": True})
+
 
 # --- the ingots --------------------------------------------------------------------------
 check("each ingot: its ounces in gold and at the one rate in afro, the article's weight,"

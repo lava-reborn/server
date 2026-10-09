@@ -382,7 +382,10 @@ MAX_DROPS = 2
 # 299/300, 313/314; the owner's of 2026-10-09). It goes into the bag
 # whatever else came up and takes none of the MAX_DROPS places, so no table
 # the wiki may give the boss one day, and no order of the rows, can push it
-# out; the rows that are rolled keep their two.
+# out; the rows that are rolled keep their two. An ingot lands in the bag
+# only off a boss that keeps the hours (combat.RoomCombat.drop_loot): with
+# the rule off a boss is back every respawn delay, and a certain ingot on
+# each kill would be gold without a limit.
 SURE = 1.0
 # Every man's valuable of his level: objects.xml's ValuableLoot_LvL_0 to _24,
 # as a row of the table at the "Ценный" chance.
