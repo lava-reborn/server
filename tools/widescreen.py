@@ -155,6 +155,33 @@ Client patches applied without altering the original artwork:
    -- a projector opened by hand, a browser -- the original's onClose runs
    as before, since its login frame is all there is to go back to.
 
+11. A corpse that swallows the click. lch;dead=<id> lays the figure down
+   (DisplayLocScene.dead: behavior DIE, nick gone, glow off), but its
+   SpriteFocus stays until lch;lostUser, CORPSE_DELAY = 2.5 s later
+   (DisplayLocScene.removePlayer). All that time the body is still what
+   the cursor points at, and still the selected target: a click on it, or
+   on the bag lying under it, goes out as a blow or a shot at the dead
+   (CursorManager.__onMouseUp: flared == selected -> forceMode), and the
+   server answers with error 12, «Объект не найден».
+
+   The wrapper on DisplayLocScene.prototype.dead lets the original lay the
+   body down, then takes its focus away through CursorManager.removeFocus,
+   the same call removePlayer makes (target list, selection, flared, the
+   sprite's listeners), wipes the selection glow select() put on the
+   figure, and asks SpriteFocusManager.checkOvered again, so whatever lies
+   under the pointer -- a bag, another creature -- is the target at once,
+   without waiting for the mouse to move. Never for the gamer's own figure.
+   The body still lies and fades as before. Char.behavior never leaves DIE
+   (Char.as), so a figure once dead is never clickable again anyway.
+
+   removePlayer then calls removeFocus a second time, for a sprite that has
+   none. TargetList.removeTarget looks the missing id up, gets null, and
+   splice(null, 1) cuts the first entry -- somebody else's target, the
+   one [ and ] or the next kill would go to (SpriteFocusManager's own
+   lookup gives undefined, and splice(undefined, 1) cuts nothing; both
+   measured in Flash 32). CursorManager.prototype.removeFocus is wrapped
+   to do nothing for a sprite without a focus.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -1522,6 +1549,38 @@ def fn_home_ack():
     return a
 
 
+def fn_corpse_dead():
+    """DisplayLocScene.dead(obj): the original, then for anyone but the
+    gamer `w = this.getWalker(obj.dead); this.cursorManager.removeFocus(w);
+    w.filters = []; this.cursorManager.sfManager.checkOvered()` (patch 11)."""
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__corpseDeadOrig").op("callmethod").op("pop")
+    a.var("obj").member("dead").var("lol").member("core", "player", "Gamer", "ID")
+    a.op("equals2").iftrue("out")
+    a.push("w").var("obj").member("dead").push(1).var("this").push("getWalker")
+    a.op("callmethod").op("definelocal")
+    a.var("w").push(UNDEF).op("equals2").iftrue("out")
+    a.var("w").var("this").member("gamer_mc").op("equals2").iftrue("out")
+    a.var("w").push(1).var("this").member("cursorManager").push("removeFocus")
+    a.op("callmethod").op("pop")
+    a.var("w").push("filters", 0).op("initarray").op("setmember")
+    a.push(0).var("this").member("cursorManager", "sfManager").push("checkOvered")
+    a.op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_corpse_focus():
+    """CursorManager.removeFocus(targ): the original only for a sprite that
+    still has a focus, so removePlayer after dead cuts nobody else's."""
+    a = Asm()
+    a.var("targ").push(1).var("this").member("sfManager").push("getFocus").op("callmethod")
+    a.push(UNDEF).op("equals2").iftrue("out")
+    a.var("targ").push(1).var("this").push("__corpseFocusOrig").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
 def injected():
     a = Asm()
     for name, fn, params in (
@@ -1593,6 +1652,10 @@ def injected():
          ("obj",), fn_bye_kick()),
         (("core", "Master"), "onClose", "__byeOrig",
          (), fn_bye_close()),
+        (("core", "location", "CursorManager"), "removeFocus", "__corpseFocusOrig",
+         ("targ",), fn_corpse_focus()),
+        (("core", "location", "DisplayLocScene"), "dead", "__corpseDeadOrig",
+         ("obj",), fn_corpse_dead()),
     )
     for method in ("increase_skill_func", "increase_level_func",
                    "increase_spec_func", "increase_spec_level_func"):
