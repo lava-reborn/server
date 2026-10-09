@@ -182,6 +182,24 @@ Client patches applied without altering the original artwork:
    measured in Flash 32). CursorManager.prototype.removeFocus is wrapped
    to do nothing for a sprite without a focus.
 
+12. No way to the global map out of a sublocation. A mine or a cellar
+   (Location.isSubLocation: a geoID with z != 0) is left through its door,
+   and LocationInterface.battleMode keeps the exit button off there
+   (`enabled = !isSubLocation`). But init() calls battleMode and then, as
+   its last line, `exitLoc_btn.enabled = !master.gamer.prepare` with no
+   word about sublocations, so on entering one the button is lit until the
+   next lch;ws. A press sends chWorld, the server refuses it. toGlobal()
+   itself checks only enabledExitLoc and toGMEnabled, and the CHANGE_WORLD
+   hot key calls it too (initHotKey), so the key sent chWorld from a
+   sublocation whatever the button showed.
+
+   The wrapper on LocationInterface.prototype.init runs the original, then
+   turns the button off in a sublocation; elsewhere the original's
+   prepare rule stands. The wrapper on LocationInterface.prototype.toGlobal
+   does nothing in a sublocation and runs the original anywhere else. Both
+   listeners (the button's RELEASE_EVENT, the hot key) are registered in
+   init with this.toGlobal, read after the wrap, so both go through it.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -1581,6 +1599,28 @@ def fn_corpse_focus():
     return a
 
 
+def fn_sublocation_init():
+    """LocationInterface.init(): the original, then
+    `if (this.currentLocation.isSubLocation) this.exitLoc_btn.enabled = false`
+    (patch 12)."""
+    a = Asm()
+    a.push(0).var("this").push("__subInitOrig").op("callmethod").op("pop")
+    a.var("this").member("currentLocation", "isSubLocation").op("not").iftrue("out")
+    a.var("this").member("exitLoc_btn").push("enabled", False).op("setmember")
+    a.label("out")
+    return a
+
+
+def fn_sublocation_global():
+    """LocationInterface.toGlobal(): nothing in a sublocation, the
+    original anywhere else (patch 12)."""
+    a = Asm()
+    a.var("this").member("currentLocation", "isSubLocation").iftrue("out")
+    a.push(0).var("this").push("__subGlobalOrig").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
 def injected():
     a = Asm()
     for name, fn, params in (
@@ -1656,6 +1696,10 @@ def injected():
          ("targ",), fn_corpse_focus()),
         (("core", "location", "DisplayLocScene"), "dead", "__corpseDeadOrig",
          ("obj",), fn_corpse_dead()),
+        (("gpui", "LocationInterface"), "init", "__subInitOrig",
+         (), fn_sublocation_init()),
+        (("gpui", "LocationInterface"), "toGlobal", "__subGlobalOrig",
+         (), fn_sublocation_global()),
     )
     for method in ("increase_skill_func", "increase_level_func",
                    "increase_spec_func", "increase_spec_level_func"):

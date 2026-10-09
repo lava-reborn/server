@@ -3707,6 +3707,15 @@ tar.gz (10.6 МБ), и распакованное сверяется с тем �
 `LAVA_FLASH_PLAYER` и `LAVA_RES` на Windows то же проходит в настоящем Flash
 на трёх сборках: оригинал, обёртка без защиты `removeFocus`, патч целиком.
 
+`tools/test_sublocation_exit.py` проверяет патч 12 `widescreen.py`: в
+подлокации (`Location.isSubLocation`, сервер ставит её через
+`travel.geo_id`) кнопка выхода на глобальную карту после входа неактивна, и
+ни кнопка, ни горячая клавиша не шлют `chWorld`; вне подлокации всё как
+раньше. Байткод обёрток `LocationInterface.init` и `toGlobal` исполняется
+против модели оригинала; с `LAVA_FLASH_PLAYER` клиент в настоящем Flash
+заходит через `/goto` в первую локацию из `no_map` в `data/passages.json`
+и возвращается в город, на оригинале и на патче.
+
 ### Известные падения
 
 [`tools/known_failures.txt`](tools/known_failures.txt) — что CI ждёт
