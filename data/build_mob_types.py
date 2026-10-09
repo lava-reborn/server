@@ -293,7 +293,7 @@ WEAPON_CLASSES = {
     "knife": {"dmg_mult": 1.0, "shots": 1, "range": 1, "ap": 6, "anim": "knife"},
     "pistol": {"dmg_mult": 1.0, "shots": 1, "range": 6, "ap": 8, "anim": "pistol"},
     "shotgun": {"dmg_mult": 1.4, "shots": 1, "range": 4, "ap": 10, "anim": "rifle"},
-    "smg": {"dmg_mult": 0.6, "shots": 3, "range": 5, "ap": 10, "anim": "pistol"},
+    "smg": {"dmg_mult": 0.6, "shots": 3, "range": 5, "ap": 10, "anim": "rifle"},
     "assault_rifle": {"dmg_mult": 0.9, "shots": 2, "range": 7, "ap": 10, "anim": "rifle"},
     "rifle": {"dmg_mult": 1.6, "shots": 1, "range": 10, "ap": 12, "anim": "rifle"},
     "machine_gun": {"dmg_mult": 0.8, "shots": 4, "range": 8, "ap": 14, "anim": "rifle"},

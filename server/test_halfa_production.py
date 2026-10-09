@@ -501,8 +501,11 @@ try:
           ({combat.respawn_delay(lid) for lid in list(VH_TOP) + VH_TIERS + VH_TUNNELS},
            combat.respawn_delay(STATION)),
           ({combat.RESPAWN_DELAY * 300 / 45}, combat.RESPAWN_DELAY))
-    check("  ..and the miners shoot a sub-machine gun (the wiki's «Кустарный ПП»), not a knife",
-          [mobs.stats(m).weapon_class for m in (MINER, MINER_9)], ["smg", "smg"])
+    check("  ..and the miners shoot a sub-machine gun (the wiki's «Кустарный ПП»), not a knife,"
+          " held as one (weapon_type 5: the client's rifle frames, not a pistol's)",
+          [(mobs.stats(m).weapon_class,
+            (items.params_of(mobs.stats(m).weapon_type_id) or {}).get("weapon_type"))
+           for m in (MINER, MINER_9)], [("smg", 5), ("smg", 5)])
     miners = {i: stood(i)[MINER] for i in VH_TIERS + VH_TUNNELS}
     check("  ..and the [8] miners stand in them", sum(miners.values()) >= 30 and all(
         miners[i] for i in (613, 617, 1012, 1024)), True)

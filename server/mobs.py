@@ -53,8 +53,12 @@ MAX_LEVEL = max(int(k) for k in LEVELS)
 # so a stall's tier-one gun of the right class is enough; the numbers a mob
 # shoots with come from the curve, not from the item. The knife is the
 # "homemade_knife_mob" entry of the _mob cold-arms series in objects.xml.
+# A sub-machine gun is «Кустарный ПП» 25341 (weapon_type 5, the rifle's
+# frames: FireArm.weapon_type), not the pistol 4380 it used to share with
+# the pistol class, which drew every gunner of the class with a pistol's
+# (the owner, 2026-10-09, the Вади-Хальфа mine's miners).
 WEAPON_ITEM = {
-    "pistol": 4380, "smg": 4380,
+    "pistol": 4380, "smg": 25341,
     "shotgun": 4392,
     "assault_rifle": 4397,
     "rifle": 4385, "machine_gun": 4385,
