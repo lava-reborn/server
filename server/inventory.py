@@ -1967,6 +1967,14 @@ class Inventory:
         if not (si["g_cost"] if code == UPD_BUY_GOLD else si["cost"]):
             self.ack(RES_REFUSED)
             return
+        # A gold ingot is sold for gold alone, though it has an afro price
+        # too, the one that keeps it loot (items.GOLD_INGOTS): bought for
+        # afro at that price and cashed at Мортимер's, it would turn afro
+        # into gold. The shipped client never asks this (Trade.buy sends the
+        # gold code for anything with a g_cost); a patched one is refused.
+        if code != UPD_BUY_GOLD and type_id in items.GOLD_INGOTS:
+            self.ack(RES_REFUSED)
+            return
         price = buy_price(si, root, n, code == UPD_BUY_GOLD)
         # The weight of all n. The client's "При покупке вы будете
         # перегружены. Купить?" adds the weight of ONE piece to the bag

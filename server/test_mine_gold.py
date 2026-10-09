@@ -202,8 +202,9 @@ check("neither is premium or a quest's, so a corpse may hold them",
       [(items.premium(t), mobs.droppable(t)) for t in (SAND, EMERALD)], [(False, True)] * 2)
 check("a dead player may lose the sand and the emeralds, like any loot",
       [combat.drops_on_death(t) for t in (SAND, EMERALD)], [True, True])
-check("the numbers are the file's, for these two and, beside them, the valley "
-      "boss's ingot alone (test_boss_ingot)", sorted(loot_manual()), [SAND, EMERALD, 4796])
+check("the numbers are the file's, for these two and, beside them, the gold ingots "
+      "alone (test_boss_ingot, test_halfa_ingots)", sorted(loot_manual()),
+      [SAND, EMERALD, 4796, 4797, 7620])
 
 
 # --- a corpse's bag, through RoomCombat and a real database -----------------------

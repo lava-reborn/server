@@ -355,12 +355,17 @@ def gold_item(type_id):
     stun bolts "Ammo_stun_bolt_gold_10" are sold for afro in their article.
     (The gold line's upgrade blueprints "bpg_damage_25_gold_lvl*", which
     their articles price in both, are sold for gold alone since 2026-09-28,
-    items.GOLD_PRICE_ONLY, so the price makes them gold things.) So is the
-    Nubian valley boss's ingot, "New_Gold_Ingot_5" (4796): gold is what it
-    is made of, not what it was bought for. The owner's «голдовое оружие и
-    сэты не падают» is about gear bought for gold -- «это не лут» -- and the
-    ingot is loot, which falls («любой лут должен падать»); data/
-    loot_manual.json writes its afro price for that reason among others.
+    items.GOLD_PRICE_ONLY, so the price makes them gold things.)
+
+    A gold ingot of 1, 5 or 10 ounces (items.GOLD_INGOTS, "New_Gold_Ingot_*")
+    is never a gold thing, whatever its name and its prices: gold is what
+    it is made of, and the bosses drop it -- the Nubian valley's and
+    Вади-Хальфа's. The owner's «голдовое оружие и сэты не падают» is about
+    gear bought for gold -- «это не лут» -- and the ingot is loot, which
+    falls («любой лут должен падать»). It carries a gold price since
+    2026-10-09, for which Мортимер sells it, beside its afro one; the
+    rule above would still say afro, and the ingot is named here so that no
+    change of a price can move it.
     """
     type_id = int(type_id)
     cached = _GOLD.get(type_id)
@@ -371,6 +376,8 @@ def gold_item(type_id):
 
 def _gold_item(type_id):
     global _ORIG_NAMES
+    if type_id in items.GOLD_INGOTS:
+        return False
     si = items.params_of(type_id) or {}
     if _positive(si, "g_cost") and not _positive(si, "cost"):
         return True
@@ -407,7 +414,7 @@ def drops_on_death(type_id):
         game itself said could not be lost («Падающие в шахте изумруды
         нельзя потерять при гибели персонажа», texts.xml 59937), fall by
         the owner's rule («любой лут должен падать в том числе из шахты»),
-        as the gold sand does and the valley boss's ingot of 5 ounces;
+        as the gold sand does and the gold ingots;
       * the developers' own gun (items.ADMIN_GUN), which is a tester's and
         nothing a player can buy: dropped by a tester killed in the open,
         it would be one.

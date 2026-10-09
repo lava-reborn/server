@@ -26,8 +26,8 @@ article leaves a hole a stall cannot sell around -- no price, a strike for
 no action points -- has it filled from data/coldarm_manual.json. And the
 things the Nubian mine's marauders drop, whose articles the extractor could
 not read or the linker could not tie, take their numbers from the "items" of
-data/loot_manual.json, the file whose rows make them drop -- and so does
-the Nubian valley boss's ingot of 5 ounces of gold.
+data/loot_manual.json, the file whose rows make them drop -- and so do
+the gold ingots of 1, 5 and 10 ounces.
 """
 import json
 import logging
@@ -404,16 +404,16 @@ def coldarm_manual():
 def loot_manual():
     """type_id -> the numbers of a hand-dropped thing (the "items" of
     data/loot_manual.json): the Nubian mine's gold sand and emeralds, and
-    the valley boss's ingot of 5 ounces of gold.
+    the gold ingots of 1, 5 and 10 ounces.
 
     Recovered, unlike heal_manual's: each record is its wiki article's own
     figures, which data/items_wiki.json lacks because the article writes
     them as sections the extractor does not read (Золотой песок) or carries
-    an icon named after no type (Небольшие изумруды, 5 унций золота) -- but
-    for the ingot's afro price, which the file designs out of the article's
-    gold one and says why. Laid over the frame
-    like a heal_manual record, and like one only where the wiki has no table
-    of its own. drop_on_death rides along for combat.drops_on_death and,
+    an icon named after no type (Небольшие изумруды, the ingots) -- but
+    for the ingots' afro price, which the file designs out of the
+    article's gold one and says why (GOLD_INGOTS lays both). Laid over the
+    frame like a heal_manual record, and like one only where the wiki has
+    no table of its own. drop_on_death rides along for combat.drops_on_death and,
     being no key of any frame, stays off the wire. Loaded like the wiki
     tables: unreadable means no start.
     """
@@ -611,12 +611,19 @@ def _common(type_id, name, root, price, weight):
 
 
 # The gold ingots of 1, 5 and 10 ounces (New_Gold_Ingot_1/_5/_10, texts.xml
-# 7636-7641), by what each is worth in hundredths of an ounce. The price is
-# that at the one rate (progression.GOLD_TO_AFRO_RATE), in afro alone: priced
-# in gold an ingot would be a gold thing, which never falls off a body
-# (combat.gold_item), and the ingot is loot; a stall pays SMOD of it, less
-# than Мортимер's cashing (0.95, 4.95, 9.95 ounces) or Джеррах's 5 ounces
-# for the five. The articles' «Базовая цена 1 G / 5 G / 10 G».
+# 7636-7641), by what each is worth in hundredths of an ounce: the articles'
+# «Базовая цена 1 G / 5 G / 10 G». An ingot carries both prices. Its g_cost
+# is that worth, for which Мортимер sells it (data/npcs.json 1188, the
+# owner's of 2026-10-09): the shipped client buys anything with a g_cost for
+# gold (Trade.buy sends UPD_BUY_GOLD) and the stall draws the gold price
+# (ItemContainer, showPriseInGold). Its cost is the same worth in afro at
+# the one rate (progression.GOLD_TO_AFRO_RATE), which keeps it loot: a
+# corpse's bag holds nothing without an afro price (mobs.droppable), and it
+# falls off a dead player like any loot (combat.gold_item answers no for
+# every ingot). A stall pays SMOD of the afro price, less than c_ga gives
+# for the same ounces and less than Мортимер's cashing (0.95, 4.95, 9.95
+# ounces) or Джеррах's 5 ounces for the five; and no stall sells one for
+# afro (Inventory.buy), which would turn afro into gold.
 GOLD_INGOTS = {7620: 100, 4796: 500, 4797: 1000}
 
 # Things a table prices in both currencies that are sold for gold alone:
@@ -824,11 +831,12 @@ def static_info(type_id):
             info[1]["cost"] = 0
         if type_id in OWN_ARTICLE_PRICE:
             info[1]["cost"] = OWN_ARTICLE_PRICE[type_id]
-        # A gold ingot is worth its ounces at the one rate (GOLD_INGOTS).
+        # A gold ingot is worth its ounces: in gold, and in afro at the one
+        # rate (GOLD_INGOTS).
         ounces = GOLD_INGOTS.get(type_id)
         if ounces:
             info[1].update(cost=ounces * progression.GOLD_TO_AFRO_RATE
-                           // progression.GOLD_OUNCE, g_cost=0)
+                           // progression.GOLD_OUNCE, g_cost=ounces)
         # A gold round costs the owner's hundredth, the pack its rounds'
         # worth (GOLD_AMMO_ROUND).
         if root_of(type_id) == AMMO and gold_round(info[1]):
