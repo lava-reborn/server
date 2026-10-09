@@ -83,6 +83,28 @@ LEAVE_COMBAT_TIMEOUT = int(os.environ.get("LAVA_LEAVE_COMBAT", "15"))
 # appears; then it comes back after RESPAWN_DELAY. The bag stays LOOT_LIFETIME.
 CORPSE_DELAY = 2.5
 RESPAWN_DELAY = float(os.environ.get("LAVA_RESPAWN", "45"))
+# Places whose creatures come back slower, in seconds at the default
+# RESPAWN_DELAY; a suite that shortens the respawn shortens these in the
+# same proportion (respawn_delay). The Вади-Хальфа mine, its three
+# entrances and all its tiers: five minutes -- the owner, 2026-10-09,
+# «слишком быстрый рес» at 45 s, with 31 miners [8] and 16 [9] below.
+RESPAWN_DEFAULT = 45.0
+SLOW_RESPAWN = {loc: 300.0 for loc in (
+    154, 158, 160,                     # VH_mine_entrance, 2, 3
+    613, 617,                          # the first tier
+    1016, 1024, 1017, 1018, 1019, 1012,  # the second tier, west to east
+    1215,                              # the third
+)}
+
+
+def respawn_delay(loc_id):
+    """Seconds before a creature killed in this location comes back."""
+    slow = SLOW_RESPAWN.get(loc_id)
+    if slow is None:
+        return RESPAWN_DELAY
+    return RESPAWN_DELAY * slow / RESPAWN_DEFAULT
+
+
 # How long a thing lies on the ground, in seconds: fifteen minutes from the
 # moment it was put down, and then it is gone -- the owner's rule of
 # 2026-09-28, «лут должен быть на локации 15 минут, даже если там никого
@@ -2786,7 +2808,8 @@ class RoomCombat:
             # it comes back.
             mob.away = True
         else:
-            asyncio.get_running_loop().call_later(RESPAWN_DELAY, self.respawn, mob)
+            asyncio.get_running_loop().call_later(
+                respawn_delay(self.room.loc.id), self.respawn, mob)
 
     def add_to_bag(self, cell, rows, until=None):
         """Put item rows into the bag on a cell, opening one where there is

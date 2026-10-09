@@ -897,7 +897,7 @@ try:
                 c.send("chWorld;")
                 got_m = c.frames(0.8)
                 check("  ..the map is no way out of the range: chWorld refused, no map, no move",
-                      (acks(got_m), named(got_m, "gmap"), named(got_m, "lcall")), ([4], [], []))
+                      (acks(got_m), named(got_m, "gmap"), named(got_m, "lcall")), ([7], [], []))
                 got_w = load(c, gun, oid(CADET, inventory.STARTER_AMMO))
                 check("  ..the newcomer's own rounds do not go into the training pistol («особыми"
                       " пулями кал. 5,6 мм»)", acks(got_w), [inventory.RES_WRONG_AMMO])
@@ -992,7 +992,7 @@ try:
     got = c.frames(0.8)
     check("  ..the map button is no way out of the range: refused, no map, no move, all still his",
           (acks(got), named(got, "gmap"), named(got, "lcall"), held(QUITTER)[GUNS[0]],
-           LESSONS[1] in journal(QUITTER)), ([4], [], [], 1, True))
+           LESSONS[1] in journal(QUITTER)), ([7], [], [], 1, True))
     c.send("userMsg;entry=@/home@;group=0;")
     got = c.frames(0.8)
     check("  ..nor is /home: the message acknowledged, a line in answer, no move",
@@ -1082,7 +1082,7 @@ try:
     got = c.frames(0.8)
     check("  ..the map is no way out of the quarry: chWorld refused, no map, no move, the pick"
           " still here", (acks(got), named(got, "gmap"), named(got, "lcall"), held(WORKER)[PICK]),
-          ([4], [], [], 1))
+          ([7], [], [], 1))
     give(c, BLOCK, 10)
     got = hand_in(c, here, SAM, q)
     have = held(WORKER)

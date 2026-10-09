@@ -151,8 +151,14 @@ DESIGNED_LEVELS = {
 # все движущееся» (texts.xml 47467-47472), and their art (Turrel) is a figure
 # with the rifle's firing frames. So a turret: a gun that never walks, with
 # a machine gun's burst, and the rounds of it in its bag (ROLES "turret").
+# RECOVERED: the Магриб miners of the Вади-Хальфа mine (838, 839) carry a
+# «Кустарный ПП» (the wiki's «Шахтер Магриб»: «Оружие: Кустарный ПП»), not
+# the knife the word "miner" gives (the owner, 2026-10-09: «Шахтеры с
+# ножами»). A sub-machine gun's class, and its 9 mm in the bag.
 DESIGNED_KINDS = {
     "m_turret_lvl6": {"role": "turret", "weapon_class": "machine_gun", "hex_ms": 0},
+    "mg_miner_lvl8": {"weapon_class": "smg"},
+    "mg_miner_lvl9": {"weapon_class": "smg"},
 }
 
 # --- weapon class from a word in the name ---------------------------------
@@ -287,7 +293,7 @@ WEAPON_CLASSES = {
     "knife": {"dmg_mult": 1.0, "shots": 1, "range": 1, "ap": 6, "anim": "knife"},
     "pistol": {"dmg_mult": 1.0, "shots": 1, "range": 6, "ap": 8, "anim": "pistol"},
     "shotgun": {"dmg_mult": 1.4, "shots": 1, "range": 4, "ap": 10, "anim": "rifle"},
-    "smg": {"dmg_mult": 0.6, "shots": 3, "range": 5, "ap": 10, "anim": "pistol"},
+    "smg": {"dmg_mult": 0.6, "shots": 3, "range": 5, "ap": 10, "anim": "rifle"},
     "assault_rifle": {"dmg_mult": 0.9, "shots": 2, "range": 7, "ap": 10, "anim": "rifle"},
     "rifle": {"dmg_mult": 1.6, "shots": 1, "range": 10, "ap": 12, "anim": "rifle"},
     "machine_gun": {"dmg_mult": 0.8, "shots": 4, "range": 8, "ap": 14, "anim": "rifle"},
