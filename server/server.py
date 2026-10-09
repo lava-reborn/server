@@ -1482,8 +1482,8 @@ class Session:
             # Nor out of a place left only by its own ways (travel.no_map):
             # Берт's course would be lost by it as by the map button.
             if travel.no_map(self.loc.id):
-                self.answer("Отсюда домой не уйти: выход отсюда только у здешних"
-                            " жителей", group)
+                self.answer("Отсюда домой не уйти: выбирайтесь тем же путём,"
+                            " каким сюда попали", group)
                 return
             self.go_home()
             return

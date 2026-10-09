@@ -437,6 +437,14 @@ class Quest:
         self.num_kill = [int(x) for x in row.get("num_kill", [])]
         if len(self.num_kill) != len(self.mobs_kill):
             raise ValueError("quest %d: num_kill must match mobs_kill" % self.type)
+        # Other creature types a kill of which counts for a slot: type -> the
+        # slot's type in mobs_kill. The client shows the slot's own creature
+        # and its count; a kin of it under another type id (the mine's [9]
+        # miners beside the [8] the raid names) moves the same count.
+        self.kill_also = {int(k): int(v) for k, v in row.get("kill_also", {}).items()}
+        if any(v not in self.mobs_kill for v in self.kill_also.values()):
+            raise ValueError("quest %d: kill_also must count for a slot of mobs_kill"
+                             % self.type)
         objs = row.get("objs", [])
         if len(objs) > BRING_SLOTS:
             raise ValueError("quest %d: at most %d objects" % (self.type, BRING_SLOTS))
@@ -1033,14 +1041,17 @@ def kill_progress(store, char_id, mob_type):
     out = []
     for row in store.quests(char_id):
         quest = get(row["type"])
-        if not quest or quest.kind != KILL_MOBS or mob_type not in quest.mobs_kill:
+        if not quest or quest.kind != KILL_MOBS:
+            continue
+        counted = quest.kill_also.get(mob_type, mob_type)
+        if counted not in quest.mobs_kill:
             continue
         progress = json.loads(row["progress_json"])
         kill_num = list(progress.get("kill_num", [0] * len(quest.mobs_kill)))
         kill_num += [0] * (len(quest.mobs_kill) - len(kill_num))
         moved = False
         for i, wanted in enumerate(quest.mobs_kill):
-            if wanted == mob_type and kill_num[i] < quest.num_kill[i]:
+            if wanted == counted and kill_num[i] < quest.num_kill[i]:
                 kill_num[i] += 1
                 moved = True
         if not moved:

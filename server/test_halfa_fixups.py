@@ -219,8 +219,9 @@ check("«Обмен слитка» (10) stays: five ounces for the boss's ingot 
       (TABLE[10].rew_gold, TABLE[10].wants()), (500, [(4796, 1)]))
 GOLD_ROWS = {t: q for t, q in TABLE.items() if q.rew_gold > 0}
 INGOTS = set(items.GOLD_INGOTS)
-check("every row that pays gold asks for something -- none for a word passed on",
-      [t for t, q in GOLD_ROWS.items() if not q.wants()], [])
+check("every row that pays gold asks for something or for kills (Фрэнк's raid, 221)"
+      " -- none for a word passed on",
+      [t for t, q in GOLD_ROWS.items() if not (q.wants() or q.mobs_kill)], [])
 check("and is a service (cashing), a once-a-day task, or an ingot changed for its ounces",
       [t for t, q in GOLD_ROWS.items()
        if not (q.service or q.per_day or {o for o, _n in q.wants()} & INGOTS)], [])
@@ -302,7 +303,7 @@ PLACES = ([41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 468, 452, 456, 45
           + list(range(80, 88)) + [109, 110, 111, 165, 198, 199, 598, 599, 623]
           + [732, 1048, 1233, 1260, 1276, 1280, 1282] + list(range(626, 631))
           + [200, 201, 202, 657, 658, 659, 1025, 1218, 1255, 1027, 1220, 1257, 1026, 1219, 1256]
-          + [154, 158, 160, 613, 617, 1012, 1016, 1024])
+          + [154, 158, 160, 613, 617, 1012, 1016, 1024, 1215, 1017, 1018, 1019])
 MT = world.mob_types()
 THING_ARTS = {MT[t][2] for t in (68, 75, 104, 625, 634, 816, 2099, 2279, 1135)}
 homes = {}

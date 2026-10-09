@@ -151,8 +151,14 @@ DESIGNED_LEVELS = {
 # все движущееся» (texts.xml 47467-47472), and their art (Turrel) is a figure
 # with the rifle's firing frames. So a turret: a gun that never walks, with
 # a machine gun's burst, and the rounds of it in its bag (ROLES "turret").
+# RECOVERED: the Магриб miners of the Вади-Хальфа mine (838, 839) carry a
+# «Кустарный ПП» (the wiki's «Шахтер Магриб»: «Оружие: Кустарный ПП»), not
+# the knife the word "miner" gives (the owner, 2026-10-09: «Шахтеры с
+# ножами»). A sub-machine gun's class, and its 9 mm in the bag.
 DESIGNED_KINDS = {
     "m_turret_lvl6": {"role": "turret", "weapon_class": "machine_gun", "hex_ms": 0},
+    "mg_miner_lvl8": {"weapon_class": "smg"},
+    "mg_miner_lvl9": {"weapon_class": "smg"},
 }
 
 # --- weapon class from a word in the name ---------------------------------
