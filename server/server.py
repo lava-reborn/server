@@ -1136,6 +1136,19 @@ class Session:
                      taken, self.loc.file)
             self.inv.refresh_gear()
 
+    def save_place(self):
+        """Write down where the character stands, as close() does at the end:
+        on every arrival, in a location (lenter) or on the map. close() is
+        not reached when the process is killed -- serve_local.ps1 stops it
+        with Stop-Process -Force, a crash does the same -- and a login then
+        put the player back wherever the last logout left him, a mine's
+        tier or a town away (the owner, 2026-10-09). Now it puts him in the
+        location he last entered at worst; the cell within it and a walk on
+        the map are still close()'s."""
+        if self.char_id and self.loc is not None:
+            STORE.save_position(self.char_id, self.loc.id, self.pos,
+                                self.gx, self.gy, self.on_map)
+
     def cmd_lenter(self, p):
         """Answer the client's "I have loaded, let me in".
 
@@ -1162,6 +1175,7 @@ class Session:
         # (Entity.as:37), long before the location opens, so it lands.
         self.send("q_sys", daily_available=self.daily_available())
         self.enter_room()
+        self.save_place()
         # A member's client asks for its roster now that it stands in a
         # location; one that has stopped listening is told to reload.
         CLANS.entered(self)
@@ -1231,6 +1245,7 @@ class Session:
             # Only after gmap: newUser is an offset from the client's own
             # figure, which Master.gmap has just created.
             GMAP.enter(self)
+            self.save_place()
 
     def leave_through_exit(self):
         """chWorld;to=1: out through the exit the player is standing on.

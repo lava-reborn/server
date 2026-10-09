@@ -1,4 +1,5 @@
-"""Where the character is when the server stops, or the link breaks.
+"""Where the character is when the server stops, or the link breaks -- and
+on every arrival, for a server that is killed and saves nothing at the end.
 
 run.sh stop sends SIGTERM. Until the server handled it, that ended the loop
 with every connection still parked in read(): no finally ran, no position
@@ -158,7 +159,12 @@ try:
     c = Client(connect())
     lcall, lenter = enter(c)
     loc_id = int(lcall.split("id=")[1].split(";")[0])
-    check("nothing saved yet", saved(), (None, None))
+    # Written on arrival, before any logout or break: a server killed
+    # outright (serve_local.ps1's Stop-Process -Force, a crash) reaches no
+    # close(), and the login then put him back where he had logged out the
+    # time before -- in the Вади-Хальфа mine, a tier or a town away.
+    check("the location written on arrival, before any logout or break", saved(),
+          (loc_id, int(lenter.split("pos=")[1].split(";")[0])))
     c.send("moveTo;path=|490|491|492|;")
     check("moved", c.names(), ["cmdAck", "userMove"])
     # No logout: the client crashed, or the network went.
