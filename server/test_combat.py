@@ -88,14 +88,18 @@ check("armour turns damage into stamina loss", combat.split_damage(100, 60, 0, F
 check("armour above the damage absorbs everything", combat.split_damage(100, 120, 0, False, 1000), (0, 100))
 check("no armour, all HP", combat.split_damage(100, 0, 0, False, 1000), (100, 0))
 check("missing stamina spills into HP", combat.split_damage(100, 60, 0, False, 20), (80, 20))
-check("a crit ignores armour", combat.split_damage(100, 60, 0, True, 1000), (100, 0))
+check("a crit ignores armour and deals equal health and stamina damage",
+      combat.split_damage(100, 60, 0, True, 1000), (100, 100))
+for stamina, expected in ((100, (50, 50)), (20, (50, 20)), (0, (50, 0))):
+    check("a 50 critical hit with %d stamina never gains health damage" % stamina,
+          combat.split_damage(50, 100, 1, True, stamina), expected)
 check("piercing eats into the armour", combat.split_damage(100, 60, 10, False, 1000), (50, 50))
 check("a gun's stamina component adds to the health damage redirected by armour",
       combat.split_damage(15, 11, 1, False, 1000, st_dmg=15), (5, 25))
-check("a critical bullet keeps H in health and S in stamina, ignoring armour",
-      combat.split_damage(15, 100, 1, True, 1000, st_dmg=15), (15, 15))
-check("a crit's separate stamina damage still spills into health when stamina runs out",
-      combat.split_damage(15, 100, 1, True, 5, st_dmg=15), (25, 5))
+check("a critical bullet uses H for both pools, without adding the weapon's S",
+      combat.split_damage(15, 100, 1, True, 1000, st_dmg=30), (15, 15))
+check("a crit's stamina damage is capped without overflowing into health",
+      combat.split_damage(15, 100, 1, True, 5, st_dmg=15), (15, 5))
 check("a blow lands on stamina first", combat.melee_split(10, False, 4), (6, 4))
 # Wiki "Расчет углового отклонения": the bracket of МР runs from 2.5 for
 # nobody to 1.1 for Стрельба 20 and spec 5; a gun's target_size is its
@@ -378,9 +382,10 @@ check("a creature's round may hit any player, and no creature",
 
 
 # --- firearm health and stamina damage, from aiming to the wire ---------------
-# FireArm.initialize and Annotation read two ranges from ss_si_firearm. The
-# owner's rule (2026-10-05): both apply; armour redirects H on ordinary hits,
-# while a crit keeps H in health and S in stamina. Missing SP spills to HP.
+# FireArm.initialize and Annotation read two ranges from ss_si_firearm.
+# Ordinary hits use both ranges and armour; missing SP spills to HP.
+# On a crit (owner, 2026-10-10), H hits both pools, capped by remaining SP
+# without overflow into HP or an additional S component.
 # Capture the real use_fire timer payload, then resolve it against a durable
 # body with known armour. Fix the rolls, not the damage parameters, so losing
 # st_damage on the way from the item to Weapon or faHit fails these checks.
@@ -437,14 +442,19 @@ check("IZH-27 outside optimal range uses both full ranges, starting at H=4/S=4",
 check("stamina runs out mid-charge: later pellets spill to HP and bars match faHit",
       _damage_frames(_izh, stamina=40),
       ([(5, 25, 0), (15, 15, 0)] + [(30, 0, 0)] * 4, (860, 0), (860, 0), 12))
-check("on critical pellets the exhausted stamina component spills to HP too",
+check("critical pellets exhaust stamina mid-charge without increasing health damage",
       _damage_frames(_izh, stamina=20, crit=True),
-      ([(15, 15, 1), (25, 5, 1)] + [(30, 0, 1)] * 4, (840, 0), (840, 0), 12))
+      ([(15, 15, 1), (15, 5, 1)] + [(15, 0, 1)] * 4, (910, 0), (910, 0), 12))
 check("an empty charge still closes all pairs and deals neither component",
       _damage_frames(_izh, live=0), ([], (1000, 1000), None, 12))
 _walther = asyncio.run(_aimed_weapon(25636, mode=1))
 check("a Walther burst with zero stamina damage still deals only its H component",
       _damage_frames(_walther), ([(19, 10, 0)] * 2, (962, 980), (962, 980), 4))
+_deagle = asyncio.run(_aimed_weapon(25657))
+for stamina, lost in ((1000, 54), (20, 20), (0, 0)):
+    check("Desert Eagle G critical hit with %d SP: frames and bars agree" % stamina,
+          _damage_frames(_deagle, stamina=stamina, crit=True),
+          ([(54, lost, 1)], (946, stamina - lost), (946, stamina - lost), 2))
 _ksg = asyncio.run(_aimed_weapon(5842))
 check("a single projectile with both components also retains its stamina damage",
       _damage_frames(_ksg, crit=True), ([(39, 39, 1)], (961, 961), (961, 961), 2))
@@ -457,9 +467,9 @@ _through = _izh._replace(num_shots=1, dmin=15, dmax=15, sdmin=9, sdmax=9,
 (_h, _s, _hits, _k), _oth = _fire(_rc, _d["mark"], [0.0], gun=_through)
 check("penetration halves H and S before the second body's armour, rounding down",
       ((_h, _s), [(h, s) for _b, h, s, _dead, _pool in _oth]), ((5, 19), [(0, 11)]))
-check("zero health damage remains zero when a gun deals only stamina damage",
+check("a zero health critical hit deals zero to both pools",
       _damage_frames(_izh._replace(dmin=0, dmax=0, sdmin=15, sdmax=15), crit=True),
-      ([(0, 15, 1)] * 6, (1000, 910), (1000, 910), 12))
+      ([(0, 0, 1)] * 6, (1000, 1000), (1000, 1000), 12))
 _rc, _gr, _d = _scene(mark=(3, DOG), behind=(5, DOG))
 for _body in _d.values():
     _damage_target(_body)
