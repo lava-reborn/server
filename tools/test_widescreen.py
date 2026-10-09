@@ -76,7 +76,10 @@ WIRED = ("__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__progressInfoOrig", "__progress_increase_spec_level_func",
          "__onlineSendOrig", "__onlineNotifyOrig",     # online players
          "__wideCreateOrig", "__wideSceneOrig",        # library, location mask
-         "__byeKickOrig", "__byeOrig")                 # no old login screen
+         "__byeKickOrig", "__byeOrig",                 # no old login screen
+         "__corpseDeadOrig", "__corpseFocusOrig",      # a corpse and its bag
+         "__corpseLocationOrig", "__corpseRemoveOrig", # corpse cell ownership
+         "__subInitOrig", "__subGlobalOrig")           # sublocation exit
 _source = open(w.__file__, encoding="utf-8").read()
 check("every fn_* patch body in widescreen.py is used",
       [name for name in re.findall(r"^def (fn_\w+)\(", _source, re.M)
