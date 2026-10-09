@@ -59,13 +59,19 @@
 Генерируемые файлы релиза собираются тем же кодом, что и раньше:
 `main.swf` — `tools/widescreen.py` по оригиналу, `database/texts.xml` —
 `tools/export_texts.py`, `database/locations.xml` — `server/map_labels.py`,
-`hints/hints.xml` — пустой документ.
+`hints/hints.xml` — пустой документ. Плитки карты `globalmap/full/<n>.jpg`, на
+которых нарисованы квадраты снятых мест (клетки `data/retired.json` и
+`data/map_cells.json`), — `server/map_cells.py`: квадраты закрашены, остальные
+блоки плитки байт в байт оригинальные. В отчёте сборки это строки
+`generated: ... globalmap/full/<n>.jpg` и `map: N squares and M caption boxes
+painted over in K tiles`.
 
 ## Кто что делает
 
 - **Любой разработчик** выпускает правку клиента или лаунчера обычным PR:
-  патч в `tools/widescreen.py`, подпись карты в `data/map_labels.json`, файл
-  в `client/files/`, код в `launcher/`. После слияния в main она уходит к
+  патч в `tools/widescreen.py`, подпись карты в `data/map_labels.json`,
+  квадрат на карте в `data/map_cells.json`, файл в `client/files/`, код в
+  `launcher/`. После слияния в main она уходит к
   игрокам сама.
 - **Шлюз** собирает и подписывает релиз ключом ресурсов, а новый лаунчер —
   ключом лаунчера. Оба ключа лежат только на сервере.
@@ -79,7 +85,8 @@
 ## Выпустить правку клиента
 
 1. Сделайте правку: патч в `tools/widescreen.py`, правку в
-   `data/map_labels.json` или файл в `client/files/<путь под res>`.
+   `data/map_labels.json` или `data/map_cells.json`, или файл в
+   `client/files/<путь под res>`.
 2. Проверьте локально: `python3 client/test_client.py` и тесты самого патча
    (`tools/test_widescreen.py`). Увидеть игру с правкой можно на стенде
    разработчика (ниже).

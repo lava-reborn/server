@@ -103,6 +103,24 @@ try:
     check('POST real file', post('/res/database/objects.xml')[0], 200)
     check('POST missing file 404', post('/res/nope/nope.xml')[0], 404)
 
+    # The map's picture: a tile that carries a retired place's square is
+    # served with it painted over, as every client release has it
+    # (map_cells); any other tile as it is on disk. CI's resources carry no
+    # tiles, and then nothing is invented either.
+    sys.path.insert(0, HERE)
+    import map_cells
+    res_dir = os.environ.get("LAVA_RES") or ""
+    tile = map_cells.tile_path(14010)
+    if os.path.isfile(os.path.join(res_dir, *tile.split("/"))):
+        painted, _report = map_cells.apply(map_cells.reader(res_dir))
+        check('a map tile with a retired place\'s square comes painted over',
+              post('/res/' + tile), (200, painted[tile]))
+        plain = map_cells.tile_path(14012)
+        with open(os.path.join(res_dir, *plain.split("/")), "rb") as fh:
+            check('  ..and a tile with none of them as it is', post('/res/' + plain), (200, fh.read()))
+    else:
+        check('a map tile the client has not is not there (404)', post('/res/' + tile)[0], 404)
+
     # base must be absolute and carry no trailing slash: the client builds
     # every resource URL as base + '/avatars/list.xml'.
     base_attr = re.search('base=' + chr(34) + '([^' + chr(34) + ']*)' + chr(34), cs).group(1)

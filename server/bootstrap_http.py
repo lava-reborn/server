@@ -53,6 +53,7 @@ import email_flow
 import names
 import items
 import stopwarn
+import map_cells
 import map_labels
 import transport
 import world
@@ -61,6 +62,8 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 # one source of truth for where the client's files are
 RES_ROOT = world.RES
+# the map's tiles with retired places' squares painted over, made on first ask
+MAP_TILES = map_cells.Served(RES_ROOT)
 GAME_HOST = os.environ.get("LAVA_GAME_HOST", "127.0.0.1")
 GAME_PORT = os.environ.get("LAVA_GAME_PORT", "9775")
 HTTP_PORT = int(os.environ.get("LAVA_HTTP_PORT", "8080"))
@@ -574,10 +577,18 @@ class Handler(BaseHTTPRequestHandler):
                            "application/octet-stream")
         with open(full, "rb") as fh:
             body = fh.read()
-        if rel.replace(os.sep, "/").lower() == "database/locations.xml":
+        posix = rel.replace(os.sep, "/")
+        if posix.lower() == "database/locations.xml":
             # The names over the global map's cells, with the owner's edits
             # laid on -- what the launcher does for every player (map_labels).
             body, _changed = map_labels.apply(body)
+        else:
+            # The map's picture, with the squares of the places taken out of
+            # the game painted over -- what every client release carries
+            # (map_cells).
+            edited = MAP_TILES.get(posix)
+            if edited is not None:
+                body = edited
         self._send(body, ctype)
 
     def _texts(self, query, body):
