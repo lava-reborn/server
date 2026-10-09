@@ -7,13 +7,12 @@
  },
  "cells": {
   "5969,1730": "The owner's cut of Вади-Хальфа, 2026-10-09 («... улучшение сетов 6-8»): the green square under the name «Улучшение сетов 6-8[G]<BR>Казначеи ремесленников» (hidden, data/map_labels.json). No file stood on the cell; the square was all the map had of the service.",
-  "5984,1759": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the clan base's square (dark red with a white centre) under the hidden name «Собственность клана KKND». Its files (297, 383, 384, 938, 961, 1189) never had a cell, so data/retired.json has no cell for it."
+  "5984,1759": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the clan base's square (dark red with a white centre) under the hidden name «Собственность клана KKND». Its files (297, 383, 384, 938, 961, 1189) never had a cell, so data/retired.json has no cell for it.",
+  "6265,1821": "The owner's word of 2026-10-10 («да», to painting the kimberlite pipe's square too): its name «Кимберлитовая трубка<br>Добыча алмазов» was hidden on 2026-10-05 and no place stands on the cell, so its black-and-orange hatch, a work site's mark, goes as well. Tile 14531."
  },
  "captions": [
   {"was": "Кланбаза KKND", "boxes": [[47879, 14049, 47920, 14057], [47879, 14058, 47910, 14067]],
    "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the two lines of letters «Кланбаза / KKND» painted above the base's square at 5984,1759 (cells 5984..5989, 1756..1758), tile 14011, a box a line with its light rim. The dark stone right of the first line's end (47918..47922, 14058..14061) is the photograph's and stays."}
  ],
- "keep": {
-  "6265,1821": "The kimberlite pipe: its name «Кимберлитовая трубка<br>Добыча алмазов» was hidden by the owner on 2026-10-05, but no place stood on the cell and the owner has not said the hatched square should go. It stays until the owner says so; then move this line to 'cells'."
- }
+ "keep": {}
 }

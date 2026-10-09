@@ -52,14 +52,14 @@ try:
     # --- the plan: what goes, from data/retired.json and data/map_cells.json -------------
     plan = M.load()
     retired = {cell(k) for k in load_json("data", "retired.json")["cells"] if not k.startswith("_")}
-    LABEL_ONLY = {(5969, 1730), (5984, 1759)}
+    LABEL_ONLY = {(5969, 1730), (5984, 1759), (6265, 1821)}
     check("every cell of data/retired.json loses its square, by itself",
           sorted(retired - set(plan.cells)), [])
     check("  ..those are the seven of the two cuts: the (P) camps 124, 125, 130 and Halfa's 468, 452,"
           " 456, 457", sorted(retired),
           [(5876, 2012), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732), (5970, 1732), (6182, 1975)])
-    check("  ..and data/map_cells.json adds the two cells that had a name and no place: «Улучшение"
-          " сетов 6-8» and the KKND base", sorted(set(plan.cells) - retired), sorted(LABEL_ONLY))
+    check("  ..and data/map_cells.json adds the three cells that had a name and no place: «Улучшение"
+          " сетов 6-8», the KKND base and the kimberlite pipe", sorted(set(plan.cells) - retired), sorted(LABEL_ONLY))
     live = {cell(k) for k in load_json("data", "settlements.json")["cells"]}
     check("no square goes from a cell a place still stands on (data/settlements.json)",
           sorted(set(plan.cells) & live), [])
@@ -67,8 +67,8 @@ try:
     undecided = sorted(c for c in hidden - live if c not in plan.cells and c not in plan.keep)
     check("every hidden name with no place under it is decided: its square goes, or stays with a why",
           undecided, [])
-    check("  ..the kimberlite pipe's stays until the owner says (hidden 2026-10-05, nothing stands there)",
-          (sorted(plan.keep), "owner" in plan.keep.get((6265, 1821), "")), ([(6265, 1821)], True))
+    check("  ..the kimberlite pipe's goes too, on the owner's word of 2026-10-10; nothing is kept now",
+          (sorted(plan.keep), "owner" in plan.cells.get((6265, 1821), "")), ([], True))
     check("  ..and the farm's cell keeps its square: only the New Year name over it is hidden",
           ((6266, 1822) in live, (6266, 1822) in plan.cells), (True, False))
     loc_path = os.path.join(RES, "database", "locations.xml")
@@ -87,8 +87,8 @@ try:
           [(b, M.tile_of(b[0], b[1]), M.tile_of(b[2], b[3])) for b, was, _ in plan.captions],
           [((47879, 14049, 47920, 14057), 14011, 14011), ((47879, 14058, 47910, 14067), 14011, 14011)])
     check("the tiles a change can touch, a square's frame reaching a pixel past its cell: Halfa's two,"
-          " KKND's and the two below it, Абу-Хамед's, Донгола's",
-          plan.tiles(), [13754, 14010, 14011, 14266, 14267, 15809, 16055])
+          " KKND's and the two below it, the kimberlite pipe's, Абу-Хамед's, Донгола's",
+          plan.tiles(), [13754, 14010, 14011, 14266, 14267, 14531, 15809, 16055])
 
     def refused(doc, retired_doc=None):
         p = os.path.join(W, "cells.json")
@@ -492,13 +492,16 @@ try:
               [M.tile_path(n) for n in plan.tiles()
                if hashlib.sha256(read(M.tile_path(n))).hexdigest() != base.get(M.tile_path(n))], [])
         real = run(every, plan)
-        check("each of the nine cells has its square found: eight green, KKND's dark red with white a pixel high",
+        odd = {(5984, 1759): (0, -1, ("red", "white")), (6265, 1821): (0, 0, ("black", "orange"))}
+        check("each of the ten cells has its square found: eight green, KKND's dark red with white a pixel"
+              " high, the kimberlite pipe's black-and-orange hatch",
               {c: (sq[0] - 8 * c[0], sq[1] - 8 * c[1], sq[2]) for c, sq in real["found"].items()},
-              {c: (0, -1, ("red", "white")) if c == (5984, 1759) else (0, 0, ("green",)) for c in plan.cells})
+              {c: odd.get(c, (0, 0, ("green",))) for c in plan.cells})
         check("  ..and nothing is reported missing", [x for x in real["report"] if ": no " in x], [])
-        check("five tiles change: 13754 and 14010 in Halfa, 14011 for KKND, 15809 Абу-Хамед, 16055 Донгола",
-              sorted(real["out"]), sorted(M.tile_path(n) for n in (13754, 14010, 14011, 15809, 16055)))
-        check("no square is left on the nine cells", {c: real["after_sq"].at(*c) for c in plan.cells},
+        check("six tiles change: 13754 and 14010 in Halfa, 14011 for KKND, 14531 the kimberlite pipe,"
+              " 15809 Абу-Хамед, 16055 Донгола",
+              sorted(real["out"]), sorted(M.tile_path(n) for n in (13754, 14010, 14011, 14531, 15809, 16055)))
+        check("no square is left on the ten cells", {c: real["after_sq"].at(*c) for c in plan.cells},
               {c: None for c in plan.cells})
         around = sorted({(x + dx, y + dy) for x, y in plan.cells for dx in range(-3, 4) for dy in range(-3, 4)}
                         - set(plan.cells))
@@ -519,7 +522,7 @@ try:
         stray, count = only_painted(every, real)
         check("only blocks with a pixel painted change; every other block of every tile keeps its"
               " coefficients (%d changed)" % count,
-              (stray, count > 0), ({n: [] for n in (13754, 14010, 14011, 15809, 16055)}, True))
+              (stray, count > 0), ({n: [] for n in (13754, 14010, 14011, 14531, 15809, 16055)}, True))
         most, share = moved(real, every)
         check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
               " that move by 2 or less" % (most, 100 * share), (most <= 16, share >= 0.9), (True, True))
