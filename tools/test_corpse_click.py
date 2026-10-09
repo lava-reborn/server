@@ -19,6 +19,13 @@ location through the client's own Location.lch: the pointer over both,
 the other selected, then it, then dead=<it>, then lostUser=<it>. Run three
 times: the original's focus code, the dead wrapper without the removeFocus
 guard, and the patch as built.
+
+Cell ownership: Location.lch releases busy at death, stops the walker's
+timer and preserves the animation; removePlayer cannot clear the next
+occupant's busy flag. Checks include duplicate deaths, leaving the cell,
+live departures and the gamer's own death. The Flash probe checks the real
+LocationGrid path predicate, then moves another walker onto the cell
+through breakMove/finishPart before lostUser removes the corpse.
 """
 import ast
 import os
@@ -30,6 +37,7 @@ import sys
 import tempfile
 import threading
 import time
+from types import SimpleNamespace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlsplit
 import zlib
@@ -47,6 +55,9 @@ from testkit import check, fails  # noqa: E402
 class Undefined:
     def __repr__(self):
         return "undefined"
+
+    def __bool__(self):
+        return False
 
 
 U = Undefined()
@@ -393,6 +404,101 @@ check("both wraps are in the injected code",
       [n for n in ("__corpseDeadOrig", "__corpseFocusOrig") if n.encode() not in w.injected()], [])
 
 
+# --- in process: walking onto a corpse's cell -------------------------------
+class Walker:
+    def __init__(self, pos):
+        self.numPos, self.moving = pos, True
+
+    def clearMove(self):
+        self.moving = False
+
+
+class Location:
+    """Cell ownership from Location.as lch/removePlayer/finishPart.
+
+    Unlike the focus test above, this goes through the location which owns
+    the walkers. The path predicate is LocationGrid.isUnreachible in battle.
+    """
+    def __init__(self, patched=True, guard=True):
+        self.cells = {n: SimpleNamespace(busy=True, alwaysBusy=False,
+                                        unreachable=False) for n in (10, 11)}
+        self.playerList = {0: SimpleNamespace(walker=Walker(11)),
+                           215: SimpleNamespace(walker=Walker(10))}
+        self.dead_events = []
+        setattr(self, "__corpseLocationOrig", self.original_lch)
+        setattr(self, "__corpseRemoveOrig", self.original_remove)
+        self.lch = (lambda obj: execute(w.fn_corpse_location().assemble(),
+                     dict(this=self, obj=obj, lol=LOL))) if patched else self.original_lch
+        self.removePlayer = (lambda ident: execute(w.fn_corpse_remove().assemble(),
+                     dict(this=self, id=ident))) if guard else self.original_remove
+
+    def getCellFromNumber(self, pos):
+        return self.cells[pos]
+
+    def original_lch(self, obj):
+        if "dead" in obj["param"]:
+            self.dead_events.append(obj["param"]["dead"])
+        if "lostUser" in obj["param"]:
+            self.removePlayer(obj["param"]["lostUser"])
+
+    def original_remove(self, ident):
+        walker = self.playerList[ident].walker
+        self.cells[walker.numPos].busy = False
+        walker.clearMove()
+        del self.playerList[ident]
+
+    def reachable(self, pos):
+        c = self.cells[pos]
+        return not (c.busy or c.alwaysBusy or c.unreachable)
+
+    def arrive(self, ident, pos):
+        walker = self.playerList[ident].walker
+        self.cells[walker.numPos].busy = False
+        walker.numPos = pos
+        self.cells[pos].busy = True
+
+
+loc = Location(patched=False)
+loc.lch(dict(param=dict(dead=215)))
+check("original: dead still blocks the cell in battle", loc.reachable(10), False)
+for occupied in (False, True):
+    loc = Location()
+    corpse = loc.playerList[215].walker
+    loc.lch(dict(param=dict(dead=215)))
+    check("dead frees the path immediately and stops the movement timer",
+          (loc.reachable(10), corpse.moving, loc.dead_events), (True, False, [215]))
+    check("the corpse remains available for its animation", 215 in loc.playerList, True)
+    if occupied:
+        loc.arrive(0, 10)
+    loc.lch(dict(param=dict(dead=215)))
+    check("duplicate dead preserves a new occupant", loc.cells[10].busy, occupied)
+    loc.lch(dict(param=dict(lostUser=215)))
+    check("lostUser preserves current ownership (occupied=%s)" % occupied,
+          (loc.cells[10].busy, 215 in loc.playerList), (occupied, False))
+loc = Location(guard=False)
+loc.lch(dict(param=dict(dead=215)))
+loc.arrive(0, 10)
+loc.lch(dict(param=dict(lostUser=215)))
+check("without removal guard the new occupant loses its busy flag", loc.cells[10].busy, False)
+loc = Location()
+loc.lch(dict(param=dict(dead=215)))
+loc.arrive(0, 10)
+loc.arrive(0, 11)
+loc.lch(dict(param=dict(lostUser=215)))
+check("an occupant that already left does not leave the cell blocked", loc.reachable(10), True)
+loc = Location()
+loc.lch(dict(param=dict(dead=0)))
+loc.lch(dict(param=dict(dead=999)))
+loc.lch(dict(param=dict(ws=0)))
+check("own death, unknown id and non-death frames leave occupancy alone",
+      (loc.cells[10].busy, loc.cells[11].busy, loc.playerList[0].walker.moving),
+      (True, True, True))
+loc.removePlayer(215)
+check("a live departure still frees its cell", loc.reachable(10), True)
+check("cell wrappers are injected", [n for n in ("__corpseLocationOrig", "__corpseRemoveOrig")
+                                     if n.encode() not in w.injected()], [])
+
+
 # --- real Flash: the same walk through the original client's classes --------
 PLAYER = os.environ.get("LAVA_FLASH_PLAYER", "")
 RES = Path(os.environ.get("LAVA_RES", ""))
@@ -449,6 +555,17 @@ def probe(url):
     a.push("step").var("_root").member("tick").var("_root").member("start").op("subtract").op("definelocal")
     a.var("r").push("step").var("step").op("setmember")
     a.var("r").push("victim").var("v").member("id").op("setmember")
+    # Keep the actual cell after lostUser removes the victim's walker.
+    a.var("_root").member("corpseCell").iftrue("cell_ready")
+    a.var("_root").push("corpseCell")
+    a.var("v").member("id").push(1).var("m").member("currentLocation")
+    a.push("getWalker").op("callmethod").member("numPos").push(1)
+    a.var("m").member("currentLocation").push("getCellFromNumber").op("callmethod").op("setmember")
+    # This town probe picks NPC figures. Use a movable creature's cell flags
+    # and battle path rules, so isUnreachible exercises the reported failure.
+    a.var("_root").member("corpseCell").push("alwaysBusy", False).op("setmember")
+    a.var("m").member("currentLocation", "locInfo").push("battle", True).op("setmember")
+    a.label("cell_ready")
     # step 1: the pointer onto both, the victim selected
     a.var("step").push(1).op("equals2").op("not").iftrue("s2")
     for who in ("o", "v"):
@@ -464,6 +581,12 @@ def probe(url):
     a.label("s2")
     for step, key in ((2, "dead"), (3, "lostUser")):
         a.var("step").push(step).op("equals2").op("not").iftrue("s%d" % (step + 1))
+        if step == 3:
+            # Another walker enters the freed cell through the real
+            # breakMove -> finishPart event before the corpse disappears.
+            a.var("_root").member("corpseCell", "num").push(1)
+            a.var("o").member("id").push(1).var("m").member("currentLocation")
+            a.push("getWalker").op("callmethod").push("breakMove").op("callmethod").op("pop")
         a.push("frame")
         w.new(a, ["_global"], "Object", 0).op("definelocal")
         a.var("frame").push("param")
@@ -482,6 +605,9 @@ def probe(url):
     a.var("r").push("selected_other").var("cm").member("selected", "target").var("o").op("equals2").op("setmember")
     a.var("r").push("selected_victim").var("cm").member("selected", "target").var("v").op("equals2").op("setmember")
     a.var("r").push("victim_dead").var("v").member("behavior").push("die").op("equals2").op("setmember")
+    a.var("r").push("cell_busy").var("_root").member("corpseCell", "busy").op("setmember")
+    a.var("r").push("cell_blocked").var("_root").member("corpseCell").push(1)
+    a.var("m").member("currentLocation", "locationGrid").push("isUnreachible").op("callmethod").op("setmember")
     a.label("send")
     a.push("POST").var("r").push(url)
     w.call_method(a, "r", "sendAndLoad", 3)
@@ -546,7 +672,7 @@ def run(variant):
     version, body = w.read_swf(SRC)
     tags = [t for t in w.split_tags(body) if t[0] not in (12, 26)] if SRC.name == "main.swf" else w.split_tags(body)
     w.patch_ceiling(tags, 3840, 2160)
-    keep = w.fn_corpse_dead, w.fn_corpse_focus
+    keep = w.fn_corpse_dead, w.fn_corpse_focus, w.fn_corpse_location, w.fn_corpse_remove
 
     def passthrough(orig, arg):
         def body():
@@ -556,12 +682,14 @@ def run(variant):
         return body
     if variant == "original":
         w.fn_corpse_dead = passthrough("__corpseDeadOrig", "obj")
+        w.fn_corpse_location = passthrough("__corpseLocationOrig", "obj")
+        w.fn_corpse_remove = passthrough("__corpseRemoveOrig", "id")
     if variant in ("original", "no-guard"):
         w.fn_corpse_focus = passthrough("__corpseFocusOrig", "targ")
     try:
         tags = w.inject(tags)
     finally:
-        w.fn_corpse_dead, w.fn_corpse_focus = keep
+        w.fn_corpse_dead, w.fn_corpse_focus, w.fn_corpse_location, w.fn_corpse_remove = keep
     code = w.Asm()
     code.var("_root").push("tick", 0).op("setmember")
     code.var("_global").push("__corpseProbe").function((), probe(url + "/report")).op("setmember")
@@ -617,6 +745,8 @@ try:
         check("Flash, original: the corpse keeps its focus and the selection",
               (dead["victim_dead"], dead["victim_focus"], dead["selected_victim"]),
               ("true", "true", "true"))
+        check("Flash, original: the dead creature's cell blocks the path",
+              (dead["cell_busy"], dead["cell_blocked"]), ("true", "true"))
         n = int(hover["foci"])
         hover, dead, lost = walk("no-guard")
         check("Flash, no guard: lostUser after dead cuts the next creature off the target list",
@@ -624,6 +754,10 @@ try:
         hover, dead, lost = walk("patched")
         check("Flash, patched: the figure still dies",
               dead["victim_dead"], "true")
+        check("Flash, patched: the cell is walkable while the corpse still lies there",
+              (dead["cell_busy"], dead["cell_blocked"]), ("false", "false"))
+        check("Flash, patched: lostUser preserves the walker that entered the cell",
+              (lost["cell_busy"], lost["cell_blocked"]), ("true", "true"))
         check("Flash, patched: the corpse lets go of focus and selection at once",
               (dead["victim_focus"], dead["selected_victim"], dead["flared_victim"]),
               ("false", "false", "false"))

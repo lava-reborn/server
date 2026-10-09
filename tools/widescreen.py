@@ -182,6 +182,14 @@ Client patches applied without altering the original artwork:
    measured in Flash 32). CursorManager.prototype.removeFocus is wrapped
    to do nothing for a sprite without a focus.
 
+   Location.lch releases the walker's busy cell at death and cancels its
+   movement timer. Removing focus alone does not let a player walk onto a
+   bag under the body: LocationGrid still treats busy cells as blocked in
+   battle. A marker prevents duplicate deaths from clearing a new
+   occupant. Location.removePlayer preserves the current busy flag when
+   removing such a corpse, since it no longer owns that cell. The body and
+   its walker stay until lostUser; the gamer's own death stays unchanged.
+
 12. No way to the global map out of a sublocation. A mine or a cellar
    (Location.isSubLocation: a geoID with z != 0) is left through its door,
    and LocationInterface.battleMode keeps the exit button off there
@@ -1599,6 +1607,53 @@ def fn_corpse_focus():
     return a
 
 
+def fn_corpse_location():
+    """Location.lch: release a dead walker's cell before notifying the scene.
+
+    clearMove cancels a pending finishPart which would occupy a cell again.
+    Keep the walker for the death animation and the original lostUser cleanup.
+    The marker makes repeated dead frames harmless if somebody has since
+    stepped onto the cell. The gamer's own death follows the original path.
+    """
+    a = Asm()
+    a.push("id").var("obj").member("param", "dead").op("definelocal")
+    a.var("id").push(UNDEF).op("equals2").iftrue("original")
+    a.var("id").var("lol").member("core", "player", "Gamer", "ID")
+    a.op("equals2").iftrue("original")
+    a.push("walker").var("this").member("playerList").var("id").op("getmember")
+    a.member("walker").op("definelocal")
+    a.var("walker").push(UNDEF).op("equals2").iftrue("original")
+    a.var("walker").member("__corpseCellReleased").iftrue("original")
+    a.push(0).var("walker").push("clearMove").op("callmethod").op("pop")
+    a.var("walker").push("__corpseCellReleased", True).op("setmember")
+    a.var("walker").member("numPos").push(1).var("this").push("getCellFromNumber")
+    a.op("callmethod").push("busy", False).op("setmember")
+    a.label("original")
+    a.var("obj").push(1).var("this").push("__corpseLocationOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_corpse_remove():
+    """Location.removePlayer: a released corpse no longer owns its cell.
+
+    Preserve busy across the original cleanup: another walker may have
+    entered and/or left since dead. Live departures keep the original rule.
+    """
+    a = Asm()
+    a.push("walker").var("this").member("playerList").var("id").op("getmember")
+    a.member("walker").op("definelocal")
+    a.var("walker").member("__corpseCellReleased").op("not").iftrue("original")
+    a.push("cell").var("walker").member("numPos").push(1).var("this")
+    a.push("getCellFromNumber").op("callmethod").op("definelocal")
+    a.push("busy").var("cell").member("busy").op("definelocal")
+    a.label("original")
+    a.var("id").push(1).var("this").push("__corpseRemoveOrig").op("callmethod").op("pop")
+    a.var("cell").push(UNDEF).op("equals2").iftrue("out")
+    a.var("cell").push("busy").var("busy").op("setmember")
+    a.label("out")
+    return a
+
+
 def fn_sublocation_init():
     """LocationInterface.init(): the original, then
     `if (this.currentLocation.isSubLocation) this.exitLoc_btn.enabled = false`
@@ -1696,6 +1751,10 @@ def injected():
          ("targ",), fn_corpse_focus()),
         (("core", "location", "DisplayLocScene"), "dead", "__corpseDeadOrig",
          ("obj",), fn_corpse_dead()),
+        (("core", "location", "Location"), "lch", "__corpseLocationOrig",
+         ("obj",), fn_corpse_location()),
+        (("core", "location", "Location"), "removePlayer", "__corpseRemoveOrig",
+         ("id",), fn_corpse_remove()),
         (("gpui", "LocationInterface"), "init", "__subInitOrig",
          (), fn_sublocation_init()),
         (("gpui", "LocationInterface"), "toGlobal", "__subGlobalOrig",

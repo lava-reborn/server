@@ -78,6 +78,7 @@ WIRED = ("__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__wideCreateOrig", "__wideSceneOrig",        # library, location mask
          "__byeKickOrig", "__byeOrig",                 # no old login screen
          "__corpseDeadOrig", "__corpseFocusOrig",      # a corpse and its bag
+         "__corpseLocationOrig", "__corpseRemoveOrig", # corpse cell ownership
          "__subInitOrig", "__subGlobalOrig")           # sublocation exit
 _source = open(w.__file__, encoding="utf-8").read()
 check("every fn_* patch body in widescreen.py is used",
