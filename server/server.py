@@ -1596,6 +1596,24 @@ class Session:
         return "%s: специализация %d %s" % (
             self.nick, int(idx), "забыта" if lvl < 0 else "теперь %d" % lvl)
 
+    def admin_xp(self, idx, xp):
+        """The admin queue's 'xp': experience into a skill of a character
+        in the game, the card and the bars told as admin_skill tells them."""
+        if not self.char_id:
+            return "персонаж не выбран"
+        ch = self.character()
+        old_level = ch.level
+        changed = ch.add_skill_xp(int(idx), int(xp))
+        ch.save(STORE)
+        self.push_stats(**changed)
+        if ch.level != old_level:
+            self.send_player_info()
+        if progression.moves_vitals(changed):
+            self.push_vitals()
+        s = ch.skill[int(idx)]
+        return "+%d опыта: %s %d (%d/%d)" % (int(xp), self.SKILL_NAMES[int(idx)],
+                                            s[0], s[1], s[2])
+
     def admin_money(self, afro=0, gold=0):
         if not self.char_id:
             return "персонаж не выбран"
@@ -3931,6 +3949,8 @@ def apply_admin_action(row):
         if kind == "goto":
             return sess.admin_goto(args.get("loc_id"), args.get("gx"),
                                    args.get("gy"))
+        if kind == "xp":
+            return sess.admin_xp(args["skill"], args["xp"])
         return "неизвестное действие: %s" % kind
 
     # Offline: nothing is holding this character, so the row is the truth.
@@ -3944,6 +3964,14 @@ def apply_admin_action(row):
                 afro=int(row_c["afro"]) + int(args.get("afro", 0)),
                 gold=int(row_c["gold"]) + int(args.get("gold", 0)))
         return "начислено (не в игре)"
+    if kind == "xp":
+        ch = progression.Character.load(STORE, row["char_id"])
+        idx = int(args["skill"])
+        ch.add_skill_xp(idx, int(args["xp"]))
+        ch.save(STORE)
+        s = ch.skill[idx]
+        return "+%d опыта: %s %d (%d/%d) (не в игре)" % (
+            int(args["xp"]), Session.SKILL_NAMES[idx], s[0], s[1], s[2])
     if kind == "item":
         type_id = int(args["type_id"])
         if items.params_of(type_id) is None:

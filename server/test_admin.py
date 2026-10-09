@@ -157,6 +157,27 @@ def row(char_id):
         db.close()
 
 
+def skill_row(char_id, idx):
+    """(level, xp, xp_max) of one skill, as the database holds it."""
+    db = storage.connect(DB)
+    try:
+        r = db.execute("SELECT value, xp, xp_max FROM char_stats WHERE char_id = ?"
+                       " AND kind = 'skill' AND idx = ?", (char_id, idx)).fetchone()
+        return (r["value"], r["xp"], r["xp_max"])
+    finally:
+        db.close()
+
+
+def last_result(kind):
+    """What the game wrote back on the newest action of that kind."""
+    db = storage.connect(DB)
+    try:
+        return db.execute("SELECT result FROM admin_actions WHERE kind = ?"
+                          " ORDER BY id DESC", (kind,)).fetchone()["result"]
+    finally:
+        db.close()
+
+
 def wait_done(n=1, timeout=10):
     """Wait for the game server to drain the queue."""
     db = storage.connect(DB)
@@ -315,6 +336,15 @@ try:
     check("очередь разобрана", wait_done(), True)
     check("деньги записаны в базу",
           row(_char_id)["afro"], before["afro"] + 500)
+    # Опыт навыку: ровно названное число, уровни переносятся, как от боя
+    # (100, 200, 400, ...), и уровень персонажа идёт за лучшим навыком.
+    post(HTTP_PORT, "/admin/do",
+         {"kind": "xp", "char_id": str(_char_id), "skill": "1", "xp": "1000"},
+         cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    check("опыт стрельбе не в игре: 100+200+400 на три уровня, 300 из 800 сверху",
+          (skill_row(_char_id, 1), row(_char_id)["level"], last_result("xp")),
+          ((3, 300, 800), 3, "+1000 опыта: стрельба 3 (300/800) (не в игре)"))
     # Вещь -- такой же, как выдаёт Session.admin_give в игре (new_fields):
     # раньше строка ложилась голой, ствол 0 из 0 -- NaN у клиента, мимо
     # окна ремонта; дробовик -- на выключенном режиме огня, лекарство без
@@ -397,6 +427,21 @@ try:
     time.sleep(1.5)
     check("после выхода игрока деньги на месте",
           row(_char_id)["afro"], was + 300)
+
+    cl = Client()
+    cl.enter()
+    post(HTTP_PORT, "/admin/do",
+         {"kind": "xp", "char_id": str(_char_id), "skill": "1", "xp": "500"},
+         cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    frames = cl.frames(1.0)
+    check("опыт в игре: карточке пришли навык и уровень, без перезахода",
+          (last_result("xp"), any(f.startswith("rp_info") for f in frames),
+           any(f.startswith("userInfo_Player") and "lvl=4;" in f for f in frames)),
+          ("+500 опыта: стрельба 4 (0/1600)", True, True))
+    cl.close()
+    time.sleep(1.5)
+    check("после выхода игрока опыт на месте", skill_row(_char_id, 1), (4, 0, 1600))
 
     print("\nтранспорт")
     cl = Client()

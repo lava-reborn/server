@@ -315,6 +315,15 @@ ADMIN_CHAR = '''<div class=card>
  <button type=submit>Выдать</button>
 </div></form>
 <form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=xp><input type=hidden name=char_id value={char_id}>
+ <input type=hidden name=q value="{name}">
+ <label>Опыт</label>
+ <select name=skill><option value=0>ближний бой</option><option value=1>стрельба</option>
+ <option value=2>медицина</option><option value=3>промышленность</option></select>
+ <input type=number name=xp min=1 placeholder="сколько" title="очков опыта навыку, без премиума и без специализации">
+ <button type=submit>Начислить</button>
+</div></form>
+<form class=act method=post action="/admin/do"><div class=row>
  <input type=hidden name=kind value=transport><input type=hidden name=char_id value={char_id}>
  <input type=hidden name=q value="{name}">
  <label>Транспорт</label>
@@ -1018,6 +1027,13 @@ class Handler(BaseHTTPRequestHandler):
                                  type_id=num("type_id"),
                                  count=num("count", 1) or 1)
                 note = "Предмет поставлен в очередь"
+            elif kind == "xp":
+                skill, xp = num("skill", -1), num("xp")
+                if not 0 <= skill <= 3 or xp <= 0:
+                    note = "Опыт: навык 0-3 и число больше нуля"
+                else:
+                    store.admin_push(who, "xp", char_id=char_id, skill=skill, xp=xp)
+                    note = "Опыт поставлен в очередь"
             elif kind == "transport":
                 store.admin_push(who, "transport", char_id=char_id,
                                  type_id=num("type_id"),
