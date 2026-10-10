@@ -146,7 +146,7 @@ class Parties:
         free, and not already asked."""
         guest = self.directory.by_pid(guest_pid) if rooms.is_player_id(guest_pid) else None
         party = self.party_of(sess)
-        if (not sess.char_id or guest is None or guest is sess
+        if (not sess.char_id or guest is None or guest is sess or guest.closed
                 or not guest.char_id or guest.char_id in self.by_char
                 or guest.char_id in self.invites
                 or (party is not None and (party.leader != sess.char_id

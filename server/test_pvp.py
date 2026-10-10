@@ -183,6 +183,9 @@ DROP_TYPE = [t for t in sorted(items.catalogue())
 # --- the server ------------------------------------------------------------------
 # Action points refill at once, so no blow below waits on the bar.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
+           # Offline fixture edits seed the victim's HP between sessions.
+           # Body persistence and PvP death are in test_combat_linger.
+           LAVA_COMBAT_LINGER="0",
            LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
            LAVA_AP_REGEN="25",
            # Every thing that may fall off the quarry does, so the bag the

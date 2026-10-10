@@ -1054,7 +1054,30 @@ class Fighter:
         rc.player_entered(self)
         # A full replacement of the list (EffectManager.e_list); empty is a
         # list too, and mobi_id=0 resolves to the gamer (PlayerRegister).
+        self.resend_room()
+
+    def resend_room(self, resumed=False):
+        """Restore a client's view without resetting the ongoing fight."""
+        rc = self.rc
+        if rc is None:
+            return
         self.sess.send("e_list", mobi_id=0, effects=[])
+        if resumed:
+            self.sess.send("lch", ws=int(rc.room.ws))
+            self.sess.send("c_ap", ap=int(self.ap))
+            for foe in self.foes:
+                if rc.actor(foe) is not None:
+                    self.sess.send("lch", enemy=foe)
+            for mob in rc.mobs.values():
+                if mob.target is self:
+                    self.sess.send("lch", enemy=mob.eid)
+            for other in rc.fighters():
+                if other.preparing():
+                    other.show_prepare(other.interception.until - now(), viewer=self.sess)
+            # Death while the new client was loading may precede its
+            # Location; persInfo was still alive at login.
+            if self.dead:
+                self.sess.send("lch", dead=0)
         # Corpses, both ways round. Someone who logged out dead walks in as
         # one, and the figure the room has just built for them has to fall
         # over (DisplayLocScene.dead); anyone already lying here has to be a
@@ -2765,6 +2788,8 @@ class RoomCombat:
             victim.die(killer)
             if killer is not None and killer.is_player and killer is not victim:
                 killer.pvp_kill(victim)
+            if getattr(victim.sess, "linger", None) is not None:
+                victim.sess.expire_linger()
             # die() has let go every creature that was after the dead.
             self.calm()
             return

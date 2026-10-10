@@ -840,6 +840,9 @@ check("  ..so a thousand rounds take about the P99's 500",
 # the admin panel; this suite uses them to set a scene, so it asks
 # for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
+           # Scene changes edit HP, skills and equipment while logged out.
+           # The persistent body lifecycle is tested in test_combat_linger.
+           LAVA_COMBAT_LINGER="0",
            LAVA_AP_REGEN="25", LAVA_RESPAWN="4",
            LAVA_SEED="7", LAVA_START_AFRO="20000",
            # A point a round, so that one shot is one point the check can see.
