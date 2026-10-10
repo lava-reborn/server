@@ -18,7 +18,8 @@ while no game is running, carried out when the queue is next read.
 
 Runs on Postgres too, when LAVA_DB_URL names a throwaway database: every
 name is unique per run, and nothing is dropped. The panel and the tool
-against a running server over sockets: test_clan_admin_wire.py.
+against a running server over sockets: test_clan_admin_wire.py. The
+warehouses' hold and release (holdings.py): test_holdings.py.
 """
 import asyncio
 import contextlib
@@ -196,7 +197,8 @@ async def main():
     # --- the order itself ---------------------------------------------------------------
     check("an op nobody knows: said so, with the ones there are",
           result("fly", clan=wolves),
-          "неизвестная операция с кланом: fly (есть: rename, disband, head, treasury, kick)")
+          "неизвестная операция с кланом: fly (есть: rename, disband, head, treasury, kick,"
+          " hold, release)")
     check("a clan that is not: said so", result("treasury", clan=999999, afro=5),
           "клана 999999 нет")
     check("a row with no args_json to read",

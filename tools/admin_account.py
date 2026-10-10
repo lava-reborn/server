@@ -37,6 +37,12 @@ Clans are looked at here and changed through the game (see "clans" below):
     python3 tools/admin_account.py clan-treasury Волки --afro -500
     python3 tools/admin_account.py clan-disband Волки --payout Боб --yes
 
+And the warehouses clans hold (server/holdings.py), the same way:
+
+    python3 tools/admin_account.py holdings
+    python3 tools/admin_account.py clan-hold Волки --site wh_sever
+    python3 tools/admin_account.py clan-release Волки --site wh_sever
+
 Where the data lives is the environment's business, exactly as it is for the
 server: LAVA_DB_URL picks Postgres, its absence picks the SQLite file (--db,
 or data/lava.db next to this checkout).
@@ -442,8 +448,9 @@ def cmd_passwd(db, args):
 # --- clans ------------------------------------------------------------------
 #
 # This tool only LOOKS at a clan by itself. A change -- rename, disband, a new
-# head, the treasury, a kick -- is queued as an admin_actions row of kind
-# 'clan', the same the panel writes, and the game server carries it out
+# head, the treasury, a kick, a warehouse held or released -- is queued as an
+# admin_actions row of kind 'clan', the same the panel writes, and the game
+# server carries it out
 # (server/clan_admin.py). Two reasons, the panel's own. A member who is
 # online has a client that was told his clan, his rights and his roster, and
 # a Character whose purse Character.save writes back at logout: only the
@@ -460,7 +467,12 @@ def cmd_passwd(db, args):
 # so and exits 2, as it does when the answer does not come in --wait.
 
 CLAN_OPS = {"clan-rename": "rename", "clan-disband": "disband", "clan-head": "head",
-            "clan-treasury": "treasury", "clan-kick": "kick"}
+            "clan-treasury": "treasury", "clan-kick": "kick", "clan-hold": "hold",
+            "clan-release": "release"}
+# The warehouses a clan can hold, read from the file the game reads
+# (server/holdings.py), not through the game's module: the tool imports none
+# of the game's content.
+HOLDINGS = os.path.join(ROOT, "data", "holdings.json")
 # A heartbeat older than this is a game that is not running: the panel's
 # own threshold.
 BEAT_FRESH = 15
@@ -601,12 +613,57 @@ def cmd_clan(db, args):
     return 0
 
 
+def holding_sites():
+    """key -> title of every site data/holdings.json lists, in key order."""
+    try:
+        with open(HOLDINGS, encoding="utf-8") as fh:
+            sites = json.load(fh).get("sites") or {}
+    except OSError:
+        return {}
+    return {k: v.get("title", k) for k, v in sorted(sites.items()) if not k.startswith("_")}
+
+
+def cmd_holdings(db, args):
+    """Every site, who holds it and since when, and its last changes."""
+    sites = holding_sites()
+    held = {}
+    if has_table(db, "clan_holdings"):
+        for row in db.execute("SELECT h.site, h.clan_id, k.name, h.since FROM clan_holdings h"
+                              " JOIN clans k ON k.id = h.clan_id").fetchall():
+            held[row["site"]] = row
+    print("%-10s %-30s %-30s %s" % ("site", "warehouse", "held by", "since"))
+    for key, title in sites.items():
+        row = held.get(key)
+        print("%-10s %-30s %-30s %s"
+              % (key, title, "%s (id %s)" % (row["name"], row["clan_id"]) if row else "nobody",
+                 time.strftime("%Y-%m-%d %H:%M", time.localtime(float(row["since"])))
+                 if row else "-"))
+    if not sites:
+        print("(no data/holdings.json)")
+    if has_table(db, "clan_holding_log"):
+        rows = db.execute("SELECT * FROM clan_holding_log ORDER BY id DESC LIMIT 20").fetchall()
+        print("\nthe last changes, newest first:")
+        for row in rows:
+            print("  %s  %-10s %-8s %s -> %s%s"
+                  % (time.strftime("%Y-%m-%d %H:%M", time.localtime(float(row["at"]))),
+                     row["site"], row["how"], row["prev"] or "-", row["clan_id"] or "-",
+                     "  char %s" % row["by_char"] if row["by_char"] else ""))
+        if not rows:
+            print("  (none)")
+    return 0
+
+
 def cmd_clan_op(db, args):
     op = CLAN_OPS[args.command]
     clan = find_clan(db, args.login)
     if clan is None:
         sys.exit("no clan named or numbered %r" % args.login)
     payload = {"op": op, "clan": int(clan["id"])}
+    if op in ("hold", "release"):
+        sites = holding_sites()
+        if args.site not in sites:
+            sys.exit("%s needs --site, one of: %s" % (args.command, ", ".join(sites) or "none"))
+        payload["site"] = args.site
     if op == "rename":
         if not args.name:
             sys.exit("clan-rename needs --name")
@@ -642,10 +699,11 @@ def cmd_clan_op(db, args):
 
 
 COMMANDS = {"list": cmd_list, "create": cmd_create, "delete": cmd_delete,
-            "passwd": cmd_passwd, "clans": cmd_clans, "clan": cmd_clan}
+            "passwd": cmd_passwd, "clans": cmd_clans, "clan": cmd_clan,
+            "holdings": cmd_holdings}
 COMMANDS.update({name: cmd_clan_op for name in CLAN_OPS})
 # The commands that name nothing.
-BARE = ("list", "clans")
+BARE = ("list", "clans", "holdings")
 
 
 def main(argv=None):
@@ -668,6 +726,8 @@ def main(argv=None):
     parser.add_argument("--payout", help="clan-disband: who gets the treasury (the head"
                                          " if left out), by name or id")
     parser.add_argument("--afro", type=int, help="clan-treasury: afro in, or out if negative")
+    parser.add_argument("--site", help="clan-hold, clan-release: the warehouse, a key of"
+                                       " data/holdings.json (wh_sever, wh_vostok, wh_ug)")
     parser.add_argument("--admin", default="console",
                         help="clan-*: the name the queue's log shows (default console)")
     parser.add_argument("--wait", type=float, default=15.0,

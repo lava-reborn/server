@@ -382,6 +382,33 @@ CREATE TABLE IF NOT EXISTS boss_kills (
     spot TEXT PRIMARY KEY,
     slot REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS clan_holdings (
+    -- Who holds a capturable site now (server/holdings.py): one row a held
+    -- site, none for a site nobody holds. site is a key of data/
+    -- holdings.json. Written by the kill of the site's boss and by the
+    -- admin's order (Store.holding_set, holding_clear); a disband takes the
+    -- clan's rows with it (clan_drop). Read for every flag, box and repair:
+    -- the game caches none of it, as it caches no clan.
+    site     TEXT    PRIMARY KEY,
+    clan_id  INTEGER NOT NULL,     -- clans.id
+    since    REAL    NOT NULL,     -- the epoch second of the capture or the order
+    by_char  INTEGER,              -- the winning clan's member credited; NULL for the admin
+    slot     REAL                  -- the boss window it was taken in (bosses.slot)
+);
+CREATE TABLE IF NOT EXISTS clan_holding_log (
+    -- Every outcome at a site (holdings.HOW): a capture, a defence, a kill
+    -- that took nothing ('none'), the admin's order, a disband -- what the
+    -- owner reads in place of lines in the chat, and the site's history.
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    at       REAL    NOT NULL,
+    site     TEXT    NOT NULL,
+    clan_id  INTEGER,              -- the holder after it, NULL when nobody
+    prev     INTEGER,              -- the holder before it, NULL when nobody
+    how      TEXT    NOT NULL,
+    by_char  INTEGER,
+    slot     REAL
+);
+CREATE INDEX IF NOT EXISTS clan_holding_log_by_site ON clan_holding_log (site, at);
 CREATE TABLE IF NOT EXISTS email_tokens (
     -- The links the mail sends (server/email_flow.py): one row per letter
     -- that carries one. kind 'confirm' proves an address belongs to the
@@ -400,6 +427,28 @@ CREATE TABLE IF NOT EXISTS email_tokens (
     used       INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS email_tokens_by_account ON email_tokens (account_id);
+CREATE TABLE IF NOT EXISTS site_orders (
+    -- A stance step ordered on the site (lava-site api/db.py queue_stance),
+    -- carried out by the game (server/site_orders.py). The site may insert
+    -- here and read; it can do nothing else to the game's tables. A table
+    -- of its own, never admin_actions: that queue carries every privileged
+    -- order, and a row here can ask for nothing but one step a character
+    -- could make in the game himself, every column a number but the login.
+    -- The game marks a row done in the transaction that makes the step
+    -- (Store.clan_stance_step), so a step is made once or not at all.
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    made_at   REAL    NOT NULL,   -- the site's clock; site and game share a host
+    login     TEXT    NOT NULL,   -- the signed-in account
+    char_id   INTEGER NOT NULL,
+    clan_id   INTEGER NOT NULL,   -- the clan the site saw; the game derives its own
+    other     INTEGER NOT NULL,
+    stat_from INTEGER NOT NULL,   -- "from" is a reserved word
+    dir       INTEGER NOT NULL,
+    done_at   REAL,               -- NULL while it waits
+    code      TEXT,               -- OK, R1..R7 (site_orders.TEXTS)
+    result    TEXT                -- the words the site shows the player
+);
+CREATE INDEX IF NOT EXISTS site_orders_pending ON site_orders (done_at, id);
 """
 
 # The sources a row of the money ledger names (money_ledger.source). A
@@ -498,12 +547,13 @@ def clan_book(db, clan_id, source, afro, char_id=0, ref=0, when=None):
 
 def clan_drop(db, clan_id, char_id=0, when=None):
     """Delete a clan with no commit: its row, its members, its relations
-    both ways. Returns (name, treasury) as the row held them, or None when
-    there was no such clan. The row goes first, by a DELETE that names it,
-    so of two processes disbanding at once one gets the treasury and the
-    other None. What the treasury held is booked as a 'disband' row; where
-    it goes is the caller's (Store.clan_disband pays it into a purse,
-    clan_hand_over lets it go with a deleted character)."""
+    both ways, the sites it held (server/holdings.py: a 'disband' row in
+    clan_holding_log each). Returns (name, treasury) as the row held them,
+    or None when there was no such clan. The row goes first, by a DELETE
+    that names it, so of two processes disbanding at once one gets the
+    treasury and the other None. What the treasury held is booked as a
+    'disband' row; where it goes is the caller's (Store.clan_disband pays it
+    into a purse, clan_hand_over lets it go with a deleted character)."""
     rows = db.execute("DELETE FROM clans WHERE id = ? RETURNING name, afro",
                       (int(clan_id),)).fetchall()
     if not rows:
@@ -513,6 +563,14 @@ def clan_drop(db, clan_id, char_id=0, when=None):
     db.execute("DELETE FROM clan_relations WHERE clan_id = ? OR other = ?",
                (int(clan_id), int(clan_id)))
     clan_book(db, clan_id, "disband", -afro, char_id, 0, when)
+    # A database no server of today has opened yet has no holdings to drop
+    # (tools/admin_account.py never builds the schema; has_table there).
+    if db.columns("clan_holdings"):
+        at = float(when or time.time())
+        for r in db.execute("DELETE FROM clan_holdings WHERE clan_id = ? RETURNING site",
+                            (int(clan_id),)).fetchall():
+            db.execute("INSERT INTO clan_holding_log (at, site, clan_id, prev, how)"
+                       " VALUES (?, ?, NULL, ?, 'disband')", (at, r["site"], int(clan_id)))
     return rows[0]["name"], afro
 
 
@@ -649,6 +707,11 @@ class _Stale(Exception):
     def __init__(self, uniq):
         super().__init__(uniq)
         self.uniq = uniq
+
+
+class _Answered(Exception):
+    """A site order is no longer waiting (site_orders.py): Store.
+    clan_stance_step rolls its step back on it."""
 
 
 def credential(login, password):
@@ -1364,6 +1427,34 @@ class Store:
             "SELECT * FROM admin_actions ORDER BY id DESC LIMIT ?",
             (limit,)).fetchall()
 
+    # --- stance steps ordered on the site (server/site_orders.py) ------------
+    # Not the admin queue: the site writes these rows with a database role
+    # that may insert here and nothing else, and the game carries them out
+    # with a handler that knows nothing but a stance step.
+    def site_pending(self, limit=20):
+        """The site's orders still waiting, oldest first."""
+        return self.db.execute(
+            "SELECT * FROM site_orders WHERE done_at IS NULL ORDER BY id LIMIT ?",
+            (int(limit),)).fetchall()
+
+    def site_done(self, order_id, code, result, when=None):
+        """An order answered without a step (a refusal): its code and words.
+        False when it was answered already -- a step is marked done by
+        clan_stance_step itself, and nothing here writes over it."""
+        with self.db:
+            hit = self.db.execute(
+                "UPDATE site_orders SET done_at = ?, code = ?, result = ?"
+                " WHERE id = ? AND done_at IS NULL",
+                (float(when if when is not None else time.time()), str(code), str(result),
+                 int(order_id))).rowcount
+        return hit == 1
+
+    def site_order(self, order_id):
+        """One order as it stands now, or None."""
+        row = self.db.execute("SELECT * FROM site_orders WHERE id = ?",
+                              (int(order_id),)).fetchone()
+        return dict(row) if row else None
+
     # --- characters ------------------------------------------------------
     def characters(self, account_id):
         return self.db.execute(
@@ -1652,6 +1743,94 @@ class Store:
             % ", ".join("?" * len(spots)), spots).fetchall()
         return {r["spot"]: float(r["slot"]) for r in rows}
 
+    # --- sites clans hold (server/holdings.py; clan_holdings, clan_holding_log) ---------
+    _HOLDING = ("SELECT h.site, h.clan_id, k.name, h.since, h.by_char, h.slot"
+                " FROM clan_holdings h JOIN clans k ON k.id = h.clan_id")
+
+    def holding(self, site):
+        """Who holds the site: {site, clan_id, name, since, by_char, slot},
+        or None. A row whose clan is gone is nobody's (the JOIN leaves it
+        out), as a membership's is (clan_member)."""
+        row = self.db.execute(self._HOLDING + " WHERE h.site = ?", (str(site),)).fetchone()
+        return dict(row) if row else None
+
+    def holdings(self):
+        """Every site held, by its key."""
+        return [dict(r) for r in self.db.execute(self._HOLDING + " ORDER BY h.site")]
+
+    def holding_set(self, site, clan_id, how, by_char=None, slot=None, when=None):
+        """The clan holds the site from now (a capture, the admin's order), in
+        one transaction with its row in the log. Returns (the clan that held
+        it before or None, "ok" | "same" | "gone"): "same" when it already
+        holds it -- nothing written, its since unchanged, so an order run
+        twice is one -- and "gone" when the clan is no more by the time of
+        the write (the INSERT names it: a disband a moment earlier, from
+        another process too). INSERT ... SELECT, since db.replace cannot
+        carry the condition; SQLite reads ON CONFLICT after a SELECT only
+        when the SELECT has its WHERE, which this one has."""
+        when = float(when or time.time())
+        with self.db:
+            row = self.db.execute(
+                "SELECT h.clan_id FROM clan_holdings h JOIN clans k ON k.id = h.clan_id"
+                " WHERE h.site = ?", (str(site),)).fetchone()
+            prev = int(row["clan_id"]) if row else None
+            if prev == int(clan_id):
+                return prev, "same"
+            hit = self.db.execute(
+                "INSERT INTO clan_holdings (site, clan_id, since, by_char, slot)"
+                " SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM clans WHERE id = ?)"
+                " ON CONFLICT (site) DO UPDATE SET clan_id = EXCLUDED.clan_id,"
+                " since = EXCLUDED.since, by_char = EXCLUDED.by_char, slot = EXCLUDED.slot",
+                (str(site), int(clan_id), when, by_char, slot, int(clan_id))).rowcount
+            if hit != 1:
+                return prev, "gone"
+            self._holding_log(site, how, int(clan_id), prev, by_char, slot, when)
+        return prev, "ok"
+
+    def holding_clear(self, site, how, clan_id=None, when=None):
+        """Nobody holds the site from now -- only if clan_id holds it, when
+        given, so a stale or repeated order clears nothing -- in one
+        transaction with its row in the log. Returns the clan that held it,
+        or None when nothing was cleared."""
+        when = float(when or time.time())
+        cond, args = ("", (str(site),)) if clan_id is None else \
+            (" AND clan_id = ?", (str(site), int(clan_id)))
+        with self.db:
+            rows = self.db.execute("DELETE FROM clan_holdings WHERE site = ?" + cond
+                                   + " RETURNING clan_id", args).fetchall()
+            if not rows:
+                return None
+            prev = int(rows[0]["clan_id"])
+            self._holding_log(site, how, None, prev, None, None, when)
+        return prev
+
+    def holding_logged(self, site, how, clan_id, by_char=None, slot=None, when=None):
+        """A row in the log alone: a defence, a kill that took nothing. The
+        holder stands as it was, before and after."""
+        with self.db:
+            self._holding_log(site, how, clan_id, clan_id, by_char, slot,
+                              float(when or time.time()))
+
+    def _holding_log(self, site, how, clan_id, prev, by_char, slot, when):
+        self.db.execute("INSERT INTO clan_holding_log (at, site, clan_id, prev, how, by_char,"
+                        " slot) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (float(when), str(site), clan_id, prev, str(how), by_char, slot))
+
+    def holding_log(self, site=None, limit=50):
+        """The log, newest first; of one site when given."""
+        where, args = ("", ()) if site is None else (" WHERE site = ?", (str(site),))
+        return [dict(r) for r in self.db.execute(
+            "SELECT * FROM clan_holding_log" + where + " ORDER BY id DESC LIMIT ?",
+            args + (int(limit),))]
+
+    def holdings_lost(self, clan_id):
+        """The sites a disband took from the clan (clan_drop's 'disband'
+        rows): the ids of clans are never handed out again, so these are
+        that one disband's."""
+        return [r["site"] for r in self.db.execute(
+            "SELECT DISTINCT site FROM clan_holding_log WHERE prev = ? AND how = 'disband'"
+            " ORDER BY site", (int(clan_id),))]
+
     def add_money(self, char_id, afro=0, gold=0):
         """Credit (or, negative, debit) the purse; returns the new (afro, gold)."""
         have = self.money(char_id)
@@ -1805,6 +1984,19 @@ class Store:
             "SELECT COUNT(*) c FROM char_quests_done WHERE char_id = ?"
             " AND done_at >= ? AND type IN (%s)" % ", ".join("?" * len(types)),
             (char_id, int(since), *types)).fetchone()["c"]
+
+    def account_quests_done_since(self, account_id, since, types):
+        """Hand-ins of these types since a moment by any character of the
+        account: a warehouse's box pays one character of an account a day
+        (server/holdings.py box_refusal), where per_day counts one."""
+        types = sorted({int(t) for t in types})
+        if not types:
+            return 0
+        return self.db.execute(
+            "SELECT COUNT(*) c FROM char_quests_done d JOIN characters c ON c.id = d.char_id"
+            " WHERE c.account_id = ? AND d.done_at >= ? AND d.type IN (%s)"
+            % ", ".join("?" * len(types)),
+            (int(account_id), int(since), *types)).fetchone()["c"]
 
     # --- mail ------------------------------------------------------------
     # Rows are returned as dicts, like items: mail.py reads and rewrites
@@ -2560,7 +2752,8 @@ class Store:
                         conflict=("clan_id", "other"))
         self.db.commit()
 
-    def clan_stance_step(self, clan_id, other, old, new, afro, char_id, need=0, when=None):
+    def clan_stance_step(self, clan_id, other, old, new, afro, char_id, need=0, when=None,
+                         order=None):
         """clan_id's stance toward other moved from old to new and paid for
         out of its treasury (clan_diplomacy.py), in one transaction: a price
         taken with no stance to show for it, or a stance got for nothing,
@@ -2571,26 +2764,46 @@ class Store:
         holding every bit of need -- then the stance and the journal's
         'diplomacy' row, a sink (ref: the other clan). Returns the new
         balance, or None when that UPDATE touched nothing, and then nothing
-        at all is written."""
+        at all is written.
+
+        order is (id, words) when the step was ordered on the site
+        (site_orders.py): the order is marked done, code OK and the words
+        for the site to show, in the same transaction, and only if it was
+        still waiting -- else the step is rolled back and None returned. So
+        a step and its order's "done" are written together or not at all,
+        and an order is carried out once, whatever stops the game when."""
         when = int(when or time.time())
         afro = abs(int(afro))
-        with self.db:
-            hit = self.db.execute(
-                "UPDATE clans SET afro = afro - ? WHERE id = ? AND afro >= ?"
-                " AND EXISTS (SELECT 1 FROM clans WHERE id = ?)"
-                " AND COALESCE((SELECT stat FROM clan_relations WHERE clan_id = ?"
-                " AND other = ?), 0) = ?"
-                " AND EXISTS (SELECT 1 FROM clan_members WHERE char_id = ?"
-                " AND clan_id = ? AND (perm & ?) = ?)",
-                (afro, int(clan_id), afro, int(other), int(clan_id), int(other), int(old),
-                 int(char_id), int(clan_id), int(need), int(need))).rowcount
-            if hit != 1:
-                return None
-            self.db.replace("clan_relations", ("clan_id", "other", "stat", "changed_at"),
-                            [(int(clan_id), int(other), int(new), when)],
-                            conflict=("clan_id", "other"))
-            clan_book(self.db, clan_id, "diplomacy", -afro, char_id, other, when)
-            return self.clan_treasury(clan_id)
+        try:
+            with self.db:
+                hit = self.db.execute(
+                    "UPDATE clans SET afro = afro - ? WHERE id = ? AND afro >= ?"
+                    " AND EXISTS (SELECT 1 FROM clans WHERE id = ?)"
+                    " AND COALESCE((SELECT stat FROM clan_relations WHERE clan_id = ?"
+                    " AND other = ?), 0) = ?"
+                    " AND EXISTS (SELECT 1 FROM clan_members WHERE char_id = ?"
+                    " AND clan_id = ? AND (perm & ?) = ?)",
+                    (afro, int(clan_id), afro, int(other), int(clan_id), int(other), int(old),
+                     int(char_id), int(clan_id), int(need), int(need))).rowcount
+                if hit != 1:
+                    return None
+                self.db.replace("clan_relations", ("clan_id", "other", "stat", "changed_at"),
+                                [(int(clan_id), int(other), int(new), when)],
+                                conflict=("clan_id", "other"))
+                clan_book(self.db, clan_id, "diplomacy", -afro, char_id, other, when)
+                if order is not None:
+                    order_id, words = order
+                    done = self.db.execute(
+                        "UPDATE site_orders SET done_at = ?, code = 'OK', result = ?"
+                        " WHERE id = ? AND done_at IS NULL",
+                        (float(when), str(words), int(order_id))).rowcount
+                    if done != 1:
+                        # Raised inside the transaction: the price, the
+                        # stance and the journal's row go back with it.
+                        raise _Answered(order_id)
+                return self.clan_treasury(clan_id)
+        except _Answered:
+            return None
 
     def clan_ledger_rows(self, clan_id, limit=50):
         """A treasury's journal, newest first."""

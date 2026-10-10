@@ -611,11 +611,14 @@ async def _rooms():
         rc6.keep_hours()
         check("at the station Хассир, whose ride keeps the gates' hours, is shown again at 22:45,"
               " and nobody else", [station.npcs[i].type_id for i in news(seat6.take())], [HASSIR])
-        check("  ..the marked are Хассир and the two guards alone, by the gates' window: nobody in"
-              " the blocks (Томас's way and the medics' rows are no window's)",
+        check("  ..the marked are Хассир and the two guards by the gates' window, and the"
+              " warehouses' three money boxes by their share-out's (wh_box, server/"
+              "holdings.py): nobody in the blocks (Томас's way and the medics' rows are no"
+              " window's)",
               {t: [w.name for w in ws] for t, ws in SCHEDULE.marked().items()},
               {HASSIR: ["prison_wh_gates"], WEST_GUARD: ["prison_wh_gates"],
-               SOUTH_GUARD: ["prison_wh_gates"]})
+               SOUTH_GUARD: ["prison_wh_gates"], 6824: ["wh_box"], 6825: ["wh_box"],
+               6826: ["wh_box"]})
     finally:
         bosses.clock = real_clock
         store.close()

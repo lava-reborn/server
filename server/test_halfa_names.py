@@ -162,14 +162,15 @@ PEOPLE.update({t: "Берт Гаммер" for t in range(2089, 2096)})     # one
 # The rest of the town, each by his family's own run of rows: the woman at the
 # pier Мауризио waits for, the resistance camp's spy and exchanger, the oasis'
 # gunsmith, the masters of the mountain paths and the recycling plant's
-# workshops; the warehouses' flag by the original's word (DESIGNED).
+# workshops; the warehouses' flag by its own caption, the original's 46362
+# (the holding clan's name goes under it, server/holdings.py).
 NEIGHBOURS = {
     6891: "Лаура Принсипе", 6960: "Лазутчик<br>Северный Альянс",
     7548: "Жозеф де Гобино<br>Оружейный механик<br>С Веселого Праздника",
     7021: "Корщунд<br>Аццкий обмен", 238: "Оружейник<br>Винтовки",
     239: "Оружейник<br>Дробовики", 242: "Оружейник<br>Пистолеты",
     243: "Оружейник<br>Пистолет-пулеметы", 1371: "Производство пуль",
-    1375: "Производство пороха", 1379: "Производство гильз", 1011: "Флаг",
+    1375: "Производство пороха", 1379: "Производство гильз", 1011: "Складом владеют:",
     # The craftsmen's quarter 447 the weapon craft's way 414 led into: its
     # trader by the first [Q] master's row (medium, the manual file says why),
     # and the exchanger the craft makes its [Q] upgrader by his own.

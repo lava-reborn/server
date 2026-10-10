@@ -10,6 +10,8 @@ a kick from above are the admin's remedies.
     {"op": "head",     "clan": C, "char": P}
     {"op": "treasury", "clan": C, "afro": <signed afro>}
     {"op": "kick",     "clan": C, "char": P}
+    {"op": "hold",     "clan": C, "site": "<site>"}
+    {"op": "release",  "clan": C, "site": "<site>"}
 
 C is a clan's id or its name (looked up as its skeleton, clans.name_key),
 P a character's id or name. The rows are written by the panel
@@ -58,6 +60,14 @@ and acts the same on a member who plays and on one who does not:
   kick      Clans.remove_member: the pushes of a kick without a kicker --
             act=2 to the roster holders, the member put out and untagged.
             Not the head: hand the lead on first, or disband.
+  hold      a warehouse (holdings.py; site a key of data/holdings.json,
+            "wh_sever") held by the clan from now, as a capture would hand
+            it over, written 'admin' in clan_holding_log. Whoever stands in
+            its room is sent the flag again, and its box is marked afresh.
+            The clan holding it already: nothing written, its since kept,
+            so an order run twice is one.
+  release   the warehouse held by nobody -- only if this clan holds it now,
+            so a stale or repeated order clears nothing; the same pushes.
 
 apply(row, clans) -> the line the panel's log and the tool print. It never
 raises for a bad order; anything that does is the queue's «ошибка: ...».
@@ -67,11 +77,12 @@ import logging
 
 import clan_treasury
 import clans as clanlib
+import holdings
 import storage
 
 log = logging.getLogger("lava")
 
-OPS = ("rename", "disband", "head", "treasury", "kick")
+OPS = ("rename", "disband", "head", "treasury", "kick", "hold", "release")
 
 # clans.afro is an INTEGER, 32 bits in Postgres: a treasury pushed past it
 # would fail the UPDATE there and wrap nowhere in SQLite.
@@ -246,5 +257,38 @@ def _kick(clans, clan, args, _action):
         else "не в игре: увидит при входе")
 
 
+def _site(args):
+    """The warehouse an order names (holdings.sites), or None."""
+    return holdings.site(args.get("site"))
+
+
+def _no_site(args):
+    return "склада %s нет (есть: %s)" % (_shown(args.get("site")),
+                                        ", ".join(sorted(holdings.sites())))
+
+
+def _hold(clans, clan, args, _action):
+    site = _site(args)
+    if site is None:
+        return _no_site(args)
+    before, status = holdings.order_hold(clans.store, clans.directory, site, clan["id"])
+    if status == "same":
+        return "склад «%s» уже за кланом «%s»" % (site.title, clan["name"])
+    if status == "gone":
+        return "клана «%s» больше нет" % clan["name"]
+    return "склад «%s» теперь за кланом «%s»%s" % (
+        site.title, clan["name"],
+        " (был за кланом «%s»)" % before["name"] if before is not None else " (был ничей)")
+
+
+def _release(clans, clan, args, _action):
+    site = _site(args)
+    if site is None:
+        return _no_site(args)
+    if not holdings.order_release(clans.store, clans.directory, site, clan["id"]):
+        return "склад «%s» уже не за кланом «%s»" % (site.title, clan["name"])
+    return "склад «%s» больше не за кланом «%s»: теперь он ничей" % (site.title, clan["name"])
+
+
 _HANDLERS = {"rename": _rename, "disband": _disband, "head": _head,
-             "treasury": _treasury, "kick": _kick}
+             "treasury": _treasury, "kick": _kick, "hold": _hold, "release": _release}

@@ -79,6 +79,7 @@ import unicodedata
 import accounts
 import clan_diplomacy
 import clan_treasury
+import holdings
 import mail
 import storage
 from protocol import RawList, Str
@@ -903,8 +904,10 @@ class Clans:
 
     def disbanded(self, clan_id, members):
         """After a clan's rows are gone: each of its members online (the ids
-        given) is put out and untagged, invitations into it are void, and
-        every other clan's standings lose it."""
+        given) is put out and untagged, invitations into it are void, every
+        other clan's standings lose it, and the warehouses it held -- dropped
+        with it (accounts.clan_drop) -- show nobody on their flags and offer
+        their boxes to nobody (holdings.disbanded)."""
         for char_id in members:
             sess = self.session_of(char_id)
             if sess is not None:
@@ -914,6 +917,7 @@ class Clans:
             if inv.clan_id == int(clan_id):
                 self.drop_invite(target, "the clan is disbanded")
         self.refresh_standings(skip_clan=clan_id)
+        holdings.disbanded(self.store, self.directory, clan_id)
 
     # --- the clan's chat -----------------------------------------------------------
     def chat(self, sess, raw):

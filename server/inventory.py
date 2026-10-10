@@ -73,6 +73,7 @@ import math
 import os
 import random
 
+import holdings
 import items
 import pace
 import progression
@@ -1848,8 +1849,10 @@ class Inventory:
         the bag is mended by the same rule if a frame names it. Only a
         trader who mends opens the window (userInfo_Trader can_repair): a
         trophy registrar who keeps no stall is refused, as the client would
-        refuse him. A worn piece of a set mended from broken counts again at
-        once: ss_upd is one of server.GEAR_COMMANDS.
+        refuse him, and so is a warehouse's flag in its room to anybody but
+        the clan holding it (holdings.may_repair). A worn piece of a set
+        mended from broken counts again at once: ss_upd is one of
+        server.GEAR_COMMANDS.
 
         A press with nothing to do -- a repair of a whole thing, a restore
         of one as new -- is answered 0 and charged nothing. The window never
@@ -1865,6 +1868,13 @@ class Inventory:
         if trophies.is_registrar(trader) and not trophies.keeps_stall(trader):
             # userInfo_Trader tells the client this one mends nothing
             # (server.py, can_repair=0), so the window never opens here.
+            self.ack(RES_REFUSED)
+            return
+        room = getattr(self.sess, "room", None)
+        if not holdings.may_repair(self.store, room.loc.id if room is not None else None,
+                                   trader, self.char_id):
+            # A warehouse's flag in its room mends for the clan holding it
+            # alone (holdings.py); everybody else was told can_repair=0.
             self.ack(RES_REFUSED)
             return
         si = items.params_of(row["type_id"]) or {}

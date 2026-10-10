@@ -385,6 +385,72 @@
       "why": "RECOVERED texts (texts.xml 61466 name, 61467 start; the notfinish and finish are «Камни для фундамента»'s, 61464/61465, stored once) and pay («За полированные камни я готов платить тебе 360 афро»), DESIGNED giver and cap. Варон (1005) at the building site 165, as «Камни для фундамента» (322): ten «Каменный блок» (2944) and one «Полировочная смесь» (2945, Большой Сэм's 321). A service outside the daily limit, three times a day (per_day 3, DESIGNED): at most 1080 afro a day."
     },
     {
+      "type": 765,
+      "kind": "del_obj",
+      "name": "Патроны и афро владельцам склада",
+      "start": "<hint><B>№0000765</B></hint><Br>Вы можете наклониться к ящику чтобы забрать оттуда патроны и 8000 афро.<Br><Br><b>Примечание:</b> данное задание можно выполнять не чаще 1 раза в сутки.</Br>",
+      "own_texts": ["name", "start"],
+      "give": [6824],
+      "take": [6824],
+      "obj": 0,
+      "rew_afro": 8000,
+      "rew_gold": 0,
+      "rew_also": [
+        {"obj": 6092, "num": 50}
+      ],
+      "repeatable": 1,
+      "per_day": 1,
+      "service": true,
+      "holders": "wh_sever",
+      "level": 8,
+      "q_type": 0,
+      "why": "RECOVERED texts and pay, DESIGNED workings (server/holdings.py, data/holdings.json). The money box of the Северный склад (6824, «Ящик с деньгами<Br>Северный склад», location 111) pays the clan holding the warehouse: «Патроны и афро владельцам склада (Бж.)» (texts.xml 26363 name, 26364 start, №0000765: «патроны и 8000 афро ... не чаще 1 раза в сутки»), the first of the series of eight whose pay follows the boss levels [8, 8, 12, 12, 16, 16, 17, 22] -- so 765-767 are Вади-Хальфа's three, a strong pattern. The refugee's rate, the plan's default 15; the gold series (741-748) and «Проникнуть на ... склад» (789-791) are left out (data/holdings.json _meta.raid). Name and start are the original's but for one passage each (own_texts): the tier «(Бж.)» and the hint «Беженцы с видом на жительство получат награду в 16000 афро, беженцы с гражданством в 40000 афро», since this server has neither residence nor citizenship. The file has no notfinish or finish for the series. A talk at the box, complete as it is taken, handed in at the same box, which writes the history per_day reads (Session.cmd_q_co). The rounds the original names, DESIGNED: 50 of the cheapest pistol cartridge the black market's «Пистолеты и патроны» (1200) sells, «9мм НАТО $КС» (6092). Only between 19:00 and 20:00 (data/schedule.json wh_box, the map's «Дележ добычи с 19:00 до 20:00»), at the site's level (8, the label's «Захват возможен игроками 8 уровня»), to a member of the clan holding wh_sever for a day at least, one character of an account a day (holders; holdings.box_refusal). A service outside the daily limit, once a day (per_day 1, the original's)."
+    },
+    {
+      "type": 766,
+      "kind": "del_obj",
+      "name": "Патроны и афро владельцам склада",
+      "start": "<hint><B>№0000766</B></hint><Br>Вы можете наклониться к ящику чтобы забрать оттуда патроны и 8000 афро.<Br><Br><b>Примечание:</b> данное задание можно выполнять не чаще 1 раза в сутки.</Br>",
+      "own_texts": ["name", "start"],
+      "give": [6825],
+      "take": [6825],
+      "obj": 0,
+      "rew_afro": 8000,
+      "rew_gold": 0,
+      "rew_also": [
+        {"obj": 6092, "num": 50}
+      ],
+      "repeatable": 1,
+      "per_day": 1,
+      "service": true,
+      "holders": "wh_vostok",
+      "level": 8,
+      "q_type": 0,
+      "why": "RECOVERED texts and pay, DESIGNED workings, as 765: the money box of the Восточный склад (6825, location 110), «Патроны и афро владельцам склада (Бж.)» №0000766 (texts.xml 26363 name, 26365 start: «патроны и 8000 афро»), less the tier and the hint of residence and citizenship (own_texts). 50 rounds of «9мм НАТО $КС» (6092), DESIGNED. 19:00-20:00 (data/schedule.json wh_box), level 8, to the clan holding wh_vostok (holders), as 765."
+    },
+    {
+      "type": 767,
+      "kind": "del_obj",
+      "name": "Патроны и афро владельцам склада",
+      "start": "<hint><B>№0000767</B></hint><Br>Вы можете наклониться к ящику чтобы забрать оттуда патроны и 24000 афро.<Br><Br><b>Примечание:</b> данное задание можно выполнять не чаще 1 раза в сутки.</Br>",
+      "own_texts": ["name", "start"],
+      "give": [6826],
+      "take": [6826],
+      "obj": 0,
+      "rew_afro": 24000,
+      "rew_gold": 0,
+      "rew_also": [
+        {"obj": 6092, "num": 50}
+      ],
+      "repeatable": 1,
+      "per_day": 1,
+      "service": true,
+      "holders": "wh_ug",
+      "level": 12,
+      "q_type": 0,
+      "why": "RECOVERED texts and pay, DESIGNED workings, as 765: the money box of the Южный склад (6826, location 109), «Патроны и афро владельцам склада (Бж.)» №0000767 (texts.xml 26363 name, 26366 start: «патроны и 24000 афро», the series' first of the [12] pair), less the tier and the hint of residence and citizenship (own_texts). 50 rounds of «9мм НАТО $КС» (6092), DESIGNED. 19:00-20:00 (data/schedule.json wh_box), level 12 (the label's «Захват возможен игроками 12 уровня»), to the clan holding wh_ug (holders), as 765."
+    },
+    {
       "type": 10,
       "kind": "bring_l_obj",
       "name": "Обмен слитка",

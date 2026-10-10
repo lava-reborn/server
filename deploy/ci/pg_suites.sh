@@ -18,7 +18,8 @@
 #   test_storage_pg   the Store against both dialects, the schema twice, the
 #                     move from the old server's schema; it drops its tables
 #   clan and ground   test_clans, test_clan_admin, test_clan_diplomacy,
-#                     test_clan_mail, test_clan_treasury, test_ground
+#                     test_clan_mail, test_clan_treasury, test_ground,
+#                     test_site_orders (the stance steps ordered on the site)
 #   the rest          accounts, admin, auction, bank, combat, progression,
 #                     relogin, email
 #
@@ -28,7 +29,8 @@
 # for what the server wrote. Under LAVA_DB_URL it fails for that reason alone
 # (measured: "fixer" not found), so it runs in the SQLite job only. The same
 # goes for test_clan_admin_wire and the socket half of test_clan_mail, which
-# skip themselves.
+# skip themselves, and for test_site_orders_wire, whose "site" writes the
+# server's SQLite file through a connection of its own.
 #
 # Each gets a fresh database, created here and named after it. That is also
 # what test_clans needs: it is order-sensitive and has to be the first thing
@@ -42,7 +44,7 @@ OUT=${1:-/tmp/lava_pg}
 JOBS=${2:-8}
 TREE=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SUITES=(storage_pg clans clan_admin clan_diplomacy clan_mail clan_treasury ground
-        accounts admin auction bank combat progression relogin email)
+        site_orders accounts admin auction bank combat progression relogin email)
 
 # The stop announced ahead (server/stopwarn.py): its stop_plan table, and the
 # game, the panel and the command line meeting in one database.

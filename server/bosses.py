@@ -21,7 +21,8 @@ and 20 are kept over them -- but for the prison, whose uprising keeps its
 label's hours as a window of data/schedule.json (events.py, on this
 module's clock). This module only knows the clock;
 combat.RoomCombat.keep_hours is what brings a room's bosses in and sends
-them away.
+them away. A warehouse's «Хозяин склада» killed in its window hands the
+warehouse to a clan (holdings.py), so each window settles it once.
 
     LAVA_BOSS_HOURS  "14,18,20"       the hours, H or H:MM on that clock.
                                       "off" turns the rule off, and a boss is

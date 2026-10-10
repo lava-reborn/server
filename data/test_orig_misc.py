@@ -253,6 +253,36 @@ def main():
         assert by_type[t].get("own_texts") == ["start"], (t, by_type[t].get("own_texts"))
         assert cut(qs[t]["start"], by_type[t]["start"]), t
         assert "жительств" not in by_type[t]["start"], t
+    # The warehouses' money boxes (765-767, server/holdings.py): name and
+    # start both the rows' own, each the original's with one passage out --
+    # the tier «(Бж.)», the hint of residence and citizenship -- the daily
+    # note kept, and the ids the hand-checked ones.
+    for t, start in (("765", 26364), ("766", 26365), ("767", 26366)):
+        assert qs[t]["ids"] == [26363, start, None, None], (t, qs[t]["ids"])
+        assert by_type[t].get("own_texts") == ["name", "start"], t
+        assert cut(qs[t]["name"], by_type[t]["name"]), t
+        assert cut(qs[t]["start"], by_type[t]["start"]), t
+        assert "(Бж.)" not in by_type[t]["name"] and "жительств" not in by_type[t]["start"], t
+        assert "не чаще 1 раза в сутки" in by_type[t]["start"], t
+    # The builder holds a name of the row's own to the same rule: the
+    # original's with one passage out builds, a name written anew or with
+    # two passages out stops the build (build_quests).
+    every = load("quests.json")["quests"] + [
+        r for n in sorted(os.listdir(HERE)) if n.startswith("questgen_") and n.endswith(".json")
+        for r in load(n)["quests"]]
+
+    def built_with(row):
+        try:
+            builder.build_quests(texts, [row if int(r["type"]) == int(row["type"]) else r
+                                         for r in every])
+        except SystemExit as exc:
+            return str(exc)
+        return None
+
+    refused = "quest 765: own start, and the name is not the original's 26363"
+    assert built_with(by_type["765"]) is None
+    assert built_with(dict(by_type["765"], name="Деньги владельцам склада")) == refused
+    assert built_with(dict(by_type["765"], name="Патроны владельцам склада")) == refused
     print("quests: %d written (%s), %d of ours left alone"
           % (len(qs), ", ".join(sorted(qs, key=int)), len(OWN_QUESTS)))
 

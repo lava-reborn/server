@@ -160,6 +160,13 @@ class Format(unittest.TestCase):
         self.assertEqual(self.npcs["5212"]["name"], "Борис<Br>Пистолеты и патроны")
         self.assertEqual(self.npcs["5146"]["name"], "Ирже Котунц<Br>Жрец Тефнут")
 
+    def test_warehouse_flag_caption(self):
+        """The warehouses' flag 1011 by hand (orig_names_manual.json): the
+        original's caption 46362 «Складом владеют:», over the holding clan's
+        name (server/holdings.py), no longer the item row's 'Флаг' (7495)."""
+        self.assertEqual(self.npcs["1011"], {"name": "Складом владеют:", "string_id": 46362,
+                                             "kind": "npc", "confidence": "high"})
+
     def test_text_left_as_is(self):
         """Formatting is the server's job: '<Br>' and '[N] ' prefixes stay."""
         names = [v["name"] for v in self.npcs.values()]

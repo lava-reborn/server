@@ -38,8 +38,8 @@
   "1011": {
    "confidence": "high",
    "kind": "npc",
-   "name": "Флаг",
-   "string_id": 7495
+   "name": "Складом владеют:",
+   "string_id": 46362
   },
   "1014": {
    "confidence": "high",

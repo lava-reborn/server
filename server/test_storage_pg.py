@@ -43,7 +43,7 @@ TABLES = ("mail", "map_marks", "items", "char_quests_done", "char_quests",
           "char_stats", "online", "heartbeat", "admin_actions", "auction_lots",
           "migrations", "trophies", "clan_ledger", "clan_relations", "clan_members",
           "clans", "characters", "accounts", "money_ledger", "char_lent", "ground",
-          "boss_kills")
+          "boss_kills", "clan_holdings", "clan_holding_log", "site_orders")
 RELINK = "heal-relink-2026-09-23"
 
 
@@ -644,6 +644,139 @@ with store.db:
 ok(handed == (bears, char_id, 0) and store.clan(bears)["head"] == char_id,
    "инструмент админа передаёт клан удаляемого главы: %s" % (handed,))
 ok(store.characters(aid) is not None, "и соединение после кланов живое")
+
+# --- склады кланов (clan_holdings, clan_holding_log; server/holdings.py) ----------
+# Кто держит склад, пишется INSERT ... SELECT ... WHERE EXISTS ... ON CONFLICT:
+# только за клан, который ещё есть, и поверх прежнего держателя. У приказа
+# админки by_char и slot — NULL, параметры без типа, и в Postgres они должны
+# лечь в типы колонок. Тот же клан второй раз не пишет ничего; снять склад
+# можно только с клана, который его держит; роспуск забирает склады той же
+# транзакцией и пишет каждому строку 'disband'.
+rivals = store.clan_create(west_id, "Соперники", "соперники", "", None)
+ok(store.holding("wh_sever") is None and store.holdings() == [], "склады пока ничьи")
+ok(store.holding_set("wh_sever", bears, "admin") == (None, "ok"),
+   "приказ админки: Северный склад у Медведей")
+held = store.holding("wh_sever")
+ok((held["clan_id"], held["name"], held["by_char"], held["slot"]) == (bears, "Медведи", None, None)
+   and isinstance(held["since"], float), "строка с названием клана, by_char и slot — NULL: %s" % held)
+ok(store.holding_set("wh_sever", bears, "admin") == (bears, "same")
+   and len(store.holding_log("wh_sever")) == 1, "тот же клан ещё раз: ничего не записано")
+ok(store.holding_set("wh_sever", 999999, "capture", by_char=char_id, slot=W18) == (bears, "gone")
+   and store.holding("wh_sever")["clan_id"] == bears, "клана нет: ничего не записано")
+ok(store.holding_set("wh_sever", rivals, "capture", by_char=west_id, slot=W18) == (bears, "ok"),
+   "захват поверх прежнего держателя (ON CONFLICT)")
+held = store.holding("wh_sever")
+ok((held["clan_id"], held["by_char"], held["slot"]) == (rivals, west_id, W18),
+   "держатель, кому зачтено, окно: %s" % held)
+store.holding_logged("wh_sever", "defend", rivals, by_char=west_id, slot=W20)
+ok(store.holding_clear("wh_sever", "admin", clan_id=bears) is None
+   and store.holding("wh_sever")["clan_id"] == rivals, "снять с клана, который не держит: ничего")
+ok([(r["how"], r["clan_id"], r["prev"], r["slot"]) for r in store.holding_log("wh_sever")]
+   == [("defend", rivals, rivals, W20), ("capture", rivals, bears, W18), ("admin", bears, None, None)],
+   "журнал склада, новые сверху: %s" % store.holding_log("wh_sever"))
+store.holding_set("wh_ug", rivals, "admin")
+ok(store.clan_disband(rivals, west_id) == 0 and store.holdings() == []
+   and store.holdings_lost(rivals) == ["wh_sever", "wh_ug"],
+   "роспуск забрал оба склада той же транзакцией")
+ok([(r["how"], r["clan_id"], r["prev"]) for r in store.holding_log(limit=2)]
+   == [("disband", None, rivals)] * 2, "и каждому — строка 'disband'")
+for table, col, kind in (("clan_holdings", "since", "double precision"),
+                         ("clan_holdings", "clan_id", "bigint"),
+                         ("clan_holding_log", "slot", "double precision")):
+    ok(store.db.execute("SELECT data_type FROM information_schema.columns WHERE table_name = ?"
+                        " AND column_name = ?", (table, col)).fetchone()["data_type"] == kind,
+       "%s.%s — %s" % (table, col, kind))
+ok(store.characters(aid) is not None, "и соединение после складов живое")
+
+# --- приказы сайта: таблица site_orders ----------------------------------------
+# Сайт пишет приказ своей ролью: INSERT ... RETURNING id, ключ — identity, и
+# права на последовательность роли не нужны. Игра читает ждущие
+# (site_pending), отказ пишет site_done, а шаг отношения отмечает приказ
+# выполненным в своей же транзакции (clan_stance_step с order). Здесь — что
+# типы доехали (made_at и done_at — double precision), что ответ ставится
+# один раз, что шаг откатывается вместе с отметкой, когда приказ уже
+# отвечен, и что две сессии, взявшиеся за один приказ разом, шаг не сделают
+# дважды.
+order_cols = {r["column_name"]: (r["data_type"], r["is_identity"]) for r in store.db.execute(
+    "SELECT column_name, data_type, is_identity FROM information_schema.columns"
+    " WHERE table_name = 'site_orders'")}
+ok(order_cols == {"id": ("bigint", "YES"), "made_at": ("double precision", "NO"),
+                  "login": ("text", "NO"), "char_id": ("bigint", "NO"),
+                  "clan_id": ("bigint", "NO"), "other": ("bigint", "NO"),
+                  "stat_from": ("bigint", "NO"), "dir": ("bigint", "NO"),
+                  "done_at": ("double precision", "NO"), "code": ("text", "NO"),
+                  "result": ("text", "NO")}, "site_orders: столбцы и типы: %s" % order_cols)
+sid, _ = store.register("посол", "пароль")
+envoy, _ = store.create_character(sid, "Посол", 0, 1)
+rival, _ = store.create_character(sid, "Сосед", 0, 1)
+owls = store.clan_create(envoy, "Совы", "совы", "", None)
+ravens = store.clan_create(rival, "Вороны", "вороны", "", None)
+store.clan_treasury_adjust(owls, 1100, "admin")
+
+
+def site_order(made_at, stat_from, step):
+    """Строка так, как её пишет сайт (lava-site api/db.py queue_stance)."""
+    oid = store.db.insert(
+        "INSERT INTO site_orders (made_at, login, char_id, clan_id, other, stat_from, dir)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?)", (made_at, "посол", envoy, owls, ravens, stat_from, step))
+    store.db.commit()
+    return oid
+
+
+now = time.time()
+up = site_order(now, 0, 1)
+refused = site_order(now - 0.25, 0, 5)
+ok(isinstance(up, int) and refused == up + 1, "RETURNING id отдаёт новый ключ: %s %s"
+   % (up, refused))
+pending = store.site_pending()
+ok([(r["id"], r["made_at"], r["done_at"]) for r in pending] == [(up, now, None),
+                                                                (refused, now - 0.25, None)],
+   "ждущие по порядку, made_at с долями секунды: %s" % [dict(r) for r in pending])
+ok(store.site_done(refused, "R7", "Приказ отклонён.", when=now) is True
+   and store.site_done(refused, "R7", "второй раз", when=now + 1) is False,
+   "отказ пишется один раз")
+row = store.site_order(refused)
+ok((row["code"], row["result"], row["done_at"]) == ("R7", "Приказ отклонён.", now),
+   "и первый ответ остаётся: %s" % row)
+ok(store.clan_stance_step(owls, ravens, 0, 1, 1000, envoy, need=0x2000, when=now,
+                          order=(up, "Готово")) == 100,
+   "шаг по приказу: цена списана, остаток 100")
+row = store.site_order(up)
+ok((row["code"], row["result"], row["done_at"]) == ("OK", "Готово", float(int(now))),
+   "и приказ отмечен в той же транзакции: %s" % row)
+ok([r["id"] for r in store.site_pending()] == [], "ждущих больше нет")
+ok(store.clan_stance_step(owls, ravens, 1, 0, 100, envoy, need=0x2000,
+                          order=(up, "ещё раз")) is None,
+   "тот же приказ второй раз: None")
+ok((store.clan_treasury(owls), store.clan_relation(owls, ravens),
+    [r["source"] for r in store.clan_ledger_rows(owls)], store.site_order(up)["result"])
+   == (100, 1, ["diplomacy", "admin"], "Готово"),
+   "и откат целиком: казна, отношение, журнал и ответ прежние")
+
+# Две сессии разом: первая отвечает на приказ и держит строку, вторая
+# делает по нему шаг — её UPDATE site_orders ждёт блокировку, после фиксации
+# первой перечитывает done_at IS NULL, не находит строки и откатывает шаг.
+race_order = site_order(time.time(), 1, -1)
+store.db.commit()
+second = accounts.Store()
+first = storage.connect()
+first.execute("UPDATE site_orders SET done_at = 1, code = 'R6', result = 'опоздал'"
+              " WHERE id = ? AND done_at IS NULL", (race_order,))
+race = {}
+worker = threading.Thread(target=lambda: race.update(got=second.clan_stance_step(
+    owls, ravens, 1, 0, 100, envoy, need=0x2000, order=(race_order, "Готово"))))
+worker.start()
+time.sleep(0.7)
+ok(worker.is_alive(), "шаг второй сессии ждёт строку приказа")
+first.commit()
+worker.join(15)
+ok(race.get("got", "нет ответа") is None, "и после фиксации первой не делается: %s" % race)
+ok((store.clan_treasury(owls), store.clan_relation(owls, ravens),
+    store.site_order(race_order)["code"]) == (100, 1, "R6"),
+   "ни цены, ни отношения; ответ первой сессии на месте")
+first.close()
+second.close()
+ok(store.characters(aid) is not None, "и соединение после приказов сайта живое")
 
 # --- схема -----------------------------------------------------------------
 cols = store.db.columns("characters")

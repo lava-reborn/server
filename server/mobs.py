@@ -787,6 +787,16 @@ class Mob:
         # combat.Fighter -> [harm done, share of the kill already paid,
         # skill, spec]: what a kill is settled from (RoomCombat.settle_xp)
         self.xp_ledger = {}
+        # Character id -> harm done since it was last whole: what a
+        # warehouse's boss is taken by (holdings.py). Apart from the xp
+        # ledger, which keeps every blow until the kill: this one forgets
+        # them whenever the creature is whole again (RoomCombat.mob_recover
+        # and its regeneration, reset), so harm cannot be banked through
+        # heals; and by character, so a reconnect keeps it.
+        self.capture_harm = {}
+        # Who brought a warehouse's boss down, for which clan, as they stood
+        # at the kill (holdings.snapshot): settled when the corpse fades.
+        self.capture = None
         # The things a quest of those who brought it down still asks for,
         # set at the kill (RoomCombat.kill): the quest rows of its loot that
         # may come up in its bag (quest_roll).
@@ -860,6 +870,8 @@ class Mob:
         self.target = None
         self.homing = False
         self.xp_ledger = {}
+        self.capture_harm = {}
+        self.capture = None
         self.quest_wants = frozenset()
         self.busy_until = 0.0
         self.next_attack = 0.0

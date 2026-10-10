@@ -41,6 +41,7 @@ import combat
 import craft
 import encounters
 import events
+import holdings
 import inventory
 import items
 import keepsakes
@@ -55,6 +56,7 @@ import production
 import quests
 import sets
 import setcraft
+import site_orders
 import stopwarn
 import transport
 import travel
@@ -2244,6 +2246,7 @@ class Session:
                       take_quests=quests.taken_by(type_id), m_hello=[],
                       can_set_home=0, can_banking=0, can_trophy=0,
                       can_repair=0, can_trade=0)
+        holder = None
         if root == world.TRADER:
             # type_list is the price list itself, in order: the client builds a
             # TradeItem per entry and later refers to a purchase by that index,
@@ -2262,6 +2265,23 @@ class Session:
                 params.update(can_trophy=1)
                 if not trophies.keeps_stall(type_id):
                     params.update(can_trade=0, can_repair=0)
+            # The flag of a warehouse a clan can take (holdings.py), in its
+            # own room: it sells nothing and mends for the holders alone
+            # (inventory.Inventory.repair refuses the rest), and names the
+            # holder -- clan= here and a fellow about the flag right after
+            # this frame. ClanInspector.userInfo can name only a clan the
+            # client knows already and sets clanReg 0 on a frame with no
+            # clan, so the fellow comes second: it makes the ClanInfo from
+            # soc for any viewer, clanless ones too, and CharInfo draws
+            # «Складом владеют:» over «<Клан>». Held by nobody, neither
+            # goes and the caption stands alone. Every other warehouse's
+            # flag is drawn as before.
+            flag = holdings.flag_for(STORE, self.room.loc.id, type_id, self.char_id)
+            if flag is not None:
+                holder, mends = flag
+                params.update(can_trade=0, can_repair=1 if mends else 0)
+                if holder is not None:
+                    params.update(clan=int(holder["clan_id"]))
         elif root == world.UPGRADER:
             # What its window turns into what, and for how many hundredths
             # of an ounce (upgrader.lists): the recipes a weapons master
@@ -2299,6 +2319,9 @@ class Session:
         # maximum of 1200 (combat.md 5).
         params.update(self.combat.mob_info(npc_id))
         self.send(cmd, **params)
+        if holder is not None:
+            self.send("fellow", id=npc_id, reg=int(holder["clan_id"]),
+                      soc=Str(holder["name"]))
         self.combat.after_npc_info(npc_id)
 
     # --- transport --------------------------------------------------------
@@ -2715,6 +2738,10 @@ class Session:
         # on offer -- and, carried, at its taker's -- only while it is open.
         if not events.quest_open(quest.type, carried):
             return False
+        # A warehouse box's row (quests: holders) only to the holders, and
+        # carried too: the site may have changed hands since the take.
+        if quest.holders and self.box_refusal(quest) is not None:
+            return False
         if carried:
             return True
         if quest.level > self.skill_level():
@@ -2766,6 +2793,13 @@ class Session:
             return False
         carried = (quests.get(r["type"]) for r in STORE.quests(cid))
         return not any(q is not None and quest.feeds(q) for q in carried)
+
+    def box_refusal(self, quest):
+        """Why a warehouse box's row (quests: holders) is not this
+        character's now, or None (holdings.box_refusal: the holding clan,
+        a day in it, one character of the account since the day's reset)."""
+        account = self.account["id"] if self.account else None
+        return holdings.box_refusal(STORE, quest, self.char_id, account, self.day_start())
 
     @staticmethod
     def day_start(now=None):
@@ -3117,6 +3151,16 @@ class Session:
             self.send("cmdAck", res=RES_WRONG_NPC)
             return
         if quest.over_cap(self.skill_level()) or not events.quest_open(quest.type, True):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        # A warehouse box's row: the hand-in asks the holders' gate again
+        # (holdings.box_refusal) -- a member who took it at half past seven
+        # and has since left the clan, or whose clan has lost the site, or
+        # whose other character collected meanwhile, hands nothing in.
+        refusal = self.box_refusal(quest) if quest.holders else None
+        if refusal is not None:
+            log.info("  ..    quest #%d (%s) not handed in by %s: %s",
+                     q_id, quest.name, self.nick, refusal)
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
             return
         way = travel.is_quest_way(quest.type)
@@ -3929,6 +3973,10 @@ async def main():
     rooms.check_placements(MOB_TYPES)
     # And so does a timed window whose rows cannot work (events.check).
     events.check(MOB_TYPES)
+    # And a warehouse a clan could not take or collect at: its boss, flag or
+    # box not in its room, its box's row missing or out of its window
+    # (holdings.check).
+    holdings.check()
     names.document()
     # Bags left lying when the last process ended go back where they lay,
     # for the rest of their time; what ran out meanwhile, or has no place
@@ -3953,6 +4001,7 @@ async def main():
     log.info("game server on %s:%d", HOST, PORT)
     log.info("%s", bosses.describe())
     log.info("%s", events.describe())
+    log.info("%s", holdings.describe())
     servers = [game]
     admin_task = asyncio.ensure_future(drain_admin_actions())
     # Lots that ran out while the server was down are settled by the first
@@ -4222,7 +4271,8 @@ def publish_online():
 
 
 async def drain_admin_actions():
-    """Watch the queue the admin panel writes into.
+    """Watch the queue the admin panel writes into, and the site's stance
+    orders after it (site_orders.py, a table of their own).
 
     Polling, and not a socket between the two processes: one small indexed
     read a second costs nothing, needs no port, no second protocol and no
@@ -4241,6 +4291,11 @@ async def drain_admin_actions():
                 log.info("  ..    admin %s: %s -> %s",
                          row["admin"], row["kind"], result)
                 STORE.admin_done(row["id"], result)
+            # Then the stance steps ordered on the site: a table of their
+            # own and a handler that knows nothing but a stance step
+            # (site_orders.py) -- never apply_admin_action, which carries
+            # out whatever an admin may order. It logs its own failures.
+            site_orders.drain(STORE, CLANS)
             # The stop's row, for the panel and the deploy (stopwarn.py):
             # written only when it changes, who is logged in included.
             STOP.publish()

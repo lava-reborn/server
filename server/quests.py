@@ -126,6 +126,13 @@ does):
                 rew_also (a lottery, «Любой предмет из вышеперечисленного
                 списка в рандомном порядке»); announced by «Вы получили»
                 like rew_also;
+  holders       a site of data/holdings.json ("wh_sever"): the row is the
+                holders' -- a warehouse box's «Патроны и афро владельцам
+                склада» -- offered and handed in only to a member of the
+                clan holding that site now, in it for a day at least, one
+                character of an account a day (server/holdings.py
+                box_refusal, asked by server.py Session.quest_available and
+                cmd_q_co, a carried quest too);
   service       true: a repeatable row that is a service, not a task --
                 cashing, lotteries, exams, assemblies, ammunition -- is
                 neither counted nor refused by the daily limit (server.py
@@ -432,6 +439,12 @@ class Quest:
             raise ValueError("quest %d: rew_random pieces and weights must be positive"
                              % self.type)
         self.service = bool(row.get("service"))
+        # The site whose holders alone take it (the docstring's holders);
+        # holdings.check asks that the site is there and its box gives it.
+        holders = row.get("holders")
+        if holders is not None and (not isinstance(holders, str) or not holders.strip()):
+            raise ValueError("quest %d: holders names a site of data/holdings.json" % self.type)
+        self.holders = holders.strip() if holders else None
         # kind-specific goals
         self.mobs_kill = [int(x) for x in row.get("mobs_kill", [])]
         self.num_kill = [int(x) for x in row.get("num_kill", [])]

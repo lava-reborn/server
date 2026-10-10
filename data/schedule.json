@@ -18,6 +18,11 @@
    "to": 30,
    "why": "RECOVERED. The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 646), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
   },
+  "wh_box": {
+   "daily": ["19:00"],
+   "minutes": 60,
+   "why": "RECOVERED. The money boxes of Вади-Хальфа's three склады 109-111: the map labels' «Дележ добычи с 19:00 до 20:00» (res/database/locations.xml 315-317). Opens the holders' daily rows (data/holdings.json, server/holdings.py); the boss keeps the owner's 14, 18 and 20 (bosses.py), so a clan collects at seven and defends at eight."
+  },
   "ny": {
    "dates": [["12-20", "01-15"]],
    "why": "RECOVERED dates, the owner's default (plan, decision 22): the New Year «План Новогодних праздников» (62256) runs from «20 декабря» (the towns' trees) to «15 января 2016 года — Отключение новогодних квестов». Nothing of Вади-Хальфа's band stands by it yet: of the band's New Year residents, the children 423/425, the refugee 1977 and the lottery men 662/711 stand all year by the owner's default 5 (server/world.py SEASON_KEPT), Ольсен 431 stands nowhere (the default names him, but SEASON_KEPT leaves him out of 35 and 104 until his stall has goods of its own), the tree and Дед Мороз's company (Npc_Commoner000780-797) stand in no file, and the rest of the event runs through Донгола and the admin bunkers."
@@ -85,6 +90,12 @@
    "types": [158],
    "gate": "hand_in",
    "why": "RECOVERED. «Охранник санатория особого режима» is taken at the station any time and handed in at the prison when the guard needs hands: «Доброволец? ... Сейчас этот зоопарк полезет наружу» (62259)."
+  },
+  {
+   "window": "wh_box",
+   "types": [765, 766, 767],
+   "gate": "both",
+   "why": "RECOVERED times. «Патроны и афро владельцам склада», taken and handed in at the box only while the share-out lasts; who may take them is data/holdings.json's (data/quests.json holders)."
   }
  ],
  "loot": [

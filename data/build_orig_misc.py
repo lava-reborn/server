@@ -394,6 +394,16 @@ VERIFIED = {
     305: (49819, 49820, None, None),
     306: (49821, 49822, None, None),
     307: (49823, 49824, None, None),
+    # The money boxes of Вади-Хальфа's three склады (765-767, server/
+    # holdings.py), read in texts.xml by hand: the series' one name line,
+    # 26363 «Патроны и афро владельцам склада (Бж.)», and each box's start,
+    # №0000765-767 (26364-26366: 8000, 8000 and 24000 afro); the file has no
+    # notfinish or finish for the series. Name and start are the rows' own
+    # (own_texts): the tier «(Бж.)» and the hint of residence and
+    # citizenship are out, one passage each (build_quests, one_passage_out).
+    765: (26363, 26364, None, None),
+    766: (26363, 26365, None, None),
+    767: (26363, 26366, None, None),
     # The quarry's leftovers (320-323), each text read in texts.xml by hand.
     # Большой Сэм's «Полированные камни.» (61439/61440) ends as his blocks do,
     # 61435/61436, the words the wiki gives it; «Создать Полировочную смесь»
@@ -1003,11 +1013,17 @@ def build_quests(texts, rows):
             # the file folds to what is left (158's cut sentence came after
             # its task line, which the fold drops anyway). The ids checked by
             # hand stand, held to what the row still shares with the file:
-            # its name, word for word, and its own start, the original's but
-            # for one passage (below).
+            # its name, word for word -- or, where the name is the row's own
+            # too (the warehouses' boxes, 765-767, without the tier «(Бж.)»),
+            # the original's but for one passage -- and its own start, the
+            # original's but for one passage (below).
             ids = list(VERIFIED[qtype])
             name_id = ids[0]
-            if name_id is None or fold(texts[name_id]) != fold(row["name"]):
+            if "name" in own:
+                name_ok = name_id is not None and one_passage_out(texts[name_id], row["name"])
+            else:
+                name_ok = name_id is not None and fold(texts[name_id]) == fold(row["name"])
+            if not name_ok:
                 raise SystemExit("quest %d: own start, and the name is not the original's %r"
                                  % (qtype, name_id))
         if qtype not in VERIFIED:

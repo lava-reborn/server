@@ -41,7 +41,8 @@ LAVA_PASSAGES it replaces the table rather than adding to it):
             way (data/passages.json 'quest') with them; "hand_in": offered
             any time, handed in then only. The NPCs who give or take them
             are shown under a new id when the window opens or shuts, or the
-            client would never ask again (_remark).
+            client would never ask again (_remark) -- and when who may take
+            them changes otherwise, a warehouse's holders (touch).
   loot      [{"locs", "mobs", "obj", "num", "chance"}]: a thing these
             creatures carry in these places, on top of their own table.
   keep_in   [{"types", "locs"}]: things that exist in these places only:
@@ -425,6 +426,7 @@ class _Entry(object):
 _ROOMS = weakref.WeakKeyDictionary()      # rooms.Room -> [_Entry]
 _SHOWN = weakref.WeakKeyDictionary()      # rooms.Room -> {npc id: what it was shown under}
 _TAKEN = {}                               # NPC type -> takes of its rows under a shut gate
+_TOUCHED = {}                             # NPC type -> changes of who may take its rows (touch)
 _NEXT_ID = [FIRST_ID]
 _MOB_TYPES = None
 
@@ -566,7 +568,8 @@ def _remark(room, t):
     (keep). Mobs never are. The taker of a "hand_in" row is shown anew
     too once the row was taken with its gate shut (taken): the client asks
     nothing after a take, and would go on offering the hand-in the server
-    refuses.
+    refuses. And so is one whose rows changed hands outside the clock
+    (touch): a warehouse's box when its holders change.
     """
     marked = table().marked()
     if not marked:
@@ -576,7 +579,8 @@ def _remark(room, t):
         windows = marked.get(npc.type_id)
         if not windows or npc.root == world.MOB:
             continue
-        now = tuple(w.slot(t) for w in windows) + (_TAKEN.get(npc.type_id, 0),)
+        now = tuple(w.slot(t) for w in windows) + (_TAKEN.get(npc.type_id, 0),
+                                                   _TOUCHED.get(npc.type_id, 0))
         if shown.setdefault(eid, now) == now:
             continue
         new = _new_id()
@@ -607,6 +611,16 @@ def taken(quest_type):
     import quests                       # late: see the imports
     for npc_type in quests.get(quest_type).take:
         _TAKEN[int(npc_type)] = _TAKEN.get(int(npc_type), 0) + 1
+
+
+def touch(npc_type):
+    """Who may take an NPC's rows changed by something other than the clock:
+    a warehouse's holders (holdings.py), whose box offers its row to the
+    holding clan alone. The client asked about the box when it met it and
+    will not ask again, so on the room's next tick it is shown under a new
+    id (_remark) -- the new holders find the offer, the old ones lose it.
+    Only an NPC whose rows a window keeps (Schedule.marked) is marked anew."""
+    _TOUCHED[int(npc_type)] = _TOUCHED.get(int(npc_type), 0) + 1
 
 
 # --- quests, loot, things --------------------------------------------------------------------

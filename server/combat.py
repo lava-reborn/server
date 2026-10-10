@@ -42,6 +42,7 @@ from collections import namedtuple
 
 import bosses
 import events
+import holdings
 import inventory
 import items
 import mobs
@@ -1807,6 +1808,12 @@ class Fighter:
             row[2], row[3] = skill, spec
             share = min(share, max(0.0, 1.0 - row[1]))
             row[1] += share
+        # The same harm on the capture ledger, by character: what a
+        # warehouse's boss is taken by (holdings.py; mobs.Mob.capture_harm).
+        harm = getattr(target, "capture_harm", None)
+        char_id = getattr(self.sess, "char_id", None)
+        if harm is not None and char_id:
+            harm[int(char_id)] = harm.get(int(char_id), 0) + dealt
         self.credit_xp(skill, spec, share, target)
 
     def credit_xp(self, skill, spec, share, target):
@@ -2362,6 +2369,9 @@ class RoomCombat:
                 if mob.hp < mob.hp_max or mob.sp < mob.sp_max:
                     mob.hp = min(mob.hp_max, mob.hp + mob.level + 1)
                     mob.sp = min(mob.sp_max, mob.sp + 1)
+                    if mob.hp >= mob.hp_max and mob.sp >= mob.sp_max:
+                        # Whole again by its own pace: as mob_recover.
+                        mob.capture_harm = {}
                     self.push_vitals(mob)
 
     def hostilities(self, t):
@@ -2528,10 +2538,14 @@ class RoomCombat:
         mob.homing = True
 
     def mob_recover(self, mob):
-        """Home again after a chase: whole, and the bar over its head shows it."""
+        """Home again after a chase: whole, and the bar over its head shows it.
+        Whole, it forgets the harm of the fight it left (Mob.capture_harm):
+        a warehouse's boss is taken by the harm done since it was last whole
+        (holdings.py), never by harm banked over heal after heal."""
         mob.homing = False
         if mob.hp < mob.hp_max or mob.sp < mob.sp_max:
             mob.hp, mob.sp = mob.hp_max, mob.sp_max
+            mob.capture_harm = {}
             self.push_vitals(mob)
 
     def mob_attack(self, mob, target, t):
@@ -2810,6 +2824,16 @@ class RoomCombat:
         # Before the ledger is settled and emptied: who brought it down is
         # who its quest rows of loot are rolled for (quest_wants).
         mob.quest_wants = self.quest_wants(mob, killer)
+        # A warehouse's boss (holdings.py): who brought it down and for which
+        # clan, as they stand now; the holding is settled when the corpse
+        # fades (corpse_gone). A database that cannot be read costs the
+        # capture and a line in the log, never the kill.
+        try:
+            mob.capture = holdings.snapshot(self, mob, killer)
+        except Exception:
+            mob.capture = None
+            log.exception("  !!    mob %d (%s) killed in %s: who killed it not read",
+                          mob.eid, mob.stats.name, self.room.loc.title)
         self.settle_xp(mob)
         # The killer's held rp_info goes out here, before calm() below can
         # end the war: the client keeps the awards of a fight and prints
@@ -2880,6 +2904,17 @@ class RoomCombat:
             if sess in self.room.players:
                 sess.send("lch", lostUser=mob.eid)
         self.add_to_bag(mob.cell, self.drop_loot(mob))
+        # A warehouse's boss settles its holding (holdings.settle) before the
+        # hours below take it away -- and with LAVA_BOSS_HOURS=off, when it is
+        # an ordinary mob, too. A database that will not take it costs the
+        # record and a line in the log, never the kill (boss_killed's rule).
+        if getattr(mob, "capture", None) is not None:
+            try:
+                holdings.settle(self, mob)
+            except Exception:
+                mob.capture = None
+                log.exception("  !!    mob %d (%s) killed in %s: its holding not settled",
+                              mob.eid, mob.stats.name, self.room.loc.title)
         if bosses.keeps_hours(mob.type_id):
             mob.away = True
             self.boss_killed(mob)

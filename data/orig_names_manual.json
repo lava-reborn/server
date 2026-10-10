@@ -1492,9 +1492,9 @@
    "why": "DESIGNED. m05_BanditAssaultGunner_lvl6, the ten ambushers of «Место засады» (121, Q_VH_Interception, 5985,1721), where «Радиоперехват» (62723-62726) sends the player for the supply group's five boxes. Neither the m05 block (50242-) nor Halfa's quest-mob block (10590-10616) has a bandit gunner of level 6, and the wiki's page of the place lists no mobs; so the row of the same line's shooters (20, 21, 851), '[2] Бандит'; the prefix shows its own level."
   },
   "1011": {
-   "string_id": 7495,
-   "text": "Флаг",
-   "why": "DESIGNED. ownloc_Flag_Clan (art flag, a Trader in mobs.xml), the flag of a clan-held warehouse: in Вади-Хальфа's three склады 109-111 and the other cities' (112-114, 128, 982-984, 1380). No creature row names it -- the wiki's warehouse pages list only the 'Ящик с деньгами' -- so the word is the original's 'Флаг' (7495, the flag taken from the sports arena's flagpole, an item row)."
+   "string_id": 46362,
+   "text": "Складом владеют:",
+   "why": "RECOVERED string, its tie a strong GUESS. ownloc_Flag_Clan (art flag, a Trader in mobs.xml), the flag of a clan-held warehouse: in Вади-Хальфа's three склады 109-111 and the other cities' (112-114, 128, 982-984, 1380). Its caption is the original's 46362 «Складом владеют:», which sits beside 46364 «База принадлежит клану:», the clan base's: the client draws the holding clan's name under it (CharInfo.clanNameUpdate: «<clan>» on the next line), which the server sends in the site rooms (server/holdings.py; the warehouse capture design of 2026-10-09). Names travel per type, so every warehouse's flag reads so -- one nobody can hold yet with nothing under it, nobody's. Until 2026-10-09 the word was 'Флаг' (7495, the flag taken from the sports arena's flagpole, an item row), DESIGNED."
   },
   "876": {
    "string_id": 62317,
