@@ -556,10 +556,17 @@ try:
     check("  ..nor a passage, side or quest way of data/passages.json, into or out of them; neither"
           " is a no_map place",
           (into, sorted({str(i) for i in FSC} & set(FSC_PASSAGES.get("no_map") or {}))), ([], []))
+    # A quest's markers (loc, finish_loc, rew_loc) are geoIDs, the packed map
+    # cell (quests.py «geoIDs for the map markers»); loc_id, stay_in and a
+    # way's target_loc_id are place ids.
+    FSC_GEO = {world.pack(*c) for c in FSC.values()}
     fsc_rows = quests.table_rows()
     named = sorted({int(r["type"]) for r in fsc_rows
-                    for key in ("loc", "loc_id", "finish_loc", "rew_loc", "stay_in")
-                    if set(place_ids(r.get(key))) & set(FSC)}
+                    for key in ("loc", "finish_loc", "rew_loc")
+                    if set(place_ids(r.get(key))) & FSC_GEO}
+                   | {int(r["type"]) for r in fsc_rows
+                      for key in ("loc_id", "stay_in")
+                      if set(place_ids(r.get(key))) & set(FSC)}
                    | {int(r["type"]) for r in fsc_rows
                       if isinstance(r.get("way"), dict)
                       and int(r["way"].get("target_loc_id") or 0) in FSC})
@@ -567,7 +574,9 @@ try:
           named, [])
     check("  ..nor does any quest as the server reads it",
           sorted(t for t, q in quests.QUESTS.items()
-                 if {q.loc, q.finish_loc, q.rew_loc} & set(FSC) or set(q.stay_in) & set(FSC)), [])
+                 if {q.loc, q.finish_loc, q.rew_loc} & FSC_GEO or set(q.stay_in) & set(FSC)), [])
+    check("  ..the markers this looks for are the two cells as the client unpacks them",
+          sorted(world.unpack(g) for g in FSC_GEO), sorted(FSC.values()))
 
     # the people
     check("in the airfield a room stood the two FSC upgraders 8213/8214 alone; in the base nobody",
