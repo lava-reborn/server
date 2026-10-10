@@ -51,6 +51,8 @@ import subprocess
 import sys
 import tempfile
 import time
+from types import SimpleNamespace
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -496,11 +498,22 @@ try:
           [(e, []) for e in VH_TOP])
     check("  ..and none of them opens onto the map: out only by the doors up (no_map)",
           [lid for lid in VH_TIERS + VH_TUNNELS if not travel.no_map(lid)], [])
-    check("  ..their creatures back in five minutes, the rest of the world's in %d s"
-          % combat.RESPAWN_DELAY,
-          ({combat.respawn_delay(lid) for lid in list(VH_TOP) + VH_TIERS + VH_TUNNELS},
-           combat.respawn_delay(STATION)),
-          ({combat.RESPAWN_DELAY * 300 / 45}, combat.RESPAWN_DELAY))
+    # Observe the timer actually scheduled after a corpse is removed: the
+    # old mine multiplier must not turn the new five minutes into 33 minutes.
+    for lid in list(VH_TOP) + VH_TIERS + VH_TUNNELS + [STATION]:
+        for role, delay in (("smg", combat.RESPAWN_DELAY),
+                            ("object", combat.OBJECT_RESPAWN_DELAY)):
+            scheduled = []
+            mob = SimpleNamespace(eid=1, cell=10, type_id=MINER,
+                                  stats=SimpleNamespace(role=role))
+            rc = SimpleNamespace(room=SimpleNamespace(loc=SimpleNamespace(id=lid)),
+                                 escorts=[], bosses=[], respawn=lambda m: None,
+                                 drop_loot=lambda m: [], add_to_bag=lambda *args: None)
+            loop = SimpleNamespace(call_later=lambda *args: scheduled.append(args))
+            with patch.object(combat.asyncio, "get_running_loop", return_value=loop):
+                combat.RoomCombat.corpse_gone(rc, mob, [])
+            check("respawn timer at %d for %s uses its unscaled delay" % (lid, role),
+                  scheduled, [(delay, rc.respawn, mob)])
     check("  ..and the miners shoot a sub-machine gun (the wiki's «Кустарный ПП»), not a knife,"
           " held as one (weapon_type 5: the client's rifle frames, not a pistol's)",
           [(mobs.stats(m).weapon_class,
@@ -789,7 +802,7 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
     admin gun fells anything in one shot, from afar): (frames, its id or
     None, where the player stands, where it fell, the cells within reach of
     the other hostiles). The fallen (done) are not among them: the mine
-    keeps them down for minutes (combat.SLOW_RESPAWN), longer than a hunt,
+    keeps them down for minutes (combat.RESPAWN_DELAY), longer than a hunt,
     and the caller empties done once it has waited them back."""
     loc = world.location(loc_id)
     cells = range(loc.width * loc.height)
@@ -1034,9 +1047,8 @@ try:
                 tier = 1024
                 pos = first(arrival, "lenter").get("pos")
             else:
-                # the fallen are back (LAVA_RESPAWN, the mine's slower clock)
-                time.sleep(float(env["LAVA_RESPAWN"]) * combat.SLOW_RESPAWN[tier]
-                           / combat.RESPAWN_DEFAULT + 1)
+                # The mine now shares the world's creature respawn delay.
+                time.sleep(float(env["LAVA_RESPAWN"]) + 1)
             done = set()
             continue
         kills += 1

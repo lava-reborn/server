@@ -243,7 +243,7 @@ def _cancel(*rcs):
 
 async def _rule_off():
     store = accounts.Store(DB0)
-    real = (bosses.HOURS, combat.CORPSE_DELAY, combat.respawn_delay)
+    real = (bosses.HOURS, combat.CORPSE_DELAY, combat.RESPAWN_DELAY)
     bosses.HOURS = ()
     out = {}
     try:
@@ -256,9 +256,9 @@ async def _rule_off():
                       sorted(r["type_id"] for r in rows if r["type_id"] in INGOTS))
             _cancel(rc)
         # Раид Кайс in his own room, killed and back on the delay five times
-        # (the real 45 seconds stood in for by a twentieth of one).
+        # (the real five minutes stood in for by a twentieth of one).
         combat.CORPSE_DELAY = 0.05
-        combat.respawn_delay = lambda loc_id: 0.05
+        combat.RESPAWN_DELAY = 0.05
         room = rooms.Room(world.location(87), rooms.IdAllocator(), MT, 87)
         rc = combat.RoomCombat(room, store)
         kais = [m for m in rc.mobs.values() if m.type_id == 314][0]
@@ -272,7 +272,7 @@ async def _rule_off():
         out["kais"] = (rc.bosses, back, len(got) > 0, [i for i in got if i in INGOTS])
         _cancel(rc)
     finally:
-        bosses.HOURS, combat.CORPSE_DELAY, combat.respawn_delay = real
+        bosses.HOURS, combat.CORPSE_DELAY, combat.RESPAWN_DELAY = real
         store.close()
     return out
 

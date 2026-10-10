@@ -82,29 +82,17 @@ LEAVE_COMBAT_TIMEOUT = int(os.environ.get("LAVA_LEAVE_COMBAT", "15"))
 # A dead mob lies for this long before lch;lostUser fades it and the bag
 # appears; then it comes back after RESPAWN_DELAY. The bag stays LOOT_LIFETIME.
 CORPSE_DELAY = 2.5
-RESPAWN_DELAY = float(os.environ.get("LAVA_RESPAWN", "45"))
-# Places whose creatures come back slower, in seconds at the default
-# RESPAWN_DELAY; a suite that shortens the respawn shortens these in the
-# same proportion (respawn_delay). The Вади-Хальфа mine, its three
-# entrances and all its tiers: five minutes -- the owner, 2026-10-09,
-# «слишком быстрый рес» at 45 s, with 31 miners [8] and 16 [9] below.
-RESPAWN_DEFAULT = 45.0
-SLOW_RESPAWN = {loc: 300.0 for loc in (
-    154, 158, 160,                     # VH_mine_entrance, 2, 3
-    613, 617,                          # the first tier
-    1016, 1024, 1017, 1018, 1019, 1012,  # the second tier, west to east
-    1215,                              # the third
-)}
-
-
-def respawn_delay(loc_id):
-    """Seconds before a creature killed in this location comes back."""
-    slow = SLOW_RESPAWN.get(loc_id)
-    if slow is None:
-        return RESPAWN_DELAY
-    return RESPAWN_DELAY * slow / RESPAWN_DEFAULT
-
-
+# Five minutes for a creature, the owner's rule of 2026-10-09 («поменяем
+# стандартный респ мобов на 5 минут»); it was 45 seconds. A thing of the
+# role "object" -- a Tir target, a camp's box, a quarry stone
+# (world.STANDING_OBJECTS) -- keeps the 45 seconds, by the owner's choice
+# the same day: a Tir lesson wants its target shot down three times
+# (quests 352-357), and five minutes a time would be a quarter of an hour
+# of waiting at the counter. LAVA_RESPAWN shortens both for a test;
+# LAVA_OBJECT_RESPAWN sets the objects' alone.
+RESPAWN_DELAY = float(os.environ.get("LAVA_RESPAWN", "300"))
+OBJECT_RESPAWN_DELAY = float(os.environ.get(
+    "LAVA_OBJECT_RESPAWN", os.environ.get("LAVA_RESPAWN", "45")))
 # How long a thing lies on the ground, in seconds: fifteen minutes from the
 # moment it was put down, and then it is gone -- the owner's rule of
 # 2026-09-28, «лут должен быть на локации 15 минут, даже если там никого
@@ -128,7 +116,7 @@ QUEST_LOOT_FOR_ALL_WHO_HARMED = True
 # Whether a creature of the role "object" -- a box, a Tir target, a quarry
 # stone (world.STANDING_OBJECTS, data/mob_curves.json roles.object) -- pays
 # experience for the harm done to it. It never fights back and stands again
-# after RESPAWN_DELAY, so paying was a farm without risk: 32 of Стрельба a
+# after OBJECT_RESPAWN_DELAY, so paying was a farm without risk: 32 of Стрельба a
 # level-5 stone at skill 4, every 45 seconds. False (the owner's plan,
 # 2026-09-28): it still dies, counts as a kill for a kill quest
 # (Fighter.count_kill) and rolls its loot, and teaches nothing. True pays
@@ -2884,8 +2872,8 @@ class RoomCombat:
             # it comes back.
             mob.away = True
         else:
-            asyncio.get_running_loop().call_later(
-                respawn_delay(self.room.loc.id), self.respawn, mob)
+            delay = OBJECT_RESPAWN_DELAY if mob.stats.role == "object" else RESPAWN_DELAY
+            asyncio.get_running_loop().call_later(delay, self.respawn, mob)
 
     def add_to_bag(self, cell, rows, until=None):
         """Put item rows into the bag on a cell, opening one where there is
