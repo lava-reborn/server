@@ -2121,6 +2121,12 @@ class Fighter:
             if row is None:
                 self.ack(inventory.RES_NOT_FOUND)
                 return True
+            if gold_item(row["type_id"]):
+                # A shared ground bag must not bypass gold gear's binding.
+                # Refuse before changing ownership or creating a bag; the
+                # failed transfer ack restores the item on the client.
+                self.ack(inventory.RES_REFUSED)
+                return True
             if quests.not_on_ground(row["type_id"]):
                 # A quest's parcel stays with whoever it was handed to
                 # (quests.START_OBJ_NOT_ON_GROUND). Before any bag is put
