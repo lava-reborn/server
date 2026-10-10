@@ -72,7 +72,8 @@ from testkit import check, fails  # noqa: E402
 with open(os.path.join(DATA, "retired.json"), encoding="utf-8") as _fh:
     RETIRED = json.load(_fh)
 # The cut of (P)'s own places: data/retired.json holds the cut of Вади-Хальфа
-# (2026-10-09) beside them, which server/test_halfa_cut.py holds.
+# (2026-10-09) and of its ФСЦ (2026-10-10) beside them, which
+# server/test_halfa_cut.py holds.
 PLACES = {int(k): v for k, v in RETIRED["places"].items()
           if v.startswith("The owner's cut of (P)")}
 CREATURES = {int(k): v for k, v in RETIRED["creatures"].items()}

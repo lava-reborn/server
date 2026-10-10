@@ -1022,4 +1022,50 @@ ok(up.character(keeper)["loc"] == 468 and accounts.ran(up.db, accounts.HALFA_CUT
    "второе открытие ничего не повторяет")
 up.close()
 
+# --- чистка ФСЦ Хальфы: аэроплощадка и база НИЛ-1 -------------------------------
+# run_once от 2026-10-10 (accounts.relocate_halfa_fsc; README «Чистка Хальфы»,
+# «ФСЦ»): кто стоит на аэроплощадке 528 или на базе «НИЛ-1» 522 или прописан
+# там -- на Причал; журналы не трогаются (ни один квест туда не ведёт). Здесь --
+# что те же IN и UPDATE идут в Postgres и второе открытие ничего не повторяет.
+# Полный набор на SQLite -- server/test_halfa_cut.py, раздел «the ФСЦ».
+store = fresh_store()
+aid, _ = store.register("фсц", "пароль")
+who = {}
+for name, loc, home in (("в528", 528, 41), ("в522", 522, 41), ("прописан в528", 36, 528),
+                        ("в468", 468, 41), ("на причале", 41, 41)):
+    c, _ = store.create_character(aid, name, 0, 1)
+    store.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5970, gy = 1727, on_map = 0,"
+                     " home_loc = ?, home_gx = 5970, home_gy = 1727 WHERE id = ?", (loc, home, c))
+    who[name] = c
+store.db.commit()
+keeper = who["в528"]
+for t in (119, 11500):
+    store.take_quest(keeper, t, {}, True)
+store.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.HALFA_FSC_FIX,))
+store.db.commit()
+store.close()
+
+up = accounts.Store()
+rows = {n: up.character(c) for n, c in who.items()}
+ok({n: (r["loc"], r["gx"], r["gy"], r["on_map"], r["pos"]) for n, r in rows.items()}
+   == {"в528": (41, 5965, 1728, 0, None), "в522": (41, 5965, 1728, 0, None),
+       "прописан в528": (36, 5970, 1727, 0, 77), "в468": (468, 5970, 1727, 0, 77),
+       "на причале": (41, 5970, 1727, 0, 77)},
+   "из 528/522 -- на Причал, 468 (чистка 10-09, давно прошла) и Причал не тронуты: %s"
+   % {n: (r["loc"], r["pos"]) for n, r in rows.items()})
+ok((rows["прописан в528"]["home_loc"], rows["прописан в528"]["home_gx"],
+    rows["прописан в528"]["home_gy"]) == (41, 5965, 1728), "прописка в 528 -- теперь Причал")
+ok(sorted(r["type"] for r in up.quests(keeper)) == [119, 11500],
+   "журнал не тронут: %s" % sorted(r["type"] for r in up.quests(keeper)))
+ok(accounts.relocate_halfa_fsc(up.db) == dict(moved=0, homes=0),
+   "повторный проход ничего не находит")
+up.db.commit()
+up.db.execute("UPDATE characters SET loc = 522 WHERE id = ?", (keeper,))
+up.db.commit()
+up.close()
+up = accounts.Store()
+ok(up.character(keeper)["loc"] == 522 and accounts.ran(up.db, accounts.HALFA_FSC_FIX),
+   "второе открытие ничего не повторяет")
+up.close()
+
 print("storage(pg): %d проверок, все зелёные" % checks)

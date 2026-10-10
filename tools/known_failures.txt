@@ -14,4 +14,4 @@
 # original's 1 749 720). CI carries no main.swf, the suite skips those two
 # checks and says so, and everything else in it runs and has to pass.
 
-data/test_borders.py | ^AssertionError: borders: 20 settlements belong to neither side of the wall | the owner's hand-drawn wall strands 20 settlements; his decision is pending, and the count may not grow
+data/test_borders.py | ^AssertionError: borders: 19 settlements belong to neither side of the wall | the owner's hand-drawn wall strands 19 settlements (20 until the base НИЛ-1 left the map on 2026-10-10); his decision is pending, and the count may not grow

@@ -9,11 +9,15 @@ bootstrap_http serves on a local run.
 
 Runs everywhere on pictures made here: the plan against data/retired.json,
 data/map_labels.json and data/settlements.json; the JPEG blocks; the
-painting over on a made map whose ground is known. With the client's tiles
-under LAVA_RES/globalmap/full it holds the real map to the same (the owner's
-client, or CI's extras once they carry the tiles):
+painting over on a made map whose ground is known. With the original's
+tiles under LAVA_RES/globalmap/full it holds the real map to the same (CI's
+extras once they carry the tiles, or a res/ whose tiles come from the
+release store by client/base.txt). An installed client is no such res any
+more: the launcher puts the release's painted tiles in it (the owner's since
+2026-10-10), and on those the test says which tiles are not the original's
+and holds nothing else of the real map:
 
-    LAVA_RES=/mnt/c/Users/gmkrt/OneDrive/Desktop/lava/res python3 server/test_map_cells.py
+    LAVA_RES=<res with the original tiles> python3 server/test_map_cells.py
 """
 import glob
 import hashlib
@@ -55,9 +59,10 @@ try:
     LABEL_ONLY = {(5969, 1730), (5984, 1759), (6265, 1821)}
     check("every cell of data/retired.json loses its square, by itself",
           sorted(retired - set(plan.cells)), [])
-    check("  ..those are the seven of the two cuts: the (P) camps 124, 125, 130 and Halfa's 468, 452,"
-          " 456, 457", sorted(retired),
-          [(5876, 2012), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732), (5970, 1732), (6182, 1975)])
+    check("  ..those are the nine of the three cuts: the (P) camps 124, 125, 130, Halfa's 468, 452, 456,"
+          " 457, and its ФСЦ's airfield 528 and base НИЛ-1 522", sorted(retired),
+          [(5876, 2012), (5942, 1723), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732), (5970, 1727),
+           (5970, 1732), (6182, 1975)])
     check("  ..and data/map_cells.json adds the three cells that had a name and no place: «Улучшение"
           " сетов 6-8», the KKND base and the kimberlite pipe", sorted(set(plan.cells) - retired), sorted(LABEL_ONLY))
     live = {cell(k) for k in load_json("data", "settlements.json")["cells"]}
@@ -86,9 +91,9 @@ try:
     check("the KKND caption is two boxes of tile 14011, above the base's cell",
           [(b, M.tile_of(b[0], b[1]), M.tile_of(b[2], b[3])) for b, was, _ in plan.captions],
           [((47879, 14049, 47920, 14057), 14011, 14011), ((47879, 14058, 47910, 14067), 14011, 14011)])
-    check("the tiles a change can touch, a square's frame reaching a pixel past its cell: Halfa's two,"
-          " KKND's and the two below it, the kimberlite pipe's, Абу-Хамед's, Донгола's",
-          plan.tiles(), [13754, 14010, 14011, 14266, 14267, 14531, 15809, 16055])
+    check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's, Halfa's"
+          " two, KKND's and the two below it, the kimberlite pipe's, Абу-Хамед's, Донгола's",
+          plan.tiles(), [13753, 13754, 14010, 14011, 14266, 14267, 14531, 15809, 16055])
 
     def refused(doc, retired_doc=None):
         p = os.path.join(W, "cells.json")
@@ -198,9 +203,12 @@ try:
 
     picture_rgb = {}
 
-    def paint(x, y, colour, off=(0, 0), centre=None):
+    def paint(x, y, colour, off=(0, 0), centre=None, bang=None):
         """A square in the original's way: a 7x7 fill in a dotted outline, its
-        9x9 frame on the cell's corner or one pixel off it."""
+        9x9 frame on the cell's corner or one pixel off it; centre a 3x3 in
+        its middle, bang an airfield's «!» as the map has it (a bar of three
+        and a dot in the fill's middle column: four pixels, as few as the
+        painter takes for a «!»)."""
         X0, Y0 = 8 * x + off[0], 8 * y + off[1]
         border = ([(X0 + i, Y0) for i in range(9)] + [(X0 + 8, Y0 + j) for j in range(1, 9)]
                   + [(X0 + i, Y0 + 8) for i in range(7, -1, -1)] + [(X0, Y0 + j) for j in range(7, 0, -1)])
@@ -214,6 +222,9 @@ try:
             for j_ in range(3, 6):
                 for i in range(3, 6):
                     picture_rgb[(X0 + i, Y0 + j_)] = centre
+        if bang:
+            for j_ in (2, 3, 4, 6):
+                picture_rgb[(X0 + 4, Y0 + j_)] = bang
 
     GREEN, RED, TAN, BLUE, WHITE = (12, 104, 2), (120, 24, 30), (204, 181, 110), (16, 16, 245), (255, 255, 255)
     paint(10, 10, GREEN)              # goes
@@ -223,6 +234,7 @@ try:
     paint(31, 5, GREEN)               # goes, on the tile's right edge: its outline is in the next tile
     paint(20, 20, RED, (0, -1), WHITE)  # goes, a clan base drawn a pixel high
     paint(40, 10, BLUE, centre=WHITE)  # stays, far from everything
+    paint(36, 20, BLUE, bang=WHITE)   # goes, an airfield (Вади-Хальфа's ФСЦ, 2026-10-10)
     for X in range(99, 141):          # a caption: letters with a light rim
         for Y in range(59, 71):
             edge = X in (99, 140) or Y in (59, 70)
@@ -236,7 +248,8 @@ try:
             picture_rgb[(X, Y)] = (204 + g, 181 + g, 110 + g)
     for c in ((21, 26), (23, 26), (22, 25), (22, 27)):
         paint(c[0], c[1], RED)
-    ERASE = {(10, 10): "t", (10, 11): "t", (31, 5): "t", (20, 20): "t", (25, 25): "nothing painted there"}
+    ERASE = {(10, 10): "t", (10, 11): "t", (31, 5): "t", (20, 20): "t", (36, 20): "t",
+             (25, 25): "nothing painted there"}
     KEPT = [(11, 10), (9, 12), (40, 10), (17, 7)]
     made_plan = M.Plan(ERASE, [((99, 59, 140, 70), "Caption", "t")], {})
 
@@ -276,11 +289,13 @@ try:
                     after_sq=M.Squares(after_canvas))
 
     r = run(made, made_plan)
-    check("each square that goes is found, the clan base's a pixel high; the cell with nothing on it says so",
+    check("each square that goes is found, the clan base's a pixel high, the airfield's blue with its «!»;"
+          " the cell with nothing on it says so",
           ({c: (sq[0] - 8 * c[0], sq[1] - 8 * c[1], sq[2]) for c, sq in r["found"].items()},
            [line for line in r["report"] if "no square" in line]),
           ({(10, 10): (0, 0, ("green",)), (10, 11): (0, 0, ("green",)), (31, 5): (0, 0, ("green",)),
-            (20, 20): (0, -1, ("red", "white"))}, ["25,25: no square painted on the cell"]))
+            (20, 20): (0, -1, ("red", "white")), (36, 20): (0, 0, ("blue", "white"))},
+           ["25,25: no square painted on the cell"]))
     check("  ..and the squares beside them that stay, and the one over the caption",
           sorted(r["kept"]), [(9, 12), (11, 10), (17, 7)])
     check("tan sand with its grain between four squares is no square (a painted fill is flat)",
@@ -404,14 +419,24 @@ try:
     check("the same picture and plan give the same bytes", again["out"] == r["out"], True)
     check("a client without the tiles gets nothing and is told",
           (M.apply(lambda p: None, made_plan)[0],
-           len([x for x in M.apply(lambda p: None, made_plan)[1] if "no tile" in x])), ({}, 6))
+           len([x for x in M.apply(lambda p: None, made_plan)[1] if "no tile" in x])), ({}, 7))
 
     made420 = {M.tile_path(0): make_tile(0, (2, 2)), M.tile_path(1): make_tile(1, (2, 2))}
     r4 = run(made420, made_plan)
-    check("on 4:2:0 tiles the same squares go and the same stay",
+    # The airfield's «!» is a column one pixel wide: on 4:2:0 each of its
+    # pixels shares its colour with a blue one beside it, comes out light
+    # blue, neither white nor the fill, and the square is not seen -- so
+    # nothing is painted there, and the cell says so. No tile of the map that
+    # holds a square to erase is 4:2:0 (the real map's check below).
+    check("on 4:2:0 tiles the same squares go and the same stay, but the airfield's: there its «!» of"
+          " one pixel's width is no white, the square is not seen and is left as it was",
           (sorted(r4["found"]), sorted(r4["kept"]), {c: r4["after_sq"].at(*c) for c in ERASE},
-           [r4["after_sq"].at(*c) == r4["before_sq"].at(*c) for c in KEPT]),
-          (sorted(r["found"]), sorted(r["kept"]), {c: None for c in ERASE}, [True] * len(KEPT)))
+           [r4["after_sq"].at(*c) == r4["before_sq"].at(*c) for c in KEPT],
+           sorted(line for line in r4["report"] if "no square" in line),
+           [p for p in r4["painted"] if 8 * 36 <= p[0] <= 8 * 36 + 8 and 8 * 20 <= p[1] <= 8 * 20 + 8]),
+          (sorted(c for c in r["found"] if c != (36, 20)), sorted(r["kept"]), {c: None for c in ERASE},
+           [True] * len(KEPT),
+           ["25,25: no square painted on the cell", "36,20: no square painted on the cell"], []))
     stray, count = only_painted(made420, r4)
     check("  ..and only blocks with a pixel painted change, a chroma block covering 16 x 16 (%d changed)"
           % count, (stray, count > 0), ({0: [], 1: []}, True))
@@ -488,80 +513,97 @@ try:
                 parts = line.rstrip("\n").split("\t")
                 if len(parts) == 3:
                     base[parts[2]] = parts[0]
+        painted_already = [M.tile_path(n) for n in plan.tiles()
+                           if hashlib.sha256(read(M.tile_path(n))).hexdigest() != base.get(M.tile_path(n))]
         check("the tiles a change can touch are the original's, as client/base.txt has them",
-              [M.tile_path(n) for n in plan.tiles()
-               if hashlib.sha256(read(M.tile_path(n))).hexdigest() != base.get(M.tile_path(n))], [])
-        real = run(every, plan)
-        odd = {(5984, 1759): (0, -1, ("red", "white")), (6265, 1821): (0, 0, ("black", "orange"))}
-        check("each of the ten cells has its square found: eight green, KKND's dark red with white a pixel"
-              " high, the kimberlite pipe's black-and-orange hatch",
-              {c: (sq[0] - 8 * c[0], sq[1] - 8 * c[1], sq[2]) for c, sq in real["found"].items()},
-              {c: odd.get(c, (0, 0, ("green",))) for c in plan.cells})
-        check("  ..and nothing is reported missing", [x for x in real["report"] if ": no " in x], [])
-        check("six tiles change: 13754 and 14010 in Halfa, 14011 for KKND, 14531 the kimberlite pipe,"
-              " 15809 Абу-Хамед, 16055 Донгола",
-              sorted(real["out"]), sorted(M.tile_path(n) for n in (13754, 14010, 14011, 14531, 15809, 16055)))
-        check("no square is left on the ten cells", {c: real["after_sq"].at(*c) for c in plan.cells},
-              {c: None for c in plan.cells})
-        around = sorted({(x + dx, y + dy) for x, y in plan.cells for dx in range(-3, 4) for dy in range(-3, 4)}
-                        - set(plan.cells))
-        shifted = [c for c in around if real["after_sq"].at(*c) != real["before_sq"].at(*c)]
-        check("every other square within three cells is where it was, as it was (%d squares)"
-              % sum(1 for c in around if real["before_sq"].at(*c)), shifted, [])
-        KEPT_HALFA = {(5969, 1728): ("green",), (5970, 1729): ("red",), (5970, 1730): ("black",),
-                      (5969, 1733): ("tan",), (5971, 1731): ("tan",), (5968, 1727): ("green",),
-                      (5970, 1727): ("blue", "white"), (5876, 2011): ("green",), (5877, 2012): ("green",),
-                      (5876, 2013): ("green",), (6183, 1975): ("green",), (6182, 1976): ("green",)}
-        check("  ..among them the owner's neighbours named in the research: the masters' camp 95, arena 78,"
-              " the black market 102, «Генри Мл.» 43, the crates 108, the old market, the airfield; Донгола's"
-              " 96, 97 and 455; Абу-Хамед's 127 and 126",
-              {c: (real["after_sq"].at(*c) or (0, 0, None))[2] for c in KEPT_HALFA}, KEPT_HALFA)
-        check("  ..and the squares beside those that go keep their outlines (largest change of a sample)",
-              max(diff(real["before"].original(*p), real["after"].original(*p))
-                  for sq in real["kept"].values() for p in M.frame_pixels(sq)) <= 16, True)
-        stray, count = only_painted(every, real)
-        check("only blocks with a pixel painted change; every other block of every tile keeps its"
-              " coefficients (%d changed)" % count,
-              (stray, count > 0), ({n: [] for n in (13754, 14010, 14011, 14531, 15809, 16055)}, True))
-        most, share = moved(real, every)
-        check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
-              " that move by 2 or less" % (most, 100 * share), (most <= 16, share >= 0.9), (True, True))
-        boxes = [(X, Y) for (x0, y0, x1, y1), _, _ in plan.captions
-                 for X in range(x0, x1 + 1) for Y in range(y0, y1 + 1)]
-        dark_before = sum(1 for p in boxes if real["before"].original(*p)[0] < 110)
-        dark_after = sum(1 for p in boxes if real["after"].original(*p)[0] < 110)
-        check("the letters «Кланбаза KKND» are gone: dark pixels in their boxes %d before, %d after"
-              % (dark_before, dark_after), (dark_before > 100, dark_after < 10), (True, True))
-        check("no fill keeps its square's colour (Донгола's ground is red of its own)",
-              colour_left(real), {c: 0 for c in real["found"]})
-        check("  ..nor brings in what its ground has not: no painted pixel darker or brighter than the ground"
-              " around it by more than 15 (Донгола's first patch carried in the river's black line, 2-3 pixels"
-              " wide; Хальфа's lake shore is really there)", beyond(real), {})
-        check("  ..and every square is painted from a patch of photograph",
-              [line.strip() for line in real["report"] if "smooth" in line], [])
-        out_real, _report = M.apply(read)
-        check("map_cells.apply gives these tiles", out_real == real["out"], True)
-        check("a local run serves the same bytes (bootstrap_http)",
-              {p: M.Served(RES).get(p) == data for p, data in out_real.items()}, {p: True for p in out_real})
+              painted_already, [])
+        if painted_already:
+            # An installed client (the launcher's since 2026-10-06) carries the
+            # release's painted tiles, the owner's since 2026-10-10: nothing
+            # below can be held on them, and the check above has said so.
+            print("  -- not the original's tiles: %s; the real map needs the original ones (the"
+                  " release store by client/base.txt)" % ", ".join(painted_already))
+        else:
+            real = run(every, plan)
+            odd = {(5984, 1759): (0, -1, ("red", "white")), (6265, 1821): (0, 0, ("black", "orange")),
+                   (5970, 1727): (0, 0, ("blue", "white"))}
+            check("each of the twelve cells has its square found: nine green, KKND's dark red with white a"
+                  " pixel high, the kimberlite pipe's black-and-orange hatch, the ФСЦ airfield's blue with «!»",
+                  {c: (sq[0] - 8 * c[0], sq[1] - 8 * c[1], sq[2]) for c, sq in real["found"].items()},
+                  {c: odd.get(c, (0, 0, ("green",))) for c in plan.cells})
+            check("  ..and nothing is reported missing", [x for x in real["report"] if ": no " in x], [])
+            check("  ..every tile that holds one is 4:4:4, where a «!» one pixel wide keeps its white",
+                  sorted({M.tile_of(X0 + 4, Y0 + 4) for X0, Y0, _k in real["found"].values()
+                          if [(c.h, c.v) for c in J.Jpeg(read(M.tile_path(M.tile_of(X0 + 4, Y0 + 4)))).comps]
+                          != [(1, 1)] * 3}), [])
+            check("seven tiles change: 13753 for НИЛ-1, 13754 and 14010 in Halfa, 14011 for KKND, 14531 the"
+                  " kimberlite pipe, 15809 Абу-Хамед, 16055 Донгола",
+                  sorted(real["out"]),
+                  sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 15809, 16055)))
+            check("no square is left on the twelve cells", {c: real["after_sq"].at(*c) for c in plan.cells},
+                  {c: None for c in plan.cells})
+            around = sorted({(x + dx, y + dy) for x, y in plan.cells for dx in range(-3, 4) for dy in range(-3, 4)}
+                            - set(plan.cells))
+            shifted = [c for c in around if real["after_sq"].at(*c) != real["before_sq"].at(*c)]
+            check("every other square within three cells is where it was, as it was (%d squares)"
+                  % sum(1 for c in around if real["before_sq"].at(*c)), shifted, [])
+            KEPT_HALFA = {(5969, 1728): ("green",), (5970, 1729): ("red",), (5970, 1730): ("black",),
+                          (5969, 1733): ("tan",), (5971, 1731): ("tan",), (5968, 1727): ("green",),
+                          (5969, 1727): ("green",), (5971, 1727): ("black", "orange"), (5970, 1728): ("red",),
+                          (5943, 1723): ("green",), (5943, 1722): ("tan",),
+                          (5876, 2011): ("green",), (5877, 2012): ("green",),
+                          (5876, 2013): ("green",), (6183, 1975): ("green",), (6182, 1976): ("green",)}
+            check("  ..among them the owner's neighbours named in the research: the masters' camp 95, arena 78,"
+                  " the black market 102, «Генри Мл.» 43, the crates 108, the old market; around the airfield"
+                  " the quarter 36, the dump 100's hatch and the arena 59, by НИЛ-1 the camp 429 and the dig"
+                  " 433; Донгола's 96, 97 and 455; Абу-Хамед's 127 and 126",
+                  {c: (real["after_sq"].at(*c) or (0, 0, None))[2] for c in KEPT_HALFA}, KEPT_HALFA)
+            check("  ..and the squares beside those that go keep their outlines (largest change of a sample)",
+                  max(diff(real["before"].original(*p), real["after"].original(*p))
+                      for sq in real["kept"].values() for p in M.frame_pixels(sq)) <= 16, True)
+            stray, count = only_painted(every, real)
+            check("only blocks with a pixel painted change; every other block of every tile keeps its"
+                  " coefficients (%d changed)" % count,
+                  (stray, count > 0), ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 15809, 16055)}, True))
+            most, share = moved(real, every)
+            check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
+                  " that move by 2 or less" % (most, 100 * share), (most <= 16, share >= 0.9), (True, True))
+            boxes = [(X, Y) for (x0, y0, x1, y1), _, _ in plan.captions
+                     for X in range(x0, x1 + 1) for Y in range(y0, y1 + 1)]
+            dark_before = sum(1 for p in boxes if real["before"].original(*p)[0] < 110)
+            dark_after = sum(1 for p in boxes if real["after"].original(*p)[0] < 110)
+            check("the letters «Кланбаза KKND» are gone: dark pixels in their boxes %d before, %d after"
+                  % (dark_before, dark_after), (dark_before > 100, dark_after < 10), (True, True))
+            check("no fill keeps its square's colour (Донгола's ground is red of its own)",
+                  colour_left(real), {c: 0 for c in real["found"]})
+            check("  ..nor brings in what its ground has not: no painted pixel darker or brighter than the ground"
+                  " around it by more than 15 (Донгола's first patch carried in the river's black line, 2-3 pixels"
+                  " wide; Хальфа's lake shore is really there)", beyond(real), {})
+            check("  ..and every square is painted from a patch of photograph",
+                  [line.strip() for line in real["report"] if "smooth" in line], [])
+            out_real, _report = M.apply(read)
+            check("map_cells.apply gives these tiles", out_real == real["out"], True)
+            check("a local run serves the same bytes (bootstrap_http)",
+                  {p: M.Served(RES).get(p) == data for p, data in out_real.items()}, {p: True for p in out_real})
 
-        # client/build.py's generated layer, over a store of the original tiles
-        sys.path.insert(0, os.path.join(ROOT, "client"))
-        import build  # noqa: E402
-        store = os.path.join(W, "store")
-        b = build.Build(ROOT, store, RES, os.path.join(W, "release"))
-        b.base, b.files, b.origin = {}, {}, {}
-        for rel, data in sorted(every.items()):
-            sha = hashlib.sha256(data).hexdigest()
-            os.makedirs(os.path.join(store, sha[:2]), exist_ok=True)
-            with open(os.path.join(store, sha[:2], sha), "wb") as fh:
-                fh.write(data)
-            b.base[rel] = b.files[rel] = (sha, len(data))
-            b.origin[rel] = "base"
-        tiles_rel, _done = b.gen_map_tiles()
-        shutil.rmtree(b.tmp, ignore_errors=True)
-        check("a client release carries the same tiles (client/build.py, from the store)",
-              tiles_rel == out_real, True)
-        print("  " + "\n  ".join(real["report"]))
+            # client/build.py's generated layer, over a store of the original tiles
+            sys.path.insert(0, os.path.join(ROOT, "client"))
+            import build  # noqa: E402
+            store = os.path.join(W, "store")
+            b = build.Build(ROOT, store, RES, os.path.join(W, "release"))
+            b.base, b.files, b.origin = {}, {}, {}
+            for rel, data in sorted(every.items()):
+                sha = hashlib.sha256(data).hexdigest()
+                os.makedirs(os.path.join(store, sha[:2]), exist_ok=True)
+                with open(os.path.join(store, sha[:2], sha), "wb") as fh:
+                    fh.write(data)
+                b.base[rel] = b.files[rel] = (sha, len(data))
+                b.origin[rel] = "base"
+            tiles_rel, _done = b.gen_map_tiles()
+            shutil.rmtree(b.tmp, ignore_errors=True)
+            check("a client release carries the same tiles (client/build.py, from the store)",
+                  tiles_rel == out_real, True)
+            print("  " + "\n  ".join(real["report"]))
 finally:
     shutil.rmtree(W, ignore_errors=True)
 

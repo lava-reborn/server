@@ -154,16 +154,45 @@ def rows_of(doc, box):
     return got
 
 
+FSC_AIRFIELD_CELL = (5970, 1727)                 # the cut of the ФСЦ, below
 kept = []
 for x, y, text in rows_of(raw, HALFA_BOX):
-    if (x, y) in HALFA_CUT or (x, y) == PREMIUM_CAMP_CELL:
+    if (x, y) in HALFA_CUT or (x, y) in (PREMIUM_CAMP_CELL, FSC_AIRFIELD_CELL):
         continue
     if (x, y) == OLD_MARKET_CELL and text == OLD_MARKET % "Обмен G комплектов<br>":
         text = OLD_MARKET % ""
     kept.append((x, y, text))
 check("  ..and every other name around Вади-Хальфа is the file's own, row for row (the (P) camp"
-      " 124's hidden since 2026-09-30)", rows_of(out, HALFA_BOX), kept)
+      " 124's hidden since 2026-09-30, the ФСЦ airfield's since 2026-10-10)",
+      rows_of(out, HALFA_BOX), kept)
 check("  ..of which there are dozens", len(kept) > 30, True)
+
+# The owner's cut of Вади-Хальфа's ФСЦ (2026-10-10, «убери фсц тоже»): the
+# FSC airfield 528 (the blue square with «!» beside the old market) and the
+# FSC base «НИЛ-1» 522 across the river are off the map (data/retired.json);
+# every other name of the ФСЦ -- the airfields of the other towns, the two
+# over wasteland, the bases НИЛ-2..4, Абри's air base -- stays.
+print("the cut of Вади-Хальфа's ФСЦ")
+FSC_CUT = {FSC_AIRFIELD_CELL: "Аэроплощадка ФСЦ", (5942, 1723): 'База ФСЦ "НИЛ-1"'}
+FSC_KEPT = {(6185, 1977): "Аэроплощадка ФСЦ", (5865, 1835): "Аэроплощадка ФСЦ",
+            (5879, 2011): "Аэроплощадка ФСЦ", (5863, 1946): "Аэроплощадка ФСЦ",
+            (6032, 1951): "Аэроплощадка ФСЦ", (6017, 2086): "Аэроплощадка ФСЦ",
+            (5849, 1851): 'База ФСЦ "НИЛ-2"', (5863, 2002): 'База ФСЦ "НИЛ-3"',
+            (6167, 1989): 'База ФСЦ "НИЛ-4"', (5866, 1836): "Авиабаза ЦСЦ"}
+check("Вади-Хальфа's FSC airfield and the base НИЛ-1 have no name over their cells any more",
+      {c: texts_at(out, *c) for c in FSC_CUT}, {c: [] for c in FSC_CUT})
+check("  ..where each had its own", {c: texts_at(raw, *c) for c in FSC_CUT},
+      {c: [t] for c, t in FSC_CUT.items()})
+check("  ..while the other airfields, the bases НИЛ-2..4 and Абри's air base keep theirs",
+      {c: texts_at(out, *c) for c in FSC_KEPT}, {c: [t] for c, t in FSC_KEPT.items()})
+FSC_WORD = re.compile(r"ФСЦ|ЦСЦ")
+check("  ..so of the file's twelve names of the ФСЦ the map shows ten",
+      (len(rows_in(raw, (0, 99999, 0, 99999), FSC_WORD)),
+       len(rows_in(out, (0, 99999, 0, 99999), FSC_WORD))), (12, 10))
+check("the ФСЦ cut's own edits are its two cells and no other",
+      sorted((e["x"], e["y"]) for e in LABELS
+             if e.get("why", "").startswith("The owner's cut of Вади-Хальфа's ФСЦ, 2026-10-10")),
+      sorted(FSC_CUT))
 
 print("the rule itself")
 doc = ('\ufeff<?xml version=\'1.0\'?>\n<data>\n'

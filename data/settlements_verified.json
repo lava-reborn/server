@@ -44,7 +44,9 @@
   "5969,1729": null,
   "5969,1731": null,
   "5969,1732": null,
-  "5970,1732": null
+  "5970,1732": null,
+  "5970,1727": null,
+  "5942,1723": null
  },
  "why": {
   "6268,1818": "RECOVERED. The map's own tooltip on this cell is «Поля и Пастбища» (res/database/locations.xml), and 182 «Предгорья» (NoobZone_Cow, library Noob_Zone_Nord like the Нубийское поселение 181 on 6268,1819 below it) is the file with the cows: Корова 5195 three times and the grazing cows 115/116/120. Its one exit is south (outzones side 4 only), which from here is 181; and Зула's quest in 181 sends the player to the cows «в соседней локации, наверху» (texts.xml 59789). The placer had put 182 on 5833,1607 by its title, the tooltip «западные предгорья» of the north-west corner's second drawing of the valley.",
@@ -87,6 +89,8 @@
   "5969,1729": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «убери из хальфы следующие локации: торговцы одеждой ...»): the clothing market 468 (Sets_Market_WH) stood here and is out of the game (data/retired.json places, which also keeps it from every other cell); its tooltip «Торговцы одеждой» is hidden (data/map_labels.json). Nulled without retiring, the four cells of this cut took the craftsmen's quarter 447 off 5968,1719; retired as well, they change exactly their own cells (data/test_retired_places.py).",
   "5969,1731": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «... ремесленники по одежде 6»): the craftsmen's quarter 452 (WH_district1) stood here and is out of the game as 468 on 5969,1729 is; tooltip «Ремесленники по одежде 6 уровень», hidden.",
   "5969,1732": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «... ремесленники по одежде ... 7»): the craftsmen's quarter 456 (WH_district4) stood here and is out of the game as 468 on 5969,1729 is; tooltip «Ремесленники по одежде 7 уровень», hidden.",
-  "5970,1732": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «... ремесленники по одежде ... 8»): the craftsmen's quarter 457 (WH_district7) stood here and is out of the game as 468 on 5969,1729 is; tooltip «Ремесленники по одежде 8 уровень», hidden."
+  "5970,1732": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «... ремесленники по одежде ... 8»): the craftsmen's quarter 457 (WH_district7) stood here and is out of the game as 468 on 5969,1729 is; tooltip «Ремесленники по одежде 8 уровень», hidden.",
+  "5970,1727": "Wasteland, the owner's cut of Вади-Хальфа's ФСЦ (2026-10-10, «убери фсц тоже»): the FSC airfield 528 (air_point_WH_map) stood here and is out of the game (data/retired.json places, which also keeps it from every other cell); its tooltip «Аэроплощадка ФСЦ» is hidden (data/map_labels.json) and its blue square with «!» painted over (server/map_cells.py). Nulled and retired, it changes this cell alone (data/test_retired_places.py).",
+  "5942,1723": "Wasteland, the owner's cut of Вади-Хальфа's ФСЦ (2026-10-10, «убери фсц тоже»): the FSC base 522 «База ЦСЦ НИЛ-1» (FVAviaBazaNil_WH) stood here, across the river beside the resistance camp 429, and is out of the game as 528 on 5970,1727 is; tooltip «База ФСЦ \"НИЛ-1\"», hidden."
  }
 }

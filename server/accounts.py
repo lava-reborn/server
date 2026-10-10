@@ -681,6 +681,7 @@ def migrate(db):
     run_once(db, "money-ledger-opening-2026-09-28", open_ledger)
     run_once(db, RETIRED_PLACES_FIX, relocate_retired_places)
     run_once(db, HALFA_CUT_FIX, relocate_halfa_cut)
+    run_once(db, HALFA_FSC_FIX, relocate_halfa_fsc)
     # Only with the client's tables to tell a premium thing by: a process
     # without them (a tool run outside the container) leaves the fix for
     # the next start that has them, rather than writing it down as done
@@ -879,6 +880,40 @@ def relocate_halfa_cut(db):
                 " quest(s) out of the journals", HALFA_CUT_FIX, len(inside),
                 "/".join(map(str, HALFA_CUT_PLACES)), loc, inside, len(homes), journal)
     return dict(moved=len(inside), homes=len(homes), journal=journal)
+
+
+# The owner's cut of Вади-Хальфа's ФСЦ (2026-10-10, «убери фсц тоже», after
+# the cut above): the FSC airfield 528 (5970,1727) and the FSC base «НИЛ-1»
+# 522 (5942,1723, across the river) are off the map (data/retired.json
+# places). A character saved in one, or calling one home, goes to Причал as
+# the cuts before sent them. No journal step: no quest gives, takes, asks
+# for or points into either place -- the airfield's two upgraders give none,
+# nobody stands in the base (server/test_halfa_cut.py holds that) -- so no
+# journal row can have become impossible with them. Nothing else is touched.
+HALFA_FSC_FIX = "retire-halfa-fsc-2026-10-10"
+HALFA_FSC_PLACES = (528, 522)
+
+
+def relocate_halfa_fsc(db):
+    """Whoever is in the FSC airfield or base, or calls one home, to Причал
+    (as relocate_retired_places); returns the counts it logs."""
+    loc, gx, gy = RETIRED_PLACES_TO
+    marks = ", ".join("?" * len(HALFA_FSC_PLACES))
+    inside = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE loc IN (%s) ORDER BY id" % marks,
+        HALFA_FSC_PLACES).fetchall()]
+    homes = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE home_loc IN (%s) ORDER BY id" % marks,
+        HALFA_FSC_PLACES).fetchall()]
+    db.execute("UPDATE characters SET loc = ?, pos = NULL, gx = ?, gy = ?, on_map = 0"
+               " WHERE loc IN (%s)" % marks, (loc, gx, gy) + HALFA_FSC_PLACES)
+    db.execute("UPDATE characters SET home_loc = ?, home_gx = ?, home_gy = ?"
+               " WHERE home_loc IN (%s)" % marks, (loc, gx, gy) + HALFA_FSC_PLACES)
+    # A warning for the reason relocate_retired_places' is one.
+    log.warning("  ..    %s: %d character(s) moved out of %s to %d %s, %d home(s) moved",
+                HALFA_FSC_FIX, len(inside), "/".join(map(str, HALFA_FSC_PLACES)), loc,
+                inside, len(homes))
+    return dict(moved=len(inside), homes=len(homes))
 
 
 # The same cut for the things: a premium thing (items.premium, 6 860 types)

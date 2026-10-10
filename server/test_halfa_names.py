@@ -69,9 +69,11 @@ MAX_REMAINDER = 8
 # The places the restoration opens. Not the premium masters' camp 124, off the
 # map since the owner's cut of (P) (2026-09-30, data/retired.json), nor the
 # clothing market 468 and the craftsmen's quarters 452, 456 and 457, off it
-# since the owner's cut of Вади-Хальфа (2026-10-09, server/test_halfa_cut.py).
+# since the owner's cut of Вади-Хальфа (2026-10-09, server/test_halfa_cut.py),
+# nor the FSC airfield 528, off it since the cut of the town's ФСЦ
+# (2026-10-10; its upgraders 8213/8214 stand in the other towns' airfields).
 TOWN = [41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 60,
-        176, 107, 528, 59, 78]
+        176, 107, 59, 78]
 QUEST_PLACES = [43, 48, 65, 119, 120, 140, 62, 61, 47, 64, 63, 117, 137, 138, 139, 141, 142,
                 122, 108, 45, 46, 44, 116, 121, 250]
 CAMPS = list(range(80, 88))
@@ -84,7 +86,9 @@ QUARRY = list(range(626, 631))
 ORE_MINES = [200, 201, 202, 657, 658, 659, 1025, 1218, 1255, 1027, 1220, 1257,
              1026, 1219, 1256]
 VH_MINE = [154, 158, 160, 613, 617, 1012, 1016, 1024, 1215, 1017, 1018, 1019]
-ZARECHYE = [429, 433, 522, 508]
+# Not the FSC base «НИЛ-1» 522, off the map since the cut of the ФСЦ
+# (2026-10-10); nobody ever stood in it.
+ZARECHYE = [429, 433, 508]
 PRISON = [644, 645, 646, 647, 648]      # the blocks under the yard 176 (events package)
 # The craftsmen's quarter, inside the owner's wall on the map. The weapon craft's
 # way «Квартал ремесленников» (414) led in from the premium masters' camp 124

@@ -80,7 +80,8 @@ each verified cell on their own.
 A place taken out of the game (data/retired.json 'places': the premium
 masters' camps 124, 125 and 130, the owner's cut of 2026-09-30; Вади-
 Хальфа's clothing market 468 and craftsmen's quarters 452, 456, 457 and
-the KKND clan base's files, the cut of 2026-10-09) is no candidate at all,
+the KKND clan base's files, the cut of 2026-10-09; its ФСЦ airfield 528
+and base «НИЛ-1» 522, the cut of 2026-10-10) is no candidate at all,
 and its old cell is nulled in settlements_verified.json. Both are needed.
 A null alone frees the file to win the next cell that names it -- 125
 simply moved to 5878,2012 -- and a file still in the running bends its

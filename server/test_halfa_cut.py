@@ -33,7 +33,14 @@ What the cut is, each part held here:
      home, goes to Причал, and its quests leave the journals -- once, by
      the run_once «retire-halfa-cut-2026-10-09»; the history, the ledger,
      the bags and the clans stay as they are. On Postgres:
-     server/test_storage_pg.py.
+     server/test_storage_pg.py;
+  8. the ФСЦ, the owner's word of 2026-10-10 («убери фсц тоже»): the FSC
+     airfield 528 (5970,1727) and the FSC base «НИЛ-1» 522 (5942,1723)
+     off the map the same way -- no way in or out through them, nobody
+     of theirs retired (the upgraders 8213/8214 stand in four other
+     towns' airfields, the base stands nobody), no quest tied to them, no
+     ambush opened, and the run_once «retire-halfa-fsc-2026-10-10» sending
+     whoever is in one, or calls one home, to Причал.
 
 The names over the map are test_map_labels'; the windows and the rows in
 detail test_halfa_setcraft's.
@@ -64,6 +71,7 @@ import events  # noqa: E402
 import items  # noqa: E402
 import names  # noqa: E402
 import quests  # noqa: E402
+import rooms  # noqa: E402
 import setcraft  # noqa: E402
 import sets  # noqa: E402
 import travel  # noqa: E402
@@ -457,6 +465,243 @@ try:
 except Exception:
     import traceback
     fails.append("the database broke:\n" + traceback.format_exc())
+
+
+# --- 8. the ФСЦ ----------------------------------------------------------------------------
+# The owner's word of 2026-10-10, after this cut: «убери фсц тоже». The FSC
+# airfield 528 (air_point_WH_map, 5970,1727, the map's blue square with a
+# white «!» beside the old market) and the FSC base «НИЛ-1» 522
+# (FVAviaBazaNil_WH, 5942,1723, across the river by the resistance camp 429)
+# are off the map as the cut's places are; the other towns' airfields and
+# bases НИЛ-2..4 stay. Its own why, so section 1's selection by CUT_WHY
+# still holds the cut of 2026-10-09 alone.
+print("the ФСЦ")
+FSC_WHY = "The owner's cut of Вади-Хальфа's ФСЦ, 2026-10-10"
+FSC = {528: (5970, 1727), 522: (5942, 1723)}
+FSC_UPGRADERS = (8213, 8214)                     # FSC_U_000001/2, art 118
+FSC_PILOTS = (7921, 8210, 8211, 8212)            # ADMIN_Q_000042, 000049-51
+NIL1_TYPES = (7529, 8621, 8622, 8624, 8625, 8626, 8635, 8636, 8687)
+OTHER_AIRFIELDS = (527, 529, 530, 531)           # Абу-Хамед, Абри, Донгола, Керма: on cells
+CSC_PEOPLE = {41: (5685, 5686), 429: (5694, 5695), 35: (2276,)}
+
+
+def stood_in(loc_id):
+    room = rooms.Room(world.location(loc_id), rooms.IdAllocator(), MT)
+    return sorted({n.type_id for n in room.npcs.values()})
+
+
+def place_ids(v):
+    """A quest row's place field (one id, or a list of them) as a list."""
+    if isinstance(v, (list, tuple)):
+        return [int(x) for x in v if str(x).lstrip("-").isdigit()]
+    return [int(v)] if str(v).lstrip("-").isdigit() else []
+
+
+try:
+    fsc = {int(k): v for k, v in RETIRED["places"].items() if v.startswith(FSC_WHY)}
+    check("data/retired.json takes out the airfield 528 and the base «НИЛ-1» 522, each with its"
+          " why quoting the order", {i: "убери фсц тоже" in v for i, v in fsc.items()},
+          {528: True, 522: True})
+    check("  ..and lists their cells, the town's ground still for the encounters",
+          {i: c for c, i in world.retired_cells().items() if i in FSC}, FSC)
+    table = world.settlements()
+    check("  ..on no cell of the table, both old cells nulled with their why",
+          ([c for c, i in table.items() if i in FSC],
+           {i: (VERIFIED["cells"].get("%d,%d" % c, "absent"),
+                "убери фсц тоже" in VERIFIED["why"].get("%d,%d" % c, ""))
+            for i, c in FSC.items()}),
+          ([], {i: (None, True) for i in FSC}))
+    check("  ..both cells lead into the wasteland",
+          {c: world.location_at(*c) == world.pack(*c) for c in FSC.values()},
+          {c: True for c in FSC.values()})
+    check("  ..the files stay, so a character saved inside still loads",
+          [world.location(i).fn for i in FSC], ["air_point_WH_map", "FVAviaBazaNil_WH"])
+    check("the neighbours stay: the quarter 36, the masters' camp 95, the arena 59 and the dump 100"
+          " around the airfield; the resistance camp 429 and the dig 433 by the base",
+          [table.get(c) for c in ((5969, 1727), (5969, 1728), (5970, 1728), (5971, 1727),
+                                  (5943, 1723), (5943, 1722))],
+          [36, 95, 59, 100, 429, 433])
+    check("  ..and so do the other towns' airfields and bases НИЛ-2..4, and Абри's air base 427",
+          [world.cell_of(i) for i in OTHER_AIRFIELDS + (523, 524, 525, 427)],
+          [(6185, 1977), (5865, 1835), (5879, 2011), (5863, 1946), (5849, 1851), (5863, 2002),
+           (6167, 1989), (5866, 1836)])
+
+    # no way in, and none out through them
+    fsc_files = sorted(int(os.path.basename(p)[:-4])
+                       for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")))
+    doors_in = []
+    for lid in fsc_files:
+        for side in "ab":
+            rec = travel.door(lid, side)
+            if rec and int(rec.get("target_loc_id") or 0) in FSC:
+                doors_in.append((lid, side, rec.get("confidence")))
+    check("no door of any confidence leads into either, and neither has a door or a quest way"
+          " out: no way out of the town went through them",
+          (doors_in, {i: [travel.door(i, s) for s in "ab"] for i in FSC},
+           [i for i in FSC if travel.quest_ways(world.location(i))]),
+          ([], {i: [None, None] for i in FSC}, []))
+    with io.open(os.path.join(DATA, "passages.json"), encoding="utf-8") as _fh:
+        FSC_PASSAGES = json.load(_fh)
+    into = []
+    for section in ("doors", "sides", "quest", "walk_in"):
+        for key, recs in (FSC_PASSAGES.get(section) or {}).items():
+            if key.startswith("_"):
+                continue
+            if isinstance(recs, dict):
+                recs = list(recs.values())
+            for rec in recs or ():
+                if isinstance(rec, dict) and (int(rec.get("target_loc_id") or 0) in FSC
+                                              or key in {str(i) for i in FSC}):
+                    into.append((section, key))
+    check("  ..nor a passage, side or quest way of data/passages.json, into or out of them; neither"
+          " is a no_map place",
+          (into, sorted({str(i) for i in FSC} & set(FSC_PASSAGES.get("no_map") or {}))), ([], []))
+    fsc_rows = quests.table_rows()
+    named = sorted({int(r["type"]) for r in fsc_rows
+                    for key in ("loc", "loc_id", "finish_loc", "rew_loc", "stay_in")
+                    if set(place_ids(r.get(key))) & set(FSC)}
+                   | {int(r["type"]) for r in fsc_rows
+                      if isinstance(r.get("way"), dict)
+                      and int(r["way"].get("target_loc_id") or 0) in FSC})
+    check("  ..and no quest row rides anybody there, sends him there, waits or pays there",
+          named, [])
+    check("  ..nor does any quest as the server reads it",
+          sorted(t for t, q in quests.QUESTS.items()
+                 if {q.loc, q.finish_loc, q.rew_loc} & set(FSC) or set(q.stay_in) & set(FSC)), [])
+
+    # the people
+    check("in the airfield a room stood the two FSC upgraders 8213/8214 alone; in the base nobody",
+          {i: stood_in(i) for i in FSC}, {528: list(FSC_UPGRADERS), 522: []})
+    check("  ..the upgraders stand in the airfields of Абу-Хамед, Абри, Донгола and Керма too, so"
+          " neither is retired; their windows were empty there as here",
+          ({i: [t for t in FSC_UPGRADERS if t in stood_in(i)] for i in OTHER_AIRFIELDS},
+           [t for t in FSC_UPGRADERS if t in world.retired_creatures()],
+           [setcraft.window(t)["in_types"] for t in FSC_UPGRADERS]),
+          ({i: list(FSC_UPGRADERS) for i in OTHER_AIRFIELDS}, [], [[], []]))
+    check("  ..the pilots in the airfield's file stand nowhere (world.EVENT_TOKENS 'admin'), the"
+          " base's nine types have no record and no stand-in",
+          ([t for t in FSC_PILOTS
+            if not world._name_tokens(MT[t][1]) & world.EVENT_TOKENS
+            or world.belongs_here(t, MT[t][1], MT[t][0], False)],
+           sorted({t for _c, t in world.location(522).spawns if t}),
+           [t for t in NIL1_TYPES if t in MT or world.substitute(t) is not None]),
+          ([], sorted(NIL1_TYPES), []))
+    check("nobody of the airfield gives or takes a quest, or registers a home",
+          {t: (quests.given_by(t), quests.taken_by(t), world.offers_home(t))
+           for t in FSC_UPGRADERS + FSC_PILOTS},
+          {t: ([], [], False) for t in FSC_UPGRADERS + FSC_PILOTS})
+    check("the ЦСЦ's people in the kept places stay, as decided: О'Нилл and Беккет at Причал,"
+          " Доберман and Хэтфилд in the camp 429, Кёртис of the Фонд in the old market",
+          {i: [t for t in ts if t in standing(i) and t not in world.retired_creatures()]
+           for i, ts in CSC_PEOPLE.items()}, {i: list(ts) for i, ts in CSC_PEOPLE.items()})
+    check("  ..and the boat into Заречье (412, О'Нилл's) stays off",
+          (quests.get(412).give, quests.get(412).take, 412 in quests.given_by(5685)),
+          ([], [], False))
+
+    # the quests
+    FSC_WORDS = re.compile(r"ФСЦ|ЦСЦ|Фонд\w* спасения|аэроплощадк|аэродром|авиабаз|НИЛ-?\d|"
+                           r"вертол[её]т", re.IGNORECASE)
+    check("no quest anybody gives or takes speaks of the ФСЦ, its airfield or a base НИЛ",
+          sorted(t for t, q in quests.QUESTS.items()
+                 if (q.give or q.take) and any(s and FSC_WORDS.search(s) for s in q.texts)), [])
+    check("  ..the words the map had for them, as this test looks for them",
+          [bool(FSC_WORDS.search(w)) for w in ("Аэроплощадка ФСЦ", "База ФСЦ \"НИЛ-1\"")],
+          [True, True])
+
+    # the town's streets: neither cell opens an ambush, listed or not
+    FSC_RING = [(x, y) for x in range(5925, 6036) for y in range(1685, 1781)]
+
+    def fsc_ambush():
+        out = {}
+        for x, y in FSC_RING:
+            band = encounters.band_at(x + 0.5, y + 0.5)
+            if band is not None:
+                out[(x, y)] = (band.camp, band.lo, band.hi)
+        return out
+
+    world.settlements()
+    world.retired_cells()
+    fsc_now = fsc_ambush()
+    saved = (world._SETTLEMENTS, world._RETIRED_CELLS)
+    try:
+        before = dict(saved[0])
+        before.update({c: i for i, c in FSC.items()})
+        world._SETTLEMENTS = before
+        world._RETIRED_CELLS = {c: i for c, i in saved[1].items() if i not in FSC}
+        fsc_was = fsc_ambush()
+        world._SETTLEMENTS = saved[0]
+        fsc_bare = fsc_ambush()
+    finally:
+        world._SETTLEMENTS, world._RETIRED_CELLS = saved
+    check("around the town and across the river the ambush cells are those of the map with the"
+          " airfield and the base on it",
+          (len(fsc_now) > 1500, fsc_now == fsc_was), (True, True))
+    check("  ..and the two cells as plain wasteland would open none either",
+          {c: v for c, v in fsc_bare.items() if fsc_was.get(c) != v}, {})
+
+    # the database
+    check("the run_once's places are the airfield and the base, Причал its target, its name new",
+          (sorted(accounts.HALFA_FSC_PLACES), accounts.RETIRED_PLACES_TO,
+           accounts.HALFA_FSC_FIX not in (accounts.RETIRED_PLACES_FIX, accounts.HALFA_CUT_FIX,
+                                          accounts.PREMIUM_THINGS_FIX)),
+          (sorted(FSC), (PRICHAL,) + world.cell_of(PRICHAL), True))
+    path = os.path.join(tempfile.mkdtemp(), "fsc.db")
+    st = accounts.Store(path)
+    acc, _ = st.register("fsc", "secret")
+    ids = {}
+    for name, loc, home in (("in528", 528, None), ("in522", 522, None), ("home528", 36, 528),
+                            ("home522", 429, 522), ("in468", 468, None), ("in447", 447, None),
+                            ("pier", PRICHAL, None)):
+        cid, _ = st.create_character(acc, name, 0, "1")
+        st.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5970, gy = 1727,"
+                      " on_map = 0 WHERE id = ?", (loc, cid))
+        if home is not None:
+            st.db.execute("UPDATE characters SET home_loc = ?, home_gx = 5970, home_gy = 1727"
+                          " WHERE id = ?", (home, cid))
+        ids[name] = cid
+    keeper = ids["in528"]
+    for t in (119, 10120):
+        st.take_quest(keeper, t, {}, True)
+    st.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.HALFA_FSC_FIX,))
+    st.db.commit()
+    st.close()
+
+    lines = Lines()
+    logging.getLogger("lava").addHandler(lines)
+    try:
+        st = accounts.Store(path)
+    finally:
+        logging.getLogger("lava").removeHandler(lines)
+    chars = {n: st.character(c) for n, c in ids.items()}
+    check("whoever was in the airfield or the base is at Причал, on its cell, off the map, with"
+          " no cell of the old file",
+          {n: (chars[n]["loc"], chars[n]["gx"], chars[n]["gy"], chars[n]["on_map"], chars[n]["pos"])
+           for n in ("in528", "in522")}, {n: (PRICHAL, 5965, 1728, 0, None) for n in ("in528", "in522")})
+    check("  ..a home in either is Причал now, the character himself left where he was",
+          [(chars[n]["home_loc"], chars[n]["home_gx"], chars[n]["home_gy"], chars[n]["loc"])
+           for n in ("home528", "home522")],
+          [(PRICHAL, 5965, 1728, 36), (PRICHAL, 5965, 1728, 429)])
+    check("  ..the one in 468 (the cut of 2026-10-09, run long ago), in 447 and at Причал untouched",
+          [(chars[n]["loc"], chars[n]["pos"]) for n in ("in468", "in447", "pier")],
+          [(468, 77), (447, 77), (PRICHAL, 77)])
+    check("  ..and his journal as it was: no quest is tied to either place",
+          sorted(r["type"] for r in st.quests(keeper)), [119, 10120])
+    check("  ..the log says so: two moved, two homes",
+          [ln for ln in lines.lines if accounts.HALFA_FSC_FIX in ln
+           and "2 character(s) moved out of 528/522" in ln and "2 home(s) moved" in ln] != [], True)
+    check("  ..the counts as the log has them, nothing left to do",
+          accounts.relocate_halfa_fsc(st.db), dict(moved=0, homes=0))
+    st.db.commit()
+    st.db.execute("UPDATE characters SET loc = 528 WHERE id = ?", (keeper,))
+    st.db.commit()
+    st.close()
+    st = accounts.Store(path)
+    check("once per database: what comes after stays where it is put",
+          (st.character(keeper)["loc"], accounts.ran(st.db, accounts.HALFA_FSC_FIX)), (528, True))
+    st.close()
+except Exception:
+    import traceback
+    fails.append("the ФСЦ broke:\n" + traceback.format_exc())
 
 
 print()

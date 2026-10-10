@@ -179,8 +179,9 @@ SLICES = {
         # Тиль (the black market 102, Simple_Upgrader) upgrades. The town's
         # other upgraders have services of their own that are not this
         # module's: the pathologist of the butchers (6765), the gift
-        # packers of the pier (2000, 2001), the ФСЦ at the airfield (8213,
-        # 8214) -- their windows stay empty.
+        # packers of the pier (2000, 2001), the ФСЦ at the airfields (8213,
+        # 8214; Вади-Хальфа's, 528, off the map since 2026-10-10, they stand
+        # in the other towns') -- their windows stay empty.
         upgraders={93: ("upgrade",), 5104: ("upgrade", "exchange"), 5: ("upgrade",)},
         craftsmen={6: 5783, 7: 5828, 8: 5873},      # in 452, 456, 457
         types={"rework": 11000, "parts": 11200, "cheque": 11400, "end": 11500},

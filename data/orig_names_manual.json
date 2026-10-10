@@ -1562,7 +1562,7 @@
   "639": "wh_modif_armor_g (art m2) at the black market (102): no row, and no resident of the wiki's black market list is left for it; the matcher's 62149 is Ваккас (1204).",
   "7660": "AQ000001 (art 119) in the four resistance camps 429-432: the only member of its family, no row, no wiki name.",
   "8236": "VOV_Q_022 in the oasis 62: a Victory Day quest thing, left out of every room by world.EVENT_TOKENS ('vov'); nobody sees it.",
-  "8213": "FSC_U_000001 (art 118, an upgrader) at every Аэроплощадка (527-532, 538; Вади-Хальфа's is 528, 5970,1727): no row. The two 'Фонд спасения цивилизаци' rows of the traders' block, 10453 'Старшина Миринков … Боеприпасы' and 10454 'Волонтер Маштаков … Лекарства', are the traders' own on their offset 10398 (members 55/56; 5671 stands in the Авиабаза ЦСЦ 427), the Фонд's two instructors 49107/49113 sit in the Apoc block beside Говард Хаксли (2192 -> 49108), and no wiki page names anybody at an Аэроплощадка.",
+  "8213": "FSC_U_000001 (art 118, an upgrader) at every Аэроплощадка (527-532, 538; Вади-Хальфа's, 528 on 5970,1727, off the map since the cut of the town's ФСЦ, 2026-10-10): no row. The two 'Фонд спасения цивилизаци' rows of the traders' block, 10453 'Старшина Миринков … Боеприпасы' and 10454 'Волонтер Маштаков … Лекарства', are the traders' own on their offset 10398 (members 55/56; 5671 stands in the Авиабаза ЦСЦ 427), the Фонд's two instructors 49107/49113 sit in the Apoc block beside Говард Хаксли (2192 -> 49108), and no wiki page names anybody at an Аэроплощадка.",
   "8214": "FSC_U_000002, the other of the pair at every Аэроплощадка (see 8213)."
  }
 }
