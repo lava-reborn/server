@@ -564,6 +564,9 @@ _store.close()
 # A fallen creature is back after 20 s: time enough to take its bag and go
 # before it stands there again (and falls on whoever is beside its cell).
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
+           # Production scenes edit gold and skill levels in the database
+           # between logins, so their logout must finish saving the character.
+           LAVA_COMBAT_LINGER="0",
            LAVA_CHEATS="1", LAVA_START="181", LAVA_AP_REGEN="50", LAVA_RESPAWN="20",
            LAVA_SEED="23", LAVA_LEAVE_COMBAT="2")
 LOG = os.path.join(os.path.dirname(DB), "server.log")

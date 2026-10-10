@@ -51,6 +51,7 @@ import npcs
 import party
 import rooms
 import progression
+import production
 import quests
 import sets
 import setcraft
@@ -68,6 +69,9 @@ PORT = int(os.environ.get("LAVA_PORT", "9775"))
 # that drops NET_BIND_SERVICE cannot have it at all, and 0 turns the second
 # listener off outright: the policy is also answered inline on the game port.
 POLICY_PORT = int(os.environ.get("LAVA_POLICY_PORT", "843"))
+COMBAT_LINGER = float(os.environ.get("LAVA_COMBAT_LINGER", "900"))
+if not math.isfinite(COMBAT_LINGER) or COMBAT_LINGER < 0:
+    raise ValueError("LAVA_COMBAT_LINGER must be finite and nonnegative")
 
 # /goto, /give and /money in chat. Off unless a test run turns them on: they
 # are the admin panel's business now, and on a server other people are on
@@ -450,6 +454,12 @@ class Session:
         self.writer = writer
         self.peer = peer
         self.closed = False
+        # A closed transport can still own a vulnerable body. A reconnect
+        # hands that Session to handle_client through the fresh one's
+        # resumed reference; transport identity protects it from old EOFs.
+        self.linger = None
+        self.resumed = None
+        self.resume_loading = False
         # When this socket arrived, so the panel can show how long somebody
         # has been in the game.
         self.since = int(time.time())
@@ -551,6 +561,8 @@ class Session:
         the journal's own ask -- so a quest with a fee is complete on the
         client only while the purse covers it. skill_gate also keeps a
         talk incomplete until its base skill goals have been reached."""
+        if self.closed:
+            return
         if _cmd[0].startswith("q_di_"):
             params = self.fee_gate(params)
             params = self.skill_gate(params)
@@ -708,16 +720,58 @@ class Session:
     def cmd_logout(self, p):
         self.close()
 
-    def close(self):
+    def should_linger(self):
+        """Dangerous ground, excluding the mines and training ranges."""
+        return (COMBAT_LINGER > 0 and self.room is not None
+                and self.loc.war and not self.combat.dead and not self.on_map
+                and self.loc.id not in production.ORE_ROCKS
+                and self.loc.id not in {626, 628, 629, 630}  # quarry pits
+                and self.loc.id not in world.SHOOT_OVER)
+
+    def expire_linger(self):
+        self.close(force=True)
+
+    def close(self, force=False):
         """Put the character away and drop the connection.
 
         Reached three ways -- logout, the finally in handle_client once the
         socket is gone, and a server stop -- and usually two of them in a
-        row, so it has to be a no-op the second time: one write of the
-        position, one close of the transport.
+        row. A repeated transport close is a no-op; force finalizes a
+        lingering body on timeout, death, kick or server shutdown.
         """
-        if self.closed:
+        if self.closed and (not force or self.linger is None):
             return
+        if not force and not self.closed and self.should_linger():
+            self.closed = True
+            self.linger = asyncio.get_running_loop().call_later(
+                COMBAT_LINGER, self.expire_linger)
+            try:
+                self.barter.close()
+                self.cancel_travel()
+                self.cancel_passage()
+                self.cancel_way()
+                self.inv.close()
+                self.upgrader.left()
+                self.combat.close()
+                if self.walk is not None:
+                    self.pos = self.live_cell()
+                    # LocWalker.startMove needs two cells. A zero-length
+                    # leg stops observers without breakMv, which would
+                    # remove their own pending move acknowledgement.
+                    self.room.broadcast(("userMove", dict(
+                        id=self.pid, path=[self.pos, self.pos])))
+                PARTIES.disconnected(self)
+                CLANS.offline(self)
+                broadcast_online_count()
+                self.save_place()
+                self.char.save(STORE)
+            finally:
+                self.writer.close()
+            log.info("  ..    %s remains for %s seconds", self.nick, COMBAT_LINGER)
+            return
+        if self.linger is not None:
+            self.linger.cancel()
+            self.linger = None
         self.closed = True
         # Whatever fails in here, the transport still closes: a socket left
         # open by a bug in one subsystem would otherwise hold up shutdown()
@@ -760,10 +814,13 @@ class Session:
         asks for a restart, so the socket closing right behind it is what
         the player has just been told to expect.
         """
+        if self.linger is not None:
+            self.close(force=True)
+            return
         if self.closed:
             return
         self.send("shutdown", seconds=0)
-        self.close()
+        self.close(force=True)
 
     def kick(self, admin="Сервер", seconds=0, reason=""):
         """Put the player out with the game's own words for it.
@@ -774,13 +831,16 @@ class Session:
         opens the window -- the leaving is the socket closing behind it, and
         close() saves the character on the way, so nothing is lost by it.
         """
+        if self.linger is not None:
+            self.close(force=True)
+            return
         if self.closed:
             return
         self.send("kickban", admin=Str(admin), seconds=int(seconds),
                   reason=Str(reason or ""))
         log.info("  ..    kicked %s by %s: %s", self.nick, admin,
                  reason or "-")
-        self.close()
+        self.close(force=True)
 
     def leave_room(self):
         # A barter is between two people standing side by side, so it ends
@@ -981,6 +1041,23 @@ class Session:
                     log.info("  ..    %s logged in again, dropping the older socket",
                              c["name"])
                     old.close()
+                    if old.linger is not None:
+                        old.linger.cancel()
+                        old.linger = None
+                        old.writer, old.peer = self.writer, self.peer
+                        old.closed = False
+                        old.resume_loading = True
+                        old.online_counter = self.online_counter
+                        old.online_names = self.online_names
+                        old.clan_view = clans.View()
+                        self.closed = True
+                        self.resumed = old
+                        PARTIES.online(old)
+                        CLANS.online(old)
+                        broadcast_online_count()
+                        old.send("lcall", id=old.loc.id, ws=int(old.room.ws),
+                                 ie=0, g_id=travel.geo_id(old.loc, old.gx, old.gy))
+                        return
                 self.active = c
                 self.char_id = c["id"]
                 # A character from before the inventory existed has an
@@ -1071,6 +1148,9 @@ class Session:
 
     # --- world -----------------------------------------------------------
     def enter_location(self):
+        # A move during reconnect loading starts a fresh location, so its
+        # lenter must not reuse the previous body's AP ceiling or snapshot.
+        self.resume_loading = False
         # An lcall makes the client drop its current Location (Master.lcall
         # builds a new LocGen), so whoever shared the old room is told now,
         # before the new one is even loading.
@@ -1170,14 +1250,20 @@ class Session:
         # rp_info's ap_max goes without it for the card to add. The fight
         # keeps this figure until the next lenter, as the bar does
         # (combat.Fighter.ap_max); entered() below fills the pool to it.
-        amax = self.character().ap_ceiling
+        amax = (self.combat.ap_max if self.resume_loading
+                else self.character().ap_ceiling)
         self.combat.amax_sent = amax
         self.send("lenter", pos=self.pos, aspd=progression.AP_REGEN, amax=amax)
         # How many quests may still be handed in today. Only QuestInspector
         # reads it, and that singleton exists from the first Entity built
         # (Entity.as:37), long before the location opens, so it lands.
         self.send("q_sys", daily_available=self.daily_available())
-        self.enter_room()
+        if self.resume_loading and self.room is not None:
+            self.resume_loading = False
+            self.room.snapshot_for(self)
+            self.combat.resend_room(resumed=True)
+        else:
+            self.enter_room()
         self.save_place()
         # A member's client asks for its roster now that it stands in a
         # location; one that has stopped listening is told to reload.
@@ -3752,7 +3838,7 @@ async def handle_client(reader, writer):
                 # Closed under our feet (a relogin elsewhere, a kick): the
                 # rest of what this socket sent is not read at all, see
                 # Session.handle.
-                if sess.closed:
+                if sess.closed or sess.writer is not writer:
                     break
                 try:
                     name, params = decode(raw)
@@ -3767,10 +3853,14 @@ async def handle_client(reader, writer):
                         sess.send("cmdAck", res=bad_frame_res(raw))
                     continue
                 sess.handle(name, params)
-            if sess.closed:
+                if sess.resumed is not None:
+                    SESSIONS.discard(sess)
+                    sess = sess.resumed
+                    SESSIONS.add(sess)
+            if sess.closed or sess.writer is not writer:
                 break
             await writer.drain()
-            if sess.closed:
+            if sess.closed or sess.writer is not writer:
                 break
     # ConnectionError: a reset, and a broken pipe too -- a write to a socket
     # the client has already shut (the online list going out while it
@@ -3782,8 +3872,9 @@ async def handle_client(reader, writer):
         # it, and the position is written all the same; close() is what
         # makes that safe after a logout already wrote it.
         log.info("disconnect %s", peer)
-        SESSIONS.discard(sess)
-        sess.close()
+        if sess.writer is writer:
+            SESSIONS.discard(sess)
+            sess.close()
 
 
 async def handle_policy(reader, writer):
@@ -3920,7 +4011,10 @@ STOP = stopwarn.Countdown(
 
 
 def session_for(char_id):
-    """The live session playing that character, if any."""
+    """The in-memory owner, including a body without a socket."""
+    body = ONLINE.by_char.get(char_id)
+    if body is not None and body.linger is not None:
+        return body
     for sess in SESSIONS:
         if sess.char_id == char_id and not sess.closed:
             return sess
@@ -3943,7 +4037,7 @@ def apply_admin_action(row):
         if kind == "ban":
             STORE.set_banned(row["account_id"], bool(args.get("banned", True)))
         target = None
-        for s in SESSIONS:
+        for s in SESSIONS | {s for s in ONLINE if s.linger is not None}:
             if s.account and s.account["id"] == row["account_id"]:
                 target = s
                 break
@@ -4077,16 +4171,17 @@ def broadcast_online_count():
     item is the nick itself; clans.list_safe only stands in for the few
     characters a raw list cannot carry, which no nick should have anyway.
     """
-    count = len(ONLINE.by_char)
+    connected = [s for s in ONLINE if not s.closed]
+    count = len(connected)
     names = None
-    for sess in ONLINE:
+    for sess in connected:
         if not sess.online_counter or sess.closed:
             continue
         if not sess.online_names:
             sess.send("online", count=count)
             continue
         if names is None:
-            names = RawList(sorted((clans.list_safe(s.nick) for s in ONLINE),
+            names = RawList(sorted((clans.list_safe(s.nick) for s in connected),
                                    key=lambda n: (n.casefold(), n)))
         sess.send("online", count=count, names=names)
 
@@ -4161,7 +4256,7 @@ async def shutdown(servers):
         STOP.forget()
     except Exception:                                    # noqa: BLE001
         log.exception("  ..    clearing the stop's row failed")
-    live = list(SESSIONS)
+    live = list(SESSIONS | {s for s in ONLINE if s.linger is not None})
     for sess in live:
         sess.shutdown()
     await asyncio.gather(*(sess.writer.wait_closed() for sess in live),
