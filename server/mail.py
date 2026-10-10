@@ -160,9 +160,9 @@ def postable(type_id):
     at every take of «Новые вопросы» (quests.START_OBJ_NOT_ON_GROUND). And
     never a premium thing (items.premium), which is out of the game and
     does not change hands, as at the barter and the auction (the owner's
-    cut of (P), 2026-09-30)."""
-    si = items.params_of(type_id) or {}
-    return bool(si.get("exchang")) and not si.get("quest") and not items.premium(type_id)
+    cut of (P), 2026-09-30). Gold items use the same binding rule as barter."""
+    from barter import tradable
+    return tradable(type_id)
 
 
 def stamp(when):

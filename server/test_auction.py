@@ -521,6 +521,17 @@ try:
           names_of(got), ["ah_sresult"])
 
     # --- listing ----------------------------------------------------------------
+    gold_belt = give(a, 3599)
+    got = create(a, gold_belt, hours=168, a_bid=100, a_buyout=500, g_bid=None)
+    check("gold gear with exchang=1 cannot be listed and stays in the bag",
+          ([p["res"] for n, p in got if n == "cmdAck"], gold_belt in bag(a)),
+          ([auction.RES_REFUSED], True))
+    a.send("sndml;item=x%s;body=@@;type=0;subj=@x@;to=@Bob@;" % gold_belt)
+    got = a.frames()
+    check("the same gold gear cannot bypass binding in a letter",
+          ([p["res"] for n, p in got if n == "cmdAck"],
+           named(got, "ctml"), gold_belt in bag(a), inbox_ids(b)),
+          ([mail.RES_REFUSED], [], True, []))
     gun = give(a, BERETTA)
     afro0, _ = purse(a)
     got = create(a, gun, hours=168, a_bid=100, a_buyout=500, g_bid=None)

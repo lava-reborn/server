@@ -8,6 +8,9 @@ own clock, and then it is gone, the room full or empty. Whoever walks in
 meanwhile is shown the bags (one ss_loot with every hex, combat.Fighter.
 entered); before, a bag was drawn only for whoever stood there when it was
 put down, and lay two minutes. Anybody may pick anything up, as before.
+Gold items cannot be put down: a shared bag must not transfer bound gear.
+The rejected ss_upd returns one failed ack (Loot.transferAck), keeps the
+owner and slot, and creates no ground row, on empty ground or an existing bag.
 
 A restart does not cut it short: where each thing lies and until when is a
 row of the ground table (accounts.SCHEMA), and the server puts back what is
@@ -613,6 +616,7 @@ try:
     s.close()
     knife = give(H, KNIFE, slot=PRIMARY)
     to_throw = give(H, SAND)
+    gold_gear = [give(H, t) for t in (25567, 3599, 7006, 37670)]
     victim_gun, victim_sand = give(V, AFRO_GUN), give(V, SAND, 2)
     walker_sand = give(W, SAND)
     stop()
@@ -624,6 +628,14 @@ try:
     spawns = {p["pos"]: p["newUser"] for p in named(arrival, "lch") if "newUser" in p}
     bum = spawns[BUM_HOME]
     pos = pos_of(arrival)
+    for row in gold_gear:
+        res, drawn = throw(h, row, pos)
+        s = store()
+        kept = s.item(row["uniq"])
+        s.close()
+        check("gold item %d cannot be dropped on empty ground" % row["type_id"],
+              (res, drawn, kept["char_id"], kept["slot"], row["uniq"] in ground()),
+              ([0, inventory.RES_REFUSED], [], H, BAG, False))
     loc = world.location(DUMP)
     others = [(cell, mobs.stats(t)) for cell, t in loc.spawns
               if cell != BUM_HOME and mobs.stats(t).can_attack]
@@ -658,6 +670,23 @@ try:
     check("  ..and the hunter throws a thing down on his own cell: a bag of its own",
           (res, drawn, pos != bum_cell), ([0, 0], [(1, [pos])], True))
     thrown_cell = pos
+    for row in gold_gear:
+        res, drawn = throw(h, row, pos)
+        check("gold item %d cannot enter an existing shared bag" % row["type_id"],
+              (res, drawn, row["uniq"] in ground()),
+              ([0, inventory.RES_REFUSED], [], False))
+    opened, inside = in_window(h, pos)
+    check("the shared bag contains only the ordinary dropped item",
+          (opened, inside), ([0], [inventory.oid_of(to_throw)]))
+    h.send("ss_upd;s_status=0;obj=x0;param=1;")
+    h.frames(0.2)
+    leave(h)
+    h = come_back("hunter")
+    s = store()
+    check("gold items keep the same owner and backpack slot after relog",
+          [(s.item(r["uniq"])["char_id"], s.item(r["uniq"])["slot"])
+           for r in gold_gear], [(H, BAG)] * len(gold_gear))
+    s.close()
 
     arrival = goto(h, DESERT)
     desert_cell = pos_of(arrival)

@@ -454,10 +454,9 @@ class Auction:
         if row is None or row["slot"] != inventory.BAG:
             return self.refuse("Выставить можно только предмет из рюкзака")
         si = items.params_of(row["type_id"]) or {}
-        # A premium thing is out of the game and changes no hands, as in a
-        # letter (mail.postable) and at the barter (the owner's cut of (P),
-        # 2026-09-30).
-        if not si.get("exchang") or si.get("quest") or items.premium(row["type_id"]):
+        # The same ownership rules as barter and mail, including gold gear.
+        from barter import tradable
+        if not tradable(row["type_id"]):
             return self.refuse("Этот предмет непередаваемый")
         cost = si.get("cost", 0)
         if not cost:
