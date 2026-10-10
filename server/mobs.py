@@ -53,8 +53,12 @@ MAX_LEVEL = max(int(k) for k in LEVELS)
 # so a stall's tier-one gun of the right class is enough; the numbers a mob
 # shoots with come from the curve, not from the item. The knife is the
 # "homemade_knife_mob" entry of the _mob cold-arms series in objects.xml.
+# A sub-machine gun is «Кустарный ПП» 25341 (weapon_type 5, the rifle's
+# frames: FireArm.weapon_type), not the pistol 4380 it used to share with
+# the pistol class, which drew every gunner of the class with a pistol's
+# (the owner, 2026-10-09, the Вади-Хальфа mine's miners).
 WEAPON_ITEM = {
-    "pistol": 4380, "smg": 4380,
+    "pistol": 4380, "smg": 25341,
     "shotgun": 4392,
     "assault_rifle": 4397,
     "rifle": 4385, "machine_gun": 4385,
@@ -363,7 +367,8 @@ JUNK_SPREAD = 2
 # Beside it, data/loot_manual.json: rows the owner decided for creatures the
 # wiki is silent about -- the Nubian mine's marauders (836, 837) and their
 # gold sand and emeralds, and the Nubian valley's boss (2103) and its ingot
-# of 5 ounces of gold, 2026-09-25. Same tiers, same roll, same cap; a row
+# of 5 ounces of gold, 2026-09-25; the gold ingots of Вади-Хальфа's bosses,
+# 2026-10-09. Same tiers, same roll, same cap; a row
 # names its item by type id, the linker tying the emerald and the ingot to
 # no type. Hand-made rather than written into the generated file, which
 # its builder would take them out of on the next run.
@@ -372,10 +377,15 @@ LOOT_TIERS = {"Ценный": True, "Обычный": False}      # tier -> valu
 # to): one roll per row, valuables first, at most this many that came up kept.
 MAX_DROPS = 2
 # A row at this chance is no roll but a certainty: the valley boss's ingot
-# (data/loot_manual.json, 2103), which the owner wants on every kill. It
-# goes into the bag whatever else came up and takes none of the MAX_DROPS
-# places, so no table the wiki may give the boss one day, and no order of
-# the rows, can push it out; the rows that are rolled keep their two.
+# (data/loot_manual.json, 2103), which the owner wants on every kill, and
+# the ingots of Вади-Хальфа's eight hour-keeping bosses (269/270, 283/284,
+# 299/300, 313/314; the owner's of 2026-10-09). It goes into the bag
+# whatever else came up and takes none of the MAX_DROPS places, so no table
+# the wiki may give the boss one day, and no order of the rows, can push it
+# out; the rows that are rolled keep their two. An ingot lands in the bag
+# only off a boss that keeps the hours (combat.RoomCombat.drop_loot): with
+# the rule off a boss is back every respawn delay, and a certain ingot on
+# each kill would be gold without a limit.
 SURE = 1.0
 # Every man's valuable of his level: objects.xml's ValuableLoot_LvL_0 to _24,
 # as a row of the table at the "Ценный" chance.
@@ -548,18 +558,46 @@ def loot_table(type_id):
     return rows
 
 
+_COUNTS = {}
+
+
+def count_of(type_id, t):
+    """How many of thing t a row of data/loot_manual.json puts in the bag of
+    a corpse of this type when the row lies there: the row's "count", 1
+    without one. The colonists' bosses of Вади-Хальфа carry their 3 ounces
+    as three ingots of one (the owner's of 2026-10-09: «если нет слитков
+    подходящего номинала то сделай несколько предметов, типа 3 по 1г
+    слитку»), which a table keyed by the thing (loot_table) cannot hold as
+    three rows. combat.drop_loot makes one stack of them, the bag the
+    player opens shows three. Built once per type; a count that is no
+    whole number above nought counts as 1."""
+    counts = _COUNTS.get(type_id)
+    if counts is None:
+        counts = {}
+        for rec in _loot_manual().get(str(type_id), []):
+            if rec.get(ONE_OF) or not rec.get("type") or rec.get("tier") not in LOOT_TIERS:
+                continue
+            n = rec.get("count", 1)
+            if isinstance(n, int) and not isinstance(n, bool) and n > 1:
+                counts[int(rec["type"])] = n
+        _COUNTS[type_id] = counts
+    return counts.get(t, 1)
+
+
 def roll_table(type_id, rng):
-    """[(type_id, 1)] off loot_table: every row rolled, so the dice spent do
-    not depend on what came up, and the first MAX_DROPS successes kept. A
-    row at SURE is certain: in the bag every time, without a die and
-    outside the cap. Then one thing of each ONE_OF group (one_of_groups)."""
+    """[(type_id, count)] off loot_table: every row rolled, so the dice
+    spent do not depend on what came up, and the first MAX_DROPS successes
+    kept. A row at SURE is certain: in the bag every time, without a die and
+    outside the cap. The count is the row's own (count_of), 1 but where the
+    owner's file says more. Then one thing of each ONE_OF group
+    (one_of_groups)."""
     out = []
     kept = 0
     for t, chance, _valuable in loot_table(type_id):
         if chance >= SURE:
-            out.append((t, 1))
+            out.append((t, count_of(type_id, t)))
         elif rng.random() < chance and kept < MAX_DROPS:
-            out.append((t, 1))
+            out.append((t, count_of(type_id, t)))
             kept += 1
     for group in one_of_groups(type_id):
         pick = rng.random() * sum(w for _t, w in group)

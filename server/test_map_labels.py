@@ -1,5 +1,6 @@
 """data/map_labels.json against the client's own res/database/locations.xml,
 and the rule server/map_labels.py and launcher/MapLabels.cs both follow."""
+import json
 import os
 import re
 import sys
@@ -86,6 +87,83 @@ check("  ..the factories keep their calibres, Вади-Хальфа's as its pla
       texts_at(out, 6017, 1726), ["Производство боеприпасов Вади Хальфы:<br>12-й калибр<br>СП-10"])
 check("  ..Донгола's quarter its quests and the ingots, not the premium bar",
       texts_at(out, 5877, 2011), ["Жилой квартал Донголы:<BR>Задания.<BR>Обмен золотых слитков"])
+
+# The owner's cut of Вади-Хальфа (2026-10-09, «убери из хальфы следующие
+# локации: торговцы одеждой, улучшение сетов 6-8, ремесленники по одежде 6, 7
+# и 8, а также кланбазу KKND»): the four places are off the map and the
+# KKND base's files out of the game (data/retired.json), the set upgrade's
+# windows empty (setcraft.SLICES off) -- no name over a cell of the town
+# offers any of them, while the other towns keep their own.
+print("the cut of Вади-Хальфа")
+HALFA_CUT = {(5969, 1729): "Торговцы одеждой",
+             (5969, 1730): "Улучшение сетов 6-8[G]<BR>Казначеи ремесленников",
+             (5969, 1731): "Ремесленники по одежде 6 уровень",
+             (5969, 1732): "Ремесленники по одежде 7 уровень",
+             (5970, 1732): "Ремесленники по одежде 8 уровень",
+             (5984, 1759): "Собственность клана KKND:<br>ПОСТОРОННИМ СМЕРТЬ! "}
+check("the clothing market, the set upgrade, the three clothing craftsmen's quarters and the"
+      " KKND base have no name over their cells any more",
+      {c: texts_at(out, *c) for c in HALFA_CUT}, {c: [] for c in HALFA_CUT})
+check("  ..where each had its own (KKND's with the original's trailing space)",
+      {c: texts_at(raw, *c) for c in HALFA_CUT}, {c: [t] for c, t in HALFA_CUT.items()})
+OLD_MARKET = "Старый рынок Вади-Хальфы:<BR>Банк<br>Торговец сувенирами.<br>Лотерейщик (А)<br>" \
+             "Обучение специализациям<br>%sЗадания"
+check("the old market keeps its label but «Обмен G комплектов», Генри ст's exchange",
+      (texts_at(raw, 5968, 1727), texts_at(out, 5968, 1727)),
+      ([OLD_MARKET % "Обмен G комплектов<br>"], [OLD_MARKET % ""]))
+HALFA_BOX = (5955, 5995, 1710, 1770)
+GONE = re.compile(r"Торговцы одеждой|Ремесленники по одежде|Улучшение сетов|Обмен G комплектов|"
+                  r"KKND")
+
+
+def rows_in(doc, box, pattern):
+    import html
+    x0, x1, y0, y1 = box
+    got = []
+    for m in M.ROW.finditer(doc):
+        a = {k.decode(): v for k, v in M.ATTR.findall(m.group(0))}
+        if x0 <= int(a["x"]) <= x1 and y0 <= int(a["y"]) <= y1 \
+                and pattern.search(html.unescape(a["text"].decode("utf-8"))):
+            got.append((int(a["x"]), int(a["y"])))
+    return sorted(got)
+
+
+check("  ..so no name around Вади-Хальфа offers any of it, where the file had seven",
+      (rows_in(out, HALFA_BOX, GONE), len(rows_in(raw, HALFA_BOX, GONE))), ([], 7))
+check("  ..while Абри, Донгола and Абу-Хамед keep their clothing markets' and craftsmen's names",
+      [texts_at(out, *c) for c in ((5865, 1836), (5878, 2013), (6183, 1974), (5860, 1836))],
+      [["Торговцы одеждой"]] * 3 + [["Ремесленники по одежде 10 уровень"]])
+with open(os.path.join(os.path.dirname(HERE), "data", "map_labels.json"), encoding="utf-8") as _fh:
+    LABELS = json.load(_fh)["labels"]
+OLD_MARKET_CELL, PREMIUM_CAMP_CELL = (5968, 1727), (5968, 1726)
+check("the cut's own edits are its seven cells and no other: the six names hidden and the old"
+      " market's retext",
+      sorted((e["x"], e["y"]) for e in LABELS
+             if e.get("why", "").startswith("The owner's cut of Вади-Хальфа, 2026-10-09")),
+      sorted(list(HALFA_CUT) + [OLD_MARKET_CELL]))
+
+
+def rows_of(doc, box):
+    import html
+    x0, x1, y0, y1 = box
+    got = []
+    for m in M.ROW.finditer(doc):
+        a = {k.decode(): v for k, v in M.ATTR.findall(m.group(0))}
+        if x0 <= int(a["x"]) <= x1 and y0 <= int(a["y"]) <= y1:
+            got.append((int(a["x"]), int(a["y"]), html.unescape(a["text"].decode("utf-8"))))
+    return got
+
+
+kept = []
+for x, y, text in rows_of(raw, HALFA_BOX):
+    if (x, y) in HALFA_CUT or (x, y) == PREMIUM_CAMP_CELL:
+        continue
+    if (x, y) == OLD_MARKET_CELL and text == OLD_MARKET % "Обмен G комплектов<br>":
+        text = OLD_MARKET % ""
+    kept.append((x, y, text))
+check("  ..and every other name around Вади-Хальфа is the file's own, row for row (the (P) camp"
+      " 124's hidden since 2026-09-30)", rows_of(out, HALFA_BOX), kept)
+check("  ..of which there are dozens", len(kept) > 30, True)
 
 print("the rule itself")
 doc = ('\ufeff<?xml version=\'1.0\'?>\n<data>\n'

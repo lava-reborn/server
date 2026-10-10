@@ -6951,22 +6951,23 @@
       "start": "Знаешь, %имя%, ты помог%sex?:ла% мне, а на это мало кто способен в наши нелёгкие времена. Многие жители живут в страхе и по принципу- каждый сам за себя. Больше всего жители Вади-Хальфы боятся Магриба и его солдат. Открыто выступать против их войск равносильно самоубийству. А вот если бы кто то согласился вести диверсионную деятельность, то это другой разговор. Поэтому если есть желание помочь, да еще и заработать, тогда слушай.<Br> Нужно совершить быстрый рейд в шахту, убить пяток шахтеров Магриба, быстро уйти и затаиться на время. <Br> Ну что скажешь? Возмешся?<Br><Br><b>Задача:</b> убить 5 шахтеров Магриба.<Br><Br><b>Примечание:</b> Задание можно выполнять не чаще 1 раза в сутки.",
       "notfinish": "Смотри не перепутай! Зашел, убил и исчез!",
       "finish": "Вот твоя награда, а теперь исчезни. Приходи завтра, когда шумиха уляжется.",
-      "give": [1014],
-      "take": [1014],
+      "give": [698],
+      "take": [698],
       "mobs_kill": [838],
       "num_kill": [5],
+      "kill_also": {"839": 838},
       "rew_obj": [],
       "num_rew_obj": [],
-      "rew_afro": 400,
-      "rew_gold": 0,
+      "rew_afro": 1000,
+      "rew_gold": 5,
       "repeatable": 1,
       "per_day": 1,
       "level": 6,
       "q_type": 0,
       "need_quest": 220,
       "loc": 49014471,
-      "finish_loc": 48867008,
-      "why": "Switched on (2026-09-28, the production package): the Вади-Хальфа mine's entrances 154, 158 and 160 lead down into its tiers by doors and sides (data/passages.json, DESIGNED), where its miners (838) stand; server/test_halfa_city.py asks for exactly that, and server/test_halfa_production.py walks the raid. RECOVERED texts (start 47482 'убить 5 шахтеров Магриба ... не чаще 1 раза в сутки', 47483, 47484 'Приходи завтра'; no name line of its own: «Просьба о помощи», 47479) and once a day, DESIGNED money and level. A raid into the mine: five [8] Шахтеры Магриба (838), who stand in the Вади-Хальфа mine's tiers (613, 617, 1012, 1016, 1024) and tunnels (1017-1019). 400 afro. Repeatable, once a day; after 220."
+      "finish_loc": 48883392,
+      "why": "Switched on (2026-09-28, the production package): the Вади-Хальфа mine's entrances 154, 158 and 160 lead down into its tiers by doors and sides (data/passages.json, DESIGNED), where its miners (838) stand; server/test_halfa_city.py asks for exactly that, and server/test_halfa_production.py walks the raid. RECOVERED texts (start 47482 'убить 5 шахтеров Магриба ... не чаще 1 раза в сутки', 47483, 47484 'Приходи завтра'; no name line of its own: «Просьба о помощи», 47479) and once a day, DESIGNED money and level. A raid into the mine: five [8] Шахтеры Магриба (838), who stand in the Вади-Хальфа mine's tiers (613, 617, 1012, 1016, 1024) and tunnels (1017-1019). Repeatable, once a day; after 220. Given and taken back by Фрэнк (698, Портовый рынок 104, 5967x1728) since 2026-10-09, the owner's decision: the wiki's article on this quest («Боец сопротивления», data/wiki/pages.json; data/quests_wiki.json 555) names Френк as giver and taker on the market at 5967x1728, and the text is his -- «ты помог мне» after 220, where the player carried his shawarma to his son, who asked nothing of anybody. It used to be the son (1014), with no source for it. DESIGNED reward, the owner the same day: 1000 afro and 0.05 G (was 400 afro), more than the wiki's 750 for a raid on five armed [8] miners from level 6 (kept: the wiki's any level is not taken), the gold the rat king's, the hardest of the valley's dailies (issue #63). Any of the mine's miners counts, the [9] (839, the third tier 1215 and most of 1016) as the [8] (kill_also): the text asks for 'пяток шахтеров Магриба', both are «Шахтер / Союз арабского Магриба» to the client, and the owner said so on 2026-10-09."
     },
     {
       "type": 222,
@@ -7368,15 +7369,15 @@
       "start": "1. Новый комплект дает большие бонусы и необходим для получения трофеев.<Br>2. При обмене Вы получите новый комплект со скидкой.<Br>3. Вы получите новый комплект независимо от состояния старого.<Br><b>Как улучшить:</b><Br>1. Снимите вещь с персонажа и переложите ее в инвентарь.<Br>2. Подойдите к мастеру и кликните на нем левой кнопкой мыши.<Br>3. В левой части открывшегося окна будет список доступных для улучшения предметов.<Br><b>Внимание! Обменять можно только (G) вещи.</b><Br>4. Вещи меняются на аналогичные по типу, то есть, ботинки на ботинки, броня на броню и т.д.<Br>5. Нажмите на необходимый предмет: справа отобразится вещь, которую вы получите, разница в унциях и кнопка \"Улучшить\"<Br>6. При нажатии кнопки, выбранная вещь будет изъята из инвентаря, а со счета снята необходимая сумма, взамен Вы получите новую улучшенную вещь.",
       "notfinish": "",
       "finish": "Если есть вопросы обращайтесь в канал помощь, либо на прямую к Администрации, либо к другим игрокам.",
-      "give": [93, 5104],
-      "take": [93, 5104],
+      "give": [],
+      "take": [],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 0,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts (texts.xml 24572 name, 24573 start, 24574 finish, in a row; the start's escaped quotes as orig_texts cleans them) and givers: the wiki's «Генри» (93, the port market 104) and «Генри ст» (5104, the old market 35) list «Как менять старые комплекты» among their quests beside «Улучшение: ... улучшить свой сет на следующий уровень со скидкой в 40%». DESIGNED workings: a talk, taken and handed in at either Генри, one-off, no reward. What it tells is their window (server/setcraft.py): a (G) piece for the same piece of the next rung, «разница в унциях», «Обменять можно только (G) вещи» (setcraft.UPGRADE_VARIANTS)."
+      "why": "OFF (give/take [], was [93, 5104]) since 2026-10-09, the owner's order «убери из хальфы ... улучшение сетов 6-8»: the window this talk explains is gone -- Генри, Генри ст and Тиль upgrade no set any more (server/setcraft.py, the slice's off 'window'), and the map's «Улучшение сетов 6-8[G]» is hidden (data/map_labels.json). Kept in the table, words and string ids as they were; the run_once «retire-halfa-cut-2026-10-09» takes it out of the journals. To switch it on again, delete the slice's 'window' line and put 93 and 5104 back in give and take. Was: RECOVERED texts (texts.xml 24572 name, 24573 start, 24574 finish, in a row; the start's escaped quotes as orig_texts cleans them) and givers: the wiki's «Генри» (93, the port market 104) and «Генри ст» (5104, the old market 35) list «Как менять старые комплекты» among their quests beside «Улучшение: ... улучшить свой сет на следующий уровень со скидкой в 40%». DESIGNED workings: a talk, taken and handed in at either Генри, one-off, no reward. What it tells is their window (server/setcraft.py): a (G) piece for the same piece of the next rung, «разница в унциях», «Обменять можно только (G) вещи» (setcraft.UPGRADE_VARIANTS)."
     },
     {
       "type": 239,
@@ -7385,15 +7386,15 @@
       "start": "Покупая комплект G снаряжения, ты получаешь в последствии скидку на более лучший. У меня можно обменять mod10 на mod05 следующего уровня.<br>К обмену принимаются только части G комплектов (в любом состоянии). Новую часть комплекта вы получите со скидкой, равной 50% от стоимости новой части комплекта.",
       "notfinish": "",
       "finish": "Если есть вопросы обращайтесь в канал помощь, либо на прямую к Администрации, либо к другим игрокам.",
-      "give": [5104],
-      "take": [5104],
+      "give": [],
+      "take": [],
       "obj": 0,
       "rew_afro": 0,
       "rew_gold": 0,
       "repeatable": 0,
       "level": 0,
       "q_type": 0,
-      "why": "RECOVERED texts (texts.xml 24376 name, 24377 start: «обменять mod10 на mod05 следующего уровня ... со скидкой, равной 50%»), DESIGNED finish, giver and workings. The file has no notfinish or finish of its own; the finish is 24574, the help line «Как менять старые комплекты» (238) ends with. Генри ст (5104) stands on the old market (35) at 5968,1727, the map's «Обмен G комплектов», and the wiki calls Генри «NPC по Обмену G Сетов» («Заказ»); his window exchanges (server/setcraft.py, EXCHANGE_*). A talk, one-off, no reward."
+      "why": "OFF (give/take [], was [5104]) since 2026-10-09, with «Как менять старые комплекты» (238), the owner's order «убери из хальфы ... улучшение сетов 6-8»: Генри ст's exchange of a mod10 for the next rung's mod05 is gone with the window (server/setcraft.py, the slice's off 'window'), and the old market's label no longer promises «Обмен G комплектов» (data/map_labels.json). Kept in the table, words and string ids as they were; the run_once «retire-halfa-cut-2026-10-09» takes it out of the journals. To switch it on again, delete the slice's 'window' line and put 5104 back in give and take. Was: RECOVERED texts (texts.xml 24376 name, 24377 start: «обменять mod10 на mod05 следующего уровня ... со скидкой, равной 50%»), DESIGNED finish, giver and workings. The file has no notfinish or finish of its own; the finish is 24574, the help line «Как менять старые комплекты» (238) ends with. Генри ст (5104) stands on the old market (35) at 5968,1727, the map's «Обмен G комплектов», and the wiki calls Генри «NPC по Обмену G Сетов» («Заказ»); his window exchanges (server/setcraft.py, EXCHANGE_*). A talk, one-off, no reward."
     }
   ]
 }

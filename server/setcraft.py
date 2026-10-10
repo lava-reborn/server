@@ -89,6 +89,21 @@ wardrobe could sell the cheques below what a stall pays for them.
 
 (P) is filtered everywhere: no variant but A and G is looked at, and
 generate() refuses a row naming a premium thing.
+
+OFF IN VADI-HALFA SINCE 2026-10-09. The owner's order «убери из хальфы ...
+улучшение сетов 6-8; ремесленники по одежде 6, 7 и 8» switched both of the
+town's services off (its slice's "off", one why a service): the windows of
+Генри, Генри ст and Тиль are empty again (entries) -- by the type, so
+Тиль's in Донгола's black market 103 too, which is open to walkers like
+every region; keeping it there would take a window that looks at the room
+it stands in -- and the rows stay in
+data/questgen_setcraft.json, numbered and worded as they were, with give and
+take [] and the why saying so (generate) -- so no string id leaves the
+table and a journal that held one names a quest the server still knows.
+The town's was the only slice: nobody in the game upgrades, exchanges or reworks
+a set or sells a clothing cheque now. The pieces and the cheques already
+made keep their names and their set (CHAINS, MOD_OF, strings, record do not
+read SLICES). Deleting a line of "off" brings that service back.
 """
 import io
 import json
@@ -150,7 +165,11 @@ TYPE_RANGE = range(11000, 13000)
 # A town's slice: the band of rungs its upgraders lead up to and its
 # craftsmen rework, the band of its parts upgrade, which upgrader does
 # what, the first of each level's fifteen craftsmen, and where its rows
-# are numbered. A town adds a slice; the code stays as it is.
+# are numbered. A town adds a slice; the code stays as it is. "off" names
+# the services of the slice that are switched off, each with its why:
+# "window" empties its upgraders' windows (entries), "rows" leaves its rows
+# in the table with nobody to give or take them (generate). Delete the line
+# to switch the service on again.
 SLICES = {
     "Вади-Хальфа": dict(
         band=(6, 8),            # «Улучшение сетов 6-8[G]»; the craftsmen of 6, 7, 8
@@ -165,8 +184,27 @@ SLICES = {
         upgraders={93: ("upgrade",), 5104: ("upgrade", "exchange"), 5: ("upgrade",)},
         craftsmen={6: 5783, 7: 5828, 8: 5873},      # in 452, 456, 457
         types={"rework": 11000, "parts": 11200, "cheque": 11400, "end": 11500},
+        off={
+            "window": "the owner's order of 2026-10-09 («убери из хальфы ... улучшение "
+                      "сетов 6-8»): Генри (93), Генри ст (5104) and Тиль (5) upgrade and "
+                      "exchange no set any more, the map's «Улучшение сетов 6-8[G]» "
+                      "(5969,1730) and the old market's «Обмен G комплектов» are gone "
+                      "(data/map_labels.json), and the talks about the window, 238 and "
+                      "239, are off",
+            "rows": "the owner's order of 2026-10-09 («убери из хальфы ... ремесленники по "
+                    "одежде 6, 7 и 8»): the craftsmen's quarters 452, 456 and 457 are off "
+                    "the map (data/retired.json places), so the rework, the parts upgrade "
+                    "and the cheques have nobody to give or take them",
+        },
     ),
 }
+
+
+def off(slice_, service):
+    """The why a slice's service ("window", "rows") is switched off for,
+    or None while it is on."""
+    return (slice_.get("off") or {}).get(service)
+
 
 # The original's lines the rows quote or follow, pinned by
 # data/build_setcraft.py against texts.xml: «no paper, no work» (24568, the
@@ -469,8 +507,9 @@ def window_entries(slice_, services):
 
 
 def _slice_of_upgrader(type_id):
+    """(slice, services) of an upgrader whose window is on, or (None, ())."""
     for slice_ in SLICES.values():
-        if type_id in slice_["upgraders"]:
+        if type_id in slice_["upgraders"] and not off(slice_, "window"):
             return slice_, slice_["upgraders"][type_id]
     return None, ()
 
@@ -715,10 +754,24 @@ def cheque_rows(slice_, first, rework):
     return rows
 
 
+def switched_off(rows, why):
+    """The rows as they stand with nobody to give or take them: give and
+    take [], the why first saying so, whom they named and why (the slice's
+    off "rows"), then the row's own -- the way a hand-written row is
+    switched off (quests.json 414). Types, kinds and texts stay, so their
+    string ids stay in the table."""
+    for q in rows:
+        was = sorted(set(q["give"]) | set(q["take"]))
+        q["why"] = "OFF (give/take [], was %s), %s. Was: %s" % (was, why, q["why"])
+        q["give"], q["take"] = [], []
+    return rows
+
+
 def generate(slice_):
     """Every row of a slice: rework, parts upgrade, cheques, each family
-    numbered from its own first type (slice_["types"]). Refuses a row that
-    names a premium thing or strays out of its block."""
+    numbered from its own first type (slice_["types"]); with nobody to give
+    or take them while the slice's "rows" are off (switched_off). Refuses a
+    row that names a premium thing or strays out of its block."""
     types = slice_["types"]
     rework = rework_rows(slice_, types["rework"])
     parts = parts_rows(slice_, types["parts"])
@@ -735,6 +788,8 @@ def generate(slice_):
         named = q["rew_obj"] + [o["obj"] for o in q.get("objs", [])]
         if any(items.premium(t) for t in named):
             raise ValueError("setcraft: quest %d names a premium thing" % q["type"])
+    if off(slice_, "rows"):
+        switched_off(rows, off(slice_, "rows"))
     return rows
 
 

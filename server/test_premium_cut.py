@@ -71,7 +71,10 @@ from testkit import check, fails  # noqa: E402
 
 with open(os.path.join(DATA, "retired.json"), encoding="utf-8") as _fh:
     RETIRED = json.load(_fh)
-PLACES = {int(k): v for k, v in RETIRED["places"].items()}
+# The cut of (P)'s own places: data/retired.json holds the cut of Вади-Хальфа
+# (2026-10-09) beside them, which server/test_halfa_cut.py holds.
+PLACES = {int(k): v for k, v in RETIRED["places"].items()
+          if v.startswith("The owner's cut of (P)")}
 CREATURES = {int(k): v for k, v in RETIRED["creatures"].items()}
 CELLS = {124: (5968, 1726), 125: (5876, 2012), 130: (6182, 1975)}
 QUARTER, AZAM, QUARTER_MASTER, WAY_IN, WAY_OUT = 447, 704, 5771, 414, 415

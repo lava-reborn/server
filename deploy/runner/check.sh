@@ -186,7 +186,7 @@ try:
 except Exception as e:
     bad("postgres:5432 by name: %s: %s" % (type(e).__name__, e))
 
-for host, port in (("github.com", 443), ("pypi.org", 443), ("deb.debian.org", 80)):
+for host, port in (("github.com", 443), ("pypi.org", 443), ("mirror.yandex.ru", 80)):
     try:
         connect(host, port).close()
         ok("internet: %s:%d" % (host, port))

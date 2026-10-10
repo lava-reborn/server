@@ -417,6 +417,9 @@ RES_NO_SUCH = 1
 RES_WRONG_NPC = 2
 RES_NOT_READY = 3
 RES_NOT_AVAILABLE = 4
+# «Невозможно перейти в локацию.» (ErrorReport 7): the map asked for from a
+# place left only by its own ways (travel.no_map).
+RES_NO_WAY = 7
 RES_LOG_FULL = 5
 RES_NO_MONEY = 21
 RES_OVERLOAD = inventory.RES_OVERLOAD
@@ -1136,6 +1139,19 @@ class Session:
                      taken, self.loc.file)
             self.inv.refresh_gear()
 
+    def save_place(self):
+        """Write down where the character stands, as close() does at the end:
+        on every arrival, in a location (lenter) or on the map. close() is
+        not reached when the process is killed -- serve_local.ps1 stops it
+        with Stop-Process -Force, a crash does the same -- and a login then
+        put the player back wherever the last logout left him, a mine's
+        tier or a town away (the owner, 2026-10-09). Now it puts him in the
+        location he last entered at worst; the cell within it and a walk on
+        the map are still close()'s."""
+        if self.char_id and self.loc is not None:
+            STORE.save_position(self.char_id, self.loc.id, self.pos,
+                                self.gx, self.gy, self.on_map)
+
     def cmd_lenter(self, p):
         """Answer the client's "I have loaded, let me in".
 
@@ -1162,6 +1178,7 @@ class Session:
         # (Entity.as:37), long before the location opens, so it lands.
         self.send("q_sys", daily_available=self.daily_available())
         self.enter_room()
+        self.save_place()
         # A member's client asks for its roster now that it stands in a
         # location; one that has stopped listening is told to reload.
         CLANS.entered(self)
@@ -1208,10 +1225,14 @@ class Session:
             return
         if not self.on_map and travel.no_map(self.loc.id):
             # An interior left only by its own ways (travel.no_map): the
-            # client greys both map buttons out there (travel.geo_id), and
-            # the hotkey that does not look is answered no -- a silent
-            # return to the location (Master.changeWorldAck).
-            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            # client greys both map buttons out there (travel.geo_id) -- but
+            # its LocationInterface.init lights the top one again, and its
+            # hotkey does not look (widescreen.py wraps both) -- and anything
+            # still asking is told no, staying in the location
+            # (Master.changeWorldAck). 7, «Невозможно перейти в локацию.»:
+            # the 4 it was printed «Аккаунт уже используется» (the owner,
+            # 2026-10-09, in the Вади-Хальфа mine).
+            self.send("cmdAck", res=RES_NO_WAY)
             return
         self.send("cmdAck", res=0)
         if self.on_map:
@@ -1231,6 +1252,7 @@ class Session:
             # Only after gmap: newUser is an offset from the client's own
             # figure, which Master.gmap has just created.
             GMAP.enter(self)
+            self.save_place()
 
     def leave_through_exit(self):
         """chWorld;to=1: out through the exit the player is standing on.
@@ -1482,8 +1504,8 @@ class Session:
             # Nor out of a place left only by its own ways (travel.no_map):
             # Берт's course would be lost by it as by the map button.
             if travel.no_map(self.loc.id):
-                self.answer("Отсюда домой не уйти: выход отсюда только у здешних"
-                            " жителей", group)
+                self.answer("Отсюда домой не уйти: выбирайтесь тем же путём,"
+                            " каким сюда попали", group)
                 return
             self.go_home()
             return
@@ -1588,6 +1610,24 @@ class Session:
         lvl = ch.spec[int(idx)][0]
         return "%s: специализация %d %s" % (
             self.nick, int(idx), "забыта" if lvl < 0 else "теперь %d" % lvl)
+
+    def admin_xp(self, idx, xp):
+        """The admin queue's 'xp': experience into a skill of a character
+        in the game, the card and the bars told as admin_skill tells them."""
+        if not self.char_id:
+            return "персонаж не выбран"
+        ch = self.character()
+        old_level = ch.level
+        changed = ch.add_skill_xp(int(idx), int(xp))
+        ch.save(STORE)
+        self.push_stats(**changed)
+        if ch.level != old_level:
+            self.send_player_info()
+        if progression.moves_vitals(changed):
+            self.push_vitals()
+        s = ch.skill[int(idx)]
+        return "+%d опыта: %s %d (%d/%d)" % (int(xp), self.SKILL_NAMES[int(idx)],
+                                            s[0], s[1], s[2])
 
     def admin_money(self, afro=0, gold=0):
         if not self.char_id:
@@ -2085,7 +2125,13 @@ class Session:
         back the creature's internal name instead of a placeholder.
 
         ally must be truthy or every service this NPC offers is refused before
-        a single frame is exchanged.
+        a single frame is exchanged -- and false for a creature one fights
+        (root MOB): the client draws an ally among creatures as a friend,
+        green on the location's minimap, and one with no ally yet as a mob,
+        yellow (DisplayMM.addPlayer). Every creature's dot is drawn on lch;
+        newUser, before this frame, and redrawn later, so with ally=1 the
+        same miners of one room came out half yellow, half green (the owner,
+        2026-10-09, «Шахта: Третий ярус.»).
         """
         entry = self.room.npc(npc_id) if self.room is not None else None
         if not entry:
@@ -2105,7 +2151,8 @@ class Session:
         # m_hello is a dead field (NPC.createHelloStrings never assigns).
         params = dict(id=npc_id, name=type_id, sex=0, res=type_id,
                       ail=0,
-                      ally=1, lvl=1, rep=[0], bg_rep=0, bg_pen=0,
+                      ally=0 if root == world.MOB else 1, lvl=1, rep=[0], bg_rep=0,
+                      bg_pen=0,
                       give_quests=quests.given_by(type_id),
                       take_quests=quests.taken_by(type_id), m_hello=[],
                       can_set_home=0, can_banking=0, can_trophy=0,
@@ -2238,10 +2285,16 @@ class Session:
             afro, gold = char.spec_cost()
             res = char.learn_spec(idx)
             if res == progression.ERR_SKILL:
-                why = "Нужен навык не ниже %d" % progression.SPEC_MIN_SKILL[idx]
+                skill = progression.SPEC_SKILL[idx]
+                why = 'Требует навык "%s" не ниже %d, у вас %d' % (
+                    progression.SKILL_TITLES[skill], progression.SPEC_MIN_SKILL[idx],
+                    char.skill_level(skill))
             elif res == progression.ERR_MONEY:
-                why = "Не хватает %s" % ("%d афро" % afro if afro
-                                         else "%d голда" % gold)
+                # The purse keeps gold in hundredths: 7500 is the window's 75.
+                cur = auction.AFRO if afro else auction.GOLD
+                why = "Специализация стоит %s, у вас %s" % (
+                    auction.money_text(afro or gold, cur),
+                    auction.money_text(char.afro if afro else char.gold, cur))
         elif status == progression.UPD_FORGET:
             bars = (char.hp_max, char.sp_max)
             res = char.forget_spec(idx)
@@ -2250,9 +2303,13 @@ class Session:
         self.send("cmdAck", res=res)
         if res != 0:
             # The window shows nothing on a refusal (trainingAck is empty),
-            # so the reason goes to the chat the player has open.
+            # and ErrorReport has a text for 45 alone -- «не хватает навыков
+            # для использования этого предмета» -- none for 20, the money.
+            # So the reason goes to the chat the player has open, whatever
+            # SERVER_CHAT says: it answers his own click on «Изучить», and
+            # without it the button just did nothing.
             if why:
-                self.say(why)
+                self.answer(why)
             return
         with STORE.booked_as("spec", idx):
             char.save(STORE)
@@ -3730,10 +3787,22 @@ async def handle_client(reader, writer):
 
 
 async def handle_policy(reader, writer):
+    """The socket policy, on its own port (LAVA_POLICY_PORT): whatever the
+    Flash player sends, the file goes back and the socket is closed.
+
+    A player that hangs up first -- the page closed or reloaded while it
+    asked, a scanner knocking, a link that died -- is no fault of ours: a
+    reset, a broken pipe or a read that timed out is one line of the log.
+    Raised out of here it was asyncio's «Unhandled exception in
+    client_connected_cb» with a traceback, an ERROR in the error log the
+    admin panel shows (production, 2026-10-09)."""
     try:
         await reader.read(64)
         writer.write(POLICY)
         await writer.drain()
+    except (ConnectionError, TimeoutError) as exc:
+        log.info("  policy %s hung up: %s", writer.get_extra_info("peername"),
+                 type(exc).__name__)
     finally:
         writer.close()
 
@@ -3819,8 +3888,9 @@ async def main():
     # died with every handle_client parked in read(), no finally ran, and
     # whoever was online came back wherever they had logged out the time
     # before.
+    global STOPPING
     loop = asyncio.get_running_loop()
-    stopping = asyncio.Event()
+    stopping = STOPPING = asyncio.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         try:
             loop.add_signal_handler(sig, stopping.set)
@@ -3838,6 +3908,9 @@ async def main():
 
 
 ADMIN_POLL_SECONDS = float(os.environ.get("LAVA_ADMIN_POLL", "1.0"))
+# The flag main() waits on to stop: a signal raises it, and so does an
+# admin's "halt" (apply_admin_action).
+STOPPING = None
 
 # The stop announced ahead of a restart, and the frames that count it down
 # (stopwarn.py): to everyone logged in, the people a stop disconnects -- not
@@ -3893,6 +3966,17 @@ def apply_admin_action(row):
                           skip_empty=bool(args.get("skip_empty")))
     if kind == "stop_cancel":
         return STOP.cancel(row["admin"])
+    # The stop itself, now, the way SIGTERM makes it (shutdown): everyone
+    # told, saved and dropped, then the process ends. For Windows, where no
+    # signal reaches a process from outside but TerminateProcess, which saves
+    # nobody: serve_local.ps1 queued this (stopwarn.py halt) and came back
+    # the next time wherever the last logout had left whoever was online
+    # (the owner, 2026-10-09).
+    if kind == "halt":
+        if STOPPING is None:
+            return "отказ: сервер ещё не запущен"
+        STOPPING.set()
+        return "сервер останавливается: места записаны при выходе каждого"
 
     if row["char_id"] is None:
         return "действию нужен персонаж"
@@ -3907,6 +3991,8 @@ def apply_admin_action(row):
         if kind == "goto":
             return sess.admin_goto(args.get("loc_id"), args.get("gx"),
                                    args.get("gy"))
+        if kind == "xp":
+            return sess.admin_xp(args["skill"], args["xp"])
         return "неизвестное действие: %s" % kind
 
     # Offline: nothing is holding this character, so the row is the truth.
@@ -3920,6 +4006,14 @@ def apply_admin_action(row):
                 afro=int(row_c["afro"]) + int(args.get("afro", 0)),
                 gold=int(row_c["gold"]) + int(args.get("gold", 0)))
         return "начислено (не в игре)"
+    if kind == "xp":
+        ch = progression.Character.load(STORE, row["char_id"])
+        idx = int(args["skill"])
+        ch.add_skill_xp(idx, int(args["xp"]))
+        ch.save(STORE)
+        s = ch.skill[idx]
+        return "+%d опыта: %s %d (%d/%d) (не в игре)" % (
+            int(args["xp"]), Session.SKILL_NAMES[idx], s[0], s[1], s[2])
     if kind == "item":
         type_id = int(args["type_id"])
         if items.params_of(type_id) is None:

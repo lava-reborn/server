@@ -108,10 +108,11 @@ try:
            world.entity_root(HASSIR, world.TRADER), trophies.keeps_stall(939)),
           (True, True, world.TRADER, False))
     check("one rate: the auction sorts by it", auction.GOLD_TO_AFRO, RATE)
-    check("the ingots are worth their ounces at it, in afro alone",
+    # In gold too since 2026-10-09: Мортимер sells them at face value.
+    check("the ingots are worth their ounces: in afro at it, and in gold",
           [(items.params_of(t)["cost"], items.params_of(t)["g_cost"])
            for t in (INGOT_1, INGOT_5, INGOT_10)],
-          [(RATE, 0), (5 * RATE, 0), (10 * RATE, 0)])
+          [(RATE, OUNCE), (5 * RATE, 5 * OUNCE), (10 * RATE, 10 * OUNCE)])
     # With the plan's correction д (test_halfa_fixups): Странник[4] and the
     # gold sets of 4/6/8 in Halfa too, not at Локсли's in the valley alone.
     check("Хамис sells the raider's set and the gold army and raider sets, Рияд the army's,"
@@ -126,9 +127,10 @@ try:
            for t in (3582, 3581, 3579, 3578)],
           [("Подсумки пистолетные", 3000), ("Подсумки охотника", 8000),
            ("Подсумки спецназовца", 40000), ("Подсумки снайпера", 20000)])
-    check("Мортимер, Марк Клаус and Ольсен sell nothing; Бартоломью has the Фуль",
+    # Мортимер sells the ingots since 2026-10-09 (test_halfa_ingots).
+    check("Мортимер sells the ingots; Марк Клаус and Ольсен sell nothing; Бартоломью has the Фуль",
           (items.stock_for(MORTIMER), items.stock_for(1959), items.stock_for(431),
-           334 in items.stock_for(81)), ([], [], [], True))
+           334 in items.stock_for(81)), ([INGOT_1, INGOT_5, INGOT_10], [], [], True))
     guns = {tr: [items.params_of(t)["weapon_type"] for t in items.stock_for(tr)
                  if items.root_of(t) == items.FIRE_ARM] for tr in (1201, 1202, 1203)}
     check("the gun stalls sell the wiki's models of their own class, and no assault rifle",

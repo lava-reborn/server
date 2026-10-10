@@ -125,8 +125,13 @@ try:
           msg_of(page)[0], "err")
     code, page = post(BASE, "/register", login="Mailer", password="secret1", email="not-an-address")
     check("a malformed address is refused", msg_of(page), ("err", "Это не похоже на адрес электронной почты"))
+    # The outbox's stand-in for the mail server refuses every .invalid
+    # domain (emailer.check_recipient): asked before the account is made.
+    code, page = post(BASE, "/register", login="Mailer", password="secret1", email="mailer@nowhere.invalid")
+    check("an address the mail server refuses is turned away at the form",
+          msg_of(page), ("err", "Почтовый сервер не принимает этот адрес — проверьте, нет ли в нём ошибки"))
     s = store()
-    check("and no account was made for either", s.account_by_login("Mailer"), None)
+    check("and no account was made for any of them", s.account_by_login("Mailer"), None)
     s.close()
 
     code, page = post(BASE, "/register", login="Mailer", password="secret1", email=" Mailer@Example.COM ")
@@ -228,6 +233,11 @@ try:
     s.db.commit()
     s.close()
     n = len(letters())
+    code, reply = post(BASE, "/account/email", login="Mailer", password="newsecret", email="new@gone.invalid",
+                       ip="203.0.113.4")
+    check("the cabinet: an address the mail server refuses is said so, and nothing is sent",
+          (code, reply["error"], len(wait_letters(n + 1, timeout=1))),
+          (400, "Почтовый сервер не принимает этот адрес — проверьте, нет ли в нём ошибки", n))
     code, reply = post(BASE, "/account/email", login="Mailer", password="newsecret", email="new@example.com",
                        ip="203.0.113.4")
     check("a new address: a letter to it", (code, reply["ok"]), (200, True))
@@ -282,6 +292,38 @@ finally:
         proc.wait(timeout=5)
     except Exception:
         proc.kill()
+
+# --- a final no from the mail server -------------------------------------------
+# What the sender does with each kind of failure, its delivery stubbed out:
+# Mail.ru's 550 for an address that takes no mail (2026-10-08, 09: two
+# invented domains) was tried three times and lit the panel's error lamp.
+import smtplib  # noqa: E402
+
+import emailer  # noqa: E402
+
+tries = []
+
+
+def failing(exc):
+    def deliver(msg):
+        tries.append(1)
+        raise exc
+    return deliver
+
+
+letter = emailer.build("someone@nowhere.example", "Тест", "x")
+emailer._deliver = failing(smtplib.SMTPRecipientsRefused(
+    {"someone@nowhere.example": (550, b"non-local recipient verification failed")}))
+check("an address the server refuses: one try, said as refused",
+      (emailer.attempt(letter, pauses=(0, 0)), len(tries)), ("refused", 1))
+del tries[:]
+emailer._deliver = failing(smtplib.SMTPAuthenticationError(535, b"bad credentials"))
+check("any other final no: no more tries, failed",
+      (emailer.attempt(letter, pauses=(0, 0)), len(tries)), ("failed", 1))
+del tries[:]
+emailer._deliver = failing(smtplib.SMTPServerDisconnected("gone"))
+check("a passing fault: all three tries", (emailer.attempt(letter, pauses=(0, 0)), len(tries)),
+      ("failed", 3))
 
 # --- mail not set up -----------------------------------------------------------
 proc, BASE, LOG = start(LAVA_MAIL_OUTBOX="", LAVA_REGISTER_EMAIL="0")

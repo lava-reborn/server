@@ -40,7 +40,11 @@
   "5838,1603": null,
   "5968,1726": null,
   "5876,2012": null,
-  "6182,1975": null
+  "6182,1975": null,
+  "5969,1729": null,
+  "5969,1731": null,
+  "5969,1732": null,
+  "5970,1732": null
  },
  "why": {
   "6268,1818": "RECOVERED. The map's own tooltip on this cell is «Поля и Пастбища» (res/database/locations.xml), and 182 «Предгорья» (NoobZone_Cow, library Noob_Zone_Nord like the Нубийское поселение 181 on 6268,1819 below it) is the file with the cows: Корова 5195 three times and the grazing cows 115/116/120. Its one exit is south (outzones side 4 only), which from here is 181; and Зула's quest in 181 sends the player to the cows «в соседней локации, наверху» (texts.xml 59789). The placer had put 182 on 5833,1607 by its title, the tooltip «западные предгорья» of the north-west corner's second drawing of the valley.",
@@ -79,6 +83,10 @@
   "5838,1603": "Kept wasteland, as the placer had it: see 5867,1844 (283 Apoc_Oasis would drift here on the title alone).",
   "5968,1726": "Wasteland, the owner's cut of (P) (2026-09-30): the premium masters' camp 124 (Upgraders_VH_P) stood here and is out of the game (data/retired.json places, which also keeps it from every other cell); this null keeps any other file off its tooltip «Лагерь мастеров: улучшение оружия (Р)», which the map hides now (data/map_labels.json). data/test_retired_places.py holds the placer's table to exactly these three cells changed.",
   "5876,2012": "Wasteland, the owner's cut of (P) (2026-09-30): the premium masters' camp 125 (Upgraders_DN_P, Донгола), out of the game as 124 on 5968,1726 is. With the null alone the placer moved 125 one cell over, to 5878,2012; retired, it is no candidate anywhere.",
-  "6182,1975": "Wasteland, the owner's cut of (P) (2026-09-30): the premium masters' camp 130 (Upgraders_AH_P, Абу-Хамед), out of the game as 124 on 5968,1726 is. With the null alone the placer took 432 off 6160,1975; retired, 130 bends no neighbour."
+  "6182,1975": "Wasteland, the owner's cut of (P) (2026-09-30): the premium masters' camp 130 (Upgraders_AH_P, Абу-Хамед), out of the game as 124 on 5968,1726 is. With the null alone the placer took 432 off 6160,1975; retired, 130 bends no neighbour.",
+  "5969,1729": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «убери из хальфы следующие локации: торговцы одеждой ...»): the clothing market 468 (Sets_Market_WH) stood here and is out of the game (data/retired.json places, which also keeps it from every other cell); its tooltip «Торговцы одеждой» is hidden (data/map_labels.json). Nulled without retiring, the four cells of this cut took the craftsmen's quarter 447 off 5968,1719; retired as well, they change exactly their own cells (data/test_retired_places.py).",
+  "5969,1731": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «... ремесленники по одежде 6»): the craftsmen's quarter 452 (WH_district1) stood here and is out of the game as 468 on 5969,1729 is; tooltip «Ремесленники по одежде 6 уровень», hidden.",
+  "5969,1732": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «... ремесленники по одежде ... 7»): the craftsmen's quarter 456 (WH_district4) stood here and is out of the game as 468 on 5969,1729 is; tooltip «Ремесленники по одежде 7 уровень», hidden.",
+  "5970,1732": "Wasteland, the owner's cut of Вади-Хальфа (2026-10-09, «... ремесленники по одежде ... 8»): the craftsmen's quarter 457 (WH_district7) stood here and is out of the game as 468 on 5969,1729 is; tooltip «Ремесленники по одежде 8 уровень», hidden."
  }
 }

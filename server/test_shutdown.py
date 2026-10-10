@@ -1,4 +1,5 @@
-"""Where the character is when the server stops, or the link breaks.
+"""Where the character is when the server stops, or the link breaks -- and
+on every arrival, for a server that is killed and saves nothing at the end.
 
 run.sh stop sends SIGTERM. Until the server handled it, that ended the loop
 with every connection still parked in read(): no finally ran, no position
@@ -57,7 +58,8 @@ env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
            LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730")
 
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
-                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                       encoding="utf-8", errors="replace")
 
 # The log outgrows a pipe that nobody drains: at 64 KB the write blocks and
 # the server stops answering in the middle of the test, which showed up as
@@ -158,7 +160,12 @@ try:
     c = Client(connect())
     lcall, lenter = enter(c)
     loc_id = int(lcall.split("id=")[1].split(";")[0])
-    check("nothing saved yet", saved(), (None, None))
+    # Written on arrival, before any logout or break: a server killed
+    # outright (serve_local.ps1's Stop-Process -Force, a crash) reaches no
+    # close(), and the login then put him back where he had logged out the
+    # time before -- in the Вади-Хальфа mine, a tier or a town away.
+    check("the location written on arrival, before any logout or break", saved(),
+          (loc_id, int(lenter.split("pos=")[1].split(";")[0])))
     c.send("moveTo;path=|490|491|492|;")
     check("moved", c.names(), ["cmdAck", "userMove"])
     # No logout: the client crashed, or the network went.
@@ -188,6 +195,34 @@ try:
     check("position written on shutdown", saved(), (loc_id, 493))
     check("one save per session, not two",
           out.count("shutting down, 1 session(s) online"), 1)
+
+    # --- halt: the same stop, queued, where no signal reaches the process ---
+    # Windows has no SIGTERM to send from outside, only TerminateProcess,
+    # which saves nobody: serve_local.ps1 queues "halt" instead (stopwarn.py
+    # halt, the admin queue), and the game stops the way SIGTERM stops it.
+    srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                           encoding="utf-8", errors="replace")
+    _log = []
+    _drain = threading.Thread(target=lambda: _log.extend(srv.stdout), daemon=True)
+    _drain.start()
+    c = Client(connect())
+    lcall, lenter = enter(c)
+    check("back where the stop left him", lenter, "lenter;pos=493;aspd=1;amax=50;")
+    c.send("moveTo;path=|493|494|;")
+    check("moved once more", c.names(), ["cmdAck", "userMove"])
+    halt = subprocess.run([sys.executable, "stopwarn.py", "halt", "--by", "test"], cwd=HERE,
+                          env=env, capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", timeout=30)
+    check("stopwarn.py halt is answered by the game", (halt.returncode, "останавливается"
+                                                       in halt.stderr), (0, True))
+    got = c.until_closed()
+    check("  ..the client told before the socket closes", got, ["shutdown;seconds=0;"])
+    srv.wait(timeout=10)
+    _drain.join(timeout=2)
+    out = "".join(_log)
+    check("  ..the server exits cleanly", srv.returncode, 0)
+    check("  ..and the position is written", saved(), (loc_id, 494))
 finally:
     if srv.poll() is None:
         srv.terminate()

@@ -17,7 +17,9 @@ A release is four layers, later ones over earlier ones:
   3. generated           what the repository computes from the original:
                          main.swf through tools/widescreen.py, the string
                          table through tools/export_texts.py, the global
-                         map's names through server/map_labels.py, hints.xml.
+                         map's names through server/map_labels.py, hints.xml,
+                         and the map's tiles that lose the squares of retired
+                         places through server/map_cells.py.
   4. client/files/**     small files of ours, kept in git as they are.
 
 A path that two layers both claim is fine going down (a generated main.swf
@@ -304,6 +306,22 @@ class Build:
         ("hints/hints.xml", "gen_hints"),
     ]
 
+    def gen_map_tiles(self):
+        """The global map's tiles with the squares of the places taken out of
+        the game painted over (server/map_cells.py): {path: bytes} of the
+        tiles that changed, and what was done. Read from the original in the
+        store; a tile this client does not have is left alone."""
+        def read(path):
+            if self.origin.get(path) != "base":
+                return None
+            return self.original(path)
+        sys.path.insert(0, os.path.join(self.tree, "server"))
+        try:
+            import map_cells
+            return map_cells.apply(read)
+        finally:
+            sys.path.pop(0)
+
     def run(self):
         os.makedirs(self.out, exist_ok=True)
         self.base = read_entries(self.base_path, "lava-base 1")
@@ -337,6 +355,16 @@ class Build:
             self.report.append("generated: %s %s (%d bytes%s)" % (
                 self.files[p][0][:16], p, len(data),
                 "" if before else ", new"))
+        tiles, done = self.gen_map_tiles()
+        for p in sorted(tiles):
+            self.put(p, tiles[p], "generated")
+            self.report.append("generated: %s %s (%d bytes, map squares painted over)" % (
+                self.files[p][0][:16], p, len(tiles[p])))
+        squares = sum(1 for line in done if " square at " in line)
+        captions = sum(1 for line in done if line.startswith("caption ") and ": no " not in line)
+        missed = [line for line in done if ": no " in line]
+        self.report.append("map:       %d squares and %d caption boxes painted over in %d tiles%s" % (
+            squares, captions, len(tiles), "".join("; " + m for m in missed)))
 
         # 4. ours, in git
         fdir = os.path.join(self.cdir, "files")

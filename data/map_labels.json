@@ -1,9 +1,9 @@
 {
  "_meta": {
   "what": "The owner's edits to the names the global map writes over its cells.",
-  "why": "Those names come from res/database/locations.xml, the player's own file: 414 <location x y text> rows the client draws itself; nothing the server sends touches them. So an edit is made where the file is served -- by the player's launcher (launcher/MapLabels.cs, from the rules tools/export_map_labels.py embeds at build) and by bootstrap_http for a local run (server/map_labels.py). The player's file on disk is never changed.",
+  "why": "Those names come from res/database/locations.xml, the player's own file: 414 <location x y text> rows the client draws itself; nothing the server sends touches them. So an edit is made where the file is served -- client/build.py puts the edited file into every client release, which the launcher installs as it is, and bootstrap_http serves it so for a local run (server/map_labels.py). Hiding a name leaves the square painted on its cell in the map's picture: that is data/map_cells.json's (server/map_cells.py).",
   "rule": "Each edit names a cell (x, y) and the text the row there has now ('was', entities decoded: '<BR>', not '&lt;BR&gt;'). hide: true drops that row; text: gives it another. A row that does not match exactly is left alone, so another copy of the client cannot be edited by mistake.",
-  "edit": "Add or change an edit, then rebuild the launcher (launcher/build.ps1) and publish it; a local run picks it up on restart."
+  "edit": "Add or change an edit; the next deploy's client release carries it, and a local run picks it up on restart. A hidden name with no place under it must also be decided in data/map_cells.json: its square goes, or stays with a why (server/test_map_cells.py)."
  },
  "labels": [
   {"x": 6265, "y": 1821, "was": "Кимберлитовая трубка<br>Добыча алмазов", "hide": true,
@@ -29,6 +29,20 @@
   {"x": 5947, "y": 2081, "was": "Производство боеприпасов Мероэ:<br>0.45 калибр (P)<br>7.62x25ММ (P)<br>7.62x39ММ (P)", "text": "Производство боеприпасов Мероэ:<br>0.45 калибр<br>7.62x25ММ<br>7.62x39ММ",
    "why": "The owner's cut of (P), 2026-09-30 («удали всё, что связано с (P), в том числе и локации»): the ammunition factory's label (Мероэ) listed its calibres as premium (P) rounds, which are out of the game (items.premium); this town's factory has no file on the map yet. The calibres stay, without the (P)."},
   {"x": 6139, "y": 1950, "was": "Производство боеприпасов Абу-Хамеда:<br>7.62x54R (P)<br>7.62x51ММ НАТО (P)<br>8.6x70 (.338 Lapua Magnum) (P)", "text": "Производство боеприпасов Абу-Хамеда:<br>7.62x54R<br>7.62x51ММ НАТО<br>8.6x70 (.338 Lapua Magnum)",
-   "why": "The owner's cut of (P), 2026-09-30 («удали всё, что связано с (P), в том числе и локации»): the ammunition factory's label (Абу-Хамед) listed its calibres as premium (P) rounds, which are out of the game (items.premium); this town's factory has no file on the map yet. The calibres stay, without the (P)."}
+   "why": "The owner's cut of (P), 2026-09-30 («удали всё, что связано с (P), в том числе и локации»): the ammunition factory's label (Абу-Хамед) listed its calibres as premium (P) rounds, which are out of the game (items.premium); this town's factory has no file on the map yet. The calibres stay, without the (P)."},
+  {"x": 5969, "y": 1729, "was": "Торговцы одеждой", "hide": true,
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («убери из хальфы следующие локации: торговцы одеждой ...»): the clothing market 468 is off the map (data/retired.json places, data/settlements_verified.json null). Hidden, the cell is the wasteland it now leads into. The same words over the markets of Абри, Донгола and Абу-Хамед stay."},
+  {"x": 5969, "y": 1730, "was": "Улучшение сетов 6-8[G]<BR>Казначеи ремесленников", "hide": true,
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («... улучшение сетов 6-8»): no file stood on this cell; the service was the set upgrade of Генри, Генри ст and Тиль (server/setcraft.py), whose windows are empty now (the slice's off 'window'), and the craftsmen's treasurers stand only in quarters nobody can reach. Hidden, the cell stays the wasteland it always led into."},
+  {"x": 5969, "y": 1731, "was": "Ремесленники по одежде 6 уровень", "hide": true,
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («... ремесленники по одежде 6»): the craftsmen's quarter 452 is off the map (data/retired.json places, data/settlements_verified.json null), its rework rows OFF. Hidden, the cell is the wasteland it now leads into."},
+  {"x": 5969, "y": 1732, "was": "Ремесленники по одежде 7 уровень", "hide": true,
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («... ремесленники по одежде ... 7»): the craftsmen's quarter 456 is off the map (data/retired.json places, data/settlements_verified.json null). Hidden, the cell is the wasteland it now leads into."},
+  {"x": 5970, "y": 1732, "was": "Ремесленники по одежде 8 уровень", "hide": true,
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («... ремесленники по одежде ... 8»): the craftsmen's quarter 457 is off the map (data/retired.json places, data/settlements_verified.json null), its rework rows OFF. Hidden, the cell is the wasteland it now leads into."},
+  {"x": 5984, "y": 1759, "was": "Собственность клана KKND:<br>ПОСТОРОННИМ СМЕРТЬ! ", "hide": true,
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the label was all the map had of the KKND clan base -- its files (297, 383, 384, 938, 961, 1189) never had a cell and are out of the game now (data/retired.json places). The original row ends in a space, kept here so the edit matches it. Hidden, the cell stays the wasteland it always led into."},
+  {"x": 5968, "y": 1727, "was": "Старый рынок Вади-Хальфы:<BR>Банк<br>Торговец сувенирами.<br>Лотерейщик (А)<br>Обучение специализациям<br>Обмен G комплектов<br>Задания", "text": "Старый рынок Вади-Хальфы:<BR>Банк<br>Торговец сувенирами.<br>Лотерейщик (А)<br>Обучение специализациям<br>Задания",
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («... улучшение сетов 6-8»): «Обмен G комплектов» was Генри ст's exchange of a gold mod10 for the next rung's mod05, gone with the set upgrade (server/setcraft.py, the slice's off 'window'; quest 239 OFF). The old market 35 stays; every other word of its label stays."}
  ]
 }

@@ -14,7 +14,7 @@
           the two-drop branch switched off until the other side of the
           graveyard (688) is reached -- «Посланник смерти», «Дар»
   single  «Шутка висельника»; «Просьба о помощи» (the lent shawarma) and the
-          son's daily raid -- switched off until a way leads into the mine
+          Фрэнк's daily raid, on since the mine's tiers have ways in
   Натти   «Странное послание» to Джо, «Веселый праздник» and its seven [Q]
           guns for Магриб tokens -- six of them switched off until their
           guns have numbers of their own --; «Великая проблема», the
@@ -138,7 +138,7 @@ GIVE_TAKE = {
     211: (VIVEK, OLD_WOMAN), 212: (OLD_WOMAN, TABLE), 213: (OLD_WOMAN, TABLE),
     214: (VIVEK, VIVEK), 215: (OLD_WOMAN, OLD_WOMAN), 216: (VIVEK, VIVEK),
     217: (VIVEK, VIVEK), 218: (VIVEK, OLD_WOMAN),
-    219: (HANGMAN, HANGMAN), 220: (FRANK, SON), 221: (SON, SON),
+    219: (HANGMAN, HANGMAN), 220: (FRANK, SON), 221: (FRANK, FRANK),
     222: (NATTY, JOE), 223: (JOE, JOE), 231: (NATTY, NATTY), 232: (NATTY, NATTY),
     237: (NATTY, NATTY)}
 GIVE_TAKE.update({t: (JOE, JOE) for t in GUNS})
@@ -154,7 +154,7 @@ KILLS = {185: ([693], [7], 119), 196: ([298], [3], 86), 200: ([723], [10], 138),
          237: ([336], [10], 81)}
 # Where a row's way on stands where no way leads yet, the row is switched off
 # (give and take []) until one does: the two-drop branch behind the other side
-# of the graveyard (688) -- as the son's raid on the miners of the mine's
+# of the graveyard (688) -- as Фрэнк's raid on the miners of the mine's
 # tiers was until stage 3 opened them (the ring's Ефрейторы at the entrances
 # stood in for the miners until then). A gun with no numbers of its own the
 # same, until it has them.
@@ -171,7 +171,7 @@ PAYS = {182: (5388, 200), 181: (5382, 0), 185: (None, 200), 186: (None, 250), 18
         200: (None, 400), 202: (None, 500), 203: (None, 400), 205: (None, 400),
         206: (None, 400), 207: (None, 1000), 208: (None, 5000), 211: (VIAL, 0),
         212: (ONE_DROP, 0), 213: (TWO_DROPS, 0), 215: (SYRINGE, 0), 218: (SYRINGE, 0),
-        219: (None, 300), 220: (None, 100), 221: (None, 400), 232: (None, 1000),
+        219: (None, 300), 220: (None, 100), 221: (None, 1000), 232: (None, 1000),
         237: (None, 300)}
 PAYS.update({t: (gun, 0) for t, (_n, gun) in GUNS.items()})
 PAYS.update({t: (chapter, 0) for t, (_p, chapter) in PARTS.items()})
@@ -271,13 +271,14 @@ try:
           sorted(probed & set(MINE_TIERS)), [613, 1024])
     check("  ..in the chain the texts draw", {t: q.need_all + q.need_any for t, q in rows.items()},
           CHAIN)
-    check("  ..one-offs, but Бари's courier, Умар's kit and the son's raid (once a day) and the"
+    check("  ..one-offs, but Бари's courier, Умар's kit and Фрэнк's raid (once a day) and the"
           " journal's four assemblies (as often as a part is lost)",
           {t: q.per_day for t, q in rows.items() if q.repeatable}, REPEATABLE)
-    check("  ..no gold among them, nothing beside the reward; the assemblies are services (no"
-          " day's task, no place in the journal's count), nothing else",
-          ([t for t, q in rows.items() if q.rew_gold or q.rew_also or q.rew_random],
-           sorted(t for t, q in rows.items() if q.service)), ([], sorted(PARTS)))
+    check("  ..no gold among them but Фрэнк's raid (0.05 G), nothing beside the reward; the"
+          " assemblies are services (no day's task, no place in the journal's count), nothing"
+          " else",
+          ([(t, q.rew_gold) for t, q in rows.items() if q.rew_gold or q.rew_also or q.rew_random],
+           sorted(t for t, q in rows.items() if q.service)), ([(RAID, 5)], sorted(PARTS)))
     check("  ..paying what each row's why says",
           {t: ((q.rew_obj[0] if q.rew_obj else None), q.rew_afro) for t, q in rows.items()
            if q.rew_obj or q.rew_afro}, PAYS)
@@ -685,12 +686,16 @@ def done():
 
 def credit_kills(qtype):
     """The kills of a quest, as a fight's Fighter.count_kill makes them:
-    quests.kill_progress on the server's own database."""
+    quests.kill_progress on the server's own database. A slot whose kin
+    count for it as well (kill_also: the raid's [9] miners beside its [8])
+    gets them in turn, the slot's own type first, so the hand-in holds only
+    if every kind is counted."""
     st = store()
     q = quests.get(qtype)
     for mob, n in zip(q.mobs_kill, q.num_kill):
-        for _ in range(n):
-            quests.kill_progress(st, char_id(), mob)
+        kinds = [mob] + sorted(k for k, v in q.kill_also.items() if v == mob)
+        for i in range(n):
+            quests.kill_progress(st, char_id(), kinds[i % len(kinds)])
     st.close()
 
 

@@ -19859,7 +19859,7 @@
    "role": "mob",
    "root": 0,
    "spawn_locations": 8,
-   "weapon_class": "knife"
+   "weapon_class": "smg"
   },
   "839": {
    "body": "man",
@@ -19871,7 +19871,7 @@
    "role": "mob",
    "root": 0,
    "spawn_locations": 2,
-   "weapon_class": "knife"
+   "weapon_class": "smg"
   },
   "84": {
    "body": "dog",

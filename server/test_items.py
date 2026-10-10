@@ -155,7 +155,7 @@ def deliberate(t):
         p["cost"] = items.OWN_ARTICLE_PRICE[t]
     if t in items.GOLD_INGOTS:
         p.update(cost=items.GOLD_INGOTS[t] * progression.GOLD_TO_AFRO_RATE
-                 // progression.GOLD_OUNCE, g_cost=0)
+                 // progression.GOLD_OUNCE, g_cost=items.GOLD_INGOTS[t])
     if quests.lent(t) or events.kept(t):
         p.update(quest=1, exchang=0)
     return cmd, p
@@ -182,10 +182,10 @@ check("set pieces are types the client has, all of them clothing",
       [t for t in pieces if cat.get(t, (None,))[0] != items.WEAR], [])
 check("hand-made cold-arm numbers are for cold arms the client has",
       [t for t in cold if cat.get(t, (None,))[0] != items.COLD_ARM], [])
-check("the hand-made loot numbers -- the mine's sand and emeralds, the valley boss's "
-      "ingot -- are for simple objects the client has and the wiki lacks",
+check("the hand-made loot numbers -- the mine's sand and emeralds, the gold ingots of "
+      "1, 5 and 10 ounces -- are for simple objects the client has and the wiki lacks",
       (sorted(loot), [t for t in loot if cat.get(t, (None,))[0] != items.TRASH or t in wiki]),
-      ([2258, 3159, 4796], []))
+      ([2258, 3159, 4796, 4797, 7620], []))
 check("  ..and fill only holes: a positive wiki value stays, a price stays whole",
       (items._holes({"cost": 5, "strike_cost": 0}, {"cost": 100, "strike_cost": 5}),
        items._holes({"g_cost": 3}, {"cost": 100, "strike_cost": 5}),

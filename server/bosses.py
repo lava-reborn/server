@@ -25,8 +25,10 @@ them away.
 
     LAVA_BOSS_HOURS  "14,18,20"       the hours, H or H:MM on that clock.
                                       "off" turns the rule off, and a boss is
-                                      an ordinary mob again; blank, or not
-                                      one hour in it, is the default
+                                      an ordinary mob again, which drops no
+                                      gold ingot (combat.RoomCombat.
+                                      drop_loot); blank, or not one hour
+                                      in it, is the default
     LAVA_BOSS_STAY   "60"             minutes a boss stays after its hour;
                                       not a number above 0 is the default
     LAVA_BOSS_TZ     "Europe/Moscow"  whose clock the hours are read on

@@ -3,7 +3,7 @@ the three ore mines' rock, the mines' sorting terminals, the processing base
 (199) and the ammunition factory (198) as the original's CrBQ rows
 (data/questgen_production.json, data/build_questgen_production.py); the
 Вади-Хальфа mine (154/158/160) joined to its tiers by DESIGNED doors and
-sides, with the son's raid (221) switched on; the quarry's leftovers
+sides, with Фрэнк's raid (221) switched on; the quarry's leftovers
 (quests.json 320-323).
 
 In process: the things (named from the original, their numbers, what a
@@ -16,8 +16,9 @@ quarry's rows and their texts, each paying more a stone than the plain
 blocks capped a day, the mine's doors and sides -- every exit of every tier
 covered, each way back where it came from, the three doors up into the
 entrances arriving on their own cells (own_cell) and every other door of the
-game keeping the player's cell -- the miners it opens and their loot, and 221
-on.
+game keeping the player's cell, every tier reached from each entrance alone,
+none of them onto the map (no_map), five minutes to a respawn there -- the
+miners it opens, their sub-machine guns and their loot, and 221 on.
 
 On a socket:
 
@@ -28,11 +29,12 @@ On a socket:
     passed; the factory makes 600 rounds of 12-gauge, not the (P) ones; the
     second line prepared, the gold line takes its 0.02 G; the gates and the
     rows closed above the band and below it;
-  * a raider (level 8): «Индийское кино» and the son's raid taken; the
+  * a raider (level 8): «Индийское кино» and Фрэнк's raid taken; the
     Вади-Хальфа mine entered by the door of 154, the Ефрейторы and miners
     shot, the ring off a miner, five miners counted, the way back up; the
-    second tier's two halves by their sides, and a door up into the third
-    entrance landing on its own cell; the raid and the ring handed in;
+    second tier walked end to end by its sides, 1016 through 1024 and the
+    tunnels to 1012, and its east end's door up into the third entrance
+    landing on its own cell, 1024's up through 613 to 158; the raid and the ring handed in;
   * a quarry worker: the polishing mix's components off the quarry's
     stones, the mix, the polished blocks at Большой Сэм, the foundation
     stones and the polished ones at Варон's building site, three a day.
@@ -49,6 +51,8 @@ import subprocess
 import sys
 import tempfile
 import time
+from types import SimpleNamespace
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -86,20 +90,24 @@ ROCKS_STAND = {1025: 20, 1218: 10, 1255: 5, 1027: 20, 1220: 15, 1257: 12, 1026: 
                1256: 7}
 PANEL, GUARD = 2022, 1714
 BASE, FACTORY, STATION, PIER, QUARRY_N, QUARRY_C, SITE = 199, 198, 37, 41, 627, 626, 165
+MARKET = 104                    # Портовый рынок, Фрэнк's stall
 VH_TOP = {154: (5983, 1735), 158: (5984, 1735), 160: (5988, 1735)}
 VH_TIERS = [613, 617, 1012, 1016, 1024, 1215]
 VH_TUNNELS = [1017, 1018, 1019]
-DOORS_WANT = {(154, "b"): 613, (613, "a"): 154, (613, "b"): 1024, (158, "b"): 617,
-              (617, "a"): 158, (617, "b"): 1012, (160, "b"): 1016, (1012, "a"): 617,
-              (1016, "a"): 160, (1024, "a"): 613, (1024, "b"): 1215, (1215, "a"): 1024}
-SIDES_WANT = {(1012, "W"): 1016, (1016, "E"): 1012, (1024, "E"): 1017, (1017, "W"): 1024,
-              (1017, "E"): 1018, (1018, "W"): 1017, (1018, "E"): 1019, (1019, "W"): 1018,
-              (1019, "E"): 1024, (1024, "W"): 1019}
+DOORS_WANT = {(154, "b"): 617, (617, "a"): 154, (613, "b"): 1024, (158, "b"): 613,
+              (613, "a"): 158, (617, "b"): 1016, (160, "b"): 1012, (1012, "a"): 160,
+              (1016, "a"): 617, (1024, "a"): 613, (1024, "b"): 1215, (1215, "a"): 1024}
+# The second tier, one gallery west to east (the owner's layout of 2026-10-09:
+# 154 - 617 - 1016 - 1024, 158 - 613 - 1024, 160 - 1012 - the tunnels - 1024).
+VH_GALLERY = [1016, 1024, 1017, 1018, 1019, 1012]
+SIDES_WANT = {}
+for _w, _e in zip(VH_GALLERY, VH_GALLERY[1:]):
+    SIDES_WANT[(_w, "E")], SIDES_WANT[(_e, "W")] = _e, _w
 SORTERS = {"plumbum": (1359, LEAD_ROOM), "nitre": (1363, NITRE_ROOM),
            "copper": (1367, COPPER_ROOM)}
 LINES = {"plumbum": 1371, "nitre": 1375, "copper": 1379}
 ASSEMBLER, GATE_COPPER, EXIT_COPPER = 1383, 1328, 1340
-SAM, VARON, STONE, SON, OLD_WOMAN, CORPORAL, MINER, MINER_9 = 979, 1005, 977, 1014, 1685, \
+SAM, VARON, STONE, FRANK, OLD_WOMAN, CORPORAL, MINER, MINER_9 = 979, 1005, 977, 698, 1685, \
     312, 838, 839
 ORE = {"plumbum": 3636, "nitre": 3640, "copper": 3644}
 SORTED = {"plumbum": 3672, "nitre": 3676, "copper": 3680}
@@ -420,7 +428,7 @@ try:
     check("  ..and every one's far side has a door back",
           [(k, s) for (k, s), t in DOORS_WANT.items()
            if not any((travel.door(t, b) or {}).get("target_loc_id") == k for b in "ab")], [])
-    check("the sides: the second tier's two halves, and the tunnels' ring round the middle one",
+    check("the sides: the second tier one gallery, 1016 - 1024 - the tunnels - 1012",
           {k: travel.side_way(*k)["target_loc_id"] for k in SIDES_WANT}, SIDES_WANT)
     check("  ..each one back over the opposite edge",
           [k for k, t in SIDES_WANT.items()
@@ -431,12 +439,12 @@ try:
         return sorted(c for c, s in travel.exit_sides(loc).items() if s == side)[0]
     ex = travel.plan_exit(world.location(154), door_cell(154, "b"), *VH_TOP[154])
     check("down 154's door: the first tier, on 154's cell", (ex.loc_id, ex.gx, ex.gy),
-          (613,) + VH_TOP[154])
-    ex = travel.plan_exit(world.location(1016), door_cell(1016, "a"), *VH_TOP[158])
-    check("up 1016's door from the side of 158: the third entrance, on its own cell"
+          (617,) + VH_TOP[154])
+    ex = travel.plan_exit(world.location(1012), door_cell(1012, "a"), *VH_TOP[158])
+    check("up 1012's door from the side of 158: the third entrance, on its own cell"
           " (travel.plan_exit)", (ex.loc_id, ex.gx, ex.gy), (160,) + VH_TOP[160])
-    ex = travel.plan_exit(world.location(613), door_cell(613, "a"), *VH_TOP[154])
-    check("  ..and up 613's door into 154, where it came from: its cell",
+    ex = travel.plan_exit(world.location(617), door_cell(617, "a"), *VH_TOP[154])
+    check("  ..and up 617's door into 154, where it came from: its cell",
           (ex.loc_id, ex.gx, ex.gy), (154,) + VH_TOP[154])
     # Every door of the game a player can take (data/exits.json, corrected by
     # data/passages.json), from its location's own cell or, for an interior,
@@ -467,7 +475,7 @@ try:
             if (ex.gx, ex.gy) != tuple(want):
                 shifted.append((lid, s, start, (ex.gx, ex.gy)))
     check("only the mine's three doors up into its entrances arrive on the far side's cell"
-          " (own_cell)", own, [(613, "a"), (617, "a"), (1016, "a")])
+          " (own_cell)", own, [(613, "a"), (617, "a"), (1012, "a")])
     check("  ..every other of the game's %d doors keeps the cell it is taken from" % len(taken),
           shifted, [])
     check("  ..among them the «Горные тропы» doors 598/162 and 623/53, as before the mine",
@@ -485,8 +493,32 @@ try:
                     seen.add(t)
                     todo.append(t)
         return seen
-    check("from the three entrances every tier and tunnel is reached",
-          sorted(set(VH_TIERS + VH_TUNNELS) - reached(set(VH_TOP))), [])
+    check("from each of the three entrances alone every tier and tunnel is reached",
+          [(e, sorted(set(VH_TIERS + VH_TUNNELS) - reached({e}))) for e in VH_TOP],
+          [(e, []) for e in VH_TOP])
+    check("  ..and none of them opens onto the map: out only by the doors up (no_map)",
+          [lid for lid in VH_TIERS + VH_TUNNELS if not travel.no_map(lid)], [])
+    # Observe the timer actually scheduled after a corpse is removed: the
+    # old mine multiplier must not turn the new five minutes into 33 minutes.
+    for lid in list(VH_TOP) + VH_TIERS + VH_TUNNELS + [STATION]:
+        for role, delay in (("smg", combat.RESPAWN_DELAY),
+                            ("object", combat.OBJECT_RESPAWN_DELAY)):
+            scheduled = []
+            mob = SimpleNamespace(eid=1, cell=10, type_id=MINER,
+                                  stats=SimpleNamespace(role=role))
+            rc = SimpleNamespace(room=SimpleNamespace(loc=SimpleNamespace(id=lid)),
+                                 escorts=[], bosses=[], respawn=lambda m: None,
+                                 drop_loot=lambda m: [], add_to_bag=lambda *args: None)
+            loop = SimpleNamespace(call_later=lambda *args: scheduled.append(args))
+            with patch.object(combat.asyncio, "get_running_loop", return_value=loop):
+                combat.RoomCombat.corpse_gone(rc, mob, [])
+            check("respawn timer at %d for %s uses its unscaled delay" % (lid, role),
+                  scheduled, [(delay, rc.respawn, mob)])
+    check("  ..and the miners shoot a sub-machine gun (the wiki's «Кустарный ПП»), not a knife,"
+          " held as one (weapon_type 5: the client's rifle frames, not a pistol's)",
+          [(mobs.stats(m).weapon_class,
+            (items.params_of(mobs.stats(m).weapon_type_id) or {}).get("weapon_type"))
+           for m in (MINER, MINER_9)], [("smg", 5), ("smg", 5)])
     miners = {i: stood(i)[MINER] for i in VH_TIERS + VH_TUNNELS}
     check("  ..and the [8] miners stand in them", sum(miners.values()) >= 30 and all(
         miners[i] for i in (613, 617, 1012, 1024)), True)
@@ -504,8 +536,8 @@ try:
           (mobs.loot_table(MINER) == mobs.loot_table(CORPORAL),
            [r for r in mobs.loot_table(MINER_9) if not r[2]]
            == [r for r in mobs.loot_table(MINER) if not r[2]]), (True, True))
-    check("«Просьба о помощи» (221) is on, at Фрэнк's son", (quests.get(RAID).give,
-                                                              quests.get(RAID).take), ([SON], [SON]))
+    check("«Просьба о помощи» (221) is on, at Фрэнк (the wiki's «Боец сопротивления»)",
+          (quests.get(RAID).give, quests.get(RAID).take), ([FRANK], [FRANK]))
     check("«Индийское кино»'s ring drops off the mine's miners (the slot's drop)",
           [dict(mobs.quest_table(m)).get(RING) for m in (MINER, MINER_9)], [0.2, 0.2])
     check("the ore mines' gates keep their band, 4-8",
@@ -769,7 +801,9 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
     clear line to it and out of every hostile's reach, its own included (the
     admin gun fells anything in one shot, from afar): (frames, its id or
     None, where the player stands, where it fell, the cells within reach of
-    the other hostiles, the fallen counted as standing -- they come back)."""
+    the other hostiles). The fallen (done) are not among them: the mine
+    keeps them down for minutes (combat.RESPAWN_DELAY), longer than a hunt,
+    and the caller empties done once it has waited them back."""
     loc = world.location(loc_id)
     cells = range(loc.width * loc.height)
     types = {e: t for t, es in inhabitants(got).items() for e in es}
@@ -782,7 +816,7 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
         home = where.get(eid)
         if home is None:
             continue
-        others = [where[e] for e in hostile if e != eid and e in where]
+        others = [where[e] for e in hostile if e != eid and e not in done and e in where]
         wary = {cell for cell in cells
                 if any(mobs.hex_distance(cell, o, loc.width) <= reach for o in others)}
         spots = sorted((mobs.hex_distance(cell, home, loc.width), cell) for cell in cells
@@ -975,9 +1009,9 @@ try:
     here = inhabitants(goto(c, STATION))
     got, q_ring = take(c, here, OLD_WOMAN, CINEMA)
     check("«Индийское кино ч.1» taken from the old woman at the station", acks(got), [0])
-    here = inhabitants(goto(c, PIER))
-    check("«Просьба о помощи» offered by Фрэнк's son after the shawarma", status(c, RAID), 1)
-    got, q_raid = take(c, here, SON, RAID)
+    here = inhabitants(goto(c, MARKET))
+    check("«Просьба о помощи» offered by Фрэнк after the shawarma", status(c, RAID), 1)
+    got, q_raid = take(c, here, FRANK, RAID)
     check("  ..taken: nought of five miners", named(got, "q_di_kill_mobs")[0]["kill_num"], [0])
     gun = arm(c)
     arrival = goto(c, 154)
@@ -985,20 +1019,36 @@ try:
           len(inhabitants(arrival).get(CORPORAL, [])), 5)
     res, call, arrival = through(c, 154, "b")
     check("  ..and its drawn door leads down to the first tier", (res, call.get("id")),
-          ([0], 613))
-    ring, kills, tier, done = False, 0, 613, set()
+          ([0], 617))
+    check("  ..its miners told as no allies (ally=0), every dot on the minimap a mob's",
+          sorted({str(p_.get("ally")) for p_ in named(arrival, "userInfo")
+                  if str(p_.get("res")) == str(MINER)}), ["0"])
+    c.send("chWorld;")
+    got = c.frames(0.8)
+    check("  ..where the map is refused (no_map), «Невозможно перейти в локацию.», no move",
+          (acks(got), named(got, "gmap"), named(got, "lcall")), ([7], [], []))
+    ring, kills, tier, done = False, 0, 617, set()
     pos = first(arrival, "lenter").get("pos")
     for _ in range(40):
         fight, eid, pos, fell, wary = hunt(c, arrival, tier, gun, MINER, pos, done)
         if not eid:
-            if tier == 613:
-                res, call, arrival = through(c, 613, "b")
-                check("  ..the first tier's door b down into the second tier's middle",
+            if tier == 617:
+                res, call, arrival = through(c, 617, "b")
+                check("  ..the first tier's door b down into the gallery's west end",
+                      (res, call.get("id")), ([0], 1016))
+                tier = 1016
+                pos = first(arrival, "lenter").get("pos")
+            elif tier == 1016:
+                # On east along the gallery rather than wait out the mine's
+                # slow respawn: 1024 has seven more.
+                res, call, arrival = through(c, 1016, "E")
+                check("  ..and on east by the gallery's side into 1024",
                       (res, call.get("id")), ([0], 1024))
                 tier = 1024
                 pos = first(arrival, "lenter").get("pos")
             else:
-                time.sleep(21)              # the fallen are back (LAVA_RESPAWN)
+                # The mine now shares the world's creature respawn delay.
+                time.sleep(float(env["LAVA_RESPAWN"]) + 1)
             done = set()
             continue
         kills += 1
@@ -1019,38 +1069,47 @@ try:
     st.close()
     check("  ..the raid counts them", raid[0]["kill_num"], [5])
     if tier == 1024:
-        res, call, arrival = through(c, 1024, "a")
+        res, call, arrival = through(c, 1024, "W")
+        check("back west from 1024 into the gallery's west end", (res, call.get("id")),
+              ([0], 1016))
+        tier = 1016
+    if tier == 1016:
+        res, call, arrival = through(c, 1016, "a")
         check("up from the second tier by its door a, to the first", (res, call.get("id")),
-              ([0], 613))
-    res, call, arrival = through(c, 613, "a")
+              ([0], 617))
+    res, call, arrival = through(c, 617, "a")
     check("  ..and up the first tier's door a to the entrance, on its own cell",
           (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
           ([0], 154, (VH_TOP[154][0] << 13) | VH_TOP[154][1]))
     arrival = goto(c, 1016)
-    res, call, arrival = through(c, 1016, "E")
-    check("the second tier's east half opens west into its other half by the side",
-          (res, call.get("id")), ([0], 1012))
+    walked = []
+    for here_, nxt in zip(VH_GALLERY, VH_GALLERY[1:]):
+        res, call, arrival = through(c, here_, "E")
+        walked.append((res, call.get("id")))
+    check("the second tier walked east by its sides, 1016 to 1012 through 1024 and the tunnels",
+          walked, [([0], t_) for t_ in VH_GALLERY[1:]])
     res, call, arrival = through(c, 1012, "a")
-    check("  ..whose door goes up to the first tier's other file", (res, call.get("id")),
-          ([0], 617))
-    res, call, arrival = through(c, 617, "a")
+    check("  ..whose door goes up to the third, eastern entrance (5988), on its own cell,"
+          " though one came in by the first",
+          (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
+          ([0], 160, (VH_TOP[160][0] << 13) | VH_TOP[160][1]))
+    arrival = goto(c, 1024)
+    res, call, arrival = through(c, 1024, "a")
+    check("1024's door a goes up to the first tier's other file", (res, call.get("id")),
+          ([0], 613))
+    res, call, arrival = through(c, 613, "a")
     check("  ..and up to the second entrance, on its cell",
           (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
           ([0], 158, (VH_TOP[158][0] << 13) | VH_TOP[158][1]))
-    arrival = goto(c, 1016)
-    res, call, arrival = through(c, 1016, "a")
-    check("a door up into the third entrance lands on its own cell, whichever way one came",
-          (res, call.get("id"), call.get("g_id", 0) & ((1 << 26) - 1)),
-          ([0], 160, (VH_TOP[160][0] << 13) | VH_TOP[160][1]))
-    here = inhabitants(goto(c, PIER))
-    afro0 = purse(RAIDER)[0]
-    got = hand_in(c, here, SON, q_raid)
-    check("the raid handed in to the son: 400 afro", (acks(got), purse(RAIDER)[0] - afro0),
-          ([0], 400))
+    here = inhabitants(goto(c, MARKET))
+    afro0, gold0 = purse(RAIDER)
+    got = hand_in(c, here, FRANK, q_raid)
+    check("the raid handed in to Фрэнк: 1000 afro and 0.05 G",
+          (acks(got), purse(RAIDER)[0] - afro0, purse(RAIDER)[1] - gold0), ([0], 1000, 5))
     here = inhabitants(goto(c, STATION))
     got = hand_in(c, here, OLD_WOMAN, q_ring)
     check("  ..and the ring to the old woman: 5000", (acks(got), purse(RAIDER)[0] - afro0),
-          ([0], 5400))
+          ([0], 6000))
     logout(c)
 except Exception:
     import traceback

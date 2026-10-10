@@ -22,7 +22,8 @@ In process, on the real table and the real world:
   * the rides: built -- a fee or a ticket, a way record naming the closed
     town it leads to -- and not offered, and no way of data/passages.json;
   * encounters: the four bands of the town's camps; never a valley cell,
-    never a settlement's cell or one beside it; the nests of the desert
+    never a settlement's cell or one beside it, nor a retired place's
+    (world.retired_cells) or one beside it; the nests of the desert
     templates, and the arrival out of every band's reach; the cells a leg
     enters, in order; a pack is after the one it waylaid from his first
     moment in its room, a camp's creatures are not; nothing of a pack comes
@@ -326,9 +327,10 @@ try:
     check("never in the Nubian valley",
           [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)
            if encounters.band_at(x, y)], [])
-    town = [c for c, lid in world.settlements().items()
+    town = [c for c, lid in list(world.settlements().items()) + list(world.retired_cells().items())
             if math.hypot(c[0] - 5968, c[1] - 1727) <= 60]
-    check("never on a settlement's cell or one beside it",
+    check("never on a settlement's cell or one beside it, nor on the cell of a place taken out"
+          " of the game (world.retired_cells) or one beside it",
           [(x + dx, y + dy) for x, y in town for dx in (-1, 0, 1) for dy in (-1, 0, 1)
            if encounters.band_at(x + dx, y + dy)], [])
     ring = [(x, y) for x in range(5930, 6030) for y in range(1690, 1775)

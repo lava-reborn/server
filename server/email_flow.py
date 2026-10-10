@@ -58,6 +58,17 @@ KICKER = "Lava Reborn"
 TOO_SOON = "Письмо уже отправлено, следующее можно запросить через минуту"
 TOO_MANY = "Слишком много писем подряд, попробуйте через час"
 NO_MAIL = "Почта на сервере ещё не настроена"
+REFUSED = "Почтовый сервер не принимает этот адрес — проверьте, нет ли в нём ошибки"
+
+
+def takes_mail(address):
+    """None, or REFUSED when the mail server says no letter can reach the
+    address (emailer.check_recipient): asked before an account is made with
+    it or the cabinet puts it in. A server that cannot be asked lets the
+    address through -- the confirm link will tell."""
+    if emailer.enabled() and emailer.check_recipient(address) == "refused":
+        return REFUSED
+    return None
 
 
 def clean_email(text):
@@ -194,7 +205,7 @@ def change_email(store, login, password, text, ip, now=None):
         return None, NO_MAIL
     if not ip_pace.allow(ip, now):
         return None, TOO_MANY
-    err = _account_pace(store, account["id"], "confirm", now)
+    err = _account_pace(store, account["id"], "confirm", now) or takes_mail(address)
     if err:
         return None, err
     store.set_email_unconfirmed(account["id"], address)

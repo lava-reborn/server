@@ -1,8 +1,8 @@
 {
  "_meta": {
-  "about": "Loot decided by hand, next to data/loot_wiki.json. That file is generated (data/build_loot_wiki.py) from the wiki, which has no page for these creatures' drops, so their rows live here rather than in it. by_type is rolled by server/mobs.loot_table exactly like a loot_wiki.json row -- one roll per row, valuables first, at most mobs.MAX_DROPS kept -- and names its item by type id, since the linker ties the emerald and the ingot to no type at all; a row at chance mobs.SURE (1.0) is no roll but a certainty, and lies in the bag outside that cap (mobs.roll_table). items are the numbers of those items, laid over the designed frame by server/items.py the way data/heal_manual.json is (same keys, frame shape unchanged; a data/items_wiki.json record, should one appear, wins), and drop_on_death, which server/combat.drops_on_death reads here before the wiki. Keys starting with _ never reach the wire.",
-  "decided": "2026-09-25, owner («Песок и изумруды»): the Nubian mine's marauders, [1] Слабый Мародёр 836 and [2] Мародёр 837, drop gold sand and emeralds. They stand in the mine's files and nowhere else (612, 1011, 1217 and the unused copies 767, 1248; no spawn substitute maps to them), so nothing else in the world drops either. Chances DESIGNED: gold sand 0.50 from both (the owner raised it from 0.20/0.30 the same day: «подними шанс песка до 50%»), an ordinary row; the emerald 0.10 from both, a valuable one. 2026-09-26, owner («давай добавим лут шахтерам: бритву и наручные часы и еще сломанные часы, вероятность выпадения 20-30 процентов»): the same marauders also roll, as ordinary rows, Сломанные часы 6919 and Бритва 6926 at 0.30 and Наручные часы 6932 at 0.35 -- under mobs.MAX_DROPS about 0.28, 0.23 and 0.21 a kill. Then («давай еще золотой портсигар и золотой зуб») Золотой зуб 6950 and Золотой портсигар 6953 as valuables at 0.05 each. The sand and the emeralds fall off a dead player like any loot (the owner, 2026-09-25: «любой лут должен падать в том числе из шахты», against the game's hint that the mine's emeralds could not be lost), and the way out of the mine takes neither («Нет, пусть выносят»). 2026-09-25, owner («давай чтобы у босса в нубийке выпадал слиток золото и сделай квест, чтобы его можно было сдать и получить на баланс», then «и слиток в 5 голд»): the Nubian valley's one boss, [5] Лидер Новые колонисты 2103 (Лагерь бандитов, location 34, where it keeps the boss hours of server/bosses.py), carries one ingot of 5 ounces of gold (4796 New_Gold_Ingot_5) on every kill, chance 1.0, and Джеррах in the Западный поселок pays 5 ounces for it (data/quests.json 10). It falls off a dead player like any loot («любой лут должен падать»): it is loot, not gold-bought gear. 2026-09-26, for the Nubian valley's quests (the owner's «давай готовь квесты все»): rows of the tier «Квестовый», the wiki's own word, for what those quests send the player to take off a creature -- the courier's letter (17), the four gun parts and the medicaments off the raiders of «Грабители» (14, 15), the medicaments and the grindstone off the New Colonists (250, 251), the leader's notes (2103) and the rat king (1019). Such a row rolls only while somebody who brought the creature down has a quest open that asks for the thing and does not yet have as many as it asks (server/mobs.py QUEST_TIER, quests.wanted_things), the original's «loot only while the quest is open»: nobody else finds a quest's litter in a bag, and a thing with no price or with the quest flag, which no other row may drop, may drop here. Holders RECOVERED where the original's texts or the quests' lavabook records name them, chances DESIGNED. The same day, for the valley's market, farm and mine quests (the third batch): the old chip Доктор Гофус asks for off the New Colonists (250, 251), and the antelope's meat and fillet the village asks for off the antelopes (12). 2026-10-05, owner approved: matches 6915 are ordinary loot from colonists 250/251 at base chance 0.30, subject to MAX_DROPS. They drop without an active quest and beyond five boxes, matching the wiki trash-loot classification and allowing players to collect ahead of the daily quest. The quest pays 700 afro and a choice of three health or stamina consumables (data/quests.json 51). Other quest rows still require an active quest that needs their item.",
-  "fields": "by_type: mob type id -> rows {type, tier ('Обычный' or 'Ценный', as in loot_wiki.json, or 'Квестовый': rolled only for a quest that asks for the thing, on its own and outside the cap), chance; 1.0 is certain and outside the cap; or, in place of tier and chance, one_of (a group name) and weight: exactly one row of the group lies in the bag on every kill, picked by weight, outside the cap (mobs.one_of_groups)}. items: type id -> ss_si_simple_obj fields as in server/items.py (cost in afro, g_cost in hundredths of G, weight in grams, max_count the most one stack holds), plus drop_on_death (1 can fall off a corpse, 0 never)."
+  "about": "Loot decided by hand, next to data/loot_wiki.json. That file is generated (data/build_loot_wiki.py) from the wiki, which has no page for these creatures' drops, so their rows live here rather than in it. by_type is rolled by server/mobs.loot_table exactly like a loot_wiki.json row -- one roll per row, valuables first, at most mobs.MAX_DROPS kept -- and names its item by type id, since the linker ties the emerald and the ingot to no type at all; a row at chance mobs.SURE (1.0) is no roll but a certainty, and lies in the bag outside that cap (mobs.roll_table); a row's count says how many of the thing it puts there (mobs.count_of). items are the numbers of those items, laid over the designed frame by server/items.py the way data/heal_manual.json is (same keys, frame shape unchanged; a data/items_wiki.json record, should one appear, wins), and drop_on_death, which server/combat.drops_on_death reads here before the wiki. Keys starting with _ never reach the wire.",
+  "decided": "2026-09-25, owner («Песок и изумруды»): the Nubian mine's marauders, [1] Слабый Мародёр 836 and [2] Мародёр 837, drop gold sand and emeralds. They stand in the mine's files and nowhere else (612, 1011, 1217 and the unused copies 767, 1248; no spawn substitute maps to them), so nothing else in the world drops either. Chances DESIGNED: gold sand 0.50 from both (the owner raised it from 0.20/0.30 the same day: «подними шанс песка до 50%»), an ordinary row; the emerald 0.10 from both, a valuable one. 2026-09-26, owner («давай добавим лут шахтерам: бритву и наручные часы и еще сломанные часы, вероятность выпадения 20-30 процентов»): the same marauders also roll, as ordinary rows, Сломанные часы 6919 and Бритва 6926 at 0.30 and Наручные часы 6932 at 0.35 -- under mobs.MAX_DROPS about 0.28, 0.23 and 0.21 a kill. Then («давай еще золотой портсигар и золотой зуб») Золотой зуб 6950 and Золотой портсигар 6953 as valuables at 0.05 each. The sand and the emeralds fall off a dead player like any loot (the owner, 2026-09-25: «любой лут должен падать в том числе из шахты», against the game's hint that the mine's emeralds could not be lost), and the way out of the mine takes neither («Нет, пусть выносят»). 2026-09-25, owner («давай чтобы у босса в нубийке выпадал слиток золото и сделай квест, чтобы его можно было сдать и получить на баланс», then «и слиток в 5 голд»): the Nubian valley's one boss, [5] Лидер Новые колонисты 2103 (Лагерь бандитов, location 34, where it keeps the boss hours of server/bosses.py), carries one ingot of 5 ounces of gold (4796 New_Gold_Ingot_5) on every kill, chance 1.0, and Джеррах in the Западный поселок pays 5 ounces for it (data/quests.json 10). It falls off a dead player like any loot («любой лут должен падать»): it is loot, not gold-bought gear. 2026-09-26, for the Nubian valley's quests (the owner's «давай готовь квесты все»): rows of the tier «Квестовый», the wiki's own word, for what those quests send the player to take off a creature -- the courier's letter (17), the four gun parts and the medicaments off the raiders of «Грабители» (14, 15), the medicaments and the grindstone off the New Colonists (250, 251), the leader's notes (2103) and the rat king (1019). Such a row rolls only while somebody who brought the creature down has a quest open that asks for the thing and does not yet have as many as it asks (server/mobs.py QUEST_TIER, quests.wanted_things), the original's «loot only while the quest is open»: nobody else finds a quest's litter in a bag, and a thing with no price or with the quest flag, which no other row may drop, may drop here. Holders RECOVERED where the original's texts or the quests' lavabook records name them, chances DESIGNED. The same day, for the valley's market, farm and mine quests (the third batch): the old chip Доктор Гофус asks for off the New Colonists (250, 251), and the antelope's meat and fillet the village asks for off the antelopes (12). 2026-10-05, owner approved: matches 6915 are ordinary loot from colonists 250/251 at base chance 0.30, subject to MAX_DROPS. They drop without an active quest and beyond five boxes, matching the wiki trash-loot classification and allowing players to collect ahead of the daily quest. The quest pays 700 afro and a choice of three health or stamina consumables (data/quests.json 51). Other quest rows still require an active quest that needs their item. 2026-10-09, owner («добавь выпадение слитков золота от боссов в хальфе: колонисты 3 голды, люшер 5, джанджавиды 6, магриб 10», «если нет слитков подходящего номинала то сделай несколько предметов, типа 3 по 1г слитку», «добавь в черный рынок мортимера который обменивает слитки (зачисляя на баланс) и продает их еще», «слитки бывают на 1 голду на 5 и на 10»): the eight hour-keeping bosses of Вади-Хальфа's four factions, the camp's and the chief's of each, carry their faction's gold on every kill, chance 1.0, outside the cap: the New Colonists (270 Агнес, 269 Асмунд) three ingots of 1 ounce, one row of count 3; the sect of Люшер (283 Дитрих, 284 Лука) one of 5; the Janjaweed (299 Ашрам, 300 Рашад) one of 5 and one of 1; the Maghreb (313 Ихсан, 314 Кайс) one of 10. Halfa's two all-day bosses, the treasurer 586 and 696, carry none, and the valley's 2103 keeps his one of 5. The 1- and 10-ounce ingots take records (items) like the 5-ounce one, and all three a gold price, their face value, for which Мортимер sells them (data/npcs.json 1188), now also on the black market (data/placements.json 102). Cashing stays his 301-303, less the original's 0.05 an ingot.",
+  "fields": "by_type: mob type id -> rows {type, tier ('Обычный' or 'Ценный', as in loot_wiki.json, or 'Квестовый': rolled only for a quest that asks for the thing, on its own and outside the cap), chance; 1.0 is certain and outside the cap; count, how many of the thing the row puts in the bag when it lies there, 1 without one (mobs.count_of: a stack of that many); or, in place of tier and chance, one_of (a group name) and weight: exactly one row of the group lies in the bag on every kill, picked by weight, outside the cap (mobs.one_of_groups)}. items: type id -> ss_si_simple_obj fields as in server/items.py (cost in afro, g_cost in hundredths of G, weight in grams, max_count the most one stack holds), plus drop_on_death (1 can fall off a corpse, 0 never)."
  },
  "by_type": {
   "12": [
@@ -382,6 +382,104 @@
     "_source": "as 3604 above",
     "_designed": "the rarer of the two, a shotgun's belt"
    }
+  ],
+  "269": [
+   {
+    "type": 7620,
+    "_name": "1 унция золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "count": 3,
+    "_source": "DESIGNED, the owner's (2026-10-09): «добавь выпадение слитков золота от боссов в хальфе: колонисты 3 голды, люшер 5, джанджавиды 6, магриб 10», «если нет слитков подходящего номинала то сделай несколько предметов, типа 3 по 1г слитку», «слитки бывают на 1 голду на 5 и на 10». 269 mrare_Asmund_lvl0, «[0] Бугор Асмунд, Новые колонисты», the chief of the colonists' «встреча с главарем» (place 82, 5971,1723). He stands in that file and in no other, no spawn substitute or placement maps to him, and he keeps the boss hours (server/bosses.py)",
+    "_designed": "the faction's 3 ounces as three ingots of one ounce, since no ingot of three exists: one row of count 3 (mobs.count_of), a stack of three on every kill, outside mobs.MAX_DROPS. Each of the faction's two hour-keeping bosses carries the faction's set, the camp's (270) and the chief's (269). The treasurer 586, a boss of the camp 80 who comes back on the respawn timer all day (bosses.ALL_DAY), carries none: a certain drop there would be gold without a limit"
+   }
+  ],
+  "270": [
+   {
+    "type": 7620,
+    "_name": "1 унция золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "count": 3,
+    "_source": "as 269 above: 270 mrare_Agnes_lvl2, «[2] Пахан Агнес, Новые колонисты», the boss of the colonists' camp (80, 5970,1724)",
+    "_designed": "as 269 above"
+   }
+  ],
+  "283": [
+   {
+    "type": 4796,
+    "_name": "5 унций золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "as 269 above, «люшер 5»: 283 mrare_Ditrich_lvl6, «[6] Магистр Дитрих, Секта Люшер», the boss of the sect's camp (81, 5978,1727)",
+    "_designed": "the faction's 5 ounces as one ingot of five on every kill, outside mobs.MAX_DROPS; both of the sect's hour-keeping bosses carry it"
+   }
+  ],
+  "284": [
+   {
+    "type": 4796,
+    "_name": "5 унций золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "as 283 above: 284 mrare_Luka_lvl4, «[4] Блаженный Лука, Секта Люшер», the chief of the sect's «встреча с главарем» (place 83, 5979,1728)",
+    "_designed": "as 283 above"
+   }
+  ],
+  "299": [
+   {
+    "type": 4796,
+    "_name": "5 унций золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "as 269 above, «джанджавиды 6»: 299 mrare_Ashram_lvl10, «[10] Лидер Ашрам, Джанджавиды», the boss of the Janjaweed's camp (84, 5974,1739)",
+    "_designed": "the faction's 6 ounces as an ingot of five and one of one (the row below), each certain on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them"
+   },
+   {
+    "type": 7620,
+    "_name": "1 унция золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "as the row above",
+    "_designed": "the sixth ounce, beside the ingot of five"
+   }
+  ],
+  "300": [
+   {
+    "type": 4796,
+    "_name": "5 унций золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "as 299 above: 300 mrare_Rashad_lvl8, «[8] Руководитель Рашад, Джанджавиды», the chief of the Janjaweed's «встреча с главарем» (place 86, 5975,1738)",
+    "_designed": "as 299 above"
+   },
+   {
+    "type": 7620,
+    "_name": "1 унция золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "as the row above",
+    "_designed": "the sixth ounce, beside the ingot of five"
+   }
+  ],
+  "313": [
+   {
+    "type": 4797,
+    "_name": "10 унций золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "as 269 above, «магриб 10»: 313 mrare_Ihsan_lvl14, «[14] Мукаддам Ихсан, Союз арабского Магриба», the boss of the Maghreb's camp (85, 5993,1721)",
+    "_designed": "the faction's 10 ounces as one ingot of ten on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry it"
+   }
+  ],
+  "314": [
+   {
+    "type": 4797,
+    "_name": "10 унций золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "_source": "as 313 above: 314 mrare_Kais_lvl12, «[12] Раид Кайс, Союз арабского Магриба», the chief of the Maghreb's «встреча с главарем» (place 87, 5992,1720)",
+    "_designed": "as 313 above"
+   }
   ]
  },
  "items": {
@@ -408,10 +506,30 @@
   "4796": {
    "_name": "5 унций золота",
    "_source": "RECOVERED. The type: texts.xml 7636-7641 are the three gold ingots of 1, 5 and 10 ounces, name and description each, and objects.xml's New_Gold_Ingot_1/_5/_10 (7620, 4796, 4797) are the one series of three with icons stamped 1, 5 and 10; the older Gold_Ingot_5 (3562) draws a lollipop in the client (data/build_orig_items.py rule 7d, data/orig_items.json). Numbers: the wiki article 5 унций золота (its icon 5.png is named after no type, so the linker tied it to none and data/items_wiki.json has no record): 'Вес 5 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 5 G'; sold by Мортимер, the money-changer, and cashed in by his 'Обналичить 5 унций' for 5 ounces. drop_on_death 1: loot, the owner's rule («любой лут должен падать»; «голдовое оружие и сэты не падают» is about gold-bought gear, «это не лут»)",
-   "_designed": "the price in afro: the article's 5 G at the game's one rate, laid by server/items.py GOLD_INGOTS from progression.GOLD_TO_AFRO_RATE, which wins over the cost here: 20 000 is that price at the first rate of 4000 (the rate is 50 000 since 2026-09-28, which makes it 250 000), written down so that the price counts as a written one (combat._price_written; the name's _Gold_ would otherwise make it a gold thing), and no g_cost. Priced in gold alone it would be one of the owner's gold things (combat.gold_item), which never fall off a body, and mobs.droppable keeps anything without an afro price out of a corpse's bag. A trader pays 70 per cent of it (inventory.SMOD), 175 000 afro at 50 000, against Джеррах's 5 ounces of gold, which is the whole 250 000 at that rate, and Мортимер's cashing, 4.95 ounces: the quest is always the better deal, which is the point. No stall sells the ingot (Мортимер sells nothing here, data/npcs.json stock 1188; data/trader_stock_wiki.json lists it for nobody, no designed stall holds it), and none should: sold for afro it would turn afro into gold. The stack of 50 is the frame's: the article gives none",
-   "cost": 20000,
-   "g_cost": 0,
+   "_designed": "the prices: the article's 5 G as g_cost 500, for which Мортимер sells it at face value (data/npcs.json 1188, the owner's of 2026-10-09: «добавь в черный рынок мортимера который обменивает слитки ... и продает их еще»), and the same 5 ounces in afro at the game's one rate, 250 000 at 50 000; both laid by server/items.py GOLD_INGOTS from progression.GOLD_TO_AFRO_RATE, which wins over the figures here should the rate move. The afro price keeps the ingot loot: mobs.droppable lets nothing without one into a corpse's bag, and a thing priced in gold alone is one of the owner's gold things (combat.gold_item), which never fall off a body; combat.gold_item answers no for every ingot. The shipped client buys a thing with a g_cost for gold (Trade.buy), and inventory.Inventory.buy refuses an ingot for afro, which would turn afro into gold. A trader pays 70 per cent of the afro price (inventory.SMOD), 175 000 afro, less than c_ga's 250 000 for the same 5 ounces; Джеррах's quest pays the whole 5 ounces and Мортимер's cashing 4.95, never more than the ingot costs at his stall. Until 2026-10-09 it had no g_cost and no stall sold it. The stack of 50 is the frame's: the article gives none",
+   "cost": 250000,
+   "g_cost": 500,
    "weight": 5,
+   "exchang": 1,
+   "drop_on_death": 1
+  },
+  "4797": {
+   "_name": "10 унций золота",
+   "_source": "RECOVERED. The type: as 4796 above (texts.xml 7640/7641, data/build_orig_items.py rule 7d). Numbers: the wiki article 10 унций золота (its icon 10.png is named after no type, so data/items_wiki.json has no record): 'Вес 10 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 10 G'; sold by Мортимер, and cashed in by his 'Обналичить 10 унций'. drop_on_death 1: loot, as 4796",
+   "_designed": "the prices, as 4796 above: the article's 10 G, for which Мортимер sells it, and its afro price at the game's one rate, both laid by server/items.py GOLD_INGOTS. Until then the frame's 150 g stood in, and the _Gold_ of its name made it a gold thing kept on death; the Maghreb's bosses drop it now (by_type 313, 314), and loot falls. The stack of 50 is the frame's",
+   "cost": 500000,
+   "g_cost": 1000,
+   "weight": 10,
+   "exchang": 1,
+   "drop_on_death": 1
+  },
+  "7620": {
+   "_name": "1 унция золота",
+   "_source": "RECOVERED. The type: as 4796 above (texts.xml 7636/7637, data/build_orig_items.py rule 7d). Numbers: the wiki article 1 унция золота (its icon 1gold.png is named after no type, so data/items_wiki.json has no record): 'Вес 1 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 1 G'; cashed in by Мортимер's 'Обналичить 1 унцию золота'. drop_on_death 1: loot, as 4796",
+   "_designed": "the prices, as 4796 above: the article's 1 G, sold by Мортимер for gold at face value (the owner's of 2026-10-09: «добавь в черный рынок мортимера который обменивает слитки ... и продает их еще»; the article names no seller), and its afro price at the game's one rate, both laid by server/items.py GOLD_INGOTS. Until then the frame's 150 g stood in, and the _Gold_ of its name made it a gold thing kept on death; the bosses of Вади-Хальфа drop it now (by_type 269, 270, 299, 300), and loot falls. The stack of 50 is the frame's",
+   "cost": 50000,
+   "g_cost": 100,
+   "weight": 1,
    "exchang": 1,
    "drop_on_death": 1
   }

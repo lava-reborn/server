@@ -39,6 +39,16 @@
     "why": "as the first row of 31",
     "escort": true
    }
+  ],
+  "102": [
+   {
+    "type": 1188,
+    "cell": [
+     40,
+     59
+    ],
+    "why": "DESIGNED, the owner's (2026-10-09): «добавь в черный рынок мортимера который обменивает слитки (зачисляя на баланс) и продает их еще». Мортимер, the money-changer (1188, ow_GoldExchange, «Мортимер<br>Обменник»), stands in the жилой квартал (36) and in Абри, Донгола, Абу-Хамед and 58 by their own files, and here by this row; the wiki's article on the black market (102, WH_Gold_Traders_old, «Черный рынок Вади-Хальфы») names no money-changer. One creature type, so the same stall (data/npcs.json 1188: the ingots of 1, 5 and 10 ounces for gold at face value) and the same service quests (data/quests.json 301-307: cashing less 0.05 an ingot, change ounce for ounce) wherever he stands. The cell is ours: free and walkable, seven steps from the entry, beside the stalls of Хамис (42,56) and Ваккас (44,61)"
+   }
   ]
  }
 }

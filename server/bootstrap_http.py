@@ -53,6 +53,7 @@ import email_flow
 import names
 import items
 import stopwarn
+import map_cells
 import map_labels
 import transport
 import world
@@ -61,6 +62,8 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 # one source of truth for where the client's files are
 RES_ROOT = world.RES
+# the map's tiles with retired places' squares painted over, made on first ask
+MAP_TILES = map_cells.Served(RES_ROOT)
 GAME_HOST = os.environ.get("LAVA_GAME_HOST", "127.0.0.1")
 GAME_PORT = os.environ.get("LAVA_GAME_PORT", "9775")
 HTTP_PORT = int(os.environ.get("LAVA_HTTP_PORT", "8080"))
@@ -315,6 +318,15 @@ ADMIN_CHAR = '''<div class=card>
  <button type=submit>Выдать</button>
 </div></form>
 <form class=act method=post action="/admin/do"><div class=row>
+ <input type=hidden name=kind value=xp><input type=hidden name=char_id value={char_id}>
+ <input type=hidden name=q value="{name}">
+ <label>Опыт</label>
+ <select name=skill><option value=0>ближний бой</option><option value=1>стрельба</option>
+ <option value=2>медицина</option><option value=3>промышленность</option></select>
+ <input type=number name=xp min=1 placeholder="сколько" title="очков опыта навыку, без премиума и без специализации">
+ <button type=submit>Начислить</button>
+</div></form>
+<form class=act method=post action="/admin/do"><div class=row>
  <input type=hidden name=kind value=transport><input type=hidden name=char_id value={char_id}>
  <input type=hidden name=q value="{name}">
  <label>Транспорт</label>
@@ -565,10 +577,18 @@ class Handler(BaseHTTPRequestHandler):
                            "application/octet-stream")
         with open(full, "rb") as fh:
             body = fh.read()
-        if rel.replace(os.sep, "/").lower() == "database/locations.xml":
+        posix = rel.replace(os.sep, "/")
+        if posix.lower() == "database/locations.xml":
             # The names over the global map's cells, with the owner's edits
             # laid on -- what the launcher does for every player (map_labels).
             body, _changed = map_labels.apply(body)
+        else:
+            # The map's picture, with the squares of the places taken out of
+            # the game painted over -- what every client release carries
+            # (map_cells).
+            edited = MAP_TILES.get(posix)
+            if edited is not None:
+                body = edited
         self._send(body, ctype)
 
     def _texts(self, query, body):
@@ -1018,6 +1038,13 @@ class Handler(BaseHTTPRequestHandler):
                                  type_id=num("type_id"),
                                  count=num("count", 1) or 1)
                 note = "Предмет поставлен в очередь"
+            elif kind == "xp":
+                skill, xp = num("skill", -1), num("xp")
+                if not 0 <= skill <= 3 or xp <= 0:
+                    note = "Опыт: навык 0-3 и число больше нуля"
+                else:
+                    store.admin_push(who, "xp", char_id=char_id, skill=skill, xp=xp)
+                    note = "Опыт поставлен в очередь"
             elif kind == "transport":
                 store.admin_push(who, "transport", char_id=char_id,
                                  type_id=num("type_id"),
@@ -1121,6 +1148,9 @@ class Handler(BaseHTTPRequestHandler):
         address = None
         if given.strip() or REGISTER_EMAIL:
             address, err = email_flow.clean_email(given)
+            # And one the mail server takes: an invented domain is turned
+            # away here, where the player can still mend it.
+            err = err or email_flow.takes_mail(address)
             if err:
                 self._page('<p class="msg err">%s</p>' % err)
                 return

@@ -437,6 +437,14 @@ class Quest:
         self.num_kill = [int(x) for x in row.get("num_kill", [])]
         if len(self.num_kill) != len(self.mobs_kill):
             raise ValueError("quest %d: num_kill must match mobs_kill" % self.type)
+        # Other creature types a kill of which counts for a slot: type -> the
+        # slot's type in mobs_kill. The client shows the slot's own creature
+        # and its count; a kin of it under another type id (the mine's [9]
+        # miners beside the [8] the raid names) moves the same count.
+        self.kill_also = {int(k): int(v) for k, v in row.get("kill_also", {}).items()}
+        if any(v not in self.mobs_kill for v in self.kill_also.values()):
+            raise ValueError("quest %d: kill_also must count for a slot of mobs_kill"
+                             % self.type)
         objs = row.get("objs", [])
         if len(objs) > BRING_SLOTS:
             raise ValueError("quest %d: at most %d objects" % (self.type, BRING_SLOTS))
@@ -681,49 +689,88 @@ def load(path=None):
     that cannot be walked -- a prerequisite the table does not have, or a
     ring of them: its quests would never be offered to anybody -- and an
     exclusion the table does not have, or one of the quest's own
-    prerequisites, however far back: it would never be offered either."""
-    rows = table_rows(path)
-    out = {}
+    prerequisites, however far back: it would never be offered either.
+    The first problem check_rows finds is raised, as it was found."""
+    out, found = check_rows(table_rows(path))
+    if found:
+        raise found[0]
+    return out
+
+
+def check_rows(rows):
+    """type -> Quest for every row that makes one, and every problem of the
+    table, each an exception, in the order load meets them: a row that does
+    not make a quest (Quest raises), a type listed twice, then the chains
+    (table_problems). load raises the first; the quest editor
+    (tools/quest_editor) shows them all, so that one save is told everything
+    a table holds wrong rather than one thing per try."""
+    out, found = {}, []
     for row in rows:
-        q = Quest(row)
+        try:
+            q = Quest(row)
+        except (ValueError, KeyError, TypeError) as exc:
+            found.append(exc)
+            continue
         if q.type in out:
-            raise ValueError("quest type %d listed twice" % q.type)
+            found.append(ValueError("quest type %d listed twice" % q.type))
+            continue
         out[q.type] = q
+    found += [ValueError(m) for m in table_problems(out)]
+    return out, found
+
+
+def table_problems(out):
+    """What is wrong with the chains of a table (type -> Quest), in words:
+    a prerequisite or an exclusion the table does not have, a ring, an
+    exclusion of what the quest itself needs. Fills in each quest's branch
+    (the rows that exclude the same) on the way. A quest whose chain is
+    already wrong one way is not asked the next: the first word is the one
+    worth reading."""
+    found, wrong = [], set()
     for q in out.values():
         missing = [t for t in q.need_all + q.need_any if t not in out]
         if missing:
-            raise ValueError("quest %d needs %s, which the table does not have"
-                             % (q.type, missing))
+            found.append("quest %d needs %s, which the table does not have"
+                         % (q.type, missing))
+            wrong.add(q.type)
     for q in out.values():
+        if q.type in wrong:
+            continue
         seen, todo = set(), list(q.need_all + q.need_any)
         while todo:
             t = todo.pop()
             if t == q.type:
-                raise ValueError("quest %d needs itself through its chain" % q.type)
-            if t not in seen:
+                found.append("quest %d needs itself through its chain" % q.type)
+                wrong.add(q.type)
+                break
+            if t not in seen and t in out:
                 seen.add(t)
                 todo += out[t].need_all + out[t].need_any
     for q in out.values():
+        if q.type in wrong:
+            continue
         missing = [t for t in q.excludes if t not in out]
         if missing:
-            raise ValueError("quest %d excludes %s, which the table does not have"
-                             % (q.type, missing))
+            found.append("quest %d excludes %s, which the table does not have"
+                         % (q.type, missing))
+            continue
         # Everything that has to be handed in before it: need_all, and theirs.
         needed, todo = set(), list(q.need_all)
         while todo:
             t = todo.pop()
-            if t not in needed:
+            if t not in needed and t in out:
                 needed.add(t)
                 todo += out[t].need_all
         blocked = sorted(needed & set(q.excludes))
         if blocked or (q.need_any and set(q.need_any) <= set(q.excludes)):
-            raise ValueError("quest %d excludes what it needs (%s): it would never be"
-                             " offered" % (q.type, blocked or q.need_any))
+            found.append("quest %d excludes what it needs (%s): it would never be"
+                         " offered" % (q.type, blocked or q.need_any))
+            continue
         # Its own branch: every row that excludes the same, itself among
         # them -- none of which it can exclude, as none excludes itself.
         if q.excludes:
             q.branch = sorted(t for t, o in out.items() if set(o.excludes) == set(q.excludes))
-    return out
+    return found
 
 
 QUESTS = load()
@@ -749,11 +796,22 @@ def check_items(table=None):
     docstring's lent) may be worth something, but no stall may sell it:
     the lent type's frame carries the quest flag, so a bought copy could not
     be sold again, and the hand-in would take it back with the lent one.
-    Returns None; raises ValueError naming the quest and the types.
+    Returns None; raises ValueError naming the quest and the types -- the
+    first of item_problems.
     """
-    import items                       # late: see above
+    found = item_problems(table)
+    if found:
+        raise ValueError(found[0])
+
+
+def item_problems(table=None):
+    """check_items's findings, every one of them, in words: per quest the
+    things the game does not have, the premium ones, the lent ones a stall
+    sells, the dear ones handed over (the order check_items raises them in)."""
+    import items                       # late: see check_items
     import npcs
     table = QUESTS if table is None else table
+    found = []
     sold = {}
     if any(q.lent for q in table.values()):
         for trader in set(items.stock_table()) | set(npcs.STOCK):
@@ -763,20 +821,21 @@ def check_items(table=None):
         unknown = ["%s %d" % (field, t) for field, t in q.things()
                    if items.params_of(t) is None]
         if unknown:
-            raise ValueError("quest %d names things the game does not have: %s"
-                             % (q.type, ", ".join(unknown)))
+            found.append("quest %d names things the game does not have: %s"
+                         % (q.type, ", ".join(unknown)))
         # Nor a premium one, given or asked for, on a row switched on or
         # off: (P) is out of the game (items.premium; the owner's cut of
         # (P), 2026-09-30), and a row switched on later must not bring one
         # back past the stalls' and the loot's filters.
-        premium = ["%s %d" % (field, t) for field, t in q.things() if items.premium(t)]
+        premium = ["%s %d" % (field, t) for field, t in q.things()
+                   if items.params_of(t) is not None and items.premium(t)]
         if premium:
-            raise ValueError("quest %d names premium things, out of the game: %s"
-                             % (q.type, ", ".join(premium)))
+            found.append("quest %d names premium things, out of the game: %s"
+                         % (q.type, ", ".join(premium)))
         on_sale = ["%d (trader %d)" % (t, sold[t]) for t in sorted(q.lent) if t in sold]
         if on_sale:
-            raise ValueError("quest %d lends what a stall sells: %s"
-                             % (q.type, ", ".join(on_sale)))
+            found.append("quest %d lends what a stall sells: %s"
+                         % (q.type, ", ".join(on_sale)))
         if not START_OBJ_WORTHLESS_ONLY:
             continue
         dear = []
@@ -784,15 +843,18 @@ def check_items(table=None):
             if t in q.lent:
                 continue
             si = items.params_of(t)
+            if si is None:
+                continue                # told above, among the unknown
             if items.root_of(t) in (items.HEAL, items.AMMO):
                 dear.append("%d (used up by its use)" % t)
             elif not si.get("quest") and (si.get("cost", 0) > 0 or si.get("exchang")):
                 dear.append("%d (cost %s, exchang %s)" % (t, si.get("cost", 0),
                                                          si.get("exchang", 0)))
         if dear:
-            raise ValueError("quest %d hands over what is worth something away from "
-                             "it: %s (quests.START_OBJ_WORTHLESS_ONLY)"
-                             % (q.type, ", ".join(dear)))
+            found.append("quest %d hands over what is worth something away from "
+                         "it: %s (quests.START_OBJ_WORTHLESS_ONLY)"
+                         % (q.type, ", ".join(dear)))
+    return found
 
 
 def _lay_original():
@@ -816,10 +878,16 @@ def _lay_original():
     import orig_texts                  # no imports of its own; safe at load
     originals = orig_texts.quests()
     for q in QUESTS.values():
-        texts = originals.get(q.type) or {}
-        q.texts = tuple(orig_texts.text(old) if key in q.own_texts
-                        else texts.get(key) or old
-                        for key, old in zip(TEXT_KEYS, q.texts))
+        _lay(q, originals)
+
+
+def _lay(q, originals):
+    """_lay_original for one quest: originals is orig_texts.quests()."""
+    import orig_texts
+    texts = originals.get(q.type) or {}
+    q.texts = tuple(orig_texts.text(old) if key in q.own_texts
+                    else texts.get(key) or old
+                    for key, old in zip(TEXT_KEYS, q.texts))
 
 
 _lay_original()
@@ -879,11 +947,16 @@ def _say_per_day():
     and a row the overlay replaces (118) is read as the player will see it.
     """
     for q in QUESTS.values():
-        start = served(q, START, q.texts[START])
-        if start != q.texts[START]:
-            texts = list(q.texts)
-            texts[START] = start
-            q.texts = tuple(texts)
+        _note(q)
+
+
+def _note(q):
+    """_say_per_day for one quest."""
+    start = served(q, START, q.texts[START])
+    if start != q.texts[START]:
+        texts = list(q.texts)
+        texts[START] = start
+        q.texts = tuple(texts)
 
 
 _say_per_day()
@@ -897,18 +970,46 @@ BOSS_HOURS_MARKS = {"{boss_hours}": False, "{boss_hours_short}": True}
 
 
 def _say_boss_hours():
-    import bosses                      # world only; safe at load
     for q in QUESTS.values():
-        texts = list(q.texts)
-        for k, text in enumerate(texts):
-            for mark, short in BOSS_HOURS_MARKS.items():
-                if text and mark in text:
-                    text = text.replace(mark, bosses.say_hours(short))
-            texts[k] = text
-        q.texts = tuple(texts)
+        _hours(q)
+
+
+def _hours(q):
+    """_say_boss_hours for one quest."""
+    import bosses                      # world only; safe at load
+    texts = list(q.texts)
+    for k, text in enumerate(texts):
+        for mark, short in BOSS_HOURS_MARKS.items():
+            if text and mark in text:
+                text = text.replace(mark, bosses.say_hours(short))
+        texts[k] = text
+    q.texts = tuple(texts)
 
 
 _say_boss_hours()
+
+
+def player_texts(row, originals=None):
+    """The four texts of a row as the client will show them, keyed by
+    TEXT_KEYS: the original's laid over (_lay), the daily note and the
+    skill goal on the start (_note), the boss hours filled in (_hours) --
+    the steps the table goes through at load, on one row that need not be
+    in it. What the quest editor previews. Raises what Quest raises."""
+    import orig_texts
+    q = Quest(row)
+    _lay(q, orig_texts.quests() if originals is None else originals)
+    _note(q)
+    _hours(q)
+    return dict(zip(TEXT_KEYS, q.texts))
+
+
+def original_texts(quest_type, originals=None):
+    """The original's own texts of a quest type (orig_texts.quests), the
+    ones _lay puts over a row's unless own_texts keeps the row's: {} for a
+    type the original never had."""
+    import orig_texts
+    originals = orig_texts.quests() if originals is None else originals
+    return dict(originals.get(int(quest_type)) or {})
 
 
 def get(quest_type):
@@ -1033,14 +1134,17 @@ def kill_progress(store, char_id, mob_type):
     out = []
     for row in store.quests(char_id):
         quest = get(row["type"])
-        if not quest or quest.kind != KILL_MOBS or mob_type not in quest.mobs_kill:
+        if not quest or quest.kind != KILL_MOBS:
+            continue
+        counted = quest.kill_also.get(mob_type, mob_type)
+        if counted not in quest.mobs_kill:
             continue
         progress = json.loads(row["progress_json"])
         kill_num = list(progress.get("kill_num", [0] * len(quest.mobs_kill)))
         kill_num += [0] * (len(quest.mobs_kill) - len(kill_num))
         moved = False
         for i, wanted in enumerate(quest.mobs_kill):
-            if wanted == mob_type and kill_num[i] < quest.num_kill[i]:
+            if wanted == counted and kill_num[i] < quest.num_kill[i]:
                 kill_num[i] += 1
                 moved = True
         if not moved:

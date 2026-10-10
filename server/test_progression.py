@@ -153,6 +153,22 @@ ch = Character()
 check("shotguns need shooting 4", ch.learn_spec(3), progression.ERR_SKILL)
 check("machine guns need shooting 16", ch.learn_spec(6), progression.ERR_SKILL)
 check("a hidden production spec cannot be bought", ch.learn_spec(12), progression.ERR_STATE)
+# The window compares minSkill with the skill and its gear bonus
+# (SkillObject.level): what it offers, the server takes.
+ch.bonus_skills[progression.SHOOTING] = 4
+check("a gear bonus counts toward the gate", ch.learn_spec(3), 0)
+ch.forget_spec(3)
+ch.bonus_skills[progression.SHOOTING] = 0
+# The window reads minSkill out of spec.xml, so the release's copy has to
+# carry this table: one figure apart, and the window offers what the
+# server refuses (or hides what it would sell).
+import re  # noqa: E402
+with open(os.path.join(HERE, "..", "client", "files", "xmldocs", "spec.xml"), "rb") as fh:
+    spec_xml = fh.read().decode("utf-8-sig")
+check("the release's spec.xml says the server's minSkill",
+      [int(m) for m in re.findall(r"<s id='\d+' minSkill='(\d+)'", spec_xml)],
+      progression.SPEC_MIN_SKILL)
+check("in id order", re.findall(r"<s id='(\d+)'", spec_xml), [str(i) for i in range(progression.SPECS)])
 check("pistols are free at skill 0", ch.learn_spec(2), 0)
 check("and now count as learned", (ch.spec[2], ch.specs_learned()), ([0, 0, 1250], 1))
 check("buying it twice is refused", ch.learn_spec(2), progression.ERR_STATE)
@@ -321,9 +337,9 @@ CRED = accounts.credential("tester", "secret")
 
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=SDB, LAVA_CHEATS="1")
 # The lines the server says by itself (Session.say) are off on a served
-# server; this suite reads them as the server's reasons, so it asks for
-# them by name.
-env["LAVA_SERVER_CHAT"] = "1"
+# server, and so here: the teacher's refusals have to come all the same,
+# since nothing else tells the player why «Изучить» did nothing.
+env["LAVA_SERVER_CHAT"] = "0"
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
@@ -463,6 +479,8 @@ try:
     got = c.until("userMsg")
     check("the skill gate is the server's", [n for n, _p in got], ["cmdAck", "userMsg"])
     check("refused with the client's own 'not enough skill' code", one(got, "cmdAck")["res"], progression.ERR_SKILL)
+    check("and told in the window's own words, with the skill held",
+          one(got, "userMsg")["entry"], 'Требует навык "Стрельбы" не ниже 4, у вас 0')
 
     # Pistols: free, the first slot.
     c.send("ss_upd;obj=x2;s_status=2;")
@@ -488,7 +506,8 @@ try:
     got = c.until("userMsg")
     check("no gold, no third", [n for n, _p in got], ["cmdAck", "userMsg"])
     check("refused for money", one(got, "cmdAck")["res"], progression.ERR_MONEY)
-    check("and the player is told why", "голда" in one(got, "userMsg")["entry"], True)
+    check("and the player is told why, in ounces as the window prices it",
+          one(got, "userMsg")["entry"], "Специализация стоит 10.00 G, у вас 0.00 G")
 
     # Reset hand-to-hand.
     c.send("ss_upd;obj=x0;s_status=1;")

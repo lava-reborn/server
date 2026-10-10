@@ -1,0 +1,18 @@
+{
+ "_meta": {
+  "what": "The squares and captions painted into the picture of the global map that go with places taken out of the game.",
+  "why": "The full-scale map (res/globalmap/full/<n>.jpg, 273 tiles, one cell 8x8 pixels) has every place painted into the photograph itself: a coloured square on its cell and, for a few, a caption in letters. Hiding a place's name (data/map_labels.json) leaves its square, so a cut has to take the square off too.",
+  "rule": "Every cell of data/retired.json 'cells' loses its square by itself: nothing to add here for a place that stood on a cell. 'cells' below are the other cells whose square goes -- a name with no place under it -- each with its why. 'captions' are letters painted into the picture, each as boxes of the map's pixels (x0, y0, x1, y1, inclusive; pixel = cell * 8) painted over whole. 'keep' lists cells whose name is hidden but whose square stays, each with its why: server/test_map_cells.py makes every hidden name with no live place under it be either here or erased.",
+  "how": "server/map_cells.py finds each square in the picture and paints it over with the photograph's texture from near by; only the JPEG blocks it touches are encoded anew. client/build.py puts the edited tiles into every client release, bootstrap_http serves them on a local run. To look at the result: python3 server/map_cells.py --res <res> --preview <folder>."
+ },
+ "cells": {
+  "5969,1730": "The owner's cut of Вади-Хальфа, 2026-10-09 («... улучшение сетов 6-8»): the green square under the name «Улучшение сетов 6-8[G]<BR>Казначеи ремесленников» (hidden, data/map_labels.json). No file stood on the cell; the square was all the map had of the service.",
+  "5984,1759": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the clan base's square (dark red with a white centre) under the hidden name «Собственность клана KKND». Its files (297, 383, 384, 938, 961, 1189) never had a cell, so data/retired.json has no cell for it.",
+  "6265,1821": "The owner's word of 2026-10-10 («да», to painting the kimberlite pipe's square too): its name «Кимберлитовая трубка<br>Добыча алмазов» was hidden on 2026-10-05 and no place stands on the cell, so its black-and-orange hatch, a work site's mark, goes as well. Tile 14531."
+ },
+ "captions": [
+  {"was": "Кланбаза KKND", "boxes": [[47879, 14049, 47920, 14057], [47879, 14058, 47910, 14067]],
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the two lines of letters «Кланбаза / KKND» painted above the base's square at 5984,1759 (cells 5984..5989, 1756..1758), tile 14011, a box a line with its light rim. The dark stone right of the first line's end (47918..47922, 14058..14061) is the photograph's and stays."}
+ ],
+ "keep": {}
+}

@@ -281,7 +281,7 @@ try:
     c.send("chWorld;")
     got = c.frames()
     check("and the map, which the client's buttons no longer offer there, is refused to the"
-          " hotkey too: one cmdAck, nothing else", got, ["cmdAck;res=4;"])
+          " hotkey too: one cmdAck, nothing else", got, ["cmdAck;res=7;"])
     stand_on(c, exit_cell(centre, travel.N))
     c.send("chWorld;to=1;")
     got = c.frames()

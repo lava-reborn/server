@@ -343,12 +343,17 @@ def gold_item(type_id):
     stun bolts "Ammo_stun_bolt_gold_10" are sold for afro in their article.
     (The gold line's upgrade blueprints "bpg_damage_25_gold_lvl*", which
     their articles price in both, are sold for gold alone since 2026-09-28,
-    items.GOLD_PRICE_ONLY, so the price makes them gold things.) So is the
-    Nubian valley boss's ingot, "New_Gold_Ingot_5" (4796): gold is what it
-    is made of, not what it was bought for. The owner's «голдовое оружие и
-    сэты не падают» is about gear bought for gold -- «это не лут» -- and the
-    ingot is loot, which falls («любой лут должен падать»); data/
-    loot_manual.json writes its afro price for that reason among others.
+    items.GOLD_PRICE_ONLY, so the price makes them gold things.)
+
+    A gold ingot of 1, 5 or 10 ounces (items.GOLD_INGOTS, "New_Gold_Ingot_*")
+    is never a gold thing, whatever its name and its prices: gold is what
+    it is made of, and the bosses drop it -- the Nubian valley's and
+    Вади-Хальфа's. The owner's «голдовое оружие и сэты не падают» is about
+    gear bought for gold -- «это не лут» -- and the ingot is loot, which
+    falls («любой лут должен падать»). It carries a gold price since
+    2026-10-09, for which Мортимер sells it, beside its afro one; the
+    rule above would still say afro, and the ingot is named here so that no
+    change of a price can move it.
     """
     type_id = int(type_id)
     cached = _GOLD.get(type_id)
@@ -359,6 +364,8 @@ def gold_item(type_id):
 
 def _gold_item(type_id):
     global _ORIG_NAMES
+    if type_id in items.GOLD_INGOTS:
+        return False
     si = items.params_of(type_id) or {}
     if _positive(si, "g_cost") and not _positive(si, "cost"):
         return True
@@ -395,7 +402,7 @@ def drops_on_death(type_id):
         game itself said could not be lost («Падающие в шахте изумруды
         нельзя потерять при гибели персонажа», texts.xml 59937), fall by
         the owner's rule («любой лут должен падать в том числе из шахты»),
-        as the gold sand does and the valley boss's ingot of 5 ounces;
+        as the gold sand does and the gold ingots;
       * the developers' own gun (items.ADMIN_GUN), which is a tester's and
         nothing a player can buy: dropped by a tester killed in the open,
         it would be one.
@@ -633,7 +640,15 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0):
     at max_range). Its line goes through the point offset sideways at the
     aim. bodies is cell -> body; a body is passed when its hex is, and only
     farther out than past hexes (a round that hit its mark goes on from
-    there)."""
+    there).
+
+    A mark on the hex the round starts from -- a creature come back on its
+    spawn hex under the player, one he walked onto, the ground at his own
+    feet -- gives the line no direction: it passes nobody and lands about
+    the aim. That answer is the same pair as every other: when flight()
+    began to name the bodies (2026-10-04) this one kept the bare end, and
+    burst read the letters of "faMiss" as the bodies a round went through
+    (production, 2026-10-09: 'str' object has no attribute 'sp_now')."""
     bodies = bodies or {}
     w, h = loc.width, loc.height
     ax, ay = mobs.real(a, w)
@@ -641,7 +656,7 @@ def flight(loc, a, aim, offset, max_range, bodies=None, past=0.0):
     dx, dy = tx - ax, ty - ay
     d = math.hypot(dx, dy)
     if d == 0:
-        return ("faMiss", miss_at(tx, ty))
+        return [], ("faMiss", miss_at(tx, ty))
     ux, uy = dx / d, dy / d
     px, py = tx - uy * offset, ty + ux * offset
     bx, by = px - ax, py - ay
@@ -685,12 +700,15 @@ def melee_crit_evade(ch):
 
 
 def split_damage(dmg, armor, piercing, crit, sp_left, st_dmg=0):
-    """(to HP, to SP) of a bullet. The owner's rule (2026-10-05): the
-    weapon has independent health and stamina damage; a crit sends H to
-    health and S to stamina. On an ordinary hit armour redirects part of H
-    to stamina, as in wiki "Броня", on top of S. Whatever stamina cannot
-    absorb spills into health, including on a crit."""
-    comp = 0 if crit else max(0, int(armor - piercing))
+    """(to HP, to SP) of a bullet. On a critical hit, the owner's rule
+    (2026-10-10) is H to health and min(H, remaining SP) to stamina, with
+    no overflow into health and no additional weapon stamina component.
+    On an ordinary hit armour redirects part of H to stamina, as in wiki
+    "Броня", on top of the weapon's S; missing stamina spills into health.
+    """
+    if crit:
+        return dmg, min(dmg, max(0, sp_left))
+    comp = max(0, int(armor - piercing))
     redirected = min(dmg, comp)
     s = st_dmg + redirected
     h = dmg - redirected
@@ -1482,8 +1500,17 @@ class Fighter:
         live = weapon.num_shots * spent // rounds if rounds else 0
         pool = target.hp if target is not None and not target.is_player else 0
         # Asked before the burst, which may kill it: whether the rounds could
-        # have got there at all. Only then is the shot a provocation.
-        reached = rc.within_fire(self, target, weapon.max_range)
+        # have got there at all. Only then is the shot a provocation. It
+        # walks the line the burst walks (shot_wall), and a fault in it is
+        # no reason to keep the burst back: faAim has announced its pairs,
+        # and raised out of here none of them went and nothing was paid. The
+        # error log has it; the shot provokes nobody.
+        try:
+            reached = rc.within_fire(self, target, weapon.max_range)
+        except Exception:
+            log.exception("  !!    the line of fire of %s failed before its burst: it"
+                          " provokes nobody", self.eid)
+            reached = False
         others = []
         h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others)
         if row is not None:
@@ -2185,6 +2212,7 @@ class RoomCombat:
         # The ones that keep hours instead of the respawn timer (bosses.py):
         # keep_hours brings them in and sends them away.
         self.bosses = [m for m in self.mobs.values() if bosses.keeps_hours(m.type_id)]
+        self.recall_kills()
         # A boss's escort (data/placements.json "escort", rooms.Room.escorts):
         # while the room has a boss keeping hours, one killed waits for its
         # next arrival rather than the respawn timer.
@@ -2579,6 +2607,73 @@ class RoomCombat:
         aim = target.cell if target is not None else hexcell
         if aim is None or not (0 <= aim < width * loc.height):
             aim = shooter.cell
+        try:
+            pairs, struck = self.resolve(shooter, target, aim, weapon, live)
+        except Exception:
+            # faAim has told every client here how many pairs this burst is
+            # (Location.faAim, currNumOfShot), and only their last faShot
+            # lowers the gun, closes the aim bar and lets the autofire go
+            # again (AutoCommandManager.fireShotHandler). A fault in working
+            # out where the rounds went -- the zero-length line of
+            # 2026-10-09 was one -- sent none of them: the figure stood with
+            # its gun raised and the autofire stopped, shot after shot. It
+            # goes to the error log whole, and the burst goes out as the
+            # miss it has become, every pair of it, and is paid for as one
+            # (Fighter.fire_now): rounds, action points and the c_ap after.
+            log.exception("  !!    a burst of %s at hex %d of %s failed: its %d round(s)"
+                          " go out as misses", shooter.eid, aim, loc.title,
+                          weapon.num_shots)
+            tx, ty = mobs.real(aim, width)
+            pairs = [(("faMiss", miss_at(tx, ty)), []) for _ in range(weapon.num_shots)]
+            struck = {}
+        # The body the client is shown the damage of: the mark if it was
+        # hit, else whoever took the most.
+        shown = target if target in struck else max(
+            struck, key=lambda b: struck[b][0] + struck[b][1], default=None)
+        pairs.sort(key=lambda pair: any(f[0] is shown for f in pair[1]))
+        for end, fates in pairs:
+            self.room.broadcast(("faShot", dict(id=shooter.eid, status=1)))
+            if end is not None:
+                self.room.broadcast(end)
+            for body, h, s, crit in sorted(fates, key=lambda f: f[0] is shown):
+                mine = body is shown
+                self.room.broadcast(("faHit", dict(target=body.eid,
+                                                   dmg=h if mine else 0,
+                                                   sdmg=s if mine else 0,
+                                                   crit=int(crit))))
+            self.room.broadcast(("faShot", dict(id=shooter.eid, status=0)))
+        # The pairs are out. What follows is the server's own account, and
+        # its caller settles the shot by it: pays the rounds and the action
+        # points, turns or kills whoever was hit. So each body's outcome is
+        # written down the moment its damage is applied, before the frames
+        # that tell of it, and a fault on the way ends the loop without
+        # taking the account with it: raised out of here, it left the shot
+        # unpaid and a body brought to 0 alive.
+        result = (0, 0, 0, False)
+        try:
+            for body, (h, s, hits, _sp) in struck.items():
+                pool = 0 if body.is_player else body.hp
+                killed = body.apply_damage(h, s)
+                if body is target:
+                    result = (h, s, hits, killed)
+                elif others is not None:
+                    others.append((body, h, s, killed, pool))
+                self.hit_landed(shooter, body)
+                self.push_vitals(body)
+        except Exception:
+            log.exception("  !!    applying the burst of %s at hex %d of %s failed after"
+                          " its pairs went out", shooter.eid, aim, loc.title)
+        return result
+
+    def resolve(self, shooter, target, aim, weapon, live):
+        """Where each round of a burst went, nothing sent and nothing
+        applied yet: (pairs, struck). A pair is (the faMiss or faWall it
+        ends in, or None, and its fates: (body, hp, sp, crit) for each body
+        it hit, nearest first); struck is body -> [hp, sp, hits, sp left]
+        over the whole burst. target is the mark, present, or None for the
+        ground at aim."""
+        loc = self.room.loc
+        width = loc.width
         dist = mobs.hex_distance(shooter.cell, aim, width)
         # The line to the mark is the bullets' line only as far as the gun
         # reaches: past max_range they come down (stray), and a wall beyond
@@ -2647,33 +2742,7 @@ class RoomCombat:
                 rec[3] -= s
                 fates.append((body, h, s, crit))
             pairs.append((None, fates))
-        # The body the client is shown the damage of: the mark if it was
-        # hit, else whoever took the most.
-        shown = target if target in struck else max(
-            struck, key=lambda b: struck[b][0] + struck[b][1], default=None)
-        pairs.sort(key=lambda pair: any(f[0] is shown for f in pair[1]))
-        for end, fates in pairs:
-            self.room.broadcast(("faShot", dict(id=shooter.eid, status=1)))
-            if end is not None:
-                self.room.broadcast(end)
-            for body, h, s, crit in sorted(fates, key=lambda f: f[0] is shown):
-                mine = body is shown
-                self.room.broadcast(("faHit", dict(target=body.eid,
-                                                   dmg=h if mine else 0,
-                                                   sdmg=s if mine else 0,
-                                                   crit=int(crit))))
-            self.room.broadcast(("faShot", dict(id=shooter.eid, status=0)))
-        result = (0, 0, 0, False)
-        for body, (h, s, hits, _sp) in struck.items():
-            pool = 0 if body.is_player else body.hp
-            self.hit_landed(shooter, body)
-            killed = body.apply_damage(h, s)
-            self.push_vitals(body)
-            if body is target:
-                result = (h, s, hits, killed)
-            elif others is not None:
-                others.append((body, h, s, killed, pool))
-        return result
+        return pairs, struck
 
     def hit_landed(self, attacker, target):
         """A faHit or a caHit has just gone out: the exit timer restarts for
@@ -2782,6 +2851,7 @@ class RoomCombat:
         self.add_to_bag(mob.cell, self.drop_loot(mob))
         if bosses.keeps_hours(mob.type_id):
             mob.away = True
+            self.boss_killed(mob)
         elif mob in self.escorts and self.bosses:
             # The boss's escort: back with the boss's next arrival
             # (keep_hours, escort_back), not on the respawn timer -- or now,
@@ -2889,9 +2959,17 @@ class RoomCombat:
 
     def drop_loot(self, mob):
         """Item rows on the ground, owned by nobody, made through the store
-        so they carry real serials the client can keep after picking up."""
+        so they carry real serials the client can keep after picking up.
+
+        A gold ingot (items.GOLD_INGOTS) comes only off a boss that keeps
+        the hours (bosses.keeps_hours): one kill a window, the window
+        remembered over a restart (boss_killed). With the rule off
+        (LAVA_BOSS_HOURS=off) a boss is back every respawn delay, and an
+        ingot on each of those kills would be gold without a limit, so its
+        bag holds the rest of its loot and no ingot."""
         rows = []
         thing = mob.stats.role == "object"
+        gold_ok = bosses.keeps_hours(mob.type_id)
         # What a timed event puts on top, by place (events.loot): a
         # prisoner's red armband in the uprising. An ore rock leaves its ore
         # beside the loot (production.yield_of).
@@ -2900,6 +2978,8 @@ class RoomCombat:
                 + production.yield_of(mob.type_id):
             if items.premium(type_id):
                 continue            # out of the game; see items.premium
+            if type_id in items.GOLD_INGOTS and not gold_ok:
+                continue            # gold off the hours' bosses only, above
             if thing and type_id == mobs.FALLBACK_LOOT:
                 # A box, a target or a stone (world.STANDING_OBJECTS) holds
                 # what its table rolls and what a quest wants of it -- and an
@@ -3062,6 +3142,57 @@ class RoomCombat:
         self.room.broadcast(("lch", dict(lostUser=mob.eid)))
         log.info("  ..    boss %d (%s) leaves %s", mob.eid, mob.stats.name,
                  self.room.loc.title)
+
+    def boss_spot(self, mob):
+        """What a boss is written down by over a restart (the boss_kills
+        table): the room's place, the boss's spawn cell and its type, which
+        stay the same whatever ids the next run's room hands out."""
+        return ":".join("-" if v is None else str(int(v))
+                        for v in tuple(self.place) + (mob.home, mob.type_id))
+
+    def boss_killed(self, mob):
+        """The window a boss keeping the hours was killed in, written down
+        (Store.boss_killed): a restart before the window shuts -- a deploy,
+        a crash -- must not stand it up again with its loot and its gold
+        ingots (recall_kills). mob.slot is the window it came for
+        (keep_hours); with none there is nothing to write. A database that
+        will not take the row costs the record and a line in the log, never
+        the kill."""
+        write = getattr(self.store, "boss_killed", None)
+        if write is None or mob.slot is None:
+            return
+        try:
+            write(self.boss_spot(mob), mob.slot)
+        except Exception:
+            log.exception("  !!    boss %d (%s) killed in %s: not written down",
+                          mob.eid, mob.stats.name, self.room.loc.title)
+
+    def recall_kills(self):
+        """The room's bosses as a restart finds them, before anybody is
+        shown the room (Session.enter_room makes this object first): one
+        written down as killed in the window open now (boss_killed) starts
+        away, as corpse_gone left it, and comes at the next window
+        (keep_hours). Unreadable, the record is skipped with a line in the
+        log, and the bosses stand as they did before there was one."""
+        read = getattr(self.store, "boss_kills", None)
+        if not self.bosses or read is None:
+            return
+        due = bosses.slot(bosses.clock())
+        if due is None:
+            return
+        try:
+            killed = read([self.boss_spot(m) for m in self.bosses])
+        except Exception:
+            log.exception("  !!    the bosses killed in %s could not be read",
+                          self.room.loc.title)
+            return
+        for mob in self.bosses:
+            if killed.get(self.boss_spot(mob)) == due:
+                mob.alive, mob.away, mob.slot = False, True, due
+                self.room.npcs.pop(mob.eid, None)
+                log.info("  ..    boss %d (%s) of %s was killed in this window before"
+                         " the restart: away until the next", mob.eid, mob.stats.name,
+                         self.room.loc.title)
 
 
 def room_combat(room, store):

@@ -1,13 +1,15 @@
 """The upgrader's window (upgrader.py): one window for the weapon recipes of
 craft.py and the set rungs of setcraft.py.
 
-In process, no sockets -- test_halfa_weaponcraft and test_halfa_setcraft
-play each service through the window on a socket. This holds what neither
-of them can, having an upgrader of one service each: the lists of an
-upgrader that has both, an upgrade sent to the service of the thing dragged
-in, and the window's state -- its upgrader forgotten the moment the player
-leaves his room, its frames still answered with the one refusal the client
-waits on, and gone with the close.
+In process, no sockets -- test_halfa_weaponcraft plays the recipes
+through the window on a socket, and test_halfa_setcraft the set rungs' empty
+windows since the owner took Вади-Хальфа's set upgrade away (2026-10-09).
+This holds what neither of them can: the lists of an upgrader that has both,
+an upgrade sent to the service of the thing dragged in, and the window's
+state -- its upgrader forgotten the moment the player leaves his room, its
+frames still answered with the one refusal the client waits on, and gone
+with the close. Генри's rungs are the ones his slice would give with its
+window on (setcraft.window_entries), laid into setcraft's cache for the run.
 
     wsl.exe -e python3 server/test_upgrader.py
 """
@@ -27,14 +29,19 @@ import world
 from testkit import check, fails  # noqa: E402
 
 
-HENRY, JOSEPH, ANYBODY = 93, 7548, 6765      # sets; weapons ([Q]); neither
+HENRY, JOSEPH, ANYBODY = 93, 7548, 6765      # sets (off); weapons ([Q]); neither
 MAUSER_Q, MAUSER_PRECISION = 25666, 43546
 EMPTY = {"in_types": [], "out_types": [], "costs": []}
+HALFA = setcraft.SLICES["Вади-Хальфа"]
 
 # --- the lists -------------------------------------------------------------------------
-check("an upgrader of sets shows his rungs, a weapons master his recipes, anybody else"
-      " nothing", (upgrader.lists(HENRY), upgrader.lists(JOSEPH), upgrader.lists(ANYBODY)),
-      (setcraft.window(HENRY), craft.upgrader_lists(JOSEPH), EMPTY))
+check("since 2026-10-09 Генри's window is empty, as anybody's; a weapons master shows his"
+      " recipes", (upgrader.lists(HENRY), upgrader.lists(JOSEPH), upgrader.lists(ANYBODY)),
+      (EMPTY, craft.upgrader_lists(JOSEPH), EMPTY))
+# Генри with his window on, for the rest of the run: his slice's rungs.
+setcraft._WINDOWS[HENRY] = setcraft.window_entries(HALFA, HALFA["upgraders"][HENRY])
+check("an upgrader of sets with his window on shows his rungs",
+      upgrader.lists(HENRY), setcraft.window(HENRY))
 # One with both: Жозеф given Генри's rungs for the while.
 setcraft._WINDOWS[JOSEPH] = setcraft.entries(HENRY)
 try:

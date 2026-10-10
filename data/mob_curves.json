@@ -484,7 +484,7 @@
    "shots": 1
   },
   "smg": {
-   "anim": "pistol",
+   "anim": "rifle",
    "ap": 10,
    "dmg_mult": 0.6,
    "range": 5,

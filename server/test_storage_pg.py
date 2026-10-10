@@ -42,7 +42,8 @@ checks = 0
 TABLES = ("mail", "map_marks", "items", "char_quests_done", "char_quests",
           "char_stats", "online", "heartbeat", "admin_actions", "auction_lots",
           "migrations", "trophies", "clan_ledger", "clan_relations", "clan_members",
-          "clans", "characters", "accounts", "money_ledger", "char_lent", "ground")
+          "clans", "characters", "accounts", "money_ledger", "char_lent", "ground",
+          "boss_kills")
 RELINK = "heal-relink-2026-09-23"
 
 
@@ -504,6 +505,28 @@ for col, kind in (("expires_at", "double precision"), ("gx", "bigint"), ("uniq",
        "ground.%s — %s" % (col, kind))
 ok(store.characters(aid) is not None, "и соединение после земли живое")
 
+# --- боссы, убитые в своё окно часов (таблица boss_kills) ---------------------
+# Убитый босс ждёт следующего часа, и перезапуск посреди окна не должен
+# ставить его снова (со слитками в мешке): убийство записано строкой по
+# месту босса, окно — секунда его начала (DOUBLE PRECISION), повторное
+# убийство пишет поверх (ON CONFLICT по spot).
+KAIS, DOUGLAS = "87:-:-:4321:314", "34:-:-:99:2103"
+W18, W20 = 1_791_558_000.0, 1_791_565_200.0
+ok(store.boss_kills([KAIS, DOUGLAS]) == {}, "пока никто не убит — пусто")
+store.boss_killed(KAIS, W18)
+store.boss_killed(DOUGLAS, W18)
+store.boss_killed(KAIS, W20)
+ok(store.boss_kills([KAIS, DOUGLAS, "1:-:-:1:1"]) == {KAIS: W20, DOUGLAS: W18},
+   "записано по месту, второе убийство переписало первое: %s"
+   % store.boss_kills([KAIS, DOUGLAS]))
+ok(store.db.execute("SELECT COUNT(*) c FROM boss_kills").fetchone()["c"] == 2,
+   "по строке на босса, не задвоено")
+ok(store.boss_kills([]) == {}, "пустой список мест — пусто, без запроса")
+ok(store.db.execute("SELECT data_type FROM information_schema.columns WHERE table_name ="
+                    " 'boss_kills' AND column_name = 'slot'").fetchone()["data_type"]
+   == "double precision", "boss_kills.slot — double precision")
+ok(store.characters(aid) is not None, "и соединение после боссов живое")
+
 # --- очередь админки -------------------------------------------------------
 action = store.admin_push("Archivist", "money", char_id=char_id, account_id=aid,
                           afro=100)
@@ -945,6 +968,58 @@ up = accounts.Store()
 ok((up.character(keeper)["loc"], [r["type_id"] for r in up.items_of(keeper)].count(MASK_P))
    == (124, 1), "второе открытие ничего не повторяет")
 ok(items.premium(MASK_P), "маска отшельника -- в самом деле (P)")
+up.close()
+
+# --- чистка Хальфы: места и журналы ---------------------------------------------
+# run_once от 2026-10-09 (accounts.relocate_halfa_cut; README «Чистка Хальфы»):
+# кто стоит в вещевом рынке 468, у ремесленников 452/456/457 или в файлах
+# кланбазы KKND (297, 383, 384, 938, 961, 1189) или прописан там -- на Причал;
+# из журналов уходят 238, 239 и строки ремесленников 11000-11499. Здесь --
+# что те же IN, UPDATE, COUNT и DELETE с диапазоном идут в Postgres и что
+# вторым открытием ничего не повторяется. Полный набор на SQLite --
+# server/test_halfa_cut.py.
+store = fresh_store()
+aid, _ = store.register("хальфа", "пароль")
+who = {}
+for name, loc, home in (("в468", 468, 41), ("в457", 457, 41), ("в1189", 1189, 41),
+                        ("прописан в452", 36, 452), ("в447", 447, 41), ("на причале", 41, 41)):
+    c, _ = store.create_character(aid, name, 0, 1)
+    store.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5969, gy = 1729, on_map = 0,"
+                     " home_loc = ?, home_gx = 5969, home_gy = 1729 WHERE id = ?", (loc, home, c))
+    who[name] = c
+store.db.commit()
+keeper = who["на причале"]
+for t in (238, 239, 11000, 11499, 11500, 119):
+    store.take_quest(keeper, t, {}, True)
+done = store.take_quest(keeper, 238, {}, True)
+store.finish_quest(done, keeper, 238)
+store.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.HALFA_CUT_FIX,))
+store.db.commit()
+store.close()
+
+up = accounts.Store()
+rows = {n: up.character(c) for n, c in who.items()}
+ok({n: (r["loc"], r["gx"], r["gy"], r["on_map"], r["pos"]) for n, r in rows.items()}
+   == {"в468": (41, 5965, 1728, 0, None), "в457": (41, 5965, 1728, 0, None),
+       "в1189": (41, 5965, 1728, 0, None), "прописан в452": (36, 5969, 1729, 0, 77),
+       "в447": (447, 5969, 1729, 0, 77), "на причале": (41, 5969, 1729, 0, 77)},
+   "из 468/457/1189 -- на Причал, 447 (чистка (P), давно прошла) и Причал не тронуты: %s"
+   % {n: (r["loc"], r["pos"]) for n, r in rows.items()})
+ok((rows["прописан в452"]["home_loc"], rows["прописан в452"]["home_gx"],
+    rows["прописан в452"]["home_gy"]) == (41, 5965, 1728), "прописка в 452 -- теперь Причал")
+ok(sorted(r["type"] for r in up.quests(keeper)) == [119, 11500],
+   "из журнала ушли 238, 239, 11000, 11499; 119 и 11500 остались: %s"
+   % sorted(r["type"] for r in up.quests(keeper)))
+ok(up.quest_done(keeper, 238), "история сдачи 238 осталась")
+ok(accounts.relocate_halfa_cut(up.db) == dict(moved=0, homes=0, journal=0),
+   "повторный проход ничего не находит")
+up.db.commit()
+up.db.execute("UPDATE characters SET loc = 468 WHERE id = ?", (keeper,))
+up.db.commit()
+up.close()
+up = accounts.Store()
+ok(up.character(keeper)["loc"] == 468 and accounts.ran(up.db, accounts.HALFA_CUT_FIX),
+   "второе открытие ничего не повторяет")
 up.close()
 
 print("storage(pg): %d проверок, все зелёные" % checks)

@@ -1,25 +1,29 @@
 """Вади-Хальфа's set craft (server/setcraft.py, the owner's «всё
 отложенное», stage 3): the upgrader's window, the gold-set exchange, the
-clothing rework with its cheques and the parts upgrade.
+clothing rework with its cheques and the parts upgrade -- switched off since
+2026-10-09, when the owner took the set upgrade and the clothing craftsmen
+out of the town («убери из хальфы ... улучшение сетов 6-8; ремесленники по
+одежде 6, 7 и 8»): the slice's "off" empties the three windows and leaves
+the rows in the table with nobody to give or take them.
 
 In process: the reworked pieces of the owner's ladder (numbers, names, set,
 no P, their rung's description id), a set of them counted as the set, what
 the module adds to the preload; the windows of Генри, Генри ст and Мастер
-Тиль and the empty ones of the town's other upgraders; the generated rows
-(data/questgen_setcraft.json is setcraft.generate_all(), rebuilt, and the
-server's start check refuses one priced off another ladder) -- their
-craftsmen, band, services, prices, no premium thing, no step a stall pays
-for, whole or worn; the same generator fed Абри's slice; the hand rows
-238/239 in the original's words.
+Тиль empty, as the town's other upgraders' are, and what the slice gives
+them switched on again (the line of "off" deleted) -- rungs, prices, the
+exchange; the generated rows (data/questgen_setcraft.json is
+setcraft.generate_all(), rebuilt, and the server's start check refuses one
+priced off another ladder) all OFF, and switched on again the same rows with
+their craftsmen -- band, services, prices, no premium thing, no step a stall
+pays for, whole or worn; the same generator fed Абри's slice; the hand rows
+238/239 OFF, in the original's words.
 
-On a socket, a character of the eighth level with «Переработка»: Генри's
-window opened, an upgrade (the frames, the one ack, the rung, the price, the
-ledger), its refusals and the bare close; Генри ст's exchange of a mod10,
-and his window left open behind upgrading nothing from another room; at the
-craftsmen of 452 the rows offered only for the piece in the bag, cheques
-bought, a rework and a parts upgrade handed in, the fees in the ledger, and
-a worn piece reworked and upgraded keeping its wear; and at the ninth level
-nothing of the band.
+On a socket, a character of the eighth level with «Переработка»: Генри's,
+Генри ст's and Тиль's windows carry nothing and open empty, an upgrade or an
+exchange sent to them is refused with one ack and moves no piece and no
+gold; neither Генри offers 238 or 239; and in the craftsmen's quarter 452
+(an admin's /goto: the file stays, the map has no way in) nobody gives or
+takes a row, even with the piece and the gold in the bag.
 
     LAVA_RES=.../lava/res python3 server/test_halfa_setcraft.py
 """
@@ -57,7 +61,11 @@ from testkit import check, fails  # noqa: E402
 
 HENRY, OLD_HENRY, TIL = 93, 5104, 5
 OTHER_UPGRADERS = (6765, 2000, 2001, 8213, 8214)
-PORT_MARKET, OLD_MARKET, CRAFT_6, CRAFT_7, CRAFT_8 = 104, 35, 452, 456, 457
+PORT_MARKET, OLD_MARKET, BLACK_MARKET, CRAFT_6, CRAFT_7, CRAFT_8 = 104, 35, 102, 452, 456, 457
+HALFA = setcraft.SLICES["Вади-Хальфа"]
+# The slice with its services on again: the lines of "off" deleted.
+HALFA_ON = dict(HALFA, off={})
+EMPTY = dict(in_types=[], out_types=[], costs=[])
 MAGRIB_G, RAIDER_G, WANDERER_G = 11260, 11187, 11193          # set types
 MAGRIB_A, RAIDER_A = 11258, 11185
 HELM = "helm"
@@ -72,18 +80,6 @@ def piece(set_type, slot=HELM):
 
 def chain(set_type, slot=HELM):
     return setcraft.CHAINS[piece(set_type, slot)]
-
-
-def row_for(craft, first_obj):
-    got = [q for q in ROWS if q["craft"] == craft and q["objs"][0]["obj"] == first_obj]
-    return got[0] if got else None
-
-
-def cheque_row(level, variant, n):
-    cheque = setcraft.CHEQUES[(level, variant)]
-    got = [q for q in ROWS if q["craft"] == "cheque" and q["rew_obj"] == [cheque]
-           and q["num_rew_obj"] == [n]]
-    return got[0] if got else None
 
 
 def standing(loc_id):
@@ -153,7 +149,31 @@ try:
 
     # --- the windows ------------------------------------------------------------------
     print("the windows")
-    henry = setcraft.entries(HENRY)
+    check("since 2026-10-09 the windows of Генри, Генри ст and Тиль are empty, as the town's"
+          " other upgraders' are; the slice says why",
+          ([setcraft.window(t) for t in (HENRY, OLD_HENRY, TIL) + OTHER_UPGRADERS],
+           "улучшение сетов 6-8" in (setcraft.off(HALFA, "window") or "")),
+          ([EMPTY] * (3 + len(OTHER_UPGRADERS)), True))
+    check("  ..nothing for an upgrade to cost at any of them",
+          [setcraft.cost_of(t, piece(MAGRIB_G), piece(RAIDER_G)) for t in (HENRY, OLD_HENRY, TIL)],
+          [None] * 3)
+    # What the windows give with the slice's "window" line deleted: the
+    # machinery stays, for a slice that opens.
+    saved_slices, saved_windows = dict(setcraft.SLICES), dict(setcraft._WINDOWS)
+    try:
+        setcraft.SLICES["Вади-Хальфа"] = HALFA_ON
+        setcraft._WINDOWS.clear()
+        flipped = [setcraft.entries(t) for t in (HENRY, OLD_HENRY, TIL)]
+    finally:
+        setcraft.SLICES.clear()
+        setcraft.SLICES.update(saved_slices)
+        setcraft._WINDOWS.clear()
+        setcraft._WINDOWS.update(saved_windows)
+    check("  ..and with the line deleted they are the slice's again",
+          flipped, [setcraft.window_entries(HALFA, HALFA["upgraders"][t])
+                    for t in (HENRY, OLD_HENRY, TIL)])
+    check("  ..which are not nothing", [len(f) > 0 for f in flipped], [True] * 3)
+    henry = setcraft.window_entries(HALFA_ON, HALFA["upgraders"][HENRY])
     check("Генри leads up to the band's rungs, 6 and 8, in gold alone: Странник to Магриб,"
           " Магриб to Налетчик",
           sorted({(sets.set_of(setcraft.base_of(i)), sets.set_of(setcraft.base_of(o)))
@@ -165,11 +185,7 @@ try:
     check("  ..at 60% of the new piece's price («со скидкой в 40%»), rounded up",
           {c for i, o, c in henry if o == piece(RAIDER_G)},
           {int(math.ceil(0.6 * setcraft.price(piece(RAIDER_G))[1]))})
-    check("  ..his userInfo carries the three lists, in step",
-          setcraft.window(HENRY), dict(in_types=[i for i, _o, _c in henry],
-                                        out_types=[o for _i, o, _c in henry],
-                                        costs=[c for _i, _o, c in henry]))
-    old = setcraft.entries(OLD_HENRY)
+    old = setcraft.window_entries(HALFA_ON, HALFA["upgraders"][OLD_HENRY])
     exchange = [e for e in old if e not in henry]
     check("Генри ст upgrades the same and exchanges a G mod10 for the next rung's mod05 at 50%",
           (set(henry) <= set(old), sorted(exchange)),
@@ -177,10 +193,9 @@ try:
                          int(math.ceil(0.5 * setcraft.price(chain(to, s)[5])[1])))
                         for frm, to in ((WANDERER_G, MAGRIB_G), (MAGRIB_G, RAIDER_G))
                         for s in sets.SLOTS)))
-    check("Мастер Тиль upgrades as Генри; the town's other upgraders keep their own services",
-          (setcraft.entries(TIL) == henry, [setcraft.window(t)["in_types"] for t in OTHER_UPGRADERS]),
-          (True, [[]] * len(OTHER_UPGRADERS)))
-    every = {t for u in (HENRY, OLD_HENRY, TIL) for e in setcraft.entries(u) for t in e[:2]}
+    check("Мастер Тиль upgrades as Генри",
+          setcraft.window_entries(HALFA_ON, HALFA["upgraders"][TIL]) == henry, True)
+    every = {t for e in henry + old for t in e[:2]}
     check("  ..no A, no P, no Q in any window («Обменять можно только (G) вещи»)",
           sorted({cat[t][1].split("_")[-2] for t in every}), ["G"])
     saved = setcraft.UPGRADE_VARIANTS
@@ -233,6 +248,28 @@ try:
           ({(q["service"], q["repeatable"]) for q in ROWS},
            [q["type"] for q in ROWS if q["type"] in quests.repeatable_types()]),
           ({(True, 1)}, []))
+    # OFF since 2026-10-09: nobody gives or takes one, and each says why.
+    ON = json.loads(json.dumps(setcraft.generate(HALFA_ON), ensure_ascii=False))
+    why_off = setcraft.off(HALFA, "rows")
+    check("every row OFF: give and take [], its why first saying so, whom it named and why",
+          [q["type"] for q, on in zip(ROWS, ON)
+           if q["give"] or q["take"] or q["why"] != "OFF (give/take [], was %s), %s. Was: %s" % (
+               sorted(set(on["give"]) | set(on["take"])), why_off, on["why"])], [])
+    check("  ..the slice's why names the order and the quarters",
+          ("ремесленники по одежде 6, 7 и 8" in why_off, "452, 456 and 457" in why_off),
+          (True, True))
+    check("  ..and but for give, take and why, the rows are the switched-on rows: types, texts"
+          " and string ids as they were",
+          (len(ROWS) == len(ON), [q["type"] for q, on in zip(ROWS, ON)
+                                  if {k: v for k, v in q.items() if k not in ("give", "take", "why")}
+                                  != {k: v for k, v in on.items()
+                                      if k not in ("give", "take", "why")}]),
+          (True, []))
+    givers = {g for q in ON for g in q["give"] + q["take"]}
+    check("  ..so none of the craftsmen and treasurers they named gives or takes a quest of the"
+          " block", (len(givers) > 0,
+                     sorted({t for g in givers for t in quests.given_by(g) + quests.taken_by(g)
+                             if t in setcraft.TYPE_RANGE})), (True, []))
     check("  ..of the band: the owner's rungs 6 and 8 (Магриб, Налетчик), offered from the"
           " rung's level up to the eighth",
           sorted({(q["level"], q["max_level"]) for q in ROWS}), [(6, 8), (8, 8)])
@@ -244,8 +281,11 @@ try:
           [q["type"] for q in ROWS if not all(names.known(i)
                                              for i in quests.get(q["type"]).string_ids())], [])
     craftsmen = {6: standing(CRAFT_6), 8: standing(CRAFT_8)}
+    on_by_craft = {}
+    for q in ON:
+        on_by_craft.setdefault(q["craft"], []).append(q)
     wrong = []
-    for q in by_craft["rework"] + by_craft["parts"]:
+    for q in on_by_craft["rework"] + on_by_craft["parts"]:
         giver = q["give"][0]
         base, k = setcraft.mod_of(q["objs"][0]["obj"])
         variant = cat[base][1].split("_")[-2]
@@ -257,10 +297,10 @@ try:
                 or giver - setcraft.SLICES["Вади-Хальфа"]["craftsmen"][q["level"]] \
                 != 3 * sets.SLOTS.index(slot) + setcraft.RANK[variant]:
             wrong.append(q["type"])
-    check("every step is its craftsman's: the level's quarter (452 for 6, 457 for 8), the"
-          " master for G, the pupil for A, his slot; modN in, modN+1 out", wrong, [])
+    check("switched on, every step is its craftsman's: the level's quarter (452 for 6, 457 for"
+          " 8), the master for G, the pupil for A, his slot; modN in, modN+1 out", wrong, [])
     check("  ..the apprentices (P) and the seventh level's quarter (456) give nothing",
-          sorted({g for q in ROWS for g in q["give"]} & (standing(CRAFT_7) | {
+          sorted({g for q in ON for g in q["give"]} & (standing(CRAFT_7) | {
               t for t in standing(CRAFT_6) | standing(CRAFT_8) if "Подмастерье" in names.text(t)})),
           [])
     steps = []
@@ -318,7 +358,7 @@ try:
     check("the cheques: [6] and [8], A and G, one or five, the A for afro and the G for gold,"
           " sold by the treasurers and the craftsmen who ask them",
           sorted((q["level"], cat[q["rew_obj"][0]][1], q["num_rew_obj"][0], q["cost_afro"],
-                  q["cost_gold"], tuple(q["give"][:3])) for q in by_craft["cheque"]),
+                  q["cost_gold"], tuple(q["give"][:3])) for q in on_by_craft["cheque"]),
           sorted((lv, "Chek_Set_%s_%d" % (v, lv), n,
                   0 if v == "G" else n * setcraft.cheque_price(lv, v),
                   n * setcraft.cheque_price(lv, v) if v == "G" else 0, setcraft.TREASURERS)
@@ -340,11 +380,13 @@ try:
            sorted({sets.set_of(setcraft.base_of(q["objs"][0]["obj"]))
                    for q in got if q.get("objs")})),
           (204, [(10, 12)], [11182, 11184]))
-    check("the hand rows: «Как менять старые комплекты» at both Генри, «Обмен б/у снаряжения»"
-          " at Генри ст, in the original's words",
-          [(quests.get(t).give, orig_texts.quests().get(t, {}).get("name")) for t in (238, 239)],
-          [([HENRY, OLD_HENRY], "Как менять старые комплекты"),
-           ([OLD_HENRY], "Обмен б/у снаряжения")])
+    hand = {int(r["type"]): r for r in quests.table_rows() if r["type"] in (238, 239)}
+    check("the hand rows OFF with the window: «Как менять старые комплекты» (was at both"
+          " Генри), «Обмен б/у снаряжения» (was at Генри ст), in the original's words",
+          [(quests.get(t).give, quests.get(t).take, hand[t]["why"].split(")")[0],
+            orig_texts.quests().get(t, {}).get("name")) for t in (238, 239)],
+          [([], [], "OFF (give/take [], was [93, 5104]", "Как менять старые комплекты"),
+           ([], [], "OFF (give/take [], was [5104]", "Обмен б/у снаряжения")])
 except Exception:
     import traceback
     fails.append("the tables in process broke:\n" + traceback.format_exc())
@@ -434,11 +476,6 @@ def acks(frames):
     return [p["res"] for p in named(frames, "cmdAck")]
 
 
-def first(frames, name):
-    got = named(frames, name)
-    return got[0] if got else {}
-
-
 def arrive(c):
     c.send("lenter;accept=1;")
     return c.frames(2)
@@ -465,24 +502,6 @@ def give(c, type_id, n=1):
 def money(c, afro, gold):
     c.send("userMsg;entry=@/money %d %d@;group=0;" % (afro, gold))
     c.frames(0.4)
-
-
-def status(c, qtype):
-    c.send("q_status;q_type=%d;" % qtype)
-    got = named(c.until(lambda f: f[0] == "q_status"), "q_status")
-    return got[0]["status"] if got else None
-
-
-def take(c, npc, npc_type, qtype):
-    c.send("q_st;mob=%d;q_idx=%d;" % (npc, quests.given_by(npc_type).index(qtype)))
-    got = c.frames(0.8)
-    ids = [p["q_id"] for n, p in got if n.startswith("q_di_")]
-    return got, (ids[0] if ids else 0)
-
-
-def hand_in(c, npc, q_id):
-    c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (npc, q_id))
-    return c.frames(0.9)
 
 
 def store():
@@ -513,14 +532,6 @@ def owned():
     return out
 
 
-def rows_of(type_id):
-    """The character's rows of a type, oldest first."""
-    st = store()
-    got = [dict(r) for r in st.items_of(char_id()) if r["type_id"] == type_id]
-    st.close()
-    return got
-
-
 def ledger(source):
     st = store()
     got = [(r["ref"], r["afro"], r["gold"]) for r in st.db.execute(
@@ -528,13 +539,6 @@ def ledger(source):
         (char_id(), source)).fetchall()]
     st.close()
     return got
-
-
-def spec_xp():
-    st = store()
-    ch = progression.Character.load(st, char_id())
-    st.close()
-    return tuple(ch.spec[RECYCLING][:2])
 
 
 def reshape(skill):
@@ -573,6 +577,14 @@ def logout(c):
     time.sleep(0.3)
 
 
+def lists(info):
+    return {k: info.get(k) for k in ("in_types", "out_types", "costs")}
+
+
+def quests_of(info):
+    return sorted(set(info.get("give_quests", []) + info.get("take_quests", [])))
+
+
 try:
     c = login(first_time=True)
     logout(c)
@@ -580,163 +592,72 @@ try:
     c = login()
     money(c, 200000, 5000)
 
-    # --- Генри's window: an upgrade --------------------------------------------------------
+    # --- Генри's window: empty, and an upgrade refused --------------------------------------
     print("Генри's window")
     here = goto(c, PORT_MARKET)
     kind, henry_info = here.get(HENRY, ("", {}))
-    check("Генри is an upgrader whose userInfo carries his window's three lists",
-          (kind, {k: henry_info.get(k) for k in ("in_types", "out_types", "costs")}),
-          ("userInfo_Upgrader", setcraft.window(HENRY)))
+    check("Генри is an upgrader whose userInfo carries three empty lists",
+          (kind, lists(henry_info)), ("userInfo_Upgrader", EMPTY))
+    check("  ..and offers and takes neither 238 nor 239, his other quests as they were",
+          ([t for t in quests_of(henry_info) if t in (238, 239)], 119 in quests_of(henry_info)),
+          ([], True))
     old_helm = give(c, piece(MAGRIB_G))[0]
     c.send("ss_create;s_type=5;target=%d;" % henry_info["id"])
-    check("ss_create;s_type=5 at Генри: one ack, 0", acks(c.frames()), [0])
-    c.send("ss_get;target=0;slot=8;")
-    got = c.frames()
-    check("  ..the window asks for the bag and gets it, the army helmet in it",
-          old_helm in [str(x).lstrip("x") for x in first(got, "ss_ack").get("o_list", [])], True)
-    cost = setcraft.cost_of(HENRY, piece(MAGRIB_G), piece(RAIDER_G))
+    check("ss_create;s_type=5 at Генри: one ack, 0 -- the window opens, with nothing in it",
+          acks(c.frames()), [0])
     afro0, gold0 = purse()
     c.send("ss_upd;param=%d;obj=x%s;s_status=1;" % (piece(RAIDER_G), old_helm))
     got = c.frames()
-    check("«Улучшить»: the ack, the old piece out, the new one in with its numbers, the purse",
-          (order(got)[:5], acks(got), [(p["status"], str(p["obj"]).lstrip("x") == old_helm)
-                                      for p in named(got, "ss_obj_status")]),
-          (["cmdAck", "ss_obj_status", "ss_obj_status", "ss_di_wear", "userInfo_Player"], [0],
-           [(0, True), (1, False)]))
-    check("  ..the army helmet (G) became the raider's goggles (G) for 60% of their 2.5 ounces",
-          (owned().get(piece(MAGRIB_G)), owned().get(piece(RAIDER_G)), gold0 - purse()[1],
-           purse()[0] - afro0, first(got, "userInfo_Player").get("gold")),
-          (None, 1, cost, 0, gold0 - cost))
-    check("  ..booked in the money ledger as the upgrade, under the new piece",
-          ledger("set_upgrade"), [(piece(RAIDER_G), 0, -cost)])
-    # Refusals: one ack each, nothing moves.
-    shirt = give(c, piece(MAGRIB_G, "shirt"))[0]
-    c.send("ss_upd;param=%d;obj=x%s;s_status=1;" % (piece(RAIDER_G), shirt))
-    got = c.frames()
-    check("a piece for another slot's piece: refused (3), one ack, nothing moves",
-          (acks(got), "ss_obj_status" in order(got), owned().get(piece(MAGRIB_G, "shirt"))),
-          ([3], False, 1))
-    c.send("ss_upd;param=%d;obj=x0;s_status=1;" % piece(RAIDER_G, "shirt"))
-    check("  ..a piece that is not in the bag: 12", acks(c.frames()), [12])
-    money(c, 0, -10 ** 6)
-    c.send("ss_upd;param=%d;obj=x%s;s_status=1;" % (piece(RAIDER_G, "shirt"), shirt))
-    got = c.frames()
-    check("  ..no gold: 21, the shirt stays", (acks(got), owned().get(piece(MAGRIB_G, "shirt"))),
-          ([21], 1))
-    money(c, 0, 5000)
+    check("«Улучшить» sent all the same (a modified client): refused (3), one ack, the helmet"
+          " and the gold stay, nothing in the ledger",
+          (acks(got), "ss_obj_status" in order(got), owned().get(piece(MAGRIB_G)),
+           owned().get(piece(RAIDER_G)), purse(), ledger("set_upgrade")),
+          ([3], False, 1, None, (afro0, gold0), []))
     c.send("ss_upd;obj=x0;s_status=0;")
-    check("closing the window is sent bare and answered with nothing", c.frames(0.4), [])
-    c.send("ss_upd;param=%d;obj=x%s;s_status=1;" % (piece(RAIDER_G, "shirt"), shirt))
-    got = c.frames()
-    check("  ..and after it an upgrade is no longer the window's", (
-        owned().get(piece(MAGRIB_G, "shirt")), owned().get(piece(RAIDER_G, "shirt"))), (1, None))
+    check("  ..the close is sent bare and answered with nothing", c.frames(0.4), [])
 
-    # --- Генри ст: the exchange -------------------------------------------------------------
-    print("Генри ст's exchange")
+    # --- Генри ст: no exchange ----------------------------------------------------------------
+    print("Генри ст's window")
     here = goto(c, OLD_MARKET)
-    old_info = here.get(OLD_HENRY, ("", {}))[1]
+    kind, old_info = here.get(OLD_HENRY, ("", {}))
+    check("Генри ст's userInfo: three empty lists, neither 238 nor 239",
+          (kind, lists(old_info), [t for t in quests_of(old_info) if t in (238, 239)]),
+          ("userInfo_Upgrader", EMPTY, []))
     worn_out = give(c, chain(MAGRIB_G)[10])[0]
     c.send("ss_create;s_type=5;target=%d;" % old_info.get("id", 0))
     c.frames()
     gold1 = purse()[1]
-    want = chain(RAIDER_G)[5]
-    c.send("ss_upd;param=%d;obj=x%s;s_status=1;" % (want, worn_out))
+    c.send("ss_upd;param=%d;obj=x%s;s_status=1;" % (chain(RAIDER_G)[5], worn_out))
     got = c.frames()
-    check("a (G) mod10 for the next rung's mod05, for half the new piece's price",
-          (acks(got), owned().get(chain(MAGRIB_G)[10]), owned().get(want), gold1 - purse()[1]),
-          ([0], None, 1, int(math.ceil(0.5 * setcraft.price(want)[1]))))
-    # The window never closed and the player gone: it upgrades nothing.
-    boots = give(c, piece(WANDERER_G, "boots"))[0]
-    here = goto(c, CRAFT_6)
-    gold1 = purse()[1]
-    c.send("ss_upd;param=%d;obj=x%s;s_status=1;" % (piece(MAGRIB_G, "boots"), boots))
-    got = c.frames()
-    check("a window left open behind, in another room: the upgrade refused (3), one ack, the"
-          " boots and the gold stay",
-          (acks(got), "ss_obj_status" in order(got), owned().get(piece(WANDERER_G, "boots")),
-           owned().get(piece(MAGRIB_G, "boots")), purse()[1]), ([3], False, 1, None, gold1))
+    check("an exchange of a (G) mod10: refused (3), the mod10 and the gold stay",
+          (acks(got), owned().get(chain(MAGRIB_G)[10]), owned().get(chain(RAIDER_G)[5]),
+           purse()[1]), ([3], 1, None, gold1))
     c.send("ss_upd;obj=x0;s_status=0;")
     c.frames(0.3)
 
-    # --- the craftsmen: cheques, a rework, a parts upgrade -----------------------------------
+    # --- Тиль ---------------------------------------------------------------------------------
+    here = goto(c, BLACK_MARKET)
+    kind, til_info = here.get(TIL, ("", {}))
+    check("Мастер Тиль's userInfo in the black market: three empty lists",
+          (kind, lists(til_info)), ("userInfo_Upgrader", EMPTY))
+
+    # --- the craftsmen's quarter: nobody gives a row ------------------------------------------
     print("the craftsmen")
-    master = setcraft.craftsman(setcraft.SLICES["Вади-Хальфа"], 6, HELM, "G")
+    here = goto(c, CRAFT_6)
+    master = setcraft.craftsman(HALFA, 6, HELM, "G")
+    pupil = setcraft.craftsman(HALFA, 6, HELM, "A")
+    give(c, chain(MAGRIB_G)[0])
+    give(c, chain(MAGRIB_A)[0])
+    check("in the quarter 452 (an admin's /goto) the master and the pupil of the helmets stand,"
+          " and neither gives or takes a quest, with the helmet and the gold in the bag",
+          {t: (t in here, quests_of(here.get(t, ("", {}))[1])) for t in (master, pupil)},
+          {master: (True, []), pupil: (True, [])})
     npc = here.get(master, ("", {}))[1].get("id", 0)
-    helm = chain(MAGRIB_G)
-    rework, parts = row_for("rework", helm[0]), row_for("parts", helm[1])
-    five = cheque_row(6, "G", 5)
-    check("the master of the (G) helmets offers his cheques; the step of a helmet not in the"
-          " bag is not offered",
-          (status(c, five["type"]), status(c, rework["type"])), (1, 0))
-    give(c, helm[0])
-    check("  ..with the army helmet (G) in the bag its step is", status(c, rework["type"]), 1)
     gold2 = purse()[1]
-    got, qid = take(c, npc, master, five["type"])
-    got = hand_in(c, npc, qid)
-    check("five cheques bought: the gold, five «Чек на одежду [6] (G)»",
-          (acks(got), gold2 - purse()[1], owned().get(setcraft.CHEQUES[(6, "G")])),
-          ([0], five["cost_gold"], 5))
-    xp0 = spec_xp()
-    got, qid = take(c, npc, master, rework["type"])
-    check("the rework taken, complete with the helmet and the cheques in the bag",
-          (acks(got), first(got, "q_di_bring_l_obj").get("complete")), ([0], 1))
-    got = hand_in(c, npc, qid)
-    check("  ..handed in: the helmet at mod01, the cheques gone, «Переработка» +54",
-          (acks(got), owned().get(helm[0]), owned().get(helm[1]),
-           owned().get(setcraft.CHEQUES[(6, "G")]), spec_xp()[1] - xp0[1]),
-          ([0], None, 1, None, 54))
-    check("  ..and now the next steps are offered: the rework's and the parts upgrade's",
-          (status(c, row_for("rework", helm[1])["type"]), status(c, parts["type"])), (1, 1))
-    afro3, gold3 = purse()
-    got, qid = take(c, npc, master, parts["type"])
-    got = hand_in(c, npc, qid)
-    check("the parts upgrade: mod01 to mod02 for 24 000 afro and 1.80 ounces, «Переработка» +240",
-          (acks(got), owned().get(helm[1]), owned().get(helm[2]), afro3 - purse()[0],
-           gold3 - purse()[1], spec_xp()[1] - xp0[1]),
-          ([0], None, 1, 24000, 180, 54 + 240))
-    check("  ..both fees in the money ledger as the quests', under their types",
-          [(r, a, g) for r, a, g in ledger("quest") if r in (five["type"], parts["type"])],
-          [(five["type"], 0, -five["cost_gold"]), (parts["type"], -24000, -180)])
-
-    # A worn piece: the step changes the mod and keeps the wear.
-    pupil = setcraft.craftsman(setcraft.SLICES["Вади-Хальфа"], 6, HELM, "A")
-    pnpc = here.get(pupil, ("", {}))[1].get("id", 0)
-    helm_a = chain(MAGRIB_A)
-    abs_a = [items.params_of(t)["max_break_abs"] for t in helm_a[:3]]
-    give(c, helm_a[0])
-    give(c, helm_a[0])
-    worn_uniq = rows_of(helm_a[0])[0]["uniq"]           # the older of the two
-    st = store()
-    st.update_item(worn_uniq, brk=1, max_break_cur=20)   # as fights and repairs leave it
-    st.close()
-    got, qid = take(c, pnpc, pupil, cheque_row(6, "A", 5)["type"])
-    hand_in(c, pnpc, qid)
-    got, qid = take(c, pnpc, pupil, row_for("rework", helm_a[0])["type"])
-    got = hand_in(c, pnpc, qid)
-    want1 = setcraft.worn_as((1, 20, abs_a[0]), abs_a[1])
-    new_oid = [str(p["obj"]).lstrip("x") for p in named(got, "ss_obj_status") if p["status"] == 1]
-    shown = [(p["break"], p["max_break_cur"]) for p in named(got, "ss_di_wear")
-             if str(p["obj"]).lstrip("x") in new_oid]
-    check("a worn army helmet (1 of a ceiling sagged to 20) reworked: the older, worn one taken,"
-          " the mod01 as worn (its share of wear and of the ceiling), the client told so last;"
-          " the whole one stays whole",
-          (acks(got), want1, [(r["brk"], r["max_break_cur"]) for r in rows_of(helm_a[1])],
-           shown[-1:], [(r["uniq"] == worn_uniq, r["brk"], r["max_break_cur"])
-                        for r in rows_of(helm_a[0])]),
-          ([0], (1, 21), [want1], [want1], [(False, abs_a[0], abs_a[0])]))
-    got, qid = take(c, pnpc, pupil, row_for("parts", helm_a[1])["type"])
-    got = hand_in(c, pnpc, qid)
-    want2 = setcraft.worn_as(want1 + (abs_a[1],), abs_a[2])
-    check("  ..and so does the parts upgrade: mod02 as worn",
-          (acks(got), [(r["brk"], r["max_break_cur"]) for r in rows_of(helm_a[2])]),
-          ([0], [want2]))
-    logout(c)
-
-    # --- the band ---------------------------------------------------------------------------
-    reshape(9)
-    c = login()
-    check("at the ninth level the band's rows are no longer offered",
-          (status(c, five["type"]), status(c, row_for("rework", helm[2])["type"])), (0, 0))
+    c.send("q_st;mob=%d;q_idx=0;" % npc)
+    got = c.frames(0.8)
+    check("  ..a take sent all the same: no such quest (1), nothing in the journal, the gold stays",
+          (acks(got), [n for n, _p in got if n.startswith("q_di_")], purse()[1]), ([1], [], gold2))
     logout(c)
 except Exception:
     import traceback

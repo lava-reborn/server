@@ -67,8 +67,10 @@ REMAINDER = {int(k) for k in MANUAL["none"]}
 MAX_REMAINDER = 8
 
 # The places the restoration opens. Not the premium masters' camp 124, off the
-# map since the owner's cut of (P) (2026-09-30, data/retired.json).
-TOWN = [41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 468, 452, 456, 457, 60,
+# map since the owner's cut of (P) (2026-09-30, data/retired.json), nor the
+# clothing market 468 and the craftsmen's quarters 452, 456 and 457, off it
+# since the owner's cut of Вади-Хальфа (2026-10-09, server/test_halfa_cut.py).
+TOWN = [41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 60,
         176, 107, 528, 59, 78]
 QUEST_PLACES = [43, 48, 65, 119, 120, 140, 62, 61, 47, 64, 63, 117, 137, 138, 139, 141, 142,
                 122, 108, 45, 46, 44, 116, 121, 250]

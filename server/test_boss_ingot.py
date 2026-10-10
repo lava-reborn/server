@@ -17,9 +17,12 @@ proper item: the original's name and description (texts.xml 7638/7639,
 data/build_orig_items.py rule 7d, which names the 1- and 10-ounce ones too),
 the article's 5 g, an afro price of the article's 5 G at the game's one
 rate (progression.GOLD_TO_AFRO_RATE, items.GOLD_INGOTS) -- of which a trader
-pays 70 per cent, so the quest's 5 ounces are always the better deal. It changes hands, and it falls off a dead player like any loot
-(«любой лут должен падать»): gold is what it is made of, not what it was
-bought for (combat.gold_item).
+pays 70 per cent, so the quest's 5 ounces are always the better deal -- and,
+since 2026-10-09, the 5 G in gold, for which Мортимер sells it (the gold
+ingots of Вади-Хальфа's bosses and his stall: test_halfa_ingots). It
+changes hands, and it falls off a dead player like any loot («любой лут
+должен падать»): gold is what it is made of, not what it was bought for
+(combat.gold_item).
 
 Джеррах ал-Хакам, Староста поселка (5206) in the Западный поселок (183),
 gives «Обмен слитка» (quest 10) and takes it back: one ingot, counted in the
@@ -144,9 +147,13 @@ finally:
     else:
         mobs._TABLES[BOSS] = _saved
 
-check("nobody else rolls for any gold ingot",
+# Вади-Хальфа's eight hour-keeping bosses carry their factions' ingots
+# since 2026-10-09 (test_halfa_ingots holds them).
+HALFA_BOSSES = [269, 270, 283, 284, 299, 300, 313, 314]
+check("nobody else rolls for any gold ingot but the bosses of Вади-Хальфа",
       sorted(int(t) for t in mobs.TYPES if int(t) != BOSS
-             and {r[0] for r in mobs.loot_table(int(t))} & {INGOT, INGOT_1, INGOT_10}), [])
+             and {r[0] for r in mobs.loot_table(int(t))} & {INGOT, INGOT_1, INGOT_10}),
+      HALFA_BOSSES)
 
 # Where he stands: location 34 and no other file, no stand-in for a missing
 # creature; and of the valley's settlements his camp is one of the two with
@@ -199,9 +206,10 @@ check("  ..and carries no ingot, ordinary or for a quest",
 
 # --- the ingot ----------------------------------------------------------------------
 si = items.params_of(INGOT) or {}
-check("the ingot: its 5 G in afro, nothing in gold, the article's 5 g, fifty to a stack",
+# The 5 G in gold since 2026-10-09: Мортимер sells it at face value.
+check("the ingot: its 5 G in afro and in gold, the article's 5 g, fifty to a stack",
       (si.get("cost"), si.get("g_cost"), si.get("weight"), si.get("max_count")),
-      (PRICE, 0, 5, 50))
+      (PRICE, REWARD, 5, 50))
 check("it changes hands: exchangeable, no quest's own, not premium",
       (si.get("exchang"), si.get("quest"), items.premium(INGOT), barter.tradable(INGOT)),
       (1, 0, False, True))
@@ -233,7 +241,7 @@ check("the frame keeps its shape: the designed one's keys, a simple object",
 check("a corpse may hold it", mobs.droppable(INGOT), True)
 
 # --- it is loot, and loot falls ---------------------------------------------------------
-check("gold in its name, afro in its price: not one of the gold things",
+check("gold in its name and in one of its prices: not one of the gold things",
       combat.gold_item(INGOT), False)
 check("so a dead player may lose it", combat.drops_on_death(INGOT), True)
 
@@ -264,9 +272,11 @@ paid = max(1, int(math.floor(si.get("cost", 0) / float(si.get("sell_num", 1) or 
 check("a trader pays 70 per cent of it (Inventory.sell), less than the quest's "
       "5 ounces at the game's rate", (paid, paid < REWARD * progression.GOLD_TO_AFRO_RATE // OUNCE),
       (SOLD, True))
-check("and no stall sells it -- sold for afro it would turn afro into gold",
+# Мортимер sells it since 2026-10-09, for gold alone: sold for afro it would
+# turn afro into gold (Inventory.buy refuses that; test_halfa_ingots).
+check("and no stall but Мортимер's sells it",
       sorted(t for t, (root, _n, _a) in world.mob_types().items()
-             if root == world.TRADER and INGOT in items.stock_for(t)), [])
+             if root == world.TRADER and INGOT in items.stock_for(t)), [1188])
 
 # --- the quest ------------------------------------------------------------------------
 q = quests.get(QUEST)
@@ -636,7 +646,7 @@ try:
     check("the client is told its original name and description, its price and 5 g",
           [(names.ALL.get(p["name"]), names.ALL.get(p["desc"]), p["cost"], p["g_cost"],
             p["weight"], p["exchang"]) for p in frame],
-          [("5 унций золота", "Слиток номиналом в пять золотых унций.", PRICE, 0, 5, 1)])
+          [("5 унций золота", "Слиток номиналом в пять золотых унций.", PRICE, REWARD, 5, 1)])
     told = []
     for t in (INGOT_1, INGOT_10):
         c.send("ss_get_si;type=%d;" % t)

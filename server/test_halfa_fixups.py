@@ -3,12 +3,13 @@
 What the plan's corrections а, б, г and д and the stage-1 skeptic asked of
 the town before c_ga pays 4000 afro an ounce, each held here:
 
-  1. the clothing market (468): each of its traders sells the owner's
-     ladder of sets (data/sets.json) of the levels in his own name, A then
-     G, no (P), no quest (Q) set; «Шахтерская одежда» (5181) the town's
-     miner's clothes, A then G, on the numbers of Колонист[2];
-     Странник[4] and the gold sets of 4/6/8 are sold in Halfa, by Ваккас and
-     Хамис, not in the valley alone;
+  1. the clothing market's traders (468, off the map since the owner's cut
+     of Вади-Хальфа, 2026-10-09; 5160, 5161 and 5181 stand in the markets of
+     Абри, Донгола and Абу-Хамед too): each sells the owner's ladder of sets
+     (data/sets.json) of the levels in his own name, A then G, no (P), no
+     quest (Q) set; «Шахтерская одежда» (5181) the town's miner's clothes, A
+     then G, on the numbers of Колонист[2]; Странник[4] and the gold sets of
+     4/6/8 are sold in Halfa, by Ваккас and Хамис, not in the valley alone;
   2. Ольсен (431) sells nothing, the lottery man (662) the town's own
      ticket alone, at its own article's price;
   3. the gold taps: the black market's placeholder quests are gone, and
@@ -219,8 +220,9 @@ check("«Обмен слитка» (10) stays: five ounces for the boss's ingot 
       (TABLE[10].rew_gold, TABLE[10].wants()), (500, [(4796, 1)]))
 GOLD_ROWS = {t: q for t, q in TABLE.items() if q.rew_gold > 0}
 INGOTS = set(items.GOLD_INGOTS)
-check("every row that pays gold asks for something -- none for a word passed on",
-      [t for t, q in GOLD_ROWS.items() if not q.wants()], [])
+check("every row that pays gold asks for something or for kills (Фрэнк's raid, 221)"
+      " -- none for a word passed on",
+      [t for t, q in GOLD_ROWS.items() if not (q.wants() or q.mobs_kill)], [])
 check("and is a service (cashing), a once-a-day task, or an ingot changed for its ounces",
       [t for t, q in GOLD_ROWS.items()
        if not (q.service or q.per_day or {o for o, _n in q.wants()} & INGOTS)], [])
@@ -294,15 +296,17 @@ check("Rahat's dead wife (68, 47) and the skull of treasure island (2099, 139) r
 check("  ..unlisted residents and cows no longer register homes either",
       [world.offers_home(t) for t in (74, 103, 423, 425, 1977, 666, 115)], [False] * 7)
 # Not the premium masters' camp 124: off the map since the owner's cut of (P)
-# (2026-09-30, data/retired.json), and nobody stands in it.
-PLACES = ([41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 468, 452, 456, 457, 60,
+# (2026-09-30, data/retired.json), and nobody stands in it. Nor the clothing
+# market 468 and the craftsmen's quarters 452, 456, 457: off the map since the
+# owner's cut of Вади-Хальфа (2026-10-09), nobody can come in to register.
+PLACES = ([41, 52, 37, 104, 35, 94, 36, 95, 102, 100, 70, 164, 60,
            176, 107, 528, 59, 78]
           + [43, 48, 65, 119, 120, 140, 62, 61, 47, 64, 63, 117, 137, 138, 139, 141, 142,
              122, 108, 45, 46, 44, 116, 121]
           + list(range(80, 88)) + [109, 110, 111, 165, 198, 199, 598, 599, 623]
           + [732, 1048, 1233, 1260, 1276, 1280, 1282] + list(range(626, 631))
           + [200, 201, 202, 657, 658, 659, 1025, 1218, 1255, 1027, 1220, 1257, 1026, 1219, 1256]
-          + [154, 158, 160, 613, 617, 1012, 1016, 1024])
+          + [154, 158, 160, 613, 617, 1012, 1016, 1024, 1215, 1017, 1018, 1019])
 MT = world.mob_types()
 THING_ARTS = {MT[t][2] for t in (68, 75, 104, 625, 634, 816, 2099, 2279, 1135)}
 homes = {}
