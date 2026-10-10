@@ -7,7 +7,13 @@
 # 2. csc compiles TestSync.cs with Release.cs, Sync.cs, TextsCheck.cs and
 #    LocalServer.cs -- the files the launcher is built from, as they are;
 # 3. TestSync.exe serves those releases on 127.0.0.1 and runs the launcher's
-#    update against them: install, update, tampering, refusals, self-update.
+#    update against them: install, update, tampering, refusals, self-update,
+#    the looks at the pointer between runs (Sync.Peek, Watch) and the
+#    version labels (Versions).
+#
+# Keep -Work short: the deepest fixture path has to stay under 260 characters
+# (a staging file is .lava\staging\<sha256>.part), or the badblob checks fail
+# for the path and not for the launcher.
 #
 # Exit status 0 when every check passed. ASCII only (see build.ps1).
 param([string]$Work = "")

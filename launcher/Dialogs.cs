@@ -245,7 +245,7 @@ class SetButton : Hot
 }
 
 // Settings: the game folder, the file check, and below them the launcher's
-// version with a link to what changed.
+// build and the game's release, with a link to what changed.
 class SettingsDialog : Modal
 {
     const int PAD = 28, WIDTH = 480;
@@ -261,7 +261,7 @@ class SettingsDialog : Modal
     readonly SetButton verify = new SetButton();
     readonly SetButton update = new SetButton();
     readonly TextLink news = new TextLink();
-    string folder, note;
+    string folder, note, game;
     readonly string version;
 
     public event Action ChangeFolder, Verify, CheckUpdates, News;
@@ -275,9 +275,10 @@ class SettingsDialog : Modal
         set { newsPending = value; Invalidate(); }
     }
 
-    public SettingsDialog(string gameFolder, string versionLabel, bool canVerify) : base(WIDTH)
+    public SettingsDialog(string gameFolder, string versionLabel, string gameLabel, bool canVerify) : base(WIDTH)
     {
-        version = versionLabel;
+        version = versionLabel ?? "";
+        game = gameLabel ?? "";
         SetFolder(gameFolder);
         Height = Theme.S(HEAD + 1 + BODY + 1 + FOOT);
         PlaceClose(30, 22, 28);
@@ -337,6 +338,16 @@ class SettingsDialog : Modal
         Invalidate();
     }
 
+    // The game's release in the footer, as the window's Render sees it each
+    // time: a run, or a change of folder, can name another while this is open.
+    public void SetGame(string gameLabel)
+    {
+        gameLabel = gameLabel ?? "";
+        if (gameLabel == game) return;
+        game = gameLabel;
+        Invalidate();
+    }
+
     // A section under a hairline: its label and up to three lines of text,
     // the button to the right of them placed by the constructor.
     static void Section(Graphics g, int w, int top, string label, string text)
@@ -377,11 +388,16 @@ class SettingsDialog : Modal
         Theme.HLine(g, 0, fy, w, Theme.Hairline);
         using (SolidBrush b = new SolidBrush(Theme.BgDialogFoot))
             g.FillRectangle(b, 1, fy + 1, w - 2, FOOT - 1);
+        // Two rows, the launcher's build over the game's release, their
+        // values in one column; each stops short of "Что нового".
         Font ff = Theme.Body(11);
-        float x = PAD;
-        Theme.Line(g, "Версия лаунчера", ff, Theme.InkStats, x, fy + 1 + (FOOT - 16) / 2f, 16);
-        x += Theme.Width(g, "Версия лаунчера", ff) + 8;
-        Theme.Line(g, version, Theme.Mono(12), Theme.InkDialogStrong, x, fy + 1 + (FOOT - 16) / 2f, 16);
+        float x = PAD + Math.Max(Theme.Width(g, "Лаунчер", ff), Theme.Width(g, "Игра", ff)) + 8;
+        float room = w - PAD - news.Measure(g) - 6 - 6 - 16 - x;
+        float top = fy + 1 + (FOOT - 16 - 4 - 16) / 2f;
+        Theme.Line(g, "Лаунчер", ff, Theme.InkStats, PAD, top, 16);
+        Theme.Line(g, Theme.Clip(g, version, mf, room), mf, Theme.InkDialogStrong, x, top, 16);
+        Theme.Line(g, "Игра", ff, Theme.InkStats, PAD, top + 16 + 4, 16);
+        Theme.Line(g, Theme.Clip(g, game, mf, room), mf, Theme.InkDialogStrong, x, top + 16 + 4, 16);
         if (newsPending)
             Theme.Dot(g, w - PAD - news.Measure(g) - 6 - 3, fy + 1 + FOOT / 2f, 6, Theme.Accent);
     }

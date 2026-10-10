@@ -148,6 +148,8 @@ static class TestSync
         Check("restart: ready", s.State, SyncState.Ready);
         Check("restart: nothing downloaded", web.StoreHits, 0);
         Check("restart: says it is up to date", s.Note, "Игра в актуальном состоянии");
+        Check("restart: no files put in place, nothing for the panel to count", s.Updated, 0);
+        Check("restart: the release's commit, from its manifest", s.Current.Source, new string('1', 40));
 
         // --- a file changed on the disk -------------------------------------------------
         string mainSwf = Path.Combine(game, "res", "main.swf");
@@ -193,6 +195,11 @@ static class TestSync
         Check("update: every file is release 2's", SameFiles(game, "v2"), true);
         Check("update: only the changed and added files downloaded", web.StoreHits, 3);
         Check("update: says how many files changed", s.Note, "Игра обновлена: 3 файла");
+        Check("update: the panel's count", Versions.Updated(s.Updated), "Игра обновлена: 3 файла");
+        Check("update: the release's commit is release 2's", s.Current.Source, new string('2', 40));
+        Pointer r2p = Pointer.Read(resource, File.ReadAllBytes(Path.Combine(Served("r2"), "current.txt")));
+        Check("update: the pointer it came with is kept beside it",
+              s.Accepted != null && s.Accepted.Serial == r2p.Serial && s.Accepted.Created == r2p.Created, true);
 
         // --- the game's web server -------------------------------------------------------------
         LocalServer ls = new LocalServer(s, null, "127.0.0.1", 9775);
@@ -241,6 +248,8 @@ static class TestSync
         Check("stranger's pointer: the note says why", s.Note.Contains("подписи"), true);
         Check("stranger's pointer: named as refused", s.Cause, OfflineCause.Refused);
         Check("stranger's pointer: nothing downloaded", web.StoreHits, 0);
+        Check("stranger's pointer: the release in place is still named by its own pointer",
+              s.Accepted != null && s.Accepted.Serial == r2p.Serial, true);
 
         web.Root = Served("r1again");
         s = Start(game, 99, null, false);
@@ -365,6 +374,207 @@ static class TestSync
         Check("manifest: a character Windows refuses is refused", Manifest.PathOk("a/b?c"), false);
         Check("manifest: a letter outside ASCII is refused", Manifest.PathOk("mobs/б.swf"), false);
         Check("manifest: a path over 150 characters is refused", Manifest.PathOk(new string('a', 151)), false);
+        Check("pointer: created is read as publish.py wrote it", Versions.Created(p.Created) != null, true);
+
+        Looks();
+        Labels();
+        Watches();
+    }
+
+    // --- a look at the pointer between runs (Sync.Peek) ---------------------------------------
+    static void Looks()
+    {
+        long serial;
+        long r1 = Pointer.Read(resource, File.ReadAllBytes(Path.Combine(Served("r1"), "current.txt"))).Serial;
+        long r2 = Pointer.Read(resource, File.ReadAllBytes(Path.Combine(Served("r2"), "current.txt"))).Serial;
+
+        string game = Fresh("peek");
+        Sync s = new Sync(game, web.Url + "download/client/", resource, launcher, 99, null);
+        web.Root = Served("r2");
+        Check("peek: before any run there is nothing to compare with", s.Peek(5000, false, out serial), Peeked.Unknown);
+        Check("peek: nor for ИГРАТЬ", s.Peek(5000, true, out serial), Peeked.Unknown);
+
+        web.Root = Served("r1");
+        s.Start();
+        if (!s.Wait(120000)) throw new Exception("sync did not settle");
+        Check("peek: release 1 in place", s.State, SyncState.Ready);
+        web.StoreHits = 0;
+        Check("peek: the same release published, nothing newer", s.Peek(5000, false, out serial), Peeked.Current);
+        Check("peek: its serial", serial, r1);
+        Check("peek: nothing is downloaded by a look", web.StoreHits, 0);
+
+        web.Root = Served("r2");
+        Check("peek: release 2 published, newer", s.Peek(5000, false, out serial), Peeked.Newer);
+        Check("peek: release 2's serial", serial, r2);
+        Check("peek: release 2 published, newer for ИГРАТЬ too", s.Peek(5000, true, out serial), Peeked.Newer);
+        Check("peek: the look took nothing, release 1's files stay", SameFiles(game, "v1"), true);
+
+        // Release 2's own body, signed by a key the launcher does not know:
+        // newer by its serial, and never trusted for it.
+        web.Root = Served("stranger");
+        Check("peek: a forged pointer is not newer", s.Peek(5000, false, out serial), Peeked.Unknown);
+        Check("peek: and has no serial", serial, 0L);
+
+        web.Root = null;
+        Check("peek: no server, nothing to go on", s.Peek(5000, false, out serial), Peeked.Unknown);
+
+        web.Silent = true;
+        DateTime t0 = DateTime.UtcNow;
+        Peeked silent = s.Peek(700, false, out serial);
+        double took = (DateTime.UtcNow - t0).TotalMilliseconds;
+        web.Silent = false;
+        Check("peek: a server that never answers, nothing to go on", silent, Peeked.Unknown);
+        Check("peek: and the look gives up in its time (" + (int)took + " ms)", took < 2500, true);
+
+        // A run looks for itself: a look during one says so at once.
+        web.Root = Served("r2");
+        Peeked during = Peeked.Unknown;
+        s.Changed = delegate
+        {
+            long ignored;
+            if (s.State == SyncState.Checking && during == Peeked.Unknown) during = s.Peek(5000, false, out ignored);
+        };
+        s.Start();
+        if (!s.Wait(120000)) throw new Exception("sync did not settle");
+        s.Changed = null;
+        Check("peek: during a run, busy", during, Peeked.Busy);
+        Check("peek: the run took release 2", SameFiles(game, "v2"), true);
+        Check("peek: release 2 in place, nothing newer", s.Peek(5000, false, out serial), Peeked.Current);
+        Check("peek: release 2 in place, nothing newer for ИГРАТЬ", s.Peek(5000, true, out serial), Peeked.Current);
+        web.Root = Served("r1again");
+        Check("peek: an older pointer is not newer", s.Peek(5000, false, out serial), Peeked.Current);
+        Check("peek: an older pointer is not newer for ИГРАТЬ", s.Peek(5000, true, out serial), Peeked.Current);
+
+        // A release a run was offered and could not download: the watch
+        // does not fetch it again (it would every 15 s), "ИГРАТЬ" does, once
+        // a press, before the game starts on the release before it.
+        string g3 = Fresh("peek-dl");
+        web.Root = Served("r1");
+        Sync d = Start(g3, 99, null, false);
+        web.Root = Served("badblob");
+        d.Start();
+        if (!d.Wait(120000)) throw new Exception("sync did not settle");
+        Check("peek: a release that would not download, release 1 plays",
+              d.State == SyncState.Offline && d.Cause == OfflineCause.Download, true);
+        Check("peek: to the watch that release is not newer", d.Peek(5000, false, out serial), Peeked.Current);
+        Check("peek: to ИГРАТЬ it is, and is tried again", d.Peek(5000, true, out serial), Peeked.Newer);
+        Check("peek: the serial tried again is release 2's", serial, r2);
+        Check("peek: the release in place is still named release 1",
+              d.Accepted != null && d.Accepted.Serial == r1, true);
+        web.Root = Served("r2");
+        d.Start();
+        if (!d.Wait(120000)) throw new Exception("sync did not settle");
+        Check("peek: tried again with the store whole, release 2 in place",
+              d.State == SyncState.Ready && SameFiles(g3, "v2"), true);
+        Check("peek: then nothing newer for ИГРАТЬ", d.Peek(5000, true, out serial), Peeked.Current);
+
+        // The release in place is named from the start of a run, whether or
+        // not the run gets as far as Ready: here it is held short of release 2.
+        string g4 = Fresh("peek-held");
+        web.Root = Served("r1");
+        Start(g4, 99, null, false);
+        web.Root = Served("r2");
+        Sync h = new Sync(g4, web.Url + "download/client/", resource, launcher, 99, null);
+        Check("in place: nothing named before a run has read the folder", h.Accepted == null && h.AcceptedSource == null, true);
+        h.Start();
+        h.Hold();
+        if (!h.Wait(120000)) throw new Exception("sync did not settle");
+        Check("in place: a run held short of release 2", h.State, SyncState.Paused);
+        Check("in place: release 1 is named, from .lava", h.Accepted != null && h.Accepted.Serial == r1, true);
+        Check("in place: with its commit", h.AcceptedSource, new string('1', 40));
+        Check("in place: and nothing is served from it", h.Current == null, true);
+
+        // A release a run has been through and could not take -- here a new
+        // launcher signed by a stranger -- does not call the window back: a
+        // launcher unable to replace itself would fetch itself on every look.
+        string g2 = Fresh("peek-ln");
+        web.Root = Served("r1");
+        Start(g2, 99, null, false);
+        string exe = Path.Combine(g2, "LavaReborn.exe");
+        File.WriteAllText(exe, "MZ launcher build 1");
+        web.Root = Served("badexe");
+        Sync b = Start(g2, 1, exe, false);
+        Check("peek: a launcher that could not be put in place, release 1 plays", b.State, SyncState.Offline);
+        Check("peek: that release is not newer to the next look", b.Peek(5000, false, out serial), Peeked.Current);
+        Check("peek: nor to ИГРАТЬ, which would fetch the launcher again", b.Peek(5000, true, out serial), Peeked.Current);
+        Check("peek: a fresh launcher on the same folder knows nothing yet", new Sync(g2, web.Url + "download/client/",
+              resource, launcher, 1, exe).Peek(5000, false, out serial), Peeked.Unknown);
+        web.Root = Served("r1");
+
+        Check("newer: a larger serial", Sync.Newer(1791658979, 1791658900), true);
+        Check("newer: the same serial", Sync.Newer(1791658979, 1791658979), false);
+        Check("newer: a smaller serial", Sync.Newer(1791658900, 1791658979), false);
+        Check("newer: nothing known, nothing newer", Sync.Newer(1791658979, 0), false);
+    }
+
+    // --- what the window says about versions (Versions) ----------------------------------------
+    static void Labels()
+    {
+        string sha = "b1042e7c0ffee00000000000000000000000000a";
+        // 19:02:59 UTC is 22:02 in Moscow, the deploy of 2026-10-10.
+        Check("label: the window's tag", Versions.Window(5, "2026-10-10T19:02:59Z", sha),
+              "Лаунчер v5 · игра от 10.10 22:02 (b1042e7)");
+        Check("label: the settings' line, with the year and the zone", Versions.Game("2026-10-10T19:02:59Z", sha, true),
+              "от 10.10.2026 22:02 мск (b1042e7)");
+        Check("label: past midnight in Moscow, the next day", Versions.Game("2026-12-31T21:30:00Z", sha, false),
+              "от 01.01 00:30 (b1042e7)");
+        Check("label: no release yet, the launcher alone", Versions.Window(5, null, null), "Лаунчер v5");
+        Check("label: a time that cannot be read is left out", Versions.Window(5, "yesterday", sha),
+              "Лаунчер v5 · игра (b1042e7)");
+        Check("label: a source that is not a commit is left out", Versions.Window(5, "2026-10-10T19:02:59Z", "unknown"),
+              "Лаунчер v5 · игра от 10.10 22:02");
+        Check("label: created as UTC", Versions.Created("2026-10-10T19:02:59Z"),
+              (DateTime?)new DateTime(2026, 10, 10, 19, 2, 59, DateTimeKind.Utc));
+        Check("label: created without its Z is not read", Versions.Created("2026-10-10T19:02:59"), null);
+        Check("label: a commit is shortened", Versions.Commit(sha), "b1042e7");
+        Check("label: too short for a commit", Versions.Commit("b1042e"), null);
+        Check("updated: nothing put in place, nothing said", Versions.Updated(0), "");
+        Check("updated: one", Versions.Updated(1), "Игра обновлена: 1 файл");
+        Check("updated: three", Versions.Updated(3), "Игра обновлена: 3 файла");
+        Check("updated: eleven", Versions.Updated(11), "Игра обновлена: 11 файлов");
+        Check("updated: twenty-two", Versions.Updated(22), "Игра обновлена: 22 файла");
+        Check("updated: thousands apart", Versions.Updated(29836), "Игра обновлена: 29 836 файлов");
+    }
+
+    // --- when the window looks on its own (Watch) ----------------------------------------------
+    static void Watches()
+    {
+        Watch w = new Watch();
+        Check("watch: off until armed", w.Due(0) || w.On, false);
+
+        // The window ticks it each second: a look every 15 s for 5 minutes.
+        int t0 = 1000, looks = 0, last = 0;
+        w.Arm(t0);
+        Check("watch: not at once", w.Due(t0), false);
+        Check("watch: not before 15 s", w.Due(t0 + 14999), false);
+        for (int t = t0 + 1000; t <= t0 + 400000; t += 1000)
+            if (w.Due(t)) { looks++; last = t - t0; }
+        Check("watch: twenty looks", looks, 20);
+        Check("watch: the last at five minutes", last, 300000);
+        Check("watch: then it stops itself", w.On, false);
+
+        w.Arm(t0);
+        Check("watch: armed again", w.Due(t0 + 15000), true);
+        w.Stop();
+        Check("watch: stopped, no look", w.Due(t0 + 30000), false);
+        Check("watch: stopped is off", w.On, false);
+
+        // Environment.TickCount wraps after 24.9 days of uptime.
+        int edge = int.MaxValue - 5000;
+        w.Arm(edge);
+        Check("watch: across the wrap", w.Due(unchecked(edge + 15000)), true);
+        Check("watch: across the wrap, not twice", w.Due(unchecked(edge + 16000)), false);
+        Check("watch: across the wrap, to the end", w.Due(unchecked(edge + 300001)), false);
+        Check("watch: across the wrap, then off", w.On, false);
+
+        // What a newer release found by a look leads to.
+        foreach (SyncState st in Enum.GetValues(typeof(SyncState)))
+        {
+            Check("act: game running, " + st + ": only told, never taken", Watch.Decide(true, true, st), Watch.Act.Tell);
+            Check("act: game starting, " + st + ": nothing", Watch.Decide(false, true, st), Watch.Act.Nothing);
+            Check("act: game closed, " + st, Watch.Decide(false, false, st),
+                  st == SyncState.Ready || st == SyncState.Offline ? Watch.Act.Take : Watch.Act.Nothing);
+        }
     }
 
     // The first line of the answer to a GET with a Host of our choosing,
@@ -424,6 +634,9 @@ class StaticServer
     TcpListener listener;
     volatile bool running;
     public volatile string Root;
+    // Silent: every request is read and never answered, the line being up
+    // and the server not, which a look must not wait out.
+    public volatile bool Silent;
     public int Port;
     public int StoreHits;
 
@@ -465,6 +678,7 @@ class StaticServer
                 string line = ReadLine(s);
                 while (true) { string h = ReadLine(s); if (h == null || h.Length == 0) break; }
                 if (line == null) return;
+                if (Silent) { Thread.Sleep(5000); return; }
                 string target = line.Split(' ')[1];
                 int q = target.IndexOf('?');
                 if (q >= 0) target = target.Substring(0, q);

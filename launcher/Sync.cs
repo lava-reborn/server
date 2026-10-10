@@ -65,6 +65,15 @@ enum OfflineCause
     Launcher,      // a new launcher exists and could not be put in place
 }
 
+// What a look at the published pointer found (Sync.Peek).
+enum Peeked
+{
+    Unknown,       // no answer in time, or no pointer that verifies: nothing to go on
+    Current,       // nothing newer than the serial Peek compares with
+    Newer,         // a signed release newer than that: a run should take it
+    Busy,          // a run is under way, and it is the one that looks
+}
+
 class Sync
 {
     readonly string root;                  // the update root, with its trailing slash
@@ -94,6 +103,11 @@ class Sync
     long needBytes, freeBytes;
     SyncFailure failure;
     OfflineCause offline;
+    Pointer pointer;                       // the release in place: the pointer this folder last accepted
+    string source;                         // and the commit its manifest names
+    int updated;                           // files the last run put in place, if it ended Ready
+    long seen;                             // the newest serial a run here accepted or was offered, signed
+    long kept;                             // the newest this folder accepted, or could not take for want of a launcher
     const long SPARE = 64L * 1024 * 1024;  // headroom asked of the drive beyond the download
     const string PAUSED = "paused";
     const string HASH_MISMATCH = "файл не сошёлся по хэшу";
@@ -125,6 +139,19 @@ class Sync
     public SyncState State { get { lock (gate) return state; } }
     public string Note { get { lock (gate) return note; } }
     public Manifest Current { get { lock (gate) return manifest; } }
+    /// <summary>The signed pointer of the release this folder holds, as it
+    /// last accepted it: read back from .lava/ and verified at the start of
+    /// a run, then the one the run accepted. When the release was published,
+    /// for the window to say; null until a run has read one.</summary>
+    public Pointer Accepted { get { lock (gate) return pointer; } }
+    /// <summary>The commit that release was built from (its manifest's
+    /// source), or null.</summary>
+    public string AcceptedSource { get { lock (gate) return source; } }
+    /// <summary>How many files the last run put in place, if it ended Ready
+    /// (0 when it found every file as the release has it).</summary>
+    public int Updated { get { lock (gate) return updated; } }
+    /// <summary>Whether a run is under way, Start to settle.</summary>
+    public bool Running { get { return Interlocked.CompareExchange(ref running, 0, 0) != 0; } }
     public bool Playable { get { SyncState s = State; return s == SyncState.Ready || s == SyncState.Offline; } }
     /// <summary>Whether the last run started on a folder with no game:
     /// an install, as against an update.</summary>
@@ -231,7 +258,7 @@ class Sync
             return;
         }
         index = Index.Load(Path.Combine(stateDir, "index.tsv"));
-        lock (gate) fresh = !File.Exists(Path.Combine(resDir, "main.swf"));
+        lock (gate) { fresh = !File.Exists(Path.Combine(resDir, "main.swf")); updated = 0; }
 
         // What this folder last accepted, re-checked: a file someone edited
         // in .lava/ is no better than one fetched from a stranger.
@@ -252,6 +279,15 @@ class Sync
         }
         long highest = ReadHighest();
         if (local != null && local.Serial > highest) highest = local.Serial;
+        lock (gate)
+        {
+            seen = Math.Max(seen, highest);
+            kept = Math.Max(kept, highest);
+            // The window names the release in place from here on, not only
+            // once a run has ended Ready: a run that stops short of it
+            // (Failed, NoSpace, Paused) leaves the installed game as it was.
+            if (local != null) { pointer = local; source = localM != null ? localM.Source : null; }
+        }
 
         Move(SyncState.Checking, "Проверяем обновления");
         Pointer remote = null;
@@ -265,6 +301,9 @@ class Sync
             else
             {
                 remote = Pointer.Read(resourceKeys, remoteDoc);
+                // Offered and signed, taken or not: the watch's Peek does not
+                // call the window back for a release a run has been through.
+                lock (gate) seen = Math.Max(seen, remote.Serial);
                 if (remote.Serial < highest)
                 {
                     why = "сервер предложил релиз старше уже установленного";
@@ -278,7 +317,7 @@ class Sync
         {
             // Nothing new can be trusted. The folder as last accepted is still
             // the game, if every file of it is still what it was.
-            if (!PlayLocal(localM, cause, "Обновления проверить не удалось (" + why + ")"))
+            if (!PlayLocal(local, localM, cause, "Обновления проверить не удалось (" + why + ")"))
             {
                 if (cause == OfflineCause.Unreachable) lock (gate) failure = SyncFailure.Network;
                 Move(SyncState.Failed, "Не удалось получить игру с сервера: " + why + ".");
@@ -289,9 +328,13 @@ class Sync
         if (remote.LauncherVersion > myVersion && exePath != null)
         {
             if (SelfUpdate(remote)) return;
+            // This release wants a launcher this exe could not become, and
+            // "ИГРАТЬ" does not ask for it again (Peek): it would fetch the
+            // new launcher, fail the same way and hold the game each time.
+            lock (gate) kept = Math.Max(kept, remote.Serial);
             // Not a reason to keep anyone out of a game that is installed and
             // whole: the old launcher plays it, and says where the new one is.
-            if (PlayLocal(localM, OfflineCause.Launcher, "Вышла новая версия лаунчера, и поставить её самостоятельно не вышло. Скачайте её с сайта"))
+            if (PlayLocal(local, localM, OfflineCause.Launcher, "Вышла новая версия лаунчера, и поставить её самостоятельно не вышло. Скачайте её с сайта"))
                 return;
             Move(SyncState.MustUpdate, "Вышла новая версия лаунчера, и поставить её самостоятельно не вышло. Скачайте её с сайта.");
             return;
@@ -312,7 +355,7 @@ class Sync
             }
             catch (ReleaseException e)
             {
-                if (PlayLocal(localM, OfflineCause.Download, "Обновление не скачалось (" + e.Message + ")")) return;
+                if (PlayLocal(local, localM, OfflineCause.Download, "Обновление не скачалось (" + e.Message + ")")) return;
                 throw;
             }
         }
@@ -362,7 +405,7 @@ class Sync
             }
             catch (Exception e)
             {
-                if (localM != null && localM != m && PlayLocal(localM, OfflineCause.Download, "Обновление не скачалось (" + Short(e) + ")")) return;
+                if (localM != null && localM != m && PlayLocal(local, localM, OfflineCause.Download, "Обновление не скачалось (" + Short(e) + ")")) return;
                 throw;
             }
             Apply(need);
@@ -377,7 +420,14 @@ class Sync
         WriteHighest(remote.Serial);
         SaveIndex();
         CleanStaging();
-        lock (gate) manifest = m;
+        lock (gate)
+        {
+            manifest = m;
+            pointer = remote;
+            source = m.Source;
+            updated = need.Count;
+            kept = Math.Max(kept, remote.Serial);
+        }
         Move(SyncState.Ready, need.Count > 0
             ? "Игра обновлена: " + need.Count + " " + Files(need.Count)
             : "Игра в актуальном состоянии");
@@ -386,11 +436,11 @@ class Sync
     /// <summary>Play the release this folder last accepted, if it is still
     /// whole: Offline, with why in the note. False if there is none or it
     /// is not whole any more.</summary>
-    bool PlayLocal(Manifest localM, OfflineCause cause, string why)
+    bool PlayLocal(Pointer localP, Manifest localM, OfflineCause cause, string why)
     {
         if (localM == null) return false;
         if (Scan(localM, false).Count != 0) return false;
-        lock (gate) { manifest = localM; offline = cause; }
+        lock (gate) { manifest = localM; pointer = localP; source = localM.Source; offline = cause; }
         SaveIndex();
         Move(SyncState.Offline, why + ". Играем на установленной версии.");
         return true;
@@ -735,6 +785,64 @@ class Sync
         }
     }
 
+    // --- between runs ---------------------------------------------------------------------
+
+    /// <summary>A look at the published pointer and at nothing else, for the
+    /// window between runs. It is fetched as a run fetches it, past every
+    /// cache, and checked as a run checks it, against the resource key; a
+    /// pointer that does not verify is Unknown and never Newer, so a forged
+    /// one cannot even start a run. Its serial is compared with one of two.
+    /// Without again (the watch, and "ИГРАТЬ" after a run it started):
+    /// the newest a run here has accepted or been offered, signed, so a
+    /// release a run has already been through, taken or not, does not call
+    /// the window back, and one that would not download is not fetched
+    /// again every 15 s. With again (every other look of "ИГРАТЬ"): the newest
+    /// this folder has accepted (.lava/serial), so a release a run was
+    /// offered and failed to download is tried once more before the game
+    /// starts on the one before it; except a release that wants a launcher
+    /// this exe could not become, which would fetch the new launcher and
+    /// fail the same way on every press. Nothing on the disk is read or
+    /// written, so a look never gets in a run's way. It takes at most
+    /// millis, whatever the network does: a name lookup is outside a
+    /// request's own timeout, so the request runs on a thread of its own and
+    /// is let go unanswered.</summary>
+    public Peeked Peek(int millis, bool again, out long serial)
+    {
+        serial = 0;
+        if (Running) return Peeked.Busy;
+        long known;
+        lock (gate) known = again ? kept : seen;
+        if (known <= 0) return Peeked.Unknown;                 // no run has looked yet
+        long found = 0;
+        string url = root + "current.txt?t=" + DateTime.UtcNow.Ticks;
+        Thread t = new Thread(delegate ()
+        {
+            try
+            {
+                Tls();
+                byte[] doc = Fetch(url, 64 * 1024, millis);
+                if (doc != null) found = Pointer.Read(resourceKeys, doc).Serial;
+            }
+            catch { /* not signed, not a pointer: nothing to go on */ }
+        });
+        t.IsBackground = true;
+        t.Name = "lava-peek";
+        t.Start();
+        if (!t.Join(millis)) return Peeked.Unknown;
+        if (found <= 0) return Peeked.Unknown;
+        serial = found;
+        if (Running) return Peeked.Busy;
+        lock (gate) known = again ? kept : seen;               // a run may have ended meanwhile
+        return Newer(found, known) ? Peeked.Newer : Peeked.Current;
+    }
+
+    /// <summary>Whether a published serial is newer than the one known
+    /// (Peek). Nothing is newer than an unknown 0.</summary>
+    public static bool Newer(long published, long known)
+    {
+        return known > 0 && published > known;
+    }
+
     // --- a new launcher -------------------------------------------------------------------
 
     bool SelfUpdate(Pointer p)
@@ -881,22 +989,22 @@ class Sync
         catch { }
     }
 
-    HttpWebRequest Request(string url)
+    HttpWebRequest Request(string url, int timeout = TIMEOUT_MS)
     {
         HttpWebRequest rq = (HttpWebRequest)WebRequest.Create(url);
-        rq.Timeout = TIMEOUT_MS;
-        rq.ReadWriteTimeout = TIMEOUT_MS;
+        rq.Timeout = timeout;
+        rq.ReadWriteTimeout = timeout;
         rq.UserAgent = "LavaReborn/" + myVersion;
         rq.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
         rq.AutomaticDecompression = DecompressionMethods.None;
         return rq;
     }
 
-    byte[] Fetch(string url, long max)
+    byte[] Fetch(string url, long max, int timeout = TIMEOUT_MS)
     {
         try
         {
-            HttpWebRequest rq = Request(url);
+            HttpWebRequest rq = Request(url, timeout);
             using (WebResponse rs = rq.GetResponse())
             using (Stream s = rs.GetResponseStream())
             using (MemoryStream m = new MemoryStream())
@@ -937,6 +1045,67 @@ class Sync
 
 // A download stopped by Sync.Pause(): not a failure, a state.
 class PausedException : Exception { }
+
+// When the window looks at the published pointer on its own (Sync.Peek):
+// every EVERY_MS for SPAN_MS once armed, and not at all once stopped. A
+// deploy closes the game when it restarts the server, waits up to 240 s
+// for the server and 20 s more, and only then publishes the release that
+// goes with it (deploy/remote/lava-gate.sh, 7b and 9b), so the check made
+// as the game closed sees the old one; five minutes of looks catch the new
+// one. Times are Environment.TickCount, and differences of it, so the
+// wrap after 24.9 days of uptime changes nothing. No clock and no timer in
+// here: the window ticks it, launcher/test walks it.
+class Watch
+{
+    public const int EVERY_MS = 15000;
+    public const int SPAN_MS = 5 * 60 * 1000;
+
+    bool on;
+    int armed, last;
+
+    public bool On { get { return on; } }
+
+    public void Arm(int now)
+    {
+        on = true;
+        armed = now;
+        last = now;
+    }
+
+    public void Stop() { on = false; }
+
+    /// <summary>Whether to look now. Past the span the watch stops itself
+    /// and says no from then on.</summary>
+    public bool Due(int now)
+    {
+        if (!on) return false;
+        if (unchecked(now - armed) > SPAN_MS) { on = false; return false; }
+        if (unchecked(now - last) < EVERY_MS) return false;
+        last = now;
+        return true;
+    }
+
+    /// <summary>What a look that found a newer release leads to. While the
+    /// game runs, only Tell: a run would change files the game is reading,
+    /// and a new launcher restarts this one, taking the game's web server
+    /// with it. With the game on its way or the folder being changed,
+    /// nothing. Otherwise Take, from a folder that is playable as it
+    /// stands; a paused download, a question before an install or a
+    /// failure are the player's to resume.</summary>
+    public static Act Decide(bool inGame, bool busy, SyncState state)
+    {
+        if (inGame) return Act.Tell;
+        if (busy) return Act.Nothing;
+        return state == SyncState.Ready || state == SyncState.Offline ? Act.Take : Act.Nothing;
+    }
+
+    public enum Act
+    {
+        Nothing,
+        Take,          // a run now, as after a game
+        Tell,          // a word in the tray, nothing installed
+    }
+}
 
 // What the launcher has hashed: path, size, modification time and sha256,
 // and whether that sha256 was a release's. A file whose size and time are

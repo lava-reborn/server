@@ -153,9 +153,8 @@ static class Launcher
         }
 
         form = new MainForm(LoadImage("hero.jpg"), LoadImage("logo.png"));
-        // The whole build under the panel: number, date and commit.
-        form.Panel.VersionLabel = VERSION.StartsWith("v") ? VERSION : "v" + VERSION;
-        form.Panel.VersionTip = "Сборка " + VERSION;
+        // The launcher and the game under the panel: Render keeps it the
+        // release in place (Labels).
 
         // "Что нового" appears once after the launcher has changed under the
         // player, and stays until the news is opened. A first start has no
@@ -240,6 +239,7 @@ static class Launcher
     static void PickFolder()
     {
         if (switching || launching) return;
+        Disarm();
         string from = gameDir;
         bool installed = HasGame(from) || Downloaded(from);
         string p;
@@ -457,7 +457,7 @@ static class Launcher
         SyncState st = sync.State;
         bool canVerify = !launching && (st == SyncState.Ready || st == SyncState.Offline ||
                                         st == SyncState.Failed || st == SyncState.Paused);
-        SettingsDialog d = new SettingsDialog(gameDir, form.Panel.VersionLabel, canVerify);
+        SettingsDialog d = new SettingsDialog(gameDir, Build(), GameVersion(), canVerify);
         d.ChangeFolder += delegate { PickFolder(); };
         // The folder can change while this is open (it is where the change
         // starts from), and the box has to follow it.
@@ -473,6 +473,7 @@ static class Launcher
     // "Проверить файлы": every file hashed again, nothing taken from the index.
     static void Verify()
     {
+        Disarm();
         sync.FullVerify = true;
         sync.Start();
     }
@@ -482,8 +483,45 @@ static class Launcher
     static void CheckNow()
     {
         if (launching || switching) return;
+        Disarm();
         sync.Start();
         Render();
+    }
+
+    // The launcher's build as build.sh stamped it: number, date and commit.
+    static string Build()
+    {
+        return VERSION.StartsWith("v") ? VERSION : "v" + VERSION;
+    }
+
+    // The release in place, in full: when it was published, from which
+    // commit, its serial. Before a run has read the folder's own pointer,
+    // and for a folder whose pointer does not verify, what can be said
+    // without it: never "не установлена" over a game that is there.
+    static string GameVersion()
+    {
+        Pointer p = sync.Accepted;
+        if (p != null)
+        {
+            string s = Versions.Game(p.Created, sync.AcceptedSource, true);
+            return s.Length > 0 ? s : "выпуск " + p.Serial;
+        }
+        if (sync.Running) return sync.Fresh ? "устанавливается" : "проверяется";
+        return HasGame(gameDir) ? "версия неизвестна" : "не установлена";
+    }
+
+    // Under the panel, the launcher and the release in place side by side
+    // (Versions.Window); over them, the hint has both in full, and so does
+    // the settings' footer while it is open. From Render, so all three
+    // follow every run and every change of folder.
+    static void Labels()
+    {
+        Pointer p = sync.Accepted;
+        string game = GameVersion();
+        form.Panel.VersionLabel = Versions.Window(BUILD, p != null ? p.Created : null,
+                                                  p != null ? sync.AcceptedSource : null);
+        form.Panel.VersionTip = "Лаунчер " + Build() + "\nИгра " + game;
+        if (settings != null) settings.SetGame(game);
     }
 
     static void OpenNews()
@@ -520,6 +558,7 @@ static class Launcher
                 st = SyncState.Checking;
             else quiet = false;
         }
+        Labels();
         PanelState s = Preview() ?? (moving ? Moving() : Panel(switching ? SyncState.Checking : st));
         if (launchError != null && s.Action == null)
         {
@@ -756,6 +795,9 @@ static class Launcher
                 s.Icon = "check";
                 s.Tone = Tone.Good;
                 s.Version = true;
+                // After a run that put files in place, how many: the update
+                // is seen to have been taken. Not after an install.
+                if (!sync.Fresh) s.Line = Versions.Updated(sync.Updated);
                 break;
         }
         return s;
@@ -814,7 +856,7 @@ static class Launcher
                 if (v != Verdict.Ok)
                 {
                     form.Auth.Hint(Explain(v), true);
-                    if (v == Verdict.Unreachable) serverUp = false;
+                    if (v == Verdict.Unreachable) Down();
                     Render();
                     return;
                 }
@@ -892,7 +934,7 @@ static class Launcher
                     form.Auth.Hint(Explain(v), true);
                     break;
                 case Verdict.Unreachable:
-                    serverUp = false;
+                    Down();
                     break;
             }
             Render();
@@ -952,6 +994,7 @@ static class Launcher
                 // A probe that got through on the account's own check has
                 // the better evidence, so a failed ping does not undo it.
                 if (serverUp != true || !up) serverUp = up;
+                if (serverUp == false) Down();
                 Render();
             });
         });
@@ -982,6 +1025,7 @@ static class Launcher
     // The panel's button, in every state but "ИГРАТЬ".
     static void PanelAction()
     {
+        Disarm();
         switch (sync.State)
         {
             case SyncState.MustUpdate:
@@ -1027,6 +1071,21 @@ static class Launcher
 
     // --- starting the game ------------------------------------------------------
 
+    // How long "ИГРАТЬ" waits for the published pointer before it starts the
+    // game on what is here, and how long a look of the watch may take (less
+    // than the time between two of them).
+    const int PEEK_PLAY_MS = 3000;
+    const int PEEK_WATCH_MS = 10000;
+
+    // A look for "ИГРАТЬ", on its worker: whatever goes wrong is Unknown,
+    // and the game starts on what is here.
+    static Peeked PeekPlay(bool again)
+    {
+        long serial;
+        try { return sync.Peek(PEEK_PLAY_MS, again, out serial); }
+        catch { return Peeked.Unknown; }
+    }
+
     static void Play()
     {
         if (!form.Panel.CanPlay || launching) return;
@@ -1035,6 +1094,7 @@ static class Launcher
         // once the check is over, if the release is still playable.
         bool wait = quiet && !sync.Playable;
         if (!sync.Playable && !wait) return;
+        Disarm();
         launching = true;
         launchError = null;
         Render();
@@ -1042,9 +1102,42 @@ static class Launcher
 
         Start(delegate
         {
+            // First one look at the published pointer. A deploy restarts the
+            // server and publishes the release that goes with it only once
+            // the server is up again, so the check made as the last game
+            // closed may well have seen the one before. A newer release is
+            // installed now, on the panel, and the game starts on it. No
+            // answer in PEEK_PLAY_MS, or a pointer that does not verify, and
+            // the game starts on what is here, as before: the look never
+            // keeps anyone out of the game. A run already under way (Busy)
+            // is waited for, as during the quiet check. This look compares
+            // with the release in place (again): one a run here failed to
+            // download is tried once more now.
+            bool ran = false;               // this press started a run
+            if (!wait)
+            {
+                Peeked look = PeekPlay(true);
+                ran = look == Peeked.Newer;
+                if (ran) sync.Start();
+                wait = ran || look == Peeked.Busy;
+            }
             if (wait)
             {
                 sync.Wait(Timeout.Infinite);
+                // The run waited for may have read the pointer before the
+                // one out now, published while it went on (a quiet check
+                // that spent a minute hashing does). One more look, and once
+                // only, so play is not held in a loop: after a run of the
+                // window's own, against the release in place, as the first
+                // look; after this press's own run, against what that run
+                // was offered, so a release it failed to take is not tried
+                // twice in one press.
+                if (sync.Playable)
+                {
+                    Peeked look = PeekPlay(!ran);
+                    if (look == Peeked.Newer) sync.Start();
+                    if (look == Peeked.Newer || look == Peeked.Busy) sync.Wait(Timeout.Infinite);
+                }
                 if (!sync.Playable)
                 {
                     Say(delegate { launching = false; Render(); });
@@ -1303,6 +1396,10 @@ static class Launcher
                 TrayText();
                 form.Hide();
                 if (cover != null) cover.Lift();
+                // A game started in the minute between a deploy's restart
+                // and its release runs on the release before; the watch
+                // says so in the tray once the new one is out (Found).
+                Arm();
             });
         });
     }
@@ -1322,6 +1419,7 @@ static class Launcher
         Interlocked.Exchange(ref launched, 0);
         launching = false;
         inGame = false;
+        Disarm();
         TrayText();
         form.Back();
         quiet = true;
@@ -1331,6 +1429,12 @@ static class Launcher
         Render();
         Goodbye g = lastBye;
         lastBye = null;
+        // The server went away under the game, which is what a deploy does:
+        // it restarts the server, waits for it and only then publishes the
+        // release that goes with it, so the check just started sees the one
+        // before. The watch looks again every 15 s for five minutes (Watch),
+        // until the game starts again or the player does something himself.
+        if (g != null && g.Why == "lost") Arm();
         if (g != null) SayBye(g);
     }
 
@@ -1357,6 +1461,139 @@ static class Launcher
                 "через минуту можно войти снова." }, null, null).Open(form);
         }
     }
+
+    // --- looking for a release between runs -----------------------------------
+    //
+    // One Watch, armed after the game lost its server (Back) and while a game
+    // runs (Done); "ИГРАТЬ", the checks and the folder stop it. A timer ticks
+    // it each second while it is on; a look is Sync.Peek on a thread of its
+    // own, and what it found is acted on here, on the window's thread, only
+    // if nothing has changed in between. The same timer asks a silent game
+    // server again (Probe).
+    static readonly Watch watch = new Watch();
+    static System.Windows.Forms.Timer watchTimer;
+    static int peeking;                   // a look is out
+    static long told;                     // the serial the tray has already announced
+    static int probing;                   // a probe of the game server is out
+    static int probed;                    // when the last one went out, or the server went silent
+
+    static void Arm()
+    {
+        watch.Arm(Environment.TickCount);
+        Ticking();
+    }
+
+    // Stops the looks; the timer itself stops at its next tick, unless the
+    // server is still to be asked again (Tick).
+    static void Disarm()
+    {
+        watch.Stop();
+    }
+
+    static void Ticking()
+    {
+        if (watchTimer == null)
+        {
+            watchTimer = new System.Windows.Forms.Timer();
+            watchTimer.Interval = 1000;
+            watchTimer.Tick += delegate { Tick(); };
+        }
+        watchTimer.Start();
+    }
+
+    static void Tick()
+    {
+        int now = Environment.TickCount;
+        Probe(now);
+        Look(now);
+        if (!watch.On && serverUp != false) watchTimer.Stop();
+    }
+
+    static void Look(int now)
+    {
+        if (!watch.Due(now)) return;
+        if (Interlocked.CompareExchange(ref peeking, 1, 0) != 0) return;
+        bool playing = inGame;
+        Sync s = sync;
+        Start(delegate
+        {
+            long serial = 0;
+            Peeked look = Peeked.Unknown;
+            try { look = s.Peek(PEEK_WATCH_MS, false, out serial); }
+            catch { }
+            finally { Interlocked.Exchange(ref peeking, 0); }
+            if (look == Peeked.Newer) Say(delegate { Found(s, serial, playing); });
+        });
+    }
+
+    // The game server did not answer a ping, the account's check or a login.
+    // Nothing else would ask it again -- the ping at the start is the only
+    // one -- and with serverUp false "ИГРАТЬ" and "Войти" stay grey: after a
+    // deploy the check made as the game closes finds the server restarting.
+    // So the timer asks again (Probe) until it answers.
+    static void Down()
+    {
+        serverUp = false;
+        probed = Environment.TickCount;
+        Ticking();
+    }
+
+    // One hello every Watch.EVERY_MS while the server is silent and no game
+    // is on its way, one at a time. Answered, the way in opens, and a
+    // remembered account is checked again, as after a game, for its card.
+    static void Probe(int now)
+    {
+        if (serverUp != false || inGame || launching || switching) return;
+        if (unchecked(now - probed) < Watch.EVERY_MS) return;
+        if (Interlocked.CompareExchange(ref probing, 1, 0) != 0) return;
+        probed = now;
+        Start(delegate
+        {
+            bool up = false;
+            try { up = GameProbe.Ping(HOST, PORT); }
+            catch { }
+            finally { Interlocked.Exchange(ref probing, 0); }
+            if (!up) return;
+            Say(delegate
+            {
+                if (serverUp != false) return;
+                serverUp = true;
+                if (signedIn) Start(Recheck);
+                Render();
+            });
+        });
+    }
+
+    // A newer release is out. With the game closed it is taken now, as the
+    // check after a game takes one (quiet: "ИГРАТЬ" stays open and, pressed,
+    // waits for it), and a newer launcher replaces this one as ever. While
+    // the game runs nothing is installed -- a run would change the files
+    // the game is reading, a new launcher would restart this one and take
+    // the game's web server with it -- and the tray says it once.
+    static void Found(Sync s, long serial, bool playing)
+    {
+        if (!watch.On || s != sync || playing != inGame) return;
+        switch (Watch.Decide(inGame, launching || switching, sync.State))
+        {
+            case Watch.Act.Tell:
+                if (serial <= told) return;
+                told = serial;
+                Disarm();
+                try
+                {
+                    tray.ShowBalloonTip(10000, "Вышло обновление игры",
+                                        "Оно установится при следующем запуске игры.", ToolTipIcon.Info);
+                }
+                catch { }
+                break;
+            case Watch.Act.Take:
+                quiet = true;
+                sync.Start();
+                Render();
+                break;
+        }
+    }
+
     // The launcher sits in the tray for as long as it is open. A click
     // brings up the game while it runs and the launcher otherwise; the menu
     // has both, and closing the game or, with no game, the launcher.

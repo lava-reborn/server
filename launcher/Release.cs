@@ -192,16 +192,19 @@ static class Hashes
 class Pointer
 {
     public long Serial;
+    public string Created;                      // as publish.py wrote it: 2026-10-06T12:00:00Z
     public string ManifestSha, ManifestPath;
     public long ManifestSize;
     public int LauncherVersion;                 // 0: none named
     public string LauncherSha, LauncherPath;
     public long LauncherSize;
 
+    // created is a named group: .NET numbers those after every unnamed one,
+    // so the numbers below stay what they were before it was captured.
     static readonly Regex RX = new Regex(
         "^lava-pointer 1\n" +
         "serial ([0-9]{1,15})\n" +
-        "created \\S+\n" +
+        "created (?<created>\\S+)\n" +
         "manifest ([0-9a-f]{64}) ([0-9]{1,12}) (manifests/[0-9]{1,15}\\.txt)\n" +
         "(?:launcher ([0-9]{1,9}) ([0-9a-f]{64}) ([0-9]{1,12}) (launcher/[0-9]{1,9}\\.exe)\n)?\\z");
 
@@ -212,6 +215,7 @@ class Pointer
         if (!m.Success) throw new ReleaseException("not a pointer");
         Pointer p = new Pointer();
         p.Serial = long.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+        p.Created = m.Groups["created"].Value;
         p.ManifestSha = m.Groups[2].Value;
         p.ManifestSize = long.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture);
         p.ManifestPath = m.Groups[4].Value;
@@ -258,6 +262,7 @@ class Entry
 class Manifest
 {
     public long Serial;
+    public string Source;         // the commit the release was built from
     public readonly List<Entry> Files = new List<Entry>();
     public long TotalBytes;
     // Windows does not tell a file from its name in another case, and Flash
@@ -270,8 +275,9 @@ class Manifest
         return byPath.TryGetValue(path, out e) ? e : null;
     }
 
+    // source is a named group, numbered after the others (see Pointer).
     static readonly Regex HEAD = new Regex(
-        "^lava-manifest 1\nserial ([0-9]{1,15})\nsource \\S+\nfiles ([0-9]{1,9}) ([0-9]{1,15})\n");
+        "^lava-manifest 1\nserial ([0-9]{1,15})\nsource (?<source>\\S+)\nfiles ([0-9]{1,9}) ([0-9]{1,15})\n");
     static readonly Regex LINE = new Regex("^([0-9a-f]{64})\t([0-9]{1,12})\t([^\t\n]+)\\z");
     // The path rules of client/FORMAT.md, the same as client/build.py's
     // check_path: a whitelist of ASCII, so that the two languages cannot
@@ -308,6 +314,7 @@ class Manifest
         if (!h.Success) throw new ReleaseException("not a manifest");
         Manifest m = new Manifest();
         m.Serial = long.Parse(h.Groups[1].Value, CultureInfo.InvariantCulture);
+        m.Source = h.Groups["source"].Value;
         int count = int.Parse(h.Groups[2].Value, CultureInfo.InvariantCulture);
         long total = long.Parse(h.Groups[3].Value, CultureInfo.InvariantCulture);
         if (!text.EndsWith("\n", StringComparison.Ordinal) || text.Length <= h.Length)
@@ -352,5 +359,76 @@ class Manifest
         int n = Math.Min(a.Length, b.Length);
         for (int i = 0; i < n; i++) if (a[i] != b[i]) return a[i] - b[i];
         return a.Length - b.Length;
+    }
+}
+
+// What the window says about the two versions a player has: the launcher's
+// build and the game's release. The launcher's number alone said nothing
+// about the game -- a launcher unchanged for days plays a release published
+// an hour ago, or one from last week -- so the release is named beside it:
+// when it was published and from which commit (the pointer's created, the
+// manifest's source). Text in, text out, so launcher/test checks it.
+static class Versions
+{
+    // The server, its deploys and the people who answer players all keep
+    // Moscow time, UTC+3 the whole year since 2014: a fixed offset, not the
+    // machine's zone database, which Windows and Mono name differently.
+    static readonly TimeSpan MSK = TimeSpan.FromHours(3);
+    static readonly Regex COMMIT = new Regex("^[0-9a-f]{7,40}\\z");
+
+    /// <summary>A pointer's created as UTC, or null for anything but the
+    /// yyyy-MM-ddTHH:mm:ssZ that publish.py writes.</summary>
+    public static DateTime? Created(string created)
+    {
+        DateTime t;
+        if (created != null &&
+            DateTime.TryParseExact(created, "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'", CultureInfo.InvariantCulture,
+                                   DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out t))
+            return t;
+        return null;
+    }
+
+    /// <summary>A commit as git shortens it, seven characters; null for
+    /// anything that is not a commit.</summary>
+    public static string Commit(string source)
+    {
+        return source != null && COMMIT.IsMatch(source) ? source.Substring(0, 7) : null;
+    }
+
+    /// <summary>The release in place: "от 10.10 22:02 (b1042e7)" under the
+    /// panel, "от 10.10.2026 22:02 мск (b1042e7)" in the settings, where
+    /// there is room. Whatever of the two cannot be read is left out; ""
+    /// when neither can, or there is no release.</summary>
+    public static string Game(string created, string source, bool full)
+    {
+        DateTime? t = Created(created);
+        string c = Commit(source);
+        string s = "";
+        if (t != null)
+            s = "от " + (t.Value + MSK).ToString(full ? "dd'.'MM'.'yyyy HH':'mm" : "dd'.'MM HH':'mm",
+                                                 CultureInfo.InvariantCulture) + (full ? " мск" : "");
+        if (c != null) s += (s.Length > 0 ? " " : "") + "(" + c + ")";
+        return s;
+    }
+
+    /// <summary>The tag under the panel: "Лаунчер v5 · игра от 10.10 22:02
+    /// (b1042e7)", or the launcher alone until a release is in place.</summary>
+    public static string Window(int build, string created, string source)
+    {
+        string game = Game(created, source, false);
+        return "Лаунчер v" + build.ToString(CultureInfo.InvariantCulture) +
+               (game.Length > 0 ? " · игра " + game : "");
+    }
+
+    /// <summary>"Игра обновлена: 12 файлов" after a run that put files in
+    /// place; "" after one that had nothing to put.</summary>
+    public static string Updated(int files)
+    {
+        if (files <= 0) return "";
+        NumberFormatInfo f = (NumberFormatInfo)NumberFormatInfo.InvariantInfo.Clone();
+        f.NumberGroupSeparator = " ";
+        int d = files % 100, u = files % 10;
+        string word = d >= 11 && d <= 14 ? "файлов" : (u == 1 ? "файл" : (u >= 2 && u <= 4 ? "файла" : "файлов"));
+        return "Игра обновлена: " + files.ToString("#,0", f) + " " + word;
     }
 }
