@@ -64,6 +64,13 @@ SPEC_MIN_SKILL = [0, 0, 0, 4, 12, 6, 16, 8, 0, 0, 0, 0, 0, 0, 0]
 # The skills as the teacher's window names them («Требует навык "Стрельбы"
 # не ниже 8»): PersAttributes.as:72-85.
 SKILL_TITLES = ["Ближнего боя", "Стрельбы", "Медицины", "Промышленность", "Производство"]
+# And as a line about them reads: the admin queue's answers, /skill.
+SKILL_NAMES = ("ближний бой", "стрельба", "медицина", "промышленность", "производство")
+# The specialisations as the card names them (PersAttributes.as:87-125).
+SPEC_TITLES = ("Рукопашный бой", "Режущее оружие", "Пистолеты", "Дробовики", "Автоматы",
+               "Винтовки", "Ручные пулеметы", "Пистолет-пулеметы", "Хирургия",
+               "Первая помощь", "Добыча", "Переработка", "Мастер свинца",
+               "Мастер селитры", "Мастер меди")
 
 # Specialisations 12-14 belong to the hidden fifth skill; a teacher does not
 # offer them and the server does not hand them out.
@@ -573,18 +580,68 @@ class Character:
         return changed
 
     def add_skill_xp(self, skill_idx, xp):
-        """xp into the skill as it is -- no premium share, no specialisation
-        half: the admin queue's 'xp' (server.py apply_admin_action), an
-        amount the owner names. Levels carry over as gain_xp's do. Returns
+        """xp into the skill as it is, either way -- no premium share, no
+        specialisation half: the admin queue's 'xp' (admin_edit), an amount
+        the owner names. Given, levels carry over as gain_xp's do; taken,
+        they go back the same way, down to level 0 with nothing. Returns
         the indexes changed, as gain_xp does."""
         if not 0 <= skill_idx < SKILLS:
             raise ValueError("skill index")
         changed = {"skills": set(), "specs": set(), "attribs": set()}
         old_level = self.level
-        self._skill_up(skill_idx, max(0, int(xp)), changed)
+        if int(xp) >= 0:
+            self._skill_up(skill_idx, int(xp), changed)
+        else:
+            self._skill_down(skill_idx, -int(xp), changed)
         if self.level != old_level:
             self.recalc()
             changed["attribs"].add(CONSTITUTION)
+        return changed
+
+    def _skill_down(self, skill_idx, xp, changed):
+        """xp out of a skill: past what this level holds, the level before it
+        with its bar full, and so on. Level n with nothing is level n-1 with
+        its bar full, so taking back what was given lands where it began."""
+        s = self.skill[skill_idx]
+        while xp > 0:
+            if xp <= s[1]:
+                s[1] -= xp
+                break
+            if s[0] == 0:
+                s[1] = 0
+                break
+            xp -= s[1]
+            s[0] -= 1
+            s[2] = s[1] = skill_xp_max(s[0])
+        changed["skills"].add(skill_idx)
+
+    def add_spec_xp(self, spec_idx, xp):
+        """xp into a learned specialisation as it is, either way: its levels
+        and its attribute go up and back down with it (one point a level,
+        as _spec_up and set_spec move it). Taking never unlearns it -- level
+        0 with nothing is the floor; set_spec(-1) forgets. Returns the
+        indexes changed, as gain_xp does."""
+        if not 0 <= spec_idx < SPECS or self.spec[spec_idx][0] < 0:
+            raise ValueError("spec not learned")
+        changed = {"skills": set(), "specs": set(), "attribs": set()}
+        if int(xp) >= 0:
+            self._spec_up(spec_idx, int(xp), changed)
+            return changed
+        sp, xp, a = self.spec[spec_idx], -int(xp), SPEC_ATTRIB[spec_idx]
+        while xp > 0:
+            if xp <= sp[1]:
+                sp[1] -= xp
+                break
+            if sp[0] == 0:
+                sp[1] = 0
+                break
+            xp -= sp[1]
+            sp[0] -= 1
+            sp[2] = sp[1] = spec_xp_max(sp[0])
+            if a is not None and self.attrib[a] > START_ATTRIB:
+                self.attrib[a] -= 1
+                changed["attribs"].add(a)
+        changed["specs"].add(spec_idx)
         return changed
 
     def _skill_up(self, skill_idx, xp, changed):
@@ -672,6 +729,49 @@ class Character:
                 changed["attribs"].add(a)
         self.spec[idx] = [level, 0, spec_xp_max(level)]
         return changed
+
+    def admin_edit(self, kind, args):
+        """The admin queue's 'xp' and 'stat' (server.py apply_admin_action),
+        on this character wherever it is held:
+
+          xp    {skill: i, xp: n} or {spec: i, xp: n}: n either way
+                (add_skill_xp, add_spec_xp)
+          stat  {skill: i, level: l, xp: n} or {spec: i, level: l, xp: n}:
+                put there outright (set_skill, set_spec: -1 forgets a
+                specialisation, a level on an unlearned one learns it),
+                n within the level's bar
+
+        Returns (changed, the state in words) -- or raises ValueError whose
+        text starts «отказ:», what the panel reads as a refusal."""
+        n = int(args.get("xp") or 0)
+        if args.get("spec") is not None:
+            idx = int(args["spec"])
+            if idx not in LEARNABLE:
+                raise ValueError("отказ: специализации %d нет" % idx)
+            title = SPEC_TITLES[idx]
+            if kind == "xp":
+                if self.spec[idx][0] < 0:
+                    raise ValueError("отказ: специализация «%s» не изучена" % title)
+                changed = self.add_spec_xp(idx, n)
+            else:
+                changed = self.set_spec(idx, int(args["level"]))
+                sp = self.spec[idx]
+                if sp[0] >= 0:
+                    sp[1] = max(0, min(n, sp[2] if sp[0] >= SPEC_MAX else sp[2] - 1))
+            sp = self.spec[idx]
+            state = "не изучена" if sp[0] < 0 else "%d (%d/%d)" % tuple(sp)
+            return changed, "специализация «%s» %s" % (title, state)
+        idx = int(args["skill"])
+        if not 0 <= idx < SKILLS:
+            raise ValueError("отказ: навыка %d нет" % idx)
+        if kind == "xp":
+            changed = self.add_skill_xp(idx, n)
+        else:
+            changed = self.set_skill(idx, int(args["level"]))
+            s = self.skill[idx]
+            s[1] = max(0, min(n, s[2] if s[0] >= SKILL_MAX else s[2] - 1))
+        s = self.skill[idx]
+        return changed, "%s %d (%d/%d)" % (SKILL_NAMES[idx], s[0], s[1], s[2])
 
 
 # --- the card's formulas, CharInterface.as verbatim -------------------------

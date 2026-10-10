@@ -193,6 +193,59 @@ check("then 30, 55, 75 ounces", [progression.SPEC_COST[3], progression.SPEC_COST
 ch.max_specs = 5
 check("free slots cover the count", ch.spec_cost(), (0, 0))
 
+# --- the admin queue's 'xp' and 'stat' (Character.admin_edit) ----------------
+# Either way: what is given and then taken back lands where it began, levels
+# and constitution with it; a skill stops at 0 with nothing.
+ad = Character()
+_c, said = ad.admin_edit("xp", {"skill": 1, "xp": 1000})
+check("admin xp: 100+200+400 for three levels, 300 of 800 on top",
+      (ad.skill[1], ad.level, ad.attrib[progression.CONSTITUTION], said),
+      ([3, 300, 800], 3, 7, "стрельба 3 (300/800)"))
+_c, said = ad.admin_edit("xp", {"skill": 1, "xp": -1000})
+check("admin xp taken back: level 0 with nothing, constitution back",
+      (ad.skill[1], ad.level, ad.attrib[progression.CONSTITUTION], said),
+      ([0, 0, 100], 0, 5, "стрельба 0 (0/100)"))
+ad.admin_edit("xp", {"skill": 1, "xp": 450})
+ad.admin_edit("xp", {"skill": 1, "xp": -200})
+check("a level down mid-way: 450 is level 2 with 150, less 200 is level 1 with 150",
+      ad.skill[1], [1, 150, 200])
+ad.admin_edit("xp", {"skill": 1, "xp": -99999})
+check("more taken than there is: level 0 with nothing", ad.skill[1], [0, 0, 100])
+_c, said = ad.admin_edit("stat", {"skill": 2, "level": 5, "xp": 99999})
+check("admin stat: a level outright, the experience kept inside its bar",
+      (ad.skill[2], ad.level, said), ([5, 3199, 3200], 5, "медицина 5 (3199/3200)"))
+ad.admin_edit("stat", {"skill": 2, "level": 0})
+check("and back to 0", (ad.skill[2], ad.level), ([0, 0, 100], 0))
+# A specialisation: set learns it (or forgets it at -1), its attribute
+# follows the level both ways; experience moves it either way and never
+# unlearns it.
+PER = progression.PERCEPTION
+_c, said = ad.admin_edit("stat", {"spec": 2, "level": 2, "xp": 10})
+check("admin stat on an unlearned spec learns it at that level, perception +2",
+      (ad.spec[2], ad.attrib[PER], said),
+      ([2, 10, 80000], 7, "специализация «Пистолеты» 2 (10/80000)"))
+_c, said = ad.admin_edit("xp", {"spec": 2, "xp": -10010})
+check("spec xp taken: one level down, perception with it",
+      (ad.spec[2], ad.attrib[PER], said),
+      ([1, 0, 10000], 6, "специализация «Пистолеты» 1 (0/10000)"))
+ad.admin_edit("xp", {"spec": 2, "xp": 10000})
+check("and given back", (ad.spec[2], ad.attrib[PER]), ([2, 0, 80000], 7))
+ad.admin_edit("xp", {"spec": 2, "xp": -10 ** 9})
+check("taking never unlearns: level 0, perception at its birth value",
+      (ad.spec[2], ad.attrib[PER]), ([0, 0, 1250], 5))
+_c, said = ad.admin_edit("stat", {"spec": 2, "level": -1})
+check("admin stat -1 forgets it", (ad.spec[2], said),
+      ([-1, 0, 1250], "специализация «Пистолеты» не изучена"))
+for args, why in (({"spec": 9, "xp": 100}, "отказ: специализация «Первая помощь» не изучена"),
+                  ({"spec": 12, "xp": 100}, "отказ: специализации 12 нет"),
+                  ({"skill": 7, "xp": 100}, "отказ: навыка 7 нет")):
+    try:
+        ad.admin_edit("xp", args)
+        got = "accepted"
+    except ValueError as exc:
+        got = str(exc)
+    check("admin xp refused: %s" % why, got, why)
+
 # Forgetting: the attribute drops by the level, nothing is refunded.
 ch = Character()
 ch.learn_spec(0)                       # рукопашный бой -> сила

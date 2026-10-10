@@ -1661,8 +1661,7 @@ class Session:
     # 1 стрельба, 2 медицина, 3 промышленность, 4 производство;
     # specialisations as PersAttributes.specMatrix numbers them (2 пистолеты,
     # 3 дробовики, 4 автоматы, 5 винтовки, 6 пулемёты, 7 ПП).
-    SKILL_NAMES = ("ближний бой", "стрельба", "медицина", "промышленность",
-                   "производство")
+    SKILL_NAMES = progression.SKILL_NAMES
 
     def admin_skill(self, idx, level):
         if not self.char_id:
@@ -1697,23 +1696,25 @@ class Session:
         return "%s: специализация %d %s" % (
             self.nick, int(idx), "забыта" if lvl < 0 else "теперь %d" % lvl)
 
-    def admin_xp(self, idx, xp):
-        """The admin queue's 'xp': experience into a skill of a character
-        in the game, the card and the bars told as admin_skill tells them."""
+    def admin_progress(self, kind, args):
+        """The admin queue's 'xp' and 'stat' (Character.admin_edit) on a
+        character in the game: the card and the bars told as admin_skill
+        tells them."""
         if not self.char_id:
             return "персонаж не выбран"
         ch = self.character()
         old_level = ch.level
-        changed = ch.add_skill_xp(int(idx), int(xp))
+        try:
+            changed, state = ch.admin_edit(kind, args)
+        except ValueError as exc:
+            return str(exc)
         ch.save(STORE)
         self.push_stats(**changed)
         if ch.level != old_level:
             self.send_player_info()
         if progression.moves_vitals(changed):
             self.push_vitals()
-        s = ch.skill[int(idx)]
-        return "+%d опыта: %s %d (%d/%d)" % (int(xp), self.SKILL_NAMES[int(idx)],
-                                            s[0], s[1], s[2])
+        return admin_progress_text(kind, args, state)
 
     def admin_money(self, afro=0, gold=0):
         if not self.char_id:
@@ -4021,6 +4022,15 @@ def session_for(char_id):
     return None
 
 
+def admin_progress_text(kind, args, state):
+    """What the queue's 'xp' and 'stat' write back: «+6000 опыта: стрельба
+    7 (5733/12800)», «-500 опыта: специализация «Пистолеты» 1 (0/10000)»,
+    «уровень: стрельба 3 (0/800)»."""
+    if kind == "xp":
+        return "%+d опыта: %s" % (int(args.get("xp") or 0), state)
+    return "уровень: %s" % state
+
+
 def apply_admin_action(row):
     """Carry out one queued action and say what happened.
 
@@ -4085,8 +4095,8 @@ def apply_admin_action(row):
         if kind == "goto":
             return sess.admin_goto(args.get("loc_id"), args.get("gx"),
                                    args.get("gy"))
-        if kind == "xp":
-            return sess.admin_xp(args["skill"], args["xp"])
+        if kind in ("xp", "stat"):
+            return sess.admin_progress(kind, args)
         return "неизвестное действие: %s" % kind
 
     # Offline: nothing is holding this character, so the row is the truth.
@@ -4100,14 +4110,14 @@ def apply_admin_action(row):
                 afro=int(row_c["afro"]) + int(args.get("afro", 0)),
                 gold=int(row_c["gold"]) + int(args.get("gold", 0)))
         return "начислено (не в игре)"
-    if kind == "xp":
+    if kind in ("xp", "stat"):
         ch = progression.Character.load(STORE, row["char_id"])
-        idx = int(args["skill"])
-        ch.add_skill_xp(idx, int(args["xp"]))
+        try:
+            _changed, state = ch.admin_edit(kind, args)
+        except ValueError as exc:
+            return str(exc)
         ch.save(STORE)
-        s = ch.skill[idx]
-        return "+%d опыта: %s %d (%d/%d) (не в игре)" % (
-            int(args["xp"]), Session.SKILL_NAMES[idx], s[0], s[1], s[2])
+        return admin_progress_text(kind, args, state) + " (не в игре)"
     if kind == "item":
         type_id = int(args["type_id"])
         if items.params_of(type_id) is None:

@@ -157,6 +157,32 @@ def row(char_id):
         db.close()
 
 
+def queue(admin_kind, **args):
+    """One row in admin_actions the way lava-admin puts it there: the game's
+    own panel has no form for every kind the queue takes."""
+    db = storage.connect(DB)
+    try:
+        db.execute("INSERT INTO admin_actions (made_at, admin, kind, char_id, account_id,"
+                   " args_json) VALUES (?, ?, ?, ?, ?, ?)",
+                   (int(time.time()), "tester", admin_kind, _char_id, None,
+                    json.dumps(args, ensure_ascii=False)))
+        db.commit()
+    finally:
+        db.close()
+
+
+def stat_row(char_id, kind, idx):
+    """(level, xp, xp_max) of one skill or specialisation, or an attribute's
+    (value, 0, 0), as the database holds it."""
+    db = storage.connect(DB)
+    try:
+        r = db.execute("SELECT value, xp, xp_max FROM char_stats WHERE char_id = ?"
+                       " AND kind = ? AND idx = ?", (char_id, kind, idx)).fetchone()
+        return (r["value"], r["xp"], r["xp_max"])
+    finally:
+        db.close()
+
+
 def skill_row(char_id, idx):
     """(level, xp, xp_max) of one skill, as the database holds it."""
     db = storage.connect(DB)
@@ -442,6 +468,54 @@ try:
     cl.close()
     time.sleep(1.5)
     check("после выхода игрока опыт на месте", skill_row(_char_id, 1), (4, 0, 1600))
+
+    # В обе стороны (lava-admin, «Навыки»): опыт со знаком минус, уровень
+    # навыка и специализации ровно, отказ словами «отказ:».
+    queue("xp", skill=1, xp=-500)
+    check("очередь разобрана", wait_done(), True)
+    check("минус опыт не в игре: уровень назад, 300 из 800",
+          (skill_row(_char_id, 1), last_result("xp")),
+          ((3, 300, 800), "-500 опыта: стрельба 3 (300/800) (не в игре)"))
+    queue("stat", skill=1, level=10, xp=5)
+    check("очередь разобрана", wait_done(), True)
+    check("уровень навыка ровно, не в игре: и уровень персонажа за ним",
+          (skill_row(_char_id, 1), row(_char_id)["level"], last_result("stat")),
+          ((10, 5, 102400), 10, "уровень: стрельба 10 (5/102400) (не в игре)"))
+    per_was = stat_row(_char_id, "attrib", 3)[0]
+    queue("stat", spec=2, level=2)
+    check("очередь разобрана", wait_done(), True)
+    check("специализация ровно, не в игре: изучена на 2, восприятие +2",
+          (stat_row(_char_id, "spec", 2), stat_row(_char_id, "attrib", 3)[0] - per_was,
+           last_result("stat")),
+          ((2, 0, 80000), 2, "уровень: специализация «Пистолеты» 2 (0/80000) (не в игре)"))
+    queue("xp", spec=9, xp=100)
+    check("очередь разобрана", wait_done(), True)
+    check("опыт неизученной специализации -- отказ, словами",
+          (last_result("xp"), stat_row(_char_id, "spec", 9)[0]),
+          ("отказ: специализация «Первая помощь» не изучена", -1))
+
+    cl = Client()
+    cl.enter()
+    queue("stat", spec=2, level=-1)
+    check("очередь разобрана", wait_done(), True)
+    frames = cl.frames(1.0)
+    check("в игре специализация забыта: карточке пришёл rp_info",
+          (last_result("stat"), any(f.startswith("rp_info") for f in frames)),
+          ("уровень: специализация «Пистолеты» не изучена", True))
+    # 10 с 5 — это 9 с полной полосой 51200 и ещё 5: минус 51205 — ровно 9 с нулём.
+    queue("xp", skill=1, xp=-51205)
+    check("очередь разобрана", wait_done(), True)
+    frames = cl.frames(1.0)
+    check("в игре минус опыт: уровень 9 и userInfo_Player с ним",
+          (last_result("xp"),
+           any(f.startswith("userInfo_Player") and "lvl=9;" in f for f in frames)),
+          ("-51205 опыта: стрельба 9 (0/51200)", True))
+    cl.close()
+    time.sleep(1.5)
+    check("после выхода игрока навыки как их поставили",
+          (skill_row(_char_id, 1), stat_row(_char_id, "spec", 2),
+           stat_row(_char_id, "attrib", 3)[0]),
+          ((9, 0, 51200), (-1, 0, 1250), per_was))
 
     print("\nтранспорт")
     cl = Client()

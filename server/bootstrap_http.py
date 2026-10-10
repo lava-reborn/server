@@ -323,7 +323,7 @@ ADMIN_CHAR = '''<div class=card>
  <label>Опыт</label>
  <select name=skill><option value=0>ближний бой</option><option value=1>стрельба</option>
  <option value=2>медицина</option><option value=3>промышленность</option></select>
- <input type=number name=xp min=1 placeholder="сколько" title="очков опыта навыку, без премиума и без специализации">
+ <input type=number name=xp placeholder="± сколько" title="очков опыта навыку, без премиума и без специализации; минус — снять, уровни уходят назад">
  <button type=submit>Начислить</button>
 </div></form>
 <form class=act method=post action="/admin/do"><div class=row>
@@ -1040,8 +1040,8 @@ class Handler(BaseHTTPRequestHandler):
                 note = "Предмет поставлен в очередь"
             elif kind == "xp":
                 skill, xp = num("skill", -1), num("xp")
-                if not 0 <= skill <= 3 or xp <= 0:
-                    note = "Опыт: навык 0-3 и число больше нуля"
+                if not 0 <= skill <= 3 or not xp:
+                    note = "Опыт: навык 0-3 и число, минус — снять"
                 else:
                     store.admin_push(who, "xp", char_id=char_id, skill=skill, xp=xp)
                     note = "Опыт поставлен в очередь"
