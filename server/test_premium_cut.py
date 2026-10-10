@@ -14,8 +14,10 @@ What the cut is, each part held here:
      camp 94, the fifteen «Подмастерье …[P]» of the quarters 452/456/457,
      the premium bar's people (804 at the door in 79, 812 in the port 445,
      and the bar 1010 itself), the premium quest places' mobs -- is in
-     data/retired.json, every one there is such a creature, and no room
-     stands one; a hand-kept row or a window naming one is refused;
+     data/retired.json, every one of the cut's rows there is such a
+     creature (the black market's 639 beside them is test_halfa_cut's),
+     and no room stands one; a hand-kept row or a window naming one is
+     refused;
   3. the ways: Мастер Азам's «Квартал ремесленников» (414) and the way back
      (415) are off, their passages and the quarter's no_map gone;
   4. quest 158 no longer promises a ride for holders of a residence
@@ -76,7 +78,10 @@ with open(os.path.join(DATA, "retired.json"), encoding="utf-8") as _fh:
 # server/test_halfa_cut.py holds.
 PLACES = {int(k): v for k, v in RETIRED["places"].items()
           if v.startswith("The owner's cut of (P)")}
-CREATURES = {int(k): v for k, v in RETIRED["creatures"].items()}
+# And its own creatures: the black market's 639 (2026-10-10), no premium
+# creature, stands beside them, and server/test_halfa_cut.py holds it.
+CREATURES = {int(k): v for k, v in RETIRED["creatures"].items()
+             if not v.startswith("The owner's cut of Вади-Хальфа")}
 CELLS = {124: (5968, 1726), 125: (5876, 2012), 130: (6182, 1975)}
 QUARTER, AZAM, QUARTER_MASTER, WAY_IN, WAY_OUT = 447, 704, 5771, 414, 415
 PRICHAL = 41

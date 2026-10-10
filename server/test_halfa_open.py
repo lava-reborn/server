@@ -28,11 +28,13 @@ suite's own but the cheats that stand in for the walking.
            50 000 afro an ounce (the owner's, progression.GOLD_TO_AFRO_RATE)
 
 Along the whole path nobody stands by his mobs.xml name (but the remainder
-data/orig_names_manual.json lists under "none" with its reason: the black
-market's 639), no thing the path hands out shows its internal name -- the
-lent kit, the certificate, the self-teacher's parts and the coin -- and every
-string id of its quests is in the launcher's table (a missing one sends the
-client back to the login).
+data/orig_names_manual.json lists under "none" with its reason; the one of
+it the path met, the black market's 639, is out of the game since the
+owner's «надо убрать с хальфы wh_modif_armor_g» of 2026-10-10, and the
+black market's frames are held to show him no more), no thing the path
+hands out shows its internal name -- the lent kit, the certificate, the
+self-teacher's parts and the coin -- and every string id of its quests is in
+the launcher's table (a missing one sends the client back to the login).
 
 In process first: row 43 on in the shipped table (Демир of the caravan gives
 and takes it) and the suite on that very table, its way in
@@ -96,6 +98,8 @@ COURSE, LESSONS, AMMO_Q, HUNTER = 1682, list(range(351, 358)), 365, 1829
 PATH = [TO_HALFA, BACK, WELCOME, RACKET, COURSE] + LESSONS + [AMMO_Q, HUNTER]
 # The people.
 DEMIR_V, DEMIR_H, SAID, BERT, TIL, HEALER = 5193, 30, 44, 2088, 5, 100
+WAKKAS, KHAMIS = 1204, 1205                                 # the black market's clothing
+ARMOR_G = 639          # wh_modif_armor_g, out of the game since 2026-10-10 (data/retired.json)
 BERT_TI = [2089, 2090, 2091, 2092, 2093, 2094, 2095]
 SCOUT = 258                                                 # [0] Лазутчик, Новые колонисты
 # The things.
@@ -106,7 +110,8 @@ RATE = 50000                                                # afro an ounce, the
 SHOOTING = progression.SHOOTING
 MT = world.mob_types()
 # Named by nobody, each with its reason in the file (test_halfa_names holds it
-# small): on this path, the black market's 639.
+# small): on this path nobody shows by his mobs.xml name since the black
+# market's 639 left the game (data/retired.json, 2026-10-10).
 with open(os.path.join(os.path.dirname(HERE), "data", "orig_names_manual.json"),
           encoding=ENC) as _fh:
     REMAINDER = {int(k) for k in json.load(_fh)["none"]}
@@ -671,6 +676,9 @@ try:
 
     # --- Тиль: the certificate ----------------------------------------------------------------
     here = inhabitants(goto(c, BLACK_MARKET), BLACK_MARKET)
+    check("the black market as the client is shown it: Тиль, Ваккас and Хамис, and no"
+          " wh_modif_armor_g (639), out of the game by the owner's word of 2026-10-10",
+          (TIL in here, WAKKAS in here, KHAMIS in here, ARMOR_G in here), (True, True, True, False))
     check("Мастер Тиль offers «Охотник» now", status(c, HUNTER), 1)
     got, q = take(c, here, TIL, HUNTER)
     check("«Охотник» taken at Тиль: the certificate in the bag, complete",

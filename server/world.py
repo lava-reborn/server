@@ -785,6 +785,11 @@ def _name_tokens(name):
 # (the schedule's held_out): a premium master is premium in any file. The
 # type's name stays in the string table all the same -- names are never
 # taken away, since an unknown id sends the client to the login screen.
+# The owner's word of 2026-10-10 («надо убрать с хальфы wh_modif_armor_g»)
+# put one more there by the same rule: the black market's 639, which no
+# other file puts down. The client draws nobody from its own copy of a
+# location file (LDParser reads no <mobs>), so a type no room stands is a
+# type no player sees.
 _RETIRED_CREATURES = None
 
 

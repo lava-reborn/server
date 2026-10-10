@@ -40,7 +40,16 @@ What the cut is, each part held here:
      of theirs retired (the upgraders 8213/8214 stand in four other
      towns' airfields, the base stands nobody), no quest tied to them, no
      ambush opened, and the run_once «retire-halfa-fsc-2026-10-10» sending
-     whoever is in one, or calls one home, to Причал.
+     whoever is in one, or calls one home, to Причал;
+  9. the black market's 639, the owner's word of 2026-10-10 («надо убрать
+     с хальфы wh_modif_armor_g»): the trader wh_modif_armor_g, shown by
+     his internal name, out of the game by data/retired.json 'creatures'.
+     The black market's file is the only place that puts him down, and its
+     room stands everybody else it stood; no hand-kept row brings him back;
+     nothing the town offers went with him -- his stall was empty, he gave
+     no quest, window or home, and the other traders of 102 sell and mend
+     as he mended. Nothing in the database to move. What the client is
+     shown on arriving there is server/test_halfa_open.py's.
 
 The names over the map are test_map_labels'; the windows and the rows in
 detail test_halfa_setcraft's.
@@ -70,11 +79,14 @@ import encounters  # noqa: E402
 import events  # noqa: E402
 import items  # noqa: E402
 import names  # noqa: E402
+import npcs  # noqa: E402
 import quests  # noqa: E402
 import rooms  # noqa: E402
 import setcraft  # noqa: E402
 import sets  # noqa: E402
 import travel  # noqa: E402
+import trophies  # noqa: E402
+import upgrader  # noqa: E402
 import world  # noqa: E402
 
 from testkit import check, fails  # noqa: E402
@@ -711,6 +723,81 @@ try:
 except Exception:
     import traceback
     fails.append("the ФСЦ broke:\n" + traceback.format_exc())
+
+
+# --- 9. the black market's 639 -------------------------------------------------------------
+# The owner's word of 2026-10-10: «надо убрать с хальфы wh_modif_armor_g». The
+# black market's trader 639, whom players saw under his internal name, is out
+# of the game by type (data/retired.json 'creatures', world.belongs_here):
+# the black market's file is the only one that puts him down, so by type is
+# by this one place. Its own why, so test_premium_cut's selection of the cut
+# of (P)'s creatures leaves him out.
+print("the black market's 639")
+ARMOR_G_WHY = "The owner's cut of Вади-Хальфа's black market, 2026-10-10"
+ARMOR_G, BLACK_MARKET = 639, 102
+WAKKAS, KHAMIS, TIL = 1204, 1205, 5
+try:
+    why = RETIRED["creatures"].get(str(ARMOR_G), "")
+    check("data/retired.json takes 639 out, its why quoting the order and saying nothing the"
+          " town offers goes with him",
+          (why.startswith(ARMOR_G_WHY), "надо убрать с хальфы wh_modif_armor_g" in why,
+           "no goods or services become unavailable in the city" in why,
+           world.retired_creature(ARMOR_G)), (True, True, True, True))
+    check("  ..he is wh_modif_armor_g, a Trader of the art m2, shown by that internal name",
+          (MT[ARMOR_G], names.ALL.get(ARMOR_G)),
+          ((world.TRADER, "wh_modif_armor_g", "m2"), "wh_modif_armor_g"))
+    check("  ..and the black market's file is the only place that could put him down: no other"
+          " file, camp fill, hand-kept row, window or stand-in",
+          sorted(put.get(ARMOR_G, ())), [("file", BLACK_MARKET)])
+
+    def black_market():
+        room = rooms.Room(world.location(BLACK_MARKET), rooms.IdAllocator(), MT)
+        return {n.type_id: n.root for n in room.npcs.values()}
+
+    after = black_market()
+    kept = world.retired_creatures()
+    try:
+        world._RETIRED_CREATURES = {t: w for t, w in kept.items() if t != ARMOR_G}
+        before = black_market()
+    finally:
+        world._RETIRED_CREATURES = kept
+    check("the black market's room stands everybody it stood before the word but 639",
+          (sorted(set(before) - set(after)), sorted(set(after) - set(before))), ([ARMOR_G], []))
+    check("  ..Ваккас, Хамис and Тиль among them; the file keeps 639, as the client's copy does,"
+          " and the client draws nobody from it (LDParser reads no <mobs>)",
+          ({WAKKAS, KHAMIS, TIL} <= set(after), ARMOR_G in standing(BLACK_MARKET)), (True, True))
+    check("world.belongs_here refuses him at the black market and anywhere else, at war or at"
+          " peace",
+          [world.belongs_here(ARMOR_G, MT[ARMOR_G][1], MT[ARMOR_G][0], war, lid)
+           for war, lid in ((0, BLACK_MARKET), (1, BLACK_MARKET), (0, 103), (1, None))],
+          [False] * 4)
+    loc102 = world.location(BLACK_MARKET)
+    free = next(c for c in range(loc102.width * loc102.height)
+                if c not in loc102.obstacles and c not in {s for s, _t in loc102.spawns})
+    row = {"type": ARMOR_G, "cell": [free % loc102.width, free // loc102.width], "why": "t"}
+    check("  ..and a hand-kept row naming him is refused (rooms.placement_problems)",
+          [p for p in rooms.placement_problems(MT, {BLACK_MARKET: [row]}) if "out of the game" in p],
+          ["loc 102: 639 on %d,%d: a creature out of the game (data/retired.json)"
+           % tuple(row["cell"])])
+    check("what he offered: an empty stall (no list of the owner's, no wiki stall, no craft"
+          " goods), no quest, no upgrade window, no trophy registration, no home",
+          (items.stock_for(ARMOR_G), npcs.stock(ARMOR_G), items.stock_table().get(ARMOR_G),
+           quests.given_by(ARMOR_G), quests.taken_by(ARMOR_G), upgrader.lists(ARMOR_G),
+           trophies.is_registrar(ARMOR_G), world.offers_home(ARMOR_G)),
+          ([], None, None, [], [], dict(in_types=[], out_types=[], costs=[]), False, False))
+    check("  ..and the mending every trader gives stays on the black market: Ваккас and Хамис"
+          " stand there as traders who sell and mend (no trophy registrar's window)",
+          {t: (after.get(t), bool(items.stock_for(t)), trophies.is_registrar(t))
+           for t in (WAKKAS, KHAMIS)},
+          {t: (world.TRADER, True, False) for t in (WAKKAS, KHAMIS)})
+    with io.open(os.path.join(DATA, "orig_names_manual.json"), encoding="utf-8") as _fh:
+        unnamed = json.load(_fh)["none"].get(str(ARMOR_G), "")
+    check("  ..his name stays in the string table, and data/orig_names_manual.json says under"
+          " 'none' that nobody sees him", (names.known(ARMOR_G), "nobody sees it" in unnamed),
+          (True, True))
+except Exception:
+    import traceback
+    fails.append("the black market's 639 broke:\n" + traceback.format_exc())
 
 
 print()
