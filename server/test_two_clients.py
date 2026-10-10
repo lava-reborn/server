@@ -478,6 +478,7 @@ try:
     got = a.frames(wait=2)
     check("the wasteland has no other player in it",
           any("rtype=-1;" in f for f in got), False)
+    alice_pos = int(param(next(f for f in got if f.startswith("lenter;")), "pos"))
 
     # Bob is still on the map above Alice's cell. Location chat does not
     # cross between the map and a local scene; trade/world do, both ways.
@@ -509,7 +510,9 @@ try:
     b.send("lenter;accept=1;")
     got = b.frames(wait=2)
     check("Bob is positioned", got[0].split(";")[0], "lenter")
-    check("Alice is not there", any("rtype=-1;" in f for f in got), False)
+    check("Alice's disconnected body is still visible under the same player id",
+          [f for f in got if "rtype=-1;" in f],
+          ["lch;newUser=%d;pos=%d;rtype=-1;" % (pid_a, alice_pos)])
     b.send("moveTo;path=|490|491|;")
     check("and can still walk",
           b.frames(), ["cmdAck;res=0;", "userMove;id=0;path=|490|491|;"])

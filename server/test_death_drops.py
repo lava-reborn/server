@@ -267,6 +267,9 @@ _store.close()
 CRED = {n: accounts.credential(n, "secret") for n in ("victim", "witness", "hunter", "quarry")}
 
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
+           # Seed HP, level and worn gear directly between offline sessions.
+           # Disconnected bodies and their loot are in test_combat_linger.
+           LAVA_COMBAT_LINGER="0",
            LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730", LAVA_AP_REGEN="25",
            LAVA_RESPAWN="120", LAVA_SEED="3", LAVA_WEAR_DROP="100", LAVA_BAG_DROP="100")
 # The lines the server says by itself (Session.say) are off on a served

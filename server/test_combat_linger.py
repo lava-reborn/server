@@ -181,6 +181,20 @@ async def in_process():
     loading.close()
     check("an already dead player leaves immediately", loading.room, None)
 
+    moved = create("Moved")
+    moved.combat.amax_sent = 3
+    moved.combat.ap = 3
+    moved.close()
+    incoming = server.Session(Writer(), "moved")
+    incoming.handle("login", dict(hash=accounts.credential("Moved", "secret")))
+    incoming.handle("selPers", dict(num=0))
+    moved.enter_location()
+    moved.handle("lenter", dict(accept=1))
+    check("a fresh location during reconnect receives its current AP ceiling",
+          (moved.combat.ap, moved.combat.amax_sent),
+          (moved.character().ap_ceiling, moved.character().ap_ceiling))
+    moved.close(force=True)
+
     with patch.object(server, "COMBAT_LINGER", 0.05):
         timed = create("Timed")
         timed.close()

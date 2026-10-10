@@ -61,6 +61,9 @@ CRED = accounts.credential("tester", "secret")
 # the admin panel; this suite uses them to set a scene, so it asks
 # for them by name.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730")
+# The expiry scene changes transport_until directly while logged out.
+# Finish the session so the next login reads that fixture from the database.
+env["LAVA_COMBAT_LINGER"] = "0"
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 

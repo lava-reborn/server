@@ -1148,6 +1148,9 @@ class Session:
 
     # --- world -----------------------------------------------------------
     def enter_location(self):
+        # A move during reconnect loading starts a fresh location, so its
+        # lenter must not reuse the previous body's AP ceiling or snapshot.
+        self.resume_loading = False
         # An lcall makes the client drop its current Location (Master.lcall
         # builds a new LocGen), so whoever shared the old room is told now,
         # before the new one is even loading.

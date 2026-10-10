@@ -22,9 +22,10 @@ shut, as it holds chWorld. What is held to here:
     the way out is not carried through it;
   * a heal of the player's own still in the air holds the way too, without
     a word, until it lands: the lcall would cut it short;
-  * a login on a walk-in takes nothing and puts the player beside it, from
-    where one walk takes him through: a socket dropped on the way into the
-    mine, or dropped while a duel held the way out.
+  * reconnecting to a body on a walk-in leaves it on the same cell and
+    takes no passage. The cancelled passage is not rearmed until the player
+    steps off and back onto it. A login after the body expires still uses
+    the saved-position rule that places the player beside the passage.
 
 Камал's quest, "Выведи меня отсюда", is a quest in two steps: taken, it is
 journalled, and handed back to him it brings the player up. The same things
@@ -615,8 +616,8 @@ try:
     b, first = log_in(CRED_B)
     check("back, he is in the mine still", first, [TIER1])
     got, pos_b = enter(b)
-    check("beside the sign, not under it", (left_on in OUT, pos_b in OUT, pos_b in POCKET),
-          (True, False, True))
+    check("reconnected to the same body under the sign, without moving it",
+          (pos_b, pos_b in OUT), (left_on, True))
     got += b.frames(RETRY + 1)
     check("and not carried out by the login", calls(got), [])
     check("nor is the quest he handed in there to hand in twice", journal(b), [([], [])])
