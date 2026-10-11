@@ -411,13 +411,14 @@ static class Versions
         return s;
     }
 
-    /// <summary>The tag under the panel: "Лаунчер v5 · игра от 10.10 22:02
-    /// (b1042e7)", or the launcher alone until a release is in place.</summary>
-    public static string Window(int build, string created, string source)
+    /// <summary>The tag under the panel, the launcher's number and the
+    /// release's commit: "v5 · b1042e7" (owner, 2026-10-11: no word
+    /// «Лаунчер», no date), or the number alone until a release with a
+    /// commit is in place. The date stays in the hint and the settings.</summary>
+    public static string Window(int build, string source)
     {
-        string game = Game(created, source, false);
-        return "Лаунчер v" + build.ToString(CultureInfo.InvariantCulture) +
-               (game.Length > 0 ? " · игра " + game : "");
+        string c = Commit(source);
+        return "v" + build.ToString(CultureInfo.InvariantCulture) + (c != null ? " · " + c : "");
     }
 
     /// <summary>"Игра обновлена: 12 файлов" after a run that put files in

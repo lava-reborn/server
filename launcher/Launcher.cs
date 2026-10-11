@@ -510,16 +510,15 @@ static class Launcher
         return HasGame(gameDir) ? "версия неизвестна" : "не установлена";
     }
 
-    // Under the panel, the launcher and the release in place side by side
-    // (Versions.Window); over them, the hint has both in full, and so does
-    // the settings' footer while it is open. From Render, so all three
-    // follow every run and every change of folder.
+    // Under the panel, the launcher's number and the release's commit
+    // (Versions.Window); over them, the hint has both in full, date
+    // included, and so does the settings' footer while it is open. From
+    // Render, so all three follow every run and every change of folder.
     static void Labels()
     {
         Pointer p = sync.Accepted;
         string game = GameVersion();
-        form.Panel.VersionLabel = Versions.Window(BUILD, p != null ? p.Created : null,
-                                                  p != null ? sync.AcceptedSource : null);
+        form.Panel.VersionLabel = Versions.Window(BUILD, p != null ? sync.AcceptedSource : null);
         form.Panel.VersionTip = "Лаунчер " + Build() + "\nИгра " + game;
         if (settings != null) settings.SetGame(game);
     }

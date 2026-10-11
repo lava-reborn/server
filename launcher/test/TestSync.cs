@@ -512,17 +512,14 @@ static class TestSync
     {
         string sha = "b1042e7c0ffee00000000000000000000000000a";
         // 19:02:59 UTC is 22:02 in Moscow, the deploy of 2026-10-10.
-        Check("label: the window's tag", Versions.Window(5, "2026-10-10T19:02:59Z", sha),
-              "Лаунчер v5 · игра от 10.10 22:02 (b1042e7)");
+        Check("label: the window's tag, the number and the commit", Versions.Window(5, sha), "v5 · b1042e7");
         Check("label: the settings' line, with the year and the zone", Versions.Game("2026-10-10T19:02:59Z", sha, true),
               "от 10.10.2026 22:02 мск (b1042e7)");
         Check("label: past midnight in Moscow, the next day", Versions.Game("2026-12-31T21:30:00Z", sha, false),
               "от 01.01 00:30 (b1042e7)");
-        Check("label: no release yet, the launcher alone", Versions.Window(5, null, null), "Лаунчер v5");
-        Check("label: a time that cannot be read is left out", Versions.Window(5, "yesterday", sha),
-              "Лаунчер v5 · игра (b1042e7)");
-        Check("label: a source that is not a commit is left out", Versions.Window(5, "2026-10-10T19:02:59Z", "unknown"),
-              "Лаунчер v5 · игра от 10.10 22:02");
+        Check("label: no release yet, the number alone", Versions.Window(5, null), "v5");
+        Check("label: a source that is not a commit is left out", Versions.Window(5, "unknown"), "v5");
+        Check("label: a time that cannot be read is left out", Versions.Game("yesterday", sha, true), "(b1042e7)");
         Check("label: created as UTC", Versions.Created("2026-10-10T19:02:59Z"),
               (DateTime?)new DateTime(2026, 10, 10, 19, 2, 59, DateTimeKind.Utc));
         Check("label: created without its Z is not read", Versions.Created("2026-10-10T19:02:59"), null);
