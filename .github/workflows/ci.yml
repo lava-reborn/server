@@ -94,6 +94,9 @@ on:
     # the quest editor's canvas, nothing but the editor reads it, and moving
     # a card in the admin's editor (a commit of that file alone) must not
     # restart the game.
+    # An empty commit touches nothing that is not ignored, so it starts no
+    # run either (39421d5, 2026-10-11): to run a failed commit again, use
+    # «Re-run failed jobs» on its run.
     # deploy/ci/still_head.sh reads this very list (the first paths-ignore
     # in this file): keep it first, one "- item" a line.
     paths-ignore:
