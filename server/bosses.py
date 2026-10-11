@@ -23,17 +23,33 @@ owner's) -- but for the prison, whose uprising keeps its
 label's hours as a window of data/schedule.json (events.py, on this
 module's clock). This module only knows the clock;
 combat.RoomCombat.keep_hours is what brings a room's bosses in and sends
-them away. A warehouse's «Хозяин склада» killed in its window hands the
-warehouse to a clan (holdings.py), so each window settles it once.
+them away.
+
+The warehouses' «Хозяин склада» keeps hours of his own: the owner's
+«на складах хозяин должен прриходить один раз!!!» (2026-10-12) -- once a
+day. DESIGNED, the default: at 20:00, the hour of the original's own label
+«Хозяин присутствует с 20:00 до 21:00», right after the money box's «Дележ
+добычи с 19:00 до 20:00» (data/schedule.json wh_box); the map shows that
+label again as the original has it (data/map_labels.json). He stays STAY
+like every boss; killed, he is gone until tomorrow's hour, and at 14, 18
+and 22 he does not come. A master killed in his window hands the warehouse
+to a clan (holdings.py), so a day settles it once.
 
     LAVA_BOSS_HOURS  "14,18,22"       the hours, H or H:MM on that clock.
                                       "off" turns the rule off, and a boss is
                                       an ordinary mob again, which drops no
                                       gold ingot (combat.RoomCombat.
-                                      drop_loot); blank, or not one hour
-                                      in it, is the default
-    LAVA_BOSS_STAY   "60"             minutes a boss stays after its hour;
-                                      not a number above 0 is the default
+                                      drop_loot) -- the warehouse masters
+                                      too; blank, or not one hour in it, is
+                                      the default
+    LAVA_WAREHOUSE_HOURS "20"         the warehouse masters' (WAREHOUSE_
+                                      MASTERS) hours, read the same way;
+                                      "off" is no hours of their own, and
+                                      they keep LAVA_BOSS_HOURS like every
+                                      boss
+    LAVA_BOSS_STAY   "60"             minutes a boss stays after its hour,
+                                      a warehouse master too; not a number
+                                      above 0 is the default
     LAVA_BOSS_TZ     "Europe/Moscow"  whose clock the hours are read on
     LAVA_BOSS_CLOCK  unset            tests only: the local time the clock
                                       reads when the server starts; it runs
@@ -69,10 +85,10 @@ def _zone(name):
 ZONE = _zone(TZ_NAME)
 
 
-def parse_hours(raw):
+def parse_hours(raw, name="LAVA_BOSS_HOURS"):
     """"18,22" -> [1080, 1320]: minutes after local midnight, sorted, each
-    once. H or H:MM; anything else is left out with a warning, so a typo
-    costs one hour and not the schedule."""
+    once. H or H:MM; anything else is left out with a warning naming the
+    setting, so a typo costs one hour and not the schedule."""
     out = set()
     for part in (raw or "").replace(";", ",").split(","):
         part = part.strip()
@@ -84,7 +100,7 @@ def parse_hours(raw):
             if not (0 <= h <= 23 and 0 <= m <= 59):
                 raise ValueError(part)
         except ValueError:
-            log.warning("  !!    LAVA_BOSS_HOURS: %r is not an hour, skipped", part)
+            log.warning("  !!    %s: %r is not an hour, skipped", name, part)
             continue
         out.add(h * 60 + m)
     return sorted(out)
@@ -92,25 +108,37 @@ def parse_hours(raw):
 
 DEFAULT_HOURS = "14,18,22"
 DEFAULT_STAY = 60.0
+# The warehouse masters' hour (the module's docstring). The client's release
+# and lava-http read it here, as they read DEFAULT_HOURS, and the map's
+# warehouse labels name it (server/test_map_labels.py).
+DEFAULT_WAREHOUSE_HOURS = "20"
 
 
-def hours_from(raw):
-    """LAVA_BOSS_HOURS as the rule reads it. Only "off" turns the rule off.
-    Unset or blank is the owner's hours -- "LAVA_BOSS_HOURS=" in a shell or
-    an env file outside compose, whose ${...:-14,18,22} covers only its own
-    case, must not quietly leave every boss standing all day -- and so is a
-    value in which not one hour could be read."""
+def hours_from(raw, name="LAVA_BOSS_HOURS", default=DEFAULT_HOURS):
+    """LAVA_BOSS_HOURS -- or another setting of hours, LAVA_WAREHOUSE_HOURS
+    -- as the rule reads it. Only "off" turns it off. Unset or blank is the
+    owner's hours -- "LAVA_BOSS_HOURS=" in a shell or an env file outside
+    compose, whose ${...:-14,18,22} covers only its own case, must not
+    quietly leave every boss standing all day -- and so is a value in which
+    not one hour could be read."""
     raw = (raw or "").strip()
     if not raw:
-        return parse_hours(DEFAULT_HOURS)
+        return parse_hours(default, name)
     if "off" in [p.strip().lower() for p in raw.replace(";", ",").split(",")]:
         return []
-    got = parse_hours(raw)
+    got = parse_hours(raw, name)
     if not got:
-        log.warning("  !!    LAVA_BOSS_HOURS=%r names no hour, keeping %s",
-                    raw, DEFAULT_HOURS)
-        return parse_hours(DEFAULT_HOURS)
+        log.warning("  !!    %s=%r names no hour, keeping %s", name, raw, default)
+        return parse_hours(default, name)
     return got
+
+
+def warehouse_hours_from(raw):
+    """LAVA_WAREHOUSE_HOURS: the warehouse masters' own hours, read as
+    LAVA_BOSS_HOURS is, with DEFAULT_WAREHOUSE_HOURS for its default. "off"
+    is no hours of their own (an empty list), and hours_of then gives the
+    masters the bosses' HOURS."""
+    return hours_from(raw, "LAVA_WAREHOUSE_HOURS", DEFAULT_WAREHOUSE_HOURS)
 
 
 def stay_from(raw):
@@ -133,6 +161,7 @@ def stay_from(raw):
 
 
 HOURS = hours_from(os.environ.get("LAVA_BOSS_HOURS"))
+WAREHOUSE_HOURS = warehouse_hours_from(os.environ.get("LAVA_WAREHOUSE_HOURS"))
 STAY = stay_from(os.environ.get("LAVA_BOSS_STAY"))
 
 
@@ -171,6 +200,22 @@ def clock():
 # camp_fill.json), the commissar «Реклама» wants dead (texts.xml 62675).
 ALL_DAY = frozenset({696, 586})
 
+# The warehouses' «Хозяин склада», who keep WAREHOUSE_HOURS: the bosses of
+# the stok_ files, each the one boss of its warehouse (data/mob_types.json
+# names; the locations are their files' spawns, and server/test_bosses.py
+# checks the list against both). The three of Вади-Хальфа are data/
+# holdings.json's capturable sites.
+WAREHOUSE_MASTERS = frozenset({
+    7448,   # boss_WH_sever   Северный склад Вади-Хальфы 111
+    7449,   # boss_WH_vostok  Восточный склад Вади-Хальфы 110 (and its copy 983)
+    7450,   # boss_WH_ug      Южный склад Вади-Хальфы 109 (and its copy 982)
+    7451,   # boss_DN_sever   Северный склад Донголы 113 (and its copy 984)
+    7452,   # boss_DN_vostok  Восточный склад Донголы 114
+    7453,   # boss_DN_ug      Южный склад Донголы 112
+    7454,   # boss_AH_vostok  Центр Абу-Хамеда 128
+    7455,   # boss_AH_sever   Ангары Абу-Хамеда 288
+})
+
 
 def keeps_hours(type_id):
     """Whether a creature of this type keeps the hours rather than the
@@ -179,22 +224,32 @@ def keeps_hours(type_id):
             and world.creature_role(type_id) == "boss")
 
 
-def slot(t):
+def hours_of(type_id):
+    """The hours a boss of this type keeps: a warehouse master's own
+    WAREHOUSE_HOURS, unless they are off, and HOURS for every other boss."""
+    if type_id in WAREHOUSE_MASTERS and WAREHOUSE_HOURS:
+        return WAREHOUSE_HOURS
+    return HOURS
+
+
+def slot(t, hours=None):
     """The window a moment falls in, named by when it opened (seconds since
     the epoch), or None outside every window.
 
-    A window opens at each of HOURS on the zone's clock and lasts STAY. It
-    may have opened yesterday -- a 23:00 hour with a two-hour stay is still
-    open at half past midnight -- and where two overlap the later one is the
-    answer: a boss killed in the first comes back for the second.
+    A window opens at each of the hours -- HOURS unless others are given,
+    a warehouse master's for him (slot_of) -- on the zone's clock and lasts
+    STAY. It may have opened yesterday -- a 23:00 hour with a two-hour stay
+    is still open at half past midnight -- and where two overlap the later
+    one is the answer: a boss killed in the first comes back for the second.
     """
-    if not HOURS:
+    hours = HOURS if hours is None else hours
+    if not hours:
         return None
     today = datetime.fromtimestamp(t, ZONE).date()
     best = None
     for back in (0, 1):
         d = today - timedelta(days=back)
-        for minute in HOURS:
+        for minute in hours:
             start = datetime(d.year, d.month, d.day, minute // 60, minute % 60,
                              tzinfo=ZONE).timestamp()
             if start <= t < start + STAY and (best is None or start > best):
@@ -202,12 +257,24 @@ def slot(t):
     return best
 
 
+def slot_of(type_id, t):
+    """slot() on the hours a boss of this type keeps (hours_of): a
+    warehouse master's window, or the bosses' one."""
+    return slot(t, hours_of(type_id))
+
+
+def _clock_list(hours):
+    return ", ".join("%d:%02d" % divmod(m, 60) for m in hours)
+
+
 def describe():
     """One line for the start-up log: what the rule is today."""
     if not HOURS:
         return "bosses keep no hours (LAVA_BOSS_HOURS is off)"
-    return "bosses come at %s %s and stay %g min" % (
-        ", ".join("%d:%02d" % divmod(m, 60) for m in HOURS), TZ_NAME, STAY / 60.0)
+    return "bosses come at %s %s and stay %g min; the warehouse masters at %s" % (
+        _clock_list(HOURS), TZ_NAME, STAY / 60.0,
+        _clock_list(WAREHOUSE_HOURS) if WAREHOUSE_HOURS
+        else "the same hours (LAVA_WAREHOUSE_HOURS is off)")
 
 
 def _and(parts):

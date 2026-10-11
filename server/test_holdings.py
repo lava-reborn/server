@@ -13,7 +13,10 @@ and a real database:
     stamina, counts for nothing; a reconnect, onto the body left standing or
     as a new session once it is put away, keeps a member's harm, and a
     member who leaves his clan after the kill still counts for it; a new
-    window forgets the last one's harm; the rule off (LAVA_BOSS_HOURS=off)
+    window forgets the last one's harm; the boss, the «Хозяин склада», comes
+    once a day, at 20:00, and not at the bosses' 14, 18 and 22 (the owner's
+    «на складах хозяин должен прриходить один раз!!!», 2026-10-12), so every
+    fight below is a day's; the rule off (LAVA_BOSS_HOURS=off)
     settles too; a restart inside the window settles nothing twice; a
     disband drops the holding; and no outcome ever reaches a chat channel,
     only the log and clan_holding_log;
@@ -55,6 +58,7 @@ os.environ["LAVA_CLAN_DEAF_CHECK"] = "0"
 # (server.COMBAT_LINGER, which the reconnect scene takes up again) are part
 # of what is tested, whatever the shell running this carries.
 for _k in ("LAVA_BOSS_HOURS", "LAVA_BOSS_STAY", "LAVA_BOSS_TZ", "LAVA_BOSS_CLOCK",
+           "LAVA_WAREHOUSE_HOURS",
            "LAVA_SERVER_CHAT", "LAVA_COMBAT_LINGER"):
     os.environ.pop(_k, None)
 
@@ -283,10 +287,28 @@ async def main():
           [(True, True, "Патроны и афро владельцам склада", key, lvl, True, False)
            for key, lvl in (("wh_sever", 8), ("wh_vostok", 8), ("wh_ug", 12))])
 
-    windows = iter([at(h, 5, day=d) for d in range(6, 40) for h in (14, 18, 22)])
+    # The master's hours: one window a day, at 20:00, and none at the bosses'
+    # 14, 18 and 22 -- the day before the fights below, he is not there.
+    check("the boss keeps the warehouse masters' hour, 20:00 alone",
+          (bosses.hours_of(BOSS),
+           [bosses.hours_of(site.boss) for site in holdings.sites().values()]),
+          ([20 * 60], [[20 * 60]] * 3))
+    seen = []
+    for h in (14, 18, 22, 20):
+        NOW[0] = at(h, 5)
+        rc.keep_hours()
+        seen.append((h, boss.alive and boss.eid in room.npcs))
+    NOW[0] = at(21, 5)
+    rc.keep_hours()
+    check("  ..not there at 14:00, 18:00 nor 22:00, there at 20:00",
+          seen, [(14, False), (18, False), (22, False), (20, True)])
+    check("  ..and gone at 21:00, nobody fighting him", (boss.alive, boss.away), (False, True))
+
+    windows = iter([at(20, 5, day=d) for d in range(6, 40)])
 
     def window():
-        """The next hour of the boss: it arrives, whole, its ledgers empty."""
+        """The next day's 20:00, the boss's hour: he arrives, whole, his
+        ledgers empty."""
         NOW[0] = next(windows)
         rc.keep_hours()
         return boss.alive and boss.eid in room.npcs
@@ -347,15 +369,15 @@ async def main():
     check("  ..one 'capture' row: the Волки after, nobody before, the killer credited,"
           " the window it was taken in",
           (row["how"], row["clan_id"], row["prev"], row["by_char"], row["slot"]),
-          ("capture", wolves, None, amir.char_id, bosses.slot(NOW[0])))
+          ("capture", wolves, None, amir.char_id, bosses.slot_of(BOSS, NOW[0])))
     held = STORE.holding("wh_sever")
     check("  ..the holding: the clan, its name, since now, the window",
           (held["clan_id"], held["name"], abs(held["since"] - time.time()) < 60,
-           held["slot"]), (wolves, "Волки", True, bosses.slot(NOW[0])))
+           held["slot"]), (wolves, "Волки", True, bosses.slot_of(BOSS, NOW[0])))
     check("  ..and the log line: who takes it, the harm, who is credited",
           LINES.take(), ["..    warehouse wh_sever (111): clan %d «Волки» takes it, 400 harm,"
-                         " credited char %d, window %d" % (wolves, amir.char_id,
-                                                           bosses.slot(NOW[0]))])
+                         " credited char %d, window %d"
+                         % (wolves, amir.char_id, bosses.slot_of(BOSS, NOW[0]))])
     frames = {s: take(s) for s in everybody}
     check("  ..no frame of it to any chat channel, world, room or clan",
           sorted({n for fr in frames.values() for n, _p in fr if n == "userMsg"}), [])

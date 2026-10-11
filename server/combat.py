@@ -3149,12 +3149,16 @@ class RoomCombat:
         and come back -- whole, on its own cell, its escort with it -- as it
         would have with anybody watching. With somebody here it stays as it
         is, and only its escort comes.
+
+        Each boss keeps its own hours (bosses.slot_of): a warehouse's
+        «Хозяин склада» comes once a day, the rest at the bosses' hours.
         """
         events.keep(self)
         if not self.bosses:
             return
-        due = bosses.slot(bosses.clock())
+        now = bosses.clock()
         for mob in self.bosses:
+            due = bosses.slot_of(mob.type_id, now)
             if mob.away:
                 if due is not None and due != mob.slot:
                     self.boss_arrives(mob, due)
@@ -3243,8 +3247,11 @@ class RoomCombat:
         read = getattr(self.store, "boss_kills", None)
         if not self.bosses or read is None:
             return
-        due = bosses.slot(bosses.clock())
-        if due is None:
+        now = bosses.clock()
+        # Each boss's own window (bosses.slot_of): a warehouse master's is
+        # his day's hour.
+        due = {m.eid: bosses.slot_of(m.type_id, now) for m in self.bosses}
+        if all(d is None for d in due.values()):
             return
         try:
             killed = read([self.boss_spot(m) for m in self.bosses])
@@ -3253,8 +3260,9 @@ class RoomCombat:
                           self.room.loc.title)
             return
         for mob in self.bosses:
-            if killed.get(self.boss_spot(mob)) == due:
-                mob.alive, mob.away, mob.slot = False, True, due
+            slot = due[mob.eid]
+            if slot is not None and killed.get(self.boss_spot(mob)) == slot:
+                mob.alive, mob.away, mob.slot = False, True, slot
                 self.room.npcs.pop(mob.eid, None)
                 log.info("  ..    boss %d (%s) of %s was killed in this window before"
                          " the restart: away until the next", mob.eid, mob.stats.name,
