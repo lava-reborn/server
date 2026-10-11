@@ -1,5 +1,5 @@
 {
- "_": "Inhabitants put down by hand, beside the ones a location's own file spawns (its mobs node). Read by server/world.py (placements) and stood in the room by server/rooms.py (Room), after the file's own and under the same kind of entity id, so the client builds them from the same lch;newUser and userInfo_* frames: a Commoner is talked to, a Trader trades, a hostile creature fights, dies and comes back on its cell. Keyed by location id; each row is {type: the creature's type id in mobs.xml, cell: [x, y] of the location's own grid, escort: true for a boss's escort, which once killed comes back with the boss's next arrival rather than on the respawn timer (a hostile creature in a location whose file has a boss), why: RECOVERED or DESIGNED and the evidence}. The server checks every row before its first socket (rooms.check_placements) and does not start on one that cannot stand: a type the client has no record or name of, a loot box or heap of ore (role object), a hostile creature in a location at peace, a cell off the grid, on an obstacle, on an exit or on somebody else's spawn. LAVA_PLACEMENTS replaces the table, for a suite that needs one of its own (server/test_valley_world.py).",
+ "_": "Inhabitants put down by hand, beside the ones a location's own file spawns (its mobs node). Read by server/world.py (placements) and stood in the room by server/rooms.py (Room), after the file's own and under the same kind of entity id, so the client builds them from the same lch;newUser and userInfo_* frames: a Commoner is talked to, a Trader trades, a hostile creature fights, dies and comes back on its cell. Keyed by location id (open desert's is its packed map cell, world.pack); each row is {type: the creature's type id in mobs.xml, cell: [x, y] of the location's own grid, escort: true for a boss's escort, which once killed comes back with the boss's next arrival rather than on the respawn timer (a hostile creature in a location whose file has a boss), patrol: the camp whose patrol the row is, on an open-desert cell next to it (data/build_camp_patrols.py writes every such row and rewrites them whole), why: RECOVERED or DESIGNED and the evidence}. The server checks every row before its first socket (rooms.check_placements) and does not start on one that cannot stand: a type the client has no record or name of, a loot box or heap of ore (role object), a hostile creature in a location at peace, a cell off the grid, on an obstacle, on an exit or on somebody else's spawn. LAVA_PLACEMENTS replaces the table, for a suite that needs one of its own (server/test_valley_world.py).",
  "locations": {
   "184": [
    {
@@ -48,6 +48,3862 @@
      59
     ],
     "why": "DESIGNED, the owner's (2026-10-09): «добавь в черный рынок мортимера который обменивает слитки (зачисляя на баланс) и продает их еще». Мортимер, the money-changer (1188, ow_GoldExchange, «Мортимер<br>Обменник»), stands in the жилой квартал (36) and in Абри, Донгола, Абу-Хамед and 58 by their own files, and here by this row; the wiki's article on the black market (102, WH_Gold_Traders_old, «Черный рынок Вади-Хальфы») names no money-changer. One creature type, so the same stall (data/npcs.json 1188: the ingots of 1, 5 and 10 ounces for gold at face value) and the same service quests (data/quests.json 301-307: cashing less 0.05 an ingot, change ounce for ounce) wherever he stands. The cell is ours: free and walkable, seven steps from the entry, beside the stalls of Хамис (42,56) and Ваккас (44,61)"
+   }
+  ],
+  "48907962": [
+   {
+    "type": 258,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5970,1722 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 259,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907962 (5970,1722)."
+   },
+   {
+    "type": 260,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907962 (5970,1722)."
+   },
+   {
+    "type": 261,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907962 (5970,1722)."
+   },
+   {
+    "type": 262,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907962 (5970,1722)."
+   },
+   {
+    "type": 263,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907962 (5970,1722)."
+   },
+   {
+    "type": 264,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907962 (5970,1722)."
+   },
+   {
+    "type": 265,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907962 (5970,1722)."
+   }
+  ],
+  "48916154": [
+   {
+    "type": 266,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5971,1722 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 267,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916154 (5971,1722)."
+   },
+   {
+    "type": 268,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916154 (5971,1722)."
+   },
+   {
+    "type": 258,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916154 (5971,1722)."
+   },
+   {
+    "type": 259,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916154 (5971,1722)."
+   },
+   {
+    "type": 260,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916154 (5971,1722)."
+   },
+   {
+    "type": 261,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916154 (5971,1722)."
+   },
+   {
+    "type": 262,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916154 (5971,1722)."
+   }
+  ],
+  "48924346": [
+   {
+    "type": 263,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5972,1722 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 264,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924346 (5972,1722)."
+   },
+   {
+    "type": 265,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924346 (5972,1722)."
+   },
+   {
+    "type": 266,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924346 (5972,1722)."
+   },
+   {
+    "type": 267,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924346 (5972,1722)."
+   },
+   {
+    "type": 268,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924346 (5972,1722)."
+   },
+   {
+    "type": 258,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924346 (5972,1722)."
+   },
+   {
+    "type": 259,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924346 (5972,1722)."
+   }
+  ],
+  "48899771": [
+   {
+    "type": 260,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5969,1723 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 261,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899771 (5969,1723)."
+   },
+   {
+    "type": 262,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899771 (5969,1723)."
+   },
+   {
+    "type": 263,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899771 (5969,1723)."
+   },
+   {
+    "type": 264,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899771 (5969,1723)."
+   },
+   {
+    "type": 265,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899771 (5969,1723)."
+   },
+   {
+    "type": 266,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899771 (5969,1723)."
+   },
+   {
+    "type": 267,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899771 (5969,1723)."
+   }
+  ],
+  "48907963": [
+   {
+    "type": 268,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5970,1723 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 258,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907963 (5970,1723)."
+   },
+   {
+    "type": 259,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907963 (5970,1723)."
+   },
+   {
+    "type": 260,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907963 (5970,1723)."
+   },
+   {
+    "type": 261,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907963 (5970,1723)."
+   },
+   {
+    "type": 262,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907963 (5970,1723)."
+   },
+   {
+    "type": 263,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907963 (5970,1723)."
+   },
+   {
+    "type": 264,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907963 (5970,1723)."
+   }
+  ],
+  "48924347": [
+   {
+    "type": 265,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5972,1723 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 266,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924347 (5972,1723)."
+   },
+   {
+    "type": 267,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924347 (5972,1723)."
+   },
+   {
+    "type": 268,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924347 (5972,1723)."
+   },
+   {
+    "type": 258,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924347 (5972,1723)."
+   },
+   {
+    "type": 259,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924347 (5972,1723)."
+   },
+   {
+    "type": 260,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924347 (5972,1723)."
+   },
+   {
+    "type": 261,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924347 (5972,1723)."
+   }
+  ],
+  "48899772": [
+   {
+    "type": 262,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5969,1724 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 263,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899772 (5969,1724)."
+   },
+   {
+    "type": 264,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899772 (5969,1724)."
+   },
+   {
+    "type": 265,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899772 (5969,1724)."
+   },
+   {
+    "type": 266,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899772 (5969,1724)."
+   },
+   {
+    "type": 267,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899772 (5969,1724)."
+   },
+   {
+    "type": 268,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899772 (5969,1724)."
+   },
+   {
+    "type": 258,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899772 (5969,1724)."
+   }
+  ],
+  "48916156": [
+   {
+    "type": 259,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5971,1724 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 260,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916156 (5971,1724)."
+   },
+   {
+    "type": 261,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916156 (5971,1724)."
+   },
+   {
+    "type": 262,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916156 (5971,1724)."
+   },
+   {
+    "type": 263,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916156 (5971,1724)."
+   },
+   {
+    "type": 264,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916156 (5971,1724)."
+   },
+   {
+    "type": 265,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916156 (5971,1724)."
+   },
+   {
+    "type": 266,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916156 (5971,1724)."
+   }
+  ],
+  "48924348": [
+   {
+    "type": 267,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5972,1724 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 268,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924348 (5972,1724)."
+   },
+   {
+    "type": 258,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924348 (5972,1724)."
+   },
+   {
+    "type": 259,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924348 (5972,1724)."
+   },
+   {
+    "type": 260,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924348 (5972,1724)."
+   },
+   {
+    "type": 261,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924348 (5972,1724)."
+   },
+   {
+    "type": 262,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924348 (5972,1724)."
+   },
+   {
+    "type": 263,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48924348 (5972,1724)."
+   }
+  ],
+  "48899773": [
+   {
+    "type": 264,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5969,1725 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 265,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899773 (5969,1725)."
+   },
+   {
+    "type": 266,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899773 (5969,1725)."
+   },
+   {
+    "type": 267,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899773 (5969,1725)."
+   },
+   {
+    "type": 268,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899773 (5969,1725)."
+   },
+   {
+    "type": 258,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899773 (5969,1725)."
+   },
+   {
+    "type": 259,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899773 (5969,1725)."
+   },
+   {
+    "type": 260,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48899773 (5969,1725)."
+   }
+  ],
+  "48907965": [
+   {
+    "type": 258,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5970,1725 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py. The lavabook puts «Учет» and «Раббин аль-Гуд» here («Квест: 5970x1725x0») with these kinds: the four whose «Учетные записи» «Учет» wants (261, 262, 266, 267) and the colonists the money bags of «Раббин аль-Гуд» come off (258-266)."
+   },
+   {
+    "type": 259,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907965 (5970,1725)."
+   },
+   {
+    "type": 260,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907965 (5970,1725)."
+   },
+   {
+    "type": 261,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907965 (5970,1725)."
+   },
+   {
+    "type": 262,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907965 (5970,1725)."
+   },
+   {
+    "type": 264,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907965 (5970,1725)."
+   },
+   {
+    "type": 266,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907965 (5970,1725)."
+   },
+   {
+    "type": 267,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48907965 (5970,1725)."
+   }
+  ],
+  "48916157": [
+   {
+    "type": 258,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 80,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5971,1725 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 259,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916157 (5971,1725)."
+   },
+   {
+    "type": 260,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916157 (5971,1725)."
+   },
+   {
+    "type": 261,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916157 (5971,1725)."
+   },
+   {
+    "type": 262,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916157 (5971,1725)."
+   },
+   {
+    "type": 263,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916157 (5971,1725)."
+   },
+   {
+    "type": 264,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916157 (5971,1725)."
+   },
+   {
+    "type": 265,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 80,
+    "why": "As the first row of 48916157 (5971,1725)."
+   }
+  ],
+  "48965310": [
+   {
+    "type": 271,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5977,1726 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 272,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965310 (5977,1726)."
+   },
+   {
+    "type": 273,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965310 (5977,1726)."
+   },
+   {
+    "type": 274,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965310 (5977,1726)."
+   },
+   {
+    "type": 276,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965310 (5977,1726)."
+   },
+   {
+    "type": 277,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965310 (5977,1726)."
+   },
+   {
+    "type": 278,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965310 (5977,1726)."
+   },
+   {
+    "type": 279,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965310 (5977,1726)."
+   }
+  ],
+  "48973502": [
+   {
+    "type": 280,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5978,1726 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 281,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973502 (5978,1726)."
+   },
+   {
+    "type": 282,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973502 (5978,1726)."
+   },
+   {
+    "type": 285,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973502 (5978,1726)."
+   },
+   {
+    "type": 271,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973502 (5978,1726)."
+   },
+   {
+    "type": 272,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973502 (5978,1726)."
+   },
+   {
+    "type": 273,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973502 (5978,1726)."
+   },
+   {
+    "type": 274,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973502 (5978,1726)."
+   }
+  ],
+  "48981694": [
+   {
+    "type": 276,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5979,1726 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 277,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981694 (5979,1726)."
+   },
+   {
+    "type": 278,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981694 (5979,1726)."
+   },
+   {
+    "type": 279,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981694 (5979,1726)."
+   },
+   {
+    "type": 280,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981694 (5979,1726)."
+   },
+   {
+    "type": 281,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981694 (5979,1726)."
+   },
+   {
+    "type": 282,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981694 (5979,1726)."
+   },
+   {
+    "type": 285,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981694 (5979,1726)."
+   }
+  ],
+  "48965311": [
+   {
+    "type": 271,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5977,1727 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py. The lavabook puts «Заказ» here («Выполнение квеста: Окрестности Лагеря Люшер 5977x1727», «Тут в округе куча фанатиков Люшера бегает») with these kinds: the sect's fighters, «все кроме Неудачников»."
+   },
+   {
+    "type": 272,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965311 (5977,1727)."
+   },
+   {
+    "type": 273,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965311 (5977,1727)."
+   },
+   {
+    "type": 274,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965311 (5977,1727)."
+   },
+   {
+    "type": 276,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965311 (5977,1727)."
+   },
+   {
+    "type": 277,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965311 (5977,1727)."
+   },
+   {
+    "type": 278,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965311 (5977,1727)."
+   },
+   {
+    "type": 279,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965311 (5977,1727)."
+   }
+  ],
+  "48981695": [
+   {
+    "type": 280,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5979,1727 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 281,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981695 (5979,1727)."
+   },
+   {
+    "type": 282,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981695 (5979,1727)."
+   },
+   {
+    "type": 285,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981695 (5979,1727)."
+   },
+   {
+    "type": 271,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981695 (5979,1727)."
+   },
+   {
+    "type": 272,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981695 (5979,1727)."
+   },
+   {
+    "type": 273,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981695 (5979,1727)."
+   },
+   {
+    "type": 274,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981695 (5979,1727)."
+   }
+  ],
+  "48989887": [
+   {
+    "type": 276,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5980,1727 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 277,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989887 (5980,1727)."
+   },
+   {
+    "type": 278,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989887 (5980,1727)."
+   },
+   {
+    "type": 279,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989887 (5980,1727)."
+   },
+   {
+    "type": 280,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989887 (5980,1727)."
+   },
+   {
+    "type": 281,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989887 (5980,1727)."
+   },
+   {
+    "type": 282,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989887 (5980,1727)."
+   },
+   {
+    "type": 285,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989887 (5980,1727)."
+   }
+  ],
+  "48965312": [
+   {
+    "type": 271,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5977,1728 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 272,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965312 (5977,1728)."
+   },
+   {
+    "type": 273,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965312 (5977,1728)."
+   },
+   {
+    "type": 274,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965312 (5977,1728)."
+   },
+   {
+    "type": 276,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965312 (5977,1728)."
+   },
+   {
+    "type": 277,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965312 (5977,1728)."
+   },
+   {
+    "type": 278,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965312 (5977,1728)."
+   },
+   {
+    "type": 279,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48965312 (5977,1728)."
+   }
+  ],
+  "48973504": [
+   {
+    "type": 280,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5978,1728 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 281,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973504 (5978,1728)."
+   },
+   {
+    "type": 282,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973504 (5978,1728)."
+   },
+   {
+    "type": 285,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973504 (5978,1728)."
+   },
+   {
+    "type": 271,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973504 (5978,1728)."
+   },
+   {
+    "type": 272,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973504 (5978,1728)."
+   },
+   {
+    "type": 273,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973504 (5978,1728)."
+   },
+   {
+    "type": 274,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973504 (5978,1728)."
+   }
+  ],
+  "48989888": [
+   {
+    "type": 276,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5980,1728 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 277,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989888 (5980,1728)."
+   },
+   {
+    "type": 278,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989888 (5980,1728)."
+   },
+   {
+    "type": 279,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989888 (5980,1728)."
+   },
+   {
+    "type": 280,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989888 (5980,1728)."
+   },
+   {
+    "type": 281,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989888 (5980,1728)."
+   },
+   {
+    "type": 282,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989888 (5980,1728)."
+   },
+   {
+    "type": 285,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989888 (5980,1728)."
+   }
+  ],
+  "48973505": [
+   {
+    "type": 271,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5978,1729 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 272,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973505 (5978,1729)."
+   },
+   {
+    "type": 273,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973505 (5978,1729)."
+   },
+   {
+    "type": 274,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973505 (5978,1729)."
+   },
+   {
+    "type": 276,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973505 (5978,1729)."
+   },
+   {
+    "type": 277,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973505 (5978,1729)."
+   },
+   {
+    "type": 278,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973505 (5978,1729)."
+   },
+   {
+    "type": 279,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48973505 (5978,1729)."
+   }
+  ],
+  "48981697": [
+   {
+    "type": 280,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5979,1729 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 281,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981697 (5979,1729)."
+   },
+   {
+    "type": 282,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981697 (5979,1729)."
+   },
+   {
+    "type": 285,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981697 (5979,1729)."
+   },
+   {
+    "type": 271,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981697 (5979,1729)."
+   },
+   {
+    "type": 272,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981697 (5979,1729)."
+   },
+   {
+    "type": 273,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981697 (5979,1729)."
+   },
+   {
+    "type": 274,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48981697 (5979,1729)."
+   }
+  ],
+  "48989889": [
+   {
+    "type": 276,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 81,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5980,1729 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 277,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989889 (5980,1729)."
+   },
+   {
+    "type": 278,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989889 (5980,1729)."
+   },
+   {
+    "type": 279,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989889 (5980,1729)."
+   },
+   {
+    "type": 280,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989889 (5980,1729)."
+   },
+   {
+    "type": 281,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989889 (5980,1729)."
+   },
+   {
+    "type": 282,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989889 (5980,1729)."
+   },
+   {
+    "type": 285,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 81,
+    "why": "As the first row of 48989889 (5980,1729)."
+   }
+  ],
+  "48940745": [
+   {
+    "type": 287,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5974,1737 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 288,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940745 (5974,1737)."
+   },
+   {
+    "type": 289,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940745 (5974,1737)."
+   },
+   {
+    "type": 290,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940745 (5974,1737)."
+   },
+   {
+    "type": 291,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940745 (5974,1737)."
+   },
+   {
+    "type": 292,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940745 (5974,1737)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940745 (5974,1737)."
+   },
+   {
+    "type": 294,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940745 (5974,1737)."
+   }
+  ],
+  "48948937": [
+   {
+    "type": 295,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5975,1737 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 296,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948937 (5975,1737)."
+   },
+   {
+    "type": 297,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948937 (5975,1737)."
+   },
+   {
+    "type": 298,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948937 (5975,1737)."
+   },
+   {
+    "type": 287,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948937 (5975,1737)."
+   },
+   {
+    "type": 288,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948937 (5975,1737)."
+   },
+   {
+    "type": 289,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948937 (5975,1737)."
+   },
+   {
+    "type": 290,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948937 (5975,1737)."
+   }
+  ],
+  "48957129": [
+   {
+    "type": 291,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5976,1737 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 292,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957129 (5976,1737)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957129 (5976,1737)."
+   },
+   {
+    "type": 294,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957129 (5976,1737)."
+   },
+   {
+    "type": 295,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957129 (5976,1737)."
+   },
+   {
+    "type": 296,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957129 (5976,1737)."
+   },
+   {
+    "type": 297,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957129 (5976,1737)."
+   },
+   {
+    "type": 298,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957129 (5976,1737)."
+   }
+  ],
+  "48932554": [
+   {
+    "type": 287,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5973,1738 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 288,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932554 (5973,1738)."
+   },
+   {
+    "type": 289,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932554 (5973,1738)."
+   },
+   {
+    "type": 290,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932554 (5973,1738)."
+   },
+   {
+    "type": 291,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932554 (5973,1738)."
+   },
+   {
+    "type": 292,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932554 (5973,1738)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932554 (5973,1738)."
+   },
+   {
+    "type": 294,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932554 (5973,1738)."
+   }
+  ],
+  "48940746": [
+   {
+    "type": 287,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5974,1738 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py. The lavabook puts «Как слышно?» here («Квест: 5974x1738x0», the ja_ of 287-298) with these kinds, among them the «Диверсант 5го уровня» (291) «Бандитская активность» finds «рядом с основным лагерем»."
+   },
+   {
+    "type": 289,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940746 (5974,1738)."
+   },
+   {
+    "type": 291,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940746 (5974,1738)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940746 (5974,1738)."
+   },
+   {
+    "type": 295,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940746 (5974,1738)."
+   },
+   {
+    "type": 296,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940746 (5974,1738)."
+   },
+   {
+    "type": 297,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940746 (5974,1738)."
+   },
+   {
+    "type": 298,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940746 (5974,1738)."
+   }
+  ],
+  "48957130": [
+   {
+    "type": 291,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5976,1738 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 292,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957130 (5976,1738)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957130 (5976,1738)."
+   },
+   {
+    "type": 294,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957130 (5976,1738)."
+   },
+   {
+    "type": 295,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957130 (5976,1738)."
+   },
+   {
+    "type": 296,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957130 (5976,1738)."
+   },
+   {
+    "type": 297,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957130 (5976,1738)."
+   },
+   {
+    "type": 298,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957130 (5976,1738)."
+   }
+  ],
+  "48932555": [
+   {
+    "type": 287,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5973,1739 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 288,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932555 (5973,1739)."
+   },
+   {
+    "type": 289,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932555 (5973,1739)."
+   },
+   {
+    "type": 290,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932555 (5973,1739)."
+   },
+   {
+    "type": 291,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932555 (5973,1739)."
+   },
+   {
+    "type": 292,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932555 (5973,1739)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932555 (5973,1739)."
+   },
+   {
+    "type": 294,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932555 (5973,1739)."
+   }
+  ],
+  "48948939": [
+   {
+    "type": 295,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5975,1739 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 296,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948939 (5975,1739)."
+   },
+   {
+    "type": 297,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948939 (5975,1739)."
+   },
+   {
+    "type": 298,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948939 (5975,1739)."
+   },
+   {
+    "type": 287,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948939 (5975,1739)."
+   },
+   {
+    "type": 288,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948939 (5975,1739)."
+   },
+   {
+    "type": 289,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948939 (5975,1739)."
+   },
+   {
+    "type": 290,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948939 (5975,1739)."
+   }
+  ],
+  "48957131": [
+   {
+    "type": 291,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5976,1739 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 292,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957131 (5976,1739)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957131 (5976,1739)."
+   },
+   {
+    "type": 294,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957131 (5976,1739)."
+   },
+   {
+    "type": 295,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957131 (5976,1739)."
+   },
+   {
+    "type": 296,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957131 (5976,1739)."
+   },
+   {
+    "type": 297,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957131 (5976,1739)."
+   },
+   {
+    "type": 298,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48957131 (5976,1739)."
+   }
+  ],
+  "48932556": [
+   {
+    "type": 287,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5973,1740 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 288,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932556 (5973,1740)."
+   },
+   {
+    "type": 289,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932556 (5973,1740)."
+   },
+   {
+    "type": 290,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932556 (5973,1740)."
+   },
+   {
+    "type": 291,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932556 (5973,1740)."
+   },
+   {
+    "type": 292,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932556 (5973,1740)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932556 (5973,1740)."
+   },
+   {
+    "type": 294,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48932556 (5973,1740)."
+   }
+  ],
+  "48940748": [
+   {
+    "type": 295,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5974,1740 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 296,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940748 (5974,1740)."
+   },
+   {
+    "type": 297,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940748 (5974,1740)."
+   },
+   {
+    "type": 298,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940748 (5974,1740)."
+   },
+   {
+    "type": 287,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940748 (5974,1740)."
+   },
+   {
+    "type": 288,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940748 (5974,1740)."
+   },
+   {
+    "type": 289,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940748 (5974,1740)."
+   },
+   {
+    "type": 290,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48940748 (5974,1740)."
+   }
+  ],
+  "48948940": [
+   {
+    "type": 291,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 84,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5975,1740 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 292,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948940 (5975,1740)."
+   },
+   {
+    "type": 293,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948940 (5975,1740)."
+   },
+   {
+    "type": 294,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948940 (5975,1740)."
+   },
+   {
+    "type": 295,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948940 (5975,1740)."
+   },
+   {
+    "type": 296,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948940 (5975,1740)."
+   },
+   {
+    "type": 297,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948940 (5975,1740)."
+   },
+   {
+    "type": 298,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 84,
+    "why": "As the first row of 48948940 (5975,1740)."
+   }
+  ],
+  "49079991": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5991,1719 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079991 (5991,1719)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079991 (5991,1719)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079991 (5991,1719)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079991 (5991,1719)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079991 (5991,1719)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079991 (5991,1719)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079991 (5991,1719)."
+   }
+  ],
+  "49088183": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5992,1719 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088183 (5992,1719)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088183 (5992,1719)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088183 (5992,1719)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088183 (5992,1719)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088183 (5992,1719)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088183 (5992,1719)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088183 (5992,1719)."
+   }
+  ],
+  "49096375": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5993,1719 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096375 (5993,1719)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096375 (5993,1719)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096375 (5993,1719)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096375 (5993,1719)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096375 (5993,1719)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096375 (5993,1719)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096375 (5993,1719)."
+   }
+  ],
+  "49079992": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5991,1720 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079992 (5991,1720)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079992 (5991,1720)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079992 (5991,1720)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079992 (5991,1720)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079992 (5991,1720)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079992 (5991,1720)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079992 (5991,1720)."
+   }
+  ],
+  "49096376": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5993,1720 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096376 (5993,1720)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096376 (5993,1720)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096376 (5993,1720)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096376 (5993,1720)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096376 (5993,1720)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096376 (5993,1720)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096376 (5993,1720)."
+   }
+  ],
+  "49104568": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5994,1720 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104568 (5994,1720)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104568 (5994,1720)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104568 (5994,1720)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104568 (5994,1720)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104568 (5994,1720)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104568 (5994,1720)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104568 (5994,1720)."
+   }
+  ],
+  "49079993": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5991,1721 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079993 (5991,1721)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079993 (5991,1721)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079993 (5991,1721)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079993 (5991,1721)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079993 (5991,1721)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079993 (5991,1721)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49079993 (5991,1721)."
+   }
+  ],
+  "49088185": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5992,1721 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088185 (5992,1721)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088185 (5992,1721)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088185 (5992,1721)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088185 (5992,1721)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088185 (5992,1721)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088185 (5992,1721)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088185 (5992,1721)."
+   }
+  ],
+  "49104569": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5994,1721 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104569 (5994,1721)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104569 (5994,1721)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104569 (5994,1721)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104569 (5994,1721)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104569 (5994,1721)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104569 (5994,1721)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104569 (5994,1721)."
+   }
+  ],
+  "49088186": [
+   {
+    "type": 303,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5992,1722 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py. The lavabook puts «Порядок (часть 2)» here («Квест: 5992x1722x0») with these kinds: the officers mg_Officer_lvl6/7/8 (303, 307, 311), who carry «Планы Магриба», and their soldiers."
+   },
+   {
+    "type": 307,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088186 (5992,1722)."
+   },
+   {
+    "type": 311,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088186 (5992,1722)."
+   },
+   {
+    "type": 301,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088186 (5992,1722)."
+   },
+   {
+    "type": 302,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088186 (5992,1722)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088186 (5992,1722)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088186 (5992,1722)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49088186 (5992,1722)."
+   }
+  ],
+  "49096378": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5993,1722 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096378 (5993,1722)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096378 (5993,1722)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096378 (5993,1722)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096378 (5993,1722)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096378 (5993,1722)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096378 (5993,1722)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49096378 (5993,1722)."
+   }
+  ],
+  "49104570": [
+   {
+    "type": 301,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 85,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5994,1722 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 302,
+    "cell": [
+     35,
+     44
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104570 (5994,1722)."
+   },
+   {
+    "type": 304,
+    "cell": [
+     20,
+     54
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104570 (5994,1722)."
+   },
+   {
+    "type": 305,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104570 (5994,1722)."
+   },
+   {
+    "type": 306,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104570 (5994,1722)."
+   },
+   {
+    "type": 308,
+    "cell": [
+     15,
+     84
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104570 (5994,1722)."
+   },
+   {
+    "type": 309,
+    "cell": [
+     39,
+     95
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104570 (5994,1722)."
+   },
+   {
+    "type": 310,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 85,
+    "why": "As the first row of 49104570 (5994,1722)."
+   }
+  ],
+  "51373871": [
+   {
+    "type": 20,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 34,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1839 (open desert inside the valley's wall, desert/0003.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 21,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373871 (6271,1839)."
+   },
+   {
+    "type": 251,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373871 (6271,1839)."
+   },
+   {
+    "type": 20,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373871 (6271,1839)."
+   }
+  ],
+  "51382063": [
+   {
+    "type": 21,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 34,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6272,1839 (open desert inside the valley's wall, desert/0004.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 251,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51382063 (6272,1839)."
+   },
+   {
+    "type": 20,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51382063 (6272,1839)."
+   },
+   {
+    "type": 21,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51382063 (6272,1839)."
+   }
+  ],
+  "51390255": [
+   {
+    "type": 251,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 34,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1839 (open desert inside the valley's wall, desert/0001.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 20,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390255 (6273,1839)."
+   },
+   {
+    "type": 21,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390255 (6273,1839)."
+   },
+   {
+    "type": 251,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390255 (6273,1839)."
+   }
+  ],
+  "51373872": [
+   {
+    "type": 20,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 34,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1840 (open desert inside the valley's wall, desert/0004.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 21,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373872 (6271,1840)."
+   },
+   {
+    "type": 251,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373872 (6271,1840)."
+   },
+   {
+    "type": 20,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373872 (6271,1840)."
+   }
+  ],
+  "51390256": [
+   {
+    "type": 21,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 34,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1840 (open desert inside the valley's wall, desert/0002.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 251,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390256 (6273,1840)."
+   },
+   {
+    "type": 20,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390256 (6273,1840)."
+   },
+   {
+    "type": 21,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390256 (6273,1840)."
+   }
+  ],
+  "51373873": [
+   {
+    "type": 251,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 34,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1841 (open desert inside the valley's wall, desert/0001.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 20,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373873 (6271,1841)."
+   },
+   {
+    "type": 21,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373873 (6271,1841)."
+   },
+   {
+    "type": 251,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51373873 (6271,1841)."
+   }
+  ],
+  "51382065": [
+   {
+    "type": 20,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 34,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6272,1841 (open desert inside the valley's wall, desert/0002.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 21,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51382065 (6272,1841)."
+   },
+   {
+    "type": 251,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51382065 (6272,1841)."
+   },
+   {
+    "type": 20,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51382065 (6272,1841)."
+   }
+  ],
+  "51390257": [
+   {
+    "type": 21,
+    "cell": [
+     20,
+     34
+    ],
+    "patrol": 34,
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1841 (open desert inside the valley's wall, desert/0003.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+   },
+   {
+    "type": 251,
+    "cell": [
+     29,
+     70
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390257 (6273,1841)."
+   },
+   {
+    "type": 20,
+    "cell": [
+     50,
+     74
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390257 (6273,1841)."
+   },
+   {
+    "type": 21,
+    "cell": [
+     25,
+     104
+    ],
+    "patrol": 34,
+    "why": "As the first row of 51390257 (6273,1841)."
    }
   ]
  }
