@@ -383,8 +383,10 @@ try:
           ["userMsg;group=0;nick=@Alice@;entry=@map neighbours@;from=%d;" % pid_a])
 
     # A leg of travel reaches the other side at once, with the velocity.
+    # Bob's heartbeat (every 2 s) may land in Alice's socket during the
+    # window just before, and so ahead of her moveAck: it is not hers.
     a.send("moveTo;dy=0;dx=-100;")
-    got = a.frames()
+    got = [f for f in a.frames() if not f.startswith("userMove;id=%d;" % pid_b)]
     check("travel acknowledged", got[0].split(";")[0], "moveAck")
     got = [f for f in b.frames() if f.startswith("userMove;id=%d;" % pid_a)]
     check("Bob sees her set off", len(got) >= 1, True)
@@ -400,7 +402,10 @@ try:
     # id: where they are is the server's to work out, and they are walking.
     b.send("moveTo;trg=%d;" % pid_a)
     got = b.frames(1.0)
-    check("the pursuit sets off", [f.split(";")[0] for f in got][:1], ["moveAck"])
+    # Alice's heartbeat may come ahead of his moveAck, as above.
+    check("the pursuit sets off",
+          [f.split(";")[0] for f in got if not f.startswith("userMove;id=%d;" % pid_a)][:1],
+          ["moveAck"])
     check("westward, towards her", any("vx=-0.35" in f for f in got), True)
     # She is standing still one cell away, so he is on her inside a few
     # seconds; the chase re-aims once a second until then.
