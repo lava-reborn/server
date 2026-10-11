@@ -7,12 +7,12 @@
    "heal": 133,
    "simple": 640,
    "trophy": 8,
-   "wear": 70
+   "wear": 76
   },
   "conflicts": 394,
   "fields": "ss_si_* names as in server/items.py; sellable/auction/drop_on_death/ammo_calibre/*_pct/name_ru/desc_ru are wiki extras the server may ignore",
   "generated": "2026-10-11",
-  "items": 2055,
+  "items": 2061,
   "source": "data/wiki (CC BY-SA, lava-online.fandom.com/ru) via data/wiki_links.json"
  },
  "items": {
@@ -85506,6 +85506,33 @@
    "quest": 0,
    "weight": 10
   },
+  "3577": {
+   "_wiki": {
+    "column": "Пояс (А)[0]",
+    "confidence": 0.9,
+    "method": "manual",
+    "page": "Подсумки автоматчика",
+    "variant": "A"
+   },
+   "armor_class": 5,
+   "bonus_specs": [
+    1
+   ],
+   "bonus_specs_m": 16,
+   "cost": 50000,
+   "desc_ru": "Удобные подсумки для магазинов автомата.",
+   "exchang": 1,
+   "max_break_abs": 300,
+   "name_ru": "Подсумки автоматчика",
+   "need_attribs": [
+    5
+   ],
+   "need_attribs_m": 4,
+   "premium": 0,
+   "sellable": 1,
+   "slot_type": 3,
+   "weight": 700
+  },
   "3578": {
    "_wiki": {
     "column": "Пояс (А)[0]",
@@ -85551,6 +85578,33 @@
    "exchang": 1,
    "max_break_abs": 300,
    "name_ru": "Подсумки спецназовца",
+   "need_attribs": [
+    5
+   ],
+   "need_attribs_m": 4,
+   "premium": 0,
+   "sellable": 1,
+   "slot_type": 3,
+   "weight": 700
+  },
+  "3580": {
+   "_wiki": {
+    "column": "Пояс (А)[0]",
+    "confidence": 0.9,
+    "method": "manual",
+    "page": "Подсумки пулеметчика",
+    "variant": "A"
+   },
+   "armor_class": 5,
+   "bonus_specs": [
+    1
+   ],
+   "bonus_specs_m": 64,
+   "cost": 100000,
+   "desc_ru": "Удобные подсумки для лент пулемёта.",
+   "exchang": 1,
+   "max_break_abs": 300,
+   "name_ru": "Подсумки пулеметчика",
    "need_attribs": [
     5
    ],
@@ -85614,6 +85668,37 @@
    "slot_type": 3,
    "weight": 700
   },
+  "3599": {
+   "_wiki": {
+    "column": "Пояс (G)[1]",
+    "confidence": 0.9,
+    "method": "manual",
+    "page": "Подсумки автоматчика",
+    "variant": "G"
+   },
+   "armor_class": 5,
+   "bonus_attribs": [
+    1
+   ],
+   "bonus_attribs_m": 2,
+   "bonus_specs": [
+    1
+   ],
+   "bonus_specs_m": 16,
+   "desc_ru": "Удобные подсумки для магазинов автомата.",
+   "exchang": 0,
+   "g_cost": 1000,
+   "max_break_abs": 600,
+   "name_ru": "Подсумки автоматчика",
+   "need_attribs": [
+    5
+   ],
+   "need_attribs_m": 4,
+   "premium": 0,
+   "sellable": 0,
+   "slot_type": 3,
+   "weight": 700
+  },
   "3600": {
    "_wiki": {
     "column": "Пояс (G)[1]",
@@ -85667,6 +85752,37 @@
    "g_cost": 800,
    "max_break_abs": 600,
    "name_ru": "Подсумки спецназовца",
+   "need_attribs": [
+    5
+   ],
+   "need_attribs_m": 4,
+   "premium": 0,
+   "sellable": 0,
+   "slot_type": 3,
+   "weight": 700
+  },
+  "3602": {
+   "_wiki": {
+    "column": "Пояс (G)[1]",
+    "confidence": 0.9,
+    "method": "manual",
+    "page": "Подсумки пулеметчика",
+    "variant": "G"
+   },
+   "armor_class": 5,
+   "bonus_attribs": [
+    1
+   ],
+   "bonus_attribs_m": 1,
+   "bonus_specs": [
+    1
+   ],
+   "bonus_specs_m": 64,
+   "desc_ru": "Удобные подсумки для лент пулемёта.",
+   "exchang": 0,
+   "g_cost": 2000,
+   "max_break_abs": 600,
+   "name_ru": "Подсумки пулеметчика",
    "need_attribs": [
     5
    ],
@@ -96304,6 +96420,72 @@
    ],
    "weapon_type": 3,
    "weight": 5490
+  },
+  "5613": {
+   "_wiki": {
+    "column": "Пояс (А)[0]",
+    "confidence": 0.9,
+    "method": "manual",
+    "page": "Подсумки рукопашника",
+    "variant": "A"
+   },
+   "armor_class": 5,
+   "bonus_skills": [
+    1
+   ],
+   "bonus_skills_m": 1,
+   "bonus_specs": [
+    1
+   ],
+   "bonus_specs_m": 1,
+   "cost": 40000,
+   "desc_ru": "Удобные подсумки для ножей.",
+   "exchang": 1,
+   "max_break_abs": 300,
+   "name_ru": "Подсумки рукопашника",
+   "need_attribs": [
+    5
+   ],
+   "need_attribs_m": 4,
+   "premium": 0,
+   "sellable": 1,
+   "slot_type": 3,
+   "weight": 700
+  },
+  "5614": {
+   "_wiki": {
+    "column": "Пояс (G)[1]",
+    "confidence": 0.9,
+    "method": "manual",
+    "page": "Подсумки рукопашника",
+    "variant": "G"
+   },
+   "armor_class": 5,
+   "bonus_attribs": [
+    1
+   ],
+   "bonus_attribs_m": 2,
+   "bonus_skills": [
+    1
+   ],
+   "bonus_skills_m": 1,
+   "bonus_specs": [
+    1
+   ],
+   "bonus_specs_m": 2,
+   "desc_ru": "Удобные подсумки для ножей.",
+   "exchang": 0,
+   "g_cost": 800,
+   "max_break_abs": 600,
+   "name_ru": "Подсумки рукопашника",
+   "need_attribs": [
+    5
+   ],
+   "need_attribs_m": 4,
+   "premium": 0,
+   "sellable": 0,
+   "slot_type": 3,
+   "weight": 700
   },
   "5615": {
    "_wiki": {

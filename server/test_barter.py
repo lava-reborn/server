@@ -84,7 +84,7 @@ from testkit import check, fails  # noqa: E402
 check("a Beretta may change hands", barter.tradable(BERETTA), True)
 check("the starter rounds may too", barter.tradable(ROUNDS), True)
 check("gold gear and supplies cannot change hands even with exchang=1",
-      [barter.tradable(t) for t in (25567, 3599, 7006, 37670)], [False] * 4)
+      [barter.tradable(t) for t in (25567, 4363, 7006, 37670)], [False] * 4)
 check("gold sand and ingots remain transferable loot",
       [barter.tradable(t) for t in (2258, *items.GOLD_INGOTS)],
       [True] * (1 + len(items.GOLD_INGOTS)))
@@ -396,7 +396,7 @@ try:
     premium = inventory.oid_of(_st.create_item(A_ID, PREMIUM, items.root_of(PREMIUM)))
     _st.close()
     paper = given(chat(a, "/give %d" % PAPER))
-    gold_belt = given(chat(a, "/give 3599"))
+    gold_belt = given(chat(a, "/give 4363"))      # belt_critical_g_Jons: exchang=1
     a.send("ss_get;target=0;slot=11;")
     kit_a = [str(x) for x in named(a.frames(), "ss_ack")[0]["o_list"]]
     pistol_a, rounds_a = kit_a[6], kit_a[8]

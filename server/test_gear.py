@@ -53,7 +53,8 @@ STR4 = 11191           # Странник: likewise, other numbers
 KOL2 = 11167           # Колонист: five pieces or nothing
 BS0 = 11218            # Беженец: no set bonus at all
 PIECES = list(sets.SETS[NAL8]["members"].items())      # helm, shirt, armor, pants, boots
-BELT_BARE = 3577       # belt_assault_rifles: no bonus of its own
+BELT_BARE = 7893       # belt_noob: no bonus of its own (belt_assault_rifles has its
+                       # article's since 2026-10-11)
 BELT_STR = 3722        # a belt with +3 strength of its own
 AXE = 3034             # Топор: +3 strength, +2 agility, crit 10, a skill, two specs
 PADDLE = 4853          # a cold arm with crit 5 and anti-crit 25

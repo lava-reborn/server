@@ -206,9 +206,10 @@ check("Странник[4] in both variants and the gold sets of 4, 6 and 8 at �
       [t for t in WANDERER + GOLD_468
        if t not in items.stock_for(1204, 102) + items.stock_for(1205, 102)], [])
 check("  ..both the town's band, 4-8, both versions (shop_bands.py, 2026-10-10); Ваккас then"
-      " his belts",
+      " his belts, each with its (G) right after it (items.GOLD_POUCHES, 2026-10-11)",
       (items.stock_for(1204, 102), items.stock_for(1205, 102)),
-      (ladder(4, 8) + [3582, 3581, 3579, 3578], ladder(4, 8)))
+      (ladder(4, 8) + [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
+       ladder(4, 8)))
 
 # --- 2. Ольсен and the lottery man ---------------------------------------------------------
 check("Ольсен, «Амулеты и сувениры», sells nothing (no amulet or souvenir has a type"
@@ -247,15 +248,20 @@ print("      the gold of the quest table: %s" % ", ".join(
 
 # --- 5e. the gold belts --------------------------------------------------------------------
 BELTS = {3600: "Подсумки снайпера (G)", 3601: "Подсумки спецназовца (G)",
-         3603: "Подсумки охотника (G)", 3604: "Подсумки пистолетные (G)"}
-check("the gold belt copies carry the (G) rows 47828/47833/47848/47853",
+         3603: "Подсумки охотника (G)", 3604: "Подсумки пистолетные (G)",
+         3599: "Подсумки автоматчика (G)", 5614: "Подсумки рукопашника (G)",
+         3602: "Подсумки пулемётчика (G)"}
+check("the gold belt copies carry the (G) rows 47828/47833/47848/47853, and since"
+      " 2026-10-11 the other three lines' 47823/47838/47843",
       {t: ORIG_ITEMS[str(t)]["name_id"] for t in BELTS},
-      {3600: 47828, 3601: 47833, 3603: 47848, 3604: 47853})
+      {3600: 47828, 3601: 47833, 3603: 47848, 3604: 47853, 3599: 47823, 5614: 47838,
+       3602: 47843})
 check("  ..and are named so", {t: names.text(items.STRING_ID_OFFSET + t) for t in BELTS}, BELTS)
 check("  ..their plain twins keep theirs",
-      [names.text(items.STRING_ID_OFFSET + t) for t in (3578, 3579, 3581, 3582)],
+      [names.text(items.STRING_ID_OFFSET + t) for t in (3578, 3579, 3581, 3582, 3577, 5613, 3580)],
       ["Подсумки снайпера", "Подсумки спецназовца", "Подсумки охотника",
-       "Подсумки пистолетные"])
+       "Подсумки пистолетные", "Подсумки автоматчика", "Подсумки рукопашника",
+       "Подсумки пулемётчика"])
 
 # --- 5d. what is lent and used up by its use ------------------------------------------------
 check("a quest lending rounds lends what is used up; one lending a gun alone does not",

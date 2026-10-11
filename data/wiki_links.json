@@ -26,12 +26,12 @@
    },
    "Амуниция": {
     "candidates": 0,
-    "linked": 77,
+    "linked": 80,
     "methods": {
      "icon_exact": 65,
      "icon_prefix": 7,
      "icon_revprefix": 1,
-     "manual": 4
+     "manual": 7
     },
     "pages": 327
    },
@@ -58,12 +58,12 @@
    },
    "Броня/одежда": {
     "candidates": 0,
-    "linked": 103,
+    "linked": 106,
     "methods": {
      "icon_exact": 90,
      "icon_prefix": 8,
      "icon_revprefix": 1,
-     "manual": 4
+     "manual": 7
     },
     "pages": 381
    },
@@ -177,21 +177,21 @@
    },
    "Одежда": {
     "candidates": 0,
-    "linked": 63,
+    "linked": 66,
     "methods": {
      "icon_exact": 56,
      "icon_prefix": 3,
-     "manual": 4
+     "manual": 7
     },
     "pages": 262
    },
    "Пояса": {
     "candidates": 0,
-    "linked": 42,
+    "linked": 45,
     "methods": {
      "icon_exact": 37,
      "icon_prefix": 1,
-     "manual": 4
+     "manual": 7
     },
     "pages": 50
    },
@@ -274,13 +274,13 @@
     "pages": 198
    }
   },
-  "generated": "2026-10-10",
+  "generated": "2026-10-11",
   "knife_mod": {
    "I": "damage_actionpoints",
    "II": "actionpoint",
    "III": "damage"
   },
-  "linked_type_ids": 2074,
+  "linked_type_ids": 2080,
   "mod_suffix": {
    "II": "weight",
    "III": "perception",
@@ -4219,11 +4219,17 @@
   "3573": [
    "Апельсин"
   ],
+  "3577": [
+   "Подсумки автоматчика"
+  ],
   "3578": [
    "Подсумки снайпера"
   ],
   "3579": [
    "Подсумки спецназовца"
+  ],
+  "3580": [
+   "Подсумки пулеметчика"
   ],
   "3581": [
    "Подсумки охотника"
@@ -4231,11 +4237,17 @@
   "3582": [
    "Подсумки пистолетные"
   ],
+  "3599": [
+   "Подсумки автоматчика"
+  ],
   "3600": [
    "Подсумки снайпера"
   ],
   "3601": [
    "Подсумки спецназовца"
+  ],
+  "3602": [
+   "Подсумки пулеметчика"
   ],
   "3603": [
    "Подсумки охотника"
@@ -5656,6 +5668,12 @@
   ],
   "5612": [
    "Sauer 303 ®"
+  ],
+  "5613": [
+   "Подсумки рукопашника"
+  ],
+  "5614": [
+   "Подсумки рукопашника"
   ],
   "5615": [
    "Подсумки рукопашника МОД. А1."
@@ -54129,9 +54147,31 @@
     "Одежда",
     "Пояса"
    ],
-   "confidence": 0,
+   "confidence": 0.9,
    "kind": "belt",
-   "links": [],
+   "links": [
+    {
+     "confidence": 0.9,
+     "key": "Подсумки автоматчика",
+     "method": "manual",
+     "names": [
+      "belt_assault_rifles",
+      "belt_assault_rifles_g"
+     ],
+     "type_ids": [
+      3577,
+      3599
+     ],
+     "variants": {
+      "A": [
+       3577
+      ],
+      "G": [
+       3599
+      ]
+     }
+    }
+   ],
    "mod": null
   },
   "Подсумки автоматчика МОД. А1.": {
@@ -54374,9 +54414,31 @@
     "Одежда",
     "Пояса"
    ],
-   "confidence": 0,
+   "confidence": 0.9,
    "kind": "belt",
-   "links": [],
+   "links": [
+    {
+     "confidence": 0.9,
+     "key": "Подсумки пулеметчика",
+     "method": "manual",
+     "names": [
+      "belt_machineguns",
+      "belt_machineguns_g"
+     ],
+     "type_ids": [
+      3580,
+      3602
+     ],
+     "variants": {
+      "A": [
+       3580
+      ],
+      "G": [
+       3602
+      ]
+     }
+    }
+   ],
    "mod": null
   },
   "Подсумки пулемётчика МОД. А1.": {
@@ -54441,9 +54503,31 @@
     "Одежда",
     "Пояса"
    ],
-   "confidence": 0,
+   "confidence": 0.9,
    "kind": "belt",
-   "links": [],
+   "links": [
+    {
+     "confidence": 0.9,
+     "key": "Подсумки рукопашника",
+     "method": "manual",
+     "names": [
+      "belt_knife",
+      "belt_knife_g"
+     ],
+     "type_ids": [
+      5613,
+      5614
+     ],
+     "variants": {
+      "A": [
+       5613
+      ],
+      "G": [
+       5614
+      ]
+     }
+    }
+   ],
    "mod": null
   },
   "Подсумки рукопашника МОД. А1.": {

@@ -72,7 +72,9 @@ death_losses = getattr(combat, "death_losses", None)
 KOLONIST_A = sets.SETS[11167]["members"]    # helm shirt armor pants boots, afro
 KOLONIST_G = sets.SETS[11169]["members"]    # the same set's gold copy
 SLOT = {"helm": HEAD, "shirt": CAMO, "armor": ARMOR, "pants": LEGS, "boots": BOOTS}
-GOLD_BELT = 3599            # belt_assault_rifles_g: the gold mark of its name
+GOLD_BELT = 4363            # belt_critical_g_Jons: the gold mark of its name, no table
+                            # (belt_assault_rifles_g has its article's G price since
+                            # 2026-10-11, the gold pouches)
 PISTOL = inventory.STARTER_PISTOL
 ROUNDS = inventory.STARTER_AMMO   # 9мм дареные: afro and gold both, an afro thing
 AFRO_GUN = 25566            # Наган 1895, 400 afro
@@ -93,11 +95,12 @@ flags = {}
 for rec in wiki.values():
     key = rec.get("drop_on_death", "none")
     flags[key] = flags.get(key, 0) + 1
-check("the wiki's column, as it reached items_wiki.json: 88 да, 557 нет, 1410 silent"
-      " (with the belts and the gun stalls' lines of 2026-09-28, and the 595 records of the"
-      " 48 gun articles of 9-20 linked for the stalls by city level, 2026-10-10, none of"
-      " which states the column)",
-      (flags.get(1), flags.get(0), flags.get("none")), (88, 557, 1410))
+check("the wiki's column, as it reached items_wiki.json: 88 да, 557 нет, 1416 silent"
+      " (with the belts and the gun stalls' lines of 2026-09-28, the 595 records of the"
+      " 48 gun articles of 9-20 linked for the stalls by city level, 2026-10-10, and the"
+      " six of the three belts linked for the gold pouches, 2026-10-11, none of which"
+      " states the column)",
+      (flags.get(1), flags.get(0), flags.get("none")), (88, 557, 1416))
 check("the owner's numbers: clothing 10 per cent, the backpack 30",
       (getattr(combat, "WEAR_DROP_CHANCE", None), getattr(combat, "BAG_DROP_CHANCE", None)),
       (10, 30))

@@ -119,15 +119,24 @@ try:
     # each of the town's set sellers its whole band, 4-8, both versions.
     both = lambda n: set_types(n + "[A]") + set_types(n + "[G]")
     town = both("Странник[4]") + both("Магриб[6]") + both("Налетчик[8]")
+    # His belts: the four of 2026-09-28, «Подсумки рукопашника» of his article since
+    # its link (2026-10-11), and each one's (G) right after it (items.GOLD_POUCHES,
+    # the owner's «добавь еще голдовые подсумки»).
+    belts = [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614]
     check("Хамис, Рияд and Ваккас sell the town's band: Странник, Магриб and Налетчик, each"
-          " in both versions; Ваккас then four belts",
+          " in both versions; Ваккас then five belts, each with its (G) after it",
           (items.stock_for(1205, 102), items.stock_for(650, 52), items.stock_for(1204, 102)),
-          (town, town, town + [3582, 3581, 3579, 3578]))
-    check("  ..the belts by the wiki's names and prices",
-          [(names.text(items.STRING_ID_OFFSET + t), items.params_of(t)["cost"])
-           for t in (3582, 3581, 3579, 3578)],
-          [("Подсумки пистолетные", 3000), ("Подсумки охотника", 8000),
-           ("Подсумки спецназовца", 40000), ("Подсумки снайпера", 20000)])
+          (town, town, town + belts))
+    check("  ..the belts by the original's names and the wiki's prices: the ordinary in"
+          " afro, the (G) in gold alone",
+          [(names.text(items.STRING_ID_OFFSET + t), items.params_of(t)["cost"],
+            items.params_of(t)["g_cost"]) for t in belts],
+          [("Подсумки пистолетные", 3000, 0), ("Подсумки пистолетные (G)", 0, 50),
+           ("Подсумки охотника", 8000, 0), ("Подсумки охотника (G)", 0, 160),
+           ("Подсумки спецназовца", 40000, 0), ("Подсумки спецназовца (G)", 0, 800),
+           ("Подсумки снайпера", 20000, 0), ("Подсумки снайпера (G)", 0, 400),
+           ("Подсумки рукопашника", 40000, 0), ("Подсумки рукопашника (G)", 0, 800)])
+    check("  ..each one a stall can show", [t for t in belts if not servable(t)], [])
     # Мортимер sells the ingots since 2026-10-09 (test_halfa_ingots).
     check("Мортимер sells the ingots; Марк Клаус and Ольсен sell nothing; Бартоломью has the Фуль",
           (items.stock_for(MORTIMER), items.stock_for(1959), items.stock_for(431),

@@ -521,7 +521,7 @@ try:
           names_of(got), ["ah_sresult"])
 
     # --- listing ----------------------------------------------------------------
-    gold_belt = give(a, 3599)
+    gold_belt = give(a, 4363)       # belt_critical_g_Jons: gold by its name, exchang=1
     got = create(a, gold_belt, hours=168, a_bid=100, a_buyout=500, g_bid=None)
     check("gold gear with exchang=1 cannot be listed and stays in the bag",
           ([p["res"] for n, p in got if n == "cmdAck"], gold_belt in bag(a)),

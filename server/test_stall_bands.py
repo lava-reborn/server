@@ -27,11 +27,18 @@ In process:
      screen), the order a window reads well; every gun a city sells has a
      round it chambers on sale in that city;
   5. the stall a size the client draws: no stall of a city longer than 64,
-     and its userInfo_Trader frame under 4 KiB.
+     and its userInfo_Trader frame under 4 KiB;
+  6. the gold pouches (the owner's «добавь еще голдовые подсумки»,
+     2026-10-11): the seven base belts and their (G) copies, named, shown and
+     drawn; the three linked that day with their articles' numbers, all seven
+     against the mirror's tables; every stall that sells an ordinary one
+     sells its (G) right after it, the pouch sellers pinned; a (G) one no
+     way to afro or gold.
 Then one session, in process, on the wire: the same trader type (5161)
 offers each city's band at its markets, the purchase index takes what the
 window of that place shows, a gold thing is paid in gold and an ordinary one
-in afro with one cmdAck each, and the wrong currency is refused.
+in afro with one cmdAck each, and the wrong currency is refused; Ваккас
+sells a (G) belt for gold alone and does not buy it back.
 
     LAVA_RES=.../res python3 server/test_stall_bands.py
 """
@@ -412,6 +419,155 @@ check("  ..outside the cities' places, and with no place at all, a stall is its 
       (items.stock_for(2391, 287) == items.stock_for(2391), items.stock_for(5161, None),
        items.stock_for(1201)[:2]), (True, [], [25938, 25951]))
 
+# --- 6. the gold pouches -----------------------------------------------------------------
+# The owner's «добавь еще голдовые подсумки» (2026-10-11): the base belt of each weapon
+# class, the seven lines of the original's run of belts (texts.xml 47822-47856), and its
+# gold copy; every stall that sells the ordinary one sells the (G) right after it.
+print()
+print("the gold pouches")
+POUCH_LINES = {"belt_pistols": "Подсумки пистолетные", "belt_shotguns": "Подсумки охотника",
+               "belt_rifles": "Подсумки снайпера", "belt_sub_machineguns": "Подсумки спецназовца",
+               "belt_knife": "Подсумки рукопашника", "belt_assault_rifles": "Подсумки автоматчика",
+               "belt_machineguns": "Подсумки пулемётчика"}
+POUCHES = items.GOLD_POUCHES
+GOLD_POUCH = set(POUCHES.values())
+check("items.GOLD_POUCHES: the seven base belts of objects.xml, each to its _g copy",
+      sorted((cat[a][1], cat[g][1]) for a, g in POUCHES.items()),
+      sorted((n, n + "_g") for n in POUCH_LINES))
+check("  ..named by the original, the gold copy with its (G)",
+      {cat[t][1]: names.text(OFF + t) for pair in POUCHES.items() for t in pair},
+      dict([(n, ru) for n, ru in POUCH_LINES.items()]
+           + [(n + "_g", ru + " (G)") for n, ru in POUCH_LINES.items()]))
+PROBLEMS = {}
+for t in sorted(set(POUCHES) | GOLD_POUCH):
+    info = items.static_info(t)
+    p = info[1] if info else {}
+    why = []
+    if not info or info[0] != "ss_si_wear":
+        why.append("frame")
+    if not names.known(p.get("name")) or names.text(p.get("name")) == cat[t][1]:
+        why.append("name")
+    if p.get("desc") != "" and not names.known(p.get("desc")):
+        why.append("desc")
+    if not os.path.isfile(os.path.join(world.RES, "classes", "WearItem", cat[t][1], "ico.swf")):
+        why.append("icon")
+    if why:
+        PROBLEMS[t] = why
+check("  ..each a stall can show: its ss_si_wear, its name and description ids in names.ALL"
+      " (an id the preload lacks sends the player to the login screen), its icon", PROBLEMS, {})
+
+
+def unpacked(p, key, n):
+    return inventory.unpacked(p.get(key + "_m"), p.get(key), n)
+
+
+def numbers(t):
+    """The numbers the article's table gives a belt, as the frame carries them."""
+    p = items.params_of(t)
+    return (p["cost"], p["g_cost"], p["armor_class"], p["max_break_abs"], p["weight"],
+            p["exchang"], unpacked(p, "need_attribs", 5), unpacked(p, "bonus_attribs", 5),
+            unpacked(p, "bonus_skills", 5), unpacked(p, "bonus_specs", 8))
+
+
+NEED = [0, 0, 5, 0, 0]                 # «Необходимые атрибуты: Телосложение 5»
+NO5, NO8 = [0] * 5, [0] * 8
+SPEC = lambda i: [1 if k == i else 0 for k in range(8)]   # noqa: E731
+ATTR = lambda i: [1 if k == i else 0 for k in range(5)]   # noqa: E731
+# The three linked on 2026-10-11 (data/wiki_links.py MANUAL), by their articles: «Базовая
+# цена 50000 Афро / 10 G», «100000 Афро / 20 G», «40000 Афро / 8 G»; «Уровень брони 5»,
+# «Износ 300 / 600», «Вес 700 г», «Допустимость обмена Да / Нет»; the specialisation of
+# both columns -- «Автоматы 1», «Ручные пулемёты 1»; «Рукопашный бой» in the A column of
+# «Подсумки рукопашника» and «Режущие оружие» in its G, as the article writes them, with
+# «Ближний бой 1» of the skills in both -- and the G column's attribute: «Ловкость 1»,
+# «Сила 1», «Ловкость 1». Prices in gold are hundredths of an ounce.
+check("the three belts linked on 2026-10-11 carry their articles' numbers: (cost, g_cost,"
+      " armour, wear, weight, exchang, need, attributes, skills, specialisations)",
+      {t: numbers(t) for t in (3577, 3599, 3580, 3602, 5613, 5614)},
+      {3577: (50000, 0, 5, 300, 700, 1, NEED, NO5, NO5, SPEC(4)),
+       3599: (0, 1000, 5, 600, 700, 0, NEED, ATTR(1), NO5, SPEC(4)),
+       3580: (100000, 0, 5, 300, 700, 1, NEED, NO5, NO5, SPEC(6)),
+       3602: (0, 2000, 5, 600, 700, 0, NEED, ATTR(0), NO5, SPEC(6)),
+       5613: (40000, 0, 5, 300, 700, 1, NEED, NO5, ATTR(0), SPEC(0)),
+       5614: (0, 800, 5, 600, 700, 0, NEED, ATTR(1), ATTR(0), SPEC(1))})
+with open(os.path.join(ROOT, "data", "wiki_items.json"), encoding="utf-8") as _fh:
+    WIKI_PAGES = json.load(_fh)
+off_page = []
+for title, (a, g) in (("Подсумки автоматчика", (3577, 3599)),
+                      ("Подсумки пулеметчика", (3580, 3602)),
+                      ("Подсумки рукопашника", (5613, 5614)),
+                      ("Подсумки пистолетные", (3582, 3604)),
+                      ("Подсумки охотника", (3581, 3603)),
+                      ("Подсумки снайпера", (3578, 3600)),
+                      ("Подсумки спецназовца", (3579, 3601))):
+    rows = WIKI_PAGES[title]["tables"][0]["sections"]["общие"]
+    price = rows["Базовая цена"]
+    page = [(price[0]["afro"], 0, rows["Износ"][0], rows["Вес"][0], rows["Уровень брони"][0]),
+            (0, int(round(price[1]["g"] * 100)), rows["Износ"][1], rows["Вес"][1],
+             rows["Уровень брони"][1])]
+    frame = [(items.params_of(t)["cost"], items.params_of(t)["g_cost"],
+              items.params_of(t)["max_break_abs"], items.params_of(t)["weight"],
+              items.params_of(t)["armor_class"]) for t in (a, g)]
+    if frame != page:
+        off_page.append((title, frame, page))
+check("  ..and all seven lines, read off the mirror's tables (data/wiki_items.json) on their"
+      " own: the A column's afro price on the ordinary, the G column's gold one on the (G),"
+      " wear, weight and armour", off_page, [])
+
+TRADERS = sorted(set(items.stock_table()) | set(npcs.STOCK))
+LISTS = [("own", t, items.stock_for(t)) for t in TRADERS] + \
+    [(p, t, items.stock_for(t, p)) for p, types in sorted(AT.items()) for t in types]
+unpaired = []
+for where, t, s in LISTS:
+    for i, x in enumerate(s):
+        if x in POUCHES and s[i + 1:i + 2] != [POUCHES[x]]:
+            unpaired.append((where, t, x))
+        if x in GOLD_POUCH and (not i or POUCHES.get(s[i - 1]) != x):
+            unpaired.append((where, t, x))
+    if len(set(s)) != len(s):
+        unpaired.append((where, t, "twice"))
+check("every stall that sells an ordinary pouch sells its (G) right after it -- every trader's"
+      " own list and every stall of a city's place -- and no (G) pouch stands alone",
+      unpaired, [])
+POUCH_STALLS = {(where, t): [x for x in s if x in POUCHES or x in GOLD_POUCH]
+                for where, t, s in LISTS if any(x in POUCHES for x in s)}
+check("  ..the pouch sellers and their pouches: Ваккас (Вади-Хальфа, 102) his four and"
+      " «Подсумки рукопашника», which his article lists; Алима (Абри, 187) and Галия (Донгола,"
+      " 103) what their articles list, «автоматчика», «пулеметчика» and «рукопашника» among"
+      " them since their link",
+      POUCH_STALLS,
+      {("own", 1179): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601],
+       ("own", 1204): [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
+       ("own", 1213): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
+       (102, 1204): [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
+       (103, 1213): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
+       (187, 1179): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601]})
+check("items.with_gold_pouches: a (G) already on a list moves after its ordinary one, a (G)"
+      " without it stays put, nothing else moves, and twice is once",
+      (items.with_gold_pouches([3604, 7, 3582, 8]), items.with_gold_pouches([9, 3603, 10]),
+       items.with_gold_pouches(items.with_gold_pouches([3577, 11, 5613]))),
+      ([7, 3582, 3604, 8], [9, 3603, 10], [3577, 3599, 11, 5613, 5614]))
+import barter  # noqa: E402
+import combat  # noqa: E402
+import mail  # noqa: E402
+check("a (G) pouch is no way to afro or gold: priced in gold alone, a gold thing that never"
+      " falls off a body, cannot change hands (barter, post, auction: barter.tradable),"
+      " and no stall buys it back (cost 0, inventory.SELL_GOLD_ONLY off)",
+      (sorted({(items.params_of(g)["cost"], items.params_of(g)["g_cost"] > 0, combat.gold_item(g),
+                combat.drops_on_death(g), barter.tradable(g), mail.postable(g))
+               for g in GOLD_POUCH}), inventory.SELL_GOLD_ONLY),
+      ([(0, True, True, False, False, False)], False))
+check("  ..an ordinary one sells back for at most 0.7 of what it cost (inventory.SMOD), and"
+      " is an afro thing that may change hands",
+      sorted({(items.params_of(a)["cost"] > 0, items.params_of(a)["g_cost"], inventory.SMOD
+               * items.params_of(a).get("sell_mod", 1) <= 0.7, combat.gold_item(a),
+               barter.tradable(a)) for a in POUCHES}),
+      [(True, 0, True, False, True)])
+check("  ..no quest gives or takes a pouch, so none turns one into gold or afro",
+      sorted((q.type, t) for q in quests.QUESTS.values() for _f, t in q.things()
+             if t in POUCHES or t in GOLD_POUCH), [])
+check("  ..and none of them is a weapon or set piece: no band moves them (shop_bands)",
+      [t for t in sorted(set(POUCHES) | GOLD_POUCH) if shop_bands.band_ware(t)], [])
+
 # --- on the wire -------------------------------------------------------------------------
 print()
 print("on the wire")
@@ -549,6 +705,35 @@ async def main():
           buy(sess, jack_g, inventory.UPD_BUY_GOLD), ([0], [25952], 0, 205))
     check("  ..Jackhammer for 12 200 afro, one ack", buy(sess, stall.index(25951), inventory.UPD_BUY),
           ([0], [25951], 12200, 0))
+    run(sess, "ss_upd;s_status=0;obj=x0;param=1;")
+
+    # Ваккас on the same market: the town's sets, then his belts, each with its (G).
+    npc = goto(sess, 102)[1204]
+    stall = as_list(window(sess, npc).get("type_list"))
+    check("102: Ваккас's window is his stall there, the belts last, each (G) after its"
+          " ordinary one", (stall == items.stock_for(1204, 102), stall[-10:]),
+          (True, [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614]))
+    run(sess, "ss_create;s_type=1;target=%d;" % npc)
+    check("  ..«Подсумки пистолетные (G)» for its 0.50 ounces in gold, one ack, no afro",
+          buy(sess, stall.index(3604), inventory.UPD_BUY_GOLD), ([0], [3604], 0, 50))
+    check("  ..«Подсумки рукопашника (G)» for 8 ounces",
+          buy(sess, stall.index(5614), inventory.UPD_BUY_GOLD), ([0], [5614], 0, 800))
+    check("  ..a (G) belt for afro refused, nothing taken, nothing given",
+          buy(sess, stall.index(3604), inventory.UPD_BUY), ([inventory.RES_REFUSED], [], 0, 0))
+    check("  ..«Подсумки рукопашника» for 40 000 afro, its article's price",
+          buy(sess, stall.index(5613), inventory.UPD_BUY), ([0], [5613], 40000, 0))
+
+    def sell(type_id):
+        row = [r for r in server.STORE.items_of(sess.char_id) if r["type_id"] == type_id][0]
+        before = purse(sess)
+        got = run(sess, "ss_upd;s_status=2;obj=x%s;param=1;" % inventory.oid_of(row))
+        return acks(got), type_id in bag(sess), purse(sess)[0] - before[0], purse(sess)[1] - before[1]
+
+    check("  ..the (G) ones are not bought back: refused, kept, no money either way",
+          (sell(3604), sell(5614)),
+          (([inventory.RES_REFUSED], True, 0, 0), ([inventory.RES_REFUSED], True, 0, 0)))
+    check("  ..the ordinary one is, for 0.7 of its price: 28 000 afro back for 40 000",
+          sell(5613), ([0], False, 28000, 0))
     run(sess, "ss_upd;s_status=0;obj=x0;param=1;")
 
 

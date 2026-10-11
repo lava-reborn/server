@@ -1079,9 +1079,19 @@ def halfa_records(T, objects):
 # rows a line -- the plain name, its "(G)", the "(G). МОД. А1." copy with its
 # description, then "М2" -- so the (G) row is the one after the plain one.
 # Neither has a description of its own (only the МОД copy does). Pinned here
-# for the four lines on sale (2026-09-28): the automatic rifles', the machine
-# guns' and the unarmed fighters' belts are on no stall.
-BELT_ROWS = {"belt_rifles": (47827, "Подсумки снайпера"),
+# for the four lines on sale (2026-09-28), and since the owner's «добавь еще
+# голдовые подсумки» (2026-10-11) for the other three too, whose articles
+# are now linked and whose belts Алима, Галия and Ваккас sell: the automatic
+# rifles' (47822), the unarmed fighters' (47837, belt_knife: its gold mod
+# belt_knife_g_mod is «Подсумки рукопашника МОД. А1.») and the machine
+# guns' (47842, «пулемётчика» with ё where the wiki writes е).
+BELT_ROWS = {"belt_assault_rifles": (47822, "Подсумки автоматчика"),
+             "belt_assault_rifles_g": (47823, "Подсумки автоматчика (G)"),
+             "belt_knife": (47837, "Подсумки рукопашника"),
+             "belt_knife_g": (47838, "Подсумки рукопашника (G)"),
+             "belt_machineguns": (47842, "Подсумки пулемётчика"),
+             "belt_machineguns_g": (47843, "Подсумки пулемётчика (G)"),
+             "belt_rifles": (47827, "Подсумки снайпера"),
              "belt_rifles_g": (47828, "Подсумки снайпера (G)"),
              "belt_sub_machineguns": (47832, "Подсумки спецназовца"),
              "belt_sub_machineguns_g": (47833, "Подсумки спецназовца (G)"),
@@ -1355,7 +1365,7 @@ RULE = ("type_id -> original texts.xml rows (html-unescaped, otherwise verbatim)
         "Вади-Хальфа's quest things (its run 6167..6341, the journal 5795..5834, the training "
         "guns 1094..1823 and 2012, the certificate 6604, the stone block 7253, "
         "the lottery and boat tickets 6901..6920), "
-        "the belts on sale and their (G) copies 47827..47853, "
+        "the belts on sale and their (G) copies 47822..47853, "
         "Вади-Хальфа's miner's clothes and their (G) copies 22856..22875, "
         "the plant's ore, sorted ore and sacks of the five cities 7189..7240 and the quarry's "
         "stones, polishing mix and its components 7255..7265, "

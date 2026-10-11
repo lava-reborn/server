@@ -204,12 +204,23 @@ MANUAL = [
     # пистолетных магазинов" is belt_pistols, "... для 12 мм" belt_shotguns,
     # "... магазинов ПП" belt_sub_machineguns, "... магазинов винтовки"
     # belt_rifles, each with its gold copy (_g, the G column). Ваккас (1204)
-    # sells the four (data/npcs.json stock). «Подсумки рукопашника» is left
-    # out: belt_closecombat's own icon is on «Противогазная сумка(Q)».
+    # sells the four (data/npcs.json stock). The other three lines of the
+    # same run (2026-10-11, the owner's «добавь еще голдовые подсумки»):
+    # "... для магазинов автомата" is belt_assault_rifles, "... для лент
+    # пулемёта" belt_machineguns, "... для ножей" belt_knife -- the line whose
+    # gold mod belt_knife_g_mod carries the icon of «Подсумки рукопашника
+    # МОД. А1.», and whose rows in the original's run of belts (texts.xml
+    # 47837-47841, «Подсумки рукопашника», «... (G)», «... (G). МОД. А1.»
+    # «Удобные подсумки ножей ...») sit where every other line's do.
+    # belt_closecombat (4323/4324) is another thing, «Противогазная
+    # сумка(Q)» of the original (47880) and of the wiki's icon.
     (r"^Подсумки пистолетные$", ["belt_pistols", "belt_pistols_g"], 0.9),
     (r"^Подсумки охотника$", ["belt_shotguns", "belt_shotguns_g"], 0.9),
     (r"^Подсумки спецназовца$", ["belt_sub_machineguns", "belt_sub_machineguns_g"], 0.9),
     (r"^Подсумки снайпера$", ["belt_rifles", "belt_rifles_g"], 0.9),
+    (r"^Подсумки автоматчика$", ["belt_assault_rifles", "belt_assault_rifles_g"], 0.9),
+    (r"^Подсумки пулеметчика$", ["belt_machineguns", "belt_machineguns_g"], 0.9),
+    (r"^Подсумки рукопашника$", ["belt_knife", "belt_knife_g"], 0.9),
     # The gold lottery's ticket: its page carries an icon named after no
     # type, and the client's WhLoteryKey_g is the one gold key of Вади-Хальфа's
     # series (LoteryKey, WhLoteryKey_g, DnLoteryKey_*, AhLoteryKey_* -- the

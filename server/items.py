@@ -303,13 +303,58 @@ def stock_for(trader_type, loc_id=None):
     «по уровню городов» of 2026-10-10): what goes on the wire, and what a
     purchase indexes, is asked with the place. Without one it is the
     trader's own list, as the editor and the start-up checks read it.
+
+    Either way an ordinary base belt on the list brings its gold copy
+    right after it (GOLD_POUCHES, the owner's of 2026-10-11).
     """
     chosen = npcs.stock(trader_type)
     if chosen is None:
         chosen = stock_table().get(trader_type, [])
         chosen = chosen + [t for t in craft.stock_extra(trader_type) if t not in chosen]
-    chosen = shop_bands.apply(trader_type, loc_id, chosen)
+    chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(chosen))
     return [t for t in chosen if not premium(t)]
+
+
+# Голдовые подсумки, the owner's «добавь еще голдовые подсумки» (2026-10-11,
+# after «чтобы была и голдовая версия, и обычная» of the city bands): the
+# base belt of each weapon class -> its gold copy, the seven lines of the
+# original's run of belts (texts.xml 47822-47856) and of their articles
+# (data/wiki_links.py MANUAL: the A column the ordinary one, the G column the
+# gold one). Every stall that sells the ordinary belt sells the gold one
+# right after it (with_gold_pouches), whatever list it came from -- the
+# owner's (data/npcs.json), the wiki's or the designed one. The gold copy is
+# priced in gold alone, its article's G price, and is not exchanged or sold
+# back: a gold thing (combat.gold_item). The МОД. А1./А2. pouches, Jons',
+# the event's and the U_ series are other lines and stay where they are.
+GOLD_POUCHES = {
+    3582: 3604,    # belt_pistols          Подсумки пистолетные    3 000 afro / 0.5 G
+    3581: 3603,    # belt_shotguns         Подсумки охотника       8 000 / 1.6 G
+    3578: 3600,    # belt_rifles           Подсумки снайпера      20 000 / 4 G
+    3579: 3601,    # belt_sub_machineguns  Подсумки спецназовца   40 000 / 8 G
+    5613: 5614,    # belt_knife            Подсумки рукопашника   40 000 / 8 G
+    3577: 3599,    # belt_assault_rifles   Подсумки автоматчика   50 000 / 10 G
+    3580: 3602,    # belt_machineguns      Подсумки пулемётчика  100 000 / 20 G
+}
+
+
+def with_gold_pouches(ids):
+    """The list with each ordinary base belt's gold copy right after it.
+
+    A gold copy already on the list moves there; one whose ordinary twin is
+    not on the list stays where it is. Nothing else moves."""
+    ids = list(ids)
+    present = set(ids)
+    moved = {GOLD_POUCHES[t] for t in present if t in GOLD_POUCHES}
+    out, placed = [], set()
+    for t in ids:
+        if t in moved:
+            continue
+        out.append(t)
+        gold = GOLD_POUCHES.get(t)
+        if gold is not None and gold not in placed:
+            out.append(gold)
+            placed.add(gold)
+    return out
 
 
 def premium(type_id):
