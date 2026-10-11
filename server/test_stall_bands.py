@@ -33,7 +33,9 @@ In process:
      drawn; the three linked that day with their articles' numbers, all seven
      against the mirror's tables; every stall that sells an ordinary one
      sells its (G) right after it, the pouch sellers pinned; a (G) one no
-     way to afro or gold.
+     way to afro or gold; tools/npc_editor.py shows the (G) apart and its
+     Save, untouched or after an edit, never writes them into data/npcs.json
+     (a copy of it), so an empty GOLD_POUCHES takes them off every stall.
 Then one session, in process, on the wire: the same trader type (5161)
 offers each city's band at its markets, the purchase index takes what the
 window of that place shows, a gold thing is paid in gold and an ordinary one
@@ -567,6 +569,82 @@ check("  ..no quest gives or takes a pouch, so none turns one into gold or afro"
              if t in POUCHES or t in GOLD_POUCH), [])
 check("  ..and none of them is a weapon or set piece: no band moves them (shop_bands)",
       [t for t in sorted(set(POUCHES) | GOLD_POUCH) if shop_bands.band_ware(t)], [])
+
+# The (G) copies are the rule's, like a city's band: tools/npc_editor.py shows the trader's
+# own list (items.own_stock) and the copies apart, and its Save never writes them into
+# data/npcs.json -- otherwise the first untouched Save on its default place (102, Ваккас)
+# froze them there, and an empty GOLD_POUCHES no longer took them off his stall.
+sys.path.append(os.path.join(ROOT, "tools"))
+import npc_editor  # noqa: E402
+
+NPCS_FILE = os.path.join(ROOT, "data", "npcs.json")
+with open(NPCS_FILE, encoding="utf-8") as _fh:
+    NPCS_DOC = json.load(_fh)
+npc_editor.OUT = os.path.join(tempfile.mkdtemp(), "npcs.json")
+with open(npc_editor.OUT, "w", encoding="utf-8") as _fh:
+    json.dump(NPCS_DOC, _fh, ensure_ascii=False)
+_kept = (npcs.NAMES, npcs.STOCK)
+
+
+def page_payload(loc_id, edit=None):
+    """What the page's «Сохранить» posts for a place, as its JS builds it; edit(n) is
+    the owner's touch before the click (none: an untouched Save)."""
+    shown = npc_editor.occupants(loc_id)
+    for n in shown["npcs"]:
+        if edit:
+            edit(n)
+    return shown, {"npcs": [{"type": n["type"], "name": n["name"], "fallback": n["fallback"],
+                             "stock_chosen": n["stock_chosen"],
+                             "stock": [s["type"] for s in n["stock"]]}
+                            for n in shown["npcs"]]}
+
+
+def saved():
+    with open(npc_editor.OUT, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+shown = {}
+for place, trader in ((102, 1204), (187, 1179), (103, 1213)):
+    doc, payload = page_payload(place)
+    n = [x for x in doc["npcs"] if x["type"] == trader][0]
+    own = [s["type"] for s in n["stock"]]
+    shown[trader] = (own == items.own_stock(trader), set(own) & GOLD_POUCH,
+                     npc_editor.gold_added(own),
+                     items.with_gold_pouches(own) == items.stock_for(trader),
+                     {int(k): v["type"] for k, v in doc["gold_pouches"].items()} == POUCHES)
+    npc_editor.save(payload)
+check("npc_editor: a pouch seller's goods are its own list, no (G) among them; the (G) the"
+      " server adds are shown apart (the page's goldOf), and the two make the stall",
+      shown,
+      {1204: (True, set(), [3604, 3603, 3601, 3600, 5614], True, True),
+       1179: (True, set(), [3599, 3603, 5614, 3600, 3601], True, True),
+       1213: (True, set(), [3599, 3602, 5614, 3600, 3601], True, True)})
+check("  ..and an untouched Save on 102 (the page's default place, Ваккас), 187 and 103 leaves"
+      " data/npcs.json as it was", saved() == NPCS_DOC, True)
+
+
+def drop_hunter(n):
+    if n["type"] == 1179:
+        n["stock"] = [s for s in n["stock"] if s["type"] != 3581]
+        n["stock_chosen"] = True
+
+
+ALIMA_OWN = items.own_stock(1179)
+npc_editor.save(page_payload(187, drop_hunter)[1])
+check("  ..the owner's edit of Алима's goods (охотника taken off) writes her own list, with"
+      " no (G) in it, and her stall then has no охотника of either kind, the other (G) kept",
+      (saved()["stock"].get("1179"),
+       [t for t in items.stock_for(1179, 187) if t in POUCHES or t in GOLD_POUCH]),
+      ([t for t in ALIMA_OWN if t != 3581], [3577, 3599, 5613, 5614, 3578, 3600, 3579, 3601]))
+npcs.NAMES, npcs.STOCK = _kept
+_rule = dict(items.GOLD_POUCHES)
+items.GOLD_POUCHES.clear()
+check("  ..and an empty GOLD_POUCHES takes every (G) pouch off every stall, Ваккас's too",
+      sorted({t for p, types in AT.items() for tr in types for t in items.stock_for(tr, p)
+              if t in GOLD_POUCH} | {t for tr in TRADERS for t in items.stock_for(tr)
+                                     if t in GOLD_POUCH}), [])
+items.GOLD_POUCHES.update(_rule)
 
 # --- on the wire -------------------------------------------------------------------------
 print()

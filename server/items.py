@@ -302,17 +302,35 @@ def stock_for(trader_type, loc_id=None):
     or set seller's stall is its city's band (shop_bands.py, the owner's
     «по уровню городов» of 2026-10-10): what goes on the wire, and what a
     purchase indexes, is asked with the place. Without one it is the
-    trader's own list, as the editor and the start-up checks read it.
+    trader's own list, as the start-up checks read it.
 
     Either way an ordinary base belt on the list brings its gold copy
-    right after it (GOLD_POUCHES, the owner's of 2026-10-11).
+    right after it (GOLD_POUCHES, the owner's of 2026-10-11). The editor
+    reads own_stock instead, the list without those copies: what it saves is
+    the owner's choice, and the rule stays a rule.
     """
+    chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(_own_list(trader_type)))
+    return [t for t in chosen if not premium(t)]
+
+
+def own_stock(trader_type):
+    """The trader's own list, as tools/npc_editor.py shows and saves it.
+
+    stock_for without a place, less the gold copies with_gold_pouches puts
+    after the ordinary belts. Those are the rule's, like a city's band: the
+    editor shows them apart and never writes them into data/npcs.json, so an
+    untouched Save leaves the file as it was and an empty GOLD_POUCHES still
+    takes every (G) pouch the rule put on a stall off it. A gold copy the
+    owner put on the list by hand is the owner's, and stays."""
+    return [t for t in _own_list(trader_type) if not premium(t)]
+
+
+def _own_list(trader_type):
     chosen = npcs.stock(trader_type)
     if chosen is None:
         chosen = stock_table().get(trader_type, [])
         chosen = chosen + [t for t in craft.stock_extra(trader_type) if t not in chosen]
-    chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(chosen))
-    return [t for t in chosen if not premium(t)]
+    return list(chosen)
 
 
 # Голдовые подсумки, the owner's «добавь еще голдовые подсумки» (2026-10-11,
@@ -322,7 +340,8 @@ def stock_for(trader_type, loc_id=None):
 # (data/wiki_links.py MANUAL: the A column the ordinary one, the G column the
 # gold one). Every stall that sells the ordinary belt sells the gold one
 # right after it (with_gold_pouches), whatever list it came from -- the
-# owner's (data/npcs.json), the wiki's or the designed one. The gold copy is
+# owner's (data/npcs.json), the wiki's or the designed one; the editor shows
+# those copies apart and does not save them (own_stock). The gold copy is
 # priced in gold alone, its article's G price, and is not exchanged or sold
 # back: a gold thing (combat.gold_item). The МОД. А1./А2. pouches, Jons',
 # the event's and the U_ series are other lines and stay where they are.

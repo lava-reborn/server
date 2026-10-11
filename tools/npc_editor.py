@@ -114,10 +114,32 @@ def describe(type_id):
         # Whether the owner has already had a say about this one.
         "named": type_id in npcs.NAMES,
         "trades": root in TRADERS,
+        # The trader's own list, without the (G) pouches the server puts
+        # after the ordinary ones (items.GOLD_POUCHES): those are a rule, so
+        # the page shows them apart and Save never writes them into
+        # data/npcs.json (items.own_stock).
         "stock": [{"type": t, "name": item_name(t)}
-                  for t in items.stock_for(type_id)],
+                  for t in items.own_stock(type_id)],
         "stock_chosen": npcs.stock(type_id) is not None,
     }
+
+
+def gold_pouches():
+    """items.GOLD_POUCHES as the page reads it: ordinary id -> the (G) one."""
+    return {str(a): {"type": g, "name": item_name(g)}
+            for a, g in items.GOLD_POUCHES.items()}
+
+
+def gold_added(stock):
+    """The (G) pouches the server puts after the ordinary ones of this list
+    (items.with_gold_pouches), the ones the list does not hold itself: what
+    the page shows apart, in Python for the tests (the page's own goldOf)."""
+    have, out = set(stock), []
+    for t in stock:
+        gold = items.GOLD_POUCHES.get(t)
+        if gold is not None and gold not in have and gold not in out:
+            out.append(gold)
+    return out
 
 
 def occupants(loc_id):
@@ -160,6 +182,9 @@ def occupants(loc_id):
         "width": loc.width,
         "height": loc.height,
         "npcs": out,
+        # Ordinary base belt -> its (G) copy, for the read-only list under the
+        # goods: the page works it out from the list as it is being edited.
+        "gold_pouches": gold_pouches(),
         "spawns": [{"cell": c, "type": t} for c, t in loc.spawns],
         "obstacles": sorted(loc.obstacles),
         "entries": sorted(set(loc.entries)),
@@ -473,6 +498,18 @@ document.getElementById("zoom").oninput = function(e){
   S = +e.target.value; draw();
 };
 
+// The (G) pouches the server puts after the ordinary ones on this list
+// (items.with_gold_pouches): shown, never sent with Save (gold_added).
+function goldOf(n){
+  var gp = (state && state.gold_pouches) || {}, out = [];
+  n.stock.forEach(function(s){
+    var g = gp[s.type];
+    if (g && !n.stock.some(function(x){ return x.type === g.type; }) &&
+        !out.some(function(x){ return x.type === g.type; })) out.push(g);
+  });
+  return out;
+}
+
 function side(){
   var box = document.getElementById("side");
   var n = byType[sel];
@@ -496,6 +533,11 @@ function side(){
         : '<p class=none>ничего</p>') +
       '</div><input id=find placeholder="найти товар — два знака и больше">' +
       '<div class=hits id=hits style=display:none></div>' +
+      (goldOf(n).length ?
+        '<div class=lab>И (G) следом за обычными подсумками (' + goldOf(n).length +
+        '; ставятся сами, items.GOLD_POUCHES)</div>' +
+        goldOf(n).map(function(s){ return '<div class=good><b>' + esc(s.name) + '</b></div>'; })
+          .join("") : "") +
       (n.band && n.band.length ?
         '<div class=lab>И по уровню города (' + esc(n.band_city) + ', ' + n.band.length +
         '; правится в data/shop_bands.json)</div>' +
