@@ -1311,6 +1311,13 @@ class Session:
         if not self.on_map and int(p.get("to", 0) or 0) == 1:
             self.leave_through_exit()
             return
+        if (not self.on_map and self.combat.duels
+                and travel.side_at(self.loc, self.pos) is None):
+            # Both the map button and the exit window send plain chWorld.
+            # A PvP pause opens only the exit window: require its cell even
+            # if a stale or modified client asks from the middle of the room.
+            self.send("cmdAck", res=RES_NO_WAY)
+            return
         if not self.on_map and travel.no_map(self.loc.id):
             # An interior left only by its own ways (travel.no_map): the
             # client greys both map buttons out there (travel.geo_id) -- but

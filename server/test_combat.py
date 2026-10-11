@@ -753,7 +753,7 @@ check("  ..and a release with nothing held pushes nothing", (_onegun.release_sta
 # The client greys its exit button for as long as the room is at war
 # (LocationInterface.battleMode), whatever the server would answer to chWorld.
 # So the war state is the rule itself: a creature after somebody here, a duel
-# inside leave_combat_timeout, or a shot or swing still in the air -- and not
+# with a living opponent still here, or a shot or swing still in the air -- and not
 # the mere memory of having fired.
 class _Seat(object):
     def __init__(self):
@@ -776,7 +776,7 @@ check("so does a burst still being aimed", _rc.hostilities(_T), True)
 _first.aim = None
 _first.engage_player(_second, _T - combat.LEAVE_COMBAT_TIMEOUT + 1)
 check("and a duel inside leave_combat_timeout", _rc.hostilities(_T), True)
-check("but not one past it", _rc.hostilities(_T + 2), False)
+check("a pause does not unlock the map button", _rc.hostilities(_T + 3600), True)
 
 _third_seat = _Seat()
 _room.players[_third_seat] = None
@@ -805,8 +805,8 @@ _third.dead = False
 _first.engage_player(_second, _T - combat.LEAVE_COMBAT_TIMEOUT - 1)
 _first.engage_player(_third, _T)
 _third.end_duels()
-check("a fresh exchange with someone else does not extend an expired duel",
-      _rc.hostilities(_T), False)
+check("ending one duel leaves the older living opponent in combat",
+      _rc.hostilities(_T), True)
 _first.engage_player(_second, _T)
 del _room.players[_second.sess]
 check("an opponent who left this room cannot hold it at war",
