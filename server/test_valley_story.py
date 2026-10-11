@@ -111,7 +111,7 @@ DOG, RAIDER1, RAIDER2, COURIER, SHOOTER, STORMER = 82, 14, 15, 17, 250, 251
 COMMISSAR, LEADER = 1405, 2103
 # The things.
 BARREL, TRIGGER, BOLT, GRIP, MEDS, LETTER, NOTES = 228, 229, 230, 231, 232, 233, 234
-RAG, BERETTA, SHIRT, ARMOUR, CLEAVER, INGOT = 6055, 25587, 10180, 10201, 6240, 4796
+RAG, BERETTA, SHIRT, ARMOUR, CLEAVER, INGOT = 6055, 25587, 10180, 10201, 6240, 7620
 # The places.
 VILLAGE, BURIALS, MARKET, TRUCK, RAIDERS, SQUAD = 186, 184, 185, 26, 27, 29
 GONETS, SCOUT_LOC, REX, CAMP, PIER, QUARTER = 28, 33, 30, 34, 41, 36
@@ -919,7 +919,7 @@ try:
                                          first(got, "lenter").get("pos"))
     check("Ян Дуглас shot", killed, [LEADER])
     held, took = loot(c, fight, CAMP, pos, fell.get(LEADER, pos), wary)
-    check("  ..his bag holds his notes, once (and his ingot)",
+    check("  ..his bag holds his notes, once (and his stack of two ingots)",
           ((held or []).count(NOTES), (held or []).count(INGOT)), (1, 1))
     check("  ..taken: the journal counts the notes, complete",
           counts(took, quests.BRING_L_OBJ)[-1:], [([1], 1)])

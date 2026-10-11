@@ -366,9 +366,10 @@ JUNK_SPREAD = 2
 #
 # Beside it, data/loot_manual.json: rows the owner decided for creatures the
 # wiki is silent about -- the Nubian mine's marauders (836, 837) and their
-# gold sand and emeralds, and the Nubian valley's boss (2103) and its ingot
-# of 5 ounces of gold, 2026-09-25; the gold ingots of Вади-Хальфа's bosses,
-# 2026-10-09. Same tiers, same roll, same cap; a row
+# gold sand and emeralds, and the Nubian valley's boss (2103) and its two
+# ingots of 1 ounce of gold (one of 5 from 2026-09-25, halved on
+# 2026-10-11); the gold ingots of Вади-Хальфа's bosses, 2026-10-09, halved
+# on 2026-10-11. Same tiers, same roll, same cap; a row
 # names its item by type id, the linker tying the emerald and the ingot to
 # no type. Hand-made rather than written into the generated file, which
 # its builder would take them out of on the next run.
@@ -376,10 +377,11 @@ LOOT_TIERS = {"Ценный": True, "Обычный": False}      # tier -> valu
 # The design the file states (its "design" block, which test_loot holds this
 # to): one roll per row, valuables first, at most this many that came up kept.
 MAX_DROPS = 2
-# A row at this chance is no roll but a certainty: the valley boss's ingot
-# (data/loot_manual.json, 2103), which the owner wants on every kill, and
-# the ingots of Вади-Хальфа's eight hour-keeping bosses (269/270, 283/284,
-# 299/300, 313/314; the owner's of 2026-10-09). It goes into the bag
+# A row at this chance is no roll but a certainty: the valley boss's two
+# ingots of an ounce (data/loot_manual.json, 2103), which the owner wants
+# on every kill, and the ingots of Вади-Хальфа's eight hour-keeping bosses
+# (269/270 one of an ounce, 283/284 two, 299/300 three, 313/314 one of
+# five; the owner's of 2026-10-09, halved on 2026-10-11). It goes into the bag
 # whatever else came up and takes none of the MAX_DROPS places, so no table
 # the wiki may give the boss one day, and no order of the rows, can push it
 # out; the rows that are rolled keep their two. An ingot lands in the bag
@@ -564,13 +566,14 @@ _COUNTS = {}
 def count_of(type_id, t):
     """How many of thing t a row of data/loot_manual.json puts in the bag of
     a corpse of this type when the row lies there: the row's "count", 1
-    without one. The colonists' bosses of Вади-Хальфа carry their 3 ounces
-    as three ingots of one (the owner's of 2026-10-09: «если нет слитков
-    подходящего номинала то сделай несколько предметов, типа 3 по 1г
-    слитку»), which a table keyed by the thing (loot_table) cannot hold as
-    three rows. combat.drop_loot makes one stack of them, the bag the
-    player opens shows three. Built once per type; a count that is no
-    whole number above nought counts as 1."""
+    without one. Ounces no ingot holds go as ingots of one (the owner's of
+    2026-10-09: «если нет слитков подходящего номинала то сделай несколько
+    предметов, типа 3 по 1г слитку»): since the halving of 2026-10-11 the
+    sect of Люшер's bosses and the valley's Лидер carry two, the
+    Janjaweed's three, which a table keyed by the thing (loot_table)
+    cannot hold as two or three rows. combat.drop_loot makes one stack of
+    them, the bag the player opens shows two or three. Built once per
+    type; a count that is no whole number above nought counts as 1."""
     counts = _COUNTS.get(type_id)
     if counts is None:
         counts = {}

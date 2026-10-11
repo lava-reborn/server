@@ -5,18 +5,20 @@ The owner's order of 2026-10-09: «добавь выпадение слитко�
 слитков подходящего номинала то сделай несколько предметов, типа 3 по 1г
 слитку. и добавь в черный рынок мортимера который обменивает слитки
 (зачисляя на баланс) и продает их еще. слитки бывают на 1 голду на 5 и на
-10».
+10». And of 2026-10-11: «у всех лагерей сделай голды в 2 раза меньше и
+округли в меньшую сторону» -- 1, 2, 3 and 5 ounces.
 
 Each of the four factions has two bosses who keep the boss hours
 (bosses.py): the camp's (Агнес 270, Дитрих 283, Ашрам 299, Ихсан 313) and
 the chief's of the «встреча с главарем» (Асмунд 269, Лука 284, Рашад 300,
 Кайс 314). Each carries the faction's gold on every kill, in the ingots of 1
-(7620), 5 (4796) and 10 (4797) ounces, rows of data/loot_manual.json at
-chance 1.0 (mobs.SURE, outside MAX_DROPS): the colonists three ingots of
-one, a row of count 3 (mobs.count_of, one stack of three); the sect one of
-five; the Janjaweed one of five and one of one; the Maghreb one of ten.
-Nobody else gains one: Halfa's all-day bosses (the treasurer 586, 696), and
-the valley's Ян Дуглас keeps his one of five (test_boss_ingot).
+(7620) and 5 (4796) ounces, rows of data/loot_manual.json at chance 1.0
+(mobs.SURE, outside MAX_DROPS): the colonists one ingot of one; the sect
+two of one, a row of count 2 (mobs.count_of, one stack of two); the
+Janjaweed three of one, one stack of three; the Maghreb one of five. The
+ingot of ten drops from nobody now. Nobody else gains one: Halfa's all-day
+bosses (the treasurer 586, 696), and the valley's Ян Дуглас carries his
+two of one (test_boss_ingot).
 
 Мортимер (1188) stands on the black market (102, data/placements.json) as
 well as in the жилой квартал (36) and the other towns' files. His stall
@@ -35,7 +37,7 @@ window, standing again in a window he was not killed in; the frames and
 the death rule, the stall, the rooms of 102 and 36, every quest that takes
 an ingot against the stall's price. On a socket, the clock at six in the
 evening (LAVA_BOSS_CLOCK): Мортимер on the black market with his price list,
-Асмунд shot in his place 82 and his bag holding one stack of three ingots,
+Асмунд shot in his place 82 and his bag holding one ingot of an ounce,
 then at Мортимер's stall no gold, an afro purchase refused, three purchases
 for gold at face value, two cashed in -- one command, one ack, every time,
 and the ledger with a row for each.
@@ -91,15 +93,15 @@ ADMIN_GUN, ROUNDS = 1534, 6092
 REFUSED, NO_MONEY = 3, 21               # inventory.RES_REFUSED, RES_NO_MONEY
 
 # The owner's ounces by faction, and the ingots that make them.
-FACTION_OUNCES = {"колонисты": 3, "Люшер": 5, "джанджавиды": 6, "Магриб": 10}
+FACTION_OUNCES = {"колонисты": 1, "Люшер": 2, "джанджавиды": 3, "Магриб": 5}
 BOSSES = {
     # type: (faction, the place he stands in, the ingots of his bag)
-    270: ("колонисты", 80, {I1: 3}), 269: ("колонисты", 82, {I1: 3}),
-    283: ("Люшер", 81, {I5: 1}), 284: ("Люшер", 83, {I5: 1}),
-    299: ("джанджавиды", 84, {I5: 1, I1: 1}), 300: ("джанджавиды", 86, {I5: 1, I1: 1}),
-    313: ("Магриб", 85, {I10: 1}), 314: ("Магриб", 87, {I10: 1}),
+    270: ("колонисты", 80, {I1: 1}), 269: ("колонисты", 82, {I1: 1}),
+    283: ("Люшер", 81, {I1: 2}), 284: ("Люшер", 83, {I1: 2}),
+    299: ("джанджавиды", 84, {I1: 3}), 300: ("джанджавиды", 86, {I1: 3}),
+    313: ("Магриб", 85, {I5: 1}), 314: ("Магриб", 87, {I5: 1}),
 }
-VALLEY_BOSS = 2103                      # Ян Дуглас: his one of five, test_boss_ingot
+VALLEY_BOSS = 2103                      # Ян Дуглас: his two of one, test_boss_ingot
 ALL_DAY = (586, 696)                    # Halfa's bosses on the respawn timer
 ASMUND = 269
 
@@ -139,13 +141,13 @@ check("  ..and the treasurer 586 stands in the colonists' camp all day",
 
 # --- what each one's bag holds -------------------------------------------------------
 _one_kill = {t: ingots_of(mobs.roll_table(t, random.Random(t))) for t in BOSSES}
-check("a kill of either of a faction's bosses: the owner's ounces, 3, 5, 6 and 10",
+check("a kill of either of a faction's bosses: the owner's ounces halved, 1, 2, 3 and 5",
       {f: sorted({ounces(_one_kill[t]) for t, (ff, _w, _b) in BOSSES.items() if ff == f})
        for f in FACTION_OUNCES}, {f: [n] for f, n in FACTION_OUNCES.items()})
 check("each row of theirs is certain (chance 1.0), outside the cap",
       {t: sorted(i for i, c, _v in mobs.loot_table(t) if c >= mobs.SURE) for t in BOSSES},
       {t: sorted(b) for t, (_f, _w, b) in BOSSES.items()})
-check("  ..the colonists' three ounces as three ingots of one, the rest one of each",
+check("  ..two and three ounces as one stack of ingots of one, the rest one of each",
       {t: {i: count_of(t, i) for i in b} for t, (_f, _w, b) in BOSSES.items()},
       {t: b for t, (_f, _w, b) in BOSSES.items()})
 N = 2000
@@ -169,11 +171,13 @@ check("what the body carries adds no ingot (mobs.loot_for)",
 # --- nobody else ----------------------------------------------------------------------
 rollers = sorted(int(t) for t in mobs.TYPES
                  if {r[0] for r in mobs.loot_table(int(t))} & set(INGOTS))
-check("nobody else's table holds an ingot but the valley's boss, his one of five",
+check("nobody else's table holds an ingot but the valley's boss, his two of one",
       (rollers, sorted(BOSSES) + [VALLEY_BOSS],
        [(i, c) for i, c, _v in mobs.loot_table(VALLEY_BOSS) if i in INGOTS],
-       count_of(VALLEY_BOSS, I5)),
-      (sorted(BOSSES) + [VALLEY_BOSS], sorted(BOSSES) + [VALLEY_BOSS], [(I5, 1.0)], 1))
+       count_of(VALLEY_BOSS, I1)),
+      (sorted(BOSSES) + [VALLEY_BOSS], sorted(BOSSES) + [VALLEY_BOSS], [(I1, 1.0)], 2))
+check("  ..and the ingot of ten drops from nobody",
+      [t for t in rollers if I10 in {r[0] for r in mobs.loot_table(t)}], [])
 check("  ..Halfa's all-day bosses carry none, ordinary or for a quest",
       [i for t in ALL_DAY for i, *_r in mobs.loot_table(t) + mobs.quest_table(t) if i in INGOTS],
       [])
@@ -357,7 +361,7 @@ async def _restart():
 
 check("a boss killed in his window stays away through a restart until the next one",
       _run(_restart(), "a restart in the window"),
-      {"stands at six": True, "his bag": [(I10, 1)], "written down": True,
+      {"stands at six": True, "his bag": [(I5, 1)], "written down": True,
        "after a restart in the window": (False, True, None),
        "at ten he comes": (True, True),
        "a restart in a window he was not killed in": True})
@@ -677,12 +681,12 @@ try:
         stacks = sorted((t, probe.item(u)["count"]) for u, t, _r in oids if t in INGOTS)
         probe.close()
         print("  ..  Асмунд left %s" % sorted(t for _u, t, _r in oids))
-        check("in it: one stack of three ingots of an ounce", stacks, [(I1, 3)])
+        check("in it: one ingot of an ounce", stacks, [(I1, 1)])
         c.send("ss_upd;s_status=3;obj=x0;param=1;")
         check("taken whole, one ack", acks(c.frames(0.8))[:1], [0])
         c.send("ss_upd;s_status=0;obj=x0;param=1;")
         c.frames(0.3)
-    check("three ounces in the bag", bag_of(CHAR, I1), 3)
+    check("one ounce in the bag", bag_of(CHAR, I1), 1)
 
     # --- at Мортимер's stall -----------------------------------------------------------------
     arrival, pos = goto(c, BLACK_MARKET)
@@ -708,7 +712,7 @@ try:
         paid.append((t, acks(got), before - money(CHAR)[1], bag_of(CHAR, t),
                      [n for n, _p in got if n in ("cmdAck", "ss_obj_status", "userInfo_Player")]))
     check("for gold: each ingot at its face value, one ack, then the thing and the purse",
-          paid, [(I1, [0], 100, 4, ["cmdAck", "ss_obj_status", "userInfo_Player"]),
+          paid, [(I1, [0], 100, 2, ["cmdAck", "ss_obj_status", "userInfo_Player"]),
                  (I5, [0], 500, 1, ["cmdAck", "ss_obj_status", "userInfo_Player"]),
                  (I10, [0], 1000, 1, ["cmdAck", "ss_obj_status", "userInfo_Player"])])
     check("  ..and the afro is untouched, 0.50 ounces left", money(CHAR), (afro2, 50))
@@ -728,8 +732,8 @@ try:
         cashed.append((t, acks(got), after[1] - before[1], after[0] - before[0]))
     check("cashing an ounce and ten: one ack each, 0.95 and 9.95 on the account, no afro",
           cashed, [(I1, [0], 95, 0), (I10, [0], 995, 0)])
-    check("  ..the ingots gone from the bag: three ounces and the five left",
-          [bag_of(CHAR, t) for t in INGOTS], [3, 1, 0])
+    check("  ..the ingots gone from the bag: an ounce and the five left",
+          [bag_of(CHAR, t) for t in INGOTS], [1, 1, 0])
     # The five is still in the bag, bought for 500: the ounce and the ten,
     # bought and cashed, are the rest of the change of the purse.
     check("bought and cashed, the ounce and the ten gave 0.10 less than they cost",

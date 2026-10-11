@@ -229,8 +229,8 @@ check("the black market's placeholders 1-3, 5, 6 are out of the table; 4 stays",
       ([t for t in (1, 2, 3, 5, 6) if t in TABLE], 4 in TABLE), ([], True))
 check("«Золотоискатель» (9) pays its ounce once a day",
       (TABLE[9].rew_gold, TABLE[9].repeatable, TABLE[9].per_day), (100, 1, 1))
-check("«Обмен слитка» (10) stays: five ounces for the boss's ingot of five",
-      (TABLE[10].rew_gold, TABLE[10].wants()), (500, [(4796, 1)]))
+check("«Обмен слитка» (10) stays: two ounces for the boss's two ingots of one",
+      (TABLE[10].rew_gold, TABLE[10].wants()), (200, [(7620, 2)]))
 GOLD_ROWS = {t: q for t, q in TABLE.items() if q.rew_gold > 0}
 INGOTS = set(items.GOLD_INGOTS)
 check("every row that pays gold asks for something or for kills (Фрэнк's raid, 221)"

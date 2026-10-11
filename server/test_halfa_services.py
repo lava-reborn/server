@@ -192,8 +192,8 @@ try:
     check("  ..in the original's words (data/orig_misc.json)",
           [orig_texts.quests().get(t, {}).get("name") for t in (CASH_1, SPLIT_5, JOIN_10)],
           ["Обналичить 1 унцию золота", "Разменять 5 унций золота", "Разменять на 10 унций золота"])
-    check("  ..the owner's ingot quest still pays 5 ounces for the 5-ounce ingot",
-          (quests.get(10).wants(), quests.get(10).rew_gold), ([(INGOT_5, 1)], 500))
+    check("  ..the owner's ingot quest pays 2 ounces for the valley boss's two ingots of one",
+          (quests.get(10).wants(), quests.get(10).rew_gold), ([(INGOT_1, 2)], 200))
     lottery = {LOTTERY: [LOTTERY_MAN], LOTTERY_G: [GOLD_LOTTERY]}
     check("the lotteries: the ticket for a prize drawn, up to the eighth level, a service",
           [(quests.get(t).take, quests.get(t).wants(),

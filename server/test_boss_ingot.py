@@ -1,45 +1,50 @@
-"""The Nubian valley boss's gold ingot, and Джеррах's «Обмен слитка».
+"""The Nubian valley boss's gold ingots, and Джеррах's «Обмен слитка».
 
 The owner's decisions of 2026-09-25: «давай чтобы у босса в нубийке выпадал
 слиток золото и сделай квест, чтобы его можно было сдать и получить на
 баланс», the ingot «и слиток в 5 голд», the giver «давай чтобы квест был у
-Джерраха».
+Джерраха»; and of 2026-10-11: «у всех лагерей сделай голды в 2 раза меньше
+и округли в меньшую сторону» -- his 5 ounces are 2, two ingots of one ounce,
+since no ingot of two exists (the owner's rule of 2026-10-09: «типа 3 по 1г
+слитку»).
 
 The boss is [5] Лидер Ян Дуглас, Новые колонисты (2103, texts.xml 50270),
 in the Лагерь бандитов (location 34) and nowhere else (the valley's other
 boss, Большой Мвамба in his camp 31, carries no ingot), and he keeps the
-boss hours (bosses.py: 14:00, 18:00 and 22:00). On every kill
-his bag holds one ingot of 5 ounces of gold, 4796 New_Gold_Ingot_5: a row of
-data/loot_manual.json at chance 1.0, which mobs.roll_table puts in without a
-die and outside the two a kill's rolls may keep (mobs.SURE, MAX_DROPS), so
-neither the cap nor the order of the rows can push it out. The ingot is a
-proper item: the original's name and description (texts.xml 7638/7639,
-data/build_orig_items.py rule 7d, which names the 1- and 10-ounce ones too),
-the article's 5 g, an afro price of the article's 5 G at the game's one
-rate (progression.GOLD_TO_AFRO_RATE, items.GOLD_INGOTS) -- of which a trader
-pays 70 per cent, so the quest's 5 ounces are always the better deal -- and,
-since 2026-10-09, the 5 G in gold, for which Мортимер sells it (the gold
-ingots of Вади-Хальфа's bosses and his stall: test_halfa_ingots). It
-changes hands, and it falls off a dead player like any loot («любой лут
-должен падать»): gold is what it is made of, not what it was bought for
-(combat.gold_item).
+boss hours (bosses.py: 14:00, 18:00 and 22:00). On every kill his bag holds
+two ingots of 1 ounce of gold, 7620 New_Gold_Ingot_1, in one stack: a row of
+data/loot_manual.json of count 2 (mobs.count_of) at chance 1.0, which
+mobs.roll_table puts in without a die and outside the two a kill's rolls may
+keep (mobs.SURE, MAX_DROPS), so neither the cap nor the order of the rows
+can push it out. The ingots are proper items: the original's names and
+descriptions (texts.xml 7636-7641, data/build_orig_items.py rule 7d), the
+articles' weights, afro prices of the articles' G at the game's one rate
+(progression.GOLD_TO_AFRO_RATE, items.GOLD_INGOTS) -- of which a trader pays
+70 per cent, so the quest's ounce an ingot is always the better deal -- and,
+since 2026-10-09, the G in gold, for which Мортимер sells them (the gold
+ingots of Вади-Хальфа's bosses and his stall: test_halfa_ingots). They
+change hands, and fall off a dead player like any loot («любой лут должен
+падать»): gold is what they are made of, not what they were bought for
+(combat.gold_item). The ingot of five, the boss's until 2026-10-11, keeps
+its own checks below.
 
 Джеррах ал-Хакам, Староста поселка (5206) in the Западный поселок (183),
-gives «Обмен слитка» (quest 10) and takes it back: one ingot, counted in the
-bag, taken at the hand-in for exactly 5 ounces of gold (rew_gold 500 in
-hundredths), repeatable, journalled, against the daily limit.
+gives «Обмен слитка» (quest 10) and takes it back: two ingots of one ounce,
+counted in the bag by pieces, taken at the hand-in for exactly 2 ounces of
+gold (rew_gold 200 in hundredths), repeatable, journalled, against the
+daily limit.
 
 In process: the table and the certainty (a seeded generator, and a table
-built to push the ingot out), nobody else rolling for it, where the boss
-stands, the item's frame, names and ids in the exported table, the death
+built to push the ingots out), nobody else rolling for them, where the boss
+stands, the items' frames, names and ids in the exported table, the death
 rule with the backpack's chance forced to 100, the trader's price, the quest
 row and its texts, and a hundred corpses' bags through RoomCombat with a
 real database. On a socket, the server's clock started just after six in
 the evening (LAVA_BOSS_CLOCK): the quest taken at Джеррах and refused
-without an ingot; the boss met in his camp, shot, his bag opened and the
-ingot taken -- the journal counts it; handed in at Джеррах for 5 ounces in
-the frame and in the database, the ingot gone; again with a second ingot;
-and a third sold at his stall for 70 per cent of its price.
+without the ingots; the boss met in his camp, shot, his bag opened and the
+stack of two taken -- the journal counts two of two; handed in at Джеррах
+for 2 ounces in the frame and in the database, the ingots gone; again with
+two more; and an ingot sold at his stall for 70 per cent of its price.
 
 Written against the code before the change it fails from the first table on
 -- no ingot in the boss's table, the ingot "New_Gold_Ingot_5" at 10 afro and
@@ -83,7 +88,8 @@ import quests        # noqa: E402
 import world         # noqa: E402
 from protocol import decode   # noqa: E402
 
-INGOT, INGOT_1, INGOT_10 = 4796, 7620, 4797     # New_Gold_Ingot_5 / _1 / _10
+INGOT, INGOT_5, INGOT_10 = 7620, 4796, 4797     # New_Gold_Ingot_1 / _5 / _10
+INGOTS = (INGOT, INGOT_5, INGOT_10)
 OLD_INGOTS = (3562, 3563)                        # Gold_Ingot_5 / _10: a lollipop's icon
 BOSS = 2103                                      # m05_nc_Leader_lvl5
 CAMP, WEST = 34, 183                             # Лагерь бандитов, Западный поселок
@@ -92,11 +98,14 @@ JERRAKH = 5206
 QUEST = 10
 ADMIN_GUN, ROUNDS = 1534, 6092
 OUNCE = 100                         # gold travels in hundredths (progression.GOLD_OUNCE)
-REWARD = 5 * OUNCE
-# afro: the article's 5 G at the one rate (20 000 at the default 4000), and
-# what a trader pays for it (Inventory.sell: cost x SMOD, floored)
-PRICE = REWARD * progression.GOLD_TO_AFRO_RATE // OUNCE
+PER_KILL = 2                        # his two ingots of an ounce, one stack; the quest's two
+REWARD = PER_KILL * OUNCE
+# afro: the article's 1 G at the one rate, and what a trader pays for it
+# (Inventory.sell: cost x SMOD, floored)
+PRICE = OUNCE * progression.GOLD_TO_AFRO_RATE // OUNCE
 SOLD = int(math.floor(PRICE * inventory.SMOD))
+# The ingot of five, the boss's until 2026-10-11: its 5 G in afro and in gold.
+PRICE_5, G_5 = 5 * progression.GOLD_TO_AFRO_RATE, 5 * OUNCE
 NOT_READY = 3                       # server.RES_NOT_READY
 DAILY_MAX = 10                      # server.DAILY_MAX
 
@@ -114,17 +123,21 @@ check("2103 is a boss and keeps the boss hours",
       (world.creature_role(BOSS), bosses.keeps_hours(BOSS)), ("boss", True))
 check("the certain row's chance is 1.0", SURE, 1.0)
 table = mobs.loot_table(BOSS)
-check("the boss rolls for the ingot at 1.0 first, then for his level's valuable, then the"
-      " camp's old chip (the owner's 5%, 2026-09-26)",
-      table, [(INGOT, 1.0, True),
-              (mobs.level_piece(mobs.VALUABLE_SERIES, mobs.stats(BOSS).level), 0.06, True),
+check("the boss rolls for his level's valuable, the ingots at 1.0, then the camp's old"
+      " chip (the owner's 5%, 2026-09-26)",
+      table, [(mobs.level_piece(mobs.VALUABLE_SERIES, mobs.stats(BOSS).level), 0.06, True),
+              (INGOT, 1.0, True),
               (3179, 0.05, False)])
+check("  ..the ingots' row puts two in the bag, one stack (mobs.count_of)",
+      mobs.count_of(BOSS, INGOT), PER_KILL)
 
 N = 2000
 rng = random.Random(20260925)
 rolls = [mobs.roll_table(BOSS, rng) for _ in range(N)]
-check("seeded, %d kills: the ingot in every one, once" % N,
-      sorted({sum(1 for t, _n in r if t == INGOT) for r in rolls}), [1])
+check("seeded, %d kills: the ingots in every one, one row of two" % N,
+      sorted({tuple(n for t, n in r if t == INGOT) for r in rolls}), [(PER_KILL,)])
+check("  ..and no ingot of five or ten",
+      sum(1 for r in rolls for t, _n in r if t in (INGOT_5, INGOT_10)), 0)
 check("and the rolled rows keep their own two besides",
       max(sum(1 for t, _n in r if t != INGOT) for r in rolls) <= mobs.MAX_DROPS, True)
 
@@ -152,7 +165,7 @@ finally:
 HALFA_BOSSES = [269, 270, 283, 284, 299, 300, 313, 314]
 check("nobody else rolls for any gold ingot but the bosses of Вади-Хальфа",
       sorted(int(t) for t in mobs.TYPES if int(t) != BOSS
-             and {r[0] for r in mobs.loot_table(int(t))} & {INGOT, INGOT_1, INGOT_10}),
+             and {r[0] for r in mobs.loot_table(int(t))} & set(INGOTS)),
       HALFA_BOSSES)
 
 # Where he stands: location 34 and no other file, no stand-in for a missing
@@ -202,48 +215,59 @@ check("the Nubian files' other boss stands in his camp on its own cell, no door 
                                  for d in v["doors"] if d.get("target_loc_id") == 31)),
       ("Q_IV_pustina3", [MVAMBA], (6274, 1833), []))
 check("  ..and carries no ingot, ordinary or for a quest",
-      [t for t, *_r in mobs.loot_table(MVAMBA) + mobs.quest_table(MVAMBA) if t == INGOT], [])
+      [t for t, *_r in mobs.loot_table(MVAMBA) + mobs.quest_table(MVAMBA) if t in INGOTS], [])
 
-# --- the ingot ----------------------------------------------------------------------
+# --- the ingots ---------------------------------------------------------------------
 si = items.params_of(INGOT) or {}
-# The 5 G in gold since 2026-10-09: Мортимер sells it at face value.
-check("the ingot: its 5 G in afro and in gold, the article's 5 g, fifty to a stack",
-      (si.get("cost"), si.get("g_cost"), si.get("weight"), si.get("max_count")),
-      (PRICE, REWARD, 5, 50))
-check("it changes hands: exchangeable, no quest's own, not premium",
-      (si.get("exchang"), si.get("quest"), items.premium(INGOT), barter.tradable(INGOT)),
-      (1, 0, False, True))
-check("by the original's name and description, not the internal one",
+# The G in gold since 2026-10-09: Мортимер sells them at face value.
+check("the boss's ingot of one: its 1 G in afro and in gold, the article's 1 g, fifty to"
+      " a stack", (si.get("cost"), si.get("g_cost"), si.get("weight"), si.get("max_count")),
+      (PRICE, OUNCE, 1, 50))
+check("  ..by the original's name and description, not the internal one",
       (names.ALL.get(si.get("name")), names.ALL.get(si.get("desc"))),
+      ("1 унция золота", "Слиток номиналом в одну золотую унцию."))
+# The ingot of five, the boss's until 2026-10-11, the Maghreb's since.
+si5 = items.params_of(INGOT_5) or {}
+check("the ingot of five: its 5 G in afro and in gold, the article's 5 g, fifty to a stack",
+      (si5.get("cost"), si5.get("g_cost"), si5.get("weight"), si5.get("max_count")),
+      (PRICE_5, G_5, 5, 50))
+check("they change hands: exchangeable, no quest's own, not premium",
+      [((items.params_of(t) or {}).get("exchang"), (items.params_of(t) or {}).get("quest"),
+        items.premium(t), barter.tradable(t)) for t in (INGOT, INGOT_5)],
+      [(1, 0, False, True)] * 2)
+check("the ingot of five by the original's name and description, not the internal one",
+      (names.ALL.get(si5.get("name")), names.ALL.get(si5.get("desc"))),
       ("5 унций золота", "Слиток номиналом в пять золотых унций."))
 check("and so are its 1- and 10-ounce siblings named",
-      [names.ALL.get(items.STRING_ID_OFFSET + t) for t in (INGOT_1, INGOT_10)],
+      [names.ALL.get(items.STRING_ID_OFFSET + t) for t in (INGOT, INGOT_10)],
       ["1 унция золота", "10 унций золота"])
 check("with their descriptions under their ids",
-      [names.ALL.get(items.DESC_ID_OFFSET + t) for t in (INGOT_1, INGOT_10)],
+      [names.ALL.get(items.DESC_ID_OFFSET + t) for t in (INGOT, INGOT_10)],
       ["Слиток номиналом в одну золотую унцию.", "Слиток номиналом в десять золотых унций."])
 check("  ..which their frames point at, so the tooltip shows them",
-      [items.static_info(t)[1].get("desc") for t in (INGOT_1, INGOT_10)],
-      [items.DESC_ID_OFFSET + t for t in (INGOT_1, INGOT_10)])
+      [items.static_info(t)[1].get("desc") for t in (INGOT, INGOT_10)],
+      [items.DESC_ID_OFFSET + t for t in (INGOT, INGOT_10)])
 check("the older Gold_Ingot_5/_10 take none of those rows",
       ["унци" in names.ALL.get(items.STRING_ID_OFFSET + t, "") for t in OLD_INGOTS],
       [False, False])
 blob = names.document_bytes()
-ids = [si.get("name"), si.get("desc")] + [off + t for t in (INGOT_1, INGOT_10)
-                                          for off in (items.STRING_ID_OFFSET, items.DESC_ID_OFFSET)]
+ids = [si5.get("name"), si5.get("desc")] + [off + t for t in (INGOT, INGOT_10)
+                                            for off in (items.STRING_ID_OFFSET, items.DESC_ID_OFFSET)]
 check("every id of theirs is in the table the launcher is handed",
       [bool(i) and names.known(i) and ("<s id='%d'>" % i).encode() in blob for i in ids],
       [True] * 6)
-check("the frame keeps its shape: the designed one's keys, a simple object",
-      (items.static_info(INGOT)[0],
-       sorted(items.static_info(INGOT)[1]) == sorted(items.designed_info(INGOT)[1])),
-      ("ss_si_simple_obj", True))
-check("a corpse may hold it", mobs.droppable(INGOT), True)
+check("the frames keep their shape: the designed one's keys, a simple object",
+      [(items.static_info(t)[0],
+        sorted(items.static_info(t)[1]) == sorted(items.designed_info(t)[1]))
+       for t in (INGOT, INGOT_5)],
+      [("ss_si_simple_obj", True)] * 2)
+check("a corpse may hold them", [mobs.droppable(t) for t in (INGOT, INGOT_5)], [True, True])
 
 # --- it is loot, and loot falls ---------------------------------------------------------
-check("gold in its name and in one of its prices: not one of the gold things",
-      combat.gold_item(INGOT), False)
-check("so a dead player may lose it", combat.drops_on_death(INGOT), True)
+check("gold in their names and in one of their prices: not one of the gold things",
+      [combat.gold_item(t) for t in (INGOT, INGOT_5)], [False, False])
+check("so a dead player may lose them", [combat.drops_on_death(t) for t in (INGOT, INGOT_5)],
+      [True, True])
 
 
 def row_of(uniq, type_id, slot, count=1):
@@ -269,8 +293,9 @@ finally:
 # --- what a trader pays ---------------------------------------------------------------
 paid = max(1, int(math.floor(si.get("cost", 0) / float(si.get("sell_num", 1) or 1)
                              * inventory.SMOD * si.get("sell_mod", 1))))
-check("a trader pays 70 per cent of it (Inventory.sell), less than the quest's "
-      "5 ounces at the game's rate", (paid, paid < REWARD * progression.GOLD_TO_AFRO_RATE // OUNCE),
+check("a trader pays 70 per cent of an ingot of one (Inventory.sell), less than the quest's "
+      "ounce for it at the game's rate",
+      (paid, paid < REWARD // PER_KILL * progression.GOLD_TO_AFRO_RATE // OUNCE),
       (SOLD, True))
 # Мортимер sells it since 2026-10-09, for gold alone: sold for afro it would
 # turn afro into gold (Inventory.buy refuses that; test_halfa_ingots).
@@ -286,10 +311,10 @@ if q:
     # stays the first he gives, q_idx 0.
     check("Джеррах gives it and takes it back, and nobody else; it is the first he gives",
           (q.give, q.take, quests.given_by(JERRAKH)[0]), ([JERRAKH], [JERRAKH], QUEST))
-    check("one ingot of 5 ounces, which the boss drops; exactly 5 ounces of gold, "
+    check("two ingots of one ounce, the boss's whole drop; exactly 2 ounces of gold, "
           "again and again, for anybody",
           (q.kind, q.objs, q.rew_gold, q.rew_afro, q.rew_obj, q.repeatable, q.level, q.rew_loc),
-          (quests.BRING_L_OBJ, [(INGOT, 1, [BOSS])], REWARD, 0, [], 1, 0, 0))
+          (quests.BRING_L_OBJ, [(INGOT, PER_KILL, [BOSS])], REWARD, 0, [], 1, 0, 0))
     check("its marks on the map: the camp to go to, Джеррах to hand it in to",
           (q.loc, q.finish_loc), (world.pack(*CAMP_CELL), world.pack(*WEST_CELL)))
     check("four texts of its own, every id in the launcher's table",
@@ -302,8 +327,8 @@ if q:
           ([h in q.texts[quests.START] for h in hours], bosses.DEFAULT_STAY,
            "ждёт там час" in q.texts[quests.START]),
           ([True] * len(hours), 60.0, True))
-    check("the texts talk of the ingot as the client names it",
-          ["«5 унций золота»" in t for t in q.texts[1:3]], [True, True])
+    check("the texts talk of the ingots as the client names them",
+          ["«1 унция золота»" in t for t in q.texts[1:3]], [True, True])
     check("and the macros are the client's own",
           sorted(set(re.findall(r"%[^%]*%", "".join(q.texts)))), ["%sex?:а%", "%имя%"])
 
@@ -332,14 +357,14 @@ async def _bags(kills):
     for i in range(kills):
         mob = mobs.Mob(i + 1, BOSS, 10 + 3 * i)
         rc.corpse_gone(mob, [])
-        n = 0
+        stacks = []
         for uniq in rc.loot[mob.cell].uniqs:
             row = store.item(uniq)
-            if row["type_id"] == INGOT:
+            if row["type_id"] in INGOTS:
                 if row["root"] != items.TRASH:
                     fails.append("bag row %r has the wrong root" % row)
-                n += row["count"]
-        per_bag.append(n)
+                stacks.append((row["type_id"], row["count"]))
+        per_bag.append(tuple(sorted(stacks)))
     for bag in rc.loot.values():
         if bag.expiry is not None:
             bag.expiry.cancel()
@@ -348,8 +373,8 @@ async def _bags(kills):
 
 
 KILLS = 100
-check("%d bosses killed leave %d bags, one ingot in each" % (KILLS, KILLS),
-      sorted(set(asyncio.run(_bags(KILLS)))), [1])
+check("%d bosses killed leave %d bags, one stack of two ingots of an ounce in each"
+      % (KILLS, KILLS), sorted(set(asyncio.run(_bags(KILLS)))), [((INGOT, PER_KILL),)])
 
 
 # --- the server ------------------------------------------------------------------
@@ -533,22 +558,22 @@ try:
           [(QUEST, 1, quests.STRING_BASE + quests.STRINGS_PER_QUEST * QUEST + quests.NAME)])
     c.send("q_si;q_type=%d;" % QUEST)
     si_frames = named(c.frames(), "q_si_bring_l_obj")
-    check("it asks for one ingot of 5 ounces off the boss and pays 5 ounces of gold, "
+    check("it asks for two ingots of one ounce off the boss and pays 2 ounces of gold, "
           "again and again",
           [(p["obj_1"], p["obj_num_1"], p["mobs_1"], p["obj_2"], p["rew_gold"], p["rew_afro"],
             p["rew_obj"], p["repeatable"], p["rew_loc"]) for p in si_frames],
-          [(INGOT, 1, [BOSS], 0, REWARD, 0, [], 1, 0)])
-    check("  ..which the client shows as 5 унций (rew_gold / 100)",
-          [p["rew_gold"] / 100.0 for p in si_frames], [5.0])
+          [(INGOT, PER_KILL, [BOSS], 0, REWARD, 0, [], 1, 0)])
+    check("  ..which the client shows as 2 унции (rew_gold / 100)",
+          [p["rew_gold"] / 100.0 for p in si_frames], [2.0])
 
     c.send("q_st;mob=%d;q_idx=0;" % jid)
     got = c.frames(0.8)
-    check("taking it: the ack, then the quest in the journal at nought of one",
+    check("taking it: the ack, then the quest in the journal at nought of two",
           ([(n, p.get("res")) for n, p in got if n in ("cmdAck", "lcall")], counts(got)),
           ([("cmdAck", 0)], [([0], 0)]))
     Q = named(got, "q_di_bring_l_obj")[0]["q_id"] if named(got, "q_di_bring_l_obj") else 0
     got = hand_in(c, jid, Q)
-    check("handed in without an ingot: refused, nothing paid",
+    check("handed in without the ingots: refused, nothing paid",
           (answer(got), [p["res"] for p in named(got, "cmdAck")], money(CHAR)),
           (["cmdAck"], [NOT_READY], (AFRO0, GOLD0)))
 
@@ -631,29 +656,34 @@ try:
         check("the bag opens", [p["res"] for p in named(c.frames(), "cmdAck")], [0])
         c.send("ss_get;slot=24;")
         lst = [str(x) for x in named(c.frames(), "ss_ack")[0]["o_list"]]
-        loot = [inventory.parse_oid(o)[1] for o in lst[lst.index("0") + 1:]]
+        oids = [inventory.parse_oid(o) for o in lst[lst.index("0") + 1:]]
+        loot = [t for _u, t, _r in oids]
+        probe = accounts.Store(DB)
+        stacks = sorted((t, probe.item(u)["count"]) for u, t, _r in oids if t in INGOTS)
+        probe.close()
         print("  ..  the boss left %s" % sorted(loot))
-        check("in it: one ingot of 5 ounces of gold", loot.count(INGOT), 1)
+        check("in it: one stack of two ingots of an ounce", stacks, [(INGOT, PER_KILL)])
         c.send("ss_upd;s_status=3;obj=x0;param=1;")
         got = c.frames(0.8)
-        check("taken whole: the ack first, and the journal counts the ingot, complete",
-              ([p["res"] for p in named(got, "cmdAck")][:1], counts(got)), ([0], [([1], 1)]))
+        check("taken whole: the ack first, and the journal counts two of two, complete",
+              ([p["res"] for p in named(got, "cmdAck")][:1], counts(got)),
+              ([0], [([PER_KILL], 1)]))
         c.send("ss_upd;s_status=0;obj=x0;param=1;")
         c.frames(0.3)
-    check("the ingot is in the bag", bag_of(CHAR, INGOT), 1)
+    check("the two ingots are in the bag", bag_of(CHAR, INGOT), PER_KILL)
     c.send("ss_get_si;type=%d;" % INGOT)
     frame = named(c.frames(), "ss_si_simple_obj")
-    check("the client is told its original name and description, its price and 5 g",
+    check("the client is told its original name and description, its price and 1 g",
           [(names.ALL.get(p["name"]), names.ALL.get(p["desc"]), p["cost"], p["g_cost"],
             p["weight"], p["exchang"]) for p in frame],
-          [("5 унций золота", "Слиток номиналом в пять золотых унций.", PRICE, REWARD, 5, 1)])
+          [("1 унция золота", "Слиток номиналом в одну золотую унцию.", PRICE, OUNCE, 1, 1)])
     told = []
-    for t in (INGOT_1, INGOT_10):
+    for t in (INGOT_5, INGOT_10):
         c.send("ss_get_si;type=%d;" % t)
         told += [(names.ALL.get(p["name"]), names.ALL.get(p["desc"]))
                  for p in named(c.frames(), "ss_si_simple_obj") if p.get("type") == t]
-    check("and of its 1- and 10-ounce siblings, their names and descriptions",
-          told, [("1 унция золота", "Слиток номиналом в одну золотую унцию."),
+    check("and of its 5- and 10-ounce siblings, their names and descriptions",
+          told, [("5 унций золота", "Слиток номиналом в пять золотых унций."),
                  ("10 унций золота", "Слиток номиналом в десять золотых унций.")])
 
     # --- handed in at Джеррах -------------------------------------------------------------
@@ -663,14 +693,14 @@ try:
     gone = [p for p in named(got, "ss_obj_status") if p["status"] == 0]
     # A repeatable quest: the day's count follows the purse, before the ack
     # (server.DAILY_MAX counts repeatable hand-ins, and the journal reads it).
-    check("handed in: the ingot leaves the bag, the purse follows, the day's"
+    check("handed in: the stack of two leaves the bag, the purse follows, the day's"
           " count, then the ack",
           (answer(got), len(gone), [p["res"] for p in named(got, "cmdAck")]),
           (["ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"], 1, [0]))
-    check("  ..paid in full: 5 ounces of gold, as the client shows it (floor(gold / 100))",
+    check("  ..paid in full: 2 ounces of gold, as the client shows it (floor(gold / 100))",
           [(p["gold"] - GOLD0, p["gold"] // OUNCE - GOLD0 // OUNCE, p["afro"])
-           for p in named(got, "userInfo_Player")], [(REWARD, 5, AFRO0)])
-    check("  ..and so in the database, the ingot gone",
+           for p in named(got, "userInfo_Player")], [(REWARD, PER_KILL, AFRO0)])
+    check("  ..and so in the database, the ingots gone",
           (bag_of(CHAR, INGOT), money(CHAR)), (0, (AFRO0, GOLD0 + REWARD)))
     c.send("q_list;")
     check("the quest is out of the log", named(c.frames(), "q_list"), [{"q_id": [], "q_types": []}])
@@ -684,13 +714,23 @@ try:
           ([0], [([0], 0)]))
     Q2 = named(got, "q_di_bring_l_obj")[0]["q_id"] if named(got, "q_di_bring_l_obj") else 0
     got, _oid = give(c, INGOT, 1)
-    check("a second ingot (from another hand, say): one of one", counts(got), [([1], 1)])
+    check("one more ingot (from another hand, say): one of two, not yet complete",
+          counts(got), [([1], 0)])
     got = hand_in(c, jid, Q2)
-    check("handed in again: the ingot gone, a second 5 ounces, then the ack",
-          (answer(got), [p["gold"] - GOLD0 for p in named(got, "userInfo_Player")],
+    check("  ..handed in so: refused, nothing paid",
+          ([p["res"] for p in named(got, "cmdAck")], money(CHAR)),
+          ([NOT_READY], (AFRO0, GOLD0 + REWARD)))
+    got, _oid = give(c, INGOT, 1)
+    check("and a second: two of two, complete", counts(got), [([PER_KILL], 1)])
+    got = hand_in(c, jid, Q2)
+    # The two given one by one may lie as one stack or two: whichever, each
+    # leaves the bag before the purse moves.
+    check("handed in again: the ingots leave the bag, a second 2 ounces, then the ack",
+          (sorted(set(answer(got)[:-3])), [p["status"] for p in named(got, "ss_obj_status")][:1],
+           answer(got)[-3:], [p["gold"] - GOLD0 for p in named(got, "userInfo_Player")],
            [p["res"] for p in named(got, "cmdAck")]),
-          (["ss_obj_status", "userInfo_Player", "q_sys", "cmdAck"], [2 * REWARD], [0]))
-    check("  ..10 ounces in all, no ingot left", (bag_of(CHAR, INGOT), money(CHAR)),
+          (["ss_obj_status"], [0], ["userInfo_Player", "q_sys", "cmdAck"], [2 * REWARD], [0]))
+    check("  ..4 ounces in all, no ingot left", (bag_of(CHAR, INGOT), money(CHAR)),
           (0, (AFRO0, GOLD0 + 2 * REWARD)))
 
     arrival, pos = goto(c, WEST)

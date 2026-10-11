@@ -647,8 +647,8 @@ def _common(type_id, name, root, price, weight):
 # falls off a dead player like any loot (combat.gold_item answers no for
 # every ingot). A stall pays SMOD of the afro price, less than c_ga gives
 # for the same ounces and less than Мортимер's cashing (0.95, 4.95, 9.95
-# ounces) or Джеррах's 5 ounces for the five; and no stall sells one for
-# afro (Inventory.buy), which would turn afro into gold.
+# ounces) or Джеррах's ounce for each of the valley boss's ingots; and no
+# stall sells one for afro (Inventory.buy), which would turn afro into gold.
 GOLD_INGOTS = {7620: 100, 4796: 500, 4797: 1000}
 
 # Things a table prices in both currencies that are sold for gold alone:

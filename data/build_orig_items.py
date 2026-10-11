@@ -59,9 +59,9 @@ by a later one, and only "high" and "medium" records are written.
  7c. What the Nubian mine's marauders drop (data/loot_manual.json): gold
     sand and the small emeralds, two hand-checked name and description
     pairs (MINE_ROWS).
- 7d. The gold ingots New_Gold_Ingot_1/_5/_10, the 5-ounce one being what
-    the Nubian valley's boss drops (data/loot_manual.json): the run of
-    three hand-checked pairs 7636-7641 (GOLD_INGOT_ROWS).
+ 7d. The gold ingots New_Gold_Ingot_1/_5/_10, the 1-ounce one being what
+    the Nubian valley's boss drops, two at a time (data/loot_manual.json):
+    the run of three hand-checked pairs 7636-7641 (GOLD_INGOT_ROWS).
  7e. What the Nubian valley's dogs, rats and antelopes leave in a bag, and
     the things its quests send the player to take off a creature -- the gun
     parts, the medicaments, the rat king, the old chip: hand-checked name
@@ -858,9 +858,10 @@ def mine_records(T, objects):
 
 # --- 7d. the gold ingots ----------------------------------------------------------------------
 
-# The 5-ounce ingot is what the Nubian valley's boss drops and Джеррах cashes
-# in (data/loot_manual.json, data/quests.json 10; the owner's decision of
-# 2026-09-25); its 1- and 10-ounce siblings are pinned beside it, at no cost,
+# The 1-ounce ingot is what the Nubian valley's boss drops, two at a time,
+# and Джеррах cashes in (data/loot_manual.json, data/quests.json 10; the
+# owner's decisions of 2026-09-25 and 2026-10-11, the 5-ounce one until
+# then); its 5- and 10-ounce siblings are pinned beside it, at no cost,
 # so that no ingot ever reaches a player under its internal name. Rule 8
 # cannot reach them: data/items_wiki.json has no record of the three, their
 # articles carrying icons named after no type (5.png, 1gold.png, 10.png).
