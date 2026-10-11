@@ -208,6 +208,30 @@ Client patches applied without altering the original artwork:
    listeners (the button's RELEASE_EVENT, the hot key) are registered in
    init with this.toGlobal, read after the wrap, so both go through it.
 
+13. The global map's scroll box. DisplayLandscape.drawArea asks for the
+   tiles n = floor(W / 512) + 1 columns and m = floor(H / 512) + 1 rows
+   either side of the player's tile, and one more to the right and below
+   (W x H is the map frame, the window less 50 x 200; tiles are 256 px at
+   both scales). Then it fixes the scroll box at five tiles from two
+   before the player's, whatever the window (DisplayLandscape.as:29-37,
+   55-59). Once the frame is as wide as that box, boundOX stops holding
+   the view (it acts only while left < right, ViewFrame.as:264), so edge
+   scrolling and dragging run past the tiles asked for; once it is taller,
+   boundOY presses the view's bottom against the box's, and at 3840x2160
+   the map is not centred and its top 168 px show a row never asked for.
+
+   The wrapper on DisplayLandscape.prototype.drawArea runs the original,
+   then sets the box again, one axis at a time. Where the frame's mask is
+   narrower than the five tiles -- boundOX's own test -- the original's
+   numbers stand, so a window below 1330 x 1480, 1280 x 1024 among them,
+   scrolls exactly as before. Elsewhere the box is the block of tiles
+   drawArea has just asked for, from (c - n) * 256, (2n + 2) * 256 long.
+   The view then stays on requested tiles and centres on the player at
+   every size up to the 3840 x 2160 ceiling. setScrollArea only stores
+   the numbers (ViewFrame.as:89-103), so the second call replaces the
+   first before anything reads them. A resize alone calls neither, as in
+   the original: tiles and box follow the next change of tile or scale.
+
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
 opcode assembled from memory once sprayed the downloads folder with copies of
@@ -782,7 +806,8 @@ def fn_location_bound(axis):
     """Clamp by map bounds, centering maps smaller than the view on each axis.
 
     Only LocationInterface.locationFrame opts in. Other ViewFrame users
-    retain the original behavior, including windows and the global map.
+    retain the original behavior, including windows and the global map
+    (whose scroll box patch 13 sets instead, fn_map_scroll).
     """
     low, high = ("left", "right") if axis == "X" else ("top", "bottom")
     prop = "_x" if axis == "X" else "_y"
@@ -815,6 +840,54 @@ def fn_location_bound(axis):
     a.push(UNDEF).op("return")
     a.label("original")
     call_method(a, "this", "__wideBound" + axis + "Orig", 0)
+    return a
+
+
+# The global map's scroll box (patch 13), as DisplayLandscape.drawArea sets
+# it: MAP_BOX tiles each way, from MAP_BOX_BACK before the player's tile.
+MAP_BOX = 5
+MAP_BOX_BACK = 2
+
+
+def fn_map_scroll():
+    """DisplayLandscape.drawArea(x, y, centerPers): the original, which asks
+    for the tiles and sets the five-tile box, then the box once more. On
+    each axis the mask still fits in five tiles keeps them; on the others
+    the box is the block of tiles just asked for, computed as the original
+    computes it (patch 13)."""
+    a = Asm()
+    a.var("centerPers").var("y").var("x").push(3).var("this")
+    a.push("__mapScrollOrig").op("callmethod").op("pop")
+    a.push("s").var("this").member("cellSize").op("definelocal")
+    a.push("ui").var("lol").member("core", "SceneShifter", "gmapScreen").op("definelocal")
+    a.push("view").push(0).var("ui").push("getFrameSize").op("callmethod").op("definelocal")
+    a.push("frame").var("ui").member("globalMapFrame").op("definelocal")
+    for axis, coord, size, mask in (("X", "x", "width", "_width"),
+                                    ("Y", "y", "height", "_height")):
+        # the player's tile: Math.floor(this.mapScale * x / s)
+        a.push("c" + axis).var("this").member("mapScale").var(coord).op("multiply")
+        a.var("s").op("divide").push(1).var("Math").push("floor").op("callmethod")
+        a.op("definelocal")
+        # the original's box, in tiles
+        a.push("from" + axis).var("c" + axis).push(MAP_BOX_BACK).op("subtract")
+        a.op("definelocal")
+        a.push("span" + axis, MAP_BOX).op("definelocal")
+        # boundOX acts only while the mask is narrower than the box
+        a.var("frame").member("mask_mc", mask).push(MAP_BOX).var("s").op("multiply")
+        a.op("less2").iftrue("keep" + axis)
+        # n = Math.floor(0.5 * width / s) + 1, the 0.5 written as s * 2:
+        # halving is exact, so the quotient rounds the same
+        a.push("n").var("view").member(size).var("s").push(2).op("multiply")
+        a.op("divide").push(1).var("Math").push("floor").op("callmethod")
+        a.push(1).op("add2").op("definelocal")
+        a.push("from" + axis).var("c" + axis).var("n").op("subtract").op("definelocal")
+        a.push("span" + axis).var("n").push(2).op("multiply").push(2).op("add2")
+        a.op("definelocal")
+        a.label("keep" + axis)
+    # frame.setScrollArea(fromX * s, fromY * s, spanX * s, spanY * s)
+    for name in ("spanY", "spanX", "fromY", "fromX"):
+        a.var(name).var("s").op("multiply")
+    call_method(a, "frame", "setScrollArea", 4)
     return a
 
 
@@ -1711,6 +1784,8 @@ def injected():
          (), fn_location_bound("X")),
         (("gpui", "view", "ExtViewFrame"), "boundOY", "__wideBoundYOrig",
          (), fn_location_bound("Y")),
+        (("core", "globmap", "DisplayLandscape"), "drawArea", "__mapScrollOrig",
+         ("x", "y", "centerPers"), fn_map_scroll()),
         (("gpui", "RepairInterface"), "calcGoldCostFromAfroCost", "__repairGoldOrig",
          ("afro_cost",), fn_repair_gold()),
         (("core", "objects", "Item"), "getProp", "__repairGetPropOrig",

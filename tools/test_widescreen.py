@@ -79,7 +79,8 @@ WIRED = ("__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__byeKickOrig", "__byeOrig",                 # no old login screen
          "__corpseDeadOrig", "__corpseFocusOrig",      # a corpse and its bag
          "__corpseLocationOrig", "__corpseRemoveOrig", # corpse cell ownership
-         "__subInitOrig", "__subGlobalOrig")           # sublocation exit
+         "__subInitOrig", "__subGlobalOrig",           # sublocation exit
+         "__mapScrollOrig")                            # global map scroll box
 _source = open(w.__file__, encoding="utf-8").read()
 check("every fn_* patch body in widescreen.py is used",
       [name for name in re.findall(r"^def (fn_\w+)\(", _source, re.M)
@@ -88,11 +89,12 @@ check("every wrap is wired into the injected code",
       [name for name in WIRED if name.encode() not in w.injected()], [])
 
 
-def execute_repair(code, env):
-    """Execute the emitted AVM1 wrapper with the original getter as a stub.
+def execute(code, env, returns=True):
+    """Execute an emitted AVM1 wrapper with the original as a stub.
 
     This catches stack order, branches and returns that container checks
-    alone cannot exercise. Opcodes follow the AVM1 stack convention.
+    alone cannot exercise. Opcodes follow the AVM1 stack convention. A body
+    that ends without Return (returns=False) gives None.
     """
     stack, at = [], 0
     while at < len(code):
@@ -131,10 +133,13 @@ def execute_repair(code, env):
             env[key] = value
         elif op == 0x12:
             stack.append(not stack.pop())
-        elif op in (0x49, 0x48, 0x0C, 0x0D):
+        elif op == 0x17:
+            stack.pop()
+        elif op in (0x49, 0x48, 0x0C, 0x0D, 0x0B, 0x47):
             right, left = stack.pop(), stack.pop()
-            stack.append(left == right if op == 0x49 else left < right if op == 0x48 else
-                         left * right if op == 0x0C else left / right)
+            stack.append({0x49: lambda: left == right, 0x48: lambda: left < right,
+                          0x0C: lambda: left * right, 0x0D: lambda: left / right,
+                          0x0B: lambda: left - right, 0x47: lambda: left + right}[op]())
         elif op == 0x9D:
             if stack.pop():
                 at += struct.unpack("<h", payload)[0]
@@ -142,20 +147,22 @@ def execute_repair(code, env):
             return stack.pop()
         else:
             raise AssertionError("unexpected opcode: %02x" % op)
-    raise AssertionError("missing return")
+    if returns:
+        raise AssertionError("missing return")
+    return None
 
 
 def run_repair_getprop(props, prop, mode, rate=50000):
     env = dict(prop=prop, this={"__repairGetPropOrig": lambda key: props.get(key)},
                lol=dict(gpui=dict(StaffInterface=dict(ssType=mode)),
                         core=dict(GConstatns=dict(gold_repair_mod=rate))))
-    return execute_repair(w.fn_repair_cost().assemble(), env)
+    return execute(w.fn_repair_cost().assemble(), env)
 
 
 check("gold repair bytecode rounds to nearest cent, halves up, with a one-cent minimum",
-      [execute_repair(w.fn_repair_gold().assemble(),
-                      dict(afro_cost=a, Math=dict(round=lambda x: math.floor(x + 0.5)),
-                           lol=dict(core=dict(GConstatns=dict(gold_repair_mod=50000)))))
+      [execute(w.fn_repair_gold().assemble(),
+               dict(afro_cost=a, Math=dict(round=lambda x: math.floor(x + 0.5)),
+                    lol=dict(core=dict(GConstatns=dict(gold_repair_mod=50000)))))
        for a in (0, 1, 749, 750, 751, 975, 1249, 1250, 1251)],
       [0.01, 0.01, 0.01, 0.02, 0.02, 0.02, 0.02, 0.03, 0.03])
 
@@ -175,6 +182,148 @@ check("gold price, repair modifier and genuinely unpriced items are unchanged",
       [13, 1, None, 0])
 
 
+# --- the global map's scroll box (patch 13) --------------------------------
+# The wrapper on DisplayLandscape.drawArea runs against a model of the
+# original (DisplayLandscape.as:29-59) and of ViewFrame's box and bounds
+# (ViewFrame.as:89-103, 185-192, 259-329). The player stands at the Meroe
+# mine, cell 5943,2110 in tile 185,65, where the owner's missing.log was
+# written (columns 181..190, rows 62..69: n = 4, m = 3).
+TILE = 256
+MINE = (5943, 2110)
+WINDOWS = (("1280x1024", (1280, 1024)), ("1920x1080", (1920, 1080)),
+           ("owner's setting, smallest", (1586, 1224)),
+           ("owner's setting, largest", (2097, 1735)),
+           ("3840x2160", (3840, 2160)))
+
+
+def original_draw_area(this, ui, x, y):
+    """drawArea as main.swf has it: sets the five-tile box and returns the
+    block of tiles it asks for, (first, last column, first, last row)."""
+    s = this["cellSize"]
+    cx = math.floor(this["mapScale"] * x / s)
+    cy = math.floor(this["mapScale"] * y / s)
+    size = ui["getFrameSize"]()
+    n = math.floor(0.5 * size["width"] / s) + 1
+    m = math.floor(0.5 * size["height"] / s) + 1
+    ui["globalMapFrame"]["setScrollArea"]((cx - 2) * s, (cy - 2) * s, 5 * s, 5 * s)
+    return cx - n, cx + n + 1, cy - m, cy + m + 1
+
+
+def draw_area(window, cell=MINE, scale=8, stroke=0):
+    """The patched drawArea in a window: every box set, in order, the block
+    asked for and the mask. The frame is the window less 50 x 200
+    (GlobalMapInterface.resizeStage); drawMask's stroke may make the mask
+    one pixel larger."""
+    fw, fh = window[0] - 50, window[1] - 200
+    boxes, asked = [], []
+    mask = (fw + stroke, fh + stroke)
+    frame = dict(mask_mc=dict(_width=mask[0], _height=mask[1]),
+                 setScrollArea=lambda *box: boxes.append(box))
+    ui = dict(getFrameSize=lambda: dict(width=fw, height=fh), globalMapFrame=frame)
+    this = dict(cellSize=TILE, mapScale=scale)
+    this["__mapScrollOrig"] = lambda x, y, centerPers: asked.append(
+        original_draw_area(this, ui, x, y))
+    env = dict(this=this, x=cell[0], y=cell[1], centerPers=None,
+               Math=dict(floor=math.floor),
+               lol=dict(core=dict(SceneShifter=dict(gmapScreen=ui))))
+    execute(w.fn_map_scroll().assemble(), env, returns=False)
+    return boxes, asked[0], mask
+
+
+def views(box, mask, asked):
+    """Where ViewFrame lets the view stand with this box, as its top-left in
+    map pixels: centred on the player anywhere in the tile (_centerPoint),
+    then scrolled as far as it goes towards each corner (scrollX/scrollY:
+    edge scrolling; a drag gets the same rectangle). The content holds at
+    least the tiles asked for."""
+    x, y, bw, bh = box
+    mw, mh = mask
+    left, right, top, bottom = mw - (x + bw), -x, mh - (y + bh), -y
+    content = ((asked[1] - asked[0] + 1) * TILE, (asked[3] - asked[2] + 1) * TILE)
+
+    def bound(cx, cy):
+        if left < right and content[0] > mw:            # boundOX
+            cx = left if cx < left else math.ceil(right) if cx > right else cx
+        if content[1] > mh:                             # boundOY
+            cy = math.floor(top) if cy < top else math.ceil(bottom) if cy > bottom else cy
+        return -cx, -cy
+    tx, ty = asked[0] + (asked[1] - asked[0] - 1) // 2, asked[2] + (asked[3] - asked[2] - 1) // 2
+    players = [(px, py) for px in (tx * TILE, tx * TILE + 8 * 23, tx * TILE + 248)
+               for py in (ty * TILE, ty * TILE + 8 * 30, ty * TILE + 248)]
+    centred = [bound(mw / 2 - px, mh / 2 - py) for px, py in players]
+    scrolled = [bound(sx, sy) for sx in (-99999, 99999) for sy in (-99999, 99999)]
+    return players, centred, scrolled
+
+
+def beyond(view, mask, asked):
+    """Pixels of the view past the tiles asked for: west, east, north, south."""
+    return (max(0, asked[0] * TILE - view[0]),
+            max(0, view[0] + mask[0] - (asked[1] + 1) * TILE),
+            max(0, asked[2] * TILE - view[1]),
+            max(0, view[1] + mask[1] - (asked[3] + 1) * TILE))
+
+
+try:
+    want = {"1280x1024": ((46848, 16128, 1280, 1280), (182, 189, 63, 68)),
+            "1920x1080": ((46336, 16128, 2560, 1280), (181, 190, 63, 68)),
+            "owner's setting, smallest": ((46336, 16128, 2560, 1280), (181, 190, 62, 69)),
+            "owner's setting, largest": ((46336, 15872, 2560, 2048), (181, 190, 62, 69)),
+            "3840x2160": ((45312, 15616, 4608, 2560), (177, 194, 61, 70))}
+    for name, window in WINDOWS:
+        for stroke in (0, 1):
+            boxes, asked, mask = draw_area(window, stroke=stroke)
+            check("map box, %s, mask +%d: the original's box, then (x, y, w, h) at the "
+                  "Meroe mine, and the tiles asked for" % (name, stroke),
+                  (len(boxes), boxes[0], boxes[-1], asked),
+                  (2, (46848, 16128, 1280, 1280)) + want[name])
+            players, centred, scrolled = views(boxes[-1], mask, asked)
+            _, before, _ = views(boxes[0], mask, asked)
+            block = [boxes[-1][2 + k] != 5 * TILE for k in (0, 1)]
+            check("map box, %s, mask +%d: centred anywhere in the tile, the view is on "
+                  "the player along a block, where the original puts it along five "
+                  "tiles" % (name, stroke), centred,
+                  [tuple(p[k] - mask[k] / 2 if block[k] else b[k] for k in (0, 1))
+                   for p, b in zip(players, before)])
+            check("map box, %s, mask +%d: centred or scrolled to any corner, the view "
+                  "shows only tiles asked for" % (name, stroke),
+                  [beyond(v, mask, asked) for v in centred + scrolled
+                   if beyond(v, mask, asked) != (0, 0, 0, 0)], [])
+
+    check("map box, 1280x1024: both calls set exactly the original's numbers",
+          draw_area((1280, 1024))[0], [(46848, 16128, 1280, 1280)] * 2)
+    check("map box, 1920x1080: wider than five tiles, so the ten columns asked for; "
+          "the rows keep the original's five",
+          draw_area((1920, 1080))[0][-1][2:], (10 * TILE, 5 * TILE))
+    check("map box, 3840x2160: both axes take the block, 18 x 10 tiles",
+          draw_area((3840, 2160))[0][-1][2:], (18 * TILE, 10 * TILE))
+
+    # Regression control: the original's box alone, measured the same way.
+    _, asked, mask = draw_area((1920, 1080))
+    _, _, scrolled = views((46848, 16128, 1280, 1280), mask, asked)
+    check("original box, 1920x1080: edge scrolling runs off the tiles asked for",
+          all(beyond(v, mask, asked)[:2] != (0, 0) for v in scrolled), True)
+    _, asked, mask = draw_area((3840, 2160))
+    _, centred, _ = views((46848, 16128, 1280, 1280), mask, asked)
+    check("original box, 3840x2160: the view sits 168 px above the rows asked for",
+          sorted({beyond(v, mask, asked)[2] for v in centred}), [168])
+
+    # The switch is boundOX's own test: the mask against five tiles.
+    check("map box at the edge: a 1280 px frame (window 1330) takes the block, "
+          "1279 takes it only when the stroke makes the mask 1280",
+          [draw_area((1330, 1024))[0][-1][::2],
+           draw_area((1329, 1024))[0][-1][::2],
+           draw_area((1329, 1024), stroke=1)[0][-1][::2]],
+          [(182 * TILE, 8 * TILE), (183 * TILE, 5 * TILE), (182 * TILE, 8 * TILE)])
+    # The small scale is 1 px a cell, tiles of 256 px too: tile 23,8.
+    check("map box, small scale, 3840x2160: the block asked for",
+          draw_area((3840, 2160), scale=1)[:2],
+          ([(21 * TILE, 6 * TILE, 5 * TILE, 5 * TILE), (15 * TILE, 4 * TILE, 18 * TILE, 10 * TILE)],
+           (15, 32, 4, 13)))
+except Exception:
+    import traceback
+    fails.append("map scroll box check crashed:\n" + traceback.format_exc())
+
+
 def check_container(label, version, body):
     """The same file round trip for the fixture and the optional real client."""
     original = w.split_tags(body)
@@ -189,6 +338,11 @@ def check_container(label, version, body):
         actual = w.split_tags(out)
         check(label + ": applying the patch twice does not stack HUDs or wrappers",
               w.inject(actual), actual)
+        mine = [t[1] for t in actual if t[0] == 12 and w.MARK.encode() in t[1]]
+        check(label + ": the saved DoAction wraps DisplayLandscape.drawArea",
+              [name for name in (b"globmap", b"DisplayLandscape", b"drawArea",
+                                 b"__mapScrollOrig", b"setScrollArea", b"mask_mc")
+               if name not in mine[0]], [])
         # Both ceilings are normalized to the same value; everything else
         # except our marked DoAction and new bitmap must remain identical.
         w.patch_ceiling(original, 3840, 2160)
@@ -249,6 +403,17 @@ try:
     if os.path.exists(src):
         version, body = w.read_swf(src)
         check_container("real client", version, body)
+        # Patch 13 wraps a prototype that frame 1 has to have built by the
+        # time the injected DoAction runs, and reads these names from it.
+        real = w.inject(w.split_tags(body))
+        ours = next(k for k, t in enumerate(real) if t[0] == 12 and w.MARK.encode() in t[1])
+        landscape = [k for k, (code, payload, _) in enumerate(real) if code == 59
+                     and {"DisplayLandscape", "drawArea", "setScrollArea", "getFrameSize",
+                          "gmapScreen", "globalMapFrame", "cellSize", "mapScale"}
+                     <= set(w.constant_pool(payload[2:]))]
+        check("real client: DisplayLandscape, with every name the scroll box "
+              "wrapper reads, is built in frame 1 before the injected code",
+              [k < ours for k in landscape], [True])
     else:
         print("  --  main.swf not found at %s; real-client checks skipped;"
               " fixture checks ran above" % res)
