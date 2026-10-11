@@ -107,6 +107,11 @@ for broken in ({"cities": [{"name": "А", "top": 8, "places": []},
         pass
 check("  ..and a file that breaks it (a ceiling below the floor, a place in two cities,"
       " a kind nobody sells) stops the server", bad, [])
+unsorted = shop_bands._WARES is None
+items.preload()
+check("the server sorts the bands' wares out at start (items.preload), not at the first"
+      " stall a player opens: built inside a handler, they held the loop for over a second",
+      (unsorted, shop_bands._WARES is not None), (True, True))
 
 # --- 2. who sells ------------------------------------------------------------------------
 print()

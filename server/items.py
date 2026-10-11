@@ -1171,3 +1171,9 @@ def preload():
     _orig_described()
     links()
     stock_table()
+    # The city bands' wares (every weapon line, knife and set piece sorted
+    # out of the catalogue by level and price): over a second on a quiet
+    # machine, and the first stall of a city entered after a restart held
+    # the loop for it -- in CI, test_terrain_move, which starts on Хальфа's
+    # black market (102), read that market's stalls after the map's frames.
+    shop_bands.wares()
