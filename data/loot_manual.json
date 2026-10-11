@@ -326,7 +326,7 @@
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "DESIGNED, the owner's (2026-09-25): «давай чтобы у босса в нубийке выпадал слиток золото», then «и слиток в 5 голд». 2103 m05_nc_Leader_lvl5, '[5] Лидер Новые колонисты' -- the wiki's 'Лидер Ян Дуглас' of the Лагерь Бандитов at 6272x1840 -- stands in location 34 and in no other file, no spawn substitute maps to it, and it was the only boss of the valley's sixteen settlements (the one other Nubian boss, nubia_boss 1406, Большой Мвамба, came onto the map with his camp 31 at 6274,1833 for Шульц's «Экипировка к пистолету» on 2026-09-26, and does not carry the ingot); which ingot, see items 4796",
-    "_designed": "all of it: one ingot on every kill, chance 1.0 (mobs.SURE), so outside the two a kill's rolls may keep (mobs.MAX_DROPS) and never pushed out by them; the valuable tier is a label only. The boss comes at 18:00 and 20:00 (server/bosses.py), so it is two ingots a day at most for the whole server, and 10 ounces of gold a day through Джеррах's quest, a hand-in each against the daily limit"
+    "_designed": "all of it: one ingot on every kill, chance 1.0 (mobs.SURE), so outside the two a kill's rolls may keep (mobs.MAX_DROPS) and never pushed out by them; the valuable tier is a label only. The boss comes at 14:00, 18:00 and 22:00 (server/bosses.py), so it is three ingots a day at most for the whole server, and 15 ounces of gold a day through Джеррах's quest, a hand-in each against the daily limit"
    },
    {
     "type": 234,

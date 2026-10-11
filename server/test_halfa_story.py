@@ -160,7 +160,7 @@ SCANNED = sorted(set().union(*WHERE.values()) | {
     CAMP_NC, CHIEF_NC, HENRY_JR_LOC, COURIER_LOC, INTERCEPT, PASTURE, LOST_SQUAD, JA_CAMP, 86,
     LU_CAMP, 83, MG_CAMP, MG_CHIEF, SPIRIT, GATHERING, DEBTORS, GOLD_MINE, AMBUSH, DSR_LOC,
     100, 138})
-# The two starts that name the owner's boss hours (18 and 20) where the
+# The two starts that name the owner's boss hours (14, 18 and 22) where the
 # original says 18 and 22: the only lines of the story that are not the
 # original's.
 HOURS = {131: (47391, "в 18:00 и 22:00", bosses.say_hours()),

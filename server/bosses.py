@@ -2,7 +2,8 @@
 
 The owner's rule (2026-09-24): «босс постоянно не должен быть в локации, а
 только в 18 и 20 часов», and on 2026-10-02 «добавь ещё боссов на 14
-часов»: 14, 18 and 20. What data/mob_types.json calls a boss -- the named
+часов»: 14, 18 and 20; and on 2026-10-11 «давай 14 18 22»: 14, 18 and
+22. What data/mob_types.json calls a boss -- the named
 mrare_ leaders, the LandLords and godfathers, the camp, warehouse and
 instance bosses: 191 spawn points in 169 war locations -- used to stand
 there all day and come back RESPAWN_DELAY after every kill like the rest of
@@ -17,14 +18,15 @@ stripped, and only its announcements survive in the map's tooltips
 кто-то приезжает... встреча с главарем» and «Сражение за чертежи в 01.00,
 05.00, 18:00 и 22:00», the warehouses «Хозяин присутствует с 20:00 до
 21:00», the prison «Усиление режима в 12:00, 16:00 и 23:00». The owner's 14, 18
-and 20 are kept over them -- but for the prison, whose uprising keeps its
+and 22 are kept over them (18 and 22 are the camps' labels' own, 14 is the
+owner's) -- but for the prison, whose uprising keeps its
 label's hours as a window of data/schedule.json (events.py, on this
 module's clock). This module only knows the clock;
 combat.RoomCombat.keep_hours is what brings a room's bosses in and sends
 them away. A warehouse's «Хозяин склада» killed in its window hands the
 warehouse to a clan (holdings.py), so each window settles it once.
 
-    LAVA_BOSS_HOURS  "14,18,20"       the hours, H or H:MM on that clock.
+    LAVA_BOSS_HOURS  "14,18,22"       the hours, H or H:MM on that clock.
                                       "off" turns the rule off, and a boss is
                                       an ordinary mob again, which drops no
                                       gold ingot (combat.RoomCombat.
@@ -68,7 +70,7 @@ ZONE = _zone(TZ_NAME)
 
 
 def parse_hours(raw):
-    """"18,20" -> [1080, 1200]: minutes after local midnight, sorted, each
+    """"18,22" -> [1080, 1320]: minutes after local midnight, sorted, each
     once. H or H:MM; anything else is left out with a warning, so a typo
     costs one hour and not the schedule."""
     out = set()
@@ -88,14 +90,14 @@ def parse_hours(raw):
     return sorted(out)
 
 
-DEFAULT_HOURS = "14,18,20"
+DEFAULT_HOURS = "14,18,22"
 DEFAULT_STAY = 60.0
 
 
 def hours_from(raw):
     """LAVA_BOSS_HOURS as the rule reads it. Only "off" turns the rule off.
     Unset or blank is the owner's hours -- "LAVA_BOSS_HOURS=" in a shell or
-    an env file outside compose, whose ${...:-14,18,20} covers only its own
+    an env file outside compose, whose ${...:-14,18,22} covers only its own
     case, must not quietly leave every boss standing all day -- and so is a
     value in which not one hour could be read."""
     raw = (raw or "").strip()
@@ -209,7 +211,7 @@ def describe():
 
 
 def _and(parts):
-    """«14, 18 и 20»: a Russian list."""
+    """«14, 18 и 22»: a Russian list."""
     return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " и " + parts[-1]
 
 
@@ -224,7 +226,7 @@ def _hours_word(n):
 
 def say_hours(short=False):
     """The hours as a quest's start names them (quests._say_boss_hours):
-    «в 14:00, 18:00 и 20:00», or short, «в 14, 18 и 20 часов», which falls
+    «в 14:00, 18:00 и 22:00», or short, «в 14, 18 и 22 часа», which falls
     back to the long one where an hour has minutes. A text that tells a
     player when to come must say what the server does, whatever
     LAVA_BOSS_HOURS is; with the rule off a boss stands all day."""

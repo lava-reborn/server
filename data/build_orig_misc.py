@@ -517,7 +517,7 @@ VERIFIED = {
     127: (47269, 47270, None, 47271),
     128: (47272, 47273, None, 47274),
     # «Порядок» and its part 2; part 3 and «Чертежи» (131, 132) are not
-    # here: their starts name the owner's boss hours, 18 and 20, where the
+    # here: their starts name the owner's boss hours, 14, 18 and 22, where the
     # original says 18 and 22, and are ours.
     129: (47383, 47384, None, 47385),
     130: (47386, 47387, 47388, 47389),

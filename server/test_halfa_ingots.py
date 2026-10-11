@@ -338,12 +338,12 @@ async def _restart():
         rc.keep_hours()
         out["after a restart in the window"] = (kais.eid in room.npcs, kais.away,
                                                 rc.actor(kais.eid))
-        now[0] = _msk(20, 0, 5)
+        now[0] = _msk(22, 0, 5)
         rc.keep_hours()
-        out["at eight he comes"] = (kais.eid in room.npcs, kais.alive)
+        out["at ten he comes"] = (kais.eid in room.npcs, kais.alive)
         store.close()
 
-        # Another restart in the eight o'clock window, nobody having killed
+        # Another restart in the ten o'clock window, nobody having killed
         # him in it: he stands.
         store = accounts.Store(db)
         room, rc, kais = room_87(store)
@@ -359,7 +359,7 @@ check("a boss killed in his window stays away through a restart until the next o
       _run(_restart(), "a restart in the window"),
       {"stands at six": True, "his bag": [(I10, 1)], "written down": True,
        "after a restart in the window": (False, True, None),
-       "at eight he comes": (True, True),
+       "at ten he comes": (True, True),
        "a restart in a window he was not killed in": True})
 
 

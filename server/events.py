@@ -11,7 +11,7 @@ The clock is the bosses' (bosses.clock: Moscow time, LAVA_BOSS_CLOCK for a
 test), and a window is never remembered, only computed: whether it is open,
 and since when, is asked of the clock every time. A server restarted in the
 middle of an uprising has the uprising on; one started out of season has no
-season. The bosses keep their own rule (bosses.py, the owner's 18/20); a
+season. The bosses keep their own rule (bosses.py, the owner's 14/18/22); a
 window here is everything else that keeps time.
 
 data/schedule.json (LAVA_SCHEDULE names another file, for a test; like

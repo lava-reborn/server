@@ -8,7 +8,7 @@ The owner's decisions of 2026-09-25: «давай чтобы у босса в н
 The boss is [5] Лидер Ян Дуглас, Новые колонисты (2103, texts.xml 50270),
 in the Лагерь бандитов (location 34) and nowhere else (the valley's other
 boss, Большой Мвамба in his camp 31, carries no ingot), and he keeps the
-boss hours (bosses.py: 18:00 and 20:00). On every kill
+boss hours (bosses.py: 14:00, 18:00 and 22:00). On every kill
 his bag holds one ingot of 5 ounces of gold, 4796 New_Gold_Ingot_5: a row of
 data/loot_manual.json at chance 1.0, which mobs.roll_table puts in without a
 die and outside the two a kill's rolls may keep (mobs.SURE, MAX_DROPS), so

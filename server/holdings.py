@@ -35,7 +35,7 @@ his clan in those seconds still counts for the one he fought for.
 A boss killed is away until its next window (bosses.py, combat.
 RoomCombat.keep_hours; the boss_kills table keeps that over a restart), so
 every window of its hours settles a site once at most: the owner's 14:00,
-18:00 and 20:00, Moscow time.
+18:00 and 22:00, Moscow time.
 
 How long. DESIGNED, the owner's of 2026-10-09: the clan holds the site until
 another clan takes it. A disband drops its holdings in the same transaction

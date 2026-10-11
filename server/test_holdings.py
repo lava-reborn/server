@@ -283,7 +283,7 @@ async def main():
           [(True, True, "Патроны и афро владельцам склада", key, lvl, True, False)
            for key, lvl in (("wh_sever", 8), ("wh_vostok", 8), ("wh_ug", 12))])
 
-    windows = iter([at(h, 5, day=d) for d in range(6, 40) for h in (14, 18, 20)])
+    windows = iter([at(h, 5, day=d) for d in range(6, 40) for h in (14, 18, 22)])
 
     def window():
         """The next hour of the boss: it arrives, whole, its ledgers empty."""

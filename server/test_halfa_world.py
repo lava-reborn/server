@@ -39,7 +39,7 @@ from types import SimpleNamespace
 
 # The boss clock at noon, Moscow time, on the owner's hours: outside every
 # window, so a boss that keeps the hours is gone and one that does not stands.
-os.environ["LAVA_BOSS_HOURS"] = "18,20"
+os.environ["LAVA_BOSS_HOURS"] = "14,18,22"
 os.environ["LAVA_BOSS_STAY"] = "60"
 os.environ["LAVA_BOSS_CLOCK"] = "2026-09-28T12:00:00"
 

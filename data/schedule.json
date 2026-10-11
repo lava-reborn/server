@@ -1,10 +1,10 @@
 {
- "_": "Timed windows and what they open and close, read by server/events.py (its docstring has the format): windows (daily times, windows laid over another's openings, calendar dates), spawns (the creatures of a location's own file that stand only while a window is open), held_out (of a file's own, never), quests (rows on offer only while a window is open), loot (a thing creatures carry in certain places), keep_in (things that exist in certain places only). The clock is the bosses' (server/bosses.py: Moscow time, LAVA_BOSS_CLOCK for a test), and nothing here is remembered: a server restarted in a window is in it. The bosses keep the owner's 18/20 (bosses.py); the rest keeps the times the map labels and the texts give. Every row says whether it is RECOVERED or DESIGNED.",
+ "_": "Timed windows and what they open and close, read by server/events.py (its docstring has the format): windows (daily times, windows laid over another's openings, calendar dates), spawns (the creatures of a location's own file that stand only while a window is open), held_out (of a file's own, never), quests (rows on offer only while a window is open), loot (a thing creatures carry in certain places), keep_in (things that exist in certain places only). The clock is the bosses' (server/bosses.py: Moscow time, LAVA_BOSS_CLOCK for a test), and nothing here is remembered: a server restarted in a window is in it. The bosses keep the owner's 14/18/22 (bosses.py); the rest keeps the times the map labels and the texts give. Every row says whether it is RECOVERED or DESIGNED.",
  "windows": {
   "prison_wh": {
    "daily": ["12:00", "16:00", "23:00"],
    "minutes": 30,
-   "why": "RECOVERED. The uprising in Вади-Хальфа's prison (m8, the blocks 644-648 under the yard 176, 5985,1744): the yard's map label «Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml; the wiki's «Тюрьма Вади-Хальфы» the same), and the guard's call 62258: «каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа», its hint «\"Охранять\" заключенных нужно в течение 30 минут» (62272). The prisoners and the godfather stand while it is open. Not the bosses' 18/20: the owner's rule is for world bosses and camp chiefs, and the prison keeps the times its label gives."
+   "why": "RECOVERED. The uprising in Вади-Хальфа's prison (m8, the blocks 644-648 under the yard 176, 5985,1744): the yard's map label «Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml; the wiki's «Тюрьма Вади-Хальфы» the same), and the guard's call 62258: «каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа», its hint «\"Охранять\" заключенных нужно в течение 30 минут» (62272). The prisoners and the godfather stand while it is open. Not the bosses' 14/18/22: the owner's rule is for world bosses and camp chiefs, and the prison keeps the times its label gives."
   },
   "prison_wh_gates": {
    "of": "prison_wh",
@@ -21,7 +21,7 @@
   "wh_box": {
    "daily": ["19:00"],
    "minutes": 60,
-   "why": "RECOVERED. The money boxes of Вади-Хальфа's three склады 109-111: the map labels' «Дележ добычи с 19:00 до 20:00» (res/database/locations.xml 315-317). Opens the holders' daily rows (data/holdings.json, server/holdings.py); the boss keeps the owner's 14, 18 and 20 (bosses.py), so a clan collects at seven and defends at eight."
+   "why": "RECOVERED. The money boxes of Вади-Хальфа's three склады 109-111: the map labels' «Дележ добычи с 19:00 до 20:00» (res/database/locations.xml 315-317). Opens the holders' daily rows (data/holdings.json, server/holdings.py); the boss keeps the owner's 14, 18 and 22 (bosses.py), so a clan collects at seven and defends at two, six or ten."
   },
   "ny": {
    "dates": [["12-20", "01-15"]],

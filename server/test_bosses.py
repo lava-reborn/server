@@ -1,12 +1,17 @@
-"""Bosses keep hours: only at 18:00 and 20:00 Moscow time, and not after a kill.
+"""Bosses keep hours: only at the owner's hours, 14:00, 18:00 and 22:00 Moscow
+time, and not after a kill.
 
 The owner's rule (2026-09-24): «босс постоянно не должен быть в локации, а
-только в 18 и 20 часов». bosses.py holds the clock and the windows,
+только в 18 и 20 часов», 14 added on 2026-10-02, and on 2026-10-11 «давай
+14 18 22». bosses.py holds the clock and the windows,
 combat.RoomCombat.keep_hours applies them to a room. Three layers here:
 
   * the windows themselves, on the Moscow clock and not the machine's, and
     the settings they are read from: a slip in one costs its default, never
-    the server's start nor, but for "off", the rule;
+    the server's start nor, but for "off", the rule; and the defaults of
+    docker-compose.yml and the env examples, which must name the hours of
+    bosses.DEFAULT_HOURS that the client's release and lava-http's string
+    table are built on;
   * a real room and a real RoomCombat on a clock the test turns by hand:
     out of hours nobody meets the boss, at the hour it arrives the way a
     respawn does, at the end of its stay it leaves -- but not in the middle
@@ -22,6 +27,7 @@ combat.RoomCombat.keep_hours applies them to a room. Three layers here:
 """
 import asyncio
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -62,12 +68,12 @@ def at(h, m=0, s=0, day=24):
 
 
 # --- the windows ------------------------------------------------------------------
-check("the owner's hours are the default: 14:00, 18:00 and 20:00, for an hour, in Moscow",
+check("the owner's hours are the default: 14:00, 18:00 and 22:00, for an hour, in Moscow",
       (bosses.HOURS, bosses.STAY, bosses.TZ_NAME),
-      ([14 * 60, 18 * 60, 20 * 60], 3600.0, "Europe/Moscow"))
+      ([14 * 60, 18 * 60, 22 * 60], 3600.0, "Europe/Moscow"))
 check("  ..as the quests' starts name them, long and short",
       (bosses.say_hours(), bosses.say_hours(short=True)),
-      ("в 14:00, 18:00 и 20:00", "в 14, 18 и 20 часов"))
+      ("в 14:00, 18:00 и 22:00", "в 14, 18 и 22 часа"))
 _hours = bosses.HOURS
 try:
     bosses.HOURS = [18 * 60, 22 * 60]
@@ -89,7 +95,8 @@ check("a second before six: no window", bosses.slot(at(17, 59, 59)), None)
 check("at six the six o'clock window opens", bosses.slot(at(18)), at(18))
 check("and holds to the last second of its hour", bosses.slot(at(18, 59, 59)), at(18))
 check("at seven it is shut", bosses.slot(at(19)), None)
-check("half past eight is the eight o'clock one", bosses.slot(at(20, 30)), at(20))
+check("half past ten is the ten o'clock one", bosses.slot(at(22, 30)), at(22))
+check("half past eight: no window any more", bosses.slot(at(20, 30)), None)
 check("noon, nine at night: none",
       (bosses.slot(at(12)), bosses.slot(at(21))), (None, None))
 check("six in the evening UTC is nine in Moscow: none",
@@ -131,7 +138,7 @@ def imported(**settings):
 # The settings are read at import, and an import that raises is a server
 # that does not start; a setting that turns the rule off is every boss
 # standing all day. Only "off" may do that.
-OWNERS = "[840, 1080, 1200] 3600.0"
+OWNERS = "[840, 1080, 1320] 3600.0"
 check("a stay that is not a number is the default stay, not a server that "
       "will not start", imported(LAVA_BOSS_STAY="час"), OWNERS)
 check("nor is a stay of nothing, which would be bosses that never come",
@@ -145,6 +152,30 @@ check("a test clock that is no time is ignored, not fatal",
       imported(LAVA_BOSS_CLOCK="в шесть"), OWNERS)
 check("and good settings are read as given",
       imported(LAVA_BOSS_HOURS="18", LAVA_BOSS_STAY="0.25"), "[1080] 15.0")
+
+
+# The client's release (deploy/remote/lava-gate.sh, a docker run with no
+# LAVA_BOSS_*) and lava-http's string table name the hours in the quests'
+# starts from bosses.DEFAULT_HOURS, while lava-game reads its own from
+# docker-compose.yml's default. One that differs is bosses coming at hours
+# no quest and no map label names: the hours change in DEFAULT_HOURS and in
+# these defaults together.
+ROOT = os.path.dirname(HERE)
+
+
+def _default(path, pattern, flags=0):
+    """The LAVA_BOSS_HOURS a file of the repo gives, or None without one."""
+    with open(os.path.join(ROOT, path), encoding=ENC) as fh:
+        found = re.search(pattern, fh.read(), flags)
+    return found.group(1).strip() if found else None
+
+
+check("docker-compose.yml, .env.example and deploy/env.example default to "
+      "bosses.DEFAULT_HOURS",
+      [_default("docker-compose.yml", r"LAVA_BOSS_HOURS:\s*\$\{LAVA_BOSS_HOURS:-([^}]*)\}"),
+       _default(".env.example", r"^LAVA_BOSS_HOURS=(.*)$", re.M),
+       _default(os.path.join("deploy", "env.example"), r"^LAVA_BOSS_HOURS=(.*)$", re.M)],
+      [bosses.DEFAULT_HOURS] * 3)
 
 
 # --- a real room on a clock turned by hand ------------------------------------------
@@ -248,11 +279,11 @@ async def _hours():
         rc.keep_hours()
         check("between the hours it is not back", (seat.take(), eid in room.npcs), ([], False))
 
-        NOW[0] = at(20)
+        NOW[0] = at(22)
         rc.keep_hours()
-        check("at eight it comes again", [f[0] for f in seat.take()], ["lch", "npc_info"])
+        check("at ten it comes again", [f[0] for f in seat.take()], ["lch", "npc_info"])
 
-        NOW[0] = at(20, 5)
+        NOW[0] = at(22, 5)
         rc.kill(boss, None)
         await asyncio.sleep(0.4)          # the corpse fades, the respawn delay passes
         got = seat.take()
@@ -260,7 +291,7 @@ async def _hours():
               [(n, sorted(p)) for n, p in got],
               [("lch", ["dead"]), ("lch", ["lostUser"]), ("ss_loot", ["hex", "s_status"])])
         check("not back after the respawn delay", (eid in room.npcs, boss.away), (False, True))
-        for t in (at(20, 10), at(20, 59, 59), at(21), at(12, day=25)):
+        for t in (at(22, 10), at(22, 59, 59), at(23), at(12, day=25)):
             NOW[0] = t
             rc.keep_hours()
         check("nor for the rest of its hour, nor overnight", (seat.take(), eid in room.npcs), ([], False))
@@ -348,7 +379,7 @@ async def _escort():
 
         # The room empties in his hour with a thug dead and Мвамба worn down
         # and off his cell: no tick sends him away at seven, so whoever walks
-        # in at ten past eight (Session.enter_room asks keep_hours first)
+        # in at ten past ten (Session.enter_room asks keep_hours first)
         # finds him standing. He has come for this hour all the same.
         NOW[0] = at(18, 10)
         rc.kill(first, None)
@@ -358,20 +389,20 @@ async def _escort():
         room.npcs[boss.eid] = room.npcs[boss.eid]._replace(cell=boss.cell)
         del room.players[seat]
         seat.take()
-        NOW[0] = at(20, 10)
+        NOW[0] = at(22, 10)
         rc.keep_hours()
         check("a thug killed before the room emptied is back for Мвамба's next hour, "
               "though nothing sent Мвамба away in between",
               (first.eid in room.npcs, first.away), (True, False))
         check("  ..and Мвамба is whole, on his own cell, as an arrival leaves him",
               (boss.hp == boss.hp_max, room.npcs[boss.eid].cell, boss.slot),
-              (True, boss.home, at(20)))
+              (True, boss.home, at(22)))
 
         # A thug killed a moment before Мвамба arrives is still a fading
         # corpse at the arrival (CORPSE_DELAY): he is back as soon as it is
         # gone, not at the hour after.
         room.players[seat] = True
-        NOW[0] = at(21)
+        NOW[0] = at(23)
         rc.keep_hours()
         NOW[0] = at(13, 59, 59, day=25)
         rc.kill(second, None)
