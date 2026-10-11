@@ -664,17 +664,24 @@ CELL_FIXES = {
 # (server/inventory.item_level): without it the gun asks for nothing and
 # reads as a level-0 one. The original's own name for the line says 16 --
 # texts.xml 3534 «РПД[A][16]» (data/orig_items.json) -- as does its price,
-# 67 400 afro, every level-16 gun's.
+# 67 400 afro, every level-16 gun's. A row is the base article's and its
+# Mod pages' alike (MOD_TAIL): «РПД Mod VIII» and the rest leave the same row
+# out, and a modification asks for the level of the gun it is made of, as
+# every other Mod page's own table says.
 ROW_FIXES = {
     ("РПД", "общие", "Необходимые навыки"): [{"Стрельба": 16}] * 3,
 }
+
+# A Mod page's title: its base article's, then «Mod» and a Roman number
+# (data/wiki_links.py, the same pattern).
+MOD_TAIL = re.compile(r"\s+Mod\s*[IVX]+\s*$")
 
 
 def repair_cells(title, tables):
     """Put the known mistyped cells of this page right, in place, and add
     the rows it leaves out (ROW_FIXES) to its first table."""
     for (page, section, label), value in ROW_FIXES.items():
-        if page == title and tables:
+        if MOD_TAIL.sub("", title) == page and tables:
             rows = tables[0].setdefault("sections", {}).setdefault(section, {})
             rows.setdefault(label, list(value))
     for table in tables:
@@ -686,6 +693,32 @@ def repair_cells(title, tables):
                     fix = CELL_FIXES.get((title, label, cell)) if isinstance(cell, str) else None
                     if fix is not None:
                         value[i] = fix
+
+
+# The rounds a gun chambers when its table has no «Тип патронов» row: the
+# calibres its «Боеприпасы» section links. Most articles state it there
+# alone -- «P90 ... ==Боеприпасы== [[5.7x28 (SS190)]]», «Thompson ...
+# [[0.45 калибр]]» -- and without this the server fell back to its class's
+# designed calibre (server/items.AMMO_FOR): a P90 that took 9 mm, a G3 that
+# took 7.62x39. A Mod page often lists the rounds one by one, «9мм НАТО (G)
+# ЭК», «7.62х54R СТ»: the quality and its (G)/(P)/(PS)/(OLD) mark come off,
+# leaving the calibre's page, whose every variant the gun then takes (the
+# server's items._calibre, as for a table row). A Mod page that names none
+# takes its base article's. Two links name a calibre short of its page.
+ROUND_QUALITY = re.compile(r"\s*(?:\((?:G|P|PS|OLD)\))?\s*"
+                           r"(?:[КK][СC]|[СC][ТT]|[ОO][ТT]|ББ|ЭК|[СC]Б|ШК)?\s*$")
+CALIBRE_PAGE = {"5.56х45мм": "5.56х45мм НАТО", "7.62х51мм": "7.62х51мм НАТО"}
+
+
+def section_calibres(lists):
+    """Calibre page titles out of a page's «Боеприпасы» links, in order."""
+    out = []
+    for name in (lists or {}).get("ammo") or []:
+        name = ROUND_QUALITY.sub("", name).strip()
+        name = CALIBRE_PAGE.get(name, name)
+        if name and name not in out:
+            out.append(name)
+    return out
 
 
 def main():
@@ -739,6 +772,12 @@ def main():
                                          choice, tier, cls)
                     if not si:
                         continue
+                    if root == FIRE_ARM and not si.get("ammo_calibre"):
+                        base = items.get(MOD_TAIL.sub("", title)) or {}
+                        rounds = section_calibres(it["lists"]) or \
+                            section_calibres(base.get("lists"))
+                        if rounds:
+                            si["ammo_calibre"] = rounds
                     si["name_ru"] = re.sub(r"\s*\((R|Rw|RW|Q)\)\s*$", "", title)
                     if it["description"]:
                         si["desc_ru"] = it["description"]

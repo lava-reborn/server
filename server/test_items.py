@@ -11,8 +11,10 @@ frame with no zero where the client divides (items.py, top).
     wsl.exe -e python3 server/test_items.py            # random sample
     LAVA_TEST_SEED=7 wsl.exe -e python3 server/test_items.py
 """
+import json
 import os
 import random
+import re
 import sys
 import time
 
@@ -263,6 +265,75 @@ check("MG-3: chambers real rounds of its class", set(p["comp_array"]) >= set(ite
 cmd, p = items.static_info(26242)
 check("AK: comp_array from the wiki's calibre", 6098 in p["comp_array"], True)
 check("AK: gold rounds of the calibre chamber too", 6158 in p["comp_array"], True)
+
+# The rounds a gun takes are its article's. Most articles name them in their
+# «Боеприпасы» section alone, not in a table row: «P90 ... ==Боеприпасы==
+# [[5.7x28 (SS190)]]». Read here off the mirror itself (data/wiki/pages.json):
+# each link of the section, less a round's quality and (G)/(P)/(PS)/(OLD) mark
+# («9мм НАТО (G) ЭК»), is a calibre page, or the start of one's title
+# («5.56х45мм» for «5.56х45мм НАТО»); a Mod page that links none takes its base
+# article's. The gun takes every variant of each.
+with open(os.path.join(os.path.dirname(HERE), "data", "wiki", "pages.json"),
+          encoding="utf-8") as _fh:
+    _PAGES = json.load(_fh)
+_QUALITY = re.compile(r"\s*(?:\((?:G|P|PS|OLD)\))?\s*(?:КС|СТ|ОТ|ББ|ЭК|СБ|CБ|ШК)?\s*$")
+_CALIBRES = [t for t, ids in items.links()[1].items()
+             if ids and all(items.root_of(i) == items.AMMO for i in ids)]
+
+
+def article_rounds(title):
+    """Every round the article's «Боеприпасы» section names, as type ids."""
+    text = (_PAGES.get(title) or {}).get("wikitext", "")
+    body, inside = [], False
+    for line in text.split("\n"):
+        head = re.match(r"^==([^=].*?)==\s*$", line)
+        if head:
+            inside = head.group(1).strip() == "Боеприпасы"
+        elif inside:
+            body.append(line)
+    out = set()
+    for link in re.findall(r"\[\[([^\]|#]+)", "\n".join(body)):
+        link = _QUALITY.sub("", link.strip()).strip()
+        for page in _CALIBRES:
+            if page == link or page.startswith(link + " "):
+                out |= set(items.resolve_title(page, all_variants=True))
+    return out
+
+
+_MOD_TAIL = re.compile(r"\s+Mod\s*[IVX]+\s*$")
+odd, said = [], 0
+for t, rec in sorted(wiki.items()):
+    if items.root_of(t) != items.FIRE_ARM:
+        continue
+    page = rec["_wiki"]["page"]
+    want = article_rounds(page) or article_rounds(_MOD_TAIL.sub("", page))
+    if want:
+        said += 1
+        if set(items.params_of(t)["comp_array"]) != want:
+            odd.append((t, page))
+check("every linked gun whose article names its rounds chambers those and no others --"
+      " P90 5.7x28, Thompson .45, G3 7.62x51, M16A2 5.56x45, ПК 7.62x54R, Li-Enfield 7.62x54R",
+      (odd[:12], len(odd)), ([], 0))
+check("  ..which is most of the linked guns (801 of 965; the rest name theirs in a table"
+      " row alone)", said >= 800, True)
+check("  ..and a gun of no stated round keeps its class's: MEG-23 (its «23-й калибр» has"
+      " no page)", items.params_of(5727)["comp_array"], items.AMMO_FOR[items.params_of(5727)["weapon_type"]])
+
+# A modification asks for the level of the gun it is made of: РПД's table and its Mod
+# pages' leave «Необходимые навыки» out, and the extractor puts the original's 16 into
+# all of them (data/wiki_extract.ROW_FIXES).
+_lvl = {}
+for t, rec in wiki.items():
+    if items.root_of(t) == items.FIRE_ARM and not _MOD_TAIL.search(rec["_wiki"]["page"]):
+        _lvl.setdefault(rec["_wiki"]["page"], set()).add(
+            max((items.params_of(t) or {}).get("need_skills") or [0]))
+check("every linked gun modification asks for its base gun's level (РПД Mod VIII to XIV: 16)",
+      sorted((t, rec["_wiki"]["page"]) for t, rec in wiki.items()
+             if items.root_of(t) == items.FIRE_ARM and _MOD_TAIL.search(rec["_wiki"]["page"])
+             and _lvl.get(_MOD_TAIL.sub("", rec["_wiki"]["page"]))
+             and max(items.params_of(t).get("need_skills") or [0])
+             not in _lvl[_MOD_TAIL.sub("", rec["_wiki"]["page"])]), [])
+check("  ..РПД Mod XII (A) among them", max(items.params_of(24992).get("need_skills") or [0]), 16)
 cmd, p = items.static_info(6235)
 check("kitchen knife: the wiki's reach and cost", (cmd, p["max_range"], p["cost"]),
       ("ss_si_coldarm", 1.7, 1033))

@@ -14,7 +14,7 @@ In process:
      next floor;
   2. who sells: the sellers of the file stand in its cities' places, and no
      trader standing there that is not one offers a weapon line, a knife or
-     a set piece of its own;
+     a set piece of its own; one that is not keeps its own list there whole;
   3. what: each seller, at each place of its city, sells exactly the band's
      things of its kinds -- worked out here from the catalogue on its own,
      not through shop_bands -- the ordinary and the gold one both, and after
@@ -24,7 +24,8 @@ In process:
      no modification, no quest or (Q) thing, no designed stand-in), every
      thing priced in its own currency and named (name and description ids
      in names.ALL: an id the preload lacks sends the player to the login
-     screen), the order a window reads well;
+     screen), the order a window reads well; every gun a city sells has a
+     round it chambers on sale in that city;
   5. the stall a size the client draws: no stall of a city longer than 64,
      and its userInfo_Trader frame under 4 KiB.
 Then one session, in process, on the wire: the same trader type (5161)
@@ -162,6 +163,18 @@ check("no trader of a city's place that is no seller offers a gun of a line, a k
 check("  ..and no seller's own list in data/npcs.json holds one: they come from the band",
       sorted(t for t, kinds in shop_bands.SELLERS.items() if kinds and npcs.stock(t)
              and any(weapon_or_piece(x) for x in npcs.stock(t))), [])
+LEFT_ALONE = sorted((p, t) for p, types in AT.items() for t in types
+                    if t not in shop_bands.SELLERS)
+# The bouquets: «Букет» (gift_girl_4) in Абри's slums and Абу-Хамед's living quarter,
+# «Цветы для любимого» (stv_flowers_m_g) on Донгола's black market.
+LEFT_HOLDING = [(103, 1215), (127, 1968), (255, 1962)]
+check("  ..and every trader of a city's place that is no seller sells its own list there, as"
+      " anywhere: the bands take nothing off it (the flower sellers keep their bouquets,"
+      " a cold arm to the client)",
+      [(p, t) for p, t in LEFT_ALONE if items.stock_for(t, p) != items.stock_for(t)], [])
+check("  ..not idly: these of them hold a cold arm or a gun of no line, which a cut would take",
+      sorted((p, t) for p, t in LEFT_ALONE if any(shop_bands.band_ware(x)
+                                                  for x in items.stock_for(t))), LEFT_HOLDING)
 
 # --- 3. what -----------------------------------------------------------------------------
 print()
@@ -348,6 +361,32 @@ for (p, t), s in stalls.items():
 check("the order: kind by kind as the seller lists them, by level within; an ordinary gun"
       " or knife right before its (G); a set whole, helm to boots, its A before its G", order, [])
 
+# A gun takes only the rounds of its comp_array: the client checks it before it asks to
+# load (FireArm.compare) and the server again (inventory.py). A city that sells a gun
+# sells, at some stall of its places, a round it takes.
+ROUNDS_IN, GUNS_IN = {}, {}
+for p, types in AT.items():
+    city_name = PLACE_CITY[p][0]
+    for t in types:
+        for x in items.stock_for(t, p):
+            if items.root_of(x) == items.AMMO:
+                ROUNDS_IN.setdefault(city_name, set()).add(x)
+            elif items.root_of(x) == items.FIRE_ARM:
+                GUNS_IN.setdefault(city_name, set()).add(x)
+check("every gun on a stall of a city has a round it chambers on sale in that city: Абри's"
+      " and Донгола's 9 mm sub-machine guns and 12-bore shotguns, Донгола's АС Вал -- all but"
+      " Хан Сэлл's ПП-19-01 Витязь at Абу-Хамед's port, a collectible of his own list whose"
+      " article names no round (the class's 9 mm), which no stall of the city ever sold",
+      sorted((c, x) for c, guns in GUNS_IN.items() for x in guns
+             if not set(items.params_of(x)["comp_array"]) & ROUNDS_IN.get(c, set())),
+      [("Абу-Хамед", 7071)])
+check("  ..and the band's guns of the class stalls, which the wiki had sell other rounds, find"
+      " theirs at the stall itself: 9 mm at Абри's and Донгола's «Пистолет-пулеметы и патроны»,"
+      " 12-bore at Абри's «Дробовики и патроны»",
+      sorted((p, t, x) for (p, t), s in stalls.items() if t in (1163, 1211, 1162)
+             for x in s if items.root_of(x) == items.FIRE_ARM
+             and not set(items.params_of(x)["comp_array"]) & set(s)), [])
+
 # --- 5. the size of a stall --------------------------------------------------------------
 print()
 print("the size of a stall")
@@ -356,7 +395,7 @@ frame = max(len(protocol.frame("userInfo_Trader", id=1, name=t, type_list=s, pmo
                                rmod=0.3)) for (p, t), s in stalls.items())
 check("no stall of a city longer than 64 things (Локсли's 51 was the longest the live game"
       " drew before), and its frame under 4 KiB",
-      (len(biggest[1]) <= 64, frame < 4096, biggest[0]), (True, True, (76, 1225)))
+      (len(biggest[1]) <= 64, frame < 4096, biggest[0]), (True, True, (195, 1229)))
 check("  ..and every thing on them a type the client has (objects.xml), so it draws an icon",
       [x for x in ALL_ON if x not in cat], [])
 check("the place decides: 5161 sells Абри's 8-12, Донгола's 12-16 and Абу-Хамед's 16-20, so"

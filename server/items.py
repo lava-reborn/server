@@ -96,6 +96,7 @@ AMMO_12MM = [6096, 6108, 6120]       # Ammo_12mm_*
 AMMO_45 = [6093, 6105, 6117]         # Ammo_45_*
 AMMO_762x25 = [6094, 6106, 6118]     # Ammo_762x25_*
 AMMO_SP10 = [6103, 6115]             # Ammo_SP_10_12_KS / _ST
+AMMO_SP_5_6 = [6100, 6112]           # ПАБ-9 КС, СП-6 СТ: АС Вал's (Ammo_SP_5_6_KS / _ST)
 
 # The pistols the wiki named, by the line each one sits on (the pairing is
 # data/firearm_lines_manual.json), cheapest first. Ordinary copies only: the
@@ -139,6 +140,20 @@ STOCK = {
     # The sub-machine guns chamber 9 mm (their articles' «Тип патронов»),
     # beside the wiki's own 0.45 and 7.62x25 lines of this stall.
     1203: AMMO_9MM,                                       # wh_SubMachineGuns
+    # Лавки по уровню городов (shop_bands.py) put guns on stalls whose own
+    # rounds do not fit them: Абри and Донгола sell the 9 mm sub-machine guns
+    # of 8-14 (Кустарный ПП to Бизон ПП-19) and the 12-bore shotguns of 8-12,
+    # and no trader of either city sold those rounds. Each class's rounds go
+    # to the stall of its class, ahead of the wiki's own (.45, SS190 and
+    # 7.62x25 at Абри's, SS190 at Донгола's); Донгола has no shotgun stall,
+    # so its shells go where its shotguns are, the oasis's general one; and
+    # АС Вал (16, Донгола's and Абу-Хамед's) gets Донгола's assault rifle
+    # stall the two rounds Абу-Хамед's sells for it (1217, the wiki's).
+    1163: AMMO_9MM,                                       # Abri_SubMachineGuns_trd
+    1162: AMMO_12MM,                                      # Abri_Shotguns_trd
+    1211: AMMO_9MM,                                       # dn_SubMachineGuns
+    1229: AMMO_12MM,                                      # dn_oasis_w_trd
+    1209: AMMO_SP_5_6,                                    # dn_AssaultRifles
 }
 
 # Which weapon class a series belongs to, and the ammunition it accepts.
@@ -539,7 +554,7 @@ _STOCK_ORDER = {FIRE_ARM: 0, COLD_ARM: 1, WEAR: 2, HEAL: 3, TRASH: 4, TROPHY: 5,
 def stock_table():
     """trader type_id -> type ids on sale, built once.
 
-    The designed table is the base for the six black-market stalls and the
+    The designed table (STOCK) is the base for the stalls it names and the
     wiki (data/trader_stock_wiki.json) extends it; every other trader in the
     wiki list sells what its page lists. A title the linker never tied to a
     type id is logged once and left out rather than guessed.
