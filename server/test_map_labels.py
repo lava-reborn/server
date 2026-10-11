@@ -211,7 +211,9 @@ check("the ФСЦ cut's own edits are its two cells and no other",
 # comes says the owner's hours, written out for bosses.DEFAULT_HOURS; the
 # camps whose bosses leave gold (data/loot_manual.json) say so, the far camps,
 # whose bosses leave none, name the fight with the chief. A name with no boss
-# of the clock behind it stays the original's, and is listed here.
+# of the clock behind it stays the original's, and is listed here; the staffs
+# and the dig 433 promised what nothing on the server keeps, and lose those
+# lines (below).
 print("the boss clock (2026-10-11)")
 import bosses  # noqa: E402
 
@@ -277,16 +279,14 @@ check("  ..and Вади-Хальфа's three still share the box from 19:00 to 2
       (one_each(HALFA_WAREHOUSES), ["19:00"], 60))
 
 # Left as the original's (UNDONE «подписи-без-механики»): the prisons keep
-# their own window (data/schedule.json prison_wh); the staffs, the pirates,
-# the jungle hangar, the clan base, the digs and the МКС helicopter have no
+# their own window (data/schedule.json prison_wh); the pirates, the jungle
+# hangar, the clan base, the three far digs and the МКС helicopter have no
 # boss of the clock behind them; the black market sells blueprints.
 ORIGINAL = {(5985, 1744): "Тюрьма Вади-Хальфы", (5903, 1996): "Тюрьма Донголы",
             (6193, 1966): "Тюрьма Абу-Хамеда",
-            (5935, 1711): "Штаб Север", (5850, 1999): "Штаб Центр", (6158, 2000): "Штаб Юг",
-            (5840, 1839): "Штаб Северо-Запад",
             (6160, 1975): "Лагерь Пиратов", (6161, 1973): "Лагерь Пиратов",
             (6174, 1982): "Ангар в джунглях", (6154, 1963): "База Клана",
-            (5943, 1722): "Археологические раскопки", (5850, 1850): "Археологические раскопки",
+            (5850, 1850): "Археологические раскопки",
             (5864, 2001): "Археологические раскопки", (6168, 1988): "Археологические раскопки",
             (6045, 2017): "Третий Склад МКС", (5970, 1730): "Чёрный рынок"}
 MWAMBA = (6274, 1833)                                    # «Лагерь Большого Мвамбы», no hours
@@ -306,7 +306,7 @@ def rows_bytes(doc, cell):
 
 
 check("every other name on the map that tells an hour or offers blueprints is one left as the"
-      " original's: the prisons, the staffs, the pirates, the hangar, the clan base, the digs, the"
+      " original's: the prisons, the pirates, the hangar, the clan base, the three far digs, the"
       " МКС helicopter and the black market",
       sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)} - set(CLOCK_CELLS)),
       sorted(ORIGINAL))
@@ -316,6 +316,38 @@ check("  ..each byte for byte as the file has it, «Лагерь Большог�
       [(rows_bytes(raw, c), True) for c in sorted(ORIGINAL) + [MWAMBA]])
 check("  ..the prisons' «12:00, 16:00 и 23:00» being their own window (data/schedule.json prison_wh)",
       WINDOWS["prison_wh"]["daily"], ["12:00", "16:00", "23:00"])
+
+# The names that promised what nothing on the server keeps (the owner's
+# «поправь чтобы на карте тоже были корректные надписи», 2026-10-11): the four
+# staffs' «Сражение за чертежи в 20:00» -- open desert with nobody on it, no
+# boss at 20:00 and no window then -- and, at the dig 433 beside Вади-Хальфа,
+# the tomb raider of 18:00, where the one inhabitant is the archaeologist. Each
+# keeps its name and loses the promise.
+LABELS_WHY = "The owner's map labels, 2026-10-11"
+STAFFS = {(5935, 1711): "Штаб Север", (5850, 1999): "Штаб Центр", (6158, 2000): "Штаб Юг",
+          (5840, 1839): "Штаб Северо-Запад"}
+STAFFS_WAS = {c: [t + "<br>Сражение за чертежи в 20:00"] for c, t in STAFFS.items()}
+STAFFS_WAS[(5840, 1839)] = [STAFFS_WAS[(5840, 1839)][0]
+                            + "<br>Внимание!!! Необходимо прибывать за 15 минут до встречи с главарем."]
+DIG_433 = (5943, 1722)
+DIG = ("Археологические раскопки:<BR> Часть сохранившегося надземного комплекса.<BR> Вход в "
+       "гробницу Фараонов.<BR>Ходят слухи, что там есть чем поживиться.%s<br>Внимание!!! "
+       "Необходимо прибывать за 15 минут до встречи с археологами.")
+check("the four staffs, open desert with nobody on them, are their names alone",
+      {c: texts_at(out, *c) for c in STAFFS}, {c: [t] for c, t in STAFFS.items()})
+check("  ..where each promised «Сражение за чертежи в 20:00» (Северо-Запад a chief as well)",
+      {c: texts_at(raw, *c) for c in STAFFS}, STAFFS_WAS)
+check("the dig 433 beside Вади-Хальфа keeps the archaeologists' meeting and drops the tomb raider of"
+      " 18:00",
+      (texts_at(raw, *DIG_433), texts_at(out, *DIG_433)),
+      ([DIG % "<BR>Расхитительница гробниц появляется в 18 часов."], [DIG % ""]))
+check("  ..these edits are those five cells and no other",
+      sorted((e["x"], e["y"]) for e in LABELS if e.get("why", "").startswith(LABELS_WHY)),
+      sorted(list(STAFFS) + [DIG_433]))
+check("«чертеж» is left on the map in two names: the black market's «Покупка чертежей» (its shop"
+      " sells them) and the pirates' camp far from Вади-Хальфа (UNDONE «подписи-без-механики»)",
+      sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if "чертеж" in t}),
+      [(5970, 1730), (6160, 1975)])
 
 print("the rule itself")
 doc = ('\ufeff<?xml version=\'1.0\'?>\n<data>\n'
