@@ -288,12 +288,15 @@ try:
     check("the black market keeps Ваккас, Хамис and Тиль, the Magrib base 650, the markets"
           " their Генри", ({1204, 1205, 5} <= standing(102), 650 in standing(52),
                           93 in standing(104), 5104 in standing(35)), (True, True, True, True))
-    check("  ..whose stalls still sell the ladder's Колонист and Странник (Ваккас), Магриб (G)"
-          " and Налетчик (Хамис), Магриб (650)",
-          {t: sorted({sets.SETS[sets.set_of(i)]["name"] for i in items.stock_for(t)
-                      if sets.set_of(i) in sets.SETS}) for t in (1204, 1205, 650)},
-          {1204: ["Колонист", "Странник", "Странник (G)"],
-           1205: ["Магриб (G)", "Налетчик", "Налетчик (G)"], 650: ["Магриб"]})
+    # Each sells the town's band of the ladder where he stands, 4-8, both
+    # versions (the owner's «по уровню городов», 2026-10-10, shop_bands.py).
+    town = ["Магриб", "Магриб (G)", "Налетчик", "Налетчик (G)", "Странник", "Странник (G)"]
+    check("  ..whose stalls still sell the ladder's sets, now the town's band: Странник,"
+          " Магриб and Налетчик, each with its (G)",
+          {t: sorted({sets.SETS[sets.set_of(i)]["name"] for i in items.stock_for(t, place)
+                      if sets.set_of(i) in sets.SETS}) for t, place in ((1204, 102), (1205, 102),
+                                                                        (650, 52))},
+          {1204: town, 1205: town, 650: town})
     check("Генри, Генри ст and Тиль keep their other quests",
           (sorted({119, 132} - set(quests.given_by(93))),
            sorted({105, 119, 132} - set(quests.given_by(5104))), 104 in quests.taken_by(5104),
@@ -785,9 +788,12 @@ try:
            quests.given_by(ARMOR_G), quests.taken_by(ARMOR_G), upgrader.lists(ARMOR_G),
            trophies.is_registrar(ARMOR_G), world.offers_home(ARMOR_G)),
           ([], None, None, [], [], dict(in_types=[], out_types=[], costs=[]), False, False))
+    # Their stalls as the black market has them: since 2026-10-10 a set
+    # seller's sets come from the town's band there (shop_bands.py), and
+    # Хамис's own list in data/npcs.json is empty.
     check("  ..and the mending every trader gives stays on the black market: Ваккас and Хамис"
           " stand there as traders who sell and mend (no trophy registrar's window)",
-          {t: (after.get(t), bool(items.stock_for(t)), trophies.is_registrar(t))
+          {t: (after.get(t), bool(items.stock_for(t, BLACK_MARKET)), trophies.is_registrar(t))
            for t in (WAKKAS, KHAMIS)},
           {t: (world.TRADER, True, False) for t in (WAKKAS, KHAMIS)})
     with io.open(os.path.join(DATA, "orig_names_manual.json"), encoding="utf-8") as _fh:

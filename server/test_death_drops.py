@@ -93,9 +93,11 @@ flags = {}
 for rec in wiki.values():
     key = rec.get("drop_on_death", "none")
     flags[key] = flags.get(key, 0) + 1
-check("the wiki's column, as it reached items_wiki.json: 88 да, 557 нет, 815 silent"
-      " (with the belts and the gun stalls' lines of 2026-09-28)",
-      (flags.get(1), flags.get(0), flags.get("none")), (88, 557, 815))
+check("the wiki's column, as it reached items_wiki.json: 88 да, 557 нет, 1410 silent"
+      " (with the belts and the gun stalls' lines of 2026-09-28, and the 595 records of the"
+      " 48 gun articles of 9-20 linked for the stalls by city level, 2026-10-10, none of"
+      " which states the column)",
+      (flags.get(1), flags.get(0), flags.get("none")), (88, 557, 1410))
 check("the owner's numbers: clothing 10 per cent, the backpack 30",
       (getattr(combat, "WEAR_DROP_CHANCE", None), getattr(combat, "BAG_DROP_CHANCE", None)),
       (10, 30))

@@ -6,8 +6,10 @@ the town before c_ga pays 4000 afro an ounce, each held here:
   1. the clothing market's traders (468, off the map since the owner's cut
      of Вади-Хальфа, 2026-10-09; 5160, 5161 and 5181 stand in the markets of
      Абри, Донгола and Абу-Хамед too): each sells the owner's ladder of sets
-     (data/sets.json) of the levels in his own name, A then G, no (P), no
-     quest (Q) set; «Шахтерская одежда» (5181) the town's miner's clothes, A
+     (data/sets.json), A then G, no (P), no quest (Q) set -- the two left at
+     468 the levels in their own names, 5160 and 5161 their city's band
+     where they stand (the owner's «по уровню городов», 2026-10-10,
+     shop_bands.py); «Шахтерская одежда» (5181) the town's miner's clothes, A
      then G, on the numbers of Колонист[2]; Странник[4] and the gold sets of
      4/6/8 are sold in Halfa, by Ваккас and Хамис, not in the valley alone;
   2. Ольсен (431) sells nothing, the lottery man (662) the town's own
@@ -130,17 +132,29 @@ MARKET = {5158: (0, 6), 5159: (7, 10), 5160: (10, 14), 5161: (15, 16)}
 check("the four set traders are named with their bands",
       {t: "%d-%d" % band in names.ALL.get(t, "") for t, band in MARKET.items()},
       {t: True for t in MARKET})
+# The two left only at 468 sell the band of their name; 5160 and 5161, who
+# stand in the markets of Абри (378), Донгола (469) and Абу-Хамед (467), their
+# city's band there, and nothing of their own (data/npcs.json).
 check("each sells the ladder's sets of his band, A then G, helm to boots",
-      {t: items.stock_for(t) for t in MARKET}, {t: ladder(*band) for t, band in MARKET.items()})
-check("  ..which is Беженец to Магриб, Налетчик and Пустынник, Пустынник to Легионер,"
-      " Штурм-М and Красное Эхо",
-      {t: sorted({s["name"].split("[")[0] for s in SETS.values()
-                  if s["members"]["helm"]["type"] in items.stock_for(t)}) for t in MARKET},
-      {5158: ["Беженец", "Колонист", "Магриб", "Странник"],
-       5159: ["Налетчик", "Пустынник"],
-       5160: ["Легионер", "Пустынник", "Спецназ"],
-       5161: ["Красное Эхо", "Штурм-М"]})
-SOLD = sorted({t for tr in list(MARKET) + [1204, 1205, 5181] for t in items.stock_for(tr)})
+      {t: items.stock_for(t) for t in (5158, 5159)}, {t: ladder(*MARKET[t]) for t in (5158, 5159)})
+CITY_MARKETS = {(5160, 378): (8, 12), (5161, 378): (8, 12), (5161, 469): (12, 16),
+                (5161, 467): (16, 20)}
+check("  ..5160 and 5161 their city's band at its market, nothing of their own",
+      ({k: items.stock_for(*k) for k in CITY_MARKETS}, items.stock_for(5160), items.stock_for(5161)),
+      ({k: ladder(*band) for k, band in CITY_MARKETS.items()}, [], []))
+check("  ..which is Беженец to Магриб, Налетчик and Пустынник; Абри's Налетчик and Пустынник,"
+      " Донгола's Спецназ to Красное Эхо, Абу-Хамед's Красное Эхо to Апокалипсис",
+      {k: sorted({s["name"].split("[")[0] for s in SETS.values()
+                  if s["members"]["helm"]["type"] in items.stock_for(*k)})
+       for k in [(5158, None), (5159, None)] + list(CITY_MARKETS)},
+      {(5158, None): ["Беженец", "Колонист", "Магриб", "Странник"],
+       (5159, None): ["Налетчик", "Пустынник"],
+       (5160, 378): ["Налетчик", "Пустынник"], (5161, 378): ["Налетчик", "Пустынник"],
+       (5161, 469): ["Красное Эхо", "Легионер", "Спецназ", "Штурм-М"],
+       (5161, 467): ["Апокалипсис", "Дредноут", "Красное Эхо", "Паладин"]})
+SOLD = sorted({t for tr, place in [(5158, None), (5159, None), (1204, 102), (1205, 102),
+                                   (5181, 378)] + list(CITY_MARKETS)
+               for t in items.stock_for(tr, place)})
 check("nothing premium, no quest piece, every piece a thing the client can show",
       ([t for t in SOLD if items.premium(t)],
        [t for t in SOLD if (items.params_of(t) or {}).get("quest")
@@ -189,13 +203,12 @@ WANDERER = set_of(4, "A") + set_of(4, "G")
 GOLD_468 = set_of(4, "G") + set_of(6, "G") + set_of(8, "G")
 check("Странник[4] in both variants and the gold sets of 4, 6 and 8 at Ваккас and Хамис"
       " (correction д)",
-      [t for t in WANDERER + GOLD_468 if t not in items.stock_for(1204) + items.stock_for(1205)],
-      [])
-check("  ..Ваккас: the colonist's, the wanderer's, then his belts; Хамис: the raider's,"
-      " then the gold army and raider sets",
-      (items.stock_for(1204), items.stock_for(1205)),
-      (set_of(2, "A") + WANDERER + [3582, 3581, 3579, 3578],
-       set_of(8, "A") + set_of(6, "G") + set_of(8, "G")))
+      [t for t in WANDERER + GOLD_468
+       if t not in items.stock_for(1204, 102) + items.stock_for(1205, 102)], [])
+check("  ..both the town's band, 4-8, both versions (shop_bands.py, 2026-10-10); Ваккас then"
+      " his belts",
+      (items.stock_for(1204, 102), items.stock_for(1205, 102)),
+      (ladder(4, 8) + [3582, 3581, 3579, 3578], ladder(4, 8)))
 
 # --- 2. Ольсен and the lottery man ---------------------------------------------------------
 check("Ольсен, «Амулеты и сувениры», sells nothing (no amulet or souvenir has a type"
@@ -651,11 +664,12 @@ async def main():
     geek = goto(sess, 102)[652]
 
     # --- a stall: bought and sold ------------------------------------------------------
+    here = sess.room.loc.id
     stall = next(eid for eid, n in sess.room.npcs.items() if n.root == world.TRADER
-                 and any(items.root_of(t) == items.AMMO for t in items.stock_for(n.type_id)))
-    ware = [t for t in items.stock_for(sess.room.npcs[stall].type_id)
+                 and any(items.root_of(t) == items.AMMO for t in items.stock_for(n.type_id, here)))
+    ware = [t for t in items.stock_for(sess.room.npcs[stall].type_id, here)
             if items.root_of(t) == items.AMMO][0]
-    index = items.stock_for(sess.room.npcs[stall].type_id).index(ware)
+    index = items.stock_for(sess.room.npcs[stall].type_id, here).index(ware)
     run(sess, "ss_create;s_type=1;target=%d;" % stall)
     before = purse(sess)
     got = run(sess, "ss_upd;s_status=1;obj=x%x;param=20;" % index)

@@ -34,6 +34,7 @@ os.environ.setdefault(
 import items   # noqa: E402
 import names   # noqa: E402
 import npcs    # noqa: E402
+import shop_bands   # noqa: E402
 import world   # noqa: E402
 
 PORT = int(os.environ.get("LAVA_NPC_EDITOR_PORT", "8091"))
@@ -138,9 +139,18 @@ def occupants(loc_id):
         counts[type_id] = counts.get(type_id, 0) + 1
 
     out = []
+    city = shop_bands.city(loc_id)
     for type_id in counts:
         one = describe(type_id)
         one["copies"] = counts[type_id]
+        # A weapon or set seller of a city sells its band here besides its own
+        # list (server/shop_bands.py, data/shop_bands.json): shown, not edited,
+        # and never saved into data/npcs.json.
+        if city and shop_bands.kinds(type_id):
+            one["band_city"] = "%s %d-%d" % city
+            one["band"] = [{"type": t, "name": item_name(t)}
+                           for t in items.stock_for(type_id, loc_id)
+                           if shop_bands.band_ware(t)]
         out.append(one)
     # Traders first: they are what the tool is for.
     out.sort(key=lambda n: (not n["trades"], n["name"]))
@@ -485,7 +495,12 @@ function side(){
                '<i data-j="' + j + '">×</i></div>'; }).join("")
         : '<p class=none>ничего</p>') +
       '</div><input id=find placeholder="найти товар — два знака и больше">' +
-      '<div class=hits id=hits style=display:none></div>'
+      '<div class=hits id=hits style=display:none></div>' +
+      (n.band && n.band.length ?
+        '<div class=lab>И по уровню города (' + esc(n.band_city) + ', ' + n.band.length +
+        '; правится в data/shop_bands.json)</div>' +
+        n.band.map(function(s){ return '<div class=good><b>' + esc(s.name) + '</b></div>'; })
+          .join("") : "")
       : '<div class=lab>Не торгует</div>');
 
   var nm = document.getElementById("nm");

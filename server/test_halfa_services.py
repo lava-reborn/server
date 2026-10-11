@@ -114,14 +114,15 @@ try:
            for t in (INGOT_1, INGOT_5, INGOT_10)],
           [(RATE, OUNCE), (5 * RATE, 5 * OUNCE), (10 * RATE, 10 * OUNCE)])
     # With the plan's correction д (test_halfa_fixups): Странник[4] and the
-    # gold sets of 4/6/8 in Halfa too, not at Локсли's in the valley alone.
-    check("Хамис sells the raider's set and the gold army and raider sets, Рияд the army's,"
-          " Ваккас the colonist's, the wanderer's in both and four belts",
-          (items.stock_for(1205), items.stock_for(650), items.stock_for(1204)),
-          (set_types("Налетчик[8][A]") + set_types("Магриб[6][G]") + set_types("Налетчик[8][G]"),
-           set_types("Магриб[6][A]"),
-           set_types("Колонист[2][A]") + set_types("Странник[4][A]") + set_types("Странник[4][G]")
-           + [3582, 3581, 3579, 3578]))
+    # gold sets of 4/6/8 in Halfa too, not at Локсли's in the valley alone --
+    # and since the owner's «по уровню городов» (2026-10-10, shop_bands.py)
+    # each of the town's set sellers its whole band, 4-8, both versions.
+    both = lambda n: set_types(n + "[A]") + set_types(n + "[G]")
+    town = both("Странник[4]") + both("Магриб[6]") + both("Налетчик[8]")
+    check("Хамис, Рияд and Ваккас sell the town's band: Странник, Магриб and Налетчик, each"
+          " in both versions; Ваккас then four belts",
+          (items.stock_for(1205, 102), items.stock_for(650, 52), items.stock_for(1204, 102)),
+          (town, town, town + [3582, 3581, 3579, 3578]))
     check("  ..the belts by the wiki's names and prices",
           [(names.text(items.STRING_ID_OFFSET + t), items.params_of(t)["cost"])
            for t in (3582, 3581, 3579, 3578)],
@@ -131,31 +132,35 @@ try:
     check("Мортимер sells the ingots; Марк Клаус and Ольсен sell nothing; Бартоломью has the Фуль",
           (items.stock_for(MORTIMER), items.stock_for(1959), items.stock_for(431),
            334 in items.stock_for(81)), ([INGOT_1, INGOT_5, INGOT_10], [], [], True))
-    guns = {tr: [items.params_of(t)["weapon_type"] for t in items.stock_for(tr)
+    guns = {tr: [items.params_of(t)["weapon_type"] for t in items.stock_for(tr, 102)
                  if items.root_of(t) == items.FIRE_ARM] for tr in (1201, 1202, 1203)}
-    check("the gun stalls sell the wiki's models of their own class, and no assault rifle",
+    check("the gun stalls sell the models of their own class, and no assault rifle",
           {tr: sorted(set(v)) for tr, v in guns.items()},
           {1201: [items.SHOTGUN], 1202: [items.RIFLE], 1203: [items.SMG]})
-    check("  ..eight shotguns, three rifles, four sub-machine guns, each by its name",
+    check("  ..the town's band, 4-8, in both versions: ten shotguns, three rifles, two"
+          " sub-machine guns, each twice, by its name",
           ({tr: len(v) for tr, v in guns.items()},
            sorted(names.text(items.STRING_ID_OFFSET + t).split("$")[0]
-                  for t in items.stock_for(1203) if items.root_of(t) == items.FIRE_ARM)),
-          ({1201: 8, 1202: 3, 1203: 4}, ["Borzh", "MP-40", "Stan MK3", "Кустарный ПП"]))
+                  for t in items.stock_for(1203, 102) if items.root_of(t) == items.FIRE_ARM)),
+          ({1201: 20, 1202: 6, 1203: 4},
+           ["Borzh", "Borzh (G)", "Кустарный ПП", "Кустарный ПП (G)"]))
     check("«Билет в Донголу» is no longer the Пропуск or the lottery's ticket",
           sorted(set(items.links()[2].get(1124, [])) & {"Пропуск", "Лотерейный билет (8)"}), [])
-    # Each trader the ladder's sets of the levels in his own name, A then G
-    # (test_halfa_fixups holds the rule; 2026-09-28).
-    both = lambda n: set_types(n + "[A]") + set_types(n + "[G]")
-    check("the clothing market by the owner's ladder and the levels in each trader's name"
-          " -- A then G -- and the town's miner's clothes, A then G",
-          [items.stock_for(t) for t in (5158, 5159, 5160, 5161, 5181)],
+    # The two traders left at the market cut off the map, the ladder's sets of
+    # the levels in their own names, A then G (test_halfa_fixups holds the
+    # rule; 2026-09-28); 5160 and 5161 their city's band in Абри's market (and
+    # Донгола's, Абу-Хамед's: test_halfa_fixups, test_stall_bands).
+    check("the clothing market by the owner's ladder: the levels in each trader's name, A then"
+          " G, or at Абри's market its band -- and the town's miner's clothes, A then G",
+          [items.stock_for(t, place) for t, place in ((5158, None), (5159, None), (5160, 378),
+                                                      (5161, 378), (5181, None))],
           [both("Беженец[1]") + both("Колонист[2]") + both("Странник[4]") + both("Магриб[6]"),
            both("Налетчик[8]") + both("Пустынник[10]"),
-           both("Пустынник[10]") + both("Спецназ[13]") + both("Легионер[14]"),
-           both("Штурм-М[15]") + both("Красное Эхо[16]"),
+           both("Налетчик[8]") + both("Пустынник[10]"),
+           both("Налетчик[8]") + both("Пустынник[10]"),
            list(range(34480, 34485)) + list(range(34490, 34495))])
     check("the oasis: new models, the choice rounds and others, medicine",
-          [len(items.stock_for(t)) > 0 for t in (1224, 1227, 202)], [True] * 3)
+          [len(items.stock_for(t, 62)) > 0 for t in (1224, 1227, 202)], [True] * 3)
     check("  ..the rounds are rounds, the medicine medicine",
           ({items.root_of(t) for t in items.stock_for(1227)},
            {items.root_of(t) for t in items.stock_for(202)}), ({items.AMMO}, {items.HEAL}))
@@ -163,9 +168,11 @@ try:
           (items.stock_for(LOTTERY_MAN), items.stock_for(GOLD_LOTTERY),
            (items.params_of(GOLD_TICKET)["cost"], items.params_of(GOLD_TICKET)["g_cost"])),
           ([TICKET], [GOLD_TICKET], (0, 50)))
-    everything = sorted({t for tr in (1205, 650, 1204, 81, 5158, 5159, 5160, 5161, 1224, 1227,
-                                      202, 662, 711, 1201, 1202, 1203)
-                         for t in items.stock_for(tr)})
+    everything = sorted({t for tr, place in ((1205, 102), (650, 52), (1204, 102), (81, 35),
+                                             (5158, None), (5159, None), (5160, 378), (5161, 378),
+                                             (1224, 62), (1227, 62), (202, 62), (662, 35),
+                                             (711, 102), (1201, 102), (1202, 102), (1203, 102))
+                         for t in items.stock_for(tr, place)})
     check("every one of these goods can be shown and priced, none premium",
           ([t for t in everything if not servable(t)], [t for t in everything if items.premium(t)]),
           ([], []))

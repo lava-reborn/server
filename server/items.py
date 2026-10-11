@@ -41,6 +41,7 @@ import production
 import progression
 import quests
 import sets
+import shop_bands
 import world
 
 log = logging.getLogger("lava")
@@ -101,7 +102,9 @@ AMMO_SP10 = [6103, 6115]             # Ammo_SP_10_12_KS / _ST
 # _pm and _gold ones were never sold for afro. The five nameless pistols_1..5
 # the stall used to hold stay where they are still needed -- the starter kit
 # and a bandit's weapon (inventory.py, mobs.py) -- but a stall that can name
-# its wares should.
+# its wares should. On the wire, in Вади-Хальфа, the black market's gun
+# stalls sell their city's band instead (shop_bands.py): this table is the
+# stalls' own list, where their rounds come from.
 WIKI_PISTOLS = [
     25666,   # Самопальный револьвер, Стрельба 2, 100
     25566,   # Наган 1895,            Стрельба 1, 400
@@ -271,7 +274,7 @@ def slot_of(name):
     return SLOT_BY_PREFIX.get(prefix, SLOT_CAMO)
 
 
-def stock_for(trader_type):
+def stock_for(trader_type, loc_id=None):
     """What this trader sells, as the list of type ids the client indexes.
 
     The owner's own list wins where there is one (data/npcs.json, written by
@@ -279,11 +282,18 @@ def stock_for(trader_type):
     a starting point and not a decision. An empty list there is a decision as
     much as a full one, so only a missing entry falls through -- to the
     wiki's list and what the weapon craft adds to it (craft.stock_extra).
+
+    At a place of a city (loc_id, the room the trader stands in), a weapon
+    or set seller's stall is its city's band (shop_bands.py, the owner's
+    «по уровню городов» of 2026-10-10): what goes on the wire, and what a
+    purchase indexes, is asked with the place. Without one it is the
+    trader's own list, as the editor and the start-up checks read it.
     """
     chosen = npcs.stock(trader_type)
     if chosen is None:
         chosen = stock_table().get(trader_type, [])
         chosen = chosen + [t for t in craft.stock_extra(trader_type) if t not in chosen]
+    chosen = shop_bands.apply(trader_type, loc_id, chosen)
     return [t for t in chosen if not premium(t)]
 
 

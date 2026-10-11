@@ -117,7 +117,9 @@ class OrigItems(unittest.TestCase):
 
     def test_manual_lines(self):
         """Every hand-decided article of firearm_lines_manual.json names its line."""
-        self.assertEqual(len(self.manual), 29)   # 12, and the 17 of the gun stalls of Вади-Хальфа (2026-09-28)
+        # 12, the 17 of the gun stalls of Вади-Хальфа (2026-09-28), and the 48
+        # guns of 9-20 of the stalls by city level (2026-10-10)
+        self.assertEqual(len(self.manual), 77)
         for article, rec in self.manual.items():
             name = self.line_name(rec["family"])
             self.assertIsNotNone(name, rec["family"])

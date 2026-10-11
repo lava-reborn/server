@@ -166,8 +166,10 @@ try:
     check("«Стреляем» shows the Наган and gives fifty rounds beside it",
           (quests.get(SHOOT).rew_obj, quests.get(SHOOT).rew_also), ([NAGAN], [(ROUNDS, 50)]))
     check("the Наган takes those rounds first", items.params_of(NAGAN)["comp_array"][0], ROUNDS)
+    # His stall at the market: the valley's sets of the band (shop_bands.py,
+    # 2026-10-10), then his own list, the silk.
     check("Локсли sells the silk, last on his list, as the task says",
-          items.stock_for(LOXLEY)[-1], SILK)
+          items.stock_for(LOXLEY, MARKET)[-1], SILK)
 except Exception:
     import traceback
     fails.append("the table in process broke:\n" + traceback.format_exc())
@@ -646,7 +648,7 @@ try:
     check("«Шелковый путь» taken from Амина", acks(got), [0])
     c.send("ss_create;s_type=1;target=%d;" % here[LOXLEY][0])
     check("Локсли's stall opens", acks(c.frames()), [0])
-    c.send("ss_upd;param=1;obj=x%x;s_status=1;" % items.stock_for(LOXLEY).index(SILK))
+    c.send("ss_upd;param=1;obj=x%x;s_status=1;" % items.stock_for(LOXLEY, MARKET).index(SILK))
     got = c.frames(0.8)
     check("the silk bought from the bottom of his list, for five afro",
           (upto_ack(got), new_things(got), purse(got)),

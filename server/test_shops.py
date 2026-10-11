@@ -11,7 +11,11 @@ hand edit that breaks one fails, and so does a change to Борис, Морис 
 Локсли that their copies did not follow. On 2026-09-26 the owner filled
 the empty stall of Барыга Сет (1187) at the arena with his wiki page's
 list, as far as the client can show it (below, and test_seth_stall on
-the socket).
+the socket). On 2026-10-10 the owner put every weapon and set seller on
+his city's band (shop_bands.py, test_stall_bands): Борис and Шульц sell the
+valley's pistols 0-4, Одноглазый its knives 0-4 and Локсли and Абдула its
+sets 0-4, both versions, from the band at their places; their own lists in
+data/npcs.json keep the rest -- the rounds, the silk.
 
 In process, no sockets, like test_items: items.stock_for is the type_list
 a stall sends, items.static_info the answer to each ss_get_si its window
@@ -32,6 +36,7 @@ import names  # noqa: E402
 import npcs  # noqa: E402
 import orig_texts  # noqa: E402
 import sets  # noqa: E402
+import shop_bands  # noqa: E402
 import world  # noqa: E402
 
 from testkit import check, fails  # noqa: E402
@@ -44,6 +49,9 @@ SCHULZ, ERIKESAM, ABDULA = 5221, 5224, 5223
 HASANI, BOMANI, RO_A_KIM = 5217, 5218, 5219
 ONE_EYE, STRANNIK, NAMELESS = 5222, 5220, 5208
 SETH = 1187
+# Where each stands: the valley's market and the Caravan, the arena.
+PLACE = {BORIS: 185, MORIS: 185, LOXLEY: 185, SCHULZ: 186, ERIKESAM: 186, ABDULA: 186,
+         ONE_EYE: 186, HASANI: 181, BOMANI: 181, RO_A_KIM: 183, SETH: 167}
 
 # The folder under res/classes each root draws its icons from.
 ICON_FOLDER = {items.FIRE_ARM: "FireArm", items.WEAR: "WearItem", items.HEAL: "Heal_Item",
@@ -138,6 +146,9 @@ check("  ..and he wears the Strangers' sprite",
 check("Шульц sells what Борис sells", stock(SCHULZ), stock(BORIS))
 check("Эрикесэм sells what Морис sells", stock(ERIKESAM), stock(MORIS))
 check("Абдула sells what Локсли sells", stock(ABDULA), stock(LOXLEY))
+check("  ..on the wire too, the valley's band at the Caravan as at the market",
+      (items.stock_for(SCHULZ, PLACE[SCHULZ]), items.stock_for(ABDULA, PLACE[ABDULA])),
+      (items.stock_for(BORIS, PLACE[BORIS]), items.stock_for(LOXLEY, PLACE[LOXLEY])))
 
 # --- Хасани: the food and water of Морис's list -----------------------------------
 FOOD = ("Med_Pacific_Heal_", "Med_Pacific_Rest_")
@@ -161,7 +172,12 @@ check("  ..no bandage, energy drink, injector or kit among them",
       [t for t in stock(HASANI) if cat[t][1].startswith(("Med_Battle_", "Med_Pacific_HR_"))], [])
 
 # --- Бомани and Ро-А-Ким: the rounds of Борис's pistols ------------------------------
-pistols = [t for t in stock(BORIS) if cat[t][0] == items.FIRE_ARM]
+# The pistols he sold when the owner decided (2026-09-24) were the pistol line
+# of levels 0-6; the valley's band (0-4) keeps the 0-4 of them on his stall
+# since 2026-10-10, and his rounds -- СП-10 of the СПС among them -- stay, as
+# every stall's rounds did. So the rule reads the whole line, the band's
+# pistols of every city (shop_bands: none has numbers above 6).
+pistols = [t for t, w in shop_bands.wares().items() if w[0] == "pistols"]
 own = [t for t in stock(BORIS) if cat[t][0] == items.AMMO]
 chambers = [items.params_of(t)["comp_array"] for t in pistols]
 
@@ -183,7 +199,7 @@ def rounds_rule():
 
 
 ROUNDS = rounds_rule()
-check("Бомани sells the rounds of every pistol Борис sells", stock(BOMANI), ROUNDS)
+check("Бомани sells the rounds of every pistol of the line Борис sold", stock(BOMANI), ROUNDS)
 check("Ро-А-Ким sells the same", stock(RO_A_KIM), ROUNDS)
 check("  ..Борис's own rounds all among them", [t for t in own if t not in ROUNDS], [])
 check("  ..and each one chambered by one of his pistols",
@@ -212,8 +228,9 @@ def knives_rule():
 
 
 KNIVES = knives_rule()
-check("Одноглазый sells the knife line of levels 0-8, level by level, plain before gold",
-      stock(ONE_EYE), KNIVES)
+check("Одноглазый sells the knife line of the valley's band, 0-4, level by level, plain before"
+      " gold (8 until 2026-10-10)", (stock(ONE_EYE), items.stock_for(ONE_EYE, PLACE[ONE_EYE])),
+      ([], [t for t in KNIVES if knife_level(t) <= 4]))
 # The table the rule gives, pinned: names from the original (texts.xml,
 # data/orig_items.json) where it has one, the wiki's for Булыжник.
 KNIFE_TABLE = [
@@ -224,7 +241,7 @@ KNIFE_TABLE = [
     (6240, 6, "Тесак"), (6241, 6, "Тесак (G)"),
     (6245, 8, "Охотничий нож"), (6246, 8, "Охотничий нож (G)"),
 ]
-check("  ..which is this table",
+check("  ..of this table, the line of 0-8, whose numbers are checked below",
       [(t, knife_level(t), names.text(items.STRING_ID_OFFSET + t)) for t in KNIVES], KNIFE_TABLE)
 
 # MeleeWeapon.initialize (MeleeWeapon.as:33-46) reads these ten; a missing
@@ -435,14 +452,18 @@ check("  ..and has nothing called OP 1, which has no article either",
 LISTS = {SCHULZ: "Шульц", ERIKESAM: "Эрикесэм", ABDULA: "Абдула", HASANI: "Хасани",
          BOMANI: "Бомани", RO_A_KIM: "Ро-А-Ким", ONE_EYE: "Одноглазый",
          SETH: "Барыга Сет"}
+LISTS.update({BORIS: "Борис", LOXLEY: "Локсли"})
 for trader, who in sorted(LISTS.items()):
     goods = stock(trader) or []
-    check("%s (%d): %d types, on the wire as written" % (who, trader, len(goods)),
-          items.stock_for(trader), goods)
-    check("  ..none twice", len(set(goods)), len(goods))
-    check("  ..none premium", [t for t in goods if items.premium(t)], [])
+    wire = items.stock_for(trader, PLACE[trader])
+    kinds = shop_bands.kinds(trader)
+    band = shop_bands.goods(kinds, 0, 4) if kinds else []
+    check("%s (%d): %d types, on the wire as written (a seller's band first)" % (
+        who, trader, len(wire)), wire, band + goods)
+    check("  ..none twice", len(set(wire)), len(wire))
+    check("  ..none premium", [t for t in wire if items.premium(t)], [])
     check("  ..every one servable",
-          {t: w for t, w in ((t, unservable(t)) for t in goods) if w}, {})
+          {t: w for t, w in ((t, unservable(t)) for t in wire) if w}, {})
 # What this change chose itself, beyond the owner's own lists, is priced in
 # one currency. (Борис's 6188, "9мм дареные", carries both from its wiki
 # page -- 1 afro and 0.01 G a round -- and his copies carry it as he does.)

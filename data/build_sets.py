@@ -14,9 +14,14 @@ Its data is one JSON file:
 This turns that page into the file server/sets.py reads, by the rules below,
 which the file's own _meta repeats for whoever edits it by hand. It is
 re-runnable on purpose: the owner may move a piece, rename a set or pick
-another figure, and the same page must give the same file. --npcs also writes
-the Локсли list into data/npcs.json (stock "5213"); without it the list is
-only printed.
+another figure, and the same page must give the same file. Which sets a
+trader sells is no longer this file's: since the owner's «по уровню городов»
+(2026-10-10) every set seller -- Локсли among them -- sells the A and G sets
+of his city's band (data/shop_bands.json, server/shop_bands.py), so a moved
+rung is on the right stalls by itself. --npcs takes the ladder's pieces off
+Локсли's own list in data/npcs.json (stock "5213"), should an older run have
+put them there; the rest of it (the silk) stays. Without it the valley's
+rungs are only printed.
 
 WHICH ROWS BECOME SETS
 
@@ -82,8 +87,7 @@ NPCS = os.path.join(HERE, "npcs.json")
 WIKI_ITEMS = os.path.join(HERE, "wiki_items.json")
 PAGES = os.path.join(HERE, "wiki", "pages.json")
 
-LOXLEY = 5213          # Локсли, "Одежда и Броня"
-SOLD_UP_TO = 8         # he sells the rungs up to this level (owner, 2026-09-23)
+LOXLEY = 5213          # Локсли, "Одежда и Броня": the valley's band (shop_bands.py)
 AFRO_PER_G = 4000      # every wiki set page's rate: Вещи Колонистов 4000 afro / 1 G
 SLOTS = sets.SLOTS     # helm, shirt, armor, pants, boots
 MIN_NAME = 3
@@ -1144,17 +1148,25 @@ def finish(rec):
     return out
 
 
-def loxley(plans, built):
-    """Локсли's stall: the rungs up to SOLD_UP_TO, level by level, A before G,
-    helm to boots."""
+def valley(plans):
+    """The rungs of the valley's band, the first city of data/shop_bands.json
+    (0-4 since 2026-10-10): what Локсли and Абдула sell of the ladder, A and
+    G, helm to boots. For the printout; the server works it out itself."""
+    import shop_bands
+    low, top = shop_bands.CITIES[0][1:3] if shop_bands.CITIES else (0, 0)
     out = []
     for plan in plans:
-        if plan["level"] > SOLD_UP_TO:
+        if not low <= plan["level"] <= top:
             continue
-        for v in ("A", "G", "Q"):
+        for v in ("A", "G"):
             if v in plan["variants"]:
                 out += [plan["variants"][v][s] for s in SLOTS]
     return out
+
+
+def pieces_of(plans):
+    """Every piece of every set of the layout, all variants."""
+    return {plan["variants"][v][s] for plan in plans for v in plan["variants"] for s in SLOTS}
 
 
 def main():
@@ -1169,12 +1181,13 @@ def main():
     plans, built, table, skipped = build(args.layout, res_dir)
     meta = dict(META)
     meta["decided"] = (
-        "Owner's wardrobe layout (%s): %d sets on the ladder, %s. Trader Локсли (%d, 'Одежда и "
-        "Броня') sells the rungs up to level %d, A then G, helm to boots, mod00 only "
-        "(data/npcs.json stock %d); the higher sets exist as data only, for quests and drops to "
-        "come." % (os.path.basename(args.layout), len(plans),
-                   ", ".join("%s %d" % (p["name"], p["level"]) for p in plans),
-                   LOXLEY, SOLD_UP_TO, LOXLEY))
+        "Owner's wardrobe layout (%s): %d sets on the ladder, %s. Every set seller sells the A "
+        "and G sets of his city's band, A then G, helm to boots, mod00 only (data/shop_bands.json, "
+        "server/shop_bands.py; the owner's 'по уровню городов', 2026-10-10) -- Локсли (%d, "
+        "'Одежда и Броня') the valley's; the quest (Q) sets exist as data only, for quests "
+        "and drops to come." % (os.path.basename(args.layout), len(plans),
+                                ", ".join("%s %d" % (p["name"], p["level"]) for p in plans),
+                                LOXLEY))
     meta["sets"] = ["%s (level %d): %s -- %s" % (
         p["name"], p["level"],
         ", ".join("%s %d" % (v, p["keys"][v]) for v in p["variants"]),
@@ -1186,7 +1199,7 @@ def main():
     with io.open(OUT, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(text)
 
-    stock = loxley(plans, built)
+    stock = valley(plans)
     print("data/sets.json: %d sets, %d pieces" % (len(table), sum(len(s["members"]) for s in table.values())))
     for p in plans:
         b = built[p["name"]]
@@ -1195,16 +1208,19 @@ def main():
         print("  %2d %-15s res %-5d %s" % (p["level"], p["name"], p["res"], ids))
     for row, why in skipped:
         print("  skipped %r (level %s): %s" % (row.get("name"), row.get("level"), why))
-    print("Локсли (%d), %d types:" % (LOXLEY, len(stock)))
+    print("Локсли (%d) and Абдула sell the valley's band of it, %d types:" % (LOXLEY, len(stock)))
     print(json.dumps(stock))
     if args.npcs:
         with io.open(NPCS, encoding="utf-8") as fh:
             raw = fh.read()
         doc = json.loads(raw)
-        doc.setdefault("stock", {})[str(LOXLEY)] = stock
-        with io.open(NPCS, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
-        print("data/npcs.json: stock %d written" % LOXLEY)
+        own = doc.setdefault("stock", {}).get(str(LOXLEY))
+        if own is not None:
+            ladder = pieces_of(plans)
+            doc["stock"][str(LOXLEY)] = [t for t in own if t not in ladder]
+            with io.open(NPCS, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
+        print("data/npcs.json: stock %d keeps its own goods, no set pieces" % LOXLEY)
 
 
 if __name__ == "__main__":

@@ -449,7 +449,9 @@ try:
     c = Client(connect())
     arrival = enter(c, "gunner", first=True)
     traders = [(p["id"], p) for n, p in arrival if n == "userInfo_Trader"]
-    stall = [(i, p) for i, p in traders if p["type_list"][:1] == items.stock_for(1200)[:1]]
+    # The pistol stall's list where it stands, the black market (102) of the
+    # cell: Вади-Хальфа's band (shop_bands.py), then its rounds.
+    stall = [(i, p) for i, p in traders if p["type_list"][:1] == items.stock_for(1200, 102)[:1]]
     check("the pistol stall stands on the starting cell", len(stall) > 0, True)
     npc, info = stall[0]
     price_list = info["type_list"]

@@ -146,7 +146,11 @@ LADDER = (
          ("Шлем Апокалипсиса", "Жилет Апокалипсиса", "Броня Апокалипсиса",
           "Моторика Апокалипсиса", "Боты Апокалипсиса"), (), ("table", "Модификация паладин")),
 )
-SOLD_UP_TO = 8          # Локсли sells the rungs up to this level; the rest is data only
+# Локсли sells the valley's band, the rungs up to this level (the owner's
+# «по уровню городов», 2026-10-10, shop_bands.py; 8 before it); the towns'
+# set sellers the rungs of theirs.
+SOLD_UP_TO = 4
+LOXLEY_PLACE = 185      # Нубийский рынок
 SUFFIX = {"A": "", "G": " (G)", "Q": " (Q)"}
 GROUPS = []             # one per set: the rung, its variant and set_type, its five types
 for r in LADDER:
@@ -186,7 +190,7 @@ check("the quest family (Bs_U) is Q alone, every other series A and G",
 check("the P copies of the ladder belong to no set and stand on no stall",
       [t for r in LADDER if "A" in r["keys"] for p in PIECES
        for t in [by_name["%s_%s_P_mod00" % (p, r["series"])]]
-       if sets.set_of(t) or t in items.stock_for(5213)], [])
+       if sets.set_of(t) or t in items.stock_for(5213, LOXLEY_PLACE)], [])
 check("the sets are named as the owner names them, gold and quest ones the way every such thing is",
       [names.text(sets.NAME_ID_OFFSET + g["key"]) for g in GROUPS],
       [g["word"] + SUFFIX[g["v"]] for g in GROUPS])
@@ -211,19 +215,19 @@ check("five pieces of a set, in either variant, draw that set's figure",
 # --- Локсли -------------------------------------------------------------------------
 print()
 print("Локсли")
-check("the rungs up to level 8 are for sale: Беженец, Колонист, Странник, Магриб, Налетчик",
+check("the valley's rungs, 0-4, are for sale: Беженец, Колонист, Странник",
       [r["word"] for r in LADDER if r["level"] <= SOLD_UP_TO],
-      ["Беженец", "Колонист", "Странник", "Магриб", "Налетчик"])
+      ["Беженец", "Колонист", "Странник"])
 # and, last of all, the silk «Шелковый путь» sends a player to him for
 # («Шелк находится в самом низу списка товаров», texts.xml 59817).
 SILK = 3482
-check("data/npcs.json sells exactly them, in order: level, A before G, helm to boots,"
-      " then the quest's silk", npcs.stock(5213), LOXLEY + [SILK])
-check("  ..50 types", len(LOXLEY), 50)
-check("and the stall shows every one of them: nothing premium to filter out",
-      items.stock_for(5213), LOXLEY + [SILK])
-check("  ..nothing above level 8 on it",
-      [t for t in items.stock_for(5213) if t not in LOXLEY + [SILK]], [])
+check("his stall at the market is exactly them, in order: level, A before G, helm to boots,"
+      " then the quest's silk", items.stock_for(5213, LOXLEY_PLACE), LOXLEY + [SILK])
+check("  ..30 types", len(LOXLEY), 30)
+check("  ..the sets from the valley's band, the silk from his own list in data/npcs.json",
+      npcs.stock(5213), [SILK])
+check("  ..nothing above level 4 on it",
+      [t for t in items.stock_for(5213, LOXLEY_PLACE) if t not in LOXLEY + [SILK]], [])
 
 # --- names and descriptions ----------------------------------------------------------
 print()
@@ -1061,7 +1065,8 @@ try:
     check("seven at once, more than the window holds: seven answers, in order, no cmdAck",
           [(n, q.get("type")) for n, q in got], [("ss_si_set", st) for st in wanted])
 
-    c.send("ss_get_si;type=%d;" % LOXLEY[-3])
+    raider_g = [t for g in GROUPS if g["level"] == 8 and g["v"] == "G" for t in g["types"]]
+    c.send("ss_get_si;type=%d;" % raider_g[2])
     got = c.until("ss_si_wear")
     si = got[0][1] if got and got[0][0] == "ss_si_wear" else {}
     check("a piece on the wire: its slot, its set, its name",

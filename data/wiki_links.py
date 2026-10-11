@@ -480,13 +480,16 @@ def link_firearm(cat, title, page, cats):
     if not levels:
         # No "Необходимые навыки" row, so the page states no level and there is
         # nothing to search. Unless the level was supplied by hand: then look in
-        # that one, under an empty column label, which column_tier reads as the
-        # ordinary (A) variant -- correct for a table with no (P)/(G) columns,
-        # which is the only shape these pages have.
+        # that one, under each column label of the page's table -- an empty one,
+        # which column_tier reads as the ordinary (A) variant, for a table with
+        # no (P)/(G) columns (Самострел), and (A)/(P)/(G) for one with them
+        # (РПД), so its gold copy is linked as every other line's is.
         manual = HAND_LEVEL.get(MOD_TAIL.sub("", title))
         if manual is None:
             return links
-        levels = [("", manual)]
+        cols = next((t["columns"][1:] for t in parse_tables(page["wikitext"])
+                     if t["columns"][1:]), None) or [""]
+        levels = [(c, manual) for c in cols]
     for col, lvl in levels:
         tier = column_tier(col)
         families = collections.defaultdict(list)
@@ -556,7 +559,14 @@ def main():
         icon_links = link_icons(cat, page, title) + link_title(cat, title)
         mod = title_mod(title, kind)
         links += narrow_by_mod(cat, icon_links, mod, kind)
-        if kind == "firearm" and not any(l["confidence"] >= 0.5 for l in links):
+        # A line recorded by hand is looked for even beside a firm link: two
+        # articles' icons name something else -- MG-3's the standalone MG3
+        # (192), СВД-С's its own precision Mod (26871) -- and without this the
+        # line the original names after them (machine_gun_2_lvl_20,
+        # rifle_1_lvl_20) kept the designed stand-in. Base pages only; a Mod
+        # page still goes by its icon when it has one.
+        if kind == "firearm" and (not any(l["confidence"] >= 0.5 for l in links)
+                                  or (not mod and title in HAND)):
             links += link_firearm(cat, title, page, cats)
         # One record per (method, key). A firm link (blueprint title, exact
         # icon) makes the family-wide prefix links of the same page noise:

@@ -49,8 +49,12 @@ CRED = accounts.credential("tester", "secret")
 # /goto, /give and /money are off on a served server and belong to
 # the admin panel; this suite uses them to set a scene, so it asks
 # for them by name.
+# The purse buys one pistol of the black market's stall (102), which sells
+# Вади-Хальфа's band, 4-8 (shop_bands.py): its cheapest, a Glock 17, is
+# 2800 afro, more than a new character's 1000.
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1",
-           LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730")
+           LAVA_DB=DB, LAVA_CHEATS="1", LAVA_GX="5970", LAVA_GY="1730",
+           LAVA_START_AFRO="9000")
 
 # The lines the server says by itself (Session.say) are off on a served
 # server; this suite reads them as the server's reasons, so it asks for
@@ -250,8 +254,11 @@ try:
     # The price list rides in userInfo as type_list, and the client refers to a
     # purchase by its index in that list rather than by the item's own id.
     # The stall is known by the head of its own price list, not by a fixed id:
-    # what a pistol stall sells first changed once the guns had names.
-    head = "type_list=|%d|" % items.stock_for(1200)[0]
+    # what a pistol stall sells first changed once the guns had names, and
+    # again with the city's band (shop_bands.py): the list as the black
+    # market (102) of the starting cell has it.
+    STALL = items.stock_for(1200, 102)
+    head = "type_list=|%d|" % STALL[0]
     trader_id = int(next(f for f in entry if f.startswith("userInfo_Trader")
                          and head in f).split("id=")[1].split(";")[0])
     c.send("getInfo;lvl=0;id=%d;type=1;" % trader_id)
@@ -287,7 +294,7 @@ try:
     # The first gun priced in afro, not simply the first: the head of the
     # list may be sold for gold only, and the afro code (1) rightly refuses
     # that -- it used to hand gold items over for a price of 0.
-    stock = items.stock_for(1200)
+    stock = STALL
     buy = next(i for i, t in enumerate(stock)
                if items.root_of(t) == items.FIRE_ARM and items.params_of(t)["cost"] > 0)
     c.send("ss_upd;s_status=1;obj=x%x;param=1;" % buy)

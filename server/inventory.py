@@ -868,12 +868,17 @@ def buy_price(si, root, n, gold=False):
 
 class TradeSession:
     """One open stall. The client keeps one Trade object per contact and
-    builds a new one for the next, so a session is a single counterpart."""
+    builds a new one for the next, so a session is a single counterpart.
 
-    def __init__(self, npc_id, trader_type):
+    loc_id is the place the trader stands in, which decides the stall of a
+    weapon or set seller (items.stock_for, shop_bands.py): the purchase
+    index has to point into the list the window was given there."""
+
+    def __init__(self, npc_id, trader_type, loc_id=None):
         self.s_type = SESSION_TRADE
         self.npc_id = npc_id
         self.trader_type = trader_type
+        self.loc_id = loc_id
 
 
 class Inventory:
@@ -1778,7 +1783,7 @@ class Inventory:
         if not entry or entry[2] != world.TRADER or not self.char_id:
             self.ack(RES_REFUSED)
             return
-        self.trade = TradeSession(target, entry[1])
+        self.trade = TradeSession(target, entry[1], self.sess.room.loc.id)
         self.ack(RES_OK)
 
     def ss_upd(self, p):
@@ -1941,7 +1946,7 @@ class Inventory:
         ss_obj_status;status=1 and the balance by a full userInfo_Player,
         the purse being the in-memory Character's (money/set_money).
         """
-        stock = items.stock_for(self.trade.trader_type)
+        stock = items.stock_for(self.trade.trader_type, self.trade.loc_id)
         try:
             index = int(str(p.get("obj", "")), 16)
             n = int(p.get("param", 1) or 1)

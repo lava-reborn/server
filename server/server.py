@@ -2250,9 +2250,12 @@ class Session:
         if root == world.TRADER:
             # type_list is the price list itself, in order: the client builds a
             # TradeItem per entry and later refers to a purchase by that index,
-            # not by the item's own id.
+            # not by the item's own id. It is the list at this place: a weapon
+            # or set seller sells its city's band (shop_bands.py), and one
+            # type stands in several cities; inventory.TradeSession keeps the
+            # same place for the purchase.
             params.update(can_trade=1, can_repair=1,
-                          type_list=items.stock_for(type_id),
+                          type_list=items.stock_for(type_id, self.room.loc.id),
                           bg_objects=[], bg_obj_rep_req=[],
                           # One source, not two: the client draws prices
                           # with these and the server charges with the same.

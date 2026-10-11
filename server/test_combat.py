@@ -1076,8 +1076,9 @@ try:
 
     # --- the kit: rounds from the stall, the pistol worn and loaded ------------
     # The stall's own head, which is not the kit's pistol: it sells the models
-    # the wiki named, starting at the cheapest.
-    head = items.stock_for(1200)[0]
+    # the wiki named, starting at the cheapest of Вади-Хальфа's band (4-8,
+    # shop_bands.py) where it stands, the black market 102 of the cell.
+    head = items.stock_for(1200, 102)[0]
     stall = [p for p in named(arrival, "userInfo_Trader") if p["type_list"][:1] == [head]][0]
     c.send("ss_create;s_type=1;target=%d;" % stall["id"])
     c.frames()

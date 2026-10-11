@@ -38,7 +38,12 @@ CRED = accounts.credential("tester", "secret")
 # The start cell is a server default and has moved since; these
 # assertions name the market by number, so the suite says which
 # world it wants.
-env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730")
+# A purse of 9000: the black market's pistol stall sells Вади-Хальфа's band,
+# 4-8 (shop_bands.py), whose cheapest pistol, a Glock 17, is 2800 afro; what
+# is left after it and its rounds buys one dearer pistol more.
+START_AFRO = 9000
+env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB, LAVA_GX="5970", LAVA_GY="1730",
+           LAVA_START_AFRO=str(START_AFRO))
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
@@ -110,12 +115,14 @@ PISTOL_SI = items.params_of(PISTOL)
 ROUNDS_SI = items.params_of(ROUNDS)
 # The gun in the starting bag and the gun bought at the stall are two
 # different items: the kit still hands out the nameless pistol
-# (inventory.py), while the stall sells the models the wiki named. The stall
-# is recognised by the head of its price list, and the pistol bought is the
-# first one priced in afro: the head itself may be sold for gold only -- the
-# wiki's Маузер C96 (Q) is 0.30 G and heads the list now -- and the afro code
-# (1) rightly refuses that one ("gold item for afro" below).
-STALL_STOCK = items.stock_for(1200)
+# (inventory.py), while the stall sells the models the wiki named -- those of
+# Вади-Хальфа's band where it stands, the black market (102) of the starting
+# cell (shop_bands.py), each followed by its gold copy. The stall is
+# recognised by the head of its price list as the place has it, and the
+# pistol bought is the first one priced in afro: a gold copy is sold for
+# gold only, and the afro code (1) rightly refuses that one ("gold item for
+# afro" below).
+STALL_STOCK = items.stock_for(1200, 102)
 STALL_BUY = next(i for i, t in enumerate(STALL_STOCK)
                  if items.root_of(t) == items.FIRE_ARM and items.params_of(t)["cost"] > 0)
 STALL_PISTOL = STALL_STOCK[STALL_BUY]
@@ -203,7 +210,7 @@ try:
     c.send("getInfo;lvl=0;id=0;type=0;")
     got = c.frames()
     afro = got[0][1]["afro"]
-    check("a new character has 1000 afro", afro, 1000)
+    check("a new character has LAVA_START_AFRO", afro, START_AFRO)
 
     # --- the stall: find the pistol seller placed on arrival ------------
     traders = [(p["id"], p) for n, p in arrival if n == "userInfo_Trader"]
@@ -248,11 +255,14 @@ try:
 
     # a purchase that does not fit the purse is refused, nothing else sent
     # The dearest item the purse can still afford, not the dearest on the
-    # shelf: the stall runs from a 100-afro revolver to a 6400 Desert Eagle
-    # and a new character carries 1000, so the dearest of all would never be
-    # bought once and there would be nothing to spend down or sell back.
+    # shelf: the stall runs from a 2800-afro Glock to a 6400 Desert Eagle
+    # and this character carries 9000 less a pistol and its rounds, so the
+    # dearest of all would never be bought once and there would be nothing to
+    # spend down or sell back. A gun, one at a time at its price: rounds are
+    # priced by the round (buy_price), not the pack.
     affordable = [i for i in range(len(price_list))
-                  if items.params_of(price_list[i])["cost"] <= afro]
+                  if items.root_of(price_list[i]) != items.AMMO
+                  and 0 < items.params_of(price_list[i])["cost"] <= afro]
     check("the stall holds something the purse can afford", bool(affordable), True)
     dear = max(affordable,
                key=lambda i: items.params_of(price_list[i])["cost"])

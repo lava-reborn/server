@@ -652,11 +652,31 @@ def build_si(root, tables, facts, price, col_choice, tier, cls):
 # client divides by (see the head of server/items.py).
 CELL_FIXES = {
     ("Desert Eagle Mod XI", "Разброс на 100 метров", "5/8"): 5.8,
+    # A price typed as text instead of the template the other cells use: the
+    # number is the one written, in the currency written. Left as text, the
+    # (A) gun had no price at all and kept the designed 120 afro.
+    ("FN F2000", "Базовая цена", "78 900 Афро"): {"afro": 78900},
+    ("СВД-С", "Базовая цена", "120 900 Афро"): {"afro": 120900},
+}
+
+# Rows a page leaves out that the original states. РПД's table has no
+# «Необходимые навыки» row, and the level is what a gun's wearer needs
+# (server/inventory.item_level): without it the gun asks for nothing and
+# reads as a level-0 one. The original's own name for the line says 16 --
+# texts.xml 3534 «РПД[A][16]» (data/orig_items.json) -- as does its price,
+# 67 400 afro, every level-16 gun's.
+ROW_FIXES = {
+    ("РПД", "общие", "Необходимые навыки"): [{"Стрельба": 16}] * 3,
 }
 
 
 def repair_cells(title, tables):
-    """Put the known mistyped cells of this page right, in place."""
+    """Put the known mistyped cells of this page right, in place, and add
+    the rows it leaves out (ROW_FIXES) to its first table."""
+    for (page, section, label), value in ROW_FIXES.items():
+        if page == title and tables:
+            rows = tables[0].setdefault("sections", {}).setdefault(section, {})
+            rows.setdefault(label, list(value))
     for table in tables:
         for section in (table.get("sections") or {}).values():
             for label, value in (section or {}).items():
