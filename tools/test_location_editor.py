@@ -99,8 +99,23 @@ E.configure(DATA, OBJ)
 E._MEMO["ext_warm_done"] = True        # no extraction of every ext sprite in the background here
 
 
+class Snapshot(dict):
+    """path -> the file's bytes as snapshot() read them, each kept
+    zlib-compressed: the copy of data/ is 11 MB (exits_sides.json 8 MB of
+    it) and the suite holds five snapshots while the editor's L3 subprocess
+    runs beside it (2026-10-12, CI's runners ran out of memory). snap[path]
+    gives the bytes back; changed() compares the blobs as they are -- one
+    input always compresses to the same blob, two never to one."""
+
+    def __getitem__(self, path):
+        return zlib.decompress(super().__getitem__(path))
+
+    def blob(self, path):
+        return super().get(path)
+
+
 def snapshot():
-    out = {}
+    out = Snapshot()
     for d in (DATA, OBJ):
         for base, _dirs, names in os.walk(d):
             if "__pycache__" in base:
@@ -108,12 +123,12 @@ def snapshot():
             for n in names:
                 p = os.path.join(base, n)
                 with open(p, "rb") as fh:
-                    out[os.path.relpath(p, W).replace(os.sep, "/")] = fh.read()
+                    out[os.path.relpath(p, W).replace(os.sep, "/")] = zlib.compress(fh.read(), 1)
     return out
 
 
 def changed(before, after):
-    return sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
+    return sorted(k for k in set(before) | set(after) if before.blob(k) != after.blob(k))
 
 
 def rel(paths):
@@ -596,6 +611,7 @@ es = json.loads(after["data/exits_sides.json"])
 check("  ..its exits_sides rows are its outzones (lavaloc.exits_row)",
       (es["locations"][str(FIRST)] == L.exits_row(lm), es["summary"][str(FIRST)]["sides"]),
       (True, ["W", "N", "E", "S", "a"]))
+del es      # the 8 MB table parsed: not kept through the saves below
 pl = json.loads(after["data/placements.json"])["locations"][str(FIRST)]
 check("  ..its inhabitants in data/placements.json, each with its why",
       ([(r["type"], r["cell"]) for r in pl] == [(r["type"], r["cell"]) for r in M["inhabitants"]],

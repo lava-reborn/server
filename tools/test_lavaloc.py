@@ -41,10 +41,6 @@ def files():
 FILES = files()
 STATIC = {int(os.path.basename(f)[:-4]): f for f in FILES
           if os.path.basename(os.path.dirname(f)) == "static"}
-RAW = {}
-for f in FILES:
-    with open(f, "rb") as fh:
-        RAW[f] = fh.read()
 t0 = time.time()
 
 # --- the files are there ---------------------------------------------------------
@@ -54,55 +50,147 @@ check("LAVA_RES holds the 1381 static files 0..1380, 11 desert, 4 deadloc",
        len([f for f in FILES if "/deadloc/" in f.replace(os.sep, "/")])),
       ([0, 1380], 1381, 11, 4))
 
-# --- raw layer: byte for byte ---------------------------------------------------------
+with open(os.path.join(ROOT, "data", "exits_sides.json"), encoding="utf-8") as fh:
+    SIDES_TABLE = json.load(fh)["locations"]
+
+# One pass over the files makes every check of a single file, each section's
+# below, and keeps of a file's bytes, raw doc and model only what a later
+# section reads again by name (KEEP_DOCS, KEEP_MODELS): all 1396 files' docs
+# and models held at once took 624 MB, and with a dozen suites at once that
+# was more than CI's runners have (2026-10-12). Each file goes through the
+# checks in the order of the sections, so it meets them as it did when
+# every section made its own pass.
+F35 = STATIC[35]
+FD = os.path.join(LOC, "desert", "0001.xml")
+PINNED = (1, 35, 266, 270, 522)      # the locations FLASH_ZSORT pins to the player
+rng = random.Random(7)
+RT_SAMPLE = rng.sample(sorted(STATIC.values()), 40)   # "random edits survive a round trip"
+KEEP_DOCS = {F35} | set(RT_SAMPLE)
+KEEP_MODELS = {FD} | {STATIC[lid] for lid in PINNED}
+DOCS, MODELS, RAW35 = {}, {}, None
+
 bad_raw, bad_sem, bad_enc, bad_et = [], [], [], []
-DOCS, MODELS = {}, {}
-for f in FILES:
-    raw = RAW[f]
-    d = L.parse_raw(raw)
-    DOCS[f] = d
-    if L.write_raw(d) != raw:
-        bad_raw.append(f)
-    m = L.decode(d)
-    MODELS[f] = m
-    if L.write_raw(L.encode_into(copy.deepcopy(d), m)) != raw:
-        bad_sem.append(f)
-    if L.write_raw(L.encode(m, d)) != raw:
-        bad_enc.append(f)
-    root = ET.fromstring(raw[3:] if raw.startswith(L.BOM) else raw)
-    kids = [(c.tag, dict(c.attrib)) for c in root]
-    mine = [(c["tag"], {k: L.unescape(v) for k, v in c["attrs"]}) for c in d.children]
-    if kids != mine or dict(root.attrib) != m["attrs"]:
-        bad_et.append(f)
+bad_world, bad_exits, bad_zones = [], [], []
+bad_front, n_front = [], 0
+same_bytes, bad_new = 0, []
+bad_depth, inst, depth_s = [], 0, 0.0
+tmpdir = tempfile.mkdtemp(prefix="lavaloc_")
+tmp = os.path.join(tmpdir, "x.xml")
+# The server's own reader on a file of our choosing: whichever of these
+# world resolves an id through, it is pointed at that file for one read.
+SERVER_PATHS = {n: getattr(world, n) for n in ("path_for", "static_path") if hasattr(world, n)}
+
+
+def server_reads(lid, path):
+    for n in SERVER_PATHS:
+        setattr(world, n, lambda _lid: path)
+    try:
+        return world.Location(lid)
+    finally:
+        for n, fn in SERVER_PATHS.items():
+            setattr(world, n, fn)
+
+
+LID_OF = {f: lid for lid, f in STATIC.items()}
+try:
+    for f in FILES:
+        with open(f, "rb") as fh:
+            raw = fh.read()
+        lid = LID_OF.get(f)
+        # raw layer: byte for byte
+        d = L.parse_raw(raw)
+        if L.write_raw(d) != raw:
+            bad_raw.append(f)
+        m = L.decode(d)
+        if L.write_raw(L.encode_into(copy.deepcopy(d), m)) != raw:
+            bad_sem.append(f)
+        if L.write_raw(L.encode(m, d)) != raw:
+            bad_enc.append(f)
+        root = ET.fromstring(raw[3:] if raw.startswith(L.BOM) else raw)
+        kids = [(c.tag, dict(c.attrib)) for c in root]
+        mine = [(c["tag"], {k: L.unescape(v) for k, v in c["attrs"]}) for c in d.children]
+        if kids != mine or dict(root.attrib) != m["attrs"]:
+            bad_et.append(f)
+        # what the server reads (an overlay, data/locations, wins over RES for its id)
+        if lid is not None and world.path_for(lid) == f:
+            loc = world.Location(lid)
+            W = m["width"]
+            got = (loc.title, loc.fn, loc.width, loc.height, loc.war, loc.pvp,
+                   loc.obstacles, loc.entries, loc.spawns)
+            want = (m["attrs"].get("title", ""), m["attrs"].get("fn", ""), W, m["height"],
+                    int(m["attrs"].get("war", 0)), int(m["attrs"].get("pvp") != "0"),
+                    {L.cell_num(x, y, W) for x, y, _ in m["lists"]["obstacles"]},
+                    [L.cell_num(x, y, W) for x, y, _ in m["lists"]["inzones"]],
+                    [(L.cell_num(x, y, W), t) for x, y, t in L.mob_slots(m)])
+            if got != want:
+                bad_world.append(lid)
+        if lid is not None and str(lid) in SIDES_TABLE and SIDES_TABLE[str(lid)] != L.exits_row(m):
+            bad_exits.append(lid)
+        if [c[:2] for c in m["lists"]["zones"]] != [c[:2] for c in m["lists"]["outzones"]]:
+            bad_zones.append(f)
+        # fronts
+        for sp in m["sprites"]:
+            fr = sp["front"] or ""
+            if len(fr) % 4:
+                continue
+            for ax, ay in sp["anchors"]:
+                n_front += 1
+                if L.front_hex(L.front_cells(fr, ax, ay), ax, ay) != fr:
+                    bad_front.append((f, sp["id"], ax, ay))
+        # the writer
+        if lid is not None:
+            out = L.write_static(m)
+            same_bytes += out == raw
+            problems = []
+            if not out.startswith(L.DECL.encode()) or out.startswith(L.BOM):
+                problems.append("declaration")
+            if out.count(b"\n") != 1 or not out.endswith(b"<serverdata>\r\n</serverdata></location>"):
+                problems.append("not one line ending in <serverdata>\r\n</serverdata>")
+            ET.fromstring(out)
+            m2 = L.load(out)
+            for k in ("pvp", "fn"):
+                if k not in m2["attrs"]:
+                    problems.append("no " + k)
+            if m2["lists"] != {k: [tuple(c) for c in v] for k, v in m["lists"].items()}:
+                problems.append("lists")
+            if [(s["id"], s["anchors"], s["front"] or "") for s in m2["sprites"]] != \
+                    [(s["id"], s["anchors"], s["front"] or "") for s in m["sprites"]]:
+                problems.append("sprites")
+            with open(tmp, "wb") as fh:
+                fh.write(out)
+            a, b = server_reads(lid, tmp), server_reads(lid, f)
+            if (a.title, a.fn, a.width, a.height, a.war, a.pvp, a.obstacles, a.entries, a.spawns) != \
+                    (b.title, b.fn, b.width, b.height, b.war, b.pvp, b.obstacles, b.entries, b.spawns):
+                problems.append("world.Location reads it differently")
+            if problems:
+                bad_new.append((lid, problems))
+        # depth: LDepthManager
+        ts = time.time()
+        o = L.depth_order(m)
+        want = sorted((si, ai) for si, sp in enumerate(m["sprites"]) for ai in range(len(sp["anchors"])))
+        inst += len(want)
+        if sorted(o) != want:
+            bad_depth.append(f)
+        depth_s += time.time() - ts
+        if f in KEEP_DOCS:
+            DOCS[f] = d
+        if f in KEEP_MODELS:
+            MODELS[f] = m
+        if f == F35:
+            RAW35 = raw
+finally:
+    shutil.rmtree(tmpdir, ignore_errors=True)
+
+# --- raw layer: byte for byte ---------------------------------------------------------
 check("raw parse -> write is byte-identical for every file", bad_raw, [])
 check("decode -> re-encode of the cell lists is byte-identical for every file", bad_sem, [])
 check("encode(decode(d), base=d) is byte-identical for every file", bad_enc, [])
 check("the raw layer reads the same elements and attributes as ElementTree", bad_et, [])
 
 # --- what the server reads -----------------------------------------------------------------
-bad_world = []
-for lid, f in sorted(STATIC.items()):
-    if world.path_for(lid) != f:
-        continue        # an overlay (data/locations) wins over RES for this id
-    loc = world.Location(lid)
-    m = MODELS[f]
-    W = m["width"]
-    got = (loc.title, loc.fn, loc.width, loc.height, loc.war, loc.pvp,
-           loc.obstacles, loc.entries, loc.spawns)
-    want = (m["attrs"].get("title", ""), m["attrs"].get("fn", ""), W, m["height"],
-            int(m["attrs"].get("war", 0)), int(m["attrs"].get("pvp") != "0"),
-            {L.cell_num(x, y, W) for x, y, _ in m["lists"]["obstacles"]},
-            [L.cell_num(x, y, W) for x, y, _ in m["lists"]["inzones"]],
-            [(L.cell_num(x, y, W), t) for x, y, t in L.mob_slots(m)])
-    if got != want:
-        bad_world.append(lid)
-check("world.Location reads every static file as the model does", bad_world, [])
-
-with open(os.path.join(ROOT, "data", "exits_sides.json"), encoding="utf-8") as fh:
-    SIDES_TABLE = json.load(fh)["locations"]
-bad_exits = [lid for lid, f in sorted(STATIC.items())
-             if str(lid) in SIDES_TABLE and SIDES_TABLE[str(lid)] != L.exits_row(MODELS[f])]
-check("data/exits_sides.json is every static file's outzones (exits_row)", bad_exits, [])
+# (the pass's files come in the order of their names; the ids are reported in theirs)
+check("world.Location reads every static file as the model does", sorted(bad_world), [])
+check("data/exits_sides.json is every static file's outzones (exits_row)", sorted(bad_exits), [])
 check("data/exits_sides.json has a row for every static file",
       [lid for lid in STATIC if str(lid) not in SIDES_TABLE], [])
 # The locations of ours (data/locations, server/world.py OVERLAY): read and
@@ -127,21 +215,9 @@ for lid in world.overlay_ids():
         bad_ours.append((lid, "exits_sides"))
 check("the locations of ours (%d in data/locations): bytes, the server's reading and their "
       "exits_sides rows agree with the model" % len(world.overlay_ids()), bad_ours, [])
-check("zones are the outzones cells, in their order, in every file",
-      [f for f in FILES if [c[:2] for c in MODELS[f]["lists"]["zones"]]
-       != [c[:2] for c in MODELS[f]["lists"]["outzones"]]], [])
+check("zones are the outzones cells, in their order, in every file", bad_zones, [])
 
 # --- fronts ---------------------------------------------------------------------------------
-bad_front, n_front = [], 0
-for f in FILES:
-    for sp in MODELS[f]["sprites"]:
-        fr = sp["front"] or ""
-        if len(fr) % 4:
-            continue
-        for ax, ay in sp["anchors"]:
-            n_front += 1
-            if L.front_hex(L.front_cells(fr, ax, ay), ax, ay) != fr:
-                bad_front.append((f, sp["id"], ax, ay))
 check("front_hex(front_cells(f, anchor)) == f for every sprite instance (%d)" % n_front,
       bad_front[:5], [])
 check("front: an odd anchor row moves odd relative rows one cell right (LDParser.getHexCoord)",
@@ -198,63 +274,14 @@ check("neighbours' centres are one hex away (40 px across, 25 px diagonally)",
 check("cell_num / num_cell", (L.cell_num(5, 3, 64), L.num_cell(197, 64)), (197, (5, 3)))
 
 # --- the writer -----------------------------------------------------------------------------------
-same_bytes, bad_new = 0, []
-tmpdir = tempfile.mkdtemp(prefix="lavaloc_")
-tmp = os.path.join(tmpdir, "x.xml")
-# The server's own reader on a file of our choosing: whichever of these
-# world resolves an id through, it is pointed at that file for one read.
-SERVER_PATHS = {n: getattr(world, n) for n in ("path_for", "static_path") if hasattr(world, n)}
-
-
-def server_reads(lid, path):
-    for n in SERVER_PATHS:
-        setattr(world, n, lambda _lid: path)
-    try:
-        return world.Location(lid)
-    finally:
-        for n, fn in SERVER_PATHS.items():
-            setattr(world, n, fn)
-
-
-try:
-    for lid, f in sorted(STATIC.items()):
-        m = MODELS[f]
-        out = L.write_static(m)
-        same_bytes += out == RAW[f]
-        problems = []
-        if not out.startswith(L.DECL.encode()) or out.startswith(L.BOM):
-            problems.append("declaration")
-        if out.count(b"\n") != 1 or not out.endswith(b"<serverdata>\r\n</serverdata></location>"):
-            problems.append("not one line ending in <serverdata>\r\n</serverdata>")
-        ET.fromstring(out)
-        m2 = L.load(out)
-        for k in ("pvp", "fn"):
-            if k not in m2["attrs"]:
-                problems.append("no " + k)
-        if m2["lists"] != {k: [tuple(c) for c in v] for k, v in m["lists"].items()}:
-            problems.append("lists")
-        if [(s["id"], s["anchors"], s["front"] or "") for s in m2["sprites"]] != \
-                [(s["id"], s["anchors"], s["front"] or "") for s in m["sprites"]]:
-            problems.append("sprites")
-        with open(tmp, "wb") as fh:
-            fh.write(out)
-        a, b = server_reads(lid, tmp), server_reads(lid, f)
-        if (a.title, a.fn, a.width, a.height, a.war, a.pvp, a.obstacles, a.entries, a.spawns) != \
-                (b.title, b.fn, b.width, b.height, b.war, b.pvp, b.obstacles, b.entries, b.spawns):
-            problems.append("world.Location reads it differently")
-        if problems:
-            bad_new.append((lid, problems))
-finally:
-    shutil.rmtree(tmpdir, ignore_errors=True)
 check("write_static: every static file rewritten in the static style reads the same "
-      "(declaration, one line, pvp and fn, lists, sprites, world.Location)", bad_new[:5], [])
+      "(declaration, one line, pvp and fn, lists, sprites, world.Location)", sorted(bad_new)[:5], [])
 print("  ..  write_static reproduces %d of %d static files byte for byte" % (same_bytes, len(STATIC)))
 check("write_static reproduces most static files byte for byte (the static style)",
       same_bytes >= 1300, True)
 
 # --- edits change only what they edit -----------------------------------------------------------------
-f35 = STATIC[35]
-d35, raw35 = DOCS[f35], RAW[f35]
+d35, raw35 = DOCS[F35], RAW35
 m = L.decode(d35)
 m["lists"]["obstacles"].append((1, 1, "f"))
 once = L.write_raw(L.encode(m, d35))
@@ -303,7 +330,7 @@ check("fmt_num: at most two places, no trailing zeros",
       ["-115", "12.5", "7.25", "0", "0", "3", "1.5"])
 
 # --- a copy of a template, normalised ---------------------------------------------------------------------
-fd = os.path.join(LOC, "desert", "0001.xml")
+fd = FD
 n = L.normalized(MODELS[fd])
 out = L.write_static(n)
 nm = L.load(out)
@@ -333,17 +360,8 @@ check("depth: a walker in front of a front line goes over it, behind it under it
        L.walker_index(objs, 5, 9) <= [o.sprite for o in objs].index(0)), (True, True))
 check("depth: the client's for..in walk takes <sprite> elements last to first",
       [o.sprite for o in L.scene_objects(synthetic)], [3, 2, 1, 0])
-t1 = time.time()
-bad_depth, inst = [], 0
-for f in FILES:
-    m = MODELS[f]
-    o = L.depth_order(m)
-    want = sorted((si, ai) for si, sp in enumerate(m["sprites"]) for ai in range(len(sp["anchors"])))
-    inst += len(want)
-    if sorted(o) != want:
-        bad_depth.append(f)
 check("depth_order: every sprite instance of every file, once (%d instances)" % inst, bad_depth, [])
-print("  ..  depth_order over all files: %.1f s" % (time.time() - t1))
+print("  ..  depth_order over all files: %.1f s" % depth_s)
 
 # --- what the real player does ---------------------------------------------------------------------
 # Flash Player 32 (the launcher's flashplayer.exe), headless under Wine and
@@ -380,7 +398,9 @@ FLASH_DECALS = {1: "208488cd260321d5f6679e2e", 266: "171125e195c3c37ddd0cee11",
                 270: "8d74dc790cfe6fe5d18f6c46"}
 got_z, got_d = {}, {}
 for lid in FLASH_ZSORT:
-    m = MODELS[STATIC[lid]]
+    # the pass keeps PINNED's models; a location pinned here later and not
+    # there is read again
+    m = MODELS.get(STATIC[lid]) or L.load(STATIC[lid])
     got_z[lid] = digest("%s@%d,%d" % ((m["sprites"][s]["id"],) + tuple(m["sprites"][s]["anchors"][a]))
                         for s, a in L.depth_order(m))
     if lid in FLASH_DECALS:
@@ -392,9 +412,9 @@ check("decals are painted last to first in the file, as the player's LDParser ga
       got_d, FLASH_DECALS)
 
 # --- random edits survive a round trip ------------------------------------------------------------
-rng = random.Random(7)
+# (the 40 files are rng's first draw, taken before the pass: RT_SAMPLE)
 bad_rt = []
-for f in rng.sample(sorted(STATIC.values()), 40):
+for f in RT_SAMPLE:
     m = L.decode(DOCS[f])
     for _ in range(5):
         x, y = rng.randrange(m["width"]), rng.randrange(m["height"])

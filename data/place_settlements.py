@@ -611,7 +611,11 @@ def static_files():
     # The original's files and ours (data/locations), ours first: the files
     # the server reads (world.static_path).
     for i in world.static_ids():
-        loc = world.location(i)
+        # Read afresh, not world.location(i): that keeps every parsed file
+        # for the life of the process (all 1381, 436 MB in the location
+        # editor's L3 subprocess beside the editor itself, 2026-10-12), and
+        # the placer takes a few fields of each, once.
+        loc = world.Location(i)
         txt = read(world.static_path(i))
         attrs = dict(re.findall(r'(\w+)="([^"]*)"',
                                 re.search(r"<location([^>]*)>", txt).group(1)))
