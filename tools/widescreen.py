@@ -219,18 +219,34 @@ Client patches applied without altering the original artwork:
    scrolling and dragging run past the tiles asked for; once it is taller,
    boundOY presses the view's bottom against the box's, and at 3840x2160
    the map is not centred and its top 168 px show a row never asked for.
+   Near the edge of the picture the block asked for runs off it as well:
+   the full scale has tiles 180..202 by 48..68 and no others (MAP_TILES),
+   and at Abri, tile 182, a frame of n = 4 asks for columns 178..187, the
+   first two of which are grey.
 
-   The wrapper on DisplayLandscape.prototype.drawArea runs the original,
-   then sets the box again, one axis at a time. Where the frame's mask is
-   narrower than the five tiles -- boundOX's own test -- the original's
-   numbers stand, so a window below 1330 x 1480, 1280 x 1024 among them,
-   scrolls exactly as before. Elsewhere the box is the block of tiles
-   drawArea has just asked for, from (c - n) * 256, (2n + 2) * 256 long.
-   The view then stays on requested tiles and centres on the player at
-   every size up to the 3840 x 2160 ceiling. setScrollArea only stores
-   the numbers (ViewFrame.as:89-103), so the second call replaces the
-   first before anything reads them. A resize alone calls neither, as in
-   the original: tiles and box follow the next change of tile or scale.
+   The wrapper on DisplayLandscape.prototype.drawArea works one axis at a
+   time. Where the frame's mask is narrower than the five tiles --
+   boundOX's own test -- the original's five tiles stand, so a window
+   below 1330 x 1480, 1280 x 1024 among them, scrolls exactly as before:
+   at the full scale they always lie on the picture, since the server
+   keeps the player on tiles 182..197 by 50..66 (world.MAP_X, MAP_Y).
+   Elsewhere it takes the block the original asks for, 2n + 2 tiles from
+   c - n, and where that runs off the picture moves it back on by whole
+   tiles; the original then runs with x or y moved by as many tiles'
+   worth of cells, so it asks for the moved block, which still holds the
+   player's tile. The box is that block, or the five tiles, cut down to
+   the picture. The view then stays on tiles that are there and were asked
+   for, and centres on the player wherever the picture lets it, at every
+   size up to the 3840 x 2160 ceiling. Should what is left be narrower
+   than the mask -- a picture narrower than the frame, which the game's
+   tiles and that ceiling never make -- the box is the mask and two
+   pixels, centred on it, so that boundOX and boundOY still act and hold
+   the view there. On an axis where the player's tile is off the picture
+   nothing is moved or cut: the box is the block asked for, or the five
+   tiles. setScrollArea only stores the numbers (ViewFrame.as:89-103),
+   so the second call replaces the first before anything reads them. A
+   resize alone calls neither, as in the original: tiles and box follow
+   the next change of tile or scale.
 
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
@@ -848,45 +864,115 @@ def fn_location_bound(axis):
 MAP_BOX = 5
 MAP_BOX_BACK = 2
 
+# The tiles the global map has, per scale: (first column, first row, the
+# column past the last, the row past the last). SSEmulator.getGMTURL names
+# a tile <row * 256 + column>.jpg in globalmap/full at the full scale and
+# <row * 32 + column>.jpg in globalmap/client at the small one.
+#   full:  the original game's 272, columns 182..197 by rows 50..66, in
+#          client/base.txt (with one stray more, 163,57, alone far to the
+#          west), and the ring of 211 around them in client/files/globalmap/
+#          full (0a11de7): 180..202 by 48..68, all 483 of them there.
+#   small: the whole 32 x 32 grid, all 1024 in client/base.txt.
+# test_widescreen.py checks both against those two lists.
+MAP_TILES = {"full": (180, 48, 203, 69), "small": (0, 0, 32, 32)}
+MAP_OPEN = 1 << 24      # tiles: a picture's edge farther than any frame goes
 
-def fn_map_scroll():
-    """DisplayLandscape.drawArea(x, y, centerPers): the original, which asks
-    for the tiles and sets the five-tile box, then the box once more. On
-    each axis the mask still fits in five tiles keeps them; on the others
-    the box is the block of tiles just asked for, computed as the original
-    computes it (patch 13)."""
+
+def fn_map_scroll(tiles=None, shift=True, centre=True):
+    """DisplayLandscape.drawArea(x, y, centerPers) (patch 13). On each axis
+    the mask still fits in five tiles keeps them; on the others the block
+    of tiles the original asks for, computed as it computes it and moved
+    back onto the picture where it runs off. Then the original, with x or y
+    moved to ask for the moved block, and the box once more: the five
+    tiles or the block, cut down to the picture, or a box that holds the
+    view centred on that when it is narrower than the mask.
+
+    tiles (MAP_TILES when None), shift and centre are there so that
+    test_widescreen.py can build broken versions; the client gets the
+    defaults."""
+    tiles = MAP_TILES if tiles is None else tiles
     a = Asm()
-    a.var("centerPers").var("y").var("x").push(3).var("this")
-    a.push("__mapScrollOrig").op("callmethod").op("pop")
     a.push("s").var("this").member("cellSize").op("definelocal")
     a.push("ui").var("lol").member("core", "SceneShifter", "gmapScreen").op("definelocal")
     a.push("view").push(0).var("ui").push("getFrameSize").op("callmethod").op("definelocal")
     a.push("frame").var("ui").member("globalMapFrame").op("definelocal")
+    # the picture at this scale, told apart as getGMTURL tells the folders
+    for scale in ("small", "full"):
+        if scale == "full":
+            a.var("this").member("mapScaleType").push("full").op("equals2")
+            a.op("not").iftrue("picked")
+        for name, value in zip(("loX", "loY", "hiX", "hiY"), tiles[scale]):
+            a.push(name, value).op("definelocal")
+    a.label("picked")
     for axis, coord, size, mask in (("X", "x", "width", "_width"),
                                     ("Y", "y", "height", "_height")):
+        c, lo, hi, m = "c" + axis, "lo" + axis, "hi" + axis, "mask" + axis
+        start, span, end, back = "from" + axis, "span" + axis, "end" + axis, "back" + axis
+        at, length = "at" + axis, "len" + axis
+        a.push(m).var("frame").member("mask_mc", mask).op("definelocal")
         # the player's tile: Math.floor(this.mapScale * x / s)
-        a.push("c" + axis).var("this").member("mapScale").var(coord).op("multiply")
+        a.push(c).var("this").member("mapScale").var(coord).op("multiply")
         a.var("s").op("divide").push(1).var("Math").push("floor").op("callmethod")
         a.op("definelocal")
+        # a player off the picture: no edges on this axis
+        a.var(c).var(lo).op("less2").iftrue("open" + axis)
+        a.var(c).var(hi).op("less2").iftrue("shut" + axis)
+        a.label("open" + axis)
+        a.push(lo, -MAP_OPEN).op("definelocal")
+        a.push(hi, MAP_OPEN).op("definelocal")
+        a.label("shut" + axis)
         # the original's box, in tiles
-        a.push("from" + axis).var("c" + axis).push(MAP_BOX_BACK).op("subtract")
-        a.op("definelocal")
-        a.push("span" + axis, MAP_BOX).op("definelocal")
+        a.push(start).var(c).push(MAP_BOX_BACK).op("subtract").op("definelocal")
+        a.push(span, MAP_BOX).op("definelocal")
+        a.push(back, 0).op("definelocal")
         # boundOX acts only while the mask is narrower than the box
-        a.var("frame").member("mask_mc", mask).push(MAP_BOX).var("s").op("multiply")
-        a.op("less2").iftrue("keep" + axis)
+        a.var(m).push(MAP_BOX).var("s").op("multiply").op("less2").iftrue("cut" + axis)
         # n = Math.floor(0.5 * width / s) + 1, the 0.5 written as s * 2:
         # halving is exact, so the quotient rounds the same
         a.push("n").var("view").member(size).var("s").push(2).op("multiply")
         a.op("divide").push(1).var("Math").push("floor").op("callmethod")
         a.push(1).op("add2").op("definelocal")
-        a.push("from" + axis).var("c" + axis).var("n").op("subtract").op("definelocal")
-        a.push("span" + axis).var("n").push(2).op("multiply").push(2).op("add2")
+        a.push(start).var(c).var("n").op("subtract").op("definelocal")
+        a.push(span).var("n").push(2).op("multiply").push(2).op("add2").op("definelocal")
+        if shift:
+            # back onto the picture, by whole tiles:
+            # back = from - Math.max(Math.min(from, hi - span), lo)
+            a.push(back).var(start).var(lo)
+            a.var(start).var(hi).var(span).op("subtract")
+            a.push(2).var("Math").push("min").op("callmethod")
+            a.push(2).var("Math").push("max").op("callmethod")
+            a.op("subtract").op("definelocal")
+            a.push(start).var(start).var(back).op("subtract").op("definelocal")
+        a.label("cut" + axis)
+        # cut down to the picture: from .. end
+        a.push(end).var(start).var(span).op("add2").var(hi)
+        a.push(2).var("Math").push("min").op("callmethod").op("definelocal")
+        a.push(start).var(start).var(lo).push(2).var("Math").push("max").op("callmethod")
         a.op("definelocal")
-        a.label("keep" + axis)
-    # frame.setScrollArea(fromX * s, fromY * s, spanX * s, spanY * s)
-    for name in ("spanY", "spanX", "fromY", "fromX"):
-        a.var(name).var("s").op("multiply")
+        a.push(at).var(start).var("s").op("multiply").op("definelocal")
+        a.push(length).var(end).var(start).op("subtract").var("s").op("multiply")
+        a.op("definelocal")
+        if centre:
+            # narrower than the mask: from Math.floor(((from + end) * s -
+            # mask) / 2) - 1, whole pixels, mask + 2 long, so that
+            # left < right and the bounds still act
+            a.var(length).var(m).op("less2").op("not").iftrue("fits" + axis)
+            a.push(at).var(start).var(end).op("add2").var("s").op("multiply")
+            a.var(m).op("subtract").push(2).op("divide")
+            a.push(1).var("Math").push("floor").op("callmethod").push(1).op("subtract")
+            a.op("definelocal")
+            a.push(length).var(m).push(2).op("add2").op("definelocal")
+            a.label("fits" + axis)
+    # the original, x and y moved by the tiles the block was moved by;
+    # subtract turns a string coordinate into a number (add2 would join)
+    a.var("centerPers")
+    for coord, back in (("y", "backY"), ("x", "backX")):
+        a.var(coord).var(back).var("s").op("multiply").var("this").member("mapScale")
+        a.op("divide").op("subtract")
+    a.push(3).var("this").push("__mapScrollOrig").op("callmethod").op("pop")
+    # frame.setScrollArea(atX, atY, lenX, lenY)
+    for name in ("lenY", "lenX", "atY", "atX"):
+        a.var(name)
     call_method(a, "frame", "setScrollArea", 4)
     return a
 
