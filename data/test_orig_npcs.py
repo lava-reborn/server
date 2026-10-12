@@ -177,7 +177,8 @@ class Format(unittest.TestCase):
         names = [v["name"] for v in self.npcs.values()]
         self.assertTrue(any("<Br>" in n for n in names))
         # Rows chosen by hand (orig_names_manual.json) are the file's text as
-        # it is, and two of them never had a level; orig_texts adds one.
+        # it is, and some of them never had a level. The level goes on the
+        # wire either way (orig_texts.person_name, the owner's 2026-10-12).
         hand = set(json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                "orig_names_manual.json"),
                                   encoding="utf-8"))["types"])

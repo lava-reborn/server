@@ -2,7 +2,7 @@
  "_meta": {
   "what": "Original texts.xml strings for creatures the matcher in build_orig_npcs.py cannot reach by name, chosen by hand.",
   "why": "The matcher ties a type to a string when its internal name transliterates into the string (Aziz_Trader -> Азиз). Mobs named mAntilope, mRat_2 or m05_NewColonAsslt_s_lvl3 translate, they do not transliterate, so the animals and bandits of the Nubian valley kept their internal names. Owner's request 2026-09-24: give them their names from the original.",
-  "rule": "string_id is the row of the original texts.xml; text is a fragment that row must contain (the build stops if it does not, so another copy of the file cannot slip a different row in); why is the evidence. The level prefix [N] is rewritten to the mob's real level by server/orig_texts.py, as for every mob.",
+  "rule": "string_id is the row of the original texts.xml; text is a fragment that row must contain (the build stops if it does not, so another copy of the file cannot slip a different row in); why is the evidence. The level prefix [N] is dropped on the wire by server/orig_texts.py, as for every mob (the owner, 2026-10-12: a mob is called by its name alone).",
   "edit": "Change a row, then: MSYS_NO_PATHCONV=1 wsl.exe -e bash -lc \"cd /mnt/c/Users/gmkrt/OneDrive/Desktop/claude/lava-server && LAVA_RES=/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res python3 data/build_orig_npcs.py\"; the string table changes, so the launcher is rebuilt too."
  },
  "types": {

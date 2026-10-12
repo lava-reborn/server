@@ -51,10 +51,12 @@ print()
 print("people")
 check("<Br> in lower case, the only one the event log parses",
       O.person_name("Борис<Br>Пистолеты и патроны"), "Борис<br>Пистолеты и патроны")
-check("a mob's level prefix is rewritten with its real level",
-      O.person_name("[3] Бугор Асмунд", 0), "[0] Бугор Асмунд")
-check("and left alone when there is no level to write",
-      O.person_name("[3] Бугор Асмунд"), "[3] Бугор Асмунд")
+check("a mob's level in front of its name goes (the owner, 2026-10-12)",
+      O.person_name("[3] Бугор Асмунд<Br>Новые колонисты"), "Бугор Асмунд<br>Новые колонисты")
+check("  ..written loosely, too", O.person_name(" [ 12 ]Амазонка"), "Амазонка")
+check("  ..and only in front: a bracket inside the name is the name's",
+      O.person_name("Аббас ибн Заглюль<Br>Обмен экзоодежды [6-8]"),
+      "Аббас ибн Заглюль<br>Обмен экзоодежды [6-8]")
 
 print()
 print("every string")
@@ -81,14 +83,26 @@ check("an image written with a numeric bracket is refused",
       O.launcher_ok("&#60;img src='x.swf'&#62;"), False)
 
 print("the Nubian valley's creatures, named by hand from the original")
-_lv = {1023: 2, 40: 1, 82: 1, 251: 3}
-_names = O.person_names(lambda t: _lv.get(t, 1))
-check("a row with no level gets the mob's own", _names.get(1023), "[2] Серая крыса")
+_names = O.person_names()
+check("a row with no level stays without one", _names.get(1023), "Серая крыса")
 check("the Nubian defender is one of the valley's own guards, a resident: no level",
       _names.get(40), "Нубийский защитник")
-check("a row with a level has it rewritten, as always", _names.get(82), "[1] Голодная собака")
-check("the colonists keep their clan under the name", _names.get(251), "[3] Штурмовик<br>Новые колонисты")
+check("a row with a level loses it", _names.get(82), "Голодная собака")
+check("the colonists keep their clan under the name", _names.get(251), "Штурмовик<br>Новые колонисты")
 check("a resident gets no level", _names.get(5205), "Говард Хаксли<br>Антиквариат и колониальные товары")
+
+print()
+print("no mob of the original goes by its level (the owner, 2026-10-12)")
+_mobs = {int(t): r["name"] for t, r in O._NPCS.items() if r.get("kind") == "mob" and r.get("name")}
+_before = sorted(t for t, n in _mobs.items() if O._MOB_LEVEL.match(n))
+_after = sorted(t for t in _mobs if O._MOB_LEVEL.match(_names.get(t) or ""))
+print("  mobs in data/orig_npcs.json: %d, with a level in front in the file: %d, on the wire: %d"
+      % (len(_mobs), len(_before), len(_after)))
+check("the file writes a level in front of most of its mobs (there is work to do)",
+      len(_before) > len(_mobs) // 2, True)
+check("  ..and not one of them keeps it on the wire", _after, [])
+check("  ..and none is left with nothing to show",
+      [t for t in _before if t in _names and not _names[t].strip()], [])
 
 print()
 if fails:

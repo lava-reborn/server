@@ -2331,7 +2331,7 @@ class Session:
                 params.update(can_banking=1)
             elif self.home_here(type_id):
                 params.update(can_set_home=1)
-        # A mob's level paints the coloured frame over its head; its usrUp
+        # A mob's level paints the coloured shield beside its name; its usrUp
         # has to follow the userInfo at once, or the bar is drawn against a
         # maximum of 1200 (combat.md 5).
         params.update(self.combat.mob_info(npc_id))

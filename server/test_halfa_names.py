@@ -49,7 +49,6 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import export_texts  # noqa: E402
 import items  # noqa: E402
-import mobs  # noqa: E402
 import names  # noqa: E402
 import quests  # noqa: E402
 import rooms  # noqa: E402
@@ -178,9 +177,10 @@ NEIGHBOURS = {
     5770: "Мастер Гуго Борхардт<br>улучшение пистолетов [Q]<br>чертежи [0у], [2у] и [15у]",
     5771: "Аббас ибн Заглюль<br>Обмен экзоодежды [6-8]",
 }
-# The creatures the quests send the player to kill or rob, without the level:
-# names.ALL puts the one each fights at in front (orig_texts.person_names), and
-# which that is belongs to data/mob_types.json.
+# The creatures the quests send the player to kill or rob, by the name alone:
+# no level in front of it (orig_texts.person_name; the owner, 2026-10-12).
+# The level each fights at belongs to data/mob_types.json, and the client
+# shows it by itself, beside the name.
 MOBS = {
     696: "Главарь бандитов", 110: "Послушник Люшера", 111: "Мастер Люшера",
     854: "Послушник Люшера", 722: "Грабитель", 833: "Трусливый грабитель",
@@ -371,9 +371,8 @@ try:
     check("the givers and takers by their names", {t: names.ALL.get(t) for t in PEOPLE}, PEOPLE)
     check("the rest of the town by its families' own runs",
           {t: names.ALL.get(t) for t in NEIGHBOURS}, NEIGHBOURS)
-    check("the creatures they send the player after, each at the level it fights at",
-          {t: names.ALL.get(t) for t in MOBS},
-          {t: "[%d] %s" % (mobs.stats(t).level, n) for t, n in MOBS.items()})
+    check("the creatures they send the player after, by their names alone",
+          {t: names.ALL.get(t) for t in MOBS}, MOBS)
     check("the things they hand out and ask for by the original's names",
           {t: names.ALL.get(items.STRING_ID_OFFSET + t) for t in ITEMS}, ITEMS)
     check("  ..each with a description", [t for t in ITEMS

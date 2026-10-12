@@ -51,11 +51,30 @@ check("row count matches the table",
 # HTTP stub already had once, and the client ends up with no strings at all.
 check("decodes as utf-8", isinstance(blob.decode("utf-8"), str), True)
 
+# --- a mob by its name alone ------------------------------------------------
+# The owner's word of 2026-10-12: «у мобов надо в начале убрать подписи
+# уровня». Read off the bytes the player gets, for every creature type, so a
+# name from any source -- mobs.xml, the wiki, the NPC editor, the original --
+# is held to it. The client shows a mob's level by itself (combat.mob_info).
+import orig_texts                                     # noqa: E402
+_LEAD = re.compile(r"^\s*\[\s*\d+\s*\]")
+_rows = {int(i): t for i, t in re.findall(r"<s id='(\d+)'>([^<]*)</s>", blob.decode("utf-8"))}
+_creatures = set(names.MOB_NAMES) | set(orig_texts.person_names())
+_raw = {int(t): r["name"] for t, r in orig_texts._NPCS.items()
+        if r.get("kind") == "mob" and int(t) in _rows}
+_in_file = sorted(t for t in _creatures if _LEAD.match(_rows.get(t, "")))
+print("  creature rows in the file: %d; mobs the original names with a level in front: %d;"
+      " rows in the file that start with one: %d"
+      % (len(_creatures & set(_rows)), sum(1 for n in _raw.values() if _LEAD.match(n)),
+         len(_in_file)))
+check("no creature's name in the file starts with a level", _in_file[:10], [])
+check("  ..including every mob the original wrote one for",
+      sorted(t for t, n in _raw.items() if _LEAD.match(n) and _LEAD.match(_rows[t])), [])
+
 # --- what the launcher will say -------------------------------------------
 # TextsCheck.Sane refuses a whole table for a single tag it does not know, and a
 # refused table leaves the player on the one he had -- whose missing ids are a
 # trip back to the login screen. So every row goes through a port of its check.
-import orig_texts                                     # noqa: E402
 import re as _re                                      # noqa: E402
 refused = [i for i, v in names.ALL.items() if v and not orig_texts.launcher_ok(v)]
 check("the launcher would accept every row", refused[:10], [])

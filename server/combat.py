@@ -1314,7 +1314,10 @@ class Fighter:
     # --- mobs as the client sees them ----------------------------------------
     def mob_info(self, npc_id):
         """Extra userInfo keys for an inhabitant that is a mob: its level,
-        which paints the coloured frame over its head (CharInfo)."""
+        which paints the coloured shield beside its name -- the mob's level
+        less the player's, -4 .. +4 (CharInfo.addLevelMc, mobLevel_mc). Since
+        the names lost their "[N] " (orig_texts.person_name, 2026-10-12) it
+        is all a player sees of a mob's level."""
         rc = self.rc
         mob = rc.mobs.get(npc_id) if rc is not None else None
         return dict(lvl=mob.level) if mob is not None else {}
