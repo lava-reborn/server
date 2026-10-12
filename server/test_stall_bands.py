@@ -191,10 +191,10 @@ check("  ..and no seller's own list in data/npcs.json holds one: they come from 
              and any(weapon_or_piece(x) for x in npcs.stock(t))), [])
 LEFT_ALONE = sorted((p, t) for p, types in AT.items() for t in types
                     if t not in shop_bands.SELLERS)
-# The bouquets: «Букет» (gift_girl_4) in Абри's slums and Абу-Хамед's living quarter,
-# «Цветы для любимого» (stv_flowers_m_g) on Донгола's black market; and Донгола's grocer
-# 155 (dn_food_trader) on its two markets, whose food is a medicine of the two lines.
-LEFT_HOLDING = [(50, 155), (103, 1215), (127, 1968), (197, 155), (255, 1962)]
+# The bouquets: «Букет» (gift_girl_4) in Абри's slums and Абу-Хамед's living quarter.
+# Донгола's black market had a third, «Цветы для любимого» (stv_flowers_m_g), on Фарюк's
+# (1215) list by a shifted link of the wiki; he sells Донгола's medicine since 2026-10-12.
+LEFT_HOLDING = [(127, 1968), (255, 1962)]
 check("  ..and every trader of a city's place that is no seller sells its own list there, as"
       " anywhere: the bands take nothing off it (the flower sellers keep their bouquets,"
       " a cold arm to the client)",
@@ -301,11 +301,15 @@ COUNTS = {
     "Абри": {1159: (2, 2), 1161: (4, 4), 1163: (10, 10), 1162: (10, 10), 1164: (3, 3),
              1225: (26, 26), 1166: (10, 10), 1165: (10, 10), 5160: (10, 10), 5161: (10, 10),
              1168: (0, 0), 2391: (0, 6), 1167: (0, 0), 207: (0, 0)},
-    "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (6, 6), 1153: (3, 3), 1214: (2, 2),
+    # The black market's machine guns at «Пулеметы и патроны» (1208), whom the wiki's article
+    # puts there; Серхио (1214), who had his list by a shifted link, sells battle medicine.
+    "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (6, 6), 1153: (3, 3), 1208: (2, 2),
                 1229: (25, 25), 1213: (20, 20), 1233: (20, 20), 5161: (20, 20), 2391: (0, 8),
-                207: (0, 0)},
-    "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (3, 3),
-                  1223: (20, 20), 1219: (20, 20), 5161: (20, 20), 2391: (0, 9), 207: (0, 0)},
+                207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0)},
+    # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
+    "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (0, 0),
+                  1223: (20, 20), 1219: (20, 20), 5161: (20, 20), 2391: (0, 9), 207: (0, 0),
+                  1222: (0, 0)},
 }
 got = {}
 for (p, t), stall in stalls.items():

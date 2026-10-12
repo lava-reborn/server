@@ -60,6 +60,16 @@
     "why": "DESIGNED, the owner's (2026-10-12): «Там голду дают 6 (работорговцы) и 8 (живодеры), принимает также Мортимер в портовом рынке». Мортимер (ow_GoldExchange, «Мортимер<Br>Обменник», 62140), who stands in the Трущобы 255 by his file, stands in the Портовый рынок 187 as well, where the ride from Вади-Хальфа lands: his stall (the ingots 7620/4796/4797 for gold) and his cashing 301-307 go with his type. The cell is ours: seven steps from the entry (35,75), beside the healer Ведич (1174, 38,71), on open ground between the houses."
    }
   ],
+  "103": [
+   {
+    "type": 1208,
+    "cell": [
+     36,
+     79
+    ],
+    "why": "RECOVERED creature, place and goods, DESIGNED cell (the owner's of 2026-10-12: «сделай во всех городах нормальную продажу медикаментов и боевой медицины ... продумай нормально всё и реализуй»). The wiki's article «Пулеметы и патроны» puts the machine-gun trader on Донгола's black market (103, «Черный рынок Донголы», 5879x2012) with РПД, AUG /Hbar, 7.62x39 and 5.56x45, and the market's own page names both «Пулеметы и патроны» and «Серхио». mobs.xml has him as dn_MachineGuns (1208, a Trader drawn as 1f_npc4, «Пулеметы и патроны» by the original's row 50655), and the location's file does not put him down: the wiki's shifted links had given his list to Серхио (1214, dn_Med_battle), who now sells his battle medicine. The cell is ours: free and walkable, on the other side of Серхио (38,83) from Фарюк (40,87), so the market's three medicine and machine-gun stalls stand in one row."
+   }
+  ],
   "88": [
    {
     "type": 1563,

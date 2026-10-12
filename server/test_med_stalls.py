@@ -41,7 +41,10 @@ In process:
   6. nothing out of a city's tiers on any stall of its places, no medicine
      of the lines on a seller's of no medicine kind, the currencies of only,
      no list of data/npcs.json carrying what the band gives;
-  7. outside the cities a stall is its own list;
+  7. outside the cities a stall is its own list, Киплер's and Курт's in
+     Мероэ their articles'; Донгола's black market has its machine-gun
+     trader (1208) back, and he and the four medics of Донгола and Абу-Хамед
+     the original's names;
   8. no way to more afro: a medicine sells back for 0.7 of its price at most,
      the gold ones not at all;
   9. the switches: MED_REACH 0 leaves two tiers a city, a file without only
@@ -317,7 +320,7 @@ check("the medicine sellers of data/shop_bands.json sell medicine alone, and one
       " where the file says so: Джут gold, the grocers afro",
       ({t: k for t, k in shop_bands.SELLERS.items() if set(k) & set(shop_bands.MED_KINDS)
         and t not in MEDICS}, shop_bands.ONLY),
-      ({}, {207: "gold", 5217: "afro", 81: "afro"}))
+      ({}, {207: "gold", 5217: "afro", 81: "afro", 155: "afro"}))
 STALLS = {(p, t): items.stock_for(t, p) for p, types in AT.items() for t in types}
 wrong = {}
 where = {}
@@ -335,7 +338,8 @@ check("every medicine seller at every place of its city: its city's tiers of its
       " says only, then its own list -- worked out here from the catalogue", wrong, {})
 check("  ..where they stand", where,
       {5211: [185], 5224: [186], 5217: [181], 202: [62], 81: [35, 104], 1206: [102],
-       1207: [102], 1167: [187], 1168: [187], 207: [76, 195, 196]})
+       1207: [102], 1167: [187], 1168: [187], 207: [76, 195, 196], 155: [50, 197],
+       1214: [103], 1215: [103], 1221: [126], 1222: [126]})
 BTR, ROSA, VILKA, TUR, MAKS, SUPER = range(6073, 6079)
 PINNED = {
     (185, 5211): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101,
@@ -351,21 +355,27 @@ PINNED = {
     (76, 207): [6905, 6906, 6907, ROSA, 7101, VILKA, 7102, TUR, 7103],
     (195, 207): [6906, 6907, 6908, VILKA, 7102, TUR, 7103, MAKS, 7104],
     (196, 207): [6907, 6908, 6909, TUR, 7103, MAKS, 7104, SUPER, 7105],
+    (103, 1214): [6057, 6063, VILKA, 7102, 6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104],
+    (103, 1215): [6045, 6900, 6051, 6906, 6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908],
+    (50, 155): [6045, 6900, 6051, 6046, 6901, 6052, 6047, 6902, 6053, 3481, 333],
+    (126, 1221): [6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104, 6060, 6066, SUPER, 7105],
+    (126, 1222): [6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908, 6048, 6903, 6054, 6909],
 }
 check("the stalls pinned (DESIGN.md 2.2): Морис, Хасани, Люций, Магдалена, Снитке, Бартоломью,"
-      " Торси, Мухсим, Джут at his three oases",
+      " Торси, Мухсим, Джут at his three oases, Серхио, Фарюк, Донгола's grocer (his quest's"
+      " box of dried meat and sack of beans after), Киплер, Курт",
       {k: STALLS[k] for k in PINNED}, PINNED)
 check("  ..Эрикесэм at the Caravan sells what Морис does at the market, Бартоломью at the port"
-      " what he does at the market",
-      (STALLS[(186, 5224)] == STALLS[(185, 5211)], STALLS[(104, 81)] == STALLS[(35, 81)]),
-      (True, True))
+      " what he does at the market, Донгола's grocer at the new market what at the old",
+      (STALLS[(186, 5224)] == STALLS[(185, 5211)], STALLS[(104, 81)] == STALLS[(35, 81)],
+       STALLS[(197, 155)] == STALLS[(50, 155)]), (True, True, True))
 check("  ..Джут: one type, three oases, three stalls, each its city's tiers in gold",
       len({tuple(STALLS[(p, 207)]) for p in (76, 195, 196)}), 3)
 
 # --- 5. coverage ------------------------------------------------------------------------------
 print()
 print("coverage")
-COVERED_CITIES = ("Нубийская долина", "Вади-Хальфа", "Абри")
+COVERED_CITIES = tuple(c[0] for c in shop_bands.CITIES)
 on_sale = {}
 for (p, t), stall in STALLS.items():
     for x in stall:
@@ -380,7 +390,10 @@ for name, lo, hi, _places in shop_bands.CITIES:
         holes[name] = (sorted(want - on_sale.get(name, set())),
                        sorted(on_sale.get(name, set()) - want))
 check("every city has its tiers on sale, every row of both lines in afro and in gold, and nothing"
-      " else of them: the valley 0_3-4_7, Вади-Хальфа 0_3-8_11, Абри 4_7-12_15", holes, {})
+      " else of them: the valley 0_3-4_7, Вади-Хальфа 0_3-8_11, Абри 4_7-12_15, Донгола"
+      " 8_11-16_19, Абу-Хамед 12_15-20 (the last two closed, their stalls laid)",
+      (holes, COVERED_CITIES),
+      ({}, ("Нубийская долина", "Вади-Хальфа", "Абри", "Донгола", "Абу-Хамед")))
 sellers_of = {}
 for (p, t) in STALLS:
     if t in MEDICS and not shop_bands.only(t):
@@ -406,23 +419,26 @@ check("every trader of a city's place the original titles a medicine or food sel
 # --- 6. nothing out of the tiers ---------------------------------------------------------------
 print()
 print("nothing out of the tiers")
-check("no medicine of the two lines on any stall of a city's place out of its city's tiers, but"
-      " Донгола's grocer 155's own list until Донгола's stalls are laid",
+check("no medicine of the two lines on any stall of a city's place out of its city's tiers",
       sorted((p, t, x) for (p, t), s in STALLS.items() for x in s if line_med(x)
-             and (x not in OF or OF[x][1] not in tiers_of(*PLACE_CITY[p][1:]))),
-      sorted((p, 155, x) for p in (50, 197) for x in (6043, 6044, 6898, 6899)))
-check("  ..none on the stall of a seller of no medicine kind in a city's place (Марат's and"
-      " Шрам's at Абу-Хамед's station, whose lists the wiki's shifted links gave Киплер's and"
-      " Курт's medicine); a trader of no kind at all keeps his list, Донгола's grocer 155 his"
-      " food until Донгола's stalls are laid",
+             and (x not in OF or OF[x][1] not in tiers_of(*PLACE_CITY[p][1:]))), [])
+check("  ..none on the stall of a trader of a city's place that is no medicine seller: Марат's"
+      " and Шрам's at Абу-Хамед's station, whose lists the wiki's shifted links gave Киплер's"
+      " and Курт's medicine, and Серхио's machine guns at Донгола's black market among them",
       sorted((p, t) for (p, t), s in STALLS.items() if t not in MEDICS
-             and any(line_med(x) for x in s)), [(50, 155), (197, 155)])
+             and any(line_med(x) for x in s)), [])
+check("  ..nor the May «Перевязочный Пакет» (26590) the name of Киплер's article tied to Марат"
+      " (1219): his own list is empty, his stall the town's sets",
+      (npcs.stock(1219), [x for x in STALLS[(126, 1219)] if cat[x][0] == items.HEAL]), ([], []))
 check("  ..the currencies of only: Джут's stalls gold alone, the grocers' afro alone",
       sorted({(t, gold_only(x)) for (p, t), s in STALLS.items() if shop_bands.only(t)
               for x in s if line_med(x)}),
-      [(81, False), (207, True), (5217, False)])
-check("no list of data/npcs.json of a medicine seller carries a medicine of the lines: the band"
-      " gives it", sorted(t for t in MEDICS if any(line_med(x) for x in npcs.stock(t) or [])), [])
+      [(81, False), (155, False), (207, True), (5217, False)])
+check("no list of data/npcs.json of a seller of a city's band carries a medicine of the lines,"
+      " the band gives it -- but Киплер's and Курт's, their articles', which they sell in Мероэ,"
+      " no city's (decision 21)",
+      sorted(t for t in shop_bands.SELLERS if any(line_med(x) for x in npcs.stock(t) or [])),
+      [1221, 1222])
 
 # --- 7. outside the cities -----------------------------------------------------------------------
 print()
@@ -431,6 +447,29 @@ check("Иван Сидоркин (5706) at Заречье (429, no city's) sells
       " place a medicine seller's stall is its own list",
       (items.stock_for(5706, 429), items.stock_for(5211), items.stock_for(207)),
       ([6048, 6065, 6899], [2178, 2184], []))
+check("Киплер and Курт in Мероэ (58, off the map, no city's): their articles' lists of"
+      " data/npcs.json, the battle medicine of 12_15-20 without the packs and the food, water"
+      " and kits of the same tiers; at Абу-Хамед's station the town's tiers in their place",
+      (items.stock_for(1221, 58), items.stock_for(1222, 58),
+       items.stock_for(1221, 126) != items.stock_for(1221, 58)),
+      ([6058, 6064, TUR, 6059, 6065, MAKS, 6060, 6066, SUPER],
+       [6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908, 6048, 6903, 6054, 6909], True))
+
+# --- Донгола's black market and the names -------------------------------------------------------
+print()
+print("Донгола's black market and the names")
+check("«Пулеметы и патроны» (1208) stands at Донгола's black market by data/placements.json and"
+      " sells the town's machine guns, then the rounds of the wiki's article, which the shifted link"
+      " had given Серхио; Серхио sells no gun",
+      (1208 in AT[103], STALLS[(103, 1208)],
+       [x for x in STALLS[(103, 1214)] if items.root_of(x) != items.HEAL]),
+      (True, [24989, 24990, 25006, 25007, 6097, 6109, 6121, 6145, 6098, 6110, 6122, 6146], []))
+check("the four medics of Донгола and Абу-Хамед and the machine-gun trader by the original's rows"
+      " (data/orig_names_manual.json: 62161, 62162, 62165, 62166, 50655)",
+      {t: names.ALL.get(t) for t in (1214, 1215, 1221, 1222, 1208)},
+      {1214: "Серхио<br>Боевая медицина", 1215: "Фарюк<br>Лекарства и еда",
+       1221: "Киплер<br>Боевая медицина", 1222: "Курт<br>Лекарства и еда",
+       1208: "Пулеметы и патроны"})
 
 # --- 8. no way to more afro ----------------------------------------------------------------------
 
