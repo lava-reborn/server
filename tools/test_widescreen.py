@@ -81,7 +81,7 @@ WIRED = ("__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__corpseDeadOrig", "__corpseFocusOrig",      # a corpse and its bag
          "__corpseLocationOrig", "__corpseRemoveOrig", # corpse cell ownership
          "__subInitOrig", "__subGlobalOrig",           # sublocation exit
-         "__mapScrollOrig")                            # global map scroll box
+         "__mapScrollOrig", "__mapResizeOrig")         # global map scroll box
 _source = open(w.__file__, encoding="utf-8").read()
 check("every fn_* patch body in widescreen.py is used",
       [name for name in re.findall(r"^def (fn_\w+)\(", _source, re.M)
@@ -119,13 +119,19 @@ def execute(code, env, returns=True):
                 elif kind == 7:
                     stack.append(struct.unpack_from("<i", payload, p)[0])
                     p += 4
+                elif kind in (2, 3):                    # null, undefined
+                    stack.append(None)
                 else:
                     raise AssertionError("unexpected push type: %s" % kind)
         elif op == 0x1C:
             stack.append(env[stack.pop()])
         elif op == 0x4E:
+            # a member of undefined is undefined, as in the player
             key, obj = stack.pop(), stack.pop()
-            stack.append(obj.get(key))
+            stack.append(None if obj is None else obj.get(key))
+        elif op == 0x4F:
+            value, key, obj = stack.pop(), stack.pop(), stack.pop()
+            obj[key] = value
         elif op == 0x52:
             method, obj, count = stack.pop(), stack.pop(), stack.pop()
             stack.append(obj[method](*[stack.pop() for _ in range(count)]))
@@ -351,13 +357,13 @@ def faults(tiles=None, body=None, windows=WINDOWS, places=PLACES):
     keeps the original's size and the player's tile; it is the original's
     block where that lies on the picture and else lies on it, when the
     picture is wide enough. A narrower mask keeps the original's block and
-    five tiles. Where the picture is as wide as the mask, the view --
+    five tiles. Where the picture is wider than the mask, the view --
     centred, scrolled to any corner, dragged anywhere -- shows nothing past
     the picture or the tiles asked for, and centres on the player as far
-    as those let it. Where the picture is narrower, the view stands centred
-    on it within two pixels (the box's play, and half a pixel of an odd
-    mask). Everywhere the drag rectangle is the right way round and the
-    player's cell is in the centred view."""
+    as those let it. Where it is no wider, the view stands centred on it
+    within two pixels (the box's play, and half a pixel of an odd mask).
+    Everywhere the drag rectangle is the right way round and the player's
+    cell is in the centred view."""
     picture = (tiles or w.MAP_TILES)["full"]
     out = []
     for wname, window in windows:
@@ -389,7 +395,7 @@ def faults(tiles=None, body=None, windows=WINDOWS, places=PLACES):
                     a0, a1 = (c - 2, c + 3) if size < 5 * TILE else (first, last + 1)
                     r0, r1 = max(lo, a0) * TILE, min(hi, a1) * TILE
                     seen = [v[k] for v in [centred] + scrolled + dragged]
-                    if (hi - lo) * TILE >= size:
+                    if (hi - lo) * TILE > size:
                         if r1 - r0 < size:
                             fault("the tiles there and asked for, %d px, are narrower "
                                   "than the mask, %d" % (r1 - r0, size))
@@ -405,7 +411,7 @@ def faults(tiles=None, body=None, windows=WINDOWS, places=PLACES):
                         off = max(abs(v - (r0 + r1 - size) / 2) for v in seen)
                         if off > 2:
                             fault("the view stands %s px off the middle of a picture "
-                                  "narrower than the mask" % off)
+                                  "no wider than the mask" % off)
                     if not (left < right if k == 0 else top < bottom):
                         fault("the drag rectangle is empty or inside out")
                     if not centred[k] <= p <= p + CELL <= centred[k] + size:
@@ -466,6 +472,19 @@ try:
           "2 px, centred on the picture",
           draw_area((3840, 2160), ABRI, body=w.fn_map_scroll(NARROW))[0][-1],
           (45464, 13739, 3792, 1962))
+    # The same picture exactly the frame's size: 2610x1992 makes a 2560 x
+    # 1792 frame, 10 x 7 tiles. A box the mask's width leaves left == right,
+    # where boundOX idles (ViewFrame.as:264) and edge scrolling runs off for
+    # good, and the drag rectangle is a line: centred like a narrower one
+    # (centring only a narrower one, the view ran 146079 px off here).
+    exact = (("2610x1992", (2610, 1992)),)
+    check("map box, a picture exactly the frame's size: centred, and the bounds "
+          "still act", faults(NARROW, w.fn_map_scroll(NARROW), windows=exact,
+                              places=(("Abri", ABRI),)), [])
+    check("map box, a picture exactly the frame's size: the box is the mask and 2 px",
+          [draw_area((2610, 1992), ABRI, stroke=s, body=w.fn_map_scroll(NARROW))[0][-1]
+           for s in (0, 1)],
+          [(46079, 13823, 2562, 1794), (46078, 13822, 2563, 1795)])
     # A player off the picture (one that lies east and south of Abri): no
     # edges, so in the owner's window the original asks for the block it
     # always did and the box is that block, columns 178..187, and the
@@ -480,6 +499,74 @@ try:
           draw_area((3840, 2160), MINE, scale=1)[:2],
           ([(20 * TILE, 6 * TILE, 5 * TILE, 5 * TILE), (14 * TILE, 4 * TILE, 18 * TILE, 10 * TILE)],
            (14, 31, 4, 13)))
+
+    # A resize. GlobalMapInterface.init sizes the frame (resizeStage) and
+    # then sets the scale, which draws the map; later the window is resized
+    # on the map, or the chat is (chatRes, through resizeStage too). The
+    # model runs fn_map_resize with the original resizeStage as setSize
+    # (the window less 50 x 200), and the landscape's drawArea as
+    # fn_map_scroll against the original's model. Per window: every call
+    # the frame got after the original, the tiles asked for last, the mask.
+    def map_session(windows, cell=ABRI, hook=None):
+        calls, asked, size = [], [], {}
+        frame = dict(mask_mc={}, setScrollArea=lambda *box: calls.append(box),
+                     boundOX=lambda: calls.append("boundOX"),
+                     boundOY=lambda: calls.append("boundOY"))
+        ui = dict(getFrameSize=lambda: dict(size), globalMapFrame=frame)
+        land = dict(cellSize=TILE, mapScale=8, mapScaleType="full")
+        land["__mapScrollOrig"] = lambda x, y, centerPers: asked.append(
+            original_draw_area(land, ui, x, y))
+        land["drawArea"] = lambda x, y: execute(
+            w.fn_map_scroll().assemble(),
+            dict(this=land, x=x, y=y, centerPers=None,
+                 Math=dict(floor=math.floor, min=min, max=max),
+                 lol=dict(core=dict(SceneShifter=dict(gmapScreen=ui)))), returns=False)
+
+        def set_size(obj):
+            size.update(width=obj["w"] - 50, height=obj["h"] - 200)
+            frame["mask_mc"].update(_width=size["width"], _height=size["height"])
+        this = dict(displayMap=dict(landscape=land), globalMapFrame=frame,
+                    __mapResizeOrig=set_size)
+        out = []
+        for k, window in enumerate(windows):
+            del calls[:]
+            execute((hook or w.fn_map_resize()).assemble(),
+                    dict(this=this, obj=dict(w=window[0], h=window[1])), returns=False)
+            after = list(calls)
+            if k == 0:
+                land["drawArea"](*cell)          # the scale, after init
+            out.append((after, asked[-1] if asked else None,
+                        (size["width"], size["height"])))
+        return out
+
+    opened, widened, narrowed = map_session(((1280, 1024), (2560, 1440), (1280, 1024)))
+    check("map resize: init's resizeStage, before the first drawArea, adds nothing",
+          opened[0], [])
+    big, small = draw_area((2560, 1440)), draw_area((1280, 1024))
+    check("map resize: widened on the map, 1280x1024 to 2560x1440 at Abri, the "
+          "map is drawn again for the new frame -- its box and tiles -- and the "
+          "view bounded in it",
+          widened[:2], ([big[0][0], big[0][1], "boundOX", "boundOY"], big[1]))
+    check("map resize: back to 1280x1024, the original's five tiles again",
+          narrowed[:2], ([small[0][0], small[0][1], "boundOX", "boundOY"], small[1]))
+    # The original's resizeStage alone, no hook: the box stays the five
+    # tiles of the 1280x1024 frame, narrower than the new 2510 px mask, so
+    # the drag rectangle is inside out and boundOX idles.
+    alone = w.Asm()
+    alone.var("obj").push(1).var("this").push("__mapResizeOrig").op("callmethod").op("pop")
+    _, stale = map_session(((1280, 1024), (2560, 1440)), hook=alone)
+    left, right = frame_range(small[0][-1], stale[2])[:2]
+    check("broken: without the resize hook the widened frame keeps the old box, "
+          "the drag rectangle inside out",
+          (stale[0], left < right), ([], False))
+    # The map gone (GlobalMapInterface.kill deletes displayMap, and its
+    # resizeStage listener stays registered): the original, and nothing more.
+    gone = []
+    execute(w.fn_map_resize().assemble(),
+            dict(this=dict(__mapResizeOrig=gone.append), obj=dict(w=2560, h=1440)),
+            returns=False)
+    check("map resize: once the map is killed, only the original runs",
+          gone, [dict(w=2560, h=1440)])
 
     # Regression controls: the original's box alone, measured the same way.
     box, asked, mask = original_only((1920, 1080), MINE)
@@ -524,10 +611,10 @@ try:
                   if stroke == 0}),
           [("3840x2160", "X", "the drag rectangle is empty or inside out"),
            ("3840x2160", "X", "the view stands 145464.0 px off the middle of a "
-                              "picture narrower than the mask"),
+                              "picture no wider than the mask"),
            ("3840x2160", "Y", "the drag rectangle is empty or inside out"),
            ("3840x2160", "Y", "the view stands 84.0 px off the middle of a "
-                              "picture narrower than the mask")])
+                              "picture no wider than the mask")])
 except Exception:
     import traceback
     fails.append("map scroll box check crashed:\n" + traceback.format_exc())
@@ -625,6 +712,15 @@ try:
         check("real client: DisplayLandscape, with every name the scroll box "
               "wrapper reads, is built in frame 1 before the injected code",
               [k < ours for k in landscape], [True])
+        # ... and the resize hook's names, each in its class's own code.
+        pools = [set(w.constant_pool(payload[2:])) for code, payload, _ in real[:ours]
+                 if code == 59]
+        check("real client: the names the map's resize hook reads are in frame 1",
+              [names for names in ({"GlobalMapInterface", "resizeStage", "displayMap",
+                                    "globalMapFrame"},
+                                   {"DisplayGlobalMap", "landscape"},
+                                   {"ViewFrame", "boundOX", "boundOY"})
+               if not any(names <= pool for pool in pools)], [])
     else:
         print("  --  main.swf not found at %s; real-client checks skipped;"
               " fixture checks ran above" % res)

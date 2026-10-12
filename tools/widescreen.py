@@ -237,16 +237,27 @@ Client patches applied without altering the original artwork:
    player's tile. The box is that block, or the five tiles, cut down to
    the picture. The view then stays on tiles that are there and were asked
    for, and centres on the player wherever the picture lets it, at every
-   size up to the 3840 x 2160 ceiling. Should what is left be narrower
-   than the mask -- a picture narrower than the frame, which the game's
-   tiles and that ceiling never make -- the box is the mask and two
-   pixels, centred on it, so that boundOX and boundOY still act and hold
-   the view there. On an axis where the player's tile is off the picture
-   nothing is moved or cut: the box is the block asked for, or the five
-   tiles. setScrollArea only stores the numbers (ViewFrame.as:89-103),
-   so the second call replaces the first before anything reads them. A
-   resize alone calls neither, as in the original: tiles and box follow
-   the next change of tile or scale.
+   size up to the 3840 x 2160 ceiling. Should what is left be no wider
+   than the mask -- a picture no wider than the frame, which the game's
+   tiles and that ceiling never make; boundOX idles on a box exactly the
+   mask's width as well -- the box is the mask and two pixels, centred on
+   it, so that boundOX and boundOY still act and hold the view there. On
+   an axis where the player's tile is off the picture nothing is moved or
+   cut: the box is the block asked for, or the five tiles. setScrollArea
+   only stores the numbers (ViewFrame.as:89-103), so the second call
+   replaces the first before anything reads them.
+
+   A resize alone calls neither in the original: tiles and box stayed as
+   the old frame had them until the next change of tile or scale, so a
+   window widened on the map -- or a frame made taller by a smaller chat,
+   GlobalMapInterface.chatRes -- had a box narrower than its mask, the
+   bounds idle and the drag rectangle inside out. A second wrapper on
+   GlobalMapInterface.prototype.resizeStage runs the first (the original,
+   then the frame's fill), then drawArea once more for the place it last
+   drew, which the drawArea wrapper keeps on the landscape, and then the
+   frame's boundOX and boundOY, which pull the view into the new box.
+   Before the first drawArea -- init sizes the frame before it sets the
+   scale -- and once the map is killed, it does nothing more.
 
 Every opcode emitted here is read back out of the written file and compared
 with what was meant (see verify()) -- the lesson of make_wrapper.py, where an
@@ -892,6 +903,9 @@ def fn_map_scroll(tiles=None, shift=True, centre=True):
     defaults."""
     tiles = MAP_TILES if tiles is None else tiles
     a = Asm()
+    # the place, for a resize to draw again (fn_map_resize)
+    a.var("this").push("__mapX").var("x").op("setmember")
+    a.var("this").push("__mapY").var("y").op("setmember")
     a.push("s").var("this").member("cellSize").op("definelocal")
     a.push("ui").var("lol").member("core", "SceneShifter", "gmapScreen").op("definelocal")
     a.push("view").push(0).var("ui").push("getFrameSize").op("callmethod").op("definelocal")
@@ -953,10 +967,11 @@ def fn_map_scroll(tiles=None, shift=True, centre=True):
         a.push(length).var(end).var(start).op("subtract").var("s").op("multiply")
         a.op("definelocal")
         if centre:
-            # narrower than the mask: from Math.floor(((from + end) * s -
-            # mask) / 2) - 1, whole pixels, mask + 2 long, so that
-            # left < right and the bounds still act
-            a.var(length).var(m).op("less2").op("not").iftrue("fits" + axis)
+            # no wider than the mask -- boundOX acts only while mask < box,
+            # so a box exactly the mask's width is centred too: from
+            # Math.floor(((from + end) * s - mask) / 2) - 1, whole pixels,
+            # mask + 2 long, so that left < right and the bounds still act
+            a.var(m).var(length).op("less2").iftrue("fits" + axis)
             a.push(at).var(start).var(end).op("add2").var("s").op("multiply")
             a.var(m).op("subtract").push(2).op("divide")
             a.push(1).var("Math").push("floor").op("callmethod").push(1).op("subtract")
@@ -974,6 +989,25 @@ def fn_map_scroll(tiles=None, shift=True, centre=True):
     for name in ("lenY", "lenX", "atY", "atX"):
         a.var(name)
     call_method(a, "frame", "setScrollArea", 4)
+    return a
+
+
+def fn_map_resize():
+    """GlobalMapInterface.resizeStage(obj) (patch 13): the original, which
+    sizes the frame, then drawArea once more for the place it last drew,
+    so that the tiles and the box follow the new frame, and the bounds,
+    which pull the view into the new box. Nothing before the first
+    drawArea, which the scale sets up, or once the map is gone."""
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__mapResizeOrig").op("callmethod").op("pop")
+    a.push("land").var("this").member("displayMap", "landscape").op("definelocal")
+    a.var("land").member("__mapX").push(UNDEF).op("equals2").iftrue("out")
+    a.var("land").member("__mapY").var("land").member("__mapX")
+    call_method(a, "land", "drawArea", 2)
+    a.push("frame").var("this").member("globalMapFrame").op("definelocal")
+    call_method(a, "frame", "boundOX", 0)
+    call_method(a, "frame", "boundOY", 0)
+    a.label("out")
     return a
 
 
@@ -1890,6 +1924,9 @@ def injected():
          (), fn_no_gold_tooltip()),
         (("gpui", "GlobalMapInterface"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper(MARK)),
+        # wraps the wrapper above: frame first, then the map drawn for it
+        (("gpui", "GlobalMapInterface"), "resizeStage", "__mapResizeOrig",
+         ("obj",), fn_map_resize()),
         (("services", "ChatPan"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper("__wideChat")),
         (("services", "SpecSkillMessages"), "init", "__wideOrig",
@@ -1928,7 +1965,8 @@ def injected():
                    ("obj",), fn_progress_event(keep)),)
     for path, method, keep, params, body in wraps:
         cls = path[-1]
-        skip = "skip_%s_%s" % (cls, method)
+        # keep too: a method wrapped twice needs two labels
+        skip = "skip_%s_%s_%s" % (cls, method, keep)
         pvar = "__wideP" + cls
         # var P = lol.<path>.prototype; wrap P[method] once, keeping the
         # original under P[keep]
