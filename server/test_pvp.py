@@ -542,31 +542,48 @@ try:
           [(f.split(";")[0], param(f, "res")) for f in got
            if f.split(";")[0] in ("cmdAck", "gmap", "lcall")],
           [("cmdAck", "39")])
-    # And the room with them. A fight with a creature ends the war state the
-    # moment nothing is after anybody, but a duel is held for
-    # leave_combat_timeout, and ws=0 would light the client's exit button
-    # (LocationInterface.battleMode) over a door the server keeps shut.
+    # The room stays at war until one opponent leaves or dies. Expiring the
+    # hit timer opens the edge window, never the central map button.
     seen += b.frames(0.6)
     check("the room stays at war through the duel",
           [f for f in named(seen, "lch") if "ws=0" in f], [])
 
-    # No further attacks: the default fifteen-second tail must end on both
-    # clients, and each chWorld must receive exactly one success ack.
+    # No further attacks for longer than the default fifteen-second timer.
     rested = []
     deadline = time.monotonic() + 16
     while time.monotonic() < deadline:
         rested += b.frames(0.3)
-        if any(param(f, "ws") == "0" for f in named(rested, "lch")):
-            break
-    check("the idle duel ends on the default timeout without waiting thirty seconds",
-          [param(f, "ws") for f in named(rested, "lch") if param(f, "ws") == "0"], ["0"])
-    for who, client in (("quarry", b), ("hunter", a)):
-        client.send("chWorld;")
-        got = client.frames(0.8)
-        check("after the duel the %s can leave with one ack" % who,
-              [(f.split(";")[0], param(f, "res")) for f in got
-               if f.split(";")[0] in ("cmdAck", "gmap", "lcall")],
-              [("cmdAck", "0"), ("gmap", None)])
+    check("an idle duel keeps the map button disabled after fifteen seconds",
+          [param(f, "ws") for f in named(rested, "lch") if param(f, "ws") == "0"], [])
+    interior = next(cell for cell in range(loc.width * loc.height)
+                    if cell not in loc.obstacles and travel.side_at(loc, cell) is None)
+    b.send("moveTo;path=|%d|;" % interior)
+    b.frames(0.6)
+    b.send("chWorld;")
+    got = b.frames(0.8)
+    check("even a direct map request cannot escape PvP from the interior",
+          [(f.split(";")[0], param(f, "res")) for f in got
+           if f.split(";")[0] in ("cmdAck", "gmap", "lcall")],
+          [("cmdAck", "7")])
+    edge = next(cell for cell in travel.exit_sides(loc) if cell not in loc.obstacles)
+    b.send("moveTo;path=|%d|;" % edge)
+    b.frames(0.6)
+    a.frames(0.3)
+    b.send("chWorld;")
+    got = b.frames(0.8)
+    check("after the hit timer the quarry can leave through the edge window",
+          [(f.split(";")[0], param(f, "res")) for f in got
+           if f.split(";")[0] in ("cmdAck", "gmap", "lcall")],
+          [("cmdAck", "0"), ("gmap", None)])
+    got = a.frames(0.8)
+    check("the opponent's departure ends the duel for the hunter",
+          [param(f, "ws") for f in named(got, "lch") if param(f, "ws") == "0"], ["0"])
+    a.send("chWorld;")
+    got = a.frames(0.8)
+    check("after the opponent leaves the hunter can use the map button",
+          [(f.split(";")[0], param(f, "res")) for f in got
+           if f.split(";")[0] in ("cmdAck", "gmap", "lcall")],
+          [("cmdAck", "0"), ("gmap", None)])
 
     # --- the open desert: where the owner found no fighting at all ----------
     arrived, apart, _cell = meet(DESERT, pid_b)
