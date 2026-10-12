@@ -35,6 +35,8 @@ DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts
 import mobs
+import travel
+import world
 accounts.DB_PATH = DB
 _store = accounts.Store(DB)
 _store.register("alice", "secret")
@@ -416,6 +418,7 @@ try:
     # escort, not an interception: the ground decides instead, and takes both.
     check("and both are taken into the cell",
           [f.split(";")[0] for f in got if f.startswith("lcall")], ["lcall"])
+    caught_loc = world.location(int(param(next(f for f in got if f.startswith("lcall;")), "id")))
     got = a.frames(0.5)
     check("she is told who by",
           any("настиг вас" in f for f in got if f.startswith("userMsg")), True)
@@ -437,6 +440,13 @@ try:
               and 2 < int(param(f, "time")) < 17 for f in entered_a), True)
     check("into the same location",
           [f for f in b.frames(1.5) if "rtype=-1;" in f] != [], True)
+    for client, entry in ((a, entry_a), (b, entry_b)):
+        client.send("moveTo;path=|%d|%d|;" % (entry, entry + 1))
+        stopped = client.frames(0.3)
+        check("a participant cannot walk during the visible countdown",
+              [(f.split(";")[0], param(f, "id"), param(f, "pos")) for f in stopped
+               if f.split(";")[0] in ("breakMv", "cmdAck", "userMove")],
+              [("breakMv", "0", str(entry))])
     got = a.frames(15)
     check("the real timer starts the duel without either player attacking",
           (any(f.startswith("lch;") and param(f, "ws") == "1" for f in got),
@@ -446,8 +456,14 @@ try:
     got = b.frames(0.1)
     check("both sides see each other as enemies after preparation",
           any(f.startswith("lch;") and param(f, "enemy") == str(pid_a) for f in got), True)
-    # Back out to the map, where the rest of the scene expects them.
+    # Movement resumes after preparation; use the edge window to leave PvP.
+    edge = next(cell for cell in travel.exit_sides(caught_loc)
+                if cell not in caught_loc.obstacles)
     for who in (a, b):
+        who.send("moveTo;path=|%d|;" % edge)
+        moved = who.frames(0.3)
+        check("after the countdown a participant can move to the exit",
+              [param(f, "res") for f in moved if f.startswith("cmdAck;")], ["0"])
         who.send("chWorld;")
         check("out to the map again",
               any(f.startswith("gmap") for f in who.frames(wait=2)), True)

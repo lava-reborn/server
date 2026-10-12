@@ -3670,7 +3670,10 @@ class Session:
         # queue itself, and then snaps the walker to pos. Sending both would
         # hand the ack to the next command. id=0 is the player's own walker
         # (Location.getWalker treats a falsy id as the gamer).
-        if not self.valid_path(path):
+        # Interception freezes both starting positions until the shared
+        # countdown ends. Refuse exactly like an invalid walk so the client
+        # consumes its movement callback without an extra cmdAck.
+        if self.combat.preparing() or not self.valid_path(path):
             self.send("breakMv", id=0, pos=self.pos)
             return
         self.send("cmdAck", res=0)
