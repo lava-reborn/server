@@ -3,7 +3,8 @@
 Мастер Тиль's six trainings it opens; the base of Magrib's self-teachers
 and exams; Равшан's quarry and its pits; the gates of the town's three ore
 mines and the doors of their tiers; the boat to Заречье, built and switched
-off.
+off, and since the cut of the camps across the river (2026-10-12) without
+its ways: the camp 429 it rowed to is out of the game.
 
 In process: the rows and their texts (the original's, pinned in
 data/build_orig_misc.py VERIFIED, laid over), the chain, what each lesson
@@ -15,9 +16,10 @@ the ways of data/passages.json with their cells, every door row beside the
 sign it follows, the quarry's sides (data/passages.json 'sides',
 travel.plan_exit), the bunker and the quarry with no way to the map
 ('no_map', travel.geo_id) and no exit leading out, the gates' levels, the
-exams' fees and experience, and the boat off in the shipped table.
+exams' fees and experience, and the boat off in the shipped table, its
+rows kept and its ways gone.
 
-On a socket, on the table with the boat switched on (LAVA_QUESTS):
+On a socket:
 
   * a newcomer (level 0) takes «Тир Берта Гаммера» from Берт at the market
     and lands in TIR_00, told it is a sublocation; the seven lessons, one
@@ -42,7 +44,6 @@ On a socket, on the table with the boat switched on (LAVA_QUESTS):
     blow for 8 action points; felled by the rival, he wakes at home without
     the pick, the work still his; back in, and out by «Покинуть
     каменоломню.» with the work open: the pick taken back on the way out;
-    the boat to Заречье and back;
   * a scholar with the pistols specialisation: «Самоучители», the exam for
     afro -- not complete while the purse is short, 25 000 taken, the book
     used up, experience into the specialisation and the skill -- and the one
@@ -105,21 +106,16 @@ ADMIN_GUN, GUN_ROUNDS = 1534, 6092
 DESIGNED_TEXTS = MINES_IN + MINES_OUT                       # no line of the original
 NUMBER = {"три": 3, "одну": 1}
 
-# The table as shipped: the boat off. The run's table: the boat on, as the
-# owner will switch it on once Заречье is filled.
+# The table as shipped: the boat off. Until 2026-10-12 the run switched it
+# on and rowed over to the camp 429 and back; the camp is out of the game
+# since the owner's «убери во всех городах лагеря за рекой», and the boat's
+# ways with it (server/test_river_camps_cut.py).
 with open(os.path.join(ROOT, "data", "quests.json"), encoding="utf-8") as _fh:
     _TABLE = json.load(_fh)
 BOAT_SHIPPED = [(r["give"], r["take"]) for r in _TABLE["quests"]
                 if r["type"] in (BOAT_OUT, BOAT_BACK)]
-for _row in _TABLE["quests"]:
-    if _row["type"] == BOAT_OUT:
-        _row["give"], _row["take"] = [ONEILL], [ONEILL]
-    elif _row["type"] == BOAT_BACK:
-        _row["give"], _row["take"] = [DOBERMAN], [DOBERMAN]
-_ON = os.path.join(tempfile.mkdtemp(), "quests.json")
-with open(_ON, "w", encoding="utf-8") as _fh:
-    json.dump(_TABLE, _fh, ensure_ascii=False)
-os.environ["LAVA_QUESTS"] = _ON
+with open(os.path.join(ROOT, "data", "retired.json"), encoding="utf-8") as _fh:
+    RETIRED_PLACES = json.load(_fh)["places"]
 
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
@@ -176,6 +172,12 @@ MT = world.mob_types()
 try:
     check("the shipped table has the boat switched off: nobody gives or takes it",
           BOAT_SHIPPED, [([], []), ([], [])])
+    check("  ..and its ways are gone with the camp 429 (data/passages.json): neither row moves anybody,"
+          " and the camp is out of the game",
+          ([travel.is_quest_way(t) for t in (BOAT_OUT, BOAT_BACK)],
+           travel.quest_way(world.location(PIER), BOAT_OUT), travel.quest_way(world.location(CAMP), BOAT_BACK),
+           str(CAMP) in RETIRED_PLACES),
+          ([False, False], None, None, True))
     check("the package's rows are all there, 351-413",
           [t for t in ALL if quests.get(t) is None], [])
     check("  ..and rows 4, 1682, 1829, 1895, 1971, 2128 no longer carry the importer's mark",
@@ -1019,7 +1021,7 @@ try:
            status(c, LESSONS[1])), ([0], 0, 0, 1))
     logout(c)
 
-    # --- a worker: the ore mine, the quarry, the boat ------------------------------------------
+    # --- a worker: the ore mine, the quarry ---------------------------------------------------
     c = login("worker", "Worker")
     logout(c)
     reshape("Worker", skill=6)
@@ -1206,15 +1208,9 @@ try:
            BLOCKS_10 in journal(WORKER)), (PIER, 0, [0], True))
     check("  ..arriving by Равшан", mobs.hex_distance(first(arrival, "lenter").get("pos"),
                                                       18 * 64 + 52, 64) <= 3, True)
-
     here = inhabitants(arrival)
-    got, q = take(c, here, ONEILL, BOAT_OUT)
-    call, arrival = moved(c, hand_in(c, here, ONEILL, q))
-    check("the boat, switched on for the run: over the river to the camp", call.get("id"), CAMP)
-    here = inhabitants(arrival)
-    got, q = take(c, here, DOBERMAN, BOAT_BACK)
-    call, arrival = moved(c, hand_in(c, here, DOBERMAN, q))
-    check("  ..and back to Причал", call.get("id"), PIER)
+    check("  ..where Лейтенант О'Нилл offers no boat", ONEILL in here and BOAT_OUT not in quests.given_by(ONEILL),
+          True)
     logout(c)
 
     # --- a scholar: the base's exams ----------------------------------------------------------

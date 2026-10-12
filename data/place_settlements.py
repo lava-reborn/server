@@ -83,8 +83,10 @@ masters' camps 124, 125 and 130, the owner's cut of 2026-09-30; Вади-
 the KKND clan base's files, the cut of 2026-10-09; its ФСЦ airfield 528
 and base «НИЛ-1» 522, the cut of 2026-10-10; Абри's clothing craftsmen's
 quarters 453, 454, 458, 459, its air base 427, the set upgraders' quarter
-450 and the clan base Liberty's files, the cut of 2026-10-12) is no
-candidate at all,
+450 and the clan base Liberty's files, the cut of 2026-10-12, with the ФСЦ
+airfield 529 and the clan base Blackwater's files; the resistance camps
+across the river 429, 430, 431 and 432 and Абри's clothing market 378, the
+cuts of the same day) is no candidate at all,
 and its old cell is nulled in settlements_verified.json. Both are needed.
 A null alone frees the file to win the next cell that names it -- 125
 simply moved to 5878,2012 -- and a file still in the running bends its
@@ -92,7 +94,12 @@ neighbours' margins even where it loses: nulling 124, 125 and 130 alone
 took 447, 429 and 432 off their cells too, and nulling Halfa's four cells
 alone took 447 off 5968,1719. Dropped from the candidates, together with
 its clones, it changes nothing but its own cells (data/test_retired_places.py
-runs the placer both ways and holds the difference to exactly those).
+runs the placer both ways and holds the difference to exactly those) --
+as long as it was not a rival whose closeness kept a neighbour off a cell:
+432, out of the running, would have let the camp of the Северный Альянс
+168 take «Аванпост Северного Альянса» (6210,1986) and 263 spread onto
+168's cell, so the cut of the camps across the river holds both cells in
+settlements_verified.json as they were.
 
     wsl.exe -e python3 data/place_settlements.py
 """

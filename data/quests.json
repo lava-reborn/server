@@ -3262,7 +3262,7 @@
       "repeatable": 1,
       "level": 0,
       "q_type": 0,
-      "why": "OFF (the owner: the island stays closed until Заречье is filled in a later stage): give and take are empty, so nobody offers it; to switch it on, put 5685 in both. RECOVERED texts (texts.xml 24440-24443), DESIGNED workings. «Боец сопротивления»: the lieutenant at Причал (41), Лейтенант О'Нилл (5685, Армия ЦСЦ; the start sends the player to «Рядовой Беккет», 5686, with the boat), signs the contract, and the hand-in -- «Запрыгивай в лодку, мы отправляемся!» -- rows the player over the Nile to the resistance's camp, 429 «Лагерь» (Invaider_Camp_WH, 5943,1723), which no walk reaches (data/passages.json 'quest'). A way, repeatable."
+      "why": "OFF for good: the camp it rowed to, 429, is out of the game since the owner's cut of the camps across the river (2026-10-12, «убери во всех городах лагеря за рекой»; data/retired.json), and its way over the river is gone from data/passages.json with it. Give and take are empty, so nobody offers it; before the cut it was off until Заречье was filled (the owner: the island stays closed). To bring the boat back, the camp, its cell and this way go back together, and 5685 into give and take. RECOVERED texts (texts.xml 24440-24443), DESIGNED workings. «Боец сопротивления»: the lieutenant at Причал (41), Лейтенант О'Нилл (5685, Армия ЦСЦ; the start sends the player to «Рядовой Беккет», 5686, with the boat), signs the contract, and the hand-in -- «Запрыгивай в лодку, мы отправляемся!» -- rows the player over the Nile to the resistance's camp, 429 «Лагерь» (Invaider_Camp_WH, 5943,1723), which no walk reaches (data/passages.json 'quest'). A way, repeatable."
     },
     {
       "type": 413,
@@ -3282,7 +3282,7 @@
       "repeatable": 1,
       "level": 0,
       "q_type": 0,
-      "why": "OFF, as the boat out (412): to switch it on, put 5694 in give and take. RECOVERED texts (texts.xml 24444-24446), DESIGNED workings. «Вернуться в город»: Рядовой Дуэйн Доберман (5694, Армия ЦСЦ, in the camp 429) takes the player back over the river to Причал (41). A way, repeatable."
+      "why": "OFF for good, as the boat out (412): its giver Доберман 5694 stood in the camp 429 alone, which is out of the game since 2026-10-12 (the cut of the camps across the river), and its way back to Причал is gone from data/passages.json. RECOVERED texts (texts.xml 24444-24446), DESIGNED workings. «Вернуться в город»: Рядовой Дуэйн Доберман (5694, Армия ЦСЦ, in the camp 429) takes the player back over the river to Причал (41). A way, repeatable."
     },
     {
       "type": 414,

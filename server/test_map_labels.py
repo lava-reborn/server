@@ -133,12 +133,12 @@ def rows_in(doc, box, pattern):
 check("  ..so no name around Вади-Хальфа offers any of it, where the file had seven",
       (rows_in(out, HALFA_BOX, GONE), len(rows_in(raw, HALFA_BOX, GONE))), ([], 7))
 # Абри's craftsmen's names went with the cut of Абри (2026-10-12,
-# server/test_abri_cut.py); its clothing market stays.
-check("  ..while Абри, Донгола and Абу-Хамед keep their clothing markets' names, Донгола and"
-      " Абу-Хамед their craftsmen's",
-      [texts_at(out, *c) for c in ((5865, 1836), (5878, 2013), (6183, 1974), (5876, 2013),
-                                   (6184, 1973))],
-      [["Торговцы одеждой"]] * 3 + [["Ремесленники по одежде 14 уровень"],
+# server/test_abri_cut.py), its clothing market's with the owner's «и ещё
+# убери локацию торговцы одеждой в Абри» the same day
+# (server/test_river_camps_cut.py).
+check("  ..while Донгола and Абу-Хамед keep their clothing markets' names and their craftsmen's",
+      [texts_at(out, *c) for c in ((5878, 2013), (6183, 1974), (5876, 2013), (6184, 1973))],
+      [["Торговцы одеждой"]] * 2 + [["Ремесленники по одежде 14 уровень"],
                                     ["Ремесленники по одежде 17 уровень"]])
 with open(os.path.join(os.path.dirname(HERE), "data", "map_labels.json"), encoding="utf-8") as _fh:
     LABELS = json.load(_fh)["labels"]

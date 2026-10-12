@@ -101,13 +101,15 @@ TOTEM, HIPPIES, LEAD_MOUTH, LEAD_CONTROL, LEAD_TIER = 262, 191, 205, 662, 1030
 CAMP_ST, CAMP_ZD = 88, 92
 # The places of Абри a player walks into from the map: the town, the camps
 # and their chiefs', the quest places and the works (DESIGN 7.2); the island
-# (434, 502, 513, 523) has no boat.
+# (434, 502, 513, 523) has no boat. The clothing market 378 is cut (the
+# owner's «и ещё убери локацию торговцы одеждой в Абри», 2026-10-12).
 ABRI = [76, 88, 89, 90, 92, 187, 188, 189, 191, 203, 204, 205, 206, 207, 219, 220, 251, 252,
-        255, 256, 261, 262, 283, 284, 285, 289, 290, 368, 378]
+        255, 256, 261, 262, 283, 284, 285, 289, 290, 368]
 # ..and the interiors their doors, sides and quest ways open (the smelter's
 # assembly shop 1055 is cut, and no door leads on to it).
 INTERIORS = [192, 193, 660, 661, 662, 671, 672, 766, 1028, 1029, 1030, 1221, 1222, 1223]
-# The cut of 2026-10-12: cell -> what stood there.
+# The cuts of 2026-10-12: cell -> what stood there (the clothing market 378
+# by the owner's «и ещё убери локацию торговцы одеждой в Абри»).
 CUT = {(5860, 1836): "Ремесленники по одежде 10 (453)",
        (5861, 1836): "Ремесленники по одежде 10 (454)",
        (5860, 1837): "Ремесленники по одежде 11 (458)",
@@ -117,8 +119,8 @@ CUT = {(5860, 1836): "Ремесленники по одежде 10 (453)",
        (5906, 1888): "Кланбаза Liberty (328)", (5906, 1889): "Плешь смерти (327)",
        (6248, 1979): "Кланбаза Liberty by Абу-Хамед",
        (5865, 1835): "Аэроплощадка ФСЦ (529)", (5924, 1838): "Блок-пост Blackwater (317)",
-       (5923, 1838): "Blackwater's square"}
-CUT_FILES = [453, 454, 458, 459, 427, 450, 328, 327, 529, 317, 1055]
+       (5923, 1838): "Blackwater's square", (5865, 1836): "Торговцы одеждой (378)"}
+CUT_FILES = [453, 454, 458, 459, 427, 450, 328, 327, 529, 317, 1055, 378]
 # The places the owner's follow-up named: cell -> file.
 FOUR = {(5862, 1836): FIELDS, (5863, 1835): DUMP, (5864, 1838): TOTEM, (5860, 1838): HIPPIES}
 # The quests.

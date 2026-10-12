@@ -613,12 +613,6 @@
     "cells": [[51, 17], [52, 19], [50, 17], [52, 16]],
     "target_loc_id": 627,
     "why": "RECOVERED way (the wiki's «Работа в Каменоломне (Вади-Хальфа)», 5965x1728: «после выполнения задания Вас переместят в другое место»), DESIGNED place. 41 'Причал': Равшан, «Владелец каменоломни» (978), stands at (52,18); his contract takes the player into the quarry's north pit, 627, beside Большой Сэм. The quarry has no cell on the map (the wiki's 5961,1727 is the lake). The cells are the ground beside him, where a player leaving the quarry arrives."
-   },
-   {
-    "quest": 412,
-    "cells": [[21, 73], [22, 73], [21, 74], [23, 74]],
-    "target_loc_id": 429,
-    "why": "RECOVERED way (texts.xml 24443: «Запрыгивай в лодку, мы отправляемся!»), DESIGNED place. 41 'Причал': Лейтенант О'Нилл (5685, Армия ЦСЦ) stands at (22,74) by the water; «Боец сопротивления» rows the player over the Nile to the resistance's camp, 429 -- switched off (quests.json 412) until Заречье is filled. The cells are the ground beside him, where the boat brings a player back."
    }
   ],
   "35": [
@@ -781,14 +775,6 @@
     "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
     "target_loc_id": 201,
     "why": "DESIGNED way, RECOVERED place. 659 «Комната управления», the control room of the nitre mine: «Выход из шахты/карьера» (1336) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 201. The cells are the ground beside him, where a player coming down arrives."
-   }
-  ],
-  "429": [
-   {
-    "quest": 413,
-    "cells": [[51, 29], [50, 30], [52, 30], [51, 31]],
-    "target_loc_id": 41,
-    "why": "DESIGNED way, RECOVERED place. 429 «Лагерь» (Invaider_Camp_WH, 5943,1723), the resistance's camp over the Nile, which no walk reaches: Рядовой Дуэйн Доберман (5694) stands at (51,30), and «Вернуться в город» takes the player back to Причал (41) -- switched off with the boat (quests.json 413). The cells are the ground beside him, where the boat lands a player."
    }
   ],
   "37": [

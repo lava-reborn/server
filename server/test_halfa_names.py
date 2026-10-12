@@ -87,8 +87,9 @@ ORE_MINES = [200, 201, 202, 657, 658, 659, 1025, 1218, 1255, 1027, 1220, 1257,
              1026, 1219, 1256]
 VH_MINE = [154, 158, 160, 613, 617, 1012, 1016, 1024, 1215, 1017, 1018, 1019]
 # Not the FSC base «НИЛ-1» 522, off the map since the cut of the ФСЦ
-# (2026-10-10); nobody ever stood in it.
-ZARECHYE = [429, 433, 508]
+# (2026-10-10); nobody ever stood in it. Nor the resistance camp 429, off the
+# map since the cut of the camps across the river (2026-10-12).
+ZARECHYE = [433, 508]
 PRISON = [644, 645, 646, 647, 648]      # the blocks under the yard 176 (events package)
 # The craftsmen's quarter, inside the owner's wall on the map. The weapon craft's
 # way «Квартал ремесленников» (414) led in from the premium masters' camp 124

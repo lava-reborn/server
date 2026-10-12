@@ -59,12 +59,19 @@ try:
     # The cut of Абри (2026-10-12) adds six: «Улучшение сетов 10-12», the
     # green mark left of the craftsmen of 12, the second «Автосвалка», the
     # two squares of «Кланбаза Liberty» by Абу-Хамед, and Blackwater's square
-    # beside its block post.
+    # beside its block post. The cut of the camps across the river (the same
+    # day) adds two: Абу-Хамед's camp's own square across the river, under
+    # its hidden name, and Абри's island camp's, which no name stands over.
     LABEL_ONLY = {(5969, 1730), (5984, 1759), (6265, 1821),
                   (5866, 1837), (5862, 1837), (5863, 1836), (6248, 1979), (6248, 1980),
-                  (5923, 1838)}
+                  (5923, 1838), (6168, 1989), (5850, 1851)}
     ABRI_CUT = [(5860, 1836), (5860, 1837), (5861, 1836), (5863, 1837), (5866, 1836),
                 (5906, 1888), (5906, 1889), (5865, 1835), (5924, 1838)]
+    # The camps across the river of Вади-Хальфа (429) and Донгола (431), and
+    # Абри's clothing market 378 (2026-10-12). Абу-Хамед's camp 432 stood on
+    # 6160,1975, under the pirates' name and over their square, which stays:
+    # that cell is no cell of data/retired.json.
+    RIVER_CUT = [(5943, 1723), (5864, 2002), (5865, 1836)]
     # Two retired places had no square of their own in the picture: Абри's ФСЦ
     # airfield 529 (its name over the river's dark bank) and Blackwater's block
     # post 317 (the base's square is on 5923,1838 beside it). The plan lists
@@ -72,16 +79,22 @@ try:
     NO_SQUARE = [(5865, 1835), (5924, 1838)]
     check("every cell of data/retired.json loses its square, by itself",
           sorted(retired - set(plan.cells)), [])
-    check("  ..those are the eighteen of the four cuts: the (P) camps 124, 125, 130, Halfa's 468, 452,"
-          " 456, 457, its ФСЦ's airfield 528 and base НИЛ-1 522, and Абри's craftsmen 453, 454, 458, 459,"
-          " air base 427, clan base Liberty 328, 327, ФСЦ airfield 529 and Blackwater's block post 317",
+    check("  ..those are the twenty-one of the six cuts: the (P) camps 124, 125, 130, Halfa's 468, 452,"
+          " 456, 457, its ФСЦ's airfield 528 and base НИЛ-1 522, Абри's craftsmen 453, 454, 458, 459,"
+          " air base 427, clan base Liberty 328, 327, ФСЦ airfield 529 and Blackwater's block post 317,"
+          " the camps across the river 429 and 431, and Абри's clothing market 378",
           sorted(retired),
           sorted([(5876, 2012), (5942, 1723), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732),
-                  (5970, 1727), (5970, 1732), (6182, 1975)] + ABRI_CUT))
-    check("  ..and data/map_cells.json adds the nine cells that had a name or a mark and no place:"
+                  (5970, 1727), (5970, 1732), (6182, 1975)] + ABRI_CUT + RIVER_CUT))
+    check("  ..and data/map_cells.json adds the eleven cells that had a name or a mark and no place:"
           " «Улучшение сетов 6-8», the KKND base, the kimberlite pipe, «Улучшение сетов 10-12», Абри's"
-          " green mark, the second «Автосвалка», the two of Liberty by Абу-Хамед and Blackwater's",
+          " green mark, the second «Автосвалка», the two of Liberty by Абу-Хамед, Blackwater's, and the"
+          " camps across the river of Абу-Хамед and Абри",
           sorted(set(plan.cells) - retired), sorted(LABEL_ONLY))
+    check("  ..and the pirates' square by Абу-Хамед, where the camp 432 stood, stays; so do the digs and"
+          " the ФСЦ's bases beside the camps across the river",
+          sorted(c for c in [(6160, 1975), (6161, 1973), (5943, 1722), (5850, 1850), (5849, 1851),
+                             (5864, 2001), (5863, 2002), (6168, 1988), (6167, 1989)] if c in plan.cells), [])
     live = {cell(k) for k in load_json("data", "settlements.json")["cells"]}
     check("no square goes from a cell a place still stands on (data/settlements.json)",
           sorted(set(plan.cells) & live), [])
@@ -106,17 +119,26 @@ try:
     else:
         print("  -- no %s: the names over erased cells are test_map_labels' alone" % loc_path)
     check("the KKND caption is two boxes of tile 14011, above the base's cell; «База Liberty» two of"
-          " tile 15811, right of the base's squares by Абу-Хамед (the line and its «y»'s tail)",
+          " tile 15811, right of the base's squares by Абу-Хамед (the line and its «y»'s tail); the three"
+          " «Лагерь» of the camps across the river two each, right of the camps' squares: Вади-Хальфа's in"
+          " tile 13753, Абри's in 14774, Донгола's in 16055 (the line and its «р»'s tail)",
           [(b, was, M.tile_of(b[0], b[1]), M.tile_of(b[2], b[3])) for b, was, _ in plan.captions],
           [((47879, 14049, 47920, 14057), "Кланбаза KKND", 14011, 14011),
            ((47879, 14058, 47910, 14067), "Кланбаза KKND", 14011, 14011),
            ((49996, 15833, 50048, 15841), "База Liberty", 15811, 15811),
-           ((50041, 15842, 50046, 15843), "База Liberty", 15811, 15811)])
-    check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's, Halfa's"
-          " two, KKND's and the two below it, the kimberlite pipe's, Абри's, Blackwater's east of it, the"
-          " two of Liberty by Абри, Абу-Хамед's two, Донгола's",
-          plan.tiles(), [13753, 13754, 14010, 14011, 14266, 14267, 14531, 14775, 14777, 15032, 15288, 15809,
-                         15811, 16055])
+           ((50041, 15842, 50046, 15843), "База Liberty", 15811, 15811),
+           ((47553, 13785, 47583, 13793), "Лагерь", 13753, 13753),
+           ((47572, 13794, 47575, 13795), "Лагерь", 13753, 13753),
+           ((46809, 14807, 46839, 14815), "Лагерь", 14774, 14774),
+           ((46828, 14816, 46831, 14817), "Лагерь", 14774, 14774),
+           ((46921, 16016, 46951, 16024), "Лагерь", 16055, 16055),
+           ((46940, 16025, 46944, 16026), "Лагерь", 16055, 16055)])
+    check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's and the"
+          " camp 429's, Halfa's two, KKND's and the two below it, the kimberlite pipe's, Абри's island"
+          " camp's, Абри's, Blackwater's east of it, the two of Liberty by Абри, Абу-Хамед's two, Донгола's,"
+          " Абу-Хамед's camp's across the river",
+          plan.tiles(), [13753, 13754, 14010, 14011, 14266, 14267, 14531, 14774, 14775, 14777, 15032, 15288,
+                         15809, 15811, 16055, 16064])
 
     def refused(doc, retired_doc=None):
         p = os.path.join(W, "cells.json")
@@ -551,7 +573,7 @@ try:
             odd = {(5984, 1759): (0, -1, ("red", "white")), (6265, 1821): (0, 0, ("black", "orange")),
                    (5970, 1727): (0, 0, ("blue", "white")), (5863, 1836): (0, 0, ("red",)),
                    (5906, 1888): (0, 0, ("red", "white")), (6248, 1979): (0, 0, ("red", "white"))}
-            check("each of the twenty-five cells with a square has it found: nineteen green (Blackwater's"
+            check("each of the thirty cells with a square has it found: twenty-four green (Blackwater's"
                   " with its black centre among them), KKND's dark red with white a pixel high, Liberty's two"
                   " dark red with white, the second «Автосвалка»'s dark red, the kimberlite pipe's"
                   " black-and-orange hatch, Halfa's ФСЦ airfield's blue with «!»",
@@ -565,13 +587,14 @@ try:
                   sorted({M.tile_of(X0 + 4, Y0 + 4) for X0, Y0, _k in real["found"].values()
                           if [(c.h, c.v) for c in J.Jpeg(read(M.tile_path(M.tile_of(X0 + 4, Y0 + 4)))).comps]
                           != [(1, 1)] * 3}), [])
-            check("eleven tiles change: 13753 for НИЛ-1, 13754 and 14010 in Halfa, 14011 for KKND, 14531 the"
-                  " kimberlite pipe, 14775 Абри, 14777 Blackwater, 15288 Liberty by Абри, 15809 Абу-Хамед,"
-                  " 15811 Liberty by Абу-Хамед, 16055 Донгола",
+            check("thirteen tiles change: 13753 for НИЛ-1 and the camp 429 with its letters, 13754 and 14010 in"
+                  " Halfa, 14011 for KKND, 14531 the kimberlite pipe, 14774 Абри's island camp, 14775 Абри,"
+                  " 14777 Blackwater, 15288 Liberty by Абри, 15809 Абу-Хамед, 15811 Liberty by Абу-Хамед, 16055"
+                  " Донгола and its camp, 16064 Абу-Хамед's camp across the river",
                   sorted(real["out"]),
-                  sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 14775, 14777, 15288, 15809,
-                                                  15811, 16055)))
-            check("no square is left on the twenty-seven cells", {c: real["after_sq"].at(*c) for c in plan.cells},
+                  sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15288,
+                                                  15809, 15811, 16055, 16064)))
+            check("no square is left on the thirty-two cells", {c: real["after_sq"].at(*c) for c in plan.cells},
                   {c: None for c in plan.cells})
             around = sorted({(x + dx, y + dy) for x, y in plan.cells for dx in range(-3, 4) for dy in range(-3, 4)}
                             - set(plan.cells))
@@ -581,23 +604,29 @@ try:
             KEPT_HALFA = {(5969, 1728): ("green",), (5970, 1729): ("red",), (5970, 1730): ("black",),
                           (5969, 1733): ("tan",), (5971, 1731): ("tan",), (5968, 1727): ("green",),
                           (5969, 1727): ("green",), (5971, 1727): ("black", "orange"), (5970, 1728): ("red",),
-                          (5943, 1723): ("green",), (5943, 1722): ("tan",),
+                          (5943, 1722): ("tan",),
                           (5876, 2011): ("green",), (5877, 2012): ("green",),
-                          (5876, 2013): ("green",), (6183, 1975): ("green",), (6182, 1976): ("green",)}
+                          (5876, 2013): ("green",), (6183, 1975): ("green",), (6182, 1976): ("green",),
+                          (5864, 2001): ("tan",), (5863, 2002): ("green",), (5850, 1850): ("tan",),
+                          (5849, 1851): ("green",), (6168, 1988): ("tan",), (6167, 1989): ("green",)}
             check("  ..among them the owner's neighbours named in the research: the masters' camp 95, arena 78,"
                   " the black market 102, «Генри Мл.» 43, the crates 108, the old market; around the airfield"
-                  " the quarter 36, the dump 100's hatch and the arena 59, by НИЛ-1 the camp 429 and the dig"
-                  " 433; Донгола's 96, 97 and 455; Абу-Хамед's 127 and 126",
+                  " the quarter 36, the dump 100's hatch and the arena 59, by НИЛ-1 and the camp 429 the dig"
+                  " 433; Донгола's 96, 97 and 455; Абу-Хамед's 127 and 126; beside the camps across the river"
+                  " the digs 435, 434, 436 and the ФСЦ's bases НИЛ-3, НИЛ-2, НИЛ-4",
                   {c: (real["after_sq"].at(*c) or (0, 0, None))[2] for c in KEPT_HALFA}, KEPT_HALFA)
             KEPT_ABRI = {(5860, 1835): ("green",), (5861, 1835): ("green",), (5862, 1835): ("green",),
                          (5863, 1835): ("red",),
-                         (5862, 1836): ("tan",), (5864, 1836): ("green",), (5865, 1836): ("green",),
+                         (5862, 1836): ("tan",), (5864, 1836): ("green",),
                          (5860, 1838): ("tan",), (5864, 1838): ("tan",)}
-            check("  ..and Абри's places that stay beside its cut: the port market 187, the quarter 188, the"
+            check("  ..and Абри's places that stay beside its cuts: the port market 187, the quarter 188, the"
                   " slums 255, the dump 289 under the first «Автосвалка»,"
-                  " Хаксли's fields 261, the graveyard 368, the clothing market 378, the hippies 191, the"
-                  " totem 262",
+                  " Хаксли's fields 261, the graveyard 368, the hippies 191, the totem 262",
                   {c: (real["after_sq"].at(*c) or (0, 0, None))[2] for c in KEPT_ABRI}, KEPT_ABRI)
+            check("  ..and the pirates' two dark red squares by Абу-Хамед, where the camp 432 stood on the first,"
+                  " are where they were, as they were",
+                  [real["after_sq"].at(*c) == real["before_sq"].at(*c) and "red" in real["before_sq"].at(*c)[2]
+                   for c in ((6160, 1975), (6161, 1973))], [True, True])
             check("  ..and the squares beside those that go keep their outlines (largest change of a sample)",
                   max(diff(real["before"].original(*p), real["after"].original(*p))
                       for sq in real["kept"].values() for p in M.frame_pixels(sq)) <= 16, True)
@@ -605,18 +634,39 @@ try:
             check("only blocks with a pixel painted change; every other block of every tile keeps its"
                   " coefficients (%d changed)" % count,
                   (stray, count > 0),
-                  ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14775, 14777, 15288, 15809, 15811,
-                                    16055)}, True))
+                  ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15288, 15809, 15811,
+                                    16055, 16064)}, True))
             most, share = moved(real, every)
             check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
                   " that move by 2 or less" % (most, 100 * share), (most <= 16, share >= 0.9), (True, True))
-            boxes = [(X, Y) for (x0, y0, x1, y1), _, _ in plan.captions
+            boxes = [(X, Y) for (x0, y0, x1, y1), was, _ in plan.captions if was != "Лагерь"
                      for X in range(x0, x1 + 1) for Y in range(y0, y1 + 1)]
             dark_before = sum(1 for p in boxes if real["before"].original(*p)[0] < 110)
             dark_after = sum(1 for p in boxes if real["after"].original(*p)[0] < 110)
             check("the letters «Кланбаза KKND» and «База Liberty» are gone: dark pixels in their boxes %d"
                   " before, %d after"
                   % (dark_before, dark_after), (dark_before > 100, dark_after < 10), (True, True))
+
+            # The three «Лагерь» stand on ground as dark as their letters in
+            # places (Донгола's red bank, Абри's river edge), so no threshold of
+            # darkness tells them: their strokes do -- the step in brightness
+            # from a pixel to the next, letter to rim, of which the ground's
+            # grain has a fraction.
+            def strokes(canvas, box):
+                x0, y0, x1, y1 = box
+                return sum(abs(canvas.original(X + 1, Y)[0] - canvas.original(X, Y)[0])
+                           + abs(canvas.original(X, Y + 1)[0] - canvas.original(X, Y)[0])
+                           for X in range(x0, x1) for Y in range(y0, y1))
+            camps = {}
+            for box, was, _why in plan.captions:
+                if was == "Лагерь":
+                    k = M.tile_of(box[0], box[1])
+                    b, a = camps.get(k, (0, 0))
+                    camps[k] = (b + strokes(real["before"], box), a + strokes(real["after"], box))
+            check("the three «Лагерь» of the camps across the river are gone: the steps of brightness in their"
+                  " boxes after are under two fifths of before (%s)"
+                  % ", ".join("%d: %d -> %d" % (k, b, a) for k, (b, a) in sorted(camps.items())),
+                  {k: a < 0.4 * b for k, (b, a) in camps.items()}, {13753: True, 14774: True, 16055: True})
             check("no fill keeps its square's colour (Донгола's ground is red of its own)",
                   colour_left(real), {c: 0 for c in real["found"]})
             check("  ..nor brings in what its ground has not: no painted pixel darker or brighter than the ground"

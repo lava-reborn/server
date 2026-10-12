@@ -43,7 +43,16 @@ What the cut is, each part held here (the pattern of server/test_halfa_cut.py):
   7. the database: whoever is in one of the cut's places, or calls one home,
      goes to the Портовый рынок 187 (5860,1835) -- once, by the run_once
      «retire-abri-cut-2026-10-12»; the journals stay. On Postgres:
-     server/test_storage_pg.py.
+     server/test_storage_pg.py;
+  8. the clothing market 378, cut the same day by the owner's next order
+     («и ещё убери локацию торговцы одеждой в Абри»): off the map as the
+     places above, its name hidden, its square painted over, no way and no
+     quest into it; of its traders 5161 and 5181 stand in the markets of
+     Донгола and Абу-Хамед, 5160 nowhere, and the twenty things the two set
+     traders sold here Алима and Гали sell in the port market 187; whoever is
+     in it, or calls it home, goes to the port market by its own run_once,
+     «retire-abri-clothes-2026-10-12» (the cut's above has run on production
+     before the order).
 
     LAVA_RES=.../res python3 server/test_abri_cut.py
 """
@@ -70,6 +79,7 @@ import accounts  # noqa: E402
 import encounters  # noqa: E402
 import events  # noqa: E402
 import items  # noqa: E402
+import map_cells  # noqa: E402
 import map_labels  # noqa: E402
 import names  # noqa: E402
 import quests  # noqa: E402
@@ -92,6 +102,8 @@ with io.open(os.path.join(DATA, "map_labels.json"), encoding="utf-8") as _fh:
     LABELS = json.load(_fh)["labels"]
 with io.open(os.path.join(DATA, "schedule.json"), encoding="utf-8") as _fh:
     SCHEDULE = json.load(_fh)
+with io.open(os.path.join(DATA, "passages.json"), encoding="utf-8") as _fh:
+    PASSAGES = json.load(_fh)
 ALL_RETIRED = {int(k) for k in RETIRED["places"]}
 CUT_WHY = "The owner's cut of Абри, 2026-10-12"
 CELLS = {453: (5860, 1836), 454: (5861, 1836), 458: (5860, 1837), 459: (5863, 1837),
@@ -169,12 +181,13 @@ try:
            "KB_Blackwater_lvl2_01", "KB_Blackwater_Lvl2_Transport", "KB_Blackwate_Sorting",
            "KB_Blackwate_Bunker_glavaria_klana"])
     check("the neighbours stay: the port market 187, the quarter 188, the slums 255, the dump 289"
-          " and the abandoned factory 290, Хаксли's fields 261, the graveyard 368, the clothing"
-          " market 378, the hippies 191, the totem 262; and east of the town the saltpetre pit 204",
+          " and the abandoned factory 290, Хаксли's fields 261, the graveyard 368, the hippies 191,"
+          " the totem 262; and east of the town the saltpetre pit 204 (the clothing market 378 went"
+          " with the owner's next order, section 8)",
           [table.get(c) for c in (PORT_CELL, (5861, 1835), (5862, 1835), (5863, 1835),
-                                  (5864, 1835), (5862, 1836), (5864, 1836), (5865, 1836),
+                                  (5864, 1835), (5862, 1836), (5864, 1836),
                                   (5860, 1838), (5864, 1838), (5914, 1854))],
-          [PORT, 188, 255, 289, 290, 261, 368, 378, 191, 262, 204])
+          [PORT, 188, 255, 289, 290, 261, 368, 191, 262, 204])
     on_box = sorted(i for (x, y), i in table.items() if 5835 <= x <= 5930 and 1820 <= y <= 1895)
     check("  ..and of the ФСЦ only the base НИЛ-2 (523) stays by Абри, on the island no boat"
           " reaches; no airfield, no clan base", [i for i in on_box if i in (523, 529, 317, 328, 327)],
@@ -315,10 +328,13 @@ try:
               (5906, 1888): "Кланбаза Liberty<br>Warning No Trespassing",
               (5906, 1889): "Плешь смерти<br>Место успокоения врагов клана Liberty",
               (5865, 1835): "Аэроплощадка ФСЦ"}
+    # The clothing market's, since the owner's next order (section 8).
+    HIDDEN = dict(HIDDEN)
+    HIDDEN[(5865, 1836)] = "Торговцы одеждой"
     hidden = {(e["x"], e["y"]): e["was"] for e in LABELS if e.get("hide")
               and BOX[0] <= e["x"] <= BOX[1] and BOX[2] <= e["y"] <= BOX[3]}
-    check("over Абри the names hidden are exactly the cut's and the second «Автосвалка»",
-          hidden, HIDDEN)
+    check("over Абри the names hidden are exactly the cut's, the second «Автосвалка» and the clothing"
+          " market's", hidden, HIDDEN)
     check("  ..and by Абу-Хамед the second «Кланбаза Liberty»",
           [(e["x"], e["y"], e["was"]) for e in LABELS if e.get("hide") and (e["x"], e["y"]) == (6248, 1979)],
           [(6248, 1979, "Кланбаза Liberty<br>Warning No Trespassing")])
@@ -357,6 +373,9 @@ print("the shops and the held out")
 try:
     abri = [c for c in BANDS["cities"] if c["name"] == "Абри"][0]
     check("Абри's band of shops holds no place of the cut", sorted(set(abri["places"]) & set(CUT)), [])
+    # The clothing market 378 is cut since (section 8); data/shop_bands.json,
+    # the shops' data, keeps it until the shops' branch is merged (UNDONE
+    # «Лагеря за рекой»): a band for a room nobody opens.
     check("  ..its places are the oasis, the port market, the quarter, the slums and the clothing market",
           abri["places"], [76, 187, 188, 255, 378])
     check("shop_bands reads the same: the air base is no town's", shop_bands.city(427), None)
@@ -365,7 +384,8 @@ try:
     check("held out for good: Рудольф 5105 in the quarter 188, 5162/5163 in the clothing market"
           " 378, the banknote machine 2402 in the smelter 766 and the assembly shop 1055",
           held, [(QUARTER, [RUDOLF]), (378, [5162, 5163]), (766, [2402]), (1055, [2402])])
-    check("  ..so the rooms stand them nowhere there, and the market keeps 5160, 5161, 5181",
+    check("  ..so the rooms stand them nowhere there, and the market's room 5160, 5161, 5181 (the market"
+          " itself is cut since, section 8)",
           ([t for t in (5162, 5163) if t in stood_in(378)], 2402 in stood_in(766),
            2402 in stood_in(1055), [t for t in (5160, 5161, 5181) if t in stood_in(378)]),
           ([], False, False, [5160, 5161, 5181]))
@@ -494,6 +514,125 @@ try:
 except Exception:
     import traceback
     fails.append("the database broke:\n" + traceback.format_exc())
+
+# --- 8. the clothing market ------------------------------------------------------------------
+print("the clothing market")
+CLOTHES, CLOTHES_CELL = 378, (5865, 1836)
+CLOTHES_WHY = "The owner's cut of Абри's clothing market, 2026-10-12"
+CLOTHES_ORDER = "и ещё убери локацию торговцы одеждой в Абри"
+SETS, MINERS = (5160, 5161), 5181
+ALIMA, GALI = 1165, 1166
+try:
+    why = RETIRED["places"].get(str(CLOTHES), "")
+    check("data/retired.json takes out the clothing market 378, its why quoting the order, and lists"
+          " its cell, the town's ground still for the encounters",
+          (why.startswith(CLOTHES_WHY), CLOTHES_ORDER in why, world.retired_cells().get(CLOTHES_CELL)),
+          (True, True, CLOTHES))
+    check("  ..on no cell; its old cell nulled with its why and leading into the wasteland; the file stays",
+          (world.cell_of(CLOTHES), VERIFIED["cells"].get("%d,%d" % CLOTHES_CELL, "absent"),
+           CLOTHES_ORDER in VERIFIED["why"].get("%d,%d" % CLOTHES_CELL, ""),
+           world.location_at(*CLOTHES_CELL) == world.pack(*CLOTHES_CELL), world.location(CLOTHES).fn),
+          (None, None, True, True, "Sets_Market_Ab"))
+    check("  ..its name hidden, «Торговцы одеждой», and nothing else for the order",
+          [(e["x"], e["y"], e["was"], bool(e.get("hide"))) for e in LABELS
+           if e.get("why", "").startswith(CLOTHES_WHY)],
+          [(5865, 1836, "Торговцы одеждой", True)])
+    check("  ..its green square painted over by server/map_cells.py, as every cell of data/retired.json",
+          CLOTHES_CELL in map_cells.load().cells, True)
+    into = [(section, key) for section in ("doors", "sides", "quest", "walk_in")
+            for key, recs in (PASSAGES.get(section) or {}).items() if not key.startswith("_")
+            for rec in ((list(recs.values()) if isinstance(recs, dict) else recs) or ())
+            if isinstance(rec, dict) and (int(rec.get("target_loc_id") or 0) == CLOTHES
+                                          or key == str(CLOTHES))]
+    doors = sorted((lid, side) for lid in files for side in "ab"
+                   if (travel.door(lid, side) or {}).get("target_loc_id") in (CLOTHES, str(CLOTHES))
+                   and travel.door(lid, side).get("confidence") in travel.DOOR_CONFIDENCE)
+    geo = world.pack(*CLOTHES_CELL)
+    marked = sorted({int(r["type"]) for r in quests.table_rows() for key in ("loc", "finish_loc", "rew_loc")
+                     if geo in place_ids(r.get(key))}
+                    | {int(r["type"]) for r in quests.table_rows() for key in ("loc_id", "stay_in")
+                       if CLOTHES in place_ids(r.get(key))})
+    check("no door, passage, side or quest way leads in, and no quest row marks, waits or pays there",
+          (doors, into, marked), ([], [], []))
+    people = stood_in(CLOTHES)
+    check("its room stood the set traders 5160, 5161 and the miners' clothes 5181; none gives or takes a"
+          " quest", (people, {t: (quests.given_by(t), quests.taken_by(t)) for t in people}),
+          ([5160, 5161, MINERS], {t: ([], []) for t in (5160, 5161, MINERS)}))
+    where = {t: sorted(i for i in files if t in standing(i) and i not in ALL_RETIRED)
+             for t in SETS + (MINERS,)}
+    check("  ..5161 and 5181 stand in the clothing markets of Абу-Хамед and Донгола; 5160, whose other"
+          " market was Вади-Хальфа's 468 (cut 2026-10-09), stands nowhere now",
+          where, {5160: [], 5161: [467, 469], MINERS: [467, 469]})
+    sold = {t: sorted(items.stock_for(t, CLOTHES)) for t in SETS}
+    port = set(items.stock_for(ALIMA, PORT)) | set(items.stock_for(GALI, PORT))
+    check("  ..the twenty things the two set traders sold here, Абри's band 8-12, Алима and Гали sell in"
+          " the port market 187", (len(sold[5160]), sold[5160] == sold[5161], sorted(set(sold[5160]) - port),
+                                  ALIMA in stood_in(PORT), GALI in stood_in(PORT)),
+          (20, True, [], True, True))
+    check("  ..its row held out of the room (5162/5163) stays, as the cut assembly shop 1055's does",
+          sorted(r["types"] for r in SCHEDULE["held_out"] if r["loc"] == CLOTHES), [[5162, 5163]])
+    check("no ambush on its cell nor beside it: the town's ground still",
+          [(CLOTHES_CELL[0] + dx, CLOTHES_CELL[1] + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+           if encounters.band_at(CLOTHES_CELL[0] + dx + 0.5, CLOTHES_CELL[1] + dy + 0.5) is not None], [])
+
+    check("the run_once's place is the market, the port market 187 its target, its name new",
+          (accounts.ABRI_CLOTHES_PLACES, accounts.ABRI_CUT_TO,
+           accounts.ABRI_CLOTHES_FIX not in (accounts.RETIRED_PLACES_FIX, accounts.HALFA_CUT_FIX,
+                                             accounts.HALFA_FSC_FIX, accounts.ABRI_CUT_FIX,
+                                             accounts.RIVER_CAMPS_FIX, accounts.PREMIUM_THINGS_FIX)),
+          ((CLOTHES,), (PORT,) + world.cell_of(PORT), True))
+    path = os.path.join(tempfile.mkdtemp(), "abri_clothes.db")
+    st = accounts.Store(path)
+    acc, _ = st.register("clothes", "secret")
+    ids = {}
+    for name, loc, home in (("in378", CLOTHES, None), ("home378", 188, CLOTHES), ("in427", 427, None),
+                            ("in187", PORT, None)):
+        cid, _ = st.create_character(acc, name, 0, "1")
+        st.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5865, gy = 1836,"
+                      " on_map = 0 WHERE id = ?", (loc, cid))
+        if home is not None:
+            st.db.execute("UPDATE characters SET home_loc = ?, home_gx = 5865, home_gy = 1836"
+                          " WHERE id = ?", (home, cid))
+        ids[name] = cid
+    keeper = ids["in378"]
+    for t in (119, 10120):
+        st.take_quest(keeper, t, {}, True)
+    st.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.ABRI_CLOTHES_FIX,))
+    st.db.commit()
+    st.close()
+    lines = Lines()
+    logging.getLogger("lava").addHandler(lines)
+    try:
+        st = accounts.Store(path)
+    finally:
+        logging.getLogger("lava").removeHandler(lines)
+    chars = {n: st.character(c) for n, c in ids.items()}
+    check("whoever was in the market is in the port market, on its cell, off the map, with no cell of"
+          " the old file; a home in it is the port market now",
+          ((chars["in378"]["loc"], chars["in378"]["gx"], chars["in378"]["gy"], chars["in378"]["on_map"],
+            chars["in378"]["pos"]),
+           (chars["home378"]["home_loc"], chars["home378"]["home_gx"], chars["home378"]["home_gy"],
+            chars["home378"]["loc"])),
+          ((PORT, 5860, 1835, 0, None), (PORT, 5860, 1835, 188)))
+    check("  ..the one in 427 (the cut's above, run long ago) and the one in 187 untouched, the journal too",
+          ([(chars[n]["loc"], chars[n]["pos"]) for n in ("in427", "in187")],
+           sorted(r["type"] for r in st.quests(keeper))),
+          ([(427, 77), (PORT, 77)], [119, 10120]))
+    check("  ..the log says so, and a second pass finds nothing",
+          ([ln for ln in lines.lines if accounts.ABRI_CLOTHES_FIX in ln
+            and "1 character(s) moved out of 378" in ln and "1 home(s) moved" in ln] != [],
+           accounts.relocate_abri_clothes(st.db)), (True, dict(moved=0, homes=0)))
+    st.db.commit()
+    st.db.execute("UPDATE characters SET loc = 378 WHERE id = ?", (keeper,))
+    st.db.commit()
+    st.close()
+    st = accounts.Store(path)
+    check("  ..once per database", (st.character(keeper)["loc"], accounts.ran(st.db, accounts.ABRI_CLOTHES_FIX)),
+          (CLOTHES, True))
+    st.close()
+except Exception:
+    import traceback
+    fails.append("the clothing market broke:\n" + traceback.format_exc())
 
 print()
 if fails:
