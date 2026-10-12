@@ -516,6 +516,48 @@ try:
           (served.get(M.tile_path(0)) == r["out"][M.tile_path(0)], served.get("globalmap/full/7.jpg"),
            served.get("database/locations.xml")), (True, None, None))
 
+    # --- painting a square on: a place of ours put on the map (data/map_cells.json "paint") -------
+    print("a square painted on")
+    PAINT = M.Plan({}, [], {}, {(25, 15): ("green", "t"), (11, 10): ("green", "t")})
+    check("the plan's tiles take in a painted cell's", PAINT.tiles(), [0])
+    for name, tiles in (("4:4:4", made), ("4:2:0", made420)):
+        canvas = M.Canvas(tiles.get)
+        report = M.paint(canvas, PAINT)
+        out, _blocks = canvas.encode()
+        new = {M.tile_path(n): b for n, b in out.items()}
+        after = M.Squares(M.Canvas(lambda p: new.get(p) or tiles.get(p)))
+        check("%s: a green square on open sand, found where the original's are, as theirs are" % name,
+              after.at(25, 15), (200, 120, ("green",)))
+        check("  ..a cell that has a square already is left as it is, and said so",
+              (after.at(11, 10), [line for line in report if "already" in line]),
+              (r["before_sq"].at(11, 10), ["11,10: a square is painted there already, left alone"]))
+        stray, count = only_painted(tiles, dict(out=new, painted=set(M.square(25, 15, M.PALETTE["green"]))))
+        check("  ..and only the blocks its pixels fall in change (%d)" % count, (stray, count > 0),
+              ({0: []}, True))
+    check("a client without the tile gets nothing and is told",
+          M.apply(lambda p: None, PAINT), ({}, ["11,10: no tile globalmap/full/0.jpg in this client, left alone",
+                                               "25,15: no tile globalmap/full/0.jpg in this client, left alone"]))
+    mc = os.path.join(W, "map_cells.json")
+
+    def load_paint(paint):
+        with open(mc, "w", encoding="utf-8") as fh:
+            json.dump({"cells": {"10,10": "t"}, "paint": paint}, fh)
+        try:
+            return sorted(M.load(mc, os.path.join(ROOT, "data", "retired.json")).paint.items())
+        except ValueError:
+            return "refused"
+
+    check("map_cells.json 'paint': 'x,y' -> {colour, why}",
+          load_paint({"25,15": {"colour": "red", "why": "a place of ours"}}),
+          [((25, 15), ("red", "a place of ours"))])
+    check("  ..a colour the map has not, no why, or a cell that is also erased: refused",
+          [load_paint(p) for p in ({"25,15": {"colour": "pink", "why": "t"}}, {"25,15": {"colour": "red"}},
+                                   {"10,10": {"colour": "red", "why": "t"}})], ["refused"] * 3)
+    import world
+    check("every cell the repository paints on holds a place of ours (data/settlements.json,"
+          " data/locations)", [c for c in plan.paint if world.settlements().get(c) not in world.overlay_ids()],
+          [])
+
     # --- the real map ------------------------------------------------------------------------------
     full = os.path.join(RES, "globalmap", "full")
     if not os.path.isdir(full):

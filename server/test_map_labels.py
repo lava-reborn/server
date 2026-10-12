@@ -30,6 +30,12 @@ def rows_at(doc, x, y, was):
 
 print("every edit names one row the client really has")
 for x, y, was, new in edits:
+    if was is None:
+        # An added row (a place of ours put on the map) names a cell that
+        # has no row of its text yet.
+        check("(%d, %d) adds %r: the cell has no row of that text" % (x, y, new),
+              rows_at(raw, x, y, new), [])
+        continue
     check("(%d, %d) %r: exactly one row" % (x, y, was), len(rows_at(raw, x, y, was)), 1)
 
 print("the real file")
@@ -41,6 +47,11 @@ check("the farm's own name is still there, and is now the cell's only one",
       len(rows_at(out, 6266, 1822, "Ферма Говарда Хаксли <BR>Здесь можно найти задания.")), 1)
 want = raw
 for x, y, was, new in edits:
+    if was is None:
+        end = want.rfind(b"</data>")
+        want = want[:end] + b'<location x="%d" y="%d" text="%s" />\n' % (
+            x, y, M.escape(new).encode("utf-8")) + want[end:]
+        continue
     row = rows_at(raw, x, y, was)[0]
     if new is None:
         want = want.replace(row, b"", 1)
@@ -413,6 +424,46 @@ check("the same text on another cell is left alone", M.apply(doc, [(3, 5, "C", N
 check("the launcher's form of the edits",
       M.export_rules([(1, 2, "A", None), (3, 4, "B", "C")]).splitlines()[1:],
       ["1\t2\tA\thide\t", "3\t4\tB\ttext\tC"])
+
+# An added row: the name of a place of ours (data/locations) on a cell of the
+# map, {x, y, text, add: true, why}. It goes before </data>, in the file's
+# own line ending, escaped as a retext is; every other byte stays.
+got, n = M.apply(doc, [(3, 4, "C", None), (7, 8, None, "Новое <BR>место")])
+check("an added row goes before </data>, after a hide in the same file", (got, n),
+      (('﻿<?xml version=\'1.0\'?>\n<data>\n'
+        '<location x="1" y="2" text="A &lt;BR&gt;B" />\n'
+        '<location x="7" y="8" text="Новое &lt;BR&gt;место" />\n'
+        '</data>\n').encode("utf-8"), 2))
+check("  ..and alone, it is the only change",
+      M.apply(doc, [(7, 8, None, "X")]),
+      (doc.replace(b"</data>", b'<location x="7" y="8" text="X" />\n</data>'), 1))
+check("an add whose cell has a row of that text already adds nothing", M.apply(doc, [(3, 4, None, "C")]),
+      (doc, 0))
+crlf = doc.replace(b"\n", b"\r\n")
+check("a file with CRLF lines gets its added row with CRLF",
+      M.apply(crlf, [(5, 6, None, "D")])[0].endswith(b'<location x="5" y="6" text="D" />\r\n</data>\r\n'), True)
+check("the launcher's rules leave an add out: they can only hide or retext",
+      M.export_rules([(1, 2, "A", None), (5, 6, None, "D")]).splitlines()[1:], ["1\t2\tA\thide\t"])
+def load_one(entry):
+    import tempfile
+    fd, tmp = tempfile.mkstemp(suffix=".json")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        json.dump({"labels": [entry]}, fh, ensure_ascii=False)
+    try:
+        return M.load(tmp)
+    except ValueError as exc:
+        return "refused: %s" % str(exc)[:40]
+    finally:
+        os.unlink(tmp)
+
+
+check("load: {x, y, text, add: true} is (x, y, None, text)",
+      load_one({"x": 5, "y": 6, "text": "D", "add": True, "why": "a place of ours"}), [(5, 6, None, "D")])
+check("load: an add with a 'was', with hide, or without a text is refused",
+      [str(load_one(e)).startswith("refused") for e in (
+          {"x": 5, "y": 6, "was": "C", "text": "D", "add": True},
+          {"x": 5, "y": 6, "hide": True, "text": "D", "add": True},
+          {"x": 5, "y": 6, "add": True})], [True, True, True])
 
 print()
 if fails:

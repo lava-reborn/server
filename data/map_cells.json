@@ -2,7 +2,7 @@
  "_meta": {
   "what": "The squares and captions painted into the picture of the global map that go with places taken out of the game.",
   "why": "The full-scale map (res/globalmap/full/<n>.jpg, 273 tiles, one cell 8x8 pixels) has every place painted into the photograph itself: a coloured square on its cell and, for a few, a caption in letters. Hiding a place's name (data/map_labels.json) leaves its square, so a cut has to take the square off too.",
-  "rule": "Every cell of data/retired.json 'cells' loses its square by itself: nothing to add here for a place that stood on a cell. 'cells' below are the other cells whose square goes -- a name with no place under it -- each with its why. 'captions' are letters painted into the picture, each as boxes of the map's pixels (x0, y0, x1, y1, inclusive; pixel = cell * 8) painted over whole. 'keep' lists cells whose name is hidden but whose square stays, each with its why: server/test_map_cells.py makes every hidden name with no live place under it be either here or erased.",
+  "rule": "Every cell of data/retired.json 'cells' loses its square by itself: nothing to add here for a place that stood on a cell. 'cells' below are the other cells whose square goes -- a name with no place under it -- each with its why. 'captions' are letters painted into the picture, each as boxes of the map's pixels (x0, y0, x1, y1, inclusive; pixel = cell * 8) painted over whole. 'keep' lists cells whose name is hidden but whose square stays, each with its why: server/test_map_cells.py makes every hidden name with no live place under it be either here or erased. 'paint' goes the other way: 'x,y' -> {colour, why}, a square painted on a cell that has none, for a place of ours (data/locations) put on the map; colour is one of server/map_cells.py's PALETTE (green, red, blue, black, white, orange, yellow, tan).",
   "how": "server/map_cells.py finds each square in the picture and paints it over with the photograph's texture from near by; only the JPEG blocks it touches are encoded anew. client/build.py puts the edited tiles into every client release, bootstrap_http serves them on a local run. To look at the result: python3 server/map_cells.py --res <res> --preview <folder>."
  },
  "cells": {
@@ -22,5 +22,6 @@
   {"was": "База Liberty", "boxes": [[49996, 15833, 50048, 15841], [50041, 15842, 50046, 15843]],
    "why": "The owner's cut of Абри, 2026-10-12 («убери кланбазу Либерти»): the letters «База Liberty» painted right of the base's squares at 6248,1979-1980 by Абу-Хамед (cells 6249..6256, 1979..1980), tile 15811: the line with its light rim, and the tail of its «y» below. Measured on the luminance of the tile; the dark stone under the tail (50040..50042, 15845..15849) is the photograph's and stays. Абри's own mark of the base (5906,1888-1889) has no letters."}
  ],
- "keep": {}
+ "keep": {},
+ "paint": {}
 }

@@ -25,6 +25,11 @@ blocks of the JPEG those pixels fall in are encoded anew (jpeg_blocks): every
 other block of every tile keeps its coefficients exactly, so nothing else on
 the map can move.
 
+A place of ours (data/locations) put on the map gets a square the same way
+round: data/map_cells.json "paint" names its cell and one colour of PALETTE,
+and the square is painted on in the original's style (square, paint), its
+blocks alone encoded anew -- unless the cell has a square already.
+
 Where it is laid on:
 
   * client/build.py, which puts the edited tiles into every client release
@@ -108,16 +113,18 @@ class Plan:
     and data/map_cells.json's; captions [((x0, y0, x1, y1), was, why)], a
     box of the full map's pixels each (inclusive), a caption of two lines
     being two; keep {(x, y): why}: cells whose square stays though their name
-    is hidden."""
+    is hidden; paint {(x, y): (colour, why)}: cells that get a square, a
+    place of ours (data/locations) put on the map."""
 
-    def __init__(self, cells, captions, keep):
+    def __init__(self, cells, captions, keep, paint=None):
         self.cells, self.captions, self.keep = cells, captions, keep
+        self.paint = dict(paint or {})
 
     def tiles(self):
         """The tiles a change can touch: a square's frame reaches one pixel
         past its cell."""
         out = set()
-        for x, y in self.cells:
+        for x, y in list(self.cells) + list(self.paint):
             for X in (CELL * x - 1, CELL * x + CELL):
                 for Y in (CELL * y - 1, CELL * y + CELL):
                     out.add(tile_of(X, Y))
@@ -171,7 +178,18 @@ def load(path=PATH, retired=RETIRED):
         if not why:
             raise ValueError("map_cells: kept %s has no why" % key)
         keep[c] = why
-    return Plan(cells, captions, keep)
+    paint = {}
+    for key, e in doc.get("paint", {}).items():
+        if key.startswith("_"):
+            continue
+        c = _cell(key)
+        if c in cells or c in keep:
+            raise ValueError("map_cells: %s is both painted on and erased or kept" % key)
+        if not isinstance(e, dict) or e.get("colour") not in PALETTE or not e.get("why"):
+            raise ValueError("map_cells: painted %s needs a colour of %s and a why"
+                             % (key, "/".join(sorted(PALETTE))))
+        paint[c] = (e["colour"], e["why"])
+    return Plan(cells, captions, keep, paint)
 
 
 # --- the picture ---------------------------------------------------------------------
@@ -738,13 +756,67 @@ def erase(canvas, plan):
     return found, kept, painted, report
 
 
+# --- painting on -----------------------------------------------------------------------------
+
+# The dotted tan the squares are framed in.
+OUTLINE = (177, 139, 102)
+
+
+def ycc(p):
+    """(Y, Cb, Cr) of an (R, G, B), as JFIF converts it: rgb() backwards."""
+    r, g, b = p
+    return (0.299 * r + 0.587 * g + 0.114 * b,
+            128 - 0.168736 * r - 0.331264 * g + 0.5 * b,
+            128 + 0.5 * r - 0.418688 * g - 0.081312 * b)
+
+
+def square(x, y, colour):
+    """{pixel: (R, G, B)} of a square in the original's way on cell (x, y):
+    a 7 x 7 fill of the colour inside a 9 x 9 frame on the cell's corner,
+    dotted -- three pixels of every four of it, the fourth the ground's."""
+    X0, Y0 = CELL * x, CELL * y
+    ring = ([(X0 + i, Y0) for i in range(9)] + [(X0 + 8, Y0 + j) for j in range(1, 9)]
+            + [(X0 + i, Y0 + 8) for i in range(7, -1, -1)] + [(X0, Y0 + j) for j in range(7, 0, -1)])
+    out = {p: OUTLINE for k, p in enumerate(ring) if k % 4}
+    for j in range(1, 8):
+        for i in range(1, 8):
+            out[(X0 + i, Y0 + j)] = colour
+    return out
+
+
+def paint(canvas, plan):
+    """Paint a square on each cell of plan.paint, in its colour of PALETTE:
+    the place of ours on that cell, as the original's places are drawn
+    (Squares). A cell whose picture has a square already is left alone, and
+    so is one this client has no tile for. Report lines."""
+    squares = Squares(canvas)
+    report = []
+    for c, (colour, _why) in sorted(plan.paint.items()):
+        n = tile_of(CELL * c[0], CELL * c[1])
+        if canvas.tile(n) is None:
+            report.append("%d,%d: no tile %s in this client, left alone" % (c[0], c[1], tile_path(n)))
+            continue
+        if squares.at(*c) is not None:
+            report.append("%d,%d: a square is painted there already, left alone" % c)
+            continue
+        px = 0
+        for (X, Y), rgb_ in sorted(square(c[0], c[1], PALETTE[colour]).items()):
+            if canvas.original(X, Y) is not None:
+                canvas.put(X, Y, ycc(rgb_))
+                px += 1
+        report.append("%d,%d: %s square painted on, %d pixels" % (c[0], c[1], colour, px))
+    return report
+
+
 def apply(read, plan=None):
     """({path: new bytes}, report lines): the tiles with the plan's squares
-    and captions painted over. read(path) gives a tile of the original (a
-    path under res/) or None when this client has none."""
+    and captions painted over, and its new squares painted on. read(path)
+    gives a tile of the original (a path under res/) or None when this
+    client has none."""
     plan = load() if plan is None else plan
     canvas = Canvas(read)
     _found, _kept, _region, report = erase(canvas, plan)
+    report += paint(canvas, plan)
     out, blocks = canvas.encode()
     for n in sorted(out):
         report.append("%s: %d blocks encoded anew" % (tile_path(n), blocks[n]))
@@ -859,7 +931,8 @@ def main(argv=None):
         after = Canvas(lambda p: tiles.get(p) or read(p))
         # one picture per neighbourhood: boxes around what goes, merged while
         # they overlap
-        boxes = [(CELL * x - 32, CELL * y - 32, CELL * x + 40, CELL * y + 40) for x, y in sorted(plan.cells)]
+        boxes = [(CELL * x - 32, CELL * y - 32, CELL * x + 40, CELL * y + 40)
+                 for x, y in sorted(plan.cells) + sorted(plan.paint)]
         boxes += [(x0 - 24, y0 - 24, x1 + 24, y1 + 24) for (x0, y0, x1, y1), _, _ in plan.captions]
         merged = True
         while merged:

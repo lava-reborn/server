@@ -2,7 +2,7 @@
  "_meta": {
   "what": "The owner's edits to the names the global map writes over its cells.",
   "why": "Those names come from res/database/locations.xml, the player's own file: 414 <location x y text> rows the client draws itself; nothing the server sends touches them. So an edit is made where the file is served -- client/build.py puts the edited file into every client release, which the launcher installs as it is, and bootstrap_http serves it so for a local run (server/map_labels.py). Hiding a name leaves the square painted on its cell in the map's picture: that is data/map_cells.json's (server/map_cells.py).",
-  "rule": "Each edit names a cell (x, y) and the text the row there has now ('was', entities decoded: '<BR>', not '&lt;BR&gt;'). hide: true drops that row; text: gives it another. A row that does not match exactly is left alone, so another copy of the client cannot be edited by mistake.",
+  "rule": "Each edit names a cell (x, y) and the text the row there has now ('was', entities decoded: '<BR>', not '&lt;BR&gt;'). hide: true drops that row; text: gives it another. A row that does not match exactly is left alone, so another copy of the client cannot be edited by mistake. add: true with x, y and text and no 'was' adds a row before </data>: the name of a place of ours (data/locations) over its cell; a cell that has a row of that text already gets no second one.",
   "edit": "Add or change an edit; the next deploy's client release carries it, and a local run picks it up on restart. A hidden name with no place under it must also be decided in data/map_cells.json: its square goes, or stays with a why (server/test_map_cells.py)."
  },
  "labels": [
