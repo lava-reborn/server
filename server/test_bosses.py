@@ -3,7 +3,9 @@ time, and not after a kill.
 
 The owner's rule (2026-09-24): «босс постоянно не должен быть в локации, а
 только в 18 и 20 часов», 14 added on 2026-10-02, and on 2026-10-11 «давай
-14 18 22». bosses.py holds the clock and the windows,
+14 18 22». The warehouses' «Хозяин склада» comes once a day, at 20:00
+(the owner's «на складах хозяин должен прриходить один раз!!!», 2026-10-12).
+bosses.py holds the clock and the windows,
 combat.RoomCombat.keep_hours applies them to a room. Three layers here:
 
   * the windows themselves, on the Moscow clock and not the machine's, and
@@ -11,12 +13,17 @@ combat.RoomCombat.keep_hours applies them to a room. Three layers here:
     the server's start nor, but for "off", the rule; and the defaults of
     docker-compose.yml and the env examples, which must name the hours of
     bosses.DEFAULT_HOURS that the client's release and lava-http's string
-    table are built on;
+    table are built on, and the hour of bosses.DEFAULT_WAREHOUSE_HOURS that
+    a server started without them keeps; the warehouse masters' list
+    against the warehouses' files;
   * a real room and a real RoomCombat on a clock the test turns by hand:
     out of hours nobody meets the boss, at the hour it arrives the way a
     respawn does, at the end of its stay it leaves -- but not in the middle
     of a fight -- and a boss that was killed is not back after the respawn
-    delay the rest of the camp keeps, only at the next hour;
+    delay the rest of the camp keeps, only at the next hour; a warehouse's
+    master is not there at 14, 18 or 22, comes at 20:00 and leaves at
+    21:00, and killed -- a restart in between or not -- he is back the next
+    day at 20:00;
   * a server on a socket whose clock starts a little before six in the
     evening (LAVA_BOSS_CLOCK): the crashed Il-4 (539), where the boss is the
     only inhabitant and stands fifty hexes from the door, is empty on entry;
@@ -26,6 +33,8 @@ combat.RoomCombat.keep_hours applies them to a room. Three layers here:
     is in it, shows the boss only during it.
 """
 import asyncio
+import glob
+import json
 import os
 import re
 import socket
@@ -42,7 +51,8 @@ ENC = "utf-8"
 
 # The defaults are part of what is tested: the owner's hours, whatever the
 # shell running this happens to carry.
-for _k in ("LAVA_BOSS_HOURS", "LAVA_BOSS_STAY", "LAVA_BOSS_TZ", "LAVA_BOSS_CLOCK"):
+for _k in ("LAVA_BOSS_HOURS", "LAVA_BOSS_STAY", "LAVA_BOSS_TZ", "LAVA_BOSS_CLOCK",
+           "LAVA_WAREHOUSE_HOURS"):
     os.environ.pop(_k, None)
 
 sys.path.insert(0, HERE)
@@ -117,6 +127,90 @@ try:
 finally:
     bosses.HOURS, bosses.STAY = _hours, _stay
 
+# --- the warehouses' master: once a day ------------------------------------------------
+# The owner's «на складах хозяин должен прриходить один раз!!!» (2026-10-12):
+# the «Хозяин склада» keeps one hour of his own, 20:00 by default -- the
+# original's «Хозяин присутствует с 20:00 до 21:00» -- and the stay of every
+# boss; every other boss keeps 14, 18 and 22.
+WH_SEVER = 7448                        # boss_WH_sever, the Северный склад 111
+check("the warehouse masters' hour is the default too: 20:00, for the bosses' stay of an hour",
+      (bosses.WAREHOUSE_HOURS, bosses.DEFAULT_WAREHOUSE_HOURS, bosses.STAY),
+      ([20 * 60], "20", 3600.0))
+check("a warehouse master keeps hours like every boss", bosses.keeps_hours(WH_SEVER), True)
+check("  ..his own, 20:00 alone, while a camp boss keeps 14, 18 and 22",
+      (bosses.hours_of(WH_SEVER), bosses.hours_of(BOSS)),
+      ([20 * 60], [14 * 60, 18 * 60, 22 * 60]))
+check("  ..all eight masters the one hour",
+      sorted({tuple(bosses.hours_of(t)) for t in bosses.WAREHOUSE_MASTERS}), [(20 * 60,)])
+check("at eight in the evening his window opens and holds to the last second of the hour",
+      (bosses.slot_of(WH_SEVER, at(19, 59, 59)), bosses.slot_of(WH_SEVER, at(20)),
+       bosses.slot_of(WH_SEVER, at(20, 59, 59)), bosses.slot_of(WH_SEVER, at(21))),
+      (None, at(20), at(20), None))
+check("  ..at 14:00, 18:00 and 22:00, the bosses' windows, he has none",
+      [bosses.slot_of(WH_SEVER, at(h, m)) for h in (14, 18, 22) for m in (0, 30)], [None] * 6)
+check("  ..the camp boss has those, and not his",
+      ([bosses.slot_of(BOSS, at(h, 30)) for h in (14, 18, 22)], bosses.slot_of(BOSS, at(20, 30)),
+       bosses.slot(at(18, 30)), bosses.slot(at(20, 30))),
+      ([at(14), at(18), at(22)], None, at(18), None))
+check("  ..the next day's eight o'clock is a new window",
+      bosses.slot_of(WH_SEVER, at(20, 10, day=25)), at(20, day=25))
+
+_wh, _hours = bosses.WAREHOUSE_HOURS, bosses.HOURS
+try:
+    bosses.WAREHOUSE_HOURS = []
+    _back = (bosses.hours_of(WH_SEVER), bosses.slot_of(WH_SEVER, at(18, 30)),
+             bosses.slot_of(WH_SEVER, at(20, 30)))
+    bosses.WAREHOUSE_HOURS = [21 * 60 + 30]
+    _moved = (bosses.slot_of(WH_SEVER, at(20, 30)), bosses.slot_of(WH_SEVER, at(21, 45)),
+              bosses.hours_of(BOSS))
+    bosses.WAREHOUSE_HOURS, bosses.HOURS = _wh, []
+    _off = (bosses.keeps_hours(WH_SEVER), bosses.slot(at(18, 30)))
+finally:
+    bosses.WAREHOUSE_HOURS, bosses.HOURS = _wh, _hours
+check("LAVA_WAREHOUSE_HOURS=off: no hours of his own, he keeps the bosses' 14, 18 and 22",
+      _back, ([14 * 60, 18 * 60, 22 * 60], at(18), None))
+check("  ..another hour moves him alone", _moved,
+      (None, at(21, 30), [14 * 60, 18 * 60, 22 * 60]))
+check("  ..LAVA_BOSS_HOURS=off turns the rule off for him too: an ordinary mob", _off,
+      (False, None))
+
+# The list against the data: the bosses of the warehouses' own files (fn
+# stok_*, the Хальфа's WH, Донгола's DN and Абу-Хамед's AH), each its file's
+# one boss, by the names data/mob_types.json gives them; no master stands
+# anywhere else; and every capturable site's boss is one of them.
+_stok = {}
+for _p in sorted(glob.glob(os.path.join(world.RES, "locations", "static", "*.xml"))):
+    with open(_p, "rb") as _fh:
+        _head = re.search(rb'<location[^>]*\bfn="(stok_[^"]*)"', _fh.read(4096))
+    if _head:
+        _lid = int(os.path.basename(_p)[:-4])
+        _stok[_lid] = sorted({t for _c, t in world.location(_lid).spawns
+                              if world.creature_role(t) == "boss"})
+check("the warehouses' files are eleven -- 109-114, 128, 288 and the copies 982-984 -- each"
+      " with one boss",
+      (sorted(_stok), sorted({len(b) for b in _stok.values()})),
+      ([109, 110, 111, 112, 113, 114, 128, 288, 982, 983, 984], [1]))
+check("  ..and their bosses are bosses.WAREHOUSE_MASTERS, all eight",
+      sorted({b[0] for b in _stok.values()}), sorted(bosses.WAREHOUSE_MASTERS))
+with open(os.path.join(os.path.dirname(HERE), "data", "mob_types.json"), encoding=ENC) as _fh:
+    _mt = json.load(_fh)["types"]
+check("  ..named boss_WH_, boss_DN_ and boss_AH_ in data/mob_types.json, and nothing else is",
+      sorted(int(k) for k, v in _mt.items() if re.match(r"boss_(WH|DN|AH)_", v.get("name", ""))),
+      sorted(bosses.WAREHOUSE_MASTERS))
+_elsewhere = []
+for _p in sorted(glob.glob(os.path.join(world.RES, "locations", "static", "*.xml"))):
+    _lid = int(os.path.basename(_p)[:-4])
+    if _lid not in _stok and bosses.WAREHOUSE_MASTERS & {t for _c, t in
+                                                         world.location(_lid).spawns}:
+        _elsewhere.append(_lid)
+check("  ..no other location's file has one of them", _elsewhere, [])
+with open(os.path.join(os.path.dirname(HERE), "data", "holdings.json"), encoding=ENC) as _fh:
+    _sites = json.load(_fh)["sites"]
+check("  ..and the capturable sites' bosses (data/holdings.json) are masters",
+      sorted((s["boss"], s["boss"] in bosses.WAREHOUSE_MASTERS)
+             for k, s in _sites.items() if not k.startswith("_")),
+      [(7448, True), (7449, True), (7450, True)])
+
 check("hours parse as minutes, sorted and once each",
       bosses.parse_hours(" 20, 18 ,18"), [18 * 60, 20 * 60])
 check("H:MM is an hour too", bosses.parse_hours("18:30"), [18 * 60 + 30])
@@ -126,11 +220,12 @@ check("\"off\" is none at all", bosses.parse_hours("off"), [])
 
 
 def imported(**settings):
-    """bosses as a server imports it under these settings: "HOURS STAY", or
-    how the import ended when it did not."""
+    """bosses as a server imports it under these settings: "HOURS STAY
+    WAREHOUSE_HOURS", or how the import ended when it did not."""
     env = dict(os.environ, **settings)
     run = subprocess.run([sys.executable, "-c",
-                          "import bosses; print(bosses.HOURS, bosses.STAY)"],
+                          "import bosses; print(bosses.HOURS, bosses.STAY,"
+                          " bosses.WAREHOUSE_HOURS)"],
                          cwd=HERE, env=env, capture_output=True, text=True)
     return run.stdout.strip() if run.returncode == 0 else "exit %d" % run.returncode
 
@@ -138,7 +233,7 @@ def imported(**settings):
 # The settings are read at import, and an import that raises is a server
 # that does not start; a setting that turns the rule off is every boss
 # standing all day. Only "off" may do that.
-OWNERS = "[840, 1080, 1320] 3600.0"
+OWNERS = "[840, 1080, 1320] 3600.0 [1200]"
 check("a stay that is not a number is the default stay, not a server that "
       "will not start", imported(LAVA_BOSS_STAY="час"), OWNERS)
 check("nor is a stay of nothing, which would be bosses that never come",
@@ -147,11 +242,17 @@ check("blank hours are the owner's hours, not the rule turned off",
       (imported(LAVA_BOSS_HOURS=""), imported(LAVA_BOSS_HOURS="  ")), (OWNERS, OWNERS))
 check("and so are hours in which not one hour could be read",
       imported(LAVA_BOSS_HOURS="18-20"), OWNERS)
-check("\"off\" is still off", imported(LAVA_BOSS_HOURS="off"), "[] 3600.0")
+check("\"off\" is still off", imported(LAVA_BOSS_HOURS="off"), "[] 3600.0 [1200]")
 check("a test clock that is no time is ignored, not fatal",
       imported(LAVA_BOSS_CLOCK="в шесть"), OWNERS)
 check("and good settings are read as given",
-      imported(LAVA_BOSS_HOURS="18", LAVA_BOSS_STAY="0.25"), "[1080] 15.0")
+      imported(LAVA_BOSS_HOURS="18", LAVA_BOSS_STAY="0.25"), "[1080] 15.0 [1200]")
+check("the warehouse hours the same way: blank, a word or no hour in them are 20:00",
+      [imported(LAVA_WAREHOUSE_HOURS=v) for v in ("", "  ", "восемь", "20-21")], [OWNERS] * 4)
+check("  ..\"off\" is none of his own (he keeps the bosses' hours), good ones are read as"
+      " given, and neither touches the bosses'",
+      (imported(LAVA_WAREHOUSE_HOURS="off"), imported(LAVA_WAREHOUSE_HOURS="19:30, 21")),
+      ("[840, 1080, 1320] 3600.0 []", "[840, 1080, 1320] 3600.0 [1170, 1260]"))
 
 
 # The client's release (deploy/remote/lava-gate.sh, a docker run with no
@@ -159,12 +260,16 @@ check("and good settings are read as given",
 # starts from bosses.DEFAULT_HOURS, while lava-game reads its own from
 # docker-compose.yml's default. One that differs is bosses coming at hours
 # no quest and no map label names: the hours change in DEFAULT_HOURS and in
-# these defaults together.
+# these defaults together. The warehouse masters' hour is named by no quest:
+# DEFAULT_WAREHOUSE_HOURS is what a server started without compose keeps,
+# LAVA_WAREHOUSE_HOURS's defaults what lava-game reads, and the warehouses'
+# map labels name it as the original's fixed text (test_map_labels); the
+# three change together all the same.
 ROOT = os.path.dirname(HERE)
 
 
 def _default(path, pattern, flags=0):
-    """The LAVA_BOSS_HOURS a file of the repo gives, or None without one."""
+    """The setting a file of the repo gives, or None without one."""
     with open(os.path.join(ROOT, path), encoding=ENC) as fh:
         found = re.search(pattern, fh.read(), flags)
     return found.group(1).strip() if found else None
@@ -176,6 +281,12 @@ check("docker-compose.yml, .env.example and deploy/env.example default to "
        _default(".env.example", r"^LAVA_BOSS_HOURS=(.*)$", re.M),
        _default(os.path.join("deploy", "env.example"), r"^LAVA_BOSS_HOURS=(.*)$", re.M)],
       [bosses.DEFAULT_HOURS] * 3)
+check("  ..and to bosses.DEFAULT_WAREHOUSE_HOURS for the warehouse masters",
+      [_default("docker-compose.yml",
+                r"LAVA_WAREHOUSE_HOURS:\s*\$\{LAVA_WAREHOUSE_HOURS:-([^}]*)\}"),
+       _default(".env.example", r"^LAVA_WAREHOUSE_HOURS=(.*)$", re.M),
+       _default(os.path.join("deploy", "env.example"), r"^LAVA_WAREHOUSE_HOURS=(.*)$", re.M)],
+      [bosses.DEFAULT_WAREHOUSE_HOURS] * 3)
 
 
 # --- a real room on a clock turned by hand ------------------------------------------
@@ -459,6 +570,119 @@ check("a row marked escort in a location with no boss is refused before the serv
           world.mob_types(), {100: [dict(type=THUG, cell=[30, 30], escort=True, why="x")]})
        if "escort" in p],
       ["566 on 30,30: an escort in a location with no boss to come with"])
+
+
+# --- a warehouse's master: once a day -------------------------------------------------
+# The «Хозяин склада» of Донгола's Северный склад (113, boss_DN_sever 7451),
+# a warehouse nobody can take yet (holdings.py has no business with his kill),
+# on a clock turned by hand: not there at the bosses' hours, in at 20:00, out
+# at 21:00; killed, not back that night nor at the next day's 14 and 18, back
+# at its 20:00 -- and a server restarted after the kill, inside his window,
+# keeps him away (boss_kills), on the window of his own hour.
+DN_SEVER, MASTER = 113, 7451
+
+
+async def _master():
+    loc = world.location(DN_SEVER)
+    store = accounts.Store(os.path.join(tempfile.mkdtemp(), "master.db"))
+    combat.CORPSE_DELAY, combat.RESPAWN_DELAY = 0.05, 0.05
+    real_clock = bosses.clock
+    bosses.clock = lambda: NOW[0]
+    try:
+        NOW[0] = at(13)
+        room = rooms.Room(loc, rooms.IdAllocator(), world.mob_types())
+        rc = combat.RoomCombat(room, store)
+        check("Донгола's Северный склад has one boss keeping hours, its «Хозяин склада»",
+              [m.type_id for m in rc.bosses], [MASTER])
+        master = rc.bosses[0]
+        eid = master.eid
+        seat = _Seat()
+        room.players[seat] = True
+        rc.keep_hours()
+        seat.take()
+        check("at one in the afternoon he is not there", (eid in room.npcs, rc.actor(eid)),
+              (False, None))
+
+        def tick(*when):
+            """The clock to each moment, a tick there: (the frames about him,
+            whether he stands in the room) after each."""
+            out = []
+            for t in when:
+                NOW[0] = t
+                rc.keep_hours()
+                out.append(([(n, sorted(p)) for n, p in seat.take()
+                             if p.get("newUser") == eid or p.get("lostUser") == eid
+                             or p.get("id") == eid], eid in room.npcs))
+            return out
+
+        check("at 14:00 and 18:00, the bosses' hours, he does not come, nor a second before 20:00",
+              tick(at(14), at(14, 30), at(18), at(18, 30), at(19, 59, 59)), [([], False)] * 5)
+        check("at 20:00 he arrives as a respawn does: newUser on his cell, then his details",
+              tick(at(20)), [([("lch", ["newUser", "pos", "rtype"]), ("npc_info", ["id"])], True)])
+        check("  ..whole, for the window of his hour",
+              (master.hp == master.hp_max, master.slot), (True, at(20)))
+        check("  ..stays through it and leaves at 21:00",
+              tick(at(20, 59, 59), at(21)), [([], True), ([("lch", ["lostUser"])], False)])
+        check("at 22:00, the bosses' hour, he does not come again",
+              tick(at(22), at(22, 30)), [([], False)] * 2)
+
+        check("the next day: not at 14:00 nor 18:00, in at 20:00",
+              [got[1] for got in tick(at(14, day=25), at(18, day=25), at(20, day=25))],
+              [False, False, True])
+        NOW[0] = at(20, 10, day=25)
+        rc.kill(master, None)
+        await asyncio.sleep(0.4)          # the corpse fades, the respawn delay passes
+        seat.take()
+        check("killed at 20:10: not back after the respawn delay",
+              (eid in room.npcs, master.away), (False, True))
+        check("  ..the kill written down with his window, 20:00",
+              store.boss_kills([rc.boss_spot(master)]), {rc.boss_spot(master): at(20, day=25)})
+
+        # The server restarts at half past eight: the room is made afresh
+        # from the database, inside his window.
+        NOW[0] = at(20, 30, day=25)
+        room2 = rooms.Room(loc, rooms.IdAllocator(), world.mob_types())
+        rc2 = combat.RoomCombat(room2, store)
+        master2 = rc2.bosses[0]
+        rc2.keep_hours()
+        check("a restart inside his window: he starts away, killed in it",
+              (master2.eid in room2.npcs, master2.away, master2.slot),
+              (False, True, at(20, day=25)))
+        seen = []
+        for t in (at(20, 59, day=25), at(22, day=25), at(14, day=26), at(18, day=26),
+                  at(19, 59, 59, day=26), at(20, day=26)):
+            NOW[0] = t
+            rc2.keep_hours()
+            seen.append(master2.eid in room2.npcs)
+        check("  ..not back that night nor at the next day's 14:00 and 18:00, back at its 20:00",
+              seen, [False, False, False, False, False, True])
+        check("  ..whole, for the new window", (master2.hp == master2.hp_max, master2.slot),
+              (True, at(20, day=26)))
+
+        # A camp boss in a room made at the same moments keeps 14, 18 and 22.
+        NOW[0] = at(13, day=26)
+        il4 = combat.RoomCombat(rooms.Room(world.location(IL4), rooms.IdAllocator(),
+                                           world.mob_types()), store)
+        camp = il4.bosses[0]
+        seen = []
+        for t in (at(14, day=26), at(15, day=26), at(20, day=26), at(22, day=26)):
+            NOW[0] = t
+            il4.keep_hours()
+            seen.append(camp.eid in il4.room.npcs)
+        check("the Il-4's boss, on the same clock: in at 14:00, gone at 15:00, none at 20:00,"
+              " in at 22:00", seen, [True, False, False, True])
+        for bag in list(rc.loot.values()) + list(rc2.loot.values()):
+            if bag.expiry is not None:
+                bag.expiry.cancel()
+    finally:
+        bosses.clock = real_clock
+        store.close()
+
+
+try:
+    asyncio.run(_master())
+except Exception:
+    fails.append("the warehouse's master on a hand-turned clock:\n" + traceback.format_exc())
 
 
 # --- the server -------------------------------------------------------------------

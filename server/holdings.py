@@ -34,8 +34,11 @@ his clan in those seconds still counts for the one he fought for.
 
 A boss killed is away until its next window (bosses.py, combat.
 RoomCombat.keep_hours; the boss_kills table keeps that over a restart), so
-every window of its hours settles a site once at most: the owner's 14:00,
-18:00 and 22:00, Moscow time.
+every window of its hours settles a site once at most. The «Хозяин склада»
+keeps hours of his own (bosses.WAREHOUSE_HOURS, the owner's «на складах
+хозяин должен прриходить один раз!!!», 2026-10-12): one window a day, from
+20:00 to 21:00 Moscow time, as the box's hour ends -- so a site changes
+hands once a day at most.
 
 How long. DESIGNED, the owner's of 2026-10-09: the clan holds the site until
 another clan takes it. A disband drops its holdings in the same transaction
@@ -75,6 +78,7 @@ import logging
 import os
 import time
 
+import bosses
 import events
 import world
 
@@ -163,7 +167,9 @@ def site_for(loc_id, boss_type):
 def problems():
     """["what: why"] for every site that cannot work as written; empty when
     all of them can. Each location's file holds the site's boss, flag and
-    box; the box's row (data/quests.json) names the site in holders, asks
+    box, and the boss is one of the warehouse masters, who keep the
+    warehouses' hour (bosses.WAREHOUSE_MASTERS); the box's row (data/
+    quests.json) names the site in holders, asks
     the site's level and is given and taken at the box; data/schedule.json
     keeps it in a window, gate "both"; and no row of the quests names a site
     that is not here."""
@@ -179,6 +185,9 @@ def problems():
             out.append("%s: no location %d (%s)" % (key, s.loc, exc))
             continue
         files = {ty for _c, ty in loc.spawns}
+        if s.boss not in bosses.WAREHOUSE_MASTERS:
+            out.append("%s: its boss %d is no warehouse master (bosses.WAREHOUSE_MASTERS)"
+                       " and keeps the bosses' hours" % (key, s.boss))
         for what, ty in (("boss", s.boss), ("flag", s.flag), ("box", s.box)):
             if ty not in files:
                 out.append("%s: its %s %d is not in location %d's file" % (key, what, ty, s.loc))

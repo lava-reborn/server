@@ -76,9 +76,8 @@ SESSION_LOOT = 0
 # deleteTimerLeaveLocation). Sent to the client in the constants frame as
 # leave_combat_timeout, which is what its countdown counts down from.
 #
-# The same length keeps a room at war after a blow between two players,
-# landed or not (RoomCombat.hostilities); a fight with creatures has no such
-# tail: it lasts while one of them is after somebody.
+# This timer opens the exits, not the map button. A PvP encounter keeps the
+# room at war until one opponent dies or leaves (RoomCombat.hostilities).
 LEAVE_COMBAT_TIMEOUT = int(os.environ.get("LAVA_LEAVE_COMBAT", "15"))
 # A dead mob lies for this long before lch;lostUser fades it and the bag
 # appears; then it comes back after RESPAWN_DELAY. The bag stays LOOT_LIFETIME.
@@ -2377,8 +2376,8 @@ class RoomCombat:
     def hostilities(self, t):
         """Whether the room is still at war.
 
-        A creature after somebody here, a duel between players inside
-        leave_combat_timeout, or a shot or swing still in the air -- anyone's,
+        A creature after somebody here, a duel between living players still
+        here, or a shot or swing still in the air -- anyone's,
         so that the bar a burst was charged on does not reset under it. That
         is all. The room used to stay at war for leave_combat_timeout after
         anybody's last shot or strike as well, and ws is not a detail the
@@ -2401,8 +2400,8 @@ class RoomCombat:
         for f in living:
             if f.aim is not None or f.strike is not None:
                 return True
-            for other, exchanged in list(f.duels.items()):
-                if other in living and t - exchanged < LEAVE_COMBAT_TIMEOUT:
+            for other in list(f.duels):
+                if other in living:
                     return True
                 f.duels.pop(other, None)
         return False
@@ -2450,7 +2449,7 @@ class RoomCombat:
                 and shot_wall(self.room.loc, shooter.cell, target.cell) is None)
 
     def after_hostile(self, attacker, target):
-        """Bookkeeping after any shot or swing: the duel timer of two players
+        """Bookkeeping after any shot or swing: the encounter of two players
         who exchanged it, and a mob that was attacked turns on its attacker.
         Nothing else is remembered: a shot at nobody leaves nobody after
         anyone, and the room returns to peace on its next tick."""
@@ -2459,8 +2458,8 @@ class RoomCombat:
             return
         if target.is_player:
             if attacker.is_player:
-                # Both ends of a duel are held for the same timeout: the one
-                # who opened it cannot walk out of the answer.
+                # Keep both participants at war until death or departure;
+                # the hit timer independently opens the edge exits.
                 attacker.engage_player(target, t)
                 self.mark_foe(target, attacker)
         elif (target.alive and attacker.is_player and target.stats.can_attack
@@ -3149,12 +3148,16 @@ class RoomCombat:
         and come back -- whole, on its own cell, its escort with it -- as it
         would have with anybody watching. With somebody here it stays as it
         is, and only its escort comes.
+
+        Each boss keeps its own hours (bosses.slot_of): a warehouse's
+        «Хозяин склада» comes once a day, the rest at the bosses' hours.
         """
         events.keep(self)
         if not self.bosses:
             return
-        due = bosses.slot(bosses.clock())
+        now = bosses.clock()
         for mob in self.bosses:
+            due = bosses.slot_of(mob.type_id, now)
             if mob.away:
                 if due is not None and due != mob.slot:
                     self.boss_arrives(mob, due)
@@ -3243,8 +3246,11 @@ class RoomCombat:
         read = getattr(self.store, "boss_kills", None)
         if not self.bosses or read is None:
             return
-        due = bosses.slot(bosses.clock())
-        if due is None:
+        now = bosses.clock()
+        # Each boss's own window (bosses.slot_of): a warehouse master's is
+        # his day's hour.
+        due = {m.eid: bosses.slot_of(m.type_id, now) for m in self.bosses}
+        if all(d is None for d in due.values()):
             return
         try:
             killed = read([self.boss_spot(m) for m in self.bosses])
@@ -3253,8 +3259,9 @@ class RoomCombat:
                           self.room.loc.title)
             return
         for mob in self.bosses:
-            if killed.get(self.boss_spot(mob)) == due:
-                mob.alive, mob.away, mob.slot = False, True, due
+            slot = due[mob.eid]
+            if slot is not None and killed.get(self.boss_spot(mob)) == slot:
+                mob.alive, mob.away, mob.slot = False, True, slot
                 self.room.npcs.pop(mob.eid, None)
                 log.info("  ..    boss %d (%s) of %s was killed in this window before"
                          " the restart: away until the next", mob.eid, mob.stats.name,

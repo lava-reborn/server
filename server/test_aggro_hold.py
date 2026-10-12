@@ -383,8 +383,8 @@ async def _timer_boundary():
         check("neither resets the timer",
               (me.exit_timer_left(), target.exit_timer_left()), (10.0, 10.0))
         me.engage_player(target, 115.0)
-        check("the PvP room tail lasts fifteen seconds too",
-              (rc.hostilities(129.99), rc.hostilities(130.0)), (True, False))
+        check("the exit timer expires but PvP keeps the map button disabled",
+              (rc.hostilities(129.99), rc.hostilities(130.0)), (True, True))
 
 
 async def _in_process():

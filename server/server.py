@@ -1311,6 +1311,13 @@ class Session:
         if not self.on_map and int(p.get("to", 0) or 0) == 1:
             self.leave_through_exit()
             return
+        if (not self.on_map and self.combat.duels
+                and travel.side_at(self.loc, self.pos) is None):
+            # Both the map button and the exit window send plain chWorld.
+            # A PvP pause opens only the exit window: require its cell even
+            # if a stale or modified client asks from the middle of the room.
+            self.send("cmdAck", res=RES_NO_WAY)
+            return
         if not self.on_map and travel.no_map(self.loc.id):
             # An interior left only by its own ways (travel.no_map): the
             # client greys both map buttons out there (travel.geo_id) -- but
@@ -3670,7 +3677,10 @@ class Session:
         # queue itself, and then snaps the walker to pos. Sending both would
         # hand the ack to the next command. id=0 is the player's own walker
         # (Location.getWalker treats a falsy id as the gamer).
-        if not self.valid_path(path):
+        # Interception freezes both starting positions until the shared
+        # countdown ends. Refuse exactly like an invalid walk so the client
+        # consumes its movement callback without an extra cmdAck.
+        if self.combat.preparing() or not self.valid_path(path):
             self.send("breakMv", id=0, pos=self.pos)
             return
         self.send("cmdAck", res=0)

@@ -49,6 +49,9 @@ services:
       # Боссы приходят только в эти часы по Москве и стоят столько минут
       # (server/bosses.py). Правило владельца: 14, 18 и 22 часа, по часу.
       LAVA_BOSS_HOURS: ${LAVA_BOSS_HOURS:-14,18,22}
+      # Хозяин склада приходит раз в день, в 20:00 (подпись оригинала);
+      # off -- он держит часы всех боссов.
+      LAVA_WAREHOUSE_HOURS: ${LAVA_WAREHOUSE_HOURS:-20}
       LAVA_BOSS_STAY: ${LAVA_BOSS_STAY:-60}
       LAVA_BOSS_TZ: ${LAVA_BOSS_TZ:-Europe/Moscow}
       LAVA_NOOB_VALLEY_SAFE: ${LAVA_NOOB_VALLEY_SAFE:-0}

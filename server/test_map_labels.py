@@ -162,8 +162,9 @@ def rows_of(doc, box):
 
 
 FSC_AIRFIELD_CELL = (5970, 1727)                 # the cut of the ФСЦ, below
-# The boss clock's retexts (2026-10-11, below): the camps', their chiefs' places'
-# and the warehouses' hours, each row's text for another.
+# The boss clock's retexts (2026-10-11, below): the camps' and their chiefs'
+# places' hours, each row's text for another. The warehouses' were retexted
+# too, and are the original's again since 2026-10-12 (below).
 CLOCK_WHY = "The owner's boss clock, 2026-10-11"
 CLOCK = {(e["x"], e["y"], e["was"]): e["text"] for e in LABELS
          if e.get("why", "").startswith(CLOCK_WHY)}
@@ -181,8 +182,8 @@ check("  ..and every other name around Вади-Хальфа is the file's own, 
       " hours retexted since 2026-10-11)",
       rows_of(out, HALFA_BOX), kept)
 check("  ..of which there are dozens", len(kept) > 30, True)
-check("  ..nine of them retexted to the boss clock: the four camps, their chiefs' places and the"
-      " southern warehouse", clocked, 9)
+check("  ..eight of them retexted to the boss clock: the four camps and their chiefs' places (the"
+      " southern warehouse's is the original's)", clocked, 8)
 
 # The owner's cut of Вади-Хальфа's ФСЦ (2026-10-10, «убери фсц тоже»): the
 # FSC airfield 528 (the blue square with «!» beside the old market) and the
@@ -225,7 +226,9 @@ check("the ФСЦ cut's own edits are its two cells and no other",
 # the chief. A name with no boss
 # of the clock behind it stays the original's, and is listed here; the staffs
 # and the dig 433 promised what nothing on the server keeps, and lose those
-# lines (below).
+# lines (below). The warehouses' «Хозяин склада» keeps his own hour since
+# 2026-10-12, the original's 20:00, and their names are the original's again
+# (below).
 print("the boss clock (2026-10-11)")
 import bosses  # noqa: E402
 
@@ -245,11 +248,11 @@ VILLAGES = [(6017, 2036), (6023, 2045), (6031, 2041), (6030, 2051), (6019, 2057)
             (5977, 2084), (5992, 2084), (5972, 2094), (5987, 2092), (5979, 2101), (6002, 2086),
             (5990, 2042), (6002, 2045), (6004, 2038), (6009, 2052), (5999, 2053), (6009, 2063),
             (5980, 2055), (5981, 2065), (5991, 2063), (5976, 2071), (5988, 2072), (6001, 2071)]
-CLOCK_CELLS = (GOLD_CAMPS + GOLD_CHIEFS + [VALLEY_CAMP] + FAR_CAMPS + FAR_CHIEFS + WAREHOUSES
+CLOCK_CELLS = (GOLD_CAMPS + GOLD_CHIEFS + [VALLEY_CAMP] + FAR_CAMPS + FAR_CHIEFS
                + [MKS_BASE] + VILLAGES)
-check("the clock's own edits are its 51 cells and no other: the camps, their chiefs' places, the"
-      " warehouses, the МКС base and the 24 villages",
-      (sorted((x, y) for x, y, _ in CLOCK), len(set(CLOCK_CELLS))), (sorted(CLOCK_CELLS), 51))
+check("the clock's own edits are its 44 cells and no other: the camps, their chiefs' places, the"
+      " МКС base and the 24 villages",
+      (sorted((x, y) for x, y, _ in CLOCK), len(set(CLOCK_CELLS))), (sorted(CLOCK_CELLS), 44))
 
 
 def say(cells, words):
@@ -279,13 +282,43 @@ check("the 24 villages' headmen and the МКС base's stock chief come at the ow
        say([MKS_BASE], "Начальник склада приходит в 14:00, 18:00 и 22:00")),
       (one_each(VILLAGES), one_each([MKS_BASE])))
 STALE = re.compile(r"чертеж|01\.00|05\.00|с 20:00 до 21:00|12:00 и 21:00|21:30")
-check("  ..and none of the 51 names blueprints or an hour no boss keeps",
+check("  ..and none of the 44 names blueprints or an hour no boss keeps",
       [(c, t) for c in CLOCK_CELLS for t in texts_at(out, *c) if STALE.search(t)], [])
 with open(os.path.join(os.path.dirname(HERE), "data", "schedule.json"), encoding="utf-8") as _fh:
     WINDOWS = json.load(_fh)["windows"]
-check("the seven warehouses' «Хозяин склада» is there in every window of the clock",
-      say(WAREHOUSES, "Хозяин присутствует с 14:00 до 15:00, с 18:00 до 19:00 и с 22:00 до 23:00"),
-      one_each(WAREHOUSES))
+
+# The warehouses' «Хозяин склада» comes once a day (the owner's «на складах
+# хозяин должен прриходить один раз!!!», 2026-10-12), at
+# bosses.DEFAULT_WAREHOUSE_HOURS for the bosses' stay: 20:00 to 21:00, the
+# original's own «Хозяин присутствует с 20:00 до 21:00». The seven names
+# over the warehouses are the file's, untouched, and say his window as the
+# default makes it: another hour there and no new labels fails here.
+print("the warehouses' master (2026-10-12)")
+
+
+def windows_said(hours, stay):
+    """«с 20:00 до 21:00», or «с 14:00 до 15:00, с 18:00 до 19:00 и с 22:00
+    до 23:00»: the windows as the warehouses' names would say them."""
+    parts = ["с %d:%02d до %d:%02d" % (m // 60, m % 60, (m + int(stay)) // 60 % 24,
+                                       (m + int(stay)) % 60) for m in hours]
+    return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " и " + parts[-1]
+
+
+MASTER_SAYS = "Хозяин присутствует " + windows_said(
+    bosses.parse_hours(bosses.DEFAULT_WAREHOUSE_HOURS), bosses.DEFAULT_STAY) + "<br>"
+check("the warehouses' names were left for this hour: change them together",
+      (bosses.parse_hours(bosses.DEFAULT_WAREHOUSE_HOURS), bosses.DEFAULT_STAY, MASTER_SAYS),
+      ([20 * 60], 60.0, "Хозяин присутствует с 20:00 до 21:00<br>"))
+check("  ..(the helper says the old three windows as they were written)",
+      windows_said([840, 1080, 1320], 60), "с 14:00 до 15:00, с 18:00 до 19:00 и с 22:00 до 23:00")
+check("the seven warehouses' names say the master's one window, the default's",
+      say(WAREHOUSES, MASTER_SAYS), one_each(WAREHOUSES))
+check("  ..as the original's own words, each the file's one row over its cell, unedited",
+      ({c: texts_at(out, *c) for c in WAREHOUSES},
+       sorted((e["x"], e["y"]) for e in LABELS if (e["x"], e["y"]) in WAREHOUSES)),
+      ({c: texts_at(raw, *c) for c in WAREHOUSES}, []))
+check("  ..and none of them names the bosses' hours any more",
+      [(c, t) for c in WAREHOUSES for t in texts_at(out, *c) if "14:00" in t or "22:00" in t], [])
 check("  ..and Вади-Хальфа's three still share the box from 19:00 to 20:00, the window wh_box of"
       " data/schedule.json",
       (say(HALFA_WAREHOUSES, "Дележ добычи с 19:00 до 20:00"),
@@ -320,10 +353,13 @@ def rows_bytes(doc, cell):
 
 
 check("every other name on the map that tells an hour or offers blueprints is one left as the"
-      " original's: the prisons, the pirates, the hangar, the clan base, the three far digs, the"
-      " МКС helicopter and the black market",
-      sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)} - set(CLOCK_CELLS)),
+      " original's: the warehouses (above), the prisons, the pirates, the hangar, the clan base,"
+      " the three far digs, the МКС helicopter and the black market",
+      sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)}
+             - set(CLOCK_CELLS) - set(WAREHOUSES)),
       sorted(ORIGINAL))
+check("  ..the warehouses' byte for byte as the file has them",
+      [rows_bytes(out, c) for c in WAREHOUSES], [rows_bytes(raw, c) for c in WAREHOUSES])
 check("  ..each byte for byte as the file has it, «Лагерь Большого Мвамбы» too, each under its name",
       [(rows_bytes(out, c), all(t.startswith(ORIGINAL.get(c, "Лагерь Большого Мвамбы"))
                                 for t in texts_at(out, *c))) for c in sorted(ORIGINAL) + [MWAMBA]],
