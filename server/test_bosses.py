@@ -12,9 +12,10 @@ combat.RoomCombat.keep_hours applies them to a room. Three layers here:
     the settings they are read from: a slip in one costs its default, never
     the server's start nor, but for "off", the rule; and the defaults of
     docker-compose.yml and the env examples, which must name the hours of
-    bosses.DEFAULT_HOURS and bosses.DEFAULT_WAREHOUSE_HOURS that the
-    client's release and lava-http's string table are built on; the
-    warehouse masters' list against the warehouses' files;
+    bosses.DEFAULT_HOURS that the client's release and lava-http's string
+    table are built on, and the hour of bosses.DEFAULT_WAREHOUSE_HOURS that
+    a server started without them keeps; the warehouse masters' list
+    against the warehouses' files;
   * a real room and a real RoomCombat on a clock the test turns by hand:
     out of hours nobody meets the boss, at the hour it arrives the way a
     respawn does, at the end of its stay it leaves -- but not in the middle
@@ -259,9 +260,11 @@ check("  ..\"off\" is none of his own (he keeps the bosses' hours), good ones ar
 # starts from bosses.DEFAULT_HOURS, while lava-game reads its own from
 # docker-compose.yml's default. One that differs is bosses coming at hours
 # no quest and no map label names: the hours change in DEFAULT_HOURS and in
-# these defaults together. The warehouse masters' hour likewise, in
-# DEFAULT_WAREHOUSE_HOURS and LAVA_WAREHOUSE_HOURS's defaults, which the
-# warehouses' map labels name (test_map_labels).
+# these defaults together. The warehouse masters' hour is named by no quest:
+# DEFAULT_WAREHOUSE_HOURS is what a server started without compose keeps,
+# LAVA_WAREHOUSE_HOURS's defaults what lava-game reads, and the warehouses'
+# map labels name it as the original's fixed text (test_map_labels); the
+# three change together all the same.
 ROOT = os.path.dirname(HERE)
 
 

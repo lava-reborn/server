@@ -108,9 +108,11 @@ def parse_hours(raw, name="LAVA_BOSS_HOURS"):
 
 DEFAULT_HOURS = "14,18,22"
 DEFAULT_STAY = 60.0
-# The warehouse masters' hour (the module's docstring). The client's release
-# and lava-http read it here, as they read DEFAULT_HOURS, and the map's
-# warehouse labels name it (server/test_map_labels.py).
+# The warehouse masters' hour (the module's docstring). It lives here so that
+# a server started without compose's defaults (a test, a bare docker run)
+# keeps it too; no quest text names it, and the map's warehouse labels name
+# it as the original's own fixed text, which server/test_map_labels.py keeps
+# in step with it.
 DEFAULT_WAREHOUSE_HOURS = "20"
 
 
