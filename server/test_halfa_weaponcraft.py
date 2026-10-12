@@ -70,7 +70,8 @@ MASTERS = {338: ("pistol", "A"), 377: ("pistol", "G"), 339: ("shotgun", "A"),
 Q_MASTERS = [5771, 7548]
 RAKIN = 7311
 GUNSMITHS = {"rifle": 238, "shotgun": 239, "pistol": 242, "smg": 243}
-WHETSTONES = {5192: (2, 4), 2279: (6, 8)}
+WHETSTONES = {5192: (2, 4), 2279: (6, 8), 2280: (10, 12)}
+ABRI_WHETSTONE, ABRI_KNIVES, ABRI_PORT = 2280, 1164, 187     # Абри's (2026-10-12)
 DECODER = 652
 # The blueprints' stalls. The premium masters 702, 704 and 705, whose stalls
 # repeated these, stand nowhere since the owner's cut of (P) (2026-09-30,
@@ -116,14 +117,19 @@ def stood(loc_id):
 # --- in process: the table ----------------------------------------------------------------
 try:
     check("every craft row is a repeatable service of Вади-Хальфа's band (or the valley's"
-          " 0-4 at its whetstone) in 10000-10999, of the loaded table",
+          " 0-4 at its whetstone, Абри's 8-12 at its own) in 10000-10999, of the loaded table",
           sorted({(r["repeatable"], r["service"], r["level"], r["max_level"],
                    10000 <= r["type"] <= 10999, quests.get(r["type"]) is not None)
                   for r in ROWS}),
-          [(1, True, 0, 4, True, True), (1, True, 0, 8, True, True)])
+          [(1, True, 0, 4, True, True), (1, True, 0, 8, True, True),
+           (1, True, 8, 12, True, True)])
+    check("  ..Абри's rows its whetstone's alone (2026-10-12: no upgrader of Абри's in the"
+          " client)", sorted({(r["craft"]["family"], tuple(r["give"])) for r in ROWS
+                              if (r["level"], r["max_level"]) == (8, 12)}),
+          [("knife", (ABRI_WHETSTONE,))])
     check("  ..the families", {f: len(family(f)) for f in
                                ("upgrade", "knife", "salvage", "assembly", "decode")},
-          {"upgrade": 132, "knife": 12, "salvage": 10, "assembly": 19, "decode": 8})
+          {"upgrade": 132, "knife": 18, "salvage": 10, "assembly": 19, "decode": 8})
     check("  ..each row's type the one its key was given (the table's \"types\"), no type"
           " given twice",
           ([r["type"] for r in ROWS if DOC["types"].get(r["craft"]["key"]) != r["type"]],
@@ -312,13 +318,35 @@ try:
           {cls: [set(items.stock_for(s)) == by_class[cls] for s in stalls]
            for cls, stalls in STALLS.items()},
           {cls: [True] * len(stalls) for cls, stalls in STALLS.items()})
-    check("  ..the quarter's trader the [Q] Маузер's twelve, Однопальцый (1152) every"
-          " whetstone's blueprints; the valley's Одноглазый his knife line alone (test_shops)",
+    check("  ..the quarter's trader the [Q] Маузер's twelve, Однопальцый (1152) the valley's"
+          " and Вади-Хальфа's whetstones' blueprints; the valley's Одноглазый his knife line"
+          " alone (test_shops)",
           (set(items.stock_for(Q_STALL)) == {r["craft"]["blueprint"] for r in ups
                                             if r["craft"]["line"] == "Q"},
-           {r["craft"]["blueprint"] for r in family("knife")} <= set(items.stock_for(1152)),
+           {r["craft"]["blueprint"] for r in family("knife")
+            if r["give"][0] in (5192, WHETSTONE)} <= set(items.stock_for(1152)),
            [t for t in items.stock_for(5222) if items.root_of(t) != items.COLD_ARM]),
           (True, True, []))
+    # Абри's whetstone (2026-10-12): its six blueprints at Одноухий, the head of
+    # his own list in data/npcs.json (build_weaponcraft --stock prints it,
+    # KNIFE_STALLS), the gypsum, wire and bandages of Марис Дамбис's chain
+    # after them; its knives (G) are the town's band's at his stall.
+    import npcs  # noqa: E402
+    abri_stone = [r for r in family("knife") if r["give"] == [ABRI_WHETSTONE]]
+    abri_prints = sorted({r["craft"]["blueprint"] for r in abri_stone})
+    check("Абри's whetstone (2280): «Заточка», «Эргономика» and both of Нож кастет (10у) and"
+          " Штык нож (12у); its blueprints on sale at Одноухий, who stands beside it in the"
+          " port market, his own list's head as --stock prints it, and its knives (G) at his"
+          " stall",
+          (sorted((r["craft"]["level"], r["craft"]["gun"]) for r in abri_stone), abri_prints,
+           npcs.stock(ABRI_KNIVES)[:len(abri_prints)] == abri_prints,
+           build_weaponcraft.stock(DOC)[ABRI_KNIVES] == abri_prints
+           if "build_weaponcraft" in sys.modules else True,
+           sorted({r["craft"]["gun"] for r in abri_stone} - set(items.stock_for(ABRI_KNIVES,
+                                                                                 ABRI_PORT))),
+           ABRI_KNIVES in stood(ABRI_PORT), ABRI_WHETSTONE in stood(ABRI_PORT)),
+          ([(10, 6251)] * 3 + [(12, 6256)] * 3, list(range(6620, 6626)), True, True, [],
+           True, True))
     import npcs  # noqa: E402
     check("  ..those two added to the wiki's list (craft.stock_extra), the owner's file"
           " (data/npcs.json) untouched there, so the wiki's list still reaches Однопальцый",
