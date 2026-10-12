@@ -30,6 +30,17 @@ round: data/map_cells.json "paint" names its cell and one colour of PALETTE,
 and the square is painted on in the original's style (square, paint), its
 blocks alone encoded anew -- unless the cell has a square already.
 
+Before the squares, the war zones go (clear_zones; data/map_cells.json
+"tint" and "zones"): round each camp across the river the makers painted a
+red tint over a circle 245 pixels across and dark blue arrows into it, on
+the camp's own tiles. The tint is taken back out of every pixel under it --
+the photograph comes back as it was under the red laid over it, the line on
+the rim measured where it is and taken off with it -- and the arrows (and
+Донгола's seam, where its two tiles meet) are painted over with the
+photograph from near by, a piece at a time; the squares and the letters
+painted over them stay as they are. The squares are then found and painted
+over on the picture without the zones.
+
 Where it is laid on:
 
   * client/build.py, which puts the edited tiles into every client release
@@ -47,6 +58,7 @@ after pictures (PNG, magnified) into the preview folder.
 """
 import collections
 import json
+import math
 import os
 import struct
 import sys
@@ -114,15 +126,18 @@ class Plan:
     box of the full map's pixels each (inclusive), a caption of two lines
     being two; keep {(x, y): why}: cells whose square stays though their name
     is hidden; paint {(x, y): (colour, why)}: cells that get a square, a
-    place of ours (data/locations) put on the map."""
+    place of ours (data/locations) put on the map; zones [Zone]: the war
+    zones painted round a place that is gone, a tinted circle and its arrows,
+    and tint: how the circles are painted (clear_zones)."""
 
-    def __init__(self, cells, captions, keep, paint=None):
+    def __init__(self, cells, captions, keep, paint=None, zones=(), tint=None):
         self.cells, self.captions, self.keep = cells, captions, keep
         self.paint = dict(paint or {})
+        self.zones, self.tint = list(zones), tint
 
     def tiles(self):
         """The tiles a change can touch: a square's frame reaches one pixel
-        past its cell."""
+        past its cell; a zone's are listed with it."""
         out = set()
         for x, y in list(self.cells) + list(self.paint):
             for X in (CELL * x - 1, CELL * x + CELL):
@@ -132,7 +147,84 @@ class Plan:
             for X in (x0, x1):
                 for Y in (y0, y1):
                     out.add(tile_of(X, Y))
+        for z in self.zones:
+            out |= set(z.tiles)
         return sorted(out)
+
+
+class Tint:
+    """How a war zone's circle is painted (data/map_cells.json "tint"): the
+    colour rgb laid over the photograph at alpha, nothing of it within
+    `clear` pixels of the centre, rising evenly to the whole alpha at `full`
+    and so to the rim, where it ends over `edge` pixels."""
+
+    def __init__(self, rgb, alpha, clear, full, edge):
+        self.rgb, self.alpha, self.clear, self.full, self.edge = tuple(rgb), alpha, clear, full, edge
+        r, g, b = self.rgb
+        # the colour as the tiles' samples have it (JFIF), unrounded
+        self.ycc = (0.299 * r + 0.587 * g + 0.114 * b,
+                    128 - 0.168736 * r - 0.331264 * g + 0.5 * b,
+                    128 + 0.5 * r - 0.418688 * g - 0.081312 * b)
+
+
+class Zone:
+    """One war zone (data/map_cells.json "zones"): the circle at centre with
+    its radius (pixels of the full map), its own alpha when it has one, the
+    arrows and seams drawn over it (polygons of the map's pixels, painted
+    over whole), the boxes of letters painted over the arrows that stay, and
+    the tiles it was painted on: nothing outside them changes."""
+
+    def __init__(self, was, why, tiles, centre, radius, alpha=None, arrows=(), seams=(), letters=()):
+        self.was, self.why = was, why
+        self.tiles = sorted(tiles)
+        self.centre, self.radius, self.alpha = tuple(centre), radius, alpha
+        self.arrows = [[tuple(p) for p in poly] for poly in arrows]
+        self.seams = [[tuple(p) for p in poly] for poly in seams]
+        self.letters = [tuple(b) for b in letters]
+
+
+def _zone(e, tint):
+    """A Zone from its row of data/map_cells.json, refused when it is not one."""
+    was = e.get("was")
+    if not was or not e.get("why"):
+        raise ValueError("map_cells: zone %r has no words or no why" % was)
+    if tint is None:
+        raise ValueError("map_cells: zone %r and no tint to take off" % was)
+    tiles = e.get("tiles") or []
+    if not tiles or not all(isinstance(n, int) and 0 <= n < ROW * ROW for n in tiles):
+        raise ValueError("map_cells: zone %r: tiles %r" % (was, tiles))
+    try:
+        cx, cy = (float(v) for v in e["centre"])
+        radius = float(e["radius"])
+    except (KeyError, TypeError, ValueError):
+        raise ValueError("map_cells: zone %r has no centre or radius" % was)
+    if not 8 <= radius <= 512 or tile_of(int(cx), int(cy)) not in tiles:
+        raise ValueError("map_cells: zone %r: a circle of %r round %r, not in its tiles" % (was, radius, (cx, cy)))
+    alpha = e.get("alpha")
+    if alpha is not None and not 0 < alpha < 0.5:
+        raise ValueError("map_cells: zone %r: alpha %r" % (was, alpha))
+    boxes = [(n % ROW * TILE, n // ROW * TILE, n % ROW * TILE + TILE - 1, n // ROW * TILE + TILE - 1)
+             for n in tiles]
+
+    def on_tiles(x, y):
+        return any(x0 <= x <= x1 and y0 <= y <= y1 for x0, y0, x1, y1 in boxes)
+    polys = {}
+    for kind in ("arrows", "seams"):
+        polys[kind] = []
+        for poly in e.get(kind, []):
+            pts = [(float(p[0]), float(p[1])) for p in poly]
+            if len(pts) < 3 or not all(on_tiles(x, y) for x, y in pts):
+                raise ValueError("map_cells: zone %r: a polygon of %s off its tiles or of fewer than three"
+                                 " points" % (was, kind))
+            polys[kind].append(pts)
+    letters = []
+    for box in e.get("letters", []):
+        x0, y0, x1, y1 = (int(v) for v in box)
+        if (not (x0 <= x1 and y0 <= y1) or (x1 - x0 + 1) * (y1 - y0 + 1) > 64 * 64
+                or not (on_tiles(x0, y0) and on_tiles(x1, y1))):
+            raise ValueError("map_cells: zone %r: letters %r" % (was, box))
+        letters.append((x0, y0, x1, y1))
+    return Zone(was, e["why"], tiles, (cx, cy), radius, alpha, polys["arrows"], polys["seams"], letters)
 
 
 def load(path=PATH, retired=RETIRED):
@@ -189,7 +281,21 @@ def load(path=PATH, retired=RETIRED):
             raise ValueError("map_cells: painted %s needs a colour of %s and a why"
                              % (key, "/".join(sorted(PALETTE))))
         paint[c] = (e["colour"], e["why"])
-    return Plan(cells, captions, keep, paint)
+    tint = None
+    t = doc.get("tint")
+    if t is not None:
+        try:
+            tint = Tint([int(v) for v in t["rgb"]], float(t["alpha"]), float(t["clear"]), float(t["full"]),
+                        float(t["edge"]))
+        except (KeyError, TypeError, ValueError):
+            raise ValueError("map_cells: the tint %r" % (t,))
+        if (len(tint.rgb) != 3 or not all(0 <= v <= 255 for v in tint.rgb) or not 0 < tint.alpha < 0.5
+                or not 0 <= tint.clear < tint.full or not 0 < tint.edge <= 8 or not t.get("why")):
+            raise ValueError("map_cells: the tint %r" % (t,))
+    zones = [_zone(e, tint) for e in doc.get("zones", [])]
+    if len({z.was for z in zones}) != len(zones):
+        raise ValueError("map_cells: two zones of one name")
+    return Plan(cells, captions, keep, paint, zones, tint)
 
 
 # --- the picture ---------------------------------------------------------------------
@@ -199,13 +305,16 @@ class Canvas:
 
     Values are the tiles' own samples, (Y, Cb, Cr), at full resolution (a
     subsampled component repeated over its footprint). put() records a
-    changed pixel; encode() writes the tiles with changes, every changed
-    block encoded anew and nothing else."""
+    changed pixel; lay() changes the picture itself, so that what is done
+    after it starts from the new value (the war zones are taken off before
+    the squares are found); encode() writes the tiles with changes, every
+    changed block encoded anew and nothing else."""
 
     def __init__(self, read):
         self._read = read
         self._tiles = {}
         self._blocks = {}
+        self._laid = {}
         self.edits = {}
 
     def tile(self, n):
@@ -222,6 +331,11 @@ class Canvas:
         return self._tiles[n]
 
     def original(self, X, Y):
+        """The picture's value at a pixel: the tile's, or what lay() put
+        there; None off the map or where this client has no tile."""
+        v = self._laid.get((X, Y))
+        if v is not None:
+            return v
         if X < 0 or Y < 0 or X >= TILE * ROW:
             return None
         n = tile_of(X, Y)
@@ -245,6 +359,10 @@ class Canvas:
 
     def put(self, X, Y, value):
         self.edits[(X, Y)] = [0 if v < 0 else 255 if v > 255 else int(round(v)) for v in value]
+
+    def lay(self, X, Y, value):
+        self.put(X, Y, value)
+        self._laid[(X, Y)] = self.edits[(X, Y)]
 
     def encode(self):
         """({tile: bytes}, {tile: number of blocks encoded anew})."""
@@ -808,14 +926,416 @@ def paint(canvas, plan):
     return report
 
 
+# --- the war zones -----------------------------------------------------------------------
+
+# A war zone's arrows (and Донгола's seam) are painted over a piece at a
+# time, about PIECE pixels each, from one end to the other, each piece with
+# a patch from no further than MARK_REACH pixels, or MARK_REACH_FAR after
+# that, blended into the ground and the pieces done before it.
+PIECE = 360
+MARK_REACH = 32
+MARK_REACH_FAR = 64
+# Of the MARK_TRY patches that fit a piece best, the first whose blend bends
+# it by no more than MARK_BEND (Y, Cb, Cr) over the piece is taken (bend).
+MARK_TRY = 6
+MARK_BEND = (48, 16, 16)
+# When none does, the one that goes past the ground's bounds least, and of
+# those bends least, held to the bounds, if no more than MARK_PAST of its
+# pixels go past them.
+MARK_PAST = 0.1
+
+
+def polygon_pixels(poly):
+    """The pixels (X, Y) whose point lies inside the polygon or on its edge
+    ([(x, y)] of the map's pixels, a pixel's point being its own
+    coordinates), by rows: an edge crosses a row y when it starts at or
+    above it and ends below it."""
+    out = set()
+    n = len(poly)
+    ys = [p[1] for p in poly]
+    for Y in range(int(math.floor(min(ys))), int(math.ceil(max(ys))) + 1):
+        xs = []
+        for i in range(n):
+            (x1, y1), (x2, y2) = poly[i], poly[(i + 1) % n]
+            if y1 == y2 == Y:
+                # an edge along the row is all edge
+                for X in range(int(math.ceil(min(x1, x2))), int(math.floor(max(x1, x2))) + 1):
+                    out.add((X, Y))
+            elif min(y1, y2) <= Y < max(y1, y2):
+                xs.append(x1 + (Y - y1) * (x2 - x1) / (y2 - y1))
+            elif Y == max(y1, y2):
+                # the lower end of an edge is its own point
+                x = x1 if y1 == Y else x2
+                if x == int(x):
+                    out.add((int(x), Y))
+        xs.sort()
+        for a, b in zip(xs[::2], xs[1::2]):
+            for X in range(int(math.ceil(a - 1e-9)), int(math.floor(b + 1e-9)) + 1):
+                out.add((X, Y))
+    return out
+
+
+def _smoothstep(e0, e1, x):
+    t = (x - e0) / (e1 - e0)
+    t = 0.0 if t < 0 else 1.0 if t > 1 else t
+    return t * t * (3 - 2 * t)
+
+
+def zone_alpha(tint, zone, r):
+    """How much of the tint lies on a pixel r pixels from the zone's centre."""
+    alpha = zone.alpha if zone.alpha is not None else tint.alpha
+    ramp = (r - tint.clear) / (tint.full - tint.clear)
+    ramp = 0.0 if ramp < 0 else 1.0 if ramp > 1 else ramp
+    half = tint.edge / 2
+    return alpha * ramp * (1 - _smoothstep(zone.radius - half, zone.radius + half, r))
+
+
+# The line on a circle's rim: what is left on the rim once the tint is off is
+# a thin line, yellowish (blue down by up to 8) and darker towards the lower
+# right, as if lit from the upper left, up to 25 levels of luma there. It is
+# taken off where it is. Across the rim, out to RIM_FIX either way in steps
+# of RIM_BIN, each RIM_ARC of the rim is measured (the middle of the pixels of
+# RIM_SPAN arcs each way) against the ground RIM_REF pixels inside and
+# outside the rim, and what it differs by is read as one line: a peak
+# RIM_WIDTH pixels to either side of its middle, the middle and the peak's
+# height in each of Y, Cb, Cr those that fit best. A line darker or lighter
+# than RIM_MOST (Y, Cb, Cr) is the photograph's (a rock, a shore) and stays.
+RIM_FIX = 2.5
+RIM_REF = (3.0, 6.0)
+RIM_BIN = 0.5
+RIM_ARC = 3.0
+RIM_SPAN = 5
+RIM_WIDTH = 1.25
+RIM_MOST = ((-40, 8), (-16, 6), (-12, 14))
+
+
+def _median(values, i):
+    s = sorted(v[i] for v in values)
+    n = len(s)
+    return (s[(n - 1) // 2] + s[n // 2]) / 2
+
+
+def _peak(d, middle):
+    w = 1 - abs(d - middle) / RIM_WIDTH
+    return w if w > 0 else 0.0
+
+
+def rim_fix(canvas, zone, inside, skip):
+    """{pixel: value}: the pixels within RIM_FIX of the zone's rim with the
+    line on it taken off, measured on the canvas as it is (the tint off);
+    pixels of skip neither count nor change."""
+    cx, cy = zone.centre
+    R = zone.radius
+    far = RIM_REF[1]
+    nb = max(8, int(round(2 * math.pi * R / RIM_ARC)))
+    nd = int(round(2 * far / RIM_BIN))
+    bins = {}
+    pix = []
+    for Y in range(int(math.floor(cy - R - far)), int(math.ceil(cy + R + far)) + 1):
+        for X in range(int(math.floor(cx - R - far)), int(math.ceil(cx + R + far)) + 1):
+            if tile_of(X, Y) not in inside or (X, Y) in skip:
+                continue
+            dx, dy = X + 0.5 - cx, Y + 0.5 - cy
+            d = math.hypot(dx, dy) - R
+            if not -far <= d < far:
+                continue
+            ab = int((math.atan2(dy, dx) + math.pi) / (2 * math.pi) * nb) % nb
+            db = min(nd - 1, int((d + far) / RIM_BIN))
+            v = canvas.original(X, Y)
+            bins.setdefault((ab, db), []).append(v)
+            if abs(d) < RIM_FIX:
+                pix.append((X, Y, ab, d, v))
+    centre = [db * RIM_BIN - far + RIM_BIN / 2 for db in range(nd)]
+    inner = [db for db in range(nd) if centre[db] < -RIM_REF[0]]
+    outer = [db for db in range(nd) if centre[db] > RIM_REF[0]]
+    line = [db for db in range(nd) if abs(centre[db]) < RIM_FIX]
+    mid_in = sum(centre[db] for db in inner) / len(inner)
+    mid_out = sum(centre[db] for db in outer) / len(outer)
+    middles = [k * 0.25 for k in range(-6, 5)]
+    est = {}
+    for ab in range(nb):
+        arcs = [(ab + k) % nb for k in range(-RIM_SPAN, RIM_SPAN + 1)]
+
+        def gather(dbs):
+            return [v for a_ in arcs for db_ in dbs for v in bins.get((a_, db_), ())]
+        inn, out = gather(inner), gather(outer)
+        if len(inn) < 20 or len(out) < 20:
+            continue
+        ri = [_median(inn, i) for i in range(3)]
+        ro = [_median(out, i) for i in range(3)]
+        diffs = []
+        for db in line:
+            vals = gather([db])
+            if len(vals) < 5:
+                continue
+            t = (centre[db] - mid_in) / (mid_out - mid_in)
+            diffs.append((centre[db], [_median(vals, i) - (ri[i] + t * (ro[i] - ri[i])) for i in range(3)]))
+        if len(diffs) < len(line) * 2 // 3:
+            continue
+        fit = None
+        for middle in middles:
+            w = [_peak(d, middle) for d, _e in diffs]
+            ww = sum(x * x for x in w)
+            if not ww:
+                continue
+            height = [sum(x * e[i] for x, (_d, e) in zip(w, diffs)) / ww for i in range(3)]
+            err = sum((e[i] - height[i] * x) ** 2 for x, (_d, e) in zip(w, diffs) for i in range(3))
+            if fit is None or err < fit[0]:
+                fit = (err, middle, height)
+        if fit and all(lo <= h <= hi for h, (lo, hi) in zip(fit[2], RIM_MOST)):
+            est[ab] = (fit[1], fit[2])
+    out_ = {}
+    for X, Y, ab, d, v in pix:
+        e = est.get(ab)
+        if e is not None:
+            w = _peak(d, e[0])
+            if w:
+                out_[(X, Y)] = [v[i] - e[1][i] * w for i in range(3)]
+    return out_
+
+
+# A letter painted over an arrow is a pixel darker than the middle of its box
+# by LETTER_DARK; it and the pixels round it stay.
+LETTER_DARK = 40
+
+
+def letters_pixels(canvas, box):
+    """The letters painted in a box of the map and the pixels round them:
+    those darker than the middle of the box by LETTER_DARK, and their
+    neighbours."""
+    x0, y0, x1, y1 = box
+    vals = [((X, Y), canvas.original(X, Y)) for X in range(x0, x1 + 1) for Y in range(y0, y1 + 1)]
+    vals = [(p, v[0]) for p, v in vals if v is not None]
+    if not vals:
+        return set()
+    mid = _median([(y,) for _p, y in vals], 0)
+    dark = [p for p, y in vals if y < mid - LETTER_DARK]
+    return {(X + dx, Y + dy) for X, Y in dark for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+
+
+def painted_square(canvas, sq):
+    """Whether a square found is paint: a fill of one colour has the
+    palette's very colour (the ground's dark rocks pass for a dark red
+    square by their colour alone, and a square under a zone is painted over
+    its tint, the ground around it under it)."""
+    X0, Y0, kind = sq
+    if len(kind) != 1:
+        return True
+    px = [rgb(canvas.original(X0 + i, Y0 + j)) for j in range(2, 7) for i in range(2, 7)]
+    mean = [sum(p[c] for p in px) / len(px) for c in range(3)]
+    return max(abs(m - c) for m, c in zip(mean, PALETTE[kind[0]])) <= 12
+
+
+def _pieces(pixels):
+    """The pixels in pieces of about PIECE, each group that touches cut
+    across its longest way, from one end to the other."""
+    out = []
+    for g in _groups(pixels):
+        n = len(g)
+        mx = sum(p[0] for p in g) / n
+        my = sum(p[1] for p in g) / n
+        sxx = sum((p[0] - mx) ** 2 for p in g)
+        syy = sum((p[1] - my) ** 2 for p in g)
+        sxy = sum((p[0] - mx) * (p[1] - my) for p in g)
+        angle = 0.5 * math.atan2(2 * sxy, sxx - syy)
+        ux, uy = math.cos(angle), math.sin(angle)
+        order = sorted(g, key=lambda p: ((p[0] - mx) * ux + (p[1] - my) * uy, p))
+        k = max(1, int(round(n / PIECE)))
+        size = n / k
+        out.extend(order[int(round(i * size)):int(round((i + 1) * size))] for i in range(k))
+    return out
+
+
+def bend(canvas, values, offset):
+    """How far the blend of a patch bends it to meet the ground round it:
+    the range over the piece of what solve() added to the patch, in each of
+    Y, Cb and Cr, as a share of MARK_BEND (the largest of the three). A patch
+    bent more than that is the ground of one side smeared over the other
+    (dark rock lifted into grey over sand)."""
+    dx, dy = offset
+    lo = [None] * 3
+    hi = [None] * 3
+    for (X, Y), v in values.items():
+        g = canvas.original(X + dx, Y + dy)
+        for i in range(3):
+            d = v[i] - g[i]
+            if lo[i] is None or d < lo[i]:
+                lo[i] = d
+            if hi[i] is None or d > hi[i]:
+                hi[i] = d
+    return max((hi[i] - lo[i]) / MARK_BEND[i] for i in range(3)) if values else 0.0
+
+
+def paint_marks(canvas, marks, every_mark, protect, squares, laid):
+    """Paint the pixels of marks over (canvas.lay, each added to laid) a
+    piece at a time (_pieces), the pieces before it ground already, each from
+    the patch of photograph near by that fits the ground round it best
+    (find_patch, solve): the first that stays within the ground's bounds and
+    whose blend bends it little (bend); when none does, the one that goes
+    past the bounds least, no more than MARK_PAST of its pixels, and of
+    those the one bent least (by a rock's edge the blend lifts the rock
+    towards the sand: the less, the less of a smear), held to the bounds;
+    when none comes that near, smooth from its edge. The other marks not yet
+    painted, the squares and the letters are no ground (apart) and no patch
+    is taken from them, nor from any square near (bad). Counter of patch,
+    bent, smooth."""
+    how = collections.Counter()
+    left = set(marks)
+    for piece in _pieces(marks):
+        left -= set(piece)
+        apart = left | (every_mark - marks) | protect
+        bad = every_mark | protect
+        bounds = None
+        tried = set()
+        done = None
+        least = None
+        for reach in (MARK_REACH, MARK_REACH_FAR):
+            xs = [p[0] for p in piece]
+            ys = [p[1] for p in piece]
+            for x in range((min(xs) - reach - 4) // CELL - 1, (max(xs) + reach + 4) // CELL + 2):
+                for y in range((min(ys) - reach - 4) // CELL - 1, (max(ys) + reach + 4) // CELL + 2):
+                    if canvas.tile(tile_of(CELL * x, CELL * y)) is not None:
+                        sq = squares.at(x, y)
+                        if sq is not None:
+                            bad = bad | frame_pixels(sq)
+            if bounds is None:
+                # the pieces painted already are ground the piece meets
+                bounds = ground_bounds(canvas, piece, apart | (bad - every_mark))
+            for offset in find_patch(canvas, piece, bad, apart, reach, bounds, best=MARK_TRY):
+                if offset in tried:
+                    continue
+                tried.add(offset)
+                values = solve(canvas, piece, apart, offset)
+                off = outside(values.values(), bounds)
+                if off > MARK_PAST * len(piece):
+                    continue
+                b_ = bend(canvas, values, offset)
+                if not off and b_ <= 1:
+                    done = values
+                    break
+                if least is None or (off, b_) < least[0]:
+                    least = ((off, b_), offset, values)
+            if done:
+                break
+        if done:
+            how["patch"] += 1
+        elif least is not None:
+            # held to the ground's bounds
+            done = least[2] if bounds is None else {
+                p: [lo if v < lo else hi if v > hi else v for v, (lo, hi) in zip(val, bounds)]
+                for p, val in least[2].items()}
+            how["bent"] += 1
+        else:
+            done = solve(canvas, piece, apart, None)
+            how["smooth"] += 1
+        for p, v in done.items():
+            canvas.lay(p[0], p[1], v)
+            laid.add(p)
+    return how
+
+
+def clear_zones(canvas, plan):
+    """Take each war zone off the picture (canvas.lay, so that the squares
+    and captions are found and painted over on the picture without it).
+    (pixels changed, report lines).
+
+    The circle is a tint of plan.tint's colour laid over the photograph at an
+    alpha rising from the middle to the rim (zone_alpha): every pixel under
+    it, outside the squares painted over it, is the photograph again,
+    (value - alpha * colour) / (1 - alpha), and the line on its rim is taken
+    off where it is (rim_fix). The arrows and the seams are paint: their
+    polygons, less the squares and the letters painted over them
+    (letters_pixels), are painted over with the photograph's texture from
+    near by as a square is, a piece at a time (paint_marks). Nothing outside
+    the zone's tiles changes."""
+    tint = plan.tint
+    laid = set()
+    report = []
+    marks_all = {}
+    for z in plan.zones:
+        inside = set(z.tiles)
+        px = set()
+        for poly in z.arrows + z.seams:
+            px |= {p for p in polygon_pixels(poly) if tile_of(*p) in inside}
+        marks_all[z.was] = px
+    every_mark = set().union(*marks_all.values()) if marks_all else set()
+    for z in plan.zones:
+        missing = [n for n in z.tiles if canvas.tile(n) is None]
+        if missing:
+            report.append("zone %s: no tile %s in this client, left alone"
+                          % (z.was, ", ".join(tile_path(n) for n in missing)))
+            continue
+        inside = set(z.tiles)
+        cx, cy = z.centre
+        reach = z.radius + tint.edge / 2 + 1
+        marks = marks_all[z.was]
+        xs = [p[0] for p in marks] + [cx - reach, cx + reach]
+        ys = [p[1] for p in marks] + [cy - reach, cy + reach]
+        # the squares painted over the zone stay as they are
+        squares = Squares(canvas)
+        protect = set()
+        kept = 0
+        for y in range(int(min(ys)) // CELL - 1, int(max(ys)) // CELL + 2):
+            for x in range(int(min(xs)) // CELL - 1, int(max(xs)) // CELL + 2):
+                if canvas.tile(tile_of(CELL * x, CELL * y)) is None:
+                    continue
+                sq = squares.at(x, y)
+                if sq is not None and painted_square(canvas, sq):
+                    protect |= frame_pixels(sq)
+                    kept += 1
+        # and so do the letters painted over its arrows
+        for box in z.letters:
+            protect |= letters_pixels(canvas, box)
+        marks = marks - protect
+        # the tint
+        tinted = 0
+        T = tint.ycc
+        for Y in range(int(math.floor(cy - reach)), int(math.ceil(cy + reach)) + 1):
+            for X in range(int(math.floor(cx - reach)), int(math.ceil(cx + reach)) + 1):
+                if tile_of(X, Y) not in inside or (X, Y) in protect or (X, Y) in marks:
+                    continue
+                a = zone_alpha(tint, z, math.hypot(X + 0.5 - cx, Y + 0.5 - cy))
+                if not a:
+                    continue
+                v = canvas.original(X, Y)
+                new = [(v[i] - a * T[i]) / (1 - a) for i in range(3)]
+                if any(abs(n - o) >= 0.5 for n, o in zip(new, v)):
+                    canvas.lay(X, Y, new)
+                    laid.add((X, Y))
+                    tinted += 1
+        # the line on the rim; the captions that go are no ground to measure it by
+        skip = protect | every_mark
+        for (x0, y0, x1, y1), _was, _why in plan.captions:
+            skip |= {(X, Y) for X in range(x0 - 1, x1 + 2) for Y in range(y0 - 1, y1 + 2)}
+        lined = 0
+        for p, v in sorted(rim_fix(canvas, z, inside, skip).items()):
+            old_v = canvas.original(*p)
+            if any(abs(n - o) >= 0.5 for n, o in zip(v, old_v)):
+                canvas.lay(p[0], p[1], v)
+                laid.add(p)
+                lined += 1
+        report.append("zone %s: the circle round %.1f,%.1f of radius %.1f, %d pixels of it under its tint,"
+                      " %d on its rim's line; %d squares over it left as they are"
+                      % (z.was, cx, cy, z.radius, tinted, lined, kept))
+        # the arrows and the seams
+        how = paint_marks(canvas, marks, every_mark, protect, squares, laid)
+        report.append("zone %s: %d arrows and %d seams, %d pixels painted over in %d pieces (%d from a patch of"
+                      " photograph, %d of them bent by the blend; %d smooth from their edge)"
+                      % (z.was, len(z.arrows), len(z.seams), len(marks), sum(how.values()),
+                         how["patch"] + how["bent"], how["bent"], how["smooth"]))
+    return laid, report
+
+
 def apply(read, plan=None):
-    """({path: new bytes}, report lines): the tiles with the plan's squares
-    and captions painted over, and its new squares painted on. read(path)
-    gives a tile of the original (a path under res/) or None when this
-    client has none."""
+    """({path: new bytes}, report lines): the tiles with the plan's war zones
+    taken off, its squares and captions painted over, and its new squares
+    painted on. read(path) gives a tile of the original (a path under res/)
+    or None when this client has none."""
     plan = load() if plan is None else plan
     canvas = Canvas(read)
-    _found, _kept, _region, report = erase(canvas, plan)
+    _laid, report = clear_zones(canvas, plan)
+    _found, _kept, _region, more = erase(canvas, plan)
+    report += more
     report += paint(canvas, plan)
     out, blocks = canvas.encode()
     for n in sorted(out):
@@ -836,9 +1356,11 @@ def reader(root):
 
 class Served:
     """The edited tiles for a local run (bootstrap_http), over its own res/:
-    made once, on the first request for a tile a change can touch, from the
-    data as it stood then (a change to it is served after a restart, as the
-    server's other tables are)."""
+    made once, on the first request for a tile a change can touch (or ahead
+    of it, warm()), from the data as it stood then (a change to it is served
+    after a restart, as the server's other tables are). Painting the whole
+    map takes half a minute with the war zones: a request that comes while
+    it is made waits for it."""
 
     def __init__(self, root, plan=None):
         self.root = root
@@ -847,26 +1369,41 @@ class Served:
         self._tiles = None
         self._lock = threading.Lock()
 
+    def _plan_paths(self):
+        if self._paths is None:
+            if self._plan is None:
+                self._plan = load()
+            self._paths = {tile_path(n) for n in self._plan.tiles()}
+        return self._paths
+
+    def _make(self):
+        if self._tiles is None:
+            try:
+                self._plan_paths()
+                self._tiles, report = apply(reader(self.root), self._plan)
+                print("  map squares: %s" % "; ".join(report), flush=True)
+            except (ValueError, OSError) as e:
+                # the player's own picture rather than none
+                print("  map squares NOT painted over: %s" % e, flush=True)
+                self._tiles = {}
+
+    def warm(self):
+        """Start making the tiles in the background now, so that the first
+        player to open the map does not wait for it."""
+        def run():
+            with self._lock:
+                self._make()
+        threading.Thread(target=run, name="map-tiles", daemon=True).start()
+
     def get(self, rel):
         """The bytes to serve for res/<rel> in place of the file's own, or
         None to serve the file as it is."""
         if not rel.startswith("globalmap/full/"):
             return None
         with self._lock:
-            if self._paths is None:
-                if self._plan is None:
-                    self._plan = load()
-                self._paths = {tile_path(n) for n in self._plan.tiles()}
-            if rel not in self._paths:
+            if rel not in self._plan_paths():
                 return None
-            if self._tiles is None:
-                try:
-                    self._tiles, report = apply(reader(self.root), self._plan)
-                    print("  map squares: %s" % "; ".join(report), flush=True)
-                except (ValueError, OSError) as e:
-                    # the player's own picture rather than none
-                    print("  map squares NOT painted over: %s" % e, flush=True)
-                    self._tiles = {}
+            self._make()
         return self._tiles.get(rel)
 
 
@@ -934,6 +1471,8 @@ def main(argv=None):
         boxes = [(CELL * x - 32, CELL * y - 32, CELL * x + 40, CELL * y + 40)
                  for x, y in sorted(plan.cells) + sorted(plan.paint)]
         boxes += [(x0 - 24, y0 - 24, x1 + 24, y1 + 24) for (x0, y0, x1, y1), _, _ in plan.captions]
+        boxes += [(int(z.centre[0] - z.radius) - 16, int(z.centre[1] - z.radius) - 16,
+                   int(z.centre[0] + z.radius) + 16, int(z.centre[1] + z.radius) + 16) for z in plan.zones]
         merged = True
         while merged:
             merged = False
@@ -949,7 +1488,7 @@ def main(argv=None):
                     break
         for i, box in enumerate(sorted(boxes)):
             with open(os.path.join(a.preview, "%d_%d_%d.png" % (i, box[0] // CELL, box[1] // CELL)), "wb") as fh:
-                fh.write(preview(before, after, box))
+                fh.write(preview(before, after, box, 6 if box[2] - box[0] <= 160 else 2))
     return 0
 
 

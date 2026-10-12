@@ -62,10 +62,12 @@
 `tools/export_texts.py`, `database/locations.xml` — `server/map_labels.py`,
 `hints/hints.xml` — пустой документ. Плитки карты `globalmap/full/<n>.jpg`, на
 которых нарисованы квадраты снятых мест (клетки `data/retired.json` и
-`data/map_cells.json`), — `server/map_cells.py`: квадраты закрашены, остальные
-блоки плитки байт в байт оригинальные. В отчёте сборки это строки
-`generated: ... globalmap/full/<n>.jpg` и `map: N squares and M caption boxes
-painted over in K tiles`. Свои объекты локаций из `client/objects/` —
+`data/map_cells.json`), и плитки с зонами боя лагерей за рекой (красный круг
+со стрелками, `zones` того же файла) — `server/map_cells.py`: квадраты
+закрашены, зоны сняты, остальные блоки плитки байт в байт оригинальные. В
+отчёте сборки это строки `generated: ... globalmap/full/<n>.jpg` и `map: N
+squares and M caption boxes painted over and Z war zones taken off in K
+tiles`; зоны добавляют сборке около 30 секунд. Свои объекты локаций из `client/objects/` —
 `tools/custom_objects.py`: каждый становится файлом
 `locations/libs/sprite/<id>.swf` (или `locations/libs/background/<id>.swf`),
 в отчёте это строки `object: ...` и `objects: N from client/objects/`. Объект,

@@ -5,11 +5,14 @@ After the cut of Вади-Хальфа (2026-10-09) the owner saw the names of t
 removed places gone and their squares still on the map: the squares are
 pixels of the map's picture, res/globalmap/full/<n>.jpg. map_cells paints
 them over in the tiles every client release carries (client/build.py) and
-bootstrap_http serves on a local run.
+bootstrap_http serves on a local run. After the cut of the camps across the
+river (2026-10-12) the owner saw their war zones still there, a red circle
+with blue arrows round each camp: map_cells takes those off first.
 
 Runs everywhere on pictures made here: the plan against data/retired.json,
 data/map_labels.json and data/settlements.json; the JPEG blocks; the
-painting over on a made map whose ground is known. With the original's
+painting over on a made map whose ground is known, and a war zone on
+another. With the original's
 tiles under LAVA_RES/globalmap/full it holds the real map to the same (CI's
 extras once they carry the tiles, or a res/ whose tiles come from the
 release store by client/base.txt). An installed client is no such res any
@@ -136,9 +139,39 @@ try:
     check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's and the"
           " camp 429's, Halfa's two, KKND's and the two below it, the kimberlite pipe's, Абри's island"
           " camp's, Абри's, Blackwater's east of it, the two of Liberty by Абри, Абу-Хамед's two, Донгола's,"
-          " Абу-Хамед's camp's across the river",
+          " Абу-Хамед's camp's across the river; and the war zones' (Донгола's on two, 16054 the other)",
           plan.tiles(), [13753, 13754, 14010, 14011, 14266, 14267, 14531, 14774, 14775, 14777, 15032, 15288,
-                         15809, 15811, 16055, 16064])
+                         15809, 15811, 16054, 16055, 16064])
+    # The camps across the river had each a war zone painted round them
+    # (the owner, 2026-10-12: «ты с карты не убрал лагеря за рекой»): a red
+    # tint over a circle 245 pixels across with dark blue arrows into it,
+    # Донгола's on two tiles with a seam where they meet.
+    check("the four war zones of the camps across the river, each on the tiles it was painted on, its circle"
+          " round the camp's village, three arrows each and Донгола's seam",
+          [(z.was, z.tiles, M.tile_of(int(z.centre[0]), int(z.centre[1])), round(z.radius),
+            len(z.arrows), len(z.seams)) for z in plan.zones],
+          [("429 Вади-Хальфа", [13753], 13753, 122, 3, 0), ("430 Абри", [14774], 14774, 122, 3, 0),
+           ("431 Донгола", [16054, 16055], 16054, 123, 3, 1), ("432 Абу-Хамед", [16064], 16064, 122, 3, 0)])
+    camp_px = {429: (5943, 1723), 430: (5850, 1851), 431: (5864, 2002), 432: (6168, 1989)}
+    check("  ..each camp's square on its circle's rim or inside it",
+          [round(math.hypot(8 * camp_px[int(z.was[:3])][0] + 4 - z.centre[0],
+                            8 * camp_px[int(z.was[:3])][1] + 4 - z.centre[1]) - z.radius) <= 5
+           for z in plan.zones], [True] * 4)
+    check("  ..the tint pure red, at an alpha of 0.09-0.10, nothing of it in the middle",
+          (plan.tint.rgb, [0.09 <= (z.alpha or plan.tint.alpha) <= 0.10 for z in plan.zones],
+           0 < plan.tint.clear < plan.tint.full < 122), ((255, 0, 0), [True] * 4, True))
+    zone_px = {z.was: set().union(*[M.polygon_pixels(p) for p in z.arrows + z.seams]) for z in plan.zones}
+    check("  ..every arrow and seam on its zone's tiles, and none of them over another",
+          ([sorted({M.tile_of(*p) for p in px} - set(z.tiles)) for z, px in zip(plan.zones, zone_px.values())],
+           sum(len(px) for px in zone_px.values()) == len(set().union(*zone_px.values()))),
+          ([[], [], [], []], True))
+    check("  ..the letters «Поселок» painted over the arrows of Вади-Хальфа and Абри in a box each",
+          [z.letters for z in plan.zones], [[(47489, 13688, 47525, 13696)], [(46732, 14713, 46768, 14718)], [], []])
+    check("polygon_pixels: a square's points, its edges and corners counted, and a triangle's",
+          (sorted(M.polygon_pixels([(0, 0), (3, 0), (3, 2), (0, 2)])) == [(x, y) for x in range(4) for y in range(3)],
+           sorted(M.polygon_pixels([(0, 0), (4, 0), (0, 4)]))
+           == sorted((x, y) for x in range(5) for y in range(5) if x + y <= 4)),
+          (True, True))
 
     def refused(doc, retired_doc=None):
         p = os.path.join(W, "cells.json")
@@ -164,6 +197,21 @@ try:
           (True, True))
     check("a good file loads", refused({"cells": {"2,2": "x"}, "keep": {"3,3": "y"},
                                         "captions": [{"was": "A", "why": "x", "boxes": [[0, 0, 9, 9]]}]}), None)
+    TINT = {"rgb": [255, 0, 0], "alpha": 0.09, "clear": 20, "full": 30, "edge": 2, "why": "x"}
+    ZONE = {"was": "Z", "why": "x", "tiles": [0], "centre": [100, 100], "radius": 40,
+            "arrows": [[[10, 10], [30, 10], [30, 20]]], "letters": [[40, 40, 60, 50]]}
+    check("a zone loads with its tint; refused: with no tint, without its why, off its tiles (its centre, an"
+          " arrow's point, its letters), a tint without its why or of an alpha past a half, two zones of a name",
+          (refused({"tint": TINT, "zones": [ZONE]}),
+           bool(refused({"zones": [ZONE]})),
+           bool(refused({"tint": TINT, "zones": [dict(ZONE, why="")]})),
+           bool(refused({"tint": TINT, "zones": [dict(ZONE, centre=[300, 100])]})),
+           bool(refused({"tint": TINT, "zones": [dict(ZONE, arrows=[[[10, 10], [300, 10], [30, 20]]])]})),
+           bool(refused({"tint": TINT, "zones": [dict(ZONE, letters=[[250, 10, 260, 20]])]})),
+           bool(refused({"tint": dict(TINT, why=""), "zones": [ZONE]})),
+           bool(refused({"tint": dict(TINT, alpha=0.6), "zones": [ZONE]})),
+           bool(refused({"tint": TINT, "zones": [ZONE, ZONE]}))),
+          (None, True, True, True, True, True, True, True, True))
 
     # --- jpeg_blocks: blocks in, blocks out -------------------------------------------------
     print("jpeg_blocks")
@@ -322,14 +370,18 @@ try:
     made = {M.tile_path(0): make_tile(0), M.tile_path(1): make_tile(1)}
 
     def run(tiles, plan_):
+        """What map_cells.apply does, kept apart: the war zones taken off
+        (laid), then the squares and captions painted over (painted)."""
         read = tiles.get
         canvas = M.Canvas(read)
         before_sq = M.Squares(M.Canvas(read))
+        laid, zreport = M.clear_zones(canvas, plan_)
         found, kept, painted, report = M.erase(canvas, plan_)
         out, blocks = canvas.encode()
         new = {M.tile_path(n): b for n, b in out.items()}
         after_canvas = M.Canvas(lambda p: new.get(p) or read(p))
-        return dict(found=found, kept=kept, painted=painted, report=report, out=new, blocks=blocks,
+        return dict(found=found, kept=kept, painted=painted, laid=laid, report=zreport + report, out=new,
+                    blocks=blocks,
                     before=M.Canvas(read), after=after_canvas, before_sq=before_sq,
                     after_sq=M.Squares(after_canvas))
 
@@ -357,15 +409,16 @@ try:
         return max(abs(u - v) for u, v in zip(a, b))
 
     def moved(rr, tiles):
-        """How far the pixels not painted moved, over the tiles that changed:
-        (largest, share of those that moved at all that moved by 2 or less)."""
+        """How far the pixels not painted (nor laid by a war zone) moved, over
+        the tiles that changed: (largest, share of those that moved at all
+        that moved by 2 or less)."""
         most, count, small = 0, 0, 0
         for path in rr["out"]:
             n = int(path.rsplit("/", 1)[1].split(".")[0])
             X0, Y0 = (n % 256) * 256, (n // 256) * 256
             for X in range(X0, X0 + 256):
                 for Y in range(Y0, Y0 + 256):
-                    if (X, Y) in rr["painted"]:
+                    if (X, Y) in rr["painted"] or (X, Y) in rr["laid"]:
                         continue
                     d = diff(rr["before"].original(X, Y), rr["after"].original(X, Y))
                     if d:
@@ -447,7 +500,7 @@ try:
         for path, data in rr["out"].items():
             n = int(path.rsplit("/", 1)[1].split(".")[0])
             got = changed_blocks(tiles_before[path], data)
-            stray[n] = sorted(got - painted_blocks(rr["painted"], n, J.Jpeg(tiles_before[path])))
+            stray[n] = sorted(got - painted_blocks(rr["painted"] | rr["laid"], n, J.Jpeg(tiles_before[path])))
             count += len(got)
         return stray, count
 
@@ -526,6 +579,94 @@ try:
            M.outside([(120, 128, 128), (90, 128, 128), (120, 128, 200)], [(108, 132), (116, 140), (116, 140)]),
            M.outside([(0, 0, 0)], None)),
           (True, 2, 0))
+
+    # --- a war zone on a made map --------------------------------------------------------------
+    # The circle as the map's makers painted it: pure red laid over the
+    # ground at an alpha rising from the middle to the rim, on tile 0 only
+    # though the circle runs on into tile 1 (Вади-Хальфа's stops at its
+    # tile's top row so), a thin yellowish line on its rim; an opaque dark
+    # blue arrow over it; a tan square painted over the tint.
+    print("a war zone on a made map")
+    tint = M.Tint((255, 0, 0), 0.09, 20, 30, 2.0)
+    NAVY = (20, 40, 120)
+    arrow = [(186, 92), (191, 89), (218, 110), (213, 115)]
+    arrow_px = M.polygon_pixels(arrow)
+    zone = M.Zone("Z", "t", [0], (225.4, 120.6), 40.0, arrows=[[(183, 91), (191, 85), (222, 109), (214, 119)]])
+    zplan = M.Plan({}, [], {}, zones=[zone], tint=tint)
+    zone_px = M.polygon_pixels(zone.arrows[0])
+    SQ = (192, 136)
+
+    def zone_rgb(X, Y):
+        """The made picture: (r, g, b) of a pixel, and that of the ground under it."""
+        g = ground(X, Y)
+        p = g
+        r_ = math.hypot(X + 0.5 - zone.centre[0], Y + 0.5 - zone.centre[1])
+        if X < 256:
+            a = M.zone_alpha(tint, zone, r_)
+            p = tuple((1 - a) * c + a * t for c, t in zip(p, tint.rgb))
+            # the line: a blue down by 12 at its middle, 0.3 inside the rim
+            p = (p[0], p[1], p[2] - 12 * max(0.0, 1 - abs(r_ - zone.radius + 0.3) / 1.2))
+        if (X, Y) in arrow_px:
+            p = NAVY
+        if SQ[0] <= X <= SQ[0] + 8 and SQ[1] <= Y <= SQ[1] + 8:
+            edge = X in (SQ[0], SQ[0] + 8) or Y in (SQ[1], SQ[1] + 8)
+            if not edge:
+                p = TAN
+            elif (X + Y) % 4:
+                p = OUTLINE
+        return p, g
+
+    def zone_tile(tx):
+        planes = [[[0] * 256 for _ in range(256)] for _ in range(3)]
+        for Y in range(256):
+            for x in range(256):
+                v = ycc(zone_rgb(256 * tx + x, Y)[0])
+                for ci in range(3):
+                    planes[ci][Y][x] = max(0, min(255, int(round(v[ci]))))
+        fine = tuple(tuple(max(1, (q + 2) // 4) for q in t) for t in (J.STD_LUMA, J.STD_CHROMA))
+        return J.make(256, 256, planes, qtables=fine)
+
+    zmade = {M.tile_path(0): zone_tile(0), M.tile_path(1): zone_tile(1)}
+    rz = run(zmade, zplan)
+    check("the arrow's polygon of the data holds the arrow painted", sorted(arrow_px - zone_px), [])
+    check("only the zone's tile changes, though the circle runs on into the next one",
+          sorted(rz["out"]), [M.tile_path(0)])
+
+    def toward(canvas, pixels, ch):
+        """Mean and mean size of (canvas - ground) in an RGB channel over pixels."""
+        d = [M.rgb(canvas.original(*p))[ch] - zone_rgb(*p)[1][ch] for p in pixels]
+        return sum(d) / len(d), sum(abs(v) for v in d) / len(d)
+
+    sq_px = M.frame_pixels((SQ[0], SQ[1], ("tan",)))
+    disk = [(X, Y) for X in range(186, 256) for Y in range(82, 160)
+            if 32 <= math.hypot(X + 0.5 - 225.4, Y + 0.5 - 120.6) <= 37
+            and (X, Y) not in zone_px and (X, Y) not in sq_px]
+    rim = [(X, Y) for X in range(186, 256) for Y in range(82, 160)
+           if abs(math.hypot(X + 0.5 - 225.4, Y + 0.5 - 120.6) - 40) < 0.8
+           and (X, Y) not in zone_px and (X, Y) not in sq_px]
+    gb, ga = toward(rz["before"], disk, 1), toward(rz["after"], disk, 1)
+    bb, ba = toward(rz["before"], rim, 2), toward(rz["after"], rim, 2)
+    check("the tint is taken off: green under the circle's strongest tint off the ground by %+.1f on average"
+          " before, %+.1f after (%.1f in size); blue on the rim's line %+.1f before, %+.1f after"
+          % (gb[0], ga[0], ga[1], bb[0], ba[0]),
+          (gb[0] < -12, abs(ga[0]) < 1.5, ga[1] < 3, bb[0] < -5, abs(ba[0]) < 2.5), (True,) * 5)
+    blue_left = [p for p in zone_px - sq_px if (lambda c: c[2] > c[0] + 20)(M.rgb(rz["after"].original(*p)))]
+    errors = [abs(rz["after"].original(*p)[0] - ycc(zone_rgb(*p)[1])[0]) for p in zone_px]
+    check("the arrow is gone (%d of its blue pixels left) and ground like the ground under it is in its"
+          " place: luma off by %.1f on average" % (len(blue_left), sum(errors) / len(errors)),
+          (blue_left, sum(errors) / len(errors) < 14), ([], True))
+    check("the square painted over the tint stays where it was, as it was (largest change of a sample)",
+          (rz["after_sq"].at(24, 17), max(diff(rz["before"].original(*p), rz["after"].original(*p))
+                                          for p in sq_px) <= 3),
+          (rz["before_sq"].at(24, 17), True))
+    stray, count = only_painted(zmade, rz)
+    most, share = moved(rz, zmade)
+    check("only blocks with a pixel of the zone laid change (%d), and a pixel not laid moves by its rounding:"
+          " %d at most" % (count, most), (stray, most <= 16), ({0: []}, True))
+    check("the same picture and plan give the same bytes", run(zmade, zplan)["out"] == rz["out"], True)
+    check("a client without the zone's tile gets nothing and is told",
+          M.clear_zones(M.Canvas(lambda p: None), zplan),
+          (set(), ["zone Z: no tile globalmap/full/0.jpg in this client, left alone"]))
 
     # The local run: bootstrap_http serves res/ through map_cells.Served.
     res = os.path.join(W, "res")
@@ -629,13 +770,14 @@ try:
                   sorted({M.tile_of(X0 + 4, Y0 + 4) for X0, Y0, _k in real["found"].values()
                           if [(c.h, c.v) for c in J.Jpeg(read(M.tile_path(M.tile_of(X0 + 4, Y0 + 4)))).comps]
                           != [(1, 1)] * 3}), [])
-            check("thirteen tiles change: 13753 for НИЛ-1 and the camp 429 with its letters, 13754 and 14010 in"
-                  " Halfa, 14011 for KKND, 14531 the kimberlite pipe, 14774 Абри's island camp, 14775 Абри,"
-                  " 14777 Blackwater, 15288 Liberty by Абри, 15809 Абу-Хамед, 15811 Liberty by Абу-Хамед, 16055"
-                  " Донгола and its camp, 16064 Абу-Хамед's camp across the river",
+            check("fourteen tiles change: 13753 for НИЛ-1 and the camp 429 with its letters and war zone, 13754"
+                  " and 14010 in Halfa, 14011 for KKND, 14531 the kimberlite pipe, 14774 Абри's island camp and its"
+                  " zone, 14775 Абри, 14777 Blackwater, 15288 Liberty by Абри, 15809 Абу-Хамед, 15811 Liberty by"
+                  " Абу-Хамед, 16054 and 16055 Донгола's camp's zone, 16055 Донгола and its camp, 16064"
+                  " Абу-Хамед's camp across the river and its zone",
                   sorted(real["out"]),
                   sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15288,
-                                                  15809, 15811, 16055, 16064)))
+                                                  15809, 15811, 16054, 16055, 16064)))
             check("no square is left on the thirty-two cells", {c: real["after_sq"].at(*c) for c in plan.cells},
                   {c: None for c in plan.cells})
             around = sorted({(x + dx, y + dy) for x, y in plan.cells for dx in range(-3, 4) for dy in range(-3, 4)}
@@ -677,7 +819,7 @@ try:
                   " coefficients (%d changed)" % count,
                   (stray, count > 0),
                   ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15288, 15809, 15811,
-                                    16055, 16064)}, True))
+                                    16054, 16055, 16064)}, True))
             most, share = moved(real, every)
             check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
                   " that move by 2 or less" % (most, 100 * share), (most <= 16, share >= 0.9), (True, True))
@@ -715,11 +857,85 @@ try:
                   " around it by more than 15 (Донгола's first patch carried in the river's black line, 2-3 pixels"
                   " wide; Хальфа's lake shore is really there)", beyond(real), {})
             check("  ..and every square is painted from a patch of photograph",
-                  [line.strip() for line in real["report"] if "smooth" in line], [])
+                  [line.strip() for line in real["report"] if "smooth" in line and not line.startswith("zone ")],
+                  [])
             out_real, _report = M.apply(read)
             check("map_cells.apply gives these tiles", out_real == real["out"], True)
+
+            # The war zones of the camps across the river (the owner,
+            # 2026-10-12: «ты с карты не убрал лагеря за рекой»).
+            check("the war zones change their own tiles and none other",
+                  sorted({M.tile_of(*p_) for p_ in real["laid"]}), sorted({n for z in plan.zones for n in z.tiles}))
+
+            def rim_steps(canvas, z, skip):
+                """The step across a zone's rim, the ground 3-6 pixels inside
+                less that 3-6 outside, in each of Y, Cb, Cr: the middle of
+                the steps of 120 arcs."""
+                cx, cy = z.centre
+                arcs = {}
+                for Y in range(int(cy - z.radius - 7), int(cy + z.radius + 8)):
+                    for X in range(int(cx - z.radius - 7), int(cx + z.radius + 8)):
+                        if M.tile_of(X, Y) not in z.tiles or (X, Y) in skip:
+                            continue
+                        d = math.hypot(X + 0.5 - cx, Y + 0.5 - cy) - z.radius
+                        if 3 <= abs(d) <= 6:
+                            a = int((math.atan2(Y + 0.5 - cy, X + 0.5 - cx) + math.pi) / (2 * math.pi) * 120) % 120
+                            arcs.setdefault((a, d > 0), []).append(canvas.original(X, Y))
+                steps = []
+                for a in range(120):
+                    if len(arcs.get((a, False), ())) >= 4 and len(arcs.get((a, True), ())) >= 4:
+                        steps.append([M._median(arcs[(a, False)], i) - M._median(arcs[(a, True)], i)
+                                      for i in range(3)])
+                return [round(M._median(steps, i), 1) for i in range(3)]
+
+            kept_over = {}
+            fills = set()
+            for z in plan.zones:
+                sq_ = M.Squares(real["before"])
+                px = set()
+                for y in range(int(z.centre[1] - z.radius) // 8 - 1, int(z.centre[1] + z.radius) // 8 + 2):
+                    for x in range(int(z.centre[0] - z.radius) // 8 - 1, int(z.centre[0] + z.radius) // 8 + 2):
+                        sq = sq_.at(x, y)
+                        if sq is not None and M.painted_square(real["before"], sq) and (x, y) not in plan.cells:
+                            px |= M.frame_pixels(sq)
+                            fills |= {(sq[0] + i, sq[1] + j) for i in range(1, 8) for j in range(1, 8)}
+                for box in z.letters:
+                    px |= M.letters_pixels(real["before"], box)
+                    fills |= M.letters_pixels(real["before"], box)
+                kept_over[z.was] = px
+            marks = {z.was: set().union(*[M.polygon_pixels(p_) for p_ in z.arrows + z.seams]) for z in plan.zones}
+            steps = {z.was: (rim_steps(real["before"], z, marks[z.was] | kept_over[z.was]),
+                             rim_steps(real["after"], z, marks[z.was] | kept_over[z.was])) for z in plan.zones}
+            check("each circle's tint is gone: the step across its rim, inside less outside, in Y, Cb, Cr: %s"
+                  % "; ".join("%s %s -> %s" % (w, b, a) for w, (b, a) in steps.items()),
+                  {w: (b[2] >= 6, abs(a[0]) <= 4 and abs(a[1]) <= 1.5 and abs(a[2]) <= 1.5)
+                   for w, (b, a) in steps.items()},
+                  {z.was: (True, True) for z in plan.zones})
+
+            def navy(canvas, pixels):
+                return sum(1 for p_ in pixels if (lambda c: c[2] > c[0] + 20)(M.rgb(canvas.original(*p_))))
+            gone = {z.was: (navy(real["before"], marks[z.was] - kept_over[z.was]),
+                            navy(real["after"], marks[z.was] - kept_over[z.was])) for z in plan.zones}
+            check("the arrows are gone: dark blue pixels in their polygons before and after: %s"
+                  % "; ".join("%s %d -> %d" % (w, b, a) for w, (b, a) in gone.items()),
+                  {w: (b > 500, a) for w, (b, a) in gone.items()}, {z.was: (True, 0) for z in plan.zones})
+            seam_rows = [Y for Y in range(15890, 16112) if not 15991 <= Y <= 15999]
+
+            def dip(canvas):
+                d = sorted((canvas.original(46847, Y)[0] + canvas.original(46848, Y)[0]) / 2
+                           - (canvas.original(46843, Y)[0] + canvas.original(46852, Y)[0]) / 2 for Y in seam_rows)
+                return d[len(d) // 2]
+            check("Донгола's seam is gone: the two columns where its tiles meet darker than the ground beside"
+                  " them by %.1f before, %.1f after" % (-dip(real["before"]), -dip(real["after"])),
+                  (dip(real["before"]) < -15, abs(dip(real["after"])) < 4), (True, True))
+            check("the squares painted over the zones and the letters over their arrows stay as they were: the"
+                  " squares' fills and the letters with the pixels round them (%d pixels, the largest change of a"
+                  " sample; the outlines beside a camp's square that goes are the check of the squares above)"
+                  % len(fills),
+                  max(diff(real["before"].original(*p_), real["after"].original(*p_)) for p_ in fills) <= 3, True)
             check("a local run serves the same bytes (bootstrap_http)",
-                  {p: M.Served(RES).get(p) == data for p, data in out_real.items()}, {p: True for p in out_real})
+                  (lambda served_: {p: served_.get(p) == data for p, data in out_real.items()})(M.Served(RES)),
+                  {p: True for p in out_real})
 
             # client/build.py's generated layer, over a store of the original tiles
             sys.path.insert(0, os.path.join(ROOT, "client"))

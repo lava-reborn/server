@@ -1433,6 +1433,10 @@ if __name__ == "__main__":
     print("res serve: %s" % ("on" if SERVE_RES else "off (registration only)"))
     # Build the 1.9 MB string table before the client can ask for it.
     names.document()
+    if SERVE_RES:
+        # and the map's tiles with the places taken out of the game painted
+        # over, half a minute's work, in the background (map_cells.Served)
+        MAP_TILES.warm()
     httpd = Server((HTTP_HOST, HTTP_PORT), Handler)
     # docker stop sends SIGTERM, whose default action kills the process where
     # it stands. Nothing here is worth saving, but the listener should close

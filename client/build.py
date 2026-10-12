@@ -431,9 +431,11 @@ class Build:
                 self.files[p][0][:16], p, len(tiles[p])))
         squares = sum(1 for line in done if " square at " in line)
         captions = sum(1 for line in done if line.startswith("caption ") and ": no " not in line)
+        zones = sum(1 for line in done if line.startswith("zone ") and " the circle round " in line)
         missed = [line for line in done if ": no " in line]
-        self.report.append("map:       %d squares and %d caption boxes painted over in %d tiles%s" % (
-            squares, captions, len(tiles), "".join("; " + m for m in missed)))
+        self.report.append("map:       %d squares and %d caption boxes painted over%s in %d tiles%s" % (
+            squares, captions, " and %d war zones taken off" % zones if zones else "", len(tiles),
+            "".join("; " + m for m in missed)))
         objects, lines = self.gen_custom_objects(set(self.base) | set(extra))
         for p in sorted(objects):
             self.put(p, objects[p], "generated")
