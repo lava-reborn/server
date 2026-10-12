@@ -500,7 +500,7 @@ try:
         for path, data in rr["out"].items():
             n = int(path.rsplit("/", 1)[1].split(".")[0])
             got = changed_blocks(tiles_before[path], data)
-            stray[n] = sorted(got - painted_blocks(rr["painted"] | rr["laid"], n, J.Jpeg(tiles_before[path])))
+            stray[n] = sorted(got - painted_blocks(rr["painted"] | rr.get("laid", set()), n, J.Jpeg(tiles_before[path])))
             count += len(got)
         return stray, count
 
