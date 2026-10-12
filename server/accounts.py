@@ -746,6 +746,8 @@ def migrate(db):
     run_once(db, HALFA_CUT_FIX, relocate_halfa_cut)
     run_once(db, HALFA_FSC_FIX, relocate_halfa_fsc)
     run_once(db, ABRI_CUT_FIX, relocate_abri_cut)
+    run_once(db, RIVER_CAMPS_FIX, relocate_river_camps)
+    run_once(db, ABRI_CLOTHES_FIX, relocate_abri_clothes)
     # Only with the client's tables to tell a premium thing by: a process
     # without them (a tool run outside the container) leaves the fix for
     # the next start that has them, rather than writing it down as done
@@ -1024,6 +1026,65 @@ def relocate_abri_cut(db):
                 ABRI_CUT_FIX, len(inside), "/".join(map(str, ABRI_CUT_PLACES)), loc,
                 inside, len(homes))
     return dict(moved=len(inside), homes=len(homes))
+
+
+def _move_out(db, fix, places, to):
+    """Whoever is in one of places, or calls one home, to the place to
+    (loc, gx, gy), as the cuts above move them; the count goes to the log as
+    a warning, for the reason relocate_retired_places' is one. Returns the
+    counts."""
+    loc, gx, gy = to
+    marks = ", ".join("?" * len(places))
+    inside = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE loc IN (%s) ORDER BY id" % marks, places).fetchall()]
+    homes = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE home_loc IN (%s) ORDER BY id" % marks,
+        places).fetchall()]
+    db.execute("UPDATE characters SET loc = ?, pos = NULL, gx = ?, gy = ?, on_map = 0"
+               " WHERE loc IN (%s)" % marks, (loc, gx, gy) + tuple(places))
+    db.execute("UPDATE characters SET home_loc = ?, home_gx = ?, home_gy = ?"
+               " WHERE home_loc IN (%s)" % marks, (loc, gx, gy) + tuple(places))
+    log.warning("  ..    %s: %d character(s) moved out of %s to %d %s, %d home(s) moved",
+                fix, len(inside), "/".join(map(str, places)), loc, inside, len(homes))
+    return dict(moved=len(inside), homes=len(homes))
+
+
+# The owner's cut of the camps across the river (2026-10-12, «убери во всех
+# городах лагеря за рекой»): the resistance camps 429 (Вади-Хальфа, in
+# Заречье), 430 (Абри's island, never on a cell), 431 (Донгола) and 432
+# (Абу-Хамед) are off the map (data/retired.json places). A character saved
+# in one, or calling one home, goes to Причал (41, on 5965,1728), as the cut
+# of (P) sent them from Донгола's and Абу-Хамед's places: the pier is where
+# the boat to 429 started, and Донгола and Абу-Хамед have no ride open. No
+# journal step: no quest gives, takes, asks for or points into a camp, and
+# the boat there and back (412, 413) was off from the day it was built, so
+# no journal can hold it (server/test_river_camps_cut.py holds that).
+RIVER_CAMPS_FIX = "retire-river-camps-2026-10-12"
+RIVER_CAMPS = (429, 430, 431, 432)
+
+
+def relocate_river_camps(db):
+    """Whoever is in a camp across the river, or calls one home, to Причал;
+    returns the counts it logs."""
+    return _move_out(db, RIVER_CAMPS_FIX, RIVER_CAMPS, RETIRED_PLACES_TO)
+
+
+# The owner's cut of Абри's clothing market (2026-10-12, «и ещё убери
+# локацию торговцы одеждой в Абри»): the market 378 is off the map (data/
+# retired.json places), as Вади-Хальфа's 468 since 2026-10-09. A character
+# saved in it, or calling it home, goes to the port market 187 beside it, as
+# the cut of Абри's places of the same day sends them. A run_once of its own:
+# that cut's has run on production already, and a place added to its list
+# would never be looked at there. No journal step: no quest gives, takes,
+# asks for or points into the market.
+ABRI_CLOTHES_FIX = "retire-abri-clothes-2026-10-12"
+ABRI_CLOTHES_PLACES = (378,)
+
+
+def relocate_abri_clothes(db):
+    """Whoever is in Абри's clothing market, or calls it home, to the port
+    market 187; returns the counts it logs."""
+    return _move_out(db, ABRI_CLOTHES_FIX, ABRI_CLOTHES_PLACES, ABRI_CUT_TO)
 
 
 # The same cut for the things: a premium thing (items.premium, 6 860 types)

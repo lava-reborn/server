@@ -42,6 +42,12 @@ window of that place shows, a gold thing is paid in gold and an ordinary one
 in afro with one cmdAck each, and the wrong currency is refused; Ваккас
 sells a (G) belt for gold alone and does not buy it back.
 
+The medicine sellers of the same file (combat_meds, peace_meds, the owner's
+«чтобы везде всё было по уровням» of 2026-10-12) are server/test_med_stalls'
+to pin: here they are sellers like the others, with no weapon or set piece
+on their stalls, and their medicine is neither a seller's band nor its own
+list.
+
     LAVA_RES=.../res python3 server/test_stall_bands.py
 """
 import asyncio
@@ -169,6 +175,12 @@ def line_ware(t):
     return bool(LINE.match(name) or KNIFE.match(name) or t in PIECES)
 
 
+def med_line(t):
+    """A medicine of the two lines the bands sell by tier (Med_Battle_, Med_Pacific_):
+    server/test_med_stalls' to pin, neither a band of this suite nor an own list."""
+    return cat[t][0] == items.HEAL and cat[t][1].startswith(("Med_Battle_", "Med_Pacific_"))
+
+
 check("no trader of a city's place that is no seller offers a gun of a line, a knife or a"
       " set piece of its own",
       sorted((p, t) for p, types in AT.items() for t in types
@@ -179,9 +191,10 @@ check("  ..and no seller's own list in data/npcs.json holds one: they come from 
              and any(weapon_or_piece(x) for x in npcs.stock(t))), [])
 LEFT_ALONE = sorted((p, t) for p, types in AT.items() for t in types
                     if t not in shop_bands.SELLERS)
-# The bouquets: «Букет» (gift_girl_4) in Абри's slums and Абу-Хамед's living quarter,
-# «Цветы для любимого» (stv_flowers_m_g) on Донгола's black market.
-LEFT_HOLDING = [(103, 1215), (127, 1968), (255, 1962)]
+# The bouquets: «Букет» (gift_girl_4) in Абри's slums and Абу-Хамед's living quarter.
+# Донгола's black market had a third, «Цветы для любимого» (stv_flowers_m_g), on Фарюк's
+# (1215) list by a shifted link of the wiki; he sells Донгола's medicine since 2026-10-12.
+LEFT_HOLDING = [(127, 1968), (255, 1962)]
 check("  ..and every trader of a city's place that is no seller sells its own list there, as"
       " anywhere: the bands take nothing off it (the flower sellers keep their bouquets,"
       " a cold arm to the client)",
@@ -210,8 +223,11 @@ def gold_of(t):
 
 @functools.lru_cache(maxsize=None)
 def expect(kind, lo, hi):
-    """The band's things of a kind, worked out from the catalogue and data/sets.json."""
+    """The band's things of a kind, worked out from the catalogue and data/sets.json;
+    nothing for a kind of medicine, which server/test_med_stalls works out."""
     out = set()
+    if kind in shop_bands.MED_KINDS:
+        return out
     if kind == "sets":
         for s in SETS_DOC.values():
             if s["variant"] in ("A", "G") and lo <= s["level"] <= hi:
@@ -248,7 +264,7 @@ for t, places in sorted(WHERE.items()):
         stall = items.stock_for(t, p)
         stalls[(p, t)] = stall
         band_part = [x for x in stall if weapon_or_piece(x)]
-        rest = [x for x in stall if not weapon_or_piece(x)]
+        rest = [x for x in stall if not weapon_or_piece(x) and not med_line(x)]
         if kinds:
             want = set()
             for k in kinds:
@@ -256,7 +272,8 @@ for t, places in sorted(WHERE.items()):
             if sorted(band_part) != sorted(want) or len(band_part) != len(set(band_part)):
                 wrong[(p, t)] = (sorted(set(band_part) - want), sorted(want - set(band_part)))
             if band_part != stall[:len(band_part)] or \
-                    rest != [x for x in own if not weapon_or_piece(x) and not items.premium(x)]:
+                    rest != [x for x in own if not weapon_or_piece(x) and not med_line(x)
+                             and not items.premium(x)] or rest != stall[len(stall) - len(rest):]:
                 gone_own[(p, t)] = rest
         else:
             cut = [x for x in own if not weapon_or_piece(x) or lo <= level_of(x) <= hi]
@@ -274,18 +291,27 @@ def ag(stall):
     return (sum(1 for x in part if not gold_of(x)), sum(1 for x in part if gold_of(x)))
 
 
+# The medicine sellers (2026-10-12) hold no weapon or set piece: (0, 0) each -- the
+# «Патроны и лекарства» of the valley's truck (5225) and of the prison yards (2180, 2181, 880)
+# among them.
 COUNTS = {
     "Нубийская долина": {5212: (9, 8), 5221: (9, 8), 5222: (4, 2), 5213: (15, 15), 5223: (15, 15),
-                         1187: (6, 0)},
+                         1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0)},
     "Вади-Хальфа": {1200: (4, 4), 1201: (10, 10), 1202: (3, 3), 1203: (2, 2), 1152: (3, 3),
-                    1224: (19, 19), 1205: (15, 15), 1204: (15, 15), 650: (15, 15), 2391: (0, 7)},
+                    1224: (19, 19), 1205: (15, 15), 1204: (15, 15), 650: (15, 15), 2391: (0, 7),
+                    1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0)},
     "Абри": {1159: (2, 2), 1161: (4, 4), 1163: (10, 10), 1162: (10, 10), 1164: (3, 3),
              1225: (26, 26), 1166: (10, 10), 1165: (10, 10), 5160: (10, 10), 5161: (10, 10),
-             1168: (0, 0), 2391: (0, 6)},
-    "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (6, 6), 1153: (3, 3), 1214: (2, 2),
-                1229: (25, 25), 1213: (20, 20), 1233: (20, 20), 5161: (20, 20), 2391: (0, 8)},
-    "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (3, 3),
-                  1223: (20, 20), 1219: (20, 20), 5161: (20, 20), 2391: (0, 9)},
+             1168: (0, 0), 2391: (0, 6), 1167: (0, 0), 207: (0, 0)},
+    # The black market's machine guns at «Пулеметы и патроны» (1208), whom the wiki's article
+    # puts there; Серхио (1214), who had his list by a shifted link, sells battle medicine.
+    "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (6, 6), 1153: (3, 3), 1208: (2, 2),
+                1229: (25, 25), 1213: (20, 20), 1233: (20, 20), 5161: (20, 20), 2391: (0, 8),
+                207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0)},
+    # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
+    "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (0, 0),
+                  1223: (20, 20), 1219: (20, 20), 5161: (20, 20), 2391: (0, 9), 207: (0, 0),
+                  1222: (0, 0), 880: (0, 0)},
 }
 got = {}
 for (p, t), stall in stalls.items():
@@ -388,12 +414,13 @@ for p, types in AT.items():
             elif items.root_of(x) == items.FIRE_ARM:
                 GUNS_IN.setdefault(city_name, set()).add(x)
 check("every gun on a stall of a city has a round it chambers on sale in that city: Абри's"
-      " and Донгола's 9 mm sub-machine guns and 12-bore shotguns, Донгола's АС Вал -- all but"
-      " Хан Сэлл's ПП-19-01 Витязь at Абу-Хамед's port, a collectible of his own list whose"
-      " article names no round (the class's 9 mm), which no stall of the city ever sold",
+      " and Донгола's 9 mm sub-machine guns and 12-bore shotguns, Донгола's АС Вал, and Хан"
+      " Сэлл's ПП-19-01 Витязь at Абу-Хамед's port too since 2026-10-12, whose 9 mm no stall of"
+      " the city sold before the prison yard's supply man (880) sold every calibre of his"
+      " article «Снабженец»",
       sorted((c, x) for c, guns in GUNS_IN.items() for x in guns
              if not set(items.params_of(x)["comp_array"]) & ROUNDS_IN.get(c, set())),
-      [("Абу-Хамед", 7071)])
+      [])
 check("  ..and the band's guns of the class stalls, which the wiki had sell other rounds, find"
       " theirs at the stall itself: 9 mm at Абри's and Донгола's «Пистолет-пулеметы и патроны»,"
       " 12-bore at Абри's «Дробовики и патроны»",
@@ -408,8 +435,13 @@ biggest = max(stalls.items(), key=lambda kv: len(kv[1]))
 frame = max(len(protocol.frame("userInfo_Trader", id=1, name=t, type_list=s, pmod=1, smod=0.7,
                                rmod=0.3)) for (p, t), s in stalls.items())
 check("no stall of a city longer than 64 things (Локсли's 51 was the longest the live game"
-      " drew before), and its frame under 4 KiB",
-      (len(biggest[1]) <= 64, frame < 4096, biggest[0]), (True, True, (195, 1229)))
+      " drew before), and its frame under 4 KiB: the longest the prison yards' supply men's"
+      " (2026-10-12), 61, their town's battle line and the 49 rounds of their article -- 880"
+      " of Абу-Хамед's the first of the three by type; of the weapon stalls 1229 at Донгола's"
+      " oasis, 53",
+      (len(biggest[1]) <= 64, frame < 4096, biggest[0], len(biggest[1]),
+       max((len(s), (p, t)) for (p, t), s in stalls.items() if t not in (880, 2180, 2181))),
+      (True, True, (177, 880), 61, (53, (195, 1229))))
 check("  ..and every thing on them a type the client has (objects.xml), so it draws an icon",
       [x for x in ALL_ON if x not in cat], [])
 check("the place decides: 5161 sells Абри's 8-12, Донгола's 12-16 and Абу-Хамед's 16-20, so"

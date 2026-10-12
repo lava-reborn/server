@@ -112,11 +112,15 @@ try:
     check("  ..their files stay, so a character saved inside still loads",
           [world.location(i).fn for i in sorted(PLACES)],
           ["Upgraders_VH_P", "Upgraders_DN_P", "Upgraders_AH_P"])
+    # Абу-Хамед's resistance camp 432, which stood on 6160,1975, went with
+    # the cut of the camps across the river (2026-10-12,
+    # server/test_river_camps_cut.py); the masters' camp 131 and the quarter
+    # 127 beside 130's cell stay.
     check("the neighbours stay: Причал, the quarter 447, the valley's Arena 167 (Сет's"
-          " stall), Донгола's 79 and 96, Абу-Хамед's 432",
+          " stall), Донгола's 79 and 96, Абу-Хамед's 131 and 127",
           [table.get(c) for c in ((5965, 1728), (5968, 1719), (6270, 1831), (5877, 2011),
-                                  (5876, 2011), (6160, 1975))],
-          [PRICHAL, QUARTER, 167, 79, 96, 432])
+                                  (5876, 2011), (6183, 1977), (6183, 1975))],
+          [PRICHAL, QUARTER, 167, 79, 96, 131, 127])
     check("the run_once's places are the retired ones and the quarter they cut off,"
           " and its Причал is 41's own cell",
           (sorted(accounts.RETIRED_PLACES), accounts.RETIRED_PLACES_TO),

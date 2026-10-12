@@ -2230,12 +2230,37 @@
    "string_id": 10326,
    "text": "Ямка",
    "why": "Npc_Commoner000763 (art 1f_SmallHole), the hole of Q_Tresure5 on 5892,1866 (256), one of Зубери's three digs around Абри: the family's holes 759-763 share the one row 10326 'Ямка' (see 6512, the hole of Вади-Хальфа's Q_Tresure1)."
+  },
+  "1214": {
+   "string_id": 62161,
+   "text": "Серхио<Br>Боевая медицина",
+   "why": "dn_Med_battle at the Черный рынок of Донгола (103): the traders' block 62149-62166 runs city by city, two to four roles each -- Вади-Хальфа's Ваккас, Хамис, Люций, Магдалена (62149-62152), the oasis' Оружие and Торговец патронами, Абри's Алима, Гали, Торси, Мухсим (62155-62158), Донгола's Галия, Дари, Серхио, Фарюк (62159-62162), Абу-Хамед's Марат, Симона, Киплер, Курт (62163-62166) -- and each city's two medicine sellers are its *_Med_battle («Боевая медицина», the fast medicine) and *_Med_simple (or Abri_Med_slow_trd: «Лекарства и еда»), as Абри's Торси and Мухсим (1167, 1168). The wiki's 'Серхио' stands in the market's list and his article sells the battle medicine of 12_15 and 16_19 with their 20-dose packs; the owner's medicine by the cities' tiers of 2026-10-12."
+  },
+  "1215": {
+   "string_id": 62162,
+   "text": "Фарюк<Br>Лекарства и еда",
+   "why": "dn_Med_simple at the Черный рынок of Донгола (103): the traders' block 62149-62166 runs city by city, two to four roles each -- Вади-Хальфа's Ваккас, Хамис, Люций, Магдалена (62149-62152), the oasis' Оружие and Торговец патронами, Абри's Алима, Гали, Торси, Мухсим (62155-62158), Донгола's Галия, Дари, Серхио, Фарюк (62159-62162), Абу-Хамед's Марат, Симона, Киплер, Курт (62163-62166) -- and each city's two medicine sellers are its *_Med_battle («Боевая медицина», the fast medicine) and *_Med_simple (or Abri_Med_slow_trd: «Лекарства и еда»), as Абри's Торси and Мухсим (1167, 1168). The wiki's 'Фарюх' (its spelling) stands in the market's list and his article sells food, water and kits of 12_15 and 16_19; the original writes Фарюк."
+  },
+  "1221": {
+   "string_id": 62165,
+   "text": "Киплер<Br>Боевая медицина",
+   "why": "ah_Med_battle at the Вокзал of Абу-Хамед (126) and in Мероэ (58): the traders' block 62149-62166 runs city by city, two to four roles each -- Вади-Хальфа's Ваккас, Хамис, Люций, Магдалена (62149-62152), the oasis' Оружие and Торговец патронами, Абри's Алима, Гали, Торси, Мухсим (62155-62158), Донгола's Галия, Дари, Серхио, Фарюк (62159-62162), Абу-Хамед's Марат, Симона, Киплер, Курт (62163-62166) -- and each city's two medicine sellers are its *_Med_battle («Боевая медицина», the fast medicine) and *_Med_simple (or Abri_Med_slow_trd: «Лекарства и еда»), as Абри's Торси and Мухсим (1167, 1168). The wiki's 'Киплер' («Киплер подберет для вас нужную таблеточку!») sells the battle medicine of 12_15-20; his list had been tied to Марат (1219) by a shifted link."
+  },
+  "1222": {
+   "string_id": 62166,
+   "text": "Курт<Br>Лекарства и еда",
+   "why": "ah_Med_simple at the Вокзал of Абу-Хамед (126) and in Мероэ (58): the traders' block 62149-62166 runs city by city, two to four roles each -- Вади-Хальфа's Ваккас, Хамис, Люций, Магдалена (62149-62152), the oasis' Оружие and Торговец патронами, Абри's Алима, Гали, Торси, Мухсим (62155-62158), Донгола's Галия, Дари, Серхио, Фарюк (62159-62162), Абу-Хамед's Марат, Симона, Киплер, Курт (62163-62166) -- and each city's two medicine sellers are its *_Med_battle («Боевая медицина», the fast medicine) and *_Med_simple (or Abri_Med_slow_trd: «Лекарства и еда»), as Абри's Торси and Мухсим (1167, 1168). The wiki's 'Курт' sells food, water and kits of 12_15-20; his list had been tied to Шрам (2274) by a shifted link."
+  },
+  "1208": {
+   "string_id": 50655,
+   "text": "Пулеметы и патроны",
+   "why": "dn_MachineGuns, the machine-gun trader the wiki's article «Пулеметы и патроны» puts on the Черный рынок of Донгола (103, 5879x2012: РПД, AUG /Hbar, 7.62x39, 5.56x45), and the market's page names him beside Серхио. The original's run of the gun stalls' titles 50655-50659 ('Пулеметы и патроны', 'Автоматы и патроны', 'Пистолеты и патроны', 'Винтовки и патроны', 'Дробовики и патроны'); its first, the words Абу-Хамед's machine-gun stall (1216, ah_MachineGuns) shows by the wiki. No file of the location puts him down: data/placements.json does (2026-10-12)."
   }
  },
  "none": {
   "5208": "Npc_Trader000035 at 'Западный поселок': the traders' block has no row for it -- the offset steps from 10399 to 10398 exactly here -- and its stall is empty. The fan wiki's 'Бомани' was wrong: the original gives Бомани to 5218.",
   "639": "wh_modif_armor_g (art m2) in the black market's file (102): no row, and no resident of the wiki's black market list is left for it; the matcher's 62149 is Ваккас (1204). Out of the game since the owner's word of 2026-10-10 («надо убрать с хальфы wh_modif_armor_g», data/retired.json): no room stands it, so nobody sees it.",
-  "7660": "AQ000001 (art 119) in the four resistance camps 429-432: the only member of its family, no row, no wiki name.",
+  "7660": "AQ000001 (art 119) in the four resistance camps 429-432: the only member of its family, no row, no wiki name. The camps are out of the game since the owner's cut of 2026-10-12 («убери во всех городах лагеря за рекой», data/retired.json), so it stands nowhere.",
   "8236": "VOV_Q_022 in the oasis 62: a Victory Day quest thing, left out of every room by world.EVENT_TOKENS ('vov'); nobody sees it.",
   "8213": "FSC_U_000001 (art 118, an upgrader) at every Аэроплощадка (527-532, 538; Вади-Хальфа's, 528 on 5970,1727, off the map since the cut of the town's ФСЦ, 2026-10-10, and Абри's, 529 on 5865,1835, since the owner's Абри, 2026-10-12, for these two shown by their internal names over empty windows): no row. The two 'Фонд спасения цивилизаци' rows of the traders' block, 10453 'Старшина Миринков … Боеприпасы' and 10454 'Волонтер Маштаков … Лекарства', are the traders' own on their offset 10398 (members 55/56; 5671 stands in the Авиабаза ЦСЦ 427), the Фонд's two instructors 49107/49113 sit in the Apoc block beside Говард Хаксли (2192 -> 49108), and no wiki page names anybody at an Аэроплощадка.",
   "8214": "FSC_U_000002, the other of the pair at every Аэроплощадка (see 8213)."

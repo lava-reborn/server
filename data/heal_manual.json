@@ -1,8 +1,17 @@
 {
  "_meta": {
-  "about": "Numbers for heal items that have no wiki article, laid over the designed frame by server/items.py exactly the way a data/items_wiki.json record is (same keys, frame shape unchanged). A wiki record, where one exists, wins. DESIGNED, NOT RECOVERED: the original server kept these numbers and they are lost. Each record says in _designed what was chosen and in _source what is real.",
-  "decided": "2026-09-23, owner: trader Морис (5211) sells medicine for character levels 0-8, i.e. the level bands 0_3, 4_7 and 8_11, in every variant (A/P/G); the 20-dose packs take the single injector's numbers with 20 uses at 20 times the price; the (P) kits between Мини and Стандарт are interpolated.",
-  "fields": "ss_si_heal names as in server/items.py; g_cost in hundredths of G (0.01 G = 1), like items_wiki.json; need_skills_m/need_skills as Item.parseNeedBonus reads them (bit 2 = Медицина). Keys starting with _ never reach the wire."
+  "about": "Numbers for heal items that have no wiki article, laid over the designed frame by server/items.py exactly the way a data/items_wiki.json record is (same keys, frame shape unchanged). A wiki record, where one exists, wins -- but for the few numbers of over_article. DESIGNED, NOT RECOVERED: the original server kept these numbers and they are lost. Each record says in _designed what was chosen and in _source what is real.",
+  "decided": "2026-09-23, owner: trader Морис (5211) sells medicine for character levels 0-8, i.e. the level bands 0_3, 4_7 and 8_11, in every variant (A/P/G); the 20-dose packs take the single injector's numbers with 20 uses at 20 times the price; the (P) kits between Мини and Стандарт are interpolated. 2026-10-12, owner: «сделай во всех городах нормальную продажу медикаментов и боевой медицины, чтобы везде всё было по уровням, были версии афро и голд»: the medicine goes by the cities' tiers (data/shop_bands.json, server/shop_bands.py; a city sells the tiers of its band and the one below), so the valley sells 0_3 and 4_7 and no longer 8_11, and the (P) are out of the game since 2026-09-30; the packs of 12_15, 16_19 and 20 (7103-7105) are made by the rule of 2026-09-23 and sold with their tiers.",
+  "fields": "ss_si_heal names as in server/items.py; g_cost in hundredths of G (0.01 G = 1), like items_wiki.json; need_skills_m/need_skills as Item.parseNeedBonus reads them (bit 2 = Медицина). Keys starting with _ never reach the wire.",
+  "over_article": "The few numbers laid over a wiki article on purpose (server/items.py heal_over_article), after it, key by key, the rest of the article standing: only for a type that has one. Each record says in _designed what it overrules and why. Taking a record out gives the article's number back."
+ },
+ "over_article": {
+  "6904": {
+   "_name": "Аптечка «Эгоист» (20) (G)",
+   "_source": "the wiki's article «Аптечка «Эгоист»» (data/items_wiki.json): 0.01 G for twenty uses of 135-180 HP and 152-190 ST, the kit of tier 0_3",
+   "_designed": "0.02 G in place of the article's 0.01 G (2026-10-12, medicine by the cities' tiers): at 0.01 G a use cost 25 afro at the one rate (50 000 the ounce) against 29 for a manioc root and a tenth of a bottle of water (6043 + 6049 / 10), so the gold kit was both twice as strong and cheaper than the afro food and water it pairs with, the one tier where «афро меньше статов» bought nothing -- and a level-0 character has gold from the first day («Золотоискатель», quest 9: an ounce a day). At 0.02 G a use costs 50 afro, 1.7 times the food and water, as the kits of the other tiers cost 1.8-2 times theirs (150/74, 275/148, 450/254, 775/420, 1275/715); the next kit, «Самоспас», is 0.06 G",
+   "g_cost": 2
+  }
  },
  "items": {
   "6068": {
@@ -46,6 +55,30 @@
    "min_h_rest": 285, "max_h_rest": 380, "min_st_rest": 550, "max_st_rest": 570,
    "heal_cost": 7, "use_count": 20, "weight": 75,
    "cost": 0, "g_cost": 60, "premium": 0, "exchang": 1
+  },
+  "7103": {
+   "_name": "20 доз Т.У.Р. (G)",
+   "_source": "texts.xml 453: use_count 20 and gold from '20 доз ... (G)'; the wiki's article «Серхио» (Донгола's «Боевая медицина», data/trader_stock_wiki.json unbound) lists «20 ДОЗ Т.У.Р.» among his goods: RECOVERED that the pack was sold, and by him",
+   "_designed": "everything else is the single Т.У.Р. (6076, wiki) as it is, weight included; price 20 x 0.04 G, by the rule of 2026-09-23",
+   "min_h_rest": 435, "max_h_rest": 580, "min_st_rest": 850, "max_st_rest": 870,
+   "heal_cost": 8, "use_count": 20, "weight": 75,
+   "cost": 0, "g_cost": 80, "premium": 0, "exchang": 1
+  },
+  "7104": {
+   "_name": "20 доз М.А.К.С. (G)",
+   "_source": "texts.xml 454: use_count 20 and gold from '20 доз ... (G)'; the wiki's article «Серхио» lists «20 ДОЗ М.А.К.С.» among his goods: RECOVERED that the pack was sold, and by him",
+   "_designed": "everything else is the single М.А.К.С. (6077, wiki) as it is, weight included; price 20 x 0.05 G, by the rule of 2026-09-23",
+   "min_h_rest": 735, "max_h_rest": 980, "min_st_rest": 1450, "max_st_rest": 1470,
+   "heal_cost": 9, "use_count": 20, "weight": 75,
+   "cost": 0, "g_cost": 100, "premium": 0, "exchang": 1
+  },
+  "7105": {
+   "_name": "20 доз С.У.П.Е.Р. (G)",
+   "_source": "texts.xml 455: use_count 20 and gold from '20 доз ... (G)'; no stall's article lists it",
+   "_designed": "that it is sold at all, as the tier's pack beside 7100-7104 (the owner's «чтобы везде всё было по уровням», 2026-10-12); everything else is the single С.У.П.Е.Р. (6078, wiki) as it is, weight included; price 20 x 0.06 G, by the rule of 2026-09-23",
+   "min_h_rest": 1035, "max_h_rest": 1380, "min_st_rest": 2050, "max_st_rest": 2070,
+   "heal_cost": 10, "use_count": 20, "weight": 75,
+   "cost": 0, "g_cost": 120, "premium": 0, "exchang": 1
   }
  }
 }

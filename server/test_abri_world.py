@@ -84,8 +84,10 @@ SECOND_DUMP = (5863, 1836)
 # interiors their doors and quest ways lead to; the island (434, 502, 513,
 # 523) has no boat, and Эван's farm across the river (321, 324, 325) no way
 # over it. The ФСЦ airfield 529, the clan base Blackwater's block post 317
-# and the assembly shop 1055 are cut (server/test_abri_cut.py).
-TOWN = [76, 187, 188, 255, 290, 368, 378]
+# and the assembly shop 1055 are cut (server/test_abri_cut.py), the clothing
+# market 378 and the island's resistance camp 430 too (the owner's orders of
+# the same day, server/test_river_camps_cut.py).
+TOWN = [76, 187, 188, 255, 290, 368]
 QUEST_PLACES = [189, 191, 192, 193, 219, 220, 251, 252, 256, 261, 262, 283, 284, 285, 289, 671,
                 672, 1038]
 CAMP_PLACES = [88, 89, 90, 92]

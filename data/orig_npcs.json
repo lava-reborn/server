@@ -4,10 +4,10 @@
    "creature_types": 5987,
    "dropped_test_high": 85,
    "dropped_test_medium": 18,
-   "manual": 445,
-   "npcs": 812,
+   "manual": 450,
+   "npcs": 817,
    "npcs_mob": 354,
-   "npcs_npc": 458,
+   "npcs_npc": 463,
    "suggest": 639,
    "verified_promoted_to_high": 1
   },
@@ -437,11 +437,41 @@
    "name": "Магдалена<Br>Еда, вода, лекарства",
    "string_id": 62152
   },
+  "1208": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Пулеметы и патроны",
+   "string_id": 50655
+  },
   "121": {
    "confidence": "high",
    "kind": "npc",
    "name": "Корова",
    "string_id": 9651
+  },
+  "1214": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Серхио<Br>Боевая медицина",
+   "string_id": 62161
+  },
+  "1215": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Фарюк<Br>Лекарства и еда",
+   "string_id": 62162
+  },
+  "1221": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Киплер<Br>Боевая медицина",
+   "string_id": 62165
+  },
+  "1222": {
+   "confidence": "high",
+   "kind": "npc",
+   "name": "Курт<Br>Лекарства и еда",
+   "string_id": 62166
   },
   "1224": {
    "confidence": "high",

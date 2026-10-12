@@ -225,11 +225,15 @@ try:
     check("  ..so does the KKND bunker's people, its banker, medic, traders and auctioneer",
           [t for t in (5082, 5319, 5320, 5322, 5323, 5343, 5344, 5345, 5346, 5360, 5363)
            if t not in only_here], [])
-    check("  ..the ones that stand elsewhere too: the set traders 5160, 5161 and the miner's"
-          " clothes 5181 in the markets of Абри, Абу-Хамед and Донгола, KKND's mobs in Le_Mon",
+    # The set traders 5160 and 5161 and the miner's clothes 5181 stood in
+    # Абри's clothing market 378 too, until the owner's «и ещё убери локацию
+    # торговцы одеждой в Абри» (2026-10-12, server/test_river_camps_cut.py):
+    # 5160 stood in the two markets alone.
+    check("  ..the ones that stand elsewhere too: the set trader 5161 and the miner's clothes 5181"
+          " in the markets of Абу-Хамед and Донгола, KKND's mobs in Le_Mon; the set trader 5160"
+          " nowhere since Абри's market went too",
           {t: elsewhere[t] for t in (5160, 5161, 5181, 5316, 5317)},
-          {5160: [("file", 378)], 5161: [("file", 378), ("file", 467), ("file", 469)],
-           5181: [("file", 378), ("file", 467), ("file", 469)],
+          {5160: [], 5161: [("file", 467), ("file", 469)], 5181: [("file", 467), ("file", 469)],
            5316: [("file", 474), ("file", 979)], 5317: [("file", 474), ("file", 979)]})
     check("nobody standing only in a retired place gives or takes a quest",
           {t: (quests.given_by(t), quests.taken_by(t)) for t in only_here
@@ -499,7 +503,9 @@ FSC_PILOTS = (7921, 8210, 8211, 8212)            # ADMIN_Q_000042, 000049-51
 NIL1_TYPES = (7529, 8621, 8622, 8624, 8625, 8626, 8635, 8636, 8687)
 OTHER_AIRFIELDS = (527, 530, 531)                # Абу-Хамед, Донгола, Керма: on cells
 # Абри's airfield 529 went with the cut of Абри (2026-10-12, server/test_abri_cut.py).
-CSC_PEOPLE = {41: (5685, 5686), 429: (5694, 5695), 35: (2276,)}
+# The resistance camp 429 and its Доберман and Хэтфилд went with the cut of
+# the camps across the river (2026-10-12, server/test_river_camps_cut.py).
+CSC_PEOPLE = {41: (5685, 5686), 35: (2276,)}
 
 
 def stood_in(loc_id):
@@ -534,10 +540,11 @@ try:
     check("  ..the files stay, so a character saved inside still loads",
           [world.location(i).fn for i in FSC], ["air_point_WH_map", "FVAviaBazaNil_WH"])
     check("the neighbours stay: the quarter 36, the masters' camp 95, the arena 59 and the dump 100"
-          " around the airfield; the resistance camp 429 and the dig 433 by the base",
+          " around the airfield; the dig 433 by the base (the resistance camp 429 beside it went"
+          " with the cut of the camps across the river, 2026-10-12)",
           [table.get(c) for c in ((5969, 1727), (5969, 1728), (5970, 1728), (5971, 1727),
                                   (5943, 1723), (5943, 1722))],
-          [36, 95, 59, 100, 429, 433])
+          [36, 95, 59, 100, None, 433])
     # Абри's air base 427 stood on 5866,1836 and its airfield 529 on 5865,1835
     # until the cut of Абри (2026-10-12, server/test_abri_cut.py).
     check("  ..and so do the other towns' airfields and bases НИЛ-2..4",
@@ -619,7 +626,7 @@ try:
            for t in FSC_UPGRADERS + FSC_PILOTS},
           {t: ([], [], False) for t in FSC_UPGRADERS + FSC_PILOTS})
     check("the ЦСЦ's people in the kept places stay, as decided: О'Нилл and Беккет at Причал,"
-          " Доберман and Хэтфилд in the camp 429, Кёртис of the Фонд in the old market",
+          " Кёртис of the Фонд in the old market",
           {i: [t for t in ts if t in standing(i) and t not in world.retired_creatures()]
            for i, ts in CSC_PEOPLE.items()}, {i: list(ts) for i, ts in CSC_PEOPLE.items()})
     check("  ..and the boat into Заречье (412, О'Нилл's) stays off",
@@ -678,7 +685,7 @@ try:
     acc, _ = st.register("fsc", "secret")
     ids = {}
     for name, loc, home in (("in528", 528, None), ("in522", 522, None), ("home528", 36, 528),
-                            ("home522", 429, 522), ("in468", 468, None), ("in447", 447, None),
+                            ("home522", 433, 522), ("in468", 468, None), ("in447", 447, None),
                             ("pier", PRICHAL, None)):
         cid, _ = st.create_character(acc, name, 0, "1")
         st.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5970, gy = 1727,"
@@ -708,7 +715,7 @@ try:
     check("  ..a home in either is Причал now, the character himself left where he was",
           [(chars[n]["home_loc"], chars[n]["home_gx"], chars[n]["home_gy"], chars[n]["loc"])
            for n in ("home528", "home522")],
-          [(PRICHAL, 5965, 1728, 36), (PRICHAL, 5965, 1728, 429)])
+          [(PRICHAL, 5965, 1728, 36), (PRICHAL, 5965, 1728, 433)])
     check("  ..the one in 468 (the cut of 2026-10-09, run long ago), in 447 and at Причал untouched",
           [(chars[n]["loc"], chars[n]["pos"]) for n in ("in468", "in447", "pier")],
           [(468, 77), (447, 77), (PRICHAL, 77)])

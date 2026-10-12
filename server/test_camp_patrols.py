@@ -24,7 +24,8 @@ written by data/build_camp_patrols.py, on the real table and the real world:
   * the table: every row can stand (rooms.placement_problems), the patrol
     rows are exactly the builder's, the hand rows of 184, 31 and 102 are
     as they were, and Абри's (Мортимер in 187, Санденс Кид in 88, Бутч
-    Кэссиди in 92, the dump's eight junk piles in 289) are all there are
+    Кэссиди in 92, the dump's eight junk piles in 289) and Донгола's
+    machine-gun trader in its black market (1208 in 103) are all there are
     besides;
   * no ambush on a ring cell, as before (encounters.band_at, near_town);
   * a patrol fighter killed comes back on the respawn timer, on its cell.
@@ -83,11 +84,14 @@ LOOSER, TREASURERS, OFFICERS = 336, (586, 590, 591), {303, 307, 311}
 UCHET, ZAKAZ, KAK_SLYSHNO, PORYADOK = (5970, 1725), (5977, 1727), (5974, 1738), (5992, 1722)
 # The hand rows: Ибрахим's tools box, Мвамба's three thugs, Мортимер; and
 # Абри's (2026-10-12): Мортимер in the port market, Санденс Кид and Бутч
-# Кэссиди in their camps, the car dump's eight junk piles.
+# Кэссиди in their camps, the car dump's eight junk piles; and Донгола's
+# machine-gun trader «Пулеметы и патроны» (1208) on its black market, the
+# medicine by the cities' tiers of the same day.
 HAND = {184: [(1135, [56, 88], False)],
         31: [(566, [34, 61], True), (566, [30, 70], True), (566, [39, 70], True)],
         102: [(1188, [40, 59], False)],
         187: [(1188, [40, 72], False)],
+        103: [(1208, [36, 79], False)],
         88: [(1563, [40, 36], False)],
         92: [(1564, [39, 40], False)],
         289: [(2367, [28, 69], False), (2368, [14, 95], False), (2369, [20, 13], False),
@@ -239,7 +243,7 @@ try:
            or any(r["why"] != "As the first row of %d (%d,%d)." % ((lid,) + world.unpack(lid))
                   for r in recs[1:])], [])
     check("the hand rows of 184, 31 and 102 are as they were, and Абри's of 187, 88, 92 and 289"
-          " are the only others",
+          " and Донгола's of 103 are the only others",
           {lid: [(r["type"], r["cell"], bool(r.get("escort"))) for r in recs if "patrol" not in r]
            for lid, recs in table.items() if any("patrol" not in r for r in recs)}, HAND)
 except Exception:

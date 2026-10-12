@@ -86,7 +86,7 @@
   {
    "loc": 378,
    "types": [5162, 5163],
-   "why": "The owner's rule of 2026-10-10 («только по уровню городов») on the owner's Абри of 2026-10-12: the traders of Снаряжение Дредноута 17-18 ур and Снаряжение Паладина 19 ур (Npc_Trader000012/13, 10411/10412) sell nothing of Абри's band 8-12, so they do not stand in its clothing market (Sets_Market_Ab). The same types stand in the clothing markets of Донгола and Абу-Хамед (469, 467) as their files have them."
+   "why": "The owner's rule of 2026-10-10 («только по уровню городов») on the owner's Абри of 2026-10-12: the traders of Снаряжение Дредноута 17-18 ур and Снаряжение Паладина 19 ур (Npc_Trader000012/13, 10411/10412) sell nothing of Абри's band 8-12, so they do not stand in its clothing market (Sets_Market_Ab). The same types stand in the clothing markets of Донгола and Абу-Хамед (469, 467) as their files have them. The market itself is cut since (the owner's «и ещё убери локацию торговцы одеждой в Абри», 2026-10-12: data/retired.json); the row stays, as the cut assembly shop 1055's does, so the market stands as it stood if it comes back."
   },
   {
    "loc": 766,
