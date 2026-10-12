@@ -18,8 +18,10 @@ A release is four layers, later ones over earlier ones:
                          main.swf through tools/widescreen.py, the string
                          table through tools/export_texts.py, the global
                          map's names through server/map_labels.py, hints.xml,
-                         and the map's tiles that lose the squares of retired
-                         places through server/map_cells.py.
+                         the map's tiles that lose the squares of retired
+                         places through server/map_cells.py, and the
+                         owner's own location objects, client/objects/ made
+                         into sprite files by tools/custom_objects.py.
   4. client/files/**     small files of ours, kept in git as they are.
 
 A path that two layers both claim is fine going down (a generated main.swf
@@ -322,6 +324,26 @@ class Build:
         finally:
             sys.path.pop(0)
 
+    def gen_custom_objects(self, taken):
+        """The owner's own location objects (client/objects/README.md): {path:
+        bytes} of their sprite files, locations/libs/sprite/<id>.swf and
+        locations/libs/background/<id>.swf, and the report's lines. An
+        object whose file would land on one of `taken` (the original's and
+        extra.txt's paths), in any case, stops the build. No manifest, no
+        objects."""
+        objdir = os.path.join(self.cdir, "objects")
+        if not os.path.exists(os.path.join(objdir, "manifest.json")):
+            return {}, []
+        sys.path.insert(0, os.path.join(self.tree, "tools"))
+        try:
+            import custom_objects
+            try:
+                return custom_objects.build(objdir, taken)
+            except custom_objects.Refused as e:
+                raise SystemExit("client/objects: %s" % e)
+        finally:
+            sys.path.pop(0)
+
     def run(self):
         os.makedirs(self.out, exist_ok=True)
         self.base = read_entries(self.base_path, "lava-base 1")
@@ -365,6 +387,11 @@ class Build:
         missed = [line for line in done if ": no " in line]
         self.report.append("map:       %d squares and %d caption boxes painted over in %d tiles%s" % (
             squares, captions, len(tiles), "".join("; " + m for m in missed)))
+        objects, lines = self.gen_custom_objects(set(self.base) | set(extra))
+        for p in sorted(objects):
+            self.put(p, objects[p], "generated")
+        self.report.extend(lines)
+        self.report.append("objects:   %d from client/objects/" % len(objects))
 
         # 4. ours, in git
         fdir = os.path.join(self.cdir, "files")

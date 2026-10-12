@@ -19,3 +19,10 @@ deploy/runner/scrub.conf text eol=lf
 # their sha256, and an original's BOM and CRLF are part of it.
 client/files/** -text
 client/files/README.md text
+# The owner's own location objects (client/objects/README.md): the release
+# builds their sprite files from these bytes, so a picture is never touched.
+client/objects/** -text
+client/objects/manifest.json text eol=lf
+client/objects/README.md text
+# Read by Linux inside docker; run.sh names its image by these bytes.
+tools/flash_headless/** text eol=lf

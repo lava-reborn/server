@@ -4,7 +4,8 @@ Small files of ours that players get as they are, at the same path under
 `res/`: `client/files/xmldocs/x.xml` becomes `res/xmldocs/x.xml`. A file here
 replaces the original one at that path. A path the release also generates
 (`main.swf`, `database/texts.xml`, `database/locations.xml`,
-`hints/hints.xml`, and the map tiles server/map_cells.py paints over) is
+`hints/hints.xml`, the map tiles server/map_cells.py paints over, and the
+sprite files of the owner's objects, client/objects/) is
 refused: change its generator instead. Big files go
 into the store and `client/extra.txt` (client/README.md).
 

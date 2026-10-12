@@ -49,6 +49,7 @@
 | `remove.txt` | файлы оригинала, которые игрокам не нужны |
 | `extra.txt` | наши крупные файлы, которые лежат только в хранилище сервера |
 | `files/` | наши небольшие файлы, в git как есть |
+| `objects/` | свои объекты локаций: картинки и `manifest.json`, сборка делает из них файлы спрайтов ([objects/README.md](objects/README.md)) |
 | `keys/` | открытые ключи, которые вшиваются в лаунчер |
 | `build.py` | сборщик релиза; на сервере работает в контейнере шлюза |
 | `publish.py` | публикатор; на сервере ставится в `/opt/lava-ci/client/` и держит ключ |
@@ -64,7 +65,12 @@
 `data/map_cells.json`), — `server/map_cells.py`: квадраты закрашены, остальные
 блоки плитки байт в байт оригинальные. В отчёте сборки это строки
 `generated: ... globalmap/full/<n>.jpg` и `map: N squares and M caption boxes
-painted over in K tiles`. На сервере отчёт сборки уходит в журнал выкатки; в
+painted over in K tiles`. Свои объекты локаций из `client/objects/` —
+`tools/custom_objects.py`: каждый становится файлом
+`locations/libs/sprite/<id>.swf` (или `locations/libs/background/<id>.swf`),
+в отчёте это строки `object: ...` и `objects: N from client/objects/`. Объект,
+чей файл есть в оригинале или в `extra.txt` хотя бы в другом регистре,
+останавливает сборку. На сервере отчёт сборки уходит в журнал выкатки; в
 отчёт выкатки попадают первые четыре строки публикации (`client: since ...:
 N changed` и до двух путей).
 
@@ -114,6 +120,9 @@ N changed` и до двух путей).
   `extra.txt` обычным PR.
 - **Убрать файл оригинала**: впишите его путь в `remove.txt`. У игроков файл
   останется на диске, но игре он отдаваться не будет.
+- **Свой объект для локаций** (картинка или анимация): папка
+  `objects/<id>/` и запись в `objects/manifest.json`, порядок в
+  [objects/README.md](objects/README.md).
 
 ## Новый лаунчер
 
@@ -329,6 +338,8 @@ powershell -ExecutionPolicy Bypass -File launcher\build.ps1 -Site http://127.0.0
 | Что | Где идёт |
 |---|---|
 | `client/test_client.py` | CI, в общем прогоне |
+| `tools/test_swfgen.py` | CI, в общем прогоне: файлы своих объектов, манифест, расстановка |
+| `bash tools/flash_headless/run.sh <локация.xml>` | вручную, Linux или WSL с docker: настоящий Flash Player 32 рисует локацию со своими объектами, без окон и без сети ([tools/flash_headless/README.md](../tools/flash_headless/README.md)) |
 | `launcher\test\run.ps1` | вручную на Windows: лаунчер ставит, обновляет, чинит, отказывает, заменяет себя; без окон |
 | `launcher\test\check_netfx.ps1 <exe>` | вручную на Windows: exe, собранный шлюзом, работает на .NET Framework этой машины; без окон |
 | `CLIENT_ORIG=<папка> CLIENT_PROJECTOR=<fp32_sa.exe> bash deploy/remote/test_gate.sh ...` | вручную, Linux с docker: шлюз собирает, проверяет, публикует и откатывает релиз и лаунчер |

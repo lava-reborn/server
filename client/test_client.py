@@ -11,10 +11,13 @@ against vectors this suite's code writes.
 import contextlib
 import hashlib
 import io
+import json
 import os
 import shutil
+import struct
 import sys
 import tempfile
+import zlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -43,6 +46,15 @@ def write(path, data):
 def read(path):
     with open(path, "rb") as fh:
         return fh.read()
+
+
+def tiny_png(w, h, rgba):
+    """An RGBA PNG of straight pixels, every row unfiltered."""
+    def chunk(typ, body):
+        return struct.pack(">I", len(body)) + typ + body + struct.pack(">I", zlib.crc32(typ + body) & 0xFFFFFFFF)
+    rows = b"".join(b"\x00" + rgba[y * w * 4:(y + 1) * w * 4] for y in range(h))
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b""))
 
 
 def quiet(fn, *args):
@@ -109,6 +121,7 @@ try:
         "mobs/copy.swf": b"m" * 5000,
         "globalmap/full/1.jpg": b"a tile with a square",
         "globalmap/full/2.jpg": b"a tile with nothing to paint over",
+        "locations/libs/sprite/C_Old.swf": b"an original sprite whose name an object of ours wants",
     }
     for p, data in originals.items():
         write(os.path.join(res, *p.split("/")), data)
@@ -221,6 +234,53 @@ try:
     check("release: a store copy that does not match base.txt stops the build",
           fails_with("does not match", os.path.join(W, "o4")), True)
     write(blob, good)
+
+    # --- build: the owner's own location objects (client/objects/) ------------------------------------
+    # The real writer (tools/swfgen.py, tools/custom_objects.py; their own
+    # suite is tools/test_swfgen.py), in the toy tree where the gate's tree
+    # has it.
+    for name in ("swfgen.py", "custom_objects.py"):
+        shutil.copy(os.path.join(ROOT, "tools", name), os.path.join(tree, "tools", name))
+    check("objects: a release without client/objects has none",
+          "objects:   0 from client/objects/" in read(os.path.join(out1, "report.txt")).decode(), True)
+    odir = os.path.join(cdir, "objects")
+    write(os.path.join(odir, "manifest.json"), json.dumps({"c_flag": {
+        "title": "Флажок", "frames": ["0.png", "1.png"], "fps": 5, "anchor": [1, 2],
+        "footprint": [[0, 0]]}}, ensure_ascii=False))
+    write(os.path.join(odir, "c_flag", "0.png"), tiny_png(2, 3, bytes(range(24))))
+    write(os.path.join(odir, "c_flag", "1.png"), tiny_png(2, 3, bytes(range(100, 124))))
+    out5 = os.path.join(W, "out5")
+    rc, out = release(out5)
+    check("objects: built", rc, None)
+    got5 = {l.split("\t")[2]: l.split("\t")[0] for l in read(os.path.join(out5, "files.tsv")).decode().splitlines()}
+    import custom_objects  # noqa: E402  (the copy build.py just loaded from the toy tree)
+    want5, _ = custom_objects.build(odir)
+    swf = want5["locations/libs/sprite/c_flag.swf"]
+    check("objects: the sprite file is in the release, the writer's bytes",
+          got5.get("locations/libs/sprite/c_flag.swf"), sha(swf))
+    check("  ..its bytes are in blobs/", read(os.path.join(out5, "blobs", sha(swf))), swf)
+    check("  ..it is an animated sprite file (SWF 9, ten frames: two pictures at 5 fps)",
+          (swf[:4], struct.unpack("<H", zlib.decompress(swf[8:])[11:13])[0]), (b"CWS\x09", 10))
+    report5 = read(os.path.join(out5, "report.txt")).decode()
+    check("  ..the report names it and counts it",
+          ("object:    %s locations/libs/sprite/c_flag.swf (2x3, 2 pictures at 5 fps," % sha(swf)[:16] in report5,
+           "objects:   1 from client/objects/" in report5), (True, True))
+    check("objects: nothing else in the release changed",
+          {p: s for p, s in got5.items() if p != "locations/libs/sprite/c_flag.swf"}, got)
+    check("objects: the same tree builds the same list", (release(os.path.join(W, "out5b"))[0],
+          read(os.path.join(W, "out5b", "files.tsv"))), (None, read(os.path.join(out5, "files.tsv"))))
+    write(os.path.join(cdir, "files", "locations", "libs", "sprite", "c_flag.swf"), b"by hand")
+    check("objects: an object's file also in client/files is refused",
+          fails_with("also generated", os.path.join(W, "o5")), True)
+    shutil.rmtree(os.path.join(cdir, "files", "locations"))
+    os.rename(os.path.join(odir, "c_flag"), os.path.join(odir, "c_old"))
+    write(os.path.join(odir, "manifest.json"), read(os.path.join(odir, "manifest.json")).replace(b"c_flag", b"c_old"))
+    check("objects: an id whose file the original has, in another case, is refused",
+          fails_with("the game already has locations/libs/sprite/C_Old.swf", os.path.join(W, "o6")), True)
+    write(os.path.join(odir, "manifest.json"), b'{"c_old": {"title": "x"}}')
+    check("objects: a broken manifest stops the build, naming client/objects",
+          fails_with("client/objects: c_old: frames", os.path.join(W, "o7")), True)
+    shutil.rmtree(odir)
 
     # --- publish: check and publish ---------------------------------------------------------------
     keyfile = os.path.join(W, "resource.pem")
