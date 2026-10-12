@@ -1160,7 +1160,64 @@ def miner_records(T, objects):
 # its description row (None where the original has none), hand-checked
 # against the run of texts.xml that names it. What Абри's stalls sell is
 # ABRI_TRADE_ROWS (7k).
-ABRI_QUEST_ROWS = {}
+#   * the dracaena's leaves, Dracena_Leavers 2264 «Листья Драцены» (6131/6132,
+#     the run of the plants' things), and the hippies' «ФРОК», frok 3550
+#     (8358/8359, «Гипно-жаба. Съешь меня.»): Ведич's «Заполучить амазонку»;
+#   * the hippies' blood, qMedBlood 7123 «Кровь» (6707/6708, «Пакет
+#     человеческой крови.»): the Мясники's «Кровь как кровь» (267), whose why
+#     asked for it before it was switched on;
+#   * the event's things of «Вода для Мариса Дамбиса», objects.xml's
+#     qRoverPad_2012, _Spade, _Piece_of_cellophane, _Stone, _Bowler and
+#     _Flash_kart (5733-5736, 5738, 5739) of the run 49065-49078, a name and its
+#     words each in objects.xml's order: «RoverPad», «Лопата», «Кусок
+#     целлофана», «Камень», «Котелок с водой», «Флэш-карта» (the rubber tube
+#     between them, 49073, goes to no quest; the gypsum, wire and bandages
+#     after them are 7k's);
+#   * what the car dump's piles give, Crat_loot_lead_from_the_battery ...
+#     _plastic_bag_shell (7043-7050), texts.xml 8261-8276 right after the tools
+#     (8238-8260) and in objects.xml's order: «Свинец из аккумулятора», the
+#     bottles of nitric and sulphuric acid, of varnish and of mercury, «Отходы
+#     латуни», «Кусок ткани», «Пакет с гильзами»;
+#   * what the smelter makes of them, 8277-8302: «Свинец в слитке$3M»
+#     (Crat_loot_Plumbum 7089), «Латунь$3F» (_Copper 7090), «Капсюль$3M»
+#     (_Detonator 7092), «Гремучая ртуть$3F» (_Mercury 7093), the four cases
+#     -- «Пистолетная гильза$3F» (_Pistol_barrel 7094), «Автоматная гильза$3F»
+#     (_AssRifle_sleeve 7106), «Винтовочная гильза$3F» (_Rifle_barrel 7096),
+#     «Охотничья гильза$3F» (_Hunting_cartridge 7097) --, «Порох$3M» (_Powder
+#     7091) and the four bullets (_Pistol_bullets .. _Hunting_bullets,
+#     7107-7110). The «$3M»/«$3F» is the client's own: a thing of root 4 shows
+#     the word after «$» from Trash.MOD_ARR, «Заводской» / «Заводская».
+# Pinned 2026-10-12.
+ABRI_QUEST_ROWS = {"Dracena_Leavers": (6131, 6132, "Листья Драцены"),
+                   "frok": (8358, 8359, "ФРОК"),
+                   "qMedBlood": (6707, 6708, "Кровь"),
+                   "qRoverPad_2012": (49065, 49066, "RoverPad"),
+                   "qSpade_2012": (49067, 49068, "Лопата"),
+                   "qPiece_of_cellophane_2012": (49069, 49070, "Кусок целлофана"),
+                   "qStone_2012": (49071, 49072, "Камень"),
+                   "qBowler_2012": (49075, 49076, "Котелок с водой"),
+                   "qFlash_kart_2012": (49077, 49078, "Флэш-карта"),
+                   "Crat_loot_lead_from_the_battery": (8261, 8262, "Свинец из аккумулятора"),
+                   "Crat_loot_bottle_nitric_acid": (8263, 8264, "Бутыль с азотной кислотой"),
+                   "Crat_loot_bottle_sulfuric_acid": (8265, 8266, "Бутыль с серной кислотой"),
+                   "Crat_loot_bottle_varnish": (8267, 8268, "Бутыль с лаком"),
+                   "Crat_loot_bottle_mercury": (8269, 8270, "Бутыль с ртутью"),
+                   "Crat_loot_copper_waste": (8271, 8272, "Отходы латуни"),
+                   "Crat_loot_piece_cloth": (8273, 8274, "Кусок ткани"),
+                   "Crat_loot_plastic_bag_shell": (8275, 8276, "Пакет с гильзами"),
+                   "Crat_loot_Plumbum": (8277, 8278, "Свинец в слитке$3M"),
+                   "Crat_loot_Copper": (8279, 8280, "Латунь$3F"),
+                   "Crat_loot_Detonator": (8281, 8282, "Капсюль$3M"),
+                   "Crat_loot_Mercury": (8283, 8284, "Гремучая ртуть$3F"),
+                   "Crat_loot_Pistol_barrel": (8285, 8286, "Пистолетная гильза$3F"),
+                   "Crat_loot_AssRifle_sleeve": (8287, 8288, "Автоматная гильза$3F"),
+                   "Crat_loot_Rifle_barrel": (8289, 8290, "Винтовочная гильза$3F"),
+                   "Crat_loot_Hunting_cartridge": (8291, 8292, "Охотничья гильза$3F"),
+                   "Crat_loot_Powder": (8293, 8294, "Порох$3M"),
+                   "Crat_loot_Pistol_bullets": (8295, 8296, "Пистолетная пуля$3F"),
+                   "Crat_loot_AssRifle_bullets": (8297, 8298, "Автоматная пуля$3F"),
+                   "Crat_loot_Rifle_bullets": (8299, 8300, "Винтовочная пуля$3F"),
+                   "Crat_loot_Hunting_bullets": (8301, 8302, "Охотничья пуля$3F")}
 
 
 def abri_quest_records(T, objects):

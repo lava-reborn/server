@@ -184,8 +184,13 @@ for (key, qtype), rec in sorted(WAYS.items()):
     # counts its kills and pays, or a gate with a level: Берт's course and
     # its lessons, the quarry's, the ore mines' and the boat's ways
     # (halfa-training-ways, 1682 and 351-449), which test_halfa_training
-    # holds. Every other way is held to the bare ride here.
-    if not (qtype == 1682 or 351 <= qtype <= 449):
+    # holds. So may a ride for a ticket, the passes of 279-286 (a thing
+    # brought), and Абри's ways (450-599, 2026-10-12): the mafia's steps
+    # through the house and the road, Ведич's to the Амазонка, the mines'
+    # gates of 8-12 -- which server/test_abri_quests holds. Every other way
+    # is held to the bare ride here.
+    if not (qtype == 1682 or 351 <= qtype <= 449 or 279 <= qtype <= 286
+            or 450 <= qtype <= 599):
         check("%s: quest %d is a way and nothing else" % (key, qtype),
               (q.kind, q.obj, q.rew_obj, q.rew_afro, q.rew_gold, q.repeatable,
                q.rew_loc, q.level, q.need_all, q.need_any),
