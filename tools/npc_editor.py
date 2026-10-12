@@ -165,9 +165,10 @@ def occupants(loc_id):
     for type_id in counts:
         one = describe(type_id)
         one["copies"] = counts[type_id]
-        # A weapon or set seller of a city sells its band here besides its own
-        # list (server/shop_bands.py, data/shop_bands.json): shown, not edited,
-        # and never saved into data/npcs.json.
+        # A weapon, set or medicine seller of a city sells its band here besides
+        # its own list (server/shop_bands.py, data/shop_bands.json; the medicine
+        # by the city's tiers and the one below, one currency where the file
+        # says only): shown, not edited, and never saved into data/npcs.json.
         if city and shop_bands.kinds(type_id):
             one["band_city"] = "%s %d-%d" % city
             one["band"] = [{"type": t, "name": item_name(t)}

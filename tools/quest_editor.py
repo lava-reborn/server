@@ -92,6 +92,7 @@ import quests  # noqa: E402
 import items   # noqa: E402  -- item_problems asks it; read once, here
 import mobs    # noqa: E402
 import names   # noqa: E402
+import travel  # noqa: E402  -- which quests are rides (way_types)
 import world   # noqa: E402
 
 PORT = int(os.environ.get("LAVA_QUEST_EDITOR_PORT", "8095"))
@@ -190,6 +191,14 @@ def generated(path=None):
         with open(p, encoding="utf-8") as fh:
             out.append({"source": os.path.basename(p), "rows": json.load(fh)["quests"]})
     return out
+
+
+def way_types(rows):
+    """The types data/passages.json makes rides (travel.is_quest_way). The
+    game counts them apart from the day's tasks (server.py
+    Session.counts_daily), and so does the page's «суточные» filter: a
+    repeatable quest that is neither a service nor one of these."""
+    return sorted(int(r["type"]) for r in rows if travel.is_quest_way(r["type"]))
 
 
 def key_order(rows):
@@ -1411,7 +1420,8 @@ class Handler(BaseHTTPRequestHandler):
         out.update({"rows": cur["doc"]["quests"], "sha": cur["sha"],
                     "generated": generated(), "layout": read_layout(),
                     "order": key_order(cur["doc"]["quests"]),
-                    "new_types": [NEW_TYPES_FROM, NEW_TYPES_TO]})
+                    "new_types": [NEW_TYPES_FROM, NEW_TYPES_TO],
+                    "ways": way_types(cur["doc"]["quests"])})
         out.setdefault("mode", "local")
         return self._send(out)
 

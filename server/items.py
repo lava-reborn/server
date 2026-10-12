@@ -20,7 +20,8 @@ laid over the designed frames here, field by field, never changing the shape
 of a frame: a wiki table decides what a rifle does, the designed frame decides
 which keys travel. The same files give the Russian names and descriptions
 names.py serves. A few medicines no article describes take numbers of our
-own, from data/heal_manual.json, laid over the same way, and so do the
+own, from data/heal_manual.json, laid over the same way (and the file
+overrules one article's price, the kit «Эгоист»'s), and so do the
 pieces of the clothing sets of data/sets.json (sets.py). A cold arm whose
 article leaves a hole a stall cannot sell around -- no price, a strike for
 no action points -- has it filled from data/coldarm_manual.json. And the
@@ -448,6 +449,7 @@ _WIKI = None
 _LINKS = None
 _STOCK = None
 _HEAL_MANUAL = None
+_HEAL_OVER_ARTICLE = None
 _COLDARM_MANUAL = None
 _LOOT_MANUAL = None
 _ORIG_DESCRIBED = None
@@ -475,6 +477,25 @@ def heal_manual():
     if _HEAL_MANUAL is None:
         _HEAL_MANUAL = {int(k): v for k, v in _load_wiki(HEAL_MANUAL_PATH, "items").items()}
     return _HEAL_MANUAL
+
+
+def heal_over_article():
+    """type_id -> ss_si_heal numbers laid over its wiki article on purpose
+    (the "over_article" of data/heal_manual.json).
+
+    The one exception to «a wiki table wins»: a number the medicine ladder
+    of the cities needs and the article gets wrong for it -- the kit
+    «Эгоист» (6904), whose 0.01 G made the gold kit of tier 0_3 cheaper a
+    use than the afro food and water it stands beside (2026-10-12). Laid
+    after the article, key by key, so the rest of the article stands; a
+    type without an article takes nothing from here. Each record says why.
+    Loaded like the wiki tables: unreadable means no start.
+    """
+    global _HEAL_OVER_ARTICLE
+    if _HEAL_OVER_ARTICLE is None:
+        _HEAL_OVER_ARTICLE = {int(k): v for k, v in
+                              _load_wiki(HEAL_MANUAL_PATH, "over_article").items()}
+    return _HEAL_OVER_ARTICLE
 
 
 def coldarm_manual():
@@ -888,6 +909,10 @@ def static_info(type_id):
         rec = wiki().get(type_id)
         if rec:
             _overlay(type_id, info[1], rec)
+            # A medicine's number the cities' ladder overrules (heal_over_article).
+            over = heal_over_article().get(type_id)
+            if over:
+                _overlay(type_id, info[1], over)
         elif type_id in heal_manual():
             _overlay(type_id, info[1], heal_manual()[type_id])
             # A designed record has no wiki text to show; the original's
@@ -1281,6 +1306,7 @@ def preload():
     catalogue()
     wiki()
     heal_manual()
+    heal_over_article()
     coldarm_manual()
     loot_manual()
     _orig_described()

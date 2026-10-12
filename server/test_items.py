@@ -97,6 +97,10 @@ for t in rnd.sample(linked, 20):
     # article says (items.GOLD_AMMO_ROUND; every one of them in test_repair).
     if root == items.AMMO and items.gold_round(p):
         ours = dict(ours, g_cost=p["g_cost"])
+    # And a medicine's number data/heal_manual.json lays over its article
+    # (items.heal_over_article; every one of them held below).
+    ours = dict(ours, **{k: v for k, v in items.heal_over_article().get(t, {}).items()
+                         if not k.startswith("_")})
     for key in SCALARS:
         if key in rec and key in p and key not in ours:
             want = rec[key]
@@ -408,20 +412,20 @@ check("gunsmiths open on a gun",
 check("every stocked type answers ss_get_si",
       all(items.static_info(i) for ids in table.values() for i in ids), True)
 
-# --- Морис (5211): medicine for characters of level 0-8 ------------------------
-# The owner's list: the level bands 0_3, 4_7 and 8_11 of every line (level 8
-# falls in 8_11), in every variant that exists -- afro (A), premium (P), gold
-# (G) and the 20-dose packs -- and the two bar items without alcohol. It lives
-# in data/npcs.json; this copy is what the data is held to, so a regeneration
-# of the wiki or texts tables that puts a wrong name or number on any of them
-# fails here. Whatever npcs.json actually stocks for 5211 is held to the same.
+# --- Морис (5211): the valley's medicine, tiers 0_3 and 4_7 --------------------
+# The valley's tiers of both lines (the owner's «чтобы везде всё было по
+# уровням», 2026-10-12: the city's band 0-4 and the tier below it,
+# server/shop_bands.py; until then his list of 2026-09-23 ran to 8_11), afro
+# and gold, the 20-dose packs among the gold, and the two bar items without
+# alcohol his own list keeps (data/npcs.json). This copy of his stall at the
+# Nubian market (185) is what the data is held to, so a regeneration of the
+# wiki or texts tables that puts a wrong name or number on any of them fails
+# here; whatever the stall holds there is held to the same. The (P) kits of
+# the old list are out of the game.
 import re                                             # noqa: E402
 import npcs                                           # noqa: E402
-MORIS = [6055, 6067, 6073, 7100, 6056, 6068, 6074, 7101, 6057, 6069, 6075, 7102,
-         6061, 6062, 6063,
-         6043, 6898, 6044, 6899, 6045, 6900,
-         6049, 6050, 6051,
-         6904, 6905, 6906,
+MORIS = [6055, 6061, 6073, 7100, 6056, 6062, 6074, 7101,
+         6043, 6898, 6049, 6904, 6044, 6899, 6050, 6905,
          2178, 2184]
 # HealItem.initialize (HealItem.as:35-51) reads these seventeen; a missing one
 # is an undefined the client carries into its arithmetic.
@@ -431,7 +435,7 @@ HEAL_FIELDS = ("heal_time", "max_h_rest", "max_st_rest", "min_h_rest", "min_st_r
                "effects", "effects_prob")
 AP_ROW = re.compile(r"Расход ОД:\s*</b>\s*(\d+)")
 bad = {}
-for t in dict.fromkeys(MORIS + (npcs.stock(5211) or [])):
+for t in dict.fromkeys(MORIS + items.stock_for(5211, 185)):
     info = items.static_info(t)
     if not info:
         bad[t] = ["no static info: ss_get_si would go unanswered"]
@@ -455,8 +459,8 @@ for t in dict.fromkeys(MORIS + (npcs.stock(5211) or [])):
         why.append("bg_p_cost turns the purchase into one for battleground points")
     if p["use_count"] < 1:
         why.append("use_count %r" % p["use_count"])
-    if cat[t][1].startswith("Med_") and not re.search(r"_(0_3|4_7|8_11)_", cat[t][1]):
-        why.append("level band of %s is above 8" % cat[t][1])
+    if cat[t][1].startswith("Med_") and not re.search(r"_(0_3|4_7)_", cat[t][1]):
+        why.append("tier of %s is not the valley's (0_3, 4_7)" % cat[t][1])
     if p["desc"] != "":
         m = AP_ROW.search(names.text(p["desc"]))
         if m and int(m.group(1)) != p["heal_cost"]:
@@ -467,6 +471,8 @@ check("Морис: each item answers ss_si_heal, named, described and priced onc
 check("Морис: no stimulant, alcohol or sleeping bag among them",
       [t for t in MORIS if 4917 <= t <= 4956 or t in (2180, 2181, 2182, 2183, 1289, 1535, 5341)],
       [])
+check("  ..and his stall at the Nubian market is this list, the medicine of his city's tiers"
+      " (shop_bands) before his own Лава-Кола and Шаурма", items.stock_for(5211, 185), MORIS)
 
 
 def shown(t):
@@ -483,8 +489,13 @@ check("6043 is the manioc root, food, out of combat",
       shown(6043), ("Корень Маниока$Еда", (68, 90), (5, 10), 0, 1, 12, 0, 0))
 check("6067 is the Мини kit: premium, 5 uses, 7 AP",
       shown(6067), ("Аптечка «Мини» (5) (P)$Боевая Медицина", (90, 180), (90, 180), 7, 5, 0, 1, 1))
-check("6904 is the Эгоист kit: gold, 20 uses, no premium needed",
-      shown(6904), ("Аптечка «Эгоист» (20) (G)$Лекарство", (135, 180), (152, 190), 0, 20, 0, 1, 0))
+check("6904 is the Эгоист kit: gold, 20 uses, no premium needed; 0.02 G, not its article's"
+      " 0.01 (data/heal_manual.json over_article: a use dearer than food and water, 2026-10-12)",
+      shown(6904), ("Аптечка «Эгоист» (20) (G)$Лекарство", (135, 180), (152, 190), 0, 20, 0, 2, 0))
+check("  ..the only number laid over an article there, and on a type that has one",
+      ({t: sorted(k for k in rec if not k.startswith("_"))
+        for t, rec in items.heal_over_article().items()},
+       sorted(t for t in items.heal_over_article() if t not in wiki)), ({6904: ["g_cost"]}, []))
 check("food of ten portions: Фуль",
       shown(6899), ("Фуль (10)$Еда", (90, 120), (5, 10), 0, 10, 210, 0, 0))
 check("the energy drink no longer borrows an NPC's name",
@@ -527,8 +538,9 @@ _offered = sorted({t for tr in list(npcs.STOCK) + list(items.stock_table())
                    for t in items.stock_for(tr)})
 check("no stall anywhere offers a premium item",
       [t for t in _offered if items.premium(t)], [])
-check("Морис keeps his list minus the three P kits",
-      (len(items.stock_for(5211)), {6067, 6068, 6069} & set(items.stock_for(5211))), (26, set()))
+check("Морис sells no P kit: 18 things at his market, none of 6067-6069",
+      (len(items.stock_for(5211, 185)), {6067, 6068, 6069} & set(items.stock_for(5211, 185))),
+      (18, set()))
 check("Борис sells no P pistol",
       [t for t in items.stock_for(5212) if items.premium(t)], [])
 

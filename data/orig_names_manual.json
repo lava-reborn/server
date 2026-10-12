@@ -2230,6 +2230,31 @@
    "string_id": 10326,
    "text": "Ямка",
    "why": "Npc_Commoner000763 (art 1f_SmallHole), the hole of Q_Tresure5 on 5892,1866 (256), one of Зубери's three digs around Абри: the family's holes 759-763 share the one row 10326 'Ямка' (see 6512, the hole of Вади-Хальфа's Q_Tresure1)."
+  },
+  "1214": {
+   "string_id": 62161,
+   "text": "Серхио<Br>Боевая медицина",
+   "why": "dn_Med_battle at the Черный рынок of Донгола (103): the traders' block 62149-62166 runs city by city, two to four roles each -- Вади-Хальфа's Ваккас, Хамис, Люций, Магдалена (62149-62152), the oasis' Оружие and Торговец патронами, Абри's Алима, Гали, Торси, Мухсим (62155-62158), Донгола's Галия, Дари, Серхио, Фарюк (62159-62162), Абу-Хамед's Марат, Симона, Киплер, Курт (62163-62166) -- and each city's two medicine sellers are its *_Med_battle («Боевая медицина», the fast medicine) and *_Med_simple (or Abri_Med_slow_trd: «Лекарства и еда»), as Абри's Торси and Мухсим (1167, 1168). The wiki's 'Серхио' stands in the market's list and his article sells the battle medicine of 12_15 and 16_19 with their 20-dose packs; the owner's medicine by the cities' tiers of 2026-10-12."
+  },
+  "1215": {
+   "string_id": 62162,
+   "text": "Фарюк<Br>Лекарства и еда",
+   "why": "dn_Med_simple at the Черный рынок of Донгола (103): the traders' block 62149-62166 runs city by city, two to four roles each -- Вади-Хальфа's Ваккас, Хамис, Люций, Магдалена (62149-62152), the oasis' Оружие and Торговец патронами, Абри's Алима, Гали, Торси, Мухсим (62155-62158), Донгола's Галия, Дари, Серхио, Фарюк (62159-62162), Абу-Хамед's Марат, Симона, Киплер, Курт (62163-62166) -- and each city's two medicine sellers are its *_Med_battle («Боевая медицина», the fast medicine) and *_Med_simple (or Abri_Med_slow_trd: «Лекарства и еда»), as Абри's Торси and Мухсим (1167, 1168). The wiki's 'Фарюх' (its spelling) stands in the market's list and his article sells food, water and kits of 12_15 and 16_19; the original writes Фарюк."
+  },
+  "1221": {
+   "string_id": 62165,
+   "text": "Киплер<Br>Боевая медицина",
+   "why": "ah_Med_battle at the Вокзал of Абу-Хамед (126) and in Мероэ (58): the traders' block 62149-62166 runs city by city, two to four roles each -- Вади-Хальфа's Ваккас, Хамис, Люций, Магдалена (62149-62152), the oasis' Оружие and Торговец патронами, Абри's Алима, Гали, Торси, Мухсим (62155-62158), Донгола's Галия, Дари, Серхио, Фарюк (62159-62162), Абу-Хамед's Марат, Симона, Киплер, Курт (62163-62166) -- and each city's two medicine sellers are its *_Med_battle («Боевая медицина», the fast medicine) and *_Med_simple (or Abri_Med_slow_trd: «Лекарства и еда»), as Абри's Торси and Мухсим (1167, 1168). The wiki's 'Киплер' («Киплер подберет для вас нужную таблеточку!») sells the battle medicine of 12_15-20; his list had been tied to Марат (1219) by a shifted link."
+  },
+  "1222": {
+   "string_id": 62166,
+   "text": "Курт<Br>Лекарства и еда",
+   "why": "ah_Med_simple at the Вокзал of Абу-Хамед (126) and in Мероэ (58): the traders' block 62149-62166 runs city by city, two to four roles each -- Вади-Хальфа's Ваккас, Хамис, Люций, Магдалена (62149-62152), the oasis' Оружие and Торговец патронами, Абри's Алима, Гали, Торси, Мухсим (62155-62158), Донгола's Галия, Дари, Серхио, Фарюк (62159-62162), Абу-Хамед's Марат, Симона, Киплер, Курт (62163-62166) -- and each city's two medicine sellers are its *_Med_battle («Боевая медицина», the fast medicine) and *_Med_simple (or Abri_Med_slow_trd: «Лекарства и еда»), as Абри's Торси and Мухсим (1167, 1168). The wiki's 'Курт' sells food, water and kits of 12_15-20; his list had been tied to Шрам (2274) by a shifted link."
+  },
+  "1208": {
+   "string_id": 50655,
+   "text": "Пулеметы и патроны",
+   "why": "dn_MachineGuns, the machine-gun trader the wiki's article «Пулеметы и патроны» puts on the Черный рынок of Донгола (103, 5879x2012: РПД, AUG /Hbar, 7.62x39, 5.56x45), and the market's page names him beside Серхио. The original's run of the gun stalls' titles 50655-50659 ('Пулеметы и патроны', 'Автоматы и патроны', 'Пистолеты и патроны', 'Винтовки и патроны', 'Дробовики и патроны'); its first, the words Абу-Хамед's machine-gun stall (1216, ah_MachineGuns) shows by the wiki. No file of the location puts him down: data/placements.json does (2026-10-12)."
   }
  },
  "none": {
