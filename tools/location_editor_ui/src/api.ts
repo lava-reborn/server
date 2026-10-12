@@ -239,15 +239,20 @@ export const api = {
     request<{ uuid?: string; rev?: number; updated?: string; error?: string; login?: string }>("POST", "/api/draft", body),
   deleteDraft: (uuid: string) => post<{ uuid: string; deleted: boolean }>("/api/draftdel", { uuid }),
   // main's engine moved on: the editor restarts on it first (503 restarting),
-  // then answers; a publish refused so started nothing and is sent again
+  // then answers; a publish refused so started nothing and is sent again.
+  // While it is down between the two, the panel answers 503 of its own
+  // («не отвечает», no restarting flag): after a restart began that is the
+  // same wait.
   publish: async (body: { uuid?: string; rev?: number; message: string }) => {
+    let waiting = false;
     for (let i = 1; ; i++) {
       const r = await request<{ uuid?: string; publish?: PublishState; error?: string; restarting?: boolean }>(
         "POST",
         "/api/publish",
         body,
       );
-      if (restarting(r) && i < 30) {
+      if ((restarting(r) || (waiting && r.status === 503)) && i < 30) {
+        waiting = true;
         tell("restarting");
         await sleep(2000);
         continue;
