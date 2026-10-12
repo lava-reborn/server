@@ -175,11 +175,16 @@ check("naming them apart needed the region, not the name alone",
       world.location(102).title != world.location(103).title, True)
 # The placer prefers the peaceful copy of a place: a night or war twin of a
 # town file is never what the map leads into. Whatever it chose for the
-# towns, none of it is a war file titled like a peaceful one.
+# towns, none of it is a war file titled like a peaceful one. A cell of
+# data/settlements_verified.json is the truth whatever else shares its title:
+# the hermit's «Оазис» by Вади-Хальфа (61, Q_Hermit, war) and the «Оазис» of
+# Карло Меони by Абри (283, Apoc_Oasis, at peace, on its own label since
+# 2026-10-12) are two places of one word, no twins.
 calm_titles = {world.location(i).title for i in set(cells.values())
                if not world.location(i).war}
 war_twins = [i for i in set(cells.values())
-             if world.location(i).war and world.location(i).title in calm_titles]
+             if world.location(i).war and world.location(i).title in calm_titles
+             and i not in _verified]
 check("no war twin of a peaceful place is on the map", war_twins, [])
 
 # cell_of is location_at read backwards, and it is what puts a player sent

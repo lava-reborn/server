@@ -113,6 +113,12 @@ try:
     check("every restored cell is walkable, and so is the cell east of the Тотем its file leaves"
           " by (a repair: data/terrain_repairs.json)",
           [c for c in list(CELLS) + [(5865, 1838)] if not world.passable(*c)], [])
+    sys.path.insert(0, os.path.join(ROOT, "data"))
+    import test_borders  # noqa: E402
+    outside = test_borders.walk_from(test_borders.START)
+    check("  ..and a walk from Вади-Хальфа's black market on the owner's map, as data/test_borders"
+          " walks it: none of them is shut away",
+          sorted(c for c in list(CELLS) + list(CAMPS) if c not in outside), [])
     check("the places' titles as the server reads them: the quest places «Пустошь», the Тотем's"
           " too (the client's copy says «Тотем»)",
           {i: world.location(i).title for i in (262, 189, 89, 90, 284, 285)},
