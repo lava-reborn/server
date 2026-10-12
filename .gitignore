@@ -17,6 +17,10 @@ tools/*
 # checkout, see tools/quest_editor_ui/build.sh).
 !tools/quest_editor_ui/
 tools/quest_editor_ui/node_modules/
+# The location editor's page (tools/location_editor.py), the same way:
+# source and built page in git, npm's packages outside (its build.sh).
+!tools/location_editor_ui/
+tools/location_editor_ui/node_modules/
 # Also ours: the headless Flash Player 32 check (tools/flash_headless/README.md).
 # The projector it runs stays out; it is mounted, never copied in.
 !tools/flash_headless/

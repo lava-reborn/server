@@ -28,7 +28,8 @@ browser, on a copy of data/ and of client/objects:
   * 409 when this location's rows changed on disk, 422 on an error, 403
     under another host name, 415 for anything but JSON;
   * the list, the palette, the creatures, the map, the CLI, and a render
-    (with Pillow).
+    (with Pillow);
+  * the page (tools/location_editor_ui/static) and the files it loads.
 
     python3 tools/test_location_editor.py
 """
@@ -396,6 +397,14 @@ check("a post that is not JSON: 415", call("/api/check", raw=b"model=1", ctype="
 check("a body that does not parse: 400", call("/api/check", raw=b"{", ctype="application/json")[0], 400)
 code, out = call("/api/edit", {"model": M, "op": {"op": "fly"}})
 check("an edit it does not know: 400", code, 400)
+# the page itself: tools/location_editor_ui/static, built and committed
+# (bash tools/location_editor_ui/build.sh); every file it loads is served
+code, page = call("/")
+assets = re.findall(rb'(?:src|href)="\./(assets/[^"]+)"', page) if code == 200 else []
+check("GET /: the built page, its script and its styles, each served",
+      (code, b'id="root"' in page, sorted(a.rsplit(b".", 1)[-1] for a in assets),
+       sorted({call("/" + a.decode())[0] for a in assets})),
+      (200, True, [b"css", b"js"], [200]))
 
 # --- the owner's objects ---------------------------------------------------------------------------------------
 print("objects")

@@ -19,8 +19,10 @@ PYTHONUTF8=1 ~/venvs/lavagd/bin/python tools/location_editor.py -- Pillow and
 numpy draw the pictures, everything else is the standard library. It prints
 its address and never opens a window: the owner opens http://127.0.0.1:8096/
 (LAVA_LOCATION_EDITOR_PORT) in his own browser, which WSL's mirrored network
-reaches. The page is tools/location_editor_ui/static once it is built; until
-then / answers with a page that lists this API.
+reaches. The page is tools/location_editor_ui (Vite, React, TypeScript; the
+canvas a plain TS module), built into its static/ by `bash
+tools/location_editor_ui/build.sh` and committed built; without static/ the
+address answers with a page that lists this API.
 
 WHAT IT READS. LAVA_RES, the original's slice the server reads: by default
 CI's (~/lava-cicd2/ci-assets2/res), else the Desktop client. A launcher's
@@ -3167,6 +3169,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(dict(exc.extra, error=str(exc)), code=409)
         except NotFound as exc:
             return self._send({"error": str(exc)}, code=404)
+        except (BrokenPipeError, ConnectionResetError):
+            # the page went away before its answer (it moved on while a
+            # picture was drawn): there is nobody to tell
+            return None
         except Exception as exc:           # noqa: BLE001 -- the page gets the reason, the log the trace
             traceback.print_exc()
             return self._send({"error": "%s: %s" % (type(exc).__name__, exc)}, code=500)
