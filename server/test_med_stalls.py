@@ -102,7 +102,7 @@ with open(os.path.join(ROOT, "data", "shop_bands.json"), encoding="utf-8") as _f
 with open(os.path.join(ROOT, "data", "heal_manual.json"), encoding="utf-8") as _fh:
     MANUAL = json.load(_fh)["items"]
 
-# --- the reading of the names, this suite's own ---------------------------------------------
+# --- the reading of the names, this suite's own ----------------------------------------------
 TIERS = ("0_3", "4_7", "8_11", "12_15", "16_19", "20")
 FLOOR = {tier: int(tier.split("_")[0]) for tier in TIERS}
 LINE_WORD = {"combat_meds": "Battle", "peace_meds": "Pacific"}
@@ -296,7 +296,7 @@ check("  ..and out of one a use of food and water costs less than a kit's from 4
       " «Эгоист» is the cheaper (25 afro a use against 29), the wiki's 0.01 G (decision 9)",
       per_use, [(29, 25), (74, 150), (148, 275), (254, 450), (420, 775), (715, 1275)])
 
-# --- 4. the stalls ----------------------------------------------------------------------------
+# --- 4. the stalls ---------------------------------------------------------------------------
 print()
 print("the stalls")
 mt = world.mob_types()
@@ -372,7 +372,7 @@ check("  ..Эрикесэм at the Caravan sells what Морис does at the mar
 check("  ..Джут: one type, three oases, three stalls, each its city's tiers in gold",
       len({tuple(STALLS[(p, 207)]) for p in (76, 195, 196)}), 3)
 
-# --- 5. coverage ------------------------------------------------------------------------------
+# --- 5. coverage -----------------------------------------------------------------------------
 print()
 print("coverage")
 COVERED_CITIES = tuple(c[0] for c in shop_bands.CITIES)
@@ -416,7 +416,7 @@ check("every trader of a city's place the original titles a medicine or food sel
       " stall stays empty, decision 19)",
       sorted({(t, title(t)) for (p, t) in STALLS if title(t) in TITLES and t not in MEDICS}), [])
 
-# --- 6. nothing out of the tiers ---------------------------------------------------------------
+# --- 6. nothing out of the tiers -------------------------------------------------------------
 print()
 print("nothing out of the tiers")
 check("no medicine of the two lines on any stall of a city's place out of its city's tiers",
@@ -440,7 +440,7 @@ check("no list of data/npcs.json of a seller of a city's band carries a medicine
       sorted(t for t in shop_bands.SELLERS if any(line_med(x) for x in npcs.stock(t) or [])),
       [1221, 1222])
 
-# --- 7. outside the cities -----------------------------------------------------------------------
+# --- 7. outside the cities -------------------------------------------------------------------
 print()
 print("outside the cities")
 check("Иван Сидоркин (5706) at Заречье (429, no city's) sells his wiki list as it was, and with no"
@@ -455,12 +455,12 @@ check("Киплер and Курт in Мероэ (58, off the map, no city's): the
       ([6058, 6064, TUR, 6059, 6065, MAKS, 6060, 6066, SUPER],
        [6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908, 6048, 6903, 6054, 6909], True))
 
-# --- Донгола's black market and the names -------------------------------------------------------
+# --- Донгола's black market and the names ----------------------------------------------------
 print()
 print("Донгола's black market and the names")
 check("«Пулеметы и патроны» (1208) stands at Донгола's black market by data/placements.json and"
-      " sells the town's machine guns, then the rounds of the wiki's article, which the shifted link"
-      " had given Серхио; Серхио sells no gun",
+      " sells the town's machine guns, then the rounds of the wiki's article, which the shifted"
+      " link had given Серхио; Серхио sells no gun",
       (1208 in AT[103], STALLS[(103, 1208)],
        [x for x in STALLS[(103, 1214)] if items.root_of(x) != items.HEAL]),
       (True, [24989, 24990, 25006, 25007, 6097, 6109, 6121, 6145, 6098, 6110, 6122, 6146], []))
@@ -471,7 +471,7 @@ check("the four medics of Донгола and Абу-Хамед and the machine-g
        1221: "Киплер<br>Боевая медицина", 1222: "Курт<br>Лекарства и еда",
        1208: "Пулеметы и патроны"})
 
-# --- 8. no way to more afro ----------------------------------------------------------------------
+# --- 8. no way to more afro ------------------------------------------------------------------
 
 
 def sold_for(t):
@@ -493,10 +493,10 @@ check("an afro medicine sells back for 0.7 of its price at most; a gold one for 
        sorted({(sold_for(t), combat.gold_item(t)) for t in ON if gold_only(t)}),
        inventory.SELL_GOLD_ONLY), ([], [(0, True)], False))
 check("  ..one thing, one price, whoever sells it: no stall of a city sells a medicine cheaper"
-      " than another buys it back", max(sold_for(t) - price(t)[0] for t in ON if not gold_only(t)) < 0,
-      True)
+      " than another buys it back",
+      max(sold_for(t) - price(t)[0] for t in ON if not gold_only(t)) < 0, True)
 
-# --- 9. the switches ----------------------------------------------------------------------------
+# --- 9. the switches -------------------------------------------------------------------------
 print()
 print("the switches")
 kept = shop_bands.MED_REACH
@@ -527,7 +527,7 @@ for broken in ({"cities": [], "sellers": {"1": {"sells": ["pistols"], "only": "g
 check("  ..and a file giving only to a weapon or set seller, to a seller of no kind, or naming"
       " another currency stops the server", refused, [])
 
-# --- 10. «Свежий хлеб» -----------------------------------------------------------------------------
+# --- 10. «Свежий хлеб» -----------------------------------------------------------------------
 print()
 print("«Свежий хлеб»")
 bread = quests.get(482)
@@ -537,7 +537,7 @@ check("482 asks, beside its flour, a «Кожаный бурдюк» (6050), and
       ((6050, 1) in bread.wants(), 6050 in STALLS[(187, 1168)],
        min(waters, key=lambda x: price(x)[0])), (True, True, 6050))
 
-# --- on the wire -------------------------------------------------------------------------------------
+# --- on the wire -----------------------------------------------------------------------------
 print()
 print("on the wire")
 accounts.DB_PATH = DB
@@ -634,7 +634,8 @@ async def main():
     stall = window(sess, npc)
     check("102: Люций's window is his stall there, Вади-Хальфа's tiers 0_3-8_11 of battle medicine",
           (stall == items.stock_for(1206, 102), stall), (True, PINNED[(102, 1206)]))
-    check("  ..the stall opens: one ack", acks(run(sess, "ss_create;s_type=1;target=%d;" % npc)), [0])
+    check("  ..the stall opens: one ack",
+          acks(run(sess, "ss_create;s_type=1;target=%d;" % npc)), [0])
     check("  ..«Тряпичный бинт» (6056) for its 34 afro, one ack, no gold",
           buy(sess, stall.index(6056), inventory.UPD_BUY), ([0], [6056], 34, 0))
     check("  ..«Р.О.С.А. (G)» (6074) for its 0.02 ounces in gold, no afro",
