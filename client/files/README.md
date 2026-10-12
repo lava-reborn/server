@@ -4,10 +4,16 @@ Small files of ours that players get as they are, at the same path under
 `res/`: `client/files/xmldocs/x.xml` becomes `res/xmldocs/x.xml`. A file here
 replaces the original one at that path. A path the release also generates
 (`main.swf`, `database/texts.xml`, `database/locations.xml`,
-`hints/hints.xml`, the map tiles server/map_cells.py paints over, and the
-sprite files of the owner's objects, client/objects/) is
-refused: change its generator instead. Big files go
-into the store and `client/extra.txt` (client/README.md).
+`hints/hints.xml`, the map tiles server/map_cells.py paints over, the
+sprite files of the owner's objects (client/objects/), `xml/loc_defs.xml`
+and the locations of ours) is refused: change its generator instead. Big
+files go into the store and `client/extra.txt` (client/README.md).
+
+A location the server should read as well -- a new place, or an original
+one changed -- does not go here: it goes into `data/locations/static/<id>.xml`
+(server/world.py), which the release ships at `locations/static/<id>.xml`
+with its row in `xml/loc_defs.xml`, and the server reads before the
+original's. An id that is both here and there stops the build.
 
 `locations/static/262.xml` is the original file of the place «Тотем» near
 Абри (Q_Abri_Totem, 5864,1838) byte for byte, but for its title: the client

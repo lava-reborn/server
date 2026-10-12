@@ -570,6 +570,15 @@ class Handler(BaseHTTPRequestHandler):
         if not (full + os.sep).startswith(root):
             self._send("forbidden", code=403)
             return
+        posix = rel.replace(os.sep, "/")
+        # A location of ours (data/locations, world.static_path) before the
+        # original's, a new id included -- what every client release carries
+        # in its place (client/build.py).
+        m = re.fullmatch(r"locations/static/(\d{1,8}\.xml)", posix)
+        loc_id = world._static_name(m.group(1)) if m else None
+        ours = world.overlay_path(loc_id) if loc_id is not None else None
+        if ours is not None:
+            full = ours
         if not os.path.isfile(full):
             self._send("not found", code=404)
             return
@@ -577,8 +586,17 @@ class Handler(BaseHTTPRequestHandler):
                            "application/octet-stream")
         with open(full, "rb") as fh:
             body = fh.read()
-        posix = rel.replace(os.sep, "/")
-        if posix.lower() == "database/locations.xml":
+        if posix == "xml/loc_defs.xml":
+            # The client's list of the location files it may open, with a
+            # row for each of ours: without one it draws a desert template
+            # where the server reads the file (world.loc_defs).
+            files = {}
+            for i in world.overlay_ids():
+                with open(world.overlay_path(i), "rb") as fh:
+                    files[i] = fh.read()
+            if files:
+                body = world.loc_defs(body, files)
+        elif posix.lower() == "database/locations.xml":
             # The names over the global map's cells, with the owner's edits
             # laid on -- what the launcher does for every player (map_labels).
             body, _changed = map_labels.apply(body)

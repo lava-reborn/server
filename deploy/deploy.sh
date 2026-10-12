@@ -73,10 +73,24 @@ fi
 # into it -- one of them inside the slice: locations/static/262.xml, the
 # Тотем titled for the client's window (client/files/README.md). Synced from
 # such a client, /opt/lava/res would read ours, the server with it, and CI's
-# copy of the slice (README «Ресурсы для тестов»). So every slice path
-# client/files has must be, in RES_SRC, the original's bytes as
-# client/base.txt has them (or absent, for a file the original lacks); else
-# nothing goes up, before anything is done.
+# copy of the slice (README «Ресурсы для тестов»). The locations of ours,
+# data/locations/static/<id>.xml, go the same way: the release ships each as
+# locations/static/<id>.xml, and the server reads them from the repository
+# (server/world.py, static_path), never from /opt/lava/res. So every slice
+# path either of the two has must be, in RES_SRC, the original's bytes as
+# client/base.txt has them; else nothing goes up, before anything is done.
+# A path the original lacks -- a new place of ours, 1381 and up -- is
+# never sent at all, whatever the client holds there (slice_excludes).
+slice_excludes=()
+ours_in_slice() {
+  {
+    (cd "$HERE/client/files" && find . -type f | sed 's|^\./||')
+    if [ -d "$HERE/data/locations/static" ]; then
+      (cd "$HERE/data/locations/static" && find . -maxdepth 1 -type f -name '*.xml' \
+         | sed 's|^\./|locations/static/|')
+    fi
+  } | LC_ALL=C sort -u
+}
 check_slice() {
   local bad=0 rel want have
   while IFS= read -r rel; do
@@ -86,16 +100,21 @@ check_slice() {
       *) continue ;;
     esac
     want=$(awk -F'\t' -v p="$rel" 'NF == 3 && $3 == p { print $1 }' "$HERE/client/base.txt")
+    if [ -z "$want" ]; then
+      slice_excludes+=(--exclude "/$rel")
+      continue
+    fi
     have=
     if [ -f "$RES_SRC/$rel" ]; then
       have=$(sha256sum "$RES_SRC/$rel" | cut -d' ' -f1)
     fi
     if [ "$have" != "$want" ]; then
-      echo "slice: $RES_SRC/$rel is not the original's (client/base.txt: ${want:-no such file});" \
-           "client/files has its own copy, which is the client's alone" >&2
+      echo "slice: $RES_SRC/$rel is not the original's (client/base.txt: $want);" \
+           "client/files or data/locations has its own copy, which the server never" \
+           "reads from /opt/lava/res" >&2
       bad=1
     fi
-  done < <(cd "$HERE/client/files" && find . -type f | sed 's|^\./||' | LC_ALL=C sort)
+  done < <(ours_in_slice)
   if [ "$bad" = 1 ]; then
     echo "put the original's file back (LAVA.zip, LAVA/res/<path>) or point LAVA_RES_SRC at a res" \
          "that has it; nothing was sent" >&2
@@ -133,8 +152,11 @@ if [ "$with_data" = 1 ]; then
   echo "==> location and item tables"
   # Named file by named file. --prune-empty-dirs keeps the directories that
   # end up with nothing in them from being created at all, and the final
-  # --exclude '*' is what makes this a whitelist rather than a filter.
+  # --exclude '*' is what makes this a whitelist rather than a filter. The
+  # new places of ours go first (check_slice): the first rule that matches
+  # wins, and those files are the repository's to serve.
   rsync -a --delete --prune-empty-dirs --info=stats1 \
+    ${slice_excludes[@]+"${slice_excludes[@]}"} \
     --include 'database/' \
     --include 'database/mobs.xml' \
     --include 'database/objects.xml' \

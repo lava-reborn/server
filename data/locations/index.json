@@ -1,0 +1,8 @@
+{
+ "_meta": {
+  "what": "The locations of ours: data/locations/static/<id>.xml, one row here for each, by id -- {title, from, author, created, why}.",
+  "why": "The server reads its location files from the original's slice of the client (/opt/lava/res), which no deploy changes, and the client from its own copy, which a release changes. A location of ours lives here so that one push brings it to both: server/world.py reads this folder before the original's (static_path), and client/build.py ships the same bytes into the release as locations/static/<id>.xml with a row in xml/loc_defs.xml, without which the client draws a desert where the server opens the file.",
+  "rule": "A new place takes the first free id from 1381 (world.FIRST_NEW_ID) and stays below 8192 (NEW_ID_LIMIT); an id of the original's here replaces the original's file for both sides. 'from' is the location it was copied from, 'created' the day, 'why' the owner's word. Its exits go into data/exits_sides.json (data/build_exits_sides.py --only <id>), its ways in and out into data/passages.json, its inhabitants into data/placements.json. 262 «Тотем» is not here: its copy in client/files is the client's alone (client/files/README.md). server/test_locations.py and server/test_location_overrides.py hold every file here to these rules."
+ },
+ "locations": {}
+}

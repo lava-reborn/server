@@ -106,7 +106,8 @@ def _chunks(txt, tag, step):
 # the walkability grid out of whatever file they picked: disagree, and the
 # player walks through walls the client is drawing, or into ones it is not.
 #
-#   locations/static/<id>.xml   whenever that file exists
+#   locations/static/<id>.xml   whenever that file exists (ours, OVERLAY,
+#                               before the original's)
 #   id >> 28 == 4               locations/deadloc/<(id >> 26) & 3>.xml
 #   id >> 26 == 0               open desert, gx = id >> 13, gy = id & 0x1FFF,
 #                               tile ((gx + gy) & 3) + 1 of four
@@ -235,21 +236,145 @@ def unpack(geo):
     return geo >> GEO_SHIFT, geo & GEO_MASK
 
 
+# The locations of ours: data/locations/static/<id>.xml, made with the
+# location editor -- new places from 1381 up (FIRST_NEW_ID), or one of the
+# original's files changed -- and read before the original's. RES on the
+# server is the original's slice (/opt/lava/res), synced by hand and never by
+# CI, so a file of ours has to live in the repository to reach the server at
+# all; client/build.py ships the same bytes into every client release, with
+# their rows in xml/loc_defs.xml (loc_defs), and the two sides read one file.
+# data/locations/index.json says, id by id, what each is and why.
+# LAVA_LOC_OVERLAY names another folder, for a suite that makes a place of
+# its own; like LAVA_PASSAGES it stands in for the repository's folder
+# whole, and nothing of that one is read beside it.
+# 262 «Тотем» is not here: its copy in client/files is the client's alone
+# (client/files/README.md), and the server keeps the original's.
+OVERLAY = os.environ.get("LAVA_LOC_OVERLAY") or os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "locations")
+
+# The original's static files are 0..1380 without a gap, so a new place takes
+# the first free id from 1381 on. Below 8192 (NEW_ID_LIMIT): a packed map cell
+# is never that small (no map column is 0), and nothing else in the id space
+# lies near it.
+FIRST_NEW_ID = 1381
+NEW_ID_LIMIT = 8192
+
+
+def _static_name(name):
+    """The id of a static file's name -- '1381.xml' -> 1381 -- or None for
+    any other name, '01381.xml' among them: the client asks for the id as
+    the number prints."""
+    stem, ext = name[:-4], name[-4:]
+    if ext != ".xml" or not stem.isdigit() or str(int(stem)) != stem:
+        return None
+    return int(stem)
+
+
+def overlay_ids(root=None):
+    """The ids with a file of ours (OVERLAY, or root), sorted."""
+    d = os.path.join(OVERLAY if root is None else root, "static")
+    try:
+        names = os.listdir(d)
+    except OSError:
+        return []
+    return sorted(i for i in map(_static_name, names) if i is not None)
+
+
+def overlay_path(loc_id):
+    """Our file for a static id, or None when the overlay has none."""
+    p = os.path.join(OVERLAY, "static", "%d.xml" % int(loc_id))
+    return p if os.path.isfile(p) else None
+
+
+def static_path(loc_id):
+    """The static file behind an id: ours (OVERLAY) before the original's
+    (RES), or None when neither has one."""
+    p = overlay_path(loc_id)
+    if p is not None:
+        return p
+    p = os.path.join(RES, "locations", "static", "%d.xml" % int(loc_id))
+    return p if os.path.isfile(p) else None
+
+
+def static_ids():
+    """Every static location id, the original's and ours, sorted."""
+    try:
+        names = os.listdir(os.path.join(RES, "locations", "static"))
+    except OSError:
+        names = []
+    ids = {i for i in map(_static_name, names) if i is not None}
+    return sorted(ids.union(overlay_ids()))
+
+
+def overlay_index(root=None):
+    """data/locations/index.json 'locations': id -> {title, from, author,
+    created, why}, one row per file of ours. No file is no rows."""
+    path = os.path.join(OVERLAY if root is None else root, "index.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except FileNotFoundError:
+        return {}
+    return {int(k): v for k, v in (doc.get("locations") or {}).items()
+            if not str(k).startswith("_")}
+
+
+# xml/loc_defs.xml: the client opens locations/static/<id>.xml only for an id
+# this list names (SourceList: an href and a hash that is not empty), and
+# draws a desert template for any other -- while the server would open the
+# file. The hash is the file's md5, as the original's rows have it, and the
+# time the original's last build's.
+LOC_DEFS_TIME = 1616508972
+_LOC_DEFS_ROW = re.compile(rb'<file\s+href="locations/static/(\d+)\.xml"[^>]*/>')
+
+
+def loc_defs(raw, files):
+    """xml/loc_defs.xml bytes with a row for each of files ({id: bytes}): a
+    row the original has gets the file's hash and size in place, every other
+    byte as it was; a new id gets a row of its own before </data>, in id
+    order."""
+    import hashlib
+    files = {int(k): v for k, v in files.items()}
+    seen = set()
+
+    def one(m):
+        i = int(m.group(1))
+        if i not in files:
+            return m.group(0)
+        seen.add(i)
+        data = files[i]
+        row = re.sub(rb'\bhash="[^"]*"', b'hash="' + hashlib.md5(data).hexdigest().encode() + b'"',
+                     m.group(0), count=1)
+        return re.sub(rb'\bsize="[^"]*"', b'size="%d"' % len(data), row, count=1)
+
+    out = _LOC_DEFS_ROW.sub(one, raw)
+    new = [i for i in sorted(files) if i not in seen]
+    if not new:
+        return out
+    end = out.rfind(b"</data>")
+    if end < 0:
+        raise ValueError("xml/loc_defs.xml: no </data> to add rows before")
+    rows = b"".join(b'<file href="locations/static/%d.xml" hash="%s" time="%d" size="%d" />\n'
+                    % (i, hashlib.md5(files[i]).hexdigest().encode(), LOC_DEFS_TIME,
+                       len(files[i])) for i in new)
+    return out[:end] + rows + out[end:]
+
+
 def is_wilderness(loc_id):
     """True when the id is a packed map cell rather than a location file.
 
     The two spaces overlap on paper -- a file number and a packed cell are
     both just integers -- but not in practice: no real map column is 0, so a
-    packed cell is always far above the 1381 file numbers.
+    packed cell is always far above the 1381 file numbers, and above the
+    ids of ours (NEW_ID_LIMIT) too.
     """
-    return not os.path.isfile(
-        os.path.join(RES, "locations", "static", "%d.xml" % loc_id))         and loc_id >> 26 == 0
+    return static_path(loc_id) is None and loc_id >> 26 == 0
 
 
 def path_for(loc_id):
     """The file behind a location id, or None where the client draws nothing."""
-    static = os.path.join(RES, "locations", "static", "%d.xml" % loc_id)
-    if os.path.isfile(static):
+    static = static_path(loc_id)
+    if static is not None:
         return static
     if loc_id >> 28 == 4:
         return os.path.join(RES, "locations", "deadloc",

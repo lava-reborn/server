@@ -122,6 +122,8 @@ try:
         "globalmap/full/1.jpg": b"a tile with a square",
         "globalmap/full/2.jpg": b"a tile with nothing to paint over",
         "locations/libs/sprite/C_Old.swf": b"an original sprite whose name an object of ours wants",
+        "xml/loc_defs.xml": (b"<?xml version='1.0'?>\n<data>\n<file href=\"locations/static/0.xml\" "
+                             b"hash=\"00000000000000000000000000000000\" time=\"1\" size=\"3\" />\n</data>"),
     }
     for p, data in originals.items():
         write(os.path.join(res, *p.split("/")), data)
@@ -281,6 +283,31 @@ try:
     check("objects: a broken manifest stops the build, naming client/objects",
           fails_with("client/objects: c_old: frames", os.path.join(W, "o7")), True)
     shutil.rmtree(odir)
+
+    # The locations of ours (data/locations/static/<id>.xml, server/world.py):
+    # the release ships the bytes the server reads, and the client's list of
+    # location files with a row for each -- without one it draws a desert.
+    check("release: no location of ours, the list of location files is the original's",
+          got.get("xml/loc_defs.xml"), sha(originals["xml/loc_defs.xml"]))
+    place = b'<location title="ours" width="32" height="64"><mobs></mobs></location>'
+    write(os.path.join(tree, "data", "locations", "static", "1381.xml"), place)
+    out6 = os.path.join(W, "out6")
+    rc, out = release(out6)
+    got6 = {l.split("\t")[2]: l.split("\t")[0] for l in read(os.path.join(out6, "files.tsv")).decode().splitlines()}
+    check("release: a location of ours is in it, at locations/static/<id>.xml, byte for byte",
+          (rc, got6.get("locations/static/1381.xml")), (None, sha(place)))
+    check("  ..and the list of location files has its row, the original's rows as they were",
+          read(os.path.join(out6, "blobs", got6["xml/loc_defs.xml"])),
+          originals["xml/loc_defs.xml"].replace(
+              b"</data>", b'<file href="locations/static/1381.xml" hash="%s" time="1616508972" size="%d" />\n</data>'
+              % (hashlib.md5(place).hexdigest().encode(), len(place))))
+    check("  ..and the report says so", "locations: 1 of ours (data/locations)" in read(
+        os.path.join(out6, "report.txt")).decode(), True)
+    write(os.path.join(cdir, "files", "locations", "static", "1381.xml"), place)
+    check("release: an id that client/files has too is refused (the client's alone, like 262)",
+          fails_with("client/files has locations/static/1381.xml", os.path.join(W, "o8")), True)
+    shutil.rmtree(os.path.join(cdir, "files", "locations"))
+    shutil.rmtree(os.path.join(tree, "data"))
 
     # --- publish: check and publish ---------------------------------------------------------------
     keyfile = os.path.join(W, "resource.pem")

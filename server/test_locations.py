@@ -7,6 +7,7 @@ is drawing, or into ones it is not.
 """
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -45,9 +46,16 @@ check("a file number is not wilderness", world.is_wilderness(456), False)
 check("a packed cell is", world.is_wilderness(geo), True)
 
 # --- every file the client ships --------------------------------------------
-d = os.path.join(world.RES, "locations", "static")
-ids = sorted(int(f[:-4]) for f in os.listdir(d) if f.endswith(".xml"))
-check("all 1381 static locations present", len(ids), 1381)
+# The original's, as client/base.txt lists them: 0..1380 without a gap. The
+# server reads each from the slice it is given, or from ours (data/locations)
+# where we changed one.
+with open(os.path.join(os.path.dirname(HERE), "client", "base.txt"), encoding="utf-8") as _fh:
+    BASE_IDS = sorted(int(m.group(1)) for m in re.finditer(
+        r"\tlocations/static/(\d+)\.xml\r?$", _fh.read(), re.M))
+check("all 1381 static locations of the original listed", (len(BASE_IDS), BASE_IDS[0], BASE_IDS[-1]),
+      (1381, 0, 1380))
+ids = world.static_ids()
+check("  ..and every one of them there to read", sorted(set(BASE_IDS) - set(ids)), [])
 
 broken = []
 without_entry = []
@@ -63,6 +71,21 @@ for i in ids:
         without_entry.append(i)
 check("every one of them parses", broken, [])
 check("every one offers somewhere to stand", without_entry, [])
+
+# The locations of ours (data/locations, world.OVERLAY): a new place from
+# 1381 up and below 8192, or a changed original; each with a free cell to
+# arrive on and its row in data/locations/index.json.
+ours = world.overlay_ids()
+index = world.overlay_index()
+check("every location of ours is a new id from 1381 below 8192, or one of the original's",
+      [i for i in ours if not (world.FIRST_NEW_ID <= i < world.NEW_ID_LIMIT or i in BASE_IDS)], [])
+check("  ..and has a free cell to arrive on",
+      [i for i in ours if not [c for c in world.location(i).entries if c not in world.location(i).obstacles]],
+      [])
+check("  ..and its row in data/locations/index.json, with a title and a why",
+      [i for i in ours if not (index.get(i) or {}).get("title") or not (index.get(i) or {}).get("why")], [])
+check("  ..and the index has no row without a file", sorted(set(index) - set(ours)), [])
+check("  ..and 262 «Тотем» is not one of them (client/files has the client's own copy)", 262 in ours, False)
 
 # Nothing the server places may carry a name the client has not been handed.
 # An unknown string id makes StringCollector fetch a batch, and a batch after

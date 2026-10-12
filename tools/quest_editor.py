@@ -405,12 +405,9 @@ def _icons():
 
 
 def _static_ids():
-    base = os.path.join(world.RES, "locations", "static")
-    try:
-        return sorted(int(f[:-4]) for f in os.listdir(base)
-                      if f.endswith(".xml") and f[:-4].isdigit())
-    except OSError:
-        return []
+    """The original's static locations and ours (data/locations), as the
+    server reads them (world.static_ids)."""
+    return world.static_ids()
 
 
 def _scan(ids):
@@ -418,13 +415,12 @@ def _scan(ids):
     title}, from the location files; cached on disk by the files' count and
     newest change, because the scan reads 1381 files and takes a dozen
     seconds over /mnt/c."""
-    base = os.path.join(world.RES, "locations", "static")
     try:
-        stamp = "%d-%d" % (len(ids), int(max(os.path.getmtime(os.path.join(base, "%d.xml" % i))
+        stamp = "%d-%d" % (len(ids), int(max(os.path.getmtime(world.static_path(i))
                                               for i in ids)) if ids else 0)
-    except OSError:
+    except (OSError, TypeError):
         stamp = "none"
-    key = hashlib.sha256((world.RES + stamp).encode()).hexdigest()[:16]
+    key = hashlib.sha256((world.RES + world.OVERLAY + stamp).encode()).hexdigest()[:16]
     cached = os.path.join(CACHE, "scan-%s.json" % key)
     try:
         with open(cached, encoding="utf-8") as fh:

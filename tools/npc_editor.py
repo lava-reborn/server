@@ -66,17 +66,12 @@ def places():
     if _PLACES is not None:
         return _PLACES
     out = []
-    base = os.path.join(world.RES, "locations", "static")
-    for fn in sorted(os.listdir(base)):
-        if not fn.endswith(".xml"):
-            continue
+    # The original's files and ours (data/locations), as the server reads
+    # them (world.static_path).
+    for loc_id in world.static_ids():
         try:
-            loc_id = int(fn[:-4])
-        except ValueError:
-            continue
-        try:
-            txt = world._read(os.path.join(base, fn))
-        except OSError:
+            txt = world._read(world.static_path(loc_id))
+        except (OSError, TypeError):
             continue
         node = re.search(r"<mobs>(.*?)</mobs>", txt, re.S)
         if not node:

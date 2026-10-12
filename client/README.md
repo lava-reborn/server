@@ -70,7 +70,14 @@ painted over in K tiles`. Свои объекты локаций из `client/ob
 `locations/libs/sprite/<id>.swf` (или `locations/libs/background/<id>.swf`),
 в отчёте это строки `object: ...` и `objects: N from client/objects/`. Объект,
 чей файл есть в оригинале или в `extra.txt` хотя бы в другом регистре,
-останавливает сборку. На сервере отчёт сборки уходит в журнал выкатки; в
+останавливает сборку. Наши локации из редактора,
+`data/locations/static/<id>.xml`, едут в релиз как `locations/static/<id>.xml`
+теми же байтами, что читает сервер (`server/world.py`, `static_path`), а
+`xml/loc_defs.xml` — оригинал со строкой на каждую из них (`world.loc_defs`):
+без строки клиент рисует на месте нового id пустыню. Id, который есть и в
+`client/files`, сборка отвергает: такая копия только клиентская (262 «Тотем»).
+В отчёте это строки `generated: ... locations/static/<id>.xml` и
+`locations: N of ours`. На сервере отчёт сборки уходит в журнал выкатки; в
 отчёт выкатки попадают первые четыре строки публикации (`client: since ...:
 N changed` и до двух путей).
 

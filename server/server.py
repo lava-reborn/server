@@ -1121,10 +1121,17 @@ class Session:
                     self.loc = world.location(START_LOC)
                     self.gx, self.gy = GLOBAL_X, GLOBAL_Y
         # A cell saved in one location means nothing in another, and a cell
-        # outside the grid would put the player in a wall.
-        if pos and 0 <= pos < self.loc.width * self.loc.height:
+        # outside the grid would put the player in a wall. So would one that
+        # is a wall now: a location of ours changed since the player left it
+        # (data/locations) may have put an obstacle on the very cell, and the
+        # client cannot walk a figure off one -- it stands at the entry.
+        if pos and 0 <= pos < self.loc.width * self.loc.height \
+                and pos not in self.loc.obstacles:
             self.pos = pos
         else:
+            if pos and pos in self.loc.obstacles:
+                log.info("  ..    saved on an obstacle at %d in %s, at the entry"
+                         " instead", pos, self.loc.file)
             self.pos = self.loc.entry_cell()
         # Left standing on a walk-in -- a socket that dropped on the way
         # through, a logout while a fight held it shut: the login

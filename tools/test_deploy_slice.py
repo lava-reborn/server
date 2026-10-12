@@ -16,7 +16,11 @@ Here ssh and rsync are stand-ins that only write down their arguments:
   - the release's copy in the client: exit 1, the path named, no ssh and no
     rsync at all;
   - the file missing from the client: refused the same way;
-  - a code deploy (no --with-data) does not look at the slice.
+  - a code deploy (no --with-data) does not look at the slice;
+  - the locations of ours (data/locations/static, server/world.py) are held
+    the same way: our copy of an original location in the client is
+    refused, and a new place (an id the original has not) is never sent,
+    whatever the client holds there -- the rsync excludes it.
 
     python3 tools/test_deploy_slice.py
 """
@@ -110,6 +114,73 @@ try:
     check("a code deploy does not look at the slice: the check runs under --with-data alone",
           'if [ "$with_data" = 1 ]; then\n  [ -d "$RES_SRC" ] || { echo "no client at $RES_SRC" >&2;'
           ' exit 1; }\n  check_slice\nfi' in script, True)
+
+    # The locations of ours (data/locations/static/<id>.xml), which the
+    # release ships as locations/static/<id>.xml and the server reads from
+    # the repository (server/world.py): held like client/files. A tree of
+    # its own, deploy.sh copied into it, so that the repository's
+    # data/locations is left as it is.
+    TREE = os.path.join(WORK, "tree")
+    os.makedirs(os.path.join(TREE, "deploy"))
+    shutil.copy(os.path.join(ROOT, "deploy", "deploy.sh"), os.path.join(TREE, "deploy"))
+    shutil.copytree(os.path.join(ROOT, "client", "files"), os.path.join(TREE, "client", "files"))
+    shutil.copy(os.path.join(ROOT, "client", "base.txt"), os.path.join(TREE, "client"))
+    NEW, OLD = "locations/static/1381.xml", "locations/static/102.xml"
+    ODIR = os.path.join(TREE, "data", "locations", "static")
+    os.makedirs(ODIR)
+    PLACE = OURS.replace('title="Тотем"'.encode(), 'title="Новое место"'.encode(), 1)
+    for rel in (NEW, OLD):
+        with open(os.path.join(ODIR, rel.split("/")[-1]), "wb") as fh:
+            fh.write(PLACE)
+    check("  (the overlay's 102 is not the original's, its 1381 the original has not)",
+          (hashlib.sha256(PLACE).hexdigest() != base_sha(OLD), base_sha(NEW)), (True, None))
+
+    def deploy_tree(res, *args):
+        if os.path.exists(LOG):
+            os.remove(LOG)
+        env = dict(os.environ, PATH=BIN + os.pathsep + os.environ.get("PATH", ""),
+                   LAVA_RES_SRC=res, LAVA_DEPLOY_HOST="nobody@nowhere", LAVA_DEPLOY_DIR="/opt/lava")
+        p = subprocess.run(["bash", os.path.join(TREE, "deploy", "deploy.sh")] + list(args),
+                           env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                           timeout=60)
+        calls = open(LOG).read().splitlines() if os.path.exists(LOG) else []
+        return p.returncode, p.stderr, calls
+
+    def installed(**files):
+        """A client's res holding 262.xml as the original and the given files
+        (path -> bytes), as the launcher leaves it."""
+        res = client(ORIGINAL)
+        for rel, data in files.items():
+            with open(os.path.join(res, *rel.split("/")), "wb") as fh:
+                fh.write(data)
+        return res
+
+    original_102 = None
+    for res_dir in (os.environ.get("LAVA_RES") or "", "/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res"):
+        p = os.path.join(res_dir, *OLD.split("/"))
+        if res_dir and os.path.isfile(p):
+            with open(p, "rb") as fh:
+                data = fh.read()
+            if hashlib.sha256(data).hexdigest() == base_sha(OLD):
+                original_102 = data
+                break
+    check("  (the original's 102.xml is at hand, from LAVA_RES)", original_102 is not None, True)
+
+    code, err, calls = deploy_tree(installed(**{NEW: PLACE, OLD: original_102}), "--data-only")
+    rsyncs = [c for c in calls if c.startswith("rsync ")]
+    check("a new place of ours in the client and the original's 102: the slice goes up",
+          (code, [c.split()[0] for c in calls], err.strip()), (0, ["ssh", "rsync"], ""))
+    check("  ..without the new place: the rsync leaves it out, first of its rules",
+          [c.split(" --include ")[0].endswith("--exclude /" + NEW) for c in rsyncs], [True])
+    check("  ..and leaves the original's own files in, 102 among them",
+          ("--exclude /" + OLD) in rsyncs[0], False)
+
+    code, err, calls = deploy_tree(installed(**{OLD: PLACE}), "--data-only")
+    check("our copy of an original location in the client: refused, the path named, nothing sent",
+          (code, OLD in err, "not the original's" in err, calls), (1, True, True, []))
+    code, err, calls = deploy_tree(client(ORIGINAL), "--data-only")
+    check("  ..and refused the same way when the client lacks the original's",
+          (code, OLD in err, calls), (1, True, []))
 finally:
     shutil.rmtree(WORK, ignore_errors=True)
 

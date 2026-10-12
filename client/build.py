@@ -19,9 +19,12 @@ A release is four layers, later ones over earlier ones:
                          table through tools/export_texts.py, the global
                          map's names through server/map_labels.py, hints.xml,
                          the map's tiles that lose the squares of retired
-                         places through server/map_cells.py, and the
-                         owner's own location objects, client/objects/ made
-                         into sprite files by tools/custom_objects.py.
+                         places through server/map_cells.py, the owner's
+                         own location objects, client/objects/ made into
+                         sprite files by tools/custom_objects.py, and the
+                         locations of ours (data/locations/static, the same
+                         bytes the server reads) with their rows in
+                         xml/loc_defs.xml.
   4. client/files/**     small files of ours, kept in git as they are.
 
 A path that two layers both claim is fine going down (a generated main.swf
@@ -344,6 +347,50 @@ class Build:
         finally:
             sys.path.pop(0)
 
+    def gen_overlay_locations(self):
+        """The locations of ours (data/locations/static/<id>.xml, the
+        location editor's) as locations/static/<id>.xml, the bytes the
+        server reads (world.static_path), and xml/loc_defs.xml with a row
+        for each (world.loc_defs): the client opens a static file only for
+        an id that list names. {path: bytes}; nothing at all while there
+        are none, so a tree without the folder builds as it always has.
+
+        An id client/files also has is refused: such a copy is the
+        client's alone and the server keeps the original's (262 «Тотем»,
+        client/files/README.md), so it cannot be ours as well."""
+        src = os.path.join(self.tree, "data", "locations", "static")
+        try:
+            names = sorted(os.listdir(src))
+        except FileNotFoundError:
+            return {}
+        theirs = set()
+        fdir = os.path.join(self.cdir, "files")
+        for d, _dirs, fs in os.walk(fdir):
+            for f in fs:
+                theirs.add(os.path.relpath(os.path.join(d, f), fdir).replace(os.sep, "/").lower())
+        files = {}
+        for name in names:
+            stem = name[:-4]
+            if not (name.endswith(".xml") and stem.isdigit() and str(int(stem)) == stem):
+                raise SystemExit("data/locations/static/%s: a location of ours is <id>.xml" % name)
+            path = "locations/static/%s" % name
+            if path.lower() in theirs:
+                raise SystemExit("data/locations/static/%s: client/files has %s, the client's alone "
+                                 "and never the server's; an id is ours in one place only" % (name, path))
+            with open(os.path.join(src, name), "rb") as fh:
+                files[int(stem)] = fh.read()
+        if not files:
+            return {}
+        sys.path.insert(0, os.path.join(self.tree, "server"))
+        try:
+            import world
+            defs = world.loc_defs(self.original("xml/loc_defs.xml"), files)
+        finally:
+            sys.path.pop(0)
+        out = {"locations/static/%d.xml" % i: data for i, data in files.items()}
+        out["xml/loc_defs.xml"] = defs
+        return out
+
     def run(self):
         os.makedirs(self.out, exist_ok=True)
         self.base = read_entries(self.base_path, "lava-base 1")
@@ -392,6 +439,15 @@ class Build:
             self.put(p, objects[p], "generated")
         self.report.extend(lines)
         self.report.append("objects:   %d from client/objects/" % len(objects))
+        ours = self.gen_overlay_locations()
+        for p in sorted(ours):
+            before = self.files.get(p)
+            self.put(p, ours[p], "generated")
+            self.report.append("generated: %s %s (%d bytes, %s)" % (
+                self.files[p][0][:16], p, len(ours[p]),
+                "the rows of our locations" if p == "xml/loc_defs.xml"
+                else "a location of ours" + ("" if before else ", new")))
+        self.report.append("locations: %d of ours (data/locations)" % (max(len(ours) - 1, 0)))
 
         # 4. ours, in git
         fdir = os.path.join(self.cdir, "files")

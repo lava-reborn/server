@@ -160,26 +160,34 @@ try:
     c = Client(connect())
     lcall, lenter = enter(c)
     loc_id = int(lcall.split("id=")[1].split(";")[0])
+    # Five cells side by side that no wall stands on: a login puts somebody
+    # saved on a wall at the entry instead (Session.restore), and these cells
+    # are the suite's own choice, where the client's findPath walks round
+    # every wall.
+    import world
+    _loc = world.location(loc_id)
+    P = next(range(i, i + 5) for i in range(490, _loc.width * _loc.height - 5)
+             if i % _loc.width + 4 < _loc.width and not any(c in _loc.obstacles for c in range(i, i + 5)))
     # Written on arrival, before any logout or break: a server killed
     # outright (serve_local.ps1's Stop-Process -Force, a crash) reaches no
     # close(), and the login then put him back where he had logged out the
     # time before -- in the Вади-Хальфа mine, a tier or a town away.
     check("the location written on arrival, before any logout or break", saved(),
           (loc_id, int(lenter.split("pos=")[1].split(";")[0])))
-    c.send("moveTo;path=|490|491|492|;")
+    c.send("moveTo;path=|%d|%d|%d|;" % (P[0], P[1], P[2]))
     check("moved", c.names(), ["cmdAck", "userMove"])
     # No logout: the client crashed, or the network went.
     c.s.close()
     time.sleep(0.5)
-    check("position written when the link breaks", saved(), (loc_id, 492))
+    check("position written when the link breaks", saved(), (loc_id, P[2]))
 
     # --- and the next login starts from there -----------------------------
     c = Client(connect())
     lcall, lenter = enter(c)
     # amax is the character's action-point ceiling, 50 + 5 * best skill, which
     # for a newborn is 50; it used to be a constant 20.
-    check("restored where the link broke", lenter, "lenter;pos=492;aspd=1;amax=50;")
-    c.send("moveTo;path=|492|493|;")
+    check("restored where the link broke", lenter, "lenter;pos=%d;aspd=1;amax=50;" % P[2])
+    c.send("moveTo;path=|%d|%d|;" % (P[2], P[3]))
     check("moved again", c.names(), ["cmdAck", "userMove"])
 
     # --- SIGTERM: told, saved, dropped, in that order ----------------------
@@ -192,7 +200,7 @@ try:
     _drain.join(timeout=2)
     out = "".join(_log)
     check("server exits cleanly", srv.returncode, 0)
-    check("position written on shutdown", saved(), (loc_id, 493))
+    check("position written on shutdown", saved(), (loc_id, P[3]))
     check("one save per session, not two",
           out.count("shutting down, 1 session(s) online"), 1)
 
@@ -208,8 +216,8 @@ try:
     _drain.start()
     c = Client(connect())
     lcall, lenter = enter(c)
-    check("back where the stop left him", lenter, "lenter;pos=493;aspd=1;amax=50;")
-    c.send("moveTo;path=|493|494|;")
+    check("back where the stop left him", lenter, "lenter;pos=%d;aspd=1;amax=50;" % P[3])
+    c.send("moveTo;path=|%d|%d|;" % (P[3], P[4]))
     check("moved once more", c.names(), ["cmdAck", "userMove"])
     halt = subprocess.run([sys.executable, "stopwarn.py", "halt", "--by", "test"], cwd=HERE,
                           env=env, capture_output=True, text=True, encoding="utf-8",
@@ -222,7 +230,7 @@ try:
     _drain.join(timeout=2)
     out = "".join(_log)
     check("  ..the server exits cleanly", srv.returncode, 0)
-    check("  ..and the position is written", saved(), (loc_id, 494))
+    check("  ..and the position is written", saved(), (loc_id, P[4]))
 finally:
     if srv.poll() is None:
         srv.terminate()

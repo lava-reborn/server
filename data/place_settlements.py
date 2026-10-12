@@ -600,14 +600,12 @@ def static_files():
     """id -> everything the placer knows about a file."""
     sides = load_json("exits_sides.json", {}).get("summary", {})
     mt = world.mob_types()
-    d = os.path.join(world.RES, "locations", "static")
     out = {}
-    for fn in sorted(os.listdir(d), key=lambda s: int(s[:-4])):
-        if not fn.endswith(".xml"):
-            continue
-        i = int(fn[:-4])
+    # The original's files and ours (data/locations), ours first: the files
+    # the server reads (world.static_path).
+    for i in world.static_ids():
         loc = world.location(i)
-        txt = read(os.path.join(d, fn))
+        txt = read(world.static_path(i))
         attrs = dict(re.findall(r'(\w+)="([^"]*)"',
                                 re.search(r"<location([^>]*)>", txt).group(1)))
         toks = fn_tokens(loc.fn)
