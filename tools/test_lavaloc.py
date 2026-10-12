@@ -9,6 +9,7 @@ the static style that world.Location reads the same.
 """
 import copy
 import glob
+import hashlib
 import json
 import os
 import random
@@ -299,6 +300,52 @@ for f in FILES:
         bad_depth.append(f)
 check("depth_order: every sprite instance of every file, once (%d instances)" % inst, bad_depth, [])
 print("  ..  depth_order over all files: %.1f s" % (time.time() - t1))
+
+# --- what the real player does ---------------------------------------------------------------------
+# Flash Player 32 (the launcher's flashplayer.exe), headless under Wine and
+# Xvfb in a --network none container, running the client's own LDParser,
+# SceneObject and LDepthManager copied byte for byte out of main.swf
+# (2026-10-12). Pinned as it came out: Array.sortOn of crafted arrays, the
+# zSort order and the order decals are painted in, for five locations.
+FLASH_SORTS = [
+    ([2, 1, 2, 1, 2], [3, 1, 0, 2, 4]),
+    ([2, 2, 2, 0, 1], [3, 4, 0, 2, 1]),
+    ([0, 2, 0, 0, 0], [0, 4, 2, 3, 1]),
+    ([1, 1, 0, 1, 2, 0, 2, 0], [5, 7, 2, 0, 1, 3, 4, 6]),
+    ([2, 0, 2, 2, 2, 1, 0, 1, 1, 1, 1, 2], [6, 1, 7, 9, 8, 5, 10, 0, 4, 3, 2, 11]),
+    ([0] * 24, list(range(24))),
+]
+check("avm1_sort: Array.sortOn's own order of equal keys, as the player gave it",
+      [L.avm1_sort(range(len(k)), k.__getitem__) for k, _ in FLASH_SORTS],
+      [o for _, o in FLASH_SORTS])
+
+
+def digest(items):
+    return hashlib.sha256("|".join(items).encode()).hexdigest()[:24]
+
+
+def flash_num(v):
+    v = float(v)
+    return str(int(v)) if v.is_integer() else repr(v)
+
+
+FLASH_ZSORT = {1: "99f5f312760f4d970d4366be", 35: "1723162005e3841d264075e5",
+               266: "03539e9f4e6eda4acd8f3c56", 270: "41a356665a0613b87fedf889",
+               522: "dfe940d1e3ffa88d58ec507f"}
+FLASH_DECALS = {1: "208488cd260321d5f6679e2e", 266: "171125e195c3c37ddd0cee11",
+                270: "8d74dc790cfe6fe5d18f6c46"}
+got_z, got_d = {}, {}
+for lid in FLASH_ZSORT:
+    m = MODELS[STATIC[lid]]
+    got_z[lid] = digest("%s@%d,%d" % ((m["sprites"][s]["id"],) + tuple(m["sprites"][s]["anchors"][a]))
+                        for s, a in L.depth_order(m))
+    if lid in FLASH_DECALS:
+        got_d[lid] = digest("%s@%s,%s" % (d["id"], flash_num(d["dx"]), flash_num(d["dy"]))
+                            for d in reversed(m["bgdecorations"]))
+check("depth_order is the player's zSort order (locations 1, 35, 266, 270, 522; 24..624 objects)",
+      got_z, FLASH_ZSORT)
+check("decals are painted last to first in the file, as the player's LDParser gave them",
+      got_d, FLASH_DECALS)
 
 # --- random edits survive a round trip ------------------------------------------------------------
 rng = random.Random(7)

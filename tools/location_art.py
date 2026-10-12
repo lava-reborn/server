@@ -40,25 +40,33 @@ A mob's stand frame is <sha>/mob-s<seq>-d<direction>.json with
 stand-<frame>.webp (full size, trimmed to its pixels, ox/oy from the
 registration point) and icon-<frame>.webp (at most 64 px).
 
-HOW THE CLIENT DRAWS A LOCATION (recon/as-src/lol/core/location, verified
-for objects in the real Flash Player 32, scratchpad cobj/verify):
+HOW THE CLIENT DRAWS A LOCATION (recon/as-src/lol/core/location):
 
   background   the library symbol bg (type lib; a painted library that
                exports nothing serves its own picture) or
                locations/libs/background/<id>.swf (ext), tiled from (0, 0)
                over W*40 x H*15 (DisplayLocBackground.fillBackground)
   decals       <bgdecoration>: the picture's top-left at (dx, dy), painted
-               into the background (drawBGDecor); the AVM1 for..in walk
-               makes the last one in the file the first painted (unverified;
-               order="file" is the other reading)
+               into the background (drawBGDecor), the last one in the file
+               first: LDParser walks the children with for..in, which in
+               AVM1 runs from the end (order="file" is kept for comparison)
   zones        a zoneHex at every exit cell, at positions rounded to 5 px
                (drawn here as a pale hex)
   sprites      lib: the symbol's top-left at cell_px(anchor) + (dx, dy);
                ext: the SWF's origin there (a live clip, animating at 25 fps;
                drawn here at its first frame); in LDepthManager's order
-               (tools/lavaloc.py depth_sort)
+               (tools/lavaloc.py depth_sort, ties as AVM1's own sort)
   mobs         a walker's stand frame on its cell, put among the sprites as
                listZSort puts it (lavaloc.walker_index)
+
+Checked against the real Flash Player 32 (the launcher's), headless under
+Wine in docker, driving the client's own LDParser, LDepthManager,
+SourceLibrary, DisplaySprite and AnimationSprite copied out of main.swf
+(2026-10-12): for locations 1, 35, 266, 270 and 522 the parse order of
+sprites and decals and the zSort order are the same as here, and 1:1 crops
+of the composed scene differ by the cache's JPEG/WebP only (mean 1.7-2.6 of
+255, 99th percentile at most 19). tools/test_lavaloc.py pins the player's
+orders.
 
 An anchor on the extra row y == H (the client's grid has no such row) is not
 drawn unless extra_row=True.
@@ -1142,6 +1150,12 @@ def cache_stats(cache):
 
 # --- command line ----------------------------------------------------------------------------------------
 
+def _short(path):
+    """A location file's path as locations/<dir>/<file> when it has one."""
+    parts = os.path.normpath(path).split(os.sep)
+    return "/".join(parts[-3:]) if len(parts) >= 3 and parts[-3] == "locations" else path
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1200,7 +1214,7 @@ def main(argv=None):
             path = art.location_path(r)
             for pr in art_problems(L.load(path), ix, extra):
                 n += 1
-                print("%s: %s %s (%s) x%d: %s" % (os.path.relpath(path), pr["what"], pr["id"],
+                print("%s: %s %s (%s) x%d: %s" % (_short(path), pr["what"], pr["id"],
                                                   pr["type"], pr["count"], pr["why"]))
         print("%d problems" % n)
         return 0

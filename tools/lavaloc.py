@@ -585,21 +585,58 @@ def cells(m, tag):
 
 # --- depth: LDepthManager ------------------------------------------------------------------------
 
+def avm1_sort(items, key):
+    """Array.sort / sortOn of the client's AVM1 (Flash Player 32): a
+    quicksort with the first element as the pivot -- the left scan passes
+    what is less than it, the right scan what is not less, crossed pointers
+    end the pass, the pivot is swapped onto the right one. Not stable: equal
+    keys come out in an order of their own, all-equal ones in place. Found by
+    running the real player headless on 47 crafted arrays (all reproduced)
+    and on LDepthManager.zSort of locations 1, 35, 266, 270 and 522 (the
+    same order, 624 objects in 266). Returns a new list."""
+    a = list(items)
+    stack = [(0, len(a) - 1)]
+    while stack:
+        lo, hi = stack.pop()
+        if lo >= hi:
+            continue
+        p = key(a[lo])
+        i, j = lo, hi + 1
+        while True:
+            i += 1
+            while i <= hi and key(a[i]) < p:
+                i += 1
+            j -= 1
+            while j > lo and key(a[j]) >= p:
+                j -= 1
+            if j < i:
+                break
+            a[i], a[j] = a[j], a[i]
+        a[lo], a[j] = a[j], a[lo]
+        stack.append((j + 1, hi))
+        stack.append((lo, j - 1))
+    return a
+
+
 class SceneObject:
     """One sprite instance as LDepthManager sees it: its front sorted by x
-    (SceneObject.front), a one-cell front replaced by the anchor and an
-    empty one kept empty (SceneObject.point), minD 1 (LocBuilder)."""
+    (SceneObject.front, sortOn when it has two cells or more), a one-cell
+    front replaced by the anchor and an empty one kept empty
+    (SceneObject.point), minD 1 (LocBuilder). minD is a float: the client
+    adds doubles, and in big locations the sums pass 2**53 (522.xml: about
+    1e18), where they round."""
     __slots__ = ("sprite", "anchor", "point", "front", "left", "right", "minD", "turned")
 
     def __init__(self, sprite, anchor, point, front):
         self.sprite, self.anchor, self.point = sprite, anchor, point
-        front = sorted(front, key=lambda c: c[0])
+        if len(front) > 1:
+            front = avm1_sort(front, lambda c: c[0])
         if len(front) == 1:
             front = [point]
         self.front = front
         self.left = front[0] if front else None
         self.right = front[-1] if front else None
-        self.minD = 1
+        self.minD = 1.0     # an AVM1 Number: a double, as the sums must round
         self.turned = False
 
 
@@ -607,8 +644,10 @@ def scene_objects(m, order="reverse"):
     """The sprite instances in the client's displayList order. LDParser
     walks the children with for..in, which in AVM1 runs an array from its
     last element to its first: order="reverse" (the default) takes the
-    <sprite> elements last to first, each one's anchors in order; "file"
-    keeps the file's order. Not run in Flash (no windows): a hypothesis."""
+    <sprite> elements last to first, each one's anchors in order -- what the
+    client's own LDParser gave in Flash Player 32 for locations 1, 35, 266,
+    270 and 522, and its <bgdecoration>s the same way. "file" keeps the
+    file's order."""
     objs = []
     idx = list(range(len(m["sprites"])))
     if order == "reverse":
@@ -647,9 +686,10 @@ def collision(obj, other):
 def depth_sort(objs):
     """LDepthManager.zSort over SceneObjects: every object with minD 1 adds
     up the minD of all it is drawn over (findCollisions, recursively), then
-    the list is sorted by minD, the lowest drawn first. Flash's sortOn is not
-    stable; ties keep the displayList order here. Returns the objects in
-    drawing order (the last on top)."""
+    the list is sorted by minD (sortOn, avm1_sort), the lowest drawn first.
+    Returns the objects in drawing order (the last on top). The real
+    player's zSort of locations 1, 35, 266, 270 and 522, with the client's
+    own classes, gave the same minD for every object and the same order."""
     n = len(objs)
     for start in objs:
         if start.minD != 1 or start.turned:
@@ -675,7 +715,7 @@ def depth_sort(objs):
                 stack.append([other, 0, None])
             else:
                 o.minD += other.minD
-    return [o for _, o in sorted(enumerate(objs), key=lambda t: (t[1].minD, t[0]))]
+    return avm1_sort(objs, lambda o: o.minD)
 
 
 def depth_order(m, order="reverse"):
