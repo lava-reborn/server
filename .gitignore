@@ -17,6 +17,9 @@ tools/*
 # checkout, see tools/quest_editor_ui/build.sh).
 !tools/quest_editor_ui/
 tools/quest_editor_ui/node_modules/
+# Also ours: the headless Flash Player 32 check (tools/flash_headless/README.md).
+# The projector it runs stays out; it is mounted, never copied in.
+!tools/flash_headless/
 dist/
 .env
 data/lava.db
