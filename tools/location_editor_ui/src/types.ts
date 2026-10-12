@@ -169,6 +169,10 @@ export interface PublishResult {
   problems?: Problem[];
   stale?: boolean;
   restarting?: boolean;
+  // the push had no answer and origin could not be looked at: the commit may be in main
+  maybe?: boolean;
+  // the commit was found in main by the draft's trailer (a push whose answer was lost)
+  landed?: boolean;
 }
 
 export interface DraftRow {

@@ -69,8 +69,10 @@ export interface Reply<T> {
 }
 
 // What the page shows above everything when the API says so: the admin's
-// session is over (401), or the editor is restarting onto a fresh main (503).
-export type Notice = "session" | "restarting" | null;
+// session is over (401), the editor is restarting onto a fresh main (503
+// restarting, or the panel's own 503 soon after one, or after a publish), or
+// it does not answer (the panel's 503 at any other time).
+export type Notice = "session" | "restarting" | "down" | null;
 let notify: (n: Notice) => void = () => undefined;
 let shown: Notice = null;
 export function onNotice(fn: (n: Notice) => void) {
@@ -143,6 +145,22 @@ async function request<T>(method: "GET" | "POST", ep: string, body?: unknown): P
 const restarting = (r: { status: number; data: unknown }) =>
   r.status === 503 && !!r.data && typeof r.data === "object" && !!(r.data as { restarting?: boolean }).restarting;
 
+// The editor said it restarts (a 503 restarting) or a publish ended (the
+// editor restarts on its commit): for RESTART_GRACE after that, the panel's
+// own 503 while the editor is down is that restart.
+const RESTART_GRACE = 120_000;
+let restartAt = 0;
+export function expectRestart() {
+  restartAt = Date.now();
+}
+function tell503(r: Reply<unknown>) {
+  if (restarting(r)) restartAt = Date.now();
+  if (restarting(r) || config.panel) tell(Date.now() - restartAt < RESTART_GRACE ? "restarting" : "down");
+}
+function untell503() {
+  if (shown === "restarting" || shown === "down") tell(null);
+}
+
 // A read waits out the editor restarting onto a fresh main (publish mode):
 // between its exit and its start the panel answers 503 for it. tries times,
 // two seconds apart; the notice says so above the page.
@@ -150,11 +168,11 @@ async function patient<T>(method: "GET" | "POST", ep: string, body: unknown, tri
   for (let i = 1; ; i++) {
     const r = await request<T>(method, ep, body);
     if (r.status === 503 && i < tries) {
-      if (restarting(r) || config.panel) tell("restarting");
+      tell503(r);
       await sleep(2000);
       continue;
     }
-    if (shown === "restarting") tell(null);
+    untell503();
     return r;
   }
 }
@@ -253,11 +271,12 @@ export const api = {
       );
       if ((restarting(r) || (waiting && r.status === 503)) && i < 30) {
         waiting = true;
+        restartAt = Date.now();
         tell("restarting");
         await sleep(2000);
         continue;
       }
-      if (shown === "restarting") tell(null);
+      untell503();
       return r;
     }
   },

@@ -224,6 +224,13 @@ class Publisher:
         except GitError:
             return False
 
+    def contains(self, sha, ref=None):
+        """True when ref (origin's branch by default) has sha in its history:
+        a push whose answer was lost may have landed all the same. GitError
+        when git cannot tell."""
+        out = self.git("rev-list", "-n", "1", sha, "^" + (ref or self.remote_ref), "--")
+        return not out.strip()
+
     def show(self, rev, path):
         """The file's bytes at rev, or None when it has no such file."""
         try:

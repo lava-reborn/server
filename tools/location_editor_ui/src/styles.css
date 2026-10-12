@@ -269,6 +269,7 @@
 /* publish mode (the admin panel): notices, drafts, the publish dialog */
 .le .notice { padding: 7px 14px; font-size: 13px; background: var(--tint-brand); border-bottom: 1px solid rgba(217,164,65,.5); flex: none; }
 .le .notice.session { background: var(--tint-danger); border-bottom-color: rgba(226,84,58,.6); }
+.le .notice.down { background: var(--tint-danger); border-bottom-color: rgba(226,84,58,.6); }
 .le .notice.stale { background: rgba(127,160,176,.12); border-bottom-color: rgba(127,160,176,.5); }
 .le .drafts { padding: 8px 12px 10px; border-bottom: 1px solid var(--line); background: var(--bg-panel); max-height: 30vh; overflow: auto; flex: none; }
 .le .drafts h3 { margin-bottom: 6px; }

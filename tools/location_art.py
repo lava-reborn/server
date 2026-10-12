@@ -106,6 +106,10 @@ TRACKS = "sounds/tracks/"
 THUMB, ICON = 128, 64
 JPEG_Q, WEBP_Q, THUMB_Q, ICON_Q = 88, 90, 80, 85
 ART_LAYERS = ("background", "decals", "sprites")
+# The largest canvas render() draws, in pixels, before and after the scale
+# (64x128 cells are 2560 x 1920, about 4.9 M): anything bigger is refused
+# before Image.new takes the memory.
+MAX_CANVAS = 40_000_000
 LAYERS = ("background", "decals", "zones", "sprites", "mobs",
           "obstacles", "exits", "entries", "warentries", "spawns", "grid", "extrarow")
 OVERLAYS = ("obstacles", "exits", "entries", "warentries", "spawns", "grid", "extrarow")
@@ -982,6 +986,9 @@ def render(m, art=None, layers=ART_LAYERS, scale=1.0, order="reverse", extra_row
     t0 = time.time()
     W, H = m["width"], m["height"]
     cw, ch = W * L.CELL_W, H * L.ROW_H
+    if not (cw > 0 and ch > 0 and cw * ch <= MAX_CANVAS and cw * ch * scale * scale <= MAX_CANVAS):
+        raise ValueError("холст %dx%d клеток (%d x %d точек, масштаб %g) больше предела в %d точек"
+                         % (W, H, cw, ch, scale, MAX_CANVAS))
     canvas = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     attrs = m["attrs"]
     library = attrs.get("library", "")

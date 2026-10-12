@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, errText } from "../api";
+import { api, errText, expectRestart } from "../api";
 import type { DiffReply, Model, Occupancy, PendingObject, Problem, PublishResult, PublishState } from "../types";
 import { Modal, Spinner } from "./ui";
 
@@ -101,6 +101,8 @@ export default function PublishDialog(props: {
         const p = d.publish;
         if (p) setState(p);
         if (p && p.state !== "running") {
+          // a commit pushed: the editor restarts on it right away
+          if (p.state === "done" && !p.result?.nothing) expectRestart();
           setPhase(p.state === "done" ? "done" : "failed");
           return;
         }
@@ -274,7 +276,16 @@ export default function PublishDialog(props: {
               Сервер перезапустится примерно через {minutes} минут: CI проверит коммит и выкатит его, игроков предупредят за{" "}
               {Math.round(warn / 60)} минуты.
             </li>
-            <li>Картинки и само место придут игрокам при следующем запуске лаунчера; до этого их клиент покажет на месте пустыню.</li>
+            {!props.model ? (
+              <li>Картинки придут игрокам при следующем запуске лаунчера.</li>
+            ) : isNew ? (
+              <li>Картинки и само место придут игрокам при следующем запуске лаунчера; до этого их клиент покажет на месте пустыню.</li>
+            ) : (
+              <li>
+                Новый вид места придёт игрокам при следующем запуске лаунчера. До этого их клиент рисует прежний вид, а стены,
+                входы и проходы сервер берёт уже из новой версии.
+              </li>
+            )}
           </ul>
           <label className="field-row">
             <span className="field-label">Что и зачем (уйдёт в описание коммита)</span>
@@ -333,6 +344,12 @@ export default function PublishDialog(props: {
                 )}
                 {result.id ? `, место #${result.id}` : ""}.
               </p>
+              {result.landed && (
+                <p className="muted">
+                  Этот коммит ушёл в main ещё в прошлую попытку, её ответ до страницы не дошёл. Он найден там по номеру
+                  черновика, второй раз ничего не отправлялось.
+                </p>
+              )}
               <p className="muted">CI проверит коммит и выкатит его; сервер перезапустится примерно через {minutes} минут.</p>
               {result.summary && result.summary.length > 0 && (
                 <ul className="pub-list">
@@ -360,7 +377,14 @@ export default function PublishDialog(props: {
             <CheckList title="Что не так" problems={result.problems} onProblem={props.onProblem} />
           )}
           <Suites result={result} />
-          <p className="muted small">В main ничего не ушло.</p>
+          {result.maybe ? (
+            <p className="muted small">
+              Ушёл ли коммит в {diff?.branch || "main"}, неизвестно. «Проверить и повторить» сначала поищет его там по номеру
+              черновика: если он там, публикация закончится им же, второго коммита не будет.
+            </p>
+          ) : result.landed ? null : (
+            <p className="muted small">В {diff?.branch || "main"} ничего не ушло.</p>
+          )}
         </div>
       )}
     </Modal>

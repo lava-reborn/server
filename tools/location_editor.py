@@ -248,13 +248,19 @@ and the draft says how far it got:
      stale draft), an error a 422;
   3. the changed files of data/ and client/objects committed onto
      origin/<branch> in an index of its own (tools/publisher.py), author
-     «<login> (админка)» from X-Lava-Admin;
+     «<login> (админка)» from X-Lava-Admin, the message ending in
+     «Черновик: <uuid>, правка <rev>»: a publish first looks for that line
+     in origin and, found, takes that commit for this publish (a push
+     whose answer was lost, a publish a restart cut short) instead of
+     making a second one;
   4. L4: the location suites (L4_SUITES, LAVA_LOCATIONS_L4) run on that
      commit's tree with LAVA_RES (LAVA_LOCATIONS_L4_RES: several folders
      separated by ":" are laid one over the other); a red one, its known
      failure (tools/known_failures.txt) aside, and nothing is pushed;
   5. push <commit>:refs/heads/<branch>, PUSH_TRIES times while the branch
-     moves meanwhile; then the editor restarts on the new commit.
+     moves meanwhile (a push with no answer: origin fetched again says
+     whether it took the commit); then the editor restarts on the new
+     commit.
 
 The art comes from the release store by sha (--store, LAVA_ART_STORE: the
 site's download/client/store, <aa>/<sha256>) through client/base.txt and
@@ -2900,6 +2906,12 @@ def _clean(model):
         int(model["id"]), int(model["width"]), int(model["height"])
     except (TypeError, ValueError):
         raise Refused("model: id, width и height — числа")
+    # The page never changes the size, and the checks, the edits and the
+    # picture walk (and draw) every cell: a hand-made size of thousands
+    # would take the editor's memory whole.
+    if (int(model["width"]), int(model["height"])) not in L.SIZES:
+        raise Refused("model: размер %sx%s; у локаций бывает только %s" % (
+            model["width"], model["height"], " и ".join("%dx%d" % s for s in L.SIZES)))
     if not isinstance(model.get("attrs"), dict):
         raise Refused("model: attrs — объект")
     for k in ("sprites", "decals", "walls", "exits", "entries", "war_entries", "inhabitants", "walk_ins"):
@@ -3714,6 +3726,10 @@ STEPS = {"start": "начинаю", "fetch": "беру свежий main", "tree
          "objects": "кладу объекты", "save": "сохраняю место и проверяю его, как сервер",
          "commit": "собираю коммит", "suites": "гоняю наборы проверок (L4)", "push": "отправляю в main",
          "done": "готово"}
+# A push with no answer, and origin not reachable after it to look.
+PUSH_MAYBE = ("GitHub не ответил на отправку коммита, и посмотреть {branch} после этого не вышло: коммит мог "
+              "уйти. Повторная публикация сначала найдёт его в {branch} по номеру черновика и второй раз "
+              "его не сделает.")
 
 
 class _LimitedArt(A.Art):
@@ -3867,8 +3883,8 @@ class Drafts:
             pub = d.get("publish") or {}
             if pub.get("state") == "running":
                 d["publish"] = dict(pub, state="failed", code=503, finished=now_iso(), result={
-                    "error": "Публикацию прервал перезапуск редактора. Если коммит успел уйти, он виден в истории "
-                             "main; иначе опубликуйте ещё раз"})
+                    "error": "Публикацию прервал перезапуск редактора. Опубликуйте ещё раз: если коммит успел "
+                             "уйти в main, публикация найдёт его там и второй раз его не сделает", "maybe": True})
                 self.write(d)
             elif pub.get("state") == "done":
                 try:
@@ -3895,7 +3911,8 @@ def draft_stale(d):
 def draft_row(d):
     m = d.get("model") or {}
     pub = d.get("publish") or None
-    return {"uuid": d["uuid"], "id": d.get("id"), "title": str((m.get("attrs") or {}).get("title") or ""),
+    return {"uuid": d["uuid"], "id": d.get("id"),
+            "title": str((m.get("attrs") or {}).get("title") or ("" if m else d.get("title")) or ""),
             "state": m.get("state"), "from": m.get("from"), "base": d.get("base"), "rev": d.get("rev"),
             "created": d.get("created"), "created_by": d.get("created_by"), "updated": d.get("updated"),
             "login": d.get("login"), "stale": draft_stale(d),
@@ -4082,6 +4099,19 @@ class PendingObjects:
             else:
                 os.makedirs(self.view)
             j = self.load()
+            if not j:
+                return
+            # what the checkout has as it is pending was published (by a push
+            # whose answer was lost, say): no longer pending
+            have = self.raw(self.checkout)
+            for oid, rec in sorted(j.items()):
+                now = {"entry": have.get(oid),
+                       "files": self.shas(os.path.join(self.checkout, oid)) if have.get(oid) is not None else {}}
+                mine = {"entry": rec.get("entry"), "files": (rec.get("files") or {}) if rec.get("entry") is not None else {}}
+                if now == mine:
+                    j.pop(oid)
+                    shutil.rmtree(os.path.join(self.files, oid), ignore_errors=True)
+                    self.save(j)
             if not j:
                 return
             raw = self.raw(self.view)
@@ -4276,9 +4306,10 @@ def l4_suites(tree, res):
     return run, notes
 
 
-def location_message(summary, objects, note, login):
+def location_message(summary, objects, note, login, uuid=None, rev=None):
     """The commit message: "Локации: …" within 72 characters, the summary,
-    the objects, the admin's words, who published."""
+    the objects, the admin's words, the draft and its revision (landed()
+    finds the commit by them), who published."""
     lines = [publisher.one_line(s) for s in summary]
     lines += ["объект %s «%s»: %s" % (o["id"], publisher.one_line(o.get("title") or ""),
                                       {"new": "новый", "update": "правка", "delete": "удалён"}.get(o["kind"], o["kind"]))
@@ -4291,32 +4322,109 @@ def location_message(summary, objects, note, login):
     parts = [first, "", "\n".join(lines) or "без изменений в словах"]
     if note:
         parts += ["", note]
-    parts += ["", "Опубликовано из админки: %s" % login]
+    tail = ["Черновик: %s, правка %s" % (uuid, rev)] if uuid else []
+    parts += ["", "\n".join(tail + ["Опубликовано из админки: %s" % login])]
     return "\n".join(parts) + "\n"
+
+
+DRAFT_TRAILER = re.compile(r"^Черновик: ([0-9a-f]{32}), правка (\d+)$", re.M)
+
+
+def landed(uuid):
+    """(commit, rev) of the commit in origin's branch (as last fetched) that
+    published this draft (its trailer, location_message), or None. A push
+    whose answer was lost, or a publish a restart cut short after its push,
+    left it there: publishing the draft again would make a second copy of a
+    new place. GitError when git cannot tell."""
+    out = PUB.git("log", "-n", "20", "--fixed-strings", "--grep=" + uuid, "--format=%H%x00%B%x01", PUB.remote_ref)
+    for chunk in out.decode("utf-8", "replace").split("\x01"):
+        sha_, _, text = chunk.strip().partition("\x00")
+        for m in DRAFT_TRAILER.finditer(text):
+            if m.group(1) == uuid:
+                return sha_, int(m.group(2))
+    return None
+
+
+def landed_result(sha_, d):
+    """A done publish's result for a draft whose commit landed() found."""
+    m = d.get("model") or {}
+    temp = m.get("id") if temp_uuid(m.get("id")) else None
+    loc = None if temp or not m else m.get("id")
+    text = PUB.git("log", "-1", "--format=%B", sha_).decode("utf-8", "replace")
+    if temp:
+        got = re.search(r"новое место #(\d+)", text)
+        loc = int(got.group(1)) if got else None
+    paras = text.split("\n\n")
+    return {"commit": sha_, "head": PUB._about(sha_), "id": loc, "landed": True,
+            "renumbered": {temp: loc} if temp and loc else {},
+            "summary": [l for l in paras[1].split("\n") if l.strip()] if len(paras) > 1 else [],
+            "files": [], "objects": [], "url": ("%s/commit/%s" % (PUB.web, sha_)) if PUB.web else ""}
+
+
+def _already_landed(uuid, got, login):
+    """publish_start of a draft whose commit is in origin already: done when
+    it is this revision, refused when the draft was edited after it. The
+    editor restarts when its checkout lacks the commit. (code, body)."""
+    sha_, rev = got
+    now = now_iso()
+    with DRAFTS.lock:
+        d = DRAFTS.get(uuid)
+        if str(rev) == str(d.get("rev")):
+            code = 202
+            d["publish"] = {"state": "done", "code": 200, "step": "done", "step_text": STEPS["done"], "started": now,
+                            "finished": now, "login": login, "rev": d.get("rev"), "result": landed_result(sha_, d)}
+            out = {"uuid": uuid, "publish": d["publish"]}
+        else:
+            code = 409
+            out = {"error": "Этот черновик уже опубликован коммитом %s (правка %d), и правки после неё в %s не "
+                            "ушли: откройте место из списка, когда редактор перезапустится, и сделайте их там"
+                            % (sha_[:10], rev, PUB.branch), "commit": sha_, "landed": True}
+            d["publish"] = {"state": "failed", "code": 409, "step": "start", "started": now, "finished": now,
+                            "login": login, "rev": d.get("rev"), "result": out}
+        DRAFTS.write(d)
+    print("publish by %s: draft %s is in %s already as %s (rev %d)" % (login, uuid, PUB.branch, sha_, rev), flush=True)
+    try:
+        behind = not PUB.contains(sha_, "HEAD")
+    except publisher.GitError:
+        behind = True
+    if behind:
+        PUB.restart()                      # once the lock is let go: on the commit that landed
+    return code, out
+
+
+def objects_draft(login):
+    """The draft of a publish of the owner's objects alone: the one such a
+    publish left before (refused, failed) or a new one. DRAFTS.lock held."""
+    for d in DRAFTS.all():
+        if d.get("model") is None and (d.get("publish") or {}).get("state") in (None, "failed"):
+            d.update(updated=now_iso(), login=login)
+            DRAFTS.write(d)
+            return d["uuid"]
+    uuid = uuidlib.uuid4().hex
+    DRAFTS.write({"v": 1, "uuid": uuid, "rev": 1, "created": now_iso(), "created_by": login,
+                  "updated": now_iso(), "login": login, "base": checkout_head(), "id": None,
+                  "title": "мои объекты", "model": None, "publish": None})
+    return uuid
 
 
 def publish_start(body, login):
     """POST /api/publish: (code, body). The work goes on in a thread of its
-    own; the draft says how it goes (GET /api/draft/<uuid>)."""
+    own; the draft says how it goes (GET /api/draft/<uuid>). Without a uuid,
+    the owner's objects alone: their draft is made only once the publish
+    can start."""
     uuid = str(body.get("uuid") or "")
-    if not uuid:
-        # the owner's objects alone, with no place: a draft of nothing
-        if not PENDING.load():
-            return 400, {"error": "нечего публиковать: ни черновика (uuid), ни новых объектов"}
-        uuid = uuidlib.uuid4().hex
-        with DRAFTS.lock:
-            DRAFTS.write({"v": 1, "uuid": uuid, "rev": 1, "created": now_iso(), "created_by": login,
-                          "updated": now_iso(), "login": login, "base": checkout_head(), "id": None,
-                          "title": "мои объекты", "model": None, "publish": None})
-    d = DRAFTS.get(uuid)
-    if body.get("rev") is not None and str(body.get("rev")) != str(d.get("rev")):
-        return 409, {"error": "черновик тем временем сохранили ещё раз (другая вкладка?): откройте его заново",
-                     "rev": d.get("rev")}
-    pub = d.get("publish") or {}
-    if pub.get("state") == "running":
-        return 202, {"uuid": uuid, "publish": pub}
-    if pub.get("state") == "done":
-        return 409, {"error": "черновик уже опубликован", "publish": pub}
+    if uuid:
+        d = DRAFTS.get(uuid)
+        if body.get("rev") is not None and str(body.get("rev")) != str(d.get("rev")):
+            return 409, {"error": "черновик тем временем сохранили ещё раз (другая вкладка?): откройте его заново",
+                         "rev": d.get("rev")}
+        pub = d.get("publish") or {}
+        if pub.get("state") == "running":
+            return 202, {"uuid": uuid, "publish": pub}
+        if pub.get("state") == "done":
+            return 409, {"error": "черновик уже опубликован", "publish": pub}
+    elif not PENDING.load():
+        return 400, {"error": "нечего публиковать: ни черновика (uuid), ни новых объектов"}
     if PUB.restarting:
         return 503, {"restarting": True, "error": publisher.RESTARTING % PUB.branch}
     try:
@@ -4332,7 +4440,19 @@ def publish_start(body, login):
         return 503, {"restarting": True, "error": publisher.ENGINE_MOVED % PUB.branch}
     if not PUB.lock.acquire(blocking=False):
         return 503, {"error": "Идёт другая публикация, повторите через минуту"}
+    started = False
     try:
+        if not uuid:
+            with DRAFTS.lock:
+                uuid = objects_draft(login)
+        if (DRAFTS.get(uuid).get("publish") or {}).get("state") == "done":
+            return 409, {"error": "черновик уже опубликован", "publish": DRAFTS.get(uuid)["publish"]}
+        try:
+            got = landed(uuid)
+        except publisher.GitError as exc:
+            return 502, PUB.failed(publisher.GIT_FAILED, exc)
+        if got:
+            return _already_landed(uuid, got, login)
         note = publisher.clean_note(body.get("message"))
         with DRAFTS.lock:
             d = DRAFTS.get(uuid)
@@ -4342,9 +4462,10 @@ def publish_start(body, login):
         t = threading.Thread(target=_publish_job, args=(uuid, note, login), daemon=True,
                              name="loc-publish-" + uuid[:8])
         t.start()
-    except BaseException:
-        PUB.lock.release()
-        raise
+        started = True
+    finally:
+        if not started:
+            PUB.lock.release()
     print("publish by %s: draft %s started" % (login, uuid), flush=True)
     return 202, {"uuid": uuid, "publish": d["publish"]}
 
@@ -4387,6 +4508,7 @@ def _publish_job(uuid, note, login):
 def _publish_attempts(uuid, note, login):
     d = DRAFTS.get(uuid)
     model = d.get("model")
+    rev = (d.get("publish") or {}).get("rev") or d.get("rev")
     for attempt in range(publisher.PUSH_TRIES):
         _step(uuid, "fetch")
         try:
@@ -4403,7 +4525,7 @@ def _publish_attempts(uuid, note, login):
         _step(uuid, "tree")
         try:
             with PUB.worktree(head, under=os.path.join(WORK, "publish")) as tree:
-                got = _publish_on(uuid, tree, head, model, note, login, attempt)
+                got = _publish_on(uuid, tree, head, model, note, login, attempt, rev)
         except publisher.GitError as exc:
             return 502, PUB.failed(publisher.GIT_FAILED, exc)
         if got is not None:
@@ -4412,9 +4534,10 @@ def _publish_attempts(uuid, note, login):
                           % (PUB.branch, publisher.PUSH_TRIES)}
 
 
-def _publish_on(uuid, tree, head, model, note, login, attempt):
+def _publish_on(uuid, tree, head, model, note, login, attempt, rev=None):
     """One attempt on a worktree of head: (code, body), or None when the
-    branch moved before the push (the caller tries again)."""
+    branch moved before the push (the caller tries again). rev: the draft's
+    revision, for the commit's trailer."""
     _step(uuid, "objects")
     objects = PENDING.apply_to(os.path.join(tree, "client", "objects"))
     saved = {"summary": [], "id": None, "renumbered": {}}
@@ -4456,7 +4579,7 @@ def _publish_on(uuid, tree, head, model, note, login, attempt):
         return 200, {"nothing": True, "commit": head, "head": PUB._about(head), "id": saved.get("id"),
                      "summary": [], "objects": objects}
     summary = list(saved.get("summary") or [])
-    sha_ = PUB.commit(head, files, location_message(summary, objects, note, login), login)
+    sha_ = PUB.commit(head, files, location_message(summary, objects, note, login, uuid, rev), login)
     _step(uuid, "suites")
     PUB.git("checkout", "--quiet", "--force", "--detach", sha_, cwd=tree, timeout=publisher.PUSH_TIMEOUT)
     res_dir = l4_res()
@@ -4479,7 +4602,18 @@ def _publish_on(uuid, tree, head, model, note, login, attempt):
             PUB.before_push(attempt)
         pushed = PUB.push(sha_)
     except publisher.GitError as exc:
-        return 502, PUB.failed(publisher.PUSH_FAILED, exc)
+        # The answer may be lost after origin took the commit (a timeout, a
+        # dropped connection): origin, fetched again, says which it was.
+        try:
+            PUB.fetch()
+            there = PUB.contains(sha_)
+        except publisher.GitError as again:
+            print("push of %s: %s; origin not seen since: %s" % (sha_, exc, again), flush=True)
+            return 502, dict(PUB.failed(PUSH_MAYBE, exc), maybe=True, commit=sha_)
+        if not there:
+            return 502, PUB.failed(publisher.PUSH_FAILED, exc)
+        print("push of %s: %s; but %s has it" % (sha_, exc, PUB.branch), flush=True)
+        pushed = True
     if not pushed:
         return None
     return 200, {"commit": sha_, "head": PUB._about(sha_), "summary": summary, "id": saved.get("id"),

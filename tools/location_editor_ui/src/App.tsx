@@ -68,6 +68,14 @@ export default function App() {
     if (window.location.hash !== hash) window.location.replace(hash);
   };
 
+  // Leaving the editor (the list, the objects) lets go of what it had open:
+  // its model is the one first loaded, its draft's revision the first save's,
+  // and the Editor never hands its later ones back. A place or a draft opened
+  // again is fetched again, as the server has it now.
+  useEffect(() => {
+    if (route.kind === "list" || route.kind === "objects") setOpen(null);
+  }, [route]);
+
   // a location or a draft opened by its address
   useEffect(() => {
     if (!info) return;
@@ -212,9 +220,14 @@ export default function App() {
         <div className={`notice ${notice}`} role="status">
           {notice === "session" ? (
             <>
-              Сессия панели закончилась: <a href="/admin/login">войдите заново</a>, правки этой страницы сохранятся в
-              черновике, когда панель снова ответит.
+              Сессия панели закончилась:{" "}
+              <a href="/admin/login" target="_blank" rel="noopener">
+                войдите заново в новой вкладке
+              </a>
+              . Эта страница остаётся открытой и сама сохранит свои правки в черновик, как только панель снова ответит.
             </>
+          ) : notice === "down" ? (
+            <>Редактор локаций не отвечает, пробую снова…</>
           ) : (
             <>Редактор обновляется на свежий {info?.branch || "main"}, это несколько секунд…</>
           )}

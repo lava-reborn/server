@@ -81,6 +81,11 @@ function dropBackup(k: string) {
     /* nothing kept */
   }
 }
+// a reason as the draft's tag repeats it: its first sentence, cut short
+const short = (text: string, limit: number) => {
+  const first = text.split(/[.:;\n]/)[0].trim() || text.trim();
+  return first.length > limit ? `${first.slice(0, limit - 1)}…` : first;
+};
 const clock = (iso?: string) => {
   if (!iso) return "";
   const d = new Date(iso);
@@ -488,6 +493,10 @@ export default function Editor(props: {
     props.published?.state === "running" ? props.published : false,
   );
   const autoTimer = useRef(0);
+  const inFlight = useRef(false);
+  // the status when the page shows what the server has
+  const settled = () =>
+    draftRef.current ? { s: "saved" as const, text: draftRef.current.updated } : { s: "idle" as const };
   const draftRun = useRef<Promise<DraftRef | null>>(Promise.resolve(null));
   const bkey = useRef(backupKey(props.draft, props.initial));
 
@@ -501,12 +510,23 @@ export default function Editor(props: {
         await queue.current.catch(() => undefined);
         const m = modelRef.current;
         const text = JSON.stringify(m);
-        if (text === savedText.current) return draftRef.current;
+        if (text === savedText.current) {
+          // nothing to send: what the page shows is the draft (or the place, before its first save)
+          if (!conflictRef.current) setDraftStatus(settled());
+          dropBackup(bkey.current);
+          return draftRef.current;
+        }
         if (conflictRef.current) throw new ApiError("черновик не сохраняется: его сохранили в другом месте", 409);
         const d = draftRef.current;
         setDraftStatus({ s: "saving" });
         const base = d?.base || info?.commit || "";
-        const r = await api.saveDraft({ uuid: d?.uuid, rev: d?.rev, base, model: m });
+        let r;
+        inFlight.current = true;
+        try {
+          r = await api.saveDraft({ uuid: d?.uuid, rev: d?.rev, base, model: m });
+        } finally {
+          inFlight.current = false;
+        }
         if (r.status === 200 && r.data.uuid) {
           const ref: DraftRef = { uuid: r.data.uuid, rev: Number(r.data.rev), base, updated: r.data.updated };
           draftRef.current = ref;
@@ -538,10 +558,24 @@ export default function Editor(props: {
   }, [props.publish, info]);
 
   // every change: a copy in the browser at once, the draft after a quiet moment
+  const opened = useRef(false);
   useEffect(() => {
     if (!props.publish || readOnly) return;
     const text = JSON.stringify(model);
-    if (text === savedText.current) return;
+    const first = !opened.current;
+    opened.current = true;
+    if (text === savedText.current) {
+      // Back to what the draft has (an undo, say): nothing waits, nothing to
+      // keep. Not on the page's first run, whose copy in the browser the
+      // effect below takes back, nor while a save is on its way (its answer
+      // sees the model moved and saves again).
+      if (!first && !inFlight.current && !conflictRef.current) {
+        window.clearTimeout(autoTimer.current);
+        dropBackup(bkey.current);
+        setDraftStatus(settled());
+      }
+      return;
+    }
     writeBackup(bkey.current, { model, rev: draftRef.current?.rev ?? 0, at: Date.now() });
     if (conflictRef.current) return;
     setDraftStatus({ s: "pending" });
@@ -574,7 +608,7 @@ export default function Editor(props: {
       case "saved":
         return `черновик сохранён${draftStatus.text ? ` ${clock(draftStatus.text)}` : ""}`;
       default:
-        return "черновик не сохранён";
+        return `черновик не сохранён${draftStatus.text ? `: ${short(draftStatus.text, 60)}` : ""}`;
     }
   })();
 

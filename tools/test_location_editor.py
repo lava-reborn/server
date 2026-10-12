@@ -418,6 +418,93 @@ def publish_mode():
     check("  ..no longer pending", call("/api/objects")[1].get("pending"), {})
     check("  ..and the clone was never written", clean_clone(), "")
 
+    # a size the page never makes is refused before anything walks its cells
+    huge = dict(mm, width=1000, height=1000)
+    check("a model of 1000x1000 cells: 400 from render, edit, check and the draft",
+          [call(u, b)[0] for u, b in (("/api/render", {"model": huge, "layers": "art", "scale": 1}),
+                                      ("/api/edit", {"model": huge, "op": {"kind": "noop"}}),
+                                      ("/api/check", {"model": huge, "quick": True}),
+                                      ("/api/draft", {"model": huge}))], [400, 400, 400, 400])
+
+    # objects alone while the engine moved: refused for the restart, and no
+    # draft of nothing left behind by the refusal
+    code, ob = call("/api/object", {"title": "Ящик после перезапуска", "frames": [base64.b64encode(pic).decode()]})
+    check("POST /api/object: another one pending", (code, (call("/api/objects")[1].get("pending") or {}).get(ob.get("id"))), (200, "new"))
+
+    def engine_note(tree):
+        with open(os.path.join(tree, "server", "engine_note.txt"), "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("код проверок сдвинулся\n")
+    somebody(engine_note, "engine moved")
+    code, st = call("/api/publish", {"message": "ящик"})
+    check("objects alone, the engine moved in main: 503 restarting, no draft made",
+          (code, st.get("restarting"), [d["uuid"] for d in call("/api/drafts")[1].get("drafts", []) if d.get("id") is None]),
+          (503, True, []))
+    restarted()
+    code, st = call("/api/publish", {"message": "ящик"})
+    pub = published(st.get("uuid") or "0" * 32)
+    check("  ..after the restart it goes through, and the list has no draft left",
+          (code, pub.get("code"), [d["uuid"] for d in call("/api/drafts")[1].get("drafts", []) if d.get("id") is None],
+           "Черновик: %s, правка 1" % st.get("uuid") in git(bare, "log", "-1", "--format=%B", "main")),
+          (202, 200, [], True))
+    restarted()
+
+    # a push whose answer is lost after origin took it
+    def lose_answer(fetch_too):
+        def push(sha_):
+            PB.Publisher.push(E.PUB, sha_)
+            if fetch_too:
+                def no_fetch():
+                    raise PB.FetchError("ssh: connect to host github.com port 22: Connection timed out")
+                E.PUB.fetch = no_fetch
+            raise PB.GitError("git push: no answer in %d s" % PB.PUSH_TIMEOUT)
+        E.PUB.push = push
+
+    def answer_back():
+        for k in ("push", "fetch"):
+            E.PUB.__dict__.pop(k, None)
+
+    code, ob = call("/api/object", {"title": "Бочка без ответа", "frames": [base64.b64encode(pic).decode()]})
+    before = origin_head()
+    lose_answer(False)
+    try:
+        code, st = call("/api/publish", {"message": "ответ потерян"})
+        pub = published(st.get("uuid") or "0" * 32)
+    finally:
+        answer_back()
+    res = pub.get("result") or {}
+    check("the push's answer lost, origin has the commit: done, 200, that commit",
+          (code, pub.get("state"), pub.get("code"), res.get("commit"), git(bare, "rev-parse", "main^"), res.get("error")),
+          (202, "done", 200, origin_head(), before, None))
+    check("  ..and the editor restarts on it", restarted(), [PB.RESTART_CODE])
+
+    code, got, m5 = place("Погреб без ответа", free102[24:25])
+    uuid5 = (got.get("draft") or {}).get("uuid")
+    code, sv = call("/api/draft", {"uuid": uuid5, "rev": 1, "model": m5})
+    rev5 = sv.get("rev")
+    before = origin_head()
+    lose_answer(True)
+    try:
+        code, st = call("/api/publish", {"uuid": uuid5, "rev": rev5})
+        pub = published(uuid5)
+    finally:
+        answer_back()
+    res = pub.get("result") or {}
+    c5 = origin_head()
+    check("the push's answer lost and origin out of reach: failed, «мог уйти», the commit named",
+          (code, pub.get("state"), pub.get("code"), res.get("maybe"), res.get("commit"), c5 != before,
+           "Черновик: %s, правка %s" % (uuid5, rev5) in git(bare, "log", "-1", "--format=%B", c5)),
+          (202, "failed", 502, True, c5, True, True))
+    real5 = int(re.search(r"новое место #(\d+)", git(bare, "log", "-1", "--format=%s", c5)).group(1))
+    code, st = call("/api/publish", {"uuid": uuid5, "rev": rev5})
+    pub = (st.get("publish") or {})
+    res = pub.get("result") or {}
+    check("  ..published again: found in main by the draft's trailer, done, no second commit",
+          (code, pub.get("state"), res.get("landed"), res.get("commit"), res.get("id"), res.get("renumbered"),
+           origin_head(), (index_row(real5 + 1) or {}).get("title")),
+          (202, "done", True, c5, real5, {"new:" + uuid5: real5}, c5, None))
+    check("  ..and the editor restarts on it", restarted(), [PB.RESTART_CODE])
+    check("  ..a third time: 409, already published", call("/api/publish", {"uuid": uuid5})[0], 409)
+
     # the server's slice (/opt/lava/res) has no database/locations.xml, which
     # the map's recount reads: publish mode lays it in from the release store
     have = os.path.join(world.RES, "database", "locations.xml")
