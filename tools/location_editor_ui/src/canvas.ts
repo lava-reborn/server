@@ -331,7 +331,11 @@ export class LocCanvas {
     const m = this.model!;
     const sp = m.sprites[si];
     const [ax, ay] = sp.anchors[ai];
-    const [cx, cy] = cellPx(ax, ay);
+    // An anchor off the client's grid (the extra row y == H) has no cell
+    // there: the client sets no position and adds dx, dy to the location's
+    // top-left corner (LocBuilder, LocationGrid.getCellFromGrid undefined).
+    const onGrid = ax >= 0 && ay >= 0 && ax < m.width && ay < m.height;
+    const [cx, cy] = onGrid ? cellPx(ax, ay) : [0, 0];
     const a = this.art(sp);
     let x = cx + Number(sp.dx || 0);
     let y = cy + Number(sp.dy || 0);
@@ -438,7 +442,6 @@ export class LocCanvas {
         }
         if (!L.has("sprites")) continue;
         if (!m.sprites[o.sprite] || !m.sprites[o.sprite].anchors[o.anchor]) continue;
-        if (o.point[1] >= m.height) continue; // the extra row: the client does not draw it
         if (`${o.sprite}:${o.anchor}` === dragged) continue;
         this.drawSprite(ctx, o.sprite, o.anchor, 1);
       }

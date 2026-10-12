@@ -60,15 +60,23 @@ export default function App() {
     setLoaded({ id: model.id, model });
     setDraft(null);
     getLocations(true);
-    go(`#/loc/${model.id}`);
+    // The saved place's address takes the place of #/new in the history
+    // (Back then goes where the owner came from, never to a new place that
+    // is no more), and the route moves with it in this same render: the
+    // editor stays as it is, its history of edits with it.
+    const hash = `#/loc/${model.id}`;
+    setRoute({ kind: "loc", id: model.id });
+    if (window.location.hash !== hash) window.location.replace(hash);
   };
 
+  // One editor per location, whether it is a new place or a saved one: a
+  // save keeps it (and its undo history) rather than making it anew.
   let body;
   if (route.kind === "objects") {
     body = <Objects onBack={() => go("#/")} />;
   } else if (route.kind === "new") {
     body = draft ? (
-      <Editor key={`new-${draft.model.id}`} initial={draft.model} dropped={draft.dropped} onBack={() => go("#/")} onSaved={saved} onCopy={openNew} />
+      <Editor key={`ed-${draft.model.id}`} initial={draft.model} dropped={draft.dropped} onBack={() => go("#/")} onSaved={saved} onCopy={openNew} />
     ) : (
       <Gone onBack={() => go("#/")} />
     );
@@ -76,7 +84,7 @@ export default function App() {
     if (loaded && loaded.id === route.id) {
       body = (
         <Editor
-          key={`loc-${route.id}-${loaded.model.etag}`}
+          key={`ed-${route.id}`}
           initial={loaded.model}
           dropped={[]}
           onBack={() => go("#/")}

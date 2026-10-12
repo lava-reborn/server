@@ -94,7 +94,8 @@ export const api = {
     (await get<{ mobs: Mob[] }>(`/api/mobs?q=${encodeURIComponent(q)}&limit=${limit}`)).mobs,
   map: () => get<MapInfo>("/api/map"),
   objects: async () => (await get<{ objects: Record<string, ObjectEntry> }>("/api/objects")).objects,
-  newModel: (body: Record<string, unknown>) => post<{ model: Model; dropped: DroppedRow[] }>("/api/new", body),
+  newModel: (body: Record<string, unknown>) =>
+    post<{ model: Model; dropped: DroppedRow[]; notes?: string[] }>("/api/new", body),
   edit: (model: Model, op: Record<string, unknown>) => post<EditReply>("/api/edit", { model, op }),
   check: (model: Model, quick: boolean) =>
     post<{ problems: Problem[]; seconds: number }>("/api/check", { model, quick }),

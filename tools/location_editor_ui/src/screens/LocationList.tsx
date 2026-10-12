@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, errText, type DroppedRow } from "../api";
-import { Field, Modal, Spinner } from "../components/ui";
+import { Field, Modal, Spinner, toast } from "../components/ui";
 import { getInfo, getLocations, getPalette } from "../store";
 import type { Info, LocRow, Model } from "../types";
 
@@ -266,6 +266,7 @@ export function NewFromCopy(props: {
       const body: Record<string, unknown> = { from: props.row.id, title, why };
       if (id.trim()) body.id = Number(id);
       const got = await api.newModel(body);
+      for (const n of got.notes || []) toast("info", n, 12000);
       props.onMade(got.model, got.dropped || []);
     } catch (e) {
       setErr(errText(e));
@@ -279,7 +280,12 @@ export function NewFromCopy(props: {
       footer={
         <>
           <button onClick={props.onClose}>Отмена</button>
-          <button className="primary" disabled={busy || !title.trim() || !why.trim()} onClick={make}>
+          <button
+            className="primary"
+            disabled={busy || !title.trim() || !why.trim()}
+            title={!title.trim() || !why.trim() ? "Нужны название и «Почему это место есть»" : undefined}
+            onClick={make}
+          >
             {busy ? "Делаю…" : "Сделать"}
           </button>
         </>
@@ -289,10 +295,10 @@ export function NewFromCopy(props: {
         Новое место возьмёт картинку, стены, выходы и входы этой локации. Её существа станут жителями. Пока вы не нажмёте
         «Сохранить» в редакторе, ничего не записывается.
       </p>
-      <Field label="Название">
+      <Field label="Название (обязательно)">
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Например: Старый склад" autoFocus />
       </Field>
-      <Field label="Почему это место есть" hint="Ваше слово: попадёт в data/locations/index.json">
+      <Field label="Почему это место есть (обязательно)" hint="Ваше слово: попадёт в data/locations/index.json. Без него «Сделать» не нажимается">
         <textarea rows={3} value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Зачем это место в игре" />
       </Field>
       <Field label="Номер" hint="Пусто: первый свободный от 1381">
@@ -346,6 +352,7 @@ function NewEmpty(props: {
         title,
         why,
       });
+      for (const n of got.notes || []) toast("info", n, 12000);
       props.onMade(got.model, got.dropped || []);
     } catch (e) {
       setErr(errText(e));
@@ -359,17 +366,22 @@ function NewEmpty(props: {
       footer={
         <>
           <button onClick={props.onClose}>Отмена</button>
-          <button className="primary" disabled={busy || !title.trim() || !why.trim()} onClick={make}>
+          <button
+            className="primary"
+            disabled={busy || !title.trim() || !why.trim()}
+            title={!title.trim() || !why.trim() ? "Нужны название и «Почему это место есть»" : undefined}
+            onClick={make}
+          >
             {busy ? "Делаю…" : "Сделать"}
           </button>
         </>
       }
     >
-      <Field label="Название">
+      <Field label="Название (обязательно)">
         <input value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
       </Field>
-      <Field label="Почему это место есть" hint="Ваше слово: попадёт в data/locations/index.json">
-        <textarea rows={3} value={why} onChange={(e) => setWhy(e.target.value)} />
+      <Field label="Почему это место есть (обязательно)" hint="Ваше слово: попадёт в data/locations/index.json. Без него «Сделать» не нажимается">
+        <textarea rows={3} value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Зачем это место в игре" />
       </Field>
       <Field label="Размер">
         <select value={size} onChange={(e) => setSize(e.target.value)}>

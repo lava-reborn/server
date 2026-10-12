@@ -103,12 +103,47 @@ export default function Objects(props: { onBack: () => void }) {
       setSize(dims[0]);
       const set = [...new Set(dims.map((d) => d.join("×")))];
       setSizes(set.length > 1 ? `кадры разного размера: ${set.join(", ")} — нужен один` : null);
-      setForm((f) => (f.anchor ? f : { ...f, anchor: [Math.floor(dims[0][0] / 2), dims[0][1] - 1] }));
+      // the feet: the bottom middle for a new picture; an object's own feet
+      // stay when its pictures are replaced (they cannot change while a
+      // location places it), unless they fall off a smaller picture of an
+      // object that stands nowhere
+      setForm((f) => {
+        const [w, h] = dims[0];
+        const off = f.anchor && (f.anchor[0] > w || f.anchor[1] > h);
+        if (f.anchor && !(off && !f.usedIn.length)) return f;
+        return { ...f, anchor: [Math.floor(w / 2), h - 1] };
+      });
     });
     return () => {
       live = false;
     };
   }, [form.frames]);
+
+  // whether the form holds what is not saved: an object's changed fields,
+  // or anything at all of a new one
+  const unsaved = () => {
+    if (!orig) return !!(form.title.trim() || form.frames.length || form.note.trim());
+    // a background has no feet: the ones the picture's size gave it are no edit
+    const fields = (f: Form) => ({ ...f, frames: [], anchor: orig.anchor === null ? null : f.anchor });
+    return form.framesChanged || !same(fields(orig), fields(form));
+  };
+  const leave = async () => {
+    if (!unsaved() || busy) return !busy;
+    return ask({
+      title: "Уйти без сохранения?",
+      text: form.id ? `Правки объекта «${form.title || form.id}» не сохранены и пропадут.` : "Новый объект не сохранён и пропадёт.",
+      ok: "Уйти",
+      cancel: "Остаться",
+      danger: true,
+    });
+  };
+  const goBack = async () => {
+    if (await leave()) props.onBack();
+  };
+  const choose = async (id: string | null) => {
+    if (id === form.id && id !== null) return;
+    if (await leave()) pick(id);
+  };
 
   const pick = (id: string | null) => {
     setMsg(null);
@@ -141,7 +176,8 @@ export default function Objects(props: { onBack: () => void }) {
       ...f,
       frames: urls,
       framesChanged: true,
-      anchor: null,
+      // a new object's feet come from its picture; an object's own stay
+      anchor: f.id ? f.anchor : null,
       title: f.title || list[0].name.replace(/\.[^.]+$/, ""),
     }));
   };
@@ -226,13 +262,13 @@ export default function Objects(props: { onBack: () => void }) {
   return (
     <div className="screen objects-screen">
       <header className="topbar">
-        <button className="ghost" onClick={props.onBack}>
+        <button className="ghost" onClick={goBack}>
           ← Локации
         </button>
         <span className="brand">Мои объекты</span>
         <span className="muted small">свои картинки для локаций: client/objects</span>
         <span className="grow" />
-        <button onClick={() => pick(null)}>Новый объект</button>
+        <button onClick={() => choose(null)}>Новый объект</button>
       </header>
       <div className="objects-body">
         <aside className="obj-list">
@@ -244,7 +280,7 @@ export default function Objects(props: { onBack: () => void }) {
           )}
           {objects && !list.length && <p className="muted pad">Своих объектов пока нет.</p>}
           {list.map(([id, e]) => (
-            <button key={id} className={`obj-row${form.id === id ? " on" : ""}`} onClick={() => pick(id)}>
+            <button key={id} className={`obj-row${form.id === id ? " on" : ""}`} onClick={() => choose(id)}>
               {e.pictures[0] ? <img src={e.pictures[0]} alt="" /> : <span className="noimg">?</span>}
               <span className="mob-text">
                 <span className="ellipsis">{e.title}</span>
@@ -280,8 +316,10 @@ export default function Objects(props: { onBack: () => void }) {
                 {form.frames.length ? "Заменить картинки…" : "Выбрать картинки…"}
               </label>
               <span className="hint">
-                PNG (без чересстрочности) или JPEG, до 2880 точек на сторону. Несколько картинок одного размера — анимация, по
-                порядку имён файлов.
+                PNG (без чересстрочности) или обычный JPEG (не progressive и не повёрнутый записью в EXIF, как фото с телефона),
+                до 2880 точек на сторону. Несколько картинок одного размера — анимация, по порядку имён файлов. Сборка игры
+                распаковывает каждую точку PNG: у объекта их до 24 миллионов (например, шесть кадров 2000 × 2000), у всех объектов
+                вместе — до 64 миллионов.
               </span>
             </div>
             {form.frames.length > 0 && (

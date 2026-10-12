@@ -73,7 +73,7 @@ export function MapView(props: { model: Model; onPick: (c: Cell) => void }) {
         </label>
         <span className="legend small">
           <i className="sw place" /> места <i className="sw ours" /> наши <i className="sw start" /> старт <i className="sw retired" />{" "}
-          выведенные <i className="sw patrol" /> патрули
+          выведенные и вырезанные <i className="sw patrol" /> патрули
         </span>
       </div>
       <div className="canvas-host" ref={host}>
@@ -92,6 +92,7 @@ export function MapView(props: { model: Model; onPick: (c: Cell) => void }) {
             </b>
             {hover.place !== null && ` · место #${hover.place} «${title(hover.place)}»`}
             {hover.retired !== null && ` · клетка выведенного места #${hover.retired}`}
+            {hover.cut !== null && ` · вырезана владельцем: ${hover.cut}`}
             {hover.patrol !== null && ` · патруль лагеря #${hover.patrol}`}
             {hover.blocked && " · горы или вода"}
             {hover.reachable === false && !hover.blocked && " · не дойти от старта и из долины"}

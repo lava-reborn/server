@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, errText, type DroppedRow } from "../api";
 import { ALL_LAYERS, LocCanvas, ZOOM_MAX, ZOOM_MIN, type Layer, type Mark, type PointerInfo } from "../canvas";
 import Problems from "../components/Problems";
-import { Modal, ask, toast } from "../components/ui";
+import { Modal, Spinner, ask, toast } from "../components/ui";
 import WalkInPicker from "../components/WalkInPicker";
 import { cellPx, disc, inGrid, key, neighbours, pxCell, rectCells } from "../hex";
 import { forgetPalettes, getInfo, getPalette, mobIcon, mobName } from "../store";
@@ -106,16 +106,33 @@ export default function Editor(props: {
   const queue = useRef<Promise<unknown>>(Promise.resolve());
 
   const readOnly = model.state === "original" || !!model.closed;
+  // While a save runs nothing is edited: the page is veiled, the keys wait,
+  // and an edit that slipped through is refused here (its answer replaces
+  // the model).
+  const savingRef = useRef(false);
+  const [saveSec, setSaveSec] = useState(0);
+  const busySaving = () => {
+    if (!savingRef.current) return false;
+    toast("info", "Идёт сохранение: править можно будет после ответа.");
+    return true;
+  };
 
   // --- the model and its history -------------------------------------------------
   const setModel = useCallback((m: Model) => {
     modelRef.current = m;
     setModelState(m);
   }, []);
+  // Edits of one text field one after another are one step of the history
+  // (a title typed letter by letter is undone at once).
+  const lastGroup = useRef<string | null>(null);
   const commit = useCallback(
-    (next: Model, before?: Model) => {
-      undo.current.push(before || modelRef.current);
-      if (undo.current.length > 100) undo.current.shift();
+    (next: Model, before?: Model, group?: string) => {
+      if (savingRef.current) return;
+      if (!(group && lastGroup.current === group && undo.current.length)) {
+        undo.current.push(before || modelRef.current);
+        if (undo.current.length > 100) undo.current.shift();
+      }
+      lastGroup.current = group || null;
       redo.current = [];
       setModel(next);
       setDirty(true);
@@ -123,33 +140,41 @@ export default function Editor(props: {
     },
     [setModel],
   );
+  // A step back or forward keeps what the disk says of the place (its id,
+  // state and etag): a save in between does not make the history stale.
+  const onDisk = (m: Model): Model => ({ ...m, id: modelRef.current.id, state: modelRef.current.state, etag: modelRef.current.etag });
   const doUndo = useCallback(() => {
+    if (savingRef.current) return;
     const prev = undo.current.pop();
     if (!prev) return;
+    lastGroup.current = null;
     redo.current.push(modelRef.current);
-    setModel(prev);
+    setModel(onDisk(prev));
     setSelSprite(null);
     setSelInh(null);
     setDirty(true);
     setHist((h) => h + 1);
   }, [setModel]);
   const doRedo = useCallback(() => {
+    if (savingRef.current) return;
     const next = redo.current.pop();
     if (!next) return;
+    lastGroup.current = null;
     undo.current.push(modelRef.current);
-    setModel(next);
+    setModel(onDisk(next));
     setSelSprite(null);
     setSelInh(null);
     setDirty(true);
     setHist((h) => h + 1);
   }, [setModel]);
   const patch = useCallback(
-    (fn: (m: Model) => Model) => {
+    (fn: (m: Model) => Model, group?: string) => {
       if (readOnly) {
         toast("info", "Локация оригинала только для просмотра: сделайте копию, чтобы править.");
         return;
       }
-      commit(fn(modelRef.current));
+      if (busySaving()) return;
+      commit(fn(modelRef.current), undefined, group);
     },
     [commit, readOnly],
   );
@@ -161,6 +186,7 @@ export default function Editor(props: {
         toast("info", "Локация оригинала только для просмотра: сделайте копию, чтобы править.");
         return Promise.resolve(null);
       }
+      if (busySaving()) return Promise.resolve(null);
       const run = queue.current.then(async () => {
         try {
           const before = modelRef.current;
@@ -347,10 +373,20 @@ export default function Editor(props: {
   };
 
   // --- save ---------------------------------------------------------------------
-  const save = async (m: Model = modelRef.current) => {
-    if (readOnly) return;
+  const savePending = useRef(false);
+  const save = async (given?: Model) => {
+    if (readOnly || savePending.current) return;
+    savePending.current = true;
     setSaving(true);
+    setSaveSec(0);
+    const t0 = Date.now();
+    const tick = window.setInterval(() => setSaveSec(Math.round((Date.now() - t0) / 1000)), 1000);
     try {
+      // an edit the server is still working out goes in first; from then
+      // on nothing is edited until the answer
+      await queue.current.catch(() => undefined);
+      savingRef.current = true;
+      const m = given || modelRef.current;
       const r = await api.save(m);
       const d = r.data;
       if (r.status === 200 && d.model) {
@@ -358,6 +394,10 @@ export default function Editor(props: {
         toast("ok", written.length ? `Сохранено: ${written.join(", ")}` : "Сохранять нечего: на диске то же самое", 9000);
         setDirty(false);
         forgetPalettes();
+        // the place as the disk has it now (its etag, state "ours"); the
+        // history of edits stays, a step back after the save included
+        lastGroup.current = null;
+        if (d.model.id === modelRef.current.id) setModel(d.model);
         props.onSaved(d.model);
         return;
       }
@@ -383,11 +423,18 @@ export default function Editor(props: {
     } catch (e) {
       toast("err", `Не сохранено: ${errText(e)}`);
     } finally {
+      window.clearInterval(tick);
+      savingRef.current = false;
+      savePending.current = false;
       setSaving(false);
     }
   };
 
   const back = async () => {
+    if (savingRef.current) {
+      toast("info", "Идёт сохранение: дождитесь ответа.");
+      return;
+    }
     if (dirty && !readOnly) {
       const go = await ask({
         title: "Уйти без сохранения?",
@@ -736,6 +783,11 @@ export default function Editor(props: {
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
       if (document.querySelector(".overlay")) return;
       const mod = e.ctrlKey || e.metaKey;
+      if (savingRef.current) {
+        // nothing is edited while a save runs (the keys included)
+        if (mod || e.key === "Delete" || e.key === "Backspace") e.preventDefault();
+        return;
+      }
       if (mod && e.code === "KeyZ") {
         e.preventDefault();
         if (e.shiftKey) doRedo();
@@ -831,10 +883,10 @@ export default function Editor(props: {
         <span className={`tag state-${model.state}`}>{STATE_RU[model.state]}</span>
         {dirty && !readOnly && model.state !== "new" && <span className="tag dirty">есть несохранённые правки</span>}
         <span className="grow" />
-        <button onClick={doUndo} disabled={!undo.current.length} title="Ctrl+Z">
+        <button onClick={doUndo} disabled={saving || !undo.current.length} title="Ctrl+Z">
           ↶ Отменить
         </button>
-        <button onClick={doRedo} disabled={!redo.current.length} title="Ctrl+Y">
+        <button onClick={doRedo} disabled={saving || !redo.current.length} title="Ctrl+Y">
           ↷ Вернуть
         </button>
         {readOnly ? (
@@ -846,11 +898,11 @@ export default function Editor(props: {
         ) : (
           <>
             <span className={`status ${errors ? "bad" : "good"}`}>{checking ? "проверка…" : errors ? `ошибок: ${errors}` : "без ошибок"}</span>
-            <button onClick={runFullCheck} disabled={checking}>
+            <button onClick={runFullCheck} disabled={checking || saving}>
               Проверить
             </button>
             <button className="primary" onClick={() => save()} disabled={saving} title="Ctrl+S">
-              {saving ? "Сохраняю…" : "Сохранить"}
+              {saving ? `Сохраняю… ${saveSec} с` : "Сохранить"}
             </button>
           </>
         )}
@@ -865,6 +917,21 @@ export default function Editor(props: {
         </div>
       )}
       <div className="editor-body">
+        {saving && (
+          <div className="saving-veil" role="status" aria-live="polite">
+            <div className="saving-box">
+              <b>
+                <Spinner /> Сохраняю… {saveSec} с
+              </b>
+              <p>
+                Сервер проверяет место так, как его прочтёт игра. Если менялись название, стороны выходов, библиотека, фон или
+                клетка на карте, он ещё пересчитывает места на карте: это занимает около минуты. Остальное сохраняется за
+                несколько секунд.
+              </p>
+              <p className="muted small">Пока идёт сохранение, править нельзя: правки, сделанные сейчас, пропали бы.</p>
+            </div>
+          </div>
+        )}
         <nav className="toolbar" aria-label="Инструменты">
           {TOOLS.map((t, i) => (
             <button key={t.id} className={tool === t.id ? "on" : ""} onClick={() => setTool(t.id)} title={`${t.label} (${i + 1})`}>
@@ -931,8 +998,10 @@ export default function Editor(props: {
                 info={info}
                 model={model}
                 readOnly={readOnly}
-                onAttr={(k, v) => patch((mm) => ({ ...mm, attrs: { ...mm.attrs, [k]: v } }))}
-                onWhy={(v) => patch((mm) => ({ ...mm, index: { ...(mm.index || { title: mm.attrs.title, from: mm.from, author: "owner", created: "" }), why: v } }))}
+                onAttr={(k, v) => patch((mm) => ({ ...mm, attrs: { ...mm.attrs, [k]: v } }), `attr:${k}`)}
+                onWhy={(v) =>
+                  patch((mm) => ({ ...mm, index: { ...(mm.index || { title: mm.attrs.title, from: mm.from, author: "owner", created: "" }), why: v } }), "why")
+                }
               />
             )}
             {tool === "objects" && (
@@ -979,7 +1048,7 @@ export default function Editor(props: {
                   setSelInh(i);
                   if (i !== null && model.inhabitants[i]) canvas.current?.centerOn(model.inhabitants[i].cell, Math.max(zoom, 0.8));
                 }}
-                onWhy={(i, why) => patch((mm) => ({ ...mm, inhabitants: mm.inhabitants.map((r, j) => (j === i ? { ...r, why } : r)) }))}
+                onWhy={(i, why) => patch((mm) => ({ ...mm, inhabitants: mm.inhabitants.map((r, j) => (j === i ? { ...r, why } : r)) }), `inh-why:${i}`)}
                 onDelete={(i) => {
                   setSelInh(null);
                   patch((mm) => ({ ...mm, inhabitants: mm.inhabitants.filter((_, j) => j !== i) }));
@@ -992,24 +1061,32 @@ export default function Editor(props: {
                 model={model}
                 readOnly={readOnly}
                 onDoor={(s, d) =>
-                  patch((mm) => {
-                    const doors = { ...mm.doors };
-                    if (d) doors[s] = d;
-                    else delete doors[s];
-                    return { ...mm, doors };
-                  })
+                  patch(
+                    (mm) => {
+                      const doors = { ...mm.doors };
+                      if (d) doors[s] = d;
+                      else delete doors[s];
+                      return { ...mm, doors };
+                    },
+                    d ? `door:${s}` : undefined,
+                  )
                 }
                 onWalkIn={(i, pt) =>
-                  patch((mm) => ({
-                    ...mm,
-                    walk_ins: pt ? mm.walk_ins.map((w, j) => (j === i ? { ...w, ...pt } : w)) : mm.walk_ins.filter((_, j) => j !== i),
-                  }))
+                  patch(
+                    (mm) => ({
+                      ...mm,
+                      walk_ins: pt ? mm.walk_ins.map((w, j) => (j === i ? { ...w, ...pt } : w)) : mm.walk_ins.filter((_, j) => j !== i),
+                    }),
+                    pt ? `walk:${i}` : undefined,
+                  )
                 }
                 onPickWalkIn={(from, index) => setPicker({ from, index })}
-                onNoMap={(v) => patch((mm) => ({ ...mm, no_map: v }))}
+                onNoMap={(v) => patch((mm) => ({ ...mm, no_map: v }), v ? "nomap" : undefined)}
               />
             )}
-            {tool === "map" && <MapPanel model={model} colours={info?.colours || []} readOnly={readOnly} onChange={(mp) => patch((mm) => ({ ...mm, map: mp }))} />}
+            {tool === "map" && (
+              <MapPanel model={model} colours={info?.colours || []} readOnly={readOnly} onChange={(mp) => patch((mm) => ({ ...mm, map: mp }), mp ? "map" : undefined)} />
+            )}
           </div>
           <Problems problems={problems} checking={checking} full={fullCheck} seconds={seconds} selected={selProblem} onPick={pickProblem} />
         </aside>

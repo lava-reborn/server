@@ -1,5 +1,5 @@
 // The global map as a picker of one cell: the release's tiles, the places
-// on it (settlements.json), the retired cells, the camp patrols, the
+// on it (settlements.json), the retired and cut cells, the camp patrols, the
 // starts, and a shade over what cannot be walked or reached. A plain TS
 // module like canvas.ts. A click picks a cell; a drag pans; the wheel zooms.
 import { image, offImage, onImage } from "./canvas";
@@ -9,6 +9,7 @@ export interface MapHover {
   cell: Cell;
   place: number | null;
   retired: number | null;
+  cut: string | null;
   patrol: number | null;
   blocked: boolean;
   reachable: boolean | null;
@@ -169,6 +170,7 @@ export class MapCanvas {
       cell: c,
       place: this.info.settlements[k] ?? null,
       retired: this.info.retired[k] ?? null,
+      cut: (this.info.cut || {})[k] ?? null,
       patrol: this.info.patrols[k] ?? null,
       blocked: !!this.bit(this.blocked, c[0], c[1]),
       reachable: this.bit(this.reach, c[0], c[1]),
@@ -290,7 +292,7 @@ export class MapCanvas {
       const [x, y] = k.split(",").map(Number);
       sq(x, y, "rgba(240,140,30,0.35)", null);
     }
-    for (const k of Object.keys(this.info.retired)) {
+    for (const k of [...Object.keys(this.info.retired), ...Object.keys(this.info.cut || {})]) {
       const [x, y] = k.split(",").map(Number);
       sq(x, y, "rgba(120,110,100,0.6)", null);
     }

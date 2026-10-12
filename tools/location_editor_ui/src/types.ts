@@ -175,6 +175,7 @@ export interface MapInfo {
   titles: Record<string, string>;
   ours: Record<string, Cell | null>;
   retired: Record<string, number>;
+  cut: Record<string, string>;
   patrols: Record<string, number>;
   labels: [number, number, string][];
   starts: Cell[];

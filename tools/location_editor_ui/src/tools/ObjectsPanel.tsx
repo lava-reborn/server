@@ -42,6 +42,8 @@ export default function ObjectsPanel(props: {
   const sel = props.selected;
   const sp = sel ? props.model.sprites[sel[0]] : null;
   const anchor = sp && sel ? sp.anchors[sel[1]] : null;
+  // the owner's object by the name he gave it, its id under it
+  const mine = sp ? (props.palette?.items || []).find((it) => it.origin === "object" && it.name === sp.id) : undefined;
 
   return (
     <div className="tool-panel objects-panel">
@@ -49,10 +51,11 @@ export default function ObjectsPanel(props: {
         <div className="selected-box">
           <div className="row">
             <b className="ellipsis" title={sp.id}>
-              {sp.id}
+              {mine?.title || sp.id}
             </b>
             <span className="tag">{sp.id.startsWith("c_") ? "мой" : sp.type === "ext" ? "отдельный" : "библиотека"}</span>
           </div>
+          {mine?.title && <div className="small muted mono ellipsis">{sp.id}</div>}
           <div className="small muted">
             клетка {anchor[0]}:{anchor[1]} · сдвиг dx {sp.dx}, dy {sp.dy}
             {sp.anchors.length > 1 ? ` · таких же мест: ${sp.anchors.length}` : ""}

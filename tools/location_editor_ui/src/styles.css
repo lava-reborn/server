@@ -154,6 +154,10 @@
 
 /* the editor */
 .le .editor-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 112px minmax(0, 1fr) 372px; }
+.le .editor-body { position: relative; }
+.le .saving-veil { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--overlay); cursor: progress; }
+.le .saving-box { width: min(460px, 100%); background: var(--bg-panel); border: 1px solid var(--line-strong); border-radius: var(--radius-lg); box-shadow: var(--elev-3); padding: 14px 16px; }
+.le .saving-box p { margin: 8px 0 0; }
 .le .toolbar { display: flex; flex-direction: column; gap: 2px; padding: 8px 6px; border-right: 1px solid var(--line); background: var(--bg-panel); overflow: auto; }
 .le .toolbar button { height: auto; flex-direction: column; gap: 2px; padding: 8px 4px; border-color: transparent; border-radius: var(--radius-md); white-space: normal; text-align: center; }
 .le .toolbar button .ico { font-size: 19px; line-height: 22px; }
