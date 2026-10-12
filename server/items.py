@@ -732,8 +732,22 @@ GOLD_INGOTS = {7620: 100, 4796: 500, 4797: 1000}
 # falls off a body, and a stall does not buy it (inventory.SELL_GOLD_ONLY).
 # The blueprints both lines share (bpg_damage_lvl2 ...) and the afro line's
 # own (bpg_damage_25_afro_*) keep both prices.
+#
+# So are the gold things Абри's stalls sell whose articles no record of
+# data/items_wiki.json carries (their icons are named after no type,
+# data/build_orig_items.py rule 7k), at their articles' gold prices, in
+# hundredths of an ounce (ARTICLE_GOLD_PRICE): the gold lottery's tickets
+# «Лотерейный билет (G)(10)» and «(G)(12)», 2 G and 2.5 G (1000 and 1700
+# afro beside them, which would buy gold prizes for afro, as 1333's), and
+# Говард Хаксли's coupons «Купон на 20 / 300 / 5000 патронов», 0.1 G, 1 G
+# and 10 G (their articles name no afro price). A coupon is the wiki's
+# discount: 5000 rounds of ЭК cost 50 G a pack at a time (GOLD_AMMO_ROUND)
+# and 10 G by the coupon -- gold leaving the game all the same, since no
+# stall pays gold for rounds. RECOVERED prices (2026-10-12).
 GOLD_LINE_BLUEPRINTS = frozenset(range(37664, 37681))
-GOLD_PRICE_ONLY = frozenset({1333}) | GOLD_LINE_BLUEPRINTS
+ARTICLE_GOLD_PRICE = {2649: 200, 2650: 250,           # DnLoteryKey_g_9_10, _g_11_12
+                      6294: 10, 6295: 100, 6296: 1000}  # kupon_ammo_20, _300, _5000
+GOLD_PRICE_ONLY = frozenset({1333}) | GOLD_LINE_BLUEPRINTS | frozenset(ARTICLE_GOLD_PRICE)
 
 # The price of a gold round, in hundredths of an ounce a ROUND: the owner's
 # «цену патронам снизь до 0.01 голды (которые голдовые)» (2026-09-28). A
@@ -770,7 +784,24 @@ def gold_round(p):
 # by icon), and with it that ticket's 400 afro; its own article,
 # «Лотерейный билет (8)» -- seller «Лотерейщик», quest «Лотерея
 # Вади-Хальфы (0-9)» -- says 500. RECOVERED (2026-09-28).
-OWN_ARTICLE_PRICE = {1307: 500}
+#
+# And of the afro things Абри's stalls sell that have an article and no
+# record (their icons are named after no type, data/build_orig_items.py
+# rule 7k), so that the designed frame's 10 afro stood: the bus tickets
+# «Билет в Абри из Вади Хальфы» 100 and «Билет в Вади Хальфу из Абри» 150
+# (Хассир's and Луиджи's), the lottery tickets «Лотерейный билет (10)» 1000
+# and «(12)» 1700, and the junkyard's twelve tools, 100 each («Все по 100
+# афро», МакКэндлесс; the articles «Паяльная лампа», «Молоток геолога» ...
+# say the same). RECOVERED (2026-10-12). The gypsum, wire and bandages
+# Одноухий sells for Марис Дамбис's chain have no article and no price in
+# the original: 50 afro each, DESIGNED -- a bandage's worth (Бинт
+# Обыкновенный 61), so the chain's errand costs 150.
+CRAT_TOOLS = (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038, 7039, 7040, 7041, 7042)
+OWN_ARTICLE_PRICE = {1307: 500,
+                     6544: 100, 6545: 150,          # ticket_WH_to_Abri, ticket_Abri_to_WH
+                     2646: 1000, 2647: 1700,        # DnLoteryKey_9_10, _11_12
+                     5740: 50, 5741: 50, 5742: 50}  # qGypsum_2012, qWire_2012, qBandages_2012
+OWN_ARTICLE_PRICE.update((t, 100) for t in CRAT_TOOLS)
 
 # The miner's clothes «Шахтерская одежда» (5181) sells: Вади-Хальфа's
 # helm_..boots_minecraft_U_LVL_WH_A_mod00 34480-34484 and their gold copies
@@ -916,6 +947,8 @@ def static_info(type_id):
         made = production.item_numbers(type_id)
         if made:
             info[1].update(made)
+        if type_id in ARTICLE_GOLD_PRICE:
+            info[1]["g_cost"] = ARTICLE_GOLD_PRICE[type_id]
         if type_id in GOLD_PRICE_ONLY:
             info[1]["cost"] = 0
         if type_id in OWN_ARTICLE_PRICE:

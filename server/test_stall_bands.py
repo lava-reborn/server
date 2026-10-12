@@ -281,7 +281,7 @@ COUNTS = {
                     1224: (19, 19), 1205: (15, 15), 1204: (15, 15), 650: (15, 15), 2391: (0, 7)},
     "Абри": {1159: (2, 2), 1161: (4, 4), 1163: (10, 10), 1162: (10, 10), 1164: (3, 3),
              1225: (26, 26), 1166: (10, 10), 1165: (10, 10), 5160: (10, 10), 5161: (10, 10),
-             1168: (0, 6), 2391: (0, 6)},
+             1168: (0, 0), 2391: (0, 6)},
     "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (6, 6), 1153: (3, 3), 1214: (2, 2),
                 1229: (25, 25), 1213: (20, 20), 1233: (20, 20), 5161: (20, 20), 2391: (0, 8)},
     "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (3, 3),
@@ -533,16 +533,17 @@ check("every stall that sells an ordinary pouch sells its (G) right after it -- 
 POUCH_STALLS = {(where, t): [x for x in s if x in POUCHES or x in GOLD_POUCH]
                 for where, t, s in LISTS if any(x in POUCHES for x in s)}
 check("  ..the pouch sellers and their pouches: Ваккас (Вади-Хальфа, 102) his four and"
-      " «Подсумки рукопашника», which his article lists; Алима (Абри, 187) and Галия (Донгола,"
-      " 103) what their articles list, «автоматчика», «пулеметчика» and «рукопашника» among"
-      " them since their link",
+      " «Подсумки рукопашника», which his article lists; Алима (Абри, 187: 1165 by her own"
+      " list since 2026-10-12, the wiki's link had given it to the driver Луиджи, 1179) and"
+      " Галия (Донгола, 103) what their articles list, «автоматчика», «пулеметчика» and"
+      " «рукопашника» among them since their link",
       POUCH_STALLS,
-      {("own", 1179): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601],
+      {("own", 1165): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601],
        ("own", 1204): [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
        ("own", 1213): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
        (102, 1204): [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
        (103, 1213): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
-       (187, 1179): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601]})
+       (187, 1165): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601]})
 check("items.with_gold_pouches: a (G) already on a list moves after its ordinary one, a (G)"
       " without it stays put, nothing else moves, and twice is once",
       (items.with_gold_pouches([3604, 7, 3582, 8]), items.with_gold_pouches([9, 3603, 10]),
@@ -605,7 +606,7 @@ def saved():
 
 
 shown = {}
-for place, trader in ((102, 1204), (187, 1179), (103, 1213)):
+for place, trader in ((102, 1204), (187, 1165), (103, 1213)):
     doc, payload = page_payload(place)
     n = [x for x in doc["npcs"] if x["type"] == trader][0]
     own = [s["type"] for s in n["stock"]]
@@ -618,24 +619,24 @@ check("npc_editor: a pouch seller's goods are its own list, no (G) among them; t
       " server adds are shown apart (the page's goldOf), and the two make the stall",
       shown,
       {1204: (True, set(), [3604, 3603, 3601, 3600, 5614], True, True),
-       1179: (True, set(), [3599, 3603, 5614, 3600, 3601], True, True),
+       1165: (True, set(), [3599, 3603, 5614, 3600, 3601], True, True),
        1213: (True, set(), [3599, 3602, 5614, 3600, 3601], True, True)})
 check("  ..and an untouched Save on 102 (the page's default place, Ваккас), 187 and 103 leaves"
       " data/npcs.json as it was", saved() == NPCS_DOC, True)
 
 
 def drop_hunter(n):
-    if n["type"] == 1179:
+    if n["type"] == 1165:
         n["stock"] = [s for s in n["stock"] if s["type"] != 3581]
         n["stock_chosen"] = True
 
 
-ALIMA_OWN = items.own_stock(1179)
+ALIMA_OWN = items.own_stock(1165)
 npc_editor.save(page_payload(187, drop_hunter)[1])
 check("  ..the owner's edit of Алима's goods (охотника taken off) writes her own list, with"
       " no (G) in it, and her stall then has no охотника of either kind, the other (G) kept",
-      (saved()["stock"].get("1179"),
-       [t for t in items.stock_for(1179, 187) if t in POUCHES or t in GOLD_POUCH]),
+      (saved()["stock"].get("1165"),
+       [t for t in items.stock_for(1165, 187) if t in POUCHES or t in GOLD_POUCH]),
       ([t for t in ALIMA_OWN if t != 3581], [3577, 3599, 5613, 5614, 3578, 3600, 3579, 3601]))
 npcs.NAMES, npcs.STOCK = _kept
 _rule = dict(items.GOLD_POUCHES)
