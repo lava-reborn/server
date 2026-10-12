@@ -215,9 +215,11 @@ try:
           [o for o in things if not names.known(items.STRING_ID_OFFSET + o)
            or not names.known(items.DESC_ID_OFFSET + o)
            or item_name(o) in (None, "", cat[o][1]) or items.premium(o)], [])
-    # Whoever stands in the open places and keeps a stall.
+    # Whoever stands in the open places and keeps a stall, its stall at each of
+    # them: a city's place decides a seller's (data/shop_bands.json -- Торси's and
+    # Мухсим's medicine since 2026-10-12, by Абри's tiers).
     traders = {w for w in stands if MT.get(w) and MT[w][0] == world.TRADER}
-    on_sale = {o for w in traders for o in items.stock_for(w)}
+    on_sale = {o for w in traders for lid in stands[w] for o in items.stock_for(w, lid)}
     handed = {o for q in real.values() if q.give for o in
               q.rew_obj + [t for t, _n in q.rew_also] + [t for t, _n, _w in q.rew_random]
               + [t for t, _n in q.start_obj]}

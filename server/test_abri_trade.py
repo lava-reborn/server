@@ -13,9 +13,11 @@ In process:
   2. the stalls: every trader standing in a place of Абри has its stall
      pinned here (data/npcs.json, the town's band of data/shop_bands.json, or
      the wiki's list kept as it was), the lists the wiki tied to the wrong
-     trader of the port market moved to their own (Алима's pouches, Торси's
-     battle medicine, Мухсим's food), Хассир sells both tickets in
-     Вади-Хальфа; nothing on them out of Абри's band 8-12, premium, or under
+     trader of the port market moved to their own (Алима's pouches; Торси's
+     battle medicine and Мухсим's food, Абри's tiers of medicine by the band
+     since the owner's medicine order of the same day, their articles still
+     on their stalls), Хассир sells both tickets in Вади-Хальфа; nothing on
+     them out of Абри's band 8-12 (its medicine 4_7-12_15), premium, or under
      objects.xml's own words, each gun's rounds on sale in the town;
   3. the knife craft: «Точильный камень Абри» (2280) sharpens Нож кастет
      (10у) and Штык нож (12у) three ways each, its blueprints on sale at
@@ -106,26 +108,29 @@ WORLD_PUTS = {PORT: {LOTTERY, GOLD_LOTTERY, MORTIMER}}
 # Each trader of Абри's places and what decides its stall there, 2026-10-12
 # (DESIGN.md 6.2): "band" the town's band of its kinds before its own list
 # (data/shop_bands.json SELLERS), "own" data/npcs.json's list, "wiki" the
-# wiki's list as it was (items.stock_table).
+# wiki's list as it was (items.stock_table). Торси, Мухсим and Джут sell
+# Абри's tiers of medicine since the owner's «чтобы везде всё было по
+# уровням» of the same day (shop_bands; server/test_med_stalls.py).
 DECIDED = {
     PORT: {1159: "band", 1161: "band", 1163: "band", SHOTGUNS: "band", ONE_EAR: "band",
-           ALIMA: "band", GALI: "band", TORSI: "own", MUKHSIM: "band", LUIGI: "own",
+           ALIMA: "band", GALI: "band", TORSI: "band", MUKHSIM: "band", LUIGI: "own",
            PILOT: "own", LOTTERY: "own", GOLD_LOTTERY: "own", KHAN_SELL: "band",
            MORTIMER: "own"},
     QUARTER: {1013: "wiki", 1196: "wiki", 2016: "wiki"},
     SLUMS: {MORTIMER: "own", FREYA: "own"},
-    OASIS: {1225: "band", AMMO_OASIS: "own", JUT: "own"},
+    OASIS: {1225: "band", AMMO_OASIS: "own", JUT: "band"},
     CLOTHES: {5160: "band", 5161: "band", 5181: "own"},
     FIELDS: {HUXLEY: "own"},
     DUMP: {MCCANDLESS: "own"},
 }
-# The lists of data/npcs.json this restoration wrote (or kept: Мортимер's).
+# The lists of data/npcs.json this restoration wrote (or kept: Мортимер's). The
+# medicine sellers' are empty since their tiers come from the band.
 OWN = {
     SHOTGUNS: [6096, 6108, 6120],
     ONE_EAR: list(KNIFE_PRINTS) + list(CHAIN),
     ALIMA: [3577, 3581, 5613, 3578, 3579],
-    TORSI: [6056, 6057, 6058, 6062, 6063, 6064, 6074, 6075, 6076],
-    MUKHSIM: [6051, 6907, 6906, 6905, 6046, 6050, 6898, 6901, 6044, 6052, 6900, 6045, 6899],
+    TORSI: [],
+    MUKHSIM: [],
     LUIGI: [TICKET_TO_HALFA],
     PILOT: [],
     LOTTERY: list(KEYS),
@@ -134,7 +139,7 @@ OWN = {
     FREYA: list(GIFTS),
     AMMO_OASIS: [6104, 6105, 6106, 6108, 6107, 6110, 6111, 6115, 6116, 6117, 6118, 6120, 6119,
                  6122, 6123, 6127, 6113, 6125],
-    JUT: [6904, 6905, 6906, 6907, 6073, 6074, 6075, 6076],
+    JUT: [],
     HUXLEY: list(COUPONS),
     MCCANDLESS: list(TOOLS),
     MORTIMER: list(INGOTS),
@@ -309,15 +314,26 @@ check("  ..each the way the table says: a seller of the band, a list of the owne
       " the wiki's list untouched (Гофус, Бернар, the doctor's junior helper)", how, {})
 check("the lists of data/npcs.json, trader by trader (DESIGN.md 6.2)",
       {t: npcs.stock(t) for t in OWN}, OWN)
+# The articles of Торси and Мухсим, which the wiki's shifted links had given the pilot
+# and Алима: the lists data/npcs.json carried for them until their tiers came from
+# Абри's band (2026-10-12).
+TORSI_ARTICLE = [6056, 6057, 6058, 6062, 6063, 6064, 6074, 6075, 6076]
+MUKHSIM_ARTICLE = [6051, 6907, 6906, 6905, 6046, 6050, 6898, 6901, 6044, 6052, 6900, 6045, 6899]
 check("  ..the port market's lists where the wiki's links had shifted them: Алима's pouches"
       " off the driver Луиджи, Торси's battle medicine off the pilot, Мухсим's food in place of"
       " Хан Сэлл's contraband, the shotgun man's 12-bore without the knife blueprints",
       ([t for t in items.stock_table().get(LUIGI, []) if t in OWN[ALIMA]] == OWN[ALIMA],
-       sorted(items.stock_table().get(PILOT, [])) == sorted(OWN[TORSI]),
-       sorted(items.stock_table().get(ALIMA, [])) == sorted(OWN[MUKHSIM]),
+       sorted(items.stock_table().get(PILOT, [])) == sorted(TORSI_ARTICLE),
+       sorted(items.stock_table().get(ALIMA, [])) == sorted(MUKHSIM_ARTICLE),
        sorted(items.stock_table().get(MUKHSIM, [])) == sorted(items.stock_table().get(KHAN_SELL)),
        [t for t in items.stock_table().get(SHOTGUNS, []) if t in (6622, 6625)]),
       (True, True, True, True, [6622, 6625]))
+check("  ..and Абри's tiers of medicine (4_7-12_15) keep their articles on their stalls: all of"
+      " Торси's, all of Мухсим's but the manioc of ten (0_3), the packs of 20 doses besides",
+      ([t for t in TORSI_ARTICLE if t not in items.stock_for(TORSI, PORT)],
+       [t for t in MUKHSIM_ARTICLE if t not in items.stock_for(MUKHSIM, PORT)],
+       [t for t in items.stock_for(TORSI, PORT) if t not in TORSI_ARTICLE]),
+      ([], [6898], [7101, 7102, 7103]))
 check("Хассир sells both tickets at Вади-Хальфа's station: the way home is bought before the"
       " ride", (HASSIR in stood(STATION), items.stock_for(HASSIR, STATION)),
       (True, [TICKET_TO_ABRI, TICKET_TO_HALFA]))
@@ -332,15 +348,18 @@ def band_thing(t):
     return shop_bands.band_ware(t)
 
 
-check("no gun, knife or set piece out of 8-12 on a seller's stall of Абри; every one of a"
-      " seller's band both ways, the ordinary for afro and the (G) for gold (Фрея's gifts,"
-      " cold arms of level 0, are no seller's: her own list, test_stall_bands' LEFT_HOLDING)",
+check("no gun, knife or set piece out of 8-12 on a seller's stall of Абри, no medicine out of"
+      " its tiers 4_7-12_15 (shop_bands.fits: a tier under the band); every one of a seller's"
+      " band both ways, the ordinary for afro and the (G) for gold, but the apothecary Джут's,"
+      " gold alone by the file's only (Фрея's gifts, cold arms of level 0, are no seller's: her"
+      " own list, test_stall_bands' LEFT_HOLDING)",
       (sorted((p, t, x) for (p, t), s in STALLS.items() for x in s if t in shop_bands.SELLERS
-              and band_thing(x) and not LO <= inventory.item_level(x) <= HI),
+              and band_thing(x) and not shop_bands.fits(x, LO, HI)),
        sorted((p, t) for (p, t), s in STALLS.items() if t in shop_bands.SELLERS
-              and shop_bands.SELLERS[t]
-              and not {gold_only(x) for x in s if band_thing(x)} >= {True, False})),
-      ([], []))
+              and shop_bands.SELLERS[t] and not shop_bands.only(t)
+              and not {gold_only(x) for x in s if band_thing(x)} >= {True, False}),
+       sorted((p, t, shop_bands.only(t)) for (p, t) in STALLS if shop_bands.only(t))),
+      ([], [], [(OASIS, JUT, "gold")]))
 check("nothing premium on a stall of Абри, nothing a quest lends, each thing priced in one"
       " currency but Мортимер's ingots (items.GOLD_INGOTS: sold for gold, loot worth afro)",
       sorted((p, t, x) for (p, t), s in STALLS.items() for x in s
@@ -605,9 +624,11 @@ async def main():
     close_stall(sess)
 
     stall, opened = open_stall(sess, PORT, TORSI)
-    check("Торси: her battle medicine; «В.И.Л.К.А. (G)» for 0.03 ounces",
+    check("Торси: Абри's tiers of battle medicine, her article's and their packs of 20 doses;"
+          " «В.И.Л.К.А. (G)» for 0.03 ounces",
           (stall, opened, buy(sess, stall, 6075, GOLD)),
-          (OWN[TORSI], [0], ([0], [6075], 0, 3)))
+          ([6056, 6062, 6074, 7101, 6057, 6063, 6075, 7102, 6058, 6064, 6076, 7103], [0],
+           ([0], [6075], 0, 3)))
     close_stall(sess)
 
     stall, opened = open_stall(sess, SLUMS, MORTIMER)

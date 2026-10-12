@@ -170,9 +170,11 @@ try:
            list(range(34480, 34485)) + list(range(34490, 34495))])
     check("the oasis: new models, the choice rounds and others, medicine",
           [len(items.stock_for(t, 62)) > 0 for t in (1224, 1227, 202)], [True] * 3)
-    check("  ..the rounds are rounds, the medicine medicine",
+    check("  ..the rounds are rounds, the medicine medicine: Снитке's the town's tiers of both"
+          " lines, afro and gold (shop_bands, 2026-10-12)",
           ({items.root_of(t) for t in items.stock_for(1227)},
-           {items.root_of(t) for t in items.stock_for(202)}), ({items.AMMO}, {items.HEAL}))
+           {items.root_of(t) for t in items.stock_for(202, 62)}, len(items.stock_for(202, 62))),
+          ({items.AMMO}, {items.HEAL}, 24))
     check("the lottery men sell their tickets; the gold one for gold alone",
           (items.stock_for(LOTTERY_MAN), items.stock_for(GOLD_LOTTERY),
            (items.params_of(GOLD_TICKET)["cost"], items.params_of(GOLD_TICKET)["g_cost"])),

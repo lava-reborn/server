@@ -15,7 +15,11 @@ the socket). On 2026-10-10 the owner put every weapon and set seller on
 his city's band (shop_bands.py, test_stall_bands): Борис and Шульц sell the
 valley's pistols 0-4, Одноглазый its knives 0-4 and Локсли and Абдула its
 sets 0-4, both versions, from the band at their places; their own lists in
-data/npcs.json keep the rest -- the rounds, the silk.
+data/npcs.json keep the rest -- the rounds, the silk. On 2026-10-12 the
+medicine went the same way («чтобы везде всё было по уровням»): Морис and
+Эрикесэм sell the valley's tiers 0_3 and 4_7 of both lines, afro and gold,
+Хасани the food and water of them for afro alone; their own lists keep
+the Лава-Кола and the Шаурма.
 
 In process, no sockets, like test_items: items.stock_for is the type_list
 a stall sends, items.static_info the answer to each ss_get_si its window
@@ -147,8 +151,10 @@ check("Шульц sells what Борис sells", stock(SCHULZ), stock(BORIS))
 check("Эрикесэм sells what Морис sells", stock(ERIKESAM), stock(MORIS))
 check("Абдула sells what Локсли sells", stock(ABDULA), stock(LOXLEY))
 check("  ..on the wire too, the valley's band at the Caravan as at the market",
-      (items.stock_for(SCHULZ, PLACE[SCHULZ]), items.stock_for(ABDULA, PLACE[ABDULA])),
-      (items.stock_for(BORIS, PLACE[BORIS]), items.stock_for(LOXLEY, PLACE[LOXLEY])))
+      (items.stock_for(SCHULZ, PLACE[SCHULZ]), items.stock_for(ABDULA, PLACE[ABDULA]),
+       items.stock_for(ERIKESAM, PLACE[ERIKESAM])),
+      (items.stock_for(BORIS, PLACE[BORIS]), items.stock_for(LOXLEY, PLACE[LOXLEY]),
+       items.stock_for(MORIS, PLACE[MORIS])))
 
 # --- Хасани: the food and water of Морис's list -----------------------------------
 FOOD = ("Med_Pacific_Heal_", "Med_Pacific_Rest_")
@@ -163,13 +169,16 @@ def food_or_water(t):
     return internal.startswith(FOOD) or not internal.startswith("Med_")
 
 
-check("Хасани sells the food and water of Морис's list, in his order",
-      stock(HASANI), [t for t in stock(MORIS) if food_or_water(t)])
+HASANI_STALL = items.stock_for(HASANI, PLACE[HASANI])
+check("Хасани sells the food and water of Морис's stall, in his order",
+      HASANI_STALL, [t for t in items.stock_for(MORIS, PLACE[MORIS]) if food_or_water(t)])
 check("  ..each one named as food or water, or the bar's",
-      sorted({names.text(items.STRING_ID_OFFSET + t).partition("$")[2] for t in stock(HASANI)}),
+      sorted({names.text(items.STRING_ID_OFFSET + t).partition("$")[2] for t in HASANI_STALL}),
       ["", "Вода", "Еда"])
-check("  ..no bandage, energy drink, injector or kit among them",
-      [t for t in stock(HASANI) if cat[t][1].startswith(("Med_Battle_", "Med_Pacific_HR_"))], [])
+check("  ..no bandage, energy drink, injector or kit among them: his city's food and water for"
+      " afro alone (data/shop_bands.json only)",
+      ([t for t in HASANI_STALL if cat[t][1].startswith(("Med_Battle_", "Med_Pacific_HR_"))],
+       shop_bands.only(HASANI)), ([], "afro"))
 
 # --- Бомани and Ро-А-Ким: the rounds of Борис's pistols ------------------------------
 # The pistols he sold when the owner decided (2026-09-24) were the pistol line
@@ -457,7 +466,7 @@ for trader, who in sorted(LISTS.items()):
     goods = stock(trader) or []
     wire = items.stock_for(trader, PLACE[trader])
     kinds = shop_bands.kinds(trader)
-    band = shop_bands.goods(kinds, 0, 4) if kinds else []
+    band = shop_bands.goods(kinds, 0, 4, shop_bands.only(trader)) if kinds else []
     check("%s (%d): %d types, on the wire as written (a seller's band first)" % (
         who, trader, len(wire)), wire, band + goods)
     check("  ..none twice", len(set(wire)), len(wire))
