@@ -20,9 +20,10 @@ drink, injector (G), its 20 doses (G) / food, food of ten, water, kit (G).
 In process:
   1. the catalogue: the 48 types of the two lines, 6 tiers of 4 rows each,
      are the band's wares at their tier's floor, (G) by the name, priced in
-     their own currency alone at the original's prices, named by the
-     original and drawn by the client; the (P), the thousand-dose pack, the
-     May and test ones are not;
+     their own currency alone at the original's prices (but «Эгоист»'s,
+     0.02 G over its article's 0.01), named by the original and drawn by
+     the client; the (P), the thousand-dose pack, the May and test ones are
+     not;
   2. the packs of 20 doses: the single injector's numbers, twenty uses,
      twenty times the price, gold alone, a gold thing, the injector's words;
      7103 and 7104 the packs Серхио's article sells, 7105 ours;
@@ -30,7 +31,7 @@ In process:
      health (the maximum exactly, the minimum one short at most) and at
      least the energy drink's stamina, both in one action for fewer AP; the
      kit twice the food's health and at least the water's stamina; and afro
-     is cheaper a dose in a fight;
+     is cheaper, a dose in a fight and a use out of one, every tier;
   4. the stalls: every medicine seller at every place of its city sells
      exactly its city's tiers of its kinds, in one currency where the file
      says only, in the order above, then its own list; pinned stall by
@@ -187,7 +188,9 @@ check("each priced in its own currency alone: afro for the afro rows, gold for t
              if gold_only(t) != gold_row(kind, row) or bool(price(t)[0]) == bool(price(t)[1])),
       [])
 # The original's prices, off the wiki's articles (items_wiki.json) and the packs' rule
-# (heal_manual.json: twenty single doses): afro, and gold in hundredths of an ounce.
+# (heal_manual.json: twenty single doses): afro, and gold in hundredths of an ounce. All
+# but «Эгоист»'s (6904), 0.02 G over its article's 0.01 (heal_manual.json over_article):
+# at 0.01 a use of the gold kit cost less afro than food and water (below).
 PRICES = {
     ("combat_meds", 0): [22, 34, 61, 105, 196, 306],         # bandages
     ("combat_meds", 1): [19, 46, 82, 127, 183, 307],         # energy drinks
@@ -196,11 +199,15 @@ PRICES = {
     ("peace_meds", 0): [12, 21, 42, 76, 150, 242],           # food
     ("peace_meds", 1): [118, 210, 416, 761, 1501, 2415],     # food of ten
     ("peace_meds", 2): [171, 527, 1062, 1778, 2700, 4725],   # water of ten uses
-    ("peace_meds", 3): [1, 6, 11, 18, 31, 51],               # kits of twenty (G)
+    ("peace_meds", 3): [2, 6, 11, 18, 31, 51],               # kits of twenty (G)
 }
-check("  ..at the original's prices, tier by tier",
+check("  ..at the original's prices, tier by tier, «Эгоист» at 0.02 G",
       {key: [max(price(LADDER[(key[0], tier, key[1])])) for tier in TIERS] for key in PRICES},
       PRICES)
+check("  ..the article's own 0.01 G under it, overruled by data/heal_manual.json alone, which"
+      " says why (DESIGNED)",
+      (items.wiki()[6904]["g_cost"], sorted(items.heal_over_article()),
+       "29" in items.heal_over_article()[6904]["_designed"]), (1, [6904], True))
 check("each named by the original, never by objects.xml, its description in the preload, and"
       " drawn: classes/Heal_Item/<name>/ico.swf",
       sorted(t for t in LADDER.values()
@@ -292,9 +299,11 @@ check("afro is cheaper a dose in a fight: a bandage and an energy drink cost les
 per_use = [(int(math.floor(price(LADDER[("peace_meds", tier, 0)])[0]
                             + price(LADDER[("peace_meds", tier, 2)])[0] / 10.0 + 0.5)),
             int(price(LADDER[("peace_meds", tier, 3)])[1] * RATE / 20)) for tier in TIERS]
-check("  ..and out of one a use of food and water costs less than a kit's from 4_7 up; at 0_3"
-      " «Эгоист» is the cheaper (25 afro a use against 29), the wiki's 0.01 G (decision 9)",
-      per_use, [(29, 25), (74, 150), (148, 275), (254, 450), (420, 775), (715, 1275)])
+check("  ..and out of one a use of food and water costs less than a kit's, every tier: at 0_3"
+      " «Эгоист» 50 afro a use against 29 (0.02 G; the article's 0.01 made it 25, the cheaper"
+      " of the two -- decision 9), each kit 1.7 to 2 times its tier's food and water",
+      (per_use, all(a < g <= 2.1 * a for a, g in per_use)),
+      ([(29, 50), (74, 150), (148, 275), (254, 450), (420, 775), (715, 1275)], True))
 
 # --- 4. the stalls ---------------------------------------------------------------------------
 print()

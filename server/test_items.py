@@ -97,6 +97,10 @@ for t in rnd.sample(linked, 20):
     # article says (items.GOLD_AMMO_ROUND; every one of them in test_repair).
     if root == items.AMMO and items.gold_round(p):
         ours = dict(ours, g_cost=p["g_cost"])
+    # And a medicine's number data/heal_manual.json lays over its article
+    # (items.heal_over_article; every one of them held below).
+    ours = dict(ours, **{k: v for k, v in items.heal_over_article().get(t, {}).items()
+                         if not k.startswith("_")})
     for key in SCALARS:
         if key in rec and key in p and key not in ours:
             want = rec[key]
@@ -485,8 +489,13 @@ check("6043 is the manioc root, food, out of combat",
       shown(6043), ("Корень Маниока$Еда", (68, 90), (5, 10), 0, 1, 12, 0, 0))
 check("6067 is the Мини kit: premium, 5 uses, 7 AP",
       shown(6067), ("Аптечка «Мини» (5) (P)$Боевая Медицина", (90, 180), (90, 180), 7, 5, 0, 1, 1))
-check("6904 is the Эгоист kit: gold, 20 uses, no premium needed",
-      shown(6904), ("Аптечка «Эгоист» (20) (G)$Лекарство", (135, 180), (152, 190), 0, 20, 0, 1, 0))
+check("6904 is the Эгоист kit: gold, 20 uses, no premium needed; 0.02 G, not its article's"
+      " 0.01 (data/heal_manual.json over_article: a use dearer than food and water, 2026-10-12)",
+      shown(6904), ("Аптечка «Эгоист» (20) (G)$Лекарство", (135, 180), (152, 190), 0, 20, 0, 2, 0))
+check("  ..the only number laid over an article there, and on a type that has one",
+      ({t: sorted(k for k in rec if not k.startswith("_"))
+        for t, rec in items.heal_over_article().items()},
+       sorted(t for t in items.heal_over_article() if t not in wiki)), ({6904: ["g_cost"]}, []))
 check("food of ten portions: Фуль",
       shown(6899), ("Фуль (10)$Еда", (90, 120), (5, 10), 0, 10, 210, 0, 0))
 check("the energy drink no longer borrows an NPC's name",

@@ -1,8 +1,17 @@
 {
  "_meta": {
-  "about": "Numbers for heal items that have no wiki article, laid over the designed frame by server/items.py exactly the way a data/items_wiki.json record is (same keys, frame shape unchanged). A wiki record, where one exists, wins. DESIGNED, NOT RECOVERED: the original server kept these numbers and they are lost. Each record says in _designed what was chosen and in _source what is real.",
+  "about": "Numbers for heal items that have no wiki article, laid over the designed frame by server/items.py exactly the way a data/items_wiki.json record is (same keys, frame shape unchanged). A wiki record, where one exists, wins -- but for the few numbers of over_article. DESIGNED, NOT RECOVERED: the original server kept these numbers and they are lost. Each record says in _designed what was chosen and in _source what is real.",
   "decided": "2026-09-23, owner: trader Морис (5211) sells medicine for character levels 0-8, i.e. the level bands 0_3, 4_7 and 8_11, in every variant (A/P/G); the 20-dose packs take the single injector's numbers with 20 uses at 20 times the price; the (P) kits between Мини and Стандарт are interpolated. 2026-10-12, owner: «сделай во всех городах нормальную продажу медикаментов и боевой медицины, чтобы везде всё было по уровням, были версии афро и голд»: the medicine goes by the cities' tiers (data/shop_bands.json, server/shop_bands.py; a city sells the tiers of its band and the one below), so the valley sells 0_3 and 4_7 and no longer 8_11, and the (P) are out of the game since 2026-09-30; the packs of 12_15, 16_19 and 20 (7103-7105) are made by the rule of 2026-09-23 and sold with their tiers.",
-  "fields": "ss_si_heal names as in server/items.py; g_cost in hundredths of G (0.01 G = 1), like items_wiki.json; need_skills_m/need_skills as Item.parseNeedBonus reads them (bit 2 = Медицина). Keys starting with _ never reach the wire."
+  "fields": "ss_si_heal names as in server/items.py; g_cost in hundredths of G (0.01 G = 1), like items_wiki.json; need_skills_m/need_skills as Item.parseNeedBonus reads them (bit 2 = Медицина). Keys starting with _ never reach the wire.",
+  "over_article": "The few numbers laid over a wiki article on purpose (server/items.py heal_over_article), after it, key by key, the rest of the article standing: only for a type that has one. Each record says in _designed what it overrules and why. Taking a record out gives the article's number back."
+ },
+ "over_article": {
+  "6904": {
+   "_name": "Аптечка «Эгоист» (20) (G)",
+   "_source": "the wiki's article «Аптечка «Эгоист»» (data/items_wiki.json): 0.01 G for twenty uses of 135-180 HP and 152-190 ST, the kit of tier 0_3",
+   "_designed": "0.02 G in place of the article's 0.01 G (2026-10-12, medicine by the cities' tiers): at 0.01 G a use cost 25 afro at the one rate (50 000 the ounce) against 29 for a manioc root and a tenth of a bottle of water (6043 + 6049 / 10), so the gold kit was both twice as strong and cheaper than the afro food and water it pairs with, the one tier where «афро меньше статов» bought nothing -- and a level-0 character has gold from the first day («Золотоискатель», quest 9: an ounce a day). At 0.02 G a use costs 50 afro, 1.7 times the food and water, as the kits of the other tiers cost 1.8-2 times theirs (150/74, 275/148, 450/254, 775/420, 1275/715); the next kit, «Самоспас», is 0.06 G",
+   "g_cost": 2
+  }
  },
  "items": {
   "6068": {
