@@ -7920,7 +7920,8 @@
       "type": 471,
       "kind": "bring_l_obj",
       "name": "Заполучить амазонку (Часть 2)",
-      "start": "Мне требуетфя офобый препарат Ф.И.Л.К.А поифи у торгофца медикаментами. Фто не так? Ватраты волота я тебе компенфирую фс лихфой не перевивай. Поторопифь. <Br><Br><b>Задача:</b> Купить В.И.Л.К.А. (G). Потраченное золото вам вернут в двойном размере.",
+      "start": "Мне требуетфя офобый препарат Ф.И.Л.К.А поифи у торгофца медикаментами. Фто не так? Ватраты волота я тебе компенфирую фс лихфой не перевивай. Поторопифь. <Br><Br><b>Задача:</b> Купить В.И.Л.К.А. (G).",
+      "own_texts": ["start"],
       "notfinish": "",
       "finish": "Хорофо.<i>Выливает жидкость в чан, где варятся корешки.</i>",
       "give": [1174],
@@ -7938,7 +7939,7 @@
       "need_quest": 470,
       "loc": 48006955,
       "finish_loc": 48006955,
-      "why": "RECOVERED texts (texts.xml 46971-46973), Ведич's «Заполучить амазонку» (Ведич, «Знахарь», 1174, texts.xml 46947, the healer of Абри's Портовый рынок 187; his copy 1178 waits in 193, the desert beside the Амазонка's 192). Part 2: buy «В.И.Л.К.А. (G)» (6075, 0,03 G) from the combat medicine stall (Торси, 1167, «Торговец медикаментами» on the same market) and bring it; Ведич pours it into his pot. «Потраченное золото вам вернут в двойном размере»: paid in kind, DESIGNED -- two of the same injectors (rew_obj 6075 x2), a gold thing no stall buys back, so no gold comes out of the row (server/test_halfa_fixups: a row paying gold is a service, a daily task or an ingot's change). The plan's «возврат цены плюс 10 %» was gold out of a one-off; the texts' double in kind is the original's word and keeps the purse closed."
+      "why": "RECOVERED texts (texts.xml 46971-46973), Ведич's «Заполучить амазонку» (Ведич, «Знахарь», 1174, texts.xml 46947, the healer of Абри's Портовый рынок 187; his copy 1178 waits in 193, the desert beside the Амазонка's 192). Part 2: buy «В.И.Л.К.А. (G)» (6075, 0,03 G) from the combat medicine stall (Торси, 1167, «Торговец медикаментами» on the same market) and bring it; Ведич pours it into his pot. «Потраченное золото вам вернут в двойном размере»: paid in kind, DESIGNED -- two of the same injectors (rew_obj 6075 x2), a gold thing no stall buys back, so no gold comes out of the row (server/test_halfa_fixups: a row paying gold is a service, a daily task or an ingot's change). The plan's «возврат цены плюс 10 %» was gold out of a one-off; the texts' double in kind is the original's word and keeps the purse closed. The start is the original's less one passage (own_texts, 2026-10-12): its task line's «Потраченное золото вам вернут в двойном размере» promised gold back, and none comes, so it goes; the quest window shows the reward, the two injectors, and Ведич's own lisped «Ватраты волота я тебе компенфирую фс лихфой» stays true in kind."
     },
     {
       "type": 472,
@@ -8176,7 +8177,7 @@
       "need_quest": 481,
       "loc": 48006955,
       "finish_loc": 48015147,
-      "why": "RECOVERED texts (texts.xml 47006-47009), the corn of Абри: Дед Кузин (1653, «Дед Кузин Фермер», 46950, the Трущобы 255, by three of his corn plants 1656), the miller Ан-Насир (1654, «Ан-Насир Мельник», 46951, the port market 187), the baker Хасим (1655, «Хасим Пекарь», 46952, the Жилой квартал 188), and the corn of «Абри: Поля» (1682, thirteen plants at Говард Хаксли's hut, 261, 5862,1836). «Свежий хлеб»: flour (3918, «Мучной заговор») and clean drinking water -- «Кожаный бурдюк (10)» (6050, the cheapest water Абри's food stall (Мухсим, 1168) sells, «Обычная вода из Нила не годится») -- for a «Кукурузный хлеб» (3914). A one-off DESIGNED: a stall pays 3500 afro for the loaf (5000 x 0,7), and the cobs are free, so a loaf a day would be an afro tap; the farm's line gives two loaves in all (480 and this)."
+      "why": "RECOVERED texts (texts.xml 47006-47009), the corn of Абри: Дед Кузин (1653, «Дед Кузин Фермер», 46950, the Трущобы 255, by three of his corn plants 1656), the miller Ан-Насир (1654, «Ан-Насир Мельник», 46951, the port market 187), the baker Хасим (1655, «Хасим Пекарь», 46952, the Жилой квартал 188), and the corn of «Абри: Поля» (1682, thirteen plants at Говард Хаксли's hut, 261, 5862,1836). «Свежий хлеб»: flour (3918, «Мучной заговор») and clean drinking water -- «Кожаный бурдюк (10)» (6050, the cheapest water Абри's food stall (Мухсим, 1168) sells, «Обычная вода из Нила не годится») -- for a «Кукурузный хлеб» (3914). A one-off DESIGNED: the farm's line gives two loaves in all (480 and this). No stall pays for the loaf (server/items.py QUEST_GIFTS_UNSOLD, as its article's «Допустимость продажи: Нет» says): at its article's 5000 a stall paid 3500, and the line made about 6700 afro a fresh character."
     },
     {
       "type": 485,

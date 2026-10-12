@@ -96,7 +96,12 @@
   {
    "loc": 1055,
    "types": [2402],
-   "why": "The same machine in the assembly shop (OreRefinery_Abri_Sorting), for the same reason as in 766."
+   "why": "The same machine in the assembly shop (OreRefinery_Abri_Sorting), for the same reason as in 766. The shop itself is cut since (no door leads in: data/passages.json 766)."
+  },
+  {
+   "loc": 188,
+   "types": [5105],
+   "why": "The owner's cut of Абри, 2026-10-12 («... улучшение сетов 10-12 ...»): Npc_Upgrader000003, «Рудольф<br>Обмен одежды на вырост [9-12]» (the original's name), the set upgrader of Абри's band in its Жилой квартал (Abri_Settelment), the one file he stands in. His window is empty, as every set upgrader's is since the cut of Вади-Хальфа (server/setcraft.py), and he gives and takes no quest: he was the service the order takes away and nothing else, so he does not stand. Вади-Хальфа's Генри ст stays where he is because he gives quests (104, 105, 119, 132)."
   }
  ],
  "quests": [

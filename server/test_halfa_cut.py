@@ -37,8 +37,9 @@ What the cut is, each part held here:
   8. the ФСЦ, the owner's word of 2026-10-10 («убери фсц тоже»): the FSC
      airfield 528 (5970,1727) and the FSC base «НИЛ-1» 522 (5942,1723)
      off the map the same way -- no way in or out through them, nobody
-     of theirs retired (the upgraders 8213/8214 stand in four other
-     towns' airfields, the base stands nobody), no quest tied to them, no
+     of theirs retired (the upgraders 8213/8214 stand in three other
+     towns' airfields, Абри's off the map too since 2026-10-12, the base
+     stands nobody), no quest tied to them, no
      ambush opened, and the run_once «retire-halfa-fsc-2026-10-10» sending
      whoever is in one, or calls one home, to Причал;
   9. the black market's 639, the owner's word of 2026-10-10 («надо убрать
@@ -496,7 +497,8 @@ FSC = {528: (5970, 1727), 522: (5942, 1723)}
 FSC_UPGRADERS = (8213, 8214)                     # FSC_U_000001/2, art 118
 FSC_PILOTS = (7921, 8210, 8211, 8212)            # ADMIN_Q_000042, 000049-51
 NIL1_TYPES = (7529, 8621, 8622, 8624, 8625, 8626, 8635, 8636, 8687)
-OTHER_AIRFIELDS = (527, 529, 530, 531)           # Абу-Хамед, Абри, Донгола, Керма: on cells
+OTHER_AIRFIELDS = (527, 530, 531)                # Абу-Хамед, Донгола, Керма: on cells
+# Абри's airfield 529 went with the cut of Абри (2026-10-12, server/test_abri_cut.py).
 CSC_PEOPLE = {41: (5685, 5686), 429: (5694, 5695), 35: (2276,)}
 
 
@@ -536,11 +538,11 @@ try:
           [table.get(c) for c in ((5969, 1727), (5969, 1728), (5970, 1728), (5971, 1727),
                                   (5943, 1723), (5943, 1722))],
           [36, 95, 59, 100, 429, 433])
-    # Абри's air base 427 stood on 5866,1836 until the cut of Абри
-    # (2026-10-12, server/test_abri_cut.py); Абри's airfield 529 stays.
+    # Абри's air base 427 stood on 5866,1836 and its airfield 529 on 5865,1835
+    # until the cut of Абри (2026-10-12, server/test_abri_cut.py).
     check("  ..and so do the other towns' airfields and bases НИЛ-2..4",
           [world.cell_of(i) for i in OTHER_AIRFIELDS + (523, 524, 525)],
-          [(6185, 1977), (5865, 1835), (5879, 2011), (5863, 1946), (5849, 1851), (5863, 2002),
+          [(6185, 1977), (5879, 2011), (5863, 1946), (5849, 1851), (5863, 2002),
            (6167, 1989)])
 
     # no way in, and none out through them
@@ -598,7 +600,7 @@ try:
     # the people
     check("in the airfield a room stood the two FSC upgraders 8213/8214 alone; in the base nobody",
           {i: stood_in(i) for i in FSC}, {528: list(FSC_UPGRADERS), 522: []})
-    check("  ..the upgraders stand in the airfields of Абу-Хамед, Абри, Донгола and Керма too, so"
+    check("  ..the upgraders stand in the airfields of Абу-Хамед, Донгола and Керма too, so"
           " neither is retired; their windows were empty there as here",
           ({i: [t for t in FSC_UPGRADERS if t in stood_in(i)] for i in OTHER_AIRFIELDS},
            [t for t in FSC_UPGRADERS if t in world.retired_creatures()],

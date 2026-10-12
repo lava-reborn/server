@@ -806,6 +806,19 @@ OWN_ARTICLE_PRICE = {1307: 500,
                      5740: 50, 5741: 50, 5742: 50}  # qGypsum_2012, qWire_2012, qBandages_2012
 OWN_ARTICLE_PRICE.update((t, 100) for t in CRAT_TOOLS)
 
+# Things a quest hands out for free that no stall may pay for, though the
+# wiki prices them: they go with no price (cost 0), so Inventory.sell refuses
+# them as it refuses the corn and the flour they are made of. The server
+# keeps no "sellable" flag of its own (the wiki's «Допустимость продажи: Нет»
+# is not read, UNDONE «Зафиксированные умолчания Абри», 38); where the thing
+# is free, a price would be a tap. «Кукурузный хлеб» (3914), the bread of
+# Абри's corn chain (480 and 482, level 0, in peaceful places): its article
+# says 5000 afro and «Допустимость продажи: Нет»; at 5000 a stall paid 3500 a
+# loaf, two loaves a character, and a fresh character's errands made about
+# 6700 afro (the owner's Абри, 2026-10-12; RECOVERED: the article's own
+# rule). It keeps its use: strength and dexterity +1 for an hour, two bites.
+QUEST_GIFTS_UNSOLD = frozenset({3914})
+
 # The miner's clothes «Шахтерская одежда» (5181) sells: Вади-Хальфа's
 # helm_..boots_minecraft_U_LVL_WH_A_mod00 34480-34484 and their gold copies
 # 34490-34494, named and described by the original (texts.xml 22856-22875,
@@ -956,6 +969,8 @@ def static_info(type_id):
             info[1]["cost"] = 0
         if type_id in OWN_ARTICLE_PRICE:
             info[1]["cost"] = OWN_ARTICLE_PRICE[type_id]
+        if type_id in QUEST_GIFTS_UNSOLD:
+            info[1]["cost"] = 0
         # A gold ingot is worth its ounces: in gold, and in afro at the one
         # rate (GOLD_INGOTS).
         ounces = GOLD_INGOTS.get(type_id)

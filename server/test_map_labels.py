@@ -190,11 +190,11 @@ check("  ..eight of them retexted to the boss clock: the four camps and their ch
 # FSC base «НИЛ-1» 522 across the river are off the map (data/retired.json);
 # every other name of the ФСЦ -- the airfields of the other towns, the two
 # over wasteland, the bases НИЛ-2..4 -- stays. Абри's air base «Авиабаза ЦСЦ»
-# (5866,1836) stayed too, until the cut of Абри took it (2026-10-12,
-# server/test_abri_cut.py); Абри's airfield beside it stays.
+# (5866,1836) and its airfield beside it (5865,1835) stayed too, until the
+# cut of Абри took them (2026-10-12, server/test_abri_cut.py).
 print("the cut of Вади-Хальфа's ФСЦ")
 FSC_CUT = {FSC_AIRFIELD_CELL: "Аэроплощадка ФСЦ", (5942, 1723): 'База ФСЦ "НИЛ-1"'}
-FSC_KEPT = {(6185, 1977): "Аэроплощадка ФСЦ", (5865, 1835): "Аэроплощадка ФСЦ",
+FSC_KEPT = {(6185, 1977): "Аэроплощадка ФСЦ",
             (5879, 2011): "Аэроплощадка ФСЦ", (5863, 1946): "Аэроплощадка ФСЦ",
             (6032, 1951): "Аэроплощадка ФСЦ", (6017, 2086): "Аэроплощадка ФСЦ",
             (5849, 1851): 'База ФСЦ "НИЛ-2"', (5863, 2002): 'База ФСЦ "НИЛ-3"',
@@ -206,10 +206,10 @@ check("  ..where each had its own", {c: texts_at(raw, *c) for c in FSC_CUT},
 check("  ..while the other airfields and the bases НИЛ-2..4 keep theirs",
       {c: texts_at(out, *c) for c in FSC_KEPT}, {c: [t] for c, t in FSC_KEPT.items()})
 FSC_WORD = re.compile(r"ФСЦ|ЦСЦ")
-check("  ..so of the file's twelve names of the ФСЦ the map shows nine (Абри's air base gone"
-      " since 2026-10-12)",
+check("  ..so of the file's twelve names of the ФСЦ the map shows eight (Абри's air base and"
+      " airfield gone since 2026-10-12)",
       (len(rows_in(raw, (0, 99999, 0, 99999), FSC_WORD)),
-       len(rows_in(out, (0, 99999, 0, 99999), FSC_WORD))), (12, 9))
+       len(rows_in(out, (0, 99999, 0, 99999), FSC_WORD))), (12, 8))
 check("the ФСЦ cut's own edits are its two cells and no other",
       sorted((e["x"], e["y"]) for e in LABELS
              if e.get("why", "").startswith("The owner's cut of Вади-Хальфа's ФСЦ, 2026-10-10")),

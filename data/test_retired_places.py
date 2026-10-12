@@ -13,7 +13,10 @@ KKND clan base's six files, which never had a cell; the cut of Вади-Халь
 Либерти») the craftsmen's quarters 453, 454, 458 and 459, the ЦСЦ's air
 base 427 and the clan base Liberty's entrance 328 and block post 327, with
 the quarter 450 behind «Улучшение сетов 10-12» and the base's nine other
-files, which never had a cell. data/retired.json lists them, data/settlements_verified.json
+files, which never had a cell -- and, by the decisions taken for him that
+day («Все, что не сможешь восстановить, вырезай»), the ФСЦ airfield 529 and
+the clan base Blackwater's block post 317, with the base's six other files.
+data/retired.json lists them, data/settlements_verified.json
 nulls their cells, and data/place_settlements.py leaves them out of the
 candidates. The trap this
 guards against was found before the first cut was made: a null alone lets
@@ -23,7 +26,7 @@ left their cells, and with other nulls the valley's Arena 167 -- Сет's
 stall and the one place for PvP -- left 6270,1831; the four nulls of
 Halfa's cut alone took 447 off 5968,1719). So the placer is run twice here,
 as the table stands and with the cuts undone, and the two may differ in
-exactly the sixteen intended cells; and the table on disk is the placer's own
+exactly the eighteen intended cells; and the table on disk is the placer's own
 output, so that difference is the difference between the map before the
 cuts and the map now.
 
@@ -48,7 +51,8 @@ PREMIUM = {"5968,1726": 124, "5876,2012": 125, "6182,1975": 130}
 HALFA = {"5969,1729": 468, "5969,1731": 452, "5969,1732": 456, "5970,1732": 457}
 FSC = {"5970,1727": 528, "5942,1723": 522}
 ABRI = {"5860,1836": 453, "5861,1836": 454, "5860,1837": 458, "5863,1837": 459,
-        "5866,1836": 427, "5906,1888": 328, "5906,1889": 327}
+        "5866,1836": 427, "5906,1888": 328, "5906,1889": 327, "5865,1835": 529,
+        "5924,1838": 317}
 INTENDED = dict(PREMIUM, **HALFA, **FSC, **ABRI)
 # The KKND clan base: six files, none of them ever on a cell -- listed so the
 # placer can never give 297 or 383 the wasteland cell under its label.
@@ -56,9 +60,13 @@ KKND = [297, 383, 384, 938, 961, 1189]
 # The cut of Абри's off-cell files: the quarter 450 behind «Улучшение сетов
 # 10-12» (5866,1837), and the clan base Liberty's own (the block post's other
 # copy, the back door, the bunker, its garage and two workshops, the leader's
-# room, and the older edition 148/610) -- the placer can never give one the
-# wasteland under «Кланбаза Liberty» at Абу-Хамед (6248,1979) or anywhere.
-ABRI_OFF_CELL = [450, 326, 329, 936, 937, 939, 940, 1190, 148, 610]
+# room, and the older edition 148/610), and the clan base Blackwater's (the
+# back door, the yard, the bunker, its garage, the workshop and the leader's
+# room) -- the placer can never give one the wasteland under «Кланбаза
+# Liberty» at Абу-Хамед (6248,1979), under Blackwater's «Блок-пост»
+# (5923,1838) or anywhere.
+ABRI_OFF_CELL = [450, 326, 329, 936, 937, 939, 940, 1190, 148, 610,
+                 311, 312, 927, 931, 935, 1188]
 
 
 def load(name):
@@ -86,7 +94,7 @@ check("  ..and settlements_verified.json nulls each one's old cell, with its why
       [(k, None, True) for k in sorted(INTENDED)])
 check("  ..so none of them opens on any cell of the table",
       sorted(k for k, v in on_disk.items() if v in INTENDED.values()), [])
-check("  ..and retired.json's cells name exactly those sixteen, each with the place it held: the"
+check("  ..and retired.json's cells name exactly those eighteen, each with the place it held: the"
       " town's ground still for the encounters (world.retired_cells)",
       {k: v for k, v in retired["cells"].items() if not k.startswith("_")}, INTENDED)
 
@@ -96,11 +104,12 @@ check("the table on disk is the placer's own output", now == on_disk, True)
 before_fixed = {k: v for k, v in verified["cells"].items() if k not in INTENDED}
 before = cells(place_settlements.Placer(fixed=before_fixed, retired=()).run())
 check("the map before the cuts had the three camps, the market, the three quarters, the"
-      " airfield, the base НИЛ-1, Абри's four quarters, its air base and the clan base Liberty"
-      " on their cells", {k: before.get(k) for k in INTENDED}, INTENDED)
+      " airfield, the base НИЛ-1, Абри's four quarters, its air base, the clan base Liberty, the"
+      " ФСЦ airfield 529 and Blackwater's block post on their cells",
+      {k: before.get(k) for k in INTENDED}, INTENDED)
 diff = {k: (before.get(k), now.get(k)) for k in sorted(set(before) | set(now))
         if before.get(k) != now.get(k)}
-check("and the cuts changed exactly those sixteen cells, nothing else on the map",
+check("and the cuts changed exactly those eighteen cells, nothing else on the map",
       diff, {k: (v, None) for k, v in INTENDED.items()})
 check("  ..the valley's Arena 167 (Сет's stall, the PvP place) is where it was",
       now.get("6270,1831"), 167)
@@ -118,15 +127,17 @@ check("  ..the KKND base on no cell, before the cut or after it",
       sorted(k for k, v in list(before.items()) + list(now.items()) if v in KKND), [])
 check("  ..and Абри's neighbours of the cut: the port market 187, the quarter 188, the slums 255,"
       " Хаксли's fields 261, the dump 289, the abandoned factory 290, the graveyard 368, the"
-      " clothing market 378, the ФСЦ airfield 529 and the hippies 191",
+      " clothing market 378 and the hippies 191; east of it the saltpetre pit's mouth 204",
       {k: now.get(k) for k in ("5860,1835", "5861,1835", "5862,1835", "5862,1836", "5863,1835",
-                               "5864,1835", "5864,1836", "5865,1836", "5865,1835", "5860,1838")},
+                               "5864,1835", "5864,1836", "5865,1836", "5860,1838", "5914,1854")},
       {"5860,1835": 187, "5861,1835": 188, "5862,1835": 255, "5862,1836": 261, "5863,1835": 289,
-       "5864,1835": 290, "5864,1836": 368, "5865,1836": 378, "5865,1835": 529, "5860,1838": 191})
-check("  ..the quarter 450 and the clan base's other files on no cell, before the cut or after it;"
-      " the second «Кланбаза Liberty» at Абу-Хамед (6248,1979) wasteland both times",
+       "5864,1835": 290, "5864,1836": 368, "5865,1836": 378, "5860,1838": 191, "5914,1854": 204})
+check("  ..the quarter 450 and the clan bases' other files on no cell, before the cut or after it;"
+      " the second «Кланбаза Liberty» at Абу-Хамед (6248,1979) and Blackwater's «Блок-пост»"
+      " (5923,1838) wasteland both times",
       (sorted(k for k, v in list(before.items()) + list(now.items()) if v in ABRI_OFF_CELL),
-       before.get("6248,1979"), now.get("6248,1979")), ([], None, None))
+       before.get("6248,1979"), now.get("6248,1979"), before.get("5923,1838"), now.get("5923,1838")),
+      ([], None, None, None, None))
 
 if fails:
     print("\nFAIL:")

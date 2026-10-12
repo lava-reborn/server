@@ -11,6 +11,13 @@ into the store and `client/extra.txt` (client/README.md).
 `locations/static/262.xml` is the original file of the place «Тотем» near
 Абри (Q_Abri_Totem, 5864,1838) byte for byte, but for its title: the client
 writes a place's title over its window, and the original's is «Пустошь»
-(the owner's Абри, 2026-10-12: «тотем - это пустоши»). The server reads the
-installed res and keeps «Пустошь» there; server/test_abri_world.py holds
-the copy to differ from the original in `title` alone.
+(the owner's Абри, 2026-10-12: «тотем - это пустоши»). It is the first file
+here inside the slice of the client the server reads (deploy/deploy.sh,
+README «Ресурсы для тестов»), and the server keeps the original's:
+`deploy/deploy.sh --with-data` and `--data-only` refuse, before they touch
+the host, a client whose copy of a slice path this folder has is not the
+original's bytes by client/base.txt -- as an installed client is once the
+launcher has put this release in it (tools/test_deploy_slice.py). Put the
+original back from LAVA.zip, or point `LAVA_RES_SRC` at a res that has it.
+server/test_abri_world.py holds this copy to client/base.txt's original but
+for `title`, and takes either file from the res the server reads.

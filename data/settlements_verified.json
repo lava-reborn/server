@@ -70,7 +70,9 @@
   "5869,1855": 90,
   "5868,1854": 92,
   "5914,1854": 204,
-  "5890,1848": 206
+  "5890,1848": 206,
+  "5865,1835": null,
+  "5924,1838": null
  },
  "why": {
   "6268,1818": "RECOVERED. The map's own tooltip on this cell is «Поля и Пастбища» (res/database/locations.xml), and 182 «Предгорья» (NoobZone_Cow, library Noob_Zone_Nord like the Нубийское поселение 181 on 6268,1819 below it) is the file with the cows: Корова 5195 three times and the grazing cows 115/116/120. Its one exit is south (outzones side 4 only), which from here is 181; and Зула's quest in 181 sends the player to the cows «в соседней локации, наверху» (texts.xml 59789). The placer had put 182 on 5833,1607 by its title, the tooltip «западные предгорья» of the north-west corner's second drawing of the valley.",
@@ -139,6 +141,8 @@
   "5869,1855": "DESIGNED reading, as 5881,1843. The map's own tooltip on this cell is «Лагерь Живодёров<br>В 18:00 и 22:00 часто кто-то приезжает. ...», the camp's second cell; the first, 5868,1854, is the camp itself (92). 90 (MW_bandits6_boss) is the meeting: Бетти (361) and ten empty slots, filled with the flayers (data/camp_fill.json). The placer had put 92 on both cells. The owner's Абри of 2026-10-12.",
   "5868,1854": "RECOVERED: the placer's own choice, pinned now that the camp's second cell holds its chief (90 on 5869,1855). The map's own tooltip on this cell is «Лагерь Живодеров: Для игроков 10-12 уровней...», the title of 92 (Bandit_Camp6).",
   "5914,1854": "RECOVERED. The map's own tooltip on this cell is «Шахта Абри:<br>Добыча селитры<br>Вход разрешен персонажам 8-12 ур.», and 204 «Вход в выработку Селиты» (Abri_Nitre_Mine_IN) is the saltpetre pit's mouth with its terminal (1325, 'Вход на карьер<Br>Добыча селитры'), as the lead and copper mines' mouths 205 and 203 stand on their labels by the placer's own choice. The placer missed this one on its misspelt title («Селиты»). The owner's Абри of 2026-10-12.",
-  "5890,1848": "RECOVERED. The map's own tooltip on this cell is «Производство боеприпасов Абри:<br>9ММ НАТО (P)<br>5.7x28 (SS190) (P)» (the (P) dropped by data/map_labels.json since the owner's cut of (P)), and 206 «Завод» (Abri_BulletWorkshop) is Абри's ammunition works: its one inhabitant is the assembler AB_ammo_creator (1384, 'Производство патронов'), as Вади-Хальфа's Завод 198. The placer missed it on the title. The owner's Абри of 2026-10-12."
+  "5890,1848": "RECOVERED. The map's own tooltip on this cell is «Производство боеприпасов Абри:<br>9ММ НАТО (P)<br>5.7x28 (SS190) (P)» (the (P) dropped by data/map_labels.json since the owner's cut of (P)), and 206 «Завод» (Abri_BulletWorkshop) is Абри's ammunition works: its one inhabitant is the assembler AB_ammo_creator (1384, 'Производство патронов'), as Вади-Хальфа's Завод 198. The placer missed it on the title. The owner's Абри of 2026-10-12.",
+  "5865,1835": "Wasteland, the owner's cut of Абри (2026-10-12, «Все, что не сможешь восстановить, вырезай», a decision taken for him): the ФСЦ airfield 529 (air_point_Ab_map) stood here and is out of the game, as Вади-Хальфа's 528 is since 2026-10-10 (data/retired.json places, which also keeps it from every other cell); its tooltip «Аэроплощадка ФСЦ» is hidden (data/map_labels.json). The map's picture has no square of the airfield's own here, so nothing is painted. Nulled and retired, the cut changes its own cells alone (data/test_retired_places.py).",
+  "5924,1838": "Wasteland, the owner's cut of Абри (2026-10-12, «... убери кланбазу Либерти»; «Все, что не сможешь восстановить, вырезай», a decision taken for him): the clan base Blackwater's block post 317 (KB_Blackwate_Block_Post) stood here and is out of the game with the base's other files (data/retired.json places, which also keeps it from every other cell); its tooltip «Собственность клана Blackwater:<br>ПОСТОРОННИМ ВХОД ВОСПРЕЩЁН!» and the one beside it on 5923,1838 «...Блок-пост:<br>обмен и торговля» are hidden (data/map_labels.json), and the base's green square with a black centre on 5923,1838 is painted over (data/map_cells.json); this cell has no square of its own."
  }
 }

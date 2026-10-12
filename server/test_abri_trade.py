@@ -271,6 +271,17 @@ check("the gold ones (the gold tickets, the coupons, seven gifts) are gold thing
        inventory.SELL_GOLD_ONLY), (12, [(True, 0)], False))
 check("  ..and every afro one sells back for 0.7 of its price at most",
       [t for t in EVERY if not gold_only(t) and sold_for(t) > 0.7 * price(t)[0]], [])
+# The corn chain (477-482, level 0, in peaceful places) hands out its cobs,
+# sack, flour and two loaves for nothing: no stall pays for any of them, the
+# loaf by items.QUEST_GIFTS_UNSOLD (its article: 5000 afro, «Допустимость
+# продажи: Нет»), else a fresh character's errands made about 6700 afro.
+BREAD, CORN_THINGS = 3914, (3916, 3917, 3918)
+check("the corn chain's things sell for nothing: the loaf, its cobs, the sack and the flour; the"
+      " loaf keeps its use, strength and dexterity +1 for an hour, two bites",
+      ({t: sold_for(t) for t in (BREAD,) + CORN_THINGS}, BREAD in items.QUEST_GIFTS_UNSOLD,
+       {k: items.params_of(BREAD)[k] for k in ("str_bonus", "dex_bonus", "bonus_act_time", "use_count")}),
+      ({t: 0 for t in (BREAD,) + CORN_THINGS}, True,
+       {"str_bonus": 1, "dex_bonus": 1, "bonus_act_time": 3600, "use_count": 2}))
 
 # --- 2. the stalls ------------------------------------------------------------------------
 print()
@@ -352,15 +363,16 @@ check("the stalls' sizes: none longer than 64, the knife trader's band and his o
       (True, [6245, 6246, 6250, 6251, 6255, 6256] + OWN[ONE_EAR]))
 check("Алима: the town's sets, then her pouches, each with its (G) right after it",
       STALLS[(PORT, ALIMA)][-10:], [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601])
-# The upgraders of Абри's places: the clothes' Рудольф (5105, «Обмен одежды на
-# вырост [9-12]») with the set upgrades off everywhere since 2026-10-09, Фрея's
-# Альфред and Алиса (2002/2003), the legionnaire's changer (2241) -- empty
-# windows; Жозеф де Гобино (7548) in the oasis the [Q] Маузер's twelve, as in
-# Вади-Хальфа's.
+# The upgraders of Абри's places: Фрея's Альфред and Алиса (2002/2003), the
+# legionnaire's changer (2241) -- empty windows; Жозеф де Гобино (7548) in the
+# oasis the [Q] Маузер's twelve, as in Вади-Хальфа's. The clothes' Рудольф
+# (5105, «Обмен одежды на вырост [9-12]»), whose window was empty too with the
+# set upgrades off everywhere since 2026-10-09, went with the set upgrade 10-12
+# (held out of the quarter 188, server/test_abri_cut.py).
 import craft  # noqa: E402
 check("the upgraders of Абри's places: empty windows, Жозеф де Гобино's the [Q] Маузер's twelve",
-      {t: len(craft.upgrader_lists(t)["out_types"]) for t in (5105, 2002, 2003, 2241, 7548)},
-      {5105: 0, 2002: 0, 2003: 0, 2241: 0, 7548: 12})
+      {t: len(craft.upgrader_lists(t)["out_types"]) for t in (2002, 2003, 2241, 7548)},
+      {2002: 0, 2003: 0, 2241: 0, 7548: 12})
 
 # --- 3. the knife craft ---------------------------------------------------------------------
 print()

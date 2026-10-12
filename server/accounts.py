@@ -985,16 +985,21 @@ def relocate_halfa_fsc(db):
 # Либерти»): the clothing craftsmen's quarters 453, 454, 458, 459, the ЦСЦ's
 # air base 427 and the quarter 450 behind «Улучшение сетов 10-12», and every
 # file of the clan base Liberty (328 and 327 on their cells, the rest never
-# on one) are off the map (data/retired.json places). A character saved in
+# on one) are off the map (data/retired.json places); so, by the decisions
+# taken for him the same day («Все, что не сможешь восстановить, вырезай»),
+# are the ФСЦ airfield 529 and every file of the clan base Blackwater (its
+# block post 317 on its cell, the rest never on one). A character saved in
 # one, or calling one home, goes to Абри's own door, the Портовый рынок 187
 # (5860,1835), where the ride from Вади-Хальфа lands, rather than across the
 # desert to Причал. No journal step: no quest gives, takes, asks for or
 # points into these places -- the clothing craftsmen of Абри never had
-# rows (server/setcraft.py has no slice for the town), the air base's people
-# and the clan base's give none (server/test_abri_cut.py holds that).
+# rows (server/setcraft.py has no slice for the town), the air base's people,
+# the airfield's and the clan bases' give none (server/test_abri_cut.py holds
+# that).
 ABRI_CUT_FIX = "retire-abri-cut-2026-10-12"
 ABRI_CUT_PLACES = (453, 454, 458, 459, 427, 450,
-                   328, 327, 326, 329, 936, 937, 939, 940, 1190, 148, 610)
+                   328, 327, 326, 329, 936, 937, 939, 940, 1190, 148, 610,
+                   529, 317, 311, 312, 927, 931, 935, 1188)
 ABRI_CUT_TO = (187, 5860, 1835)
 
 

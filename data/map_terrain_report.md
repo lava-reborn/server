@@ -18,13 +18,13 @@ Passable: **229088 of 241703 cells, 94.78%**. The rectangle is 473 by 511 cells,
 
 ## The checks
 
-**Settlements.** All 279 cells of `data/settlements.json` are passable. 20 of them the photograph alone would have walled in (an icon sits on the cell, or the place is built against a scarp); they are open because a player has stood there, not because the picture says so.
+**Settlements.** All 277 cells of `data/settlements.json` are passable. 19 of them the photograph alone would have walled in (an icon sits on the cell, or the place is built against a scarp); they are open because a player has stood there, not because the picture says so.
 
-**Map tooltips.** All 414 cells of `res/database/locations.xml` are passable, 9 of them forced the same way. Blocked after forcing: 0.
+**Map tooltips.** All 414 cells of `res/database/locations.xml` are passable, 10 of them forced the same way. Blocked after forcing: 0.
 
 Of the 29 cells forced open, 23 read as rock and 6 as water. The wet ones are shore: 5863,1946, 5879,2011, 5970,1727, 6017,2086, 6032,1951, 6185,1977 -- a place standing on the bank of the lake covers a cell whose 8x8 block is mostly water.
 
-**Connectivity.** From the start cell 6268,1819 (the black market of Wadi Halfa) 228892 cells are reachable on foot, 99.9% of the passable ground, and 276 of the 279 settlements. The world falls into 43 separate pieces of walkable ground; the main one holds everything but the pockets listed here.
+**Connectivity.** From the start cell 6268,1819 (the black market of Wadi Halfa) 228892 cells are reachable on foot, 99.9% of the passable ground, and 274 of the 277 settlements. The world falls into 43 separate pieces of walkable ground; the main one holds everything but the pockets listed here.
 
 | settlement | cell | location | pocket |
 | --- | --- | ---: | ---: |

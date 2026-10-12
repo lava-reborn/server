@@ -1,35 +1,42 @@
 """The owner's cut of Абри, 2026-10-12: «Убери локации: все ремесленники по
 одежде; Авиабаза ЦСЦ; улучшение сетов 10-12; слева от ремесленников по
-одежде 12 есть зеленая метка, её тоже убрать; убери кланбазу Либерти».
+одежде 12 есть зеленая метка, её тоже убрать; убери кланбазу Либерти»; and,
+by the decisions taken for him the same day («Все, что не сможешь
+восстановить, вырезай»), the ФСЦ airfield 529, the clan base Blackwater and
+the set upgrader Рудольф.
 
 What the cut is, each part held here (the pattern of server/test_halfa_cut.py):
 
   1. the places: the clothing craftsmen's quarters 453, 454, 458, 459
      (5860,1836, 5861,1836, 5860,1837, 5863,1837), the ЦСЦ's air base 427
-     (5866,1836) and the clan base Liberty's entrance 328 and block post 327
-     (5906,1888-1889) are off the map; the quarter 450 behind «Улучшение
-     сетов 10-12» and the base's nine other files, which never had a cell,
-     are out of the game with them (data/retired.json, data/settlements_
-     verified.json); their cells, the set upgrade's label cell 5866,1837,
-     the green mark 5862,1837, the second «Автосвалка» 5863,1836 and the
-     second «Кланбаза Liberty» by Абу-Хамед (6248,1979-1980) lead into the
-     wasteland; the files stay; the neighbours stay -- the ФСЦ airfield 529
-     on 5865,1835 among them (the plan's decision 13);
+     (5866,1836), the clan base Liberty's entrance 328 and block post 327
+     (5906,1888-1889), the ФСЦ airfield 529 (5865,1835) and the clan base
+     Blackwater's block post 317 (5924,1838) are off the map; the quarter
+     450 behind «Улучшение сетов 10-12», Liberty's nine other files and
+     Blackwater's six, which never had a cell, are out of the game with
+     them (data/retired.json, data/settlements_verified.json); their cells,
+     the set upgrade's label cell 5866,1837, the green mark 5862,1837, the
+     second «Автосвалка» 5863,1836, the second «Кланбаза Liberty» by
+     Абу-Хамед (6248,1979-1980) and Blackwater's square 5923,1838 lead into
+     the wasteland; the files stay; the neighbours stay;
   2. no way in: no door the server follows, no passage, side or quest way,
      no quest's ride and no quest's marker leads into one of them, none has
      a way out;
   3. the people: whoever stands only in them gives and takes no quest, and
-     keeps his name in the string table; the airfield's upgraders stand on;
+     keeps his name in the string table; the airfield's upgraders, nameless
+     in the original, stand in no place of Абри any more;
   4. the map's names: hidden on exactly the cut's cells and the second
      «Автосвалка»; every other name over Абри is the file's own, row for
      row, but the three lines the town's labels lose or gain (Базиль's
      exchange, Мортимер in the port market, the slums' New Year tree), the
-     boss clock's and the camps' gold, and the (P) factory's;
+     boss clock's and the camps' gold, and the (P) factory's; Blackwater's
+     two names east of the town hidden too;
   5. the shops' band of Абри holds no place of the cut; held out of their
      rooms for good: the Dreadnought's and the Paladin's traders 5162/5163
      in the clothing market 378, the banknote machine 2402 in the smelter
-     766 and the assembly shop 1055; the New Year of 2014's 2426/2427 stand
-     in the quarter 188 only in the window 'ny';
+     766 and the assembly shop 1055 (no door leads into the shop any more),
+     the set upgrader Рудольф 5105 in the quarter 188; the New Year of
+     2014's 2426/2427 stand in the quarter 188 only in the window 'ny';
   6. the town's ground: the cut's cells are the town's still for the
      encounters (world.retired_cells), so no ambush is met on them or beside
      them;
@@ -62,10 +69,12 @@ sys.path.insert(0, HERE)
 import accounts  # noqa: E402
 import encounters  # noqa: E402
 import events  # noqa: E402
+import items  # noqa: E402
 import map_labels  # noqa: E402
 import names  # noqa: E402
 import quests  # noqa: E402
 import rooms  # noqa: E402
+import setcraft  # noqa: E402
 import shop_bands  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
@@ -86,16 +95,21 @@ with io.open(os.path.join(DATA, "schedule.json"), encoding="utf-8") as _fh:
 ALL_RETIRED = {int(k) for k in RETIRED["places"]}
 CUT_WHY = "The owner's cut of Абри, 2026-10-12"
 CELLS = {453: (5860, 1836), 454: (5861, 1836), 458: (5860, 1837), 459: (5863, 1837),
-         427: (5866, 1836), 328: (5906, 1888), 327: (5906, 1889)}
-OFF_CELL = (450, 326, 329, 936, 937, 939, 940, 1190, 148, 610)
+         427: (5866, 1836), 328: (5906, 1888), 327: (5906, 1889), 529: (5865, 1835),
+         317: (5924, 1838)}
+OFF_CELL = (450, 326, 329, 936, 937, 939, 940, 1190, 148, 610, 311, 312, 927, 931, 935, 1188)
 CUT = tuple(CELLS) + OFF_CELL
 # The cells with a name or a mark and no place, wasteland as before: the set
 # upgrade's label, the green mark, the second «Автосвалка», the second
-# «Кланбаза Liberty» and the square below it.
-LABEL_ONLY = [(5866, 1837), (5862, 1837), (5863, 1836), (6248, 1979), (6248, 1980)]
+# «Кланбаза Liberty» and the square below it, Blackwater's square beside its
+# block post.
+LABEL_ONLY = [(5866, 1837), (5862, 1837), (5863, 1836), (6248, 1979), (6248, 1980), (5923, 1838)]
 PORT, PORT_CELL = 187, (5860, 1835)
 AIRFIELD, AIRFIELD_CELL = 529, (5865, 1835)
 FSC_UPGRADERS = (8213, 8214)
+OTHER_AIRFIELDS = (527, 530, 531)                # Абу-Хамед, Донгола, Керма
+BLACKWATER = (4685, 7029, 4779, 4780, 4781, 4782, 4783, 4784, 4625, 4627, 4628)
+RUDOLF, QUARTER = 5105, 188
 MT = world.mob_types()
 
 
@@ -120,42 +134,51 @@ print("the places")
 try:
     cut = {int(k): v for k, v in RETIRED["places"].items() if v.startswith(CUT_WHY)}
     check("data/retired.json takes out the four craftsmen's quarters, the air base, the set"
-          " upgraders' quarter and the clan base Liberty's eleven files, each with its why",
+          " upgraders' quarter, the clan base Liberty's eleven files, the ФСЦ airfield and the clan"
+          " base Blackwater's seven, each with its why",
           sorted(cut), sorted(CUT))
-    check("  ..every why quotes the order",
+    check("  ..every why quotes the order, or the word the decisions taken for the owner rest on",
           [i for i, v in cut.items() if "«" not in v or not ("Убери локации" in v or "Либерти" in v
                                                             or "Авиабаза ЦСЦ" in v
                                                             or "улучшение сетов" in v
-                                                            or "ремесленники" in v)], [])
-    check("  ..and lists the seven cells they stood on, the town's ground still for the encounters",
+                                                            or "ремесленники" in v
+                                                            or "вырезай" in v)], [])
+    check("  ..and lists the nine cells they stood on, the town's ground still for the encounters",
           {i: c for c, i in world.retired_cells().items() if i in CUT}, CELLS)
     table = world.settlements()
     check("none of them on any cell", [c for c, i in table.items() if i in CUT], [])
-    check("  ..the seven old cells nulled with their why in data/settlements_verified.json",
+    check("  ..the nine old cells nulled with their why in data/settlements_verified.json",
           {i: (VERIFIED["cells"].get("%d,%d" % c, "absent"),
                "the owner's cut of Абри (2026-10-12" in VERIFIED["why"].get("%d,%d" % c, ""))
            for i, c in CELLS.items()}, {i: (None, True) for i in CELLS})
     leads = {c: world.location_at(*c) == world.pack(*c) for c in list(CELLS.values()) + LABEL_ONLY}
-    check("the seven cells, the set upgrade's label, the green mark, the second «Автосвалка» and"
-          " the second «Кланбаза Liberty» with the square below it lead into the wasteland",
-          leads, {c: True for c in leads})
+    check("the nine cells, the set upgrade's label, the green mark, the second «Автосвалка», the"
+          " second «Кланбаза Liberty» with the square below it and Blackwater's square lead into the"
+          " wasteland", leads, {c: True for c in leads})
     check("  ..the second «Автосвалка» nulled with its why, so the dump spreads no further",
           (VERIFIED["cells"].get("5863,1836", "absent"), "автосвалки" in VERIFIED["why"].get("5863,1836", "")),
           (None, True))
     check("  ..the files stay, so a character saved inside still loads",
           [world.location(i).fn for i in CUT],
           ["Ab_district1", "Ab_district2", "Ab_district4", "Ab_district7", "Abri_Mi-8",
-           "KB_Liberty_Enter", "KB_Liberty_Block_post", "Ab_master_01", "KB_Liberty_Block_post1",
+           "KB_Liberty_Enter", "KB_Liberty_Block_post", "air_point_Ab_map",
+           "KB_Blackwate_Block_Post", "Ab_master_01", "KB_Liberty_Block_post1",
            "Backdoor_Liberty2", "KB_Liberty_lvl2_01", "KB_Liberty_Lvl2_Transport",
            "KB_Liberty_Sorting", "KB_Liberty2_Sorting", "KB_Liberty_Bunker_glavaria_klana",
-           "Clan_Base_Gold", "Clan_Base_Gold_lvl2"])
+           "Clan_Base_Gold", "Clan_Base_Gold_lvl2", "Backdoor_Blackwater", "KB_Blackwater_Enter",
+           "KB_Blackwater_lvl2_01", "KB_Blackwater_Lvl2_Transport", "KB_Blackwate_Sorting",
+           "KB_Blackwate_Bunker_glavaria_klana"])
     check("the neighbours stay: the port market 187, the quarter 188, the slums 255, the dump 289"
           " and the abandoned factory 290, Хаксли's fields 261, the graveyard 368, the clothing"
-          " market 378, the hippies 191, the totem 262, and the ФСЦ airfield 529",
+          " market 378, the hippies 191, the totem 262; and east of the town the saltpetre pit 204",
           [table.get(c) for c in (PORT_CELL, (5861, 1835), (5862, 1835), (5863, 1835),
                                   (5864, 1835), (5862, 1836), (5864, 1836), (5865, 1836),
-                                  (5860, 1838), (5864, 1838), AIRFIELD_CELL)],
-          [PORT, 188, 255, 289, 290, 261, 368, 378, 191, 262, AIRFIELD])
+                                  (5860, 1838), (5864, 1838), (5914, 1854))],
+          [PORT, 188, 255, 289, 290, 261, 368, 378, 191, 262, 204])
+    on_box = sorted(i for (x, y), i in table.items() if 5835 <= x <= 5930 and 1820 <= y <= 1895)
+    check("  ..and of the ФСЦ only the base НИЛ-2 (523) stays by Абри, on the island no boat"
+          " reaches; no airfield, no clan base", [i for i in on_box if i in (523, 529, 317, 328, 327)],
+          [523])
 except Exception:
     import traceback
     fails.append("the places broke:\n" + traceback.format_exc())
@@ -242,9 +265,23 @@ try:
           " login screen", [t for t in sorted(people) if t in MT and not names.known(t)], [])
     check("Гуго Борхардт of the quarter 450 stands in Вади-Хальфа's quarter 447 still",
           5770 in standing(447), True)
-    check("the ФСЦ airfield 529 stays on 5865,1835 (the plan's decision 13), its upgraders with it",
-          (world.cell_of(AIRFIELD), [t for t in FSC_UPGRADERS if t in stood_in(AIRFIELD)]),
-          (AIRFIELD_CELL, list(FSC_UPGRADERS)))
+    check("the ФСЦ airfield 529 is off the map: its two upgraders had empty windows and no name of"
+          " the original's, so the client showed «FSC_U_000001/2» (data/orig_names_manual.json 'none')",
+          (world.cell_of(AIRFIELD), [t for t in FSC_UPGRADERS if t in stood_in(AIRFIELD)],
+           [names.ALL.get(t) == MT[t][1] for t in FSC_UPGRADERS],
+           [setcraft.window(t)["in_types"] for t in FSC_UPGRADERS]),
+          (None, list(FSC_UPGRADERS), [True, True], [[], []]))
+    check("  ..they stand on in the airfields of Абу-Хамед, Донгола and Керма, so neither is a"
+          " retired creature", ({i: [t for t in FSC_UPGRADERS if t in stood_in(i)] for i in OTHER_AIRFIELDS},
+                                [t for t in FSC_UPGRADERS if t in world.retired_creatures()]),
+          ({i: list(FSC_UPGRADERS) for i in OTHER_AIRFIELDS}, []))
+    check("the clan base Blackwater's block post 317 stood eleven people, none named by the original,"
+          " ten of them traders with empty stalls; none stands anywhere but in its retired files",
+          (stood_in(317), [t for t in BLACKWATER if names.ALL.get(t) != MT[t][1]],
+           sorted(t for t in BLACKWATER if world.entity_root(t, MT[t][0]) == world.TRADER
+                  and not items.stock_for(t, 317)),
+           [t for t in BLACKWATER if t not in only_here]),
+          (sorted(BLACKWATER), [], sorted(set(BLACKWATER) - {7029}), []))
 except Exception:
     import traceback
     fails.append("the people broke:\n" + traceback.format_exc())
@@ -276,7 +313,8 @@ try:
               (5866, 1836): "Авиабаза ЦСЦ",
               (5863, 1836): "Автосвалка",
               (5906, 1888): "Кланбаза Liberty<br>Warning No Trespassing",
-              (5906, 1889): "Плешь смерти<br>Место успокоения врагов клана Liberty"}
+              (5906, 1889): "Плешь смерти<br>Место успокоения врагов клана Liberty",
+              (5865, 1835): "Аэроплощадка ФСЦ"}
     hidden = {(e["x"], e["y"]): e["was"] for e in LABELS if e.get("hide")
               and BOX[0] <= e["x"] <= BOX[1] and BOX[2] <= e["y"] <= BOX[3]}
     check("over Абри the names hidden are exactly the cut's and the second «Автосвалка»",
@@ -284,6 +322,13 @@ try:
     check("  ..and by Абу-Хамед the second «Кланбаза Liberty»",
           [(e["x"], e["y"], e["was"]) for e in LABELS if e.get("hide") and (e["x"], e["y"]) == (6248, 1979)],
           [(6248, 1979, "Кланбаза Liberty<br>Warning No Trespassing")])
+    BLACKWATER_NAMES = {(5923, 1838): "Собственность клана Blackwater:<br>Блок-пост:<br>обмен и торговля",
+                        (5924, 1838): "Собственность клана Blackwater:<br>ПОСТОРОННИМ ВХОД ВОСПРЕЩЁН!"}
+    check("  ..and east of the town Blackwater's two, which the map shows no more",
+          ({(e["x"], e["y"]): e["was"] for e in LABELS if e.get("hide") and "Blackwater" in e["was"]},
+           [t for _x, _y, t in rows_in(out, (5900, 5990, 1800, 1900)) if "Blackwater" in t],
+           len([t for _x, _y, t in rows_in(raw, (0, 99999, 0, 99999)) if "Blackwater" in t])),
+          (BLACKWATER_NAMES, [], 2))
     TEXTS = {(5861, 1835): "Жилой квартал Абри:<BR>Гофус - стимуляторы<br>Обучение специализации<BR>Задания",
              (5860, 1835): "Портовый Рынок Абри:<BR>Весь спектр услуг<BR>Мортимер - обмен золотых слитков<BR>",
              (5862, 1835): "Трущобы Абри: <br>Обмен золотых слитков<BR>Задания"}
@@ -316,14 +361,28 @@ try:
           abri["places"], [76, 187, 188, 255, 378])
     check("shop_bands reads the same: the air base is no town's", shop_bands.city(427), None)
     held = sorted((r["loc"], sorted(r["types"])) for r in SCHEDULE["held_out"]
-                  if r["loc"] in (378, 766, 1055))
-    check("held out for good: 5162/5163 in the clothing market 378, the banknote machine 2402 in"
-          " the smelter 766 and the assembly shop 1055",
-          held, [(378, [5162, 5163]), (766, [2402]), (1055, [2402])])
+                  if r["loc"] in (188, 378, 766, 1055))
+    check("held out for good: Рудольф 5105 in the quarter 188, 5162/5163 in the clothing market"
+          " 378, the banknote machine 2402 in the smelter 766 and the assembly shop 1055",
+          held, [(QUARTER, [RUDOLF]), (378, [5162, 5163]), (766, [2402]), (1055, [2402])])
     check("  ..so the rooms stand them nowhere there, and the market keeps 5160, 5161, 5181",
           ([t for t in (5162, 5163) if t in stood_in(378)], 2402 in stood_in(766),
            2402 in stood_in(1055), [t for t in (5160, 5161, 5181) if t in stood_in(378)]),
           ([], False, False, [5160, 5161, 5181]))
+    check("the set upgrade 10-12 is gone from the quarter with its label: Рудольф «Обмен одежды на"
+          " вырост [9-12]», whose window was empty and who gives no quest, stood in its file alone",
+          (RUDOLF in standing(QUARTER), RUDOLF in stood_in(QUARTER),
+           sorted(i for i in files if RUDOLF in standing(i)),
+           setcraft.window(RUDOLF)["in_types"], quests.given_by(RUDOLF), quests.taken_by(RUDOLF)),
+          (True, False, [QUARTER], [], [], []))
+    rec = travel.door(766, "b")
+    check("the assembly shop 1055 is cut: the smelter's door b towards it is a guess the server does"
+          " not follow, and no other way leads in",
+          (rec and rec.get("confidence") in travel.DOOR_CONFIDENCE,
+           sorted((lid, s) for lid in files for s in "ab"
+                  if (travel.door(lid, s) or {}).get("target_loc_id") in (1055, "1055")
+                  and travel.door(lid, s).get("confidence") in travel.DOOR_CONFIDENCE)),
+          (False, []))
     check("  ..while Донгола's and Абу-Хамед's clothing markets keep them",
           [sorted({5162, 5163} & standing(i)) for i in (469, 467)], [[5162, 5163], [5162, 5163]])
     owned = {t: events.table().owned.get((188, t)) for t in (2426, 2427)}
@@ -346,7 +405,7 @@ except Exception:
 # --- 6. the town's ground --------------------------------------------------------------------
 print("the town's ground")
 try:
-    check("no ambush on the cut's seven cells, nor beside them: the town's ground still",
+    check("no ambush on the cut's nine cells, nor beside them: the town's ground still",
           [(x + dx, y + dy) for x, y in CELLS.values() for dx in (-1, 0, 1) for dy in (-1, 0, 1)
            if encounters.band_at(x + dx + 0.5, y + dy + 0.5) is not None], [])
     check("  ..every one of them a town's cell for encounters.near_town",
@@ -382,8 +441,9 @@ try:
     ids = {}
     for name, loc, home in (("in427", 427, None), ("in453", 453, None), ("in459", 459, None),
                             ("in450", 450, None), ("in328", 328, None), ("in1190", 1190, None),
-                            ("in610", 610, None), ("home427", 188, 427), ("home327", 255, 327),
-                            ("in528", 528, None), ("in187", PORT, None)):
+                            ("in610", 610, None), ("in529", 529, None), ("in317", 317, None),
+                            ("in927", 927, None), ("home427", 188, 427), ("home327", 255, 327),
+                            ("home529", 378, 529), ("in528", 528, None), ("in187", PORT, None)):
         cid, _ = st.create_character(acc, name, 0, "1")
         st.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5866, gy = 1836,"
                       " on_map = 0 WHERE id = ?", (loc, cid))
@@ -405,21 +465,22 @@ try:
     finally:
         logging.getLogger("lava").removeHandler(lines)
     chars = {n: st.character(c) for n, c in ids.items()}
-    moved = ("in427", "in453", "in459", "in450", "in328", "in1190", "in610")
+    moved = ("in427", "in453", "in459", "in450", "in328", "in1190", "in610", "in529", "in317",
+             "in927")
     check("whoever was in one of the cut's places is in the port market 187, on its cell, off"
           " the map, with no cell of the old file",
           {n: (chars[n]["loc"], chars[n]["gx"], chars[n]["gy"], chars[n]["on_map"], chars[n]["pos"])
            for n in moved}, {n: (PORT, 5860, 1835, 0, None) for n in moved})
-    check("  ..a home in 427 or 327 is the port market now, the character left where he was",
+    check("  ..a home in 427, 327 or 529 is the port market now, the character left where he was",
           [(chars[n]["home_loc"], chars[n]["home_gx"], chars[n]["home_gy"], chars[n]["loc"])
-           for n in ("home427", "home327")],
-          [(PORT, 5860, 1835, 188), (PORT, 5860, 1835, 255)])
+           for n in ("home427", "home327", "home529")],
+          [(PORT, 5860, 1835, 188), (PORT, 5860, 1835, 255), (PORT, 5860, 1835, 378)])
     check("  ..the one in 528 (the cut of the ФСЦ's, run long ago) and the one in 187 untouched",
           [(chars[n]["loc"], chars[n]["pos"]) for n in ("in528", "in187")], [(528, 77), (PORT, 77)])
     check("the journal is untouched", sorted(r["type"] for r in st.quests(keeper)), [119, 10120])
-    check("  ..and the log says so: seven moved, two homes",
+    check("  ..and the log says so: ten moved, three homes",
           [ln for ln in lines.lines if accounts.ABRI_CUT_FIX in ln
-           and "7 character(s) moved" in ln and "2 home(s) moved" in ln] != [], True)
+           and "10 character(s) moved" in ln and "3 home(s) moved" in ln] != [], True)
     check("  ..nothing left to do on a second pass", accounts.relocate_abri_cut(st.db),
           dict(moved=0, homes=0))
     st.db.commit()

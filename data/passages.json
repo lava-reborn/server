@@ -277,7 +277,7 @@
     "confidence": "medium",
     "source": "designed",
     "target_loc_id": 766,
-    "why": "DESIGNED. OreRefinery_top_Abri, «Заброшенный завод» on the map's «Заброшенный завод» (5864,1835): its one door, b, ten cells in the ruin's middle (27-51, 18-45), has no sign and no target in exits.json, so it led nowhere. The only way down the client has for it is the smelter beneath, 766 «Плавильный завод.» (OreRefinery_Abri, the same family's name), whose doors otherwise both led on to its own workshop 1055 and none back up: entered from 1055, 766 was a dead end. The owner's Абри, 2026-10-12 (the restored smelter and assembly shop)."
+    "why": "DESIGNED. OreRefinery_top_Abri, «Заброшенный завод» on the map's «Заброшенный завод» (5864,1835): its one door, b, ten cells in the ruin's middle (27-51, 18-45), has no sign and no target in exits.json, so it led nowhere. The only way down the client has for it is the smelter beneath, 766 «Плавильный завод.» (OreRefinery_Abri, the same family's name), whose doors otherwise both led on to its own workshop 1055 and none back up: entered from 1055, 766 was a dead end. The owner's Абри, 2026-10-12 (the restored smelter; its assembly shop 1055 is cut, see 766)."
    }
   },
   "660": {
@@ -309,13 +309,7 @@
     "confidence": "medium",
     "source": "sign",
     "target_loc_id": 290,
-    "why": "RECOVERED direction, DESIGNED target. OreRefinery_Abri, «Плавильный завод.»: door a, two clusters (32-58, 25-87), each with W_Pointer_Exit beside it (33,29 and 56,82): out, up to the ruin it lies under, 290 «Заброшенный завод» (see 290 b). exits.json guessed 1055 by family, at low."
-   },
-   "b": {
-    "confidence": "high",
-    "source": "sign",
-    "target_loc_id": 1055,
-    "why": "RECOVERED. OreRefinery_Abri: door b, three cells at the west (17-18, 60-61), has W_Pointer_West beside it (20,61): on, west, to the assembly shop 1055 «Сборочный цех» (OreRefinery_Abri_Sorting), whose one door a, at its west edge with W_Pointer_Exit (1,35), leads back here (exits.json, medium). exits.json guessed the same for this door, at low."
+    "why": "RECOVERED direction, DESIGNED target. OreRefinery_Abri, «Плавильный завод.»: door a, two clusters (32-58, 25-87), each with W_Pointer_Exit beside it (33,29 and 56,82): out, up to the ruin it lies under, 290 «Заброшенный завод» (see 290 b). exits.json guessed 1055 by family, at low. Door b, three cells at the west (17-18, 60-61) with W_Pointer_West beside it (20,61), led on to the assembly shop 1055 «Сборочный цех» (OreRefinery_Abri_Sorting); it has no row here and stays at exits.json's low guess, which travel.door does not follow: the shop is cut with its (КС)ШК rounds, which objects.xml lacks (README «Абри», «Что вырезано»), and its four machines would open empty windows."
    }
   },
   "1028": {

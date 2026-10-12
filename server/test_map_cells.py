@@ -56,23 +56,31 @@ try:
     # --- the plan: what goes, from data/retired.json and data/map_cells.json -------------
     plan = M.load()
     retired = {cell(k) for k in load_json("data", "retired.json")["cells"] if not k.startswith("_")}
-    # The cut of Абри (2026-10-12) adds five: «Улучшение сетов 10-12», the
-    # green mark left of the craftsmen of 12, the second «Автосвалка», and the
-    # two squares of «Кланбаза Liberty» by Абу-Хамед.
+    # The cut of Абри (2026-10-12) adds six: «Улучшение сетов 10-12», the
+    # green mark left of the craftsmen of 12, the second «Автосвалка», the
+    # two squares of «Кланбаза Liberty» by Абу-Хамед, and Blackwater's square
+    # beside its block post.
     LABEL_ONLY = {(5969, 1730), (5984, 1759), (6265, 1821),
-                  (5866, 1837), (5862, 1837), (5863, 1836), (6248, 1979), (6248, 1980)}
+                  (5866, 1837), (5862, 1837), (5863, 1836), (6248, 1979), (6248, 1980),
+                  (5923, 1838)}
     ABRI_CUT = [(5860, 1836), (5860, 1837), (5861, 1836), (5863, 1837), (5866, 1836),
-                (5906, 1888), (5906, 1889)]
+                (5906, 1888), (5906, 1889), (5865, 1835), (5924, 1838)]
+    # Two retired places had no square of their own in the picture: Абри's ФСЦ
+    # airfield 529 (its name over the river's dark bank) and Blackwater's block
+    # post 317 (the base's square is on 5923,1838 beside it). The plan lists
+    # them as every retired cell, and the painting finds nothing there.
+    NO_SQUARE = [(5865, 1835), (5924, 1838)]
     check("every cell of data/retired.json loses its square, by itself",
           sorted(retired - set(plan.cells)), [])
-    check("  ..those are the sixteen of the four cuts: the (P) camps 124, 125, 130, Halfa's 468, 452, 456,"
-          " 457, its ФСЦ's airfield 528 and base НИЛ-1 522, and Абри's craftsmen 453, 454, 458, 459, air"
-          " base 427 and clan base Liberty 328, 327", sorted(retired),
+    check("  ..those are the eighteen of the four cuts: the (P) camps 124, 125, 130, Halfa's 468, 452,"
+          " 456, 457, its ФСЦ's airfield 528 and base НИЛ-1 522, and Абри's craftsmen 453, 454, 458, 459,"
+          " air base 427, clan base Liberty 328, 327, ФСЦ airfield 529 and Blackwater's block post 317",
+          sorted(retired),
           sorted([(5876, 2012), (5942, 1723), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732),
                   (5970, 1727), (5970, 1732), (6182, 1975)] + ABRI_CUT))
-    check("  ..and data/map_cells.json adds the eight cells that had a name or a mark and no place:"
+    check("  ..and data/map_cells.json adds the nine cells that had a name or a mark and no place:"
           " «Улучшение сетов 6-8», the KKND base, the kimberlite pipe, «Улучшение сетов 10-12», Абри's"
-          " green mark, the second «Автосвалка» and the two of Liberty by Абу-Хамед",
+          " green mark, the second «Автосвалка», the two of Liberty by Абу-Хамед and Blackwater's",
           sorted(set(plan.cells) - retired), sorted(LABEL_ONLY))
     live = {cell(k) for k in load_json("data", "settlements.json")["cells"]}
     check("no square goes from a cell a place still stands on (data/settlements.json)",
@@ -105,10 +113,10 @@ try:
            ((49996, 15833, 50048, 15841), "База Liberty", 15811, 15811),
            ((50041, 15842, 50046, 15843), "База Liberty", 15811, 15811)])
     check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's, Halfa's"
-          " two, KKND's and the two below it, the kimberlite pipe's, Абри's, the two of Liberty by Абри,"
-          " Абу-Хамед's two, Донгола's",
-          plan.tiles(), [13753, 13754, 14010, 14011, 14266, 14267, 14531, 14775, 15032, 15288, 15809, 15811,
-                         16055])
+          " two, KKND's and the two below it, the kimberlite pipe's, Абри's, Blackwater's east of it, the"
+          " two of Liberty by Абри, Абу-Хамед's two, Донгола's",
+          plan.tiles(), [13753, 13754, 14010, 14011, 14266, 14267, 14531, 14775, 14777, 15032, 15288, 15809,
+                         15811, 16055])
 
     def refused(doc, retired_doc=None):
         p = os.path.join(W, "cells.json")
@@ -543,22 +551,27 @@ try:
             odd = {(5984, 1759): (0, -1, ("red", "white")), (6265, 1821): (0, 0, ("black", "orange")),
                    (5970, 1727): (0, 0, ("blue", "white")), (5863, 1836): (0, 0, ("red",)),
                    (5906, 1888): (0, 0, ("red", "white")), (6248, 1979): (0, 0, ("red", "white"))}
-            check("each of the twenty-four cells has its square found: eighteen green, KKND's dark red with"
-                  " white a pixel high, Liberty's two dark red with white, the second «Автосвалка»'s dark red,"
-                  " the kimberlite pipe's black-and-orange hatch, the ФСЦ airfield's blue with «!»",
+            check("each of the twenty-five cells with a square has it found: nineteen green (Blackwater's"
+                  " with its black centre among them), KKND's dark red with white a pixel high, Liberty's two"
+                  " dark red with white, the second «Автосвалка»'s dark red, the kimberlite pipe's"
+                  " black-and-orange hatch, Halfa's ФСЦ airfield's blue with «!»",
                   {c: (sq[0] - 8 * c[0], sq[1] - 8 * c[1], sq[2]) for c, sq in real["found"].items()},
-                  {c: odd.get(c, (0, 0, ("green",))) for c in plan.cells})
-            check("  ..and nothing is reported missing", [x for x in real["report"] if ": no " in x], [])
+                  {c: odd.get(c, (0, 0, ("green",))) for c in plan.cells if c not in NO_SQUARE})
+            check("  ..and nothing is reported missing but the two retired places that had none of their"
+                  " own (Абри's airfield, Blackwater's block post)",
+                  [x for x in real["report"] if ": no " in x],
+                  ["%d,%d: no square painted on the cell" % c for c in NO_SQUARE])
             check("  ..every tile that holds one is 4:4:4, where a «!» one pixel wide keeps its white",
                   sorted({M.tile_of(X0 + 4, Y0 + 4) for X0, Y0, _k in real["found"].values()
                           if [(c.h, c.v) for c in J.Jpeg(read(M.tile_path(M.tile_of(X0 + 4, Y0 + 4)))).comps]
                           != [(1, 1)] * 3}), [])
-            check("ten tiles change: 13753 for НИЛ-1, 13754 and 14010 in Halfa, 14011 for KKND, 14531 the"
-                  " kimberlite pipe, 14775 Абри, 15288 Liberty by Абри, 15809 Абу-Хамед, 15811 Liberty by"
-                  " Абу-Хамед, 16055 Донгола",
+            check("eleven tiles change: 13753 for НИЛ-1, 13754 and 14010 in Halfa, 14011 for KKND, 14531 the"
+                  " kimberlite pipe, 14775 Абри, 14777 Blackwater, 15288 Liberty by Абри, 15809 Абу-Хамед,"
+                  " 15811 Liberty by Абу-Хамед, 16055 Донгола",
                   sorted(real["out"]),
-                  sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 14775, 15288, 15809, 15811, 16055)))
-            check("no square is left on the twenty-four cells", {c: real["after_sq"].at(*c) for c in plan.cells},
+                  sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 14775, 14777, 15288, 15809,
+                                                  15811, 16055)))
+            check("no square is left on the twenty-seven cells", {c: real["after_sq"].at(*c) for c in plan.cells},
                   {c: None for c in plan.cells})
             around = sorted({(x + dx, y + dy) for x, y in plan.cells for dx in range(-3, 4) for dy in range(-3, 4)}
                             - set(plan.cells))
@@ -591,7 +604,9 @@ try:
             stray, count = only_painted(every, real)
             check("only blocks with a pixel painted change; every other block of every tile keeps its"
                   " coefficients (%d changed)" % count,
-                  (stray, count > 0), ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14775, 15288, 15809, 15811, 16055)}, True))
+                  (stray, count > 0),
+                  ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14775, 14777, 15288, 15809, 15811,
+                                    16055)}, True))
             most, share = moved(real, every)
             check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
                   " that move by 2 or less" % (most, 100 * share), (most <= 16, share >= 0.9), (True, True))

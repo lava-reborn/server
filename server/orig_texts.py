@@ -279,7 +279,31 @@ DOUBTFUL_STRINGS = frozenset((9163, 48871, 48872))
 NAME_TYPOS = {
     8904: ("Надзиратель аки", "Надзиратель Лаки"),
 }
+
+# Lines of a name that offer work the server cut, dropped on the wire by the
+# row's id: the name keeps the lines of what the creature does.
+#
+#   49753-49755, three machines of Абри's smelter (766: 2394-2396) -- each
+#        also names a step of the original's diamond line, «Изготовление
+#        ювелирной проволоки», «Изготовление алмазного инструмента»,
+#        «Расколка и распил алмазов» (its quests 0000501-0000505, texts
+#        25839-25855). There are no diamonds to work since the kimberlite
+#        pipe left the map (2026-10-05), so the line is cut (README «Абри»,
+#        «Что вырезано»); the machines smelt, mix and press for 532-538.
+NAME_CUTS = {
+    49753: ("Изготовление ювелирной проволоки",),
+    49754: ("Изготовление алмазного инструмента",),
+    49755: ("Расколка и распил алмазов",),
+}
 _MISC = _load("orig_misc.json")
+
+
+def cut_lines(name, lines):
+    """name less each of lines and the break before it, whatever case the
+    file wrote its <br> in."""
+    for line in lines:
+        name = re.sub(r"<br>\s*" + re.escape(line), "", name, flags=re.I)
+    return name
 
 
 # Both tables are cleaned once a process: _ITEMS does not change after the
@@ -326,6 +350,7 @@ def person_names(level_of=None):
         typo = NAME_TYPOS.get(r.get("string_id"))
         if typo:
             name = name.replace(*typo)
+        name = cut_lines(name, NAME_CUTS.get(r.get("string_id"), ()))
         if r.get("kind") == "mob" and lvl is not None and not _MOB_LEVEL.match(name):
             name = "[%d] %s" % (int(lvl), name)
         out[tid] = person_name(name, lvl)

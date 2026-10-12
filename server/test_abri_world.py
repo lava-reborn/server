@@ -26,15 +26,22 @@
   * the ambushes: the wasteland round Абри's two camps is theirs, without
     the named ones, and Вади-Хальфа's ring is the same cell for cell;
   * the names: nobody who stands in an open place of Абри, or in an
-    interior its doors and ways reach, shows his mobs.xml name;
+    interior its doors and ways reach, shows his mobs.xml name -- the
+    remainder data/orig_names_manual.json lists under "none" included --,
+    and every place on a cell round the town a walk reaches is one of those
+    looked at; the smelter's machines name no work of the cut diamond line;
   * the doors of the mines' tiers and of the smelter are followed (high or
-    medium), each where the file's sign points;
-  * the client's copy of the Тотем's file differs from the original in its
-    title alone.
+    medium), each where the file's sign points, but the smelter's door on
+    to the cut assembly shop;
+  * the client's copy of the Тотем's file is the original's, as
+    client/base.txt has it, but for its title -- whatever copy the res the
+    server reads holds (the launcher installs the release's own into the
+    owner's).
 
     LAVA_RES=.../res python3 server/test_abri_world.py
 """
 import collections
+import hashlib
 import json
 import math
 import os
@@ -75,13 +82,16 @@ SECOND_DUMP = (5863, 1836)
 
 # The places of Абри a player can walk into (settlements in its box) and the
 # interiors their doors and quest ways lead to; the island (434, 502, 513,
-# 523) has no boat.
-TOWN = [76, 187, 188, 255, 290, 368, 378, 529]
+# 523) has no boat, and Эван's farm across the river (321, 324, 325) no way
+# over it. The ФСЦ airfield 529, the clan base Blackwater's block post 317
+# and the assembly shop 1055 are cut (server/test_abri_cut.py).
+TOWN = [76, 187, 188, 255, 290, 368, 378]
 QUEST_PLACES = [189, 191, 192, 193, 219, 220, 251, 252, 256, 261, 262, 283, 284, 285, 289, 671,
                 672, 1038]
 CAMP_PLACES = [88, 89, 90, 92]
-WORKS = [203, 204, 205, 206, 207, 660, 661, 662, 1028, 1029, 1030, 1221, 1222, 1223, 766, 1055]
+WORKS = [203, 204, 205, 206, 207, 660, 661, 662, 1028, 1029, 1030, 1221, 1222, 1223, 766]
 PLACES = TOWN + QUEST_PLACES + CAMP_PLACES + WORKS
+BOX = (5835, 5930, 1820, 1895)                 # x0, x1, y0, y1 round the town
 
 
 def room(lid):
@@ -119,10 +129,19 @@ try:
     check("  ..and a walk from Вади-Хальфа's black market on the owner's map, as data/test_borders"
           " walks it: none of them is shut away",
           sorted(c for c in list(CELLS) + list(CAMPS) if c not in outside), [])
+    check("  ..and every place on a cell round the town that walk reaches is one this suite looks"
+          " at (a place left out would show its people unchecked)",
+          sorted((i, c) for c, i in world.settlements().items()
+                 if BOX[0] <= c[0] <= BOX[1] and BOX[2] <= c[1] <= BOX[3] and c in outside
+                 and i not in PLACES), [])
+    # The server reads the res it is given: the original's file says «Пустошь»,
+    # and an installed client the launcher keeps carries the release's copy,
+    # «Тотем» (client/files), which a res synced from it would too.
     check("the places' titles as the server reads them: the quest places «Пустошь», the Тотем's"
-          " too (the client's copy says «Тотем»)",
-          {i: world.location(i).title for i in (262, 189, 89, 90, 284, 285)},
-          {i: "Пустошь" for i in (262, 189, 89, 90, 284, 285)})
+          " the original's «Пустошь» or the release's «Тотем»",
+          ({i: world.location(i).title for i in (189, 89, 90, 284, 285)},
+           world.location(262).title in ("Пустошь", "Тотем")),
+          ({i: "Пустошь" for i in (189, 89, 90, 284, 285)}, True))
 except Exception:
     import traceback
     fails.append("the cells broke:\n" + traceback.format_exc())
@@ -263,15 +282,23 @@ try:
             if world._name_tokens(MT[t][1]) & world.EVENT_TOKENS \
                     and not world.belongs_here(t, MT[t][1], MT[t][0], True, lid):
                 continue                         # a season's or the developers', nobody sees it
-            if internal(t) and t not in REMAINDER:
+            if internal(t):
                 shown.setdefault(t, set()).add(lid)
         for n in room(lid).npcs.values():
-            if internal(n.type_id) and n.type_id not in REMAINDER:
+            if internal(n.type_id):
                 shown.setdefault(n.type_id, set()).add(lid)
-    check("nobody who stands in Абри's places shows his mobs.xml name, but the remainder the"
-          " manual file lists", {t: sorted(w) for t, w in shown.items()}, {})
+    check("nobody who stands in Абри's places shows his mobs.xml name, the remainder the manual"
+          " file lists under \"none\" included: none of it stands here (the ФСЦ airfield's two went"
+          " with 529)", {t: sorted(w) for t, w in shown.items()}, {})
+    check("  ..that remainder is the six types the original has no name for, Абри's none of them",
+          sorted(REMAINDER), [639, 5208, 7660, 8213, 8214, 8236])
     check("  ..the New Year of 2014's two in the quarter named too, for their season",
           [t for t in (2426, 2427) if internal(t)], [])
+    check("the smelter's machines name what they do and no work of the cut diamond line"
+          " (orig_texts.NAME_CUTS)",
+          {t: names.ALL.get(t) for t in (2393, 2394, 2395, 2396)},
+          {2393: "Выплавка свинца и латуни", 2394: "Изготовление пороха, гремучей ртути",
+           2395: "Очистка гильз, изготовление капсюлей", 2396: "Пресс<br>Изготовление пуль"})
     RANKS = {315: "Проводник", 323: "Караван-Баши", 326: "Конвоир", 327: "Папаша Абу",
              328: "Надзиратель Лаки", 348: "Псих", 359: "Изверг", 590: "Казначей<br>Работорговцы",
              591: "Казначей<br>Живодеры Элфрида", 1563: "Санденс Кид", 1564: "Бутч Кэссиди"}
@@ -288,15 +315,18 @@ try:
             (1028, "a"): 660, (1028, "b"): 1221, (1029, "a"): 661, (1029, "b"): 1222,
             (1030, "a"): 662, (1030, "b"): 1223,
             (1221, "a"): 1028, (1222, "a"): 1029, (1223, "a"): 1030,
-            (290, "b"): 766, (766, "a"): 290, (766, "b"): 1055, (1055, "a"): 766}
+            (290, "b"): 766, (766, "a"): 290, (766, "b"): None}
     got = {}
     for (lid, side) in WANT:
         rec = travel.door(lid, side)
         ok = rec and rec.get("confidence") in travel.DOOR_CONFIDENCE
         got[(lid, side)] = int(rec["target_loc_id"]) if ok else None
     check("the mines' control rooms lead to their first tiers, the tiers to each other and back,"
-          " the abandoned factory down to the smelter, the smelter up and on to its workshop,"
-          " every door followed", got, WANT)
+          " the abandoned factory down to the smelter and the smelter back up, every door followed;"
+          " the smelter's door on to the assembly shop 1055 none, the shop being cut",
+          got, WANT)
+    WANT = {k: v for k, v in WANT.items() if v is not None}
+    got = {k: v for k, v in got.items() if v is not None}
     check("  ..each room's doors lead between the rooms of its own mine or works and nowhere else",
           sorted((lid, side) for (lid, side), t in got.items()
                  if {lid, t} - set(WORKS + [290])), [])
@@ -307,14 +337,27 @@ except Exception:
 # --- the Тотем's title ------------------------------------------------------------------------
 print("the Тотем's title")
 try:
-    with open(world.path_for(262), "rb") as fh:
-        orig = fh.read()
-    with open(os.path.join(ROOT, "client", "files", "locations", "static", "262.xml"), "rb") as fh:
+    # Held to the original's own bytes, as client/base.txt has them: the res
+    # the server reads may be an installed client, which the launcher gives
+    # the release's copy of this very file.
+    REL = "locations/static/262.xml"
+    base = {}
+    with open(os.path.join(ROOT, "client", "base.txt"), encoding="utf-8") as fh:
+        for line in fh:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) == 3 and parts[2] == REL:
+                base[REL] = (parts[0], int(parts[1]))
+    with open(os.path.join(ROOT, "client", "files", *REL.split("/")), "rb") as fh:
         ours = fh.read()
-    check("the client's copy of Q_Abri_Totem differs from the original in its title alone",
-          (ours.replace('title="Тотем"'.encode(), 'title="Пустошь"'.encode(), 1) == orig,
-           len(re.findall(rb'title="', ours)), b'title="\xd0\xa2\xd0\xbe\xd1\x82\xd0\xb5\xd0\xbc"' in ours),
-          (True, 1, True))
+    back = ours.replace('title="Тотем"'.encode(), 'title="Пустошь"'.encode(), 1)
+    check("the client's copy of Q_Abri_Totem is the original's (client/base.txt) but for its title",
+          ((hashlib.sha256(back).hexdigest(), len(back)), len(re.findall(rb'title="', ours)),
+           'title="Тотем"'.encode() in ours),
+          (base[REL], 1, True))
+    with open(world.path_for(262), "rb") as fh:
+        served = fh.read()
+    check("  ..and the server's file is one of the two: the original's, or the release's copy",
+          served in (back, ours), True)
 except Exception:
     import traceback
     fails.append("the Тотем's title broke:\n" + traceback.format_exc())

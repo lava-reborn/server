@@ -68,6 +68,46 @@ if [ "$warn" != 0 ] && { [ "$warn" -lt 10 ] || [ "$warn" -gt 600 ]; }; then
   exit 2
 fi
 
+# The slice the server reads is the original's. An installed client is the
+# launcher's, and the launcher puts the release's own files (client/files)
+# into it -- one of them inside the slice: locations/static/262.xml, the
+# Тотем titled for the client's window (client/files/README.md). Synced from
+# such a client, /opt/lava/res would read ours, the server with it, and CI's
+# copy of the slice (README «Ресурсы для тестов»). So every slice path
+# client/files has must be, in RES_SRC, the original's bytes as
+# client/base.txt has them (or absent, for a file the original lacks); else
+# nothing goes up, before anything is done.
+check_slice() {
+  local bad=0 rel want have
+  while IFS= read -r rel; do
+    case "$rel" in
+      database/mobs.xml|database/objects.xml|avatars/list.xml) ;;
+      locations/static/*.xml|locations/deadloc/*.xml|locations/desert/*.xml) ;;
+      *) continue ;;
+    esac
+    want=$(awk -F'\t' -v p="$rel" 'NF == 3 && $3 == p { print $1 }' "$HERE/client/base.txt")
+    have=
+    if [ -f "$RES_SRC/$rel" ]; then
+      have=$(sha256sum "$RES_SRC/$rel" | cut -d' ' -f1)
+    fi
+    if [ "$have" != "$want" ]; then
+      echo "slice: $RES_SRC/$rel is not the original's (client/base.txt: ${want:-no such file});" \
+           "client/files has its own copy, which is the client's alone" >&2
+      bad=1
+    fi
+  done < <(cd "$HERE/client/files" && find . -type f | sed 's|^\./||' | LC_ALL=C sort)
+  if [ "$bad" = 1 ]; then
+    echo "put the original's file back (LAVA.zip, LAVA/res/<path>) or point LAVA_RES_SRC at a res" \
+         "that has it; nothing was sent" >&2
+    exit 1
+  fi
+}
+
+if [ "$with_data" = 1 ]; then
+  [ -d "$RES_SRC" ] || { echo "no client at $RES_SRC" >&2; exit 1; }
+  check_slice
+fi
+
 echo "==> $HOST:$DEST"
 "${SSH[@]}" "$HOST" "mkdir -p '$DEST' '$DEST/res'"
 
