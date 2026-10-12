@@ -5,6 +5,7 @@ live timer is also exercised by test_two_clients. Location.prepare and
 Player.prepare in the original client require time=remaining+2, then zero
 to clear the stored preparation flag. No player or mob, including a stray
 bullet, may damage either participant during those fifteen seconds.
+Neither participant may walk until the same deadline.
 """
 import asyncio
 import os
@@ -157,6 +158,17 @@ async def main():
             check("both remain protected until all fifteen seconds pass",
                   (a.combat.preparing(), b.combat.preparing(), rc.room.ws),
                   (True, True, False))
+            for mover, viewer in ((a, b), (b, a)):
+                mover.writer.frames.clear()
+                viewer.writer.frames.clear()
+                start, walk, ap = mover.pos, mover.walk, mover.combat.ap
+                mover.cmd_moveTo({"path": [start, start + 1]})
+                check("the countdown freezes %s with one movement refusal" % mover.nick,
+                      (mover.pos, mover.walk, mover.combat.ap, mover.writer.frames,
+                       frames(viewer, "userMove")),
+                      (start, walk, ap, [("breakMv", {"id": 0, "pos": start})], []))
+                # Keep later checks independent when testing the unfixed server.
+                mover.pos, mover.walk, mover.combat.ap = start, walk, ap
             clock[0] = 115
             for s in (a, b):
                 s.writer.frames.clear()
@@ -172,6 +184,16 @@ async def main():
                 rc.burst(c.combat, a.combat, a.pos, gun, 1)
             check("after preparation an ordinary shot can damage a participant",
                   a.character().vitals()["hcur"] < before[0]["hcur"], True)
+            for mover, viewer in ((a, b), (b, a)):
+                mover.writer.frames.clear()
+                viewer.writer.frames.clear()
+                path = [mover.pos, mover.pos + 1]
+                mover.cmd_moveTo({"path": path})
+                check("at the deadline %s can walk and the opponent sees it" % mover.nick,
+                      (mover.pos, frames(mover, "cmdAck"), frames(mover, "breakMv"),
+                       frames(mover, "userMove"), frames(viewer, "userMove")),
+                      (path[-1], [{"res": 0}], [], [{"id": 0, "path": path}],
+                       [{"id": mover.pid, "path": path}]))
 
             # A slow loader does not restart the deadline or receive an
             # enemy id before its room snapshot has introduced that player.
