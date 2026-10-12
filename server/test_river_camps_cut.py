@@ -15,10 +15,11 @@ cut is, each part held here (the pattern of server/test_abri_cut.py):
      no cell (data/settlements_verified.json nulls 5943,1723, 5864,2002 and
      6160,1975), and every cell of theirs -- with 6168,1989 and 5850,1851,
      which had a square or a name and no place -- leads into the wasteland;
-     the files stay; every place on the towns' banks stays where it was, and
-     so do the digs, the ФСЦ's bases, the gorges and the staffs across the
-     river; the camp of the Северный Альянс 168 and its base 263 by
-     Абу-Хамед are held where they were;
+     the files stay; every place on the towns' banks stays where it was (the
+     digs, the ФСЦ's bases, the gorges and the staffs across the river
+     stayed too, until the cut of everything across the river, 2026-10-13:
+     server/test_river_all_cut.py); the camp of the Северный Альянс 168 and
+     its base 263 by Абу-Хамед are held where they were;
   2. no way in: no door the server follows, no passage, side or quest way,
      no quest's ride and no quest's marker leads into one of them; the boat
      from Причал to 429 and back (412, 413) has lost its ways and stays off;
@@ -31,8 +32,9 @@ cut is, each part held here (the pattern of server/test_abri_cut.py):
      «Отправка на фронт» any more, and the men of the Армия ЦСЦ on the
      piers stay there with no quest;
   5. the map's squares: the four camps' green squares and the three captions
-     «Лагерь» go (server/map_cells.py), the pirates' square, the digs' and
-     the bases' stay -- on the real map when the original's tiles are here;
+     «Лагерь» go (server/map_cells.py), the pirates' square stays (the
+     digs' and the bases' went with the next cut) -- on the real map when
+     the original's tiles are here;
   6. the town's ground: the cut's cells of data/retired.json are the towns'
      still for the encounters (world.retired_cells);
   7. the database: whoever is in a camp, or calls one home, goes to Причал
@@ -130,7 +132,9 @@ BANKS = {
                   (6182, 1977): 446, (6183, 1974): 467},
 }
 # Across the river, beside the camps: the digs, the ФСЦ's bases (НИЛ-1, 522,
-# went on 2026-10-10), the gorges and the evacuation zones.
+# went on 2026-10-10), the gorges and the evacuation zones -- all of them out
+# of the game since the owner's cut of everything across the river
+# (2026-10-13, server/test_river_all_cut.py).
 ACROSS = {(5943, 1722): 433, (5941, 1697): 508, (5850, 1850): 434, (5849, 1851): 523,
           (5844, 1826): 513, (5844, 1831): 502, (5864, 2001): 435, (5863, 2002): 524,
           (5851, 1986): 516, (5851, 1991): 988, (6168, 1988): 436, (6167, 1989): 525,
@@ -188,7 +192,9 @@ try:
           " Абу-Хамед's Северный Альянс, masters, quarter, port and market",
           {town: {c: table.get(c) for c in cells} for town, cells in BANKS.items()}, BANKS)
     check("  ..and across the river the digs 433-436, the ФСЦ's bases НИЛ-2..4, the gorges and the"
-          " evacuation zones stay", {c: table.get(c) for c in ACROSS}, ACROSS)
+          " evacuation zones, which this cut left, are wasteland since the next one",
+          ({c: table.get(c) for c in ACROSS}, sorted(i for i in ACROSS.values() if i not in ALL_RETIRED)),
+          ({c: None for c in ACROSS}, []))
     check("by Абу-Хамед the camp of the Северный Альянс 168 and «Аванпост Северного Альянса» are held"
           " as they were (432's going would move 168 there): data/settlements_verified.json",
           ({c: table.get(c) for c in HELD},
@@ -405,8 +411,8 @@ try:
     check("server/map_cells.py paints over the camps' squares: 429's and 431's by data/retired.json,"
           " Абу-Хамед's camp's own and Абри's island camp's by data/map_cells.json",
           sorted(c for c in CELLS if c in plan.cells), sorted(c for c in CELLS if c != (6160, 1975)))
-    check("  ..and not the pirates' squares, the digs' or the ФСЦ's bases'",
-          sorted(c for c in PIRATES + [c for c, i in ACROSS.items()] if c in plan.cells), [])
+    check("  ..and not the pirates' squares (the digs' and the ФСЦ's bases' go with the cut of everything across"
+          " the river)", sorted(c for c in PIRATES if c in plan.cells), [])
     camps_caps = [(b, map_cells.tile_of(b[0], b[1])) for b, was, why in plan.captions if was == "Лагерь"]
     check("  ..and the three captions «Лагерь» right of the squares of Вади-Хальфа's, Абри's and Донгола's"
           " camps, each its line and the tail of its «р»",
@@ -429,8 +435,8 @@ try:
         check("on the real map each camp's green square is found, and gone after",
               {c: ((before.at(*c) or (0, 0, None))[2], after.at(*c)) for c in CELLS if c != (6160, 1975)},
               {c: (("green",), None) for c in CELLS if c != (6160, 1975)})
-        check("  ..the pirates' dark red squares, the digs' and the bases' where they were, as they were",
-              [c for c in PIRATES + list(ACROSS) if before.at(*c) and after.at(*c) != before.at(*c)], [])
+        check("  ..the pirates' dark red squares where they were, as they were",
+              [c for c in PIRATES if before.at(*c) and after.at(*c) != before.at(*c)], [])
     else:
         print("  -- not the original's tiles under %s: the real map is test_map_cells' (with them)"
               % world.RES)

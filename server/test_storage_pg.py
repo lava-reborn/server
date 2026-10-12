@@ -1303,4 +1303,52 @@ ok(up.character(keeper)["loc"] == 429 and accounts.ran(up.db, accounts.RIVER_CAM
    and accounts.ran(up.db, accounts.ABRI_CLOTHES_FIX), "второе открытие ничего не повторяет")
 up.close()
 
+# --- всё за рекой ------------------------------------------------------------------------
+# run_once от 2026-10-13 (accounts.relocate_river_all; README «Всё за рекой»): кто
+# стоит в местах того берега или прописан там -- с того берега у Абри и из мест
+# Эвана на Портовый рынок Абри 187 (5860,1835), из остальных -- на Причал
+# (5965,1728); журналы не трогаются. Здесь -- что оба IN и UPDATE идут в Postgres и
+# второе открытие ничего не повторяет. Полный набор на SQLite --
+# server/test_river_all_cut.py (раздел 7).
+store = fresh_store()
+aid, _ = store.register("тотберег", "пароль")
+who = {}
+for name, loc, home in (("в433", 433, 41), ("в474", 474, 41), ("в1197", 1197, 41), ("прописан в323", 36, 323),
+                        ("в434", 434, 187), ("в325", 325, 187), ("прописан в513", 188, 513),
+                        ("в429", 429, 41), ("на причале", 41, 41)):
+    c, _ = store.create_character(aid, name, 0, 1)
+    store.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5943, gy = 1722, on_map = 0,"
+                     " home_loc = ?, home_gx = 5943, home_gy = 1722 WHERE id = ?", (loc, home, c))
+    who[name] = c
+store.db.commit()
+keeper = who["в433"]
+for t in (119, 11500):
+    store.take_quest(keeper, t, {}, True)
+store.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.RIVER_ALL_FIX,))
+store.db.commit()
+store.close()
+
+up = accounts.Store()
+rows = {n: up.character(c) for n, c in who.items()}
+ok({n: (r["loc"], r["gx"], r["gy"], r["on_map"], r["pos"]) for n, r in rows.items()}
+   == {"в433": (41, 5965, 1728, 0, None), "в474": (41, 5965, 1728, 0, None), "в1197": (41, 5965, 1728, 0, None),
+       "прописан в323": (36, 5943, 1722, 0, 77), "в434": (187, 5860, 1835, 0, None),
+       "в325": (187, 5860, 1835, 0, None), "прописан в513": (188, 5943, 1722, 0, 77),
+       "в429": (429, 5943, 1722, 0, 77), "на причале": (41, 5943, 1722, 0, 77)},
+   "из 433/474/1197 -- на Причал, из 434/325 -- на Портовый рынок, 429 (лагеря, давно прошло) и Причал"
+   " не тронуты: %s" % {n: (r["loc"], r["pos"]) for n, r in rows.items()})
+ok([(rows[n]["home_loc"], rows[n]["home_gx"], rows[n]["home_gy"]) for n in ("прописан в323", "прописан в513")]
+   == [(41, 5965, 1728), (187, 5860, 1835)], "прописка в 323 -- Причал, в 513 -- Портовый рынок")
+ok(sorted(r["type"] for r in up.quests(keeper)) == [119, 11500],
+   "журнал не тронут: %s" % sorted(r["type"] for r in up.quests(keeper)))
+ok(accounts.relocate_river_all(up.db) == dict(moved=0, homes=0), "повторный проход ничего не находит")
+up.db.commit()
+up.db.execute("UPDATE characters SET loc = 433 WHERE id = ?", (keeper,))
+up.db.commit()
+up.close()
+up = accounts.Store()
+ok(up.character(keeper)["loc"] == 433 and accounts.ran(up.db, accounts.RIVER_ALL_FIX),
+   "второе открытие ничего не повторяет")
+up.close()
+
 print("storage(pg): %d проверок, все зелёные" % checks)

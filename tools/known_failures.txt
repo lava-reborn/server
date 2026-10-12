@@ -14,4 +14,4 @@
 # original's 1 749 720). CI carries no main.swf, the suite skips those two
 # checks and says so, and everything else in it runs and has to pass.
 
-data/test_borders.py | ^AssertionError: borders: 18 settlements belong to neither side of the wall | the owner's hand-drawn wall strands 18 settlements (20 until the base НИЛ-1 left the map on 2026-10-10, 19 until the camp across the river 429 left it on 2026-10-12); his decision is pending, and the count may not grow
+data/test_borders.py | ^AssertionError: borders: 3 settlements belong to neither side of the wall | the owner's hand-drawn wall strands 3 settlements, the quarter 447 by Вади-Хальфа and the station 126 and masters' camp 131 by Абу-Хамед, which stand on its cells (20 until the base НИЛ-1 left the map on 2026-10-10, 19 until the camp across the river 429 left it on 2026-10-12, 18 until everything across the river left it on 2026-10-13); his decision is pending, and the count may not grow

@@ -748,6 +748,7 @@ def migrate(db):
     run_once(db, ABRI_CUT_FIX, relocate_abri_cut)
     run_once(db, RIVER_CAMPS_FIX, relocate_river_camps)
     run_once(db, ABRI_CLOTHES_FIX, relocate_abri_clothes)
+    run_once(db, RIVER_ALL_FIX, relocate_river_all)
     # Only with the client's tables to tell a premium thing by: a process
     # without them (a tool run outside the container) leaves the fix for
     # the next start that has them, rather than writing it down as done
@@ -1085,6 +1086,38 @@ def relocate_abri_clothes(db):
     """Whoever is in Абри's clothing market, or calls it home, to the port
     market 187; returns the counts it logs."""
     return _move_out(db, ABRI_CLOTHES_FIX, ABRI_CLOTHES_PLACES, ABRI_CUT_TO)
+
+
+# The owner's cut of everything across the river (2026-10-13, «все локации за
+# рекой не нужны»): every place on the far bank of the Nile and on its islands
+# is off the map (data/retired.json places). A character saved in one, or
+# calling one home, goes back to his side of the river: from Абри's far bank
+# and the clan Эван's farm opposite the town -- the dig 434, the base НИЛ-2
+# 523, the gorge 513, the evacuation zone 502, the tomb 964/1199 and the
+# bunker 1004/1210 behind them, Эван's 321, 324, 325 and his works 934 and 962
+# -- to Абри's port market 187, as the cuts of Абри send them; from the rest
+# (Вади-Хальфа's 433 and 508, Донгола's 435, 524, 516, 988, Абу-Хамед's 436,
+# 525, 517, the tombs and bunkers behind them, the north-west corner's 322
+# and 323, the clan base Le_Mon on Донгола's island) to Причал (41, on
+# 5965,1728), as the cut of the camps across the river sends them: Донгола
+# and Абу-Хамед have no ride open. No journal step: no quest gives, takes,
+# asks for or points into any of them (server/test_river_all_cut.py holds
+# that).
+RIVER_ALL_FIX = "retire-river-all-2026-10-13"
+RIVER_ALL_ABRI = (434, 523, 513, 502, 964, 1199, 1004, 1210, 321, 324, 325, 934, 962)
+RIVER_ALL_PRICHAL = (433, 508, 963, 1198, 1003, 1209,
+                     435, 524, 516, 988, 965, 1200, 1005, 1211,
+                     436, 525, 517, 966, 1197, 1006, 1212,
+                     322, 323, 474, 475, 476, 979, 980, 981, 985, 1206)
+
+
+def relocate_river_all(db):
+    """Whoever is in a place across the river, or calls one home, to Абри's
+    port market (from Абри's far bank and Эван's places) or to Причал (from
+    every other); returns the counts it logs."""
+    a = _move_out(db, RIVER_ALL_FIX, RIVER_ALL_ABRI, ABRI_CUT_TO)
+    b = _move_out(db, RIVER_ALL_FIX, RIVER_ALL_PRICHAL, RETIRED_PLACES_TO)
+    return dict(moved=a["moved"] + b["moved"], homes=a["homes"] + b["homes"])
 
 
 # The same cut for the things: a premium thing (items.premium, 6 860 types)

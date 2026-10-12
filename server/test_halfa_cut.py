@@ -228,13 +228,16 @@ try:
     # The set traders 5160 and 5161 and the miner's clothes 5181 stood in
     # Абри's clothing market 378 too, until the owner's «и ещё убери локацию
     # торговцы одеждой в Абри» (2026-10-12, server/test_river_camps_cut.py):
-    # 5160 stood in the two markets alone.
+    # 5160 stood in the two markets alone. KKND's mobs 5316 and 5317 stood in
+    # the clan base Le_Mon on Донгола's island too (474, 979), until the
+    # owner's cut of everything across the river (2026-10-13,
+    # server/test_river_all_cut.py).
     check("  ..the ones that stand elsewhere too: the set trader 5161 and the miner's clothes 5181"
-          " in the markets of Абу-Хамед and Донгола, KKND's mobs in Le_Mon; the set trader 5160"
-          " nowhere since Абри's market went too",
+          " in the markets of Абу-Хамед and Донгола; the set trader 5160 nowhere since Абри's market"
+          " went too, KKND's mobs nowhere since Le_Mon's base did",
           {t: elsewhere[t] for t in (5160, 5161, 5181, 5316, 5317)},
           {5160: [], 5161: [("file", 467), ("file", 469)], 5181: [("file", 467), ("file", 469)],
-           5316: [("file", 474), ("file", 979)], 5317: [("file", 474), ("file", 979)]})
+           5316: [], 5317: []})
     check("nobody standing only in a retired place gives or takes a quest",
           {t: (quests.given_by(t), quests.taken_by(t)) for t in only_here
            if quests.given_by(t) or quests.taken_by(t)}, {})
@@ -540,17 +543,20 @@ try:
     check("  ..the files stay, so a character saved inside still loads",
           [world.location(i).fn for i in FSC], ["air_point_WH_map", "FVAviaBazaNil_WH"])
     check("the neighbours stay: the quarter 36, the masters' camp 95, the arena 59 and the dump 100"
-          " around the airfield; the dig 433 by the base (the resistance camp 429 beside it went"
-          " with the cut of the camps across the river, 2026-10-12)",
+          " around the airfield; by the base across the river nothing (the resistance camp 429 beside"
+          " it went with the cut of the camps across the river, 2026-10-12, the dig 433 with the cut"
+          " of everything across the river, 2026-10-13)",
           [table.get(c) for c in ((5969, 1727), (5969, 1728), (5970, 1728), (5971, 1727),
                                   (5943, 1723), (5943, 1722))],
-          [36, 95, 59, 100, None, 433])
+          [36, 95, 59, 100, None, None])
     # Абри's air base 427 stood on 5866,1836 and its airfield 529 on 5865,1835
-    # until the cut of Абри (2026-10-12, server/test_abri_cut.py).
-    check("  ..and so do the other towns' airfields and bases НИЛ-2..4",
+    # until the cut of Абри (2026-10-12, server/test_abri_cut.py); the bases
+    # НИЛ-2..4 across the river stood on 5849,1851, 5863,2002 and 6167,1989
+    # until the cut of everything across the river (2026-10-13,
+    # server/test_river_all_cut.py).
+    check("  ..and so do the other towns' airfields; the bases НИЛ-2..4 are on no cell since",
           [world.cell_of(i) for i in OTHER_AIRFIELDS + (523, 524, 525)],
-          [(6185, 1977), (5879, 2011), (5863, 1946), (5849, 1851), (5863, 2002),
-           (6167, 1989)])
+          [(6185, 1977), (5879, 2011), (5863, 1946), None, None, None])
 
     # no way in, and none out through them
     fsc_files = sorted(int(os.path.basename(p)[:-4])

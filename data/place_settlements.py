@@ -86,7 +86,11 @@ quarters 453, 454, 458, 459, its air base 427, the set upgraders' quarter
 450 and the clan base Liberty's files, the cut of 2026-10-12, with the ФСЦ
 airfield 529 and the clan base Blackwater's files; the resistance camps
 across the river 429, 430, 431 and 432 and Абри's clothing market 378, the
-cuts of the same day) is no candidate at all,
+cuts of the same day; everything across the river -- the digs 433-436 and
+the tombs under them, the ФСЦ's bases НИЛ-2..4, the gorges 508, 513, 516,
+517 and Доктор «Д»'s bunkers, the evacuation zones 502 and 988, the clan
+Эван's files and the clan base Le_Mon's on Донгола's island --, the cut of
+2026-10-13) is no candidate at all,
 and its old cell is nulled in settlements_verified.json. Both are needed.
 A null alone frees the file to win the next cell that names it -- 125
 simply moved to 5878,2012 -- and a file still in the running bends its

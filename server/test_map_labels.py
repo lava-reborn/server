@@ -214,25 +214,30 @@ check("  ..eight of them retexted to the boss clock: the four camps and their ch
 # every other name of the ФСЦ -- the airfields of the other towns, the two
 # over wasteland, the bases НИЛ-2..4 -- stays. Абри's air base «Авиабаза ЦСЦ»
 # (5866,1836) and its airfield beside it (5865,1835) stayed too, until the
-# cut of Абри took them (2026-10-12, server/test_abri_cut.py).
+# cut of Абри took them (2026-10-12, server/test_abri_cut.py), and so did the
+# bases НИЛ-2..4 across the river, until the cut of everything across it
+# (2026-10-13, server/test_river_all_cut.py).
 print("the cut of Вади-Хальфа's ФСЦ")
 FSC_CUT = {FSC_AIRFIELD_CELL: "Аэроплощадка ФСЦ", (5942, 1723): 'База ФСЦ "НИЛ-1"'}
 FSC_KEPT = {(6185, 1977): "Аэроплощадка ФСЦ",
             (5879, 2011): "Аэроплощадка ФСЦ", (5863, 1946): "Аэроплощадка ФСЦ",
-            (6032, 1951): "Аэроплощадка ФСЦ", (6017, 2086): "Аэроплощадка ФСЦ",
-            (5849, 1851): 'База ФСЦ "НИЛ-2"', (5863, 2002): 'База ФСЦ "НИЛ-3"',
-            (6167, 1989): 'База ФСЦ "НИЛ-4"'}
+            (6032, 1951): "Аэроплощадка ФСЦ", (6017, 2086): "Аэроплощадка ФСЦ"}
+FSC_FAR = {(5849, 1851): 'База ФСЦ "НИЛ-2"', (5863, 2002): 'База ФСЦ "НИЛ-3"',
+           (6167, 1989): 'База ФСЦ "НИЛ-4"'}
 check("Вади-Хальфа's FSC airfield and the base НИЛ-1 have no name over their cells any more",
       {c: texts_at(out, *c) for c in FSC_CUT}, {c: [] for c in FSC_CUT})
 check("  ..where each had its own", {c: texts_at(raw, *c) for c in FSC_CUT},
       {c: [t] for c, t in FSC_CUT.items()})
-check("  ..while the other airfields and the bases НИЛ-2..4 keep theirs",
+check("  ..while the other airfields keep theirs",
       {c: texts_at(out, *c) for c in FSC_KEPT}, {c: [t] for c, t in FSC_KEPT.items()})
+check("  ..and the bases НИЛ-2..4 across the river, which kept theirs, are hidden since 2026-10-13",
+      ({c: texts_at(raw, *c) for c in FSC_FAR}, {c: texts_at(out, *c) for c in FSC_FAR}),
+      ({c: [t] for c, t in FSC_FAR.items()}, {c: [] for c in FSC_FAR}))
 FSC_WORD = re.compile(r"ФСЦ|ЦСЦ")
-check("  ..so of the file's twelve names of the ФСЦ the map shows eight (Абри's air base and"
-      " airfield gone since 2026-10-12)",
+check("  ..so of the file's twelve names of the ФСЦ the map shows five (Абри's air base and"
+      " airfield gone since 2026-10-12, the bases НИЛ-2..4 since 2026-10-13)",
       (len(rows_in(raw, (0, 99999, 0, 99999), FSC_WORD)),
-       len(rows_in(out, (0, 99999, 0, 99999), FSC_WORD))), (12, 8))
+       len(rows_in(out, (0, 99999, 0, 99999), FSC_WORD))), (12, 5))
 check("the ФСЦ cut's own edits are its two cells and no other",
       sorted((e["x"], e["y"]) for e in LABELS
              if e.get("why", "").startswith("The owner's cut of Вади-Хальфа's ФСЦ, 2026-10-10")),
@@ -374,15 +379,14 @@ check("  ..and Вади-Хальфа's three still share the box from 19:00 to 2
       (one_each(HALFA_WAREHOUSES), ["19:00"], 60))
 
 # Left as the original's (UNDONE «подписи-без-механики»): the prisons keep
-# their own window (data/schedule.json prison_wh); the pirates, the jungle
-# hangar, the clan base, the three far digs and the МКС helicopter have no
-# boss of the clock behind them; the black market sells blueprints.
+# their own window (data/schedule.json prison_wh); the pirates, the clan base
+# and the МКС helicopter have no boss of the clock behind them; the black
+# market sells blueprints. The jungle hangar and the three far digs were left
+# so too, until the cut of everything across the river hid them (2026-10-13).
 ORIGINAL = {(5985, 1744): "Тюрьма Вади-Хальфы", (5903, 1996): "Тюрьма Донголы",
             (6193, 1966): "Тюрьма Абу-Хамеда",
             (6160, 1975): "Лагерь Пиратов", (6161, 1973): "Лагерь Пиратов",
-            (6174, 1982): "Ангар в джунглях", (6154, 1963): "База Клана",
-            (5850, 1850): "Археологические раскопки",
-            (5864, 2001): "Археологические раскопки", (6168, 1988): "Археологические раскопки",
+            (6154, 1963): "База Клана",
             (6045, 2017): "Третий Склад МКС", (5970, 1730): "Чёрный рынок"}
 MWAMBA = (6274, 1833)                                    # «Лагерь Большого Мвамбы», no hours
 TIMED = re.compile(r"\d\d:\d\d|\b\d\d\.\d\d\b|\d+ час|чертеж")
@@ -401,8 +405,8 @@ def rows_bytes(doc, cell):
 
 
 check("every other name on the map that tells an hour or offers blueprints is one left as the"
-      " original's: the warehouses (above), the prisons, the pirates, the hangar, the clan base,"
-      " the three far digs, the МКС helicopter and the black market",
+      " original's: the warehouses (above), the prisons, the pirates, the clan base, the МКС"
+      " helicopter and the black market",
       sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)}
              - set(CLOCK_CELLS) - set(WAREHOUSES)),
       sorted(ORIGINAL))
@@ -420,7 +424,10 @@ check("  ..the prisons' «12:00, 16:00 и 23:00» being their own window (data/s
 # staffs' «Сражение за чертежи в 20:00» -- open desert with nobody on it, no
 # boss at 20:00 and no window then -- and, at the dig 433 beside Вади-Хальфа,
 # the tomb raider of 18:00, where the one inhabitant is the archaeologist. Each
-# keeps its name and loses the promise.
+# kept its name and lost the promise; all five stand across the river and are
+# hidden whole since the owner's cut of everything across it (2026-10-13,
+# «все локации за рекой не нужны»; server/test_river_all_cut.py): their
+# edits are hides of the same rows now.
 LABELS_WHY = "The owner's map labels, 2026-10-11"
 STAFFS = {(5935, 1711): "Штаб Север", (5850, 1999): "Штаб Центр", (6158, 2000): "Штаб Юг",
           (5840, 1839): "Штаб Северо-Запад"}
@@ -431,17 +438,20 @@ DIG_433 = (5943, 1722)
 DIG = ("Археологические раскопки:<BR> Часть сохранившегося надземного комплекса.<BR> Вход в "
        "гробницу Фараонов.<BR>Ходят слухи, что там есть чем поживиться.%s<br>Внимание!!! "
        "Необходимо прибывать за 15 минут до встречи с археологами.")
-check("the four staffs, open desert with nobody on them, are their names alone",
-      {c: texts_at(out, *c) for c in STAFFS}, {c: [t] for c, t in STAFFS.items()})
-check("  ..where each promised «Сражение за чертежи в 20:00» (Северо-Запад a chief as well)",
-      {c: texts_at(raw, *c) for c in STAFFS}, STAFFS_WAS)
-check("the dig 433 beside Вади-Хальфа keeps the archaeologists' meeting and drops the tomb raider of"
-      " 18:00",
-      (texts_at(raw, *DIG_433), texts_at(out, *DIG_433)),
-      ([DIG % "<BR>Расхитительница гробниц появляется в 18 часов."], [DIG % ""]))
-check("  ..these edits are those five cells and no other",
-      sorted((e["x"], e["y"]) for e in LABELS if e.get("why", "").startswith(LABELS_WHY)),
-      sorted(list(STAFFS) + [DIG_433]))
+RIVER_ALL_WHY = "The owner's cut of everything across the river, 2026-10-13"
+check("the four staffs, open desert with nobody on them, and the dig 433 have no name on the map",
+      {c: texts_at(out, *c) for c in list(STAFFS) + [DIG_433]}, {c: [] for c in list(STAFFS) + [DIG_433]})
+check("  ..where each staff promised «Сражение за чертежи в 20:00» (Северо-Запад a chief as well) and the dig"
+      " the tomb raider of 18:00",
+      ({c: texts_at(raw, *c) for c in STAFFS}, texts_at(raw, *DIG_433)),
+      (STAFFS_WAS, [DIG % "<BR>Расхитительница гробниц появляется в 18 часов."]))
+check("  ..each edit a hide of that row now, the cut of everything across the river's, telling what 2026-10-11"
+      " took off; no edit of the owner's map labels is left",
+      ({(e["x"], e["y"]): (e["was"], bool(e.get("hide")), e["why"].startswith(RIVER_ALL_WHY), "2026-10-11" in e["why"])
+        for e in LABELS if (e["x"], e["y"]) in set(STAFFS) | {DIG_433}},
+       sorted((e["x"], e["y"]) for e in LABELS if e.get("why", "").startswith(LABELS_WHY))),
+      ({c: (w[0], True, True, True) for c, w in list(STAFFS_WAS.items())
+        + [(DIG_433, [DIG % "<BR>Расхитительница гробниц появляется в 18 часов."])]}, []))
 check("«чертеж» is left on the map in two names: the black market's «Покупка чертежей» (its shop"
       " sells them) and the pirates' camp far from Вади-Хальфа (UNDONE «подписи-без-механики»)",
       sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if "чертеж" in t}),

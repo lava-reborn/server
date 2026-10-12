@@ -31,7 +31,10 @@ client lets us check (182 "Западные Предгорья" on gx 5833 and 3
 Предгорья" on gy 1600) have no outward exit of their own, which is what a
 cell on the edge of the world is supposed to look like. 182 has since moved
 to the Nubian valley's «Поля и Пастбища» (data/settlements_verified.json),
-and its old corner 5833,1607 takes a tile of the ring like its neighbours.
+and its old corner 5833,1607 takes a tile of the ring like its neighbours;
+322 is out of the game since the owner's cut of everything across the river
+(2026-10-13, data/retired.json), and 5840,1600 takes one too. No rim cell
+carries a settlement now.
 
     python3 data/build_borders.py                    # the world's rectangle
     python3 data/build_borders.py --bounds captions  # the caption box it was

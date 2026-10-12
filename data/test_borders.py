@@ -16,14 +16,14 @@ What is checked here:
   * the ring agrees cell for cell with travel.rock_for, so the server's
     tables and the data file cannot drift apart;
   * not one location the server places on the map declares an exit the server
-    cannot honour: 0 of the 951 the settlement cells declare and 0 of the
+    cannot honour: 0 of the 944 the settlement cells declare and 0 of the
     ring's lead off the world, and no settlement's leads into the lake. That
     count was 18 while the ground came from a photograph;
   * a way that does run out ends in one of the four dead-end pockets, entered
     over the edge the player came in by, and backing out lands where it
     started -- never an error, never a black screen;
   * and the walk: breadth-first from the cell a character starts on, every
-    one of the 262 settlements of data/settlements.json is reachable on foot,
+    one of the 254 settlements of data/settlements.json is reachable on foot,
     the Nubian valley and the camp of the New Colonists among them.
 
 Runs under WSL with the client resources present:
@@ -180,7 +180,9 @@ def check_exits(ring):
     if by_hand:
         print("  %d settlement exits meet a hand-drawn wall, which outranks"
               " them: %s" % (len(by_hand), by_hand[:4]))
-    assert settlement_exits >= 949, \
+    # 944 since the owner's cut of everything across the river (2026-10-13)
+    # took nineteen settlement cells off the map.
+    assert settlement_exits >= 944, \
         "borders: only %d settlement exits to check" % settlement_exits
     print("all %d exits of the %d placed locations lead onto the map, the %d"
           " of the settlements among them; %d of the ring's meet the lake and"
@@ -217,9 +219,14 @@ def check_pockets(wet):
     print("the four pockets open the way they were walked into, and back out"
           " onto the cell they were entered from")
 
-    # A real one: the cell beside the lake whose exit meets the water.
-    if wet:
-        gx, gy, loc_id, side = wet[0]
+    # A real one: the cell beside the lake whose exit meets the water -- one
+    # a walker can stand on: the quarter 447 stands on the owner's wall
+    # itself, and a player on blocked ground is let out (travel.plan_exit).
+    # Эван's farm 325, the first until the owner's cut of everything across
+    # the river (2026-10-13), is off the map.
+    real = [e for e in wet if world.passable(e[0], e[1])]
+    if real:
+        gx, gy, loc_id, side = real[0]
         loc = world.location(loc_id)
         cell = next(c for c, s in travel.exit_sides(loc).items() if s == side)
         ex = travel.plan_exit(loc, cell, gx, gy)
@@ -333,7 +340,7 @@ def check_walk():
           % (wide, high, len(blocked)))
 
     settled = world.settlements()
-    assert len(settled) >= 262, "borders: only %d settlements" % len(settled)
+    assert len(settled) >= 254, "borders: only %d settlements" % len(settled)
 
     # The world is no longer one piece, and that is a decision rather than a
     # fault: the owner drew a wall round the Nubian valley, so the starting

@@ -2119,15 +2119,17 @@ def map_problems(model):
 
 def cut_cells():
     """{(x, y): why} of the map cells the owner's cuts took off the map: a
-    square erased or kept under a hidden name (data/map_cells.json 'cells',
-    'keep') and a name hidden (data/map_labels.json 'hide'). A place of ours
+    square erased or kept under a hidden name, or a hidden name with no square
+    (data/map_cells.json 'cells', 'keep', 'bare') and a name hidden
+    (data/map_labels.json 'hide'). A place of ours
     there would put a name and a place back over what was cut
     (server/test_map_cells.py, test_halfa_cut and the other cuts' suites
     hold those cells empty)."""
     out = {}
     cd = cells_doc()
     for part, why in (("cells", "квадрат стёрт (data/map_cells.json)"),
-                      ("keep", "имя снято, квадрат оставлен (data/map_cells.json)")):
+                      ("keep", "имя снято, квадрат оставлен (data/map_cells.json)"),
+                      ("bare", "имя снято, квадрата нет (data/map_cells.json)")):
         for k in cd.get(part) or {}:
             try:
                 out.setdefault(_xy(k), why)

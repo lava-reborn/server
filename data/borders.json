@@ -37,16 +37,7 @@
   },
   "note": "the side letter is the direction the wall faces, read off each file's own outzones"
  },
- "skipped_settlement_cells": [
-  {
-   "cell": "5840,1600",
-   "loc": 322,
-   "walls": [
-    "N"
-   ],
-   "own_sides": "SW"
-  }
- ],
+ "skipped_settlement_cells": [],
  "cells": {
   "5833,1600": 3,
   "5833,1601": 12,
@@ -604,6 +595,7 @@
   "5838,2143": 16,
   "5839,1600": 11,
   "5839,2143": 15,
+  "5840,1600": 10,
   "5840,2143": 16,
   "5841,1600": 11,
   "5841,2143": 15,

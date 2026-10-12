@@ -23,7 +23,10 @@ river's black line); where no spot near does, the pixels are painted smooth
 from what surrounds them. Only the 8 x 8
 blocks of the JPEG those pixels fall in are encoded anew (jpeg_blocks): every
 other block of every tile keeps its coefficients exactly, so nothing else on
-the map can move.
+the map can move. A hidden name over a cell whose picture has no square
+(data/map_cells.json "bare", each with its why: Доктор «Д»'s columns of
+names across the river, the old drawing of the valley in the north-west
+corner) leaves nothing to paint over there.
 
 A place of ours (data/locations) put on the map gets a square the same way
 round: data/map_cells.json "paint" names its cell and one colour of PALETTE,
@@ -103,6 +106,9 @@ SEARCH_FAR = 112     # and, when nothing near will do, how far after that
 # river's black line, a rock -- is not taken.
 GROUND = 3
 MARGIN = 12
+# A region of more pixels than this (squares and captions that touch) is
+# painted a piece at a time (paint_marks), not from one patch.
+PIECES_OVER = 1000
 
 
 def tile_of(X, Y):
@@ -128,12 +134,15 @@ class Plan:
     is hidden; paint {(x, y): (colour, why)}: cells that get a square, a
     place of ours (data/locations) put on the map; zones [Zone]: the war
     zones painted round a place that is gone, a tinted circle and its arrows,
-    and tint: how the circles are painted (clear_zones)."""
+    and tint: how the circles are painted (clear_zones); bare {(x, y): why}:
+    cells whose name is hidden and whose picture has no square to paint over,
+    left as they are."""
 
-    def __init__(self, cells, captions, keep, paint=None, zones=(), tint=None):
+    def __init__(self, cells, captions, keep, paint=None, zones=(), tint=None, bare=None):
         self.cells, self.captions, self.keep = cells, captions, keep
         self.paint = dict(paint or {})
         self.zones, self.tint = list(zones), tint
+        self.bare = dict(bare or {})
 
     def tiles(self):
         """The tiles a change can touch: a square's frame reaches one pixel
@@ -281,6 +290,16 @@ def load(path=PATH, retired=RETIRED):
             raise ValueError("map_cells: painted %s needs a colour of %s and a why"
                              % (key, "/".join(sorted(PALETTE))))
         paint[c] = (e["colour"], e["why"])
+    bare = {}
+    for key, why in doc.get("bare", {}).items():
+        if key.startswith("_"):
+            continue
+        c = _cell(key)
+        if c in cells or c in keep or c in paint:
+            raise ValueError("map_cells: %s is bare and also erased, kept or painted on" % key)
+        if not why:
+            raise ValueError("map_cells: bare %s has no why" % key)
+        bare[c] = why
     tint = None
     t = doc.get("tint")
     if t is not None:
@@ -295,7 +314,7 @@ def load(path=PATH, retired=RETIRED):
     zones = [_zone(e, tint) for e in doc.get("zones", [])]
     if len({z.was for z in zones}) != len(zones):
         raise ValueError("map_cells: two zones of one name")
-    return Plan(cells, captions, keep, paint, zones, tint)
+    return Plan(cells, captions, keep, paint, zones, tint, bare)
 
 
 # --- the picture ---------------------------------------------------------------------
@@ -776,8 +795,10 @@ def solve(canvas, region, apart, donor_offset):
 
 
 def erase(canvas, plan):
-    """Paint over every square and caption of the plan. (found {cell:
-    square}, kept {cell: square}, the pixels painted, report lines)."""
+    """Paint over every square and caption of the plan, each region that
+    touches from one patch of photograph, or one larger than PIECES_OVER a
+    piece at a time (paint_marks). (found {cell: square}, kept {cell:
+    square}, the pixels painted, report lines)."""
     squares = Squares(canvas)
     report = []
     found = {}
@@ -825,6 +846,18 @@ def erase(canvas, plan):
         report.append("caption %r at %d,%d..%d,%d: %d pixels" % (was, x0, y0, x1, y1, len(px)))
     painted = set()
     for g in _groups(region):
+        if len(g) > PIECES_OVER:
+            # a caption across several strips of ground (the island's by
+            # Донгола runs over a bank, the river and the island): one patch
+            # cannot continue them all, a piece at a time does, as the war
+            # zones' arrows are painted
+            how = paint_marks(canvas, set(g), region, protect, squares, set())
+            painted |= set(g)
+            report.append("  %d pixels from %d,%d painted a piece at a time, %d pieces from a patch of photograph"
+                          " (%d of them bent by the blend)%s"
+                          % (len(g), g[0][0], g[0][1], how["patch"] + how["bent"], how["bent"],
+                             ", %d smooth from their edge" % how["smooth"] if how["smooth"] else ""))
+            continue
         # nothing is copied from a square, a caption or what is being
         # erased; a kept square or another region is no surrounding to match
         apart = region | protect

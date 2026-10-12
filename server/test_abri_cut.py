@@ -189,9 +189,10 @@ try:
                                   (5860, 1838), (5864, 1838), (5914, 1854))],
           [PORT, 188, 255, 289, 290, 261, 368, 191, 262, 204])
     on_box = sorted(i for (x, y), i in table.items() if 5835 <= x <= 5930 and 1820 <= y <= 1895)
-    check("  ..and of the ФСЦ only the base НИЛ-2 (523) stays by Абри, on the island no boat"
-          " reaches; no airfield, no clan base", [i for i in on_box if i in (523, 529, 317, 328, 327)],
-          [523])
+    # The base НИЛ-2 (523) on the far bank stayed until the owner's cut of
+    # everything across the river (2026-10-13, server/test_river_all_cut.py).
+    check("  ..and no place of the ФСЦ stays by Абри: no airfield, no base, no clan base",
+          [i for i in on_box if i in (523, 529, 317, 328, 327)], [])
 except Exception:
     import traceback
     fails.append("the places broke:\n" + traceback.format_exc())
@@ -331,10 +332,17 @@ try:
     # The clothing market's, since the owner's next order (section 8).
     HIDDEN = dict(HIDDEN)
     HIDDEN[(5865, 1836)] = "Торговцы одеждой"
+    # The names over the far bank and Эван's on the north bank went with the
+    # owner's cut of everything across the river (2026-10-13): that cut's,
+    # server/test_river_all_cut.py.
+    RIVER_ALL = "The owner's cut of everything across the river, 2026-10-13"
+    far = {(e["x"], e["y"]): e["was"] for e in LABELS if e.get("hide")
+           and e.get("why", "").startswith(RIVER_ALL)}
     hidden = {(e["x"], e["y"]): e["was"] for e in LABELS if e.get("hide")
+              and not e.get("why", "").startswith(RIVER_ALL)
               and BOX[0] <= e["x"] <= BOX[1] and BOX[2] <= e["y"] <= BOX[3]}
     check("over Абри the names hidden are exactly the cut's, the second «Автосвалка» and the clothing"
-          " market's", hidden, HIDDEN)
+          " market's (the far bank's aside)", hidden, HIDDEN)
     check("  ..and by Абу-Хамед the second «Кланбаза Liberty»",
           [(e["x"], e["y"], e["was"]) for e in LABELS if e.get("hide") and (e["x"], e["y"]) == (6248, 1979)],
           [(6248, 1979, "Кланбаза Liberty<br>Warning No Trespassing")])
@@ -355,12 +363,14 @@ try:
     check("the quarter loses Базиль's «обмен G комплектов», the port market names Мортимер, the"
           " slums lose the New Year tree",
           {c: retexts.get(c) for c in TEXTS}, TEXTS)
-    OTHERS = {(5880, 1844), (5868, 1854), (5881, 1843), (5869, 1855), (5890, 1848), (5840, 1839)}
-    check("  ..the other retexts over Абри are the camps' gold and clock, the (P) factory's and the"
-          " staff's: no other", sorted(set(retexts) - set(TEXTS)), sorted(OTHERS))
+    # (the staff Северо-Запад's on the far bank, 5840,1839, is a hide since
+    # the cut of everything across the river)
+    OTHERS = {(5880, 1844), (5868, 1854), (5881, 1843), (5869, 1855), (5890, 1848)}
+    check("  ..the other retexts over Абри are the camps' gold and clock and the (P) factory's: no other",
+          sorted(set(retexts) - set(TEXTS)), sorted(OTHERS))
     want = []
     for x, y, t in rows_in(raw, BOX):
-        if (x, y) in HIDDEN and t == HIDDEN[(x, y)]:
+        if (x, y) in HIDDEN and t == HIDDEN[(x, y)] or far.get((x, y)) == t:
             continue
         want.append((x, y, retexts.get((x, y), t)))
     # the names of the places of ours (data/locations), added over their
@@ -370,7 +380,8 @@ try:
              and world.settlements().get((e["x"], e["y"])) in ours}
     check("every other name over Абри is the file's own, row for row (the places of ours aside)",
           [r for r in rows_in(out, BOX) if r not in added], want)
-    check("  ..of which there are dozens", len(want) > 40, True)
+    # (fewer since the names of the far bank and Эван's went, 2026-10-13)
+    check("  ..of which there are a couple of dozen", len(want) > 25, True)
 except Exception:
     import traceback
     fails.append("the names broke:\n" + traceback.format_exc())
