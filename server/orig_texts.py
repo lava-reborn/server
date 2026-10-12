@@ -275,8 +275,14 @@ DOUBTFUL_STRINGS = frozenset((9163, 48871, 48872))
 #        traders' chief's place (328, mrare_Lucky_lvl16). His type's own word
 #        is Lucky, and the quest that sends the player to him writes
 #        «найди там Надзирателя Лаки» (50434): the file lost a letter.
+#   8956 "[18] ШефДженсен<Br>Миротворцы" -- the boss of the Peacekeepers'
+#        camp (407, mrare_chief_lvl30, by hand in orig_names_manual.json).
+#        The quest that sends the player to him writes «найди там МаксКоула
+#        и Шефа Дженсен» (50437): the file lost a space. МаксКоул (8955) is
+#        joined there too, so his row stays as it is.
 NAME_TYPOS = {
     8904: ("Надзиратель аки", "Надзиратель Лаки"),
+    8956: ("ШефДженсен", "Шеф Дженсен"),
 }
 
 # Lines of a name that offer work the server cut, dropped on the wire by the

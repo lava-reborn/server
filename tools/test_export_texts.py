@@ -55,7 +55,8 @@ check("decodes as utf-8", isinstance(blob.decode("utf-8"), str), True)
 # The owner's word of 2026-10-12: «у мобов надо в начале убрать подписи
 # уровня». Read off the bytes the player gets, for every creature type, so a
 # name from any source -- mobs.xml, the wiki, the NPC editor, the original --
-# is held to it. The client shows a mob's level by itself (combat.mob_info).
+# is held to it. Of the level the client shows only a shield beside the
+# name, the difference from the player's own, -4 .. +4 (combat.mob_info).
 import orig_texts                                     # noqa: E402
 _LEAD = re.compile(r"^\s*\[\s*\d+\s*\]")
 _rows = {int(i): t for i, t in re.findall(r"<s id='(\d+)'>([^<]*)</s>", blob.decode("utf-8"))}
@@ -70,6 +71,84 @@ print("  creature rows in the file: %d; mobs the original names with a level in 
 check("no creature's name in the file starts with a level", _in_file[:10], [])
 check("  ..including every mob the original wrote one for",
       sorted(t for t, n in _raw.items() if _LEAD.match(n) and _LEAD.match(_rows[t])), [])
+
+# --- nobody a player meets goes by a level ----------------------------------
+# Who the rooms stand, as well as what the table holds. A creature with no
+# row of the original, the wiki or the NPC editor goes by its mobs.xml name,
+# and that carries the level as well: «m510_zhivoder_lvl8» and
+# «mrare_chief_lvl30» stood so in 73 and 98 until 2026-10-12
+# (data/orig_names_manual.json names them now). The places: every one on the
+# map's cells and every room a door, a side of data/passages.json or a quest
+# way leads into from them, the camps' patrol cells (data/placements.json),
+# and the camps' encounters in the wasteland (encounters.bands).
+import json                                           # noqa: E402
+import encounters                                     # noqa: E402
+import mobs                                           # noqa: E402
+import quests                                         # noqa: E402
+import rooms                                          # noqa: E402
+import travel                                         # noqa: E402
+import world                                          # noqa: E402
+
+
+def reached_from(start):
+    """Every place a player gets to from start, start among them."""
+    with open(travel.passages_path(), encoding="utf-8") as fh:
+        sides = json.load(fh).get("sides") or {}
+    seen, todo = set(start), list(start)
+    while todo:
+        lid = todo.pop()
+        targets = [r.get("target_loc_id") for _c, r in travel.quest_ways(world.location(lid))]
+        for side in "ab":
+            rec = travel.door(lid, side)
+            if rec and rec.get("confidence") in travel.DOOR_CONFIDENCE:
+                targets.append(rec.get("target_loc_id"))
+        targets += [r.get("target_loc_id") for r in (sides.get(str(lid)) or {}).values()
+                    if isinstance(r, dict)]
+        for t in targets:
+            if t and int(t) not in seen:
+                seen.add(int(t))
+                todo.append(int(t))
+    return seen
+
+
+_MT = world.mob_types()
+_places = reached_from(sorted(set(world.settlements().values())
+                              | {int(k) for k in world.placements()}))
+_stands = {}
+for _lid in sorted(_places):
+    _stands[str(_lid)] = {n.type_id for n in
+                          rooms.Room(world.location(_lid), rooms.IdAllocator(), _MT).npcs.values()}
+for _band, _reach in encounters.bands():
+    _stands["band %d" % _band.camp] = set(_band.types)
+_met = set().union(*_stands.values())
+_LEVEL_IN = re.compile(r"lvl_?\d|^\s*\[\s*\d+\s*\]", re.I)
+print("  places a player gets to: %d, creature types standing in them or met on the way: %d"
+      % (len(_places), len(_met)))
+check("the walk reaches the camps of 2026-10-12's three: «Тайная Сделка» 68, «Донгола: Живодеры»"
+      " 73, «Лагерь Миротворцев» 98", {68, 73, 98} <= _places, True)
+check("nobody a player meets goes by a level in his name, a mobs.xml one included",
+      sorted((t, _rows.get(t)) for t in _met if _LEVEL_IN.search(_rows.get(t, ""))), [])
+
+# A kill quest's target and a mob it does not count, in one place under one
+# name at another level: with no level in the name the player cannot tell
+# which to kill (the shield shows a difference clamped to -4 .. +4, the same
+# for both from level 9 on). «Бандитская активность» (117) had its level-5
+# Диверсант among level-4 ones; kill_also counts both since 2026-10-12.
+_lv = {t: mobs.stats(t).level for t in _met}
+_mixed = sorted({(q.type, aim, other, place)
+                 for q in quests.QUESTS.values() if q.kind == quests.KILL_MOBS
+                 for aim in q.mobs_kill
+                 for place, there in _stands.items() if aim in there
+                 for other in there
+                 if other != aim and other not in q.mobs_kill and other not in q.kill_also
+                 and names.ALL.get(other) == names.ALL.get(aim)
+                 and _lv[other] != _lv[aim]})
+check("no kill quest's target stands under its name beside a mob of another level it does"
+      " not count", _mixed[:10], [])
+check("  ..117's two Диверсанты: one name, one camp, two levels, both counted",
+      (names.ALL.get(290) == names.ALL.get(291), any({290, 291} <= s for s in _stands.values()),
+       (_lv[290], _lv[291]), quests.get(117).kill_also),
+      (True, True, (4, 5), {290: 291}))
 
 # --- what the launcher will say -------------------------------------------
 # TextsCheck.Sane refuses a whole table for a single tag it does not know, and a

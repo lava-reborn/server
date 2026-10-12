@@ -158,9 +158,10 @@ except Exception:
 
 # The people of the world by the original's own names, over the wiki's.
 # A mob goes by its name alone, without the level the original writes in
-# front of it (orig_texts.person_name; the owner's word of 2026-10-12): the
-# client shows the level by itself, as the shield beside the name that the
-# lvl of its userInfo paints (combat.mob_info).
+# front of it (orig_texts.person_name; the owner's word of 2026-10-12). Of
+# the level the client shows only a shield beside the name, the difference
+# from the player's own clamped to -4 .. +4, which the lvl of the mob's
+# userInfo paints (combat.mob_info); the number itself nowhere.
 ORIG_PERSON_NAMES = orig_texts.person_names()
 ALL.update(ORIG_PERSON_NAMES)
 

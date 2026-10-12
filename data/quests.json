@@ -4468,6 +4468,7 @@
       "take": [48],
       "mobs_kill": [291],
       "num_kill": [5],
+      "kill_also": {"290": 291},
       "rew_afro": 600,
       "rew_gold": 0,
       "repeatable": 1,
@@ -4477,7 +4478,7 @@
       "need_quest": 114,
       "loc": 48940747,
       "finish_loc": 48899775,
-      "why": "RECOVERED texts, target, once a day and chain, the giver inferred, DESIGNED reward. «Бандитская активность» (47282-47285): 'убить 5х Диверсантов Джанджавидов ... Диверсант 5го уровня. Их можно найти рядом с основным лагерем' -- [5] Диверсант (291, ja_Diversant_lvl5), three in the Джанджавиды's camp (84); 'Задание можно выполнять не чаще 1 раза в сутки' (per_day 1). lavabook makes it a child of «Потерянная группа», Назир's last errand; nobody else is named, so Назир (48) gives and takes it. The finish names no sum: DESIGNED 600 afro, the other dailies' pay. Map marks: the camp, then the quarter."
+      "why": "RECOVERED texts, target, once a day and chain, the giver inferred, DESIGNED reward. «Бандитская активность» (47282-47285): 'убить 5х Диверсантов Джанджавидов ... Диверсант 5го уровня. Их можно найти рядом с основным лагерем' -- [5] Диверсант (291, ja_Diversant_lvl5), three in the Джанджавиды's camp (84); 'Задание можно выполнять не чаще 1 раза в сутки' (per_day 1). lavabook makes it a child of «Потерянная группа», Назир's last errand; nobody else is named, so Назир (48) gives and takes it. The finish names no sum: DESIGNED 600 afro, the other dailies' pay. Map marks: the camp, then the quarter. DESIGNED, 2026-10-12: the level-4 Диверсант (290, ja_Diversant_lvl4) counts as the 5 (kill_also). He stands beside them in the camp and on its four patrol cells and walks in the camp's encounters, and since the owner's «у мобов надо в начале убрать подписи уровня» both are «Диверсант / Джанджавиды» to the client; the level shield tells them apart only for a player of level 1 to 8, and the hint's level is now shown nowhere. The precedent is the raid 221, whose [9] miners count as its [8] (the owner, 2026-10-09). Undone by taking kill_also out (UNDONE «мобы-без-уровня»)."
     },
     {
       "type": 118,

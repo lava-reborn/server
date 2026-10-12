@@ -28,8 +28,8 @@ before the town is opened:
     in to him; the stand-in 421 is put down nowhere;
   * the givers and takers the Halfa quests rely on, the rest of the town by
     its families' own runs, the creatures the quests send the player to kill
-    or rob (each at the level it fights at, whatever data/mob_types.json
-    makes it), and the things they hand out and ask for, by the names below;
+    or rob (each by its name alone, no level in front: the owner's
+    2026-10-12), and the things they hand out and ask for, by the names below;
     every thing with a description; 260 still the valley's antelope meat,
     which its quests hand out;
   * every one of those ids in names.ALL, and the exported table with no id
@@ -179,8 +179,9 @@ NEIGHBOURS = {
 }
 # The creatures the quests send the player to kill or rob, by the name alone:
 # no level in front of it (orig_texts.person_name; the owner, 2026-10-12).
-# The level each fights at belongs to data/mob_types.json, and the client
-# shows it by itself, beside the name.
+# The level each fights at belongs to data/mob_types.json; of it the client
+# shows only a shield beside the name with the difference from the player's
+# own level, -4 .. +4 (combat.mob_info).
 MOBS = {
     696: "Главарь бандитов", 110: "Послушник Люшера", 111: "Мастер Люшера",
     854: "Послушник Люшера", 722: "Грабитель", 833: "Трусливый грабитель",
