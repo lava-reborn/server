@@ -8,11 +8,18 @@
  "cells": {
   "5969,1730": "The owner's cut of Вади-Хальфа, 2026-10-09 («... улучшение сетов 6-8»): the green square under the name «Улучшение сетов 6-8[G]<BR>Казначеи ремесленников» (hidden, data/map_labels.json). No file stood on the cell; the square was all the map had of the service.",
   "5984,1759": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the clan base's square (dark red with a white centre) under the hidden name «Собственность клана KKND». Its files (297, 383, 384, 938, 961, 1189) never had a cell, so data/retired.json has no cell for it.",
-  "6265,1821": "The owner's word of 2026-10-10 («да», to painting the kimberlite pipe's square too): its name «Кимберлитовая трубка<br>Добыча алмазов» was hidden on 2026-10-05 and no place stands on the cell, so its black-and-orange hatch, a work site's mark, goes as well. Tile 14531."
+  "6265,1821": "The owner's word of 2026-10-10 («да», to painting the kimberlite pipe's square too): its name «Кимберлитовая трубка<br>Добыча алмазов» was hidden on 2026-10-05 and no place stands on the cell, so its black-and-orange hatch, a work site's mark, goes as well. Tile 14531.",
+  "5866,1837": "The owner's cut of Абри, 2026-10-12 («... улучшение сетов 10-12 ...»): the green square under the name «Улучшение сетов 10-12[G]<BR>Казначеи ремесленников» (hidden, data/map_labels.json). No file stood on the cell -- its quarter 450 never had one, and is out of the game (data/retired.json places) -- so data/retired.json has no cell for it. Tile 14775.",
+  "5862,1837": "The owner's cut of Абри, 2026-10-12 («слева от ремесленников по одежде 12 есть зеленая метка, её тоже убрать»): the green square left of «Ремесленники по одежде 12 уровень» (5863,1837). No name of the map stands over it in any copy, and no file on it. Tile 14775.",
+  "5863,1836": "The owner's Абри, 2026-10-12 («автосвалки (2 штуки, непонятно зачем)»): the second of the two red squares named «Автосвалка» (hidden, data/map_labels.json). Абри has one dump, 289 «Свалка Автомобилей» on 5863,1835, the wiki's «(5863:1835)»; this cell is wasteland (data/settlements_verified.json null). Tile 14775.",
+  "6248,1979": "The owner's cut of Абри, 2026-10-12 («убери кланбазу Либерти»): the clan base's square (dark red with a white centre) under the hidden name «Кланбаза Liberty<br>Warning No Trespassing» by Абу-Хамед, the base's second mark on the map (the first, 5906,1888, by Абри). No file ever stood on it. Tile 15811.",
+  "6248,1980": "The same base's second square below it (green with a black centre, as 5906,1889 beside Абри's mark, the «Плешь смерти»), which no name of the map stands over: the block of two goes whole. Tile 15811."
  },
  "captions": [
   {"was": "Кланбаза KKND", "boxes": [[47879, 14049, 47920, 14057], [47879, 14058, 47910, 14067]],
-   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the two lines of letters «Кланбаза / KKND» painted above the base's square at 5984,1759 (cells 5984..5989, 1756..1758), tile 14011, a box a line with its light rim. The dark stone right of the first line's end (47918..47922, 14058..14061) is the photograph's and stays."}
+   "why": "The owner's cut of Вади-Хальфа, 2026-10-09 («а также кланбазу KKND»): the two lines of letters «Кланбаза / KKND» painted above the base's square at 5984,1759 (cells 5984..5989, 1756..1758), tile 14011, a box a line with its light rim. The dark stone right of the first line's end (47918..47922, 14058..14061) is the photograph's and stays."},
+  {"was": "База Liberty", "boxes": [[49996, 15833, 50048, 15841], [50041, 15842, 50046, 15843]],
+   "why": "The owner's cut of Абри, 2026-10-12 («убери кланбазу Либерти»): the letters «База Liberty» painted right of the base's squares at 6248,1979-1980 by Абу-Хамед (cells 6249..6256, 1979..1980), tile 15811: the line with its light rim, and the tail of its «y» below. Measured on the luminance of the tile; the dark stone under the tail (50040..50042, 15845..15849) is the photograph's and stays. Абри's own mark of the base (5906,1888-1889) has no letters."}
  ],
  "keep": {}
 }

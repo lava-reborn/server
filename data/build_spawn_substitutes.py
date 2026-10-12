@@ -69,6 +69,13 @@ CAMP_FACTIONS = {
     10: "na",  # Лагерь Северного Альянса
     11: "na",  # База Северного Альянса
 }
+# Fighters with a name of their own, one man each, who never stand in for an
+# unknown type: Санденс Кид and Бутч Кэссиди of Абри's camps (st_SundanceKid,
+# zd_ButchKassidy), whom data/placements.json puts down in their camps. With
+# their rows' levels (data/build_mob_types.py DESIGNED_LEVELS, 2026-10-12) they
+# would otherwise be the nearest level of their faction for the Up_Camp copies'
+# lost types and stand there by the dozen.
+NAMED = {1563, 1564}
 # Prefixes that are a season or a test, never a company.
 EVENT_PREFIXES = {"vov", "may", "event", "eventboss", "test", "admin", "ny",
                   "hw", "xmas", "vbg", "clan", "kb"}
@@ -95,13 +102,16 @@ def camp_level(fn):
     return int(m.group(1)) if m else None
 
 
-# DESIGNED: who stands in the empty (type 0) slots of Вади-Хальфа's camps and
-# quest places, slot by slot in the file's order. location -> (faction prefix,
-# or None for stand-ins of another name; (lowest, highest) level; the types;
-# why). The bands are the map's tooltips on the camps («Для игроков 0-2
-# уровней» ...); every kind of the faction's fighters that falls in the band
-# stands in the camp or at its chief's, so that a quest to kill one of them
-# finds it.
+# DESIGNED: who stands in the empty (type 0) slots of Вади-Хальфа's and Абри's
+# camps and quest places, slot by slot in the file's order. location ->
+# (faction prefix, or None for stand-ins of another name; (lowest, highest)
+# level; the types; why). The bands are the map's tooltips on the camps («Для
+# игроков 0-2 уровней» ...); every kind of the faction's fighters that falls in
+# the band stands in the camp or at its chief's, so that a quest to kill one of
+# them finds it. A place of no faction (None) may stand animals too: Абри's
+# fields, totem and car dump held beasts in the original (the wiki's «Поля
+# Абри» names the hyenas), and no ambush draws on them (encounters.bands takes
+# role "mob" alone).
 CAMP_FILL = {
     80: ("nc", (0, 2),
          [258, 259, 260, 261, 262, 263, 264, 265, 268, 586],
@@ -162,6 +172,56 @@ CAMP_FILL = {
          [21],
          "«Перехват» (Q_IV_perehvat): a fourth m05_BanditShooter_lvl3 beside the three the "
          "file has, over the box m_WF_Q8_Box (50)."),
+    # Абри, the owner's order of 2026-10-12: «В Абри добавь мобов в лагеря и в
+    # окрестности».
+    88: ("st", (8, 10),
+         [315, 316, 317, 318, 319, 320, 321, 323, 324, 590],
+         "Лагерь Работорговцев (Bandit_Camp5), «Для игроков 8-10 уровней» (tooltip 5880,1844): "
+         "the slave traders st_ of levels 8-10 round their boss Папаша Абу (327), and their "
+         "treasurer st_Kaznachei (590, «[10] Казначей<Br>Работорговцы», 8890), who stands all "
+         "day (server/bosses.py ALL_DAY). Санденс Кид (1563) is put down by hand "
+         "(data/placements.json), so that no ambush draws on him."),
+    89: ("st", (8, 10),
+         [316, 317, 318, 321, 323, 324, 325, 326, 325],
+         "Надзиратель Лаки's meeting place (MW_bandits5_boss) beside the camp 88: the slave "
+         "traders round their chief and the four the file has (315, 319, 320, 322), the kinds "
+         "88 leaves out (325, 326) among them, the Мучитель twice."),
+    92: ("zd", (10, 12),
+         [348, 349, 350, 351, 352, 353, 355, 356, 357, 591],
+         "Лагерь Живодеров (Bandit_Camp6), «Для игроков 10-12 уровней» (tooltip 5868,1854): the "
+         "flayers zd_ of levels 10-12 round their boss Элфрид (360), and their treasurer "
+         "zd_Kaznachei (591, «[12] Казначей<Br>Живодеры Элфрида», 8907), who stands all day. "
+         "Бутч Кэссиди (1564) is put down by hand (data/placements.json)."),
+    90: ("zd", (10, 12),
+         [352, 353, 354, 355, 356, 357, 358, 359, 354, 358],
+         "Бетти's meeting place (MW_bandits6_boss) beside the camp 92: the flayers of levels "
+         "11-12 round their chief, the kinds 92 leaves out (354, 358, 359) among them, 354 and "
+         "358 twice."),
+    191: (None, (9, 11),
+          [1175, 1176, 5631, 1175, 1176, 5631, 1175, 1176, 5631],
+          "«Хиппи в пустыне» (Q_Abri_Hippi, tooltip 5860,1838): the file has three hippies, "
+          "«Дети цветов» (9048, 9050), and nine empty slots; the same three kinds three times "
+          "more, at 9-11 (data/build_mob_types.py DESIGNED_LEVELS). They brew the ФРОК "
+          "«Заполучить амазонку (Часть 3)» sends the player for («у них и раздобудь, заодно "
+          "порядок наведи», texts.xml 46975)."),
+    261: (None, (6, 9),
+          [1674, 1674, 1675, 1675, 1676, 1676, 1677, 1677],
+          "«Абри: Поля» (Q_Abri_Farm, the map's «Хижина Говарда Хаксли», 5862,1836): the corn "
+          "field of Хаксли, where the wiki's «Поля Абри» names the hyenas -- Молодая, Больная, "
+          "Голодная, Сытая (m510_Hyena_lvl6..9, 9522-9525), two of each in the file's eight "
+          "empty slots. Below the town's band, as the original had them: the corn's pests."),
+    262: (None, (7, 8),
+          [1675, 1675, 1675, 1675, 1676, 1676, 1676, 1676],
+          "The Тотем (Q_Abri_Totem, 5864,1838): Багира's quests at the totem want the skulls of "
+          "Больная Гиена (1675, «Жертва Духам», 47020-47023) and ten Голодная Гиена killed (1676, "
+          "«Охота: Голодные Гиены», 47024-47027); four of each in the file's eight empty slots."),
+    289: (None, (8, 12),
+          [2405, 2405, 2405, 2405, 2405, 2405, 2405, 2405, 2405, 2406, 2406, 2406, 2406],
+          "«Свалка Автомобилей» (Svalka_OldCars_01, 5863,1835): the dump's own creatures are "
+          "lost with the server; rats, the dump's vermin (mRat_8, mRat_12, «[N] Крыса<Br>Дикое "
+          "животное», 9498), at the town's band, nine of level 8 and four of 12 in the file's "
+          "thirteen empty slots. The junk piles of the dump's searches stand by hand "
+          "(data/placements.json)."),
 }
 
 
@@ -179,7 +239,9 @@ def camp_fill(mt, types):
         for t in picked:
             rec = types.get(t)
             assert t in mt and mt[t][0] == 0 and rec, "camp fill: %d in %d is no fighter" % (t, loc_id)
-            assert rec["role"] in ("mob", "boss"), "camp fill: %d in %d is a %s" % (t, loc_id, rec["role"])
+            # A beast only where no faction holds the place (see CAMP_FILL).
+            roles = ("mob", "boss") if faction else ("mob", "boss", "animal")
+            assert rec["role"] in roles, "camp fill: %d in %d is a %s" % (t, loc_id, rec["role"])
             assert faction is None or prefix_of(rec["name"]) == faction, \
                 "camp fill: %d (%s) in %d is not %s" % (t, rec["name"], loc_id, faction)
             assert lo <= rec["level"] <= hi, "camp fill: %d (%s, level %d) in %d is outside %d-%d" % (
@@ -187,7 +249,7 @@ def camp_fill(mt, types):
         fill[str(loc_id)] = dict(fn=loc.fn, faction=faction, band=[lo, hi], types=picked, why=why)
     return {
         "_": "DESIGNED, not recovered: who stands in the empty (type 0) spawn slots of "
-             "Вади-Хальфа's camps and quest places, one type per slot in the file's order. "
+             "Вади-Хальфа's and Абри's camps and quest places, one type per slot in the file's order. "
              "Applied by server/rooms.py in war=1 locations, to these files only; every other "
              "file's empty slot stays empty. Built by data/build_spawn_substitutes.py "
              "(CAMP_FILL), which says why for each.",
@@ -200,10 +262,11 @@ def main():
     with io.open(os.path.join(HERE, "mob_types.json"), encoding="utf-8") as fh:
         types = {int(k): v for k, v in json.load(fh)["types"].items()}
 
-    # Faction pools: known hostile creatures of role "mob" by prefix.
+    # Faction pools: known hostile creatures of role "mob" by prefix, the
+    # named ones (NAMED) left out.
     pools = collections.defaultdict(list)
     for tid, rec in types.items():
-        if rec["root"] != 0 or rec["role"] != "mob":
+        if rec["root"] != 0 or rec["role"] != "mob" or tid in NAMED:
             continue
         p = prefix_of(rec["name"])
         if p and p not in EVENT_PREFIXES:

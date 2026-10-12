@@ -52,13 +52,13 @@
   "raid": 4,
   "rb": 3,
   "set": 6,
-  "st": 13,
+  "st": 12,
   "touareg": 14,
   "ufo": 5,
   "ves": 4,
   "wh": 11,
   "xenos": 20,
-  "zd": 13
+  "zd": 12
  },
  "substitutes": {
   "2212": {

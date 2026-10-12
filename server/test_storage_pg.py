@@ -1201,4 +1201,51 @@ ok(up.character(keeper)["loc"] == 522 and accounts.ran(up.db, accounts.HALFA_FSC
    "второе открытие ничего не повторяет")
 up.close()
 
+# --- чистка Абри: ремесленники, Авиабаза ЦСЦ, улучшение сетов, Liberty ----------
+# run_once от 2026-10-12 (accounts.relocate_abri_cut; README «Абри»): кто стоит
+# в кварталах ремесленников 453/454/458/459, на Авиабазе ЦСЦ 427, в квартале
+# 450 или в файлах кланбазы Liberty (328, 327 и прочие) или прописан там -- на
+# Портовый рынок Абри 187 (5860,1835); журналы не трогаются (ни один квест туда
+# не ведёт). Здесь -- что те же IN и UPDATE идут в Postgres и второе открытие
+# ничего не повторяет. Полный набор на SQLite -- server/test_abri_cut.py.
+store = fresh_store()
+aid, _ = store.register("абри", "пароль")
+who = {}
+for name, loc, home in (("в427", 427, 41), ("в453", 453, 41), ("в936", 936, 41),
+                        ("прописан в328", 187, 328), ("в528", 528, 41), ("в187", 187, 187)):
+    c, _ = store.create_character(aid, name, 0, 1)
+    store.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5866, gy = 1836, on_map = 0,"
+                     " home_loc = ?, home_gx = 5866, home_gy = 1836 WHERE id = ?", (loc, home, c))
+    who[name] = c
+store.db.commit()
+keeper = who["в427"]
+for t in (119, 11500):
+    store.take_quest(keeper, t, {}, True)
+store.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.ABRI_CUT_FIX,))
+store.db.commit()
+store.close()
+
+up = accounts.Store()
+rows = {n: up.character(c) for n, c in who.items()}
+ok({n: (r["loc"], r["gx"], r["gy"], r["on_map"], r["pos"]) for n, r in rows.items()}
+   == {"в427": (187, 5860, 1835, 0, None), "в453": (187, 5860, 1835, 0, None),
+       "в936": (187, 5860, 1835, 0, None), "прописан в328": (187, 5866, 1836, 0, 77),
+       "в528": (528, 5866, 1836, 0, 77), "в187": (187, 5866, 1836, 0, 77)},
+   "из 427/453/936 -- на Портовый рынок Абри, 528 (чистка 10-10, давно прошла) и 187 не тронуты: %s"
+   % {n: (r["loc"], r["pos"]) for n, r in rows.items()})
+ok((rows["прописан в328"]["home_loc"], rows["прописан в328"]["home_gx"],
+    rows["прописан в328"]["home_gy"]) == (187, 5860, 1835), "прописка в 328 -- теперь Портовый рынок Абри")
+ok(sorted(r["type"] for r in up.quests(keeper)) == [119, 11500],
+   "журнал не тронут: %s" % sorted(r["type"] for r in up.quests(keeper)))
+ok(accounts.relocate_abri_cut(up.db) == dict(moved=0, homes=0),
+   "повторный проход ничего не находит")
+up.db.commit()
+up.db.execute("UPDATE characters SET loc = 427 WHERE id = ?", (keeper,))
+up.db.commit()
+up.close()
+up = accounts.Store()
+ok(up.character(keeper)["loc"] == 427 and accounts.ran(up.db, accounts.ABRI_CUT_FIX),
+   "второе открытие ничего не повторяет")
+up.close()
+
 print("storage(pg): %d проверок, все зелёные" % checks)

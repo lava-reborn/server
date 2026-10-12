@@ -10,8 +10,9 @@ stands in them, and the things there that are made to be broken.
     the tooltips give (data/camp_fill.json): 80/81/84/85 stand nine
     fighters and more each, the chiefs' places 82/83/86/87 their chief and
     the fill, «Механик ДСР» (122) its ДСР of levels 7-8; and nothing
-    changes where the table says nothing -- the valley's camp 34, the slave
-    traders' camp 88;
+    changes where the table says nothing -- the valley's camp 34 (Абри's camps
+    88/92, filled since the owner's Абри of 2026-10-12, are
+    server/test_abri_world.py's);
   * the objects of STANDING_OBJECTS stand where they are listed and nowhere
     else: the «ящик спирта» of 64 takes a shot, dies, counts as a kill, is
     gone and comes back whole; the Tir's targets and the quarry's stones
@@ -79,8 +80,10 @@ check("the four camps keep their first cell, and only it, now that the second is
       ({c: world.location_at(*c) for c in CAMPS},
        sorted(c for c, i in world.settlements().items() if i in CAMPS.values())),
       (CAMPS, sorted(CAMPS)))
-check("283 (Apoc_Oasis) is off the hermit's oasis and on no other cell",
-      [c for c, i in world.settlements().items() if i == 283], [])
+# 283 stands on its own label by Абри, «Оазис<br>Можно встретить Карло Меони»
+# (5867,1844), since the owner's Абри of 2026-10-12 (server/test_abri_world.py).
+check("283 (Apoc_Oasis) is off the hermit's oasis and on no cell but Абри's",
+      [c for c, i in world.settlements().items() if i == 283], [(5867, 1844)])
 
 
 def walk_from(start):
@@ -165,17 +168,17 @@ check("every type the table fills a slot with is one the client can draw and nam
 # Where the table says nothing, nothing changed.
 check("the valley's camp 34 stands what its file says, as before",
       stood(room(34)), collections.Counter({251: 4, 2103: 1, 20: 1, 21: 2}))
-check("the slave traders' camp 88 (another city's Bandit_Camp): its chief alone, the"
-      " empty slots and the ammunition boxes left out as before",
-      (stood(room(88)), world.camp_fill(88)), (collections.Counter({327: 1}), ()))
+check("the slave traders' camp 88 is Абри's to fill, since the owner's Абри of 2026-10-12"
+      " (server/test_abri_world.py): its chief stands, and the table fills its slots",
+      (stood(room(88))[327], len(world.camp_fill(88))), (1, 10))
 check("an Up_Camp copy of the colonists' camp keeps its ammunition box out",
       stood(room(1057))[409], 0)
 # Each place the table lets an object stand, by where it is: a map cell of
 # Вади-Хальфа outside the valley, or an interior of the town's own -- the
 # range TIR_01..06 or the quarry's pits -- which have no cell of their own.
 HALFA_INSIDE = re.compile(r"^(TIR_0[1-6]|WH_Stone_Mine_)")
-check("no object stands by the table in the Nubian valley, nor anywhere but Вади-Хальфа's"
-      " cells and its range and quarry",
+check("no object stands by the table in the Nubian valley, nor anywhere but the towns' cells"
+      " (Вади-Хальфа's, Абри's) and Вади-Хальфа's range and quarry",
       sorted(i for i in world.STANDING_OBJECTS
              if (world.in_noob_valley(*world.cell_of(i)) if world.cell_of(i)
                  else not HALFA_INSIDE.match(world.location(i).fn))), [])
@@ -462,14 +465,19 @@ def goods_from(type_id):
     return "%s/%s" % (row.get("city"), row.get("confidence"))
 
 
-kept_traders = sorted({n.type_id for i in world.SEASON_KEPT for n in room(i).npcs.values()
+# The town each place of the season list is: Абри's port market since the
+# owner's Абри of 2026-10-12 (its lottery sellers 1171, 1172), Вади-Хальфа's
+# the rest.
+TOWN_OF = {187: "Абри"}
+kept_traders = sorted({(n.type_id, TOWN_OF.get(i, "Вади-Хальфа"))
+                       for i in world.SEASON_KEPT for n in room(i).npcs.values()
                        if n.type_id in world.SEASON_KEPT[i] and n.root == world.TRADER})
 check("every trader the season list brings back sells the owner's list or the wiki's stall"
-      " of this town -- no low-confidence stall of another city's trader (Ольсен's was"
+      " of his own town -- no low-confidence stall of another city's trader (Ольсен's was"
       " Донгола's «Генрих»: Анестетик and Салюс МК V-VII)",
-      [(t, goods_from(t)) for t in kept_traders
+      [(t, goods_from(t)) for t, town in kept_traders
        if not (goods_from(t) in (None, "npcs.json")
-               or goods_from(t).startswith("Вади-Хальфа/") and not goods_from(t).endswith("/low"))],
+               or goods_from(t).startswith(town + "/") and not goods_from(t).endswith("/low"))],
       [])
 black = stood(room(102))
 check("the gold lottery stands in the black market (102), Савин's presents and the"

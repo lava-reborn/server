@@ -172,11 +172,13 @@ PLACE_PRICE = 500
 
 REGISTRARS = world.TROPHY_REGISTRARS
 # The registrars that keep their stall and their repairs beside the
-# registration: Хассир (105) on the station of Вади-Хальфы, a trader first.
-# The others sell and mend nothing (server.py send_npc_info).
-KEEPS_STALL = frozenset({105})
+# registration: Хассир (105) on the station of Вади-Хальфы and Луиджи (1179)
+# in Абри's Портовый рынок, traders first. The others sell and mend nothing
+# (server.py send_npc_info).
+KEEPS_STALL = frozenset({105, 1179})
 WHERE = ("у Демира в Караване (Нубийская долина), у Мясников в Вади-Хальфе "
-         "(Сумасшедшие живодеры) и у Хассира на вокзале Вади-Хальфы")
+         "(Сумасшедшие живодеры), у Хассира на вокзале Вади-Хальфы и у Луиджи "
+         "на Портовом рынке Абри")
 
 
 def is_registrar(type_id):

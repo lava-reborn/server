@@ -745,6 +745,7 @@ def migrate(db):
     run_once(db, RETIRED_PLACES_FIX, relocate_retired_places)
     run_once(db, HALFA_CUT_FIX, relocate_halfa_cut)
     run_once(db, HALFA_FSC_FIX, relocate_halfa_fsc)
+    run_once(db, ABRI_CUT_FIX, relocate_abri_cut)
     # Only with the client's tables to tell a premium thing by: a process
     # without them (a tool run outside the container) leaves the fix for
     # the next start that has them, rather than writing it down as done
@@ -975,6 +976,47 @@ def relocate_halfa_fsc(db):
     # A warning for the reason relocate_retired_places' is one.
     log.warning("  ..    %s: %d character(s) moved out of %s to %d %s, %d home(s) moved",
                 HALFA_FSC_FIX, len(inside), "/".join(map(str, HALFA_FSC_PLACES)), loc,
+                inside, len(homes))
+    return dict(moved=len(inside), homes=len(homes))
+
+
+# The owner's cut of Абри (2026-10-12, «Убери локации: все ремесленники по
+# одежде; Авиабаза ЦСЦ; улучшение сетов 10-12; ...; убери кланбазу
+# Либерти»): the clothing craftsmen's quarters 453, 454, 458, 459, the ЦСЦ's
+# air base 427 and the quarter 450 behind «Улучшение сетов 10-12», and every
+# file of the clan base Liberty (328 and 327 on their cells, the rest never
+# on one) are off the map (data/retired.json places). A character saved in
+# one, or calling one home, goes to Абри's own door, the Портовый рынок 187
+# (5860,1835), where the ride from Вади-Хальфа lands, rather than across the
+# desert to Причал. No journal step: no quest gives, takes, asks for or
+# points into these places -- the clothing craftsmen of Абри never had
+# rows (server/setcraft.py has no slice for the town), the air base's people
+# and the clan base's give none (server/test_abri_cut.py holds that).
+ABRI_CUT_FIX = "retire-abri-cut-2026-10-12"
+ABRI_CUT_PLACES = (453, 454, 458, 459, 427, 450,
+                   328, 327, 326, 329, 936, 937, 939, 940, 1190, 148, 610)
+ABRI_CUT_TO = (187, 5860, 1835)
+
+
+def relocate_abri_cut(db):
+    """Whoever is in a place of Абри's cut, or calls one home, to Абри's port
+    market (as relocate_retired_places sends them to Причал); returns the
+    counts it logs."""
+    loc, gx, gy = ABRI_CUT_TO
+    marks = ", ".join("?" * len(ABRI_CUT_PLACES))
+    inside = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE loc IN (%s) ORDER BY id" % marks,
+        ABRI_CUT_PLACES).fetchall()]
+    homes = [r["id"] for r in db.execute(
+        "SELECT id FROM characters WHERE home_loc IN (%s) ORDER BY id" % marks,
+        ABRI_CUT_PLACES).fetchall()]
+    db.execute("UPDATE characters SET loc = ?, pos = NULL, gx = ?, gy = ?, on_map = 0"
+               " WHERE loc IN (%s)" % marks, (loc, gx, gy) + ABRI_CUT_PLACES)
+    db.execute("UPDATE characters SET home_loc = ?, home_gx = ?, home_gy = ?"
+               " WHERE home_loc IN (%s)" % marks, (loc, gx, gy) + ABRI_CUT_PLACES)
+    # A warning for the reason relocate_retired_places' is one.
+    log.warning("  ..    %s: %d character(s) moved out of %s to %d %s, %d home(s) moved",
+                ABRI_CUT_FIX, len(inside), "/".join(map(str, ABRI_CUT_PLACES)), loc,
                 inside, len(homes))
     return dict(moved=len(inside), homes=len(homes))
 

@@ -536,10 +536,12 @@ try:
           [table.get(c) for c in ((5969, 1727), (5969, 1728), (5970, 1728), (5971, 1727),
                                   (5943, 1723), (5943, 1722))],
           [36, 95, 59, 100, 429, 433])
-    check("  ..and so do the other towns' airfields and bases НИЛ-2..4, and Абри's air base 427",
-          [world.cell_of(i) for i in OTHER_AIRFIELDS + (523, 524, 525, 427)],
+    # Абри's air base 427 stood on 5866,1836 until the cut of Абри
+    # (2026-10-12, server/test_abri_cut.py); Абри's airfield 529 stays.
+    check("  ..and so do the other towns' airfields and bases НИЛ-2..4",
+          [world.cell_of(i) for i in OTHER_AIRFIELDS + (523, 524, 525)],
           [(6185, 1977), (5865, 1835), (5879, 2011), (5863, 1946), (5849, 1851), (5863, 2002),
-           (6167, 1989), (5866, 1836)])
+           (6167, 1989)])
 
     # no way in, and none out through them
     fsc_files = sorted(int(os.path.basename(p)[:-4])
