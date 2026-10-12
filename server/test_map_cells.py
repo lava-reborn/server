@@ -912,6 +912,46 @@ try:
                    for w, (b, a) in steps.items()},
                   {z.was: (True, True) for z in plan.zones})
 
+            def rim_line(canvas, z, a0, a1, untint):
+                """How much lighter than the ground the rim's line is over the arc
+                a0..a1 (degrees, clockwise from east): the middle of the luma of
+                the pixels from 1.5 inside the rim to 0.5 outside, on the zone's
+                tiles, less that of the ground 3-5 pixels either side (the tiles
+                round the zone's too); untint takes the tint off first, as
+                clear_zones does, to see the line as the circle has it."""
+                cx, cy = z.centre
+                band, ground = [], []
+                for Y in range(int(cy - z.radius - 6), int(cy + z.radius + 7)):
+                    for X in range(int(cx - z.radius - 6), int(cx + z.radius + 7)):
+                        if (X, Y) in marks[z.was] or not a0 <= math.degrees(
+                                math.atan2(Y + 0.5 - cy, X + 0.5 - cx)) % 360 < a1:
+                            continue
+                        r_ = math.hypot(X + 0.5 - cx, Y + 0.5 - cy)
+                        on = M.tile_of(X, Y) in z.tiles
+                        v = canvas.original(X, Y)
+                        if v is None:
+                            continue
+                        if untint and on:
+                            a = M.zone_alpha(plan.tint, z, r_)
+                            v = [(v[i] - a * plan.tint.ycc[i]) / (1 - a) for i in range(3)]
+                        if -1.5 <= r_ - z.radius < 0.5 and on:
+                            band.append(v[0])
+                        elif 3 <= abs(r_ - z.radius) <= 5:
+                            ground.append(v[0])
+                return round(sorted(band)[len(band) // 2] - sorted(ground)[len(ground) // 2], 1)
+            # where the circles are lit from: Вади-Хальфа's and Донгола's west
+            # rims, Донгола's north-east, Абу-Хамед's north-west (the owner's
+            # Донгола, 2026-10-12: a pale green arc was left there)
+            lit = {"429 Вади-Хальфа": [(178, 196)], "431 Донгола": [(178, 206), (316, 328)],
+                   "432 Абу-Хамед": [(238, 252)]}
+            lines = {w: [(rim_line(real["before"], z, a0, a1, True), rim_line(real["after"], z, a0, a1, False))
+                         for a0, a1 in lit[w]] for z in plan.zones for w in [z.was] if w in lit}
+            check("the light line on the rims is gone where the circles are lit from: lighter than the ground"
+                  " by, before (the tint off) -> after: %s"
+                  % "; ".join("%s %s" % (w, ", ".join("%+.1f -> %+.1f" % ba for ba in v)) for w, v in lines.items()),
+                  {w: [(b >= 7, abs(a) <= 4) for b, a in v] for w, v in lines.items()},
+                  {w: [(True, True)] * len(v) for w, v in lit.items()})
+
             def navy(canvas, pixels):
                 return sum(1 for p_ in pixels if (lambda c: c[2] > c[0] + 20)(M.rgb(canvas.original(*p_))))
             gone = {z.was: (navy(real["before"], marks[z.was] - kept_over[z.was]),

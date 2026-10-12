@@ -996,17 +996,29 @@ def zone_alpha(tint, zone, r):
 # taken off where it is. Across the rim, out to RIM_FIX either way in steps
 # of RIM_BIN, each RIM_ARC of the rim is measured (the middle of the pixels of
 # RIM_SPAN arcs each way) against the ground RIM_REF pixels inside and
-# outside the rim, and what it differs by is read as one line: a peak
-# RIM_WIDTH pixels to either side of its middle, the middle and the peak's
-# height in each of Y, Cb, Cr those that fit best. A line darker or lighter
-# than RIM_MOST (Y, Cb, Cr) is the photograph's (a rock, a shore) and stays.
+# outside the rim: what it differs by there is the line's profile across the
+# rim. Whether that is a line is read from a peak fitted to it (RIM_WIDTH
+# pixels to either side of its middle, the middle and the peak's height in
+# each of Y, Cb, Cr those that fit best): a line within RIM_MOST (Y, Cb, Cr)
+# is the circle's. On the side it is lit from (the left and the top) the line
+# is a light one, up to 40 levels of luma above the ground and greener (Cr
+# down by up to 15): one within RIM_LIGHT is the circle's too where the
+# ground on either side of the rim is alike, within RIM_ALIKE (the owner's
+# Донгола, 2026-10-12: a pale green arc was left on its west rim). Any other
+# line is the photograph's (a rock's edge, a shore) and stays. The circle's
+# line is taken off as measured, its profile itself (held to the bounds of
+# its kind), the line being wider and flatter than the peak that tells it;
+# over the last RIM_TAPER pixels to RIM_FIX less and less of it.
 RIM_FIX = 2.5
+RIM_TAPER = 0.75
 RIM_REF = (3.0, 6.0)
 RIM_BIN = 0.5
 RIM_ARC = 3.0
 RIM_SPAN = 5
 RIM_WIDTH = 1.25
 RIM_MOST = ((-40, 8), (-16, 6), (-12, 14))
+RIM_LIGHT = ((8, 45), (-16, 6), (-18, 4))
+RIM_ALIKE = (24, 6, 8)
 
 
 def _median(values, i):
@@ -1020,10 +1032,26 @@ def _peak(d, middle):
     return w if w > 0 else 0.0
 
 
+def _profile_at(profile, d):
+    """A profile [(d, [Y, Cb, Cr])], in order of d, at d: straight between
+    its points, as at its end past it."""
+    if d <= profile[0][0]:
+        return profile[0][1]
+    for (d0, e0), (d1, e1) in zip(profile, profile[1:]):
+        if d <= d1:
+            t = (d - d0) / (d1 - d0)
+            return [a + t * (b - a) for a, b in zip(e0, e1)]
+    return profile[-1][1]
+
+
 def rim_fix(canvas, zone, inside, skip):
-    """{pixel: value}: the pixels within RIM_FIX of the zone's rim with the
-    line on it taken off, measured on the canvas as it is (the tint off);
-    pixels of skip neither count nor change."""
+    """{pixel: value}: the pixels within RIM_FIX of the zone's rim, on the
+    zone's tiles (inside), with the line on it taken off, measured on the
+    canvas as it is (the tint off); pixels of skip neither count nor change.
+    The ground RIM_REF away from the rim is measured on the tiles round the
+    zone's too: where a circle comes within a few pixels of its tile's edge
+    (Вади-Хальфа's west and north, Абри's east) the ground outside it lies on
+    the next tile, unpainted, and the line along there is measured by it."""
     cx, cy = zone.centre
     R = zone.radius
     far = RIM_REF[1]
@@ -1033,17 +1061,23 @@ def rim_fix(canvas, zone, inside, skip):
     pix = []
     for Y in range(int(math.floor(cy - R - far)), int(math.ceil(cy + R + far)) + 1):
         for X in range(int(math.floor(cx - R - far)), int(math.ceil(cx + R + far)) + 1):
-            if tile_of(X, Y) not in inside or (X, Y) in skip:
+            if (X, Y) in skip:
                 continue
             dx, dy = X + 0.5 - cx, Y + 0.5 - cy
             d = math.hypot(dx, dy) - R
             if not -far <= d < far:
                 continue
+            on = tile_of(X, Y) in inside
+            if not on and abs(d) <= RIM_REF[0]:
+                # the line was painted on the zone's tiles alone
+                continue
+            v = canvas.original(X, Y)
+            if v is None:
+                continue
             ab = int((math.atan2(dy, dx) + math.pi) / (2 * math.pi) * nb) % nb
             db = min(nd - 1, int((d + far) / RIM_BIN))
-            v = canvas.original(X, Y)
             bins.setdefault((ab, db), []).append(v)
-            if abs(d) < RIM_FIX:
+            if on and abs(d) < RIM_FIX:
                 pix.append((X, Y, ab, d, v))
     centre = [db * RIM_BIN - far + RIM_BIN / 2 for db in range(nd)]
     inner = [db for db in range(nd) if centre[db] < -RIM_REF[0]]
@@ -1082,15 +1116,24 @@ def rim_fix(canvas, zone, inside, skip):
             err = sum((e[i] - height[i] * x) ** 2 for x, (_d, e) in zip(w, diffs) for i in range(3))
             if fit is None or err < fit[0]:
                 fit = (err, middle, height)
-        if fit and all(lo <= h <= hi for h, (lo, hi) in zip(fit[2], RIM_MOST)):
-            est[ab] = (fit[1], fit[2])
+        if fit is None:
+            continue
+        if all(lo <= h <= hi for h, (lo, hi) in zip(fit[2], RIM_MOST)):
+            kind = RIM_MOST
+        elif (all(lo <= h <= hi for h, (lo, hi) in zip(fit[2], RIM_LIGHT))
+              and all(abs(ri[i] - ro[i]) <= RIM_ALIKE[i] for i in range(3))):
+            kind = RIM_LIGHT
+        else:
+            continue
+        est[ab] = [(d, [min(max(e[i], min(lo, 0)), max(hi, 0)) for i, (lo, hi) in enumerate(kind)])
+                   for d, e in diffs]
     out_ = {}
     for X, Y, ab, d, v in pix:
-        e = est.get(ab)
-        if e is not None:
-            w = _peak(d, e[0])
-            if w:
-                out_[(X, Y)] = [v[i] - e[1][i] * w for i in range(3)]
+        profile = est.get(ab)
+        if profile is not None:
+            w = min(1.0, (RIM_FIX - abs(d)) / RIM_TAPER)
+            e = _profile_at(profile, d)
+            out_[(X, Y)] = [v[i] - e[i] * w for i in range(3)]
     return out_
 
 
