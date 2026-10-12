@@ -356,14 +356,20 @@ try:
         # An installed client's file is the release's, with the names hidden.
         print("  -- %s is not the original's (%d «Лагерь за рекой»): the map's names are held on the"
               " edits alone" % (os.path.join(world.RES, "database", "locations.xml"), len(original)))
-    retexts = {(e["x"], e["y"], e["was"]): e["text"] for e in LABELS if "text" in e}
+    retexts = {(e["x"], e["y"], e["was"]): e["text"] for e in LABELS if "text" in e and not e.get("add")}
     hidden = {(e["x"], e["y"], e["was"]) for e in LABELS if e.get("hide")}
+    # the names of places of ours (data/locations), added by the location
+    # editor over their own cells, are the owner's
+    ours_ids = {i for i in world.overlay_ids() if i >= world.FIRST_NEW_ID}
+    added = {(e["x"], e["y"], e["text"]) for e in LABELS if e.get("add")
+             and world.settlements().get((e["x"], e["y"])) in ours_ids}
     for camp, (x, y) in ((429, (5943, 1723)), (431, (5864, 2002)), (432, (6168, 1989)), (430, (5850, 1851))):
         box = (x - 8, x + 8, y - 8, y + 8)
         want = [(rx, ry, retexts.get((rx, ry, t), t)) for rx, ry, t in rows_in(raw, box)
                 if (rx, ry, t) not in hidden]
         check("  ..around the camp %d (%s) every other name is the file's own, row for row, or its"
-              " retext of the owner's" % (camp, TOWNS[camp]), rows_in(out, box), want)
+              " retext of the owner's (the places of ours aside)" % (camp, TOWNS[camp]),
+              [r for r in rows_in(out, box) if r not in added], want)
     pirates = [r for r in rows_in(out, (6160, 6161, 1973, 1975)) if r[2].startswith("Лагерь Пиратов")]
     check("the pirates' two names by Абу-Хамед stay", sorted((x, y) for x, y, _t in pirates), sorted(PIRATES))
     # The town's end of the boats: Донгола's pier 445 named the front its two

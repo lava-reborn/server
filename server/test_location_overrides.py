@@ -16,7 +16,8 @@ data/locations/static/<id>.xml -- and both sides take it from there:
     id client/files also has (262 «Тотем» is the client's alone);
   * data/build_exits_sides.py rewrites the rows of ours alone (rows_for),
     and travel's own reading of the file agrees with them;
-  * bootstrap_http serves them, and the list with their rows, on a local run.
+  * bootstrap_http serves them, the list with their rows and the owner's
+    objects' sprite files (client/objects), on a local run.
 
 All of it on a made overlay (LAVA_LOC_OVERLAY, world.OVERLAY), so that the
 repository's own data/locations is left as it is; its files are held to the
@@ -297,6 +298,15 @@ try:
     check("  ..an id nobody has is not found", get("/res/locations/static/%d.xml" % (NEW + 977))[0], 404)
     check("the list it serves has their rows", get("/res/xml/loc_defs.xml"),
           (200, world.loc_defs(real or toy, {NEW: PLACE, 102: CHANGED})))
+    # the owner's objects: their sprite files, as the release builds them
+    import custom_objects  # noqa: E402
+    objs, _report = custom_objects.build(os.path.join(ROOT, "client", "objects"))
+    if objs:
+        p, data = sorted(objs.items())[0]
+        check("  ..and the owner's objects' sprite files, as the release builds them (%s)" % p,
+              (get("/res/" + p), get("/res/" + p.replace("/c_", "/c_nobody_"))[0]), ((200, data), 404))
+    else:
+        print("  -- no objects in client/objects: their sprite files are not checked here")
 except Exception:
     import traceback
     fails.append("crashed:\n" + traceback.format_exc())

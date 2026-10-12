@@ -254,8 +254,15 @@ def main():
     assert (int(m.group(1)), int(m.group(2))) == (walkable, total), \
         "report: says %s of %s, the table has %d of %d" % (
             m.group(1), m.group(2), walkable, total)
+    # The report was written over the original's places; a place of ours
+    # (data/locations, put on the map in the location editor) comes after
+    # it and is not counted against it -- the editor's own checks hold its
+    # cell walkable and on the walk.
+    ours = {i for i in world.overlay_ids() if i >= world.FIRST_NEW_ID}
+    theirs = [c for c in settled if world.settlements()[c] not in ours]
     m = re.search(r"and (\d+) of the (\d+) settlements", report)
-    assert m and (int(m.group(1)), int(m.group(2))) == (len(reached), len(settled)), \
+    assert m and (int(m.group(1)), int(m.group(2))) == (
+        len([c for c in reached if c in set(theirs)]), len(theirs)), \
         "report: settlement count does not match the table"
     # The report no longer claims a seal; it records how far the walker
     # gets, which is the number worth watching.

@@ -68,8 +68,12 @@ of the composed scene differ by the cache's JPEG/WebP only (mean 1.7-2.6 of
 255, 99th percentile at most 19). tools/test_lavaloc.py pins the player's
 orders.
 
-An anchor on the extra row y == H (the client's grid has no such row) is not
-drawn unless extra_row=True.
+An anchor off the client's grid -- the extra row y == H, which 199 of the
+original's files use -- has no cell there (LocationGrid.getCellFromGrid is
+undefined), so the client sets no position and the picture lands at dx, dy
+from the location's top-left corner, in its place in the depth order (seen
+in the real Flash Player 32, 2026-10-12); render draws it so, or at the
+cell beyond the grid with extra_row=True.
 """
 import argparse
 import collections
@@ -159,18 +163,26 @@ def _env_dirs(name, default):
 Entry = collections.namedtuple("Entry", "path sha size origin")
 
 
-def read_release(repo=ROOT):
+def read_release(repo=ROOT, objects=None):
     """{path: Entry} of a release built from repo (client/build.py's layers
-    less what it generates), plus the owner's objects as origin "object"
-    (sha: of their frames' bytes)."""
+    less what it generates), plus the owner's objects (those of `objects`,
+    by default repo's client/objects) as origin "object" (sha: of their
+    frames' bytes). A list client/build.py refuses (it stops the build with
+    SystemExit) is a ValueError here, with the reason."""
     build = _client_build()
     cdir = os.path.join(repo, "client")
     out = {}
-    for p, (sha, size) in build.read_entries(os.path.join(cdir, "base.txt"), "lava-base 1").items():
+    try:
+        base = build.read_entries(os.path.join(cdir, "base.txt"), "lava-base 1")
+        removed = build.read_paths(os.path.join(cdir, "remove.txt"))
+        extra = build.read_entries(os.path.join(cdir, "extra.txt"), "lava-extra 1")
+    except SystemExit as exc:
+        raise ValueError("client/build.py: %s" % (exc.code if exc.code is not None else "refused"))
+    for p, (sha, size) in base.items():
         out[p] = Entry(p, sha, size, "base")
-    for p in build.read_paths(os.path.join(cdir, "remove.txt")):
+    for p in removed:
         out.pop(p, None)
-    for p, (sha, size) in build.read_entries(os.path.join(cdir, "extra.txt"), "lava-extra 1").items():
+    for p, (sha, size) in extra.items():
         out[p] = Entry(p, sha, size, "extra")
     fdir = os.path.join(cdir, "files")
     for d, _dirs, names in os.walk(fdir):
@@ -182,7 +194,7 @@ def read_release(repo=ROOT):
             with open(full, "rb") as fh:
                 data = fh.read()
             out[p] = Entry(p, hashlib.sha256(data).hexdigest(), len(data), "files")
-    for oid, obj in read_objects(repo).items():
+    for oid, obj in read_objects(repo, objects).items():
         p = object_path(oid, obj)
         if p in out:
             continue        # a SWF committed under client/files wins
@@ -194,7 +206,7 @@ def read_release(repo=ROOT):
         size = 0
         for fr in _frames(obj):
             try:
-                with open(object_file(repo, oid, fr), "rb") as fh:
+                with open(object_file(repo, oid, fr, objects), "rb") as fh:
                     data = fh.read()
             except OSError:
                 data = b""
@@ -209,15 +221,20 @@ def _custom_objects():
     return custom_objects
 
 
-def read_objects(repo=ROOT):
+def objects_dir(repo=ROOT, objects=None):
+    """The owner's objects folder: `objects`, else repo's client/objects."""
+    return objects or os.path.join(repo, "client", "objects")
+
+
+def read_objects(repo=ROOT, objects=None):
     """The owner's objects as client/objects/manifest.json has them
     (tools/custom_objects.py load_raw): {id: entry}, an entry's frames
-    being file names in client/objects/<id>/. Entries whose id is not an
-    object id are left out; {} without a manifest or when it does not
-    read (custom_objects.py check says why)."""
+    being file names in client/objects/<id>/ (or in the `objects` folder).
+    Entries whose id is not an object id are left out; {} without a
+    manifest or when it does not read (custom_objects.py check says why)."""
     co = _custom_objects()
     try:
-        raw = co.load_raw(os.path.join(repo, "client", "objects"))
+        raw = co.load_raw(objects_dir(repo, objects))
     except co.Refused:
         return {}
     return {oid: e for oid, e in raw.items() if co.ID.fullmatch(oid) and isinstance(e, dict)}
@@ -233,9 +250,9 @@ def object_path(oid, obj):
     return (BACKGROUNDS if obj.get("kind") == "background" else SPRITES) + oid + ".swf"
 
 
-def object_file(repo, oid, frame):
+def object_file(repo, oid, frame, objects=None):
     """A picture of an object: client/objects/<id>/<frame>."""
-    return os.path.join(repo, "client", "objects", oid, frame)
+    return os.path.join(objects_dir(repo, objects), oid, frame)
 
 
 def object_frames(obj):
@@ -421,7 +438,7 @@ def load_index(path=INDEX):
         return json.load(fh)
 
 
-def local_ext(repo=ROOT):
+def local_ext(repo=ROOT, objects=None):
     """Ext sprite and background ids a release of repo has beyond the
     original: client/files and the owner's objects. ({sprites}, {backgrounds})"""
     sprites, backgrounds = set(), set()
@@ -430,7 +447,7 @@ def local_ext(repo=ROOT):
         d = os.path.join(fdir, *sub.rstrip("/").split("/"))
         if os.path.isdir(d):
             bag.update(f[:-4] for f in os.listdir(d) if f.endswith(".swf"))
-    for oid, obj in read_objects(repo).items():
+    for oid, obj in read_objects(repo, objects).items():
         (backgrounds if obj.get("kind") == "background" else sprites).add(oid)
     return sprites, backgrounds
 
@@ -556,7 +573,7 @@ def extract_swf(data, sha, path):
     return files, man
 
 
-def extract_object(repo, oid, obj, sha, path):
+def extract_object(repo, oid, obj, sha, path, objects=None):
     """The owner's object: its first picture, the origin at its top-left
     (client/objects -> swfgen puts the picture at the SWF's (0, 0); checked
     in the real Flash Player 32 by tools/flash_headless)."""
@@ -566,7 +583,7 @@ def extract_object(repo, oid, obj, sha, path):
     man = {"v": CACHE_V, "sha": sha, "path": path, "bytes": 0, "frames": object_frames(obj),
            "stage": None, "symbols": {}, "errors": [], "object": oid}
     try:
-        img = Image.open(object_file(repo, oid, frames[0])).convert("RGBA")
+        img = Image.open(object_file(repo, oid, frames[0], objects)).convert("RGBA")
         man["stage"] = _picture(files, "stage", img, (0, 0))
     except Exception as e:
         man["errors"].append("picture: %s" % e)
@@ -605,8 +622,11 @@ def extract_mob(data, sha, path, frame):
 class Art:
     """Pictures of a release's location art, cached by SWF sha256."""
 
-    def __init__(self, repo=ROOT, res=None, store=None, cache=None):
+    def __init__(self, repo=ROOT, res=None, store=None, cache=None, objects=None):
         self.repo = repo
+        # the owner's objects: repo's client/objects, or the folder an
+        # editor works in (tools/location_editor.py --objects)
+        self.objects = objects_dir(repo, objects)
         self.res_dirs = list(res) if res is not None else _env_dirs("LAVA_ART_RES", DEFAULT_RES)
         self.store_dirs = list(store) if store is not None else _env_dirs("LAVA_ART_STORE", ())
         self.cache = cache or os.environ.get("LAVA_ART_CACHE") or \
@@ -623,7 +643,7 @@ class Art:
     @property
     def release(self):
         if self._release is None:
-            self._release = read_release(self.repo)
+            self._release = read_release(self.repo, self.objects)
             self._lower = {p.lower(): p for p in self._release}
         return self._release
 
@@ -711,7 +731,8 @@ class Art:
         if e.origin == "object":
             sub = BACKGROUNDS if e.path.startswith(BACKGROUNDS) else SPRITES
             oid = e.path[len(sub):-4]
-            files, man = extract_object(self.repo, oid, read_objects(self.repo).get(oid, {}), e.sha, e.path)
+            files, man = extract_object(self.repo, oid, read_objects(self.repo, self.objects).get(oid, {}),
+                                        e.sha, e.path, self.objects)
         else:
             data = self.read(e.path)
             if data is None:
@@ -790,7 +811,7 @@ class Art:
                     continue
                 out.append(dict(pic, name=name, type="lib", sha=man["sha"], path=lib_path(library)))
         if ext:
-            objs = read_objects(self.repo)
+            objs = read_objects(self.repo, self.objects)
             for p in sorted(self.release):
                 if not (p.startswith(SPRITES) and p.endswith(".swf")):
                     continue
@@ -1036,10 +1057,16 @@ def render(m, art=None, layers=ART_LAYERS, scale=1.0, order="reverse", extra_row
             continue
         sp = m["sprites"][o.sprite]
         ax, ay = o.point
-        if ay >= H and not extra_row:
+        if 0 <= ax < W and 0 <= ay < H:
+            px, py = L.cell_px(ax, ay)
+        else:
+            # No such cell in the client's grid (the extra row y == H):
+            # LocationGrid.getCellFromGrid gives undefined, placeObject's
+            # NaN position is ignored, and dx, dy are added to the clip's
+            # 0, 0 -- the picture lands at the location's top-left corner,
+            # in its place in the depth order.
             rep["sprites"]["extra_row"] += 1
-            continue
-        px, py = L.cell_px(ax, ay)
+            px, py = L.cell_px(ax, ay) if extra_row else (0, 0)
         x, y = px + L.num(sp.get("dx")), py + L.num(sp.get("dy"))
         if sp.get("type") == "ext":
             img, off = art.ext_picture(sp["id"])
@@ -1258,7 +1285,7 @@ def main(argv=None):
         import glob
         world = _world()
         refs = a.refs or sorted(glob.glob(os.path.join(world.RES, "locations", "*", "*.xml")))
-        ix, extra = load_index(), local_ext(art.repo)
+        ix, extra = load_index(), local_ext(art.repo, art.objects)
         n = 0
         for r in refs:
             path = art.location_path(r)

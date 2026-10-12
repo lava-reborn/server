@@ -387,6 +387,8 @@ try:
         for side, rec in sorted(doors.items()):
             if rec.get("source") == "designed":
                 continue            # no sign to follow: test_halfa_production holds those
+            if rec.get("source") == "editor":
+                continue            # a place of ours, the owner's: tools/test_location_editor.py holds those
             cells = [c for c, s in travel.exit_sides(loc).items() if s == side]
             near = sorted({name for name, cell in signs(loc)
                            if min(mobs.hex_distance(cell, c, loc.width) for c in cells) <= 10})

@@ -242,10 +242,15 @@ try:
                else "DESIGNED, the owner's (2026-10-11)")
            or any(r["why"] != "As the first row of %d (%d,%d)." % ((lid,) + world.unpack(lid))
                   for r in recs[1:])], [])
+    # The owner's places of ours (data/locations, the location editor) stand
+    # whom he puts there: their rows are the editor's and its checks', not
+    # hand rows of the original's places.
+    OURS = set(world.overlay_ids())
     check("the hand rows of 184, 31 and 102 are as they were, and Абри's of 187, 88, 92 and 289"
-          " and Донгола's of 103 are the only others",
+          " and Донгола's of 103 are the only others (the places of ours aside)",
           {lid: [(r["type"], r["cell"], bool(r.get("escort"))) for r in recs if "patrol" not in r]
-           for lid, recs in table.items() if any("patrol" not in r for r in recs)}, HAND)
+           for lid, recs in table.items() if any("patrol" not in r for r in recs)
+           and not (lid in OURS and lid >= world.FIRST_NEW_ID)}, HAND)
 except Exception:
     fails.append("the table broke:\n" + traceback.format_exc())
 

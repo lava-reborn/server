@@ -214,10 +214,22 @@ def make(src_id, title, why, data_dir=None, new_id=None, fn=None, author="owner"
             ptext = jsonrows.set_key(ptext, ["walk_in", str(from_id)], rows)
         if door:
             side, target = door
-            ptext = jsonrows.set_key(ptext, ["doors", str(new_id), side], {
-                "confidence": "high", "source": "editor", "target_loc_id": target,
-                "why": "DESIGNED (%s, %s): door %s of «%s» (%d), a location of ours copied from %d, "
-                       "leads to %d. %s" % (today, author, side, title, new_id, src_id, target, why)})
+            rec = {"confidence": "high", "source": "editor", "target_loc_id": target}
+            # A door into a place on the map arrives on that place's own
+            # cell (travel.plan_exit), not on the one the player had here.
+            spath = os.path.join(data_dir, "settlements.json")
+            if not os.path.isfile(spath):
+                spath = os.path.join(ROOT, "data", "settlements.json")
+            try:
+                with io.open(spath, encoding="utf-8") as fh:
+                    placed = set((json.load(fh).get("cells") or {}).values())
+            except (OSError, ValueError):
+                placed = set()
+            if target in placed:
+                rec["own_cell"] = True
+            rec["why"] = ("DESIGNED (%s, %s): door %s of «%s» (%d), a location of ours copied from %d, "
+                          "leads to %d. %s" % (today, author, side, title, new_id, src_id, target, why))
+            ptext = jsonrows.set_key(ptext, ["doors", str(new_id), side], rec)
         with io.open(ppath, "w", encoding="utf-8", newline="") as fh:
             fh.write(ptext)
         written["files"].append(ppath)

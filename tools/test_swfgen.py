@@ -374,6 +374,18 @@ try:
     check("jpeg: extended sequential is refused too", refused(swfgen.jpeg_size, make_jpeg(9, 9, sof=0xC1)) is not None, True)
     check("jpeg: CMYK is refused", "CMYK" in (refused(swfgen.jpeg_size, make_jpeg(9, 9, comps=4)) or ""), True)
     check("jpeg: a side over 2880 is refused", refused(swfgen.jpeg_size, make_jpeg(3000, 9)) is not None, True)
+
+    def exif_jpeg(orientation, order=b"II"):
+        e = "<" if order == b"II" else ">"
+        tiff = order + struct.pack(e + "HI", 42, 8) + struct.pack(e + "H", 1) + \
+            struct.pack(e + "HHIHH", 0x0112, 3, 1, orientation, 0) + struct.pack(e + "I", 0)
+        app1 = b"Exif\x00\x00" + tiff
+        base = make_jpeg(60, 100)
+        return base[:2] + b"\xff\xe1" + struct.pack(">H", 2 + len(app1)) + app1 + base[2:]
+    check("jpeg: one an EXIF Orientation turns (a phone's photo) is refused: a browser turns it, Flash never",
+          ["EXIF" in (refused(swfgen.jpeg_size, exif_jpeg(6)) or ""),
+           "EXIF" in (refused(swfgen.jpeg_size, exif_jpeg(8, b"MM")) or "")], [True, True])
+    check("  ..one whose Orientation is 1 is taken as it is", swfgen.jpeg_size(exif_jpeg(1)), (60, 100))
     check("jpeg: grey (one component) is fine", swfgen.jpeg_size(make_jpeg(5, 4, comps=1)), (5, 4))
 
     # --- one picture: the form of CL_BW.png.swf ----------------------------------------------------
@@ -612,6 +624,22 @@ try:
         check("build: pictures over the total a deploy may carry are refused", "extra.txt" in (refused(co.build, d) or ""), True)
     finally:
         co.MAX_PICTURE_BYTES, co.MAX_TOTAL_BYTES = keep
+    keep = co.MAX_OBJECT_PIXELS, co.MAX_TOTAL_PIXELS
+    try:
+        co.MAX_OBJECT_PIXELS = 12 * 20 * 2 - 1
+        check("build: an object whose PNG pictures hold more pixels than a build may decode is refused, by name",
+              (refused(co.build, d) or "").startswith("c_flag: 480 pixels of PNG pictures"), True)
+        co.MAX_OBJECT_PIXELS, co.MAX_TOTAL_PIXELS = keep[0], 12 * 20 * 2 - 1
+        check("build: all the objects' PNG pixels over the budget are refused too",
+              (refused(co.build, d) or "").startswith("client/objects: 480 pixels"), True)
+        co.MAX_TOTAL_PIXELS = 12 * 20 * 2
+        check("  ..a JPEG costs nothing there (its bytes go in as they are)", sorted(co.build(d)[0]), sorted(built))
+    finally:
+        co.MAX_OBJECT_PIXELS, co.MAX_TOTAL_PIXELS = keep
+    lazy = co.read_pictures(d, "c_flag", co.load(d)["c_flag"])
+    check("read_pictures reads headers only; the pixels come when the writer asks, as png_decode gives them",
+          ([(p.kind, p.w, p.h, p._png is not None) for p in lazy], lazy[1].rgba == swfgen.png_decode(flag[1])[2]),
+          ([("png", 12, 20, True), ("png", 12, 20, True)], True))
 
     # --- placing an object ----------------------------------------------------------------------------
     import world  # noqa: E402

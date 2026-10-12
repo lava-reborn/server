@@ -76,9 +76,23 @@ for f in sorted(glob.glob(os.path.join(world.RES, "locations", "*", "*.xml"))):
 check("lint: every original location's art resolves but for the original's own misses",
       dict(found), KNOWN)
 overlay = sorted(glob.glob(os.path.join(world.OVERLAY, "**", "*.xml"), recursive=True))
-check("lint: every location of data/locations (%d) draws all it names" % len(overlay),
-      [(os.path.relpath(f, ROOT), A.art_problems(L.load(f), ix, extra)) for f in overlay
-       if A.art_problems(L.load(f), ix, extra)], [])
+OV_INDEX = world.overlay_index()
+
+
+def new_misses(f):
+    """What a location of ours misses that the location it was copied from
+    (index.json 'from') does not: the copy keeps the original's own misses,
+    as the location editor does (a warning there, «так в оригинале»)."""
+    got = A.art_problems(L.load(f), ix, extra)
+    stem = os.path.basename(f)[:-4]
+    src = (OV_INDEX.get(int(stem)) or {}).get("from") if stem.isdigit() else None
+    path = world.static_path(int(src)) if src is not None else None
+    had = {(p["what"], p["id"], p["type"]) for p in A.art_problems(L.load(path), ix, extra)} if path else set()
+    return [p for p in got if (p["what"], p["id"], p["type"]) not in had]
+
+
+check("lint: every location of data/locations (%d) draws all it names, but for what its copy's original misses"
+      % len(overlay), [(os.path.relpath(f, ROOT), new_misses(f)) for f in overlay if new_misses(f)], [])
 model = {"attrs": {"library": "Mountains", "bgsound": "underground", "bg": "bg_desert2.jpg",
                    "bgExt": "lib"},
          "background": None,
@@ -342,10 +356,28 @@ else:
     full, rep = A.render(m1, real, ["sprites"])
     check("render_layers: one layer alone is that layer of render", np.array_equal(
         np.asarray(lay), np.asarray(full)), True)
-    check("render: anchors on the extra row y == H are left out unless asked",
-          (rep["sprites"]["extra_row"],
-           A.render(m1, real, ["sprites"], extra_row=True)[1]["sprites"]["extra_row"]),
-          (2, 0))
+    check("render: two anchors on the extra row y == H, drawn all the same",
+          (rep["sprites"]["extra_row"], rep["sprites"]["drawn"],
+           A.render(m1, real, ["sprites"], extra_row=True)[1]["sprites"]["drawn"]),
+          (2, sum(len(s["anchors"]) for s in m1["sprites"]), sum(len(s["anchors"]) for s in m1["sprites"])))
+    xs, xa = next((s, a) for s in m1["sprites"] for a in s["anchors"] if a[1] >= m1["height"]
+                  and s.get("type") != "ext")
+    one = copy.deepcopy(m1)
+    one["sprites"] = [dict(xs, anchors=[xa])]
+    pic, _o = real.lib_picture(m1["attrs"]["library"], xs["id"])
+    cx, cy = L.cell_px(*xa)
+
+    def clipped(x, y):
+        """The box the picture covers on the canvas with its top-left at x, y."""
+        canvas = Image.new("RGBA", (m1["width"] * L.CELL_W, m1["height"] * L.ROW_H), (0, 0, 0, 0))
+        swfx.blit(canvas, pic, x, y)
+        return canvas.getbbox()
+    check("  ..from the location's top-left corner, as the client (no such cell: dx, dy from 0, 0), at the cell"
+          " beyond only when asked (%s)" % xs["id"],
+          (A.render(one, real, ["sprites"])[0].getbbox(),
+           A.render(one, real, ["sprites"], extra_row=True)[0].getbbox()),
+          (clipped(A._round(L.num(xs["dx"])), A._round(L.num(xs["dy"]))),
+           clipped(A._round(cx + L.num(xs["dx"])), A._round(cy + L.num(xs["dy"])))))
 
     # --- reference renders ---
     print_sigs = "--print-signatures" in sys.argv

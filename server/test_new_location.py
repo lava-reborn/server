@@ -17,7 +17,9 @@ start it on the repository's:
     door and goes through it, back beside the walk-in;
   * left saved on a cell the place has a wall on now (a location of ours
     may change under a player who logged out in it), a login stands him on
-    the entry instead (Session.restore).
+    the entry instead (Session.restore);
+  * a walk onto one of its walls is refused (breakMv), as a client still
+    on the release before it would send one.
 
     python3 server/test_new_location.py
 """
@@ -96,11 +98,19 @@ try:
     market = world.location(FROM)
     exits = travel.exit_sides(market)
     steps = reach(market, market.entry_cell())
+    # off the walk-ins the market has already (a place of ours the owner
+    # made in the editor may lead in from it), and off their neighbours
+    # (read from the table itself: travel keeps what it read, and the tool
+    # below adds a row this process must see)
+    with io.open(os.path.join(DATA, "passages.json"), encoding="utf-8") as fh:
+        passed = {y * market.width + x for r in (json.load(fh).get("walk_in") or {}).get(str(FROM)) or ()
+                  for x, y in r.get("cells") or ()}
+    near = passed | {n for c in passed for n in progression.hex_neighbours(c, market.width, market.height)}
     pick = [c for c, n in sorted(steps.items(), key=lambda kv: (kv[1], kv[0]))
-            if n >= 4 and c not in exits and c not in market.entries]
+            if n >= 4 and c not in exits and c not in market.entries and c not in near]
     a = pick[0]
     b = next(n for n in progression.hex_neighbours(a, market.width, market.height)
-             if n in steps and n not in exits and n not in market.entries and n != a)
+             if n in steps and n not in exits and n not in market.entries and n != a and n not in near)
     WALK = {a, b}
     spec = "%d:%s" % (FROM, ";".join("%d,%d" % (c % market.width, c // market.width) for c in sorted(WALK)))
     wall = next(iter(sorted(market.obstacles)))
@@ -126,7 +136,7 @@ try:
         code, out = tool(*args, data=scratch)
         check("%s: refused, and why" % why, (code, said in str(out)), (2, True))
     check("  ..and a refusal leaves nothing behind",
-          (os.listdir(os.path.join(scratch, "locations", "static")) if os.path.isdir(
+          (sorted(os.listdir(os.path.join(scratch, "locations", "static"))) if os.path.isdir(
               os.path.join(scratch, "locations", "static")) else [],
            {n: open(os.path.join(scratch, n), "rb").read() == before[n] for n in before}),
           (sorted(os.listdir(os.path.join(DATA, "locations", "static")))
@@ -314,6 +324,19 @@ try:
     pos = enter(c)
     check("a login saved on a cell that is a wall stands on the entry instead (Session.restore)",
           (first, pos in place.obstacles, pos == place.entry_cell()), ([NEW], False, True))
+    # A client still on the release before the place draws a desert there
+    # and paths through its walls: the server holds such a walk itself.
+    wall_cell = sorted(place.obstacles)[0]
+    c.send("moveTo;path=|%d|%d|;" % (pos, wall_cell))
+    got = c.until(lambda f: f[0] in ("breakMv", "cmdAck"), 3)
+    check("a walk onto a wall of the place is refused: breakMv, the walker kept where he stands",
+          [(n, p.get("pos")) for n, p in got if n in ("breakMv", "cmdAck", "userMove")], [("breakMv", pos)])
+    free = next(n for n in progression.hex_neighbours(pos, place.width, place.height)
+                if n not in place.obstacles)
+    c.send("moveTo;path=|%d|%d|;" % (pos, free))
+    got = c.until(lambda f: f[0] == "userMove", 3)
+    check("  ..one onto open ground goes", [n for n, _p in got if n in ("breakMv", "cmdAck", "userMove")],
+          ["cmdAck", "userMove"])
     c.s.close()
 except Exception:
     import traceback

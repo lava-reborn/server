@@ -179,6 +179,18 @@ FSC_AIRFIELD_CELL = (5970, 1727)                 # the cut of the ФСЦ, below
 CLOCK_WHY = "The owner's boss clock, 2026-10-11"
 CLOCK = {(e["x"], e["y"], e["was"]): e["text"] for e in LABELS
          if e.get("why", "").startswith(CLOCK_WHY)}
+# The names of the places of ours (data/locations), each added over its own
+# cell by the location editor: the owner's, not the file's, and not part of
+# any cut (the editor refuses a cell a cut took off the map).
+_DATA = os.path.join(os.path.dirname(HERE), "data")
+try:
+    _OURS = {int(n[:-4]) for n in os.listdir(os.path.join(_DATA, "locations", "static"))
+             if n.endswith(".xml") and n[:-4].isdigit() and int(n[:-4]) >= 1381}
+except OSError:
+    _OURS = set()
+with open(os.path.join(_DATA, "settlements.json"), encoding="utf-8") as _fh:
+    _SETTLED = {tuple(int(v) for v in k.split(",")): lid for k, lid in json.load(_fh)["cells"].items()}
+OURS_ADDED = {(x, y, new) for x, y, was, new in edits if was is None and _SETTLED.get((x, y)) in _OURS}
 kept, clocked = [], 0
 for x, y, text in rows_of(raw, HALFA_BOX):
     if (x, y) in HALFA_CUT or (x, y) in (PREMIUM_CAMP_CELL, FSC_AIRFIELD_CELL):
@@ -190,8 +202,8 @@ for x, y, text in rows_of(raw, HALFA_BOX):
     kept.append((x, y, text))
 check("  ..and every other name around Вади-Хальфа is the file's own, row for row (the (P) camp"
       " 124's hidden since 2026-09-30, the ФСЦ airfield's since 2026-10-10, the boss clock's"
-      " hours retexted since 2026-10-11)",
-      rows_of(out, HALFA_BOX), kept)
+      " hours retexted since 2026-10-11; the names of places of ours aside)",
+      [r for r in rows_of(out, HALFA_BOX) if r not in OURS_ADDED], kept)
 check("  ..of which there are dozens", len(kept) > 30, True)
 check("  ..eight of them retexted to the boss clock: the four camps and their chiefs' places (the"
       " southern warehouse's is the original's)", clocked, 8)

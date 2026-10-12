@@ -348,7 +348,9 @@ try:
     TEXTS = {(5861, 1835): "Жилой квартал Абри:<BR>Гофус - стимуляторы<br>Обучение специализации<BR>Задания",
              (5860, 1835): "Портовый Рынок Абри:<BR>Весь спектр услуг<BR>Мортимер - обмен золотых слитков<BR>",
              (5862, 1835): "Трущобы Абри: <br>Обмен золотых слитков<BR>Задания"}
-    retexts = {(e["x"], e["y"]): e["text"] for e in LABELS if "text" in e
+    # (a row that adds a name -- a place of ours, the location editor's --
+    # retexts nothing)
+    retexts = {(e["x"], e["y"]): e["text"] for e in LABELS if "text" in e and not e.get("add")
                and BOX[0] <= e["x"] <= BOX[1] and BOX[2] <= e["y"] <= BOX[3]}
     check("the quarter loses Базиль's «обмен G комплектов», the port market names Мортимер, the"
           " slums lose the New Year tree",
@@ -361,7 +363,13 @@ try:
         if (x, y) in HIDDEN and t == HIDDEN[(x, y)]:
             continue
         want.append((x, y, retexts.get((x, y), t)))
-    check("every other name over Абри is the file's own, row for row", rows_in(out, BOX), want)
+    # the names of the places of ours (data/locations), added over their
+    # own cells by the location editor, are the owner's
+    ours = {i for i in world.overlay_ids() if i >= world.FIRST_NEW_ID}
+    added = {(e["x"], e["y"], e["text"]) for e in LABELS if e.get("add")
+             and world.settlements().get((e["x"], e["y"])) in ours}
+    check("every other name over Абри is the file's own, row for row (the places of ours aside)",
+          [r for r in rows_in(out, BOX) if r not in added], want)
     check("  ..of which there are dozens", len(want) > 40, True)
 except Exception:
     import traceback

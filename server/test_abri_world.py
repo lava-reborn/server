@@ -131,11 +131,13 @@ try:
     check("  ..and a walk from Вади-Хальфа's black market on the owner's map, as data/test_borders"
           " walks it: none of them is shut away",
           sorted(c for c in list(CELLS) + list(CAMPS) if c not in outside), [])
+    # (the places of ours, data/locations, are the owner's: the location
+    # editor's checks are theirs)
     check("  ..and every place on a cell round the town that walk reaches is one this suite looks"
-          " at (a place left out would show its people unchecked)",
+          " at (a place left out would show its people unchecked; the places of ours aside)",
           sorted((i, c) for c, i in world.settlements().items()
                  if BOX[0] <= c[0] <= BOX[1] and BOX[2] <= c[1] <= BOX[3] and c in outside
-                 and i not in PLACES), [])
+                 and i not in PLACES and not (i >= world.FIRST_NEW_ID and i in world.overlay_ids())), [])
     # The server reads the res it is given: the original's file says «Пустошь»,
     # and an installed client the launcher keeps carries the release's copy,
     # «Тотем» (client/files), which a res synced from it would too.

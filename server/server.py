@@ -3875,11 +3875,24 @@ class Session:
         never produces anything else, so whatever fails here came from a
         modified client or a desync, and either way the walker is put back
         where the server has it.
+
+        In a location of ours (data/locations, world.Location.ours) no step
+        may land on a wall either: a client still on the release before the
+        place draws a desert template there and paths straight through the
+        walls the editor drew. The first cell is where the walker stands,
+        wherever that is.
         """
         if not isinstance(path, list) or not path:
             return False
         cells = self.loc.width * self.loc.height
-        return all(isinstance(c, int) and 0 <= c < cells for c in path)
+        if not all(isinstance(c, int) and 0 <= c < cells for c in path):
+            return False
+        if getattr(self.loc, "ours", False):
+            walls = self.loc.obstacles
+            steps = path[1:] or path
+            if any(c in walls and c != self.pos for c in steps):
+                return False
+        return True
 
 
 async def handle_client(reader, writer):

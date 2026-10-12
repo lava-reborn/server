@@ -469,7 +469,10 @@ try:
                 ex = travel.plan_exit(loc, door_cell(lid, s), *start)
             except (IndexError, KeyError, OSError, travel.Refused):
                 continue
-            if rec.get("own_cell"):
+            # a door of a place of ours (data/locations) into a place on the
+            # map is written own_cell by the location editor, so it lands on
+            # that place's cell (tools/test_location_editor.py)
+            if rec.get("own_cell") and rec.get("source") != "editor":
                 own.append((lid, s))
             far = world.cell_of(int(rec["target_loc_id"]))
             want = far if rec.get("own_cell") and far else start

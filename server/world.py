@@ -393,6 +393,11 @@ class Location:
         if path is None:
             raise KeyError("no file for location %d" % loc_id)
         self.file = os.path.basename(os.path.dirname(path)) + "/" +             os.path.basename(path)
+        # A location of ours (data/locations): its walls were drawn for this
+        # server, and a client that has not got its file yet draws a desert
+        # template there, so the server holds a walk to them itself
+        # (Session.valid_path).
+        self.ours = path == overlay_path(loc_id)
         txt = _read(path)
         attrs = dict(re.findall(r'(\w+)="([^"]*)"',
                                 re.search(r"<location([^>]*)>", txt).group(1)))

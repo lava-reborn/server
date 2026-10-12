@@ -108,7 +108,9 @@ nor rebind its own name to this port).
   GET  /api/mobicon/<type>.webp  a creature's icon (its stand frame)
   GET  /api/map                  {bounds, cell, tile, tiles: [{n, x, y, url}],
                                  settlements: {"x,y": id}, titles, ours,
-                                 retired, patrols, labels: [[x, y, text]],
+                                 retired, cut: {"x,y": why} (the owner's
+                                 cuts: no new place there), patrols,
+                                 labels: [[x, y, text]],
                                  starts, blocked, reachable}: blocked and
                                  reachable are bitsets over the bounds, row
                                  by row, base64
@@ -145,6 +147,9 @@ nor rebind its own name to this port).
     {op: move, sprite, anchor, cell, stamp?}   moves one placing (the
         footprint's walls with it when stamp)
     {op: delete, sprite, anchor, stamp?}       takes one placing out
+        (stamp takes off only the placing's own walls: a wall of the
+        copy -- base_walls -- or a cell another placing's footprint
+        stands on stays)
     {op: nudge, sprite, anchor, dx, dy}        one placing's pixel offset
     {op: exits, cells, side: auto|W|N|E|S|a|b} exit cells (auto: the edge's)
     {op: ring}                                 edge exits and a ring of
@@ -170,7 +175,15 @@ nothing writes nothing):
 
 Never data/terrain_verified.json, data/map_terrain.json, client/files or
 res/. The owner's objects (client/objects) are written by the object calls
-alone.
+alone. A door into a place on the map is written with own_cell (the
+player arrives on that place's cell). A list of another location's rows
+(102's walk-ins) is rewritten in place: this location's rows where they
+stood, the others' untouched.
+
+One save at a time over a data/ folder, between processes too (SaveLock:
+the page, a second editor, the command line); before it writes, every
+table the plan was made from is read again, and one another writer
+changed meanwhile is a 409 that names it, nothing written.
 
 THE CHECKS. Every check and save runs, on the model:
 
@@ -180,7 +193,9 @@ THE CHECKS. Every check and save runs, on the model:
       rooms.placement_problems has them, doors and walk-ins that lead
       somewhere real, a way in and a way out, and for a map cell: in the
       world and off its rim, walkable, nobody's (no place, retired cell or
-      camp patrol), side exits onto walkable ground, and on the walk from
+      camp patrol), not one of the owner's cuts (cut_cells: a square
+      data/map_cells.json erases or keeps, a name data/map_labels.json
+      hides), side exits onto walkable ground, and on the walk from
       the start or from the Nubian valley (data/test_borders.py pins the
       settlements stranded by the valley's wall);
   L2  a walk from the free entries to every exit side, door, war entry and
@@ -214,6 +229,7 @@ import json
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -304,6 +320,88 @@ def today():
     return TODAY or datetime.date.today().isoformat()
 
 
+# --- the refusals of the build, in the owner's words ----------------------------------------
+# tools/swfgen.py and tools/custom_objects.py say why in English (the
+# release build's log); the page shows the owner the same reasons in
+# Russian. A reason with no row here goes through as it is.
+_RU = [
+    (r"not a PNG", "это не PNG"),
+    (r"not a JPEG", "это не JPEG"),
+    (r"neither a PNG nor a JPEG", "это не PNG и не JPEG"),
+    (r"(PNG|JPEG|picture) (\d+)x(\d+): each side must be 1\.\.(\d+) pixels",
+     r"\1 \2x\3: каждая сторона — от 1 до \4 точек"),
+    (r"PNG: interlaced; save it without interlacing",
+     "PNG с чересстрочностью (interlaced): сохраните его без неё"),
+    (r"PNG: colour type (\d+) with bit depth (\d+)", r"PNG: такого цвета игра не знает (тип \1, глубина \2)"),
+    (r"PNG: (?:cut short before IEND|chunk .* cut short|image data cut short)", "PNG: файл обрезан"),
+    (r"PNG: no IHDR first", "PNG: файл испорчен (нет IHDR в начале)"),
+    (r"PNG: bad CRC in chunk (.*)", r"PNG: файл испорчен (не сходится контрольная сумма блока \1)"),
+    (r"PNG: image data does not inflate.*", "PNG: данные картинки не распаковываются, файл испорчен"),
+    (r"PNG: unknown row filter (\d+)", r"PNG: файл испорчен (фильтр строки \1)"),
+    (r"PNG: palette picture without a palette", "PNG: у картинки с палитрой нет палитры"),
+    (r"PNG: palette index (\d+) past the palette", r"PNG: цвет \1 за краем палитры"),
+    (r"JPEG: no marker at byte (\d+)", r"JPEG: файл испорчен (байт \1)"),
+    (r"JPEG: no frame header", "JPEG: файл испорчен (нет заголовка кадра)"),
+    (r"JPEG: (\d+) colour components \(CMYK\?\); save it as RGB", r"JPEG в CMYK (\1 канала): сохраните его в RGB"),
+    (r"JPEG: not baseline .*",
+     "JPEG прогрессивный (progressive) или другой необычный: сохраните его как обычный (baseline) JPEG или как PNG"),
+    (r"JPEG: EXIF Orientation (\d+) .*",
+     r"JPEG повёрнут записью в EXIF (Orientation \1): браузер его поворачивает, игра показывает так, как он "
+     r"записан. Поверните картинку и сохраните без поворота в EXIF"),
+    (r"every picture of an animation must be the same size: (.*)",
+     r"все картинки анимации должны быть одного размера; здесь размеры \1"),
+    (r"fps (.*): a whole number 1\.\.(\d+) .*", r"кадров в секунду — целое число от 1 до \2"),
+    (r"an animation of (\d+) pictures needs fps, 1\.\.(\d+)", r"анимации из \1 картинок нужна скорость: 1..\2 в секунду"),
+    (r"anchor (-?\d+),(-?\d+) is outside the (\d+)x(\d+) picture", r"ноги \1,\2 за краем картинки \3x\4"),
+    (r"(\d+) bytes, more than (\d+); big art goes into the store and client/extra\.txt",
+     r"\1 байт, больше \2: крупное — в хранилище и client/extra.txt"),
+    (r"(\d+) bytes of pictures, more than (\d+); big art goes into the store and client/extra\.txt",
+     r"\1 байт картинок, больше \2: крупное — в хранилище и client/extra.txt"),
+    (r"(\d+) pixels of PNG pictures, more than (\d+): .*",
+     r"\1 точек в картинках PNG, больше \2: сборка релиза распаковывает каждую точку, и столько она "
+     r"не потянет. Уменьшите картинки, сократите кадры или сохраните непрозрачные в JPEG"),
+    (r"title is text of 1\.\.(\d+) characters on one line", r"название — от 1 до \1 знаков в одну строку"),
+    (r"front needs at least one cell.*", "линии глубины нужна хотя бы одна клетка"),
+    (r"anchor is \[x, y\].*", "ноги — точка картинки [x, y]"),
+    (r"(front|footprint) names cell (.*) twice", r"клетка \2 дважды"),
+    (r"(front|footprint) cell (.*): \[dx, dy\], each -128\.\.127", r"клетка \2: [dx, dy], каждое от -128 до 127"),
+    (r"a background is one picture.*", "фон — одна картинка: клиент рисует только первый кадр"),
+    (r"a background has no (\w+): it is tiled from the corner", r"у фона нет \1: он кладётся плиткой от угла"),
+    (r"the game already has (.*); pick another id", r"в игре уже есть \1: нужен другой id"),
+]
+_RU = [(re.compile(p), r) for p, r in _RU]
+
+
+def ru_refusal(text):
+    """A refusal of swfgen or custom_objects in Russian: its prefix (the
+    object, the file) kept, the reason after it translated."""
+    text = str(text)
+    head, rest = "", text
+    m = re.match(r"((?:client/objects/[^:]+|c_[a-z0-9_]+|client/objects|картинка \d+): )(.*)\Z", text, re.S)
+    if m:
+        head, rest = m.group(1), m.group(2)
+    for rx, ru in _RU:
+        m = rx.fullmatch(rest)
+        if m:
+            return head + m.expand(ru)
+    return text
+
+
+def art_why_ru(why):
+    """location_art.art_problems' why in Russian."""
+    for rx, ru in ((r"no (\S+) in the release", r"в релизе нет \1"),
+                   (r"not exported by (\S+): the client draws the library's whole picture there",
+                    r"такой картинки в библиотеке \1 нет: клиент рисует там всю картинку библиотеки"),
+                   (r"not exported by (\S+): nothing is drawn", r"такой картинки в библиотеке \1 нет: ничего не рисуется"),
+                   (r"no (\S+): nothing is drawn", r"нет файла \1: ничего не рисуется"),
+                   (r"no (\S+): no music", r"нет файла \1: музыки не будет"),
+                   (r"no (\S+)", r"нет файла \1")):
+        m = re.fullmatch(rx, str(why))
+        if m:
+            return m.expand(ru)
+    return why
+
+
 # --- where things are ---------------------------------------------------------------------
 
 class Paths:
@@ -359,7 +457,9 @@ def configure(data=None, objects=None):
     # what is read from data/ itself; the original's files, the names and
     # the map's walks stay
     forget("locations", "exits_json")
-    _ART_RESET()
+    # the pictures: the objects of this folder (Art reads them, not the
+    # repository's client/objects)
+    _ART[0] = None
 
 
 def memo(name, fn):
@@ -738,9 +838,11 @@ def location_state(loc_id):
     walk = []
     section = pas.get("walk_in") or {}
     for src in sorted(_ids(section), key=int):
-        for i, r in enumerate(section[src] or ()):
+        # by content, not by place in the list: another location's rows
+        # moving round this one's leave its etag as it was
+        for r in section[src] or ():
             if isinstance(r, dict) and r.get("target_loc_id") == loc_id:
-                walk.append([src, i, r])
+                walk.append([src, r])
     ver = verified_doc()
     mine = sorted(k for k, v in (ver.get("cells") or {}).items() if v == loc_id)
     labels = [r for r in labels_doc().get("labels", ())
@@ -982,7 +1084,7 @@ _ART = [None]
 
 def art():
     if _ART[0] is None:
-        _ART[0] = A.Art()
+        _ART[0] = A.Art(objects=P.objects)
     return _ART[0]
 
 
@@ -1024,7 +1126,7 @@ def objects_checked():
 def local_ext():
     """Ext sprite and background ids beyond the original: client/files and
     the owner's objects of this editor's objects folder."""
-    sprites, bgs = A.local_ext(ROOT)
+    sprites, bgs = A.local_ext(ROOT, objects=P.objects)
     for oid, e in objects_checked().items():
         (bgs if e["kind"] == "background" else sprites).add(oid)
     return sprites, bgs
@@ -1159,21 +1261,58 @@ def render_png(model, layers="art", scale=1.0, order="reverse"):
 
 # --- a new place -------------------------------------------------------------------------------
 
+GIT = {"ok": None, "why": "ещё не спрашивали"}     # what origin_main_ids last found out
+
+
+def wsl_path(path):
+    """C:/Users/... (or C:\\Users\\...) as WSL reaches it, /mnt/c/Users/...;
+    any other path as it is."""
+    w = re.match(r"([A-Za-z]):[\\/](.*)\Z", path)
+    if w and os.name != "nt":
+        return "/mnt/%s/%s" % (w.group(1).lower(), w.group(2).replace("\\", "/"))
+    return path
+
+
+def git_env(root=ROOT):
+    """The environment git runs in for a checkout. A worktree made by git
+    for Windows names its git folder C:/...: WSL's git cannot open that and
+    says "not a git repository", so GIT_DIR points at it through /mnt/c."""
+    env = dict(os.environ)
+    # the fetch asks nobody for anything: a key that wants a passphrase is a
+    # fetch that fails at once, the ids then as origin/main last had them
+    env.setdefault("GIT_TERMINAL_PROMPT", "0")
+    env.setdefault("GIT_SSH_COMMAND", "ssh -o BatchMode=yes")
+    dotgit = os.path.join(root, ".git")
+    if os.path.isfile(dotgit):
+        m = re.match(r"gitdir:\s*(.+?)\s*\Z", read_text(dotgit) or "")
+        if m and wsl_path(m.group(1)) != m.group(1):
+            g = wsl_path(m.group(1))
+            if os.path.isdir(g):
+                env.update(GIT_DIR=g, GIT_WORK_TREE=root)
+    return env
+
+
 def origin_main_ids():
     """The ids origin/main has under data/locations/static (after a fetch);
-    empty when git cannot say (no git, a worktree WSL git cannot read)."""
+    empty when git cannot say (no git, no origin/main), which GIT keeps
+    and /api/info and /api/new tell the owner."""
     if os.environ.get("LAVA_LOCATION_EDITOR_GIT", "1") == "0":
+        GIT.update(ok=None, why="git выключен (LAVA_LOCATION_EDITOR_GIT=0)")
         return set()
+    env = git_env()
     try:
         if os.environ.get("LAVA_LOCATION_EDITOR_FETCH", "1") != "0":
             subprocess.run(["git", "-C", ROOT, "fetch", "--quiet", "origin", "main"],
-                           capture_output=True, timeout=30)
+                           capture_output=True, timeout=30, env=env)
         p = subprocess.run(["git", "-C", ROOT, "ls-tree", "--name-only", "origin/main",
-                            "data/locations/static/"], capture_output=True, text=True, timeout=30)
-    except (OSError, subprocess.SubprocessError):
+                            "data/locations/static/"], capture_output=True, text=True, timeout=30, env=env)
+    except (OSError, subprocess.SubprocessError) as exc:
+        GIT.update(ok=False, why="git не запустился: %s" % exc)
         return set()
     if p.returncode != 0:
+        GIT.update(ok=False, why="git не прочёл origin/main: %s" % ((p.stderr or "").strip()[-300:] or p.returncode))
         return set()
+    GIT.update(ok=True, why="")
     out = set()
     for line in p.stdout.splitlines():
         i = world._static_name(os.path.basename(line.strip()))
@@ -1309,7 +1448,11 @@ def new_model(title, src=None, empty=None, why="", author="owner", new_id=None):
                             "why": why or ""},
                   "closed": False})
     model["etag"] = etag_of(location_state(new_id))
-    return {"model": model, "dropped": dropped}
+    notes = []
+    if GIT.get("ok") is False:
+        notes.append("Номер %d выбран без origin/main (%s): если в другой сессии уже сделано место под этим "
+                     "номером, при слиянии будет конфликт." % (new_id, GIT["why"]))
+    return {"model": model, "dropped": dropped, "notes": notes}
 
 
 # --- edits the server works out ------------------------------------------------------------------
@@ -1324,16 +1467,18 @@ def _instance(model, op):
     return si, ai, sp, anchor
 
 
-def sprite_footprint(sp):
+def sprite_footprint(sp, objs=None, used=None):
     """[(dx, dy, code)] a sprite's placing stamps: an object's footprint as
-    walls "f", a picture's the walls its original placings share."""
+    walls "f", a picture's the walls its original placings share. objs and
+    used: objects_checked() and usage(), when the caller has them."""
     sid = sp["id"]
-    if sid in objects_checked():
-        e = objects_checked()[sid]
-        return [(dx, dy, CO.OBSTACLE) for dx, dy in e["footprint"]]
+    objs = objects_checked() if objs is None else objs
+    if sid in objs:
+        return [(dx, dy, CO.OBSTACLE) for dx, dy in objs[sid]["footprint"]]
     kind = "ext" if sp.get("type") == "ext" else "lib"
     var = (L.num(sp.get("dx")), L.num(sp.get("dy")), sp.get("front") or "")
-    for r in (usage(wait=False) or {}).get("%s:%s" % (kind, sid)) or ():
+    used = (usage(wait=False) or {}) if used is None else used
+    for r in used.get("%s:%s" % (kind, sid)) or ():
         if (r["dx"], r["dy"], r["front"]) == var:
             return [tuple(c) for c in r["footprint"]]
     return []
@@ -1354,21 +1499,63 @@ def _stamp(model, foot, ax, ay):
     return out
 
 
-def _unstamp(model, foot, ax, ay):
-    """The footprint's walls taken off (those with its code); the cells."""
+def _unstamp(model, foot, ax, ay, keep=frozenset()):
+    """The footprint's walls taken off (those with its code), but for the
+    cells in keep; the cells."""
     gone = {}
     for dx, dy, code in foot:
         x, y = L.offsets_cells([(dx, dy)], ax, ay)[0]
-        gone[(x, y)] = code
-    keep, out = [], []
+        if (x, y) not in keep:
+            gone[(x, y)] = code
+    stay, out = [], []
     for r in model.get("walls") or ():
         c = (int(r[0]), int(r[1]))
         if c in gone and str(r[2]) == gone[c]:
             out.append(list(c))
             continue
-        keep.append(r)
-    model["walls"] = keep
+        stay.append(r)
+    model["walls"] = stay
     return out
+
+
+def base_walls(model):
+    """{(x, y)} of the walls the place was made with: those of the location
+    it was copied from (none for a place made empty, its own for an
+    original). Taking a picture out never takes these away."""
+    if model.get("state") == "original":
+        return {(int(r[0]), int(r[1])) for r in model.get("walls") or ()}
+    src = model.get("from")
+    if src is None:
+        return set()
+    try:
+        path = world.static_path(int(src))
+    except (TypeError, ValueError):
+        return set()
+    if path is None:
+        return set()
+    return {(x, y) for x, y, _e in L.load(path)["lists"]["obstacles"]}
+
+
+def kept_walls(model, si, ai):
+    """The cells whose walls stay when placing (si, ai) is taken out or
+    moved: the place's own walls from its copy, and every cell another
+    placing's footprint stands on (two objects side by side share a wall;
+    the second never stamped it)."""
+    keep = base_walls(model)
+    objs, used = objects_checked(), usage(wait=False) or {}
+    for sj, sp in enumerate(model.get("sprites") or ()):
+        foot = sprite_footprint(sp, objs, used)
+        if not foot:
+            continue
+        offs = [(dx, dy) for dx, dy, _c in foot]
+        for aj, a in enumerate(sp.get("anchors") or ()):
+            if (sj, aj) == (si, ai):
+                continue
+            try:
+                keep.update(L.offsets_cells(offs, int(a[0]), int(a[1])))
+            except (TypeError, ValueError, IndexError):
+                continue
+    return keep
 
 
 def _cell(op, model, key="cell"):
@@ -1439,12 +1626,12 @@ def edit(model, op):
         x, y = _cell(op, model)
         if op.get("stamp"):
             foot = sprite_footprint(sp)
-            info["cells"] = _unstamp(model, foot, ax, ay) + _stamp(model, foot, x, y)
+            info["cells"] = _unstamp(model, foot, ax, ay, kept_walls(model, si, ai)) + _stamp(model, foot, x, y)
         sp["anchors"][ai] = [x, y]
     elif kind == "delete":
         si, ai, sp, (ax, ay) = _instance(model, op)
         if op.get("stamp"):
-            info["cells"] = _unstamp(model, sprite_footprint(sp), ax, ay)
+            info["cells"] = _unstamp(model, sprite_footprint(sp), ax, ay, kept_walls(model, si, ai))
         del sp["anchors"][ai]
         if not sp["anchors"]:
             del model["sprites"][si]
@@ -1588,7 +1775,7 @@ def lint(model, for_save=True):
         add(problem("warning" if inherited or st == "original" else "error", "art",
                     "%s %s%s: %s%s" % ({"library": "библиотека", "background": "фон", "sprite": "спрайт",
                                         "decal": "наклейка", "bgsound": "музыка"}.get(pr["what"], pr["what"]),
-                                       pr["id"], " x%d" % pr["count"] if pr["count"] > 1 else "", pr["why"],
+                                       pr["id"], " x%d" % pr["count"] if pr["count"] > 1 else "", art_why_ru(pr["why"]),
                                        " (так в оригинале)" if inherited else "")))
 
     # --- cells on the grid
@@ -1646,7 +1833,8 @@ def lint(model, for_save=True):
     for s in model.get("sprites") or ():
         an_extra, _ = grid(s.get("anchors"), "sprites", "спрайт %s" % s.get("id"))
         if an_extra:
-            add(problem("warning", "sprites", "спрайт %s на лишнем ряду y=%d: клиент его не рисует"
+            add(problem("warning", "sprites", "спрайт %s на лишнем ряду y=%d: такой клетки у клиента нет, и он "
+                        "рисует спрайт от левого верхнего угла локации (сдвиг dx, dy от точки 0,0)"
                         % (s.get("id"), H), an_extra))
         if s.get("type") not in (None, "lib", "ext"):
             add(problem("error", "sprites", "тип спрайта %s — lib или ext" % s.get("id")))
@@ -1915,17 +2103,42 @@ def map_problems(model):
             out.append(problem("error", "map", "подпись — в одну строку (перенос — <br>)"))
         if label in _tooltips().get(c, ()):
             out.append(problem("error", "map", "у клетки уже есть подпись «%s»" % label))
+    cut = cut_cells().get(c)
+    if cut:
+        out.append(problem("error", "map", "%s вырезана владельцем: %s. Новое место туда не ставится, "
+                                           "выберите другую клетку" % (where, cut)))
     sq = mp.get("square")
     if sq:
         import map_cells
         if sq not in map_cells.PALETTE:
             out.append(problem("error", "map", "квадрат: цвет из %s" % ", ".join(sorted(map_cells.PALETTE))))
-        cd = cells_doc()
-        if _key(*c) in (cd.get("cells") or {}) or _key(*c) in (cd.get("keep") or {}):
-            out.append(problem("error", "map", "%s в data/map_cells.json стирается или хранится: квадрат не ставится"
-                               % where))
     if "test" in str((model.get("attrs") or {}).get("fn", "")).lower():
         out.append(problem("warning", "map", "fn со словом test: пересчёт карты считает такие файлы черновиками"))
+    return out
+
+
+def cut_cells():
+    """{(x, y): why} of the map cells the owner's cuts took off the map: a
+    square erased or kept under a hidden name (data/map_cells.json 'cells',
+    'keep') and a name hidden (data/map_labels.json 'hide'). A place of ours
+    there would put a name and a place back over what was cut
+    (server/test_map_cells.py, test_halfa_cut and the other cuts' suites
+    hold those cells empty)."""
+    out = {}
+    cd = cells_doc()
+    for part, why in (("cells", "квадрат стёрт (data/map_cells.json)"),
+                      ("keep", "имя снято, квадрат оставлен (data/map_cells.json)")):
+        for k in cd.get(part) or {}:
+            try:
+                out.setdefault(_xy(k), why)
+            except ValueError:
+                continue
+    for r in labels_doc().get("labels") or ():
+        if isinstance(r, dict) and r.get("hide"):
+            try:
+                out.setdefault((int(r["x"]), int(r["y"])), "имя клетки снято (data/map_labels.json)")
+            except (KeyError, TypeError, ValueError):
+                continue
     return out
 
 
@@ -2035,6 +2248,7 @@ def plan_writes(model, author="owner"):
         text = "{}\n"
     doc = json.loads(text)
     doors = model.get("doors") or {}
+    placed = set(settlements_table().values())
     for side in DOOR_SIDES:
         d = doors.get(side) or {}
         old = ((doc.get("doors") or {}).get(key) or {}).get(side)
@@ -2047,8 +2261,14 @@ def plan_writes(model, author="owner"):
         rec.update({"confidence": d.get("confidence") or rec.get("confidence") or "high",
                     "source": d.get("source") or rec.get("source") or "editor",
                     "target_loc_id": target})
-        if d.get("own_cell") is not None:
-            rec["own_cell"] = d["own_cell"]
+        # A door into a place that stands on the map arrives on that place's
+        # cell (travel.plan_exit own_cell): without it the player keeps the
+        # cell he had here -- this place's own, when it has one -- and the
+        # map, and every edge exit of the far side, are a cell off.
+        if d.get("own_cell") is False or target not in placed:
+            rec.pop("own_cell", None)
+        else:
+            rec["own_cell"] = True
         rec["why"] = _why(d.get("why"), "DESIGNED (%s, %s): дверь %s места «%s» (%d) ведёт в %d."
                           % (today(), author, side, title, loc_id, target))
         rec = {k: rec[k] for k in ("confidence", "source", "target_loc_id", "own_cell", "why") if k in rec}
@@ -2070,8 +2290,18 @@ def plan_writes(model, author="owner"):
                                            % (today(), author, src, title, loc_id, src))})
     for src in sorted(set(_ids(walk)) | set(mine), key=int):
         old = list(walk.get(src) or [])
-        others = [r for r in old if not (isinstance(r, dict) and r.get("target_loc_id") == loc_id)]
-        new = others + mine.get(src, [])
+        # in place: this location's new rows where its old rows stood, in
+        # their order, the rest of them after; another location's rows keep
+        # their places, so a save that changes nothing changes no byte
+        todo = list(mine.get(src, []))
+        new = []
+        for r in old:
+            if isinstance(r, dict) and r.get("target_loc_id") == loc_id:
+                if todo:
+                    new.append(todo.pop(0))
+                continue
+            new.append(r)
+        new += todo
         if new == old:
             continue
         text = jsonrows.set_key(text, ["walk_in", src], new) if new else \
@@ -2607,19 +2837,71 @@ def check(model, quick=False, author="owner"):
     return {"problems": problems, "seconds": round(time.time() - t0, 2)}
 
 
+def table_paths(loc_id):
+    """Every file of data/ a save of this location reads to plan what it
+    writes, or writes: whatever another writer changes in one of them
+    between the plan and the write is lost unless a save looks again."""
+    return [P.xml(loc_id), P.index, P.placements, P.passages, P.verified, P.labels, P.cells, P.exits,
+            P.settlements, P.report]
+
+
+def table_shas(loc_id):
+    return {p: sha(read_bytes(p)) for p in table_paths(loc_id)}
+
+
+class SaveLock:
+    """One save at a time over one data/ folder, between processes too: the
+    page's server, a second editor and the command line (`new`, `save`)
+    each plan from the tables, check for up to a few minutes and write the
+    tables whole. A lock file outside the repository (the system's temp
+    folder, named by the folder's path); without fcntl (Windows) only the
+    process's own lock holds."""
+
+    def __init__(self, data):
+        key = hashlib.sha256(os.path.abspath(data).encode("utf-8")).hexdigest()[:16]
+        self.path = os.path.join(tempfile.gettempdir(), "lava-location-editor-%s.lock" % key)
+        self.fh = None
+
+    def __enter__(self):
+        _LOCK.acquire()
+        try:
+            import fcntl
+        except ImportError:
+            return self
+        try:
+            self.fh = open(self.path, "a+b")
+            fcntl.flock(self.fh, fcntl.LOCK_EX)
+        except OSError:
+            if self.fh is not None:
+                self.fh.close()
+            self.fh = None
+        return self
+
+    def __exit__(self, *exc):
+        try:
+            if self.fh is not None:
+                import fcntl
+                fcntl.flock(self.fh, fcntl.LOCK_UN)
+                self.fh.close()
+                self.fh = None
+        finally:
+            _LOCK.release()
+        return False
+
+
 def save(model, etag, author="owner"):
     """POST /api/save: (code, body)."""
     model = _clean(model)
     loc_id = int(model["id"])
-    with _LOCK:
+    with SaveLock(P.data):
         if loc_id == 262:
             return 422, {"error": "262 «Тотем» закрыт для редактора", "problems": []}
         state = location_state(loc_id)
-        if etag != etag_of(state):
+        if etag != etag_of(state) or (model.get("state") == "new" and loc_id in origin_main_ids()):
             body = {"error": "локация %d изменилась на диске после того, как её открыли: откройте её снова" % loc_id}
             if model.get("state") == "new":
-                body["error"] = ("номер %d тем временем занят или у него появились строки в таблицах: "
-                                 "сделайте новое место ещё раз" % loc_id)
+                body["error"] = ("номер %d тем временем занят (здесь или в origin/main) или у него появились строки "
+                                 "в таблицах: сделайте новое место ещё раз" % loc_id)
                 try:
                     body["next_id"] = next_free_id()
                 except Refused:
@@ -2632,6 +2914,9 @@ def save(model, etag, author="owner"):
         errors = [p for p in problems if p["level"] == "error"]
         if errors:
             return 422, {"error": "есть ошибки: %d" % len(errors), "problems": problems}
+        # what the plan is made from: written over only if nobody (git,
+        # another session without this lock) changed it meanwhile
+        read = table_shas(loc_id)
         plan = plan_writes(model, author)
         if not plan:
             return 200, {"id": loc_id, "written": [], "model": load_model(loc_id), "problems": problems}
@@ -2642,8 +2927,11 @@ def save(model, etag, author="owner"):
             return 422, {"error": "сервер не примет это место: %d" % len(errors), "problems": problems,
                          "seconds": round(seconds, 1)}
         plan.update(extra)
-        if etag_of(location_state(loc_id)) != etag:
-            return 409, {"error": "локация %d изменилась на диске во время проверки: откройте её снова" % loc_id}
+        moved = sorted(P.rel(p) for p, h in table_shas(loc_id).items() if read.get(p) != h)
+        if moved or etag_of(location_state(loc_id)) != etag:
+            return 409, {"error": "пока шла проверка, на диске поменялись %s: откройте локацию снова"
+                         % (", ".join(moved) if moved else "строки локации %d" % loc_id),
+                         "changed": moved}
         order = sorted(plan, key=lambda p: (p != P.xml(loc_id), p))
         for path in order:
             write_atomic(path, plan[path])
@@ -2831,6 +3119,7 @@ def map_info():
             "titles": {str(i): titles.get(i, "") for i in sorted(set(table.values()))},
             "ours": {str(i): c for i, c in ((r["id"], r["cell"]) for r in locations() if r["state"] == "ours")},
             "retired": {_key(*c): i for c, i in sorted(retired_cells().items())},
+            "cut": {_key(*c): why for c, why in sorted(cut_cells().items())},
             "patrols": {_key(*c): i for c, i in sorted(patrol_cells().items())},
             "labels": labels, "starts": starts, "blocked": blocked, "reachable": reachable,
             "colours": sorted(map_cells.PALETTE)}
@@ -2905,10 +3194,59 @@ def _object_id(title, raw, wanted=None):
     return oid
 
 
+Size = collections.namedtuple("Size", "w h")
+
+# What a browser reads from a picture and Flash never does: the gamma, the
+# colour profile and the rotation of a PNG. The browser draws such a picture
+# colour-managed (a gAMA of 1.0 lightens (128, 64, 200) to (188, 137, 229)),
+# while swfgen carries the samples as they are; taken out on upload, the
+# editor shows what the game will.
+PNG_COLOUR_CHUNKS = {b"gAMA", b"cHRM", b"iCCP", b"sRGB", b"eXIf"}
+
+
+def plain_picture(data):
+    """A PNG's bytes without PNG_COLOUR_CHUNKS, a JPEG's without its ICC
+    profile (APP2 ICC_PROFILE); anything else, or a file that does not walk
+    as one, as it came (swfgen says what is wrong with it)."""
+    if data[:8] == swfgen.PNG_SIG:
+        out, pos = [data[:8]], 8
+        while pos + 12 <= len(data):
+            ln, typ = struct.unpack(">I4s", data[pos:pos + 8])
+            end = pos + 12 + ln
+            if end > len(data):
+                return data
+            if typ not in PNG_COLOUR_CHUNKS:
+                out.append(data[pos:end])
+            pos = end
+            if typ == b"IEND":
+                break
+        out.append(data[pos:])
+        return b"".join(out)
+    if data[:2] == b"\xff\xd8":
+        out, pos = [data[:2]], 2
+        while pos + 4 <= len(data) and data[pos] == 0xFF:
+            m = data[pos + 1]
+            if m == 0xDA or not (0xE0 <= m <= 0xFE or m in (0xC4, 0xDB, 0xDD) or 0xC0 <= m <= 0xCF):
+                break
+            ln = struct.unpack(">H", data[pos + 2:pos + 4])[0]
+            end = pos + 2 + ln
+            if end > len(data):
+                return data
+            if not (m == 0xE2 and data[pos + 4:pos + 16] == b"ICC_PROFILE\x00"):
+                out.append(data[pos:end])
+            pos = end
+        out.append(data[pos:])
+        return b"".join(out)
+    return data
+
+
 def _decode_frames(frames):
-    """[(bytes, ext, swfgen.Picture)] of base64 pictures, checked as the
-    release build checks them (swfgen: PNG not interlaced, baseline JPEG,
-    sides up to 2880, one size for all)."""
+    """[(bytes, ext, Size)] of base64 pictures, checked from their headers
+    as the release build checks them (swfgen: PNG not interlaced, baseline
+    JPEG not rotated by EXIF, sides up to 2880, one size for all), their
+    colour chunks taken out (plain_picture). Nothing is decoded here: the
+    build in _write_object does that, a picture at a time, within
+    custom_objects' pixel budget."""
     if not isinstance(frames, list) or not 1 <= len(frames) <= CO.MAX_FRAMES:
         raise Refused("frames: от 1 до %d картинок" % CO.MAX_FRAMES)
     out = []
@@ -2923,11 +3261,14 @@ def _decode_frames(frames):
             raise Refused("картинка %d: не base64" % (i + 1))
         if len(data) > CO.MAX_PICTURE_BYTES:
             raise Refused("картинка %d: %d байт, больше %d" % (i + 1, len(data), CO.MAX_PICTURE_BYTES))
+        data = plain_picture(data)
         try:
-            pic = swfgen.picture(data)
+            w, h = swfgen.picture_size(data)
+            if data[:8] == swfgen.PNG_SIG and swfgen.png_header(data)[4]:
+                raise swfgen.Refused("PNG: interlaced; save it without interlacing")
         except swfgen.Refused as exc:
-            raise Refused("картинка %d: %s" % (i + 1, exc))
-        out.append((data, ".png" if pic.kind == "png" else ".jpg", pic))
+            raise Refused("картинка %d: %s" % (i + 1, ru_refusal(str(exc))))
+        out.append((data, ".png" if data[:8] == swfgen.PNG_SIG else ".jpg", Size(w, h)))
     sizes = sorted({(p.w, p.h) for _d, _e, p in out})
     if len(sizes) > 1:
         raise Refused("все картинки анимации одного размера: %s" % ", ".join("%dx%d" % s for s in sizes))
@@ -2972,9 +3313,11 @@ def _write_object(oid, entry, pictures, raw):
         raw[oid] = {k: entry[k] for k in CO.KEY_ORDER if entry.get(k) is not None}
         checked = CO.check_entry(oid, raw[oid])
         write_atomic(man, CO.manifest_text(raw).encode("utf-8"))
+        # the sizes and the pixel budget from the headers first, then the
+        # build itself, as the release makes it (a picture at a time)
+        CO.check_tree(P.objects, CO.load(P.objects))
         pics = CO.read_pictures(P.objects, oid, checked)
         swfgen.sprite_swf(pics, fps=checked["fps"], keys=checked["frames"])
-        CO.check_tree(P.objects, CO.load(P.objects))
     except (CO.Refused, swfgen.Refused, OSError) as exc:
         if old_man is None:
             if os.path.exists(man):
@@ -2987,7 +3330,7 @@ def _write_object(oid, entry, pictures, raw):
             os.makedirs(d, exist_ok=True)
             for n, data in old_files.items():
                 write_atomic(os.path.join(d, n), data)
-        raise Refused(str(exc))
+        raise Refused(ru_refusal(str(exc)))
     _ART_RESET()
     forget("locations")
     return raw[oid]
@@ -3081,7 +3424,7 @@ def info():
     """GET /api/info."""
     import map_cells
     return {"mode": "local", "data": P.data, "objects": P.objects, "res": world.RES,
-            "res_original": res_original(), "pictures": have_pictures(),
+            "res_original": res_original(), "pictures": have_pictures(), "origin_main": dict(GIT),
             "first_new_id": world.FIRST_NEW_ID, "id_limit": world.NEW_ID_LIMIT,
             "sizes": [list(s) for s in L.SIZES], "tracks": tracks(), "codes": OBSTACLE_CODES,
             "sides": {"W": "запад", "N": "север", "E": "восток", "S": "юг", "a": "дверь a", "b": "дверь b"},
@@ -3173,7 +3516,10 @@ class Handler(BaseHTTPRequestHandler):
             # the page went away before its answer (it moved on while a
             # picture was drawn): there is nobody to tell
             return None
-        except Exception as exc:           # noqa: BLE001 -- the page gets the reason, the log the trace
+        except (Exception, SystemExit) as exc:  # noqa: BLE001 -- the page gets the reason, the log the trace
+            # SystemExit too: client/build.py's readers stop a build with it
+            # (a client/base.txt that does not read), and uncaught it would
+            # end this request's thread with no answer and no line in the log
             traceback.print_exc()
             return self._send({"error": "%s: %s" % (type(exc).__name__, exc)}, code=500)
 

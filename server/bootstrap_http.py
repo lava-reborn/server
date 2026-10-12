@@ -64,6 +64,62 @@ from urllib.parse import parse_qs, unquote, urlparse
 RES_ROOT = world.RES
 # the map's tiles with retired places' squares painted over, made on first ask
 MAP_TILES = map_cells.Served(RES_ROOT)
+
+
+class ObjectSprites:
+    """The owner's own location objects' sprite files for a local run:
+    locations/libs/sprite/c_*.swf and locations/libs/background/c_*.swf,
+    which every release builds from client/objects (client/build.py,
+    tools/custom_objects.py) and no res/ has. Built on the first request
+    for one, and again when a file of client/objects changes. The image
+    the server runs in carries server/ and data/ only: there are no
+    client/objects or tools/ in it, and these files are not found, as
+    before."""
+
+    PATH = re.compile(r"locations/libs/(?:sprite|background)/c_[a-z0-9_]{1,40}\.swf")
+
+    def __init__(self, root):
+        self.objdir = os.path.join(root, "client", "objects")
+        self.tools = os.path.join(root, "tools")
+        self._stamp = None
+        self._files = {}
+        self._lock = threading.Lock()
+
+    def _now(self):
+        out = []
+        for base, _dirs, names in os.walk(self.objdir):
+            for n in names:
+                try:
+                    st = os.stat(os.path.join(base, n))
+                except OSError:
+                    continue
+                out.append((os.path.join(base, n), st.st_size, st.st_mtime_ns))
+        return tuple(sorted(out))
+
+    def get(self, rel):
+        """The bytes for res/<rel>, or None when it is no object's file."""
+        low = rel.lower()
+        if not self.PATH.fullmatch(low) or not os.path.isfile(os.path.join(self.tools, "custom_objects.py")):
+            return None
+        with self._lock:
+            stamp = self._now()
+            if stamp != self._stamp:
+                sys.path.insert(0, self.tools)
+                try:
+                    import custom_objects
+                    files, report = custom_objects.build(self.objdir)
+                    print("  objects: %s" % ("; ".join(report) or "none"), flush=True)
+                except Exception as e:     # noqa: BLE001 -- a refusal, a broken picture
+                    print("  objects NOT built: %s" % e, flush=True)
+                    files = {}
+                finally:
+                    sys.path.remove(self.tools)
+                self._files = {p.lower(): data for p, data in files.items()}
+                self._stamp = stamp
+            return self._files.get(low)
+
+
+OBJECT_SPRITES = ObjectSprites(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GAME_HOST = os.environ.get("LAVA_GAME_HOST", "127.0.0.1")
 GAME_PORT = os.environ.get("LAVA_GAME_PORT", "9775")
 HTTP_PORT = int(os.environ.get("LAVA_HTTP_PORT", "8080"))
@@ -579,6 +635,12 @@ class Handler(BaseHTTPRequestHandler):
         ours = world.overlay_path(loc_id) if loc_id is not None else None
         if ours is not None:
             full = ours
+        # The owner's objects (client/objects): their sprite files are made
+        # by every release build, never kept in a res/.
+        made = OBJECT_SPRITES.get(posix)
+        if made is not None:
+            self._send(made, "application/x-shockwave-flash")
+            return
         if not os.path.isfile(full):
             self._send("not found", code=404)
             return

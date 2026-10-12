@@ -89,6 +89,15 @@ MAX_TITLE = 80
 # store and client/extra.txt (client/README.md).
 MAX_PICTURE_BYTES = 8 << 20
 MAX_TOTAL_BYTES = 32 << 20
+# What a build may decode. tools/swfgen.py inflates every PNG picture into
+# RGBA in pure Python, about a second and 4 MB for each million pixels (a
+# picture at a time, read_pictures), and the release is built inside the
+# deploy gate's container (deploy/remote/lava-gate.sh: 2 GB, 15 minutes for
+# the whole build); a few megabytes of PNG can claim more pixels than that.
+# The pixels of an object's distinct PNG pictures, and of all objects'; a
+# JPEG goes in as its bytes and costs nothing here.
+MAX_OBJECT_PIXELS = 24 * 1000 * 1000
+MAX_TOTAL_PIXELS = 64 * 1000 * 1000
 OBSTACLE = "f"
 
 
@@ -220,10 +229,26 @@ def _clash_names(oid):
     return {d + oid + ".swf" for d in DIRS.values()} | {"locations/libs/" + oid + ".swf"}
 
 
+def png_pixels(path):
+    """Width times height of a PNG file from its header, 0 for anything
+    else (a JPEG is not decoded by the build)."""
+    with open(path, "rb") as fh:
+        head = fh.read(33)
+    if head[:8] != swfgen.PNG_SIG:
+        return 0
+    try:
+        w, h = swfgen.png_header(head)[:2]
+    except Refused:
+        return 0
+    return w * h
+
+
 def check_tree(objdir, objs):
     """Every folder is an object of the manifest and holds its pictures and
-    nothing else; the sizes fit what a deploy may carry."""
+    nothing else; the sizes fit what a deploy may carry, the pixels what a
+    build may decode (MAX_OBJECT_PIXELS, MAX_TOTAL_PIXELS)."""
     total = 0
+    pixels = 0
     # Dot files are a desktop's own (.DS_Store); git and the release never
     # see them.
     names = {n for n in os.listdir(objdir) if not n.startswith(".")} - {MANIFEST, README}
@@ -251,23 +276,66 @@ def check_tree(objdir, objs):
         for f in listed:
             if not os.path.isfile(os.path.join(d, f)):
                 raise Refused("%s: frame %s is not in client/objects/%s/" % (oid, f, oid))
+        px = sum(png_pixels(os.path.join(d, f)) for f in sorted(listed))
+        if px > MAX_OBJECT_PIXELS:
+            raise Refused("%s: %d pixels of PNG pictures, more than %d: the release build decodes every one "
+                          "(tools/swfgen.py, about a second a million); smaller pictures, fewer of them, or the "
+                          "opaque ones as JPEG" % (oid, px, MAX_OBJECT_PIXELS))
+        pixels += px
     if total > MAX_TOTAL_BYTES:
         raise Refused("client/objects: %d bytes of pictures, more than %d; big art goes into "
                       "the store and client/extra.txt" % (total, MAX_TOTAL_BYTES))
+    if pixels > MAX_TOTAL_PIXELS:
+        raise Refused("client/objects: %d pixels of PNG pictures, more than %d: the release build decodes every "
+                      "one (tools/swfgen.py, about a second a million); smaller pictures, fewer of them, or the "
+                      "opaque ones as JPEG" % (pixels, MAX_TOTAL_PIXELS))
     return total
 
 
+class LazyPicture:
+    """A picture of an object as swfgen.sprite_swf takes it (kind, w, h,
+    jpeg, rgba), read from its header; a PNG's pixels are decoded when the
+    writer asks for rgba and dropped once it has wrapped them, so a build
+    holds one decoded picture at a time, whatever the frames. A fault the
+    decoding finds names the file."""
+
+    def __init__(self, data, label):
+        self.label = label
+        if data[:8] == swfgen.PNG_SIG:
+            w, h, _depth, _ctype, interlace = swfgen.png_header(data)
+            swfgen._check_side(w, h, "PNG")
+            if interlace:
+                raise Refused("PNG: interlaced; save it without interlacing")
+            self.kind, self.jpeg, self._png = "png", None, data
+        elif data[:2] == b"\xff\xd8":
+            w, h = swfgen.jpeg_size(data)
+            self.kind, self.jpeg, self._png = "jpeg", bytes(data), None
+        else:
+            raise Refused("neither a PNG nor a JPEG")
+        self.w, self.h = w, h
+
+    @property
+    def rgba(self):
+        if self._png is None:
+            return None
+        try:
+            return swfgen.png_decode(self._png)[2]
+        except Refused as e:
+            raise Refused("%s: %s" % (self.label, e))
+
+
 def read_pictures(objdir, oid, entry):
-    """The entry's pictures as swfgen.Picture, one per frame, with the
-    anchor checked against their size."""
+    """The entry's pictures (LazyPicture), one per frame, with the anchor
+    checked against their size. Nothing is decoded until a writer asks."""
     pics = {}
     for f in entry["frames"]:
         if f not in pics:
+            label = "client/objects/%s/%s" % (oid, f)
             with open(os.path.join(objdir, oid, f), "rb") as fh:
                 try:
-                    pics[f] = swfgen.picture(fh.read())
+                    pics[f] = LazyPicture(fh.read(), label)
                 except Refused as e:
-                    raise Refused("client/objects/%s/%s: %s" % (oid, f, e))
+                    raise Refused("%s: %s" % (label, e))
     frames = [pics[f] for f in entry["frames"]]
     w, h = frames[0].w, frames[0].h
     if entry["anchor"] is not None:

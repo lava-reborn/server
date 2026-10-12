@@ -27,6 +27,20 @@ browser, on a copy of data/ and of client/objects:
     file alone; the rows taken out again give the tables back byte for byte;
   * 409 when this location's rows changed on disk, 422 on an error, 403
     under another host name, 415 for anything but JSON;
+  * «со следом» takes away only the walls a placing put down (not the
+    copy's, not a neighbour's); a door into a place on the map is written
+    with own_cell;
+  * two places walked into from one location: a save that changes nothing
+    leaves passages.json byte for byte and the rows in their order, and one
+    place's save never stales the other's etag; a table another writer
+    changes during a save's checks is a 409; a second process's save waits
+    for the lock on data/;
+  * the cuts' map cells are refused, square or not, and /api/map names them;
+  * the refusals and the art's problems in Russian, a SystemExit answered
+    500, the pictures from the --objects folder, a Windows worktree's
+    gitdir read through /mnt/c;
+  * a JPEG turned by EXIF, a progressive one and an interlaced PNG refused,
+    a PNG's gamma taken out, an object over the pixel budget refused;
   * the list, the palette, the creatures, the map, the CLI, and a render
     (with Pillow);
   * the page (tools/location_editor_ui/static) and the files it loads.
@@ -112,10 +126,15 @@ ORIGINAL = snapshot()
 # --- jsonrows: one row in, one row out, the rest as it was ----------------------------------------
 pas_text = ORIGINAL["data/passages.json"].decode("utf-8")
 rows = [{"cells": [[3, 4]], "target_loc_id": 1381, "why": "t"}]
-t1 = jsonrows.set_key(pas_text, ["walk_in", "102"], rows)
-check("jsonrows: a walk-in added to the empty table reads back", json.loads(t1)["walk_in"], {"102": rows})
-check("jsonrows: delete_key gives the bytes back, the empty object written {} again",
-      jsonrows.delete_key(t1, ["walk_in", "102"]) == pas_text, True)
+# a location no walk-in leads from yet (the owner's places may lead in from
+# 102 and others); the table may be empty, its {} written so again
+WALK0 = json.loads(pas_text).get("walk_in") or {}
+wsrc = next(str(i) for i in range(5, 1381) if str(i) not in WALK0)
+t1 = jsonrows.set_key(pas_text, ["walk_in", wsrc], rows)
+check("jsonrows: a walk-in added to the table reads back, the others as they were", json.loads(t1)["walk_in"],
+      dict(WALK0, **{wsrc: rows}))
+check("jsonrows: delete_key gives the bytes back (an empty object written {} again)",
+      jsonrows.delete_key(t1, ["walk_in", wsrc]) == pas_text, True)
 check("jsonrows: delete_key of a missing path changes nothing",
       jsonrows.delete_key(pas_text, ["doors", "999999", "a"]) == pas_text, True)
 one = '{"a": 1, "b": {"x": 1, "y": 2}, "c": 3}'
@@ -483,6 +502,28 @@ for parity, (ox, oy) in sorted(SPOTS.items()):
           (want["attrs"], [[ox, oy]], want["obstacles"]))
 OX, OY = SPOTS[1]
 
+
+def walls_of(m):
+    return {(int(r[0]), int(r[1])) for r in m["walls"]}
+
+
+# «со следом» takes away only the walls the placing put down: not a wall the
+# copy had, not one a neighbour's footprint stands on
+ox, oy = SPOTS[0]
+s1, _ = E.edit(M, {"op": "place", "kind": "object", "id": OID, "cell": [ox, oy], "stamp": True})
+s2, i2 = E.edit(s1, {"op": "place", "kind": "object", "id": OID, "cell": [ox + 1, oy], "stamp": True})
+s3, i3 = E.edit(s2, {"op": "delete", "sprite": len(s2["sprites"]) - 1, "anchor": 0, "stamp": True})
+check("two objects side by side: the second stamps the one cell that was open, and taken out takes that one only,"
+      " the first keeps its wall", (sorted(i2["cells"]), sorted(i3["cells"]), walls_of(s3) == walls_of(s1)),
+      ([[ox + 2, oy]], [[ox + 2, oy]], True))
+wx, wy = next((x, y) for x, y in sorted(walls) if x >= 1 and (x - 1, y) in open_m and (x - 1, y) not in busy)
+s4, i4 = E.edit(M, {"op": "place", "kind": "object", "id": OID, "cell": [wx - 1, wy], "stamp": True})
+s5, i5 = E.edit(s4, {"op": "delete", "sprite": len(s4["sprites"]) - 1, "anchor": 0, "stamp": True})
+check("an object against a wall of the copy: taken out, the copy's wall stays",
+      (sorted(i4["cells"]), sorted(i5["cells"]), walls_of(s5) == walls_of(M)), ([[wx - 1, wy]], [[wx - 1, wy]], True))
+s6, i6 = E.edit(s4, {"op": "move", "sprite": len(s4["sprites"]) - 1, "anchor": 0, "cell": [ox, oy], "stamp": True})
+check("  ..and moved away from it: the copy's wall stays there too", (wx, wy) in walls_of(s6), True)
+
 # --- a save -------------------------------------------------------------------------------------------------------
 print("a save")
 model, _ = E.edit(M, {"op": "place", "kind": "object", "id": OID, "cell": [OX, OY], "stamp": True})
@@ -572,6 +613,9 @@ check("travel: the walk-in from 102 leads into the place, beside its door back",
 dpos = DOOR[0][1] * loc.width + DOOR[0][0]
 ex = travel.plan_exit(loc, dpos, CELL[0], CELL[1])
 check("travel: its door a leads back to 102", ex.loc_id, 102)
+check("  ..written with own_cell, so from the place's own map cell he arrives on 102's, not one beside it",
+      (json.loads(after["data/passages.json"])["doors"][str(FIRST)]["a"].get("own_cell"), (ex.gx, ex.gy)),
+      (True, world.cell_of(102)))
 settle = json.loads(after["data/settlements.json"])["cells"]
 before_settle = json.loads(ORIGINAL["data/settlements.json"])["cells"]
 check("the map: settlements.json gains this cell alone (data/place_settlements.py rerun)",
@@ -647,6 +691,177 @@ code, out = call("/api/object/delete", {"id": OID})
 check("then deleted: its folder gone, the manifest as it was before it",
       (code, os.path.isdir(os.path.join(OBJ, OID)), open(os.path.join(OBJ, "manifest.json"), "rb").read() == man_before),
       (200, False, True))
+
+# --- two places walked into from one location ---------------------------------------------------------------------
+print("two places, one walk-in location")
+free102 = [c for c in sorted(reach102) if c not in ex102 and c not in set(g102[3]) and c not in people102
+           and 20 <= c[1] <= 90 and 15 <= c[0] <= 45]
+PAIR = []
+for k, cells in enumerate((free102[10:11], free102[30:31])):
+    mk = E.new_model("Кваквак %d" % (k + 1), src=673, why="t")["model"]
+    mk["walk_ins"] = [{"from": 102, "cells": [list(c) for c in cells], "why": ""}]
+    mk["doors"] = {"a": {"target": 102, "why": ""}}
+    if k == 1:
+        # another writer changes a table while this save checks: the save
+        # sees it before it writes, and writes nothing
+        real_l3 = E.run_l3
+
+        def l3_and_a_writer(model, plan, placer=False):
+            got = real_l3(model, plan, placer)
+            idx_path = os.path.join(DATA, "locations", "index.json")
+            with open(idx_path, encoding="utf-8") as fh:
+                d = json.load(fh)
+            d["locations"]["8100"] = {"title": "чужая строка", "from": None, "author": "t", "created": "", "why": "t"}
+            with open(idx_path, "w", encoding="utf-8") as fh:
+                fh.write(E.dumps1(d))
+            return got
+        before_race = snapshot()
+        E.run_l3 = l3_and_a_writer
+        try:
+            code, out = call("/api/save", {"model": mk, "etag": mk["etag"]})
+        finally:
+            E.run_l3 = real_l3
+        check("a save during which another writer changed a table it planned from: 409, naming it, nothing of its "
+              "own written", (code, out.get("changed"), changed(before_race, snapshot())),
+              (409, ["data/locations/index.json"], ["data/locations/index.json"]))
+        with open(os.path.join(DATA, "locations", "index.json"), "wb") as fh:
+            fh.write(before_race["data/locations/index.json"])
+    code, out = call("/api/save", {"model": mk, "etag": mk["etag"]})
+    check("place %d with its walk-in from 102: saved" % (k + 1), (code, out.get("error")), (200, None))
+    PAIR.append(out["model"])
+PAIR_IDS = [p["id"] for p in PAIR]
+
+
+def order102():
+    """The two places' walk-in rows in 102's list, in its order."""
+    with open(os.path.join(DATA, "passages.json"), encoding="utf-8") as fh:
+        rows = json.load(fh)["walk_in"]["102"]
+    return [r["target_loc_id"] for r in rows if r["target_loc_id"] in PAIR_IDS]
+
+
+check("  ..102's walk-ins: the first place's row, then the second's", order102(), PAIR_IDS)
+pas_bytes = open(os.path.join(DATA, "passages.json"), "rb").read()
+first = call("/api/location/%d" % PAIR[0]["id"])[1]
+code, out = call("/api/save", {"model": first, "etag": first["etag"]})
+check("a save of the first that changes nothing writes nothing: passages.json byte for byte, the rows in their order",
+      (code, out["written"], open(os.path.join(DATA, "passages.json"), "rb").read() == pas_bytes), (200, [], True))
+moved = json.loads(json.dumps(first))
+moved["walk_ins"][0]["cells"] = [list(free102[12])]
+code, out = call("/api/save", {"model": moved, "etag": moved["etag"]})
+check("  ..one that moves its walk-in rewrites its row where it stands", (code, out["written"], order102()),
+      (200, ["data/passages.json"], PAIR_IDS))
+code, out = call("/api/save", {"model": PAIR[1], "etag": PAIR[1]["etag"]})
+check("  ..and the second, open all the while, still saves: another place's rows are no part of its etag",
+      (code, out.get("error")), (200, None))
+
+# one save at a time over a data/ folder, between processes too
+if E.SaveLock(DATA).path and sys.platform != "win32":
+    lock = E.SaveLock(DATA)
+    second = os.path.join(W, "second.json")
+    with open(second, "w", encoding="utf-8") as fh:
+        json.dump(call("/api/location/%d" % PAIR[1]["id"])[1], fh, ensure_ascii=False)
+    lock.__enter__()
+    try:
+        proc = subprocess.Popen([sys.executable, os.path.join(HERE, "location_editor.py"), "--data", DATA,
+                                 "--objects", OBJ, "save", second], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True)
+        # a save that changes nothing takes a few seconds with its start; it
+        # is still there after fifteen only if it waits for the lock
+        time.sleep(15)
+        waited = proc.poll() is None
+    finally:
+        lock.__exit__(None, None, None)
+    said = proc.communicate(timeout=300)[0]
+    check("a second process's save (the command line) waits while this one holds data/'s lock, then saves",
+          (waited, proc.returncode, said.strip().splitlines()[-1:] if proc.returncode else []), (True, 0, []))
+
+# --- the owner's cuts on the map ----------------------------------------------------------------------------------
+print("the cuts")
+cut = sorted(E.cut_cells())
+check("the cuts' cells: the squares map_cells.json erases or keeps, the names map_labels.json hides",
+      ((5969, 1730) in cut, (5984, 1759) in cut, (5969, 1729) in cut), (True, True, True))
+check("a map cell a cut took off the map is refused, with no square chosen as with one",
+      [any("вырезана" in t for t in map_errors(M, c)) for c in ((5969, 1730), (5984, 1759))], [True, True])
+code, out = call("/api/map")
+check("GET /api/map names the cut cells, for the page to grey them out", (code, "5969,1730" in out["cut"]), (200, True))
+
+# --- what the page says ---------------------------------------------------------------------------------------------
+print("the owner's words")
+check("the build's refusals in Russian, the object or the file kept in front",
+      [E.ru_refusal("client/objects/c_x/0.png: PNG: interlaced; save it without interlacing"),
+       E.ru_refusal("JPEG: not baseline (SOF2: progressive, lossless or arithmetic); save it as baseline"),
+       E.ru_refusal("c_x: anchor 30,99 is outside the 20x40 picture"),
+       E.ru_refusal("something new")],
+      ["client/objects/c_x/0.png: PNG с чересстрочностью (interlaced): сохраните его без неё",
+       "JPEG прогрессивный (progressive) или другой необычный: сохраните его как обычный (baseline) JPEG или как PNG",
+       "c_x: ноги 30,99 за краем картинки 20x40", "something new"])
+check("the art's problems in Russian", [E.art_why_ru("not exported by Vadihalfa: nothing is drawn"),
+                                        E.art_why_ru("no locations/libs/sprite/x.swf: nothing is drawn")],
+      ["такой картинки в библиотеке Vadihalfa нет: ничего не рисуется",
+       "нет файла locations/libs/sprite/x.swf: ничего не рисуется"])
+real_map = E.map_info
+E.map_info = lambda: (_ for _ in ()).throw(SystemExit("client/base.txt: the first line is not lava-base 1"))
+try:
+    code, out = call("/api/map")
+finally:
+    E.map_info = real_map
+check("a request that ends in SystemExit (client/build.py's readers) is answered 500 with the reason",
+      (code, "lava-base 1" in out.get("error", "")), (500, True))
+check("the pictures come from the editor's own objects folder (--objects)", E.art().objects, OBJ)
+check("a worktree git for Windows made (gitdir: C:/...) is read through /mnt/c in WSL",
+      (E.wsl_path("C:/Users/x/lava/.git/worktrees/w"), E.wsl_path("/home/x/lava/.git")),
+      ("/mnt/c/Users/x/lava/.git/worktrees/w" if os.name != "nt" else "C:/Users/x/lava/.git/worktrees/w",
+       "/home/x/lava/.git"))
+gitroot = os.path.join(W, "wt")
+os.makedirs(gitroot)
+with open(os.path.join(gitroot, ".git"), "w") as fh:
+    fh.write("gitdir: Z:/no/such/worktree\n")
+check("  ..and one that is not there sets no GIT_DIR", E.git_env(gitroot).get("GIT_DIR"), os.environ.get("GIT_DIR"))
+
+# --- pictures the browser and Flash would show apart ---------------------------------------------------------------
+print("pictures")
+
+
+def chunk(t, b):
+    return struct.pack(">I", len(b)) + t + b + struct.pack(">I", zlib.crc32(t + b) & 0xFFFFFFFF)
+
+
+def jpeg(w, h, sof=0xC0, orientation=None):
+    head = b"\xff\xd8" + b"\xff\xe0" + struct.pack(">H", 16) + b"JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+    if orientation is not None:
+        tiff = b"II*\x00" + struct.pack("<I", 8) + struct.pack("<H", 1) + \
+            struct.pack("<HHIHH", 0x0112, 3, 1, orientation, 0) + struct.pack("<I", 0)
+        app1 = b"Exif\x00\x00" + tiff
+        head += b"\xff\xe1" + struct.pack(">H", 2 + len(app1)) + app1
+    sof_body = struct.pack(">BHHB", 8, h, w, 3) + b"".join(bytes((i + 1, 0x11, 0)) for i in range(3))
+    return (head + bytes((0xFF, sof)) + struct.pack(">H", 2 + len(sof_body)) + sof_body
+            + b"\xff\xda" + struct.pack(">H", 8) + b"\x01\x01\x00\x00\x3f\x00" + b"\x12\x34\x56" + b"\xff\xd9")
+
+
+for body, said in (({"title": "x", "frames": [b64(jpeg(60, 100, orientation=6))]}, "EXIF"),
+                   ({"title": "x", "frames": [b64(jpeg(60, 100, sof=0xC2))]}, "progressive"),
+                   ({"title": "x", "frames": [b64(png(4, 4, (1, 2, 3, 4), interlace=1))]}, "чересстрочн")):
+    code, out = call("/api/object", body)
+    check("an upload refused in Russian (%s): 400" % said, (code, said in out.get("error", "")), (400, True))
+code, out = call("/api/object", {"title": "Фото без поворота", "frames": [b64(jpeg(60, 100, orientation=1))]})
+check("  ..a JPEG whose EXIF turns nothing is taken", code, 200)
+call("/api/object/delete", {"id": out.get("id")})
+gamma = f0[:33] + chunk(b"gAMA", struct.pack(">I", 100000)) + f0[33:]
+code, out = call("/api/object", {"title": "Гамма", "frames": [b64(gamma)]})
+stored = open(os.path.join(OBJ, out["id"], "0.png"), "rb").read() if code == 200 else b""
+check("a PNG's gamma is taken out on upload: the editor then shows what the game draws",
+      (code, b"gAMA" in stored, stored == f0), (200, False, True))
+call("/api/object/delete", {"id": out.get("id")})
+keep_px = CO.MAX_OBJECT_PIXELS
+CO.MAX_OBJECT_PIXELS = 16 * 24 - 1
+try:
+    code, out = call("/api/object", {"title": "Великан", "frames": [b64(f0)]})
+finally:
+    CO.MAX_OBJECT_PIXELS = keep_px
+check("an object over the pixels a build may decode: 400, in Russian, nothing written",
+      (code, "точек в картинках PNG" in out.get("error", ""), os.path.isdir(os.path.join(OBJ, "c_velikan"))),
+      (400, True, False))
+check("  ..and the manifest is as it was", open(os.path.join(OBJ, "manifest.json"), "rb").read(), man_before)
 
 # --- the rest of the API ------------------------------------------------------------------------------------------
 print("the rest")

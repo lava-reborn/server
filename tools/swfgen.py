@@ -34,8 +34,8 @@ them, alpha exact, colour within 1 of the source, the animation advancing a
 picture per hold and looping.
 
 Refused, with the reason: anything but PNG or baseline JPEG, an interlaced
-PNG, a progressive or CMYK JPEG, a side over MAX_SIDE pixels, an animation
-whose pictures differ in size.
+PNG, a progressive or CMYK JPEG, a JPEG an Exif Orientation turns, a side
+over MAX_SIDE pixels, an animation whose pictures differ in size.
 
     python3 tools/swfgen.py OUT.swf A.png [B.png ...] [--fps N]
 """
@@ -212,11 +212,32 @@ def png_decode(data):
     return w, h, bytes(out)
 
 
+def exif_orientation(tiff):
+    """The Orientation (tag 0x0112) of an Exif block's TIFF part, or None."""
+    if len(tiff) < 8 or tiff[:2] not in (b"II", b"MM"):
+        return None
+    e = "<" if tiff[:2] == b"II" else ">"
+    if struct.unpack(e + "H", tiff[2:4])[0] != 42:
+        return None
+    off = struct.unpack(e + "I", tiff[4:8])[0]
+    if off + 2 > len(tiff):
+        return None
+    for i in range(struct.unpack(e + "H", tiff[off:off + 2])[0]):
+        q = off + 2 + 12 * i
+        if q + 12 > len(tiff):
+            break
+        code, typ, _count = struct.unpack(e + "HHI", tiff[q:q + 8])
+        if code == 0x0112 and typ == 3:
+            return struct.unpack(e + "H", tiff[q + 8:q + 10])[0]
+    return None
+
+
 def jpeg_size(data):
     """(width, height) of a baseline JPEG with one or three components.
     Progressive, lossless, arithmetic-coded and CMYK files are refused: the
     bytes go into the file unchanged, and only a baseline JPEG is what the
-    originals carry."""
+    originals carry. So is one an Exif Orientation turns (a phone's photo
+    taken upright): a browser shows it turned, Flash as it is stored."""
     if data[:2] != b"\xff\xd8":
         raise Refused("not a JPEG")
     p = 2
@@ -233,6 +254,11 @@ def jpeg_size(data):
         if m in (0xD9, 0xDA):
             break
         ln = struct.unpack(">H", data[p + 2:p + 4])[0]
+        if m == 0xE1 and data[p + 4:p + 10] == b"Exif\x00\x00":
+            turn = exif_orientation(data[p + 10:p + 2 + ln])
+            if turn not in (None, 1):
+                raise Refused("JPEG: EXIF Orientation %d turns the picture in a browser, never in Flash; rotate it "
+                              "and save it without the EXIF rotation" % turn)
         if m == 0xC0:
             if p + 10 > len(data):
                 break

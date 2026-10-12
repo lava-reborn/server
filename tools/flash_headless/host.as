@@ -106,7 +106,12 @@ function buildScene() {
             spr = lol.display.AnimationSprite.create(core, "el" + d, d);
         }
         var gy = obj.point.y;
-        var p = lol.core.location.LocDeclaration.abstractToReal({x:obj.point.x + 0.5 * (gy % 2), y:gy * 0.8660254037844386});
+        var gx = obj.point.x;
+        // LocationGrid.getCellFromGrid: CellsGrid[y][x], undefined off the
+        // grid (the extra row y == H); DisplayLocScene.placeObject then
+        // sets NaN, which Flash ignores, and dx, dy land from 0, 0
+        var cell = (gy >= 0 && gy < info.height && gx >= 0 && gx < info.width) ? {rx:gx + 0.5 * (gy % 2), ry:gy * 0.8660254037844386} : undefined;
+        var p = lol.core.location.LocDeclaration.abstractToReal({x:cell.rx, y:cell.ry});
         spr._x = p.x;
         spr._y = p.y;
         spr._x += obj.resDX;

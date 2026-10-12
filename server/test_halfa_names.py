@@ -321,9 +321,12 @@ try:
             reached.add(t)
             if t not in SET_ASIDE:
                 todo.append(t)
+    # The places of ours (data/locations, the location editor's) are the
+    # owner's, their inhabitants put there by him: not the original's town.
+    OURS = {i for i in world.overlay_ids() if i >= world.FIRST_NEW_ID}
     check("every place on the town's map and every one its doors and quest ways lead to "
-          "is listed above or set aside with its reason",
-          (sorted(reached - set(PLACES) - set(SET_ASIDE)), all(SET_ASIDE.values())), ([], True))
+          "is listed above or set aside with its reason (the places of ours aside)",
+          (sorted(reached - set(PLACES) - set(SET_ASIDE) - OURS), all(SET_ASIDE.values())), ([], True))
 except Exception:
     import traceback
     fails.append("the town's map in process broke:\n" + traceback.format_exc())
