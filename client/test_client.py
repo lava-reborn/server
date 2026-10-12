@@ -307,6 +307,24 @@ try:
     check("release: an id that client/files has too is refused (the client's alone, like 262)",
           fails_with("client/files has locations/static/1381.xml", os.path.join(W, "o8")), True)
     shutil.rmtree(os.path.join(cdir, "files", "locations"))
+    # Both steps in one release: a location of ours that stands an object of
+    # ours on a cell (custom_objects.place), its sprite file beside it.
+    write(os.path.join(odir, "manifest.json"), json.dumps({"c_flag": {
+        "title": "Флажок", "frames": ["0.png"], "anchor": [1, 2], "footprint": [[0, 0]]}}, ensure_ascii=False))
+    write(os.path.join(odir, "c_flag", "0.png"), tiny_png(2, 3, bytes(range(24))))
+    put = custom_objects.place("c_flag", custom_objects.load(odir)["c_flag"], 5, 7)
+    with_obj = place.replace(b"<mobs>", put["sprite"].encode() + b"<obstacles>" + put["obstacles"].encode()
+                             + b"</obstacles><mobs>")
+    write(os.path.join(tree, "data", "locations", "static", "1381.xml"), with_obj)
+    out7 = os.path.join(W, "out7")
+    rc, out = release(out7)
+    got7 = {l.split("\t")[2]: l.split("\t")[0] for l in read(os.path.join(out7, "files.tsv")).decode().splitlines()}
+    report7 = read(os.path.join(out7, "report.txt")).decode()
+    check("release: a location of ours with an object of ours: both files, and both steps report",
+          (rc, got7.get("locations/static/1381.xml"), "locations/libs/sprite/c_flag.swf" in got7,
+           "objects:   1 from client/objects/" in report7, "locations: 1 of ours (data/locations)" in report7),
+          (None, sha(with_obj), True, True, True))
+    shutil.rmtree(odir)
     shutil.rmtree(os.path.join(tree, "data"))
 
     # --- publish: check and publish ---------------------------------------------------------------

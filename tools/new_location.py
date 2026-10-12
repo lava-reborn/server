@@ -50,6 +50,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(ROOT, "data"))
 sys.path.insert(0, os.path.join(ROOT, "server"))
 import jsonrows  # noqa: E402
+import lavaloc  # noqa: E402
 import world  # noqa: E402
 
 
@@ -68,28 +69,23 @@ def next_id(taken):
     return i
 
 
-def _attr(value):
-    return (value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-            .replace('"', "&quot;"))
-
-
 def copy_xml(raw, title, fn, keep_mobs=False):
     """The bytes of a location file with its title and fn set and, unless
-    keep_mobs, its <mobs> emptied; every other byte as it was."""
-    m = re.search(rb"<location\b[^>]*>", raw)
-    if not m:
-        raise Refused("not a location file: no <location> tag")
-    tag = m.group(0)
-    for name, value in ((b"title", title), (b"fn", fn)):
-        enc = _attr(value).encode("utf-8")
-        if re.search(rb'\b' + name + rb'="[^"]*"', tag):
-            tag = re.sub(rb'\b' + name + rb'="[^"]*"', lambda _m: name + b'="' + enc + b'"', tag, count=1)
-        else:
-            tag = tag[:-1] + b" " + name + b'="' + enc + b'">'
-    out = raw[:m.start()] + tag + raw[m.end():]
+    keep_mobs, its <mobs> emptied; every other byte as it was. Read and
+    written by tools/lavaloc.py against the file itself (encode with base),
+    so whatever is not changed keeps its own bytes, and a fn the file lacks
+    goes where the static style puts it."""
+    try:
+        doc = lavaloc.parse_raw(raw)
+        m = lavaloc.decode(doc)
+    except (ValueError, KeyError, UnicodeDecodeError) as exc:
+        raise Refused("not a location file: %s" % exc)
+    m["attrs"]["title"] = title
+    m["attrs"]["fn"] = fn
     if not keep_mobs:
-        out = re.sub(rb"<mobs>.*?</mobs>", b"<mobs></mobs>", out, count=1, flags=re.S)
-    return out
+        m["lists"]["mobs"] = []
+        m["tails"]["mobs"] = ""
+    return lavaloc.write_raw(lavaloc.encode(m, base=doc, derive_zones=False))
 
 
 def parse_walk_in(spec):
@@ -164,9 +160,7 @@ def make(src_id, title, why, data_dir=None, new_id=None, fn=None, author="owner"
         free = [c for c in loc.entries if c not in loc.obstacles]
         if not free:
             raise Refused("the copy has no free entry cell")
-        sides = {}
-        for chunk in world._chunks(world._read(path), "outzones", 5):
-            sides.setdefault(chunk[4], []).append(loc._cell(chunk))
+        sides = set(lavaloc.exits_row(lavaloc.load(body)).values())
         if door:
             side, target = door
             if side not in ("a", "b"):

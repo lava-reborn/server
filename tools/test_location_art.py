@@ -75,7 +75,7 @@ for f in sorted(glob.glob(os.path.join(world.RES, "locations", "*", "*.xml"))):
         found[(p["what"], p["id"])] += p["count"]
 check("lint: every original location's art resolves but for the original's own misses",
       dict(found), KNOWN)
-overlay = sorted(glob.glob(os.path.join(ROOT, "data", "locations", "**", "*.xml"), recursive=True))
+overlay = sorted(glob.glob(os.path.join(world.OVERLAY, "**", "*.xml"), recursive=True))
 check("lint: every location of data/locations (%d) draws all it names" % len(overlay),
       [(os.path.relpath(f, ROOT), A.art_problems(L.load(f), ix, extra)) for f in overlay
        if A.art_problems(L.load(f), ix, extra)], [])
@@ -135,9 +135,12 @@ with open(os.path.join(repo, "client", "files", "README.md"), "w") as fh:
     fh.write("not a release file")
 with open(os.path.join(repo, "client", "objects", "c_box", "0.png"), "wb") as fh:
     fh.write(b"png")
+# client/objects/manifest.json as tools/custom_objects.py has it: {id: entry},
+# frames in client/objects/<id>/.
 with open(os.path.join(repo, "client", "objects", "manifest.json"), "w") as fh:
-    json.dump({"format": 1, "objects": {"c_box": {"frames": ["c_box/0.png"], "kind": "sprite"},
-                                        "c_sky": {"frames": [], "kind": "background"}}}, fh)
+    json.dump({"c_box": {"title": "Ящик", "frames": ["0.png"], "anchor": [0, 0], "kind": "sprite"},
+               "c_sky": {"title": "Небо", "frames": ["0.jpg"], "kind": "background"},
+               "Not_an_id": {"title": "x", "frames": ["0.png"]}}, fh)
 with open(os.path.join(res, "locations", "libs", "Lib.swf"), "wb") as fh:
     fh.write(bad_bytes)
 os.makedirs(os.path.join(store, sha(gone + b"1")[:2]))
@@ -163,6 +166,17 @@ check("read: a path in another case is the release's file (Release.Find)",
       (True, "locations/libs/Lib.swf"))
 check("local_ext: the ext ids of client/files and of the objects",
       A.local_ext(repo), ({"c_mine", "c_box"}, {"c_sky"}))
+# This repository's own objects (client/objects, tools/custom_objects.py):
+# each is an ext sprite of the release to the editor and the lint, at the
+# path the build writes it to.
+import custom_objects  # noqa: E402
+OBJS = custom_objects.load()
+check("objects: every object of client/objects is in the release list where custom_objects "
+      "builds it, and a sprite the lint accepts",
+      sorted((custom_objects.release_path(o, e), rel.get(custom_objects.release_path(o, e)).origin
+              if rel.get(custom_objects.release_path(o, e)) else None,
+              o in (extra[1] if e["kind"] == "background" else extra[0])) for o, e in OBJS.items()),
+      sorted((custom_objects.release_path(o, e), "object", True) for o, e in OBJS.items()))
 check("cache_file: only a sha and a plain name, never a way out",
       [art.cache_file(*a) for a in (("../x", "manifest.json"), ("a" * 64, "../../etc/passwd"),
                                     ("a" * 64, ".hidden"), ("a" * 64, "nofile.webp"))],
@@ -286,6 +300,30 @@ else:
     x0, y0 = A._round(px + sp["dx"] + o[0]), A._round(py + sp["dy"] + o[1])
     check("render: an ext sprite's origin at cell_px(anchor) + (dx, dy) (%s)" % sp["id"],
           got, (max(0, x0 + bx[0]), max(0, y0 + bx[1]), x0 + bx[2], y0 + bx[3]))
+    # An object of ours, put on a cell the way custom_objects.place() writes
+    # it into the XML: its anchor pixel stands on the cell's centre.
+    for oid, ent in sorted(OBJS.items()):
+        if ent["kind"] != "sprite":
+            continue
+        for gx, gy in ((10, 20), (10, 21)):
+            pl = custom_objects.place(oid, ent, gx, gy)
+            sp = L.load(('<location width="32" height="64">%s</location>' % pl["sprite"]).encode())["sprites"][0]
+            one["sprites"] = [sp]
+            got = A.render(one, real, ["sprites"])[0].getbbox()
+            pic = Image.open(A.object_file(ROOT, oid, ent["frames"][0])).convert("RGBA")
+            bx = pic.getbbox()
+            px, py = L.cell_px(gx, gy)
+            x0, y0 = px - ent["anchor"][0], py - ent["anchor"][1]
+            check("render: object %s placed on %d:%d by custom_objects.place, its anchor on the "
+                  "cell's centre" % (oid, gx, gy),
+                  got, (x0 + bx[0], y0 + bx[1], x0 + bx[2], y0 + bx[3]))
+        item = next((p for p in real.palette(m35["attrs"]["library"]) if p["name"] == oid), None)
+        check("palette: object %s is there with its manifest's anchor, front and frames" % oid,
+              (item or {}).get("origin"), "object")
+        check("  ..anchor, front, game frames",
+              ((item or {}).get("anchor"), (item or {}).get("front"), (item or {}).get("frames")),
+              (list(ent["anchor"]), [list(c) for c in ent["front"]],
+               A.object_frames(custom_objects.load_raw()[oid])))
     m1 = L.load(real.location_path(1))
     dc = next(d for d in m1["bgdecorations"] if d["dx"] > 100 and d["dy"] > 100 and d["type"] != "ext")
     one = copy.deepcopy(m1)

@@ -105,6 +105,28 @@ bad_exits = [lid for lid, f in sorted(STATIC.items())
 check("data/exits_sides.json is every static file's outzones (exits_row)", bad_exits, [])
 check("data/exits_sides.json has a row for every static file",
       [lid for lid in STATIC if str(lid) not in SIDES_TABLE], [])
+# The locations of ours (data/locations, server/world.py OVERLAY): read and
+# written byte for byte too, the server reads them as the model does, and
+# their exits_sides rows are their exits_row.
+bad_ours = []
+for lid in world.overlay_ids():
+    f = world.overlay_path(lid)
+    with open(f, "rb") as fh:
+        raw = fh.read()
+    d = L.parse_raw(raw)
+    m = L.decode(d)
+    loc = world.Location(lid)
+    W = m["width"]
+    if L.write_raw(L.encode(m, d)) != raw:
+        bad_ours.append((lid, "bytes"))
+    if (loc.width, loc.height, loc.obstacles, loc.entries) != (
+            W, m["height"], {L.cell_num(x, y, W) for x, y, _ in m["lists"]["obstacles"]},
+            [L.cell_num(x, y, W) for x, y, _ in m["lists"]["inzones"]]):
+        bad_ours.append((lid, "world.Location"))
+    if SIDES_TABLE.get(str(lid)) != L.exits_row(m):
+        bad_ours.append((lid, "exits_sides"))
+check("the locations of ours (%d in data/locations): bytes, the server's reading and their "
+      "exits_sides rows agree with the model" % len(world.overlay_ids()), bad_ours, [])
 check("zones are the outzones cells, in their order, in every file",
       [f for f in FILES if [c[:2] for c in MODELS[f]["lists"]["zones"]]
        != [c[:2] for c in MODELS[f]["lists"]["outzones"]]], [])
@@ -131,6 +153,28 @@ check("front: offsets in the even-row convention give the same cells",
       [True] * 6)
 check("front: offsets_front is front_offsets' inverse",
       L.offsets_front(L.front_offsets("7e807f80808081808280")), "7e807f80808081808280")
+
+# The owner's objects (tools/custom_objects.py place) are written in the
+# same convention: what place() puts into a location is what lavaloc reads.
+import custom_objects  # noqa: E402
+OBJ = {"kind": "sprite", "anchor": (3, 5), "front": [(-1, 0), (0, 0), (1, 1)],
+       "footprint": [(0, 0), (1, 1), (0, -1), (-1, 1)]}
+bad_obj = []
+for gx, gy in ((10, 20), (10, 21), (0, 1)):
+    pl = custom_objects.place("c_probe", OBJ, gx, gy)
+    m = L.load(('<location width="32" height="64">%s<obstacles>%s</obstacles></location>'
+                % (pl["sprite"], pl["obstacles"])).encode())
+    sp = m["sprites"][0]
+    got = ((sp["id"], sp["type"], sp["dx"], sp["dy"], sp["anchors"]),
+           sp["front"], L.front_cells(sp["front"], gx, gy), L.offsets_cells(OBJ["footprint"], gx, gy),
+           m["lists"]["obstacles"])
+    want = (("c_probe", "ext", -3, -5, [(gx, gy)]),
+            L.offsets_front(OBJ["front"]), pl["front"], pl["footprint"],
+            [(x, y, "f") for x, y in pl["footprint"]])
+    if got != want:
+        bad_obj.append((gx, gy, got, want))
+check("objects: custom_objects.place() writes a sprite, front and footprint walls that lavaloc "
+      "reads back as the same cells, on even and odd rows", bad_obj, [])
 
 # --- the grid ----------------------------------------------------------------------------------
 mism = 0

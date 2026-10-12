@@ -464,9 +464,10 @@ def affected(base, impact):
         if path.startswith("client/"):
             # The client release's code and lists: its own suite, and the
             # string table's, whose whitelist the launcher shares. The
-            # owner's objects are built for real by test_swfgen.
+            # owner's objects are built for real by test_swfgen and drawn
+            # in a location by test_location_art.
             names = ("test_client", "test_export_texts") + (
-                ("test_swfgen",) if path.startswith("client/objects/") else ())
+                ("test_swfgen", "test_location_art") if path.startswith("client/objects/") else ())
             take({n for n in names if n in every}, "client release: %s" % path)
             continue
         hit = naming([base_name, path])

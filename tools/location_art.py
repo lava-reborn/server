@@ -183,14 +183,18 @@ def read_release(repo=ROOT):
                 data = fh.read()
             out[p] = Entry(p, hashlib.sha256(data).hexdigest(), len(data), "files")
     for oid, obj in read_objects(repo).items():
-        p = (BACKGROUNDS if obj.get("kind") == "background" else SPRITES) + oid + ".swf"
+        p = object_path(oid, obj)
         if p in out:
             continue        # a SWF committed under client/files wins
-        h = hashlib.sha256(b"lava-object 1\n")
+        # The picture's sha: of the frames' bytes and how they play, which
+        # is all swfgen makes the SWF from (the anchor and the cells are
+        # the XML's, never the picture's).
+        h = hashlib.sha256(b"lava-object 2\n")
+        h.update(json.dumps([obj.get("frames"), obj.get("fps")]).encode())
         size = 0
-        for fr in obj.get("frames") or []:
+        for fr in _frames(obj):
             try:
-                with open(os.path.join(repo, "client", "objects", fr), "rb") as fh:
+                with open(object_file(repo, oid, fr), "rb") as fh:
                     data = fh.read()
             except OSError:
                 data = b""
@@ -200,18 +204,50 @@ def read_release(repo=ROOT):
     return out
 
 
+def _custom_objects():
+    import custom_objects
+    return custom_objects
+
+
 def read_objects(repo=ROOT):
-    """The owner's objects, client/objects/manifest.json {"objects": {id:
-    {title, frames: [path under client/objects], fps, anchor, front,
-    footprint, kind}}}; {} without one."""
-    path = os.path.join(repo, "client", "objects", "manifest.json")
+    """The owner's objects as client/objects/manifest.json has them
+    (tools/custom_objects.py load_raw): {id: entry}, an entry's frames
+    being file names in client/objects/<id>/. Entries whose id is not an
+    object id are left out; {} without a manifest or when it does not
+    read (custom_objects.py check says why)."""
+    co = _custom_objects()
     try:
-        with open(path, encoding="utf-8") as fh:
-            m = json.load(fh)
-    except (OSError, ValueError):
+        raw = co.load_raw(os.path.join(repo, "client", "objects"))
+    except co.Refused:
         return {}
-    objs = m.get("objects") if isinstance(m, dict) else None
-    return objs if isinstance(objs, dict) else {}
+    return {oid: e for oid, e in raw.items() if co.ID.fullmatch(oid) and isinstance(e, dict)}
+
+
+def _frames(obj):
+    fr = obj.get("frames")
+    return [f for f in fr if isinstance(f, str)] if isinstance(fr, list) else []
+
+
+def object_path(oid, obj):
+    """The release path of an object: its sprite or background file."""
+    return (BACKGROUNDS if obj.get("kind") == "background" else SPRITES) + oid + ".swf"
+
+
+def object_file(repo, oid, frame):
+    """A picture of an object: client/objects/<id>/<frame>."""
+    return os.path.join(repo, "client", "objects", oid, frame)
+
+
+def object_frames(obj):
+    """Game frames (25 a second) the object's SWF plays: each picture held
+    round(25 / fps) of them, as tools/swfgen.py writes it; 1 for a still."""
+    n = len(_frames(obj))
+    if n <= 1:
+        return 1
+    try:
+        return n * _custom_objects().swfgen.hold_for(obj.get("fps"))
+    except Exception:
+        return n
 
 
 # --- a light look at a SWF, standard library only --------------------------------------------
@@ -522,14 +558,15 @@ def extract_swf(data, sha, path):
 
 def extract_object(repo, oid, obj, sha, path):
     """The owner's object: its first picture, the origin at its top-left
-    (client/objects -> swfgen puts the picture at the SWF's (0, 0))."""
+    (client/objects -> swfgen puts the picture at the SWF's (0, 0); checked
+    in the real Flash Player 32 by tools/flash_headless)."""
     Image, _ = _pil()
     files = {}
-    frames = obj.get("frames") or []
-    man = {"v": CACHE_V, "sha": sha, "path": path, "bytes": 0, "frames": len(frames) or 1,
+    frames = _frames(obj)
+    man = {"v": CACHE_V, "sha": sha, "path": path, "bytes": 0, "frames": object_frames(obj),
            "stage": None, "symbols": {}, "errors": [], "object": oid}
     try:
-        img = Image.open(os.path.join(repo, "client", "objects", frames[0])).convert("RGBA")
+        img = Image.open(object_file(repo, oid, frames[0])).convert("RGBA")
         man["stage"] = _picture(files, "stage", img, (0, 0))
     except Exception as e:
         man["errors"].append("picture: %s" % e)
@@ -740,7 +777,10 @@ class Art:
         """What a location of this library can place: its exports, then
         (ext=True) every ext sprite of the release. [{name, type, sha, path,
         and, once cached, file, thumb, w, h, ox, oy, frames}]. Ext sprites
-        are listed without extracting them; ensure(path) does that."""
+        are listed without extracting them; ensure(path) does that. The
+        owner's objects (origin "object") also carry their manifest's
+        title, anchor, front and footprint: what custom_objects.place()
+        writes when one is put on a cell."""
         out = []
         man = self.library(library)
         if man:
@@ -750,11 +790,17 @@ class Art:
                     continue
                 out.append(dict(pic, name=name, type="lib", sha=man["sha"], path=lib_path(library)))
         if ext:
+            objs = read_objects(self.repo)
             for p in sorted(self.release):
                 if not (p.startswith(SPRITES) and p.endswith(".swf")):
                     continue
                 e = self.release[p]
                 item = {"name": p[len(SPRITES):-4], "type": "ext", "sha": e.sha, "path": p}
+                if e.origin == "object":
+                    obj = objs.get(item["name"], {})
+                    item.update(origin="object", title=obj.get("title"), anchor=obj.get("anchor"),
+                                front=obj.get("front", [[0, 0]]), footprint=obj.get("footprint", []),
+                                frames=object_frames(obj))
                 sm = self._cached(e.sha)
                 if sm and sm["stage"]:
                     item.update(sm["stage"], frames=sm["frames"])
@@ -862,8 +908,10 @@ class Art:
     # -- locations --------------------------------------------------------------------
     def location_path(self, ref):
         """A location file by id ("35", 35), by "desert/0001", or by path:
-        data/locations/static/<id>.xml first (the editor's), then LAVA_RES,
-        then the art res folders."""
+        the locations of ours first (server/world.py OVERLAY, which
+        LAVA_LOC_OVERLAY moves, for this repository; another repo's
+        data/locations), then LAVA_RES, then the art res folders -- the
+        order the server reads them in (world.static_path)."""
         ref = str(ref)
         if os.path.isfile(ref):
             return ref
@@ -871,7 +919,9 @@ class Art:
         if not rel.endswith(".xml"):
             rel += ".xml"
         world = _world()
-        cands = [os.path.join(self.repo, "data", "locations", *rel.split("/")),
+        overlay = getattr(world, "OVERLAY", None) if os.path.abspath(self.repo) == ROOT else None
+        overlay = overlay or os.path.join(self.repo, "data", "locations")
+        cands = [os.path.join(overlay, *rel.split("/")),
                  os.path.join(world.RES, "locations", *rel.split("/"))]
         cands += [os.path.join(d, "locations", *rel.split("/")) for d in self.res_dirs]
         for c in cands:

@@ -52,6 +52,7 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 sys.path.insert(0, os.path.join(ROOT, "data"))
 import accounts  # noqa: E402
 import build_exits_sides as B  # noqa: E402
+import lavaloc  # noqa: E402
 import mobs  # noqa: E402
 import new_location  # noqa: E402
 import progression  # noqa: E402
@@ -153,6 +154,23 @@ try:
         es = json.load(fh)
     check("its rows in exits_sides.json, read off its own outzones",
           (es["locations"].get(str(NEW)), es["summary"].get(str(NEW))), B.row(NEW, world.static_path(NEW))[:2])
+    # The location file's own reader and writer (tools/lavaloc.py) agree:
+    # the copy is the original but for title, fn and <mobs>, and the table's
+    # row is what the editor computes from the file.
+    with open(world.static_path(NEW), "rb") as fh:
+        new_raw = fh.read()
+    with open(world.static_path(SRC), "rb") as fh:
+        src_raw = fh.read()
+    new_m, src_m = lavaloc.load(new_raw), lavaloc.load(src_raw)
+    want_m = lavaloc.load(src_raw)
+    want_m["attrs"].update(title=TITLE, fn="ED_%d" % NEW)
+    want_m["lists"]["mobs"], want_m["tails"]["mobs"] = [], ""
+    check("lavaloc: the copy is the original but for title, fn and <mobs>, and reads back byte for byte",
+          (new_m == want_m, lavaloc.write_raw(lavaloc.parse_raw(new_raw)) == new_raw,
+           len(src_m["lists"]["mobs"]) > 0),
+          (True, True, True))
+    check("  ..and its exits_sides row is lavaloc's exits_row of the file",
+          es["locations"].get(str(NEW)), lavaloc.exits_row(new_m))
     p_after = open(os.path.join(DATA, "passages.json"), encoding="utf-8").read()
     doc_b, doc_a = json.loads(p_before), json.loads(p_after)
     walk_rows = doc_a["walk_in"].pop(str(FROM))

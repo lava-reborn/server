@@ -5284,6 +5284,18 @@ LAVA.zip или укажите `LAVA_RES_SRC` на res с оригиналом
 `tools/new_location.py`; `server/test_new_location.py` проходит такое место
 на настоящем сервере. Тотем 262 остаётся только клиентским.
 
+Свои объекты владельца — картинки в `client/objects/<id>/` и строка в
+`client/objects/manifest.json` (`client/objects/README.md`) — сборка релиза
+превращает в `locations/libs/sprite/c_<имя>.swf` (`tools/custom_objects.py`,
+`tools/swfgen.py`). Локация из `data/locations` ставит объект как
+`<sprite type="ext">`, а его след — как стены `f` в `<obstacles>` того же
+файла, так что сервер не пускает на них и без отдельной таблицы. Основа
+редактора локаций: `tools/lavaloc.py` читает и пишет файл локации байт в
+байт, `tools/location_art.py` рисует её из SWF оригинала и из своих
+объектов в том порядке, что и Flash Player 32 (`tools/swfx.py` извлекает
+картинки, `data/location_art.json` — список графики релиза для проверки без
+SWF).
+
 ### Адрес
 
 **`lava-reborn.ru`** — A-запись на 159.194.247.90. Страница регистрации

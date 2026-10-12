@@ -26,3 +26,7 @@ client/objects/manifest.json text eol=lf
 client/objects/README.md text
 # Read by Linux inside docker; run.sh names its image by these bytes.
 tools/flash_headless/** text eol=lf
+# The locations of ours (server/world.py OVERLAY): the server reads these
+# bytes and the release ships them, and the static style ends in
+# <serverdata>\r\n</serverdata> (tools/lavaloc.py write_static).
+data/locations/static/** -text
