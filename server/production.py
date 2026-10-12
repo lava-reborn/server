@@ -57,6 +57,17 @@ ORE_ROCKS = {
     1026: frozenset({1312}),        # WH_Nitre_Mine_lvl1, WH_Source_Nitre_1
     1219: frozenset({1349}),        # WH_Nitre_Mine_lvl2, WH_Source_Nitre_2
     1256: frozenset({1350}),        # WH_Nitre_Mine_lvl3, WH_Source_Nitre_3
+    # Абри's three ore mines (the labels «Шахта Абри: Добыча свинца / меди /
+    # селитры<br>Вход разрешен персонажам 8-12 ур.», 2026-10-12): two tiers
+    # each, the client has no third -- 15 and 10 rocks of copper in
+    # Abri_Copper_Mine_lvl1/2, 15 and 15 of lead, 10 and 10 sources of
+    # saltpetre; the panel and the guards as in Вади-Хальфа's.
+    1028: frozenset({1317}),        # Медная Шахта 1, AB_Stone_Copper_1
+    1221: frozenset({1356}),        # Медная Шахта 2, AB_Stone_Copper_2
+    1030: frozenset({1309}),        # Свинцовая шахта 1, AB_Stone_Plumbum_1
+    1223: frozenset({1346}),        # Свинцовая шахта 2, AB_Stone_Plumbum_2
+    1029: frozenset({1313}),        # Выработка селитры 1, AB_Source_Nitre_1
+    1222: frozenset({1351}),        # Выработка селитры 2, AB_Source_Nitre_2
 }
 
 # What a rock leaves when broken: (ore, pieces). The town's own ore, the (ВХ)
@@ -69,6 +80,11 @@ ORE_YIELD = {
     1316: (3644, 1), 1354: (3644, 1), 1355: (3644, 1),     # copper
     1308: (3636, 1), 1344: (3636, 1), 1345: (3636, 1),     # lead
     1312: (3640, 1), 1349: (3640, 1), 1350: (3640, 1),     # saltpetre
+    # Абри's rocks leave Абри's ore, the (Аб) copy of each series (copper_ore_2,
+    # plumbum_ore_2, nitre_ore_2), what its terminals sort.
+    1317: (3645, 1), 1356: (3645, 1),                      # copper
+    1309: (3637, 1), 1346: (3637, 1),                      # lead
+    1313: (3641, 1), 1351: (3641, 1),                      # saltpetre
 }
 
 # «Добыча», the specialisation of Промышленность a broken rock trains beside
