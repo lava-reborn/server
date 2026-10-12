@@ -27,6 +27,9 @@ cut is, each part held here (the pattern of server/test_abri_cut.py):
      keeps his name in the string table; the camps stood no mob;
   4. the map's names: «Лагерь за рекой» hidden on its three cells, every
      other name around each camp the file's own; the pirates' names stay;
+     Донгола's pier, the town's end of the boat to 431, offers no
+     «Отправка на фронт» any more, and the men of the Армия ЦСЦ on the
+     piers stay there with no quest;
   5. the map's squares: the four camps' green squares and the three captions
      «Лагерь» go (server/map_cells.py), the pirates' square, the digs' and
      the bases' stay -- on the real map when the original's tiles are here;
@@ -107,6 +110,9 @@ LISTED = {429: (5943, 1723), 431: (5864, 2002)}
 PIRATES = [(6160, 1975), (6161, 1973)]
 HELD = {(6274, 1952): 168, (6210, 1986): None}
 PRICHAL, PRICHAL_CELL = 41, (5965, 1728)
+PIER_DN = (5873, 2012)                                  # Причал Донголы 445
+PIER_DN_WAS = "Причал Донголы:<BR>Задания.<br>Отправка на фронт.<br>Новогодняя Елка"
+PIER_DN_NOW = "Причал Донголы:<BR>Задания.<br>Новогодняя Елка"
 BOAT_OUT, BOAT_BACK = 412, 413
 ONEILL, DOBERMAN = 5685, 5694
 # The towns' banks: the places that stay (FIND.md, the research of 2026-10-12).
@@ -334,10 +340,12 @@ try:
 
     HIDDEN = {(5943, 1723): "Лагерь за рекой", (5864, 2002): "Лагерь за рекой",
               (6168, 1989): "Лагерь за рекой"}
-    ours = {(e["x"], e["y"]): (e["was"], bool(e.get("hide"))) for e in LABELS
+    ours = {(e["x"], e["y"]): (e["was"], bool(e.get("hide")), e.get("text")) for e in LABELS
             if e.get("why", "").startswith(CUT_WHY)}
-    check("data/map_labels.json hides «Лагерь за рекой» on its three cells, and edits nothing else"
-          " for the cut", ours, {c: (t, True) for c, t in HIDDEN.items()})
+    want_ours = {c: (t, True, None) for c, t in HIDDEN.items()}
+    want_ours[PIER_DN] = (PIER_DN_WAS, False, PIER_DN_NOW)
+    check("data/map_labels.json hides «Лагерь за рекой» on its three cells, takes «Отправка на"
+          " фронт» off Донгола's pier, and edits nothing else for the cut", ours, want_ours)
     EVERYWHERE = (0, 99999, 0, 99999)
     original = [r for r in rows_in(raw, EVERYWHERE) if r[2] == "Лагерь за рекой"]
     if len(original) == 3:
@@ -358,6 +366,27 @@ try:
               " retext of the owner's" % (camp, TOWNS[camp]), rows_in(out, box), want)
     pirates = [r for r in rows_in(out, (6160, 6161, 1973, 1975)) if r[2].startswith("Лагерь Пиратов")]
     check("the pirates' two names by Абу-Хамед stay", sorted((x, y) for x, y, _t in pirates), sorted(PIRATES))
+    # The town's end of the boats: Донгола's pier 445 named the front its two
+    # men of the Армия ЦСЦ sent the player to by boat (5689 and 5690, the
+    # original's Майор Картер and Рядовой Хиггинсон; texts 24458-24459: «к
+    # месту боевых действий», «об отправке в лагерь сопротивления»), the camp
+    # 431. Абу-Хамед's pier 446 (5691 and 5692), Вади-Хальфа's 41 (О'Нилл
+    # and Беккет) and Абри's port market (МакКей and Вулси) never named it.
+    PIER_BOX = (PIER_DN[0], PIER_DN[0], PIER_DN[1], PIER_DN[1])
+    check("Донгола's pier keeps its name, its quests and its tree, without «Отправка на фронт» (an"
+          " installed client's file, the release's, may have it so already)",
+          ([t for _x, _y, t in rows_in(raw, PIER_BOX)] in ([PIER_DN_WAS], [PIER_DN_NOW]),
+           [t for _x, _y, t in rows_in(out, PIER_BOX)]),
+          (True, [PIER_DN_NOW]))
+    check("  ..so no name on the map offers the front any more",
+          [(x, y) for x, y, t in rows_in(out, EVERYWHERE) if "фронт" in t.lower()], [])
+    for lid, crew in ((445, (5689, 5690)), (446, (5691, 5692)), (PRICHAL, (ONEILL, ONEILL + 1))):
+        check("  ..the two men of the Армия ЦСЦ on the pier %d stay there, with no quest to give or"
+              " take" % lid,
+              (sorted(set(crew) & set(stood_in(lid))),
+               {t: (quests.given_by(t), quests.taken_by(t)) for t in crew
+                if quests.given_by(t) or quests.taken_by(t)}),
+              (sorted(crew), {}))
 except Exception:
     import traceback
     fails.append("the names broke:\n" + traceback.format_exc())

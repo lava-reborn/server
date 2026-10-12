@@ -215,6 +215,31 @@ check("the ФСЦ cut's own edits are its two cells and no other",
              if e.get("why", "").startswith("The owner's cut of Вади-Хальфа's ФСЦ, 2026-10-10")),
       sorted(FSC_CUT))
 
+# The owner's cut of the camps across the river (2026-10-12, «убери во всех
+# городах лагеря за рекой»; server/test_river_camps_cut.py): «Лагерь за
+# рекой» is hidden on its three cells, and Донгола's pier no longer offers
+# «Отправка на фронт», the boat of its two men of the Армия ЦСЦ to the camp
+# 431 across the river. The pier keeps every other word.
+print("the cut of the camps across the river")
+RIVER_WHY = "The owner's cut of the camps across the river, 2026-10-12"
+RIVER_HIDDEN = [(5943, 1723), (5864, 2002), (6168, 1989)]
+PIER_DN = (5873, 2012)
+check("«Лагерь за рекой» has no cell of the map any more, where the file had three",
+      ({c: texts_at(out, *c) for c in RIVER_HIDDEN}, {c: texts_at(raw, *c) for c in RIVER_HIDDEN}),
+      ({c: [] for c in RIVER_HIDDEN}, {c: ["Лагерь за рекой"] for c in RIVER_HIDDEN}))
+check("Донгола's pier drops «Отправка на фронт» and keeps its quests and its tree",
+      (texts_at(raw, *PIER_DN), texts_at(out, *PIER_DN)),
+      (["Причал Донголы:<BR>Задания.<br>Отправка на фронт.<br>Новогодняя Елка"],
+       ["Причал Донголы:<BR>Задания.<br>Новогодняя Елка"]))
+check("  ..the only name of the file that offered the front",
+      (rows_in(raw, (0, 99999, 0, 99999), re.compile("фронт", re.I)),
+       rows_in(out, (0, 99999, 0, 99999), re.compile("фронт", re.I))),
+      ([PIER_DN], []))
+check("the river cut's own edits are those four cells and no other (Абри's clothing market's is"
+      " its own cut's)",
+      sorted((e["x"], e["y"]) for e in LABELS if e.get("why", "").startswith(RIVER_WHY)),
+      sorted(RIVER_HIDDEN + [PIER_DN]))
+
 # The owner's boss clock (2026-10-11: «давай 14 18 22», «и в описании ко всем
 # локациям измени это», «и там написано что выпадает чертеж хотя надо чтобы
 # было написано выпадает голд»). The client's only description of a place is
