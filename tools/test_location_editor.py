@@ -45,7 +45,29 @@ browser, on a copy of data/ and of client/objects:
     (with Pillow);
   * the page (tools/location_editor_ui/static) and the files it loads.
 
-    python3 tools/test_location_editor.py
+Then publish mode (--repo, the admin panel's), in a process of its own
+(publish_mode below): origin is a bare repository made here from this tree
+as it is, the editor works on a shallow clone of it, and a second clone
+plays everybody else pushing to main meanwhile; L4 is a probe suite that
+goes red on a place titled «КРАСНЫЙ…»:
+
+  * /api/info says publish mode and the commit; a write without
+    X-Lava-Admin is refused; the page's entry is there;
+  * a new place is a draft under "new:<uuid>" at once, nothing written into
+    the clone; its draft saves with a rev, a stale rev is a 409; the diff
+    says what publishing it changes;
+  * a publish: one commit on main on top of a commit somebody pushed
+    meanwhile (merged: theirs kept), exactly the place's files, by the
+    admin; the place took the next free number because theirs took the
+    first, and every "new:<uuid>" (the why, the walk-in's why) and fn
+    ED_NEW became it; the editor asks to be restarted on the new commit;
+  * a draft of that place whose rows main changed meanwhile: 409, nothing
+    pushed; a place L4 finds red: 422 with the suite, nothing pushed;
+  * an uploaded object stays out of the clone and goes to main with a
+    publish, as its PNG and its manifest row; the clone is never written.
+
+    python3 tools/test_location_editor.py              (both; publish mode as a child)
+    python3 tools/test_location_editor.py --publish    (publish mode alone)
 """
 import base64
 import json
@@ -64,6 +86,393 @@ import zlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+
+# The env the local half sets for itself; publish mode reads its clone's.
+LOCAL_ENV = ("LAVA_LOCATION_EDITOR_GIT", "LAVA_LOCATION_EDITOR_CACHE", "LAVA_LOC_OVERLAY", "LAVA_PASSAGES",
+             "LAVA_PLACEMENTS")
+PROBE = '''"""L4 probe of the location editor's publish test: red on a place titled «КРАСНЫЙ…»."""
+import json, os, sys
+root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+with open(os.path.join(root, "data", "locations", "index.json"), encoding="utf-8") as fh:
+    rows = json.load(fh).get("locations") or {}
+red = sorted(k for k, v in rows.items() if "КРАСНЫЙ" in str((v or {}).get("title") or ""))
+print("probe: %d places of ours, red: %s" % (len(rows), red))
+sys.exit(1 if red else 0)
+'''
+
+
+def publish_mode():
+    """The editor's publish mode on a git origin made here (see the top)."""
+    tmp = tempfile.mkdtemp(prefix="test-location-publish-")
+    cfg = os.path.join(tmp, "gitconfig")
+    open(cfg, "w").close()
+    os.environ.update(GIT_CONFIG_GLOBAL=cfg, GIT_CONFIG_NOSYSTEM="1", LAVA_LOCATIONS_L4="tools/test_l4_probe.py")
+    for k in LOCAL_ENV + ("LAVA_LOCATIONS_AUTHOR_EMAIL", "LAVA_LOCATIONS_COMMITTER_NAME",
+                          "LAVA_LOCATIONS_COMMITTER_EMAIL", "LAVA_LOCATIONS_L4_RES"):
+        os.environ.pop(k, None)
+    sys.path.insert(0, HERE)
+    sys.path.insert(0, os.path.join(ROOT, "server"))
+    import location_editor as E
+    import publisher as PB
+    import world
+    from testkit import check, fails
+
+    def gitb(cwd, *args):
+        done = subprocess.run(["git", "-C", cwd, "-c", "user.name=Somebody Else",
+                               "-c", "user.email=else@example.invalid"] + list(args),
+                              capture_output=True, timeout=300)
+        if done.returncode:
+            raise RuntimeError("git %s: %s" % (" ".join(args), done.stderr.decode("utf-8", "replace")))
+        return done.stdout
+
+    def git(cwd, *args):
+        return gitb(cwd, *args).decode("utf-8").strip()
+
+    # --- origin: this tree as it is (what git tracks and what it does not
+    # know yet, never what it ignores), the probe suite beside it
+    seed = os.path.join(tmp, "seed")
+    env = E.git_env(ROOT)
+    listed = None
+    try:
+        out = subprocess.run(["git", "-C", ROOT, "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+                             capture_output=True, timeout=120, env=env)
+        if out.returncode == 0 and out.stdout:
+            listed = [p for p in out.stdout.decode("utf-8").split("\0") if p]
+    except (OSError, subprocess.SubprocessError):
+        listed = None
+    if listed:
+        for rel in listed:
+            src = os.path.join(ROOT, *rel.split("/"))
+            if not os.path.isfile(src):
+                continue                   # gone from the tree, not yet from the index
+            dst = os.path.join(seed, *rel.split("/"))
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst)
+    else:
+        shutil.copytree(ROOT, seed, ignore=shutil.ignore_patterns(".git", "__pycache__", "node_modules", "*.pyc"))
+    with open(os.path.join(seed, "tools", "test_l4_probe.py"), "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(PROBE)
+    git(tmp, "init", "-q", "-b", "main", seed)
+    git(seed, "add", "-A")
+    git(seed, "commit", "-q", "-m", "seed")
+    bare = os.path.join(tmp, "origin.git")
+    git(tmp, "clone", "-q", "--bare", seed, bare)
+    clone = os.path.join(tmp, "clone")
+    git(tmp, "clone", "-q", "--depth", "1", "--single-branch", "--branch", "main", "file://" + bare, clone)
+    other = os.path.join(tmp, "other")
+    git(tmp, "clone", "-q", "file://" + bare, other)
+    head0 = git(bare, "rev-parse", "main")
+
+    web = "https://example.invalid/lava/server"
+    E.configure_repo(clone, "main", web, work=os.path.join(tmp, "work"), cache=os.path.join(tmp, "cache"))
+    E._MEMO["ext_warm_done"] = True
+    exits = []
+    E.PUB.exit = exits.append
+    srv = E.serve(0)
+    port = srv.server_address[1]
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+
+    def call(url, body=None, admin="tester"):
+        data = None if body is None else json.dumps(body, ensure_ascii=False).encode("utf-8")
+        headers = {"Content-Type": "application/json"}
+        if admin:
+            headers["X-Lava-Admin"] = admin
+        req = urllib.request.Request("http://127.0.0.1:%d%s" % (port, url), data=data, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=600) as resp:
+                raw, code = resp.read(), resp.status
+        except urllib.error.HTTPError as exc:
+            raw, code = exc.read(), exc.code
+        try:
+            return code, json.loads(raw.decode("utf-8"))
+        except ValueError:
+            return code, raw
+
+    def origin_head():
+        return git(bare, "rev-parse", "main")
+
+    def at(rev, path):
+        return gitb(bare, "show", "%s:%s" % (rev, path))
+
+    def somebody(change, message):
+        """A commit to main from another clone, as a merged PR lands."""
+        git(other, "fetch", "-q", "origin")
+        git(other, "reset", "-q", "--hard", "origin/main")
+        change(other)
+        git(other, "add", "-A")
+        git(other, "commit", "-q", "-m", message)
+        git(other, "push", "-q", "origin", "main")
+        return git(other, "rev-parse", "HEAD")
+
+    def published(uuid, wait=900):
+        """The draft once its publish is over."""
+        t0 = time.time()
+        while time.time() - t0 < wait:
+            code, d = call("/api/draft/" + uuid)
+            if code == 200 and (d.get("publish") or {}).get("state") not in (None, "running"):
+                return d["publish"]
+            time.sleep(1)
+        return {"state": "timeout"}
+
+    def restarted():
+        """What the container's entrypoint does on exit 75: the clone onto
+        origin's main, the editor started again from it."""
+        for _ in range(100):
+            if exits:
+                break
+            time.sleep(0.1)
+        got = list(exits)
+        del exits[:]
+        git(clone, "checkout", "-q", "-f", "--detach", "refs/remotes/origin/main")
+        E.PUB.restarting = False
+        E.PENDING.rebuild()
+        E.configure(os.path.join(clone, "data"), E.PENDING.view)
+        world._CACHE.clear()
+        return got
+
+    def clean_clone():
+        return git(clone, "status", "--porcelain", "--untracked-files=all")
+
+    def index_row(loc_id, rev="main"):
+        return (json.loads(at(rev, "data/locations/index.json")).get("locations") or {}).get(str(loc_id))
+
+    print("publish mode")
+    code, inf = call("/api/info")
+    check("GET /api/info: publish mode, the commit and the branch",
+          (code, inf.get("mode"), inf.get("commit"), inf.get("branch"), inf.get("web")),
+          (200, "publish", head0, "main", web))
+    code, ent = call("/api/entry")
+    check("GET /api/entry: the built page's script and styles",
+          (code, str(ent.get("js") or "").startswith("assets/"), all(c.startswith("assets/") for c in ent.get("css") or [])),
+          (200, True, True))
+    check("a write without X-Lava-Admin is refused",
+          call("/api/new", {"from": 673, "title": "x", "why": "t"}, admin=None)[0], 400)
+
+    # the walk-in from the black market (102) and the door back, as the local half makes them
+    g102 = E.location_grid(102)
+    reach102 = E._components(64, 128, g102[2], [c for c in g102[3] if c not in g102[2]])
+    people102 = {(r[0], r[1]) for r in E.load_model(102)["spawns"]}
+    free102 = [c for c in sorted(reach102) if c not in g102[4] and c not in set(g102[3]) and c not in people102
+               and 20 <= c[1] <= 90 and 15 <= c[0] <= 45]
+
+    def place(title, cells):
+        code, got = call("/api/new", {"from": 673, "title": title, "why": "проверка публикации", "base": head0},
+                         admin="Грач".encode("utf-8"))
+        m = got.get("model") or {}
+        m["walk_ins"] = [{"from": 102, "cells": [list(c) for c in cells], "why": ""}]
+        m["doors"] = {"a": {"target": 102, "why": ""}}
+        return code, got, m
+
+    first = E.next_free_id()
+    code, got, m = place("Погреб публикации", free102[12:13])
+    uuid = (got.get("draft") or {}).get("uuid")
+    temp = m.get("id")
+    check("POST /api/new: a draft at once, under new:<uuid>, its fn from the title",
+          (code, temp == "new:%s" % uuid, m.get("state"), m["attrs"]["fn"], (got.get("draft") or {}).get("rev")),
+          (200, True, "new", "ED_Pogreb_Publikatsii", 1))
+    check("  ..and nothing written into the clone", clean_clone(), "")
+    m["attrs"]["fn"] = E.TEMP_FN               # as a title with no latin word would have it
+    m["index"]["why"] = "проверка публикации: ссылка на %s" % temp
+    m["walk_ins"][0]["why"] = "проход в %s из 102" % temp
+    code, chk = call("/api/check", {"model": m, "quick": True})
+    check("POST /api/check of the new place under its temporary id: no error",
+          (code, [p["text"] for p in chk.get("problems", []) if p["level"] == "error"]), (200, []))
+    code, sv = call("/api/draft", {"uuid": uuid, "rev": 1, "model": m})
+    check("POST /api/draft: saved, rev 2", (code, sv.get("rev"), sv.get("id")), (200, 2, temp))
+    check("  ..a save with a stale rev is a 409", call("/api/draft", {"uuid": uuid, "rev": 1, "model": m})[0], 409)
+    code, sv2 = call("/api/save", {"uuid": uuid, "rev": 2, "model": m})
+    check("POST /api/save is the draft's save in publish mode", (code, sv2.get("rev")), (200, 3))
+    code, lst = call("/api/drafts")
+    check("GET /api/drafts lists it: who began it, who saved it last",
+          (code, [(d["uuid"], d["title"], d["created_by"], d["login"], d["rev"]) for d in lst.get("drafts", [])]),
+          (200, [(uuid, "Погреб публикации", "Грач", "tester", 3)]))
+    code, dif = call("/api/diff/" + uuid)
+    check("GET /api/diff/<uuid>: a new place, its files, no error",
+          (code, (dif.get("summary") or [""])[0].startswith("новое место «Погреб публикации», копия #673"),
+           "data/locations/static/N.xml" in (dif.get("files") or []), "data/passages.json" in (dif.get("files") or []),
+           [p["text"] for p in dif.get("problems") or [] if p["level"] == "error"], dif.get("assign")),
+          (200, True, True, True, [], first))
+
+    # somebody takes the number the place would get, and changes something else
+    def theirs(tree):
+        static = os.path.join(tree, "data", "locations", "static")
+        os.makedirs(static, exist_ok=True)
+        shutil.copyfile(world.static_path(673), os.path.join(static, "%d.xml" % first))
+        idx = os.path.join(tree, "data", "locations", "index.json")
+        with open(idx, encoding="utf-8") as fh:
+            doc = json.load(fh)
+        doc.setdefault("locations", {})[str(first)] = {"title": "Чужое место", "from": 673, "author": "t",
+                                                       "created": "2026-10-12", "why": "t"}
+        with open(idx, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(E.dumps1(doc))
+        with open(os.path.join(tree, "README.md"), "a", encoding="utf-8", newline="\n") as fh:
+            fh.write("\nСтрока из чужой ветки.\n")
+    up = somebody(theirs, "their place")
+    code, st = call("/api/publish", {"uuid": uuid, "rev": 3, "message": "проверка публикации"},
+                    admin="Грач".encode("utf-8"))
+    check("POST /api/publish: 202, running", (code, (st.get("publish") or {}).get("state")), (202, "running"))
+    pub = published(uuid)
+    res = pub.get("result") or {}
+    real = res.get("id")
+    c1 = origin_head()
+    check("the publish went through: a commit on main, the place under the next free number",
+          (pub.get("state"), pub.get("code"), res.get("commit"), real, res.get("renumbered"),
+           res.get("url"), res.get("error")),
+          ("done", 200, c1, first + 1, {temp: first + 1}, web + "/commit/" + c1, None))
+    if real is None:
+        print("  !!  the publish did not go through: %s" % json.dumps(res, ensure_ascii=False)[:3000])
+        srv.shutdown()
+        return 1
+    check("  ..one commit, on top of theirs", (git(bare, "rev-list", "--count", "%s..main" % up),
+                                               git(bare, "rev-parse", c1 + "^")), ("1", up))
+    files = git(bare, "diff", "--name-only", up, c1).split("\n")
+    want = {"data/locations/static/%d.xml" % real, "data/locations/index.json", "data/exits_sides.json",
+            "data/passages.json"}
+    check("  ..exactly the place's files: its file, its rows (the copy's creatures among them maybe)",
+          (want <= set(files), sorted(set(files) - want - {"data/placements.json"}), sorted(res.get("files") or [])),
+          (True, [], sorted(files)))
+    check("  ..theirs kept: their place and their line",
+          ((index_row(first) or {}).get("title"),
+           "Строка из чужой ветки" in at("main", "README.md").decode("utf-8")), ("Чужое место", True))
+    row = index_row(real) or {}
+    xml = at("main", "data/locations/static/%d.xml" % real).decode("utf-8")
+    pas = json.loads(at("main", "data/passages.json"))
+    walk = [r for r in (pas.get("walk_in") or {}).get("102") or () if r.get("target_loc_id") == real]
+    check("  ..every new:<uuid> became the number: the why, the walk-in's why, fn ED_NEW",
+          (row.get("title"), row.get("why"), [r["why"] for r in walk], 'fn="ED_%d"' % real in xml,
+           (pas.get("doors") or {}).get(str(real), {}).get("a", {}).get("target_loc_id"),
+           "new:" in gitb(bare, "diff", up, c1).decode("utf-8")),
+          ("Погреб публикации", "проверка публикации: ссылка на %d" % real, ["проход в %d из 102" % real],
+           True, 102, False))
+    check("  ..by the admin, with the summary, the note and who",
+          (git(bare, "log", "-1", "--format=%an|%ae|%cn|%ce", c1),
+           git(bare, "log", "-1", "--format=%s", c1),
+           "проверка публикации" in git(bare, "log", "-1", "--format=%B", c1),
+           git(bare, "log", "-1", "--format=%B", c1).rstrip().endswith("Опубликовано из админки: Грач")),
+          ("Грач (админка)|locations@lava-reborn.ru|Редактор локаций админки|locations@lava-reborn.ru",
+           "Локации: новое место #%d «Погреб публикации», копия #673" % real, True, True))
+    check("  ..L4 ran on it, green", [(s["suite"], s["ok"]) for s in res.get("suites") or []],
+          [("tools/test_l4_probe.py", True)])
+    check("  ..the draft leaves the list; the editor asks to restart on the new commit",
+          ([d["uuid"] for d in call("/api/drafts")[1].get("drafts", [])], restarted()), ([], [PB.RESTART_CODE]))
+    check("  ..and the clone was never written", clean_clone(), "")
+
+    # a draft of the place whose rows main changes meanwhile: stale
+    code, mm = call("/api/location/%d" % real)
+    mm["walls"] = mm["walls"] + [[mm["entries"][0][0] + 1, mm["entries"][0][1], "f"]]
+    code, sv = call("/api/draft", {"model": mm, "base": origin_head()})
+    uuid2 = sv.get("uuid")
+    check("a draft of our place: saved under a uuid of its own", (code, bool(uuid2), sv.get("id")), (200, True, real))
+
+    def their_why(tree):
+        idx = os.path.join(tree, "data", "locations", "index.json")
+        with open(idx, encoding="utf-8") as fh:
+            doc = json.load(fh)
+        doc["locations"][str(real)]["why"] = "переписано в чужой ветке"
+        with open(idx, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(E.dumps1(doc))
+    before = somebody(their_why, "their why")
+    code, st = call("/api/publish", {"uuid": uuid2, "rev": sv.get("rev")})
+    pub = published(uuid2)
+    check("its rows changed in main meanwhile: the publish is a 409, a stale draft, nothing pushed",
+          (code, pub.get("state"), pub.get("code"), (pub.get("result") or {}).get("stale"), origin_head()),
+          (202, "failed", 409, True, before))
+    check("  ..and the draft is kept, to be done again", (call("/api/draft/" + uuid2)[0]), 200)
+
+    # a place L4 finds red
+    code, got, m3 = place("КРАСНЫЙ погреб", free102[60:61])
+    uuid3 = (got.get("draft") or {}).get("uuid")
+    code, sv = call("/api/draft", {"uuid": uuid3, "rev": 1, "model": m3})
+    code, st = call("/api/publish", {"uuid": uuid3, "rev": sv.get("rev")})
+    pub = published(uuid3)
+    res = pub.get("result") or {}
+    check("a place the L4 suites find red: 422, the suite named, nothing pushed",
+          (code, pub.get("code"), [(s["suite"], s["ok"]) for s in res.get("suites") or []], origin_head()),
+          (202, 422, [("tools/test_l4_probe.py", False)], before))
+    check("  ..and no restart asked for", exits, [])
+
+    # the owner's object: pending, then published as its PNG and its manifest row
+    def png(w, h, rgba):
+        def chunk(t, b):
+            return struct.pack(">I", len(b)) + t + b + struct.pack(">I", zlib.crc32(t + b) & 0xFFFFFFFF)
+        raw = b"".join(b"\x00" + bytes(rgba) * w for _ in range(h))
+        return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+                + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+    pic = png(12, 20, (200, 120, 40, 255))
+    code, ob = call("/api/object", {"title": "Бочка публикации", "frames": [base64.b64encode(pic).decode()]})
+    oid = ob.get("id")
+    code, objs = call("/api/objects")
+    check("POST /api/object: pending, out of the clone",
+          (code, (objs.get("pending") or {}).get(oid), oid in objs.get("objects", {}), clean_clone()),
+          (200, "new", True, ""))
+    code, st = call("/api/publish", {"message": "бочка"})
+    pub = published(st.get("uuid") or "0" * 32)
+    res = pub.get("result") or {}
+    c2 = origin_head()
+    man = json.loads(at("main", "client/objects/manifest.json"))
+    check("published with no place: one commit, its PNG and its manifest row",
+          (code, pub.get("code"), res.get("commit"), sorted(git(bare, "diff", "--name-only", before, c2).split("\n")),
+           at("main", "client/objects/%s/0.png" % oid) == pic, man.get(oid, {}).get("title")),
+          (202, 200, c2, ["client/objects/%s/0.png" % oid, "client/objects/manifest.json"], True, "Бочка публикации"))
+    restarted()
+    check("  ..no longer pending", call("/api/objects")[1].get("pending"), {})
+    check("  ..and the clone was never written", clean_clone(), "")
+
+    # the server's slice (/opt/lava/res) has no database/locations.xml, which
+    # the map's recount reads: publish mode lays it in from the release store
+    have = os.path.join(world.RES, "database", "locations.xml")
+    if os.path.isfile(have):
+        with open(have, "rb") as fh:
+            raw = fh.read()
+        store = os.path.join(tmp, "store")
+        sha_ = E.sha(raw)
+        os.makedirs(os.path.join(store, sha_[:2]))
+        with open(os.path.join(store, sha_[:2], sha_), "wb") as fh:
+            fh.write(raw)
+        slim = os.path.join(tmp, "slice")
+        os.makedirs(os.path.join(slim, "database"))
+        for n in os.listdir(world.RES):
+            if n != "database":
+                os.symlink(os.path.join(world.RES, n), os.path.join(slim, n))
+        for n in os.listdir(os.path.join(world.RES, "database")):
+            if n != "locations.xml":
+                os.symlink(os.path.join(world.RES, "database", n), os.path.join(slim, "database", n))
+        was = (world.RES, os.environ.get("LAVA_ART_STORE"), os.environ.get("LAVA_ART_RES"))
+        world.RES = slim
+        os.environ.update(LAVA_ART_STORE=store, LAVA_ART_RES=os.path.join(tmp, "nowhere"))
+        E._ART[0] = None
+        try:
+            got = E.fill_res(os.path.join(tmp, "filled"))
+            with open(os.path.join(got, "database", "locations.xml"), "rb") as fh:
+                filled = fh.read()
+            check("RES without database/locations.xml: the release's laid in by its sha, the rest linked",
+                  (got != slim, filled == raw, sorted(os.listdir(got)) == sorted(os.listdir(was[0])),
+                   os.path.isfile(os.path.join(got, "database", "mobs.xml"))), (True, True, True, True))
+        finally:
+            world.RES = was[0]
+            for k, v in (("LAVA_ART_STORE", was[1]), ("LAVA_ART_RES", was[2])):
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+            E._ART[0] = None
+    else:
+        print("  --  no database/locations.xml in LAVA_RES: the fill from the store is not checked here")
+
+    srv.shutdown()
+    shutil.rmtree(tmp, ignore_errors=True)
+    print()
+    if fails:
+        print("FAILED %d:" % len(fails))
+        for failure in fails:
+            print(" -", failure)
+        return 1
+    print("location publish OK")
+    return 0
+
+
+if __name__ == "__main__" and sys.argv[1:2] == ["--publish"]:
+    sys.exit(publish_mode())
 
 W = tempfile.mkdtemp(prefix="test-location-editor-")
 DATA = os.path.join(W, "data")
@@ -916,6 +1325,18 @@ else:
 
 srv.shutdown()
 shutil.rmtree(W, ignore_errors=True)
+
+# --- publish mode, in a process of its own --------------------------------------------------------------------------
+print("publish mode (a child process: a git origin of its own)")
+t0 = time.time()
+child = subprocess.run([sys.executable, os.path.abspath(__file__), "--publish"],
+                       env={k: v for k, v in os.environ.items() if k not in LOCAL_ENV},
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=3600)
+print(child.stdout.rstrip())
+if child.returncode:
+    print(child.stderr[-3000:])
+check("publish mode: every check of the child passed (%.0f s)" % (time.time() - t0),
+      (child.returncode, child.stdout.strip().splitlines()[-1:]), (0, ["location publish OK"]))
 print()
 if fails:
     print("FAILED %d:" % len(fails))

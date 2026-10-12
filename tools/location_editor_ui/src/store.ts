@@ -1,10 +1,18 @@
 // What the page reads once and keeps: the editor's info, the list of
 // locations, the creatures' names, the palettes by library, the map.
-import { api } from "./api";
+import { api, href } from "./api";
 import type { Info, LocRow, MapInfo, Mob, Palette } from "./types";
 
 let info: Promise<Info> | null = null;
-export const getInfo = () => (info ||= api.info());
+export const getInfo = (fresh = false) => {
+  if (fresh || !info) {
+    info = api.info();
+    info.catch(() => (info = null));
+  }
+  return info;
+};
+// publish mode: the admin panel's, where a save is a draft and «Опубликовать» a commit to main
+export const isPublish = (i: Info | null | undefined) => i?.mode === "publish";
 
 let rows: Promise<LocRow[]> | null = null;
 export const getLocations = (fresh = false) => {
@@ -60,4 +68,4 @@ export function lookupMob(t: number): Promise<Mob | null> {
   return p;
 }
 export const mobName = (t: number) => mobs.get(t)?.name || `существо ${t}`;
-export const mobIcon = (t: number) => `/api/mobicon/${t}.webp`;
+export const mobIcon = (t: number) => href(`/api/mobicon/${t}.webp`);

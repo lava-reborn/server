@@ -7,7 +7,7 @@ export default function LocInput(props: {
   value: number | null;
   onChange: (id: number | null) => void;
   placeholder?: string;
-  exclude?: number;
+  exclude?: number | string;
   label?: string;
 }) {
   const id = useId();

@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api, errText, type DroppedRow } from "../api";
+import { api, ApiError, errText, type DroppedRow } from "../api";
 import { ALL_LAYERS, LocCanvas, ZOOM_MAX, ZOOM_MIN, type Layer, type Mark, type PointerInfo } from "../canvas";
 import Problems from "../components/Problems";
+import PublishDialog from "../components/PublishDialog";
 import { Modal, Spinner, ask, toast } from "../components/ui";
 import WalkInPicker from "../components/WalkInPicker";
 import { cellPx, disc, inGrid, key, neighbours, pxCell, rectCells } from "../hex";
-import { forgetPalettes, getInfo, getPalette, mobIcon, mobName } from "../store";
+import { forgetPalettes, getInfo, getLocations, getPalette, mobIcon, mobName } from "../store";
 import { EntriesPanel, ExitsPanel, WallsPanel, type ExitSide, type WallMode } from "../tools/CellPanels";
 import InhabitantsPanel from "../tools/InhabitantsPanel";
 import { MapPanel, MapView } from "../tools/MapTool";
 import ObjectsPanel from "../tools/ObjectsPanel";
 import PropsPanel from "../tools/PropsPanel";
 import WaysPanel from "../tools/WaysPanel";
-import type { Cell, Info, Mob, Model, Palette, PaletteItem, Problem } from "../types";
+import type { Cell, Info, Mob, Model, Palette, PaletteItem, Problem, PublishState } from "../types";
 import { NewFromCopy } from "./LocationList";
 
 type Tool = "props" | "objects" | "walls" | "exits" | "entries" | "wars" | "inhabitants" | "ways" | "map";
@@ -40,10 +41,51 @@ const LAYER_RU: Record<Layer, string> = {
 };
 const SIDE_RU: Record<string, string> = { W: "запад", N: "север", E: "восток", S: "юг", a: "дверь a", b: "дверь b" };
 const STATE_RU = { new: "новая, не сохранена", ours: "наша", original: "оригинал: только просмотр" };
+const STATE_RU_PUBLISH = { new: "новая, черновик", ours: "наша", original: "оригинал: только просмотр" };
 
 // what the page remembers between the screens (not in the browser's storage)
 const ui = { tool: "objects" as Tool, layers: new Set<Layer>(ALL_LAYERS) };
-const views = new Map<number, { zoom: number; panX: number; panY: number }>();
+const views = new Map<number | string, { zoom: number; panX: number; panY: number }>();
+
+// Publish mode (the admin panel): what the page edits is a draft on the
+// server, saved after AUTOSAVE_MS of quiet; until it is, a copy waits in the
+// browser (localStorage), which a page opened again takes back.
+export interface DraftRef {
+  uuid: string;
+  rev: number;
+  base: string;
+  updated?: string;
+}
+const AUTOSAVE_MS = 3000;
+const RETRY_MS = 10000;
+const backupKey = (d: DraftRef | null, m: Model) => `lava-loc-draft:${d ? d.uuid : `loc:${m.id}`}`;
+function readBackup(k: string): { model: Model; rev: number; at: number } | null {
+  try {
+    const t = window.localStorage.getItem(k);
+    return t ? JSON.parse(t) : null;
+  } catch {
+    return null;
+  }
+}
+function writeBackup(k: string, v: { model: Model; rev: number; at: number }) {
+  try {
+    window.localStorage.setItem(k, JSON.stringify(v));
+  } catch {
+    /* a private window or a full storage: the server's draft is the copy */
+  }
+}
+function dropBackup(k: string) {
+  try {
+    window.localStorage.removeItem(k);
+  } catch {
+    /* nothing kept */
+  }
+}
+const clock = (iso?: string) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+};
 
 interface Stroke {
   before: Model;
@@ -57,10 +99,14 @@ interface Stroke {
 export default function Editor(props: {
   initial: Model;
   dropped: DroppedRow[];
+  publish: boolean;
+  draft: DraftRef | null;
+  published?: PublishState | null;
   onBack: () => void;
   onSaved: (m: Model) => void;
-  onCopy: (m: Model, d: DroppedRow[]) => void;
-  onReload?: () => void;
+  onCopy: (m: Model, d: DroppedRow[], draft?: { uuid: string; rev: number }) => void;
+  onDraft?: (d: DraftRef) => void;
+  onReload?: (fromMain: boolean) => void;
 }) {
   const [model, setModelState] = useState<Model>(props.initial);
   const modelRef = useRef<Model>(props.initial);
@@ -105,7 +151,7 @@ export default function Editor(props: {
   const drag = useRef<{ kind: "sprite" | "inh"; id: [number, number] | number; start: [number, number]; moved: boolean } | null>(null);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
 
-  const readOnly = model.state === "original" || !!model.closed;
+  const readOnly = model.state === "original" || !!model.closed || props.published?.state === "done";
   // While a save runs nothing is edited: the page is veiled, the keys wait,
   // and an edit that slipped through is refused here (its answer replaces
   // the model).
@@ -430,9 +476,137 @@ export default function Editor(props: {
     }
   };
 
+  // --- the draft (publish mode) -------------------------------------------------------
+  const draftRef = useRef<DraftRef | null>(props.draft);
+  const savedText = useRef(JSON.stringify(props.initial));
+  const [draftStatus, setDraftStatus] = useState<{ s: "idle" | "pending" | "saving" | "saved" | "error"; text?: string }>(
+    props.draft ? { s: "saved", text: props.draft.updated } : { s: "idle" },
+  );
+  const [draftConflict, setDraftConflict] = useState<string | null>(null);
+  const conflictRef = useRef(false);
+  const [publishing, setPublishing] = useState<PublishState | null | false>(
+    props.published?.state === "running" ? props.published : false,
+  );
+  const autoTimer = useRef(0);
+  const draftRun = useRef<Promise<DraftRef | null>>(Promise.resolve(null));
+  const bkey = useRef(backupKey(props.draft, props.initial));
+
+  const saveDraft = useCallback((): Promise<DraftRef | null> => {
+    if (!props.publish) return Promise.resolve(null);
+    window.clearTimeout(autoTimer.current);
+    const run = draftRun.current
+      .catch(() => null)
+      .then(async () => {
+        // an edit the server is still working out goes in first
+        await queue.current.catch(() => undefined);
+        const m = modelRef.current;
+        const text = JSON.stringify(m);
+        if (text === savedText.current) return draftRef.current;
+        if (conflictRef.current) throw new ApiError("черновик не сохраняется: его сохранили в другом месте", 409);
+        const d = draftRef.current;
+        setDraftStatus({ s: "saving" });
+        const base = d?.base || info?.commit || "";
+        const r = await api.saveDraft({ uuid: d?.uuid, rev: d?.rev, base, model: m });
+        if (r.status === 200 && r.data.uuid) {
+          const ref: DraftRef = { uuid: r.data.uuid, rev: Number(r.data.rev), base, updated: r.data.updated };
+          draftRef.current = ref;
+          savedText.current = text;
+          const now = JSON.stringify(modelRef.current) === text;
+          if (now) dropBackup(bkey.current);
+          if (!d) {
+            dropBackup(bkey.current);
+            bkey.current = backupKey(ref, m);
+            props.onDraft?.(ref);
+          }
+          setDraftStatus({ s: now ? "saved" : "pending", text: r.data.updated });
+          if (!now) autoTimer.current = window.setTimeout(() => saveDraft().catch(() => undefined), AUTOSAVE_MS);
+          return ref;
+        }
+        const why = r.data.error || `ответ ${r.status}`;
+        if (r.status === 409) {
+          conflictRef.current = true;
+          setDraftConflict(why);
+          setDraftStatus({ s: "error", text: why });
+          throw new ApiError(why, 409);
+        }
+        setDraftStatus({ s: "error", text: why });
+        autoTimer.current = window.setTimeout(() => saveDraft().catch(() => undefined), RETRY_MS);
+        throw new ApiError(why, r.status);
+      });
+    draftRun.current = run;
+    return run;
+  }, [props.publish, info]);
+
+  // every change: a copy in the browser at once, the draft after a quiet moment
+  useEffect(() => {
+    if (!props.publish || readOnly) return;
+    const text = JSON.stringify(model);
+    if (text === savedText.current) return;
+    writeBackup(bkey.current, { model, rev: draftRef.current?.rev ?? 0, at: Date.now() });
+    if (conflictRef.current) return;
+    setDraftStatus({ s: "pending" });
+    window.clearTimeout(autoTimer.current);
+    autoTimer.current = window.setTimeout(() => saveDraft().catch(() => undefined), AUTOSAVE_MS);
+  }, [model, saveDraft]);
+  useEffect(() => () => window.clearTimeout(autoTimer.current), []);
+
+  // a page opened again takes back what the browser kept and the draft had not
+  useEffect(() => {
+    if (!props.publish || readOnly) return;
+    const b = readBackup(bkey.current);
+    if (!b || !b.model || (b.rev ?? 0) !== (props.draft?.rev ?? 0)) return;
+    if (JSON.stringify(b.model) === savedText.current) return;
+    if (b.model.id !== props.initial.id) return;
+    undo.current.push(modelRef.current);
+    setModel({ ...b.model, etag: props.initial.etag, state: props.initial.state });
+    setHist((h) => h + 1);
+    toast("info", "Вернул правки, которые не успели уйти в черновик: они сохраняются сейчас.", 8000);
+  }, []);
+
+  const draftLabel = (() => {
+    switch (draftStatus.s) {
+      case "idle":
+        return "правок нет";
+      case "pending":
+        return "черновик: есть несохранённое";
+      case "saving":
+        return "сохраняю черновик…";
+      case "saved":
+        return `черновик сохранён${draftStatus.text ? ` ${clock(draftStatus.text)}` : ""}`;
+      default:
+        return "черновик не сохранён";
+    }
+  })();
+
+  const published = (res: { id?: number | null }) => {
+    dropBackup(bkey.current);
+    setPublishing(false);
+    getLocations(true);
+    toast("ok", res.id ? `Опубликовано: место #${res.id}` : "Опубликовано", 9000);
+    props.onBack();
+  };
+
   const back = async () => {
     if (savingRef.current) {
       toast("info", "Идёт сохранение: дождитесь ответа.");
+      return;
+    }
+    if (props.publish) {
+      if (!readOnly && JSON.stringify(modelRef.current) !== savedText.current) {
+        try {
+          await saveDraft();
+        } catch (e) {
+          const go = await ask({
+            title: "Уйти без черновика?",
+            text: `Последние правки не сохранились в черновик (${errText(e)}). В этом браузере их копия останется.`,
+            ok: "Уйти",
+            cancel: "Остаться",
+            danger: true,
+          });
+          if (!go) return;
+        }
+      }
+      props.onBack();
       return;
     }
     if (dirty && !readOnly) {
@@ -450,14 +624,14 @@ export default function Editor(props: {
 
   useEffect(() => {
     const f = (e: BeforeUnloadEvent) => {
-      if (dirty && !readOnly) {
+      if (props.publish ? draftStatus.s === "pending" || draftStatus.s === "saving" : dirty && !readOnly) {
         e.preventDefault();
         e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", f);
     return () => window.removeEventListener("beforeunload", f);
-  }, [dirty, readOnly]);
+  }, [dirty, readOnly, props.publish, draftStatus]);
 
   // --- what a cell holds ----------------------------------------------------------
   const lookup = useMemo(() => {
@@ -797,7 +971,8 @@ export default function Editor(props: {
         doRedo();
       } else if (mod && e.code === "KeyS") {
         e.preventDefault();
-        save();
+        if (props.publish) saveDraft().catch(() => undefined);
+        else save();
       } else if (e.key === "Delete" || e.key === "Backspace") {
         if (selSprite || selInh !== null) {
           e.preventDefault();
@@ -828,7 +1003,7 @@ export default function Editor(props: {
   // --- the problems ---------------------------------------------------------------
   const pickProblem = (p: Problem, i: number) => {
     setSelProblem(i);
-    if (p.loc !== null && p.loc !== undefined && p.loc !== model.id) {
+    if (typeof p.loc === "number" && p.loc !== model.id) {
       const wi = model.walk_ins.findIndex((w) => w.from === p.loc);
       setTool("ways");
       setPicker({ from: p.loc, index: wi >= 0 ? wi : null, focus: p.cells });
@@ -878,10 +1053,15 @@ export default function Editor(props: {
           ← Локации
         </button>
         <span className="loc-title">
-          <b>#{model.id}</b> {title}
+          <b>{typeof model.id === "string" ? "новое место" : `#${model.id}`}</b> {title}
         </span>
-        <span className={`tag state-${model.state}`}>{STATE_RU[model.state]}</span>
-        {dirty && !readOnly && model.state !== "new" && <span className="tag dirty">есть несохранённые правки</span>}
+        <span className={`tag state-${model.state}`}>{(props.publish ? STATE_RU_PUBLISH : STATE_RU)[model.state]}</span>
+        {!props.publish && dirty && !readOnly && model.state !== "new" && <span className="tag dirty">есть несохранённые правки</span>}
+        {props.publish && !readOnly && (
+          <span className={`tag draft-${draftStatus.s}`} title={draftStatus.s === "error" ? draftStatus.text : undefined}>
+            {draftLabel}
+          </span>
+        )}
         <span className="grow" />
         <button onClick={doUndo} disabled={saving || !undo.current.length} title="Ctrl+Z">
           ↶ Отменить
@@ -901,12 +1081,34 @@ export default function Editor(props: {
             <button onClick={runFullCheck} disabled={checking || saving}>
               Проверить
             </button>
-            <button className="primary" onClick={() => save()} disabled={saving} title="Ctrl+S">
-              {saving ? `Сохраняю… ${saveSec} с` : "Сохранить"}
-            </button>
+            {props.publish ? (
+              <button
+                className="primary"
+                onClick={() => setPublishing(null)}
+                disabled={draftStatus.s === "idle" && !draftRef.current}
+                title={
+                  draftStatus.s === "idle" && !draftRef.current
+                    ? "Правок нет: публиковать нечего"
+                    : "Черновик — в main (Ctrl+S сохраняет черновик сейчас)"
+                }
+              >
+                Опубликовать…
+              </button>
+            ) : (
+              <button className="primary" onClick={() => save()} disabled={saving} title="Ctrl+S">
+                {saving ? `Сохраняю… ${saveSec} с` : "Сохранить"}
+              </button>
+            )}
           </>
         )}
       </header>
+      {props.published?.state === "done" && (
+        <div className="banner">
+          Этот черновик уже опубликован
+          {props.published.result?.commit ? ` (коммит ${props.published.result.commit.slice(0, 10)})` : ""}: дальнейшие правки — в
+          локации из списка.
+        </div>
+      )}
       {dropped.length > 0 && (
         <div className="banner">
           Из существ копии сюда не встали ({dropped.length}):{" "}
@@ -935,7 +1137,7 @@ export default function Editor(props: {
         <nav className="toolbar" aria-label="Инструменты">
           {TOOLS.map((t, i) => (
             <button key={t.id} className={tool === t.id ? "on" : ""} onClick={() => setTool(t.id)} title={`${t.label} (${i + 1})`}>
-              <span className="ico">{t.icon}</span>
+              <span className="le-ico">{t.icon}</span>
               <span className="lbl">{t.label}</span>
             </button>
           ))}
@@ -953,7 +1155,7 @@ export default function Editor(props: {
               <button onClick={() => canvas.current?.fit()}>Вписать</button>
               <span className="sep" />
               {ALL_LAYERS.map((l) => (
-                <label key={l} className={`chip${layers.has(l) ? " on" : ""}`}>
+                <label key={l} className={`le-chip${layers.has(l) ? " on" : ""}`}>
                   <input
                     type="checkbox"
                     checked={layers.has(l)}
@@ -990,7 +1192,7 @@ export default function Editor(props: {
             />
           )}
         </main>
-        <aside className="side">
+        <aside className="le-side">
           <div className="side-tool">
             <h3>{TOOLS.find((t) => t.id === tool)?.label}</h3>
             {tool === "props" && (
@@ -1097,7 +1299,7 @@ export default function Editor(props: {
           from={picker.from}
           cells={picker.index !== null ? model.walk_ins[picker.index]?.cells || [] : []}
           focus={picker.focus}
-          target={`#${model.id} «${title}»`}
+          target={`${typeof model.id === "string" ? "новое место" : `#${model.id}`} «${title}»`}
           onClose={() => setPicker(null)}
           onDone={(cells) => {
             const at = picker.index;
@@ -1133,7 +1335,7 @@ export default function Editor(props: {
                 </button>
               )}
               {model.state === "ours" && props.onReload && (
-                <button className="danger" onClick={() => props.onReload!()}>
+                <button className="danger" onClick={() => props.onReload!(true)}>
                   Открыть заново с диска
                 </button>
               )}
@@ -1152,7 +1354,47 @@ export default function Editor(props: {
           )}
         </Modal>
       )}
-      {copying && <NewFromCopy row={{ id: model.id, title: model.attrs.title }} onClose={() => setCopying(false)} onMade={props.onCopy} />}
+      {copying && typeof model.id === "number" && (
+        <NewFromCopy row={{ id: model.id, title: model.attrs.title }} onClose={() => setCopying(false)} onMade={props.onCopy} />
+      )}
+      {publishing !== false && (
+        <PublishDialog
+          uuid={draftRef.current?.uuid || null}
+          model={modelRef.current}
+          title={title}
+          flush={saveDraft}
+          watch={publishing}
+          onClose={() => setPublishing(false)}
+          onDone={published}
+          onProblem={(p) => {
+            setPublishing(false);
+            pickProblem(p, problems.indexOf(p));
+          }}
+        />
+      )}
+      {draftConflict && (
+        <Modal
+          title="Черновик не сохраняется"
+          onClose={() => setDraftConflict(null)}
+          footer={
+            <>
+              <button onClick={() => setDraftConflict(null)}>Закрыть</button>
+              {props.onReload && draftRef.current && <button onClick={() => props.onReload!(false)}>Открыть черновик заново</button>}
+              {props.onReload && model.state === "ours" && (
+                <button className="danger" onClick={() => props.onReload!(true)}>
+                  Открыть локацию из main
+                </button>
+              )}
+            </>
+          }
+        >
+          <p>{draftConflict}.</p>
+          <p className="muted">
+            Правки этой страницы остаются в этом браузере, пока вы её не закроете. «Открыть черновик заново» покажет то, что
+            сохранено на сервере.
+          </p>
+        </Modal>
+      )}
     </div>
   );
 }

@@ -766,7 +766,9 @@ class Art:
             px = 0
             for k in reversed(self._images):
                 px += self._images[k].size[0] * self._images[k].size[1]
-            while len(self._images) > 1 and px > 120_000_000:
+            # LAVA_ART_IMAGE_PIXELS: how many decoded pixels are kept (4
+            # bytes each); the admin panel's container keeps fewer
+            while len(self._images) > 1 and px > int(os.environ.get("LAVA_ART_IMAGE_PIXELS") or 120_000_000):
                 _k, old = self._images.popitem(last=False)
                 px -= old.size[0] * old.size[1]
         return img
