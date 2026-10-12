@@ -259,7 +259,26 @@ _NPCS = _load("orig_npcs.json").get("npcs", {})
 #        eight is not a pattern of the file; it is a pattern of the matcher.
 #        The builder flagged it itself. Better the name the mob had than a
 #        wrong one over it in two dozen places.
-DOUBTFUL_STRINGS = frozenset((9163,))
+#   48871 "Ущелье 1", 48872 "Ущелье 2" -- place names of the 21.12.2012
+#        event's own map (48867-48880: «Диверсия ВХ», «Лагерь», «Блок-пост»,
+#        «Комната управления», «Ущелье 1» .. «Ущелье 5», «Крыша 1», ...),
+#        not creatures. The matcher gave the first to a junk pile of Абри's
+#        car dump (2372, NPC_Shell_Loot, drawn as nothing: 1f_Pixel) and the
+#        second to a table of its smelter (2395) by where they fall in the
+#        file. The table has its own row by hand (orig_names_manual.json);
+#        the pile has none in the original, and data/npcs.json names it.
+DOUBTFUL_STRINGS = frozenset((9163, 48871, 48872))
+
+# Typos of the original in a name, mended on the wire by the row's id, with
+# the word the original itself spells right elsewhere.
+#
+#   8904 "[11] Надзиратель аки<Br>Работорговцы" -- the boss of the slave
+#        traders' chief's place (328, mrare_Lucky_lvl16). His type's own word
+#        is Lucky, and the quest that sends the player to him writes
+#        «найди там Надзирателя Лаки» (50434): the file lost a letter.
+NAME_TYPOS = {
+    8904: ("Надзиратель аки", "Надзиратель Лаки"),
+}
 _MISC = _load("orig_misc.json")
 
 
@@ -304,6 +323,9 @@ def person_names(level_of=None):
             except Exception:
                 lvl = None
         name = r["name"]
+        typo = NAME_TYPOS.get(r.get("string_id"))
+        if typo:
+            name = name.replace(*typo)
         if r.get("kind") == "mob" and lvl is not None and not _MOB_LEVEL.match(name):
             name = "[%d] %s" % (int(lvl), name)
         out[tid] = person_name(name, lvl)

@@ -135,12 +135,43 @@ WIKI_LEVELS = {
 # Halfa camp's band, as the map's tooltips give it («Для игроков 0-2
 # уровней» on 5970,1724, 2-4 on 5978,1727, 4-6 on 5974,1739, 6-8 on
 # 5993,1721).
+#
+# And Абри (the owner's order of 2026-10-12, «Делаем Абри», the town's band
+# 8-12): whoever stands in its camps and quest places with no level of his
+# own, or with only his tier's or his town's guess (m05_ is 3, Abri_ is 10).
+# The hippies of «Хиппи в пустыне» (191) 9-11 and their Амазонка (192) 12,
+# as the original's rows give her ([12] Амазонка, 9049; its hippies say
+# [15] and [0]); the crocodiles of «Сокровища» (189) 12 ([12] Крокодил,
+# 9532); the two treasurers (st_/zd_Kaznachei, who stand all day) and
+# Санденс Кид and Бутч Кэссиди at their rows' levels ([10] 8890/8903,
+# [12] 8907/8920); the camps' ammunition boxes at the middle of their camp's
+# band, 8-10 and 10-12, as Вади-Хальфа's are; the bum of the smelter 766
+# (m05_craft_bomj_2) inside the town's band; and the Мантикора's technician
+# and Барон Дайсон with his bodyguards at 12, as their rows ([12] 10578,
+# 10579, 10581) and the wiki («Барон Дайсон ... Уровень: 12», «Телохранитель
+# Дайсона 12 ур») give them. A level set here beats every guess, the tier's
+# and the town's included.
 DESIGNED_LEVELS = {
     "nubia_boss": 5,
     "nc_box_ammo": 1,
     "lu_box_ammo": 3,
     "ja_box_ammo": 5,
     "mg_box_ammo": 7,
+    "hippie_1": 10,
+    "hippie_2": 9,
+    "hippie_3": 11,
+    "Amazon": 12,
+    "mCrocodile": 12,
+    "st_Kaznachei": 10,
+    "zd_Kaznachei": 12,
+    "st_SundanceKid": 10,
+    "zd_ButchKassidy": 12,
+    "st_box_ammo": 9,
+    "zd_box_ammo": 11,
+    "m05_craft_bomj_2": 9,
+    "Abri_Manticore_Tech": 12,
+    "Abri_Dayson": 12,
+    "Abri_Dyson_Guard": 12,
 }
 
 # --- kinds set by hand ------------------------------------------------------
@@ -340,10 +371,12 @@ def main():
         # NPCs are here only when their name spells a level outright.
         if root != 0 and src != "name":
             continue
+        # A level set by hand beats a guess (a tier's or a town's band, an
+        # animal's index); only a level the name spells outright beats it.
+        if src != "name" and name in DESIGNED_LEVELS:
+            lvl, src = DESIGNED_LEVELS[name], "designed"
         if lvl is None and name in WIKI_LEVELS:
             lvl, src = WIKI_LEVELS[name], "wiki"
-        if lvl is None and name in DESIGNED_LEVELS:
-            lvl, src = DESIGNED_LEVELS[name], "designed"
         if lvl is None:
             camps = sorted(camp_level[l] for l in where[tid] if l in camp_level)
             if camps:

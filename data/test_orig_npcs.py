@@ -58,8 +58,13 @@ MIN_MOB_KIND = 308
 # The prison's staff by hand (the events package): Томас 876 was the
 # matcher's medium guess, one less. And the ДСР stand-ins of «Механик ДСР»
 # by hand at the integration of 2026-09-28: 51 was the matcher's medium
-# «[4] Связной<Br>Джанджавиды», one less again.
-MIN_SUGGEST = 665
+# «[4] Связной<Br>Джанджавиды», one less again. Абри's people by hand
+# (2026-10-12, the owner's «Делаем Абри»): 26 of the matcher's medium guesses
+# went into "npcs" -- the market's traders (Одноухий, Алима, Гали), Дед
+# Кузин, Говард Хаксли, the Кучка песка, Санденс Кид, the slave traders' and
+# flayers' ranks the matcher had from another block, the crocodile and the
+# Амазонка -- and "suggest" fell from 665 to 639.
+MIN_SUGGEST = 639
 
 
 def canonical(doc):
