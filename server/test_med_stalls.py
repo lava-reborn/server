@@ -35,10 +35,15 @@ In process:
   4. the stalls: every medicine seller at every place of its city sells
      exactly its city's tiers of its kinds, in one currency where the file
      says only, in the order above, then its own list; pinned stall by
-     stall; the apothecary Джут three oases, three stalls;
+     stall, the «Патроны и лекарства» of the valley's truck and of the
+     prison yards among them (the supply men's rounds their article's);
+     the apothecary Джут three oases, three stalls; nothing without a
+     price on any stall of a city's place (Донгола's grocer no quest
+     parcel);
   5. coverage: every city has a seller of each line, and its city's tiers
      are on sale in both currencies; every trader of a city's place the
-     original titles a medicine or food seller is one;
+     original titles a medicine or food seller is one, and none of them
+     opens an empty window;
   6. nothing out of a city's tiers on any stall of its places, no medicine
      of the lines on a seller's of no medicine kind, the currencies of only,
      no list of data/npcs.json carrying what the band gives;
@@ -346,11 +351,29 @@ check("every medicine seller at every place of its city: its city's tiers of its
       " and the one under it, tier by tier, afro before (G), in its one currency where the file"
       " says only, then its own list -- worked out here from the catalogue", wrong, {})
 check("  ..where they stand", where,
-      {5211: [185], 5224: [186], 5217: [181], 202: [62], 81: [35, 104], 1206: [102],
-       1207: [102], 1167: [187], 1168: [187], 207: [76, 195, 196], 155: [50, 197],
-       1214: [103], 1215: [103], 1221: [126], 1222: [126]})
+      {5211: [185], 5224: [186], 5217: [181], 5225: [26], 202: [62], 81: [35, 104],
+       1206: [102], 1207: [102], 2180: [176], 1167: [187], 1168: [187], 207: [76, 195, 196],
+       155: [50, 197], 1214: [103], 1215: [103], 2181: [159], 1221: [126], 1222: [126],
+       880: [177]})
 BTR, ROSA, VILKA, TUR, MAKS, SUPER = range(6073, 6079)
+# The rounds of the wiki's article «Снабженец» (data/trader_stock_wiki.json, unbound: no
+# type was tied to it), every calibre's columns as the wiki's links resolve them: the own
+# list of the prisons' supply men, «Патроны и лекарства» by the original's rows.
+with open(os.path.join(ROOT, "data", "trader_stock_wiki.json"), encoding="utf-8") as _fh:
+    _SUPPLY_TITLES = json.load(_fh)["unbound"]["Снабженец"]["*"]
+ROUNDS = []
+for _title in _SUPPLY_TITLES:
+    for _x in items.resolve_stock_title(_title):
+        if _x in cat and items.root_of(_x) == items.AMMO and _x not in ROUNDS:
+            ROUNDS.append(_x)
 PINNED = {
+    (26, 5225): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101],
+    (176, 2180): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101, 6057, 6063, VILKA, 7102]
+    + ROUNDS,
+    (159, 2181): [6057, 6063, VILKA, 7102, 6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104]
+    + ROUNDS,
+    (177, 880): [6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104, 6060, 6066, SUPER, 7105]
+    + ROUNDS,
     (185, 5211): [6055, 6061, BTR, 7100, 6056, 6062, ROSA, 7101,
                   6043, 6898, 6049, 6904, 6044, 6899, 6050, 6905, 2178, 2184],
     (181, 5217): [6043, 6898, 6049, 6044, 6899, 6050, 2178, 2184],
@@ -372,8 +395,15 @@ PINNED = {
 }
 check("the stalls pinned (DESIGN.md 2.2): Морис, Хасани, Люций, Магдалена, Снитке, Бартоломью,"
       " Торси, Мухсим, Джут at his three oases, Серхио, Фарюк, Донгола's grocer (the sack of"
-      " beans of his article after), Киплер, Курт",
-      {k: STALLS[k] for k in PINNED}, PINNED)
+      " beans of his article after), Киплер, Курт; the valley truck's Йонас and the prisons'"
+      " supply men, «Патроны и лекарства», the battle line of their town (the supply men their"
+      " article's rounds after)",
+      {k: STALLS.get(k) for k in PINNED}, PINNED)
+check("  ..the supply men's rounds: their own list (data/npcs.json), the same at the three"
+      " prison yards, every calibre of the article, 49 types, each with a price",
+      ([npcs.stock(t) == ROUNDS for t in (2180, 2181, 880)], len(ROUNDS),
+       [x for x in ROUNDS if price(x) == (0, 0)], max(len(STALLS[k]) for k in PINNED)),
+      ([True] * 3, 49, [], 61))
 check("  ..Донгола's grocer's own list (data/npcs.json) is the sack of beans: the «Коробка"
       " вяленого мяса» of his article is the food of ten of 12_15 (6901), the band's, which the"
       " name tied to the valley's quest parcel 3481, a thing with no price no stall can sell",
@@ -420,7 +450,7 @@ check("  ..each city a seller of each line selling both currencies",
       {c: sorted(sellers_of.get(c, ())) for c in COVERED_CITIES},
       {c: ["combat_meds", "peace_meds"] for c in COVERED_CITIES})
 TITLES = ("Боевая медицина", "Лекарства и еда", "Еда, вода, лекарства", "Аптекарь",
-          "Еда и Медикаменты", "Продукты", "Торговец Едой")
+          "Еда и Медикаменты", "Продукты", "Торговец Едой", "Патроны и лекарства")
 
 
 def title(t):
@@ -429,9 +459,12 @@ def title(t):
 
 
 check("every trader of a city's place the original titles a medicine or food seller is a seller"
-      " of medicine in the file (Йонас «Патроны и лекарства» on the valley's truck is not: his"
-      " stall stays empty, decision 19)",
-      sorted({(t, title(t)) for (p, t) in STALLS if title(t) in TITLES and t not in MEDICS}), [])
+      " of medicine in the file: Йонас «Патроны и лекарства» on the valley's truck and the"
+      " Снабженец Хальфы of the prison yard among them, whose stalls stood empty",
+      (sorted({(t, title(t)) for (p, t) in STALLS if title(t) in TITLES and t not in MEDICS}),
+       sorted({t for (p, t) in STALLS if title(t) == "Патроны и лекарства"})), ([], [2180, 5225]))
+check("  ..and no seller of medicine there opens an empty window",
+      sorted((p, t) for (p, t), s in STALLS.items() if t in MEDICS and not s), [])
 
 # --- 6. nothing out of the tiers -------------------------------------------------------------
 print()
