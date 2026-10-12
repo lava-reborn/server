@@ -80,6 +80,12 @@ by a later one, and only "high" and "medium" records are written.
     digs, Уорхол's collection and the rides hand out and ask for --
     Дирижер's maps, the Бункер Ламантина pieces, the tickets rule 7f leaves
     (WILD_ROWS).
+ 7j. The things Абри's quests hand out and ask for that no rule above
+    names, hand-checked name and description pairs (ABRI_QUEST_ROWS).
+ 7k. What Абри's stalls sell (2026-10-12): the lottery tickets [10], [12],
+    [G][10], [G][12], Хаксли's ammunition coupons, the junkyard's tools,
+    Одноухий's gypsum, wire and bandages, and Фрея Каплан's 24 gifts, each a
+    hand-checked name and description pair of its run (ABRI_TRADE_ROWS).
  8. Everything else: the wiki name from data/items_wiki.json equals exactly
     one row (brackets, $-suffix, case, ё and quotes ignored); "high" when the
     row after it is the wiki description too. Types of firearm_families.json
@@ -1147,6 +1153,32 @@ def miner_records(T, objects):
     return out
 
 
+# --- 7j. the things of Абри's quests --------------------------------------------------------
+
+# The Абри restoration (2026-10-12): the things its quests hand out and ask
+# for that no rule above names -- an objects.xml name each, its name row and
+# its description row (None where the original has none), hand-checked
+# against the run of texts.xml that names it. What Абри's stalls sell is
+# ABRI_TRADE_ROWS (7k).
+ABRI_QUEST_ROWS = {}
+
+
+def abri_quest_records(T, objects):
+    by_name = {name: tid for tid, (root, name) in objects.items()}
+    names = {text for _n, _d, text in ABRI_QUEST_ROWS.values()}
+    out = {}
+    for name, (nid, did, text) in sorted(ABRI_QUEST_ROWS.items()):
+        # Вади-Хальфа's guard: the name row is the name, and the description
+        # row, where there is one, is prose -- no "$", no bracket, no name.
+        if T[nid] != text or (did is not None and (
+                "$" in T[did] or "[" in T[did] or T[did] in names or len(T[did]) < 20)):
+            raise SystemExit("texts.xml rows %s/%s do not look like %s" % (nid, did, name))
+        if name not in by_name:
+            raise SystemExit("objects.xml has no object %s" % name)
+        out[by_name[name]] = (nid, did, "high")
+    return out
+
+
 # --- 7i. the prison's armband ------------------------------------------------------------
 
 # What the prisoners of Вади-Хальфа's uprising carry and its medics pay for
@@ -1230,6 +1262,119 @@ def production_records(T, objects):
             raise SystemExit("texts.xml rows %d/%d do not look like %s" % (nid, did, name))
         if name not in by_name:
             raise SystemExit("objects.xml has no simple object %s" % name)
+        out[by_name[name]] = (nid, did, "high")
+    return out
+
+
+# --- 7k. what Абри's stalls sell ----------------------------------------------------------
+
+# The Абри restoration (2026-10-12, the owner's «Добавь каждому продавцу
+# нужные предметы»): the things its stalls sell that reached the player under
+# objects.xml's own words (DnLoteryKey_9_10, kupon_ammo_20, Crat_loot_blowlamp
+# ...). Rule 8 cannot reach them: the wiki has their articles, but under
+# icons named after no type (LoteryKey.png, Купон20патронов.png,
+# Рвапр5476рарр.png), so data/items_wiki.json has no record of theirs.
+#   * the lottery tickets of Абри's lottery men (1172, 1171): «Лотерейный
+#     билет [10]», «[12]», «[G][10]», «[G][12]» (6921, 6922, 6924, 6925 of the
+#     tickets' run, rule 7f), objects.xml's DnLoteryKey_9_10, _11_12 and
+#     _g_9_10, _g_11_12 by their bands -- the articles «Лотерейный билет
+#     (10)» and «(G)(12)» take part in «Лотерея Абри (9-10)» and «Золотая
+#     Лотерея Абри (11-12)»; all four share the [8] ticket's words, 6919;
+#   * the coupons Говард Хаксли sells and changes (kupon_ammo_20, _300,
+#     _5000): «Купон на 20 / 300 / 5000 патронов», 6684-6690, a name and its
+#     words each but the 500 one (6688, kupon_ammo_500, which nobody sells);
+#   * the junkyard's tools МакКэндлесс sells «по 100 афро» (49748), what the
+#     piles of the car dump ask (49721-49745): Crat_loot_blowlamp,
+#     _hammer_geologist, _can, _bottle, _funnel, _gloves, _passatizhi,
+#     _screwdriver, _knife, _enema, _respirator, _plastic_bag (7025-7029,
+#     7036-7042), texts.xml 8238-8260 in that order, a name and its words
+#     each -- but the geologist's hammer, whose name row the run skips: its
+#     words, 8240 «Незаменимая вещь при исследовании залежей мусора...», are
+#     its article's, and its name is «Молоток геолога», 1610, the one row of
+#     those words (the cold arms' run, where no type takes it);
+#   * what Одноухий sells for Марис Дамбис's chain («торговец ножами ...
+#     знатным костоправом», 49186): qGypsum_2012, qWire_2012,
+#     qBandages_2012 (5740-5742), «Гипс», «Проволока с искривлением», «Бинты
+#     для гипса» of the event's run 49065-49084 (a name and its words each,
+#     in objects.xml's order: qRoverPad_2012 ... qBandages_2012);
+#   * the gifts Фрея Каплан sells, her article's 24 in its order: the cold
+#     arms gift_kid_1..10, gift_girl_1..10, gift_0..3 (4329-4352) are the run
+#     1265-1308 in that order, «Пистолет» ... «Zippo», «Цветок» ...
+#     «Шоколадка», «Черная метка», «Открытка» -- a name and its words each,
+#     but three. The run has no name row for the shell amulet (gift_girl_6,
+#     the wiki's «Амулет-ракушка») or the perfume (gift_girl_9, «Духи»): their
+#     words, 1295 «Амулет.<Br>Этот ценнейший амулет...» and 1300
+#     «Духи.<Br>...», each open with the name, and the name is the row of
+#     that word, «Амулет» 1269 and «Духи» 766. The three postcards share the
+#     one «Открытка», 1305, with their three verses (the wiki's I, II, III).
+#     gift_girl_4 «Букет» (1291/1292), which rule 8 already found, is pinned
+#     here with the rest.
+# Pinned 2026-10-12.
+ABRI_TRADE_ROWS = {"DnLoteryKey_9_10": (6921, 6919, "Лотерейный билет [10]"),
+                   "DnLoteryKey_11_12": (6922, 6919, "Лотерейный билет [12]"),
+                   "DnLoteryKey_g_9_10": (6924, 6919, "Лотерейный билет [G][10]"),
+                   "DnLoteryKey_g_11_12": (6925, 6919, "Лотерейный билет [G][12]"),
+                   "kupon_ammo_20": (6684, 6685, "Купон на 20 патронов"),
+                   "kupon_ammo_300": (6686, 6687, "Купон на 300 патронов"),
+                   "kupon_ammo_5000": (6689, 6690, "Купон на 5000 патронов"),
+                   "Crat_loot_blowlamp": (8238, 8239, "Паяльная лампа"),
+                   "Crat_loot_hammer_geologist": (1610, 8240, "Молоток геолога"),
+                   "Crat_loot_can": (8241, 8242, "Жестяная банка"),
+                   "Crat_loot_bottle": (8243, 8244, "Бутыль"),
+                   "Crat_loot_funnel": (8245, 8246, "Воронка"),
+                   "Crat_loot_gloves": (8247, 8248, "Перчатки"),
+                   "Crat_loot_passatizhi": (8249, 8250, "Пассатижы"),
+                   "Crat_loot_screwdriver": (8251, 8252, "Отвертка"),
+                   "Crat_loot_knife": (8253, 8254, "Нож для грязной работы"),
+                   "Crat_loot_enema": (8255, 8256, "Клизма"),
+                   "Crat_loot_respirator": (8257, 8258, "Респиратор"),
+                   "Crat_loot_plastic_bag": (8259, 8260, "Пластиковый пакет"),
+                   "qGypsum_2012": (49079, 49080, "Гипс"),
+                   "qWire_2012": (49081, 49082, "Проволока с искривлением"),
+                   "qBandages_2012": (49083, 49084, "Бинты для гипса")}
+GIFT_WORDS = (("gift_kid", ("Пистолет", "Рогатка", "Амулет", "Машинка", "Печатка",
+                            "GPS-навигатор", "Набор солдатиков", "Гантеля", "Гитара", "Zippo")),
+              ("gift_girl", ("Цветок", "Кукла", "Тедди", "Букет", "Сердечко", None, "Медальон",
+                             "Зайчонок", None, "Шоколадка")))
+GIFT_BORROWED = {"gift_girl_6": (1269, "Амулет"), "gift_girl_9": (766, "Духи")}
+
+
+def gift_rows():
+    """internal name -> (name row, description row, the name): the run 1265-1308,
+    a name row and its words a gift, the words alone where GIFT_BORROWED names it."""
+    rows, nid = {}, 1265
+    for stem, words in GIFT_WORDS:
+        for k, word in enumerate(words):
+            name = "%s_%d" % (stem, k + 1)
+            if word is None:
+                row, word = GIFT_BORROWED[name]
+                rows[name] = (row, nid, word)
+                nid += 1
+            else:
+                rows[name] = (nid, nid + 1, word)
+                nid += 2
+    rows["gift_0"] = (nid, nid + 1, "Черная метка")
+    for k in range(1, 4):
+        rows["gift_%d" % k] = (nid + 2, nid + 2 + k, "Открытка")
+    return rows
+
+
+ABRI_TRADE_ROWS.update(gift_rows())
+
+
+def abri_trade_records(T, objects):
+    by_name = {name: tid for tid, (root, name) in objects.items()}
+    out = {}
+    for name, (nid, did, text) in sorted(ABRI_TRADE_ROWS.items()):
+        # The name row is the name, and the description row is prose -- no
+        # "$", no bracket; a gift's words say its name in their first line
+        # («Мишка Тедди.», «Цветочный букет.»).
+        if T[nid] != text or "$" in T[did] or "[" in T[did] or len(T[did]) < 20 \
+                or (name.startswith("gift_")
+                    and text.lower() not in T[did].split("<Br>")[0].lower()):
+            raise SystemExit("texts.xml rows %d/%d do not look like %s" % (nid, did, name))
+        if name not in by_name:
+            raise SystemExit("objects.xml has no object %s" % name)
         out[by_name[name]] = (nid, did, "high")
     return out
 
@@ -1369,6 +1514,9 @@ RULE = ("type_id -> original texts.xml rows (html-unescaped, otherwise verbatim)
         "Вади-Хальфа's miner's clothes and their (G) copies 22856..22875, "
         "the plant's ore, sorted ore and sacks of the five cities 7189..7240 and the quarry's "
         "stones, polishing mix and its components 7255..7265, "
+        "Абри's quest things (ABRI_QUEST_ROWS), what Абри's stalls sell (the lottery tickets "
+        "6919..6925, the ammunition coupons 6684..6690, the junkyard's tools 8238..8260 and "
+        "1610, the event's gypsum, wire and bandages 49079..49084, the gifts 1265..1308), "
         "and an exact wiki name for the rest. See data/build_orig_items.py.")
 
 
@@ -1396,6 +1544,8 @@ def build(texts_path):
              ("gold_ingot", gold_ingot_records(T, objects)),
              ("valley_loot", valley_records(T, objects)),
              ("halfa_quest", halfa_records(T, objects)),
+             ("abri_quest", abri_quest_records(T, objects)),
+             ("abri_trade", abri_trade_records(T, objects)),
              ("belt", belt_records(T, objects)),
              ("miner_wear", miner_records(T, objects)),
              ("prison", prison_records(T, objects)),

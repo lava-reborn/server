@@ -6,7 +6,7 @@
     "medium": 30
    },
    "ColdArm": {
-    "high": 81,
+    "high": 104,
     "medium": 24
    },
    "FireArm": {
@@ -18,7 +18,7 @@
     "medium": 28
    },
    "SimpleObject": {
-    "high": 375,
+    "high": 397,
     "medium": 355
    },
    "Trophy": {
@@ -29,7 +29,7 @@
     "medium": 5509
    }
   },
-  "rule": "type_id -> original texts.xml rows (html-unescaped, otherwise verbatim). Firearm lines <-> 'Имя[тир][уровень]$Класс' blocks per (class, level): lines with _pm/_gold copies <-> std blocks (A+P+G and [M] or >=12 mod descriptions), without <-> Q/RW blocks, mob-only <-> [M] blocks, both sides ascending (index / row id); high = equal counts, medium = fewer blocks. Then clan copies, USSR/NY2016 pistols, ammo (calibre + quality code), wear (Mob, Bs_U), the sets Bs/Set/Exzo of levels 0-8 by their words (Колонист[2] named as level 0), trophies 800..813, medicine/food/water blocks 320..415 by level band with the packs 450..457 and the bar 464..475, the knife line 1488..1580 level by level (A, G, three G mods), the Nubian mine's gold sand 7352/7353 and small emeralds 7243/7244, the gold ingots New_Gold_Ingot_1/5/10 7636..7641, the Nubian valley's animal parts and quest things 6089..6163 and 6344, Вади-Хальфа's quest things (its run 6167..6341, the journal 5795..5834, the training guns 1094..1823 and 2012, the certificate 6604, the stone block 7253, the lottery and boat tickets 6901..6920), the belts on sale and their (G) copies 47822..47853, Вади-Хальфа's miner's clothes and their (G) copies 22856..22875, the plant's ore, sorted ore and sacks of the five cities 7189..7240 and the quarry's stones, polishing mix and its components 7255..7265, and an exact wiki name for the rest. See data/build_orig_items.py.",
+  "rule": "type_id -> original texts.xml rows (html-unescaped, otherwise verbatim). Firearm lines <-> 'Имя[тир][уровень]$Класс' blocks per (class, level): lines with _pm/_gold copies <-> std blocks (A+P+G and [M] or >=12 mod descriptions), without <-> Q/RW blocks, mob-only <-> [M] blocks, both sides ascending (index / row id); high = equal counts, medium = fewer blocks. Then clan copies, USSR/NY2016 pistols, ammo (calibre + quality code), wear (Mob, Bs_U), the sets Bs/Set/Exzo of levels 0-8 by their words (Колонист[2] named as level 0), trophies 800..813, medicine/food/water blocks 320..415 by level band with the packs 450..457 and the bar 464..475, the knife line 1488..1580 level by level (A, G, three G mods), the Nubian mine's gold sand 7352/7353 and small emeralds 7243/7244, the gold ingots New_Gold_Ingot_1/5/10 7636..7641, the Nubian valley's animal parts and quest things 6089..6163 and 6344, Вади-Хальфа's quest things (its run 6167..6341, the journal 5795..5834, the training guns 1094..1823 and 2012, the certificate 6604, the stone block 7253, the lottery and boat tickets 6901..6920), the belts on sale and their (G) copies 47822..47853, Вади-Хальфа's miner's clothes and their (G) copies 22856..22875, the plant's ore, sorted ore and sacks of the five cities 7189..7240 and the quarry's stones, polishing mix and its components 7255..7265, Абри's quest things (ABRI_QUEST_ROWS), what Абри's stalls sell (the lottery tickets 6919..6925, the ammunition coupons 6684..6690, the junkyard's tools 8238..8260 and 1610, the event's gypsum, wire and bandages 49079..49084, the gifts 1265..1308), and an exact wiki name for the rest. See data/build_orig_items.py.",
   "source": "/mnt/c/Users/gmkrt/Downloads/texts.xml",
   "source_md5": "7a10e992003480a76546b6c824b3dbc2",
   "source_size": 20433511
@@ -26817,6 +26817,38 @@
    "desc_id": 6189,
    "name": "Жетон",
    "name_id": 6188,
+   "root": "SimpleObject"
+  },
+  "2646": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [10]",
+   "name_id": 6921,
+   "root": "SimpleObject"
+  },
+  "2647": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [12]",
+   "name_id": 6922,
+   "root": "SimpleObject"
+  },
+  "2649": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [G][10]",
+   "name_id": 6924,
+   "root": "SimpleObject"
+  },
+  "2650": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [G][12]",
+   "name_id": 6925,
    "root": "SimpleObject"
   },
   "26590": {
@@ -74827,6 +74859,14 @@
    "name_id": 6481,
    "root": "SimpleObject"
   },
+  "4329": {
+   "confidence": "high",
+   "desc": "Пистолет.<Br>Этот Пистолет - раритет, два выстрела и первое место в номинации пистолеты твое.",
+   "desc_id": 1266,
+   "name": "Пистолет",
+   "name_id": 1265,
+   "root": "ColdArm"
+  },
   "43297": {
    "confidence": "high",
    "desc": "Патроны кончатся - можно добить врага как дубинкой. Суровый аналог штыковой атаке.<Br><B>Оригинальная модель без конструктивных изменений.",
@@ -74858,6 +74898,14 @@
    "name": "Страница 14 журнала",
    "name_id": 5829,
    "root": "SimpleObject"
+  },
+  "4330": {
+   "confidence": "high",
+   "desc": "Рогатка.<Br>С лазерным прицелом - урон +100500 крита, для лучшего снайпера.",
+   "desc_id": 1268,
+   "name": "Рогатка",
+   "name_id": 1267,
+   "root": "ColdArm"
   },
   "43300": {
    "confidence": "high",
@@ -74939,6 +74987,14 @@
    "name_id": 4772,
    "root": "FireArm"
   },
+  "4331": {
+   "confidence": "high",
+   "desc": "Амулет.<Br>Этот амулет, не пустая фраза, а твоя судьба - от шальной пули он спасет тебя.",
+   "desc_id": 1270,
+   "name": "Амулет",
+   "name_id": 1269,
+   "root": "ColdArm"
+  },
   "43310": {
    "confidence": "high",
    "desc": "Патроны кончатся - можно добить врага как дубинкой. Суровый аналог штыковой атаке.<Br><B>Время прицеливания -15%.",
@@ -75018,6 +75074,14 @@
    "name": "Desert Eagle Mark XIX[G][0]$Пистолет",
    "name_id": 4773,
    "root": "FireArm"
+  },
+  "4332": {
+   "confidence": "high",
+   "desc": "Машинка.<Br>Она тебя переместит в 5 секунд от Хальфы до Донголы, Абу и обратно.",
+   "desc_id": 1272,
+   "name": "Машинка",
+   "name_id": 1271,
+   "root": "ColdArm"
   },
   "43320": {
    "confidence": "high",
@@ -75099,6 +75163,14 @@
    "name_id": 4770,
    "root": "FireArm"
   },
+  "4333": {
+   "confidence": "high",
+   "desc": "Печатка.<Br>Изготовлена из Золота дураков, приносит владельцу - Власть, Силу, Славу, Победу.",
+   "desc_id": 1274,
+   "name": "Печатка",
+   "name_id": 1273,
+   "root": "ColdArm"
+  },
   "43330": {
    "confidence": "high",
    "desc": "Патроны кончатся - можно добить врага как дубинкой. Суровый аналог штыковой атаке.<Br><B>Увеличена точность на 20% и увеличена максимальная дальность стрельбы на 2 единицы.",
@@ -75178,6 +75250,14 @@
    "name": "Самострел[P][0]$Пистолет",
    "name_id": 4789,
    "root": "FireArm"
+  },
+  "4334": {
+   "confidence": "high",
+   "desc": "GPS-навигатор.<Br>Лучшее средство для прохода по локам, убегая от мародеров.",
+   "desc_id": 1276,
+   "name": "GPS-навигатор",
+   "name_id": 1275,
+   "root": "ColdArm"
   },
   "43340": {
    "confidence": "high",
@@ -75259,6 +75339,14 @@
    "name_id": 4790,
    "root": "FireArm"
   },
+  "4335": {
+   "confidence": "high",
+   "desc": "Набор солдатиков.<Br>Это твой клан,теперь ты не один...<Br>Вас стало еще больше.",
+   "desc_id": 1278,
+   "name": "Набор солдатиков",
+   "name_id": 1277,
+   "root": "ColdArm"
+  },
   "43350": {
    "confidence": "high",
    "desc": "Пистолет, хуже которого только игрушечная модель.<Br><B>Скорость перезарядки увеличена.<Br>ОД на перезарядку -20%.",
@@ -75338,6 +75426,14 @@
    "name": "Самострел[A][0]$Пистолет",
    "name_id": 4787,
    "root": "FireArm"
+  },
+  "4336": {
+   "confidence": "high",
+   "desc": "Гантеля.<Br>Новая спеца,только для тебя!",
+   "desc_id": 1280,
+   "name": "Гантеля",
+   "name_id": 1279,
+   "root": "ColdArm"
   },
   "43360": {
    "confidence": "high",
@@ -75419,6 +75515,14 @@
    "name_id": 4789,
    "root": "FireArm"
   },
+  "4337": {
+   "confidence": "high",
+   "desc": "Гитара.<Br>Дарю гитару, чтобы зазвучала, Восторгом Лаву наполняла.",
+   "desc_id": 1282,
+   "name": "Гитара",
+   "name_id": 1281,
+   "root": "ColdArm"
+  },
   "43370": {
    "confidence": "high",
    "desc": "Пистолет, хуже которого только игрушечная модель.<Br><B>Увеличена точность на 20% и увеличена максимальная дальность стрельбы на 2 единицы.",
@@ -75499,6 +75603,14 @@
    "name_id": 4804,
    "root": "FireArm"
   },
+  "4338": {
+   "confidence": "high",
+   "desc": "Зажигалка Zippo.<Br>Особенная бензиновая зажигалка ZIPPO - для особенного парня!",
+   "desc_id": 1284,
+   "name": "Zippo",
+   "name_id": 1283,
+   "root": "ColdArm"
+  },
   "43380": {
    "confidence": "high",
    "desc": "Самодельный револьвер. Сработан на совесть.<Br><B>Увеличено повреждение на 10%.",
@@ -75578,6 +75690,14 @@
    "name": "Самопальный револьвер[P][0]$Пистолет",
    "name_id": 4806,
    "root": "FireArm"
+  },
+  "4339": {
+   "confidence": "high",
+   "desc": "Цветок.<Br>О, бархат - нежный аромат,<Br>Хрусталь росы на пламя пал,<Br>В одном дыханье рай и ад,<Br>Огонь - цветок, роса - опал!",
+   "desc_id": 1286,
+   "name": "Цветок",
+   "name_id": 1285,
+   "root": "ColdArm"
   },
   "43390": {
    "confidence": "high",
@@ -75667,6 +75787,14 @@
    "name_id": 5831,
    "root": "SimpleObject"
   },
+  "4340": {
+   "confidence": "high",
+   "desc": "Кукла.<Br>Ты просто кукла ледяная<Br>С хрустальным сердцем во груди,<Br>Из изумрудных глаз роняешь<Br>Слез бриллианты без любви,<Br>Твой холод веет не напрасно,<Br>Он душу так заледенил,<Br>И заморозил твои страсти,<Br>А чувства нежные убил",
+   "desc_id": 1288,
+   "name": "Кукла",
+   "name_id": 1287,
+   "root": "ColdArm"
+  },
   "43400": {
    "confidence": "high",
    "desc": "Самодельный револьвер. Сработан на совесть.<Br><B>Оружие модифицировано  в целях большего удобства пользования им.<Br>Ловкость +2.",
@@ -75746,6 +75874,14 @@
    "name": "Самопальный револьвер[A][0]$Пистолет",
    "name_id": 4804,
    "root": "FireArm"
+  },
+  "4341": {
+   "confidence": "high",
+   "desc": "Мишка Тедди.<Br>Их называют лапочками, серенькими клубочками ниток и теддичками. Им дарят любовь, ласку и заботу, к ним испытывают нежность.",
+   "desc_id": 1290,
+   "name": "Тедди",
+   "name_id": 1289,
+   "root": "ColdArm"
   },
   "43410": {
    "confidence": "high",
@@ -75915,6 +76051,14 @@
    "name_id": 4839,
    "root": "FireArm"
   },
+  "4343": {
+   "confidence": "high",
+   "desc": "Сердечко.<Br>Дарю тебе свое сердечко,<Br>Держи тихонько, не разбей.",
+   "desc_id": 1294,
+   "name": "Сердечко",
+   "name_id": 1293,
+   "root": "ColdArm"
+  },
   "43430": {
    "confidence": "high",
    "desc": "Бельгийский револьвер обр. 1895 года сложен, медлителен при снаряжании, с другой стороны, надежен и имеет хорошую точность.<Br><B>Оружие модифицировано  в целях большего удобства пользования им.<Br>Ловкость +2.",
@@ -75994,6 +76138,14 @@
    "name": "Наган 1895[A][1]$Пистолет",
    "name_id": 4836,
    "root": "FireArm"
+  },
+  "4344": {
+   "confidence": "high",
+   "desc": "Амулет.<Br>Этот ценнейший амулет,<Br>сберег от разных бед.",
+   "desc_id": 1295,
+   "name": "Амулет",
+   "name_id": 1269,
+   "root": "ColdArm"
   },
   "43440": {
    "confidence": "high",
@@ -76075,6 +76227,14 @@
    "name_id": 4855,
    "root": "FireArm"
   },
+  "4345": {
+   "confidence": "high",
+   "desc": "Медальон.<Br>Медальончик, изображающий Нефертити. Легенды рассказывают, что никогда ранее Египет не порождал такой красавицы.",
+   "desc_id": 1297,
+   "name": "Медальон",
+   "name_id": 1296,
+   "root": "ColdArm"
+  },
   "43450": {
    "confidence": "high",
    "desc": "Это первый пистолет с ударно-спусковым механизмом двойного действия из выпускавшихся в США. Он, и его модификации, широко использовался в полиции.<Br><B>Скорость перезарядки увеличена.<Br>ОД на перезарядку -20%.",
@@ -76154,6 +76314,14 @@
    "name": "С. и В. специальный[G][1]$Пистолет",
    "name_id": 4856,
    "root": "FireArm"
+  },
+  "4346": {
+   "confidence": "high",
+   "desc": "Зайчонок.<Br>В зайчонке спрятана записка- *Моему любимому зайке*.",
+   "desc_id": 1299,
+   "name": "Зайчонок",
+   "name_id": 1298,
+   "root": "ColdArm"
   },
   "43460": {
    "confidence": "high",
@@ -76235,6 +76403,14 @@
    "name_id": 4853,
    "root": "FireArm"
   },
+  "4347": {
+   "confidence": "high",
+   "desc": "Духи.<Br>В них самый африканский аромат.",
+   "desc_id": 1300,
+   "name": "Духи",
+   "name_id": 766,
+   "root": "ColdArm"
+  },
   "43470": {
    "confidence": "high",
    "desc": "Это первый пистолет с ударно-спусковым механизмом двойного действия из выпускавшихся в США. Он, и его модификации, широко использовался в полиции.<Br><B>Увеличено повреждение на 10% и увеличена обойма.",
@@ -76315,6 +76491,14 @@
    "name_id": 4872,
    "root": "FireArm"
   },
+  "4348": {
+   "confidence": "high",
+   "desc": "Шоколадка.<Br>Используется для заманивания добычи... в берлогу.",
+   "desc_id": 1302,
+   "name": "Шоколадка",
+   "name_id": 1301,
+   "root": "ColdArm"
+  },
   "43480": {
    "confidence": "high",
    "desc": "Итальянские пистолеты серии Beretta 92 в конце концов заслужили репутацию довольно надежного, хотя и несколько громоздкого оружия.<Br><B>Время прицеливания -15%.",
@@ -76394,6 +76578,14 @@
    "name": "Беретта 92[G][2]$Пистолет",
    "name_id": 4873,
    "root": "FireArm"
+  },
+  "4349": {
+   "confidence": "high",
+   "desc": "Черная метка.<Br>Ее вручали дважды - штурману Билли Бонсу и капитану Сильверу. Вот и у вас есть она.",
+   "desc_id": 1304,
+   "name": "Черная метка",
+   "name_id": 1303,
+   "root": "ColdArm"
   },
   "43490": {
    "confidence": "high",
@@ -76483,6 +76675,14 @@
    "name_id": 5833,
    "root": "SimpleObject"
   },
+  "4350": {
+   "confidence": "high",
+   "desc": "Открытка с Днем рождения.<Br>Желаю уюта, комфорта, тепла<Br>Чтоб доброю жизнь и веселой была,<Br>Чтоб стало побольше в ней<Br>праздничных дней,<Br>Подарков, цветов и улыбок друзей!",
+   "desc_id": 1306,
+   "name": "Открытка",
+   "name_id": 1305,
+   "root": "ColdArm"
+  },
   "43500": {
    "confidence": "high",
    "desc": "Итальянские пистолеты серии Beretta 92 в конце концов заслужили репутацию довольно надежного, хотя и несколько громоздкого оружия.<Br><B>Увеличено повреждение на 10% и увеличена обойма.",
@@ -76563,6 +76763,14 @@
    "name_id": 4889,
    "root": "FireArm"
   },
+  "4351": {
+   "confidence": "high",
+   "desc": "Открытка с новым уровнем.<Br>Мы не ели, мы не спали,<Br>как же мобы нас доставали.<Br>Поздравляю! Все же сдали!<Br>Ждут тусовки, сон, постель.<Br>Здравствуй, счастье двух недель!",
+   "desc_id": 1307,
+   "name": "Открытка",
+   "name_id": 1305,
+   "root": "ColdArm"
+  },
   "43510": {
    "confidence": "high",
    "desc": "В разное время состоял на вооружении армий и полиций многих стран, в том числе стран Британского Содружества.<Br><B>Скорость перезарядки увеличена.<Br>ОД на перезарядку -20%.",
@@ -76642,6 +76850,14 @@
    "name": "Браунинг[G][2]$Пистолет",
    "name_id": 4890,
    "root": "FireArm"
+  },
+  "4352": {
+   "confidence": "high",
+   "desc": "Открытка просто так.<Br>Что пожелать тебе? Богатств? Удачи?<Br>От жизни каждый хочет своего...<Br>А мы тебе желаем просто счастья,<Br>Чтоб было понемногу, но всего!",
+   "desc_id": 1308,
+   "name": "Открытка",
+   "name_id": 1305,
+   "root": "ColdArm"
   },
   "43520": {
    "confidence": "high",
@@ -94291,6 +94507,30 @@
    "name_id": 2056,
    "root": "FireArm"
   },
+  "5740": {
+   "confidence": "high",
+   "desc": "Применяют в хирургии и стоматологии для изготовления повязок, временных протезов. Это медицинский гипс, который соответствует ГОСТ 125–79.",
+   "desc_id": 49080,
+   "name": "Гипс",
+   "name_id": 49079,
+   "root": "SimpleObject"
+  },
+  "5741": {
+   "confidence": "high",
+   "desc": "Такой проволокой можно слона привязать и он не убежит.",
+   "desc_id": 49082,
+   "name": "Проволока с искривлением",
+   "name_id": 49081,
+   "root": "SimpleObject"
+  },
+  "5742": {
+   "confidence": "high",
+   "desc": "по-настоящему надежные китайские бинты. Тут вам будет стопроцентная гарантия. Даже сто и одна десятая процента. Заживет, как на собаке.",
+   "desc_id": 49084,
+   "name": "Бинты для гипса",
+   "name_id": 49083,
+   "root": "SimpleObject"
+  },
   "5799": {
    "confidence": "medium",
    "desc": null,
@@ -95947,6 +96187,30 @@
    "name_id": 1579,
    "root": "ColdArm"
   },
+  "6294": {
+   "confidence": "high",
+   "desc": "Предъявите продавцу патронов для получения 20 шт. редких боеприпасов.",
+   "desc_id": 6685,
+   "name": "Купон на 20 патронов",
+   "name_id": 6684,
+   "root": "SimpleObject"
+  },
+  "6295": {
+   "confidence": "high",
+   "desc": "Предъявите продавцу патронов для получения 300 шт. редких боеприпасов.",
+   "desc_id": 6687,
+   "name": "Купон на 300 патронов",
+   "name_id": 6686,
+   "root": "SimpleObject"
+  },
+  "6296": {
+   "confidence": "high",
+   "desc": "Предъявите продавцу патронов для получения 5000 шт. редких боеприпасов.",
+   "desc_id": 6690,
+   "name": "Купон на 5000 патронов",
+   "name_id": 6689,
+   "root": "SimpleObject"
+  },
   "6478": {
    "confidence": "medium",
    "desc": "Господь создал людей, а полковник Кольт сделал их равными. Старший сержант Калашников пошёл дальше: он уравнял не только людей, но целые государства.",
@@ -96587,6 +96851,46 @@
    "name_id": 876,
    "root": "Ammo"
   },
+  "7025": {
+   "confidence": "high",
+   "desc": "Используется в истинно мужском, суровом, челябинском варианте эпиляции или как детектор лжи.",
+   "desc_id": 8239,
+   "name": "Паяльная лампа",
+   "name_id": 8238,
+   "root": "SimpleObject"
+  },
+  "7026": {
+   "confidence": "high",
+   "desc": "Незаменимая вещь при исследовании залежей мусора на предмет ништяков.",
+   "desc_id": 8240,
+   "name": "Молоток геолога",
+   "name_id": 1610,
+   "root": "SimpleObject"
+  },
+  "7027": {
+   "confidence": "high",
+   "desc": "В этой банке можно обжигать свинец.",
+   "desc_id": 8242,
+   "name": "Жестяная банка",
+   "name_id": 8241,
+   "root": "SimpleObject"
+  },
+  "7028": {
+   "confidence": "high",
+   "desc": "Бутыль для проведения химических опытов",
+   "desc_id": 8244,
+   "name": "Бутыль",
+   "name_id": 8243,
+   "root": "SimpleObject"
+  },
+  "7029": {
+   "confidence": "high",
+   "desc": "С этим древним приспособлением сподручней залить жидкость в бутылку с минимальными потерями.",
+   "desc_id": 8246,
+   "name": "Воронка",
+   "name_id": 8245,
+   "root": "SimpleObject"
+  },
   "7030": {
    "confidence": "high",
    "desc": "Заглавная страница «Бункера Ламантина» на планшете Templiersа. <Br><b> Адрес «Бункера Ламантина» http://ru.lava-online.wikia.com/wiki/Бункер_Ламантина",
@@ -96633,6 +96937,62 @@
    "desc_id": 8485,
    "name": "Штурвал от гермодвери (Коллекция)",
    "name_id": 8484,
+   "root": "SimpleObject"
+  },
+  "7036": {
+   "confidence": "high",
+   "desc": "Хоть и старые, но еще способны защитить руки от всяких кислот или едких лаков.",
+   "desc_id": 8248,
+   "name": "Перчатки",
+   "name_id": 8247,
+   "root": "SimpleObject"
+  },
+  "7037": {
+   "confidence": "high",
+   "desc": "Инстумент юного марадера(сталкера).",
+   "desc_id": 8250,
+   "name": "Пассатижы",
+   "name_id": 8249,
+   "root": "SimpleObject"
+  },
+  "7038": {
+   "confidence": "high",
+   "desc": "Ей можно как прикрутить, так и открутить что-нибудь нужное и незаметное.",
+   "desc_id": 8252,
+   "name": "Отвертка",
+   "name_id": 8251,
+   "root": "SimpleObject"
+  },
+  "7039": {
+   "confidence": "high",
+   "desc": "Этим тихим ужасом только веревку отрезать и выбросить.",
+   "desc_id": 8254,
+   "name": "Нож для грязной работы",
+   "name_id": 8253,
+   "root": "SimpleObject"
+  },
+  "7040": {
+   "confidence": "high",
+   "desc": "Когда необходимо собрать ртуть, то клизма вне конкуренции или пошли другу с намеком.",
+   "desc_id": 8256,
+   "name": "Клизма",
+   "name_id": 8255,
+   "root": "SimpleObject"
+  },
+  "7041": {
+   "confidence": "high",
+   "desc": "Защищает органы дыхания, когда вы собираете нужные вещи в ненужном месте.",
+   "desc_id": 8258,
+   "name": "Респиратор",
+   "name_id": 8257,
+   "root": "SimpleObject"
+  },
+  "7042": {
+   "confidence": "high",
+   "desc": "В нем нести сподручней чем в карманах.",
+   "desc_id": 8260,
+   "name": "Пластиковый пакет",
+   "name_id": 8259,
    "root": "SimpleObject"
   },
   "7084": {
