@@ -128,7 +128,18 @@ check("  ..the gold lottery's ticket and the gold line's blueprints among them",
                                               and cat[t][1].startswith("bpg_damage_25_gold_")
                                               and t not in items.GOLD_PRICE_ONLY)), (True, []))
 check("a record that is another article's: its own article's price",
-      {t: items.params_of(t)["cost"] for t in items.OWN_ARTICLE_PRICE}, {1307: 500})
+      {t: items.params_of(t)["cost"] for t in items.OWN_ARTICLE_PRICE if t == 1307}, {1307: 500})
+# Абри's stalls (2026-10-12): the things whose articles no record carries, at
+# their articles' prices -- the bus tickets, the lottery tickets, the
+# junkyard's tools -- and the chain's gypsum, wire and bandages at a designed 50.
+check("  ..and Абри's things with an article and no record: theirs, afro or gold alone",
+      ({t: items.params_of(t)["cost"] for t in items.OWN_ARTICLE_PRICE if t != 1307},
+       {t: (items.params_of(t)["cost"], items.params_of(t)["g_cost"])
+        for t in items.ARTICLE_GOLD_PRICE}),
+      (dict([(6544, 100), (6545, 150), (2646, 1000), (2647, 1700), (5740, 50), (5741, 50),
+             (5742, 50)] + [(t, 100) for t in (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038,
+                                                7039, 7040, 7041, 7042)]),
+       {2649: (0, 200), 2650: (0, 250), 6294: (0, 10), 6295: (0, 100), 6296: (0, 1000)}))
 
 # --- every unlinked type keeps the designed frame ------------------------------
 # All of them, not a sample: twenty drawn by the clock failed now and then on
@@ -141,7 +152,7 @@ def deliberate(t):
     overlays, each on its own keys: a simple object's original words
     (names.ORIG_ITEM_DESCS), the ore's and the plant's numbers
     (production.item_numbers), a price of the server's (GOLD_PRICE_ONLY,
-    OWN_ARTICLE_PRICE, GOLD_INGOTS), a trophy's exchange, and the quest flag
+    ARTICLE_GOLD_PRICE, OWN_ARTICLE_PRICE, GOLD_INGOTS), a trophy's exchange, and the quest flag
     of a thing a quest lends or a place keeps (quests.lent, events.kept)."""
     cmd, p = items.designed_info(t)
     p = dict(p)
@@ -151,6 +162,8 @@ def deliberate(t):
     if root == items.TRASH and not p.get("desc") and t in items._orig_described():
         p["desc"] = items.DESC_ID_OFFSET + t
     p.update(production.item_numbers(t) or {})
+    if t in items.ARTICLE_GOLD_PRICE:
+        p["g_cost"] = items.ARTICLE_GOLD_PRICE[t]
     if t in items.GOLD_PRICE_ONLY:
         p["cost"] = 0
     if t in items.OWN_ARTICLE_PRICE:

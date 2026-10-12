@@ -86,6 +86,7 @@ COPPER_TOP, COPPER_ROOM, COPPER_1 = 200, 657, 1025
 LEAD_ROOM, NITRE_ROOM = 658, 659
 ORE_TIERS = {1025: 1316, 1218: 1354, 1255: 1355, 1027: 1308, 1220: 1344, 1257: 1345,
              1026: 1312, 1219: 1349, 1256: 1350}
+ABRI_ORE_TIERS = (1028, 1029, 1030, 1221, 1222, 1223)
 ROCKS_STAND = {1025: 20, 1218: 10, 1255: 5, 1027: 20, 1220: 15, 1257: 12, 1026: 10, 1219: 9,
                1256: 7}
 PANEL, GUARD = 2022, 1714
@@ -202,12 +203,12 @@ try:
           {i: (2, 0) for i in ORE_TIERS})
     check("world.STANDING_OBJECTS is unchanged: the rocks stand by production's own table",
           any(i in world.STANDING_OBJECTS for i in ORE_TIERS), False)
+    # Абри's mines stand their own rocks since 2026-10-12 (test_abri_trade).
     others = {i: world.location(i) for i in range(1, 1400)
-              if world.path_for(i) and i not in ORE_TIERS
+              if world.path_for(i) and i not in ORE_TIERS and i not in ABRI_ORE_TIERS
               and any(t in production.ORE_YIELD for _c, t in world.location(i).spawns)}
-    check("no other file stands the town's rocks", {i: stood(i) for i in others if
-                                                    any(t in production.ORE_YIELD
-                                                        for t in stood(i))}, {})
+    check("no other file stands the town's rocks (but Абри's tiers theirs)",
+          {i: stood(i) for i in others if any(t in production.ORE_YIELD for t in stood(i))}, {})
     check("a rock is an immobile, harmless object of level 5",
           [(mobs.stats(t).role, mobs.stats(t).moves, mobs.stats(t).can_attack, mobs.stats(t).level)
            for t in sorted(set(ORE_TIERS.values()))], [("object", False, False, 5)] * 9)
@@ -268,8 +269,9 @@ try:
           [t for t in GEN if rows[t] is None], [])
     with open(os.path.join(ROOT, "data", "questgen_production.json"), encoding="utf-8") as fh:
         GEN_DOC = json.load(fh)
-    check("  ..and only those, each saying it is generated and from which CrBQ row",
-          ([r["type"] for r in GEN_DOC["quests"]],
+    check("  ..and only those of Вади-Хальфа's block, each saying it is generated and from"
+          " which CrBQ row (Абри's 13100-13131 since 2026-10-12, test_abri_trade)",
+          ([r["type"] for r in GEN_DOC["quests"] if r["type"] < 13100],
            [r["type"] for r in GEN_DOC["quests"] if not r["why"].startswith("GENERATED")
             or "CrBQ№" not in r["why"]]), (GEN, []))
     where = {}

@@ -227,6 +227,16 @@ CITIES = [
          # Винтовки / Дробовики / Пистолеты / Пистолет-пулеметы».
          gunsmiths={"rifle": 238, "shotgun": 239, "pistol": 242, "smg": 243},
          decoder=652),
+    # Абри (2026-10-12): its whetstone, «Точильный камень<Br>Абри» (2280,
+    # Портовый рынок 187, texts.xml 51646), sharpens the knives of the town's
+    # band its knife trader sells, Нож кастет (10у) and Штык нож (12у): the
+    # wiki's «Заточка и Эргономика Нож кастета (10у)» and «... Штык ножа
+    # (12у)» are on Одноухий's list. Охотничий нож (8у) is Вади-Хальфа's
+    # whetstone's. No masters, camps' blueprints, gunsmiths or decoder: the
+    # client has no upgrader of Абри's, and the guns of 8-12 were upgraded
+    # in Вади-Хальфа and Донгола (the owner's decision 28, DESIGNED).
+    dict(name="abri", band=(8, 12),
+         whetstones={2280: (10, 12)}),
 ]
 
 # The blueprint stalls the stock is written for (data/npcs.json 'stock', the
@@ -246,6 +256,15 @@ STALLS = {"shotgun": (576, 7309), "rifle": (578, 7310), "smg": (7311,)}
 # the owner's to add there.
 Q_STALL = 5770
 EXTRA_STALLS = {1152: dict(blueprints=(5192, 2279), knives=(2279,))}
+# The knife stalls whose list is the owner's file's (data/npcs.json 'stock',
+# --stock prints it), by the whetstones whose blueprints they sell:
+# Одноухий (1164, Абри's port market) Абри's whetstone's (2280). His list
+# in the file is these and after them the gypsum, wire and bandages of
+# Марис Дамбис's chain («торговец ножами ... знатным костоправом», texts.xml
+# 49186), which are no craft's -- so a list of his own, which the table's
+# "stock" (EXTRA_STALLS) would not reach. His knives are Абри's band's
+# (data/shop_bands.json).
+KNIFE_STALLS = {1164: (2280,)}
 
 
 # --- the tables of the game -------------------------------------------------------------
@@ -873,7 +892,8 @@ def item_table(rows, parts):
 
 def stock(doc):
     """The blueprint stalls' lists for data/npcs.json (--stock): each
-    master's class's blueprints, by level."""
+    master's class's blueprints, by level; a knife stall's (KNIFE_STALLS)
+    its whetstones' blueprints, the head of its list there."""
     out = {}
     rows = doc["quests"]
     for cls, stalls in STALLS.items():
@@ -886,6 +906,9 @@ def stock(doc):
         got.sort(key=lambda t: (int(re.search(r"lvl(\d+)$", CAT[t][1]).group(1)), t))
         for s in stalls:
             out[s] = got
+    for s, stones in KNIFE_STALLS.items():
+        out[s] = sorted({r["craft"]["blueprint"] for r in rows
+                         if r["craft"]["family"] == "knife" and set(stones) & set(r["give"])})
     return out
 
 

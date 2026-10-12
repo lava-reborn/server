@@ -522,6 +522,18 @@
     "target_loc_id": 1012,
     "why": "DESIGNED topology on the files' own sides. VH_mine_tunel3_horizont: its east edge into 1012, the gallery's east end (see 1012 W)."
    }
+  },
+  "193": {
+   "N": {
+    "target_loc_id": 192,
+    "why": "DESIGNED topology on the files' own sides. Ведич's «Заполучить амазонку (Часть 5)» (46985): «Перейти в соседнюю локацию и победить Амазонку» -- 193 (Q_Abri_Healer, Ведич's copy 1178) opens only to the north, 192 (Q_Abri_Amazon, the Амазонка 1177) to the east and the south: the north of the one leads to the other, arrived at over its south edge. Neither has a cell; 192's east side leads onto the map by the cell it was entered from."
+   }
+  },
+  "192": {
+   "S": {
+    "target_loc_id": 193,
+    "why": "DESIGNED topology on the files' own sides: back from the Амазонка's 192 over its south edge to Ведич's copy in 193, whose «С меня хватит!» (474) leads home to the market."
+   }
   }
  },
  "no_map": {
@@ -791,6 +803,18 @@
     "cells": [[30, 77], [31, 78], [32, 77], [30, 76]],
     "target_loc_id": 176,
     "why": "RECOVERED way and time, DESIGNED place. 37 «Вади Хальфа: вокзал» (5967,1727): Хассир (105), «водитель», the station's driver («В другие города часто Хассир ездит», 50343), stands at (31,77). «Поехали!» (62262/62263: «Мне как раз по пути, подброшу тебя до нового работодателя ... В 12:00, 16:00 или 23:00 отправиться в тюрьму ... Вас отправят в тюрьму около Вади Хальфы») is the ride to the prison's yard (176, 5985,1744), open from a quarter of an hour before an uprising to its end (data/schedule.json prison_wh_gates). The cells are the ground by him, where a player driven back from the prison arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 273,
+    "cells": [[30, 78], [31, 79], [32, 78], [33, 77]],
+    "target_loc_id": 187,
+    "why": "RECOVERED ride and texts, DESIGNED way. 37 «Вади Хальфа: вокзал» (5967,1727): Хассир (105, «Хассир водитель», the station's driver: «В другие города часто Хассир ездит», 50343; the tooltip «Вокзал Вади-Хальфы: ... Транспортировка в Абри») stands at (31,77). «Поездка в Абри» (46957-46960, 100 afro) is the ride to Абри's Портовый рынок (187, 5860,1835), the owner's «Открой у водителя на вокзале квест поездку в Абри» (2026-10-12). The cells are the ground south of him, beside the cells of his «Поехали!» (159), where a player driven back from Абри arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 279,
+    "cells": [[30, 78], [31, 79], [32, 78], [33, 77]],
+    "target_loc_id": 187,
+    "why": "RECOVERED ride and texts, DESIGNED way. 37: Хассир's «Проездной в Абри» (46745, 61303, 47226, 59830), the same ride to 187 for the ticket 6544 instead of the fare; the same cells as «Поездка в Абри» (273)."
    }
   ],
   "176": [
@@ -819,6 +843,144 @@
     "cells": [[30, 74], [31, 73], [31, 75], [32, 74]],
     "target_loc_id": 176,
     "why": "RECOVERED way and giver, DESIGNED place. 646 «Тюрьма: Центральный блок.» (Prison_3_WH): «Томас<Br>Выход из тюрьмы» (876, uf_ExitMan, 62317; the wiki: «безопасно выводит из тюрьмы. При выходе отбирает все повязки») at (31,74), and his «Выход» (62276-62278, «Там еще кто-нибудь выходить будет?»), handed back to him, leads up to the yard (176) at any time; the armbands stay below (data/schedule.json keep_in). The cells are the ground at his feet."
+   }
+  ],
+  "188": [
+   {
+    "quest": 452,
+    "cells": [[18, 88], [19, 88], [18, 89], [19, 89]],
+    "target_loc_id": 671,
+    "why": "DESIGNED way, RECOVERED place. 188 «Абри: Жилой квартал»: the house's door «Дверь» (1394, ow_AbriDoor2) stands at (19,87) in the quarter's wall; «Вскрыть дверь» (texts.xml 46878-46881), handed in to it with the lockpicks, leads into the house, 671 «Особняк Барона», by its door 1262. The cells are the ground beside the door, where a player coming the other way arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 456,
+    "cells": [[32, 119], [32, 120], [33, 120], [32, 118]],
+    "target_loc_id": 671,
+    "why": "DESIGNED way, RECOVERED place. 188: the garden gate «Садовые ворота» (1395, ow_AbriGate) at (33,119), Вальдес's car (1415) at (5,65); «Все в сад» (46892-46894), handed back to Вальдес, leads through the gate into 671, whose garden ends at the same gate (33,119). The cells are the ground beside the gate, where the way is drawn."
+   },
+   {
+    "quest": 460,
+    "cells": [[6, 65], [5, 66], [6, 66], [7, 65]],
+    "target_loc_id": 672,
+    "why": "DESIGNED way, RECOVERED place. 188: «Автомобиль Вальдеса» (1415) at (5,65); «План Б» (46904-46907, «Садись в машину, я присмотрел хорошее место для засады») drives to the road, 672 «Дорога в Абри», the quest copy at peace where the pit 1417 waits. The cells are the ground beside the car, where a player coming the other way arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 464,
+    "cells": [[18, 88], [19, 88], [18, 89], [19, 89]],
+    "target_loc_id": 671,
+    "why": "DESIGNED way, RECOVERED place. 188: «Войти в дом» (46920-46922) at the house's door (1394, 19,87), the way in for the storm of the house (463). The cells are the ground beside the door, where a player coming the other way arrives (travel.door_arrival)."
+   }
+  ],
+  "671": [
+   {
+    "quest": 453,
+    "cells": [[21, 89], [21, 90], [22, 88], [21, 91]],
+    "target_loc_id": 188,
+    "why": "DESIGNED way, RECOVERED place. 671 «Особняк Барона» (Abri_Baron_house1): its door «Дверь» (1262, ow_AbriDoor) at (19,89), beside Родригес's body (1416, 27,91); «Плохие новости» (46882-46884, «вы покидаете дом»), handed back at the body, leads out by the door to the quarter, 188. The cells are the ground beside the door, where a player coming the other way arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 458,
+    "cells": [[35, 119], [35, 120], [36, 118], [36, 119]],
+    "target_loc_id": 188,
+    "why": "DESIGNED way, RECOVERED place. 671: the garden gate (1395) at (33,119); «Обратно в город» (46898-46900, «покинуть сад») leads out to the quarter, 188. The cells are the ground beside the gate, where a player coming the other way arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 465,
+    "cells": [[21, 89], [21, 90], [22, 88], [21, 91]],
+    "target_loc_id": 188,
+    "why": "DESIGNED way, RECOVERED place. 671: «Покинуть дом» (46923-46925) at the door 1262 (19,89), out to the quarter at any time: the house has no side out, and its door b goes upstairs."
+   }
+  ],
+  "672": [
+   {
+    "quest": 461,
+    "cells": [[15, 107], [17, 107], [16, 108], [16, 106]],
+    "target_loc_id": 219,
+    "why": "DESIGNED way, RECOVERED place. 672 «Дорога в Абри» (the quest copy, war 0, no way out of its own): «Небольшая ямка» (1417, Abri_BombPlace) at (16,107); «Заминировать дорогу» (46908-46911), the mine laid and the blast heard, leads to the road on the map, 219 (5876,1850), where the car stands among the survivors. The cells are the ground beside the pit, where a player coming the other way arrives (travel.door_arrival)."
+   }
+  ],
+  "219": [
+   {
+    "quest": 462,
+    "cells": [[54, 51], [53, 52], [54, 52], [55, 51]],
+    "target_loc_id": 188,
+    "why": "DESIGNED way, RECOVERED place. 219 «Дорога в Абри» (5876,1850): «Автомобиль Вальдеса» (1415) at (53,51); «Добить выживших» (46912-46915, «Садись в машину, вернемся в город») leads back to the quarter, 188. The cells are the ground beside the car, where a player coming the other way arrives (travel.door_arrival)."
+   }
+  ],
+  "187": [
+   {
+    "quest": 473,
+    "cells": [[39, 71], [39, 72], [39, 73], [40, 71]],
+    "target_loc_id": 193,
+    "why": "DESIGNED way, RECOVERED place. 187 «Портовый рынок»: Ведич (1174, Abri_Healer) stands at (38,71); «Заполучить амазонку (Часть 4)» (46978-46980, «Пойти вместе с Ведичем») takes the player to 193 «Пустошь» (Q_Abri_Healer, his copy 1178 at 36,63), beside the Амазонка's 192. The cells are the ground beside him, where a player coming the other way arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 274,
+    "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
+    "target_loc_id": 37,
+    "why": "RECOVERED ride and texts, DESIGNED way. 187 «Портовый рынок» of Абри (5860,1835): Луиджи (1179, «Луиджи водитель», 46948) stands at (50,91) by his car (car1.png at 50,89, whose body is the obstacles 48-51 x 88-91). «Поездка в Вади Хальфу» (46961-46964, 400 afro) is the ride back to Вади-Хальфа's station (37). The cells are the ground by him, where a player driven out from Вади-Хальфа arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 280,
+    "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
+    "target_loc_id": 37,
+    "why": "RECOVERED ride and texts, DESIGNED way. 187: Луиджи's «Проездной в Вади Хальфу» (46744, 61304, 47226, 59830), the same ride to 37 for the ticket 6545; the same cells as «Поездка в Вади Хальфу» (274)."
+   }
+  ],
+  "193": [
+   {
+    "quest": 474,
+    "cells": [[35, 63], [37, 63], [36, 64], [35, 64]],
+    "target_loc_id": 187,
+    "why": "DESIGNED way, RECOVERED place. 193 «Пустошь»: Ведич's copy (1178, Abri_Healer_q) at (36,63); «С меня хватит!» (46981-46983) takes the player back to the market, 187, at any time. The cells are the ground beside him, where a player coming the other way arrives (travel.door_arrival)."
+   }
+  ],
+  "205": [
+   {
+    "quest": 558,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 662,
+    "why": "DESIGNED way, RECOVERED place. 205, the entrance of Абри's mine of свинца, draws its door (31,57's gatekeeper 1321 in front of it) and no zone to go in by. His quest takes the player down to the control room, 662. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "662": [
+   {
+    "quest": 561,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 205,
+    "why": "DESIGNED way, RECOVERED place. 662 «Комната управления»: «Выход из шахты» (1333) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 205. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "204": [
+   {
+    "quest": 559,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 661,
+    "why": "DESIGNED way, RECOVERED place. 204, the entrance of Абри's mine of селитры, draws its door (31,57's gatekeeper 1325 in front of it) and no zone to go in by. His quest takes the player down to the control room, 661. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "661": [
+   {
+    "quest": 562,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 204,
+    "why": "DESIGNED way, RECOVERED place. 661 «Комната управления»: «Выход из шахты» (1337) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 204. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "203": [
+   {
+    "quest": 560,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 660,
+    "why": "DESIGNED way, RECOVERED place. 203, the entrance of Абри's mine of меди, draws its door (31,57's gatekeeper 1329 in front of it) and no zone to go in by. His quest takes the player down to the control room, 660. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "660": [
+   {
+    "quest": 563,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 203,
+    "why": "DESIGNED way, RECOVERED place. 660 «Комната управления»: «Выход из шахты» (1341) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 203. The cells are the ground beside him, where a player coming down arrives."
    }
   ]
  }
