@@ -160,6 +160,10 @@ table = call("/api/table")
 check("GET /api/table: the hand rows and the generated ones",
       (len(table["rows"]), sorted(g["source"] for g in table["generated"])),
       (len(rows), sorted(os.path.basename(p) for p in quests.companion_paths(quests.PATH))))
+import travel  # noqa: E402
+ways = sorted(int(r["type"]) for r in rows if travel.is_quest_way(r["type"]))
+check("GET /api/table: the rides, as the game knows them (the «суточные» filter leaves them out)",
+      (table["ways"], len(ways) > 0), (ways, True))
 probs = call("/api/check", {"rows": table["rows"]})["problems"]
 check("POST /api/check: no error", [p for p in probs if p["level"] == "error"], [])
 some = next(r for r in rows if quests.original_texts(r["type"]).get("start"))

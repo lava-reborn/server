@@ -86,6 +86,7 @@ function Editor() {
   const mini = useStore((s) => miniFor(s.width));
   const [rows, setRows] = useState<Row[]>([]);
   const [generated, setGenerated] = useState<Generated[]>([]);
+  const [ways, setWays] = useState<ReadonlySet<number>>(new Set());
   const [sha, setSha] = useState("");
   const [layout, setLayout] = useState<Layout>({});
   const [positions, setPositions] = useState<Record<string, Pos>>({});
@@ -153,6 +154,7 @@ function Editor() {
       const t = await api.table();
       setRows(t.rows);
       setGenerated(t.generated);
+      setWays(new Set(t.ways || []));
       setSha(t.sha);
       setLayout(t.layout || {});
       setPositions((t.layout && t.layout.positions) || {});
@@ -360,8 +362,8 @@ function Editor() {
   // --- the graph ---------------------------------------------------------------
   const visible = useMemo(() => {
     const base = filters.generated ? allRows : rows;
-    return base.filter((r) => matches(r, filters, lookup, hasProblem));
-  }, [rows, allRows, filters, lookup, hasProblem]);
+    return base.filter((r) => matches(r, filters, lookup, hasProblem, ways));
+  }, [rows, allRows, filters, lookup, hasProblem, ways]);
 
   const [nodes, setNodes, onNodesChangeBase] = useNodesState<QuestNodeT>([]);
   useEffect(() => {
@@ -728,6 +730,7 @@ function Editor() {
               errorsOf={errorsOf}
               warnsOf={warnsOf}
               generatedCount={genCount}
+              ways={ways}
             />
             <div className={"canvas mini-" + mini} ref={canvasRef}>
               <ReactFlow

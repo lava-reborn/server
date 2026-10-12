@@ -145,6 +145,8 @@ export interface TableResp {
   layout: Layout;
   order: string[];
   new_types: [number, number];
+  // Types data/passages.json makes rides: not the day's tasks (Sidebar isDaily).
+  ways?: number[];
   // "publish": the admin panel's editor, which pushes to the branch;
   // "local": a checkout's data/quests.json, saved on disk.
   mode?: "publish" | "local";

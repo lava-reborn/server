@@ -10,12 +10,32 @@ export interface Filters {
   generated: boolean;
   onlyProblems: boolean;
   off: "all" | "on" | "off";
+  repeat: "all" | "daily" | "once" | "service";
 }
 
-export const NO_FILTERS: Filters = { text: "", kind: "", generated: false, onlyProblems: false, off: "all" };
+export const NO_FILTERS: Filters = { text: "", kind: "", generated: false, onlyProblems: false, off: "all", repeat: "all" };
 
-export function matches(row: Row, f: Filters, lk: ReturnType<typeof useLookup>, hasProblem: (t: number) => boolean): boolean {
+// Суточный — тот, что игра считает в дневной лимит (server.py
+// Session.counts_daily): повторяемый, но не услуга и не поездка. Поездки
+// знает таблица путей сервера, а не строка квеста: их номера приходят с
+// таблицей (TableResp.ways).
+const NO_WAYS: ReadonlySet<number> = new Set();
+
+export function isDaily(row: Row, ways: ReadonlySet<number> = NO_WAYS): boolean {
+  return !!row.repeatable && !row.service && !row.way && !ways.has(row.type);
+}
+
+export function matches(
+  row: Row,
+  f: Filters,
+  lk: ReturnType<typeof useLookup>,
+  hasProblem: (t: number) => boolean,
+  ways: ReadonlySet<number> = NO_WAYS,
+): boolean {
   if (f.kind && row.kind !== f.kind) return false;
+  if (f.repeat === "daily" && !isDaily(row, ways)) return false;
+  if (f.repeat === "once" && row.repeatable) return false;
+  if (f.repeat === "service" && !row.service) return false;
   if (f.onlyProblems && !hasProblem(row.type)) return false;
   const off = !(row.give || []).length;
   if (f.off === "on" && off) return false;
@@ -44,9 +64,10 @@ interface Props {
   errorsOf: (t: number) => number;
   warnsOf: (t: number) => number;
   generatedCount: number;
+  ways: ReadonlySet<number>;
 }
 
-export function Sidebar({ visible, filters, setFilters, selected, onSelect, errorsOf, warnsOf, generatedCount, rows }: Props) {
+export function Sidebar({ visible, filters, setFilters, selected, onSelect, errorsOf, warnsOf, generatedCount, rows, ways }: Props) {
   const sorted = useMemo(() => [...visible].sort((a, b) => a.type - b.type), [visible]);
   return (
     <aside className="sidebar">
@@ -70,6 +91,16 @@ export function Sidebar({ visible, filters, setFilters, selected, onSelect, erro
           <option value="on">Только включённые</option>
           <option value="off">Только выключенные</option>
         </select>
+        <select
+          value={filters.repeat}
+          title="Суточные — повторяемые, которые игра считает в дневной лимит: не услуги и не поездки"
+          onChange={(e) => setFilters({ ...filters, repeat: e.target.value as Filters["repeat"] })}
+        >
+          <option value="all">Суточные и разовые</option>
+          <option value="daily">Только суточные</option>
+          <option value="once">Только разовые</option>
+          <option value="service">Только услуги</option>
+        </select>
         <label className="check">
           <input type="checkbox" checked={filters.onlyProblems} onChange={(e) => setFilters({ ...filters, onlyProblems: e.target.checked })} />{" "}
           только с проблемами
@@ -91,6 +122,11 @@ export function Sidebar({ visible, filters, setFilters, selected, onSelect, erro
               <span className={`qdot kind-${r.kind}`} />
               <span className="muted">#{r.type}</span>
               <span className="grow ellipsis">{plain(r.name) || "без названия"}</span>
+              {isDaily(r, ways) && (
+                <span className="muted" title={r.per_day ? `Суточный: ${r.per_day} в сутки` : "Суточный"}>
+                  ⟳{r.per_day ? ` ${r.per_day}` : ""}
+                </span>
+              )}
               {e > 0 && <span className="qbadge err">{e}</span>}
               {!e && w > 0 && <span className="qbadge warn">{w}</span>}
             </div>
