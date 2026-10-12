@@ -150,6 +150,9 @@ STOCK = {
     # АС Вал (16, Донгола's and Абу-Хамед's) gets Донгола's assault rifle
     # stall the two rounds Абу-Хамед's sells for it (1217, the wiki's).
     1163: AMMO_9MM,                                       # Abri_SubMachineGuns_trd
+    # 1162's list is data/npcs.json's since 2026-10-12 (these rounds alone,
+    # without the knife blueprints the wiki's shifted link gave it), which
+    # wins over this row; kept as the class's rounds should the file drop it.
     1162: AMMO_12MM,                                      # Abri_Shotguns_trd
     1211: AMMO_9MM,                                       # dn_SubMachineGuns
     1229: AMMO_12MM,                                      # dn_oasis_w_trd
