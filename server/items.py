@@ -38,6 +38,7 @@ import os
 import craft
 import npcs
 import orig_texts
+import own_items
 import production
 import progression
 import quests
@@ -260,16 +261,32 @@ _SERIES = re.compile(r"^([a-z_]+?)_(\d+)$")
 
 
 def catalogue():
-    """type_id -> (root_type_id, internal name), from the client's own table."""
+    """type_id -> (root_type_id, internal name), from the client's own table
+    and the types of our own (data/own_items.json, own_items.py), which the
+    release's objects.xml carries as rows of the same table."""
     global _CATALOGUE
     if _CATALOGUE is None:
         txt = world._read(os.path.join(world.RES, "database", "objects.xml"))
-        _CATALOGUE = {
+        table = {
             int(m.group(1)): (int(m.group(2)), m.group(3))
             for m in re.finditer(
                 r'<object type_id="(\d+)" root_type_id=\s*"(\d+)"'
                 r' name="([^"]*)"', txt)}
+        table.update(own_items.rows(table))
+        _CATALOGUE = table
     return _CATALOGUE
+
+
+_OWN = None
+
+
+def own(type_id):
+    """Whether a type is one of ours rather than the original's
+    (data/own_items.json, own_items.py)."""
+    global _OWN
+    if _OWN is None:
+        _OWN = frozenset(own_items.load())
+    return type_id in _OWN
 
 
 def tier(name):

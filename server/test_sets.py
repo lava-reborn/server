@@ -38,6 +38,7 @@ import items  # noqa: E402
 import names  # noqa: E402
 import npcs  # noqa: E402
 import orig_texts  # noqa: E402
+import own_items  # noqa: E402
 import quests  # noqa: E402
 import sets  # noqa: E402
 import world  # noqa: E402
@@ -87,13 +88,15 @@ check("and every belt_ into the belt slot",
 PIECES = ("helm", "shirt", "armor", "pants", "boots")
 
 
-def rung(level, word, res, series, keys, words, pages=(), bonus=None):
+def rung(level, word, res, series, keys, words, pages=(), bonus=None, named=None):
     """pages: the wiki page per slot where it is not the piece's own name;
-    None for a rung the wiki has no numbers for."""
+    None for a rung the wiki has no numbers for. named: the variant letter
+    of a variant's pieces in their internal names where it is not the
+    variant's own -- a sold quest series' A is _Q_."""
     if pages is not None:
         pages = tuple(dict(pages).get(s, w) for s, w in zip(PIECES, words))
     return dict(level=level, word=word, res=res, series=series, keys=keys, words=words,
-                pages=pages, bonus=bonus)
+                pages=pages, bonus=bonus, named=named or {})
 
 
 LADDER = (
@@ -115,10 +118,13 @@ LADDER = (
     rung(10, "Пустынник", 103, "Set_M_LVL_7", {"A": 11182, "G": 11184},
          ("Шлем пустынника", "Накидка пустынника", "Броня пустынника", "Штаны пустынника",
           "Сапоги пустынника"), (), ("table", "Пустынник")),
-    rung(12, "Чёрный Ловелас", 111, "Bs_U_LVL_12", {"Q": 11120},
+    # A quest series sold for afro and gold (the owner's 2026-10-13): its
+    # quest pieces are the A, five types of our own the G (data/own_items.json),
+    # keyed by its first piece -- no row of the original names that set.
+    rung(12, "Чёрный Ловелас", 111, "Bs_U_LVL_12", {"A": 11120, "G": 60000},
          ("Шлем Чёрного Ловеласа", "Жилет Чёрного Ловеласа", "Броня Чёрного Ловеласа",
           "Штанишки Чёрного Ловеласа", "Ботинки Чёрного Ловеласа"), None,
-         ("text", "Снаряжение Чёрного Ловеласа")),
+         ("text", "Снаряжение Чёрного Ловеласа"), named={"A": "Q"}),
     rung(13, "Спецназ", 10, "Set_M_LVL_17", {"A": 11206, "G": 11208},
          ("Шлем спецназа", "Куртка спецназа", "Броня спецназа", "Штаны спецназа",
           "Ботинки спецназа"), (), ("table", "Спецназ")),
@@ -155,13 +161,14 @@ SUFFIX = {"A": "", "G": " (G)", "Q": " (Q)"}
 GROUPS = []             # one per set: the rung, its variant and set_type, its five types
 for r in LADDER:
     for v, key in r["keys"].items():
-        group = [by_name["%s_%s_%s_mod00" % (p, r["series"], v)] for p in PIECES]
+        group = [by_name["%s_%s_%s_mod00" % (p, r["series"], r["named"].get(v, v))]
+                 for p in PIECES]
         GROUPS.append(dict(r, v=v, key=key, types=group))
 ALL_TYPES = [t for g in GROUPS for t in g["types"]]
 LOXLEY = [t for g in GROUPS if g["level"] <= SOLD_UP_TO for t in g["types"]]
 print()
 print("the ladder")
-check("15 rungs, 28 sets, 140 pieces", (len(LADDER), len(GROUPS), len(ALL_TYPES)), (15, 28, 140))
+check("15 rungs, 29 sets, 145 pieces", (len(LADDER), len(GROUPS), len(ALL_TYPES)), (15, 29, 145))
 check("data/sets.json holds these sets and nothing else",
       sorted(sets.SETS), sorted(g["key"] for g in GROUPS))
 check("..and these pieces", sorted(sets.ITEMS), sorted(ALL_TYPES))
@@ -183,12 +190,18 @@ check("each group of five is one set, keyed by its texts.xml row, and that set i
       wrong, [])
 check("no P anywhere: the A and G of the series, and the quest family's one Q",
       [cat[t][1] for g in GROUPS for t in g["types"]
-       if cat[t][1].split("_")[-2] != g["v"] or items.premium(t)], [])
-check("the quest family (Bs_U) is Q alone, every other series A and G",
+       if cat[t][1].split("_")[-2] != g["named"].get(g["v"], g["v"]) or items.premium(t)], [])
+check("the quest family (Bs_U) is Q, every other series A and G -- and Чёрный Ловелас, "
+      "sold for afro and gold: A of its quest pieces, G of our own types",
       {r["word"]: sorted(r["keys"]) for r in LADDER if r["series"].startswith("Bs_U")},
-      {"Чёрный Ловелас": ["Q"], "Тёмное Эхо": ["Q"]})
+      {"Чёрный Ловелас": ["A", "G"], "Тёмное Эхо": ["Q"]})
+check("  ..its G: the five types of data/own_items.json, each drawing its A piece's picture",
+      [(t, items.own(t), cat[t], own_items.load()[t]["like"]) for g in GROUPS
+       if g["word"] == "Чёрный Ловелас" and g["v"] == "G" for t in g["types"]],
+      [(60000 + i, True, (items.WEAR, "%s_Bs_U_LVL_12_G_mod00" % p), 11721 + i)
+       for i, p in enumerate(PIECES)])
 check("the P copies of the ladder belong to no set and stand on no stall",
-      [t for r in LADDER if "A" in r["keys"] for p in PIECES
+      [t for r in LADDER if "A" in r["keys"] and not r["named"] for p in PIECES
        for t in [by_name["%s_%s_P_mod00" % (p, r["series"])]]
        if sets.set_of(t) or t in items.stock_for(5213, LOXLEY_PLACE)], [])
 check("the sets are named as the owner names them, gold and quest ones the way every such thing is",

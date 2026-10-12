@@ -24,7 +24,10 @@ A release is four layers, later ones over earlier ones:
                          sprite files by tools/custom_objects.py, and the
                          locations of ours (data/locations/static, the same
                          bytes the server reads) with their rows in
-                         xml/loc_defs.xml.
+                         xml/loc_defs.xml, and the item types of our own
+                         (data/own_items.json, server/own_items.py): their
+                         rows in database/objects.xml and their icons,
+                         copies of the original's pictures.
   4. client/files/**     small files of ours, kept in git as they are.
 
 A path that two layers both claim is fine going down (a generated main.swf
@@ -56,6 +59,8 @@ import zipfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 HINTS = b"\xef\xbb\xbf<?xml version='1.0'?><data/>"
+# A row of database/objects.xml, as server/items.py reads it.
+OBJECT_ROW = re.compile(rb'<object type_id="(\d+)" root_type_id=\s*"(\d+)" name="([^"]*)"')
 
 
 # --- paths ---------------------------------------------------------------------
@@ -391,6 +396,47 @@ class Build:
         out["xml/loc_defs.xml"] = defs
         return out
 
+    def gen_own_items(self, taken):
+        """Item types of our own (data/own_items.json, server/own_items.py):
+        database/objects.xml, the original's with a row for each, and each
+        one's icon, classes/<folder>/<name>/ico.swf, a byte copy of the
+        original's picture of the type it is like -- the one thing the
+        client reads a type's row for (SSEmulator.getIcon). {path: bytes}
+        and the report's lines; nothing at all while there are none, so a
+        tree without the file builds as it always has. An icon that would
+        land on one of `taken` (the original's and extra.txt's paths), in
+        any case, stops the build, as does a table the server would refuse."""
+        path = os.path.join(self.tree, "data", "own_items.json")
+        if not os.path.exists(path):
+            return {}, []
+        sys.path.insert(0, os.path.join(self.tree, "server"))
+        try:
+            import own_items
+            try:
+                mine = own_items.load(path)
+                if not mine:
+                    return {}, []
+                original = self.original("database/objects.xml")
+                cat = {int(m.group(1)): (int(m.group(2)), m.group(3).decode("ascii"))
+                       for m in OBJECT_ROW.finditer(original)}
+                rows = own_items.rows(cat, mine)
+                out = {"database/objects.xml": own_items.objects_xml(original, rows)}
+            except own_items.Refused as e:
+                raise SystemExit("data/own_items.json: %s" % e)
+            low = {p.lower() for p in taken}
+            lines = []
+            for t, (root, name) in sorted(rows.items()):
+                like = mine[t]["like"]
+                path = own_items.icon_path(root, name)
+                if path.lower() in low:
+                    raise SystemExit("data/own_items.json: the icon of %d, %s, is a file of the "
+                                     "original or of extra.txt already" % (t, path))
+                out[path] = self.original(own_items.icon_path(*cat[like]))
+                lines.append("own item:  %d %s, the picture of %d %s" % (t, name, like, cat[like][1]))
+            return out, lines
+        finally:
+            sys.path.pop(0)
+
     def run(self):
         os.makedirs(self.out, exist_ok=True)
         self.base = read_entries(self.base_path, "lava-base 1")
@@ -448,6 +494,16 @@ class Build:
                 "the rows of our locations" if p == "xml/loc_defs.xml"
                 else "a location of ours" + ("" if before else ", new")))
         self.report.append("locations: %d of ours (data/locations)" % (max(len(ours) - 1, 0)))
+        own, lines = self.gen_own_items(set(self.base) | set(extra))
+        for p in sorted(own):
+            before = self.files.get(p)
+            self.put(p, own[p], "generated")
+            self.report.append("generated: %s %s (%d bytes, %s)" % (
+                self.files[p][0][:16], p, len(own[p]),
+                "the rows of our own item types" if p == "database/objects.xml"
+                else "an icon of our own item type" + ("" if before else ", new")))
+        self.report.extend(lines)
+        self.report.append("own items: %d types (data/own_items.json)" % len(lines))
 
         # 4. ours, in git
         fdir = os.path.join(self.cdir, "files")

@@ -74,6 +74,7 @@ import inventory  # noqa: E402
 import items  # noqa: E402
 import names  # noqa: E402
 import npcs  # noqa: E402
+import own_items  # noqa: E402
 import protocol  # noqa: E402
 import quests  # noqa: E402
 import rooms  # noqa: E402
@@ -300,13 +301,16 @@ COUNTS = {
     "Вади-Хальфа": {1200: (4, 4), 1201: (10, 10), 1202: (3, 3), 1203: (2, 2), 1152: (3, 3),
                     1224: (19, 19), 1205: (15, 15), 1204: (15, 15), 650: (15, 15), 2391: (0, 7),
                     1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0)},
+    # The set sellers of Абри (8-12) and Донгола (12-16) hold Чёрный Ловелас[12], A and G,
+    # since the owner's «поставь ловеласа у Гали и за афро и за голд» (2026-10-13): five
+    # more of each currency than while it was a quest set.
     "Абри": {1159: (2, 2), 1161: (4, 4), 1163: (10, 10), 1162: (10, 10), 1164: (3, 3),
-             1225: (26, 26), 1166: (10, 10), 1165: (10, 10), 5160: (10, 10), 5161: (10, 10),
+             1225: (26, 26), 1166: (15, 15), 1165: (15, 15), 5160: (15, 15), 5161: (15, 15),
              1168: (0, 0), 2391: (0, 6), 1167: (0, 0), 207: (0, 0)},
     # The black market's machine guns at «Пулеметы и патроны» (1208), whom the wiki's article
     # puts there; Серхио (1214), who had his list by a shifted link, sells battle medicine.
     "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (6, 6), 1153: (3, 3), 1208: (2, 2),
-                1229: (25, 25), 1213: (20, 20), 1233: (20, 20), 5161: (20, 20), 2391: (0, 8),
+                1229: (25, 25), 1213: (25, 25), 1233: (25, 25), 5161: (25, 25), 2391: (0, 8),
                 207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0)},
     # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
     "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (0, 0),
@@ -437,18 +441,22 @@ frame = max(len(protocol.frame("userInfo_Trader", id=1, name=t, type_list=s, pmo
 check("no stall of a city longer than 64 things (Локсли's 51 was the longest the live game"
       " drew before), and its frame under 4 KiB: the longest the prison yards' supply men's"
       " (2026-10-12), 61, their town's battle line and the 49 rounds of their article -- 880"
-      " of Абу-Хамед's the first of the three by type; of the weapon stalls 1229 at Донгола's"
-      " oasis, 53",
+      " of Абу-Хамед's the first of the three by type; of the weapon and set stalls 1213 on"
+      " Донгола's black market, 60: its band's 50 set pieces (Чёрный Ловелас among them since"
+      " 2026-10-13) and its ten pouches",
       (len(biggest[1]) <= 64, frame < 4096, biggest[0], len(biggest[1]),
        max((len(s), (p, t)) for (p, t), s in stalls.items() if t not in (880, 2180, 2181))),
-      (True, True, (177, 880), 61, (53, (195, 1229))))
-check("  ..and every thing on them a type the client has (objects.xml), so it draws an icon",
-      [x for x in ALL_ON if x not in cat], [])
+      (True, True, (177, 880), 61, (60, (103, 1213))))
+check("  ..and every thing on them a type the client has, so it draws an icon: one of"
+      " objects.xml, or one of ours whose row and icon the release adds"
+      " (data/own_items.json, client/build.py)",
+      [x for x in ALL_ON if x not in cat or (items.own(x) and own_items.load()[x]["like"] not in cat)],
+      [])
 check("the place decides: 5161 sells Абри's 8-12, Донгола's 12-16 and Абу-Хамед's 16-20, so"
       " a purchase index taken at another place would buy another thing",
       (sorted({level_of(x) for x in stalls[(378, 5161)]}), sorted({level_of(x) for x in stalls[(469, 5161)]}),
        sorted({level_of(x) for x in stalls[(467, 5161)]}), stalls[(378, 5161)][0] != stalls[(469, 5161)][0]),
-      ([8, 10], [13, 14, 15, 16], [16, 18, 19, 20], True))
+      ([8, 10, 12], [12, 13, 14, 15, 16], [16, 18, 19, 20], True))
 check("  ..outside the cities' places, and with no place at all, a stall is its own list",
       (items.stock_for(2391, 287) == items.stock_for(2391), items.stock_for(5161, None),
        items.stock_for(1201)[:2]), (True, [], [25938, 25951]))

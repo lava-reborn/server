@@ -36,7 +36,10 @@ WHAT COMES FROM WHERE
   pieces   the layout's A piece; the G variant is the G of that piece's own
            series and level, the same icon in gold (helm_Set_M_LVL_11_A_mod00
            -> helm_Set_M_LVL_11_G_mod00). A quest piece has no G: a set made
-           of quest pieces is its one variant, Q; a quest piece among A ones
+           of quest pieces is its one variant, Q -- unless its series has a
+           G of our own for every piece (data/own_items.json): then it is
+           sold, the quest pieces its A and ours its G (Чёрный Ловелас,
+           2026-10-13); a quest piece among A ones
            (Красное Эхо's boots) is matched in the G variant by the G of the
            series the rest of the set is. No P anywhere: the owner took
            premium out of the game (items.premium).
@@ -80,6 +83,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "server"))
 import items  # noqa: E402  (reads LAVA_RES for the client's catalogue)
 import orig_texts  # noqa: E402
+import own_items  # noqa: E402
 import sets  # noqa: E402
 
 OUT = os.path.join(HERE, "sets.json")
@@ -99,7 +103,10 @@ SERIES = re.compile(r"^(helm|shirt|armor|pants|boots)_((?:Bs|Set|Exzo)_[MU])_LVL
 # block of the original texts.xml (10938-11289); P rows left out. Колонист is
 # Set_M, Беженец Bs_M; Exzo_M is Легионер 0-6, Красное ЭXO 7-10, Темное ЭXO
 # 11-14, Штурм-М 15-16, Дредноут 17-18, Паладин 19, Апокалипсис 20; the quest
-# family Bs_U has only [Q] rows.
+# family Bs_U has only [Q] rows. A quest set that is sold (pieces_of: its
+# series has a G of our own, data/own_items.json) keeps its [Q] row for the
+# A, the row its types answered to; its G no row of the original names, and
+# it is keyed by its first piece, our type (Чёрный Ловелас[12]: 60000).
 SET_ROWS = {
     ("Bs_M", 0): {"A": 11218, "G": 11221}, ("Bs_M", 2): {"A": 11222, "G": 11224},
     ("Bs_M", 3): {"A": 11225, "G": 11227}, ("Bs_M", 4): {"A": 11228, "G": 11230},
@@ -128,7 +135,8 @@ SET_ROWS = {
     ("Exzo_M", 15): {"A": 10987, "G": 10990}, ("Exzo_M", 16): {"A": 11002, "G": 11004},
     ("Exzo_M", 17): {"A": 11010, "G": 11013}, ("Exzo_M", 18): {"A": 11016, "G": 11018},
     ("Exzo_M", 19): {"A": 11030, "G": 11033}, ("Exzo_M", 20): {"A": 11043, "G": 11046},
-    ("Bs_U", 10): {"Q": 11116}, ("Bs_U", 11): {"Q": 11118}, ("Bs_U", 12): {"Q": 11120},
+    ("Bs_U", 10): {"Q": 11116}, ("Bs_U", 11): {"Q": 11118},
+    ("Bs_U", 12): {"Q": 11120, "A": 11120, "G": 60000},
     ("Bs_U", 14): {"Q": 11122}, ("Bs_U", 15): {"Q": 11123}, ("Bs_U", 16): {"Q": 11125},
     ("Bs_U", 17): {"Q": 11126}, ("Bs_U", 18): {"Q": 11127}, ("Bs_U", 19): {"Q": 11128},
     ("Bs_U", 20): {"Q": 11129},
@@ -616,9 +624,13 @@ def figure(row, res_dir):
 def pieces_of(row, cat, by_name):
     """variant -> {slot: type}, and the set's family and series level.
 
-    The G of each piece is its own series' G. A quest piece has none: five of
-    them are the one variant Q, and one among A pieces is matched by the G of
-    the series the rest of the set is (the same slot), and said so."""
+    The G of each piece is its own series' G. A quest piece has none in the
+    original: five of them are the one variant Q, and one among A pieces is
+    matched by the G of the series the rest of the set is (the same slot),
+    and said so. Unless the quest series has a G of our own for every piece
+    (data/own_items.json, a copy of that very piece's picture): then the set
+    is sold, its quest pieces are its A, priced in afro, and our types its G
+    (Чёрный Ловелас[12], the owner's «за афро и за голд», 2026-10-13)."""
     parsed = {}
     for slot in SLOTS:
         t = int(row["slots"][slot])
@@ -636,7 +648,22 @@ def pieces_of(row, cat, by_name):
     if variants == {"Q"}:
         fams = {(f, lvl) for _t, f, lvl, _v in parsed.values()}
         family, level = sorted(fams)[0]
-        return {"Q": {s: p[0] for s, p in parsed.items()}}, family, level, notes
+        quest = {s: p[0] for s, p in parsed.items()}
+        own = own_items.load()
+        gold = {s: by_name.get("%s_%s_LVL_%d_G_mod00" % (s, f, lvl))
+                for s, (_t, f, lvl, _v) in parsed.items()}
+        if not any(gold.values()):
+            return {"Q": quest}, family, level, notes
+        wrong = [s for s, g in gold.items() if g not in own or own[g]["like"] != quest[s]]
+        if wrong:
+            raise SystemExit("%s: a quest set is sold when every piece has a G of our own copying "
+                             "its picture (data/own_items.json); not so for %s"
+                             % (row["name"], ", ".join(wrong)))
+        notes.append("A: the quest series' own pieces (_Q_), sold for afro since the owner's "
+                     "'за афро и за голд' (2026-10-13); G: types of our own, %s "
+                     "(data/own_items.json), each its A piece's picture: the original has no G "
+                     "of this series" % ", ".join(str(gold[s]) for s in SLOTS))
+        return {"A": quest, "G": gold}, family, level, notes
     main = {}
     for _t, f, lvl, v in parsed.values():
         if v == "A":
@@ -829,15 +856,21 @@ META = {
     "rules": [
         "Pieces: the layout's A piece for each slot (or quest piece, _Q_); the G variant is the "
         "G of the same series and level, the same icon in gold. A set of quest pieces is its "
-        "one variant, Q. A quest piece among A ones is matched in G by the G of the series the "
-        "rest of the set is. No P anywhere: the owner took premium out of the game (items.premium).",
+        "one variant, Q -- unless its series has a G of our own for every piece "
+        "(data/own_items.json, each a copy of its quest piece's picture): then the set is sold, "
+        "the quest pieces its A and our types its G (Чёрный Ловелас, the owner's 'за афро и за "
+        "голд', 2026-10-13). A quest piece among A ones is matched in G by the G of the series "
+        "the rest of the set is. No P anywhere: the owner took premium out of the game "
+        "(items.premium).",
         "set key = set_type = the texts.xml row of the name of the set these very types formed in "
         "the original (the block 10938-11289): Колонист[N] for Set_M_LVL_N, Беженец[N] for "
         "Bs_M_LVL_N, Легионер / Красное ЭXO / Темное ЭXO / Штурм-М / Дредноут / Паладин / "
-        "Апокалипсис[N] for Exzo_M_LVL_N, the [Q] rows for the quest family Bs_U. Stable, "
-        "unique, below 100 000, and the row the types already answered to. The owner's names "
-        "are his own: Странник sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник "
-        "on Колонист[7]'s, Спецназ on Колонист[17]'s.",
+        "Апокалипсис[N] for Exzo_M_LVL_N, the [Q] rows for the quest family Bs_U (a sold quest "
+        "set's A keeps it). Stable, unique, below 100 000, and the row the types already "
+        "answered to. A set of our own types, which no row of the original names, is keyed by "
+        "its first piece: Чёрный Ловелас (G) 60000. The owner's names are his own: Странник "
+        "sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник on Колонист[7]'s, "
+        "Спецназ on Колонист[17]'s.",
         "Магриб is the owner's name for Bs_M_LVL_16, whose icons are a steel helmet, a field "
         "shirt, a plate vest, army trousers and boots: the wiki's Армейские вещи ('used "
         "everywhere, the military of Магриб among them'), whose pieces ask Стрельба 6, the rung "
@@ -976,12 +1009,15 @@ def set_desc(plan):
 def new_set(plan, v, source, designed):
     desc, desc_src = set_desc(plan)
     key = plan["keys"][v]
+    if key >= own_items.FIRST:
+        why = "key %d, its first piece, a type of our own: no row of the original names it" % key
+    else:
+        why = "key texts.xml %d, the row of the set these types formed in the original" % key
     return {
         "name": label(plan["name"], plan["level"], v),
         "desc": desc,
         "_layout": plan["row"].get("key"),
-        "_source": "key texts.xml %d, the row of the set these types formed in the original; "
-                   "desc %s; %s" % (key, desc_src, source),
+        "_source": "%s; desc %s; %s" % (why, desc_src, source),
         "_designed": designed,
         "family": plan["family"],
         "level": plan["level"],
@@ -1164,7 +1200,7 @@ def valley(plans):
     return out
 
 
-def pieces_of(plans):
+def ladder_pieces(plans):
     """Every piece of every set of the layout, all variants."""
     return {plan["variants"][v][s] for plan in plans for v in plan["variants"] for s in SLOTS}
 
@@ -1185,7 +1221,10 @@ def main():
         "and G sets of his city's band, A then G, helm to boots, mod00 only (data/shop_bands.json, "
         "server/shop_bands.py; the owner's 'по уровню городов', 2026-10-10) -- Локсли (%d, "
         "'Одежда и Броня') the valley's; the quest (Q) sets exist as data only, for quests "
-        "and drops to come." % (os.path.basename(args.layout), len(plans),
+        "and drops to come. Чёрный Ловелас, the quest series Bs_U_LVL_12, is sold for afro and "
+        "for gold (the owner's 'поставь ловеласа у Гали и за афро и за голд', 2026-10-13): its "
+        "quest pieces are its A, five types of our own its G (data/own_items.json)."
+        % (os.path.basename(args.layout), len(plans),
                                 ", ".join("%s %d" % (p["name"], p["level"]) for p in plans),
                                 LOXLEY))
     meta["sets"] = ["%s (level %d): %s -- %s" % (
@@ -1216,7 +1255,7 @@ def main():
         doc = json.loads(raw)
         own = doc.setdefault("stock", {}).get(str(LOXLEY))
         if own is not None:
-            ladder = pieces_of(plans)
+            ladder = ladder_pieces(plans)
             doc["stock"][str(LOXLEY)] = [t for t in own if t not in ladder]
             with io.open(NPCS, "w", encoding="utf-8", newline="\n") as fh:
                 fh.write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
