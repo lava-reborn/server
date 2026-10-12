@@ -223,6 +223,7 @@ export interface DiffReply {
 export interface Occupancy {
   saved: number;
   online: number | null;
+  homes: number | null;
 }
 
 export interface LocRow {

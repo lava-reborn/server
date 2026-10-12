@@ -256,25 +256,25 @@ export const api = {
       return r;
     }
   },
-  // the panel's own answer (the game's database): who is saved in that location
+  // the panel's own answer (the game's database): who is saved in that location.
+  // lava-admin answers GET occupancy?id=<id>[,<id>...] with {fresh, beat,
+  // locations: [{id, saved, homes, online: [{char_id, nick}]}]}; online is
+  // only known while the game's snapshot is fresh.
   occupancy: async (id: number): Promise<Occupancy | null> => {
-    for (const ep of [`/api/occupancy/${id}`, `/api/occupancy?id=${id}`]) {
-      try {
-        const r = await request<Record<string, unknown>>("GET", ep);
-        if (r.status !== 200 || !r.data || typeof r.data !== "object") continue;
-        const d = r.data;
-        const num = (...ks: string[]) => {
-          for (const k of ks) if (typeof d[k] === "number") return d[k] as number;
-          return null;
-        };
-        const saved = num("saved", "characters", "count");
-        if (saved === null) continue;
-        return { saved, online: num("online", "players") };
-      } catch {
-        /* not there: local mode, or a panel without it */
-      }
+    if (!config.panel) return null;
+    try {
+      const r = await request<{ fresh?: boolean; locations?: Record<string, unknown>[] }>(
+        "GET",
+        `/api/occupancy?id=${id}`,
+      );
+      if (r.status !== 200 || !r.data || !Array.isArray(r.data.locations)) return null;
+      const row = r.data.locations.find((l) => l && l.id === id);
+      if (!row || typeof row.saved !== "number") return null;
+      const online = Array.isArray(row.online) && r.data.fresh !== false ? row.online.length : null;
+      return { saved: row.saved, online, homes: typeof row.homes === "number" ? row.homes : null };
+    } catch {
+      return null; // a panel without it: the dialog says the number is unknown
     }
-    return null;
   },
 };
 

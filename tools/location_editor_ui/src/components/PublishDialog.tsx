@@ -264,6 +264,7 @@ export default function PublishDialog(props: {
                   <>
                     В локации сохранено персонажей: <b>{occ.saved}</b>
                     {occ.online !== null ? `, сейчас в игре там ${occ.online}` : ""}.
+                    {occ.homes ? ` Дом здесь у ${occ.homes}.` : ""}
                     {occ.saved > 0 && " Тот, кто окажется на новой стене, после перезапуска встанет на вход."}
                   </>
                 )}
