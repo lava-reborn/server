@@ -366,14 +366,22 @@ PINNED = {
     (196, 207): [6907, 6908, 6909, TUR, 7103, MAKS, 7104, SUPER, 7105],
     (103, 1214): [6057, 6063, VILKA, 7102, 6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104],
     (103, 1215): [6045, 6900, 6051, 6906, 6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908],
-    (50, 155): [6045, 6900, 6051, 6046, 6901, 6052, 6047, 6902, 6053, 3481, 333],
+    (50, 155): [6045, 6900, 6051, 6046, 6901, 6052, 6047, 6902, 6053, 333],
     (126, 1221): [6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104, 6060, 6066, SUPER, 7105],
     (126, 1222): [6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908, 6048, 6903, 6054, 6909],
 }
 check("the stalls pinned (DESIGN.md 2.2): Морис, Хасани, Люций, Магдалена, Снитке, Бартоломью,"
-      " Торси, Мухсим, Джут at his three oases, Серхио, Фарюк, Донгола's grocer (his quest's"
-      " box of dried meat and sack of beans after), Киплер, Курт",
+      " Торси, Мухсим, Джут at his three oases, Серхио, Фарюк, Донгола's grocer (the sack of"
+      " beans of his article after), Киплер, Курт",
       {k: STALLS[k] for k in PINNED}, PINNED)
+check("  ..Донгола's grocer's own list (data/npcs.json) is the sack of beans: the «Коробка"
+      " вяленого мяса» of his article is the food of ten of 12_15 (6901), the band's, which the"
+      " name tied to the valley's quest parcel 3481, a thing with no price no stall can sell",
+      (npcs.stock(155), 6901 in STALLS[(50, 155)], 3481 in STALLS[(50, 155)],
+       price(3481)), ([333], True, False, (0, 0)))
+check("nothing on any stall of a city's place goes without a price: the client would show it and"
+      " the stall refuse it in both currencies",
+      sorted((p, t, x) for (p, t), s in STALLS.items() for x in s if price(x) == (0, 0)), [])
 check("  ..Эрикесэм at the Caravan sells what Морис does at the market, Бартоломью at the port"
       " what he does at the market, Донгола's grocer at the new market what at the old",
       (STALLS[(186, 5224)] == STALLS[(185, 5211)], STALLS[(104, 81)] == STALLS[(35, 81)],
