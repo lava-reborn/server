@@ -56,15 +56,24 @@ try:
     # --- the plan: what goes, from data/retired.json and data/map_cells.json -------------
     plan = M.load()
     retired = {cell(k) for k in load_json("data", "retired.json")["cells"] if not k.startswith("_")}
-    LABEL_ONLY = {(5969, 1730), (5984, 1759), (6265, 1821)}
+    # The cut of Абри (2026-10-12) adds five: «Улучшение сетов 10-12», the
+    # green mark left of the craftsmen of 12, the second «Автосвалка», and the
+    # two squares of «Кланбаза Liberty» by Абу-Хамед.
+    LABEL_ONLY = {(5969, 1730), (5984, 1759), (6265, 1821),
+                  (5866, 1837), (5862, 1837), (5863, 1836), (6248, 1979), (6248, 1980)}
+    ABRI_CUT = [(5860, 1836), (5860, 1837), (5861, 1836), (5863, 1837), (5866, 1836),
+                (5906, 1888), (5906, 1889)]
     check("every cell of data/retired.json loses its square, by itself",
           sorted(retired - set(plan.cells)), [])
-    check("  ..those are the nine of the three cuts: the (P) camps 124, 125, 130, Halfa's 468, 452, 456,"
-          " 457, and its ФСЦ's airfield 528 and base НИЛ-1 522", sorted(retired),
-          [(5876, 2012), (5942, 1723), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732), (5970, 1727),
-           (5970, 1732), (6182, 1975)])
-    check("  ..and data/map_cells.json adds the three cells that had a name and no place: «Улучшение"
-          " сетов 6-8», the KKND base and the kimberlite pipe", sorted(set(plan.cells) - retired), sorted(LABEL_ONLY))
+    check("  ..those are the sixteen of the four cuts: the (P) camps 124, 125, 130, Halfa's 468, 452, 456,"
+          " 457, its ФСЦ's airfield 528 and base НИЛ-1 522, and Абри's craftsmen 453, 454, 458, 459, air"
+          " base 427 and clan base Liberty 328, 327", sorted(retired),
+          sorted([(5876, 2012), (5942, 1723), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732),
+                  (5970, 1727), (5970, 1732), (6182, 1975)] + ABRI_CUT))
+    check("  ..and data/map_cells.json adds the eight cells that had a name or a mark and no place:"
+          " «Улучшение сетов 6-8», the KKND base, the kimberlite pipe, «Улучшение сетов 10-12», Абри's"
+          " green mark, the second «Автосвалка» and the two of Liberty by Абу-Хамед",
+          sorted(set(plan.cells) - retired), sorted(LABEL_ONLY))
     live = {cell(k) for k in load_json("data", "settlements.json")["cells"]}
     check("no square goes from a cell a place still stands on (data/settlements.json)",
           sorted(set(plan.cells) & live), [])
@@ -88,12 +97,18 @@ try:
               sorted(set(plan.cells) & named), [])
     else:
         print("  -- no %s: the names over erased cells are test_map_labels' alone" % loc_path)
-    check("the KKND caption is two boxes of tile 14011, above the base's cell",
-          [(b, M.tile_of(b[0], b[1]), M.tile_of(b[2], b[3])) for b, was, _ in plan.captions],
-          [((47879, 14049, 47920, 14057), 14011, 14011), ((47879, 14058, 47910, 14067), 14011, 14011)])
+    check("the KKND caption is two boxes of tile 14011, above the base's cell; «База Liberty» two of"
+          " tile 15811, right of the base's squares by Абу-Хамед (the line and its «y»'s tail)",
+          [(b, was, M.tile_of(b[0], b[1]), M.tile_of(b[2], b[3])) for b, was, _ in plan.captions],
+          [((47879, 14049, 47920, 14057), "Кланбаза KKND", 14011, 14011),
+           ((47879, 14058, 47910, 14067), "Кланбаза KKND", 14011, 14011),
+           ((49996, 15833, 50048, 15841), "База Liberty", 15811, 15811),
+           ((50041, 15842, 50046, 15843), "База Liberty", 15811, 15811)])
     check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's, Halfa's"
-          " two, KKND's and the two below it, the kimberlite pipe's, Абу-Хамед's, Донгола's",
-          plan.tiles(), [13753, 13754, 14010, 14011, 14266, 14267, 14531, 15809, 16055])
+          " two, KKND's and the two below it, the kimberlite pipe's, Абри's, the two of Liberty by Абри,"
+          " Абу-Хамед's two, Донгола's",
+          plan.tiles(), [13753, 13754, 14010, 14011, 14266, 14267, 14531, 14775, 15032, 15288, 15809, 15811,
+                         16055])
 
     def refused(doc, retired_doc=None):
         p = os.path.join(W, "cells.json")
@@ -526,9 +541,11 @@ try:
         else:
             real = run(every, plan)
             odd = {(5984, 1759): (0, -1, ("red", "white")), (6265, 1821): (0, 0, ("black", "orange")),
-                   (5970, 1727): (0, 0, ("blue", "white"))}
-            check("each of the twelve cells has its square found: nine green, KKND's dark red with white a"
-                  " pixel high, the kimberlite pipe's black-and-orange hatch, the ФСЦ airfield's blue with «!»",
+                   (5970, 1727): (0, 0, ("blue", "white")), (5863, 1836): (0, 0, ("red",)),
+                   (5906, 1888): (0, 0, ("red", "white")), (6248, 1979): (0, 0, ("red", "white"))}
+            check("each of the twenty-four cells has its square found: eighteen green, KKND's dark red with"
+                  " white a pixel high, Liberty's two dark red with white, the second «Автосвалка»'s dark red,"
+                  " the kimberlite pipe's black-and-orange hatch, the ФСЦ airfield's blue with «!»",
                   {c: (sq[0] - 8 * c[0], sq[1] - 8 * c[1], sq[2]) for c, sq in real["found"].items()},
                   {c: odd.get(c, (0, 0, ("green",))) for c in plan.cells})
             check("  ..and nothing is reported missing", [x for x in real["report"] if ": no " in x], [])
@@ -536,11 +553,12 @@ try:
                   sorted({M.tile_of(X0 + 4, Y0 + 4) for X0, Y0, _k in real["found"].values()
                           if [(c.h, c.v) for c in J.Jpeg(read(M.tile_path(M.tile_of(X0 + 4, Y0 + 4)))).comps]
                           != [(1, 1)] * 3}), [])
-            check("seven tiles change: 13753 for НИЛ-1, 13754 and 14010 in Halfa, 14011 for KKND, 14531 the"
-                  " kimberlite pipe, 15809 Абу-Хамед, 16055 Донгола",
+            check("ten tiles change: 13753 for НИЛ-1, 13754 and 14010 in Halfa, 14011 for KKND, 14531 the"
+                  " kimberlite pipe, 14775 Абри, 15288 Liberty by Абри, 15809 Абу-Хамед, 15811 Liberty by"
+                  " Абу-Хамед, 16055 Донгола",
                   sorted(real["out"]),
-                  sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 15809, 16055)))
-            check("no square is left on the twelve cells", {c: real["after_sq"].at(*c) for c in plan.cells},
+                  sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 14775, 15288, 15809, 15811, 16055)))
+            check("no square is left on the twenty-four cells", {c: real["after_sq"].at(*c) for c in plan.cells},
                   {c: None for c in plan.cells})
             around = sorted({(x + dx, y + dy) for x, y in plan.cells for dx in range(-3, 4) for dy in range(-3, 4)}
                             - set(plan.cells))
@@ -558,13 +576,22 @@ try:
                   " the quarter 36, the dump 100's hatch and the arena 59, by НИЛ-1 the camp 429 and the dig"
                   " 433; Донгола's 96, 97 and 455; Абу-Хамед's 127 and 126",
                   {c: (real["after_sq"].at(*c) or (0, 0, None))[2] for c in KEPT_HALFA}, KEPT_HALFA)
+            KEPT_ABRI = {(5860, 1835): ("green",), (5861, 1835): ("green",), (5862, 1835): ("green",),
+                         (5863, 1835): ("red",),
+                         (5862, 1836): ("tan",), (5864, 1836): ("green",), (5865, 1836): ("green",),
+                         (5860, 1838): ("tan",), (5864, 1838): ("tan",)}
+            check("  ..and Абри's places that stay beside its cut: the port market 187, the quarter 188, the"
+                  " slums 255, the dump 289 under the first «Автосвалка»,"
+                  " Хаксли's fields 261, the graveyard 368, the clothing market 378, the hippies 191, the"
+                  " totem 262",
+                  {c: (real["after_sq"].at(*c) or (0, 0, None))[2] for c in KEPT_ABRI}, KEPT_ABRI)
             check("  ..and the squares beside those that go keep their outlines (largest change of a sample)",
                   max(diff(real["before"].original(*p), real["after"].original(*p))
                       for sq in real["kept"].values() for p in M.frame_pixels(sq)) <= 16, True)
             stray, count = only_painted(every, real)
             check("only blocks with a pixel painted change; every other block of every tile keeps its"
                   " coefficients (%d changed)" % count,
-                  (stray, count > 0), ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 15809, 16055)}, True))
+                  (stray, count > 0), ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14775, 15288, 15809, 15811, 16055)}, True))
             most, share = moved(real, every)
             check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
                   " that move by 2 or less" % (most, 100 * share), (most <= 16, share >= 0.9), (True, True))
@@ -572,7 +599,8 @@ try:
                      for X in range(x0, x1 + 1) for Y in range(y0, y1 + 1)]
             dark_before = sum(1 for p in boxes if real["before"].original(*p)[0] < 110)
             dark_after = sum(1 for p in boxes if real["after"].original(*p)[0] < 110)
-            check("the letters «Кланбаза KKND» are gone: dark pixels in their boxes %d before, %d after"
+            check("the letters «Кланбаза KKND» and «База Liberty» are gone: dark pixels in their boxes %d"
+                  " before, %d after"
                   % (dark_before, dark_after), (dark_before > 100, dark_after < 10), (True, True))
             check("no fill keeps its square's colour (Донгола's ground is red of its own)",
                   colour_left(real), {c: 0 for c in real["found"]})

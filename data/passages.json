@@ -271,6 +271,118 @@
     "target_loc_id": 1024,
     "why": "DESIGNED. VH_mine_lvl3, «Шахта: Третий ярус.», the bottom of the mine: its one door, a (north-east, 50-52, 20-22), up, to the second tier's middle file, 1024."
    }
+  },
+  "290": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 766,
+    "why": "DESIGNED. OreRefinery_top_Abri, «Заброшенный завод» on the map's «Заброшенный завод» (5864,1835): its one door, b, ten cells in the ruin's middle (27-51, 18-45), has no sign and no target in exits.json, so it led nowhere. The only way down the client has for it is the smelter beneath, 766 «Плавильный завод.» (OreRefinery_Abri, the same family's name), whose doors otherwise both led on to its own workshop 1055 and none back up: entered from 1055, 766 was a dead end. The owner's Абри, 2026-10-12 (the restored smelter and assembly shop)."
+   }
+  },
+  "660": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1028,
+    "why": "RECOVERED. Abri_Copper_Mine_Enter, the control room of Абри's медная шахта («Комната управления»): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1028 «Медная Шахта 1» (Abri_Copper_Mine_lvl1), as Вади-Хальфа's control rooms (657). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
+  },
+  "661": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1029,
+    "why": "RECOVERED. Abri_Nitre_Mine_Enter, the control room of Абри's выработка селитры («Комната управления»): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1029 «Выработка селитры 1» (Abri_Nitre_Mine_lvl1), as Вади-Хальфа's control rooms (657). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
+  },
+  "662": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1030,
+    "why": "RECOVERED. Abri_Plumbum_Mine_Enter, the control room of Абри's свинцовая шахта («Комната управления»): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1030 «Свинцовая шахта 1» (Abri_Plumbum_Mine_lvl1), as Вади-Хальфа's control rooms (657). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
+  },
+  "766": {
+   "a": {
+    "confidence": "medium",
+    "source": "sign",
+    "target_loc_id": 290,
+    "why": "RECOVERED direction, DESIGNED target. OreRefinery_Abri, «Плавильный завод.»: door a, two clusters (32-58, 25-87), each with W_Pointer_Exit beside it (33,29 and 56,82): out, up to the ruin it lies under, 290 «Заброшенный завод» (see 290 b). exits.json guessed 1055 by family, at low."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1055,
+    "why": "RECOVERED. OreRefinery_Abri: door b, three cells at the west (17-18, 60-61), has W_Pointer_West beside it (20,61): on, west, to the assembly shop 1055 «Сборочный цех» (OreRefinery_Abri_Sorting), whose one door a, at its west edge with W_Pointer_Exit (1,35), leads back here (exits.json, medium). exits.json guessed the same for this door, at low."
+   }
+  },
+  "1028": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 660,
+    "why": "RECOVERED. Abri_Copper_Mine_lvl1: door a, the small one (9-11, 30-32), has W_Pointer_Exit beside it (8,31): out, back to the control room 660. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1221, at low; the signs settle it, as in Вади-Хальфа's copper mine (1025). The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1221,
+    "why": "RECOVERED. Abri_Copper_Mine_lvl1: door b, 15 cells in two galleries, south-west and north-east (11-52, 21-109), each gallery with W_Pointer_Down beside it (11,103) and (50,19): down, to the second tier, 1221 «Медная Шахта 2» (Abri_Copper_Mine_lvl2). exits.json sent it back up to 660, at low. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
+  },
+  "1029": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 661,
+    "why": "RECOVERED. Abri_Nitre_Mine_lvl1: door a, the small one (6-7, 29-30), has W_Pointer_Exit beside it (5,32): out, back to the control room 661. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1222, at low; the signs settle it, as in Вади-Хальфа's copper mine (1025). The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1222,
+    "why": "RECOVERED. Abri_Nitre_Mine_lvl1: door b, 14 cells in two galleries (8-52, 21-115), each gallery with W_Pointer_Down beside it (10,110) and (50,21): down, to the second tier, 1222 «Выработка селитры 2» (Abri_Nitre_Mine_lvl2). exits.json sent it back up to 661, at low. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
+  },
+  "1030": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 662,
+    "why": "RECOVERED. Abri_Plumbum_Mine_lvl1: door a, the small one (7-9, 18-20), has W_Pointer_Exit beside it (12,21): out, back to the control room 662. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1223, at low; the signs settle it, as in Вади-Хальфа's copper mine (1025). The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1223,
+    "why": "RECOVERED. Abri_Plumbum_Mine_lvl1: door b, 14 cells in two galleries (9-52, 20-118), each gallery with W_Pointer_Down beside it (50,19) and (9,113): down, to the second tier, 1223 «Свинцовая шахта 2» (Abri_Plumbum_Mine_lvl2). exits.json sent it back up to 662, at low. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
+  },
+  "1221": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1028,
+    "why": "RECOVERED. Abri_Copper_Mine_lvl2, the bottom of the mine (the client has no third tier for Абри): its one door, a, 11 cells in two galleries (8-52, 21-107), has W_Pointer_Up beside each gallery (10,104) and (50,19): up, to the first tier 1028. exits.json guessed the same by file name, at low. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
+  },
+  "1222": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1029,
+    "why": "RECOVERED. Abri_Nitre_Mine_lvl2, the bottom of the mine (the client has no third tier for Абри): its one door, a, 11 cells in two galleries (8-52, 21-107), has W_Pointer_Up beside each gallery (10,104) and (50,19): up, to the first tier 1029. exits.json guessed the same by file name, at low. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
+  },
+  "1223": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1030,
+    "why": "RECOVERED. Abri_Plumbum_Mine_lvl2, the bottom of the mine (the client has no third tier for Абри): its one door, a, 11 cells in two galleries (8-52, 20-112), has W_Pointer_Up beside each gallery (11,108) and (50,19): up, to the first tier 1030. exits.json guessed the same by file name, at low. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
+   }
   }
  },
  "sides": {

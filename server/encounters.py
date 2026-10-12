@@ -73,9 +73,15 @@ log = logging.getLogger("lava")
 # a cell still belongs to them, in cells. DESIGNED: the four camps of
 # Вади-Хальфа stand within twenty cells of each other, and twenty-five from
 # them is the town's ring -- the gold mine's road, the quarries, the lake
-# shore -- and nowhere near Абри (216 cells) or the valley.
+# shore -- and nowhere near Абри (216 cells) or the valley. Абри's two camps
+# (the owner's «В Абри добавь мобов в лагеря и в окрестности», 2026-10-12),
+# the slave traders 8-10 (88) and the flayers 10-12 (92), fifteen cells
+# apart, by the same rule: twenty-five from them is the town's desert, the
+# fields, the totem, Зубери's digs, the oasis of Карло Меони and the roads to
+# the works; the two towns' rings never meet.
 REGIONS = (
     {"town": "Вади-Хальфа", "camps": (80, 81, 84, 85), "reach": 25},
+    {"town": "Абри", "camps": (88, 92), "reach": 25},
 )
 
 # One roll per cell entered on the map: about one encounter in thirty cells

@@ -68,10 +68,14 @@ USERINFO = {
 # Нубийский рынок), who stood in for him before, is an ordinary Trader
 # again. And Хассир (105) at the station of Вади-Хальфы,
 # whose map label says he registers trophies; a Trader already, he keeps his
-# stall and his repairs besides (trophies.KEEPS_STALL).
+# stall and his repairs besides (trophies.KEEPS_STALL). And Луиджи (1179,
+# Abri_travel, «Луиджи<Br>водитель») in Абри's Портовый рынок 187, the
+# driver of the ride back to Вади-Хальфа, whose wiki page lists «Здесь можно
+# осуществить регистрацию трофеев» beside his trade and repairs (the owner's
+# Абри, 2026-10-12): Хассир's twin at the other end of the road.
 TROPHY_REGISTRARS = frozenset({939, 940, 941, 942, 943, 1132,
                                2033, 2034, 2035, 2036,
-                               5193, 105})
+                               5193, 105, 1179})
 
 
 def entity_root(type_id, root):
@@ -695,12 +699,18 @@ EVENT_TOKENS = {"vov", "vbg", "lemon", "ny", "9may", "presents", "lotery",
 # the wiki's low-confidence one of Донгола's «Генрих» -- Анестетик and Салюс
 # МК V-VII at 33 600-50 400 afro, two of them sold nowhere else. Once a
 # 'stock' row of his is written, add 431 back to rows 35 and 104.
+#
+# And Абри's two lottery sellers in its Портовый рынок 187, Abri_lotery
+# (1172, «Лотерейщик») and Abri_lotery_g (1171, «Лотерейщик<Br>Золотая
+# лотерея»), whose «lotery» is the same token: the town's lotteries all year,
+# as Вади-Хальфа's (the owner's Абри, 2026-10-12, decision 24 of its plan).
 SEASON_KEPT = {
     35: frozenset({662}),           # Вади Хальфа: рынок
     104: frozenset({662}),          # Портовый рынок
     102: frozenset({711}),          # Черный рынок
     36: frozenset({1977, 423}),     # жилой квартал
     41: frozenset({425}),           # Причал
+    187: frozenset({1171, 1172}),   # Абри: Портовый рынок
 }
 
 # The objects that do stand, by location: the things of Вади-Хальфа's quests,
@@ -715,6 +725,12 @@ SEASON_KEPT = {
 # loot, respawns, and its kill counts for a quest like anybody's. Everywhere
 # else -- the Nubian valley, the other cities, the old copies of the range
 # (670, 1037 ...) and the quarry's control panel (2022) -- objects stay out.
+# Абри's (the owner's «Делаем Абри», 2026-10-12): the ammunition boxes of
+# the slave traders' and the flayers' camps (st_box_ammo 2163 in 88,
+# zd_box_ammo 2164 in 92), as Вади-Хальфа's camps have theirs; and the six
+# dracaenas m00_Dracena (857) of «Сокровища» (189), whose leaves «Заполучить
+# амазонку (Часть 1)» and whose roots Хаксли's chain ask for, falling off
+# them by the quests' own rows (data/quests.json objs[].mobs).
 STANDING_OBJECTS = {
     43: frozenset({41}),
     46: frozenset({50}),
@@ -733,6 +749,9 @@ STANDING_OBJECTS = {
     628: frozenset({977}),          # WH_Stone_Mine_S
     629: frozenset({977}),          # WH_Stone_Mine_W2
     630: frozenset({977}),          # WH_Stone_Mine_E2
+    88: frozenset({2163}),          # Лагерь Работорговцев (Абри)
+    92: frozenset({2164}),          # Лагерь Живодеров (Абри)
+    189: frozenset({857}),          # «Сокровища», Q_Abri_Crocodile
 }
 
 # The ranges where a shot goes over the booth's counter. In TIR_01..06 the

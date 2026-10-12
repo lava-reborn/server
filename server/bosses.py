@@ -168,8 +168,13 @@ def clock():
 # default (2026-09-28): the «Главарь бандитов» m05_glavbandit (696) of the
 # plundered caravan (120), whom «Фрэнк (часть 2)» sends the player to, and
 # the colonists' treasurer nc_Kaznachei (586) in their camp (80, data/
-# camp_fill.json), the commissar «Реклама» wants dead (texts.xml 62675).
-ALL_DAY = frozenset({696, 586})
+# camp_fill.json), the commissar «Реклама» wants dead (texts.xml 62675). And
+# Абри's two treasurers (the owner's Абри, 2026-10-12), st_Kaznachei (590)
+# of the slave traders' camp (88) and zd_Kaznachei (591) of the flayers' (92):
+# bosses by role who stand in their camps all day, as the colonists' one does,
+# and carry no ingot -- the camps' gold is their two bosses' who keep the
+# hours (data/loot_manual.json).
+ALL_DAY = frozenset({696, 586, 590, 591})
 
 
 def keeps_hours(type_id):

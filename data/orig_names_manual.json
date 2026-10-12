@@ -1555,6 +1555,681 @@
    "string_id": 50334,
    "text": "Головорез",
    "why": "olm_safeguard1_lvl_4, Большой Мвамба's guards in his camp 31 (data/placements.json, the owner's of 2026-10-02: «Мвамба это головорез афроамериканец, соратники похожие должны быть»). The same art as Мвамба (mob-m20), level 4, an assault rifle, and no location puts the type down. 'Головорез' (50334) is the original's own word for the slave traders' thugs drawn in that art ([9] Головорез 8897, [11]..[14] Головорез 50276-50298); this row is the one without a level, which server/orig_texts.py gives the level 4 the type fights at."
+  },
+  "315": {
+   "string_id": 8891,
+   "text": "Проводник<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Karavanshik_lvl8, 'Проводник'."
+  },
+  "316": {
+   "string_id": 8892,
+   "text": "Смотритель<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Smotritel_lvl8, 'Смотритель'."
+  },
+  "317": {
+   "string_id": 8893,
+   "text": "Громила<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Gromila_lvl8, 'Громила'."
+  },
+  "318": {
+   "string_id": 8894,
+   "text": "Погонщик<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Pogonshik_lvl8, 'Погонщик'."
+  },
+  "319": {
+   "string_id": 8895,
+   "text": "Караванщик<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Karavanshik_lvl9, 'Караванщик'."
+  },
+  "320": {
+   "string_id": 8896,
+   "text": "Охотник<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Smotritel_lvl9, 'Охотник'."
+  },
+  "321": {
+   "string_id": 8897,
+   "text": "Головорез<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Gromila_lvl9, 'Головорез'."
+  },
+  "322": {
+   "string_id": 8898,
+   "text": "Загонщик<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Pogonshik_lvl9, 'Загонщик'."
+  },
+  "323": {
+   "string_id": 8899,
+   "text": "Караван-Баши<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Karavanshik_lvl10, 'Караван-Баши'."
+  },
+  "324": {
+   "string_id": 8900,
+   "text": "Страж<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Smotritel_lvl10, 'Страж'."
+  },
+  "325": {
+   "string_id": 8901,
+   "text": "Мучитель<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Gromila_lvl10, 'Мучитель'."
+  },
+  "326": {
+   "string_id": 8902,
+   "text": "Конвоир<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Pogonshik_lvl10, 'Конвоир'."
+  },
+  "348": {
+   "string_id": 8908,
+   "text": "Псих<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Maniak_lvl10, 'Псих'."
+  },
+  "349": {
+   "string_id": 8909,
+   "text": "Преследователь<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Hunter_lvl10, 'Преследователь'."
+  },
+  "350": {
+   "string_id": 8910,
+   "text": "Шкуродер<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Svezhevatel_lvl10, 'Шкуродер'."
+  },
+  "351": {
+   "string_id": 8911,
+   "text": "Мучитель<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Sadist_lvl10, 'Мучитель'."
+  },
+  "352": {
+   "string_id": 8912,
+   "text": "Маньяк<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Maniak_lvl11, 'Маньяк'."
+  },
+  "353": {
+   "string_id": 8913,
+   "text": "Охотник<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Hunter_lvl11, 'Охотник'."
+  },
+  "354": {
+   "string_id": 8914,
+   "text": "Свежеватель<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Svezhevatel_lvl11, 'Свежеватель'."
+  },
+  "355": {
+   "string_id": 8915,
+   "text": "Садист<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Sadist_lvl11, 'Садист'."
+  },
+  "356": {
+   "string_id": 8916,
+   "text": "Каннибал<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Maniak_lvl12, 'Каннибал'."
+  },
+  "357": {
+   "string_id": 8917,
+   "text": "Зверь<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Hunter_lvl12, 'Зверь'."
+  },
+  "358": {
+   "string_id": 8918,
+   "text": "Потрошитель<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Svezhevatel_lvl12, 'Потрошитель'."
+  },
+  "359": {
+   "string_id": 8919,
+   "text": "Изверг<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Sadist_lvl12, 'Изверг'."
+  },
+  "327": {
+   "string_id": 8905,
+   "text": "Папаша Абу<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: mrare_Abu_lvl18, the camp's boss, 'Папаша Абу' (50434 sends the player to «Надзирателя Лаки и Папашу Абу» in the slave traders' camp). The prefix shows the level he fights at."
+  },
+  "328": {
+   "string_id": 8904,
+   "text": "Надзиратель аки<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: mrare_Lucky_lvl16, the boss of the chief's place 89, '[11] Надзиратель аки' -- a typo of the file for Лаки (the type's own word, Lucky; 50434 «найди там Надзирателя Лаки»), mended on the wire by server/orig_texts.py NAME_TYPOS."
+  },
+  "590": {
+   "string_id": 8890,
+   "text": "Казначей<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_Kaznachei, the treasurer, who stands in the camp 88 all day (data/camp_fill.json, server/bosses.py ALL_DAY), 'Казначей'."
+  },
+  "1563": {
+   "string_id": 8903,
+   "text": "Санденс Кид<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_SundanceKid, 'Санденс Кид', put down in the camp 88 by hand (data/placements.json)."
+  },
+  "2163": {
+   "string_id": 8906,
+   "text": "Ящик<Br>Работорговцы",
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: st_box_ammo, the camp's ammunition boxes in 88, 'Ящик'."
+  },
+  "591": {
+   "string_id": 8907,
+   "text": "Казначей<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_Kaznachei, the treasurer, who stands in the camp 92 all day, 'Казначей'; the matcher had given him the ДСР's treasurer (8924)."
+  },
+  "1564": {
+   "string_id": 8920,
+   "text": "Бутч Кэссиди<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_ButchKassidy, 'Бутч Кэссиди', put down in the camp 92 by hand (data/placements.json)."
+  },
+  "2164": {
+   "string_id": 8923,
+   "text": "Ящик<Br>Живодеры Элфрида",
+   "why": "The flayers' ranks, texts.xml 8907-8923 ('[12] Казначей', '[10] Псих', '[10] Преследователь', '[10] Шкуродер', '[10] Мучитель', '[11] Маньяк', '[11] Охотник', '[11] Свежеватель', '[11] Садист', '[12] Каннибал', '[12] Зверь', '[12] Потрошитель', '[12] Изверг', '[12] Бутч Кэссиди', '[13] Бетти', '[14] Элфрид', '[12] Ящик'), taken in the order of the types, level by level: zd_ 348-351, 352-355 and 356-359 (levels 10, 11 and 12, each Maniak, Hunter, Svezhevatel, Sadist). Borne out at level 11, where the block's words are the internal ones (Маньяк, Охотник, Свежеватель, Садист, 8912-8915); the matcher had given those four level-11 words to the levels 10 and 12 too, and 'Бетти' (8921) to the hunter 357. Лагерь Живодеров (92) and its chief's place (90), the owner's Абри of 2026-10-12. This one: zd_box_ammo, the camp's ammunition boxes in 92, 'Ящик'."
+  },
+  "1164": {
+   "string_id": 46941,
+   "text": "Одноухий<Br>Торговец ножами",
+   "why": "Abri_knife_trd at the Портовый рынок of Абри (187): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the wiki's 'Одноухий' of the market's list, a knife trader like Вади-Хальфа's Однопальцый (1152, 62136)."
+  },
+  "1165": {
+   "string_id": 62155,
+   "text": "Алима<Br>Броня, одежда, пояса",
+   "why": "Abri_armor_trd at the Портовый рынок of Абри (187): the traders' block 62149-62166 runs city by city -- Вади-Хальфа's Ваккас and Хамис (62149, 62150, the black market's 1204 and 1205), Люций, Магдалена, the oasis' Оружие and Торговец патронами, then Алима, Гали, Торси, Мухсим -- and Abri_armor_trd, Abri_set_trd, Abri_Med_fast_trd, Abri_Med_slow_trd are those four roles in that order; the wiki's 'Алима' stands in the market's list (its own links were shifted by one, all low)."
+  },
+  "1166": {
+   "string_id": 62156,
+   "text": "Гали<Br>Торговец комплектами",
+   "why": "Abri_set_trd at the Портовый рынок of Абри (187): the second of Абри's four in the traders' block (see 1165); the wiki's 'Гали' of the market's list."
+  },
+  "1167": {
+   "string_id": 62157,
+   "text": "Торси<Br>Боевая медицина",
+   "why": "Abri_Med_fast_trd at the Портовый рынок of Абри (187): the third of Абри's four in the traders' block (see 1165): the fast medicine, 'Боевая медицина', as Вади-Хальфа's Люций; the wiki's 'Торси' of the market's list."
+  },
+  "1168": {
+   "string_id": 62158,
+   "text": "Мухсим<Br>Лекарства и еда",
+   "why": "Abri_Med_slow_trd at the Портовый рынок of Абри (187): the fourth of Абри's four in the traders' block (see 1165): the slow medicine and food, as Вади-Хальфа's Магдалена."
+  },
+  "1162": {
+   "string_id": 50659,
+   "text": "Дробовики и патроны",
+   "why": "Abri_Shotguns_trd at the Портовый рынок of Абри (187): the wiki's 'Дробовики и патроны' of the market's list, the row after 'Винтовки и патроны' (50658, Abri_Rifles_trd's)."
+  },
+  "1174": {
+   "string_id": 46947,
+   "text": "Ведич<Br>Знахарь",
+   "why": "Abri_Healer at the Портовый рынок of Абри (187): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the wiki's 'Ведич' of the market's list, the healer of «Заполучить амазонку» (46967-46989)."
+  },
+  "1178": {
+   "string_id": 46947,
+   "text": "Ведич<Br>Знахарь",
+   "why": "DESIGNED copy. Abri_Healer_q (the healer's art, 1f_npc5) alone in Q_Abri_Amazon1 (193), the room «Заполучить амазонку (Часть 4)» takes the player to with Ведич («Пойти вместе с Ведичем», 46979): Ведич himself, so his row."
+  },
+  "1179": {
+   "string_id": 46948,
+   "text": "Луиджи<Br>водитель",
+   "why": "Abri_travel at the Портовый рынок of Абри (187): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the wiki's 'Луиджи' of the market's list, the driver of the ride back to Вади-Хальфа (46961-46964)."
+  },
+  "1388": {
+   "string_id": 10531,
+   "text": "Водитель автобуса<Br>до завода",
+   "why": "AB_factory_bus_driver at the Портовый рынок of Абри (187): the row of Вади-Хальфа's bus driver (1387), whose twin he is; the wiki's 'Водитель Автобуса' of the market's list."
+  },
+  "1654": {
+   "string_id": 46951,
+   "text": "Ан-Насир<Br>Мельник",
+   "why": "AB_Miller (art 1f_Miller) at the Портовый рынок of Абри (187): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the wiki's 'Ан-Насир' of the market's list. The matcher's 'доктор Джордж Миллер' (10690) took the word Miller for a name."
+  },
+  "2280": {
+   "string_id": 51646,
+   "text": "Точильный камень<Br>Абри",
+   "why": "ab_modif_knifes (art 1f_Grindstone) at the Портовый рынок of Абри (187): the run 51645-51648 'Точильный камень' of Вади-Хальфа, Абри, Донгола, Абу-Хамед; Вади-Хальфа's (2279) has the first."
+  },
+  "5687": {
+   "string_id": 9667,
+   "text": "Капитан МакКей<Br>Армия ЦСЦ",
+   "why": "Npc_Commoner000093 at the Портовый рынок of Абри (187): the commoners' block on its offset 9574 (Вади-Хальфа's ЦСЦ soldiers, Лейтенант О'Нилл and Рядовой Беккет, 5685/5686, sit two rows before): 'Капитан МакКей'."
+  },
+  "5688": {
+   "string_id": 9668,
+   "text": "Рядовой Вулси<Br>Армия ЦСЦ",
+   "why": "Npc_Commoner000094 at the Портовый рынок of Абри (187): the next row on the same offset (see 5687): 'Рядовой Вулси'."
+  },
+  "1171": {
+   "string_id": 46945,
+   "text": "Лотерейщик<Br>Золотая лотерея",
+   "why": "Abri_lotery_g at the Портовый рынок of Абри (187): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the wiki's 'Лотерейщик Золотая лотерея', with the line break of the original."
+  },
+  "1172": {
+   "string_id": 46946,
+   "text": "Лотерейщик",
+   "why": "Abri_lotery at the Портовый рынок of Абри (187): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the wiki's 'Лотерейщик'."
+  },
+  "4623": {
+   "string_id": 62120,
+   "text": "Абу Вердас<Br>Раб Эвана",
+   "why": "Medium. Quest_NPC_Evan_CLAN_1 at the Портовый рынок of Абри (187): the man of Эван's clan quests, the only row of Эван's people in the traders' block before Ольсен (62122): 'Абу Вердас, Раб Эвана'."
+  },
+  "4672": {
+   "string_id": 62148,
+   "text": "МН-6",
+   "why": "Medium. ab_city_travel (art 1f_Pilot_Vert) at the Портовый рынок of Абри (187): the pilots' pair 62147/62148 'Карен ван Бурен, Пилот вертолета' differ by the helicopter; 62147 is the Причал's (4670), so this is the other, 'МН-6'."
+  },
+  "1655": {
+   "string_id": 46952,
+   "text": "Хасим<Br>Пекарь",
+   "why": "AB_Baker (art 1f_Baker) in the Жилой квартал of Абри (188): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the baker of «Свежий хлеб»."
+  },
+  "2016": {
+   "string_id": 62130,
+   "text": "Младший<Br>помощник Доктора",
+   "why": "Dr_Gofus_assistent_AB in the Жилой квартал of Абри (188): the row of Вади-Хальфа's junior assistant (2015), whose twin he is."
+  },
+  "1394": {
+   "string_id": 46937,
+   "text": "Дверь",
+   "why": "ow_AbriDoor2 (art 1f_Door2) in the Жилой квартал of Абри (188): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the door of Барон Дайсон's mansion in «Вскрыть дверь»."
+  },
+  "1262": {
+   "string_id": 46937,
+   "text": "Дверь",
+   "why": "ow_AbriDoor (art 1f_Door1) in the mansion 671: the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; its door."
+  },
+  "1395": {
+   "string_id": 46938,
+   "text": "Садовые ворота",
+   "why": "ow_AbriGate (art 1f_Gate1) in 188 and 671: the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; «Все в сад». The matcher's 'Гатера' (60592) took the word Gate for a name."
+  },
+  "1264": {
+   "string_id": 46939,
+   "text": "Холодильник",
+   "why": "ow_Fridge (art 1f_Fridge) in the mansion 671: the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types."
+  },
+  "1419": {
+   "string_id": 46940,
+   "text": "Сейф",
+   "why": "Abri_Safe (art 1f_Safe) in the mansion 671: the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the safe of «Вскрыть сейф», which opens no storage window (names.SAFES would call it 'Хранилище')."
+  },
+  "5105": {
+   "string_id": 10479,
+   "text": "Рудольф<Br>Обмен одежды на вырост [9-12]",
+   "why": "Npc_Upgrader000003 in the Жилой квартал of Абри (188): the upgraders' block on its offset 10476 (10478 'Брендольф ... [6-8]' is Вади-Хальфа's, 10480 'Адольф ... [13-16]' the next town's): 'Рудольф, Обмен одежды на вырост [9-12]', Абри's band. The map's label named a Базиль for the exchange (his type 1199 stands in no file)."
+  },
+  "6511": {
+   "string_id": 10325,
+   "text": "Камал<Br>Картограф",
+   "why": "Npc_Commoner000758 (art 1f_Fisherman) in the Трущобы of Абри (255): the commoners' block on its offset, the Картограф of «Сокровища Зубери» and «Мухаммед Ахмед» (47028-47030); the wiki's 'Камал' stands in the slums."
+  },
+  "1653": {
+   "string_id": 46950,
+   "text": "Дед Кузин",
+   "why": "AB_Farmer (art 1f_Farmer) in the Трущобы of Абри (255): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the farmer of the corn (46990 «Все меня зовут Дед Кузин»)."
+  },
+  "1656": {
+   "string_id": 46953,
+   "text": "Кукуруза",
+   "why": "OW_CornPlant (art 1f_CornPlant) in the Трущобы of Абри (255): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the same row as the fields' OW_CornPlant2 (1682)."
+  },
+  "1667": {
+   "string_id": 46954,
+   "text": "Багира<Br>Охотница",
+   "why": "AB_Huntress (art 1f_Huntress) in the Трущобы of Абри (255): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the huntress of «Багира», «Тотемный столб», «Охота» (47010-47027)."
+  },
+  "1843": {
+   "string_id": 46956,
+   "text": "Генри Джонс",
+   "why": "AB_Djons3 in the Трущобы of Абри (255): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types, its last row."
+  },
+  "1877": {
+   "string_id": 50573,
+   "text": "Светлана<Br>Скаут",
+   "why": "oasis_Lana (art 1f_Lana) in the Трущобы of Абри (255): the scouts' run 50572-50574 'Заур, Светлана, Иоан Суосан, Скаут' in the order of the types oasis_Zaur, oasis_Lana, oasis_Ioan (1876 and 1878 hold the other two)."
+  },
+  "1962": {
+   "string_id": 59613,
+   "text": "Фрея Каплан<Br>Подарки",
+   "why": "Ab_romantik_trader in the Трущобы of Абри (255): the gift traders' run 59613-59615 'Фрея Каплан, Подарки', her son Альфред and daughter Алиса, as Вади-Хальфа's Марк Клаус, Борн and Лана (1959, 2000, 2001)."
+  },
+  "2002": {
+   "string_id": 59614,
+   "text": "Альфред<Br>сын Фреи",
+   "why": "Ab_romantik_Upgrader_1 (art 1f_NigerBoy) in the Трущобы of Абри (255): the second of the run (see 1962), her son."
+  },
+  "2003": {
+   "string_id": 59615,
+   "text": "Алиса<Br>дочь Фреи",
+   "why": "Ab_romantik_Upgrader_2 in the Трущобы of Абри (255): the third of the run (see 1962), her daughter."
+  },
+  "1225": {
+   "string_id": 62153,
+   "text": "Оружие",
+   "why": "Abri_oasis_w_trd in the Дальний Оазис (76): the row of Вади-Хальфа's oasis gun trader (1224), whose twin he is."
+  },
+  "1228": {
+   "string_id": 62154,
+   "text": "Торговец патронами",
+   "why": "Abri_oasis_ammo in the Дальний Оазис (76): the row of Вади-Хальфа's oasis ammunition trader (1227), whose twin he is."
+  },
+  "1266": {
+   "string_id": 46359,
+   "text": "Лекарь",
+   "why": "Abri_oasis_healer in the Дальний Оазис (76): the row of Вади-Хальфа's oasis healer (1234), whose twin he is."
+  },
+  "207": {
+   "string_id": 62128,
+   "text": "Джут<Br>Аптекарь",
+   "why": "Medium. pp_Med_trader in the Дальний Оазис (76): the apothecaries' pair 62127/62128 'Снитке, Аптекарь' (Вади-Хальфа's 202) and 'Джут, Аптекарь' -- this oasis' apothecary is the other."
+  },
+  "2241": {
+   "string_id": 62336,
+   "text": "Эрих Френкель<Br>Меняла легионера",
+   "why": "Medium. Ab_upg_legio in the Дальний Оазис (76): the legionnaires' exchanger, 'Эрих Френкель, Меняла легионера', the only such row."
+  },
+  "2299": {
+   "string_id": 50410,
+   "text": "Тьерри Сабин",
+   "why": "oasis_Lessor_2 (art 1f_Tankist2) in the Дальний Оазис (76): the row of the other oasis' lessor, oasis_Lessor_1 (2298), whose twin he is."
+  },
+  "1754": {
+   "string_id": 60228,
+   "text": "Осколок скалы (Аб)",
+   "why": "AB_Rock (art 1f_Plumbum) in the Дальний Оазис (76): 'Осколок скалы (Аб)', Абри's, beside Вади-Хальфа's (ВХ) 1753."
+  },
+  "5162": {
+   "string_id": 10411,
+   "text": "Снаряжение Дредноута",
+   "why": "Npc_Trader000012 at the Вещевой рынок of Абри (378, where server/events.py holds him out: data/schedule.json held_out) and of Донгола and Абу-Хамед: the traders' block on its offset 10399, as 5160 (10409) and 5161 (10410) beside him."
+  },
+  "5163": {
+   "string_id": 10412,
+   "text": "Снаряжение Паладина",
+   "why": "Npc_Trader000013, the next of the block (see 5162)."
+  },
+  "5766": {
+   "string_id": 10431,
+   "text": "Говард Хаксли<Br>Антиквариат и колониальные товары",
+   "why": "Npc_Trader000070 (art 1f_cowboy2) in «Абри: Поля» (261), the map's «Хижина Говарда Хаксли» (5862,1836): the traders' block, and the wiki's 'Говард Хаксли' ('Поля Абри 5862х1836'), who changes coupons for rounds (61902-61924)."
+  },
+  "2195": {
+   "string_id": 49111,
+   "text": "Кучка песка",
+   "why": "Apoc_sand (art 1f_SmallHole) in Apoc_Desert2 (285, the map's «Финиковая пальма»): the run 49108-49112 'Говард Хаксли, Марис Дамбис, Финиковая пальма, Кучка песка, Карло Меони' of the Apoc_ types in their order (2192-2196); the palm 2194 beside it holds 49110."
+  },
+  "2226": {
+   "string_id": 10683,
+   "text": "УАЗ",
+   "why": "DESIGNED. Apoc_UAZ (art 1f_UAZ) in the oasis 283 beside Карло Меони: no row of the Apoc block names it, so the original's own word for the car, the UAZ of the vehicles' rows (10683)."
+  },
+  "2390": {
+   "string_id": 49748,
+   "text": "Кристофер МакКэндлесс",
+   "why": "Medium-strong. NPC_ammo_craft_bomj (art bich) at the Свалка Автомобилей (289): the dump's block 49745-49751, 'Кристофер МакКэндлесс, Бомж - интеллигент, Все по 100 афро' -- a bum by the sprite and the word, a trader by the class (root 1), at the price of the dump's tools."
+  },
+  "2403": {
+   "string_id": 49749,
+   "text": "Бомж",
+   "why": "m05_craft_bomj_2 (art q1-2) in the smelter 766: the plain 'Бомж' of the dump's block, as Вади-Хальфа's 411."
+  },
+  "2393": {
+   "string_id": 49752,
+   "text": "Выплавка свинца и латуни",
+   "why": "NPC_sorting_Plumbum (art 1f_Owen, a furnace) in the smelter 766: the smelter's four machines 49752-49755 in the order of the types (Plumbum, Powder, Shell, Bullets)."
+  },
+  "2394": {
+   "string_id": 49753,
+   "text": "Изготовление пороха",
+   "why": "NPC_sorting_Powder (art 1f_ChemicalTable) in the smelter 766: the second of the run (see 2393)."
+  },
+  "2395": {
+   "string_id": 49754,
+   "text": "Очистка гильз",
+   "why": "NPC_sorting_Shell (art 1f_ChemicalTable) in the smelter 766: the third of the run (see 2393). The matcher's 'Ущелье 2' (48872) is a place name of the 21.12.2012 event's map (48867-48880), kept off the wire (server/orig_texts.py DOUBTFUL_STRINGS)."
+  },
+  "2396": {
+   "string_id": 49755,
+   "text": "Пресс",
+   "why": "NPC_sorting_Bullets (art 1f_Workbench) in the smelter 766: the fourth of the run (see 2393), the bullet press."
+  },
+  "2397": {
+   "string_id": 49756,
+   "text": "Патроны пистолетные",
+   "why": "NPC_Pistol_bullets (art 1f_Workbench) in the Сборочный цех 1055: the run 49756-49759 in the order of the types (Pistol, Ass_Rifle, Rifle, Hunting)."
+  },
+  "2398": {
+   "string_id": 49757,
+   "text": "Патроны автоматные",
+   "why": "NPC_Ass_Rifle_bullets in the Сборочный цех 1055 (see 2397)."
+  },
+  "2399": {
+   "string_id": 49758,
+   "text": "Патроны винтовочные",
+   "why": "NPC_Rifle_bullets in the Сборочный цех 1055 (see 2397)."
+  },
+  "2400": {
+   "string_id": 49759,
+   "text": "Патроны охотничьи",
+   "why": "NPC_Hunting_bullets in the Сборочный цех 1055 (see 2397)."
+  },
+  "2402": {
+   "string_id": 62143,
+   "text": "Банкомат<br>Золото и серебро",
+   "why": "Medium. NPC_gold_craft_bank (art 1f_Minibox) in 766 and 1055: the exchangers' run 62140-62143 (Мортимер, Моше, Шломо, then 'Банкомат, Золото и серебро'), the machine by its word. Held out of both rooms (data/schedule.json held_out): its exchange of the dump's notes is cut."
+  },
+  "1309": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "AB_Stone_Plumbum_1 in Абри's lead mine, tier 1 (1030): the mines' objects 48065-48070, as Вади-Хальфа's (1308)."
+  },
+  "1346": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "AB_Stone_Plumbum_2 in Абри's lead mine, tier 2 (1223), as 1309."
+  },
+  "1313": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "AB_Source_Nitre_1 in Абри's saltpetre pit, tier 1 (1029), as Вади-Хальфа's."
+  },
+  "1351": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "AB_Source_Nitre_2 in Абри's saltpetre pit, tier 2 (1222), as 1313."
+  },
+  "1317": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "AB_Stone_Copper_1 in Абри's copper mine, tier 1 (1028), as Вади-Хальфа's."
+  },
+  "1356": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "AB_Stone_Copper_2 in Абри's copper mine, tier 2 (1221), as 1317."
+  },
+  "1715": {
+   "string_id": 48069,
+   "text": "Злой шахтёр",
+   "why": "Craft_Miner_2, the hostile miners of Абри's mines (1028-1030, 1221-1223): the row of Вади-Хальфа's Craft_Miner_1 (1714)."
+  },
+  "1321": {
+   "string_id": 10521,
+   "text": "Добыча свинца",
+   "why": "AB_EnterPlumbumNPC1, the terminal at the mouth of Абри's lead mine (205): the ore mines' run 10521-10526, as Вади-Хальфа's 1320."
+  },
+  "1325": {
+   "string_id": 10522,
+   "text": "Добыча селитры",
+   "why": "AB_EnterNitreNPC1, the terminal at the mouth of Абри's saltpetre pit (204): as Вади-Хальфа's 1324."
+  },
+  "1329": {
+   "string_id": 10523,
+   "text": "Добыча меди",
+   "why": "AB_EnterCopperNPC1, the terminal at the mouth of Абри's copper mine (203): as Вади-Хальфа's 1328."
+  },
+  "1333": {
+   "string_id": 10524,
+   "text": "Выход из шахты",
+   "why": "AB_ExitPlumbumNPC1, the way out of Абри's lead mine's control room (662): as Вади-Хальфа's 1332."
+  },
+  "1337": {
+   "string_id": 10525,
+   "text": "Выход из карьера",
+   "why": "AB_ExitNitreNPC1, the way out of Абри's saltpetre pit's control room (661): as Вади-Хальфа's 1336."
+  },
+  "1341": {
+   "string_id": 10524,
+   "text": "Выход из шахты",
+   "why": "AB_ExitCopperNPC1, the way out of Абри's copper mine's control room (660): as Вади-Хальфа's 1340."
+  },
+  "1360": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "AB_plumbum_sorting in Абри's lead mine's control room (662): as Вади-Хальфа's 1359."
+  },
+  "1364": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "AB_nitre_sorting in Абри's saltpetre pit's control room (661): as Вади-Хальфа's."
+  },
+  "1368": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "AB_copper_sorting in Абри's copper mine's control room (660): as Вади-Хальфа's."
+  },
+  "1372": {
+   "string_id": 10527,
+   "text": "Производство пуль",
+   "why": "AB_bullet_creator in Абри's «База переработки» (207, the map's «Центр Переработки Абри»): the run 10527-10530 by the words of the internal names, as Вади-Хальфа's 1371."
+  },
+  "1376": {
+   "string_id": 10528,
+   "text": "Производство пороха",
+   "why": "AB_powder_creator in Абри's «База переработки» (207), as 1372."
+  },
+  "1380": {
+   "string_id": 10529,
+   "text": "Производство гильз",
+   "why": "AB_shell_creator in Абри's «База переработки» (207), as 1372; the matcher's suggestion 'Ущелье 1' (48871) is a place name."
+  },
+  "1384": {
+   "string_id": 10530,
+   "text": "Производство патронов",
+   "why": "AB_ammo_creator in Абри's Завод (206, the map's «Производство боеприпасов Абри»), as Вади-Хальфа's 1383."
+  },
+  "1411": {
+   "string_id": 10580,
+   "text": "Наёмник<Br>Мантикоры",
+   "why": "Abri_Manticore at the База Мантикоры (220): the pair 10580/10581 '[10] Наёмник', '[12] Техник' <Br>Мантикоры after Барон Дайсон and his bodyguard (10578/10579, 1413/1414), in the order of the types; the wiki's 'Наёмники Мантикоры' of Абри's page."
+  },
+  "1412": {
+   "string_id": 10581,
+   "text": "Техник<Br>Мантикоры",
+   "why": "Abri_Manticore_Tech (art a5-Machinegunner) at the База Мантикоры (220), the second of the pair (see 1411)."
+  },
+  "1417": {
+   "string_id": 46935,
+   "text": "Небольшая ямка",
+   "why": "Abri_BombPlace (art 1f_SmallHole) on the Дорога в Абри (672): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the hole of «Заминировать дорогу»."
+  },
+  "1177": {
+   "string_id": 9049,
+   "text": "Амазонка<Br>Дети цветов",
+   "why": "Amazon (art m22-shakira) alone in Q_Abri_Amazon2 (192): '[12] Амазонка, Дети цветов', between the two hippie rows 9048/9050 of the same people; the Амазонка of «Заполучить амазонку»."
+  },
+  "130": {
+   "string_id": 9532,
+   "text": "Крокодил<Br>Дикое животное",
+   "why": "mCrocodile in Q_Abri_Crocodile (189, the map's «Сокровища» on 5862,1846): the crocodiles' run 9531-9535, '[12] Крокодил' at the level of the place (data/build_mob_types.py DESIGNED_LEVELS)."
+  },
+  "857": {
+   "string_id": 10593,
+   "text": "Драцена",
+   "why": "m00_Dracena (art plant_dracena) in Q_Abri_Crocodile (189): 'Драцена', the plant whose leaves «Заполучить амазонку (Часть 1)» asks for (Листья Драцены, object 2264)."
+  },
+  "390": {
+   "string_id": 48762,
+   "text": "сын Агаты",
+   "why": "Medium. dn_son_of_Agata (art mnpc-child-q6) in the flayers' camp (92): 'сын Агаты', the child the flayers hold, of Донгола's Агата."
+  },
+  "1674": {
+   "string_id": 9522,
+   "text": "Молодая Гиена<Br>Дикое животное",
+   "why": "m510_Hyena_lvl6 in «Абри: Поля» (261): the hyenas' run 9522-9526 in the order of the types and levels (6-10); the wiki's «Поля Абри» names the hyenas."
+  },
+  "1675": {
+   "string_id": 9523,
+   "text": "Больная Гиена<Br>Дикое животное",
+   "why": "m510_Hyena_lvl7, the run of 1674: 'Больная Гиена', whose skulls «Жертва Духам» asks for, at the fields (261) and the Тотем (262)."
+  },
+  "1676": {
+   "string_id": 9524,
+   "text": "Голодная Гиена<Br>Дикое животное",
+   "why": "m510_Hyena_lvl8, the run of 1674: 'Голодная Гиена' of «Охота: Голодные Гиены», at the fields (261) and the Тотем (262)."
+  },
+  "1677": {
+   "string_id": 9525,
+   "text": "Сытая Гиена<Br>Дикое животное",
+   "why": "m510_Hyena_lvl9, the run of 1674, at the fields (261)."
+  },
+  "1678": {
+   "string_id": 9526,
+   "text": "Бешеная Гиена<Br>Дикое животное",
+   "why": "m510_Hyena_lvl10, the last of the run of 1674."
+  },
+  "2405": {
+   "string_id": 9498,
+   "text": "Крыса<Br>Дикое животное",
+   "why": "Medium. mRat_8 (art f8_rat) in the Свалка Автомобилей (289, data/camp_fill.json): the rats' run 9494-9502 has 'Крыса, Дикое животное' at 12, 16 and 20 and other beasts at other levels ('[8] Сурикат', 9496, the only level-8 row, a meerkat where the sprite is a rat). The plain rat's row, the prefix rewritten to the level it fights at."
+  },
+  "2406": {
+   "string_id": 9498,
+   "text": "Крыса<Br>Дикое животное",
+   "why": "mRat_12 (art f8_rat) in the Свалка Автомобилей (289): '[12] Крыса, Дикое животное' of the rats' run, level for level (9497 'Песчаная крыса' is the other level-12 row)."
+  },
+  "2101": {
+   "string_id": 800,
+   "text": "Череп",
+   "why": "DESIGNED. TreasureIsland_6 (art 1f_Skull) at the Тотем (262): a skull, the word of row 800 (the trophy 'Череп'), as Вади-Хальфа's 2099."
+  },
+  "2102": {
+   "string_id": 800,
+   "text": "Череп",
+   "why": "DESIGNED. TreasureIsland_7 (art 1f_Skull) in Q_Abri_Crocodile (189): as 2101."
+  },
+  "5631": {
+   "string_id": 9050,
+   "text": "Хиппи<Br>Дети цветов",
+   "why": "DESIGNED. hippie_3 (art mob-m18, as 1175 and 1176) at «Хиппи в пустыне» (191): the third of the hippies, whose two rows 9048 and 9050 hold the other two; the same words, the prefix rewritten to the level it fights at."
+  },
+  "2426": {
+   "string_id": 60277,
+   "text": "Дайсон",
+   "why": "NG_2014_Quest_NPC_1 (art 1f_Bich) in the Жилой квартал of Абри (188), of the New Year of 2014: the event's run 60277-60284 in the order of its types -- 'Дайсон', 'Канализационный люк' (2427, art 1f_Canalization), 'Холодильник он же сейф' (2428, art 1f_Fridge), then the event's chief and his guard (60280/60281, the NG_2014 boss and soldiers) -- two sprites of three borne out. He stands only in the New Year's window (data/schedule.json spawns, 'ny'), and his quests are not built."
+  },
+  "2427": {
+   "string_id": 60278,
+   "text": "Канализационный<Br>люк",
+   "why": "NG_2014_Quest_NPC_2 (art 1f_Canalization) in the Жилой квартал of Абри (188), of the New Year of 2014: see 2426; the sprite is the hatch. In the window 'ny' only."
+  },
+  "1173": {
+   "string_id": 50406,
+   "text": "Мухсин<Br>Аренда транспорта",
+   "why": "Abri_Lessor at the Портовый рынок of Абри (187): the lessors' run 50405-50409 ('Марат', 'Мухсин' ... 'Аренда транспорта'); the wiki's list of the Портовый рынок names Мухсин (its 'Марат' stands at Абу-Хамед's station), while the wiki's name table had given this type Марат."
+  },
+  "1169": {
+   "string_id": 46942,
+   "text": "Техногик<Br>расшифровка чертежей",
+   "why": "Abri_technogeek at the Портовый рынок of Абри (187): the Абри block of the people's rows, 46933-46956 (Автомобиль Вальдеса, Труп Родригеса, Небольшая ямка, Эсмеральда, Дверь, Садовые ворота, Холодильник, Сейф, Одноухий, Техногик, Др. Джонс, Мурат, the two Лотерейщик, Ведич, Луиджи, Терминал, Дед Кузин, Ан-Насир, Хасим, Кукуруза, Багира, Тотем, Генри Джонс), in the order of the town's types; the original's full row, as Вади-Хальфа's 652 has it."
+  },
+  "1875": {
+   "string_id": 50547,
+   "text": "Эльза<Br>Ведунья",
+   "why": "oasis_Elza (art 1f_BigMom) in the Трущобы of Абри (255): the first row of her own block 50547-50601 (her quests follow); the wiki has 'Эльза' alone."
+  },
+  "6516": {
+   "string_id": 10326,
+   "text": "Ямка",
+   "why": "Npc_Commoner000760 (art 1f_SmallHole), the hole of Q_Tresure2 on 5870,1838 (251), one of Зубери's three digs around Абри: the family's holes 759-763 share the one row 10326 'Ямка' (see 6512, the hole of Вади-Хальфа's Q_Tresure1)."
+  },
+  "6517": {
+   "string_id": 10326,
+   "text": "Ямка",
+   "why": "Npc_Commoner000761 (art 1f_SmallHole), the hole of Q_Tresure3 on 5865,1859 (252), one of Зубери's three digs around Абри: the family's holes 759-763 share the one row 10326 'Ямка' (see 6512, the hole of Вади-Хальфа's Q_Tresure1)."
+  },
+  "6519": {
+   "string_id": 10326,
+   "text": "Ямка",
+   "why": "Npc_Commoner000763 (art 1f_SmallHole), the hole of Q_Tresure5 on 5892,1866 (256), one of Зубери's three digs around Абри: the family's holes 759-763 share the one row 10326 'Ямка' (see 6512, the hole of Вади-Хальфа's Q_Tresure1)."
   }
  },
  "none": {

@@ -171,11 +171,14 @@ check("what the body carries adds no ingot (mobs.loot_for)",
 # --- nobody else ----------------------------------------------------------------------
 rollers = sorted(int(t) for t in mobs.TYPES
                  if {r[0] for r in mobs.loot_table(int(t))} & set(INGOTS))
-check("nobody else's table holds an ingot but the valley's boss, his two of one",
-      (rollers, sorted(BOSSES) + [VALLEY_BOSS],
-       [(i, c) for i, c, _v in mobs.loot_table(VALLEY_BOSS) if i in INGOTS],
+# Абри's four hour-keeping bosses carry theirs since the owner's Абри of
+# 2026-10-12 (server/test_abri_ingots.py holds them).
+ABRI_BOSSES = [327, 328, 360, 361]
+check("nobody else's table holds an ingot but the valley's boss, his two of one, and Абри's"
+      " four bosses",
+      (rollers, [(i, c) for i, c, _v in mobs.loot_table(VALLEY_BOSS) if i in INGOTS],
        count_of(VALLEY_BOSS, I1)),
-      (sorted(BOSSES) + [VALLEY_BOSS], sorted(BOSSES) + [VALLEY_BOSS], [(I1, 1.0)], 2))
+      (sorted(list(BOSSES) + [VALLEY_BOSS] + ABRI_BOSSES), [(I1, 1.0)], 2))
 check("  ..and the ingot of ten drops from nobody",
       [t for t in rollers if I10 in {r[0] for r in mobs.loot_table(t)}], [])
 check("  ..Halfa's all-day bosses carry none, ordinary or for a quest",

@@ -14,7 +14,9 @@ The cells
   A camp's neighbour cells are the open desert touching it or its chief's
   place: the 8-neighbourhood of both, the two places taken out. That is 12
   cells round each camp pair of Вади-Хальфа (80/82, 81/83, 84/86, 85/87)
-  and 8 round the Nubian valley's «Лагерь бандитов» (34). A cell is left
+  and of Абри (88/89, 92/90: the owner's «В Абри добавь мобов в лагеря и
+  в окрестности», 2026-10-12, ORDERED) and 8 round the Nubian valley's
+  «Лагерь бандитов» (34). A cell is left
   out (and the run says so) where it is a settlement, a place taken out of
   the game (world.retired_cells), the rock of the rim, impassable, or on the
   other side of the valley's wall from its camp. Open desert's location id
@@ -67,10 +69,23 @@ RINGS = {
     84: (86, "Лагерь Джанджавидов"),
     85: (87, "Лагерь Магриба"),
     34: (None, "Лагерь бандитов"),
+    88: (89, "Лагерь Работорговцев"),
+    92: (90, "Лагерь Живодеров"),
+}
+# The owner's word each ring answers: Вади-Хальфа's and the valley's, unless
+# named here.
+ORDERED = {
+    88: ("DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в "
+         "лагеря и в окрестности». "),
+    92: ("DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в "
+         "лагеря и в окрестности». "),
 }
 
 # Fighters of a camp that stay in it, with why.
 LEFT_OUT = {
+    590: "st_Kaznachei, the slave traders' treasurer, who stands in the camp 88 all day "
+         "(server/bosses.py ALL_DAY); a boss by role, so no ring takes him anyway",
+    591: "zd_Kaznachei, the flayers' treasurer in 92, as 590",
     336: "lu_Looser_lvl2, the sectarian of «Театр жизни»; «Заказ» names the sect "
          "«все кроме Неудачников»",
     303: "mg_Officer_lvl6: the Магриб's officers stand only where «Порядок (часть 2)» "
@@ -195,8 +210,9 @@ def _check_slots(loc, slots):
 def _why(camp, x, y, loc, pool):
     chief, name = RINGS[camp]
     cx, cy = world.cell_of(camp)
-    head = ("DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь "
-            "мобов они там должны быть». ")
+    head = ORDERED.get(camp) or (
+        "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь "
+        "мобов они там должны быть». ")
     if region(camp) == "valley":
         text = head + (
             "The patrol of the Nubian valley's «%s» (%d on %d,%d) on the neighbour cell %d,%d "

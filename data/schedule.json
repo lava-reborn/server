@@ -25,7 +25,7 @@
   },
   "ny": {
    "dates": [["12-20", "01-15"]],
-   "why": "RECOVERED dates, the owner's default (plan, decision 22): the New Year «План Новогодних праздников» (62256) runs from «20 декабря» (the towns' trees) to «15 января 2016 года — Отключение новогодних квестов». Nothing of Вади-Хальфа's band stands by it yet: of the band's New Year residents, the children 423/425, the refugee 1977 and the lottery men 662/711 stand all year by the owner's default 5 (server/world.py SEASON_KEPT), Ольсен 431 stands nowhere (the default names him, but SEASON_KEPT leaves him out of 35 and 104 until his stall has goods of its own), the tree and Дед Мороз's company (Npc_Commoner000780-797) stand in no file, and the rest of the event runs through Донгола and the admin bunkers."
+   "why": "RECOVERED dates, the owner's default (plan, decision 22): the New Year «План Новогодних праздников» (62256) runs from «20 декабря» (the towns' trees) to «15 января 2016 года — Отключение новогодних квестов». Nothing of Вади-Хальфа's band stands by it yet: of the band's New Year residents, the children 423/425, the refugee 1977 and the lottery men 662/711 stand all year by the owner's default 5 (server/world.py SEASON_KEPT), Ольсен 431 stands nowhere (the default names him, but SEASON_KEPT leaves him out of 35 and 104 until his stall has goods of its own), the tree and Дед Мороз's company (Npc_Commoner000780-797) stand in no file, and the rest of the event runs through Донгола and the admin bunkers. Абри's band has two (the owner's Абри, 2026-10-12): the New Year of 2014's Дайсон and Канализационный люк (2426, 2427) in the Жилой квартал 188, who stood there all year until then (their token 'ng' is none of world.EVENT_TOKENS) and now stand in this window only (spawns, below)."
   },
   "may9": {
    "dates": [["05-09", "08-02"]],
@@ -54,6 +54,12 @@
    "why": "RECOVERED creatures and place, the window's time. The prisoners of the eastern cells (Prison_5_WH, «Тюрьма: Восточные камеры»), ten of them, as the northern ones."
   },
   {
+   "window": "ny",
+   "loc": 188,
+   "types": [2426, 2427],
+   "why": "RECOVERED people and season, the owner's default for Абри (2026-10-12, decision 34 of its plan). NG_2014_Quest_NPC_1 and _2, «Дайсон» and «Канализационный<Br>люк» of the New Year of 2014 (60277/60278, data/orig_names_manual.json), in Абри's Жилой квартал (Abri_Settelment): the event's people stand only in its season, 20 December to 15 January. Their quests are not built (the plan's stage 9), so in the season they stand and say nothing."
+  },
+  {
    "window": "prison_wh",
    "loc": 646,
    "types": [2173],
@@ -76,6 +82,21 @@
    "loc": 645,
    "types": [2176],
    "why": "DESIGNED. The same guard at the entrance of Prison_2_WH (titled «Восточный блок»; south of the centre by its one opening, the wiki's «Южный блок», where the southern gate leads), for the same reason."
+  },
+  {
+   "loc": 378,
+   "types": [5162, 5163],
+   "why": "The owner's rule of 2026-10-10 («только по уровню городов») on the owner's Абри of 2026-10-12: the traders of Снаряжение Дредноута 17-18 ур and Снаряжение Паладина 19 ур (Npc_Trader000012/13, 10411/10412) sell nothing of Абри's band 8-12, so they do not stand in its clothing market (Sets_Market_Ab). The same types stand in the clothing markets of Донгола and Абу-Хамед (469, 467) as their files have them."
+  },
+  {
+   "loc": 766,
+   "types": [2402],
+   "why": "The owner's Абри of 2026-10-12, decision 22 of its plan: «Банкомат<br>Золото и серебро» (NPC_gold_craft_bank, 62143) in the smelter (OreRefinery_Abri) changed the dump's paper notes for gold (49782-49797: one note to 1.2 G and the like) -- a tap of gold with no known source of the notes, so its exchange is cut, and the machine does not stand."
+  },
+  {
+   "loc": 1055,
+   "types": [2402],
+   "why": "The same machine in the assembly shop (OreRefinery_Abri_Sorting), for the same reason as in 766."
   }
  ],
  "quests": [

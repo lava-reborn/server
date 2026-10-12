@@ -1,5 +1,5 @@
 {
- "_": "DESIGNED, not recovered: who stands in the empty (type 0) spawn slots of Вади-Хальфа's camps and quest places, one type per slot in the file's order. Applied by server/rooms.py in war=1 locations, to these files only; every other file's empty slot stays empty. Built by data/build_spawn_substitutes.py (CAMP_FILL), which says why for each.",
+ "_": "DESIGNED, not recovered: who stands in the empty (type 0) spawn slots of Вади-Хальфа's and Абри's camps and quest places, one type per slot in the file's order. Applied by server/rooms.py in war=1 locations, to these files only; every other file's empty slot stays empty. Built by data/build_spawn_substitutes.py (CAMP_FILL), which says why for each.",
  "designed": true,
  "fill": {
   "122": {
@@ -20,6 +20,88 @@
     1040
    ],
    "why": "«Механик ДСР» (Q_VH_Mechanic, tooltip 5988,1714): the mechanic 717 and the ДСР of levels 7-8 texts.xml names for this line -- [7] Ополченец, [8] Диверсант, [7] Боевик, [8] Старший офицер, [7] Новобранец (10611-10615) -- whose creatures are not in mobs.xml (the ДСР jm_ it has are levels 12-14). Stand-ins of the level and a soldier's art that no location puts down: Ополченец m05_BanditShooter_lvl7 (62), Боевик m510_BanditAssaultRifle_lvl7 (90), Новобранец m510_Courier_lvl7 (51) -- all three in the mechanic's own art, mob-m2 -- Диверсант m510_BanditShotgunner_lvl8 (87), Старший офицер inv_8_cap (1040), two officers for «Операция \"Возмездие\"» (texts.xml 62728: «уничтожить 5 старших офицеров ДСР»). The rule that the officers come running at the shooting is not built: they stand from the start."
+  },
+  "191": {
+   "band": [
+    9,
+    11
+   ],
+   "faction": null,
+   "fn": "Q_Abri_Hippi",
+   "types": [
+    1175,
+    1176,
+    5631,
+    1175,
+    1176,
+    5631,
+    1175,
+    1176,
+    5631
+   ],
+   "why": "«Хиппи в пустыне» (Q_Abri_Hippi, tooltip 5860,1838): the file has three hippies, «Дети цветов» (9048, 9050), and nine empty slots; the same three kinds three times more, at 9-11 (data/build_mob_types.py DESIGNED_LEVELS). They brew the ФРОК «Заполучить амазонку (Часть 3)» sends the player for («у них и раздобудь, заодно порядок наведи», texts.xml 46975)."
+  },
+  "261": {
+   "band": [
+    6,
+    9
+   ],
+   "faction": null,
+   "fn": "Q_Abri_Farm",
+   "types": [
+    1674,
+    1674,
+    1675,
+    1675,
+    1676,
+    1676,
+    1677,
+    1677
+   ],
+   "why": "«Абри: Поля» (Q_Abri_Farm, the map's «Хижина Говарда Хаксли», 5862,1836): the corn field of Хаксли, where the wiki's «Поля Абри» names the hyenas -- Молодая, Больная, Голодная, Сытая (m510_Hyena_lvl6..9, 9522-9525), two of each in the file's eight empty slots. Below the town's band, as the original had them: the corn's pests."
+  },
+  "262": {
+   "band": [
+    7,
+    8
+   ],
+   "faction": null,
+   "fn": "Q_Abri_Totem",
+   "types": [
+    1675,
+    1675,
+    1675,
+    1675,
+    1676,
+    1676,
+    1676,
+    1676
+   ],
+   "why": "The Тотем (Q_Abri_Totem, 5864,1838): Багира's quests at the totem want the skulls of Больная Гиена (1675, «Жертва Духам», 47020-47023) and ten Голодная Гиена killed (1676, «Охота: Голодные Гиены», 47024-47027); four of each in the file's eight empty slots."
+  },
+  "289": {
+   "band": [
+    8,
+    12
+   ],
+   "faction": null,
+   "fn": "Svalka_OldCars_01",
+   "types": [
+    2405,
+    2405,
+    2405,
+    2405,
+    2405,
+    2405,
+    2405,
+    2405,
+    2405,
+    2406,
+    2406,
+    2406,
+    2406
+   ],
+   "why": "«Свалка Автомобилей» (Svalka_OldCars_01, 5863,1835): the dump's own creatures are lost with the server; rats, the dump's vermin (mRat_8, mRat_12, «[N] Крыса<Br>Дикое животное», 9498), at the town's band, nine of level 8 and four of 12 in the file's thirteen empty slots. The junk piles of the dump's searches stand by hand (data/placements.json)."
   },
   "46": {
    "band": [
@@ -218,6 +300,89 @@
     309
    ],
    "why": "Кайс's meeting place (MW_bandits4_boss) beside the camp 85: every kind of Magrib's soldiers of levels 6-8, 310 (which 85 leaves out) twice."
+  },
+  "88": {
+   "band": [
+    8,
+    10
+   ],
+   "faction": "st",
+   "fn": "Bandit_Camp5",
+   "types": [
+    315,
+    316,
+    317,
+    318,
+    319,
+    320,
+    321,
+    323,
+    324,
+    590
+   ],
+   "why": "Лагерь Работорговцев (Bandit_Camp5), «Для игроков 8-10 уровней» (tooltip 5880,1844): the slave traders st_ of levels 8-10 round their boss Папаша Абу (327), and their treasurer st_Kaznachei (590, «[10] Казначей<Br>Работорговцы», 8890), who stands all day (server/bosses.py ALL_DAY). Санденс Кид (1563) is put down by hand (data/placements.json), so that no ambush draws on him."
+  },
+  "89": {
+   "band": [
+    8,
+    10
+   ],
+   "faction": "st",
+   "fn": "MW_bandits5_boss",
+   "types": [
+    316,
+    317,
+    318,
+    321,
+    323,
+    324,
+    325,
+    326,
+    325
+   ],
+   "why": "Надзиратель Лаки's meeting place (MW_bandits5_boss) beside the camp 88: the slave traders round their chief and the four the file has (315, 319, 320, 322), the kinds 88 leaves out (325, 326) among them, the Мучитель twice."
+  },
+  "90": {
+   "band": [
+    10,
+    12
+   ],
+   "faction": "zd",
+   "fn": "MW_bandits6_boss",
+   "types": [
+    352,
+    353,
+    354,
+    355,
+    356,
+    357,
+    358,
+    359,
+    354,
+    358
+   ],
+   "why": "Бетти's meeting place (MW_bandits6_boss) beside the camp 92: the flayers of levels 11-12 round their chief, the kinds 92 leaves out (354, 358, 359) among them, 354 and 358 twice."
+  },
+  "92": {
+   "band": [
+    10,
+    12
+   ],
+   "faction": "zd",
+   "fn": "Bandit_Camp6",
+   "types": [
+    348,
+    349,
+    350,
+    351,
+    352,
+    353,
+    355,
+    356,
+    357,
+    591
+   ],
+   "why": "Лагерь Живодеров (Bandit_Camp6), «Для игроков 10-12 уровней» (tooltip 5868,1854): the flayers zd_ of levels 10-12 round their boss Элфрид (360), and their treasurer zd_Kaznachei (591, «[12] Казначей<Br>Живодеры Элфрида», 8907), who stands all day. Бутч Кэссиди (1564) is put down by hand (data/placements.json)."
   }
  }
 }
