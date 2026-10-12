@@ -35,6 +35,8 @@ DB = os.path.join(tempfile.mkdtemp(), "test.db")
 sys.path.insert(0, HERE)
 import accounts
 import mobs
+import travel
+import world
 accounts.DB_PATH = DB
 _store = accounts.Store(DB)
 _store.register("alice", "secret")
@@ -416,6 +418,7 @@ try:
     # escort, not an interception: the ground decides instead, and takes both.
     check("and both are taken into the cell",
           [f.split(";")[0] for f in got if f.startswith("lcall")], ["lcall"])
+    caught_loc = world.location(int(param(next(f for f in got if f.startswith("lcall;")), "id")))
     got = a.frames(0.5)
     check("she is told who by",
           any("настиг вас" in f for f in got if f.startswith("userMsg")), True)
@@ -446,8 +449,14 @@ try:
     got = b.frames(0.1)
     check("both sides see each other as enemies after preparation",
           any(f.startswith("lch;") and param(f, "enemy") == str(pid_a) for f in got), True)
-    # Back out to the map, where the rest of the scene expects them.
+    # Movement resumes after preparation; use the edge window to leave PvP.
+    edge = next(cell for cell in travel.exit_sides(caught_loc)
+                if cell not in caught_loc.obstacles)
     for who in (a, b):
+        who.send("moveTo;path=|%d|;" % edge)
+        moved = who.frames(0.3)
+        check("after the countdown a participant can move to the exit",
+              [param(f, "res") for f in moved if f.startswith("cmdAck;")], ["0"])
         who.send("chWorld;")
         check("out to the map again",
               any(f.startswith("gmap") for f in who.frames(wait=2)), True)
