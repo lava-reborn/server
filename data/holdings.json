@@ -1,14 +1,14 @@
 {
  "_meta": {
   "what": "Capturable sites: a boss whose kill hands the place to a clan, read by server/holdings.py (its docstring has the rules). One row a site; a city added later is a row here.",
-  "min_level": "RECOVERED. The map labels' «Захват возможен игроками 8 уровня при поддержке клана» (12 for the south warehouse; res/database/locations.xml 315-317): the level two living members of the clan who hurt the boss must have at the kill, and the level of the box's row (data/quests.json 765-767).",
+  "min_level": "RECOVERED. The map labels' «Захват возможен игроками 8 уровня при поддержке клана» (12 for the south warehouse; res/database/locations.xml 315-317): the level two living members of the clan who hurt the boss must have at the kill, and the level of the box's row (data/quests.json 765-767). Донгола's: 12, 16 and 16 (L323-L325; the boxes 768-770).",
   "squad": "DESIGNED, the plan's default 16: «отряд из 2+ членов клана убивает «Хозяина» в окне; уровень — по подписи».",
   "box_hours": "Kept in data/schedule.json, window wh_box: the labels' «Дележ добычи с 19:00 до 20:00».",
   "box_tenure_hours": "DESIGNED: a member takes the box's row only after this many hours in the clan, so that nobody is invited at 19:00 to collect and put out at 19:59.",
   "box_one_per_account": "DESIGNED: one character of an account collects a site's row a day.",
   "holding": "DESIGNED, the owner's decision of 2026-10-09: a clan holds a warehouse until another clan takes it; the clan spec (clans_spec.md:783) had «до следующего окна».",
   "raid": "DESIGNED: the boxes' «Проникнуть на северный/восточный/южный склад Вади Хальфы», quests 789-791 (texts.xml ids 26390-26395), 200000 afro once a day, are left out: who could take them is unknown.",
-  "left_out": "DESIGNED: 982 and 983, copies of 109 and 110 with the same bosses, have no map cell and capture nothing; Донгола's 112-114, Абу-Хамед's 128, 984 and 1380 wait for their stages (their flags mend for anybody, as before); Абу-Хамед's 288 under «Ангар в джунглях», across the river, is out of the game (data/retired.json, the owner's cut of everything across the river, 2026-10-13)."
+  "left_out": "DESIGNED: 982 and 983, copies of 109 and 110 with the same bosses, have no map cell and capture nothing; Абу-Хамед's 128, 984 and 1380 wait for their stages (their flags mend for anybody, as before); Абу-Хамед's 288 under «Ангар в джунглях», across the river, is out of the game (data/retired.json, the owner's cut of everything across the river, 2026-10-13). Донгола's three, 113, 114 and 112, are taken with the city (the owner's «и потом сделай донголу тоже», 2026-10-13; the plan's decision 25): the labels L323-L325 «Захват возможен игроками 12/16/16 уровня при поддержке клана», the boxes 768-770."
  },
  "squad": 2,
  "box_tenure_hours": 24,
@@ -19,6 +19,12 @@
   "wh_vostok": {"loc": 110, "boss": 7449, "flag": 1011, "box": 6825, "quest": 766, "min_level": 8,
                 "title": "Восточный склад Вади-Хальфы"},
   "wh_ug": {"loc": 109, "boss": 7450, "flag": 1011, "box": 6826, "quest": 767, "min_level": 12,
-            "title": "Южный склад Вади-Хальфы"}
+            "title": "Южный склад Вади-Хальфы"},
+  "wh_dn_sever": {"loc": 113, "boss": 7451, "flag": 1011, "box": 6827, "quest": 768, "min_level": 12,
+                  "title": "Северный склад Донголы"},
+  "wh_dn_vostok": {"loc": 114, "boss": 7452, "flag": 1011, "box": 6828, "quest": 769, "min_level": 16,
+                   "title": "Восточный склад Донголы"},
+  "wh_dn_ug": {"loc": 112, "boss": 7453, "flag": 1011, "box": 6829, "quest": 770, "min_level": 16,
+               "title": "Южный склад Донголы"}
  }
 }

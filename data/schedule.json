@@ -18,6 +18,23 @@
    "to": 30,
    "why": "RECOVERED. The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 646), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
   },
+  "prison_dn": {
+   "daily": ["12:00", "16:00", "23:00"],
+   "minutes": 30,
+   "why": "RECOVERED (the owner's «и потом сделай донголу тоже», 2026-10-13). The uprising in Донгола's prison (m11, the blocks 618-622 under the yard 159, 5903,1996): the yard's map label «Тюрьма Донголы: Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml), the guard's call 62258 («каждый день в 12:00, 16:00 и 23:00 ... всего пол часа») and its hint «\"Охранять\" заключенных нужно в течение 30 минут», as Вади-Хальфа's prison_wh, at the same hours."
+  },
+  "prison_dn_gates": {
+   "of": "prison_dn",
+   "from": -15,
+   "to": 30,
+   "why": "RECOVERED lead, DESIGNED end, as prison_wh_gates (the owner's «и потом сделай донголу тоже», 2026-10-13): the label's «Внимание!!! Необходимо прибывать за 15 минут до встречи с охранниками». The gates of the prison open a quarter of an hour before the uprising and stay open while it lasts: the guards' ways into the blocks (634, 635), the station's ride to the yard (632) and the guard's hand-in of the invitation (636)."
+  },
+  "prison_dn_medics": {
+   "of": "prison_dn",
+   "from": 25,
+   "to": 30,
+   "why": "RECOVERED, as prison_wh_medics (the owner's «и потом сделай донголу тоже», 2026-10-13). The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 622), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
+  },
   "wh_box": {
    "daily": ["19:00"],
    "minutes": 60,
@@ -105,6 +122,30 @@
    "loc": 146,
    "types": [819],
    "why": "The same for m510_MasterLusher_3 on the third road 146 (5876,2031), from twenty past for five minutes (lusher_road3)."
+  },
+  {
+   "window": "prison_dn",
+   "loc": 620,
+   "types": [932, 933, 934, 935, 936],
+   "why": "RECOVERED creatures and place, the window's time (the owner's «и потом сделай донголу тоже», 2026-10-13). The prisoners m11_uf_Competitor_1..5 («Заключенный», 60388) in the northern cells (Prison_4, «Тюрьма: Северные камеры»), ten of them: they break out when the uprising begins and are gone when it ends, as 647's."
+  },
+  {
+   "window": "prison_dn",
+   "loc": 621,
+   "types": [932, 933, 934, 935, 936],
+   "why": "RECOVERED creatures and place, the window's time (the owner's «и потом сделай донголу тоже», 2026-10-13). The prisoners of the eastern cells (Prison_5, «Тюрьма: Восточные камеры»), ten of them, as the northern ones."
+  },
+  {
+   "window": "prison_dn",
+   "loc": 622,
+   "types": [2174],
+   "why": "RECOVERED creature and place, the window's time (the owner's «и потом сделай донголу тоже», 2026-10-13). The godfather m11_uf_godfather_2, «Беглый каторжник<Br>Хранитель общака» (60387), in the centre block (Prison_3), as 2173 in 646: a boss, once an uprising."
+  },
+  {
+   "window": "prison_dn_medics",
+   "loc": 622,
+   "types": [877, 878, 879],
+   "why": "RECOVERED people, place and time (the owner's «и потом сделай донголу тоже», 2026-10-13). Джеф, Аль-Назир and Томпсон (877-879) stand in Донгола's centre block too (its file), and take the armbands there for the last five minutes of its uprising."
   }
  ],
  "held_out": [
@@ -192,6 +233,24 @@
    "types": [765, 766, 767],
    "gate": "both",
    "why": "RECOVERED times. «Патроны и афро владельцам склада», taken and handed in at the box only while the share-out lasts; who may take them is data/holdings.json's (data/quests.json holders)."
+  },
+  {
+   "window": "prison_dn_gates",
+   "types": [632, 634, 635],
+   "gate": "both",
+   "why": "RECOVERED times (the owner's «и потом сделай донголу тоже», 2026-10-13). The ride to the prison, «Поехали!» (62262/62264: «В 12:00, 16:00 или 23:00 отправиться в тюрьму»), and the guards' gates «Тюрьма: западные/южные ворота» (62275/62274) lead there only for the uprising, from a quarter of an hour before it."
+  },
+  {
+   "window": "prison_dn_gates",
+   "types": [636],
+   "gate": "hand_in",
+   "why": "RECOVERED (the owner's «и потом сделай донголу тоже», 2026-10-13). Донгола's «Охранник санатория особого режима» is taken at the station any time and handed in at the prison when the guard needs hands (62259), as 158."
+  },
+  {
+   "window": "wh_box",
+   "types": [768, 769, 770],
+   "gate": "both",
+   "why": "RECOVERED times (the owner's «и потом сделай донголу тоже», 2026-10-13). Донгола's «Патроны и афро владельцам склада», taken and handed in at the box only while the share-out lasts: the labels L323-L325 «Дележ добычи с 19:00 до 20:00», the hour of Вади-Хальфа's (a row of its own, so that 765-767's stays as it is); who may take them is data/holdings.json's (holders)."
   }
  ],
  "loot": [
@@ -202,13 +261,21 @@
    "num": 1,
    "chance": 1.0,
    "why": "RECOVERED thing, DESIGNED chance. Red_Bandage, «Красная повязка ВХ» — «Красная повязка, сорванная с ваших соперников» (7323/7324): the proof the medics pay for («принесешь медикам доказательства отстрела урок», 62272). One on every prisoner and on the godfather, in the blocks only."
+  },
+  {
+   "locs": [620, 621, 622],
+   "mobs": [932, 933, 934, 935, 936, 2174],
+   "obj": 2476,
+   "num": 1,
+   "chance": 1.0,
+   "why": "RECOVERED thing, DESIGNED chance, as the row of Вади-Хальфа's blocks (the owner's «и потом сделай донголу тоже», 2026-10-13): the prisoners and the godfather of Донгола's uprising carry the same Red_Bandage, «Красная повязка ВХ» (7323/7324), which Джеф, Аль-Назир and Томпсон take in both prisons (164-168, the plan's decision 26: Донгола's own 4165 Red_Bandage_DN is not used, and the player reads the band's name «ВХ» here too). One each, in the cells and the centre only."
   }
  ],
  "keep_in": [
   {
    "types": [2476],
-   "locs": [644, 645, 646, 647, 648],
-   "why": "RECOVERED rule. Томас, who leads out of the prison, «При выходе отбирает все повязки» (the wiki's «Томас»): the armbands stay in the blocks, whichever way the player leaves -- Томас's «Выход», a death sent home, a login elsewhere. DESIGNED: and no other way either -- the frame of a thing kept in carries the quest flag and no exchange (server/events.py kept, items.static_info), so no letter, lot, barter or stall takes one out, and a death does not drop it."
+   "locs": [644, 645, 646, 647, 648, 618, 619, 620, 621, 622],
+   "why": "RECOVERED rule. Томас, who leads out of the prison, «При выходе отбирает все повязки» (the wiki's «Томас»): the armbands stay in the blocks, whichever way the player leaves -- Томас's «Выход», a death sent home, a login elsewhere. DESIGNED: and no other way either -- the frame of a thing kept in carries the quest flag and no exchange (server/events.py kept, items.static_info), so no letter, lot, barter or stall takes one out, and a death does not drop it. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the row holds Донгола's blocks too, 618-622: one row for the one armband of both prisons, since server/events.py take_back reads every keep_in row on its own -- a second row for 2476 would take the armbands away in Донгола's blocks for not being Вади-Хальфа's, and the other way round. The prisons touch nowhere: leaving either is leaving the row's places."
   }
  ]
 }

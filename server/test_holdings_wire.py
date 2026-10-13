@@ -6,7 +6,7 @@ What test_holdings.py checks in process, seen from the wire. In the Северн
 followed at once by a fellow about the flag's own id, which names the clan
 for any viewer -- a member of the holding clan with repair, a member of
 another clan and a player in no clan without it, nothing for sale to
-anybody. Донгола's flag (112), a warehouse nobody can take yet, is drawn as
+anybody. Абу-Хамед's flag (128), a warehouse nobody can take yet, is drawn as
 before: for sale, mending, no clan, no fellow. Then the admin's orders,
 queued as the panel and tools/admin_account.py queue them (clan_admin.py
 hold and release): a release sends everybody in the room the flag again
@@ -43,7 +43,9 @@ _st.close()
 CRED = {l: accounts.credential(l + RUN, "secret") for l in ("alice", "bob", "carol")}
 ALICE, BOB, CAROL = "Alice" + RUN, "Bob" + RUN, "Carol" + RUN
 WOLVES, JACKALS = "Волки " + RUN, "Шакалы " + RUN
-SEVER, DONGOLA = 111, 112
+# Донгола's three are sites since 2026-10-13 (the owner's «и потом сделай
+# донголу тоже»): Абу-Хамед's 128 is the flag of a warehouse nobody takes yet.
+SEVER, ELSEWHERE = 111, 128
 FLAG, BOX = 1011, 6824
 
 import testkit  # noqa: E402
@@ -219,10 +221,10 @@ try:
              after), ({"can_trade": 0, "can_repair": 0, "clan": wolves},
                       ("fellow", {"id": flag_id, "reg": wolves, "soc": WOLVES})))
 
-    # --- Донгола's flag: as it always was --------------------------------------------
-    got = goto(c, DONGOLA)
+    # --- Абу-Хамед's flag: as it always was ------------------------------------------
+    got = goto(c, ELSEWHERE)
     flag, after = flag_of(got)
-    check("Донгола's flag (112): for sale and mending, no clan",
+    check("Абу-Хамед's flag (128): for sale and mending, no clan",
           {k: flag.get(k) for k in ("can_trade", "can_repair", "clan")} if flag else None,
           {"can_trade": 1, "can_repair": 1, "clan": None})
     check("  ..and no fellow about it", about(got, flag["id"] if flag else -1, "fellow"), [])
