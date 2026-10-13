@@ -106,6 +106,10 @@ TRACKS = "sounds/tracks/"
 THUMB, ICON = 128, 64
 JPEG_Q, WEBP_Q, THUMB_Q, ICON_Q = 88, 90, 80, 85
 ART_LAYERS = ("background", "decals", "sprites")
+# The largest canvas render() draws, in pixels, before and after the scale
+# (64x128 cells are 2560 x 1920, about 4.9 M): anything bigger is refused
+# before Image.new takes the memory.
+MAX_CANVAS = 40_000_000
 LAYERS = ("background", "decals", "zones", "sprites", "mobs",
           "obstacles", "exits", "entries", "warentries", "spawns", "grid", "extrarow")
 OVERLAYS = ("obstacles", "exits", "entries", "warentries", "spawns", "grid", "extrarow")
@@ -766,7 +770,9 @@ class Art:
             px = 0
             for k in reversed(self._images):
                 px += self._images[k].size[0] * self._images[k].size[1]
-            while len(self._images) > 1 and px > 120_000_000:
+            # LAVA_ART_IMAGE_PIXELS: how many decoded pixels are kept (4
+            # bytes each); the admin panel's container keeps fewer
+            while len(self._images) > 1 and px > int(os.environ.get("LAVA_ART_IMAGE_PIXELS") or 120_000_000):
                 _k, old = self._images.popitem(last=False)
                 px -= old.size[0] * old.size[1]
         return img
@@ -980,6 +986,9 @@ def render(m, art=None, layers=ART_LAYERS, scale=1.0, order="reverse", extra_row
     t0 = time.time()
     W, H = m["width"], m["height"]
     cw, ch = W * L.CELL_W, H * L.ROW_H
+    if not (cw > 0 and ch > 0 and cw * ch <= MAX_CANVAS and cw * ch * scale * scale <= MAX_CANVAS):
+        raise ValueError("холст %dx%d клеток (%d x %d точек, масштаб %g) больше предела в %d точек"
+                         % (W, H, cw, ch, scale, MAX_CANVAS))
     canvas = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
     attrs = m["attrs"]
     library = attrs.get("library", "")

@@ -57,8 +57,11 @@ of its own and pushes it straight to the branch -- for main that is a deploy
 answered 503 and the process exits with RESTART_CODE: the container's
 entrypoint checks the new commit out and starts the editor again from it.
 A preview or a publish does the same when origin's engine (ENGINE: the
-server's code, the tables beside the quest table, this file) is not the
-checkout's: the merged table is checked by main's own code.
+server's code, the tables beside the quest table, this file and
+tools/publisher.py) is not the checkout's: the merged table is checked by
+main's own code. The git side of all this (fetch, the commit in an index of
+its own, the push, the restart) is tools/publisher.py, which the location
+editor's publish mode shares.
 """
 import argparse
 import datetime
@@ -68,12 +71,9 @@ import io
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
 import threading
-import time
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -94,6 +94,9 @@ import mobs    # noqa: E402
 import names   # noqa: E402
 import travel  # noqa: E402  -- which quests are rides (way_types)
 import world   # noqa: E402
+
+sys.path.insert(0, HERE)
+import publisher  # noqa: E402  -- tools/publisher.py, the git side of publish mode
 
 PORT = int(os.environ.get("LAVA_QUEST_EDITOR_PORT", "8095"))
 TABLE = os.path.join(ROOT, "data", "quests.json")
@@ -648,98 +651,43 @@ def page_layout(layout):
 
 REL_TABLE = "data/quests.json"
 REL_LAYOUT = "data/quest_layout.json"
-FETCH_EVERY = 15          # seconds: a page load fetches at most this often
-GIT_TIMEOUT = 60
-PUSH_TIMEOUT = 120
-PUSH_TRIES = 3            # a branch that moved between fetch and push: again
-DEEPEN = 500              # a shallow clone's history, deepened once for a base
-RESTART_CODE = 75         # the entrypoint checks out the new commit and restarts
-_SHA = re.compile(r"^[0-9a-f]{7,64}$")
+# The git side is tools/publisher.py, shared with the location editor; its
+# names stay importable from here.
+FETCH_EVERY = publisher.FETCH_EVERY
+GIT_TIMEOUT = publisher.GIT_TIMEOUT
+PUSH_TIMEOUT = publisher.PUSH_TIMEOUT
+PUSH_TRIES = publisher.PUSH_TRIES
+DEEPEN = publisher.DEEPEN
+RESTART_CODE = publisher.RESTART_CODE
+_SHA = publisher.SHA
 PUB = None                # the Publisher in publish mode, None in local mode
 # What check() runs and reads: the engine's code, the tables beside the quest
 # table, the editor itself. When origin's differ from the checkout's, the
 # merged table would be checked by the old ones: the editor restarts first.
 # The two files the page edits are merged, and never a reason to restart.
-ENGINE = ("server", "data", "tools/quest_editor.py")
+ENGINE = ("server", "data", "tools/quest_editor.py", "tools/publisher.py")
 
-# What a 502 says above git's own words (in English, LC_ALL=C).
-FETCH_FAILED = ("Свежий {branch} получить не удалось: GitHub не ответил или не пустил. "
-                "Если так и останется, проверьте ключ развёртывания на сервере "
-                "(README панели, раздел «Квесты»).")
-PUSH_FAILED = ("GitHub не принял коммит, и в {branch} он не попал. Проверьте, что у ключа "
-               "развёртывания есть право записи и что защита ветки {branch} его пропускает "
-               "(README панели, раздел «Квесты»).")
-GIT_FAILED = "Git в контейнере редактора не справился; его слова ниже."
-RESTARTING = "Редактор подтягивает свежий %s, повторите через несколько секунд"
-ENGINE_MOVED = ("В %s новый код проверок: редактор перезапускается на нём, "
-                "повторите через несколько секунд")
-
-
-class GitError(Exception):
-    """A git command that failed; the text is its stderr, trimmed."""
-
-
-class FetchError(GitError):
-    """The fetch from origin failed: origin did not answer or let us in."""
-
-
-class BaseMissing(Exception):
-    """The commit the page was opened on is not in the clone, even deepened."""
-
-
-class EngineMoved(Exception):
-    """origin's engine (ENGINE) is not the checkout's: restart before checking."""
-
-
-def _trim(text, limit=600):
-    lines = [l.strip() for l in (text or "").replace("\r", "\n").split("\n") if l.strip()]
-    out = "\n".join(lines)
-    return out if len(out) <= limit else "…" + out[-limit:]
-
-
-# What git says after any failed fetch or clone, whatever the cause.
-_GENERIC = ("could not read from remote repository", "please make sure you have the correct access",
-            "and the repository exists")
-
-
-def _reason(text, limit=200):
-    """The line of git's stderr that says what went wrong: the first
-    "fatal:" or "error:" one that is not git's closing boilerplate ("Please
-    make sure you have the correct access rights and the repository
-    exists."), else the first other line (ssh's own "Permission denied
-    (publickey)" has no prefix), else the last."""
-    lines = [l.strip() for l in (text or "").split("\n") if l.strip()]
-    told = [l for l in lines if not any(g in l.lower() for g in _GENERIC)]
-    pick = [l for l in told if l.lower().startswith(("fatal:", "error:"))] or told or lines[-1:]
-    line = pick[0] if pick else ""
-    return line if len(line) <= limit else line[:limit] + "…"
-
-
-def one_line(text):
-    """text as one line of a commit message: control characters (an escape,
-    a newline) and other unprintable ones become spaces, spaces squeezed."""
-    text = "".join(ch if ch.isprintable() else " " for ch in str(text))
-    return re.sub(r"\s+", " ", text).strip()
+FETCH_FAILED = publisher.FETCH_FAILED
+PUSH_FAILED = publisher.PUSH_FAILED
+GIT_FAILED = publisher.GIT_FAILED
+RESTARTING = publisher.RESTARTING
+ENGINE_MOVED = publisher.ENGINE_MOVED
+GitError = publisher.GitError
+FetchError = publisher.FetchError
+BaseMissing = publisher.BaseMissing
+EngineMoved = publisher.EngineMoved
+_trim = publisher.trim
+_reason = publisher.reason
+one_line = publisher.one_line
+clean_login = publisher.clean_login
+clean_note = publisher.clean_note
+header_text = publisher.header_text
 
 
 def plain_name(row, limit=50):
     """A row's name for a summary line: markup out, one line."""
     text = one_line(re.sub(r"<[^>]+>", " ", str((row or {}).get("name") or ""))) or "без названия"
     return text if len(text) <= limit else text[:limit - 1] + "…"
-
-
-def clean_login(raw):
-    """X-Lava-Admin as it may stand in a commit: printable, no <>, at most 64."""
-    text = "".join(ch for ch in (raw or "") if ch.isprintable() and ch not in "<>\r\n")
-    return text.strip()[:64].strip()
-
-
-def clean_note(raw, limit=2000):
-    """The admin's own words for the commit message: lines kept, no control
-    characters, not longer than limit."""
-    text = str(raw or "").replace("\r\n", "\n").replace("\r", "\n")
-    text = "".join(ch for ch in text if ch == "\n" or ch == "\t" or ch.isprintable())
-    return text.strip()[:limit].strip()
 
 
 def merge_rows(base, head, mine):
@@ -908,84 +856,18 @@ def commit_message(summary, note, login):
     return "\n".join(parts) + "\n"
 
 
-class Publisher:
+class Publisher(publisher.Publisher):
     """The clone publish mode works on (--repo): fetches, merges, commits and
-    pushes to origin/<branch>, one publish at a time."""
+    pushes to origin/<branch>, one publish at a time (tools/publisher.py for
+    the git side, the quests' merge here)."""
 
     def __init__(self, repo, branch="main", web=""):
-        self.repo = os.path.abspath(repo)
-        self.branch = branch
-        self.web = (web or "").rstrip("/")
-        self.lock = threading.Lock()          # one publish at a time
-        self._fetch_lock = threading.Lock()
-        self._fetched = 0.0
-        self._fetch_error = None
-        self.restarting = False
-        self.exit = _exit_now                 # a test puts its own here
-        self.before_push = None               # and a hook here, to move the branch
-
-    # -- git --------------------------------------------------------------------
-    def git(self, *args, data=None, env=None, timeout=GIT_TIMEOUT):
-        """git -C repo args...: its stdout; GitError with its stderr. An
-        argument list and a timeout, never a shell."""
-        full = dict(os.environ, GIT_TERMINAL_PROMPT="0", LC_ALL="C", LANG="C")
-        full.update(env or {})
-        try:
-            done = subprocess.run(["git", "-C", self.repo] + list(args), input=data,
-                                  capture_output=True, timeout=timeout, env=full)
-        except subprocess.TimeoutExpired:
-            raise GitError("git %s: no answer in %d s" % (args[0], timeout)) from None
-        except OSError as exc:
-            raise GitError("git: %s" % exc) from None
-        if done.returncode:
-            raise GitError(_trim(done.stderr.decode("utf-8", "replace"))
-                           or "git %s failed (%d)" % (args[0], done.returncode))
-        return done.stdout
-
-    @property
-    def remote_ref(self):
-        return "refs/remotes/origin/" + self.branch
-
-    def fetch(self):
-        """git fetch of the branch, now. Raises FetchError."""
-        with self._fetch_lock:
-            try:
-                self.git("fetch", "--quiet", "--no-tags", "origin",
-                         "+refs/heads/%s:%s" % (self.branch, self.remote_ref))
-                self._fetch_error = None
-            except GitError as exc:
-                self._fetch_error = str(exc)
-                raise FetchError(str(exc)) from None
-            finally:
-                self._fetched = time.monotonic()
-
-    def fetch_now_and_then(self):
-        """fetch, at most once per FETCH_EVERY: the reason it failed, or None."""
-        with self._fetch_lock:
-            if self._fetched and time.monotonic() - self._fetched < FETCH_EVERY:
-                return self._fetch_error
-        try:
-            self.fetch()
-        except GitError as exc:
-            return str(exc)
-        return None
-
-    def rev(self, name):
-        return self.git("rev-parse", "--verify", name + "^{commit}").decode().strip()
-
-    def has(self, sha):
-        try:
-            self.git("cat-file", "-e", sha + "^{commit}")
-            return True
-        except GitError:
-            return False
-
-    def show(self, rev, path):
-        """The file's bytes at rev, or None when it has no such file."""
-        try:
-            return self.git("cat-file", "blob", "%s:%s" % (rev, path))
-        except GitError:
-            return None
+        publisher.Publisher.__init__(
+            self, repo, branch, web, engine=ENGINE, merged=(REL_TABLE, REL_LAYOUT), section="Квесты",
+            ident={"author_email": ("LAVA_QUESTS_AUTHOR_EMAIL", "quests@lava-reborn.ru"),
+                   "committer_name": ("LAVA_QUESTS_COMMITTER_NAME", "Квест-редактор админки"),
+                   "committer_email": ("LAVA_QUESTS_COMMITTER_EMAIL", "quests@lava-reborn.ru")},
+            tmp_prefix="quest-publish-")
 
     def table_text(self, rev):
         raw = self.show(rev, REL_TABLE)
@@ -993,42 +875,14 @@ class Publisher:
             raise GitError("%s has no %s" % (rev[:12], REL_TABLE))
         return raw.decode("utf-8")
 
-    def info(self, rev="HEAD"):
-        out = self.git("log", "-1", "--format=%H%x00%cI%x00%an%x00%s", rev)
-        sha, date, author, subject = (out.decode("utf-8", "replace").strip().split("\0")
-                                      + ["", "", "", ""])[:4]
-        return {"sha": sha, "date": date, "author": author, "subject": subject}
-
-    def engine_moved(self, rev):
-        """The files under ENGINE that differ between the checkout and rev,
-        the table and the layout aside: what check() would read stale."""
-        names = self.git("diff", "--no-renames", "--name-only", "HEAD", rev, "--", *ENGINE)
-        return [n for n in names.decode("utf-8").split("\n") if n and n not in (REL_TABLE, REL_LAYOUT)]
-
     def generated_at(self, rev):
         """generated()'s shape, of the commit: its data/questgen_*.json."""
-        names = self.git("ls-tree", "--name-only", rev, "data/").decode("utf-8").split("\n")
         out = []
-        for p in sorted(n for n in names if n):
+        for p in sorted(self.ls(rev, "data")):
             base = p.rsplit("/", 1)[-1]
             if base.startswith("questgen_") and base.endswith(".json"):
                 out.append({"source": base, "rows": json.loads(self.show(rev, p))["quests"]})
         return out
-
-    def ensure(self, base):
-        """The base commit in the clone, deepening a shallow one once."""
-        if self.has(base):
-            return
-        if self.git("rev-parse", "--is-shallow-repository").strip() == b"true":
-            try:
-                self.git("fetch", "--quiet", "--no-tags", "--deepen=%d" % DEEPEN, "origin",
-                         "+refs/heads/%s:%s" % (self.branch, self.remote_ref),
-                         timeout=PUSH_TIMEOUT)
-            except GitError:
-                pass
-            if self.has(base):
-                return
-        raise BaseMissing(base)
 
     # -- the merge ----------------------------------------------------------------
     def prepare(self, rows, layout, base):
@@ -1096,10 +950,6 @@ class Publisher:
                 "problems": problems, "renumbered": {str(k): v for k, v in renumbered.items()},
                 "nothing": not table_changed and not layout_changed}
 
-    def failed(self, lead, exc):
-        """A 502's body: what happened in the page's words, git's own below."""
-        return {"error": lead.format(branch=self.branch), "git": str(exc)}
-
     def rebase(self, got):
         """What the page becomes if it takes main's version of the quests in
         conflict and keeps the rest of its edits: the merged rows (head's
@@ -1135,44 +985,6 @@ class Publisher:
         if got["conflicts"]:
             out["rebase"] = self.rebase(got)
         return 200, out
-
-    # -- the commit -----------------------------------------------------------------
-    def commit(self, head, files, message, login):
-        """A commit on head with files ({path: bytes}) in place, built in a
-        temporary index: the checkout and its index are never touched."""
-        tmp = tempfile.mkdtemp(prefix="quest-publish-")
-        try:
-            env = {"GIT_INDEX_FILE": os.path.join(tmp, "index")}
-            self.git("read-tree", head, env=env)
-            for path, data in files.items():
-                blob = self.git("hash-object", "-w", "--stdin", data=data).decode().strip()
-                listed = self.git("ls-tree", head, "--", path).decode().split()
-                mode = listed[0] if listed else "100644"
-                self.git("update-index", "--add", "--cacheinfo", "%s,%s,%s" % (mode, blob, path),
-                         env=env)
-            tree = self.git("write-tree", env=env).decode().strip()
-            env.update(
-                GIT_AUTHOR_NAME="%s (админка)" % login,
-                GIT_AUTHOR_EMAIL=os.environ.get("LAVA_QUESTS_AUTHOR_EMAIL") or "quests@lava-reborn.ru",
-                GIT_COMMITTER_NAME=os.environ.get("LAVA_QUESTS_COMMITTER_NAME") or "Квест-редактор админки",
-                GIT_COMMITTER_EMAIL=os.environ.get("LAVA_QUESTS_COMMITTER_EMAIL") or "quests@lava-reborn.ru")
-            return self.git("commit-tree", tree, "-p", head, "-F", "-",
-                            data=message.encode("utf-8"), env=env).decode().strip()
-        finally:
-            shutil.rmtree(tmp, ignore_errors=True)
-
-    def push(self, sha):
-        """True when origin took it, False when the branch moved meanwhile (a
-        non-fast-forward); GitError for anything else."""
-        try:
-            self.git("push", "--quiet", "origin", "%s:refs/heads/%s" % (sha, self.branch),
-                     timeout=PUSH_TIMEOUT)
-            return True
-        except GitError as exc:
-            text = str(exc)
-            if "[rejected]" in text or "non-fast-forward" in text or "fetch first" in text:
-                return False
-            raise
 
     def publish(self, rows, layout, base, note, login):
         """(status, body) of POST /api/publish."""
@@ -1232,34 +1044,6 @@ class Publisher:
         return 502, {"error": "%s уходил вперёд во время публикации %d раза подряд: повторите"
                               % (self.branch, PUSH_TRIES)}
 
-    def _about(self, sha):
-        """info(sha), or as much as is known: a reply about a commit already
-        pushed must not turn into an error."""
-        try:
-            return self.info(sha)
-        except GitError:
-            return {"sha": sha, "date": "", "author": "", "subject": ""}
-
-    # -- restarting --------------------------------------------------------------------
-    def restart(self):
-        """Exit with RESTART_CODE once no publish is running, so the entrypoint
-        checks out what origin has now and starts the editor from it."""
-        if self.restarting:
-            return
-        self.restarting = True
-
-        def go():
-            with self.lock:
-                time.sleep(0.2)               # the 503 is on its way out
-                sys.stdout.flush()
-                sys.stderr.flush()
-                self.exit(RESTART_CODE)
-        threading.Thread(target=go, daemon=True).start()
-
-
-def _exit_now(code):
-    os._exit(code)
-
 
 def configure(repo, branch="main", web=""):
     """Publish mode on the clone repo: the table and the layout are its."""
@@ -1278,14 +1062,6 @@ def entry():
     js = re.search(r'<script[^>]*\ssrc="(?:\./|/)?(assets/[^"]+\.js)"', html)
     css = re.findall(r'<link[^>]*\shref="(?:\./|/)?(assets/[^"]+\.css)"', html)
     return {"js": js.group(1) if js else None, "css": css}
-
-
-def header_text(raw):
-    """A header http.server read as Latin-1, back to the UTF-8 it was sent in."""
-    try:
-        return raw.encode("latin-1").decode("utf-8")
-    except (UnicodeEncodeError, UnicodeDecodeError):
-        return raw
 
 
 _KEY = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")

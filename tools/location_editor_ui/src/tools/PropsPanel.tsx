@@ -43,7 +43,7 @@ export default function PropsPanel(props: {
       </Field>
       <dl className="facts">
         <dt>Номер</dt>
-        <dd>{m.id}</dd>
+        <dd>{typeof m.id === "string" ? "получит при публикации" : m.id}</dd>
         <dt>Размер</dt>
         <dd>
           {m.width} × {m.height} клеток
