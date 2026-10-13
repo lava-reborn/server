@@ -23,7 +23,14 @@ like's icon at ours, classes/<folder>/<name>/ico.swf; the server lays the
 same rows into items.catalogue(), so root_of, slot_of and every reader of
 the catalogue see our type as the client does. A table that does not read,
 or that names a type, a name or an icon the original already has, stops
-both: the server at start, the release at build.
+both: the server at start, the release at build. The local stand serves
+the same file and icons on its /res/ (bootstrap_http), what a release
+carries.
+
+An objects.xml read with rows in our range is a release's: the launcher
+writes the release's file into the player's client, and the owner's own
+client is one. Those rows are ours, as the release had them, so every
+reader drops them first (originals) and lays the current ones on.
 
 The first of them (the owner's «поставь ловеласа у Гали и за афро и за
 голд», 2026-10-13): the gold copies of Чёрный Ловелас[12]'s pieces. The
@@ -98,14 +105,36 @@ def load(path=PATH):
     return parse(doc)
 
 
+# A row of database/objects.xml as the client and items.catalogue read it,
+# and a whole row with its line end, which objects_xml takes out of our range.
+TABLE_ROW = re.compile(r'<object type_id="(\d+)" root_type_id=\s*"(\d+)" name="([^"]*)"')
+ROW_LINE = re.compile(r'<object type_id="(\d+)"[^>]*/>[ \t]*(?:\r?\n)?')
+
+
+def table(data):
+    """type -> (root, name) out of a database/objects.xml, bytes or text."""
+    if isinstance(data, bytes):
+        data = data.decode("ascii", "replace")
+    return {int(m.group(1)): (int(m.group(2)), m.group(3)) for m in TABLE_ROW.finditer(data)}
+
+
+def originals(read):
+    """A table as read, without its rows in our range. The original has
+    none there, so such a row is ours -- a release's, as it is now or as an
+    older release had it -- wherever the table was read: the objects.xml of
+    a client the launcher has installed is the release's. What is left is
+    the original's, which is what rows() checks ours against."""
+    return {t: v for t, v in read.items() if not FIRST <= t <= LAST}
+
+
 def rows(original, own=None):
     """type -> (root, name) of ours, checked against the original's
     catalogue (items.catalogue's shape: type -> (root, name)): like is one
-    of its types with an icon folder, and neither our id nor our name is
-    already one of its. A row the original already holds as it is -- a
-    release's objects.xml, ours included, read as the original -- is ours
-    all the same."""
+    of its types with an icon folder, and our name is none of its. Rows of
+    the table in our range are left out first (originals): ours, current or
+    stale, never the original's."""
     own = load() if own is None else own
+    original = originals(original)
     by_name = {n.lower(): t for t, (_r, n) in original.items()}
     out = {}
     for t, rec in sorted(own.items()):
@@ -115,13 +144,10 @@ def rows(original, own=None):
         if like[0] not in FOLDERS:
             raise Refused("item %d: like %d has root %d, which has no icon folder"
                           % (t, rec["like"], like[0]))
-        mine = (like[0], rec["name"])
-        if t in original and original[t] != mine:
-            raise Refused("item %d: the original has this type, %s" % (t, original[t][1]))
         other = by_name.get(rec["name"].lower())
-        if other is not None and other != t:
+        if other is not None:
             raise Refused("item %d: the original's %d is named %s" % (t, other, rec["name"]))
-        out[t] = mine
+        out[t] = (like[0], rec["name"])
     return out
 
 
@@ -130,16 +156,33 @@ def icon_path(root, name):
     return "classes/%s/%s/ico.swf" % (FOLDERS[root], name)
 
 
+def icons(read, own=None):
+    """Our icon path -> the original's icon path it is a copy of: like's
+    (rows())."""
+    own = load() if own is None else own
+    original = originals(read)
+    return {icon_path(root, name): icon_path(*original[own[t]["like"]])
+            for t, (root, name) in rows(original, own).items()}
+
+
 def objects_xml(original_bytes, mine):
     """The original's database/objects.xml with a row for each of ours
     (rows()) before its closing tag, in its own format: what the release
-    ships. Rows the file already has stay as they are, once."""
+    ships. Any row the file has in our range goes first -- an objects.xml a
+    release has written, read back, gives the same file, and a row of ours
+    that is no longer (a rename, a type taken out) goes with it."""
     text = original_bytes.decode("ascii")
+    text = ROW_LINE.sub(lambda m: "" if FIRST <= int(m.group(1)) <= LAST else m.group(0), text)
     end = text.rfind("</data>")
     if end < 0:
         raise Refused("database/objects.xml has no </data>")
-    add = "".join(ROW % (t, root, name) for t, (root, name) in sorted(mine.items())
-                  if (ROW % (t, root, name)) not in text)
+    add = "".join(ROW % (t, root, name) for t, (root, name) in sorted(mine.items()))
     if add and not text[:end].endswith("\n"):
         add = "\n" + add
     return (text[:end] + add + text[end:]).encode("ascii")
+
+
+def release_xml(data, own=None):
+    """What the release ships as database/objects.xml, made from the one at
+    hand, the original's or a release's: objects_xml with rows()."""
+    return objects_xml(data, rows(table(data), own))

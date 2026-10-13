@@ -263,15 +263,13 @@ _SERIES = re.compile(r"^([a-z_]+?)_(\d+)$")
 def catalogue():
     """type_id -> (root_type_id, internal name), from the client's own table
     and the types of our own (data/own_items.json, own_items.py), which the
-    release's objects.xml carries as rows of the same table."""
+    release's objects.xml carries as rows of the same table. Rows of our
+    range in the file read -- a release's, the launcher's install of it,
+    perhaps an older one -- give way to the current ones (own_items.originals)."""
     global _CATALOGUE
     if _CATALOGUE is None:
         txt = world._read(os.path.join(world.RES, "database", "objects.xml"))
-        table = {
-            int(m.group(1)): (int(m.group(2)), m.group(3))
-            for m in re.finditer(
-                r'<object type_id="(\d+)" root_type_id=\s*"(\d+)"'
-                r' name="([^"]*)"', txt)}
+        table = own_items.originals(own_items.table(txt))
         table.update(own_items.rows(table))
         _CATALOGUE = table
     return _CATALOGUE

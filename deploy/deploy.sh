@@ -81,9 +81,14 @@ fi
 # client/base.txt has them; else nothing goes up, before anything is done.
 # A path the original lacks -- a new place of ours, 1381 and up -- is
 # never sent at all, whatever the client holds there (slice_excludes).
+# database/objects.xml is held the same way: the release writes its own,
+# with a row for each item type of ours (data/own_items.json,
+# server/own_items.py), and the launcher puts it into the client; the
+# server lays those rows on the original's by itself (items.catalogue).
 slice_excludes=()
 ours_in_slice() {
   {
+    echo database/objects.xml
     (cd "$HERE/client/files" && find . -type f | sed 's|^\./||')
     if [ -d "$HERE/data/locations/static" ]; then
       (cd "$HERE/data/locations/static" && find . -maxdepth 1 -type f -name '*.xml' \
@@ -110,8 +115,8 @@ check_slice() {
     fi
     if [ "$have" != "$want" ]; then
       echo "slice: $RES_SRC/$rel is not the original's (client/base.txt: $want);" \
-           "client/files or data/locations has its own copy, which the server never" \
-           "reads from /opt/lava/res" >&2
+           "the release has its own copy (client/files, data/locations, data/own_items.json)," \
+           "which the server never reads from /opt/lava/res" >&2
       bad=1
     fi
   done < <(ours_in_slice)

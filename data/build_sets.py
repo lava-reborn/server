@@ -62,7 +62,10 @@ WHAT COMES FROM WHERE
   bonuses  the wiki's set page, the variant's column (a lone column serves
            both); where the page's table is not one wiki_items.json parses,
            transcribed from its wikitext (TRANSCRIBED); none where the page
-           says none; designed like the numbers where there is no page.
+           says none; designed like the numbers where there is no page, and
+           for Чёрный Ловелас, whose page gives Штурм-М[15]'s column to a set
+           sold at 12. A designed G lies between the neighbours' G pieces and
+           G columns where both have a G.
   words    each set's piece names and descriptions (SOURCES): the wiki's or
            the original's, never a line about a dead former owner.
 
@@ -242,9 +245,17 @@ SOURCES = {
             pants=("Штаны пустынника", "Штаны пустынника", WIKI),
             boots=("Сапоги пустынника", "Сапоги пустынника", WIKI))),
     # No piece pages on the wiki: numbers designed. Words the original's
-    # (texts.xml 15108-15117), the set's name row 11120 its own.
+    # (texts.xml 15108-15117), the set's name row 11120 its own. The set
+    # page's bonuses (TRANSCRIBED) are Штурм-М[15]'s A column word for word,
+    # an event set's that was never sold -- its Цена комплекта is blank, its
+    # pieces ask Стрельба 7. Sold on the ladder at 12 since 2026-10-13, with
+    # its pieces designed between Пустынник and Спецназ, it gets its bonuses
+    # the same way (designed_bonuses), so that its power is its rung's.
     "Чёрный Ловелас": dict(
-        page="Снаряжение Чёрного Ловеласа", bonus="text",
+        page="Снаряжение Чёрного Ловеласа", bonus="design",
+        bonus_why="the wiki's Снаряжение Чёрного Ловеласа gives Штурм-М[15]'s A column word for "
+                  "word (an event set, never sold: its Цена комплекта is blank); sold at 12 since "
+                  "2026-10-13, the set takes its rung's power instead",
         desc=lit("texts.xml 11121",
                  "Комплекс снаряжения легендарной антитеррористической группы «ЛОВЕЛАС»."),
         pieces=dict(
@@ -398,7 +409,9 @@ SOURCES = {
 
 # Set pages whose table wiki_items.json does not parse, transcribed from
 # their wikitext in data/wiki/pages.json: K pieces -> {bonus: value}. Both
-# are one column.
+# are one column. Снаряжение Чёрного Ловеласа's serves no set since its set
+# is sold (SOURCES: designed); it stays here, the page's word, should the
+# owner want it back with a price to match.
 TRANSCRIBED = {
     "Снаряжение Чёрного Ловеласа": {
         2: {"hp": 50, "st": 20},
@@ -850,9 +863,10 @@ META = {
     "designed": "DESIGNED only where the wiki is silent or contradicts itself, and each such "
                 "place says so in its set's _designed: a variant column the wiki does not have, "
                 "the ladder's Стрельба where a page asks another, four prices a page gives that "
-                "its own set page refutes, and three sets with no numbers on the wiki at all "
+                "its own set page refutes, three sets with no numbers on the wiki at all "
                 "(Чёрный Ловелас's pieces, Дредноут, Паладин), interpolated between their "
-                "neighbours on the ladder.",
+                "neighbours on the ladder, and Чёрный Ловелас's bonus, which its page copies "
+                "from Штурм-М[15], designed the same way since the set is sold.",
     "rules": [
         "Pieces: the layout's A piece for each slot (or quest piece, _Q_); the G variant is the "
         "G of the same series and level, the same icon in gold. A set of quest pieces is its "
@@ -898,24 +912,30 @@ META = {
         "says so.",
         "Set bonuses per K pieces worn, from the set page's column (a lone column serves every "
         "variant); cumulative, K=5 adds to what 2..4 gave, the way the client's tooltip lights "
-        "its lines. Снаряжение Чёрного Ловеласа and Темное Эхо are transcribed from the page's "
-        "wikitext, which wiki_items.json does not parse. Вещи Беженца has none ('Дополнительных "
-        "бонусов и параметров не предусмотрено').",
+        "its lines. Темное Эхо is transcribed from the page's wikitext, which wiki_items.json "
+        "does not parse. Вещи Беженца has none ('Дополнительных бонусов и параметров не "
+        "предусмотрено'). Снаряжение Чёрного Ловеласа's column is Штурм-М[15]'s A word for word "
+        "(+20 action points at three pieces), an event set's that was never sold (its Цена "
+        "комплекта is blank): since the set is sold at 12 (2026-10-13) its bonuses are "
+        "designed, as below, and the page's stay in data/build_sets.py (TRANSCRIBED), served "
+        "nowhere.",
         "Модификация паладин is Апокалипсис's table: the page lists the five Апокалипсис pieces "
         "and its 300 G is their sum; only its title and blurb are Паладин's.",
         "DESIGNED sets (no numbers on the wiki): each number of each piece linear between the "
         "nearest rungs below and above that have wiki numbers, by level -- value = low + (high - "
         "low) x (level - low level) / (high level - low level), half up -- from their A (or Q) "
         "pieces in the same slot; afro prices to whole thousands; Телосложение asked likewise, a "
-        "requirement only one neighbour has is not carried; the G copies the A's numbers, its "
-        "price at 4000 afro = 1 G. A set with no wiki page gets its bonuses the same way, K by K "
-        "and bonus by bonus, 0 where a neighbour has none.",
+        "requirement only one neighbour has is not carried; the G lies between the neighbours' "
+        "G pieces where both have a G (else it copies the A's numbers), its price the A's at "
+        "4000 afro = 1 G. A set with no wiki page gets its bonuses the same way, K by K and "
+        "bonus by bonus (its G between the neighbours' G columns where its pieces are), 0 where "
+        "a neighbour has none; so does Чёрный Ловелас. Its full set (pieces and bonuses) thus "
+        "lies between its neighbours', as its price does.",
         "Not carried: a piece's own attribute bonus (the wiki's 'Бонусы к атрибутам') has no "
         "field in server/sets.py ITEM_FIELDS; it is kept under the piece's _bonus_attribs, "
         "unread, until it has one. Nor 'Допустимость продажи: Нет' of the quest pieces.",
         "Wiki numbers kept although odd, for the owner to judge: Пончо's Выносливость 45 at the "
-        "first rung; Снаряжение Чёрного Ловеласа's bonuses are Штурм-М's A column word for word "
-        "(+20 action points at three pieces); on the owner's ladder Магриб (Армейские вещи, 4 G "
+        "first rung; on the owner's ladder Магриб (Армейские вещи, 4 G "
         "the set) stands above Странник (5 G) and Красное Эхо (500 000 afro) above Штурм-М "
         "(700 000), both weaker than the rung below; Броня пустынника (G) and Ботинки легионера "
         "(G) wear out sooner than their A, as their pages say; Апокалипсис asks 5 in every "
@@ -1079,14 +1099,30 @@ def designed_set(plan, anchors, built):
         if plan["level"]:
             need["Стрельба"] = plan["level"]
         base[slot] = (rec, ordered_need(need))
+    # The G between the neighbours' G pieces (their pages' G columns) where
+    # both have a G, priced as the A; else the A's numbers. A G column is
+    # stronger than its A, so a G copied from the A would stand below the
+    # rung under it (Чёрный Ловелас (G) against Пустынник (G)).
+    gold = None
+    if lo is not hi and all("G" in built[n["name"]]["variants"] for n in (lo, hi)):
+        gold = {}
+        for slot in SLOTS:
+            rec, need = interpolate(built[lo["name"]]["variants"]["G"]["members"][slot],
+                                    built[hi["name"]]["variants"]["G"]["members"][slot], t)
+            rec["cost"] = base[slot][0]["cost"]
+            if plan["level"]:
+                need["Стрельба"] = plan["level"]
+            gold[slot] = (rec, ordered_need(need))
     for v in plan["variants"]:
         designed = list(plan["notes"]) + [why]
         if v == "G":
-            designed.append("G: the A's numbers, priced at 4000 afro = 1 G")
+            designed.append("G: between %s (G) and %s (G), their G pieces, priced as the A at "
+                            "4000 afro = 1 G" % (lo["name"], hi["name"]) if gold else
+                            "G: the A's numbers, priced at 4000 afro = 1 G")
         rec = new_set(plan, v, "numbers designed", designed)
         for slot in SLOTS:
             word, _page, text, note = words(plan, slot)
-            fields, need = base[slot]
+            fields, need = (gold or base)[slot] if v == "G" else base[slot]
             piece = {"type": plan["variants"][v][slot], "name": label(word, plan["level"], v),
                      "desc": text, "_wiki": None}
             if note:
@@ -1106,6 +1142,7 @@ def designed_set(plan, anchors, built):
     base_v = "A" if "A" in plan["variants"] else "Q"
     out["base"] = {s: dict(p, need=dict(p["need"])) for s, p in out["variants"][base_v]["members"].items()}
     out["anchors"] = (lo["name"], hi["name"], t)
+    out["gold"] = gold is not None
     return out
 
 
@@ -1131,23 +1168,37 @@ def set_bonuses(plan, done):
         per = set_bonus_table(page)
         note = "bonus wiki %s%s" % (page, " (one column)" if "*" in per else "")
     done["bonus"] = per.get("A", per.get("*"))
+    done["bonus_of"] = {}
     for v, rec in done["variants"].items():
         b = per.get(v, per.get("*"))
+        done["bonus_of"][v] = b
         rec["bonus"] = lines(b)
         rec["_source"] += "; " + note
 
 
 def designed_bonuses(plan, anchors, built):
+    """Each K and each bonus between the neighbours' columns: the A (or Q)
+    ones, and for a G whose pieces were designed between the neighbours' G
+    (designed_set) their G columns."""
     lo, hi = neighbours(plan["level"], anchors)
     lo, hi = lo or hi, hi or lo
     t = 0.0 if hi["level"] == lo["level"] else (plan["level"] - lo["level"]) / float(hi["level"] - lo["level"])
     b = interpolate_bonus(built[lo["name"]]["bonus"], built[hi["name"]]["bonus"], t)
     built[plan["name"]]["bonus"] = b
-    for rec in built[plan["name"]]["variants"].values():
-        rec["bonus"] = lines(b)
-        rec["_designed"].append("bonus: no set page on the wiki; each K and each bonus between %s "
-                                "(%d) and %s (%d), 0 where one has none, half up"
-                                % (lo["name"], lo["level"], hi["name"], hi["level"]))
+    gold = built[plan["name"]].get("gold") and all(
+        "G" in built[n["name"]]["bonus_of"] for n in (lo, hi))
+    why = plan["src"].get("bonus_why") or "no set page on the wiki"
+    for v, rec in built[plan["name"]]["variants"].items():
+        if v == "G" and gold:
+            rec["bonus"] = lines(interpolate_bonus(built[lo["name"]]["bonus_of"]["G"],
+                                                   built[hi["name"]]["bonus_of"]["G"], t))
+            cols = " (their G columns)"
+        else:
+            rec["bonus"] = lines(b)
+            cols = ""
+        rec["_designed"].append("bonus: %s; each K and each bonus between %s (%d) and %s (%d)%s, "
+                                "0 where one has none, half up"
+                                % (why, lo["name"], lo["level"], hi["name"], hi["level"], cols))
         rec["_source"] += "; bonus designed"
 
 

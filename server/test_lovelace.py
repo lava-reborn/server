@@ -15,11 +15,14 @@ In process:
   2. the prices by the rule the afro ones were designed by (data/sets.json
      _meta): t = 2/3 between Пустынник[10] and Спецназ[13], piece by piece,
      afro to whole thousands and gold to the same grain, 1 000 afro = 0.25 G
-     at the wiki's 4 000 : 1 -- which is the A's price at that rate;
+     at the wiki's 4 000 : 1 -- which is the A's price at that rate; the G's
+     numbers between the neighbours' G pieces, as the A's between their A;
   3. the names in the table (names.ALL), as the ladder's A and G read;
-  4. the sets: five A one set, five G one set with the same bonus and the
-     same figure, and a mix of A and G two sets -- as every rung's A and G,
-     which the original named as two sets ([A] and [G] rows of texts.xml);
+  4. the sets: five A one set, five G one set with the same figure, each
+     with a bonus designed between its neighbours' columns (the wiki page's
+     is Штурм-М[15]'s, an event set's never sold), and a mix of A and G two
+     sets -- as every rung's A and G, which the original named as two sets
+     ([A] and [G] rows of texts.xml);
   5. Гали's stall at Портовый рынок Абри (187): the band's sets, A then G,
      helm to boots, Чёрный Ловелас last.
 Then on the wire (server.Session, in process): Гали's window is that stall,
@@ -56,6 +59,7 @@ import own_items  # noqa: E402
 import sets  # noqa: E402
 import setcraft  # noqa: E402
 import shop_bands  # noqa: E402
+import world  # noqa: E402
 from protocol import decode  # noqa: E402
 
 import testkit  # noqa: E402
@@ -128,16 +132,78 @@ check("a table of our own types is refused where it would clash with the origina
           {"60000": {"name": "helm x", "like": 11721}},          # no folder name
           {"60000": {"name": "helm_x", "like": 4242424}},        # like no type
           {"60000": {"name": "helm_x", "like": 11721},
-           "60001": {"name": "HELM_X", "like": 11722}})],         # one name twice
-      [False, True, True, True, True, True, True])
-check("  ..and a release's objects.xml, our rows in it, read as the original is ours all the same",
-      refused({"items": ok}, dict(cat)), None)
-xml = own_items.objects_xml(b"<?xml version='1.0'?>\n<data>\n<object type_id=\"11721\" "
-                            b"root_type_id= \"1\" name=\"helm_Bs_U_LVL_12_Q_mod00\" />\n</data>",
-                            {60000: (1, "helm_Bs_U_LVL_12_G_mod00")})
-check("  ..the row the release writes, in the original's format, once however often it is laid",
-      (xml.count(b'<object type_id="60000" root_type_id= "1" name="helm_Bs_U_LVL_12_G_mod00" />'),
-       own_items.objects_xml(xml, {60000: (1, "helm_Bs_U_LVL_12_G_mod00")}) == xml), (1, True))
+           "60001": {"name": "HELM_X", "like": 11722}},          # one name twice
+          {"60001": {"name": "helm_x", "like": 60000}})],        # like one of ours
+      [False, True, True, True, True, True, True, True])
+# The objects.xml of a client the launcher installed is the release's: our
+# rows in it, as that release had them -- this one's, or an older one's.
+STALE = dict(cat)
+STALE.update({60000: (1, "helm_renamed_G_mod00"), 60009: (1, "helm_dropped_G_mod00")})
+check("  ..and a release's objects.xml read as the original is not: its rows in our range are"
+      " ours, as they are now or as an older release had them (a rename, a type taken out)",
+      (refused({"items": ok}, dict(cat)), refused({"items": ok}, STALE),
+       own_items.rows(STALE, own_items.parse({"items": ok}))),
+      (None, None, {60000: (1, "helm_Bs_U_LVL_12_G_mod00")}))
+HEAD = (b"<?xml version='1.0'?>\n<data>\n<object type_id=\"11721\" "
+        b"root_type_id= \"1\" name=\"helm_Bs_U_LVL_12_Q_mod00\" />\n")
+MINE = {60000: (1, "helm_Bs_U_LVL_12_G_mod00")}
+xml = own_items.objects_xml(HEAD + b"</data>", MINE)
+stale_xml = (HEAD + b'<object type_id="60000" root_type_id= "1" name="helm_renamed_G_mod00" />\n'
+             b'<object type_id="60009" root_type_id= "1" name="helm_dropped_G_mod00" />\n</data>')
+check("  ..the row the release writes, in the original's format, once however often it is laid,"
+      " and the same file out of a release's with stale rows of ours",
+      (xml, own_items.objects_xml(xml, MINE) == xml, own_items.objects_xml(stale_xml, MINE) == xml),
+      (HEAD + b'<object type_id="60000" root_type_id= "1" name="helm_Bs_U_LVL_12_G_mod00" />\n'
+       b"</data>", True, True))
+with open(os.path.join(world.RES, "database", "objects.xml"), "rb") as fh:
+    ORIGINAL = own_items.objects_xml(fh.read(), {})       # the original's, whatever the res
+OLDER = ORIGINAL.replace(b"</data>", b'<object type_id="60000" root_type_id= "1" name="helm_ren'
+                         b'amed_G_mod00" />\n<object type_id="60009" root_type_id= "1" name="hel'
+                         b'm_dropped_G_mod00" />\n</data>')
+_read, _was = world._read, items._CATALOGUE
+try:
+    world._read = lambda _path: OLDER.decode("ascii")
+    items._CATALOGUE = None
+    seen = items.catalogue()
+except own_items.Refused as e:
+    seen = {"refused": str(e)}
+finally:
+    world._read, items._CATALOGUE = _read, _was
+check("  ..the server reads an older release's objects.xml as it reads the original:"
+      " items.catalogue() has the current rows of ours and none of the stale",
+      (seen == cat, seen.get(60000), 60009 in seen), (True, (1, "helm_Bs_U_LVL_12_G_mod00"), False))
+check("  ..and the release made out of it is the release made out of the original",
+      own_items.release_xml(OLDER) == own_items.release_xml(ORIGINAL) != ORIGINAL, True)
+
+# The local stand's /res/ (bootstrap_http, LAVA_HTTP_RES=1: run.sh, the
+# suites) serves the release's layer of ours as the release has it: without
+# it a branch tried against the original's res shows the gold pieces as
+# empty cells (SBase.getItem(60000) undefined). Its handler, in process.
+import bootstrap_http  # noqa: E402
+
+
+def served(path):
+    h = bootstrap_http.Handler.__new__(bootstrap_http.Handler)
+    got = []
+    h._send = lambda body, ctype="", code=200: got.append((code, body))
+    bootstrap_http.Handler._resource(h, path)
+    return got[0]
+
+
+code, body = served("/res/database/objects.xml")
+check("the stand's /res/database/objects.xml is the release's: a row for each of ours, the"
+      " original's rows as they are", (code, body == own_items.release_xml(ORIGINAL)), (200, True))
+ICONS = own_items.icons(cat)
+if all(os.path.isfile(os.path.join(world.RES, *p.split("/"))) for p in ICONS.values()):
+    pictures = {}
+    for mine, like in sorted(ICONS.items()):
+        with open(os.path.join(world.RES, *like.split("/")), "rb") as fh:
+            pictures[mine] = served("/res/" + mine) == (200, fh.read())
+    check("  ..and each one's icon, its quest piece's picture byte for byte, at the path the client"
+          " builds from that row", pictures,
+          {own_items.icon_path(*cat[t]): True for t in G_TYPES})
+else:
+    print("  --  no quest pieces' icons in %s; the stand's icons are not checked" % world.RES)
 
 # --- 2. the prices -----------------------------------------------------------------------
 print()
@@ -166,12 +232,28 @@ check("  ..the set: 167 000 afro or 41.75 G, between Пустынник's 100 00
        sum(price(t)[1] for t in members(DESERT_G)), sum(price(t)[0] for t in members(SPEC_A)),
        sum(price(t)[1] for t in members(SPEC_G))),
       (167000, 4175, 100000, 2500, 200000, 5000))
-check("the G is the A's numbers otherwise: armour, wear, weight, what it asks and adds",
-      [t for a, g in zip(A_TYPES, G_TYPES)
-       for t in [g] if any(items.params_of(a).get(k) != items.params_of(g).get(k) for k in (
-           "armor_class", "max_break_abs", "weight", "bonus_hp", "bonus_st", "bonus_od",
-           "bonus_cp", "bonus_ce", "need_attribs_m", "need_attribs", "need_skills_m",
-           "need_skills"))], [])
+NUMS = ("armor_class", "max_break_abs", "weight", "bonus_hp", "bonus_st", "bonus_od", "bonus_cp",
+        "bonus_ce")
+
+
+def between(lo, hi, key):
+    a, b = items.params_of(lo).get(key, 0), items.params_of(hi).get(key, 0)
+    return half_up(a + (b - a) * T)
+
+
+check("the numbers: t = 2/3 piece by piece -- armour, wear, weight, what it adds -- the A between"
+      " Пустынник's and Спецназ's A pieces, the G between their (G) ones",
+      [[items.params_of(t).get(k, 0) for k in NUMS] for t in A_TYPES + G_TYPES],
+      [[between(lo, hi, k) for k in NUMS] for lo, hi in zip(members(DESERT_A), members(SPEC_A))]
+      + [[between(lo, hi, k) for k in NUMS] for lo, hi in zip(members(DESERT_G), members(SPEC_G))])
+check("  ..so each gold piece is the stronger, as on every rung: armour, health, stamina, action"
+      " points", [g for a, g in zip(A_TYPES, G_TYPES)
+                  if any(items.params_of(g).get(k, 0) <= items.params_of(a).get(k, 0)
+                         for k in ("armor_class", "bonus_hp", "bonus_st", "bonus_od"))], [])
+check("  ..and asks what the A asks", [g for a, g in zip(A_TYPES, G_TYPES)
+                                       if any(items.params_of(a).get(k) != items.params_of(g).get(k)
+                                              for k in ("need_attribs_m", "need_attribs",
+                                                        "need_skills_m", "need_skills"))], [])
 check("  ..the A exchanged, the G not, as every rung's; neither premium nor a quest's",
       [(items.params_of(t)["exchang"], items.params_of(t)["premium"], items.params_of(t)["quest"])
        for t in (A_TYPES[0], G_TYPES[0])], [(1, 0, 0), (0, 0, 0)])
@@ -236,12 +318,38 @@ def plus(*bs):
     return out
 
 
-check("the gold set adds what the afro one does, K by K: the wiki's one column of «Снаряжение"
-      " Чёрного Ловеласа» serves both", sets.frame(G),
-      dict(sets.frame(A), type=G, name=sets.NAME_ID_OFFSET + G, desc=sets.DESC_ID_OFFSET + G))
-check("  ..five pieces: +200 stamina, +17 crit, Сила 2, Телосложение 3, Восприятие 2, after"
-      " 2, 3 and 4 pieces' lines", RAW[str(G)]["bonus"]["5"],
-      {"st": 200, "cp": 17, "Сила": 2, "Телосложение": 3, "Восприятие": 2})
+def column(st):
+    return {int(k): line for k, line in RAW[str(st)]["bonus"].items()}
+
+
+def between_columns(lo, hi):
+    """K by K and bonus by bonus, t = 2/3, half up, 0 left out."""
+    out = {}
+    for k in sorted(set(column(lo)) | set(column(hi))):
+        a, b = column(lo).get(k, {}), column(hi).get(k, {})
+        line = {key: half_up(a.get(key, 0) + (b.get(key, 0) - a.get(key, 0)) * T)
+                for key in list(a) + [x for x in b if x not in a]}
+        line = {key: x for key, x in line.items() if x}
+        if line:
+            out[k] = line
+    return out
+
+
+check("the afro set's bonus: K by K between Пустынник's and Спецназ's columns, t = 2/3; the gold"
+      " set's between their (G) columns -- designed like the pieces, a rung's power",
+      (column(A), column(G)), (between_columns(DESERT_A, SPEC_A), between_columns(DESERT_G, SPEC_G)))
+check("  ..at three pieces +10 stamina, +4 anti-crit, Ловкость 1 (gold: +23, +4, Ловкость 2);"
+      " at five +38 stamina, +4 action points, +8 crit, Сила 1, Телосложение 2, Восприятие 1"
+      " (gold: +47, +4, +10, the same three)", [column(st)[k] for st in (A, G) for k in (3, 5)],
+      [{"st": 10, "ce": 4, "Ловкость": 1},
+       {"st": 38, "od": 4, "cp": 8, "Сила": 1, "Телосложение": 2, "Восприятие": 1},
+       {"st": 23, "ce": 4, "Ловкость": 2},
+       {"st": 47, "od": 4, "cp": 10, "Сила": 1, "Телосложение": 2, "Восприятие": 1}])
+check("  ..the wiki page's own column, Штурм-М[15]'s A word for word (+20 action points at three),"
+      " serves neither", [column(st) == column(11002) for st in (A, G)]
+      + [column(st)[3].get("od", 0) for st in (A, G)], [False, False, 0, 0])
+check("  ..the same figure, 111", (sets.frame(A)["res"], sets.frame(G)["res"]),
+      (111, 111))
 check("five A are one set, five G one set, each with its five-piece bonus",
       (sets.pieces(A_TYPES), sets.pieces(G_TYPES), sets.bonuses(A_TYPES), sets.bonuses(G_TYPES)),
       ({A: 5}, {G: 5}, bonus_of(A, 5), bonus_of(G, 5)))
@@ -422,15 +530,17 @@ async def main():
           [wear(sess, t, s) for t, s in zip(A_TYPES[:2] + G_TYPES[2:], SLOTS)], [[0]] * 5)
     check("  ..its card: the pieces' own and two sets' -- two of the afro, three of the gold",
           gear(sess), want_gear(A_TYPES[:2] + G_TYPES[2:]))
-    check("  ..which is more than five pieces of no set would give: +20 action points, Ловкость 1",
-          (gear(sess)["od"] - sum(items.params_of(t)["bonus_od"] for t in mix),
-           gear(sess)["attribs"]), (20, [0, 1, 0, 0, 0]))
+    check("  ..which is more than five pieces of no set would give: +29 health, +46 stamina,"
+          " +4 anti-crit and Ловкость 2 -- no action points (Штурм-М's column gave 20)",
+          ([gear(sess)[k] - sum(items.params_of(t)["bonus_" + k] for t in mix)
+            for k in ("hp", "st", "od", "cp", "ce")], gear(sess)["attribs"]),
+          ([29, 46, 0, 0, 4], [0, 2, 0, 0, 0]))
     check("the gold helmet and vest in their place: accepted",
           [wear(sess, t, s) for t, s in zip(G_TYPES[:2], SLOTS)], [[0], [0]])
     check("  ..five of the gold set: the five-piece bonus on the card",
           gear(sess), want_gear(G_TYPES))
-    check("  ..Сила 2, Ловкость 1, Телосложение 3, Восприятие 2, Интеллект 1 of it",
-          gear(sess)["attribs"], [2, 1, 3, 2, 1])
+    check("  ..Сила 2, Ловкость 2, Телосложение 2, Восприятие 1 of it",
+          gear(sess)["attribs"], [2, 2, 2, 1, 0])
     worn = {r["slot"]: r["type_id"] for r in rows(sess) if r["slot"] in inventory.SET_SLOTS}
     check("  ..and the figure the set draws: 111", sets.look([worn.get(s) for s in inventory.SET_SLOTS]),
           111)

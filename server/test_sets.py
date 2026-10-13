@@ -120,11 +120,13 @@ LADDER = (
           "Сапоги пустынника"), (), ("table", "Пустынник")),
     # A quest series sold for afro and gold (the owner's 2026-10-13): its
     # quest pieces are the A, five types of our own the G (data/own_items.json),
-    # keyed by its first piece -- no row of the original names that set.
+    # keyed by its first piece -- no row of the original names that set. Its
+    # set page's bonuses are Штурм-М[15]'s A column, an event set's never
+    # sold; sold at 12, its bonuses are designed like its pieces.
     rung(12, "Чёрный Ловелас", 111, "Bs_U_LVL_12", {"A": 11120, "G": 60000},
          ("Шлем Чёрного Ловеласа", "Жилет Чёрного Ловеласа", "Броня Чёрного Ловеласа",
           "Штанишки Чёрного Ловеласа", "Ботинки Чёрного Ловеласа"), None,
-         ("text", "Снаряжение Чёрного Ловеласа"), named={"A": "Q"}),
+         ("design", "Снаряжение Чёрного Ловеласа"), named={"A": "Q"}),
     rung(13, "Спецназ", 10, "Set_M_LVL_17", {"A": 11206, "G": 11208},
          ("Шлем спецназа", "Куртка спецназа", "Броня спецназа", "Штаны спецназа",
           "Ботинки спецназа"), (), ("table", "Спецназ")),
@@ -462,7 +464,10 @@ check("  ..eighteen totals to hold them to", len(totals), 18)
 # between the nearest rungs below and above that have them, by level, from
 # their A (or quest) piece in the same slot, half up; afro prices to whole
 # thousands; Телосложение likewise, a requirement only one neighbour has is
-# not carried; Стрельба is the level. The G copies the A, priced at 4000 : 1.
+# not carried; Стрельба is the level. The G lies between the neighbours' G
+# pieces where both have a G -- a G column is stronger than its A, and a G
+# copied from the A would stand below the rung under it -- and copies the A
+# where one has none; either is priced as the A, at 4000 : 1.
 WIKI_RUNGS = [r for r in LADDER if r["pages"] is not None]
 
 
@@ -477,17 +482,26 @@ def base_types(r):
     return [by_name["%s_%s_%s_mod00" % (p, r["series"], v)] for p in PIECES]
 
 
+def gold_types(r):
+    return [by_name["%s_%s_G_mod00" % (p, r["series"])] for p in PIECES]
+
+
 designed_off = {}
 anchors = {}
+from_gold = []
 for g in GROUPS:
     if g["pages"] is not None:
         continue
     lo, hi, t = between(g["level"], WIKI_RUNGS)
     anchors[g["word"]] = (lo["word"], hi["word"], round(t, 3))
-    for slot, tt, a, b in zip(PIECES, g["types"], base_types(lo), base_types(hi)):
-        a, b = served(a), served(b)
+    gold = g["v"] == "G" and "G" in lo["keys"] and "G" in hi["keys"]
+    if gold:
+        from_gold.append(g["word"])
+    nums = (gold_types(lo), gold_types(hi)) if gold else (base_types(lo), base_types(hi))
+    for slot, tt, pa, pb, a, b in zip(PIECES, g["types"], base_types(lo), base_types(hi), *nums):
+        pa, pb, a, b = served(pa), served(pb), served(a), served(b)
         want = {key: half_up(a[key] + (b[key] - a[key]) * t) for _w, key in NUMBERS}
-        afro = half_up((a["cost"] + (b["cost"] - a["cost"]) * t) / 1000.0) * 1000
+        afro = half_up((pa["cost"] + (pb["cost"] - pa["cost"]) * t) / 1000.0) * 1000
         want["cost"], want["g_cost"] = (0, afro // 40) if g["v"] == "G" else (afro, 0)
         want["need"] = {k: half_up(a["need"][k] + (b["need"][k] - a["need"][k]) * t)
                         for k in a["need"] if k in b["need"] and k != "Стрельба"}
@@ -501,12 +515,15 @@ check("the three rungs the wiki has no numbers for sit between their neighbours"
                 "Дредноут": ("Тёмное Эхо", "Апокалипсис", 0.333),
                 "Паладин": ("Тёмное Эхо", "Апокалипсис", 0.667)})
 check("  ..and every number of their pieces is the rule's", designed_off, {})
+check("  ..the G between the neighbours' G for Чёрный Ловелас alone: Тёмное Эхо, under Дредноут"
+      " and Паладин, has no G", from_gold, ["Чёрный Ловелас"])
 check("  ..Броня Дредноута 806 armour for 280 000 afro, Броня Паладина (G) 975 for 80 G, "
-      "Броня Чёрного Ловеласа 109 for 50 000",
+      "Броня Чёрного Ловеласа 109 for 50 000, its (G) 130 for 12.50 G",
       [(items.params_of(by_name[n])["armor_class"], items.params_of(by_name[n])["cost"],
         items.params_of(by_name[n])["g_cost"]) for n in (
-          "armor_Exzo_M_LVL_18_A_mod00", "armor_Exzo_M_LVL_19_G_mod00", "armor_Bs_U_LVL_12_Q_mod00")],
-      [(806, 280000, 0), (975, 0, 8000), (109, 50000, 0)])
+          "armor_Exzo_M_LVL_18_A_mod00", "armor_Exzo_M_LVL_19_G_mod00", "armor_Bs_U_LVL_12_Q_mod00",
+          "armor_Bs_U_LVL_12_G_mod00")],
+      [(806, 280000, 0), (975, 0, 8000), (109, 50000, 0), (130, 0, 1250)])
 
 bad = {}
 for g in GROUPS:
@@ -749,9 +766,11 @@ for g in GROUPS:
     if g["bonus"][0] != "design":
         continue
     lo, hi, t = between(g["level"], BONUS_RUNGS)
-    designed_anchor[g["key"]] = (lo["word"], hi["word"])
-    a = as_lines(sets.frame(list(lo["keys"].values())[0]))
-    b = as_lines(sets.frame(list(hi["keys"].values())[0]))
+    designed_anchor[g["word"]] = (lo["word"], hi["word"])
+    # A G whose pieces lie between the neighbours' G takes their G columns.
+    v = "G" if g["v"] == "G" and g["word"] in from_gold else None
+    a = as_lines(sets.frame(lo["keys"][v] if v else list(lo["keys"].values())[0]))
+    b = as_lines(sets.frame(hi["keys"][v] if v else list(hi["keys"].values())[0]))
     per_k = {}
     for k in sets.PIECES:
         line = {}
@@ -762,13 +781,75 @@ for g in GROUPS:
         if line:
             per_k[k] = line
     designed_want[g["key"]] = frame_of(g, per_k)
-check("Дредноут and Паладин, with no set page, between Тёмное Эхо and Апокалипсис, K by K",
-      set(designed_anchor.values()), {("Тёмное Эхо", "Апокалипсис")})
+check("Дредноут and Паладин, with no set page, between Тёмное Эхо and Апокалипсис, K by K;"
+      " Чёрный Ловелас, its page Штурм-М's column, between Пустынник and Спецназ",
+      designed_anchor, {"Чёрный Ловелас": ("Пустынник", "Спецназ"),
+                        "Дредноут": ("Тёмное Эхо", "Апокалипсис"),
+                        "Паладин": ("Тёмное Эхо", "Апокалипсис")})
 check("  ..every frame of theirs is the rule's",
       {st: sets.frame(st) for st in designed_want}, designed_want)
 check("  ..Дредноут at five: +333 stamina, +17 crit, Ловкость 4, Телосложение 5, Восприятие 5",
       as_lines(sets.frame(11016))[5],
       {"st": 333, "cp": 17, "Ловкость": 4, "Телосложение": 5, "Восприятие": 5})
+check("  ..Чёрный Ловелас at three: +10 stamina, +4 anti-crit, Ловкость 1 -- not Штурм-М's +20"
+      " action points; at five +38 stamina, +4 action points, +8 crit and four attribute points",
+      [as_lines(sets.frame(st)).get(k) for st in (11120, 60000) for k in (3, 5)],
+      [{"st": 10, "ce": 4, "Ловкость": 1},
+       {"st": 38, "od": 4, "cp": 8, "Сила": 1, "Телосложение": 2, "Восприятие": 1},
+       {"st": 23, "ce": 4, "Ловкость": 2},
+       {"st": 47, "od": 4, "cp": 10, "Сила": 1, "Телосложение": 2, "Восприятие": 1}])
+
+
+# What a whole set gives its wearer: its pieces' own bonuses and every line
+# of its column (K = 2..5 are cumulative), health, stamina, action points,
+# crit, anti-crit and the points of attributes, skills and specialisations;
+# and its price, gold at the wiki's 4000 afro = 1 G. A designed rung -- its
+# numbers ours, not the wiki's -- gives no more and costs no less than the
+# rung above it, and no less and no more than the rung under it, variant by
+# variant (a neighbour without the variant by its A, or its quest set).
+POWER = ("hp", "st", "od", "cp", "ce", "points")
+
+
+def power(st):
+    s = sets.SETS[st]
+    out = dict.fromkeys(POWER, 0)
+    for t in s["members"].values():
+        p = items.params_of(t)
+        for key in POWER[:5]:
+            out[key] += p.get("bonus_" + key, 0)
+    for line in as_lines(sets.frame(st)).values():
+        for key, x in line.items():
+            out[key if key in POWER else "points"] += x
+    afro = sum(items.params_of(t)["cost"] + items.params_of(t)["g_cost"] * 40 for t in s["members"].values())
+    return out, afro
+
+
+def key_of(r, v):
+    return r["keys"].get(v) or r["keys"].get("A") or r["keys"]["Q"]
+
+
+out_of_rung, told = {}, {}
+for i, r in enumerate(LADDER):
+    if r["pages"] is not None:
+        continue
+    lo, hi = LADDER[i - 1], LADDER[i + 1]
+    for v in r["keys"]:
+        (mine, price), (low, p_low), (high, p_high) = (power(key_of(x, v)) for x in (r, lo, hi))
+        told[(r["word"], v)] = (mine, price)
+        for key in POWER:
+            if not low[key] <= mine[key] <= high[key]:
+                out_of_rung[(r["word"], v, key)] = (low[key], mine[key], high[key])
+        if not p_low <= price <= p_high:
+            out_of_rung[(r["word"], v, "price")] = (p_low, price, p_high)
+check("a designed rung's whole set lies between its neighbours': power and price, each variant",
+      out_of_rung, {})
+check("  ..Чёрный Ловелас: 89 health, 346 stamina, 20 action points, 17 crit, 15 anti-crit, 6 points"
+      " for 167 000 afro; its (G) 109, 417, 26, 19, 17, 7 for 41.75 G (Пустынник's 50, 300, 15, 14,"
+      " 10, 5 / 70, 350, 23, 17, 13, 5 under it, Спецназ's 110, 369, 25, 19, 19, 6 / 130, 451, 30,"
+      " 21, 21, 8 above)",
+      [told[("Чёрный Ловелас", v)] for v in ("A", "G")],
+      [(dict(hp=89, st=346, od=20, cp=17, ce=15, points=6), 167000),
+       (dict(hp=109, st=417, od=26, cp=19, ce=17, points=7), 167000)])
 check("Беженец adds nothing, in either variant (Вещи Беженца has no bonus), and draws no figure",
       [sets.frame(st) for st in (11218, 11221)],
       [dict(type=st, res=0, name=sets.NAME_ID_OFFSET + st, desc=sets.DESC_ID_OFFSET + st)
