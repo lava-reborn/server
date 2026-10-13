@@ -48,8 +48,9 @@ What the cut is, each part held here (the pattern of server/test_halfa_cut.py):
      («и ещё убери локацию торговцы одеждой в Абри»): off the map as the
      places above, its name hidden, its square painted over, no way and no
      quest into it; of its traders 5161 and 5181 stand in the markets of
-     Донгола and Абу-Хамед, 5160 nowhere, and the twenty things the two set
-     traders sold here Алима and Гали sell in the port market 187; whoever is
+     Донгола and Абу-Хамед, 5160 nowhere, and the things the two set traders
+     sold here (twenty; thirty since Чёрный Ловелас joined Абри's band on
+     2026-10-13) Алима and Гали sell in the port market 187; whoever is
      in it, or calls it home, goes to the port market by its own run_once,
      «retire-abri-clothes-2026-10-12» (the cut's above has run on production
      before the order).
@@ -573,10 +574,11 @@ try:
           where, {5160: [], 5161: [467, 469], MINERS: [467, 469]})
     sold = {t: sorted(items.stock_for(t, CLOTHES)) for t in SETS}
     port = set(items.stock_for(ALIMA, PORT)) | set(items.stock_for(GALI, PORT))
-    check("  ..the twenty things the two set traders sold here, Абри's band 8-12, Алима and Гали sell in"
-          " the port market 187", (len(sold[5160]), sold[5160] == sold[5161], sorted(set(sold[5160]) - port),
-                                  ALIMA in stood_in(PORT), GALI in stood_in(PORT)),
-          (20, True, [], True, True))
+    check("  ..the thirty things the two set traders sold here, Абри's band 8-12 (Налетчик, Пустынник"
+          " and, since 2026-10-13, Чёрный Ловелас, each A and G), Алима and Гали sell in the port"
+          " market 187", (len(sold[5160]), sold[5160] == sold[5161], sorted(set(sold[5160]) - port),
+                          ALIMA in stood_in(PORT), GALI in stood_in(PORT)),
+          (30, True, [], True, True))
     check("  ..its row held out of the room (5162/5163) stays, as the cut assembly shop 1055's does",
           sorted(r["types"] for r in SCHEDULE["held_out"] if r["loc"] == CLOTHES), [[5162, 5163]])
     check("no ambush on its cell nor beside it: the town's ground still",

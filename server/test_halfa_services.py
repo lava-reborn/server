@@ -58,6 +58,7 @@ import items  # noqa: E402
 import names  # noqa: E402
 import npcs  # noqa: E402
 import orig_texts  # noqa: E402
+import own_items  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
 import sets  # noqa: E402
@@ -78,9 +79,11 @@ ICON_FOLDER = {items.FIRE_ARM: "FireArm", items.WEAR: "WearItem", items.HEAL: "H
 
 
 def servable(t):
-    """A stall can show it: a frame, a name the preload has, an icon, a price."""
+    """A stall can show it: a frame, a name the preload has, an icon, a price.
+    A type of our own (data/own_items.json) draws the icon the release
+    copies from the original type it is like (client/build.py)."""
     p = items.params_of(t)
-    root, internal = cat[t]
+    root, internal = cat[own_items.load()[t]["like"]] if items.own(t) else cat[t]
     return bool(p) and names.known(p["name"]) and os.path.isfile(
         os.path.join(world.RES, "classes", ICON_FOLDER[root], internal, "ico.swf")) \
         and (p["cost"] > 0 or p["g_cost"] > 0)
@@ -158,15 +161,16 @@ try:
     # The two traders left at the market cut off the map, the ladder's sets of
     # the levels in their own names, A then G (test_halfa_fixups holds the
     # rule; 2026-09-28); 5160 and 5161 their city's band in Абри's market (and
-    # Донгола's, Абу-Хамед's: test_halfa_fixups, test_stall_bands).
+    # Донгола's, Абу-Хамед's: test_halfa_fixups, test_stall_bands) -- Чёрный
+    # Ловелас[12] among it since 2026-10-13.
     check("the clothing market by the owner's ladder: the levels in each trader's name, A then"
           " G, or at Абри's market its band -- and the town's miner's clothes, A then G",
           [items.stock_for(t, place) for t, place in ((5158, None), (5159, None), (5160, 378),
                                                       (5161, 378), (5181, None))],
           [both("Беженец[1]") + both("Колонист[2]") + both("Странник[4]") + both("Магриб[6]"),
            both("Налетчик[8]") + both("Пустынник[10]"),
-           both("Налетчик[8]") + both("Пустынник[10]"),
-           both("Налетчик[8]") + both("Пустынник[10]"),
+           both("Налетчик[8]") + both("Пустынник[10]") + both("Чёрный Ловелас[12]"),
+           both("Налетчик[8]") + both("Пустынник[10]") + both("Чёрный Ловелас[12]"),
            list(range(34480, 34485)) + list(range(34490, 34495))])
     check("the oasis: new models, the choice rounds and others, medicine",
           [len(items.stock_for(t, 62)) > 0 for t in (1224, 1227, 202)], [True] * 3)

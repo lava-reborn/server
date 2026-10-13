@@ -20,6 +20,14 @@ preload. items.static_info lays record() over the frame, names.py puts
 strings() into names.ALL, and inventory counts a reworked piece as its
 rung's (base_of) wherever it counts a set.
 
+A rung is reworked where its pieces are the original's A or G of their
+series, named so. Чёрный Ловелас[12] (sold for afro and gold since the
+owner's «за афро и за голд», 2026-10-13) is neither: its A is the
+original's quest series, whose mods the client has no pictures for, and its
+G five types of our own (data/own_items.json) with no mods at all. Its ten
+pieces are NOT_REWORKED, as they were while the set was a quest set; the
+window still upgrades into it and out of it at mod00 (window_entries).
+
 THE UPGRADER'S WINDOW (ss_create;s_type=5; the window itself is upgrader.py's,
 shared with the weapon recipes of craft.py). userInfo_Upgrader carries three
 parallel lists (Upgrader.as:13-19): in_types, out_types and costs, the costs
@@ -239,7 +247,7 @@ def _share(price, share):
 def _load_ladder():
     """The owner's rungs as the file writes them: set_type, level, variant,
     family and the five pieces, by level (data/sets.json; sets.py leaves
-    the level and variant out of its table)."""
+    the level and the family out of its table)."""
     with io.open(sets.PATH, encoding="utf-8") as fh:
         raw = json.load(fh)["sets"]
     out = []
@@ -273,18 +281,24 @@ def _catalogue():
 
 def _chains():
     """base type -> its eleven copies [mod00 .. mod10] for every A and G
-    piece of the ladder whose ten mods objects.xml has; and the ones it
-    has not, for the record."""
+    piece of the ladder whose ten mods objects.xml has; the ones it has
+    not, for the record; and the pieces that are not reworked at all: a
+    piece that is no A or G of its series by its internal name (Чёрный
+    Ловелас's A, the quest series _Q_), or a type of our own (its G,
+    items.own) -- the module's docstring."""
     cat = _catalogue()
     if not cat:
-        return {}, []
+        return {}, [], []
     by_name = {n: t for t, (_r, n) in cat.items()}
-    chains, missing = {}, []
+    chains, missing, unworked = {}, [], []
     for r in LADDER:
         if r["variant"] not in VARIANTS:
             continue
         for slot, base in r["members"].items():
             m = _MOD_NAME.match(cat[base][1])
+            if items.own(base) or (m and m.group(3) != r["variant"]):
+                unworked.append(base)
+                continue
             if not m or m.group(4) != "00":
                 missing.append(base)
                 continue
@@ -294,10 +308,10 @@ def _chains():
                 missing.append(base)
                 continue
             chains[base] = chain
-    return chains, missing
+    return chains, missing, unworked
 
 
-CHAINS, MISSING = _chains()
+CHAINS, MISSING, NOT_REWORKED = _chains()
 # type -> (its rung's piece, the mod), mod00 included.
 MOD_OF = {t: (base, k) for base, chain in CHAINS.items() for k, t in enumerate(chain)}
 
@@ -475,15 +489,20 @@ def name_of(type_id):
 
 # --- the upgrader's window ---------------------------------------------------------
 
-def _previous(r, variant):
-    """The rung of the variant just below r on the ladder, or None."""
-    below = [x for x in LADDER if x["variant"] == variant and x["level"] < r["level"]]
+def _previous(r, variant, reworked=False):
+    """The rung of the variant just below r on the ladder, or None; with
+    reworked, the nearest one below whose pieces have their mods (CHAINS)."""
+    below = [x for x in LADDER if x["variant"] == variant and x["level"] < r["level"]
+             and (not reworked or all(t in CHAINS for t in x["members"].values()))]
     return below[-1] if below else None
 
 
 def window_entries(slice_, services):
     """[(in type, out type, cost in hundredths)] of an upgrader of this
-    slice doing these services (the module's docstring)."""
+    slice doing these services (the module's docstring). The upgrade takes
+    a piece to the next rung up at mod00, a rung that is not reworked
+    (NOT_REWORKED) included, from its piece alone; the exchange is mod10
+    for mod05, between rungs that have them, over one that has not."""
     lo, hi = slice_["band"]
     out = []
     for variant in UPGRADE_VARIANTS:
@@ -493,18 +512,32 @@ def window_entries(slice_, services):
             prev = _previous(nxt, variant)
             if prev is None:
                 continue
+            swap = _previous(nxt, variant, reworked=True) \
+                if "exchange" in services and variant == "G" else None
             for slot in sets.SLOTS:
-                src = CHAINS.get(prev["members"][slot])
-                dst = CHAINS.get(nxt["members"][slot])
+                src = _copies(prev["members"][slot])
+                dst = _copies(nxt["members"][slot])
                 if not src or not dst:
                     continue
                 if "upgrade" in services:
                     cost = _share(gold_price(dst[0]), UPGRADE_SHARE)
                     out += [(t, dst[0], cost) for t in src]
-                if "exchange" in services and variant == "G":
-                    out.append((src[EXCHANGE_FROM], dst[EXCHANGE_TO],
-                                _share(gold_price(dst[EXCHANGE_TO]), EXCHANGE_SHARE)))
+                old = CHAINS.get(swap["members"][slot]) if swap else None
+                new = CHAINS.get(nxt["members"][slot])
+                if old and new:
+                    out.append((old[EXCHANGE_FROM], new[EXCHANGE_TO],
+                                _share(gold_price(new[EXCHANGE_TO]), EXCHANGE_SHARE)))
     return out
+
+
+def _copies(piece):
+    """The copies of a rung's piece the window knows: its eleven mods, the
+    piece alone where it is not reworked (NOT_REWORKED), None where its
+    mods are missing."""
+    chain = CHAINS.get(piece)
+    if chain:
+        return chain
+    return [piece] if piece in NOT_REWORKED else None
 
 
 def _slice_of_upgrader(type_id):

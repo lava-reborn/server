@@ -36,7 +36,10 @@ WHAT COMES FROM WHERE
   pieces   the layout's A piece; the G variant is the G of that piece's own
            series and level, the same icon in gold (helm_Set_M_LVL_11_A_mod00
            -> helm_Set_M_LVL_11_G_mod00). A quest piece has no G: a set made
-           of quest pieces is its one variant, Q; a quest piece among A ones
+           of quest pieces is its one variant, Q -- unless its series has a
+           G of our own for every piece (data/own_items.json): then it is
+           sold, the quest pieces its A and ours its G (Чёрный Ловелас,
+           2026-10-13); a quest piece among A ones
            (Красное Эхо's boots) is matched in the G variant by the G of the
            series the rest of the set is. No P anywhere: the owner took
            premium out of the game (items.premium).
@@ -59,7 +62,10 @@ WHAT COMES FROM WHERE
   bonuses  the wiki's set page, the variant's column (a lone column serves
            both); where the page's table is not one wiki_items.json parses,
            transcribed from its wikitext (TRANSCRIBED); none where the page
-           says none; designed like the numbers where there is no page.
+           says none; designed like the numbers where there is no page, and
+           for Чёрный Ловелас, whose page gives Штурм-М[15]'s column to a set
+           sold at 12. A designed G lies between the neighbours' G pieces and
+           G columns where both have a G.
   words    each set's piece names and descriptions (SOURCES): the wiki's or
            the original's, never a line about a dead former owner.
 
@@ -80,6 +86,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "server"))
 import items  # noqa: E402  (reads LAVA_RES for the client's catalogue)
 import orig_texts  # noqa: E402
+import own_items  # noqa: E402
 import sets  # noqa: E402
 
 OUT = os.path.join(HERE, "sets.json")
@@ -99,7 +106,10 @@ SERIES = re.compile(r"^(helm|shirt|armor|pants|boots)_((?:Bs|Set|Exzo)_[MU])_LVL
 # block of the original texts.xml (10938-11289); P rows left out. Колонист is
 # Set_M, Беженец Bs_M; Exzo_M is Легионер 0-6, Красное ЭXO 7-10, Темное ЭXO
 # 11-14, Штурм-М 15-16, Дредноут 17-18, Паладин 19, Апокалипсис 20; the quest
-# family Bs_U has only [Q] rows.
+# family Bs_U has only [Q] rows. A quest set that is sold (pieces_of: its
+# series has a G of our own, data/own_items.json) keeps its [Q] row for the
+# A, the row its types answered to; its G no row of the original names, and
+# it is keyed by its first piece, our type (Чёрный Ловелас[12]: 60000).
 SET_ROWS = {
     ("Bs_M", 0): {"A": 11218, "G": 11221}, ("Bs_M", 2): {"A": 11222, "G": 11224},
     ("Bs_M", 3): {"A": 11225, "G": 11227}, ("Bs_M", 4): {"A": 11228, "G": 11230},
@@ -128,7 +138,8 @@ SET_ROWS = {
     ("Exzo_M", 15): {"A": 10987, "G": 10990}, ("Exzo_M", 16): {"A": 11002, "G": 11004},
     ("Exzo_M", 17): {"A": 11010, "G": 11013}, ("Exzo_M", 18): {"A": 11016, "G": 11018},
     ("Exzo_M", 19): {"A": 11030, "G": 11033}, ("Exzo_M", 20): {"A": 11043, "G": 11046},
-    ("Bs_U", 10): {"Q": 11116}, ("Bs_U", 11): {"Q": 11118}, ("Bs_U", 12): {"Q": 11120},
+    ("Bs_U", 10): {"Q": 11116}, ("Bs_U", 11): {"Q": 11118},
+    ("Bs_U", 12): {"Q": 11120, "A": 11120, "G": 60000},
     ("Bs_U", 14): {"Q": 11122}, ("Bs_U", 15): {"Q": 11123}, ("Bs_U", 16): {"Q": 11125},
     ("Bs_U", 17): {"Q": 11126}, ("Bs_U", 18): {"Q": 11127}, ("Bs_U", 19): {"Q": 11128},
     ("Bs_U", 20): {"Q": 11129},
@@ -234,9 +245,17 @@ SOURCES = {
             pants=("Штаны пустынника", "Штаны пустынника", WIKI),
             boots=("Сапоги пустынника", "Сапоги пустынника", WIKI))),
     # No piece pages on the wiki: numbers designed. Words the original's
-    # (texts.xml 15108-15117), the set's name row 11120 its own.
+    # (texts.xml 15108-15117), the set's name row 11120 its own. The set
+    # page's bonuses (TRANSCRIBED) are Штурм-М[15]'s A column word for word,
+    # an event set's that was never sold -- its Цена комплекта is blank, its
+    # pieces ask Стрельба 7. Sold on the ladder at 12 since 2026-10-13, with
+    # its pieces designed between Пустынник and Спецназ, it gets its bonuses
+    # the same way (designed_bonuses), so that its power is its rung's.
     "Чёрный Ловелас": dict(
-        page="Снаряжение Чёрного Ловеласа", bonus="text",
+        page="Снаряжение Чёрного Ловеласа", bonus="design",
+        bonus_why="the wiki's Снаряжение Чёрного Ловеласа gives Штурм-М[15]'s A column word for "
+                  "word (an event set, never sold: its Цена комплекта is blank); sold at 12 since "
+                  "2026-10-13, the set takes its rung's power instead",
         desc=lit("texts.xml 11121",
                  "Комплекс снаряжения легендарной антитеррористической группы «ЛОВЕЛАС»."),
         pieces=dict(
@@ -390,7 +409,9 @@ SOURCES = {
 
 # Set pages whose table wiki_items.json does not parse, transcribed from
 # their wikitext in data/wiki/pages.json: K pieces -> {bonus: value}. Both
-# are one column.
+# are one column. Снаряжение Чёрного Ловеласа's serves no set since its set
+# is sold (SOURCES: designed); it stays here, the page's word, should the
+# owner want it back with a price to match.
 TRANSCRIBED = {
     "Снаряжение Чёрного Ловеласа": {
         2: {"hp": 50, "st": 20},
@@ -616,9 +637,13 @@ def figure(row, res_dir):
 def pieces_of(row, cat, by_name):
     """variant -> {slot: type}, and the set's family and series level.
 
-    The G of each piece is its own series' G. A quest piece has none: five of
-    them are the one variant Q, and one among A pieces is matched by the G of
-    the series the rest of the set is (the same slot), and said so."""
+    The G of each piece is its own series' G. A quest piece has none in the
+    original: five of them are the one variant Q, and one among A pieces is
+    matched by the G of the series the rest of the set is (the same slot),
+    and said so. Unless the quest series has a G of our own for every piece
+    (data/own_items.json, a copy of that very piece's picture): then the set
+    is sold, its quest pieces are its A, priced in afro, and our types its G
+    (Чёрный Ловелас[12], the owner's «за афро и за голд», 2026-10-13)."""
     parsed = {}
     for slot in SLOTS:
         t = int(row["slots"][slot])
@@ -636,7 +661,22 @@ def pieces_of(row, cat, by_name):
     if variants == {"Q"}:
         fams = {(f, lvl) for _t, f, lvl, _v in parsed.values()}
         family, level = sorted(fams)[0]
-        return {"Q": {s: p[0] for s, p in parsed.items()}}, family, level, notes
+        quest = {s: p[0] for s, p in parsed.items()}
+        own = own_items.load()
+        gold = {s: by_name.get("%s_%s_LVL_%d_G_mod00" % (s, f, lvl))
+                for s, (_t, f, lvl, _v) in parsed.items()}
+        if not any(gold.values()):
+            return {"Q": quest}, family, level, notes
+        wrong = [s for s, g in gold.items() if g not in own or own[g]["like"] != quest[s]]
+        if wrong:
+            raise SystemExit("%s: a quest set is sold when every piece has a G of our own copying "
+                             "its picture (data/own_items.json); not so for %s"
+                             % (row["name"], ", ".join(wrong)))
+        notes.append("A: the quest series' own pieces (_Q_), sold for afro since the owner's "
+                     "'за афро и за голд' (2026-10-13); G: types of our own, %s "
+                     "(data/own_items.json), each its A piece's picture: the original has no G "
+                     "of this series" % ", ".join(str(gold[s]) for s in SLOTS))
+        return {"A": quest, "G": gold}, family, level, notes
     main = {}
     for _t, f, lvl, v in parsed.values():
         if v == "A":
@@ -823,21 +863,28 @@ META = {
     "designed": "DESIGNED only where the wiki is silent or contradicts itself, and each such "
                 "place says so in its set's _designed: a variant column the wiki does not have, "
                 "the ladder's Стрельба where a page asks another, four prices a page gives that "
-                "its own set page refutes, and three sets with no numbers on the wiki at all "
+                "its own set page refutes, three sets with no numbers on the wiki at all "
                 "(Чёрный Ловелас's pieces, Дредноут, Паладин), interpolated between their "
-                "neighbours on the ladder.",
+                "neighbours on the ladder, and Чёрный Ловелас's bonus, which its page copies "
+                "from Штурм-М[15], designed the same way since the set is sold.",
     "rules": [
         "Pieces: the layout's A piece for each slot (or quest piece, _Q_); the G variant is the "
         "G of the same series and level, the same icon in gold. A set of quest pieces is its "
-        "one variant, Q. A quest piece among A ones is matched in G by the G of the series the "
-        "rest of the set is. No P anywhere: the owner took premium out of the game (items.premium).",
+        "one variant, Q -- unless its series has a G of our own for every piece "
+        "(data/own_items.json, each a copy of its quest piece's picture): then the set is sold, "
+        "the quest pieces its A and our types its G (Чёрный Ловелас, the owner's 'за афро и за "
+        "голд', 2026-10-13). A quest piece among A ones is matched in G by the G of the series "
+        "the rest of the set is. No P anywhere: the owner took premium out of the game "
+        "(items.premium).",
         "set key = set_type = the texts.xml row of the name of the set these very types formed in "
         "the original (the block 10938-11289): Колонист[N] for Set_M_LVL_N, Беженец[N] for "
         "Bs_M_LVL_N, Легионер / Красное ЭXO / Темное ЭXO / Штурм-М / Дредноут / Паладин / "
-        "Апокалипсис[N] for Exzo_M_LVL_N, the [Q] rows for the quest family Bs_U. Stable, "
-        "unique, below 100 000, and the row the types already answered to. The owner's names "
-        "are his own: Странник sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник "
-        "on Колонист[7]'s, Спецназ on Колонист[17]'s.",
+        "Апокалипсис[N] for Exzo_M_LVL_N, the [Q] rows for the quest family Bs_U (a sold quest "
+        "set's A keeps it). Stable, unique, below 100 000, and the row the types already "
+        "answered to. A set of our own types, which no row of the original names, is keyed by "
+        "its first piece: Чёрный Ловелас (G) 60000. The owner's names are his own: Странник "
+        "sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник on Колонист[7]'s, "
+        "Спецназ on Колонист[17]'s.",
         "Магриб is the owner's name for Bs_M_LVL_16, whose icons are a steel helmet, a field "
         "shirt, a plate vest, army trousers and boots: the wiki's Армейские вещи ('used "
         "everywhere, the military of Магриб among them'), whose pieces ask Стрельба 6, the rung "
@@ -865,24 +912,30 @@ META = {
         "says so.",
         "Set bonuses per K pieces worn, from the set page's column (a lone column serves every "
         "variant); cumulative, K=5 adds to what 2..4 gave, the way the client's tooltip lights "
-        "its lines. Снаряжение Чёрного Ловеласа and Темное Эхо are transcribed from the page's "
-        "wikitext, which wiki_items.json does not parse. Вещи Беженца has none ('Дополнительных "
-        "бонусов и параметров не предусмотрено').",
+        "its lines. Темное Эхо is transcribed from the page's wikitext, which wiki_items.json "
+        "does not parse. Вещи Беженца has none ('Дополнительных бонусов и параметров не "
+        "предусмотрено'). Снаряжение Чёрного Ловеласа's column is Штурм-М[15]'s A word for word "
+        "(+20 action points at three pieces), an event set's that was never sold (its Цена "
+        "комплекта is blank): since the set is sold at 12 (2026-10-13) its bonuses are "
+        "designed, as below, and the page's stay in data/build_sets.py (TRANSCRIBED), served "
+        "nowhere.",
         "Модификация паладин is Апокалипсис's table: the page lists the five Апокалипсис pieces "
         "and its 300 G is their sum; only its title and blurb are Паладин's.",
         "DESIGNED sets (no numbers on the wiki): each number of each piece linear between the "
         "nearest rungs below and above that have wiki numbers, by level -- value = low + (high - "
         "low) x (level - low level) / (high level - low level), half up -- from their A (or Q) "
         "pieces in the same slot; afro prices to whole thousands; Телосложение asked likewise, a "
-        "requirement only one neighbour has is not carried; the G copies the A's numbers, its "
-        "price at 4000 afro = 1 G. A set with no wiki page gets its bonuses the same way, K by K "
-        "and bonus by bonus, 0 where a neighbour has none.",
+        "requirement only one neighbour has is not carried; the G lies between the neighbours' "
+        "G pieces where both have a G (else it copies the A's numbers), its price the A's at "
+        "4000 afro = 1 G. A set with no wiki page gets its bonuses the same way, K by K and "
+        "bonus by bonus (its G between the neighbours' G columns where its pieces are), 0 where "
+        "a neighbour has none; so does Чёрный Ловелас. Its full set (pieces and bonuses) thus "
+        "lies between its neighbours', as its price does.",
         "Not carried: a piece's own attribute bonus (the wiki's 'Бонусы к атрибутам') has no "
         "field in server/sets.py ITEM_FIELDS; it is kept under the piece's _bonus_attribs, "
         "unread, until it has one. Nor 'Допустимость продажи: Нет' of the quest pieces.",
         "Wiki numbers kept although odd, for the owner to judge: Пончо's Выносливость 45 at the "
-        "first rung; Снаряжение Чёрного Ловеласа's bonuses are Штурм-М's A column word for word "
-        "(+20 action points at three pieces); on the owner's ladder Магриб (Армейские вещи, 4 G "
+        "first rung; on the owner's ladder Магриб (Армейские вещи, 4 G "
         "the set) stands above Странник (5 G) and Красное Эхо (500 000 afro) above Штурм-М "
         "(700 000), both weaker than the rung below; Броня пустынника (G) and Ботинки легионера "
         "(G) wear out sooner than their A, as their pages say; Апокалипсис asks 5 in every "
@@ -976,12 +1029,15 @@ def set_desc(plan):
 def new_set(plan, v, source, designed):
     desc, desc_src = set_desc(plan)
     key = plan["keys"][v]
+    if key >= own_items.FIRST:
+        why = "key %d, its first piece, a type of our own: no row of the original names it" % key
+    else:
+        why = "key texts.xml %d, the row of the set these types formed in the original" % key
     return {
         "name": label(plan["name"], plan["level"], v),
         "desc": desc,
         "_layout": plan["row"].get("key"),
-        "_source": "key texts.xml %d, the row of the set these types formed in the original; "
-                   "desc %s; %s" % (key, desc_src, source),
+        "_source": "%s; desc %s; %s" % (why, desc_src, source),
         "_designed": designed,
         "family": plan["family"],
         "level": plan["level"],
@@ -1043,14 +1099,30 @@ def designed_set(plan, anchors, built):
         if plan["level"]:
             need["Стрельба"] = plan["level"]
         base[slot] = (rec, ordered_need(need))
+    # The G between the neighbours' G pieces (their pages' G columns) where
+    # both have a G, priced as the A; else the A's numbers. A G column is
+    # stronger than its A, so a G copied from the A would stand below the
+    # rung under it (Чёрный Ловелас (G) against Пустынник (G)).
+    gold = None
+    if lo is not hi and all("G" in built[n["name"]]["variants"] for n in (lo, hi)):
+        gold = {}
+        for slot in SLOTS:
+            rec, need = interpolate(built[lo["name"]]["variants"]["G"]["members"][slot],
+                                    built[hi["name"]]["variants"]["G"]["members"][slot], t)
+            rec["cost"] = base[slot][0]["cost"]
+            if plan["level"]:
+                need["Стрельба"] = plan["level"]
+            gold[slot] = (rec, ordered_need(need))
     for v in plan["variants"]:
         designed = list(plan["notes"]) + [why]
         if v == "G":
-            designed.append("G: the A's numbers, priced at 4000 afro = 1 G")
+            designed.append("G: between %s (G) and %s (G), their G pieces, priced as the A at "
+                            "4000 afro = 1 G" % (lo["name"], hi["name"]) if gold else
+                            "G: the A's numbers, priced at 4000 afro = 1 G")
         rec = new_set(plan, v, "numbers designed", designed)
         for slot in SLOTS:
             word, _page, text, note = words(plan, slot)
-            fields, need = base[slot]
+            fields, need = (gold or base)[slot] if v == "G" else base[slot]
             piece = {"type": plan["variants"][v][slot], "name": label(word, plan["level"], v),
                      "desc": text, "_wiki": None}
             if note:
@@ -1070,6 +1142,7 @@ def designed_set(plan, anchors, built):
     base_v = "A" if "A" in plan["variants"] else "Q"
     out["base"] = {s: dict(p, need=dict(p["need"])) for s, p in out["variants"][base_v]["members"].items()}
     out["anchors"] = (lo["name"], hi["name"], t)
+    out["gold"] = gold is not None
     return out
 
 
@@ -1095,23 +1168,37 @@ def set_bonuses(plan, done):
         per = set_bonus_table(page)
         note = "bonus wiki %s%s" % (page, " (one column)" if "*" in per else "")
     done["bonus"] = per.get("A", per.get("*"))
+    done["bonus_of"] = {}
     for v, rec in done["variants"].items():
         b = per.get(v, per.get("*"))
+        done["bonus_of"][v] = b
         rec["bonus"] = lines(b)
         rec["_source"] += "; " + note
 
 
 def designed_bonuses(plan, anchors, built):
+    """Each K and each bonus between the neighbours' columns: the A (or Q)
+    ones, and for a G whose pieces were designed between the neighbours' G
+    (designed_set) their G columns."""
     lo, hi = neighbours(plan["level"], anchors)
     lo, hi = lo or hi, hi or lo
     t = 0.0 if hi["level"] == lo["level"] else (plan["level"] - lo["level"]) / float(hi["level"] - lo["level"])
     b = interpolate_bonus(built[lo["name"]]["bonus"], built[hi["name"]]["bonus"], t)
     built[plan["name"]]["bonus"] = b
-    for rec in built[plan["name"]]["variants"].values():
-        rec["bonus"] = lines(b)
-        rec["_designed"].append("bonus: no set page on the wiki; each K and each bonus between %s "
-                                "(%d) and %s (%d), 0 where one has none, half up"
-                                % (lo["name"], lo["level"], hi["name"], hi["level"]))
+    gold = built[plan["name"]].get("gold") and all(
+        "G" in built[n["name"]]["bonus_of"] for n in (lo, hi))
+    why = plan["src"].get("bonus_why") or "no set page on the wiki"
+    for v, rec in built[plan["name"]]["variants"].items():
+        if v == "G" and gold:
+            rec["bonus"] = lines(interpolate_bonus(built[lo["name"]]["bonus_of"]["G"],
+                                                   built[hi["name"]]["bonus_of"]["G"], t))
+            cols = " (their G columns)"
+        else:
+            rec["bonus"] = lines(b)
+            cols = ""
+        rec["_designed"].append("bonus: %s; each K and each bonus between %s (%d) and %s (%d)%s, "
+                                "0 where one has none, half up"
+                                % (why, lo["name"], lo["level"], hi["name"], hi["level"], cols))
         rec["_source"] += "; bonus designed"
 
 
@@ -1164,7 +1251,7 @@ def valley(plans):
     return out
 
 
-def pieces_of(plans):
+def ladder_pieces(plans):
     """Every piece of every set of the layout, all variants."""
     return {plan["variants"][v][s] for plan in plans for v in plan["variants"] for s in SLOTS}
 
@@ -1185,7 +1272,10 @@ def main():
         "and G sets of his city's band, A then G, helm to boots, mod00 only (data/shop_bands.json, "
         "server/shop_bands.py; the owner's 'по уровню городов', 2026-10-10) -- Локсли (%d, "
         "'Одежда и Броня') the valley's; the quest (Q) sets exist as data only, for quests "
-        "and drops to come." % (os.path.basename(args.layout), len(plans),
+        "and drops to come. Чёрный Ловелас, the quest series Bs_U_LVL_12, is sold for afro and "
+        "for gold (the owner's 'поставь ловеласа у Гали и за афро и за голд', 2026-10-13): its "
+        "quest pieces are its A, five types of our own its G (data/own_items.json)."
+        % (os.path.basename(args.layout), len(plans),
                                 ", ".join("%s %d" % (p["name"], p["level"]) for p in plans),
                                 LOXLEY))
     meta["sets"] = ["%s (level %d): %s -- %s" % (
@@ -1216,7 +1306,7 @@ def main():
         doc = json.loads(raw)
         own = doc.setdefault("stock", {}).get(str(LOXLEY))
         if own is not None:
-            ladder = pieces_of(plans)
+            ladder = ladder_pieces(plans)
             doc["stock"][str(LOXLEY)] = [t for t in own if t not in ladder]
             with io.open(NPCS, "w", encoding="utf-8", newline="\n") as fh:
                 fh.write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")

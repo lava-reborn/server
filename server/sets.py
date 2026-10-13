@@ -80,6 +80,10 @@ PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 
 # The five pieces a set is counted over, in the client's order.
 SLOTS = ("helm", "shirt", "armor", "pants", "boots")
+# A set's variant (the file's "variant"): A sold for afro, G for gold, Q a
+# quest's, "" where the file says none. What the stalls sell of the ladder
+# is its A and G sets (shop_bands.wares).
+VARIANTS = ("", "A", "G", "Q")
 # SetObject.initSet reads bonus_2_* .. bonus_6_*.
 PIECES = range(2, 7)
 
@@ -237,8 +241,11 @@ def parse(doc):
             pieces[type_id] = over
         if not members:
             raise ValueError("%s: no members" % where)
+        variant = rec.get("variant") or ""
+        if variant not in VARIANTS:
+            raise ValueError("%s: variant %r is none of %s" % (where, variant, "/".join(VARIANTS[1:])))
         table[set_type] = dict(name=orig_texts.item_name(name), desc=orig_texts.text(desc),
-                               res=_int(where + ".res", rec.get("res", 0)),
+                               res=_int(where + ".res", rec.get("res", 0)), variant=variant,
                                bonus=bonus, members=members, names=names, descs=descs)
     return table, set_of, pieces
 
@@ -259,6 +266,20 @@ SETS, SET_OF, ITEMS = _load()
 def set_of(type_id):
     """The set a type belongs to, or 0 -- which is what ss_si_wear says for none."""
     return SET_OF.get(type_id, 0)
+
+
+def variant_of(type_id):
+    """The variant of the set a piece is in (VARIANTS), "" for none."""
+    s = SETS.get(SET_OF.get(type_id))
+    return s["variant"] if s else ""
+
+
+def slot_of(type_id):
+    """The slot a piece fills in its set (SLOTS), or None."""
+    s = SETS.get(SET_OF.get(type_id))
+    if not s:
+        return None
+    return next(slot for slot, t in s["members"].items() if t == type_id)
 
 
 def item(type_id):
