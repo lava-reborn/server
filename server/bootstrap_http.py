@@ -55,6 +55,7 @@ import items
 import stopwarn
 import map_cells
 import map_labels
+import own_items
 import transport
 import world
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -120,6 +121,20 @@ class ObjectSprites:
 
 
 OBJECT_SPRITES = ObjectSprites(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_OWN_ICONS = None
+
+
+def own_icon(posix):
+    """The original's icon (a path under res/) that our own item type's
+    icon at res/<posix> is a copy of, or None when it is no such icon
+    (own_items.icons): what every release carries at that path
+    (client/build.py), and no res/ of the original has."""
+    global _OWN_ICONS
+    if _OWN_ICONS is None:
+        _OWN_ICONS = {p.lower(): like for p, like in own_items.icons(items.catalogue()).items()}
+    return _OWN_ICONS.get(posix.lower())
+
+
 GAME_HOST = os.environ.get("LAVA_GAME_HOST", "127.0.0.1")
 GAME_PORT = os.environ.get("LAVA_GAME_PORT", "9775")
 HTTP_PORT = int(os.environ.get("LAVA_HTTP_PORT", "8080"))
@@ -641,6 +656,11 @@ class Handler(BaseHTTPRequestHandler):
         if made is not None:
             self._send(made, "application/x-shockwave-flash")
             return
+        # The icon of an item type of our own (data/own_items.json): the
+        # original's picture it copies, as every release ships it.
+        like = own_icon(posix)
+        if like is not None:
+            full = os.path.normpath(os.path.join(RES_ROOT, *like.split("/")))
         if not os.path.isfile(full):
             self._send("not found", code=404)
             return
@@ -662,6 +682,12 @@ class Handler(BaseHTTPRequestHandler):
             # The names over the global map's cells, with the owner's edits
             # laid on -- what the launcher does for every player (map_labels).
             body, _changed = map_labels.apply(body)
+        elif posix.lower() == "database/objects.xml":
+            # The client's table of item types with a row for each of our own
+            # (own_items.py): its one use of a row is the icon's folder. The
+            # release ships it so (client/build.py); a res/ holding a release's
+            # older copy gives the same.
+            body = own_items.release_xml(body)
         else:
             # The map's picture, with the squares of the places taken out of
             # the game painted over -- what every client release carries

@@ -157,15 +157,12 @@ except Exception:
     SAFES = frozenset()
 
 # The people of the world by the original's own names, over the wiki's.
-# The level a mob's name carries is rewritten with the level it really
-# fights at (orig_texts.person_name): the file's number and the mob's agree
-# for fewer than half of them.
-def _mob_level(type_id):
-    import mobs                        # here, not at the top: it imports half the server
-    return mobs.stats(type_id).level
-
-
-ORIG_PERSON_NAMES = orig_texts.person_names(_mob_level)
+# A mob goes by its name alone, without the level the original writes in
+# front of it (orig_texts.person_name; the owner's word of 2026-10-12). Of
+# the level the client shows only a shield beside the name, the difference
+# from the player's own clamped to -4 .. +4, which the lvl of the mob's
+# userInfo paints (combat.mob_info); the number itself nowhere.
+ORIG_PERSON_NAMES = orig_texts.person_names()
 ALL.update(ORIG_PERSON_NAMES)
 
 # A safe the original names keeps its own name: the Nubian market's bank is

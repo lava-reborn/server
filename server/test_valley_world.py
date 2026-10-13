@@ -17,7 +17,8 @@ the names those quests need, held to before the quests are written.
   * a quest's thing on a creature (mobs.QUEST_TIER): the courier's letter is
     in his bag for a player whose quest asks for it, and for nobody else --
     not before the quest is taken, not once the letter is in the bag;
-  * names: the boss by his full one, «[5] Лидер Ян Дуглас» (texts.xml 50270),
+  * names: the boss by his full one, «Лидер Ян Дуглас» (texts.xml 50270, the
+    level in front of it gone: the owner, 2026-10-12),
     the arena's trader, the courier, the commissar and the three raiders who
     stand with him in 30, the black rats, the box, the cows -- and nobody the
     valley or the rooms its doors lead into stand by his mobs.xml name but
@@ -227,12 +228,12 @@ except Exception:
 # --- in process: names -----------------------------------------------------------------
 try:
     blob = names.document_bytes()
-    want = {2103: "[5] Лидер Ян Дуглас<br>Новые колонисты",
+    want = {2103: "Лидер Ян Дуглас<br>Новые колонисты",
             1187: "Барыга Сет<br>Торговля для экспедиций",
-            COURIER: "[2] Курьер",
-            1405: "[3] Комиссар Рекс<br>Новые колонисты",
-            RAIDER: "[3] Мародёр",
-            1019: "[3] Черная Крыса<br>Дикое животное",
+            COURIER: "Курьер",
+            1405: "Комиссар Рекс<br>Новые колонисты",
+            RAIDER: "Мародёр",
+            1019: "Черная Крыса<br>Дикое животное",
             BOX: "Ящик с инструментами",
             115: "Корова", 116: "Корова", 120: "Корова"}
     check("the boss by his full name, and the valley's nameless by theirs",
@@ -587,8 +588,8 @@ try:
           (call.get("id"), 1405 in inhabitants(got)), (30, True))
     here = inhabitants(got)
     check("  ..and his three raiders, each drawn under the name id the table has"
-          " «[3] Мародёр» for",
-          (len(here.get(RAIDER, [])), names.text(RAIDER)), (3, "[3] Мародёр"))
+          " «Мародёр» for",
+          (len(here.get(RAIDER, [])), names.text(RAIDER)), (3, "Мародёр"))
     check("  ..nobody of 30 shown by his mobs.xml name",
           sorted(t for t in here if names.text(t) == MT[t][1]), [])
     call, got, pos = goto(c, *OLD_CORNER)

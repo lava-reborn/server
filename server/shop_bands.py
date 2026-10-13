@@ -35,7 +35,13 @@ anybody touching a list:
   the designed stand-in, 120 afro and no level), a name, and a price in its
   own currency, afro for the ordinary one and gold for the (G); nothing
   premium, nothing a quest owns or lends, no modification. A set piece is
-  one of an A or G set of the owner's ladder (data/sets.json), mod00. Its
+  one of an A or G set of the owner's ladder (data/sets.json), mod00 -- by
+  the file's variant, not the piece's internal name: Чёрный Ловелас[12]'s A
+  is the original's quest series (_Q_), its G types of our own
+  (data/own_items.json), and both are sold since the owner's «за афро и за
+  голд» (2026-10-13); a Q set stays off the stalls. And by the name the
+  player reads: a piece of the ladder shows the file's, not the original's
+  «(Q)». Its
   level is inventory.item_level: the «Необходимые навыки» the client shows,
   the level the owner's rule of 2026-09-25 lets a character hold or wear it
   at. A medicine is one of the original's two lines, named by its stalls:
@@ -107,7 +113,6 @@ MED_REACH = 4
 _LINE = re.compile(r"^(pistols|shotgun|sub_machine_guns|assault_rifle|rifle|machine_gun)"
                    r"_([1-9]\d*)_lvl_(\d+)(_gold)?$")
 _KNIFE = re.compile(r"^knife_lvl(\d+)_(A|G)$")
-_SET_PIECE = re.compile(r"^(helm|shirt|armor|pants|boots)_.+_LVL_\d+_(A|G)_mod00$")
 # The two lines of medicine, tier by tier: the tier is the levels it is for
 # (0_3 .. 16_19, 20), the end what it is (A afro, Ax10 ten of it, G gold,
 # G_Pack twenty doses of the gold). Not the (P) kits (_P, out of the game),
@@ -282,6 +287,7 @@ def wares():
     orig = orig_texts.item_names()
     wiki = items.wiki()
     manual = items.heal_manual()
+    set_names = sets.item_names()
     for t, (root, name) in items.catalogue().items():
         kind = line = level = None
         if root == items.FIRE_ARM:
@@ -293,11 +299,13 @@ def wares():
             if m:
                 kind, line, gold = "knives", 0, m.group(2) == "G"
         elif root == items.WEAR:
-            m = _SET_PIECE.match(name)
-            set_type = sets.set_of(t)
-            if m and set_type:
-                kind, gold = "sets", m.group(2) == "G"
-                line = sets.SLOTS.index(m.group(1))
+            # A piece of an A or G set of the ladder by the file's variant
+            # (the file holds the mod00 pieces alone): Чёрный Ловелас's A is
+            # the original's quest series, _Q_ by its internal name.
+            variant = sets.variant_of(t)
+            if variant in ("A", "G"):
+                kind, gold = "sets", variant == "G"
+                line = sets.SLOTS.index(sets.slot_of(t))
         elif root == items.HEAL:
             med = _med(name)
             if med:
@@ -312,8 +320,11 @@ def wares():
         p = items.params_of(t) or {}
         priced = (p.get("g_cost", 0) > 0 and not p.get("cost")) if gold \
             else (p.get("cost", 0) > 0 and not p.get("g_cost"))
+        # The name the player reads: a piece of the ladder shows the set
+        # file's, over the original's «... (Q)» (names.SET_ITEM_NAMES).
+        shown = set_names.get(t) or orig.get(t) or ""
         if not priced or items.premium(t) or p.get("quest") or quests.lent(t) \
-                or not _named(t) or _NOT_SHOP_NAME.search(orig.get(t) or ""):
+                or not _named(t) or _NOT_SHOP_NAME.search(shown):
             continue
         if level is None:
             level = inventory.item_level(t)

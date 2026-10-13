@@ -4,9 +4,9 @@
    "creature_types": 5987,
    "dropped_test_high": 85,
    "dropped_test_medium": 18,
-   "manual": 450,
-   "npcs": 817,
-   "npcs_mob": 354,
+   "manual": 454,
+   "npcs": 821,
+   "npcs_mob": 358,
    "npcs_npc": 463,
    "suggest": 639,
    "verified_promoted_to_high": 1
@@ -569,6 +569,12 @@
    "name": "Медная порода",
    "string_id": 48068
   },
+  "132": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Громила<Br>Работорговцы",
+   "string_id": 50336
+  },
   "1320": {
    "confidence": "high",
    "kind": "npc",
@@ -1000,6 +1006,12 @@
    "kind": "mob",
    "name": "[14] Вильям Блейд<Br>ДСР",
    "string_id": 8937
+  },
+  "158": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "Живодер",
+   "string_id": 50335
   },
   "16": {
    "confidence": "high",
@@ -2657,11 +2669,23 @@
    "name": "Раб",
    "string_id": 48747
   },
+  "407": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[18] ШефДженсен<Br>Миротворцы",
+   "string_id": 8956
+  },
   "4079": {
    "confidence": "high",
    "kind": "npc",
    "name": "Багира",
    "string_id": 47010
+  },
+  "408": {
+   "confidence": "high",
+   "kind": "mob",
+   "name": "[17] МаксКоул<Br>Миротворцы",
+   "string_id": 8955
   },
   "4087": {
    "confidence": "high",

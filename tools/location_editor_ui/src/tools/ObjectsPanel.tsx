@@ -92,7 +92,7 @@ export default function ObjectsPanel(props: {
         <input type="checkbox" checked={props.stamp} onChange={(e) => props.onStamp(e.target.checked)} /> Со следом: ставить и
         убирать стены под объектом
       </label>
-      <div className="tabs" role="tablist">
+      <div className="le-tabs" role="tablist">
         <button role="tab" className={tab === "lib" ? "on" : ""} onClick={() => (setTab("lib"), setPage(1))}>
           Этой локации <span className="n">{counts.lib}</span>
         </button>

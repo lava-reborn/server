@@ -124,6 +124,12 @@ try:
         "locations/libs/sprite/C_Old.swf": b"an original sprite whose name an object of ours wants",
         "xml/loc_defs.xml": (b"<?xml version='1.0'?>\n<data>\n<file href=\"locations/static/0.xml\" "
                              b"hash=\"00000000000000000000000000000000\" time=\"1\" size=\"3\" />\n</data>"),
+        "database/objects.xml": (b"<?xml version='1.0'?>\n<data>\n"
+                                 b"<object type_id=\"7\" root_type_id= \"0\" name=\"gun\" />\n"
+                                 b"<object type_id=\"11721\" root_type_id= \"1\" name=\"helm_Bs_U_LVL_12_Q_mod00\" />\n"
+                                 b"</data>"),
+        "classes/WearItem/helm_Bs_U_LVL_12_Q_mod00/ico.swf": b"CWS\x09the quest helmet's picture",
+        "classes/WearItem/helm_Taken_mod00/ico.swf": b"CWS\x09a folder no row names",
     }
     for p, data in originals.items():
         write(os.path.join(res, *p.split("/")), data)
@@ -325,6 +331,67 @@ try:
            "objects:   1 from client/objects/" in report7, "locations: 1 of ours (data/locations)" in report7),
           (None, sha(with_obj), True, True, True))
     shutil.rmtree(odir)
+    shutil.rmtree(os.path.join(tree, "data"))
+
+    # Item types of our own (data/own_items.json, server/own_items.py, the
+    # real one in the toy tree): the client draws a type by its row of
+    # objects.xml, classes/<folder>/<name>/ico.swf (SSEmulator.getIcon), so
+    # the release adds a row for each and a byte copy of the picture of the
+    # original type it is like. Чёрный Ловелас's gold helmet is the model.
+    shutil.copy(os.path.join(ROOT, "server", "own_items.py"), os.path.join(tree, "server", "own_items.py"))
+    check("own items: none, objects.xml is the original's and the report counts none",
+          (got.get("database/objects.xml"),
+           "own items: 0 types (data/own_items.json)" in read(os.path.join(out1, "report.txt")).decode()),
+          (sha(originals["database/objects.xml"]), True))
+    own_json = os.path.join(tree, "data", "own_items.json")
+
+    def own(items_):
+        write(own_json, json.dumps({"_meta": {"what": "x"}, "items": items_}))
+
+    gold_helm = {"60000": {"name": "helm_Bs_U_LVL_12_G_mod00", "like": 11721}}
+    own(gold_helm)
+    out9 = os.path.join(W, "out9")
+    rc, out = release(out9)
+    got9 = {l.split("\t")[2]: l.split("\t")[0] for l in read(os.path.join(out9, "files.tsv")).decode().splitlines()}
+    icon = "classes/WearItem/helm_Bs_U_LVL_12_G_mod00/ico.swf"
+    rows9 = originals["database/objects.xml"].replace(
+        b"</data>", b'<object type_id="60000" root_type_id= "1" name="helm_Bs_U_LVL_12_G_mod00" />\n</data>')
+    check("own items: built; objects.xml is the original with our row before its end, in its"
+          " own format", (rc, read(os.path.join(out9, "blobs", got9["database/objects.xml"]))), (None, rows9))
+    check("  ..which the server's reader reads as the type, its root and its name",
+          [(int(m.group(1)), int(m.group(2)), m.group(3)) for m in build.OBJECT_ROW.finditer(rows9)][-1],
+          (60000, 1, b"helm_Bs_U_LVL_12_G_mod00"))
+    check("  ..and the type's icon is the picture of the type it is like, byte for byte",
+          read(os.path.join(out9, "blobs", got9[icon])),
+          originals["classes/WearItem/helm_Bs_U_LVL_12_Q_mod00/ico.swf"])
+    check("  ..nothing else in the release changed",
+          {p: s for p, s in got9.items() if p not in (icon, "database/objects.xml")},
+          {p: s for p, s in got.items() if p != "database/objects.xml"})
+    report9 = read(os.path.join(out9, "report.txt")).decode()
+    check("  ..the report names the type, the picture it copies and the count",
+          ("own item:  60000 helm_Bs_U_LVL_12_G_mod00, the picture of 11721 helm_Bs_U_LVL_12_Q_mod00"
+           in report9, "own items: 1 types (data/own_items.json)" in report9,
+           "an icon of our own item type, new" in report9), (True, True, True))
+    check("  ..the same tree builds the same list",
+          (release(os.path.join(W, "out9b"))[0], read(os.path.join(W, "out9b", "files.tsv"))),
+          (None, read(os.path.join(out9, "files.tsv"))))
+    write(os.path.join(cdir, "files", *icon.split("/")), b"by hand")
+    check("own items: an icon also in client/files is refused",
+          fails_with("also generated", os.path.join(W, "o9")), True)
+    shutil.rmtree(os.path.join(cdir, "files", "classes"))
+    for why, items_, text in (
+            ("a name whose icon folder the original has, in another case",
+             {"60000": {"name": "HELM_Taken_mod00", "like": 11721}}, "is a file of the original"),
+            ("a like that is no type of the original",
+             {"60000": {"name": "helm_x_G_mod00", "like": 4242}}, "like 4242 is no type of the original"),
+            ("a type id of the original's range",
+             {"11722": {"name": "helm_x_G_mod00", "like": 11721}}, "a type of ours is 50036..65535"),
+            ("a name of the original's",
+             {"60000": {"name": "gun", "like": 11721}}, "the original's 7 is named gun")):
+        own(items_)
+        check("own items: %s is refused, naming data/own_items.json" % why,
+              fails_with("data/own_items.json: ", os.path.join(W, "o10")) and fails_with(text, os.path.join(W, "o10")),
+              True)
     shutil.rmtree(os.path.join(tree, "data"))
 
     # --- publish: check and publish ---------------------------------------------------------------

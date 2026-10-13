@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, errText, type DroppedRow } from "../api";
-import { Field, Modal, Spinner, toast } from "../components/ui";
+import PublishDialog from "../components/PublishDialog";
+import { Field, Modal, Spinner, ask, toast } from "../components/ui";
 import { getInfo, getLocations, getPalette } from "../store";
-import type { Info, LocRow, Model } from "../types";
+import type { DraftRow, Info, LocRow, Model, PendingObject } from "../types";
+
+type Made = (m: Model, d: DroppedRow[], draft?: { uuid: string; rev: number }) => void;
+const KIND_RU: Record<string, string> = { new: "новый", update: "правка", delete: "удалён" };
+const when = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+};
 
 const SIDE_RU: Record<string, string> = { W: "З", N: "С", E: "В", S: "Ю", a: "a", b: "b" };
 const LIMIT = 300;
@@ -10,8 +18,10 @@ const LIMIT = 300;
 // «Локации»: every location the editor knows, the original's and ours,
 // with a search, filters and a picture of the one picked.
 export default function LocationList(props: {
+  publish: boolean;
   onOpen: (id: number) => void;
-  onNew: (model: Model, dropped: DroppedRow[]) => void;
+  onOpenDraft: (uuid: string) => void;
+  onNew: Made;
   onObjects: () => void;
 }) {
   const [rows, setRows] = useState<LocRow[] | null>(null);
@@ -25,13 +35,47 @@ export default function LocationList(props: {
   const [more, setMore] = useState(false);
   const [sel, setSel] = useState<number | null>(null);
   const [dialog, setDialog] = useState<"copy" | "empty" | null>(null);
+  // publish mode: the drafts on the server, the objects waiting for a publish
+  const [drafts, setDrafts] = useState<DraftRow[] | null>(null);
+  const [pending, setPending] = useState<PendingObject[]>([]);
+  const [publishObjects, setPublishObjects] = useState(false);
+
+  const loadDrafts = () =>
+    api.drafts().then(
+      (d) => {
+        setDrafts(d.drafts);
+        setPending(d.objects || []);
+      },
+      () => setDrafts((x) => x || []),
+    );
 
   useEffect(() => {
     getLocations()
       .then(setRows)
       .catch((e) => setErr(errText(e)));
     getInfo().then(setInfo, () => undefined);
-  }, []);
+    if (props.publish) {
+      loadDrafts();
+      const t = window.setInterval(loadDrafts, 20000);
+      return () => window.clearInterval(t);
+    }
+  }, [props.publish]);
+
+  const dropDraft = async (d: DraftRow) => {
+    const go = await ask({
+      title: "Удалить черновик?",
+      text: `Черновик «${d.title || "без названия"}» пропадёт со всеми правками. В main он не попадал.`,
+      ok: "Удалить",
+      danger: true,
+    });
+    if (!go) return;
+    try {
+      await api.deleteDraft(d.uuid);
+      loadDrafts();
+    } catch (e) {
+      toast("err", errText(e));
+    }
+  };
 
   const libraries = useMemo(() => [...new Set((rows || []).map((r) => r.library))].sort((a, b) => a.localeCompare(b)), [rows]);
 
@@ -55,7 +99,7 @@ export default function LocationList(props: {
   return (
     <div className="screen list-screen">
       <header className="topbar">
-        <span className="brand">LAVA · Локации</span>
+        <span className="le-brand">LAVA · Локации</span>
         <span className="muted small">
           {rows ? `${rows.length} локаций, наших ${ours}` : "читаю список…"}
           {info && !info.res_original && " · внимание: RES не оригинальный, пересчёт карты может сдвинуть места"}
@@ -102,6 +146,56 @@ export default function LocationList(props: {
               <option value="1">Военные</option>
             </select>
           </div>
+          {props.publish && drafts && drafts.length > 0 && (
+            <div className="drafts">
+              <h3>Черновики</h3>
+              <table className="loc-table draft-table">
+                <tbody>
+                  {drafts.map((d) => (
+                    <tr key={d.uuid} onDoubleClick={() => props.onOpenDraft(d.uuid)}>
+                      <td className="num">{typeof d.id === "number" ? d.id : d.id ? "новое" : ""}</td>
+                      <td>
+                        {d.title || <span className="muted">без названия</span>}
+                        {d.stale && (
+                          <span className="tag war" title={d.stale}>
+                            устарел
+                          </span>
+                        )}
+                        {d.publish?.state === "running" && <span className="tag ours">публикуется</span>}
+                        {d.publish?.state === "failed" && (
+                          <span className="tag war" title={d.publish.result?.error}>
+                            не опубликован
+                          </span>
+                        )}
+                      </td>
+                      <td className="small muted">
+                        {d.login}
+                        {d.created_by && d.created_by !== d.login ? ` (начал ${d.created_by})` : ""}, {when(d.updated)}
+                      </td>
+                      <td className="actions-cell">
+                        <button className="small" onClick={() => props.onOpenDraft(d.uuid)}>
+                          Открыть
+                        </button>
+                        <button className="small ghost" onClick={() => dropDraft(d)} disabled={d.publish?.state === "running"}>
+                          Удалить
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {props.publish && pending.length > 0 && (
+            <div className="banner">
+              Мои объекты ждут публикации:{" "}
+              {pending.map((o) => `${o.id} «${o.title}» (${KIND_RU[o.kind] || o.kind})`).join(", ")}. Они уйдут в main с ближайшей
+              публикацией.{" "}
+              <button className="small" onClick={() => setPublishObjects(true)}>
+                Опубликовать только объекты
+              </button>
+            </div>
+          )}
           {err && <div className="banner err">Список не прочитан: {err}</div>}
           {!rows && !err && (
             <div className="loading">
@@ -157,19 +251,36 @@ export default function LocationList(props: {
             </div>
           )}
         </section>
-        <aside className="list-side">{picked ? <Preview row={picked} /> : <Help />}</aside>
+        <aside className="list-side">{picked ? <Preview row={picked} /> : <Help publish={props.publish} />}</aside>
       </div>
       {dialog === "copy" && picked && (
-        <NewFromCopy row={picked} onClose={() => setDialog(null)} onMade={props.onNew} />
+        <NewFromCopy row={picked} publish={props.publish} onClose={() => setDialog(null)} onMade={props.onNew} />
       )}
       {dialog === "empty" && info && (
-        <NewEmpty info={info} libraries={libraries} onClose={() => setDialog(null)} onMade={props.onNew} />
+        <NewEmpty info={info} libraries={libraries} publish={props.publish} onClose={() => setDialog(null)} onMade={props.onNew} />
+      )}
+      {publishObjects && (
+        <PublishDialog
+          uuid={null}
+          model={null}
+          title="мои объекты"
+          objects={pending}
+          onClose={() => {
+            setPublishObjects(false);
+            loadDrafts();
+          }}
+          onDone={() => {
+            setPublishObjects(false);
+            toast("ok", "Объекты опубликованы", 8000);
+            loadDrafts();
+          }}
+        />
       )}
     </div>
   );
 }
 
-function Help() {
+function Help({ publish }: { publish: boolean }) {
   return (
     <div className="pad help">
       <h3>Как сделать новое место</h3>
@@ -177,7 +288,14 @@ function Help() {
         <li>Найдите похожую локацию и выберите её в списке.</li>
         <li>«Новая из копии»: место получит её картинку, стены, выходы и входы, а существа станут жителями.</li>
         <li>Или «Новая пустая»: ровное поле 64×128 или 32×64 с выходами по краям.</li>
-        <li>В редакторе расставьте объекты, стены, выходы, жителей, путь сюда и клетку на карте, затем «Сохранить».</li>
+        {publish ? (
+          <li>
+            В редакторе расставьте объекты, стены, выходы, жителей, путь сюда и клетку на карте. Правки сами сохраняются в черновик;
+            в игру место уходит кнопкой «Опубликовать».
+          </li>
+        ) : (
+          <li>В редакторе расставьте объекты, стены, выходы, жителей, путь сюда и клетку на карте, затем «Сохранить».</li>
+        )}
       </ol>
       <p className="muted">Локации оригинала открываются только для просмотра. Свои картинки добавляются в «Мои объекты».</p>
     </div>
@@ -210,7 +328,7 @@ function Preview({ row }: { row: LocRow }) {
     };
   }, [row.id]);
   return (
-    <div className="pad preview">
+    <div className="pad le-preview">
       <h3>
         #{row.id} {row.title}
       </h3>
@@ -251,8 +369,9 @@ function Preview({ row }: { row: LocRow }) {
 
 export function NewFromCopy(props: {
   row: { id: number; title: string };
+  publish?: boolean;
   onClose: () => void;
-  onMade: (m: Model, d: DroppedRow[]) => void;
+  onMade: Made;
 }) {
   const [title, setTitle] = useState("");
   const [why, setWhy] = useState("");
@@ -264,10 +383,10 @@ export function NewFromCopy(props: {
     setErr(null);
     try {
       const body: Record<string, unknown> = { from: props.row.id, title, why };
-      if (id.trim()) body.id = Number(id);
+      if (id.trim() && !props.publish) body.id = Number(id);
       const got = await api.newModel(body);
       for (const n of got.notes || []) toast("info", n, 12000);
-      props.onMade(got.model, got.dropped || []);
+      props.onMade(got.model, got.dropped || [], got.draft);
     } catch (e) {
       setErr(errText(e));
       setBusy(false);
@@ -292,8 +411,10 @@ export function NewFromCopy(props: {
       }
     >
       <p className="muted">
-        Новое место возьмёт картинку, стены, выходы и входы этой локации. Её существа станут жителями. Пока вы не нажмёте
-        «Сохранить» в редакторе, ничего не записывается.
+        Новое место возьмёт картинку, стены, выходы и входы этой локации. Её существа станут жителями.{" "}
+        {props.publish
+          ? "Оно сразу станет черновиком; в игру уйдёт, когда вы нажмёте «Опубликовать»."
+          : "Пока вы не нажмёте «Сохранить» в редакторе, ничего не записывается."}
       </p>
       <Field label="Название (обязательно)">
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Например: Старый склад" autoFocus />
@@ -301,9 +422,11 @@ export function NewFromCopy(props: {
       <Field label="Почему это место есть (обязательно)" hint="Ваше слово: попадёт в data/locations/index.json. Без него «Сделать» не нажимается">
         <textarea rows={3} value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Зачем это место в игре" />
       </Field>
-      <Field label="Номер" hint="Пусто: первый свободный от 1381">
-        <input value={id} onChange={(e) => setId(e.target.value.replace(/\D/g, ""))} placeholder="авто" inputMode="numeric" />
-      </Field>
+      {!props.publish && (
+        <Field label="Номер" hint="Пусто: первый свободный от 1381">
+          <input value={id} onChange={(e) => setId(e.target.value.replace(/\D/g, ""))} placeholder="авто" inputMode="numeric" />
+        </Field>
+      )}
       {err && <p className="err-text">{err}</p>}
     </Modal>
   );
@@ -312,8 +435,9 @@ export function NewFromCopy(props: {
 function NewEmpty(props: {
   info: Info;
   libraries: string[];
+  publish?: boolean;
   onClose: () => void;
-  onMade: (m: Model, d: DroppedRow[]) => void;
+  onMade: Made;
 }) {
   const [title, setTitle] = useState("");
   const [why, setWhy] = useState("");
@@ -353,7 +477,7 @@ function NewEmpty(props: {
         why,
       });
       for (const n of got.notes || []) toast("info", n, 12000);
-      props.onMade(got.model, got.dropped || []);
+      props.onMade(got.model, got.dropped || [], got.draft);
     } catch (e) {
       setErr(errText(e));
       setBusy(false);

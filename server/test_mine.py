@@ -224,7 +224,7 @@ check("the rails' end is a walk from the alcove Рудо guards",
 check("the EXIT sign is a walk from where the tier is arrived at",
       mobs.find_path(tier1, min(POCKET), lambda c: c in UNDER_SIGN) is not None, True)
 check("the mine's bandits go by the original's names",
-      [names.text(t) for t in BANDITS], ["[1] Слабый Мародёр", "[2] Мародёр"])
+      [names.text(t) for t in BANDITS], ["Слабый Мародёр", "Мародёр"])
 
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
            LAVA_CHEATS="1", LAVA_GX=str(MOUTH_CELL[0]), LAVA_GY=str(MOUTH_CELL[1]),

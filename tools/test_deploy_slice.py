@@ -20,7 +20,11 @@ Here ssh and rsync are stand-ins that only write down their arguments:
   - the locations of ours (data/locations/static, server/world.py) are held
     the same way: our copy of an original location in the client is
     refused, and a new place (an id the original has not) is never sent,
-    whatever the client holds there -- the rsync excludes it.
+    whatever the client holds there -- the rsync excludes it;
+  - database/objects.xml too: the release ships its own, with a row for
+    each item type of ours (data/own_items.json), and the launcher puts it
+    into the client. Synced up, the server and CI would read our rows as
+    the original's; the client holding it is refused like 262.xml.
 
     python3 tools/test_deploy_slice.py
 """
@@ -62,13 +66,33 @@ with open(os.path.join(ROOT, "client", "files", *REL.split("/")), "rb") as fh:
 ORIGINAL = OURS.replace('title="Тотем"'.encode(), 'title="Пустошь"'.encode(), 1)
 
 
-def client(data):
-    """A client's res holding 262.xml as given (None: without it)."""
+def original_of(rel):
+    """The original's bytes of a slice file, from LAVA_RES or the owner's
+    client, held to client/base.txt; None when neither has them."""
+    for res_dir in (os.environ.get("LAVA_RES") or "", "/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res"):
+        p = os.path.join(res_dir, *rel.split("/"))
+        if res_dir and os.path.isfile(p):
+            with open(p, "rb") as fh:
+                data = fh.read()
+            if hashlib.sha256(data).hexdigest() == base_sha(rel):
+                return data
+    return None
+
+
+OBJECTS = "database/objects.xml"
+ORIGINAL_OBJECTS = original_of(OBJECTS)
+
+
+def client(data, objects=ORIGINAL_OBJECTS):
+    """A client's res holding 262.xml and database/objects.xml as given
+    (None: without it); objects.xml the original's unless said."""
     res = tempfile.mkdtemp(dir=WORK)
     os.makedirs(os.path.join(res, "locations", "static"))
-    if data is not None:
-        with open(os.path.join(res, *REL.split("/")), "wb") as fh:
-            fh.write(data)
+    os.makedirs(os.path.join(res, "database"))
+    for rel, body in ((REL, data), (OBJECTS, objects)):
+        if body is not None:
+            with open(os.path.join(res, *rel.split("/")), "wb") as fh:
+                fh.write(body)
     return res
 
 
@@ -89,6 +113,8 @@ try:
     check("the copy here is the original's but for its title (client/base.txt)",
           hashlib.sha256(ORIGINAL).hexdigest() == base_sha(REL) != hashlib.sha256(OURS).hexdigest(),
           True)
+    check("  (the original's database/objects.xml is at hand, from LAVA_RES)",
+          ORIGINAL_OBJECTS is not None, True)
 
     code, err, calls = deploy(client(ORIGINAL), "--data-only")
     check("the original's file in the client: the slice goes up, nothing refused",
@@ -108,6 +134,26 @@ try:
     code, err, calls = deploy(client(None), "--data-only")
     check("the file missing from the client: refused the same way",
           (code, REL in err, calls), (1, True, []))
+
+    # The release's objects.xml: the original's with a row for each item
+    # type of ours, as client/build.py writes it (server/own_items.py).
+    import own_items  # noqa: E402
+    RELEASE_OBJECTS = own_items.release_xml(ORIGINAL_OBJECTS or b"<data></data>")
+    check("  (the release's objects.xml is the original's with our rows: 60000 among them)",
+          (RELEASE_OBJECTS != ORIGINAL_OBJECTS,
+           b'<object type_id="60000" root_type_id= "1" name="helm_Bs_U_LVL_12_G_mod00" />'
+           in RELEASE_OBJECTS), (True, True))
+    code, err, calls = deploy(client(ORIGINAL, RELEASE_OBJECTS), "--data-only")
+    check("the release's objects.xml in the client (the launcher's install since our own item"
+          " types): refused, the path named, nothing sent",
+          (code, OBJECTS in err, "not the original's" in err, REL in err, calls),
+          (1, True, True, False, []))
+    code, err, calls = deploy(client(ORIGINAL, RELEASE_OBJECTS), "--with-data", "--now")
+    check("  ..and the same with --with-data, before the code goes up",
+          (code, OBJECTS in err, calls), (1, True, []))
+    code, err, calls = deploy(client(ORIGINAL, None), "--data-only")
+    check("  ..and refused when the client has no objects.xml at all",
+          (code, OBJECTS in err, calls), (1, True, []))
 
     with open(os.path.join(ROOT, "deploy", "deploy.sh"), encoding="utf-8") as fh:
         script = fh.read()
@@ -155,15 +201,7 @@ try:
                 fh.write(data)
         return res
 
-    original_102 = None
-    for res_dir in (os.environ.get("LAVA_RES") or "", "/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res"):
-        p = os.path.join(res_dir, *OLD.split("/"))
-        if res_dir and os.path.isfile(p):
-            with open(p, "rb") as fh:
-                data = fh.read()
-            if hashlib.sha256(data).hexdigest() == base_sha(OLD):
-                original_102 = data
-                break
+    original_102 = original_of(OLD)
     check("  (the original's 102.xml is at hand, from LAVA_RES)", original_102 is not None, True)
 
     code, err, calls = deploy_tree(installed(**{NEW: PLACE, OLD: original_102}), "--data-only")

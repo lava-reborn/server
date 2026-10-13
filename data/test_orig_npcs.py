@@ -173,11 +173,14 @@ class Format(unittest.TestCase):
                                              "kind": "npc", "confidence": "high"})
 
     def test_text_left_as_is(self):
-        """Formatting is the server's job: '<Br>' and '[N] ' prefixes stay."""
+        """Formatting is the server's job: '<Br>' and '[N] ' prefixes stay here."""
         names = [v["name"] for v in self.npcs.values()]
         self.assertTrue(any("<Br>" in n for n in names))
         # Rows chosen by hand (orig_names_manual.json) are the file's text as
-        # it is, and two of them never had a level; orig_texts adds one.
+        # it is too, and some of them never had a level. On the wire no mob's
+        # name has one, the hand rows' and the matcher's alike: person_name
+        # drops a leading [N] from every name (server/orig_texts.py, the
+        # owner's 2026-10-12), while this file keeps the original's text.
         hand = set(json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                "orig_names_manual.json"),
                                   encoding="utf-8"))["types"])

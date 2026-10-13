@@ -66,7 +66,7 @@ export default function WalkInPicker(props: {
     let url: string | null = null;
     const scale = model.width > 32 ? 0.5 : 1;
     api
-      .renderSaved(model.id, "art", scale)
+      .renderSaved(Number(model.id), "art", scale)
       .then((b) => {
         url = URL.createObjectURL(b);
         c.setBackground(url, scale);

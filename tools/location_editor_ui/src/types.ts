@@ -63,7 +63,8 @@ export interface IndexRow {
 export type State = "new" | "ours" | "original";
 
 export interface Model {
-  id: number;
+  // a number, or in publish mode "new:<uuid>" for a new place until it is published
+  id: number | string;
   state: State;
   from: number | null;
   attrs: Record<string, string>;
@@ -93,7 +94,7 @@ export interface Problem {
   what: string;
   text: string;
   cells: Cell[];
-  loc: number | null;
+  loc: number | string | null;
 }
 
 export interface Info {
@@ -113,6 +114,120 @@ export interface Info {
   colours: string[];
   layers: string[];
   today: string;
+  // publish mode (the admin panel)
+  commit?: string;
+  branch?: string;
+  web?: string;
+  head?: { sha: string; date: string; author: string; subject: string };
+  stale?: string;
+  pending_objects?: PendingObject[];
+  restart_minutes?: number;
+  warn_seconds?: number;
+}
+
+export interface PendingObject {
+  id: string;
+  kind: "new" | "update" | "delete";
+  title: string;
+  at?: string;
+}
+
+export interface PublishState {
+  state: "running" | "done" | "failed";
+  step?: string;
+  step_text?: string;
+  code?: number;
+  started?: string;
+  finished?: string;
+  login?: string;
+  note?: string;
+  result?: PublishResult;
+}
+
+export interface SuiteResult {
+  suite: string;
+  ok: boolean;
+  code: number | null;
+  seconds: number;
+  known: boolean;
+  tail: string;
+}
+
+export interface PublishResult {
+  commit?: string;
+  url?: string;
+  id?: number | null;
+  renumbered?: Record<string, number>;
+  summary?: string[];
+  files?: string[];
+  objects?: PendingObject[];
+  suites?: SuiteResult[];
+  suite_notes?: string[];
+  nothing?: boolean;
+  error?: string;
+  git?: string;
+  problems?: Problem[];
+  stale?: boolean;
+  restarting?: boolean;
+  // the push had no answer and origin could not be looked at: the commit may be in main
+  maybe?: boolean;
+  // the commit was found in main by the draft's trailer (a push whose answer was lost)
+  landed?: boolean;
+}
+
+export interface DraftRow {
+  uuid: string;
+  id: number | string | null;
+  title: string;
+  state: State | null;
+  from: number | null;
+  base: string;
+  rev: number;
+  created: string;
+  created_by: string;
+  updated: string;
+  login: string;
+  stale: string | null;
+  publish: PublishState | null;
+}
+
+export interface Draft {
+  uuid: string;
+  rev: number;
+  base: string;
+  id: number | string | null;
+  title: string;
+  created: string;
+  created_by: string;
+  updated: string;
+  login: string;
+  model: Model | null;
+  publish: PublishState | null;
+  stale: string | null;
+}
+
+export interface DiffReply {
+  uuid: string;
+  rev: number;
+  base: string;
+  branch: string;
+  head: { sha: string; date: string; author: string; subject: string };
+  id: number | string | null;
+  assign: number | null;
+  summary: string[];
+  files: string[];
+  objects: PendingObject[];
+  problems: Problem[];
+  stale: string | null;
+  occupancy_id?: number | null;
+  restart_minutes: number;
+  warn_seconds: number;
+}
+
+export interface Occupancy {
+  saved: number;
+  online: number | null;
+  homes: number | null;
 }
 
 export interface LocRow {

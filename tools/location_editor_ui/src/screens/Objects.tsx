@@ -54,8 +54,10 @@ const fromEntry = (id: string, e: ObjectEntry): Form => ({
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
-export default function Objects(props: { onBack: () => void }) {
+export default function Objects(props: { onBack: () => void; publish?: boolean }) {
   const [objects, setObjects] = useState<Record<string, ObjectEntry> | null>(null);
+  // publish mode: what is not in main yet (it goes there with a publish)
+  const [pending, setPending] = useState<Record<string, string>>({});
   const [err, setErr] = useState<string | null>(null);
   const [form, setForm] = useState<Form>(blank());
   const [orig, setOrig] = useState<Form | null>(null);
@@ -72,6 +74,7 @@ export default function Objects(props: { onBack: () => void }) {
       .then((o) => {
         setObjects(o);
         setErr(null);
+        if (props.publish) api.objectsPending().then(setPending, () => undefined);
         return o;
       })
       .catch((e) => {
@@ -265,8 +268,12 @@ export default function Objects(props: { onBack: () => void }) {
         <button className="ghost" onClick={goBack}>
           ← Локации
         </button>
-        <span className="brand">Мои объекты</span>
-        <span className="muted small">свои картинки для локаций: client/objects</span>
+        <span className="le-brand">Мои объекты</span>
+        <span className="muted small">
+          {props.publish
+            ? "свои картинки для локаций: в main они уходят с ближайшей публикацией"
+            : "свои картинки для локаций: client/objects"}
+        </span>
         <span className="grow" />
         <button onClick={() => choose(null)}>Новый объект</button>
       </header>
@@ -290,6 +297,7 @@ export default function Objects(props: { onBack: () => void }) {
                   {e.used_in.length ? ` · стоит в ${e.used_in.join(", ")}` : ""}
                 </span>
                 {e.problem && <span className="small err-text">{e.problem}</span>}
+                {pending[id] && <span className="small warn-text">ждёт публикации</span>}
               </span>
             </button>
           ))}

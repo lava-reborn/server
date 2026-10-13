@@ -213,6 +213,34 @@ try:
     else:
         print("  --  no main.swf in %s; its two checks are skipped" % world.RES)
     check("crossdomain", b"allow-access-from" in get("/res/crossdomain.xml"), True)
+    # The item types of our own (data/own_items.json, own_items.py), served
+    # as every release ships them (client/build.py): the client's table with
+    # a row for each -- the one thing it reads a row for is the icon's
+    # folder -- and each one's icon, a copy of the original's picture. With
+    # the original's objects.xml alone the gold Ловелас is an empty cell.
+    import own_items
+    with open(os.path.join(world.RES, "database", "objects.xml"), "rb") as fh:
+        here = fh.read()
+    objs = get("/res/database/objects.xml")
+    row = b'<object type_id="60000" root_type_id= "1" name="helm_Bs_U_LVL_12_G_mod00" />\n'
+    check("objects.xml carries a row for each type of our own: 60000, the gold Ловелас helmet,"
+          " once", (objs.count(row), sorted(t for t in own_items.table(objs) if t >= own_items.FIRST)),
+          (1, sorted(own_items.load())))
+    check("  ..over the original's rows, every one as it is",
+          own_items.originals(own_items.table(objs)), own_items.originals(own_items.table(here)))
+    icons = own_items.icons(own_items.table(here))
+    if all(os.path.isfile(os.path.join(world.RES, *p.split("/"))) for p in icons.values()):
+        served_icons = {}
+        for mine, like in sorted(icons.items()):
+            with open(os.path.join(world.RES, *like.split("/")), "rb") as fh:
+                served_icons[mine] = get("/res/" + mine) == fh.read()
+        check("each one's icon served, its quest piece's picture byte for byte:"
+              " classes/WearItem/helm_Bs_U_LVL_12_G_mod00/ico.swf and the four others",
+              served_icons, dict.fromkeys(["classes/WearItem/%s_Bs_U_LVL_12_G_mod00/ico.swf" % s
+                                           for s in ("helm", "shirt", "armor", "pants", "boots")],
+                                          True))
+    else:
+        print("  --  no quest pieces' icons in %s; the check of ours is skipped" % world.RES)
     # directory traversal must not escape the res root
     traversal_code = None
     try:

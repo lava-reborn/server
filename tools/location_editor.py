@@ -217,6 +217,83 @@ against the files of the overlay and RES, data/locations/index.json and
 origin/main's data/locations/static (git fetch first; LAVA_LOCATION_EDITOR_GIT=0
 skips git, LAVA_LOCATION_EDITOR_FETCH=0 the fetch). 262 «Тотем» is closed
 to the editor; the original's files are read and copied, never written.
+
+PUBLISH MODE, for the admin panel (lava-admin runs this in a container of
+its own, service `locations`, and shows the page at /admin/locations):
+
+    python3 DIR/tools/location_editor.py --repo DIR [--branch main]
+            --host 0.0.0.0 [--port 8096] [--work /work] [--store /store]
+            [--cache /cache]
+
+DIR is a git clone whose origin is the source of truth (lvrbrn/server); the
+editor runs from it and reads its data/, and never writes it. What the page
+saves is a draft, WORK/drafts/<uuid>.json (the page saves after 3 s of quiet
+and keeps a copy in the browser); the owner's objects go into WORK/objects
+(the clone's client/objects with the uploads laid over it, kept until they
+are published). A new place has the temporary id "new:<uuid>" (its draft's
+uuid) until it is published; the checks see it under the first free number.
+«Опубликовать» (POST /api/publish) runs in the background, one at a time,
+and the draft says how far it got:
+
+  1. fetch origin/<branch>; when origin's engine (ENGINE: the server, data/
+     but the tables this editor merges, this editor and the tools it
+     imports) is not the checkout's, the editor restarts on it first (503
+     restarting, RESTART_CODE: the entrypoint checks the new commit out);
+  2. a git worktree of origin/<branch>; the pending objects laid into its
+     client/objects (an object main changed meanwhile is a 409); the draft
+     saved into its data/ by main's own code (`publish-save`, the save above:
+     L1, L2, L3 and the map's recount): a new place gets the first free id
+     there, and every "new:<uuid>" of the draft becomes it (fn ED_NEW too);
+     a place whose rows main changed since the draft began is a 409 (a
+     stale draft), an error a 422;
+  3. the changed files of data/ and client/objects committed onto
+     origin/<branch> in an index of its own (tools/publisher.py), author
+     «<login> (админка)» from X-Lava-Admin, the message ending in
+     «Черновик: <uuid>, правка <rev>»: a publish first looks for that line
+     in origin and, found, takes that commit for this publish (a push
+     whose answer was lost, a publish a restart cut short) instead of
+     making a second one;
+  4. L4: the location suites (L4_SUITES, LAVA_LOCATIONS_L4) run on that
+     commit's tree with LAVA_RES (LAVA_LOCATIONS_L4_RES: several folders
+     separated by ":" are laid one over the other); a red one, its known
+     failure (tools/known_failures.txt) aside, and nothing is pushed;
+  5. push <commit>:refs/heads/<branch>, PUSH_TRIES times while the branch
+     moves meanwhile (a push with no answer: origin fetched again says
+     whether it took the commit); then the editor restarts on the new
+     commit.
+
+The art comes from the release store by sha (--store, LAVA_ART_STORE: the
+site's download/client/store, <aa>/<sha256>) through client/base.txt and
+extra.txt, cached under --cache (LAVA_ART_CACHE); at most two pictures are
+extracted at once, and the ten libraries the original uses most are
+extracted in the background at start. Requests come from the panel alone
+(no port outside); a write names its admin in X-Lava-Admin (the panel sends
+the login as its UTF-8 bytes), and the panel itself checks its form token
+(X-Lava-Token) before it lets a write through. More of the API in publish
+mode:
+
+  GET  /api/entry                the built page's script and styles, for the panel
+  GET  /api/drafts               {drafts: [{uuid, id, title, state, from, base, rev,
+                                 created, created_by, updated, login, stale,
+                                 publish}]}
+  GET  /api/draft/<uuid>         the draft whole: {uuid, rev, base, id, model,
+                                 publish: {state: running|done|failed, step,
+                                 code, result, ...} or null}
+  GET  /api/diff/<uuid>          what publishing it would change, against the
+                                 checkout: {summary, files, objects, problems,
+                                 stale, assign, ...}
+  POST /api/new                  as above, and the draft made at once: {model
+                                 (id "new:<uuid>"), dropped, notes, draft: {uuid, rev}}
+  POST /api/draft, /api/save     {uuid?, rev?, base?, model} -> {uuid, rev, updated,
+                                 id}; 409 when the draft was saved meanwhile
+                                 (another tab: its rev differs) or is published
+  POST /api/draftdel             {uuid}
+  POST /api/publish              {uuid, rev?, message?} -> 202 {uuid, publish};
+                                 then GET /api/draft/<uuid> until publish.state
+                                 is done (result: {commit, url, id, summary,
+                                 files, suites, objects}) or failed (code
+                                 409/422/502 and result {error, problems?,
+                                 suites?, git?})
 """
 import argparse
 import ast
@@ -236,6 +313,7 @@ import tempfile
 import threading
 import time
 import traceback
+import uuid as uuidlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -269,6 +347,7 @@ import custom_objects as CO  # noqa: E402
 import jsonrows  # noqa: E402
 import lavaloc as L  # noqa: E402
 import location_art as A  # noqa: E402
+import publisher  # noqa: E402
 import swfgen  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
@@ -1084,8 +1163,22 @@ _ART = [None]
 
 def art():
     if _ART[0] is None:
-        _ART[0] = A.Art(objects=P.objects)
+        # publish mode: at most EXTRACT_AT_ONCE pictures extracted at once
+        _ART[0] = (_LimitedArt if PUB is not None else A.Art)(objects=P.objects)
     return _ART[0]
+
+
+def res_bytes(rel):
+    """A file of the client the server's slice (RES) may not hold -- the
+    original's database/locations.xml is no part of /opt/lava/res -- from
+    RES, else from the release (client/base.txt, the store, by its sha)."""
+    raw = read_bytes(os.path.join(world.RES, *rel.split("/")))
+    if raw is None:
+        try:
+            raw = art().read(rel)
+        except (OSError, ValueError):
+            raw = None
+    return raw
 
 
 def _ART_RESET():
@@ -1295,7 +1388,12 @@ def git_env(root=ROOT):
 def origin_main_ids():
     """The ids origin/main has under data/locations/static (after a fetch);
     empty when git cannot say (no git, no origin/main), which GIT keeps
-    and /api/info and /api/new tell the owner."""
+    and /api/info and /api/new tell the owner. In publish mode: origin's as
+    the clone last fetched it."""
+    if PUB is not None:
+        GIT.update(ok=True, why="")
+        names = PUB.ls(PUB.remote_ref, "data/locations/static")
+        return {i for i in (world._static_name(os.path.basename(n)) for n in names) if i is not None}
     if os.environ.get("LAVA_LOCATION_EDITOR_GIT", "1") == "0":
         GIT.update(ok=None, why="git выключен (LAVA_LOCATION_EDITOR_GIT=0)")
         return set()
@@ -2149,7 +2247,7 @@ def _tooltips():
     def read():
         import html
         out = collections.defaultdict(list)
-        raw = read_bytes(os.path.join(world.RES, "database", "locations.xml")) or b""
+        raw = res_bytes("database/locations.xml") or b""
         for x, y, t in re.findall(rb'<location x="(\d+)" y="(\d+)" text="([^"]*)"', raw):
             out[(int(x), int(y))].append(html.unescape(t.decode("utf-8", "replace")))
         return dict(out)
@@ -2810,6 +2908,12 @@ def _clean(model):
         int(model["id"]), int(model["width"]), int(model["height"])
     except (TypeError, ValueError):
         raise Refused("model: id, width и height — числа")
+    # The page never changes the size, and the checks, the edits and the
+    # picture walk (and draw) every cell: a hand-made size of thousands
+    # would take the editor's memory whole.
+    if (int(model["width"]), int(model["height"])) not in L.SIZES:
+        raise Refused("model: размер %sx%s; у локаций бывает только %s" % (
+            model["width"], model["height"], " и ".join("%dx%d" % s for s in L.SIZES)))
     if not isinstance(model.get("attrs"), dict):
         raise Refused("model: attrs — объект")
     for k in ("sprites", "decals", "walls", "exits", "entries", "war_entries", "inhabitants", "walk_ins"):
@@ -3090,7 +3194,7 @@ def map_info():
     for r in locations():
         titles[r["id"]] = r["title"]
     labels = []
-    raw = read_bytes(os.path.join(world.RES, "database", "locations.xml"))
+    raw = res_bytes("database/locations.xml")
     if raw is not None:
         try:
             edited, _n = map_labels.apply(raw, map_labels.load(P.labels))
@@ -3435,6 +3539,1116 @@ def info():
             "today": today()}
 
 
+# --- what a save changes, in words --------------------------------------------------------------
+
+SIDE_WORDS = {"W": "запад", "N": "север", "E": "восток", "S": "юг", "a": "дверь a", "b": "дверь b"}
+ATTR_WORDS = (("title", "название"), ("pvp", "pvp"), ("war", "война"), ("bgsound", "музыка"), ("fn", "fn"),
+              ("library", "библиотека"), ("bg", "фон"), ("bgExt", "вид фона"))
+
+
+def _cellset(rows):
+    return {(int(r[0]), int(r[1])) for r in rows or () if _ok_cell(r)}
+
+
+def _plus_minus(word, now, was):
+    add, gone = len(now - was), len(was - now)
+    if not add and not gone:
+        return None
+    return "%s: %s" % (word, ", ".join(p for p in ("+%d" % add if add else "", "−%d" % gone if gone else "") if p))
+
+
+def cells_word(n):
+    """«1 клетка», «3 клетки», «5 клеток»."""
+    tail = n % 100
+    word = "клеток" if 11 <= tail <= 14 else {1: "клетка", 2: "клетки", 3: "клетки", 4: "клетки"}.get(n % 10, "клеток")
+    return "%d %s" % (n, word)
+
+
+def _names_of(types, limit=4):
+    c = collections.Counter(types)
+    parts = ["%s%s" % (creature_name(t), " ×%d" % n if n > 1 else "") for t, n in sorted(c.items())]
+    return ", ".join(parts[:limit]) + (" и ещё %d" % (len(parts) - limit) if len(parts) > limit else "")
+
+
+def describe(before, after):
+    """What saving the model `after` changes against `before` (the place as
+    it is; for a new place, the location it is copied from, or None for one
+    made empty): one line in Russian per kind of change -- the publish
+    dialog's semantic diff and the commit message's summary."""
+    out = []
+    title = str((after.get("attrs") or {}).get("title") or "")
+    new = after.get("state") == "new" or bool(temp_uuid(after.get("id")))
+    if new:
+        src = after.get("from")
+        out.append("новое место%s «%s», %s" % ("" if temp_uuid(after.get("id")) else " #%s" % after.get("id"), title,
+                                               "копия #%s" % src if src is not None else
+                                               "пустое %sx%s" % (after.get("width"), after.get("height"))))
+    if before is None:
+        before = {}
+    elif new:
+        # the location copied: its file is the new place's start, its rows are its own
+        before = dict(before, inhabitants=[], spawns=[], doors={}, walk_ins=[], no_map=None, map=None, index=None)
+    a0, a1 = before.get("attrs") or {}, after.get("attrs") or {}
+    for k, word in ATTR_WORDS:
+        if new and k in ("title", "fn"):
+            continue
+        if before and str(a0.get(k, "")) != str(a1.get(k, "")):
+            out.append("%s: «%s» → «%s»" % (word, a0.get(k, ""), a1.get(k, "")))
+    for key, word in (("walls", "стены"), ("entries", "входы"), ("war_entries", "военные входы")):
+        line = _plus_minus(word, _cellset(after.get(key)), _cellset(before.get(key)))
+        if line:
+            out.append(line)
+    e0 = {(int(r[0]), int(r[1])): str(r[2]) for r in before.get("exits") or () if _ok_cell(r) and len(r) > 2}
+    e1 = {(int(r[0]), int(r[1])): str(r[2]) for r in after.get("exits") or () if _ok_cell(r) and len(r) > 2}
+    for side in sorted(set(e0.values()) | set(e1.values()), key=lambda s: "WNESab".find(s)):
+        line = _plus_minus("выходы (%s)" % SIDE_WORDS.get(side, side),
+                           {c for c, s in e1.items() if s == side}, {c for c, s in e0.items() if s == side})
+        if line:
+            out.append(line)
+
+    def placings(m):
+        return collections.Counter((str(s.get("id")), s.get("type"), L.num(s.get("dx")), L.num(s.get("dy")),
+                                    str(s.get("front") or ""), int(a[0]), int(a[1]))
+                                   for s in m.get("sprites") or () for a in s.get("anchors") or () if _ok_cell(a))
+    p0, p1 = placings(before), placings(after)
+    if p0 != p1:
+        add, gone = sum((p1 - p0).values()), sum((p0 - p1).values())
+        out.append("объекты на клетках: %s" % ", ".join(p for p in ("+%d" % add if add else "",
+                                                                    "−%d" % gone if gone else "") if p))
+    if before and (before.get("decals") or []) != (after.get("decals") or []):
+        out.append("наклейки: было %d, стало %d" % (len(before.get("decals") or []), len(after.get("decals") or [])))
+    if before and (before.get("background") or None) != (after.get("background") or None):
+        out.append("фон: %s → %s" % ((before.get("background") or {}).get("id", ""),
+                                     (after.get("background") or {}).get("id", "")))
+
+    def people(m):
+        return collections.Counter((int(r["type"]), int(r["cell"][0]), int(r["cell"][1]))
+                                   for r in m.get("inhabitants") or ()
+                                   if isinstance(r, dict) and "type" in r and _ok_cell(r.get("cell") or ()))
+    h0, h1 = people(before), people(after)
+    if h0 != h1:
+        add = [t for (t, _x, _y), n in (h1 - h0).items() for _ in range(n)]
+        gone = [t for (t, _x, _y), n in (h0 - h1).items() for _ in range(n)]
+        parts = []
+        if add:
+            parts.append("+%d (%s)" % (len(add), _names_of(add)))
+        if gone:
+            parts.append("−%d (%s)" % (len(gone), _names_of(gone)))
+        out.append("жители: " + ", ".join(parts))
+    d0, d1 = before.get("doors") or {}, after.get("doors") or {}
+    for side in DOOR_SIDES:
+        t0, t1 = (d0.get(side) or {}).get("target"), (d1.get(side) or {}).get("target")
+        if t0 != t1:
+            out.append("дверь %s: %s → %s" % (side, "#%s" % t0 if t0 is not None else "никуда",
+                                              "#%s" % t1 if t1 is not None else "никуда"))
+
+    def walks_in(m):
+        return {(int(w.get("from")), tuple(sorted(_cellset(w.get("cells"))))) for w in m.get("walk_ins") or ()
+                if isinstance(w, dict) and str(w.get("from", "")).lstrip("-").isdigit()}
+    w0, w1 = walks_in(before), walks_in(after)
+    for src, cells in sorted(w1 - w0):
+        out.append("проход сюда из #%d (%s)" % (src, cells_word(len(cells))))
+    for src, cells in sorted(w0 - w1):
+        if src not in {s for s, _c in w1}:
+            out.append("убран проход из #%d" % src)
+    if bool(before.get("no_map")) != bool(after.get("no_map")):
+        out.append("не выходит на карту" if after.get("no_map") else "снова выходит на карту")
+    m0, m1 = before.get("map") or {}, after.get("map") or {}
+    c0 = tuple(m0["cell"]) if m0.get("cell") is not None else None
+    c1 = tuple(m1["cell"]) if m1.get("cell") is not None else None
+    if c0 != c1:
+        out.append("клетка на карте: %s → %s" % ("%d,%d" % c0 if c0 else "нет", "%d,%d" % c1 if c1 else "нет"))
+    if c1 and (m0.get("label") or "") != (m1.get("label") or ""):
+        out.append("подпись на карте: «%s»" % (m1.get("label") or ""))
+    if c1 and (m0.get("square") or None) != (m1.get("square") or None):
+        out.append("квадрат на карте: %s" % (m1.get("square") or "без квадрата"))
+    i0, i1 = before.get("index") or {}, after.get("index") or {}
+    if before and not new and str(i0.get("why") or "") != str(i1.get("why") or ""):
+        out.append("«почему» места переписано")
+    return out
+
+
+def describe_against(model):
+    """describe() of a model against what the editor's data/ has: the place
+    itself (ours), or the location a new place is copied from."""
+    try:
+        lid = int(model["id"])
+    except (TypeError, ValueError, KeyError):
+        lid = None
+    before = None
+    if lid is not None and model.get("state") != "new" and is_ours(lid):
+        before = load_model(lid)
+    elif model.get("from") is not None:
+        try:
+            before = load_model(int(model["from"]))
+        except (NotFound, TypeError, ValueError):
+            before = None
+    return describe(before, model)
+
+
+# --- publish mode (the admin panel) ------------------------------------------------------------
+
+PUB = None                  # the LocationPublisher in publish mode, None locally
+WORK = None                 # its folder: drafts/, objects/, publish/
+DRAFTS = None
+PENDING = None
+TEMP = re.compile(r"new:([0-9a-f]{32})\Z")
+UUID = re.compile(r"[0-9a-f]{32}\Z")
+TEMP_FN = "ED_NEW"          # a new place's fn while it has no number and its title no latin word
+# What the checks and the merge read: the server, its tables, the editor and
+# the tools it imports. When origin's differ from the checkout's, the editor
+# restarts on them before it publishes. The tables a save of a place writes
+# (MERGED) are merged by that save itself, on origin's own: never a reason.
+ENGINE = ("server", "data", "client/build.py", "tools/location_editor.py", "tools/lavaloc.py",
+          "tools/swfx.py", "tools/location_art.py", "tools/publisher.py", "tools/custom_objects.py",
+          "tools/jsonrows.py", "tools/swfgen.py")
+MERGED = ("data/locations/", "data/placements.json", "data/passages.json", "data/map_labels.json",
+          "data/map_cells.json", "data/settlements_verified.json", "data/settlements.json",
+          "data/settlements_report.md", "data/exits_sides.json", "client/objects/")
+PUBLISHED_PATHS = ("data", "client/objects")
+# L4: the suites that read locations and the tables a place writes, run on
+# the commit before it is pushed. The long ones that play whole sessions
+# (test_walk_in, test_travel, test_world) are CI's after the push.
+L4_SUITES = ("server/test_locations.py", "server/test_location_overrides.py", "server/test_new_location.py",
+             "server/test_map_labels.py", "server/test_map_cells.py", "server/test_camp_patrols.py",
+             "data/test_borders.py", "tools/test_lavaloc.py")
+# a suite that needs a file of the client beyond the server's slice runs only
+# where the res given has it (CI's extras, /opt/lava-ci/res-extra)
+L4_NEEDS = {"server/test_map_labels.py": "database/locations.xml"}
+L4_JOBS = int(os.environ.get("LAVA_LOCATIONS_L4_JOBS") or "2")
+L4_TIMEOUT = 900
+EXTRACT_AT_ONCE = int(os.environ.get("LAVA_LOCATION_EDITOR_EXTRACT") or "2")
+WARM_LIBRARIES = 10
+KEEP_PUBLISHED = 3 * 86400  # a published draft is kept this long, for the page that asks how it went
+RESTARTS_AFTER = 20         # minutes, about: CI, the deploy and the warning to players
+WARN_SECONDS = 180
+
+# the publish steps, in the page's words
+STEPS = {"start": "начинаю", "fetch": "беру свежий main", "tree": "раскладываю main",
+         "objects": "кладу объекты", "save": "сохраняю место и проверяю его, как сервер",
+         "commit": "собираю коммит", "suites": "гоняю наборы проверок (L4)", "push": "отправляю в main",
+         "done": "готово"}
+# A push with no answer, and origin not reachable after it to look.
+PUSH_MAYBE = ("GitHub не ответил на отправку коммита, и посмотреть {branch} после этого не вышло: коммит мог "
+              "уйти. Повторная публикация сначала найдёт его в {branch} по номеру черновика и второй раз "
+              "его не сделает.")
+
+
+class _LimitedArt(A.Art):
+    """Art that extracts at most EXTRACT_AT_ONCE pictures at once (a big
+    library takes about 500 MB while it is extracted; the container has 2 GB)."""
+
+    _slots = threading.BoundedSemaphore(EXTRACT_AT_ONCE)
+
+    def ensure(self, path):
+        e = self.entry(path)
+        if e is None or self._cached(e.sha) is not None:
+            return A.Art.ensure(self, path)
+        with self._slots:
+            return A.Art.ensure(self, path)
+
+    def mob(self, type_id, direction=1):
+        if (int(type_id), direction) in self._mob_memo:
+            return A.Art.mob(self, type_id, direction)
+        with self._slots:
+            return A.Art.mob(self, type_id, direction)
+
+
+def _warm_libraries():
+    """The libraries the original's locations use most, extracted ahead."""
+    counts = collections.Counter(r.get("library") for r in _originals().values() if r.get("library"))
+    for name, _n in counts.most_common(WARM_LIBRARIES):
+        try:
+            art().library(libraries().get(name.lower(), name))
+        except Exception:                  # noqa: BLE001 -- a library missing is a thumbnail missing
+            traceback.print_exc()
+
+
+class LocationPublisher(publisher.Publisher):
+    """The clone publish mode works on, the location editor's way."""
+
+    def __init__(self, repo, branch="main", web=""):
+        publisher.Publisher.__init__(
+            self, repo, branch, web, engine=ENGINE, merged=MERGED, section="Локации",
+            ident={"author_email": ("LAVA_LOCATIONS_AUTHOR_EMAIL", "locations@lava-reborn.ru"),
+                   "committer_name": ("LAVA_LOCATIONS_COMMITTER_NAME", "Редактор локаций админки"),
+                   "committer_email": ("LAVA_LOCATIONS_COMMITTER_EMAIL", "locations@lava-reborn.ru")},
+            tmp_prefix="loc-publish-")
+
+
+def now_iso():
+    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat()
+
+
+def temp_uuid(v):
+    """The uuid of a temporary id "new:<uuid>", else None."""
+    m = TEMP.match(v) if isinstance(v, str) else None
+    return m.group(1) if m else None
+
+
+def numbered(model):
+    """(model, temp, n): a model whose id is "new:<uuid>" under the first free
+    number n, for the checks, the edits and the pictures; temp None for one
+    that has its number."""
+    if not isinstance(model, dict) or not temp_uuid(model.get("id")):
+        return model, None, None
+    n = next_free_id()
+    return dict(model, id=n, state="new"), model["id"], n
+
+
+def lettered(model, temp, n):
+    """A model numbered() gave, back under its temporary id."""
+    if temp is not None and isinstance(model, dict) and model.get("id") == n:
+        return dict(model, id=temp)
+    return model
+
+
+def problems_back(problems, temp, n):
+    if temp is not None:
+        for p in problems:
+            if p.get("loc") == n:
+                p["loc"] = temp
+    return problems
+
+
+def assign_id(model, temp, real):
+    """A new place's model under its number: every "new:<uuid>" in it (the
+    id, a why that names it) becomes the number, and fn ED_NEW its ED_<id>."""
+    def walk(v):
+        if isinstance(v, str):
+            return v.replace(temp, str(real))
+        if isinstance(v, list):
+            return [walk(x) for x in v]
+        if isinstance(v, dict):
+            return {k: walk(x) for k, x in v.items()}
+        return v
+    m = walk(model)
+    m["id"] = int(real)
+    m["state"] = "new"
+    attrs = m.setdefault("attrs", {})
+    if str(attrs.get("fn") or "") == TEMP_FN:
+        attrs["fn"] = "ED_%d" % int(real)
+    elif not attrs.get("fn"):
+        attrs["fn"] = fn_for(attrs.get("title"), int(real))
+    return m
+
+
+class Drafts:
+    """The drafts of publish mode: WORK/drafts/<uuid>.json each."""
+
+    def __init__(self, folder):
+        self.dir = folder
+        os.makedirs(folder, exist_ok=True)
+        self.lock = threading.RLock()
+
+    def path(self, uuid):
+        if not UUID.fullmatch(str(uuid or "")):
+            raise NotFound("нет черновика %s" % uuid)
+        return os.path.join(self.dir, "%s.json" % uuid)
+
+    def read(self, uuid):
+        try:
+            with open(self.path(uuid), encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            return None
+
+    def get(self, uuid):
+        d = self.read(uuid)
+        if d is None:
+            raise NotFound("нет черновика %s" % uuid)
+        return d
+
+    def write(self, doc):
+        write_atomic(self.path(doc["uuid"]), (json.dumps(doc, ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
+
+    def delete(self, uuid):
+        try:
+            os.unlink(self.path(uuid))
+        except FileNotFoundError:
+            pass
+
+    def all(self):
+        out = []
+        for f in sorted(os.listdir(self.dir)):
+            if f.endswith(".json") and UUID.fullmatch(f[:-5]):
+                d = self.read(f[:-5])
+                if d:
+                    out.append(d)
+        return out
+
+    def settle(self):
+        """At start: a publish a restart cut short is said to have failed (its
+        thread is gone); a published draft past KEEP_PUBLISHED goes."""
+        cut = time.time() - KEEP_PUBLISHED
+        for d in self.all():
+            pub = d.get("publish") or {}
+            if pub.get("state") == "running":
+                d["publish"] = dict(pub, state="failed", code=503, finished=now_iso(), result={
+                    "error": "Публикацию прервал перезапуск редактора. Опубликуйте ещё раз: если коммит успел "
+                             "уйти в main, публикация найдёт его там и второй раз его не сделает", "maybe": True})
+                self.write(d)
+            elif pub.get("state") == "done":
+                try:
+                    if os.path.getmtime(self.path(d["uuid"])) < cut:
+                        self.delete(d["uuid"])
+                except OSError:
+                    pass
+
+
+def draft_stale(d):
+    """Why a draft would be a 409 now (its place's rows changed in the
+    checkout since it began), or None."""
+    m = d.get("model") or {}
+    if temp_uuid(m.get("id")) or m.get("state") != "ours":
+        return None
+    try:
+        if etag_of(location_state(int(m["id"]))) != m.get("etag"):
+            return ("локацию %s тем временем изменили в %s: этот черновик начат с прежней" % (m["id"], PUB.branch))
+    except (TypeError, ValueError, KeyError):
+        return None
+    return None
+
+
+def draft_row(d):
+    m = d.get("model") or {}
+    pub = d.get("publish") or None
+    return {"uuid": d["uuid"], "id": d.get("id"),
+            "title": str((m.get("attrs") or {}).get("title") or ("" if m else d.get("title")) or ""),
+            "state": m.get("state"), "from": m.get("from"), "base": d.get("base"), "rev": d.get("rev"),
+            "created": d.get("created"), "created_by": d.get("created_by"), "updated": d.get("updated"),
+            "login": d.get("login"), "stale": draft_stale(d),
+            "publish": {k: pub.get(k) for k in ("state", "step", "code", "started", "finished", "login")}
+            if pub else None}
+
+
+def drafts_list():
+    rows = [draft_row(d) for d in DRAFTS.all() if (d.get("publish") or {}).get("state") != "done"]
+    return sorted(rows, key=lambda r: r.get("updated") or "", reverse=True)
+
+
+def checkout_head():
+    try:
+        return PUB.rev("HEAD")
+    except publisher.GitError:
+        return ""
+
+
+def draft_save(body, login):
+    """POST /api/draft (and /api/save in publish mode)."""
+    model = body.get("model")
+    if not isinstance(model, dict):
+        raise Refused("model: объект")
+    temp = temp_uuid(model.get("id"))
+    _clean(numbered(model)[0])
+    uuid = str(body.get("uuid") or temp or uuidlib.uuid4().hex)
+    if not UUID.fullmatch(uuid):
+        raise Refused("uuid черновика: 32 шестнадцатеричных знака")
+    if temp and temp != uuid:
+        raise Refused("черновик нового места живёт под его же номером new:<uuid>")
+    if not temp:
+        if model.get("state") != "ours" or not is_ours(int(model["id"])):
+            raise Refused("черновик — нового места или нашей локации; локация оригинала правится копией")
+        if int(model["id"]) == 262:
+            raise Refused("262 «Тотем» закрыт для редактора")
+    with DRAFTS.lock:
+        d = DRAFTS.read(uuid)
+        if d is None:
+            d = {"v": 1, "uuid": uuid, "rev": 0, "created": now_iso(), "created_by": login,
+                 "base": str(body.get("base") or "") or checkout_head(), "publish": None}
+        else:
+            pub = d.get("publish") or {}
+            if pub.get("state") == "running":
+                raise Conflict("черновик сейчас публикуется: дождитесь конца", {"rev": d["rev"], "publish": pub})
+            if pub.get("state") == "done":
+                raise Conflict("черновик уже опубликован: дальнейшие правки — в локации из списка",
+                               {"rev": d["rev"], "publish": pub})
+            if body.get("rev") is not None and str(body.get("rev")) != str(d.get("rev")):
+                raise Conflict("черновик тем временем сохранили в другой вкладке (%s): откройте его заново"
+                               % (d.get("login") or "?"), {"rev": d.get("rev"), "login": d.get("login"),
+                                                           "updated": d.get("updated")})
+            if (d.get("model") or {}).get("id") != model.get("id"):
+                raise Conflict("у черновика другая локация: %s" % (d.get("model") or {}).get("id"))
+            if pub.get("state") == "failed":
+                d["publish"] = None
+        d.update(rev=int(d.get("rev") or 0) + 1, model=model, id=model.get("id"), updated=now_iso(), login=login,
+                 title=str((model.get("attrs") or {}).get("title") or ""))
+        DRAFTS.write(d)
+        return {"uuid": uuid, "rev": d["rev"], "updated": d["updated"], "id": d["id"], "base": d.get("base")}
+
+
+def draft_new(body, login):
+    """POST /api/new in publish mode: the model under "new:<uuid>" and its
+    draft at once."""
+    uuid = uuidlib.uuid4().hex
+    temp = "new:" + uuid
+    n = next_free_id()
+    got = new_model(body.get("title"), body.get("from"), body.get("empty"), body.get("why") or "",
+                    author=login, new_id=n)
+    m = got["model"]
+    if m["attrs"].get("fn") == "ED_%d" % n:
+        m["attrs"]["fn"] = TEMP_FN
+    m["id"] = temp
+    m["etag"] = ""
+    notes = [x for x in got["notes"] if "origin/main" not in x]
+    notes.append("Номер новое место получит при публикации: первый свободный в %s (сейчас это %d)."
+                 % (PUB.branch, n))
+    with DRAFTS.lock:
+        d = {"v": 1, "uuid": uuid, "rev": 1, "created": now_iso(), "created_by": login, "updated": now_iso(),
+             "login": login, "base": str(body.get("base") or "") or checkout_head(), "id": temp,
+             "title": m["attrs"]["title"], "model": m, "publish": None}
+        DRAFTS.write(d)
+    return {"model": m, "dropped": got["dropped"], "notes": notes, "draft": {"uuid": uuid, "rev": 1}}
+
+
+def draft_delete(body):
+    uuid = str(body.get("uuid") or "")
+    with DRAFTS.lock:
+        d = DRAFTS.get(uuid)
+        if (d.get("publish") or {}).get("state") == "running":
+            raise Conflict("черновик сейчас публикуется")
+        DRAFTS.delete(uuid)
+    return {"uuid": uuid, "deleted": True}
+
+
+def draft_users(oid):
+    """The drafts whose place shows an object (any case)."""
+    low = oid.lower()
+    out = []
+    for d in DRAFTS.all() if DRAFTS else ():
+        if (d.get("publish") or {}).get("state") == "done":
+            continue
+        m = d.get("model") or {}
+        ids = [s.get("id") for s in m.get("sprites") or ()] + [x.get("id") for x in m.get("decals") or ()]
+        ids.append((m.get("background") or {}).get("id"))
+        if any(str(x or "").lower() == low for x in ids):
+            out.append("«%s»" % ((m.get("attrs") or {}).get("title") or d["uuid"][:8]))
+    return out
+
+
+def draft_diff(uuid):
+    """GET /api/diff/<uuid>: what publishing the draft would change, worked
+    out against the checkout (the publish works it out again on origin's)."""
+    d = DRAFTS.get(uuid)
+    m0 = d.get("model")
+    out = {"uuid": uuid, "rev": d.get("rev"), "base": d.get("base"), "head": PUB._about("HEAD"),
+           "objects": PENDING.listing(), "restart_minutes": RESTARTS_AFTER, "warn_seconds": WARN_SECONDS,
+           "branch": PUB.branch}
+    if not m0:
+        out.update(summary=[], files=[], problems=[], stale=None, id=None, assign=None)
+        return out
+    model, temp, n = numbered(m0)
+    model = _clean(model)
+    out["id"] = m0.get("id")
+    out["assign"] = n
+    out["stale"] = draft_stale(d)
+    summary = describe_against(dict(model, id=m0.get("id")) if temp else model)
+    problems = lint(model)
+    try:
+        plan = plan_writes(model, d.get("login") or "admin")
+        files = [P.rel(p) for p in sorted(plan)]
+    except Exception as exc:               # noqa: BLE001 -- a plan that does not come out is a problem shown
+        files = []
+        problems.append(problem("error", "model", "файлы из черновика не пишутся: %s" % exc))
+    if temp:
+        files = [f.replace("/%d.xml" % n, "/%s.xml" % "N") for f in files]
+    out.update(summary=summary, files=files, problems=problems_back(problems, temp, n))
+    out["occupancy_id"] = None if temp else model["id"]
+    return out
+
+
+class PendingObjects:
+    """The owner's objects of publish mode, not yet in main: WORK/objects/view
+    is the clone's client/objects with them laid over it (what the editor
+    reads and the object calls write), pending.json and pending/<id>/ what
+    each changed into, against what the clone had (base) when it changed."""
+
+    def __init__(self, folder, checkout):
+        self.dir = folder
+        self.view = os.path.join(folder, "view")
+        self.files = os.path.join(folder, "pending")
+        self.journal = os.path.join(folder, "pending.json")
+        self.checkout = checkout
+        self.lock = threading.RLock()
+        os.makedirs(self.files, exist_ok=True)
+
+    def load(self):
+        return load_json(self.journal, {}) or {}
+
+    def save(self, j):
+        write_atomic(self.journal, (json.dumps(j, ensure_ascii=False, indent=1, sort_keys=True) + "\n").encode("utf-8"))
+
+    @staticmethod
+    def shas(folder):
+        if not os.path.isdir(folder):
+            return {}
+        return {n: sha(read_bytes(os.path.join(folder, n))) for n in sorted(os.listdir(folder))
+                if os.path.isfile(os.path.join(folder, n))}
+
+    @staticmethod
+    def raw(folder):
+        try:
+            return CO.load_raw(folder)
+        except CO.Refused:
+            return {}
+
+    def rebuild(self):
+        """The view, anew: the clone's objects and the pending ones over them."""
+        with self.lock:
+            shutil.rmtree(self.view, ignore_errors=True)
+            if os.path.isdir(self.checkout):
+                shutil.copytree(self.checkout, self.view)
+            else:
+                os.makedirs(self.view)
+            j = self.load()
+            if not j:
+                return
+            # what the checkout has as it is pending was published (by a push
+            # whose answer was lost, say): no longer pending
+            have = self.raw(self.checkout)
+            for oid, rec in sorted(j.items()):
+                now = {"entry": have.get(oid),
+                       "files": self.shas(os.path.join(self.checkout, oid)) if have.get(oid) is not None else {}}
+                mine = {"entry": rec.get("entry"), "files": (rec.get("files") or {}) if rec.get("entry") is not None else {}}
+                if now == mine:
+                    j.pop(oid)
+                    shutil.rmtree(os.path.join(self.files, oid), ignore_errors=True)
+                    self.save(j)
+            if not j:
+                return
+            raw = self.raw(self.view)
+            for oid, rec in sorted(j.items()):
+                shutil.rmtree(os.path.join(self.view, oid), ignore_errors=True)
+                if rec.get("entry") is None:
+                    raw.pop(oid, None)
+                    continue
+                shutil.copytree(os.path.join(self.files, oid), os.path.join(self.view, oid))
+                raw[oid] = rec["entry"]
+            write_atomic(os.path.join(self.view, CO.MANIFEST), CO.manifest_text(raw).encode("utf-8"))
+
+    def record(self, oid):
+        """After an object call wrote the view: what the object is now."""
+        with self.lock:
+            j = self.load()
+            entry = self.raw(self.view).get(oid)
+            files = self.shas(os.path.join(self.view, oid)) if entry is not None else {}
+            was = {"entry": self.raw(self.checkout).get(oid), "files": self.shas(os.path.join(self.checkout, oid))}
+            base = (j.get(oid) or {}).get("base") or was
+            shutil.rmtree(os.path.join(self.files, oid), ignore_errors=True)
+            if entry == was["entry"] and files == (was["files"] if was["entry"] is not None else {}):
+                j.pop(oid, None)           # back to what main has: nothing to publish
+            else:
+                if entry is not None:
+                    shutil.copytree(os.path.join(self.view, oid), os.path.join(self.files, oid))
+                kind = "delete" if entry is None else ("new" if base.get("entry") is None else "update")
+                j[oid] = {"entry": entry, "files": files, "base": base, "kind": kind, "at": now_iso()}
+            self.save(j)
+
+    def listing(self):
+        return [{"id": oid, "kind": rec.get("kind"), "title": (rec.get("entry") or (rec.get("base") or {}).get("entry")
+                                                                 or {}).get("title", ""), "at": rec.get("at")}
+                for oid, rec in sorted(self.load().items())]
+
+    def apply_to(self, objdir):
+        """The pending objects into a tree's client/objects (origin's); Conflict
+        when origin changed one of them since it was taken. [{id, kind,
+        title, at}]."""
+        with self.lock:
+            j = self.load()
+            if not j:
+                return []
+            raw = self.raw(objdir)
+            for oid, rec in sorted(j.items()):
+                now = {"entry": raw.get(oid), "files": self.shas(os.path.join(objdir, oid))}
+                mine = {"entry": rec.get("entry"), "files": rec.get("files") or {}}
+                if now["entry"] is None:
+                    now["files"] = {}
+                base = rec.get("base") or {}
+                if base.get("entry") is None:
+                    base = {"entry": None, "files": {}}
+                if now != base and now != mine:
+                    raise Conflict("объект %s тем временем изменили в %s: откройте «Мои объекты» после перезапуска "
+                                   "редактора и сделайте правку заново" % (oid, PUB.branch if PUB else "main"))
+                shutil.rmtree(os.path.join(objdir, oid), ignore_errors=True)
+                if rec.get("entry") is None:
+                    raw.pop(oid, None)
+                else:
+                    shutil.copytree(os.path.join(self.files, oid), os.path.join(objdir, oid))
+                    raw[oid] = rec["entry"]
+            write_atomic(os.path.join(objdir, CO.MANIFEST), CO.manifest_text(raw).encode("utf-8"))
+            return self.listing()
+
+    def published(self, done):
+        """The objects a push took to main: no longer pending (unless changed
+        again since)."""
+        with self.lock:
+            j = self.load()
+            for o in done:
+                rec = j.get(o["id"])
+                if rec is not None and rec.get("at") == o.get("at"):
+                    j.pop(o["id"])
+                    shutil.rmtree(os.path.join(self.files, o["id"]), ignore_errors=True)
+            self.save(j)
+
+
+def configure_repo(repo, branch="main", web="", work=None, store=None, cache=None):
+    """Publish mode on the clone repo: its data/ read and never written, the
+    drafts and the pending objects in work."""
+    global PUB, WORK, DRAFTS, PENDING, CACHE
+    PUB = LocationPublisher(repo, branch, web)
+    WORK = os.path.abspath(work or os.path.join(os.path.dirname(PUB.repo), "locations-work"))
+    if store:
+        os.environ["LAVA_ART_STORE"] = store
+    if cache:
+        # the pictures, the original's placings, the list and the map's
+        # recount, shared with the publish's own save (a subprocess)
+        os.environ["LAVA_ART_CACHE"] = cache
+        os.environ["LAVA_LOCATION_EDITOR_CACHE"] = cache
+        CACHE = cache
+    os.environ.setdefault("LAVA_ART_IMAGE_PIXELS", "40000000")
+    for sub in ("drafts", "objects", "publish"):
+        os.makedirs(os.path.join(WORK, sub), exist_ok=True)
+    DRAFTS = Drafts(os.path.join(WORK, "drafts"))
+    DRAFTS.settle()
+    PENDING = PendingObjects(os.path.join(WORK, "objects"), os.path.join(PUB.repo, "client", "objects"))
+    PENDING.rebuild()
+    configure(os.path.join(PUB.repo, "data"), PENDING.view)
+    res = fill_res(os.path.join(WORK, "res"))
+    if res != world.RES:
+        # what this process, the checks it starts and the suites read from now on
+        world.RES = os.environ["LAVA_RES"] = res
+        world._CACHE.clear()
+        forget("tooltips", "res_original")
+    # what the last publish left behind in the clone, a killed one included
+    try:
+        PUB.git("worktree", "prune")
+    except publisher.GitError:
+        pass
+    shutil.rmtree(os.path.join(WORK, "publish"), ignore_errors=True)
+    os.makedirs(os.path.join(WORK, "publish"), exist_ok=True)
+    return PUB
+
+
+# What the checks read of the client beyond the server's slice (/opt/lava/res):
+# data/place_settlements.py, the map's recount, reads the original's list of
+# places on the map. Publish mode lays it in from the release by its sha.
+RES_FILLS = ("database/locations.xml",)
+
+
+def fill_res(into):
+    """RES as the checks need it: RES itself when it has every file of
+    RES_FILLS, else a folder of links to it with the missing ones taken from
+    the release (client/base.txt, the store) laid in."""
+    if not world.RES:
+        return world.RES
+    missing = [rel for rel in RES_FILLS if not os.path.isfile(os.path.join(world.RES, *rel.split("/")))]
+    if not missing:
+        return world.RES
+    extra = into + "-fill"
+    shutil.rmtree(extra, ignore_errors=True)
+    found = 0
+    for rel in missing:
+        try:
+            data = art().read(rel)
+        except (OSError, ValueError):
+            data = None
+        if data is None:
+            print("location editor: %s is in neither RES (%s) nor the release store; the map's recount "
+                  "will not run" % (rel, world.RES), flush=True)
+            continue
+        write_atomic(os.path.join(extra, *rel.split("/")), data)
+        found += 1
+    if not found:
+        return world.RES
+    return merged_res([os.path.realpath(world.RES), extra], into)
+
+
+def merged_res(dirs, into):
+    """One folder of links that has the files of every one of dirs, a later
+    one's file over an earlier one's: the server's slice and CI's extras as
+    the suites see them in CI."""
+    shutil.rmtree(into, ignore_errors=True)
+    os.makedirs(into)
+
+    def merge(srcs, dst):
+        names = collections.OrderedDict()
+        for s in srcs:
+            for n in sorted(os.listdir(s)):
+                names.setdefault(n, []).append(os.path.join(s, n))
+        for n, paths in names.items():
+            subdirs = [p for p in paths if os.path.isdir(p)]
+            if len(subdirs) > 1:
+                os.makedirs(os.path.join(dst, n))
+                merge(subdirs, os.path.join(dst, n))
+            else:
+                os.symlink(subdirs[0] if subdirs else paths[-1], os.path.join(dst, n))
+    merge([d for d in dirs if os.path.isdir(d)], into)
+    return into
+
+
+def l4_res():
+    dirs = [d for d in (os.environ.get("LAVA_LOCATIONS_L4_RES") or "").split(os.pathsep) if d] or [world.RES]
+    if len(dirs) == 1:
+        return dirs[0]
+    return merged_res(dirs, os.path.join(WORK, "l4-res"))
+
+
+def l4_suites(tree, res):
+    """(suites to run, notes): LAVA_LOCATIONS_L4 or L4_SUITES, less those the
+    tree has not and those whose file the res has not."""
+    names = [s.strip() for s in (os.environ.get("LAVA_LOCATIONS_L4") or "").split(",") if s.strip()] or list(L4_SUITES)
+    run, notes = [], []
+    for s in names:
+        if not os.path.isfile(os.path.join(tree, *s.split("/"))):
+            notes.append("%s: такого набора в main нет" % s)
+        elif s in L4_NEEDS and not os.path.exists(os.path.join(res, *L4_NEEDS[s].split("/"))):
+            notes.append("%s пропущен: в ресурсах нет %s" % (s, L4_NEEDS[s]))
+        else:
+            run.append(s)
+    return run, notes
+
+
+def location_message(summary, objects, note, login, uuid=None, rev=None):
+    """The commit message: "Локации: …" within 72 characters, the summary,
+    the objects, the admin's words, the draft and its revision (landed()
+    finds the commit by them), who published."""
+    lines = [publisher.one_line(s) for s in summary]
+    lines += ["объект %s «%s»: %s" % (o["id"], publisher.one_line(o.get("title") or ""),
+                                      {"new": "новый", "update": "правка", "delete": "удалён"}.get(o["kind"], o["kind"]))
+              for o in objects]
+    first = "Локации: " + (lines[0] if lines else "правка")
+    if len(lines) > 1 and lines[0].startswith("новое место") is False:
+        first = "Локации: " + "; ".join(lines[:2])
+    if len(first) > 72:
+        first = first[:71] + "…"
+    parts = [first, "", "\n".join(lines) or "без изменений в словах"]
+    if note:
+        parts += ["", note]
+    tail = ["Черновик: %s, правка %s" % (uuid, rev)] if uuid else []
+    parts += ["", "\n".join(tail + ["Опубликовано из админки: %s" % login])]
+    return "\n".join(parts) + "\n"
+
+
+DRAFT_TRAILER = re.compile(r"^Черновик: ([0-9a-f]{32}), правка (\d+)$", re.M)
+
+
+def landed(uuid):
+    """(commit, rev) of the commit in origin's branch (as last fetched) that
+    published this draft (its trailer, location_message), or None. A push
+    whose answer was lost, or a publish a restart cut short after its push,
+    left it there: publishing the draft again would make a second copy of a
+    new place. GitError when git cannot tell."""
+    out = PUB.git("log", "-n", "20", "--fixed-strings", "--grep=" + uuid, "--format=%H%x00%B%x01", PUB.remote_ref)
+    for chunk in out.decode("utf-8", "replace").split("\x01"):
+        sha_, _, text = chunk.strip().partition("\x00")
+        for m in DRAFT_TRAILER.finditer(text):
+            if m.group(1) == uuid:
+                return sha_, int(m.group(2))
+    return None
+
+
+def landed_result(sha_, d):
+    """A done publish's result for a draft whose commit landed() found."""
+    m = d.get("model") or {}
+    temp = m.get("id") if temp_uuid(m.get("id")) else None
+    loc = None if temp or not m else m.get("id")
+    text = PUB.git("log", "-1", "--format=%B", sha_).decode("utf-8", "replace")
+    if temp:
+        got = re.search(r"новое место #(\d+)", text)
+        loc = int(got.group(1)) if got else None
+    paras = text.split("\n\n")
+    return {"commit": sha_, "head": PUB._about(sha_), "id": loc, "landed": True,
+            "renumbered": {temp: loc} if temp and loc else {},
+            "summary": [l for l in paras[1].split("\n") if l.strip()] if len(paras) > 1 else [],
+            "files": [], "objects": [], "url": ("%s/commit/%s" % (PUB.web, sha_)) if PUB.web else ""}
+
+
+def _already_landed(uuid, got, login):
+    """publish_start of a draft whose commit is in origin already: done when
+    it is this revision, refused when the draft was edited after it. The
+    editor restarts when its checkout lacks the commit. (code, body)."""
+    sha_, rev = got
+    now = now_iso()
+    with DRAFTS.lock:
+        d = DRAFTS.get(uuid)
+        if str(rev) == str(d.get("rev")):
+            code = 202
+            d["publish"] = {"state": "done", "code": 200, "step": "done", "step_text": STEPS["done"], "started": now,
+                            "finished": now, "login": login, "rev": d.get("rev"), "result": landed_result(sha_, d)}
+            out = {"uuid": uuid, "publish": d["publish"]}
+        else:
+            code = 409
+            out = {"error": "Этот черновик уже опубликован коммитом %s (правка %d), и правки после неё в %s не "
+                            "ушли: откройте место из списка, когда редактор перезапустится, и сделайте их там"
+                            % (sha_[:10], rev, PUB.branch), "commit": sha_, "landed": True}
+            d["publish"] = {"state": "failed", "code": 409, "step": "start", "started": now, "finished": now,
+                            "login": login, "rev": d.get("rev"), "result": out}
+        DRAFTS.write(d)
+    print("publish by %s: draft %s is in %s already as %s (rev %d)" % (login, uuid, PUB.branch, sha_, rev), flush=True)
+    try:
+        behind = not PUB.contains(sha_, "HEAD")
+    except publisher.GitError:
+        behind = True
+    if behind:
+        PUB.restart()                      # once the lock is let go: on the commit that landed
+    return code, out
+
+
+def objects_draft(login):
+    """The draft of a publish of the owner's objects alone: the one such a
+    publish left before (refused, failed) or a new one. DRAFTS.lock held."""
+    for d in DRAFTS.all():
+        if d.get("model") is None and (d.get("publish") or {}).get("state") in (None, "failed"):
+            d.update(updated=now_iso(), login=login)
+            DRAFTS.write(d)
+            return d["uuid"]
+    uuid = uuidlib.uuid4().hex
+    DRAFTS.write({"v": 1, "uuid": uuid, "rev": 1, "created": now_iso(), "created_by": login,
+                  "updated": now_iso(), "login": login, "base": checkout_head(), "id": None,
+                  "title": "мои объекты", "model": None, "publish": None})
+    return uuid
+
+
+def publish_start(body, login):
+    """POST /api/publish: (code, body). The work goes on in a thread of its
+    own; the draft says how it goes (GET /api/draft/<uuid>). Without a uuid,
+    the owner's objects alone: their draft is made only once the publish
+    can start."""
+    uuid = str(body.get("uuid") or "")
+    if uuid:
+        d = DRAFTS.get(uuid)
+        if body.get("rev") is not None and str(body.get("rev")) != str(d.get("rev")):
+            return 409, {"error": "черновик тем временем сохранили ещё раз (другая вкладка?): откройте его заново",
+                         "rev": d.get("rev")}
+        pub = d.get("publish") or {}
+        if pub.get("state") == "running":
+            return 202, {"uuid": uuid, "publish": pub}
+        if pub.get("state") == "done":
+            return 409, {"error": "черновик уже опубликован", "publish": pub}
+    elif not PENDING.load():
+        return 400, {"error": "нечего публиковать: ни черновика (uuid), ни новых объектов"}
+    if PUB.restarting:
+        return 503, {"restarting": True, "error": publisher.RESTARTING % PUB.branch}
+    try:
+        PUB.fetch()
+        head = PUB.rev(PUB.remote_ref)
+        moved = PUB.engine_moved(head)
+    except publisher.FetchError as exc:
+        return 502, PUB.failed(publisher.FETCH_FAILED, exc)
+    except publisher.GitError as exc:
+        return 502, PUB.failed(publisher.GIT_FAILED, exc)
+    if moved:
+        PUB.restart()
+        return 503, {"restarting": True, "error": publisher.ENGINE_MOVED % PUB.branch}
+    if not PUB.lock.acquire(blocking=False):
+        return 503, {"error": "Идёт другая публикация, повторите через минуту"}
+    started = False
+    try:
+        if not uuid:
+            with DRAFTS.lock:
+                uuid = objects_draft(login)
+        if (DRAFTS.get(uuid).get("publish") or {}).get("state") == "done":
+            return 409, {"error": "черновик уже опубликован", "publish": DRAFTS.get(uuid)["publish"]}
+        try:
+            got = landed(uuid)
+        except publisher.GitError as exc:
+            return 502, PUB.failed(publisher.GIT_FAILED, exc)
+        if got:
+            return _already_landed(uuid, got, login)
+        note = publisher.clean_note(body.get("message"))
+        with DRAFTS.lock:
+            d = DRAFTS.get(uuid)
+            d["publish"] = {"state": "running", "step": "start", "step_text": STEPS["start"], "started": now_iso(),
+                            "login": login, "note": note, "rev": d.get("rev")}
+            DRAFTS.write(d)
+        t = threading.Thread(target=_publish_job, args=(uuid, note, login), daemon=True,
+                             name="loc-publish-" + uuid[:8])
+        t.start()
+        started = True
+    finally:
+        if not started:
+            PUB.lock.release()
+    print("publish by %s: draft %s started" % (login, uuid), flush=True)
+    return 202, {"uuid": uuid, "publish": d["publish"]}
+
+
+def _step(uuid, step):
+    with DRAFTS.lock:
+        d = DRAFTS.read(uuid)
+        if d and d.get("publish"):
+            d["publish"].update(step=step, step_text=STEPS.get(step, step))
+            DRAFTS.write(d)
+
+
+def _publish_job(uuid, note, login):
+    """The publish of a draft, the lock held (publish_start took it)."""
+    try:
+        try:
+            code, out = _publish_attempts(uuid, note, login)
+        except Conflict as exc:
+            code, out = 409, dict(exc.extra, error=str(exc))
+        except Exception as exc:           # noqa: BLE001 -- the page gets the reason, the log the trace
+            traceback.print_exc()
+            code, out = 500, {"error": "%s: %s" % (type(exc).__name__, exc)}
+        with DRAFTS.lock:
+            d = DRAFTS.read(uuid)
+            if d is not None:
+                d["publish"] = dict(d.get("publish") or {}, state="done" if code == 200 else "failed", code=code,
+                                    result=out, finished=now_iso(), step="done" if code == 200 else
+                                    (d.get("publish") or {}).get("step"))
+                DRAFTS.write(d)
+        print("publish by %s: draft %s: %d %s" % (login, uuid, code, out.get("commit") or str(out.get("error", ""))[:200]),
+              flush=True)
+        if code == 200 and out.get("objects"):
+            PENDING.published(out["objects"])
+        if code == 200 and not out.get("nothing"):
+            PUB.restart()                  # once the lock is let go: on the commit just pushed
+    finally:
+        PUB.lock.release()
+
+
+def _publish_attempts(uuid, note, login):
+    d = DRAFTS.get(uuid)
+    model = d.get("model")
+    rev = (d.get("publish") or {}).get("rev") or d.get("rev")
+    for attempt in range(publisher.PUSH_TRIES):
+        _step(uuid, "fetch")
+        try:
+            PUB.fetch()
+            head = PUB.rev(PUB.remote_ref)
+            moved = PUB.engine_moved(head)
+        except publisher.FetchError as exc:
+            return 502, PUB.failed(publisher.FETCH_FAILED, exc)
+        except publisher.GitError as exc:
+            return 502, PUB.failed(publisher.GIT_FAILED, exc)
+        if moved:
+            PUB.restart()
+            return 503, {"restarting": True, "error": publisher.ENGINE_MOVED % PUB.branch}
+        _step(uuid, "tree")
+        try:
+            with PUB.worktree(head, under=os.path.join(WORK, "publish")) as tree:
+                got = _publish_on(uuid, tree, head, model, note, login, attempt, rev)
+        except publisher.GitError as exc:
+            return 502, PUB.failed(publisher.GIT_FAILED, exc)
+        if got is not None:
+            return got
+    return 502, {"error": "%s уходил вперёд во время публикации %d раза подряд: повторите"
+                          % (PUB.branch, publisher.PUSH_TRIES)}
+
+
+def _publish_on(uuid, tree, head, model, note, login, attempt, rev=None):
+    """One attempt on a worktree of head: (code, body), or None when the
+    branch moved before the push (the caller tries again). rev: the draft's
+    revision, for the commit's trailer."""
+    _step(uuid, "objects")
+    objects = PENDING.apply_to(os.path.join(tree, "client", "objects"))
+    saved = {"summary": [], "id": None, "renumbered": {}}
+    if model:
+        _step(uuid, "save")
+        mfile = os.path.join(os.path.dirname(tree), "%s-model.json" % uuid)
+        rfile = os.path.join(os.path.dirname(tree), "%s-result.json" % uuid)
+        with open(mfile, "w", encoding="utf-8") as fh:
+            json.dump(model, fh, ensure_ascii=False)
+        env = dict(os.environ, LAVA_LOCATION_EDITOR_GIT="0", PYTHONDONTWRITEBYTECODE="1", PYTHONUTF8="1")
+        for k in ("LAVA_LOC_OVERLAY", "LAVA_PASSAGES", "LAVA_PLACEMENTS", "LAVA_SCHEDULE"):
+            env.pop(k, None)
+        try:
+            p = subprocess.run([sys.executable, os.path.join(tree, "tools", "location_editor.py"),
+                                "--data", os.path.join(tree, "data"), "--objects", os.path.join(tree, "client", "objects"),
+                                "publish-save", mfile, "--author", login, "--out", rfile],
+                               cwd=tree, env=env, capture_output=True, timeout=1800)
+        except subprocess.TimeoutExpired:
+            return 502, {"error": "сохранение места в main не уложилось в 30 минут"}
+        res = load_json(rfile, None) if os.path.isfile(rfile) else None
+        for f in (mfile, rfile):
+            try:
+                os.unlink(f)
+            except OSError:
+                pass
+        if not isinstance(res, dict):
+            tail = (p.stderr or p.stdout or b"").decode("utf-8", "replace")[-1500:]
+            return 502, {"error": "сохранение места в main упало (код %d): %s" % (p.returncode, tail)}
+        if res["code"] == 409:
+            return 409, {"error": "Черновик устарел: %s" % res["body"].get("error", ""), "stale": True}
+        if res["code"] != 200:
+            body = res["body"]
+            return res["code"], {"error": "Место в таком виде сервер не примет: %s" % body.get("error", ""),
+                                 "problems": body.get("problems") or []}
+        saved = res
+    _step(uuid, "commit")
+    files = PUB.changed_in(tree, PUBLISHED_PATHS)
+    if not files:
+        return 200, {"nothing": True, "commit": head, "head": PUB._about(head), "id": saved.get("id"),
+                     "summary": [], "objects": objects}
+    summary = list(saved.get("summary") or [])
+    sha_ = PUB.commit(head, files, location_message(summary, objects, note, login, uuid, rev), login)
+    _step(uuid, "suites")
+    PUB.git("checkout", "--quiet", "--force", "--detach", sha_, cwd=tree, timeout=publisher.PUSH_TIMEOUT)
+    res_dir = l4_res()
+    run, notes = l4_suites(tree, res_dir)
+    env = {"LAVA_RES": res_dir, "LAVA_LOCATION_EDITOR_GIT": "0"}
+    results = publisher.run_suites(tree, run, env=env, jobs=L4_JOBS, timeout=L4_TIMEOUT,
+                                   drop=("LAVA_LOC_OVERLAY", "LAVA_PASSAGES", "LAVA_PLACEMENTS", "LAVA_SCHEDULE",
+                                         "LAVA_ART_STORE", "LAVA_ART_RES", "LAVA_ART_CACHE",
+                                         "LAVA_LOCATION_EDITOR_CACHE", "LAVA_ART_IMAGE_PIXELS"),
+                                   scratch=os.path.join(WORK, "publish", "suites-" + uuid[:8]))
+    shutil.rmtree(os.path.join(WORK, "publish", "suites-" + uuid[:8]), ignore_errors=True)
+    red = [r for r in results if not r["ok"]]
+    if red:
+        return 422, {"error": "Наборы проверок на этом коммите красные (%s): в %s ничего не ушло"
+                              % (", ".join(r["suite"] for r in red), PUB.branch),
+                     "suites": results, "suite_notes": notes, "problems": []}
+    _step(uuid, "push")
+    try:
+        if PUB.before_push:
+            PUB.before_push(attempt)
+        pushed = PUB.push(sha_)
+    except publisher.GitError as exc:
+        # The answer may be lost after origin took the commit (a timeout, a
+        # dropped connection): origin, fetched again, says which it was.
+        try:
+            PUB.fetch()
+            there = PUB.contains(sha_)
+        except publisher.GitError as again:
+            print("push of %s: %s; origin not seen since: %s" % (sha_, exc, again), flush=True)
+            return 502, dict(PUB.failed(PUSH_MAYBE, exc), maybe=True, commit=sha_)
+        if not there:
+            return 502, PUB.failed(publisher.PUSH_FAILED, exc)
+        print("push of %s: %s; but %s has it" % (sha_, exc, PUB.branch), flush=True)
+        pushed = True
+    if not pushed:
+        return None
+    return 200, {"commit": sha_, "head": PUB._about(sha_), "summary": summary, "id": saved.get("id"),
+                 "renumbered": saved.get("renumbered") or {}, "files": sorted(files),
+                 "objects": objects, "suites": results, "suite_notes": notes,
+                 "url": ("%s/commit/%s" % (PUB.web, sha_)) if PUB.web else ""}
+
+
+def publish_save(model, author):
+    """`publish-save`: the save a publish makes in a worktree of origin's
+    main (this editor configured on its data/): a new place takes the first
+    free number there. {code, body, id, renumbered, summary}."""
+    if not isinstance(model, dict):
+        return {"code": 400, "body": {"error": "model: объект"}}
+    temp = model.get("id") if temp_uuid(model.get("id")) else None
+    renumbered = {}
+    if temp:
+        real = next_free_id()
+        model = assign_id(model, temp, real)
+        renumbered[temp] = real
+        etag = etag_of(location_state(real))
+    else:
+        etag = str(model.get("etag") or "")
+    try:
+        model = _clean(model)
+    except Refused as exc:
+        return {"code": 400, "body": {"error": str(exc)}}
+    summary = describe_against(model)
+    code, out = save(model, etag, author)
+    out = {k: v for k, v in out.items() if k != "model"}
+    return {"code": code, "body": out, "id": int(model["id"]), "renumbered": renumbered, "summary": summary}
+
+
 # --- the page ---------------------------------------------------------------------------------------
 
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -3451,6 +4665,21 @@ code,pre{font-family:ui-monospace,monospace;font-size:13px}a{color:#e0a85a}</sty
 <a href="/api/info">/api/info</a>, <a href="/api/locations">/api/locations</a>,
 <a href="/api/map">/api/map</a>, <a href="/api/objects">/api/objects</a>.
 Описание API — в начале <code>tools/location_editor.py</code>.</p></body></html>"""
+
+
+def entry():
+    """The built page's script and stylesheets, for a page that embeds it
+    (the admin panel's /admin/locations)."""
+    with open(os.path.join(UI, "index.html"), encoding="utf-8") as fh:
+        html = fh.read()
+    js = re.search(r'<script[^>]*\ssrc="(?:\./|/)?(assets/[^"]+\.js)"', html)
+    css = re.findall(r'<link[^>]*\shref="(?:\./|/)?(assets/[^"]+\.css)"', html)
+    return {"js": js.group(1) if js else None, "css": css}
+
+
+# What a write in publish mode is: an admin's, named by X-Lava-Admin.
+WRITES = ("/api/new", "/api/save", "/api/draft", "/api/draftdel", "/api/publish", "/api/object",
+          "/api/object/update", "/api/object/delete")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -3481,7 +4710,10 @@ class Handler(BaseHTTPRequestHandler):
     def _local_only(self):
         """Only under a loopback name (or the --host it was given): a page of
         another site that rebinds its own name to 127.0.0.1 gets nothing.
+        Publish mode sits behind the panel, under the container's name.
         True when the request was refused."""
+        if PUB is not None:
+            return False
         port = self.server.server_address[1]
         names = {"127.0.0.1", "localhost", "[::1]"}
         bound = getattr(self.server, "bound_host", "")
@@ -3541,8 +4773,24 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(FALLBACK.encode("utf-8"), "text/html; charset=utf-8")
         if url.startswith("/assets/"):
             return self._file(UI, url[1:])
+        if url == "/api/entry":
+            try:
+                return self._send(entry())
+            except OSError:
+                return self._send({"error": "страница редактора не собрана (tools/location_editor_ui/build.sh)"},
+                                  code=500)
         if url == "/api/info":
-            return self._send(info())
+            return self._info()
+        if PUB is not None:
+            if url == "/api/drafts":
+                return self._send({"drafts": drafts_list(), "objects": PENDING.listing()})
+            m = re.fullmatch(r"/api/draft/([0-9a-f]{32})", url)
+            if m:
+                d = DRAFTS.get(m.group(1))
+                return self._send(dict(d, stale=draft_stale(d)))
+            m = re.fullmatch(r"/api/diff/([0-9a-f]{32})", url)
+            if m:
+                return self._send(draft_diff(m.group(1)))
         if url == "/api/locations":
             return self._send({"locations": locations()})
         m = re.fullmatch(r"/api/location/(\d+)", url)
@@ -3585,11 +4833,39 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send({"error": "нет такой плитки"}, code=404)
             return self._send(data, "image/jpeg")
         if url == "/api/objects":
-            return self._send(objects_info())
+            out = objects_info()
+            if PUB is not None:
+                out["pending"] = {o["id"]: o["kind"] for o in PENDING.listing()}
+            return self._send(out)
         m = re.fullmatch(r"/api/object/(c_[a-z0-9_]{1,40})/([a-z0-9_-]{1,40}\.(?:png|jpg|jpeg))", url)
         if m:
             return self._file(os.path.join(P.objects, m.group(1)), m.group(2))
         return self._send({"error": "not found"}, code=404)
+
+    def _info(self):
+        out = info()
+        if PUB is None:
+            return self._send(out)
+        # A page load fetches: main moved on, and the editor restarts on it
+        # (the entrypoint checks it out), so that what the page shows and
+        # checks against is main as it is.
+        stale = None if PUB.restarting else PUB.fetch_now_and_then()
+        try:
+            moved = not stale and PUB.rev(PUB.remote_ref) != PUB.rev("HEAD")
+        except publisher.GitError as exc:
+            stale, moved = str(exc), False
+        if PUB.restarting or moved:
+            self._send({"restarting": True, "error": publisher.RESTARTING % PUB.branch}, code=503)
+            return PUB.restart()
+        head = PUB._about("HEAD")
+        out.update(mode="publish", commit=head["sha"], branch=PUB.branch, web=PUB.web, head=head,
+                   pending_objects=PENDING.listing(), restart_minutes=RESTARTS_AFTER, warn_seconds=WARN_SECONDS)
+        if stale:
+            out["stale"] = publisher.reason(stale)
+        return self._send(out)
+
+    def _login(self):
+        return publisher.clean_login(publisher.header_text(self.headers.get("X-Lava-Admin") or ""))
 
     def do_POST(self):
         try:
@@ -3613,27 +4889,65 @@ class Handler(BaseHTTPRequestHandler):
 
     def _post(self, body):
         url = self.path.split("?", 1)[0]
+        login = "owner"
+        if PUB is not None:
+            if PUB.restarting and url in WRITES:
+                return self._send({"restarting": True, "error": publisher.RESTARTING % PUB.branch}, code=503)
+            login = self._login()
+            if url in WRITES and not login:
+                return self._send({"error": "нет X-Lava-Admin: кто правит?"}, code=400)
         if url == "/api/new":
+            if PUB is not None:
+                return self._send(draft_new(body, login))
             return self._send(new_model(body.get("title"), body.get("from"), body.get("empty"),
                                         body.get("why") or "", new_id=body.get("id")))
         if url == "/api/edit":
-            model, inf = edit(_clean(body.get("model")), body.get("op") or {})
-            return self._send(dict(inf, model=model))
+            # a new place of publish mode ("new:<uuid>") is edited under a number
+            model, temp, n = numbered(body.get("model"))
+            model, inf = edit(_clean(model), body.get("op") or {})
+            return self._send(dict(inf, model=lettered(model, temp, n)))
         if url == "/api/check":
-            return self._send(check(body.get("model"), bool(body.get("quick"))))
-        if url == "/api/save":
+            model, temp, n = numbered(body.get("model"))
+            got = check(model, bool(body.get("quick")), author=login)
+            problems_back(got["problems"], temp, n)
+            return self._send(got)
+        if url == "/api/save" and PUB is None:
             code, out = save(body.get("model"), str(body.get("etag") or ""))
             return self._send(out, code=code)
         if url == "/api/render":
-            png, _rep = render_png(_clean(body.get("model")), body.get("layers") or "art",
+            model, _temp, _n = numbered(body.get("model"))
+            png, _rep = render_png(_clean(model), body.get("layers") or "art",
                                    _scale(body.get("scale")), body.get("order") or "reverse")
             return self._send(png, "image/png")
         if url == "/api/object":
-            return self._send(object_upload(body))
+            got = object_upload(body)
+            if PUB is not None:
+                PENDING.record(got["id"])
+            return self._send(got)
         if url == "/api/object/update":
-            return self._send(object_update(body))
+            got = object_update(body)
+            if PUB is not None:
+                PENDING.record(got["id"])
+            return self._send(got)
         if url == "/api/object/delete":
-            return self._send(object_delete(body))
+            if PUB is not None:
+                users = draft_users(str(body.get("id") or ""))
+                if users:
+                    raise Conflict("объект стоит в черновиках %s: сначала уберите его оттуда" % ", ".join(users),
+                                   {"drafts": users})
+            got = object_delete(body)
+            if PUB is not None:
+                PENDING.record(got["id"])
+            return self._send(got)
+        if PUB is not None:
+            # publish mode: what the page saves is a draft, and «Опубликовать» a commit to main
+            if url in ("/api/save", "/api/draft"):
+                return self._send(draft_save(body, login))
+            if url == "/api/draftdel":
+                return self._send(draft_delete(body))
+            if url == "/api/publish":
+                code, out = publish_start(body, login)
+                return self._send(out, code=code)
         return self._send({"error": "not found"}, code=404)
 
 
@@ -3652,10 +4966,13 @@ def serve(port=PORT, host="127.0.0.1"):
 
 
 def warm():
-    """What the page asks for first, read in the background."""
+    """What the page asks for first, read in the background; in publish
+    mode also the libraries the original uses most."""
     _background("names", creatures)
     _background("list", locations)
     _background("usage", lambda: usage(True))
+    if PUB is not None and have_pictures():
+        _background("libraries", _warm_libraries)
 
 
 # --- command line --------------------------------------------------------------------------------------
@@ -3690,6 +5007,15 @@ def main(argv=None):
     ap.add_argument("--objects", help="the objects folder (default: client/objects)")
     ap.add_argument("--port", type=int, default=PORT, help="serve: the port (LAVA_LOCATION_EDITOR_PORT, 8096)")
     ap.add_argument("--host", default="127.0.0.1", help="serve: the address to answer on")
+    ap.add_argument("--repo", help="publish mode: a git clone whose origin is the source of truth")
+    ap.add_argument("--branch", default=os.environ.get("LAVA_LOCATIONS_BRANCH") or "main",
+                    help="the branch publish mode pushes to (LAVA_LOCATIONS_BRANCH, main)")
+    ap.add_argument("--work", default=os.environ.get("LAVA_LOCATIONS_WORK"),
+                    help="publish mode: the folder of the drafts and the pending objects (LAVA_LOCATIONS_WORK)")
+    ap.add_argument("--store", default=os.environ.get("LAVA_ART_STORE"),
+                    help="the release store, <aa>/<sha256> (LAVA_ART_STORE)")
+    ap.add_argument("--cache", default=os.environ.get("LAVA_ART_CACHE"),
+                    help="the art cache (LAVA_ART_CACHE)")
     sub = ap.add_subparsers(dest="cmd")
     p = sub.add_parser("serve", help="the page and its API (the default)")
     p.add_argument("--port", type=int, default=argparse.SUPPRESS)
@@ -3719,17 +5045,30 @@ def main(argv=None):
     p.add_argument("file")
     p.add_argument("--etag", help="default: the model's own")
     p.add_argument("--author", default="owner")
+    p = sub.add_parser("publish-save", help="publish mode's save on a worktree of origin's main (a model file)")
+    p.add_argument("file")
+    p.add_argument("--author", default="owner")
+    p.add_argument("--out", required=True, help="where the result goes, as JSON")
     a = ap.parse_args(argv)
     configure(a.data, a.objects)
     cmd = a.cmd or "serve"
+    if a.repo:
+        if cmd != "serve":
+            print("--repo is for serving the page", file=sys.stderr)
+            return 2
+        configure_repo(a.repo, a.branch, os.environ.get("LAVA_LOCATIONS_WEB", ""), a.work, a.store, a.cache)
     try:
         if cmd == "serve":
             srv = serve(a.port, a.host)
             url = "http://%s:%d/" % (srv.bound_host, srv.server_address[1])
-            print("location editor on %s (data: %s, RES: %s%s); Ctrl+C to stop"
-                  % (url, P.data, world.RES, "" if res_original() else
-                     "; its 262.xml differs from client/base.txt: the map's recount may move places"),
-                  flush=True)
+            if PUB is not None:
+                print("location editor, publish mode: %s -> origin/%s, on %s (work: %s, RES: %s)"
+                      % (PUB.repo, PUB.branch, url, WORK, world.RES), flush=True)
+            else:
+                print("location editor on %s (data: %s, RES: %s%s); Ctrl+C to stop"
+                      % (url, P.data, world.RES, "" if res_original() else
+                         "; its 262.xml differs from client/base.txt: the map's recount may move places"),
+                      flush=True)
             warm()
             try:
                 srv.serve_forever()
@@ -3763,6 +5102,12 @@ def main(argv=None):
             return 0
         if cmd == "show":
             print(json.dumps(_model_arg(a.ref), ensure_ascii=False, indent=1))
+            return 0
+        if cmd == "publish-save":
+            with open(a.file, encoding="utf-8") as fh:
+                model = json.load(fh)
+            got = publish_save(model, a.author)
+            write_atomic(os.path.abspath(a.out), json.dumps(got, ensure_ascii=False).encode("utf-8"))
             return 0
         if cmd == "check":
             got = check(_model_arg(a.ref), a.quick)

@@ -90,8 +90,30 @@ def standing(loc_id):
 try:
     print("the reworked pieces")
     ladder_ag = [r for r in setcraft.LADDER if r["variant"] in ("A", "G")]
-    check("every A and G piece of the owner's ladder has its ten mods in objects.xml",
-          (len(setcraft.CHAINS), setcraft.MISSING), (5 * len(ladder_ag), []))
+    # Чёрный Ловелас[12], sold for afro and gold since 2026-10-13, is not
+    # reworked, as it was not while a quest set: its A is the quest series
+    # (_Q_, mods without pictures), its G our own types with no mods.
+    lovelace = [r for r in ladder_ag if r["level"] == 12]
+    check("every A and G piece of the owner's ladder has its ten mods in objects.xml, but"
+          " Чёрный Ловелас's ten, which are not reworked",
+          (len(setcraft.CHAINS), setcraft.MISSING, sorted(setcraft.NOT_REWORKED)),
+          (5 * (len(ladder_ag) - len(lovelace)), [],
+           sorted(t for r in lovelace for t in r["members"].values())))
+    check("  ..those: its A the quest pieces 11721-11725, its G our own 60000-60004",
+          sorted((r["variant"], sorted(r["members"].values())) for r in lovelace),
+          [("A", list(range(11721, 11726))), ("G", list(range(60000, 60005)))])
+    for_g = dict(band=(10, 13), upgraders={}, craftsmen={}, types={})
+    got = setcraft.window_entries(for_g, ("upgrade", "exchange"))
+    lov_g, spec_g = (sets.SETS[60000]["members"]["helm"], sets.SETS[11208]["members"]["helm"])
+    des_g = sets.SETS[11184]["members"]["helm"]
+    des_chain, spec_chain = setcraft.CHAINS[des_g], setcraft.CHAINS[spec_g]
+    check("  ..the window still upgrades into it and out of it, at mod00 (Пустынник (G) of any"
+          " mod -> Шлем Чёрного Ловеласа (G) -> Шлем спецназа (G)), and the exchange of mod10"
+          " for mod05 goes over it, Пустынник (G) to Спецназ (G), as before it was sold",
+          (sorted(i for i, o, _c in got if o == lov_g), [o for i, o, _c in got if i == lov_g],
+           [(i, o) for i, o, _c in got if o == spec_chain[setcraft.EXCHANGE_TO]]),
+          (sorted(des_chain), [spec_g],
+           [(des_chain[setcraft.EXCHANGE_FROM], spec_chain[setcraft.EXCHANGE_TO])]))
     cat = items.catalogue()
     check("  ..mod01-mod10 of the same series, slot and variant, never a P",
           [t for c in setcraft.CHAINS.values() for k, t in enumerate(c)

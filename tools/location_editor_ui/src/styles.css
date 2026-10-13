@@ -16,14 +16,20 @@
   --tint-danger: rgba(226,84,58,.14);
   --tint-success: rgba(139,183,90,.14);
   --tint-brand: rgba(217,164,65,.14);
-  height: 100vh;
+  /* in the admin panel it fills main.wide; standalone the window (.le-alone) */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background: var(--bg-base);
   color: var(--ink);
   font: 400 14px/20px var(--font-sans);
   scrollbar-color: var(--line-strong) transparent;
 }
+.le.le-alone { height: 100vh; }
 .le, .le *, .le *::before, .le *::after { box-sizing: border-box; }
+/* the panel styles main, the editor's stage is one: not here */
+.le main { padding: 0; gap: 0; max-width: none; width: auto; margin: 0; }
 .le :where(h1, h2, h3, h4, p, ul, ol, dl, figure) { margin: 0; }
 .le h2 { font-size: 17px; line-height: 24px; font-weight: 600; }
 .le h3 { font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
@@ -106,9 +112,9 @@
 .le .facts dd { margin: 0; overflow-wrap: anywhere; }
 
 /* screens */
-.le .screen { height: 100vh; display: flex; flex-direction: column; min-height: 0; }
+.le .screen { flex: 1 1 0; display: flex; flex-direction: column; min-height: 0; }
 .le .topbar { display: flex; gap: 8px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--bg-panel); flex-wrap: wrap; min-height: 50px; }
-.le .brand { font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--brand); margin-right: 6px; }
+.le .le-brand { font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--brand); margin-right: 6px; }
 .le .loc-title { font-size: 15px; font-weight: 600; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .le .status { height: 24px; min-width: 104px; display: inline-flex; align-items: center; justify-content: center; padding: 0 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .le .status.good { background: var(--tint-success); color: var(--success); }
@@ -131,7 +137,7 @@
 .le button.more { margin: 12px 14px; }
 .le .list-side { border-left: 1px solid var(--line); background: var(--bg-panel); overflow: auto; }
 .le .help ol { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
-.le .preview h3 { text-transform: none; letter-spacing: 0; font-size: 16px; color: var(--ink); margin-bottom: 10px; }
+.le .le-preview h3 { text-transform: none; letter-spacing: 0; font-size: 16px; color: var(--ink); margin-bottom: 10px; }
 .le .preview-img { min-height: 160px; display: flex; align-items: center; justify-content: center; background: var(--bg-inset); border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
 .le .preview-img img { display: block; max-width: 100%; height: auto; }
 .le .legend { margin-top: 6px; color: var(--ink-muted); }
@@ -160,7 +166,7 @@
 .le .saving-box p { margin: 8px 0 0; }
 .le .toolbar { display: flex; flex-direction: column; gap: 2px; padding: 8px 6px; border-right: 1px solid var(--line); background: var(--bg-panel); overflow: auto; }
 .le .toolbar button { height: auto; flex-direction: column; gap: 2px; padding: 8px 4px; border-color: transparent; border-radius: var(--radius-md); white-space: normal; text-align: center; }
-.le .toolbar button .ico { font-size: 19px; line-height: 22px; }
+.le .toolbar button .le-ico { font-size: 19px; line-height: 22px; }
 .le .toolbar button .lbl { font-size: 12px; line-height: 14px; }
 .le .toolbar button.on { border-color: var(--brand); background: var(--tint-brand); }
 .le .stage { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
@@ -169,13 +175,13 @@
 .le .canvas-tools button { height: 28px; padding: 0 9px; }
 .le .canvas-tools .zoom { min-width: 44px; text-align: center; color: var(--ink-muted); }
 .le .canvas-tools .sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
-.le .chip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: var(--radius-pill); font-size: 12px; color: var(--ink-muted); cursor: pointer; user-select: none; }
-.le .chip.on { border-color: var(--line-strong); color: var(--ink); background: var(--bg-raised); }
-.le .chip input { width: 12px; height: 12px; }
+.le .le-chip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: var(--radius-pill); font-size: 12px; color: var(--ink-muted); cursor: pointer; user-select: none; }
+.le .le-chip.on { border-color: var(--line-strong); color: var(--ink); background: var(--bg-raised); }
+.le .le-chip input { width: 12px; height: 12px; }
 .le .canvas-host { flex: 1; min-height: 0; position: relative; overflow: hidden; background: var(--bg-inset); }
 .le .loc-canvas { position: absolute; inset: 0; display: block; touch-action: none; outline: none; }
 .le .statusbar { display: flex; gap: 12px; align-items: center; padding: 4px 10px; min-height: 28px; border-top: 1px solid var(--line); background: var(--bg-panel); font-size: 12px; overflow: hidden; white-space: nowrap; }
-.le .side { border-left: 1px solid var(--line); background: var(--bg-panel); display: flex; flex-direction: column; min-height: 0; }
+.le .le-side { border-left: 1px solid var(--line); background: var(--bg-panel); display: flex; flex-direction: column; min-height: 0; }
 .le .side-tool { flex: 1 1 0; overflow: auto; padding: 10px 12px; border-bottom: 1px solid var(--line); min-height: 140px; }
 .le .side-tool > h3 { margin-bottom: 8px; }
 .le .tool-panel { display: flex; flex-direction: column; gap: 6px; }
@@ -184,9 +190,9 @@
 .le .selected-box { border: 1px solid var(--brand); border-radius: var(--radius-md); padding: 8px; display: flex; flex-direction: column; gap: 6px; background: var(--tint-brand); }
 .le .selected-box .nudge button { height: 26px; padding: 0 8px; }
 .le .selected-box .nudge button.arr { width: 30px; padding: 0; }
-.le .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-.le .tabs button { height: 28px; padding: 0 9px; font-size: 12px; }
-.le .tabs .n { color: var(--ink-faint); font-size: 11px; }
+.le .le-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.le .le-tabs button { height: 28px; padding: 0 9px; font-size: 12px; }
+.le .le-tabs .n { color: var(--ink-faint); font-size: 11px; }
 .le .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 6px; }
 .le .pal-item { height: auto !important; padding: 4px !important; flex-direction: column; gap: 3px !important; border-color: var(--line) !important; background: var(--bg-inset) !important; position: relative; }
 .le .pal-item.on { border-color: var(--brand) !important; box-shadow: 0 0 0 1px var(--brand); background: var(--tint-brand) !important; }
@@ -259,3 +265,27 @@
   .le .list-body { grid-template-columns: minmax(0, 1fr) 300px; }
   .le .obj-edit { grid-template-columns: 1fr; }
 }
+
+/* publish mode (the admin panel): notices, drafts, the publish dialog */
+.le .notice { padding: 7px 14px; font-size: 13px; background: var(--tint-brand); border-bottom: 1px solid rgba(217,164,65,.5); flex: none; }
+.le .notice.session { background: var(--tint-danger); border-bottom-color: rgba(226,84,58,.6); }
+.le .notice.down { background: var(--tint-danger); border-bottom-color: rgba(226,84,58,.6); }
+.le .notice.stale { background: rgba(127,160,176,.12); border-bottom-color: rgba(127,160,176,.5); }
+.le .drafts { padding: 8px 12px 10px; border-bottom: 1px solid var(--line); background: var(--bg-panel); max-height: 30vh; overflow: auto; flex: none; }
+.le .drafts h3 { margin-bottom: 6px; }
+.le .draft-table td { white-space: normal; }
+.le .draft-table .actions-cell { text-align: right; white-space: nowrap; }
+.le .draft-table .actions-cell button { margin-left: 6px; }
+.le .tag.draft-saved { background: var(--tint-success); color: var(--success); }
+.le .tag.draft-pending, .le .tag.draft-saving { background: var(--tint-brand); color: var(--brand); }
+.le .tag.draft-error { background: var(--tint-danger); color: #f08a74; }
+.le .tag.draft-idle { background: var(--bg-raised); color: var(--ink-faint); }
+.le .publish-body { display: flex; flex-direction: column; gap: 8px; }
+.le .publish-body h4 { margin-top: 8px; font-size: 13px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: .06em; }
+.le .pub-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+.le .pub-list button { height: auto; padding: 0; text-align: left; white-space: normal; color: inherit; }
+.le .pub-files { margin: 4px 0 0; padding-left: 18px; font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+.le .pub-warn { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.le .pub-check { display: flex; flex-direction: column; gap: 4px; }
+.le .pub-git { margin: 4px 0; padding: 8px 10px; background: var(--bg-inset); border: 1px solid var(--line); border-radius: var(--radius-md); font: 12px/17px var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 220px; overflow: auto; color: var(--ink-muted); }
+.le details > summary { cursor: pointer; color: var(--ink-muted); }
