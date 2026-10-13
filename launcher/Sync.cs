@@ -1052,16 +1052,24 @@ class PausedException : Exception { }
 // for the server and 20 s more, and only then publishes the release that
 // goes with it (deploy/remote/lava-gate.sh, 7b and 9b), so the check made
 // as the game closed sees the old one; five minutes of looks catch the new
-// one. Times are Environment.TickCount, and differences of it, so the
-// wrap after 24.9 days of uptime changes nothing. No clock and no timer in
-// here: the window ticks it, launcher/test walks it.
+// one. Besides those, a launcher left open with no game looks every IDLE_MS
+// for as long as it is open (Idle): it used to take a release only when
+// started, on "ИГРАТЬ" or after a game, and in between went on saying
+// "актуальная версия" over the release before (owner, 2026-10-13: after
+// every deploy the client's version has to move). Times are
+// Environment.TickCount, and differences of it, so the wrap after 24.9 days
+// of uptime changes nothing. No clock and no timer in here: the window
+// ticks it, launcher/test walks it.
 class Watch
 {
     public const int EVERY_MS = 15000;
     public const int SPAN_MS = 5 * 60 * 1000;
+    public const int IDLE_MS = 5 * 60 * 1000;
 
     bool on;
     int armed, last;
+    bool paced;
+    int pace;                              // when the idle count last began
 
     public bool On { get { return on; } }
 
@@ -1082,6 +1090,24 @@ class Watch
         if (unchecked(now - armed) > SPAN_MS) { on = false; return false; }
         if (unchecked(now - last) < EVERY_MS) return false;
         last = now;
+        return true;
+    }
+
+    /// <summary>Whether a launcher left open looks now: once every IDLE_MS,
+    /// counted from the first time it is asked. Away (a game running or on
+    /// its way, the folder being changed) and while the watch is on, never,
+    /// and the count begins again, so the first idle look comes IDLE_MS
+    /// after the game or the watch is over.</summary>
+    public bool Idle(int now, bool away)
+    {
+        if (on || away || !paced)
+        {
+            paced = true;
+            pace = now;
+            return false;
+        }
+        if (unchecked(now - pace) < IDLE_MS) return false;
+        pace = now;
         return true;
     }
 

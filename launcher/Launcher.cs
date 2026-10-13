@@ -1006,6 +1006,9 @@ static class Launcher
         // own thread, so this costs the window nothing.
         sync.Changed = delegate { Say(Render); };
         sync.Start();
+        // The watch's timer, for good: the idle looks (Watch.Idle) need it
+        // while the launcher is open, not only after a game.
+        Ticking();
 
         // The download line alternates speed and time left every three
         // seconds, as the concept does.
@@ -1464,11 +1467,13 @@ static class Launcher
     // --- looking for a release between runs -----------------------------------
     //
     // One Watch, armed after the game lost its server (Back) and while a game
-    // runs (Done); "ИГРАТЬ", the checks and the folder stop it. A timer ticks
-    // it each second while it is on; a look is Sync.Peek on a thread of its
-    // own, and what it found is acted on here, on the window's thread, only
-    // if nothing has changed in between. The same timer asks a silent game
-    // server again (Probe).
+    // runs (Done); "ИГРАТЬ", the checks and the folder stop it. Off, it still
+    // looks every Watch.IDLE_MS while the launcher is open with no game
+    // (Watch.Idle), so a launcher left open takes every deploy's release
+    // within minutes. A timer ticks it each second for as long as the window
+    // lives; a look is Sync.Peek on a thread of its own, and what it found is
+    // acted on here, on the window's thread, only if nothing has changed in
+    // between. The same timer asks a silent game server again (Probe).
     static readonly Watch watch = new Watch();
     static System.Windows.Forms.Timer watchTimer;
     static int peeking;                   // a look is out
@@ -1482,8 +1487,7 @@ static class Launcher
         Ticking();
     }
 
-    // Stops the looks; the timer itself stops at its next tick, unless the
-    // server is still to be asked again (Tick).
+    // Stops the looks every 15 s; the idle ones go on (Look).
     static void Disarm()
     {
         watch.Stop();
@@ -1505,12 +1509,13 @@ static class Launcher
         int now = Environment.TickCount;
         Probe(now);
         Look(now);
-        if (!watch.On && serverUp != false) watchTimer.Stop();
     }
 
     static void Look(int now)
     {
-        if (!watch.Due(now)) return;
+        bool due = watch.Due(now);
+        bool idle = !due && watch.Idle(now, inGame || launching || switching);
+        if (!due && !idle) return;
         if (Interlocked.CompareExchange(ref peeking, 1, 0) != 0) return;
         bool playing = inGame;
         Sync s = sync;
@@ -1521,7 +1526,7 @@ static class Launcher
             try { look = s.Peek(PEEK_WATCH_MS, false, out serial); }
             catch { }
             finally { Interlocked.Exchange(ref peeking, 0); }
-            if (look == Peeked.Newer) Say(delegate { Found(s, serial, playing); });
+            if (look == Peeked.Newer) Say(delegate { Found(s, serial, playing, idle); });
         });
     }
 
@@ -1568,10 +1573,11 @@ static class Launcher
     // waits for it), and a newer launcher replaces this one as ever. While
     // the game runs nothing is installed -- a run would change the files
     // the game is reading, a new launcher would restart this one and take
-    // the game's web server with it -- and the tray says it once.
-    static void Found(Sync s, long serial, bool playing)
+    // the game's web server with it -- and the tray says it once. An idle
+    // look (Watch.Idle) is only ever made with no game, so it can only Take.
+    static void Found(Sync s, long serial, bool playing, bool idle)
     {
-        if (!watch.On || s != sync || playing != inGame) return;
+        if ((!idle && !watch.On) || s != sync || playing != inGame) return;
         switch (Watch.Decide(inGame, launching || switching, sync.State))
         {
             case Watch.Act.Tell:
