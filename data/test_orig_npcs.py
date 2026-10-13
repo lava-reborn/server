@@ -63,8 +63,16 @@ MIN_MOB_KIND = 308
 # went into "npcs" -- the market's traders (Одноухий, Алима, Гали), Дед
 # Кузин, Говард Хаксли, the Кучка песка, Санденс Кид, the slave traders' and
 # flayers' ranks the matcher had from another block, the crocodile and the
-# Амазонка -- and "suggest" fell from 665 to 639.
-MIN_SUGGEST = 639
+# Амазонка -- and "suggest" fell from 665 to 639. Донгола's people by hand
+# (2026-10-13, the owner's «и потом сделай донголу тоже»): 38 more -- the
+# slaves, the healer Грегори, Печурка, the grave, the car, the dogs of the
+# flayers, Муаз, two gunsmiths, the Peacekeepers' snipers and the ДСР's ranks
+# the matcher had from the wrong level, the masters of the markets and their
+# helpers, the quarry's owner and foreman, Бамбук, the knives' and the sets'
+# traders, the colonel of the dump 695, Альма, Али-Малистик, the doctor's
+# junior helper and the New Year's children -- and "suggest" fell from 639
+# to 601.
+MIN_SUGGEST = 601
 
 
 def canonical(doc):

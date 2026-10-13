@@ -278,11 +278,19 @@ DOUBTFUL_STRINGS = frozenset((9163, 48871, 48872))
 #   8956 "[18] ШефДженсен<Br>Миротворцы" -- the boss of the Peacekeepers'
 #        camp (407, mrare_chief_lvl30, by hand in orig_names_manual.json).
 #        The quest that sends the player to him writes «найди там МаксКоула
-#        и Шефа Дженсен» (50437): the file lost a space. МаксКоул (8955) is
-#        joined there too, so his row stays as it is.
+#        и Шефа Дженсен» (50437): the file lost a space.
+#   8955 "[17] МаксКоул<Br>Миротворцы" -- the boss of the Peacekeepers'
+#        chief's place (408, mrare_koul_lvl28). The same lost space: the
+#        quest joins him too («МаксКоула»), but a given name and a surname
+#        are two words, as «Шеф Дженсен» beside him is (the owner's Донгола,
+#        2026-10-13, decision 23 of its plan).
+#   9514 "[1] Cобака<Br>Дикое животное" -- the flayers' dogs of Донгола
+#        (230, mEnvironmentDog): its first letter is a Latin C.
 NAME_TYPOS = {
     8904: ("Надзиратель аки", "Надзиратель Лаки"),
+    8955: ("МаксКоул", "Макс Коул"),
     8956: ("ШефДженсен", "Шеф Дженсен"),
+    9514: ("Cобака", "Собака"),
 }
 
 # Lines of a name that offer work the server cut, dropped on the wire by the

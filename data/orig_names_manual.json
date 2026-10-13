@@ -2275,6 +2275,846 @@
    "string_id": 8955,
    "text": "МаксКоул<Br>Миротворцы",
    "why": "mrare_koul_lvl28, the boss of 99, which no door, side or quest way from the map reaches (2026-10-12): Koul is Коул, '[17] МаксКоул' (8955), the other chief 50437 names (see 407). 50437 writes him joined as well, so the name stays as the file has it."
+  },
+  "138": {
+   "string_id": 50006,
+   "text": "Грегори<Br>Лекарь",
+   "why": "dn_Healer, Донгола's healer at the station 49, the old and new markets 50/197 and the quarry's first tier 632: the healers' block 50005-50010 ('Деда Джоф', 'Грегори', 'Роуз', 'Ланд Байрон', 'Андрей Евгеньевич', 'Альфред Петрович', each '<Br>Лекарь'), one healer to a town in the towns' order -- Вади-Хальфа's Деда Джоф, Донгола's Грегори; Андрей Евгеньевич is the prison yard's (2109). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1018": {
+   "string_id": 48774,
+   "text": "Бамбук<Br>Местный пьяница",
+   "why": "DN_NativeDrunk at the station 49: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- the drunk of «Старый колодец» (48715-48734, who wants the moonshine). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "1389": {
+   "string_id": 10531,
+   "text": "Водитель автобуса<Br>до завода",
+   "why": "DN_factory_bus_driver at the station 49: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. Its twins 1387/1388 at Вади-Хальфа's and Абри's stations take the same row. The bus has no ride (the plan's cut list)."
+  },
+  "156": {
+   "string_id": 48846,
+   "text": "Нур-ад-Дин<Br>водитель",
+   "why": "dn_travel, the driver at the station 49: the drivers' rows 48845-48848 of Донгола's block ('Абу-бакр', 'Нур-ад-Дин<Br>водитель', 'Снабженец Хальфы', 'Снабженец'), over the wiki's bare 'Нур-ад-Дин'; the station's map label L122 «Перевозчик». Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "142": {
+   "string_id": 48753,
+   "text": "Мелкий хулиган",
+   "why": "dn_Boy in the old market 50: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- the boy of «Радостная встреча». the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "155": {
+   "string_id": 48845,
+   "text": "Абу-бакр<Br>Торговец едой",
+   "why": "dn_food_trader in the old and new markets 50/197: the drivers' and grocers' rows 48845-48848 ('Абу-бакр<Br>Торговец едой<Br>Брат бармена Чакки'); the barman Чакки's bar «Пьяный Ослик» is cut with (P), the row's third line stays as the original writes it. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "232": {
+   "string_id": 62324,
+   "text": "Муаз<Br>Обмен одежды на вырост",
+   "why": "dn_upg_muaz in the old market 50: the clothes-for-growth upgraders' block 62322-62325 ('Генри', 'Базиль', 'Муаз', 'Юсуф', each '<Br>Обмен одежды на вырост'), the type's own word. He does not stand (data/schedule.json held_out, as Абри's Рудольф): the sets' upgrades are off. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "580": {
+   "string_id": 51661,
+   "text": "Мастер Самир<Br>улучшение автоматов",
+   "why": "dn_trmodif_assrifle_g, the assault rifles' master of the markets 50/197: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). Over the wiki's bare 'Мастер Самир'. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "583": {
+   "string_id": 51665,
+   "text": "Мастер Гафур<Br>улучшение пулеметов",
+   "why": "dn_trmodif_machingun_g, the machine guns' master of the markets 50/197: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). The wiki names Гафур on both markets; Гази (51662) is the camp's master 385. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "584": {
+   "string_id": 51663,
+   "text": "Мастер Умар<Br>улучшение винтовок",
+   "why": "dn_trmodif_rifle_g, the rifles' master of the markets 50/197: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "585": {
+   "string_id": 51664,
+   "text": "Мастер Фахад<Br>улучшение пистолет-пулеметов",
+   "why": "dn_trmodif_submachgun_g, the sub-machine guns' master of the markets 50/197: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). Over the wiki's bare 'Мастер Фахад'. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "982": {
+   "string_id": 48771,
+   "text": "Джамшут<Br>Владелец каменоломни",
+   "why": "DN_Stone_Owner in the new market 197: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- the owner of the quarry 631-635, whose ride down the quarry's chain gives. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "2017": {
+   "string_id": 62130,
+   "text": "Младший<Br>помощник Доктора",
+   "why": "Dr_Gofus_assistent_DN in the new market 197: 62130 'Младший<Br>помощник Доктора', the row of its twins 2015 (Вади-Хальфа) and 2016 (Абри). The matcher's medium guess and the wiki gave it the doctor's own 'Доктор Гофус' (10440), which is 1013's. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "5747": {
+   "string_id": 9685,
+   "text": "Савва Мамонтов",
+   "why": "Npc_Commoner000115 in the new market 197, MEDIUM: it stands at the seam of two offsets of the commoners' family. For 'Савва Мамонтов' (9685, offset 9570): the offset holds on its next members, Commoner000116-120 -> 9686 'Ричард Земекис', 9687 'Сесиль Родс' and the craftsmen's treasurers 9688-9690 (5764, 5765, 5767-5769), and the original's text 47535 calls Лейтенант О'Нилл a recruiter «в Вади Хальфе», not in Донгола. For 'Лейтенант О'Нилл<Br>Армия ЦСЦ' (9665, the matcher's pick): its chain 5743-5747 -> 9661-9665 (four boxes q-box_small against 'Верстак' and three 'Грузовой контейнер', then a man against a man) and the soldier's sprite a8_DarkEcho. The offset that the following members keep wins (decision 50 of the plan); 9665 is the one-line alternative. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "5106": {
+   "string_id": 10480,
+   "text": "Адольф<Br>Обмен одежды на вырост",
+   "why": "Npc_Upgrader000004 in the new market 197: the upgraders' family on its offset 10476 ('Басым-албанец', 'Тестовый Апгрейдер', 'Брендольф ... [6-8]', 'Рудольф ... [9-12]', 'Адольф ... [13-16]', 'Ундольф ... [17-20]'), member 4 -> 10480; Абри's Рудольф 5105 is member 3. He does not stand (data/schedule.json held_out, as Рудольф): the sets' upgrades are off. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "678": {
+   "string_id": 48764,
+   "text": "Тариф<Br>полицейский",
+   "why": "dn_PoliceManOutDoor in the residential quarter 79: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- Тариф, the policeman of the catacombs' chain (60014-60018, 60042), outdoors; his sprite is the one of 674, the same man in the sewer 607. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "1017": {
+   "string_id": 48773,
+   "text": "Старец Паисий",
+   "why": "DN_WaterMan in the residential quarter 79: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- the old man of «Старый колодец». the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "6504": {
+   "string_id": 10320,
+   "text": "Агент Фарис",
+   "why": "Npc_Commoner000751 in the residential quarter 79: the commoners' family's members 751-755 take the rows 10320-10324 one for one (10320 'Агент Фарис' ... ), and its sprite is the one of DN_Agen_Faris 1768, the agent of the scenes 696/1043. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1816": {
+   "string_id": 59766,
+   "text": "Майор Давыдов",
+   "why": "N_VH_NPC in the residential quarter 79, MEDIUM: the row 59766 'Майор Давыдов' of the night Вади-Хальфа's block, and its text 60130 speaks of «майор Давыдов из Донголы». He stands with no quest (the night Вади-Хальфа is stage 5's). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "6513": {
+   "string_id": 10459,
+   "text": "Али-Малистик<Br>Авантюрист",
+   "why": "Npc_Trader000072 in the residential quarter 79, MEDIUM: the traders' family on its offset 10387 -> 10459 'Али-Малистик<Br>Авантюрист'; his copies 6514/6515 stand in 260 and 685. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1153": {
+   "string_id": 62137,
+   "text": "Одноногий<Br>Торговец ножами",
+   "why": "dn_knife_trd in the black market 103: the black markets' block 62125-62166 (Вади-Хальфа's, Абри's, Донгола's and Абу-Хамед's traders in turn: ... 62159 'Галия<Br>Броня, одежда, пояса', 62160 'Дари<Br>Торговец комплектами', 62161 'Серхио', 62162 'Фарюк' ...), by the type's own word; the wiki's market list is shifted by one here, as in Абри's port market -- the knives' traders 62136-62138 ('Однопальцый', 'Одноногий', 'Шрам'), Донгола's the second. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1213": {
+   "string_id": 62160,
+   "text": "Дари<Br>Торговец комплектами",
+   "why": "dn_set_trd in the black market 103: the black markets' block 62125-62166 (Вади-Хальфа's, Абри's, Донгола's and Абу-Хамед's traders in turn: ... 62159 'Галия<Br>Броня, одежда, пояса', 62160 'Дари<Br>Торговец комплектами', 62161 'Серхио', 62162 'Фарюк' ...), by the type's own word; the wiki's market list is shifted by one here, as in Абри's port market; set_trd is the sets' trader, as Абри's Гали 1166 (62156). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1233": {
+   "string_id": 62159,
+   "text": "Галия<Br>Броня, одежда, пояса",
+   "why": "dn_wear_trd in the black market 103: the black markets' block 62125-62166 (Вади-Хальфа's, Абри's, Донгола's and Абу-Хамед's traders in turn: ... 62159 'Галия<Br>Броня, одежда, пояса', 62160 'Дари<Br>Торговец комплектами', 62161 'Серхио', 62162 'Фарюк' ...), by the type's own word; the wiki's market list is shifted by one here, as in Абри's port market; wear_trd is the armour's and clothes' trader, as Абу-Хамед's 1219 and Абри's Алима 1165 (62155). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "655": {
+   "string_id": 50405,
+   "text": "Марат<Br>Аренда транспорта",
+   "why": "dn_Lessor in the black market 103, MEDIUM: the lessors' rows 50405/50406, Абри's Мухсин took 50406; the wiki's 'Марат' of the market. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "140": {
+   "string_id": 48751,
+   "text": "Печурка",
+   "why": "dn_SmallStove on the pier 445: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- the little stove of «Радостная встреча». the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "5689": {
+   "string_id": 9669,
+   "text": "Майор Картер<Br>Армия ЦСЦ",
+   "why": "Npc_Commoner000095 on the pier 445: the commoners' family on its offset 9574 -> 9669 'Майор Картер<Br>Армия ЦСЦ'; he stands with no quest, as the ЦСЦ's men on Вади-Хальфа's pier. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "5690": {
+   "string_id": 9670,
+   "text": "Рядовой Хиггинсон<Br>Армия ЦСЦ",
+   "why": "Npc_Commoner000096 on the pier 445, the next member and the next row (see 5689). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1965": {
+   "string_id": 59616,
+   "text": "Элизабет Стюарт<Br>Подарки",
+   "why": "DN_romantik_trader: the gifts' block 59616-59618 ('Элизабет Стюарт<Br>Подарки', 'Чарльз Стюарт<Br>сын Элизабет<Br>упаковка подарков', 'Анна-Мария<Br>дочь Элизабет<Br>распаковка подарков') in the order of the DN_romantik_ types (trader, Upgrader_1, Upgrader_2), on the pier 445. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "2004": {
+   "string_id": 59617,
+   "text": "Чарльз Стюарт<Br>сын Элизабет",
+   "why": "DN_romantik_Upgrader_1: the gifts' block 59616-59618 ('Элизабет Стюарт<Br>Подарки', 'Чарльз Стюарт<Br>сын Элизабет<Br>упаковка подарков', 'Анна-Мария<Br>дочь Элизабет<Br>распаковка подарков') in the order of the DN_romantik_ types (trader, Upgrader_1, Upgrader_2), on the pier 445. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "2005": {
+   "string_id": 59618,
+   "text": "Анна-Мария<Br>дочь Элизабет",
+   "why": "DN_romantik_Upgrader_2: the gifts' block 59616-59618 ('Элизабет Стюарт<Br>Подарки', 'Чарльз Стюарт<Br>сын Элизабет<Br>упаковка подарков', 'Анна-Мария<Br>дочь Элизабет<Br>распаковка подарков') in the order of the DN_romantik_ types (trader, Upgrader_1, Upgrader_2), on the pier 445. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1797": {
+   "string_id": 62329,
+   "text": "Альма<Br>Коллекционер",
+   "why": "amulet_upg on the pier 445, MEDIUM: the collectors' row 62329 'Альма<Br>Коллекционер' beside the upgraders' block 62322-62325; the amulet upgrader's word. Her window is empty (the amulet of «Посланник Смерти» part 3 is cut with parts 2-6). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "4676": {
+   "string_id": 10660,
+   "text": "Карен ван Бурен<Br>Пилот вертолета",
+   "why": "dn_city_travel on the pier 445, MEDIUM: the pilots' rows -- 62147/62148 'Карен ван Бурен<Br>Пилот вертолета<Br>«SE.313 Alouette II»' / '«МН-6»' are Вади-Хальфа's 4670 and Абри's -- and 10660 'Карен ван Бурен<Br>Пилот вертолета<Br>«SE.313 Alouette II»' of the traders' block, the row left for the third. No flights (the plan's cut list). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "6560": {
+   "string_id": 10350,
+   "text": "Майор Свейн<Br>Delta Force",
+   "why": "Npc_Commoner000798 on the pier 445, WEAK: the commoners' family on its offset 9552 -> 10350 'Майор Свейн<Br>Delta Force' (only the offset says so). A man of the clan base Delta Force, cut with it: he does not stand (data/schedule.json held_out). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "2010": {
+   "string_id": 60231,
+   "text": "Хоу Сян<Br>Колдун",
+   "why": "Dn_Kitaec on the shore 105 (L130 «Побережье Донголы, Хижина колдуна»): 60231 'Хоу Сян<Br>Колдун', the row before Вади-Хальфа's 2011 Wh_Kitaec 'Мун Сон Мён<Br>Колдунья' (60232). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "630": {
+   "string_id": 59673,
+   "text": "Цветущий куст",
+   "why": "stv_flower_bush_dn on the shore 105: 59673 'Цветущий куст', the row of its twin 625. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "144": {
+   "string_id": 48755,
+   "text": "Могила",
+   "why": "dn_Grave on the graveyard 72: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "145": {
+   "string_id": 48756,
+   "text": "Мунир",
+   "why": "dn_Gamzat on the graveyard 72: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- the block's row after 'Могила' is 'Мунир'. The text of «Радостная встреча» (48629) calls the man at the grave 'Рамзат', and the type's own word is Gamzat: a disagreement of the original itself. The name goes by the block of rows, as every name of the town does (decision 54 of the plan). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "230": {
+   "string_id": 9514,
+   "text": "Cобака<Br>Дикое животное",
+   "why": "mEnvironmentDog, the flayers' dogs in 73: the wild animals' block 9498-9515, '[1] Cобака<Br>Дикое животное' (its first letter a Latin C, mended on the wire: server/orig_texts.py NAME_TYPOS). The level prefix is dropped on the wire. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "335": {
+   "string_id": 51653,
+   "text": "Подмастерье Сафи<Br>улучшение автоматов",
+   "why": "dn_modif_assrifle in the masters' camp 96: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "345": {
+   "string_id": 51654,
+   "text": "Подмастерье Али<Br>улучшение пулеметов",
+   "why": "dn_modif_machingun in the masters' camp 96: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "382": {
+   "string_id": 51661,
+   "text": "Мастер Самир<Br>улучшение автоматов",
+   "why": "dn_modif_assrifle_g in the masters' camp 96: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). The same master as the markets' 580. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "385": {
+   "string_id": 51662,
+   "text": "Мастер Гази<Br>улучшение пулеметов",
+   "why": "dn_modif_machingun_g in the masters' camp 96: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "346": {
+   "string_id": 51655,
+   "text": "Подмастерье Санчес<Br>улучшение винтовок",
+   "why": "dn_modif_rifle in the masters' camp 97: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "347": {
+   "string_id": 51656,
+   "text": "Подмастерье Басам<Br>улучшение пистолет-пулеметов",
+   "why": "dn_modif_submachgun in the masters' camp 97: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "386": {
+   "string_id": 51663,
+   "text": "Мастер Умар<Br>улучшение винтовок",
+   "why": "dn_modif_rifle_g in the masters' camp 97: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). The same master as the markets' 584. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "387": {
+   "string_id": 51664,
+   "text": "Мастер Фахад<Br>улучшение пистолет-пулеметов",
+   "why": "dn_modif_submachgun_g in the masters' camp 97: The masters' block 51653-51665 (Подмастерье Сафи, Али, Санчес, Басам; Мастер Клара, Сэм, Азам, Ракин -- Вади-Хальфа's; Мастер Самир, Гази, Умар, Фахад, Гафур), each with the class he works on; Донгола's two «Лагерь мастеров» (96 'автоматов, пулеметов', 97 'винтовок, пистолет-пулеметов', the map's L124/L128) and the masters' stalls of the two markets (50, 197). The same master as the markets' 585. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "5109": {
+   "string_id": 9626,
+   "text": "Абрам Васильевич<Br>Водитель",
+   "why": "Npc_Commoner000034: the commoners' family on its offset 9592 (Npc_Commoner000034-36 -> 9626-9628 'Абрам Васильевич<Br>Водитель', 'Мастер Ибн Аббас Фирас<Br>Улучшение пулеметов', 'Мастер Ибн аль-Хайтам<Br>Улучшение пулеметов'), MEDIUM, in the masters' camp 96. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "5110": {
+   "string_id": 9627,
+   "text": "Мастер Ибн Аббас Фирас",
+   "why": "Npc_Commoner000035: the commoners' family on its offset 9592 (Npc_Commoner000034-36 -> 9626-9628 'Абрам Васильевич<Br>Водитель', 'Мастер Ибн Аббас Фирас<Br>Улучшение пулеметов', 'Мастер Ибн аль-Хайтам<Br>Улучшение пулеметов'), MEDIUM, in the masters' camp 96. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "5111": {
+   "string_id": 9628,
+   "text": "Мастер Ибн аль-Хайтам",
+   "why": "Npc_Commoner000036: the commoners' family on its offset 9592 (Npc_Commoner000034-36 -> 9626-9628 'Абрам Васильевич<Br>Водитель', 'Мастер Ибн Аббас Фирас<Br>Улучшение пулеметов', 'Мастер Ибн аль-Хайтам<Br>Улучшение пулеметов'), MEDIUM, in the masters' camp 96. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "109": {
+   "string_id": 48747,
+   "text": "Раб",
+   "why": "dn_Slave at Амин's (67): the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "136": {
+   "string_id": 48747,
+   "text": "Раб",
+   "why": "dn_Slave_env, Амин's five slaves in 67: the row of dn_Slave 109 (the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "131": {
+   "string_id": 50328,
+   "text": "Папаша Абу",
+   "why": "m510_Father_Aby_lvl8, MEDIUM: 'Папаша Абу' (50328), the row of the slave traders' boss 327 of Абри, whose word Father_Aby is. Stands in no file. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "148": {
+   "string_id": 48759,
+   "text": "Автомобиль",
+   "why": "dn_avto at «Старые приятели» (69): the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "2096": {
+   "string_id": 800,
+   "text": "Череп",
+   "why": "TreasureIsland_1 in «Тайная Сделка» (68), a skull of the treasure maps: 800 'Череп', the row of its kin 2099, 2101 and 2102. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "2097": {
+   "string_id": 800,
+   "text": "Череп",
+   "why": "TreasureIsland_2 on the road 146 (5876,2031), a skull of the treasure maps (see 2096). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "362": {
+   "string_id": 8925,
+   "text": "Командир<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Komandir_lvl12, 'Командир'."
+  },
+  "363": {
+   "string_id": 8926,
+   "text": "Ополченец<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Opolchenec_lvl12, 'Ополченец'."
+  },
+  "364": {
+   "string_id": 8927,
+   "text": "Солдат<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Veteran_lvl12, 'Солдат'."
+  },
+  "365": {
+   "string_id": 8928,
+   "text": "Боевик<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Boevik_lvl12, 'Боевик'."
+  },
+  "366": {
+   "string_id": 8929,
+   "text": "Командир Группы<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Komandir_lvl13, 'Командир Группы'."
+  },
+  "367": {
+   "string_id": 8930,
+   "text": "Доброволец<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Opolchenec_lvl13, 'Доброволец'."
+  },
+  "368": {
+   "string_id": 8931,
+   "text": "Ветеран<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Veteran_lvl13, 'Ветеран'."
+  },
+  "369": {
+   "string_id": 8932,
+   "text": "Диверсант<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Boevik_lvl13, 'Диверсант'."
+  },
+  "370": {
+   "string_id": 8933,
+   "text": "Полевой Командир<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Komandir_lvl14, 'Полевой Командир'."
+  },
+  "371": {
+   "string_id": 8934,
+   "text": "Рядовой<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Opolchenec_lvl14, 'Рядовой'."
+  },
+  "372": {
+   "string_id": 8935,
+   "text": "Спецназ<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Veteran_lvl14, 'Спецназ'."
+  },
+  "373": {
+   "string_id": 8936,
+   "text": "Командос<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Boevik_lvl14, 'Командос'."
+  },
+  "592": {
+   "string_id": 8924,
+   "text": "Казначей<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_Kaznachei, the camp's treasurer, 'Казначей'."
+  },
+  "1565": {
+   "string_id": 8937,
+   "text": "Вильям Блейд<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_WilliamBlade, 'Вильям Блейд', who stands in the camp 93 by hand (data/placements.json)."
+  },
+  "375": {
+   "string_id": 8938,
+   "text": "Джибрил Ибрагим<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: mrare_serjeant_lvl24, the boss of the chief's place 91, 'Джибрил Ибрагим': the text 50436 sends the player «в лагерь ДСР ... найди там Джибрила Ибрагима и Полковника Халила», and the serjeant is the lesser of the two."
+  },
+  "374": {
+   "string_id": 8939,
+   "text": "Полковник Халил<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: mrare_komandir_lvl26, the boss of the camp 93, 'Полковник Халил' (50436, see 375). The matcher's pick was 9005 '[20] Командер<Br>Северный Альянс', the Northern Alliance's commander, by the word komandir."
+  },
+  "2165": {
+   "string_id": 8940,
+   "text": "Ящик<Br>ДСР",
+   "why": "The ДСР's ranks, texts.xml 8924-8940 ('[14] Казначей', '[12] Командир', '[12] Ополченец', '[12] Солдат', '[12] Боевик', '[13] Командир Группы', '[13] Доброволец', '[13] Ветеран', '[13] Диверсант', '[14] Полевой Командир', '[14] Рядовой', '[14] Спецназ', '[14] Командос', '[14] Вильям Блейд', '[15] Джибрил Ибрагим', '[16] Полковник Халил', '[14] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's and Абри's factions are: jm_ 362-365, 366-369 and 370-373 (levels 12, 13 and 14, each Komandir, Opolchenec, Veteran, Boevik). Borne out by the internal words where the block repeats them -- Командир at each level, Ополченец and Боевик at 12 -- and each rank climbs a line: Командир, Командир Группы, Полевой Командир; Ополченец, Доброволец, Рядовой; Солдат, Ветеран, Спецназ; Боевик, Диверсант, Командос. The matcher's picks for 364, 372 and 373 were other factions' rows (10595 '[5] Ветеран<Br>Джанджавиды', 46338 '[14] Ветеран<Br>Миротворцы', 10603 '[6] Боевик<Br>Beja Congress'). Лагерь ДСР (93) and its chief's place (91), the owner's «и потом сделай донголу тоже», 2026-10-13. This one: jm_box_ammo, the camp's ammunition boxes in 93, 'Ящик'."
+  },
+  "395": {
+   "string_id": 8942,
+   "text": "Капрал<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_veteran_lvl14, 'Капрал'."
+  },
+  "396": {
+   "string_id": 8943,
+   "text": "Разведчик<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_sniper_lvl14, 'Разведчик'."
+  },
+  "397": {
+   "string_id": 8944,
+   "text": "Рядовой-рекрут<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_soldat_lvl14, 'Рядовой-рекрут'."
+  },
+  "398": {
+   "string_id": 8945,
+   "text": "Автоматчик<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_shturmovik_lvl14, 'Автоматчик'."
+  },
+  "399": {
+   "string_id": 8946,
+   "text": "Сержант<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_veteran_lvl15, 'Сержант'."
+  },
+  "400": {
+   "string_id": 8947,
+   "text": "Стрелок<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_sniper_lvl15, 'Стрелок'."
+  },
+  "401": {
+   "string_id": 8948,
+   "text": "Рядовой<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_soldat_lvl15, 'Рядовой'."
+  },
+  "402": {
+   "string_id": 8949,
+   "text": "Штурмовик<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_shturmovik_lvl15, 'Штурмовик'."
+  },
+  "403": {
+   "string_id": 8950,
+   "text": "Мастер-сержант<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_veteran_lvl16, 'Мастер-сержант'."
+  },
+  "404": {
+   "string_id": 8951,
+   "text": "Снайпер<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_sniper_lvl16, 'Снайпер'."
+  },
+  "405": {
+   "string_id": 8952,
+   "text": "Рядовой первого класса<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_soldat_lvl16, 'Рядовой первого класса'."
+  },
+  "406": {
+   "string_id": 8953,
+   "text": "Элитный Штурмовик<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_shturmovik_lvl16, 'Элитный Штурмовик'."
+  },
+  "593": {
+   "string_id": 8941,
+   "text": "Казначей<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_Kaznachei, the camp's treasurer, 'Казначей'."
+  },
+  "2167": {
+   "string_id": 8958,
+   "text": "Ящик<Br>Миротворцы",
+   "why": "The Peacekeepers' ranks, texts.xml 8941-8958 ('[16] Казначей', '[14] Капрал', '[14] Разведчик', '[14] Рядовой-рекрут', '[14] Автоматчик', '[15] Сержант', '[15] Стрелок', '[15] Рядовой', '[15] Штурмовик', '[16] Мастер-сержант', '[16] Снайпер', '[16] Рядовой первого класса', '[16] Элитный Штурмовик', '[16] ДжонТорнхил', '[17] МаксКоул', '[18] ШефДженсен', '[18] Пулеметчик Ганс', '[16] Ящик'), taken by their place in the block, level by level, as the ranks of every other camp are: pc_ 395-398, 399-402 and 403-406 (levels 14, 15 and 16, each veteran, sniper, soldat, shturmovik). Each rank climbs a line: Капрал, Сержант, Мастер-сержант (the veteran); Разведчик, Стрелок, Снайпер (the sniper); Рядовой-рекрут, Рядовой, Рядовой первого класса (the soldier); Автоматчик, Штурмовик, Элитный Штурмовик (the stormtrooper). The matcher's picks were the block 46338-46347 by words ('[14] Ветеран', '[14] Снайпер' ... '[16] Штурмовик<Br>Миротворцы'), which has no row for two of the twelve (the sniper of 16, the stormtrooper of 15) and is the wiki's reconstruction of the same faction; the block of the camps' ranks is the one with the camp's treasurer and box beside them (decision 20 of the plan). Лагерь Миротворцев (98), its chief's place (99) and the mines' mouths 155/157/161, the owner's «и потом сделай донголу тоже», 2026-10-13. This one: pc_box_ammo, the camp's ammunition boxes in 98, 'Ящик'."
+  },
+  "6827": {
+   "string_id": 10353,
+   "text": "Ящик с деньгами<Br>Северный склад",
+   "why": "Npc_Commoner000804, the money box of the northern warehouse 113: the commoners' family on its offset 9549 -> 10353-10355 'Ящик с деньгами<Br>Северный / Восточный / Южный склад', members 804-806 in turn. Донгола's three warehouses, the map's L323-L325 (Северный 113 on 5913,1976, Восточный 114 on 5931,2031, Южный 112 on 5883,2060). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "6828": {
+   "string_id": 10354,
+   "text": "Ящик с деньгами<Br>Восточный склад",
+   "why": "Npc_Commoner000805, the money box of the eastern warehouse 114 (see 6827). Донгола's three warehouses, the map's L323-L325 (Северный 113 on 5913,1976, Восточный 114 on 5931,2031, Южный 112 on 5883,2060). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "6829": {
+   "string_id": 10355,
+   "text": "Ящик с деньгами<Br>Южный склад",
+   "why": "Npc_Commoner000806, the money box of the southern warehouse 112 (see 6827). Донгола's three warehouses, the map's L323-L325 (Северный 113 on 5913,1976, Восточный 114 on 5931,2031, Южный 112 on 5883,2060). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "7451": {
+   "string_id": 9613,
+   "text": "Хозяин склада<Br>Северный склад",
+   "why": "boss_DN_sever, the warehouse master of 113: the masters' rows 9613-9615 ('[12] Хозяин склада<Br>Северный склад', '[16] ... Восточный', '[16] ... Южный') in the order of the types sever, vostok, ug, as Вади-Хальфа's 7448-7450 take theirs. Донгола's three warehouses, the map's L323-L325 (Северный 113 on 5913,1976, Восточный 114 on 5931,2031, Южный 112 on 5883,2060). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "7452": {
+   "string_id": 9614,
+   "text": "Хозяин склада<Br>Восточный склад",
+   "why": "boss_DN_vostok, the warehouse master of 114 (see 7451). Донгола's three warehouses, the map's L323-L325 (Северный 113 on 5913,1976, Восточный 114 on 5931,2031, Южный 112 on 5883,2060). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "7453": {
+   "string_id": 9615,
+   "text": "Хозяин склада<Br>Южный склад",
+   "why": "boss_DN_ug, the warehouse master of 112 (see 7451). Донгола's three warehouses, the map's L323-L325 (Северный 113 on 5913,1976, Восточный 114 on 5931,2031, Южный 112 on 5883,2060). the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "644": {
+   "string_id": 50312,
+   "text": "Крисп<Br>Офицер Магриба",
+   "why": "m1520_magrib_officer_q, the one man of Q_DN_Bunker01 (115, the map's L133 «Патруль Магриба» on 5889,2003): 50312 'Крисп<Br>Офицер Магриба' of the quest mobs' block, and «Секреты Магриба» (47704-47705) sends the player «устранить Криспа-офицера Магриба». Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "818": {
+   "string_id": 10609,
+   "text": "Мастер Люшера",
+   "why": "m510_MasterLusher_2 on the road 145: '[6] Мастер Люшера' (10609), the row of its twin 817 on 144; the level prefix is dropped on the wire. Люшер's roads 144-146 (Q_DN_Road01-03, the map's L143/L145/L146 «Пустошь: дорога»), each a master of Люшер and his Сакиб, whom the line of Люшер and Рашид (48647-48714) sends the player to. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "819": {
+   "string_id": 10609,
+   "text": "Мастер Люшера",
+   "why": "m510_MasterLusher_3 on the road 146 (see 818). Люшер's roads 144-146 (Q_DN_Road01-03, the map's L143/L145/L146 «Пустошь: дорога»), each a master of Люшер and his Сакиб, whom the line of Люшер and Рашид (48647-48714) sends the player to. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "830": {
+   "string_id": 48770,
+   "text": "Сакиб",
+   "why": "dn_Sakib_2 on the road 145: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types, the row of its twin 829 on 144. Люшер's roads 144-146 (Q_DN_Road01-03, the map's L143/L145/L146 «Пустошь: дорога»), each a master of Люшер and his Сакиб, whom the line of Люшер and Рашид (48647-48714) sends the player to. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "831": {
+   "string_id": 48770,
+   "text": "Сакиб",
+   "why": "dn_Sakib_3 on the road 146 (see 830). Люшер's roads 144-146 (Q_DN_Road01-03, the map's L143/L145/L146 «Пустошь: дорога»), each a master of Люшер and his Сакиб, whom the line of Люшер and Рашид (48647-48714) sends the player to. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "827": {
+   "string_id": 48769,
+   "text": "Мастер Люшера Вельс",
+   "why": "dn_Master_Veense in Q_DN_MasterVeense (147, the map's L140 «Дом Мастера Люшера Вельса» on 5878,2012): the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "185": {
+   "string_id": 50287,
+   "text": "Погонщик<Br>Работорговцы",
+   "why": "m05_sl_tr_assault_rifle_lvl13, the ten slavers of Q_DN_Slavers (150): 50287 '[13] Погонщик<Br>Работорговцы' of the level-11-13 slave traders' block 50271-50290 (ranks by weapon: the assault rifle's is the drover), at the type's own level 13; «Старые приятели» part 7 asks for «10 погонщиков». The level prefix is dropped on the wire. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1792": {
+   "string_id": 62315,
+   "text": "Охранник<Br>Западная сторона",
+   "why": "uf_EnterMan_North_DG in the yard 159: 62315 'Охранник<Br>Западная сторона', the row of its Вади-Хальфа twin 1791 uf_EnterMan_North_WH; his gate is «Тюрьма: западные ворота» (62275). The prison yard 159 (Тюремный двор, the map's L118 «Тюрьма Донголы: Усиление режима в 12:00, 16:00 и 23:00»), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1795": {
+   "string_id": 62316,
+   "text": "Охранник<Br>Южная сторона",
+   "why": "uf_EnterMan_South_DG in the yard 159: 62316 'Охранник<Br>Южная сторона', the row of its twin 1794; his gate is «Тюрьма: южные ворота» (62274). The prison yard 159 (Тюремный двор, the map's L118 «Тюрьма Донголы: Усиление режима в 12:00, 16:00 и 23:00»), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "2109": {
+   "string_id": 50009,
+   "text": "Андрей Евгеньевич<Br>Лекарь",
+   "why": "dn_prison_Healer in the yard 159: the healers' block 50005-50010, 'Андрей Евгеньевич<Br>Лекарь' (see 138, the town's Грегори). The prison yard 159 (Тюремный двор, the map's L118 «Тюрьма Донголы: Усиление режима в 12:00, 16:00 и 23:00»), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "2181": {
+   "string_id": 48848,
+   "text": "Снабженец<Br>Патроны и лекарства",
+   "why": "uf_SupplyMan_g_DN in the yard 159: 48848 'Снабженец<Br>Патроны и лекарства', after Вади-Хальфа's 'Снабженец Хальфы' (48847) in Донгола's drivers' rows. The prison yard 159 (Тюремный двор, the map's L118 «Тюрьма Донголы: Усиление режима в 12:00, 16:00 и 23:00»), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "932": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m11_uf_Competitor_1, the prisoners of the northern and eastern cells 620/621: 60388 'Заключенный', the row Вади-Хальфа's prisoners 1113-1117 take (five ranks and one plain word). Донгола's prison (Prison_1..5, 618-622, under the yard 159; m11, the twin of Вади-Хальфа's m8 prison 644-648), the rows its twin's people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "933": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m11_uf_Competitor_2, the prisoners of the northern and eastern cells 620/621: 60388 'Заключенный', the row Вади-Хальфа's prisoners 1113-1117 take (five ranks and one plain word). Донгола's prison (Prison_1..5, 618-622, under the yard 159; m11, the twin of Вади-Хальфа's m8 prison 644-648), the rows its twin's people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "934": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m11_uf_Competitor_3, the prisoners of the northern and eastern cells 620/621: 60388 'Заключенный', the row Вади-Хальфа's prisoners 1113-1117 take (five ranks and one plain word). Донгола's prison (Prison_1..5, 618-622, under the yard 159; m11, the twin of Вади-Хальфа's m8 prison 644-648), the rows its twin's people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "935": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m11_uf_Competitor_4, the prisoners of the northern and eastern cells 620/621: 60388 'Заключенный', the row Вади-Хальфа's prisoners 1113-1117 take (five ranks and one plain word). Донгола's prison (Prison_1..5, 618-622, under the yard 159; m11, the twin of Вади-Хальфа's m8 prison 644-648), the rows its twin's people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "936": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m11_uf_Competitor_5, the prisoners of the northern and eastern cells 620/621: 60388 'Заключенный', the row Вади-Хальфа's prisoners 1113-1117 take (five ranks and one plain word). Донгола's prison (Prison_1..5, 618-622, under the yard 159; m11, the twin of Вади-Хальфа's m8 prison 644-648), the rows its twin's people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "2174": {
+   "string_id": 60387,
+   "text": "Хранитель общака",
+   "why": "m11_uf_godfather_2, the godfather of the centre block 622: 60387 'Беглый каторжник<Br>Хранитель общака', the row of Вади-Хальфа's 2173. Донгола's prison (Prison_1..5, 618-622, under the yard 159; m11, the twin of Вади-Хальфа's m8 prison 644-648), the rows its twin's people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1229": {
+   "string_id": 62153,
+   "text": "Оружие",
+   "why": "dn_oasis_w_trd: The oasis «Аль-Захаб» 195 (L210), the oases' row of the black markets' block (62153 'Оружие', 62154 'Торговец патронами', as Абри's Дальний Оазис's 1227/1228 take them) and the healers' and lessors' rows, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1230": {
+   "string_id": 62154,
+   "text": "Торговец патронами",
+   "why": "dn_oasis_ammo: The oasis «Аль-Захаб» 195 (L210), the oases' row of the black markets' block (62153 'Оружие', 62154 'Торговец патронами', as Абри's Дальний Оазис's 1227/1228 take them) and the healers' and lessors' rows, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1268": {
+   "string_id": 46359,
+   "text": "Лекарь",
+   "why": "dn_oasis_healer: 46359 'Лекарь', the oases' healers' row. The oasis «Аль-Захаб» 195 (L210), the oases' row of the black markets' block (62153 'Оружие', 62154 'Торговец патронами', as Абри's Дальний Оазис's 1227/1228 take them) and the healers' and lessors' rows, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1755": {
+   "string_id": 60229,
+   "text": "Осколок скалы (Дн)",
+   "why": "DN_Rock: 60229 'Осколок скалы (Дн)'. The oasis «Аль-Захаб» 195 (L210), the oases' row of the black markets' block (62153 'Оружие', 62154 'Торговец патронами', as Абри's Дальний Оазис's 1227/1228 take them) and the healers' and lessors' rows, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "2242": {
+   "string_id": 62335,
+   "text": "Фриденсрайх Шнеерсон<Br>Меняла спецназа",
+   "why": "DN_upg_specops: 62335 'Фриденсрайх Шнеерсон<Br>Меняла спецназа', the special forces' exchanger's row of Донгола, beside Абри's 2241 «Эрих Френкель<Br>Меняла легионера» (62336). The oasis «Аль-Захаб» 195 (L210), the oases' row of the black markets' block (62153 'Оружие', 62154 'Торговец патронами', as Абри's Дальний Оазис's 1227/1228 take them) and the healers' and lessors' rows, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "2300": {
+   "string_id": 50410,
+   "text": "Тьерри Сабин",
+   "why": "oasis_Lessor_3: 50410 'Тьерри Сабин<Br>', the oases' lessor. The oasis «Аль-Захаб» 195 (L210), the oases' row of the black markets' block (62153 'Оружие', 62154 'Торговец патронами', as Абри's Дальний Оазис's 1227/1228 take them) and the healers' and lessors' rows, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1330": {
+   "string_id": 10523,
+   "text": "Вход в шахту<Br>Добыча меди",
+   "why": "DN_EnterCopperNPC1, the copper mine's mouth 208: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1326": {
+   "string_id": 10522,
+   "text": "Вход на карьер<Br>Добыча селитры",
+   "why": "DN_EnterNitreNPC1, the saltpetre pit's mouth 209: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1322": {
+   "string_id": 10521,
+   "text": "Вход в шахту<Br>Добыча свинца",
+   "why": "DN_EnterPlumbumNPC1, the lead mine's mouth 210: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1342": {
+   "string_id": 10524,
+   "text": "Выход из шахты",
+   "why": "DN_ExitCopperNPC1, the copper mine's control room 663: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1338": {
+   "string_id": 10525,
+   "text": "Выход из карьера",
+   "why": "DN_ExitNitreNPC1, the saltpetre pit's control room 664: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1334": {
+   "string_id": 10524,
+   "text": "Выход из шахты",
+   "why": "DN_ExitPlumbumNPC1, the lead mine's control room 665: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1369": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "DN_copper_sorting in 663: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1365": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "DN_nitre_sorting in 664: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1361": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "DN_plumbum_sorting in 665: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1373": {
+   "string_id": 10527,
+   "text": "Производство пуль",
+   "why": "DN_bullet_creator in the processing base 212: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1377": {
+   "string_id": 10528,
+   "text": "Производство пороха",
+   "why": "DN_powder_creator in the processing base 212: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1381": {
+   "string_id": 10529,
+   "text": "Производство гильз",
+   "why": "DN_shell_creator in the processing base 212: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1385": {
+   "string_id": 10530,
+   "text": "Производство патронов",
+   "why": "DN_ammo_creator, the assembler of the works 211: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's and Абри's twins of these types take them. Донгола's copper, lead and saltpetre works (208-212, 663-665), the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1310": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "DN_Stone_Plumbum_1 in the lead mine's first tier 1033: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as Вади-Хальфа's and Абри's rocks of the series take them. Донгола's tiers 1031-1033 and 1224-1226, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1347": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "DN_Stone_Plumbum_2 in its second tier 1226: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as Вади-Хальфа's and Абри's rocks of the series take them. Донгола's tiers 1031-1033 and 1224-1226, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1314": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "DN_Source_Nitre_1 in the saltpetre pit's first tier 1032: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as Вади-Хальфа's and Абри's rocks of the series take them. Донгола's tiers 1031-1033 and 1224-1226, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1352": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "DN_Source_Nitre_2 in its second tier 1225: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as Вади-Хальфа's and Абри's rocks of the series take them. Донгола's tiers 1031-1033 and 1224-1226, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1318": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "DN_Stone_Copper_1 in the copper mine's first tier 1031: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as Вади-Хальфа's and Абри's rocks of the series take them. Донгола's tiers 1031-1033 and 1224-1226, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1357": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "DN_Stone_Copper_2 in its second tier 1224: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as Вади-Хальфа's and Абри's rocks of the series take them. Донгола's tiers 1031-1033 and 1224-1226, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "1716": {
+   "string_id": 48069,
+   "text": "Злой шахтёр<Br>Стахановцы",
+   "why": "Craft_Miner_3, the angry miners of every tier: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as Вади-Хальфа's and Абри's rocks of the series take them. Донгола's tiers 1031-1033 and 1224-1226, the owner's «и потом сделай донголу тоже», 2026-10-13. "
+  },
+  "980": {
+   "string_id": 48065,
+   "text": "Порода",
+   "why": "Stone_DN, the stones of the quarry 631, 633-635: 48065 'Порода', the row of Вади-Хальфа's quarry stones 977. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "983": {
+   "string_id": 48772,
+   "text": "Олег<Br>Прораб",
+   "why": "DN_Stone_Brigadir in the quarry's first tier 632: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- the foreman of the quarry. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "244": {
+   "string_id": 48071,
+   "text": "Оружейник<Br>Винтовки",
+   "why": "dn_craft_RifleCrafter: the gunsmiths' rows 48071-48076 ('Оружейник<Br>Винтовки', 'Дробовики', 'Автоматы', 'Пистолеты', 'Пистолет-пулеметы', 'Пулеметы') by the class each type's word names, in the masters' place 625 of the mountain paths (L229-L231 «Горные тропы»). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "246": {
+   "string_id": 48076,
+   "text": "Оружейник<Br>Пулеметы",
+   "why": "dn_craft_MachGunCrafter: the gunsmiths' rows 48071-48076 ('Оружейник<Br>Винтовки', 'Дробовики', 'Автоматы', 'Пистолеты', 'Пистолет-пулеметы', 'Пулеметы') by the class each type's word names, in the masters' place 625 of the mountain paths (L229-L231 «Горные тропы»). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "247": {
+   "string_id": 48073,
+   "text": "Оружейник<Br>Автоматы",
+   "why": "dn_craft_AssRifleCrafter: the gunsmiths' rows 48071-48076 ('Оружейник<Br>Винтовки', 'Дробовики', 'Автоматы', 'Пистолеты', 'Пистолет-пулеметы', 'Пулеметы') by the class each type's word names, in the masters' place 625 of the mountain paths (L229-L231 «Горные тропы»). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "249": {
+   "string_id": 48075,
+   "text": "Оружейник<Br>Пистолет-пулеметы",
+   "why": "dn_craft_SubMachGunCrafter: the gunsmiths' rows 48071-48076 ('Оружейник<Br>Винтовки', 'Дробовики', 'Автоматы', 'Пистолеты', 'Пистолет-пулеметы', 'Пулеметы') by the class each type's word names, in the masters' place 625 of the mountain paths (L229-L231 «Горные тропы»). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "840": {
+   "string_id": 8959,
+   "text": "Шахтер<Br>Миротворцы",
+   "why": "pc_miner_lvl16, the Peacekeepers' miners of Донгола's mine (614, 616, 1013, 1015, 1020-1023): 8959 '[16] Шахтер<Br>Миротворцы' of the camps' block, after the Peacekeepers' box (8958); «Саботаж» asks for ten of them. The level prefix is dropped on the wire. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "841": {
+   "string_id": 8960,
+   "text": "Шахтер<Br>Миротворцы",
+   "why": "pc_miner_lvl17, the miners of 1015 and the third tier 1214: 8960 '[17] Шахтер<Br>Миротворцы' (see 840). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1770": {
+   "string_id": 48778,
+   "text": "Полковник Дарт Соренсен<Br>Барон бомжей",
+   "why": "WH_Dart_Sorenser in the dump 695, which no way reaches: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "1773": {
+   "string_id": 10634,
+   "text": "Голодная собака",
+   "why": "Bich_Hangry_Dog_lvl10, the dogs of Донгола's dump 1042 (BichKing_Dump2, the map's L141 «Свалка Донголы: Место жительства бомжей, диких собак и старых вещей»): '[1] Голодная собака' of the starter-animal block (10634, the row of 82); the level prefix is dropped on the wire, the dog fights at its own 10. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1772": {
+   "string_id": 50300,
+   "text": "Опасный БОМЖ",
+   "why": "DN_Sorenser_bich_lvl12, the four bums of the dump 1042: 50300 '[12] Опасный БОМЖ', the bum of level 12 the sewer's 670 is. The matcher's pick was the colonel's own row 49946 by the word Sorenser; the colonel is 1767. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "674": {
+   "string_id": 48764,
+   "text": "Тариф<Br>полицейский",
+   "why": "dn_PoliceManInside in the sewer 607 (Dongola_Sewers01 «Канализация»): the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- Тариф the policeman, the man of 678 in the quarter above; by the files 674 and the БОМЖ 676 stand in 607, 675 in the collector 608. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "675": {
+   "string_id": 48765,
+   "text": "Наим<Br>полицейский",
+   "why": "dn_PoliceChiefInside in the collector 608 (Dongola_Sewers02 «Коллектор»): the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types -- 'Наим<Br>полицейский', the row after Тариф's. The wiki's 'БОМЖ' was the next row's. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "676": {
+   "string_id": 48766,
+   "text": "БОМЖ",
+   "why": "dn_HomePerson in the sewer 607: the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "677": {
+   "string_id": 48767,
+   "text": "Ящик с деталями оружия",
+   "why": "dn_WeaponPartBox in the cellar 1009 (Dongola_Sewers03 «Подвал»): the Донгола block of the people's rows, 48745-48779 (Расул, Тахир, Раб, Гудмэн, Гусейн, Айна, Печурка, Ганий, Мелкий хулиган, Ящик с кошками, Могила, Мунир, Рашид, Шамиль, Автомобиль, Агата, Рамон, сын Агаты, Техномастер, Тариф, Наим, БОМЖ, Ящик с деталями оружия, Мастер Люшера Сэмир, Мастер Люшера Вельс, Сакиб, Джамшут, Олег, Старец Паисий, Бамбук, Мистер Соренсен, Жан-Батист, мсье Фурнье, Полковник Дарт Соренсен, Густав Стивенсон), in the order of the town's dn_ types. the owner's «и потом сделай донголу тоже», 2026-10-13."
+  },
+  "670": {
+   "string_id": 50300,
+   "text": "Опасный БОМЖ",
+   "why": "m_Tramp_12, the bums of the collector 608: '[12] Опасный БОМЖ' (50300) of Люшер's quest mobs' block 50300-50302, beside 'Фанатик<Br>Люшер' and 'Боец<Br>Люшер'. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "672": {
+   "string_id": 50302,
+   "text": "Боец<Br>Люшер",
+   "why": "lu_Warrior_lvl12, Люшер's fighters in the collector 608: '[12] Боец<Br>Люшер' (50302), after the fanatic 671's row. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "256": {
+   "string_id": 50284,
+   "text": "Телохранитель",
+   "why": "m510_LBG_Corner_lvl_12, the bodyguards of the dungeon 597/1007 («Подземелье»): '[12] Телохранитель' (50284), the row right after '[12] Лора Крафт' (50283) of the quest mobs' block; LBG is her bodyguard. MEDIUM. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "257": {
+   "string_id": 50284,
+   "text": "Телохранитель",
+   "why": "m510_LBG_Near_lvl_12, the bodyguards of the dungeon 597/1007 («Подземелье»): '[12] Телохранитель' (50284), the row right after '[12] Лора Крафт' (50283) of the quest mobs' block; LBG is her bodyguard. MEDIUM. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "436": {
+   "string_id": 50284,
+   "text": "Телохранитель",
+   "why": "m510_LBG_1wave_lvl_12, the bodyguards of the dungeon 597/1007 («Подземелье»): '[12] Телохранитель' (50284), the row right after '[12] Лора Крафт' (50283) of the quest mobs' block; LBG is her bodyguard. MEDIUM. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "437": {
+   "string_id": 50284,
+   "text": "Телохранитель",
+   "why": "m510_LBG_2wave_lvl_12, the bodyguards of the dungeon 597/1007 («Подземелье»): '[12] Телохранитель' (50284), the row right after '[12] Лора Крафт' (50283) of the quest mobs' block; LBG is her bodyguard. MEDIUM. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "438": {
+   "string_id": 50284,
+   "text": "Телохранитель",
+   "why": "m510_LBG_3wave_lvl_12, the bodyguards of the dungeon 597/1007 («Подземелье»): '[12] Телохранитель' (50284), the row right after '[12] Лора Крафт' (50283) of the quest mobs' block; LBG is her bodyguard. MEDIUM. Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1845": {
+   "string_id": 50318,
+   "text": "Плохой парень<Br>Селениты",
+   "why": "Ab_BadBoy_lvl15, the Selenites of Zone 49 (703-705): 50318 'Плохой парень<Br>Селениты', and «Доктор Джонс» (47059-47089) sends the player against «Селениты». Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1846": {
+   "string_id": 50318,
+   "text": "Плохой парень<Br>Селениты",
+   "why": "Ab_BadBoy_lvl17, the Selenites of Zone 49 (703-705): 50318 'Плохой парень<Br>Селениты', and «Доктор Джонс» (47059-47089) sends the player against «Селениты». Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1847": {
+   "string_id": 50318,
+   "text": "Плохой парень<Br>Селениты",
+   "why": "Ab_BadBoy_lvl7, the Selenites of Zone 49 (703-705): 50318 'Плохой парень<Br>Селениты', and «Доктор Джонс» (47059-47089) sends the player against «Селениты». Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "426": {
+   "string_id": 59672,
+   "text": "Местный житель",
+   "why": "dn_ny_Local_Man at the station 49: the New Year's block 59666-59676 ('Пальма', 'Бармалей', 'Пустыный волк', 'Салага', 'Добрый беженец', 'Ребенок', 'Местный житель', 'Цветущий куст', 'Ящик экспедиции', 'Фонтан', 'Новогодняя ёлка'); the dn_ny_ types stand only in their season (world.EVENT_TOKENS 'ny'). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "428": {
+   "string_id": 59671,
+   "text": "Ребенок",
+   "why": "dn_ny_Kid1 at the station 49: the New Year's block 59666-59676 ('Пальма', 'Бармалей', 'Пустыный волк', 'Салага', 'Добрый беженец', 'Ребенок', 'Местный житель', 'Цветущий куст', 'Ящик экспедиции', 'Фонтан', 'Новогодняя ёлка'); the dn_ny_ types stand only in their season (world.EVENT_TOKENS 'ny'). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "429": {
+   "string_id": 59671,
+   "text": "Ребенок",
+   "why": "dn_ny_Kid2 on the pier 445: the New Year's block 59666-59676 ('Пальма', 'Бармалей', 'Пустыный волк', 'Салага', 'Добрый беженец', 'Ребенок', 'Местный житель', 'Цветущий куст', 'Ящик экспедиции', 'Фонтан', 'Новогодняя ёлка'); the dn_ny_ types stand only in their season (world.EVENT_TOKENS 'ny'). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "430": {
+   "string_id": 59671,
+   "text": "Ребенок",
+   "why": "dn_ny_Kid3 in the residential quarter 79: the New Year's block 59666-59676 ('Пальма', 'Бармалей', 'Пустыный волк', 'Салага', 'Добрый беженец', 'Ребенок', 'Местный житель', 'Цветущий куст', 'Ящик экспедиции', 'Фонтан', 'Новогодняя ёлка'); the dn_ny_ types stand only in their season (world.EVENT_TOKENS 'ny'). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1978": {
+   "string_id": 59670,
+   "text": "Добрый беженец",
+   "why": "dn_ny_2011_good_Good_Refugee at the station 49: the New Year's block 59666-59676 ('Пальма', 'Бармалей', 'Пустыный волк', 'Салага', 'Добрый беженец', 'Ребенок', 'Местный житель', 'Цветущий куст', 'Ящик экспедиции', 'Фонтан', 'Новогодняя ёлка'); the dn_ny_ types stand only in their season (world.EVENT_TOKENS 'ny'). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1768": {
+   "string_id": 10320,
+   "text": "Агент Фарис",
+   "why": "DN_Agen_Faris in the scene 696, which no way reaches (\"По следу одноногого\" is cut): the row of 6504 (10320). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "1769": {
+   "string_id": 10320,
+   "text": "Агент Фарис",
+   "why": "DN_Agen_Faris_A in the scene 1043 (see 1768). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "6518": {
+   "string_id": 10326,
+   "text": "Ямка",
+   "why": "Npc_Commoner000762 (art 1f_SmallHole), the hole of Q_Tresure4 on 5899,2003 (253, the map's L220 «Сокровища Зубери»): the family's holes 759-763 share the one row 10326 'Ямка' (see 6512 and 6516). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
   }
  },
  "none": {
@@ -2283,6 +3123,9 @@
   "7660": "AQ000001 (art 119) in the four resistance camps 429-432: the only member of its family, no row, no wiki name. The camps are out of the game since the owner's cut of 2026-10-12 («убери во всех городах лагеря за рекой», data/retired.json), so it stands nowhere.",
   "8236": "VOV_Q_022 in the oasis 62: a Victory Day quest thing, left out of every room by world.EVENT_TOKENS ('vov'); nobody sees it.",
   "8213": "FSC_U_000001 (art 118, an upgrader) at every Аэроплощадка (527-532, 538; Вади-Хальфа's, 528 on 5970,1727, off the map since the cut of the town's ФСЦ, 2026-10-10, and Абри's, 529 on 5865,1835, since the owner's Абри, 2026-10-12, for these two shown by their internal names over empty windows): no row. The two 'Фонд спасения цивилизаци' rows of the traders' block, 10453 'Старшина Миринков … Боеприпасы' and 10454 'Волонтер Маштаков … Лекарства', are the traders' own on their offset 10398 (members 55/56; 5671 stands in the Авиабаза ЦСЦ 427), the Фонд's two instructors 49107/49113 sit in the Apoc block beside Говард Хаксли (2192 -> 49108), and no wiki page names anybody at an Аэроплощадка.",
-  "8214": "FSC_U_000002, the other of the pair at every Аэроплощадка (see 8213)."
+  "8214": "FSC_U_000002, the other of the pair at every Аэроплощадка (see 8213).",
+  "4047": "cosm_NPC_1 in «Упавший спутник» (Sputnik_Enter, 77, on 5877,2004 since the owner's «и потом сделай донголу тоже», 2026-10-13): no row -- the satellite's place has none of its own -- no wiki page, no role. He does not stand (data/schedule.json held_out), so nobody sees him.",
+  "6896": "Abri_Archa in «Упавший спутник» (77): no row and no role (art 1f_npc10); it does not stand (data/schedule.json held_out, see 4047).",
+  "5113": "Npc_Trader000002 in the black market of Донгола (103): on the traders' offset 10399 its row is 10401 'Тестовый торгвец', a test template of the original the builder drops as it drops every 'Тестовый' (TEMPLATE_PREFIX), and its stall is empty. He does not stand (data/schedule.json held_out, the owner's «и потом сделай донголу тоже», 2026-10-13), so nobody sees him."
  }
 }
