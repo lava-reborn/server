@@ -782,9 +782,13 @@ GOLD_INGOTS = {7620: 100, 4796: 500, 4797: 1000}
 # and 10 G (their articles name no afro price). A coupon is the wiki's
 # discount: 5000 rounds of ЭК cost 50 G a pack at a time (GOLD_AMMO_ROUND)
 # and 10 G by the coupon -- gold leaving the game all the same, since no
-# stall pays gold for rounds. RECOVERED prices (2026-10-12).
+# stall pays gold for rounds. RECOVERED prices (2026-10-12). And Донгола's
+# gold lottery's ticket «Лотерейный билет (G)(14)» (712, the black market),
+# 3 G, its article's, gold alone as its Абри twins' (2400 afro beside it in
+# the article), RECOVERED (2026-10-13).
 GOLD_LINE_BLUEPRINTS = frozenset(range(37664, 37681))
 ARTICLE_GOLD_PRICE = {2649: 200, 2650: 250,           # DnLoteryKey_g_9_10, _g_11_12
+                      2651: 300,                      # DnLoteryKey_g_13_14
                       6294: 10, 6295: 100, 6296: 1000}  # kupon_ammo_20, _300, _5000
 GOLD_PRICE_ONLY = frozenset({1333}) | GOLD_LINE_BLUEPRINTS | frozenset(ARTICLE_GOLD_PRICE)
 
@@ -835,10 +839,20 @@ def gold_round(p):
 # Одноухий sells for Марис Дамбис's chain have no article and no price in
 # the original: 50 afro each, DESIGNED -- a bandage's worth (Бинт
 # Обыкновенный 61), so the chain's errand costs 150.
+#
+# And of Донгола's (2026-10-13): «Билет в Абри из Донголы» 110, Нур-ад-Дин's
+# (his article's), and «Лотерейный билет (14)» 2400, the lottery man 663's
+# -- RECOVERED; «Билет в Донголу из Абри», Луиджи's, 100, DESIGNED: its
+# article says 200, and Луиджи takes 100 afro for the same ride (texts.xml
+# 46966, data/quests.json 275), so a ticket at 200 nobody would buy. In Абри
+# no ticket costs more than its ride either (6544 100 against 100, 6545 150
+# against 400).
 CRAT_TOOLS = (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038, 7039, 7040, 7041, 7042)
 OWN_ARTICLE_PRICE = {1307: 500,
                      6544: 100, 6545: 150,          # ticket_WH_to_Abri, ticket_Abri_to_WH
+                     6546: 100, 6547: 110,          # ticket_Abri_to_DN, ticket_DN_to_Abri
                      2646: 1000, 2647: 1700,        # DnLoteryKey_9_10, _11_12
+                     2648: 2400,                    # DnLoteryKey_13_14
                      5740: 50, 5741: 50, 5742: 50}  # qGypsum_2012, qWire_2012, qBandages_2012
 OWN_ARTICLE_PRICE.update((t, 100) for t in CRAT_TOOLS)
 

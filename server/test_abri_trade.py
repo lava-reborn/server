@@ -89,6 +89,9 @@ PILOT, LOTTERY, GOLD_LOTTERY, KHAN_SELL, MORTIMER = 4672, 1172, 1171, 2391, 1188
 FREYA, AMMO_OASIS, JUT, HUXLEY, MCCANDLESS = 1962, 1228, 207, 5766, 2390
 WHETSTONE = 2280
 TICKET_TO_ABRI, TICKET_TO_HALFA = 6544, 6545
+# Донгола's (2026-10-13): Луиджи sells the way there and, before the ride, the
+# way back (server/test_dongola_trade.py).
+TICKET_TO_DONGOLA, TICKET_FROM_DONGOLA = 6546, 6547
 KEYS, GOLD_KEYS = (2646, 2647), (2649, 2650)
 COUPONS = (6294, 6295, 6296)
 TOOLS = (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038, 7039, 7040, 7041, 7042)
@@ -131,7 +134,7 @@ OWN = {
     ALIMA: [3577, 3581, 5613, 3578, 3579],
     TORSI: [],
     MUKHSIM: [],
-    LUIGI: [TICKET_TO_HALFA],
+    LUIGI: [TICKET_TO_HALFA, TICKET_TO_DONGOLA, TICKET_FROM_DONGOLA],
     PILOT: [],
     LOTTERY: list(KEYS),
     GOLD_LOTTERY: list(GOLD_KEYS),
@@ -436,7 +439,7 @@ check("  ..an immobile, harmless object each, leaving one piece of Абри's or
       ({("object", False, False)}, {r: [(o, 1)] for r, o in sorted(ROCK_ORE.items())},
        ["(Аб) Свинцовая руда", "(Аб) Селитра сырьевая", "(Аб) Медная руда"]))
 GEN_DOC = json.load(open(os.path.join(ROOT, "data", "questgen_production.json"), encoding="utf-8"))
-rows = {r["type"]: r for r in GEN_DOC["quests"] if r["type"] >= 13100}
+rows = {r["type"]: r for r in GEN_DOC["quests"] if 13100 <= r["type"] < 13200}
 check("Абри's 32 rows, 13100-13131, of the CrBQ family, loaded",
       (sorted(rows), [t for t in rows if quests.get(t) is None],
        [t for t, r in rows.items() if "for АБ from the original's CrBQ№" not in r["why"]]),
@@ -606,9 +609,11 @@ async def main():
     close_stall(sess)
 
     stall, opened = open_stall(sess, PORT, LUIGI)
-    check("Луиджи (Абри's port market): his window the ticket home, 150 afro",
+    check("Луиджи (Абри's port market): his window the ticket home, 150 afro, and Донгола's"
+          " two since 2026-10-13",
           (stall, opened, buy(sess, stall, TICKET_TO_HALFA, BUY)),
-          ([TICKET_TO_HALFA], [0], ([0], [TICKET_TO_HALFA], 150, 0)))
+          ([TICKET_TO_HALFA, TICKET_TO_DONGOLA, TICKET_FROM_DONGOLA], [0],
+           ([0], [TICKET_TO_HALFA], 150, 0)))
     check("  ..a ticket sold back for 0.7 of it: 105 afro", sell(sess, TICKET_TO_HALFA),
           ([0], True, 105, 0))
     close_stall(sess)

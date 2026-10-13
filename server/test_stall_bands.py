@@ -195,7 +195,10 @@ LEFT_ALONE = sorted((p, t) for p, types in AT.items() for t in types
 # The bouquets: «Букет» (gift_girl_4) in Абри's slums and Абу-Хамед's living quarter.
 # Донгола's black market had a third, «Цветы для любимого» (stv_flowers_m_g), on Фарюк's
 # (1215) list by a shifted link of the wiki; he sells Донгола's medicine since 2026-10-12.
-LEFT_HOLDING = [(127, 1968), (255, 1962)]
+# The gifts, cold arms of level 0 to the client: Фрея Каплан's 24 in Абри's slums
+# (2026-10-12) and Элизабет Стюарт's, the same 24, at Донгола's pier (2026-10-13,
+# server/test_dongola_trade.py).
+LEFT_HOLDING = [(127, 1968), (255, 1962), (445, 1965)]
 check("  ..and every trader of a city's place that is no seller sells its own list there, as"
       " anywhere: the bands take nothing off it (the flower sellers keep their bouquets,"
       " a cold arm to the client)",
@@ -309,9 +312,12 @@ COUNTS = {
              1168: (0, 0), 2391: (0, 6), 1167: (0, 0), 207: (0, 0)},
     # The black market's machine guns at «Пулеметы и патроны» (1208), whom the wiki's article
     # puts there; Серхио (1214), who had his list by a shifted link, sells battle medicine.
+    # The oasis's «Торговец патронами» (1230) its rounds alone, a seller of no kinds since
+    # 2026-10-13 (his own list cut to the band; server/test_dongola_trade.py).
     "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (6, 6), 1153: (3, 3), 1208: (2, 2),
                 1229: (25, 25), 1213: (25, 25), 1233: (25, 25), 5161: (25, 25), 2391: (0, 8),
-                207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0)},
+                207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0),
+                1230: (0, 0)},
     # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
     "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (0, 0),
                   1223: (20, 20), 1219: (20, 20), 5161: (20, 20), 2391: (0, 9), 207: (0, 0),
@@ -441,12 +447,13 @@ frame = max(len(protocol.frame("userInfo_Trader", id=1, name=t, type_list=s, pmo
 check("no stall of a city longer than 64 things (Локсли's 51 was the longest the live game"
       " drew before), and its frame under 4 KiB: the longest the prison yards' supply men's"
       " (2026-10-12), 61, their town's battle line and the 49 rounds of their article -- 880"
-      " of Абу-Хамед's the first of the three by type; of the weapon and set stalls 1213 on"
-      " Донгола's black market, 60: its band's 50 set pieces (Чёрный Ловелас among them since"
-      " 2026-10-13) and its ten pouches",
+      " of Абу-Хамед's the first of the three by type; of the weapon and set stalls Галия's"
+      " (1233) on Донгола's black market, 60: its band's 50 set pieces (Чёрный Ловелас among"
+      " them since 2026-10-13) and the ten pouches of her article (Дари's, 1213, until their"
+      " link was set right the same day)",
       (len(biggest[1]) <= 64, frame < 4096, biggest[0], len(biggest[1]),
        max((len(s), (p, t)) for (p, t), s in stalls.items() if t not in (880, 2180, 2181))),
-      (True, True, (177, 880), 61, (60, (103, 1213))))
+      (True, True, (177, 880), 61, (60, (103, 1233))))
 check("  ..and every thing on them a type the client has, so it draws an icon: one of"
       " objects.xml, or one of ours whose row and icon the release adds"
       " (data/own_items.json, client/build.py)",
@@ -575,14 +582,15 @@ POUCH_STALLS = {(where, t): [x for x in s if x in POUCHES or x in GOLD_POUCH]
 check("  ..the pouch sellers and their pouches: Ваккас (Вади-Хальфа, 102) his four and"
       " «Подсумки рукопашника», which his article lists; Алима (Абри, 187: 1165 by her own"
       " list since 2026-10-12, the wiki's link had given it to the driver Луиджи, 1179) and"
-      " Галия (Донгола, 103) what their articles list, «автоматчика», «пулеметчика» and"
+      " Галия (Донгола, 103: 1233 by her own list since 2026-10-13, the wiki's link had given"
+      " it to Дари, 1213) what their articles list, «автоматчика», «пулеметчика» and"
       " «рукопашника» among them since their link",
       POUCH_STALLS,
       {("own", 1165): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601],
        ("own", 1204): [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
-       ("own", 1213): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
+       ("own", 1233): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
        (102, 1204): [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
-       (103, 1213): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
+       (103, 1233): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
        (187, 1165): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601]})
 check("items.with_gold_pouches: a (G) already on a list moves after its ordinary one, a (G)"
       " without it stays put, nothing else moves, and twice is once",
@@ -646,7 +654,7 @@ def saved():
 
 
 shown = {}
-for place, trader in ((102, 1204), (187, 1165), (103, 1213)):
+for place, trader in ((102, 1204), (187, 1165), (103, 1233)):
     doc, payload = page_payload(place)
     n = [x for x in doc["npcs"] if x["type"] == trader][0]
     own = [s["type"] for s in n["stock"]]
@@ -660,7 +668,7 @@ check("npc_editor: a pouch seller's goods are its own list, no (G) among them; t
       shown,
       {1204: (True, set(), [3604, 3603, 3601, 3600, 5614], True, True),
        1165: (True, set(), [3599, 3603, 5614, 3600, 3601], True, True),
-       1213: (True, set(), [3599, 3602, 5614, 3600, 3601], True, True)})
+       1233: (True, set(), [3599, 3602, 5614, 3600, 3601], True, True)})
 check("  ..and an untouched Save on 102 (the page's default place, Ваккас), 187 and 103 leaves"
       " data/npcs.json as it was", saved() == NPCS_DOC, True)
 

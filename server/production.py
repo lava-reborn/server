@@ -68,6 +68,16 @@ ORE_ROCKS = {
     1223: frozenset({1346}),        # Свинцовая шахта 2, AB_Stone_Plumbum_2
     1029: frozenset({1313}),        # Выработка селитры 1, AB_Source_Nitre_1
     1222: frozenset({1351}),        # Выработка селитры 2, AB_Source_Nitre_2
+    # Донгола's three ore mines («Шахта Донголы: Добыча меди / свинца /
+    # селитры<br>Вход разрешен персонажам 12-15 ур.», 2026-10-13): two tiers
+    # each, as Абри's -- 15 and 10 rocks of copper, 15 and 12 of lead, 10 and
+    # 7 sources of saltpetre; the panel and the guards as in Вади-Хальфа's.
+    1031: frozenset({1318}),        # Медная Шахта 1, DN_Stone_Copper_1
+    1224: frozenset({1357}),        # Медная Шахта 2, DN_Stone_Copper_2
+    1033: frozenset({1310}),        # Свинцовая шахта 1, DN_Stone_Plumbum_1
+    1226: frozenset({1347}),        # Свинцовая шахта 2, DN_Stone_Plumbum_2
+    1032: frozenset({1314}),        # Выработка селитры 1, DN_Source_Nitre_1
+    1225: frozenset({1352}),        # Выработка селитры 2, DN_Source_Nitre_2
 }
 
 # What a rock leaves when broken: (ore, pieces). The town's own ore, the (ВХ)
@@ -85,6 +95,11 @@ ORE_YIELD = {
     1317: (3645, 1), 1356: (3645, 1),                      # copper
     1309: (3637, 1), 1346: (3637, 1),                      # lead
     1313: (3641, 1), 1351: (3641, 1),                      # saltpetre
+    # Донгола's rocks leave Донгола's ore, the (Дн) copy (copper_ore_3,
+    # plumbum_ore_3, nitre_ore_3).
+    1318: (3646, 1), 1357: (3646, 1),                      # copper
+    1310: (3638, 1), 1347: (3638, 1),                      # lead
+    1314: (3642, 1), 1352: (3642, 1),                      # saltpetre
 }
 
 # «Добыча», the specialisation of Промышленность a broken rock trains beside
