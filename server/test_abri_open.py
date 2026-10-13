@@ -665,13 +665,15 @@ try:
 
     # --- the port market ----------------------------------------------------------------
     shown = infos(arrival)
-    check("the port market as the client is shown it: Луиджи with the two ways back, Мортимер"
+    check("the port market as the client is shown it: Луиджи with the two ways back and,"
+          " since 2026-10-13, the two to Донгола (275, 281), Мортимер"
           " with the three ingots and his cashing, the lottery men, Ведич, Одноухий",
           (shown.get(LUIGI, ("", {}))[1].get("give_quests"),
            shown.get(MORTIMER, ("", {}))[1].get("type_list"),
            shown.get(MORTIMER, ("", {}))[1].get("give_quests"),
            [t in here for t in (LOTTERY_MAN, 1171, 1174, 1164)]),
-          ([RIDE_BACK, TICKET_BACK], list(INGOTS), list(range(301, 308)), [True] * 4))
+          ([RIDE_BACK, 275, TICKET_BACK, 281], list(INGOTS), list(range(301, 308)),
+           [True] * 4))
     check("  ..arrived beside Луиджи's way back",
           first(arrival, "lenter").get("pos") == travel.door_arrival(world.location(PORT), STATION),
           True)

@@ -253,11 +253,13 @@ def main():
         assert by_type[t].get("own_texts") == ["start"], (t, by_type[t].get("own_texts"))
         assert cut(qs[t]["start"], by_type[t]["start"]), t
         assert "жительств" not in by_type[t]["start"], t
-    # The warehouses' money boxes (765-767, server/holdings.py): name and
-    # start both the rows' own, each the original's with one passage out --
-    # the tier «(Бж.)», the hint of residence and citizenship -- the daily
-    # note kept, and the ids the hand-checked ones.
-    for t, start in (("765", 26364), ("766", 26365), ("767", 26366)):
+    # The warehouses' money boxes (765-767, server/holdings.py; Донгола's
+    # 768-770 since 2026-10-13): name and start both the rows' own, each the
+    # original's with one passage out -- the tier «(Бж.)», the hint of
+    # residence and citizenship -- the daily note kept, and the ids the
+    # hand-checked ones.
+    for t, start in (("765", 26364), ("766", 26365), ("767", 26366),
+                     ("768", 26367), ("769", 26368), ("770", 26369)):
         assert qs[t]["ids"] == [26363, start, None, None], (t, qs[t]["ids"])
         assert by_type[t].get("own_texts") == ["name", "start"], t
         assert cut(qs[t]["name"], by_type[t]["name"]), t

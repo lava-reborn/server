@@ -1248,7 +1248,26 @@ def abri_quest_records(T, objects):
 # -- an objects.xml name each, its name row and its description row (None
 # where the original has none), hand-checked against the run of texts.xml
 # that names it. What Донгола's stalls sell is DONGOLA_TRADE_ROWS (7m).
-DONGOLA_QUEST_ROWS = {}
+#   * «Пробитая фляга» (bottle 108, 8320/8321): «Вода из колодца» asks ten; rule 8
+#     named it by the wiki alone, without its words;
+#   * the six pieces of Энди Уорхол's «Коллекция водителя шайтан-арбы» (271),
+#     collection_travel_1..6 by texts.xml 8426-8437, «Балонник (Коллекция)» ..
+#     «Зеркало заднего вида (Коллекция)», in objects.xml's order -- the rule of
+#     the Ламантин pieces (7i); an unknown id would kick the client;
+#   * the quarry's «Серебряный Анкх» (qAnkh_Silver, 6335/6336, between the
+#     bronze and the gold ones' lines), «В поисках артефактов (ДН)»;
+#   * «Запчасть N325» (8339/8340, «Устройство от загадочного механизма.») for
+#     «Заклятие» part 4: qR_345, objects.xml's one quest thing of the name.
+# Pinned 2026-10-13.
+DONGOLA_QUEST_ROWS = {"bottle": (8320, 8321, "Пробитая фляга"),
+                      "collection_travel_1": (8426, 8427, "Балонник (Коллекция)"),
+                      "collection_travel_2": (8428, 8429, "Прикуриватель (Коллекция)"),
+                      "collection_travel_3": (8430, 8431, "Дворники (Коллекция)"),
+                      "collection_travel_4": (8432, 8433, "Домкрат (Коллекция)"),
+                      "collection_travel_5": (8434, 8435, "Ароматизатор (Коллекция)"),
+                      "collection_travel_6": (8436, 8437, "Зеркало заднего вида (Коллекция)"),
+                      "qAnkh_Silver": (6335, 6336, "Серебряный Анкх"),
+                      "qR_345": (8339, 8340, "Запчасть N325")}
 
 
 def dongola_quest_records(T, objects):

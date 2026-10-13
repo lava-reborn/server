@@ -795,6 +795,12 @@
     "cells": [[30, 78], [31, 79], [32, 78], [33, 77]],
     "target_loc_id": 187,
     "why": "RECOVERED ride and texts, DESIGNED way. 37: Хассир's «Проездной в Абри» (46745, 61303, 47226, 59830), the same ride to 187 for the ticket 6544 instead of the fare; the same cells as «Поездка в Абри» (273)."
+   },
+   {
+    "quest": 630,
+    "cells": [[30, 78], [31, 79], [32, 78], [33, 77]],
+    "target_loc_id": 49,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 37 «Вади Хальфа: вокзал»: Хассир (105) stands at (31,77); «Поездка в Донголу» (630, 48539-48541, 200 afro) is the ride to Донгола's station (49, 5877,2010). The same ground as his ride to Абри (273): a player driven back from Донгола arrives there (travel.door_arrival)."
    }
   ],
   "176": [
@@ -905,6 +911,18 @@
     "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
     "target_loc_id": 37,
     "why": "RECOVERED ride and texts, DESIGNED way. 187: Луиджи's «Проездной в Вади Хальфу» (46744, 61304, 47226, 59830), the same ride to 37 for the ticket 6545; the same cells as «Поездка в Вади Хальфу» (274)."
+   },
+   {
+    "quest": 275,
+    "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
+    "target_loc_id": 49,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 187 «Портовый рынок» of Абри: Луиджи (1179) stands at (50,91) by his car; «Поездка в Донголу» (275, 46965/46966, 100 afro) is the ride to Донгола's station (49). The same ground as his ride to Вади-Хальфа (274)."
+   },
+   {
+    "quest": 281,
+    "cells": [[51, 90], [51, 91], [50, 92], [51, 92]],
+    "target_loc_id": 49,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 187: Луиджи's «Проездной в Донголу» (281), the same ride to 49 for the ticket 6546; the same cells as «Поездка в Донголу» (275)."
    }
   ],
   "193": [
@@ -961,6 +979,248 @@
     "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
     "target_loc_id": 203,
     "why": "DESIGNED way, RECOVERED place. 660 «Комната управления»: «Выход из шахты» (1341) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 203. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "49": [
+   {
+    "quest": 631,
+    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "target_loc_id": 37,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49 «Донгола: Вокзал» (5877,2010): Нур-ад-Дин (156, «водитель», 48846) stands at (37,47) by the station's bus and car (bus.png, car2.png); «Поездка в Вади Хальфу» (631, 48542-48544, 150 afro) is the ride to Вади-Хальфа's station (37). The cells are the ground around him, where a player driven out from Вади-Хальфа arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 282,
+    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "target_loc_id": 187,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Нур-ад-Дин's «Проездной в Абри» (282), the ride to Абри's Портовый рынок (187) for the ticket 6547; the same cells as his other rides, where a player driven out from Абри arrives."
+   },
+   {
+    "quest": 632,
+    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "target_loc_id": 159,
+    "why": "RECOVERED way and time, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Нур-ад-Дин's «Поехали!» (62262/62264, «Вас отправят в тюрьму около Донголы») is the ride to the prison's yard (159, 5903,1996), open from a quarter of an hour before an uprising to its end (data/schedule.json prison_dn_gates). The cells are his rides' ground, where a player driven back from the prison arrives."
+   },
+   {
+    "quest": 650,
+    "cells": [[33, 79], [32, 80], [34, 80], [33, 81]],
+    "target_loc_id": 69,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Рашид (146) stands at (33,80); «Старые приятели (часть 6)» (48582-48584, «мы поедем туда, откуда можно будет пробраться в лагерь наших противников ... Что ж, в путь.») takes the player to «Старые приятели» (69, 5881,1999), where Рашид, Шамиль and the car stand. The cells are the ground beside him."
+   }
+  ],
+  "622": [
+   {
+    "quest": 163,
+    "cells": [[30, 74], [31, 73], [31, 75], [32, 74]],
+    "target_loc_id": 159,
+    "why": "RECOVERED way and giver, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 622 «Тюрьма: Центральный блок.» (Prison_3, Донгола's copy of 646): «Томас<Br>Выход из тюрьмы» (876, uf_ExitMan, 62317) at (31,74), and his «Выход» (163, 62276-62278), handed back to him, leads up to the yard (159) at any time; the armbands stay below (data/schedule.json keep_in). The row is Вади-Хальфа's, of the same Томас: without this record it is refused here (the rule of 'quest' above), and the blocks would have no way out. The cells are the ground at his feet, as under '646'."
+   }
+  ],
+  "159": [
+   {
+    "quest": 633,
+    "cells": [[31, 43], [32, 42], [32, 44], [33, 43]],
+    "target_loc_id": 49,
+    "why": "RECOVERED way, DESIGNED giver and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 159 «Тюремный двор» (Prison_Entrance, 5903,1996): «Назад в Донголу» (62268/62269) is the ride back to the station (49); the supply man «Снабженец» (2181) at (32,43) drives, as 2180 in Вади-Хальфа's yard (160). The cells are the ground by him, where a player driven to the prison arrives."
+   },
+   {
+    "quest": 634,
+    "cells": [[16, 39], [17, 38], [15, 39], [16, 40]],
+    "target_loc_id": 618,
+    "why": "RECOVERED way and time, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 159: «Охранник<Br>Западная сторона» (1792) at (16,38), and his «Тюрьма: западные ворота» (62275), handed back to him at the uprising (data/schedule.json prison_dn_gates), takes the player down into 618 (Prison_1). The cells are the ground at his feet, as 161's under '176'."
+   },
+   {
+    "quest": 635,
+    "cells": [[40, 38], [41, 37], [39, 38], [40, 39]],
+    "target_loc_id": 619,
+    "why": "RECOVERED way and time, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 159: «Охранник<Br>Южная сторона» (1795) at (40,37), and his «Тюрьма: южные ворота» (62274), handed back to him at the uprising, takes the player down into 619 (Prison_2). The cells are the ground at his feet."
+   }
+  ],
+  "208": [
+   {
+    "quest": 715,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 663,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 208, the entrance of Донгола's mine of меди (L307), draws its door with the gatekeeper (1330) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 663. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "209": [
+   {
+    "quest": 716,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 664,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 209, the entrance of Донгола's mine of селитры (L309), draws its door with the gatekeeper (1326) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 664. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "210": [
+   {
+    "quest": 717,
+    "cells": [[30, 57], [31, 58], [32, 58], [30, 58]],
+    "target_loc_id": 665,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 210, the entrance of Донгола's mine of свинца (L308), draws its door with the gatekeeper (1322) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 665. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "663": [
+   {
+    "quest": 718,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 208,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 663 «Комната управления»: «Выход из шахты/карьера» (1342) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 208. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "664": [
+   {
+    "quest": 719,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 209,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 664 «Комната управления»: «Выход из шахты/карьера» (1338) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 209. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "665": [
+   {
+    "quest": 720,
+    "cells": [[12, 27], [13, 27], [14, 26], [13, 28]],
+    "target_loc_id": 210,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 665 «Комната управления»: «Выход из шахты/карьера» (1334) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 210. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "197": [
+   {
+    "quest": 708,
+    "cells": [[13, 89], [12, 90], [11, 90], [13, 90]],
+    "target_loc_id": 632,
+    "why": "RECOVERED way (the wiki's «Работа в Каменоломне»: «после выполнения задания Вас переместят в другое место»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 197 «Донгола: Новый рынок»: Джамшут (982) stands at (12,89); his contract takes the player into the quarry's north pit, 632, beside Олег. The cells are the ground beside him, where a player leaving the quarry arrives."
+   }
+  ],
+  "632": [
+   {
+    "quest": 709,
+    "cells": [[55, 18], [56, 19], [55, 17], [55, 19]],
+    "target_loc_id": 197,
+    "why": "RECOVERED way, DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 632 «Каменоломня.» (DN_Stone_Mine_N), the quarry's north pit: Олег (983) stands at (56,18), and his «Покинуть каменоломню.» leads back to the Новый рынок (197), where Джамшут signs the contract. The cells are the ground beside him, where a player sent in by Джамшут arrives."
+   }
+  ],
+  "69": [
+   {
+    "quest": 762,
+    "cells": [[40, 39], [39, 40], [40, 40], [41, 39]],
+    "target_loc_id": 150,
+    "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 69 «Старые приятели» (Q_DN_starieprijateli): the car «Автомобиль» (148) at (39,39); «К лагерю работорговцев» (762) drives to the slavers' camp 150 (Q_DN_Slavers, no cell), part 7 of the chain. The cells are the ground beside the car."
+   }
+  ],
+  "79": [
+   {
+    "quest": 697,
+    "cells": [[3, 25], [4, 26], [5, 24], [5, 26]],
+    "target_loc_id": 607,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 79 «Донгола: Жилой квартал.»: Тариф (678, dn_PoliceManOutDoor) guards the one collector left open «рядом со мной» at (4,25); «Перед входом» (60013-60016, «Давай покажу тебе, как спуститься вниз») leads down into the sewer 607 (Dongola_Sewers01). The cells are the ground beside him, where a player coming up arrives."
+   },
+   {
+    "quest": 706,
+    "cells": [[3, 25], [4, 26], [5, 24], [5, 26]],
+    "target_loc_id": 607,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 79: Тариф's «Снова вниз» (706), the same way down as 697 for whoever went down once."
+   }
+  ],
+  "607": [
+   {
+    "quest": 705,
+    "cells": [[2, 21], [2, 20], [2, 22], [3, 21]],
+    "target_loc_id": 79,
+    "why": "RECOVERED way (60041-60043, «Что обратно собрался?»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 607 «Донгола: Канализация.» (Dongola_Sewers01): Тариф inside (674, dn_PoliceManInside) at (1,21); «На свежий воздух» leads up to the quarter 79. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "608": [
+   {
+    "quest": 699,
+    "cells": [[41, 82], [40, 80], [40, 82], [42, 82]],
+    "target_loc_id": 1009,
+    "why": "RECOVERED way (60025, «Давай, проходи в дверь»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 608 «Донгола: Коллектор.» (Dongola_Sewers02): Наим (675, dn_PoliceChiefInside) at (41,81); «Под прикрытием» leads into the cellar 1009 (Dongola_Sewers03). The cells are the ground beside him, where a player coming out of the cellar arrives."
+   },
+   {
+    "quest": 704,
+    "cells": [[41, 82], [40, 80], [40, 82], [42, 82]],
+    "target_loc_id": 1009,
+    "why": "RECOVERED way (60038-60040), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 608: Наим's «Снова в подвал», the same way into the cellar for another envelope."
+   }
+  ],
+  "1009": [
+   {
+    "quest": 700,
+    "cells": [[41, 95], [40, 96], [39, 94], [41, 94]],
+    "target_loc_id": 608,
+    "why": "RECOVERED way (60029, «убегаете по тайному ходу обратно в канализации»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 1009 «Подвал» (Dongola_Sewers03): the box of parts (677) at (40,95); «Бери и беги!» leads back to the collector 608. The cells are the ground beside the box, where a player coming into the cellar arrives."
+   },
+   {
+    "quest": 707,
+    "cells": [[41, 95], [40, 96], [39, 94], [41, 94]],
+    "target_loc_id": 608,
+    "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 1009: «Тайный ход» at the box (677), the cellar's free way out to the collector 608."
+   }
+  ],
+  "36": [
+   {
+    "quest": 733,
+    "cells": [[51, 30], [50, 31], [52, 31], [51, 32]],
+    "target_loc_id": 702,
+    "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 36 «Вади Хальфа: жилой квартал»: Каспар (49, wh_Kaspar) at (51,31); «Мухаммед Ахмед (часть 10)» (47056-47058, «придется надеть мешок на голову») takes the player to the cellar of Zone 49, 702 (DN_Zone49_Prison), which no door or side reaches. The cells are the ground beside him."
+   }
+  ],
+  "702": [
+   {
+    "quest": 741,
+    "cells": [[45, 106], [44, 107], [45, 108], [44, 106]],
+    "target_loc_id": 703,
+    "why": "RECOVERED way («Давай наведаемся к ним еще раз»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 702 «Подвал» (DN_Zone49_Prison): Генри Джонс (1841) at (45,107); «Осмотр пирамиды» (47066-47068) leads into the first room of Zone 49, 703. The cells are the ground beside him, where a player coming back from the rooms arrives."
+   }
+  ],
+  "703": [
+   {
+    "quest": 749,
+    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "target_loc_id": 702,
+    "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 703 «Зона 49» (DN_Zone49_1): Генри Джонс (1842) at (6,36); «Назад в подвал» (749) leads back to the cellar 702. The cells are the ground beside him, where a player coming from the cellar arrives."
+   },
+   {
+    "quest": 743,
+    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "target_loc_id": 255,
+    "why": "RECOVERED way («я видел тут какой-то лаз ... Теперь в Абри»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 703: «В город за патронами» (47075-47077) leads to Абри's Трущобы (255)."
+   },
+   {
+    "quest": 748,
+    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "target_loc_id": 49,
+    "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 703 «Зона 49»: Генри Джонс (1842) at (6,36); «Выбраться наверх» (748), the Zone's free way out to Донгола's station (49)."
+   }
+  ],
+  "704": [
+   {
+    "quest": 748,
+    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "target_loc_id": 49,
+    "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 704 «Зона 49»: Генри Джонс (1842) at (6,36); «Выбраться наверх» (748), the Zone's free way out to Донгола's station (49)."
+   }
+  ],
+  "705": [
+   {
+    "quest": 748,
+    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "target_loc_id": 49,
+    "why": "DESIGNED way and place (the owner's «и потом сделай донголу тоже», 2026-10-13). 705 «Зона 49»: Генри Джонс (1842) at (6,36); «Выбраться наверх» (748), the Zone's free way out to Донгола's station (49)."
+   },
+   {
+    "quest": 746,
+    "cells": [[7, 36], [6, 37], [7, 35], [5, 37]],
+    "target_loc_id": 49,
+    "why": "RECOVERED way («На верх»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 705 «Зона 49» (DN_Zone49_3): «На верх» (47084-47086), the ten Selenites of the room killed, leads out to Донгола's station (49)."
+   }
+  ],
+  "255": [
+   {
+    "quest": 744,
+    "cells": [[10, 118], [9, 119], [8, 119], [9, 120]],
+    "target_loc_id": 704,
+    "why": "RECOVERED way («Путь в пирамиду»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 255 «Абри: Трущобы»: Генри Джонс (1843, AB_Djons3) at (9,118); «Путь в пирамиду» (47078-47080) leads back into Zone 49, its second room 704 (DN_Zone49_2). The cells are the ground beside him, where a player coming from the Zone arrives (743)."
    }
   ]
  }

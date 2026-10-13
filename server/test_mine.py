@@ -187,10 +187,14 @@ for (key, qtype), rec in sorted(WAYS.items()):
     # holds. So may a ride for a ticket, the passes of 279-286 (a thing
     # brought), and Абри's ways (450-599, 2026-10-12): the mafia's steps
     # through the house and the road, Ведич's to the Амазонка, the mines'
-    # gates of 8-12 -- which server/test_abri_quests holds. Every other way
-    # is held to the bare ride here.
+    # gates of 8-12 -- which server/test_abri_quests holds; and Донгола's
+    # (630-799, 2026-10-13): the rides for a fare, the chains' steps that
+    # lead on (Рашид's car, the sewers for an envelope, Zone 49 and the
+    # basement), the quarry's contract and the mines' gates of 12-15 --
+    # which server/test_dongola_quests holds. Every other way is held to
+    # the bare ride here.
     if not (qtype == 1682 or 351 <= qtype <= 449 or 279 <= qtype <= 286
-            or 450 <= qtype <= 599):
+            or 450 <= qtype <= 599 or 630 <= qtype <= 799):
         check("%s: quest %d is a way and nothing else" % (key, qtype),
               (q.kind, q.obj, q.rew_obj, q.rew_afro, q.rew_gold, q.repeatable,
                q.rew_loc, q.level, q.need_all, q.need_any),

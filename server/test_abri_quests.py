@@ -35,7 +35,8 @@ In process:
     sides and ways lead back to a place with a cell on the map (no trap);
   * the mines' gates: three ways down at level 8-12, three up at any level;
   * Зубери's map in four parts (256): every part only from bosses that keep
-    the boss hours, the map of Донгола out of the choice;
+    the boss hours, the map of Донгола in the choice since Донгола opened
+    (2026-10-13);
   * the rides: Хассир gives «Поездка в Абри» and «Проездной в Абри», Луиджи
     the two back; the four ways lead between 37 and 187.
 
@@ -338,11 +339,11 @@ try:
 
     # Зубери's map in four parts.
     check("Зубери's map in four parts (256): each part only from bosses that keep the boss"
-          " hours; the choice four maps, the one of Донгола out",
+          " hours; the choice five maps, the one of Донгола in since 2026-10-13",
           ({o: sorted(ms) for o, _n, ms in real[256].objs},
            all(bosses.keeps_hours(m) for ms in PARTS.values() for m in ms),
            sorted({o for _m, o, _c in real[256].drops}), real[256].rew_obj),
-          (PARTS, True, sorted(PARTS), [3892, 3893, 3894, 3906]))
+          (PARTS, True, sorted(PARTS), [3892, 3893, 3894, 3895, 3906]))
 except Exception:
     import traceback
     fails.append("the table in process broke:\n" + traceback.format_exc())
