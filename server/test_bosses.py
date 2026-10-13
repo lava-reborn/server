@@ -206,10 +206,11 @@ for _p in sorted(glob.glob(os.path.join(world.RES, "locations", "static", "*.xml
 check("  ..no other location's file has one of them", _elsewhere, [])
 with open(os.path.join(os.path.dirname(HERE), "data", "holdings.json"), encoding=ENC) as _fh:
     _sites = json.load(_fh)["sites"]
-check("  ..and the capturable sites' bosses (data/holdings.json) are masters",
+check("  ..and the capturable sites' bosses (data/holdings.json) are masters: Вади-Хальфа's"
+      " three and, since 2026-10-13, Донгола's",
       sorted((s["boss"], s["boss"] in bosses.WAREHOUSE_MASTERS)
              for k, s in _sites.items() if not k.startswith("_")),
-      [(7448, True), (7449, True), (7450, True)])
+      [(7448, True), (7449, True), (7450, True), (7451, True), (7452, True), (7453, True)])
 
 check("hours parse as minutes, sorted and once each",
       bosses.parse_hours(" 20, 18 ,18"), [18 * 60, 20 * 60])

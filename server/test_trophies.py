@@ -112,12 +112,13 @@ else:
            trophies.record(1, "hunter", 2, 2, "quarry", 3, T0)["victim_clan"]),
           ("Волки", "Волки", ""))
     check("the registrars are the six butchers of Вади-Хальфа, the original's"
-          " own, Демир in «Караван», Хассир on the station and Луиджи in Абри's port"
-          " market (since 2026-10-12), built as Traders",
+          " own, Демир in «Караван», Хассир on the station, Луиджи in Абри's port"
+          " market (since 2026-10-12) and Нур-ад-Дин on Донгола's station (since"
+          " 2026-10-13), built as Traders",
           (sorted(trophies.REGISTRARS), world.entity_root(939, world.COMMONER),
            world.entity_root(5193, world.COMMONER), world.entity_root(5212, world.TRADER),
            world.entity_root(5228, world.COMMONER)),
-          ([105, 939, 940, 941, 942, 943, 1132, 1179, 2033, 2034, 2035, 2036, 5193],
+          ([105, 156, 939, 940, 941, 942, 943, 1132, 1179, 2033, 2034, 2035, 2036, 5193],
            world.TRADER, world.TRADER, world.TRADER, world.COMMONER))
     check("  ..and Адам, who stood in for Демир, is none: an ordinary Trader",
           (trophies.is_registrar(5216), world.entity_root(5216, world.TRADER)),

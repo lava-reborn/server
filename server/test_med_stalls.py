@@ -389,13 +389,14 @@ PINNED = {
     (196, 207): [6907, 6908, 6909, TUR, 7103, MAKS, 7104, SUPER, 7105],
     (103, 1214): [6057, 6063, VILKA, 7102, 6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104],
     (103, 1215): [6045, 6900, 6051, 6906, 6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908],
-    (50, 155): [6045, 6900, 6051, 6046, 6901, 6052, 6047, 6902, 6053, 333],
+    (50, 155): [6045, 6900, 6051, 6046, 6901, 6052, 6047, 6902, 6053, 333, 334],
     (126, 1221): [6058, 6064, TUR, 7103, 6059, 6065, MAKS, 7104, 6060, 6066, SUPER, 7105],
     (126, 1222): [6046, 6901, 6052, 6907, 6047, 6902, 6053, 6908, 6048, 6903, 6054, 6909],
 }
 check("the stalls pinned (DESIGN.md 2.2): Морис, Хасани, Люций, Магдалена, Снитке, Бартоломью,"
       " Торси, Мухсим, Джут at his three oases, Серхио, Фарюк, Донгола's grocer (the sack of"
-      " beans of his article after), Киплер, Курт; the valley truck's Йонас and the prisons'"
+      " beans of his article and the Фуль of «Старые приятели» after), Киплер, Курт; the valley"
+      " truck's Йонас and the prisons'"
       " supply men, «Патроны и лекарства», the battle line of their town (the supply men their"
       " article's rounds after)",
       {k: STALLS.get(k) for k in PINNED}, PINNED)
@@ -404,11 +405,13 @@ check("  ..the supply men's rounds: their own list (data/npcs.json), the same at
       ([npcs.stock(t) == ROUNDS for t in (2180, 2181, 880)], len(ROUNDS),
        [x for x in ROUNDS if price(x) == (0, 0)], max(len(STALLS[k]) for k in PINNED)),
       ([True] * 3, 49, [], 61))
-check("  ..Донгола's grocer's own list (data/npcs.json) is the sack of beans: the «Коробка"
-      " вяленого мяса» of his article is the food of ten of 12_15 (6901), the band's, which the"
-      " name tied to the valley's quest parcel 3481, a thing with no price no stall can sell",
+check("  ..Донгола's grocer's own list (data/npcs.json) is the sack of beans and, since"
+      " 2026-10-13, the Фуль «Старые приятели» and «Фуль ему!» send the player to buy «в местной"
+      " лавке»: the «Коробка вяленого мяса» of his article is the food of ten of 12_15 (6901),"
+      " the band's, which the name tied to the valley's quest parcel 3481, a thing with no price"
+      " no stall can sell",
       (npcs.stock(155), 6901 in STALLS[(50, 155)], 3481 in STALLS[(50, 155)],
-       price(3481)), ([333], True, False, (0, 0)))
+       price(3481)), ([333, 334], True, False, (0, 0)))
 check("nothing on any stall of a city's place goes without a price: the client would show it and"
       " the stall refuse it in both currencies",
       sorted((p, t, x) for (p, t), s in STALLS.items() for x in s if price(x) == (0, 0)), [])
