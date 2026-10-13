@@ -53,6 +53,7 @@ import inventory  # noqa: E402
 import items  # noqa: E402
 import mobs  # noqa: E402
 import names  # noqa: E402
+import npcs  # noqa: E402
 import quests  # noqa: E402
 import rooms  # noqa: E402
 import setcraft  # noqa: E402
@@ -100,8 +101,16 @@ ROWS = DOC["quests"]
 CRAFT = {r["type"]: r["craft"] for r in ROWS}
 
 
+def city_of(r):
+    """The city a row was written for, off its key (build_weaponcraft.row_key)."""
+    return r["craft"]["key"].split(":")[1]
+
+
 def family(name):
-    return [r for r in ROWS if r["craft"]["family"] == name]
+    """A family's rows of the cities before Донгола: Донгола's (2026-10-13, its band
+    9-16, its own masters, stalls, gunsmiths, decoder and whetstone) are
+    server/test_dongola_trade.py's."""
+    return [r for r in ROWS if r["craft"]["family"] == name and city_of(r) != "dongola"]
 
 
 def things(r):
@@ -117,12 +126,13 @@ def stood(loc_id):
 # --- in process: the table ----------------------------------------------------------------
 try:
     check("every craft row is a repeatable service of Вади-Хальфа's band (or the valley's"
-          " 0-4 at its whetstone, Абри's 8-12 at its own) in 10000-10999, of the loaded table",
+          " 0-4 at its whetstone, Абри's 8-12 at its own, Донгола's 9-16 since 2026-10-13) in"
+          " 10000-10999, of the loaded table",
           sorted({(r["repeatable"], r["service"], r["level"], r["max_level"],
                    10000 <= r["type"] <= 10999, quests.get(r["type"]) is not None)
                   for r in ROWS}),
           [(1, True, 0, 4, True, True), (1, True, 0, 8, True, True),
-           (1, True, 8, 12, True, True)])
+           (1, True, 8, 12, True, True), (1, True, 9, 16, True, True)])
     check("  ..Абри's rows its whetstone's alone (2026-10-12: no upgrader of Абри's in the"
           " client)", sorted({(r["craft"]["family"], tuple(r["give"])) for r in ROWS
                               if (r["level"], r["max_level"]) == (8, 12)}),
@@ -219,6 +229,19 @@ try:
         check("  ..and rebuilt now, Вади-Хальфа's table is the one on disk",
               json.dumps(build_weaponcraft.build(texts), sort_keys=True),
               json.dumps(DOC, sort_keys=True))
+        # The blueprint stalls are each city's (2026-10-13): Вади-Хальфа's entry
+        # names the stalls these were before, and --stock gives them the
+        # blueprints of Вади-Хальфа's recipes alone, none of Донгола's 9-16.
+        printed = build_weaponcraft.stock(DOC)
+        check("  ..the blueprint stalls by city: Вади-Хальфа's entry the stalls of before,"
+              " each printed the blueprints of its own city's recipes of its class and no"
+              " other's, as data/npcs.json has them",
+              ([c.get("stalls") for c in build_weaponcraft.CITIES if c["name"] == "halfa"],
+               {s: sorted(set(printed[s]) - {r["craft"]["blueprint"] for r in family("upgrade")})
+                for ss in STALLS.values() for s in ss},
+               {s: printed[s] == npcs.stock(s) for ss in STALLS.values() for s in ss}),
+              ([STALLS], {s: [] for ss in STALLS.values() for s in ss},
+               {s: True for ss in STALLS.values() for s in ss}))
         # A type is its row's for good: a recipe line gone (a gun's table
         # withdrawn) leaves its type unused, and a key new to the table (a
         # table found later, a line the original's order puts between two
@@ -261,14 +284,15 @@ try:
     else:
         print("  --  no %s: the generator's band filter is checked on the table only" % source)
 
-    # The blueprints drop only in the camps of their level.
+    # The blueprints drop only in the camps of their level (Донгола's camps:
+    # test_dongola_trade).
     camp_of = {}
     for (lo, hi), locs in CAMPS:
         for loc in locs:
             for t in stood(loc):
                 camp_of.setdefault(t, set()).add((lo, hi))
     stray = []
-    for r in ROWS:
+    for r in (r for r in ROWS if city_of(r) != "dongola"):
         level = r["craft"].get("level")
         for o in r.get("objs", []):
             for m in o.get("mobs", []):

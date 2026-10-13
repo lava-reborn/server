@@ -10,11 +10,11 @@ original's own lines out of texts.xml (LAVA_ORIG_TEXTS, default
 /mnt/c/Users/gmkrt/Downloads/texts.xml), ties every gun, blueprint and part
 they name to its objects.xml type, and writes the rows a CITY asks for by
 its level band. A city is data (CITIES): its band, its masters by class and
-line, its camps, whetstones, gunsmiths and decoder. The next city adds an
-entry and gets its rows from the same code; the rows of the cities before it
-keep their types (number: each row's key -- family, city, the original's
-line -- keeps the type the table's "types" gave it, and a new key takes the
-next type of its family's blocks, FAMILIES).
+line, its camps, whetstones, gunsmiths, decoder and blueprint stalls. The
+next city adds an entry and gets its rows from the same code; the rows of
+the cities before it keep their types (number: each row's key -- family,
+city, the original's line -- keeps the type the table's "types" gave it,
+and a new key takes the next type of its family's blocks, FAMILIES).
 
 The families, each a repeatable service (quests.py: service -- neither
 counted nor refused by the daily limit, no place in the server's journal),
@@ -63,7 +63,8 @@ plan's «видны только в своём поясе»):
             decoded blueprint sold back to a stall nets no more than a tenth
             of its price). The encrypted blueprint drops in the camps of its
             level, from anybody there, for a player with the row open
-            (DESIGNED chance CODIFIED_DROP, one a corpse at most).
+            (DESIGNED chance CODIFIED_DROP, one a corpse at most); nothing
+            else gives it, so a level no camp of the city holds has no row.
 
 Beside the rows, "items": names for what the original names only in words
 -- the gunsmith's parts (7924-8139, the quality and the part: «Кустарный
@@ -196,7 +197,9 @@ DECODE_NOTFINISH, DECODE_FINISH = 46151, 46152
 # recipes; q_masters: the [Q] line's; camps: ((lo, hi), locations) of the
 # faction camps whose level band drops a blueprint of that level;
 # whetstones: type -> the knife levels it sharpens; gunsmiths: class ->
-# type; decoder: the Техногик.
+# type; decoder: the Техногик; stalls: class -> the blueprint stalls that
+# sell the blueprints of that class's recipes of this city and of no other
+# (data/npcs.json 'stock', the owner's file: --stock prints them).
 CITIES = [
     dict(name="valley", band=(0, 4),
          # «Точильный камень<Br>Нубийской долины» (5192, «Караван» 186): the
@@ -226,7 +229,13 @@ CITIES = [
          # «Горные тропы: Мастера» (599): the gunsmiths «Оружейник<Br>
          # Винтовки / Дробовики / Пистолеты / Пистолет-пулеметы».
          gunsmiths={"rifle": 238, "shotgun": 239, "pistol": 242, "smg": 243},
-         decoder=652),
+         decoder=652,
+         # The blueprint stalls, by the class their master upgrades. Not the
+         # premium masters 702, 704 and 705 of the camp 124, whose stalls
+         # repeated these one for one: they stand nowhere since the owner's
+         # cut of (P) (2026-09-30, data/retired.json), and their lists left
+         # data/npcs.json.
+         stalls={"shotgun": (576, 7309), "rifle": (578, 7310), "smg": (7311,)}),
     # Абри (2026-10-12): its whetstone, «Точильный камень<Br>Абри» (2280,
     # Портовый рынок 187, texts.xml 51646), sharpens the knives of the town's
     # band its knife trader sells, Нож кастет (10у) and Штык нож (12у): the
@@ -237,14 +246,43 @@ CITIES = [
     # in Вади-Хальфа and Донгола (the owner's decision 28, DESIGNED).
     dict(name="abri", band=(8, 12),
          whetstones={2280: (10, 12)}),
+    # Донгола (2026-10-13, the owner's «и потом сделай донголу тоже»). Its
+    # masters by their original names (texts.xml 51653-51664) in the two
+    # masters' camps the map labels name: «Лагерь мастеров ... автоматов,
+    # пулемётов» (96, L124) -- Подмастерье Сафи A and Мастер Самир G assault
+    # rifles (dn_modif_assrifle 335, _g 382), Подмастерье Али A and Мастер
+    # Гази G machine guns (345, 385) -- and «... винтовок, пистолет-
+    # пулеметов» (97, L128) -- Подмастерье Санчес A and Мастер Умар G rifles
+    # (346, 386), Подмастерье Басам A and Мастер Фахад G sub-machine guns
+    # (347, 387). The band 9-16, DESIGNED (the owner's decision 27): the
+    # masters' blueprint stalls of the original start at 9у (Фахад's), and
+    # 9-12, which Абри has no master for, is served here. No shotgun master:
+    # the shotguns of 9-12 (Вепрь-12, Remington ...) have nobody to upgrade
+    # them. The camps whose chiefs drop the blueprints: Лагерь ДСР (93) and
+    # its chiefs' second cell (91) 12-14, Лагерь Миротворцев (98, 99) 15-16,
+    # by their labels' «12-14» and «14-16» without the overlap. The
+    # whetstone «Точильный камень<Br>Донголы» (2281, the black market 103)
+    # sharpens Боевой нож (14у) and Такоуба (16у), the knives of the town's
+    # band Одноногий sells beside it (his article: «Заточка и Эргономика
+    # Боевого ножа (14у)», «... Такоубы (16у)»). The gunsmiths «Оружейник<Br>
+    # Винтовки / Пулеметы / Автоматы / Пистолет-пулеметы» of «Горные тропы»
+    # (625; 244, 246, 247, 249), the decoder Техногик (651, the black
+    # market). The blueprint stalls of the markets 50 and 197 by their
+    # internal names: dn_trmodif_assrifle_g (580, «Мастер Самир»),
+    # _machingun_g (583, «Мастер Гафур»), _rifle_g (584, «Мастер Умар»),
+    # _submachgun_g (585, «Мастер Фахад»).
+    dict(name="dongola", band=(9, 16),
+         masters={("assault", "A"): [335], ("assault", "G"): [382],
+                  ("mg", "A"): [345], ("mg", "G"): [385],
+                  ("rifle", "A"): [346], ("rifle", "G"): [386],
+                  ("smg", "A"): [347], ("smg", "G"): [387]},
+         camps=[((12, 14), (93, 91)), ((15, 16), (98, 99))],
+         whetstones={2281: (14, 16)},
+         gunsmiths={"rifle": 244, "mg": 246, "assault": 247, "smg": 249},
+         decoder=651,
+         stalls={"assault": (580,), "mg": (583,), "rifle": (584,), "smg": (585,)}),
 ]
 
-# The blueprint stalls the stock is written for (data/npcs.json 'stock', the
-# owner's file: --stock prints it), by the class their master upgrades. Not
-# the premium masters 702, 704 and 705 of the camp 124, whose stalls repeated
-# these one for one: they stand nowhere since the owner's cut of (P)
-# (2026-09-30, data/retired.json), and their lists left data/npcs.json.
-STALLS = {"shotgun": (576, 7309), "rifle": (578, 7310), "smg": (7311,)}
 # What the craft adds to a stall with no list of the owner's (the table's
 # "stock", server/craft.py stock_extra, after the wiki's list): the
 # quarter's trader (5770) the [Q] line's blueprints; Однопальцый (1152, the
@@ -263,8 +301,10 @@ EXTRA_STALLS = {1152: dict(blueprints=(5192, 2279), knives=(2279,))}
 # Марис Дамбис's chain («торговец ножами ... знатным костоправом», texts.xml
 # 49186), which are no craft's -- so a list of his own, which the table's
 # "stock" (EXTRA_STALLS) would not reach. His knives are Абри's band's
-# (data/shop_bands.json).
-KNIFE_STALLS = {1164: (2280,)}
+# (data/shop_bands.json). Одноногий (1153, Донгола's black market) Донгола's
+# whetstone's (2281), his whole list in the file; his knives are Донгола's
+# band's.
+KNIFE_STALLS = {1164: (2280,), 1153: (2281,)}
 
 
 # --- the tables of the game -------------------------------------------------------------
@@ -479,6 +519,17 @@ def recipe_row(city, gun, line, effect, level, givers, ids, texts, numbered):
         return None
     if not servable(bp):
         report["upgrade"].append("%s: no blueprint %s (%dу)" % (why, effect, level))
+        return None
+    ceiling = (items.params_of(gun)["max_break_abs"], items.params_of(mod)["max_break_abs"])
+    if ceiling[1] < ceiling[0]:
+        # An upgrade keeps the gun's wear as a share of its ceiling
+        # (setcraft.worn_as): a modification its article gives a lower
+        # ceiling than its gun's would come out more worn, a gun worn by a
+        # point broken. The article's slip -- AUG /Hbar Mod VIII's «повышение
+        # прочности» at 550 against the gun's 2750 (its (G) copy's 5500) --
+        # makes no row, DESIGNED.
+        report["upgrade"].append("%s: the modification's wear ceiling %d under the gun's %d"
+                                 % (why, ceiling[1], ceiling[0]))
         return None
     slot = {"obj": bp, "num": 1}
     chiefs = camp_mobs(city, level, chiefs_only=True)
@@ -775,10 +826,16 @@ def decode_rows(city, texts, upgrades):
         if not servable(codified) or not prizes:
             report["decode"].append("%d %s: nothing to draw" % (i, texts[i]))
             continue
-        slot = {"obj": codified, "num": 1}
         dropping = camp_mobs(city, level, chiefs_only=False)
-        if dropping:
-            slot.update(mobs=dropping, drop=CODIFIED_DROP, one_of=ONE_OF_CODIFIED)
+        if not dropping:
+            # Nothing else gives the encrypted blueprint (no loot table,
+            # no stall): a row for it could never be done. Донгола's
+            # 9-11, whose levels no camp of the town holds.
+            report["decode"].append("%d %s: no camp of %s drops it"
+                                    % (i, texts[i], city["name"]))
+            continue
+        slot = {"obj": codified, "num": 1,
+                "mobs": dropping, "drop": CODIFIED_DROP, "one_of": ONE_OF_CODIFIED}
         fee = int(craft.LADDER[level][0] * DECODE_FEE)
         out.append(service(city, dict(
             kind="bring_l_obj", name=clean(texts[i]),
@@ -890,22 +947,31 @@ def item_table(rows, parts):
     return out
 
 
+def city_of(row):
+    """The name of the city a row was written for, off its key (row_key)."""
+    return row["craft"]["key"].split(":")[1]
+
+
 def stock(doc):
-    """The blueprint stalls' lists for data/npcs.json (--stock): each
-    master's class's blueprints, by level; a knife stall's (KNIFE_STALLS)
-    its whetstones' blueprints, the head of its list there."""
+    """The blueprint stalls' lists for data/npcs.json (--stock): each city's
+    stalls (CITIES' stalls) the blueprints of its own masters' recipes of
+    their class, by level -- never another city's, whose levels are another
+    band; a knife stall's (KNIFE_STALLS) its whetstones' blueprints, the
+    head of its list there."""
     out = {}
     rows = doc["quests"]
-    for cls, stalls in STALLS.items():
-        got = []
-        for r in rows:
-            c = r["craft"]
-            if c["family"] == "upgrade" and c["line"] in ("A", "G") \
-                    and craft.weapon_of(c["gun"]) == cls and c["blueprint"] not in got:
-                got.append(c["blueprint"])
-        got.sort(key=lambda t: (int(re.search(r"lvl(\d+)$", CAT[t][1]).group(1)), t))
-        for s in stalls:
-            out[s] = got
+    for city in CITIES:
+        for cls, stalls in city.get("stalls", {}).items():
+            got = []
+            for r in rows:
+                c = r["craft"]
+                if c["family"] == "upgrade" and c["line"] in ("A", "G") \
+                        and city_of(r) == city["name"] \
+                        and craft.weapon_of(c["gun"]) == cls and c["blueprint"] not in got:
+                    got.append(c["blueprint"])
+            got.sort(key=lambda t: (int(re.search(r"lvl(\d+)$", CAT[t][1]).group(1)), t))
+            for s in stalls:
+                out[s] = got
     for s, stones in KNIFE_STALLS.items():
         out[s] = sorted({r["craft"]["blueprint"] for r in rows
                          if r["craft"]["family"] == "knife" and set(stones) & set(r["give"])})
