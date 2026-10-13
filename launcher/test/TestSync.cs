@@ -564,6 +564,54 @@ static class TestSync
         Check("watch: across the wrap, to the end", w.Due(unchecked(edge + 300001)), false);
         Check("watch: across the wrap, then off", w.On, false);
 
+        // A launcher left open with no game: a look every five minutes, for
+        // as long as it stays open. The window asks each second.
+        Watch i = new Watch();
+        int i0 = 5000, idles = 0, first = 0;
+        Check("idle: not at the first tick", i.Idle(i0, false), false);
+        Check("idle: not before five minutes", i.Idle(i0 + 299999, false), false);
+        for (int t = i0 + 1000; t <= i0 + 3600000; t += 1000)
+            if (i.Idle(t, false)) { idles++; if (first == 0) first = t - i0; }
+        Check("idle: the first look at five minutes", first, 300000);
+        Check("idle: twelve looks an hour", idles, 12);
+        Check("idle: the watch itself stays off", i.On, false);
+
+        // None while a game runs or starts; the count begins again after it.
+        int g0 = i0 + 3600000;
+        bool any = false;
+        for (int t = g0 + 1000; t <= g0 + 1200000; t += 1000) any |= i.Idle(t, true);
+        Check("idle: no look while a game is on", any, false);
+        Check("idle: not at once after the game", i.Idle(g0 + 1201000, false), false);
+        Check("idle: not before five minutes after it", i.Idle(g0 + 1200000 + 299999, false), false);
+        Check("idle: five minutes after the game", i.Idle(g0 + 1200000 + 300000, false), true);
+
+        // None while the watch looks every 15 s; five minutes after it ends.
+        int a0 = g0 + 2000000;
+        i.Arm(a0);
+        any = false;
+        int end = 0;
+        for (int t = a0 + 1000; t <= a0 + 400000; t += 1000)
+        {
+            i.Due(t);
+            if (i.Idle(t, false)) { any = true; break; }
+            if (end == 0 && !i.On) end = t;
+        }
+        Check("idle: no idle look while the watch is on", any, false);
+        Check("idle: the watch ended at its span", end - a0, 301000);
+        any = false;
+        int next = 0;
+        for (int t = a0 + 401000; t <= a0 + 1000000 && next == 0; t += 1000)
+            if (i.Idle(t, false)) next = t;
+        Check("idle: then five minutes after its last tick", next - a0, 300000 + 300000);
+
+        // Environment.TickCount wraps after 24.9 days of uptime.
+        Watch j = new Watch();
+        int e0 = int.MaxValue - 100000;
+        j.Idle(e0, false);
+        Check("idle: across the wrap, not early", j.Idle(unchecked(e0 + 299000), false), false);
+        Check("idle: across the wrap, on time", j.Idle(unchecked(e0 + 300000), false), true);
+        Check("idle: across the wrap, not twice", j.Idle(unchecked(e0 + 301000), false), false);
+
         // What a newer release found by a look leads to.
         foreach (SyncState st in Enum.GetValues(typeof(SyncState)))
         {
