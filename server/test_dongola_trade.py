@@ -160,7 +160,11 @@ OWN = {
     PILOT: [],
     AMMO_OASIS: OASIS_ROUNDS,
     ONE_LEG: list(KNIFE_PRINTS),
-    FOOD: [333],
+    # the bag of beans, as before, and since the integration of 2026-10-13
+    # «Фуль» (334): «Старые приятели» (647) and «Фуль ему!» (658) send the
+    # player to buy it «в местной лавке»; until then only Вади-Хальфа's 81
+    # sold it.
+    FOOD: [333, 334],
     MORTIMER: list(INGOTS),
 }
 LO, HI = 12, 16
