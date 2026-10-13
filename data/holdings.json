@@ -8,7 +8,7 @@
   "box_one_per_account": "DESIGNED: one character of an account collects a site's row a day.",
   "holding": "DESIGNED, the owner's decision of 2026-10-09: a clan holds a warehouse until another clan takes it; the clan spec (clans_spec.md:783) had «до следующего окна».",
   "raid": "DESIGNED: the boxes' «Проникнуть на северный/восточный/южный склад Вади Хальфы», quests 789-791 (texts.xml ids 26390-26395), 200000 afro once a day, are left out: who could take them is unknown.",
-  "left_out": "DESIGNED: 982 and 983, copies of 109 and 110 with the same bosses, have no map cell and capture nothing; Донгола's 112-114, Абу-Хамед's 128/288, 984 and 1380 wait for their stages (their flags mend for anybody, as before)."
+  "left_out": "DESIGNED: 982 and 983, copies of 109 and 110 with the same bosses, have no map cell and capture nothing; Донгола's 112-114, Абу-Хамед's 128, 984 and 1380 wait for their stages (their flags mend for anybody, as before); Абу-Хамед's 288 under «Ангар в джунглях», across the river, is out of the game (data/retired.json, the owner's cut of everything across the river, 2026-10-13)."
  },
  "squad": 2,
  "box_tenure_hours": 24,

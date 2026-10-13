@@ -20,7 +20,10 @@ near by, blended into what surrounds them (find_patch, solve), a spot taken
 only if the pixels it paints stay within the darkest and the brightest of
 the ground around (ground_bounds: Донгола's nearest fitting spot held the
 river's black line); where no spot near does, the pixels are painted smooth
-from what surrounds them. Only the 8 x 8
+from what surrounds them. A caption's band that runs across several strips
+of ground (the island's by Донгола: a bank, two channels, the island) is
+painted in strips across it, each from the ground straight above or below
+it, so what crosses the band runs on through it (paint_strips). Only the 8 x 8
 blocks of the JPEG those pixels fall in are encoded anew (jpeg_blocks): every
 other block of every tile keeps its coefficients exactly, so nothing else on
 the map can move. A hidden name over a cell whose picture has no square
@@ -107,8 +110,23 @@ SEARCH_FAR = 112     # and, when nothing near will do, how far after that
 GROUND = 3
 MARGIN = 12
 # A region of more pixels than this (squares and captions that touch) is
-# painted a piece at a time (paint_marks), not from one patch.
+# painted a piece at a time, not from one patch: a band wider than it is tall
+# (a caption's line or two) in strips across it (paint_strips), any other a
+# piece at a time as the war zones' arrows (paint_marks).
 PIECES_OVER = 1000
+# The strips: STRIP pixels wide, from the left end to the right, each from
+# the patch of photograph straight above or below it (no more than STRIP_DX
+# aside, no further than STRIP_REACH past its own height) that fits the ground
+# round it best, blended with the pull between pixels side by side
+# STRIP_ACROSS of the pull between pixels one above the other (solve's
+# across), and held to the ground's bounds. What crosses the band -- the
+# island's channels by Донгола, its red strip -- runs on through it from above
+# and below; a patch from aside and an even blend laid one ground over the
+# other (a pale smear across the dark channel).
+STRIP = 16
+STRIP_DX = 4
+STRIP_REACH = 40
+STRIP_ACROSS = 0.08
 
 
 def tile_of(X, Y):
@@ -794,10 +812,128 @@ def solve(canvas, region, apart, donor_offset):
     return dict(zip(order, f))
 
 
+def solve_across(canvas, region, apart, donor_offset, across):
+    """solve(), with the pull between pixels side by side `across` of the
+    pull between pixels one above the other: in a band wider than it is tall
+    each column meets the ground above and below it far more than its
+    neighbours, so what crosses the band runs on through it."""
+    dx, dy = donor_offset or (0, 0)
+    order = sorted(region)
+    index = {p: i for i, p in enumerate(order)}
+    zero = (0.0, 0.0, 0.0)
+
+    def patch(X, Y):
+        return zero if donor_offset is None else canvas.original(X + dx, Y + dy)
+    donor = [patch(X, Y) for X, Y in order]
+    links = []
+    edge = []
+    for k, (X, Y) in enumerate(order):
+        inside, fixed = [], [0.0, 0.0, 0.0]
+        weight = 0.0
+        for ddx, ddy in N4:
+            w = across if ddx else 1.0
+            q = (X + ddx, Y + ddy)
+            gq = patch(*q)
+            if q in index:
+                inside.append((index[q], w, [donor[k][i] - gq[i] for i in range(3)]))
+                weight += w
+            elif q not in apart and canvas.original(*q) is not None:
+                tq = canvas.original(*q)
+                edge.append(tq)
+                for i in range(3):
+                    fixed[i] += w * (tq[i] + donor[k][i] - gq[i])
+                weight += w
+        links.append((inside, fixed, weight))
+    if donor_offset is None:
+        f = ([[sum(v[i] for v in edge) / len(edge) for i in range(3)] for _ in order] if edge
+             else [list(canvas.original(*p)) for p in order])
+    else:
+        f = [list(v) for v in donor]
+    for _ in range(4000):
+        change = 0.0
+        for k, (inside, fixed, weight) in enumerate(links):
+            if not weight:
+                continue
+            fk = f[k]
+            for i in range(3):
+                s = fixed[i]
+                for j, w, g in inside:
+                    s += w * (f[j][i] + g[i])
+                new = fk[i] + 1.9 * (s / weight - fk[i])
+                if abs(new - fk[i]) > change:
+                    change = abs(new - fk[i])
+                fk[i] = new
+        if change < 0.01:
+            break
+    return dict(zip(order, f))
+
+
+def paint_strips(canvas, marks, every_mark, protect, squares):
+    """Paint the pixels of marks, a band wider than it is tall, over
+    (canvas.lay) in strips STRIP pixels wide from its left end to its right,
+    the strips before it ground already: each from the patch of photograph
+    straight above or below it (STRIP_DX, STRIP_REACH) that fits the ground
+    round it best (_cost), blended by solve_across and held to the ground's
+    bounds; smooth
+    from its edge, along the columns, when no patch is clear. The other
+    marks not yet painted, the squares and the letters are no ground (apart)
+    and no patch is taken from them, nor from any square near (bad). Counter
+    of patch and smooth."""
+    how = collections.Counter()
+    left = set(marks)
+    xs = [p[0] for p in marks]
+    for x0 in range(min(xs), max(xs) + 1, STRIP):
+        piece = sorted(p for p in marks if x0 <= p[0] < x0 + STRIP)
+        if not piece:
+            continue
+        left -= set(piece)
+        apart = left | (every_mark - marks) | protect
+        bad = every_mark | protect
+        px = [p[0] for p in piece]
+        py = [p[1] for p in piece]
+        bx0, by0, bx1, by1 = min(px) - 2, min(py) - 2, max(px) + 2, max(py) + 2
+        h = by1 - by0 + 1
+        reach = h + STRIP_REACH
+        for x in range((bx0 - STRIP_DX) // CELL - 1, (bx1 + STRIP_DX) // CELL + 2):
+            for y in range((by0 - reach) // CELL - 1, (by1 + reach) // CELL + 2):
+                if canvas.tile(tile_of(CELL * x, CELL * y)) is not None:
+                    sq = squares.at(x, y)
+                    if sq is not None:
+                        bad = bad | frame_pixels(sq)
+        bounds = ground_bounds(canvas, piece, apart | (bad - every_mark))
+        win = Window(canvas, (bx0 - STRIP_DX, by0 - reach, bx1 + STRIP_DX, by1 + reach), bad)
+        ring = _ring(piece, 2)
+        target = [(p, canvas.original(*p)) for p in sorted(ring) if p not in apart]
+        target = [(p, v) for p, v in target if v is not None]
+        around = [canvas.original(*p) for p in sorted(_ring(piece, 6) - ring) if p not in bad]
+        around = [v[0] for v in around if v is not None] or [v[0] for _, v in target]
+        mean_t = sum(around) / len(around) if around else 0.0
+        spread_t = sum(abs(y - mean_t) for y in around) / len(around) if around else 0.0
+        found = []
+        if target:
+            for dy in list(range(h, reach + 1)) + list(range(-reach, -h + 1)):
+                for dx in range(-STRIP_DX, STRIP_DX + 1):
+                    if win.clear(bx0 + dx, by0 + dy, bx1 + dx, by1 + dy):
+                        found.append((_cost(win, target, piece, spread_t, dx, dy), dy, dx))
+        if found:
+            _c, dy, dx = min(found)
+            values = solve_across(canvas, piece, apart, (dx, dy), STRIP_ACROSS)
+            how["patch"] += 1
+        else:
+            values = solve_across(canvas, piece, apart, None, STRIP_ACROSS)
+            how["smooth"] += 1
+        for p, v in values.items():
+            if bounds is not None:
+                v = [lo if c < lo else hi if c > hi else c for c, (lo, hi) in zip(v, bounds)]
+            canvas.lay(p[0], p[1], v)
+    return how
+
+
 def erase(canvas, plan):
     """Paint over every square and caption of the plan, each region that
-    touches from one patch of photograph, or one larger than PIECES_OVER a
-    piece at a time (paint_marks). (found {cell: square}, kept {cell:
+    touches from one patch of photograph, or one larger than PIECES_OVER in
+    strips across it when it is wider than tall (paint_strips), else a piece
+    at a time (paint_marks). (found {cell: square}, kept {cell:
     square}, the pixels painted, report lines)."""
     squares = Squares(canvas)
     report = []
@@ -848,11 +984,21 @@ def erase(canvas, plan):
     for g in _groups(region):
         if len(g) > PIECES_OVER:
             # a caption across several strips of ground (the island's by
-            # Донгола runs over a bank, the river and the island): one patch
-            # cannot continue them all, a piece at a time does, as the war
-            # zones' arrows are painted
-            how = paint_marks(canvas, set(g), region, protect, squares, set())
+            # Донгола runs over a bank, two channels and the island): one
+            # patch cannot continue them all; strips straight across the band
+            # do, each from the ground above or below it (paint_strips), and
+            # any other shape a piece at a time, as the war zones' arrows
+            width = g[-1][0] - g[0][0] + 1
+            height = max(p[1] for p in g) - min(p[1] for p in g) + 1
             painted |= set(g)
+            if width > height:
+                how = paint_strips(canvas, set(g), region, protect, squares)
+                report.append("  %d pixels from %d,%d painted in %d strips across, each from the ground straight"
+                              " above or below it%s"
+                              % (len(g), g[0][0], g[0][1], how["patch"] + how["smooth"],
+                                 ", %d smooth from their edge" % how["smooth"] if how["smooth"] else ""))
+                continue
+            how = paint_marks(canvas, set(g), region, protect, squares, set())
             report.append("  %d pixels from %d,%d painted a piece at a time, %d pieces from a patch of photograph"
                           " (%d of them bent by the blend)%s"
                           % (len(g), g[0][0], g[0][1], how["patch"] + how["bent"], how["bent"],

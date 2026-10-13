@@ -88,8 +88,10 @@ airfield 529 and the clan base Blackwater's files; the resistance camps
 across the river 429, 430, 431 and 432 and Абри's clothing market 378, the
 cuts of the same day; everything across the river -- the digs 433-436 and
 the tombs under them, the ФСЦ's bases НИЛ-2..4, the gorges 508, 513, 516,
-517 and Доктор «Д»'s bunkers, the evacuation zones 502 and 988, the clan
-Эван's files and the clan base Le_Mon's on Донгола's island --, the cut of
+517 and Доктор «Д»'s bunkers, laboratories and pass, the gorges' pieces,
+the evacuation zones 502 and 988, the clan Эван's files and the clan base
+Le_Mon's on Донгола's island, the resistance's quest wasteland 441-444, the
+event «9 мая», the warehouse 288 under «Ангар в джунглях» --, the cut of
 2026-10-13) is no candidate at all,
 and its old cell is nulled in settlements_verified.json. Both are needed.
 A null alone frees the file to win the next cell that names it -- 125
@@ -103,7 +105,9 @@ as long as it was not a rival whose closeness kept a neighbour off a cell:
 432, out of the running, would have let the camp of the Северный Альянс
 168 take «Аванпост Северного Альянса» (6210,1986) and 263 spread onto
 168's cell, so the cut of the camps across the river holds both cells in
-settlements_verified.json as they were.
+settlements_verified.json as they were; and 288, out of the running, would
+hand «Ангар в джунглях» (6174,1982) to the jungle 727, so the cut of
+everything across the river holds that cell wasteland.
 
     wsl.exe -e python3 data/place_settlements.py
 """

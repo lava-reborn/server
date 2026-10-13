@@ -1090,25 +1090,37 @@ def relocate_abri_clothes(db):
 
 # The owner's cut of everything across the river (2026-10-13, «все локации за
 # рекой не нужны»): every place on the far bank of the Nile and on its islands
-# is off the map (data/retired.json places). A character saved in one, or
-# calling one home, goes back to his side of the river: from Абри's far bank
-# and the clan Эван's farm opposite the town -- the dig 434, the base НИЛ-2
-# 523, the gorge 513, the evacuation zone 502, the tomb 964/1199 and the
-# bunker 1004/1210 behind them, Эван's 321, 324, 325 and his works 934 and 962
-# -- to Абри's port market 187, as the cuts of Абри send them; from the rest
-# (Вади-Хальфа's 433 and 508, Донгола's 435, 524, 516, 988, Абу-Хамед's 436,
-# 525, 517, the tombs and bunkers behind them, the north-west corner's 322
-# and 323, the clan base Le_Mon on Донгола's island) to Причал (41, on
-# 5965,1728), as the cut of the camps across the river sends them: Донгола
-# and Абу-Хамед have no ride open. No journal step: no quest gives, takes,
-# asks for or points into any of them (server/test_river_all_cut.py holds
-# that).
+# is off the map (data/retired.json places), with the files without a cell
+# that belong there. A character saved in one, or calling one home, goes back
+# to his side of the river: from Абри's far bank and the clan Эван's farm
+# opposite the town -- the dig 434, the base НИЛ-2 523, the gorge 513, the
+# evacuation zone 502, the tomb 964/1199, the bunker 1004/1210 and the
+# laboratory 987 behind them, Эван's 321, 324, 325 and his works 934 and 962,
+# Абри's marked zone of the quest wasteland 442 and Абри's copy of the event
+# «9 мая» (547-554, 572, 996, 997) -- to Абри's port market 187, as the cuts of
+# Абри send them; from the rest (Вади-Хальфа's 433 and 508, Донгола's 435,
+# 524, 516, 988, Абу-Хамед's 436, 525, 517, the tombs, bunkers and
+# laboratories behind them, the north-west corner's 322 and 323, the clan
+# base Le_Mon on Донгола's island, the pieces of the gorges and of Доктор
+# «Д»'s pass with the gate 595, the other marked zones 441, 443, 444, the
+# other copies of «9 мая» and the warehouse 288 under «Ангар в джунглях») to
+# Причал (41, on 5965,1728), as the cut of the camps across the river sends
+# them: Донгола and Абу-Хамед have no ride open. No journal step: no quest
+# gives, takes, asks for or points into any of them (server/
+# test_river_all_cut.py holds that).
 RIVER_ALL_FIX = "retire-river-all-2026-10-13"
-RIVER_ALL_ABRI = (434, 523, 513, 502, 964, 1199, 1004, 1210, 321, 324, 325, 934, 962)
-RIVER_ALL_PRICHAL = (433, 508, 963, 1198, 1003, 1209,
-                     435, 524, 516, 988, 965, 1200, 1005, 1211,
-                     436, 525, 517, 966, 1197, 1006, 1212,
-                     322, 323, 474, 475, 476, 979, 980, 981, 985, 1206)
+RIVER_ALL_ABRI = (434, 523, 513, 502, 964, 1199, 1004, 1210, 987, 321, 324, 325, 934, 962,
+                  442, 547, 548, 549, 550, 551, 552, 553, 554, 572, 996, 997)
+RIVER_ALL_PRICHAL = (433, 508, 963, 1198, 1003, 1209, 986,
+                     435, 524, 516, 988, 965, 1200, 1005, 1211, 989,
+                     436, 525, 517, 966, 1197, 1006, 1212, 990,
+                     322, 323, 474, 475, 476, 979, 980, 981, 985, 1206,
+                     268, 269, 270, 271, 273, 503, 505, 506, 514, 515, 507, 509, 510, 511, 512, 595,
+                     441, 443, 444,
+                     539, 540, 541, 542, 543, 544, 545, 546, 571, 994, 995,
+                     555, 556, 557, 558, 559, 560, 561, 562, 573, 998, 999,
+                     563, 564, 565, 566, 567, 568, 569, 570, 574, 1000, 1001,
+                     924, 925, 288)
 
 
 def relocate_river_all(db):

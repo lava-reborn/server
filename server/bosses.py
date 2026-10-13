@@ -220,7 +220,7 @@ WAREHOUSE_MASTERS = frozenset({
     7452,   # boss_DN_vostok  Восточный склад Донголы 114
     7453,   # boss_DN_ug      Южный склад Донголы 112
     7454,   # boss_AH_vostok  Центр Абу-Хамеда 128
-    7455,   # boss_AH_sever   Ангары Абу-Хамеда 288
+    7455,   # boss_AH_sever   Ангары Абу-Хамеда 288 (out of the game since 2026-10-13: across the river)
 })
 
 

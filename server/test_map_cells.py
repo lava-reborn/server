@@ -155,8 +155,8 @@ try:
           " tile 15811, right of the base's squares by Абу-Хамед (the line and its «y»'s tail); the three"
           " «Лагерь» of the camps across the river two each, right of the camps' squares: Вади-Хальфа's in"
           " tile 13753, Абри's in 14774, Донгола's in 16055 (the line and its «р»'s tail); across the river"
-          " the three villages' «Поселок» (13753, 14774, 16054), the star by Вади-Хальфа, the island's two"
-          " lines by Донгола and the cross by Абу-Хамед",
+          " the three villages' «Поселок» (13753, 14774, 16054) and the island's two lines by Донгола (the"
+          " picture's small grey crosses stay: they stand on the towns' bank and in the lake too)",
           [(b, was, M.tile_of(b[0], b[1]), M.tile_of(b[2], b[3])) for b, was, _ in plan.captions],
           [((47879, 14049, 47920, 14057), "Кланбаза KKND", 14011, 14011),
            ((47879, 14058, 47910, 14067), "Кланбаза KKND", 14011, 14011),
@@ -169,12 +169,10 @@ try:
            ((46921, 16016, 46951, 16024), "Лагерь", 16055, 16055),
            ((46940, 16025, 46944, 16026), "Лагерь", 16055, 16055),
            ((47489, 13687, 47525, 13697), "Поселок", 13753, 13753),
-           ((47535, 13671, 47547, 13683), "Звезда", 13753, 13753),
            ((46732, 14710, 46771, 14720), "Поселок", 14774, 14774),
            ((46809, 15991, 46845, 16001), "Поселок", 16054, 16054),
            ((46962, 16002, 47031, 16011), "Частный остров / Господина ПэЖэ", 16055, 16055),
-           ((46961, 16011, 47034, 16020), "Частный остров / Господина ПэЖэ", 16055, 16055),
-           ((49173, 15883, 49182, 15891), "Плюс", 16064, 16064)])
+           ((46961, 16011, 47034, 16020), "Частный остров / Господина ПэЖэ", 16055, 16055)])
     check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's and the"
           " camp 429's, Halfa's two, KKND's and the two below it, the kimberlite pipe's, Абри's island"
           " camp's, Абри's, Blackwater's east of it, the two of Liberty by Абри, Абу-Хамед's two, Донгола's,"
@@ -911,16 +909,15 @@ try:
                     b, a = camps.get(k, (0, 0))
                     camps[k] = (b + strokes(real["before"], box), a + strokes(real["after"], box))
             # the island's two lines by Донгола run over the river's own dark
-            # strips and the banks' grain, the cross by Абу-Хамед over rock:
-            # under half there
-            loose = {("Частный остров / Господина ПэЖэ", 16055), ("Плюс", 16064)}
-            check("the three «Лагерь» of the camps across the river and the letters and marks across the river"
+            # strips and the banks' grain: under half there
+            loose = {("Частный остров / Господина ПэЖэ", 16055)}
+            check("the three «Лагерь» of the camps across the river and the letters across the river"
                   " are gone: the steps of brightness in their boxes after are under two fifths of before (%s)"
                   % ", ".join("%s %d: %d -> %d" % (w, k, b, a) for (w, k), (b, a) in sorted(camps.items())),
                   {k: a < (0.5 if k in loose else 0.4) * b for k, (b, a) in camps.items()},
                   {k: True for k in [("Лагерь", 13753), ("Лагерь", 14774), ("Лагерь", 16055), ("Поселок", 13753),
-                                     ("Поселок", 14774), ("Поселок", 16054), ("Звезда", 13753),
-                                     ("Частный остров / Господина ПэЖэ", 16055), ("Плюс", 16064)]})
+                                     ("Поселок", 14774), ("Поселок", 16054),
+                                     ("Частный остров / Господина ПэЖэ", 16055)]})
             def own_ground(rr, c):
                 """The share of the ground round a square (a band four pixels
                 wide outside its frame, after) of the square's own colours."""

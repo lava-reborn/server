@@ -11,16 +11,23 @@ gorges of Доктор «Д» with his bunkers, two evacuation zones, the clan
 Эван's farm opposite Абри (and two of his files the placer stood in the
 north-west corner beyond the lake), the clan base Le_Mon on the island by
 Донгола, and the names, squares and letters the map's picture paints over
-all of them. All of it goes; the river and the towns' banks stay. Each part
-held here (the pattern of server/test_river_camps_cut.py):
+all of them. All of it goes, with the files without a cell that belong
+there: Доктор «Д»'s other laboratories, the pieces of his pass and of the
+gorges, the resistance camps' quest wasteland («боевые действия на западном
+берегу Нила»), the event «9 мая» (the villages and staffs of the war zones
+across the river), the warehouse under «Ангар в джунглях». The river and
+the towns' banks stay. Each part held here (the pattern of server/
+test_river_camps_cut.py):
 
   1. the places: the eighteen files that stood on the far bank's nineteen
-     cells and the twenty-six behind them are out of the game (data/
+     cells and the ninety-seven behind them are out of the game (data/
      retired.json), on no cell (data/settlements_verified.json nulls the
-     nineteen), every cell leads into the wasteland, the files stay; no
-     place stands on a far bank any more, every place on the towns' banks
-     stays where it was; the placer's rivals left out (288, 441-444, the
-     event «9 мая», 595, 268, 269) stay on no cell;
+     nineteen, and holds 6174,1982 under «Ангар в джунглях» wasteland),
+     every cell leads into the wasteland, the files stay; no place stands
+     on a far bank any more, every place on the towns' banks stays where it
+     was; the gate of the older gorges 272 and its 504, named «Перевал
+     Смерти» as the towns' bank's name (5982,1866), and the jungle 727 stay,
+     on no cell;
   2. no way in: no door, passage, side or quest way, no quest's ride,
      marker, waiting place or reward place leads there; the owner's wall is
      closed along Донгола's bank (data/terrain_verified.json), so no walk
@@ -28,17 +35,19 @@ held here (the pattern of server/test_river_camps_cut.py):
      reached the dig 435 in twenty steps; the towns' banks are walked as
      before;
   3. the people: who stood there stood there alone but for those named,
-     gives or takes no quest no other giver keeps, is no boss, sells
-     nothing, and keeps his name; no live quest asks to kill one of those
-     who stood there alone;
+     gives or takes no quest no other giver keeps, is no boss but those
+     named (who stood there alone), sells nothing, and keeps his name; no
+     live quest asks to kill one of those who stood there alone;
   4. the map's names: every name over a far bank and its islands hidden
      (66), the towns' banks' names as they were;
   5. the map's squares and letters: 23 squares, the letters «Поселок»
-     thrice, the island's two lines, a star and a cross go (server/
-     map_cells.py), the names with nothing painted are 'bare'; on the real
-     map, when the original's tiles are here, no square of the palette is
-     left on a far bank and every other square in the tiles that change is
-     where it was;
+     thrice and the island's two lines go (server/map_cells.py), the
+     picture's grey crosses (on the towns' bank and in the lake as well)
+     stay, the names with nothing painted are 'bare'; on the real map, when
+     the original's tiles are here, no square of the palette is left on a
+     far bank, every other square in the tiles that change is where it
+     was, and the island's west channel runs on through where its letters
+     were;
   6. the encounters: the map of the camps' wasteland is what it was, cell
      for cell (the cut's cells are the towns' ground still,
      world.retired_cells);
@@ -118,7 +127,22 @@ OFF_CELL = {963: 433, 1198: 433, 964: 434, 1199: 434, 965: 435, 1200: 435, 966: 
             1003: 508, 1209: 508, 1004: 513, 1210: 513, 1005: 516, 1211: 516, 1006: 517, 1212: 517,  # Доктор «Д»
             934: 324, 962: 324,                                             # Эван's works
             474: None, 475: None, 476: None, 979: None, 980: None, 981: None, 985: None, 1206: None}  # Le_Mon
+# The files without a cell that belong there all the same: Доктор «Д»'s
+# other laboratories, the pieces of his pass, the ambush copy of the gorges'
+# gate and the older gorges' pieces (the map's only «Ущелье Смерти» are the
+# far banks' columns), the quest wasteland of the war on the west bank, the
+# event «9 мая» (its staffs and villages are the war zones' across the
+# river), the warehouse under «Ангар в джунглях».
+DOCD_LABS = {986: 508, 987: 513, 989: 516, 990: 517}
+GORGES = [268, 269, 270, 271, 273, 503, 505, 506, 514, 515, 507, 509, 510, 511, 512, 595]
+WASTELAND = [441, 442, 443, 444]
+MAY9 = list(range(539, 575)) + [924, 925] + list(range(994, 1002))
+OFF_CELL.update(DOCD_LABS)
+OFF_CELL.update({i: None for i in GORGES + WASTELAND + MAY9 + [288]})
 CUT = sorted(set(ON_CELLS.values()) | set(OFF_CELL))
+# Абри's own of them (to Абри's port market).
+ABRI_CUT = sorted([434, 523, 513, 502, 964, 1199, 1004, 1210, 987, 321, 324, 325, 934, 962, 442]
+                  + [i for i in MAY9 if world.location(i).fn.endswith("_Ab")])
 CELLS = sorted(ON_CELLS)
 # The far banks, box by box (gx0, gx1, gy0, gy1): the owner's wall shuts each in.
 FAR = {"Вади-Хальфа": (5914, 5953, 1687, 1728), "the north-west corner": (5833, 5841, 1600, 1607),
@@ -154,8 +178,15 @@ SQ_NAMES = [(5941, 1703), (5935, 1711), (5944, 1712), (5844, 1832), (5849, 1830)
             (5850, 1999), (5850, 2008), (5871, 2003), (5871, 2004), (6145, 1999), (6153, 1994), (6158, 2000),
             (6149, 2009), (6174, 1982)]
 SQ_CAMPS = [(5942, 1723), (5943, 1723), (5864, 2002), (6168, 1989), (5850, 1851)]
-CAPTIONS = {"Поселок": [13753, 14774, 16054], "Звезда": [13753], "Частный остров / Господина ПэЖэ": [16055],
-            "Плюс": [16064]}
+CAPTIONS = {"Поселок": [13753, 14774, 16054], "Частный остров / Господина ПэЖэ": [16055]}
+# The picture's small grey crosses with a white middle on the far banks (by
+# Вади-Хальфа and Абу-Хамед): the same mark stands on the towns' bank and in
+# the lake, so it is the picture's own and stays.
+CROSSES = [(5942, 1709), (6147, 1985), (5851, 1721), (5925, 1654), (5933, 1605)]
+# The island's caption by Донгола, its two lines' box, and the columns of
+# its left end where the island's west channel ran under the letters.
+ISLAND = (46961, 16002, 47034, 16020)
+CHANNEL = range(46962, 46969)
 WALL_DN = [(5869, 1999), (5869, 2000)] + [(5871, y) for y in range(2007, 2015)]
 PRICHAL, PRICHAL_CELL = 41, (5965, 1728)
 PORT_AB, PORT_AB_CELL = 187, (5860, 1835)
@@ -179,10 +210,15 @@ BANKS = {
                   (6182, 1977): 446, (6183, 1974): 467, (6182, 1976): 126, (6126, 1980): 194,
                   (6154, 1963): 118},
 }
-# Left out of the cut, and on no cell as before: the warehouse under «Ангар в
-# джунглях», the resistance's quest wasteland, the event «9 мая», the gorges'
-# rivals in the placer.
-LEFT = [288, 441, 442, 443, 444, 595, 268, 269, 546, 554, 562, 570, 924, 994, 996, 998, 1000]
+# Left out of the cut, and on no cell as before: the older gorges' gate 272
+# «Перевал Смерти.» and its 504 «Перевал смерти» (their name stands on the
+# towns' bank, 5982,1866), the eternal flame 304 «Вечный огонь» of «9 мая»
+# (9may_9_new, war 0: a memorial, no room of the war on the west bank; the
+# monument «Памятник Воину-Освободителю» stands on Донгола's bank), the
+# jungle 727 «Джунгли» (one of the jungles of the clans, the placer's other
+# candidate for «Ангар в джунглях»).
+LEFT = [272, 304, 504, 727]
+HANGAR = (6174, 1982)
 MT = world.mob_types()
 
 
@@ -224,17 +260,28 @@ files = sorted(int(os.path.basename(p)[:-4])
 print("the places")
 try:
     cut = {int(k): v for k, v in RETIRED["places"].items() if v.startswith(CUT_WHY)}
-    check("data/retired.json takes out the forty-four files, each with its why quoting the order",
-          (sorted(cut), all(ORDER in v for v in cut.values())), (CUT, True))
-    check("  ..the digs, the ФСЦ's bases, Доктор «Д»'s gorges, bunkers and laboratories, the evacuation"
-          " zones, the tombs, the clan Эван's files and the clan base Le_Mon's, every one of each family",
+    check("data/retired.json takes out the hundred and fifteen files, each with its why quoting the order",
+          (len(cut), sorted(cut), all(ORDER in v for v in cut.values())), (115, CUT, True))
+    fams = ("Archeologic", "FVAviaBazaNil", "FV_Bunker", "FV_MainGate", "FV_exit", "fevral23_exit", "DocD_",
+            "DethPass", "Evan", "KB_EVAN", "KB_Le_Mon", "Invaiders_qwest", "9may", "stok_AH_sever")
+    check("  ..the digs, the ФСЦ's bases, Доктор «Д»'s gorges, bunkers, laboratories and pass, the older gorges'"
+          " pieces, the evacuation zones, the tombs, the clan Эван's files, the clan base Le_Mon's, the quest"
+          " wasteland, «9 мая» and the warehouse under «Ангар в джунглях», every one of each family",
           {fam: sorted(lid for lid in files if world.location(lid).fn.startswith(fam) and lid not in (429, 430, 431,
                                                                                                          432, 522))
-           for fam in ("Archeologic", "FVAviaBazaNil", "FV_Bunker", "Evan", "KB_EVAN", "KB_Le_Mon")},
+           for fam in fams},
           {"Archeologic": [433, 434, 435, 436, 963, 964, 965, 966, 1197, 1198, 1199, 1200],
            "FVAviaBazaNil": [523, 524, 525], "FV_Bunker": [1003, 1004, 1005, 1006, 1209, 1210, 1211, 1212],
+           "FV_MainGate": [508, 513, 516, 517, 595], "FV_exit": [502], "fevral23_exit": [988],
+           "DocD_": [507, 509, 510, 511, 512, 986, 987, 989, 990],
+           "DethPass": [268, 269, 270, 271, 272, 273, 503, 504, 505, 506, 514, 515],
            "Evan": [321, 322, 323, 324, 325, 934], "KB_EVAN": [962],
-           "KB_Le_Mon": [474, 475, 979, 980, 981, 985, 1206]})
+           "KB_Le_Mon": [474, 475, 979, 980, 981, 985, 1206], "Invaiders_qwest": WASTELAND, "9may": [304] + MAY9,
+           "stok_AH_sever": [288]})
+    check("  ..and every one of them is out, but the older gorges' gate 272 and its 504, «Перевал Смерти» as the"
+          " towns' bank's name, and «9 мая»'s eternal flame 304, a memorial (war 0)",
+          sorted(lid for fam in fams for lid in files if world.location(lid).fn.startswith(fam)
+                 and lid not in (429, 430, 431, 432, 522) and lid not in ALL_RETIRED), [272, 304, 504])
     check("  ..and every one of them is out", [lid for lid in CUT if lid not in ALL_RETIRED], [])
     check("  ..and lists the nineteen cells they stood on, the towns' ground still for the encounters",
           {c: i for c, i in world.retired_cells().items() if i in CUT}, ON_CELLS)
@@ -251,9 +298,14 @@ try:
     check("the towns' banks keep every place, the neighbours across the water among them",
           {town: {c: table.get(c) for c in cells} for town, cells in BANKS.items()}, BANKS)
     check("  ..none of them on a far bank", [c for cells in BANKS.values() for c in cells if far(c)], [])
-    check("the placer's rivals the cut leaves alone are on no cell, as before, and not retired: the warehouse 288"
-          " under «Ангар в джунглях», the quest wasteland 441-444, «9 мая»'s staffs, the gorges 595, 268, 269",
+    check("the placer's rivals the cut leaves alone are on no cell, as before, and not retired: the older gorges'"
+          " gate 272 and its 504, the jungle 727",
           ([world.cell_of(i) for i in LEFT], [i for i in LEFT if i in ALL_RETIRED]), ([None] * len(LEFT), []))
+    check("  ..and the cell under «Ангар в джунглях», which 727 would take with 288 out of the running, is held"
+          " wasteland in data/settlements_verified.json, with its why",
+          (table.get(HANGAR), VERIFIED["cells"].get("%d,%d" % HANGAR, "absent"),
+           ORDER in VERIFIED["why"].get("%d,%d" % HANGAR, ""), world.location_at(*HANGAR) == world.pack(*HANGAR)),
+          (None, None, True, True))
     check("the north-west corner's rim cell (5840,1600, 322's) is a rock of the ring now",
           (world.location(world.location_at(5840, 1600)).title, (5840, 1600) in world.borders()), ("Скалы", True))
 except Exception:
@@ -346,21 +398,24 @@ try:
         for t in events._types(rec.get("types")):
             put.setdefault(t, set()).add(("window", rec.get("loc")))
     people = {t for lid in CUT for t in stood_in(lid)}
-    check("the cut places stood 72 kinds of people and creatures: the four archaeologists, the tombs' mobs, Эван's"
-          " clan, the cows, Le_Mon's fighters", len(people), 72)
+    check("the cut places stood 111 kinds of people and creatures: the four archaeologists, the tombs' mobs, Эван's"
+          " clan, the cows, Le_Mon's fighters, Доктор «Д»'s laboratories' mobs, the quest wasteland's mini-bosses,"
+          " «9 мая»'s bosses and staff, the warehouse's master, man and flag", len(people), 111)
     unstood = sorted({(t, i) for i in CUT for t in standing(i) if t and t not in people
-                      and (t in MT or world.substitute(t) is not None)})
+                      and (t in MT or world.substitute(t) is not None) and world.substitute(t) not in people})
     check("  ..their other spawn types have no row in mobs.xml and no stand-in, or are the 45 entries of the clan"
-          " base Le_Mon's people and of the developers (LeMon_*, ADMIN_*, *_TEST_CLAN, the zeon landlord) that"
-          " the room leaves out by their names (world.belongs_here), so nothing else ever stood there",
+          " base Le_Mon's people and of the developers (LeMon_*, ADMIN_*, *_TEST_CLAN, the zeon landlord) and the"
+          " 63 of «9 мая»'s people of the war (VOV_*: its traders, quest people and lessor, who give no quest of the"
+          " table) that the room leaves out by their names (world.belongs_here), so nothing else ever stood there",
           (len({t for t, _i in unstood}), sorted({i for _t, i in unstood}),
            [(t, i) for t, i in unstood if t not in MT
             or world.belongs_here(t, MT[t][1], world.entity_root(t, MT[t][0]), world.location(i).war, i)]),
-          (45, [474, 475, 476, 979, 980, 981, 985, 1206], []))
+          (108, sorted([474, 475, 476, 979, 980, 981, 985, 1206, 545, 546, 553, 554, 561, 562, 569, 570, 571, 572,
+                        573, 574, 925] + list(range(994, 1002))), []))
     ELSEWHERE = {114: [44], 257: [1007], 436: [1007], 437: [1007], 438: [1007],
                  2172: [609, 656, 706, 735, 926, 928, 932, 1044], 2393: [766], 2394: [766], 2395: [766],
                  2396: [766], 2403: [766], 4017: [1010, 1186, 1187, 1191, 1192, 1193, 1194, 1195],
-                 4581: [929, 930, 933, 959], 5308: [380, 381, 388]}
+                 4581: [929, 930, 933, 959], 5308: [380, 381, 388], 4427: [118]}
     rooms_of = {}
 
     def stands(t, where):
@@ -376,7 +431,7 @@ try:
                  for t in people}
     check("every one of them stood in the cut places alone, but the cows (Вади-Хальфа's pasture 44), the tombs' waves"
           " (Донгола's dungeon 1007), the band leader, Абри's ore refinery's people (its cash machine 2402 held out"
-          " of it), the bankers, the clan upgrader and Delta Force",
+          " of it), the bankers, the clan upgrader, Delta Force and the warehouse's clan flag (the base 118)",
           {t: w[:8] for t, w in elsewhere.items() if w}, ELSEWHERE)
     alone = sorted(t for t in people if not elsewhere[t])
     givers = {t for t in people if quests.given_by(t) or quests.taken_by(t)}
@@ -385,11 +440,15 @@ try:
           ([2393, 2394, 2395, 2396], []))
     check("  ..the healer 4612 of Эван's village alone registered a home there (the run_once moves such homes)",
           sorted(t for t in people if world.offers_home(t)), [4612])
-    check("  ..nobody of them is a boss of the clock, has loot of the owner's, or keeps a site of the clans",
-          (sorted(t for t in people if bosses.keeps_hours(t)),
+    clock = sorted(t for t in people if bosses.keeps_hours(t))
+    check("  ..the bosses of the clock among them -- the quest wasteland's four mini-bosses, «9 мая»'s twenty-four"
+          " (fash_boss_*), the warehouse's master 7455 -- stood there alone; nobody of them has loot of the owner's"
+          " or keeps a site of the clans",
+          (clock, [t for t in clock if elsewhere[t]],
            sorted(t for t in people if str(t) in (LOOT.get("by_type") or {})),
            sorted(k for k, v in HOLDINGS["sites"].items() if v.get("loc") in CUT or v.get("boss") in people)),
-          ([], [], []))
+          ([5725, 5726, 5727, 5728] + [b + k for b in (6897, 6907, 6917, 6927) for k in range(6)] + [7455], [],
+           [], []))
     hunted = sorted({t for q in quests.QUESTS.values()
                      for t in list(q.mobs_kill) + list(q.kill_also.values()) + [m for _o, _n, ms in q.objs for m in ms]
                      if t in alone})
@@ -398,7 +457,8 @@ try:
                  | {lid for key in ("loot", "keep_in") for r in SCHEDULE.get(key, [])
                     for lid in r.get("locs", [])})
     check("  ..and data/schedule.json names no cut place: no window stands anybody there or holds anybody out"
-          " (feb23's why names 988 and stands nobody there)", (len(scheduled) > 5, sorted(set(CUT) & scheduled)),
+          " (feb23's why names 988, may9's the copy 9may_*_WH, and neither stands anybody there)",
+          (len(scheduled) > 5, sorted(set(CUT) & scheduled)),
           (True, []))
     check("  ..and their names stay in the string table: an unknown id sends the client to the login screen",
           [t for t in sorted(people) if t in MT and not names.known(t)], [])
@@ -466,8 +526,14 @@ try:
     for b, was, why in plan.captions:
         if why.startswith(CUT_WHY):
             caps[was] |= {map_cells.tile_of(b[0], b[1]), map_cells.tile_of(b[2], b[3])}
-    check("  ..and the letters: «Поселок» by Вади-Хальфа, Абри and Донгола, the star and the cross, the island's"
-          " two lines", {w: sorted(t) for w, t in caps.items()}, CAPTIONS)
+    check("  ..and the letters: «Поселок» by Вади-Хальфа, Абри and Донгола, the island's two lines",
+          {w: sorted(t) for w, t in caps.items()}, CAPTIONS)
+
+    def boxed(X, Y):
+        return [was for (x0, y0, x1, y1), was, _why in plan.captions if x0 <= X <= x1 and y0 <= Y <= y1]
+    check("  ..while the picture's small grey crosses stay: they stand on the towns' bank and in the lake as well"
+          " (by 6016,1713, 6116,1632, 6018,1650), a mark of the picture's own, tied to no place",
+          {c: boxed(8 * c[0] + 4, 8 * c[1] + 4) for c in CROSSES}, {c: [] for c in CROSSES})
     named_no_place = sorted(c for c in HIDDEN if c not in ON_CELLS)
     check("every hidden name with no place under it is decided: its square goes, or the picture has none there"
           " ('bare', 34)",
@@ -531,9 +597,17 @@ try:
         for b, was, why in plan.captions:
             if why.startswith(CUT_WHY):
                 gone[(was, b[0])] = (strokes(bc, b), strokes(ac, b))
-        check("the letters and marks are gone: the steps of brightness in each box after under half of before (%s)"
+        check("the letters are gone: the steps of brightness in each box after under half of before (%s)"
               % ", ".join("%s %d: %d -> %d" % (w, x, b, a) for (w, x), (b, a) in sorted(gone.items())),
               {k: a < 0.5 * b for k, (b, a) in gone.items()}, {k: True for k in gone})
+        x0, y0, x1, y1 = ISLAND
+        ground = [bc.original(X, Y)[0] for X in CHANNEL for Y in list(range(y0 - 3, y0)) + list(range(y1 + 1, y1 + 4))]
+        band = [ac.original(X, Y)[0] for X in CHANNEL for Y in range(y0, y1 + 1)]
+        g_, b_ = sum(ground) / len(ground), sum(band) / len(band)
+        check("the island's west channel runs on through where its letters were, painted in strips from the ground"
+              " above and below: over its columns (%d-%d) the band is as dark as the ground just above and below it,"
+              " within 8 levels (%.0f against %.0f; a patch from aside left it 15 lighter, a pale smear across the"
+              " channel)" % (CHANNEL[0], CHANNEL[-1], b_, g_), abs(b_ - g_) <= 8, True)
     else:
         print("  -- not the original's tiles under %s: the real map is test_map_cells' (with them)" % world.RES)
 except Exception:
@@ -586,15 +660,15 @@ class Lines(logging.Handler):
 
 
 try:
-    check("the run_once's places are the forty-four, Абри's far bank and Эван's to the port market 187, the rest to"
-          " Причал, each on its cell, its name new",
+    check("the run_once's places are the hundred and fifteen, Абри's far bank, Эван's and Абри's copies to the port"
+          " market 187, the rest to Причал, each on its cell, its name new",
           (sorted(accounts.RIVER_ALL_ABRI + accounts.RIVER_ALL_PRICHAL), len(set(accounts.RIVER_ALL_ABRI)
                                                                             & set(accounts.RIVER_ALL_PRICHAL)),
            sorted(accounts.RIVER_ALL_ABRI), accounts.ABRI_CUT_TO, accounts.RETIRED_PLACES_TO,
            accounts.RIVER_ALL_FIX not in (accounts.RETIRED_PLACES_FIX, accounts.HALFA_CUT_FIX,
                                           accounts.HALFA_FSC_FIX, accounts.ABRI_CUT_FIX, accounts.RIVER_CAMPS_FIX,
                                           accounts.ABRI_CLOTHES_FIX, accounts.PREMIUM_THINGS_FIX)),
-          (CUT, 0, sorted([434, 523, 513, 502, 964, 1199, 1004, 1210, 321, 324, 325, 934, 962]),
+          (CUT, 0, ABRI_CUT,
            (PORT_AB,) + world.cell_of(PORT_AB), (PRICHAL,) + world.cell_of(PRICHAL), True))
     path = os.path.join(tempfile.mkdtemp(), "river_all.db")
     st = accounts.Store(path)
@@ -603,6 +677,8 @@ try:
     for name, loc, home in (("in433", 433, None), ("in1198", 1198, None), ("in435", 435, None),
                             ("in474", 474, None), ("in322", 322, None), ("in517", 517, None),
                             ("in434", 434, None), ("in325", 325, None), ("in1210", 1210, None),
+                            ("in539", 539, None), ("in288", 288, None), ("in507", 507, None), ("in441", 441, None),
+                            ("in547", 547, None), ("in987", 987, None),
                             ("home323", 36, 323), ("home434", 188, 434),
                             ("in429", 429, None), ("pier", PRICHAL, None), ("port", PORT_AB, None)):
         cid, _ = st.create_character(acc, name, 0, "1")
@@ -626,13 +702,15 @@ try:
     finally:
         logging.getLogger("lava").removeHandler(lines)
     chars = {n: st.character(c) for n, c in ids.items()}
-    to_prichal = ("in433", "in1198", "in435", "in474", "in322", "in517")
-    to_port = ("in434", "in325", "in1210")
-    check("whoever was in Вади-Хальфа's, Донгола's, Абу-Хамед's or the north-west corner's cut places, a tomb or"
-          " Le_Mon's base is at Причал, on its cell, off the map, with no cell of the old file",
+    to_prichal = ("in433", "in1198", "in435", "in474", "in322", "in517", "in539", "in288", "in507", "in441")
+    to_port = ("in434", "in325", "in1210", "in547", "in987")
+    check("whoever was in Вади-Хальфа's, Донгола's, Абу-Хамед's or the north-west corner's cut places, a tomb,"
+          " Le_Mon's base, a room of «9 мая», the warehouse 288, Доктор «Д»'s pass or the quest wasteland is at"
+          " Причал, on its cell, off the map, with no cell of the old file",
           {n: (chars[n]["loc"], chars[n]["gx"], chars[n]["gy"], chars[n]["on_map"], chars[n]["pos"])
            for n in to_prichal}, {n: (PRICHAL, 5965, 1728, 0, None) for n in to_prichal})
-    check("  ..whoever was on Абри's far bank or in Эван's places at Абри's port market",
+    check("  ..whoever was on Абри's far bank, in Эван's places or in Абри's copies (of «9 мая», of Доктор «Д»'s"
+          " laboratory) at Абри's port market",
           {n: (chars[n]["loc"], chars[n]["gx"], chars[n]["gy"], chars[n]["on_map"], chars[n]["pos"])
            for n in to_port}, {n: (PORT_AB, 5860, 1835, 0, None) for n in to_port})
     check("  ..a home in 323 is Причал now, in 434 the port market, the character left where he was",
@@ -644,10 +722,10 @@ try:
           [(chars[n]["loc"], chars[n]["pos"]) for n in ("in429", "pier", "port")],
           [(429, 77), (PRICHAL, 77), (PORT_AB, 77)])
     check("the journal is untouched", sorted(r["type"] for r in st.quests(keeper)), [119, 10120])
-    check("  ..and the log says so: six moved to Причал and three to the port market, a home each",
-          ([ln for ln in lines.lines if accounts.RIVER_ALL_FIX in ln and "6 character(s) moved" in ln
+    check("  ..and the log says so: ten moved to Причал and five to the port market, a home each",
+          ([ln for ln in lines.lines if accounts.RIVER_ALL_FIX in ln and "10 character(s) moved" in ln
             and "to 41" in ln and "1 home(s) moved" in ln] != [],
-           [ln for ln in lines.lines if accounts.RIVER_ALL_FIX in ln and "3 character(s) moved" in ln
+           [ln for ln in lines.lines if accounts.RIVER_ALL_FIX in ln and "5 character(s) moved" in ln
             and "to 187" in ln and "1 home(s) moved" in ln] != []),
           (True, True))
     check("  ..nothing left to do on a second pass", accounts.relocate_river_all(st.db), dict(moved=0, homes=0))
