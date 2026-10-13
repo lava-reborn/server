@@ -438,7 +438,7 @@ for name, lo, hi, _places in shop_bands.CITIES:
                        sorted(on_sale.get(name, set()) - want))
 check("every city has its tiers on sale, every row of both lines in afro and in gold, and nothing"
       " else of them: the valley 0_3-4_7, Вади-Хальфа 0_3-8_11, Абри 4_7-12_15, Донгола"
-      " 8_11-16_19, Абу-Хамед 12_15-20 (the last two closed, their stalls laid)",
+      " 8_11-16_19 (open since 2026-10-13), Абу-Хамед 12_15-20 (closed, its stalls laid)",
       (holes, COVERED_CITIES),
       ({}, ("Нубийская долина", "Вади-Хальфа", "Абри", "Донгола", "Абу-Хамед")))
 sellers_of = {}
