@@ -24,8 +24,8 @@ factory, calibres, band and type range) and its name to OPEN; the code does
 not know which city it builds.
 
 Types: CITIES[..]["base"] on, a block of 100 a city; Вади-Хальфа's is
-13000-13099, Абри's 13100-13199 (the registry's generators, 10000-29999;
-10000-12999 are the weapon and set crafts').
+13000-13099, Абри's 13100-13199, Донгола's 13200-13299 (the registry's
+generators, 10000-29999; 10000-12999 are the weapon and set crafts').
 
     LAVA_RES=/mnt/c/Users/gmkrt/OneDrive/Desktop/lava/res python3 data/build_questgen_production.py
 
@@ -54,8 +54,12 @@ CALIBRES = ("12мм", "9мм", "5.56х45", "7.62х54", "7.62х51", "0.45", "7.62
 # label names is Ammo_<word>_KS_P, and what it makes here the same without the
 # (P) -- the owner's decision 12 (the original factories made only (P) rounds).
 # Абри's «9ММ НАТО» and «5.7x28 (SS190)» are Ammo_9mmNato_KS and
-# Ammo_SS190_KS, the rounds «9мм НАТО $КС» and «5.7x28 $КС».
-CALIBRE_WORD = {"12мм": "12mm", "СП-10": "SP_10_12", "9мм": "9mmNato", "5.7x28": "SS190"}
+# Ammo_SS190_KS, the rounds «9мм НАТО $КС» and «5.7x28 $КС»; Донгола's
+# «5.56x45ММ НАТО» and «ПАБ-9» Ammo_556x45_KS and Ammo_SP_5_6_KS, «5.56х45мм
+# НАТО $КС» and «ПАБ–9 $КС» (CALIBRES writes the first with a Cyrillic «х»,
+# as the texts do).
+CALIBRE_WORD = {"12мм": "12mm", "СП-10": "SP_10_12", "9мм": "9mmNato", "5.7x28": "SS190",
+                "5.56х45": "556x45", "ПАБ-9": "SP_5_6"}
 
 # The blocks of the family: the first CrBQ number of each, its name row (None:
 # the file has none), its finish row (None: none either; FINISH_BORROWED is
@@ -123,8 +127,21 @@ CITIES = {
                sorters={"plumbum": 1360, "nitre": 1364, "copper": 1368},
                lines={"plumbum": 1372, "nitre": 1376, "copper": 1380},
                assembler=1384, calibres=("9мм", "5.7x28")),
+    # Донгола (2026-10-13): the terminals DN_plumbum/nitre/copper_sorting in
+    # the control rooms 665/664/663 of its lead, saltpetre and copper mines
+    # («Шахта Донголы: Добыча свинца / селитры / меди, Вход разрешен
+    # персонажам 12-15 ур.»), the processing centre 212's DN_bullet/powder/
+    # shell_creator («Центр Переработки Донголы»), the factory 211's
+    # DN_ammo_creator, whose label reads «Производство боеприпасов Донголы:
+    # 5.56x45ММ НАТО (P), ПАБ-9 (P)»; the band of the mines' gates, as
+    # Вади-Хальфа's and Абри's are theirs -- one short of the town's 12-16: a
+    # character of the 16th enters no mine of Донгола.
+    "ДН": dict(index=2, band=(12, 15), base=13200,
+               sorters={"plumbum": 1361, "nitre": 1365, "copper": 1369},
+               lines={"plumbum": 1373, "nitre": 1377, "copper": 1381},
+               assembler=1385, calibres=("5.56х45", "ПАБ-9")),
 }
-OPEN = ("ВХ", "АБ")
+OPEN = ("ВХ", "АБ", "ДН")
 
 _ITEM = re.compile(r'<item id="(\d+)">(.*?)</item>', re.S)
 _START = re.compile(r"^<hint><B>CrBQ№(\d+)</B></hint>")

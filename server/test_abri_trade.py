@@ -436,7 +436,7 @@ check("  ..an immobile, harmless object each, leaving one piece of Абри's or
       ({("object", False, False)}, {r: [(o, 1)] for r, o in sorted(ROCK_ORE.items())},
        ["(Аб) Свинцовая руда", "(Аб) Селитра сырьевая", "(Аб) Медная руда"]))
 GEN_DOC = json.load(open(os.path.join(ROOT, "data", "questgen_production.json"), encoding="utf-8"))
-rows = {r["type"]: r for r in GEN_DOC["quests"] if r["type"] >= 13100}
+rows = {r["type"]: r for r in GEN_DOC["quests"] if 13100 <= r["type"] < 13200}
 check("Абри's 32 rows, 13100-13131, of the CrBQ family, loaded",
       (sorted(rows), [t for t in rows if quests.get(t) is None],
        [t for t, r in rows.items() if "for АБ from the original's CrBQ№" not in r["why"]]),
