@@ -63,8 +63,7 @@ from datetime import date, datetime, timedelta
 
 # Only these two at the top: combat and world import this module, and mobs,
 # names and rooms -- asked late, where they are used -- import half the
-# server; names.ALL is built at its own import and asks mobs for levels,
-# which must not find mobs half-imported (names._mob_level).
+# server, this module among it: at the top they would close a circle.
 import bosses
 import world
 

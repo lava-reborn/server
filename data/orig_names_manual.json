@@ -2,7 +2,7 @@
  "_meta": {
   "what": "Original texts.xml strings for creatures the matcher in build_orig_npcs.py cannot reach by name, chosen by hand.",
   "why": "The matcher ties a type to a string when its internal name transliterates into the string (Aziz_Trader -> Азиз). Mobs named mAntilope, mRat_2 or m05_NewColonAsslt_s_lvl3 translate, they do not transliterate, so the animals and bandits of the Nubian valley kept their internal names. Owner's request 2026-09-24: give them their names from the original.",
-  "rule": "string_id is the row of the original texts.xml; text is a fragment that row must contain (the build stops if it does not, so another copy of the file cannot slip a different row in); why is the evidence. The level prefix [N] is rewritten to the mob's real level by server/orig_texts.py, as for every mob.",
+  "rule": "string_id is the row of the original texts.xml; text is a fragment that row must contain (the build stops if it does not, so another copy of the file cannot slip a different row in); why is the evidence. The level prefix [N] is dropped on the wire by server/orig_texts.py, as for every mob (the owner, 2026-10-12: a mob is called by its name alone).",
   "edit": "Change a row, then: MSYS_NO_PATHCONV=1 wsl.exe -e bash -lc \"cd /mnt/c/Users/gmkrt/OneDrive/Desktop/claude/lava-server && LAVA_RES=/mnt/c/Users/gmkrt/OneDrive/Desktop/LAVA/res python3 data/build_orig_npcs.py\"; the string table changes, so the launcher is rebuilt too."
  },
  "types": {
@@ -34,7 +34,7 @@
   "16": {
    "string_id": 50268,
    "text": "Мародёр",
-   "why": "DESIGNED, not recovered: m05_BanditRaider_lvl3, the three raiders beside the commissar Рекс (1405) in 30 (Q_IV_pustina2, the map's 'Банда коммисара Рекса' at 6273,1832, which stage 2 of the valley's quests made reachable -- before it the type stood only in 43 'Генри Мл.', outside the owner's wall) and so shown to players by its internal name. The m05 block (50242-) has no raider of level 3: its raiders stop at '[1] Слабый Мародёр' and '[2] Мародёр' (14, 15), and '[4] Мародер<Br>Новые колонисты' (50254) is a New Colonists' marauder, another level and spelling. So the family's own word, the row of the level-2 raider 15, whose sprite (m9) it wears; the prefix is rewritten to its own level, '[3] Мародёр'. The owner's session's choice of 2026-09-26; 50254 is the one-line alternative."
+   "why": "DESIGNED, not recovered: m05_BanditRaider_lvl3, the three raiders beside the commissar Рекс (1405) in 30 (Q_IV_pustina2, the map's 'Банда коммисара Рекса' at 6273,1832, which stage 2 of the valley's quests made reachable -- before it the type stood only in 43 'Генри Мл.', outside the owner's wall) and so shown to players by its internal name. The m05 block (50242-) has no raider of level 3: its raiders stop at '[1] Слабый Мародёр' and '[2] Мародёр' (14, 15), and '[4] Мародер<Br>Новые колонисты' (50254) is a New Colonists' marauder, another level and spelling. So the family's own word, the row of the level-2 raider 15, whose sprite (m9) it wears; on the wire it reads 'Мародёр': the level prefix is dropped on the wire (server/orig_texts.py), as for every mob (the owner, 2026-10-12). The owner's session's choice of 2026-09-26; 50254 is the one-line alternative."
   },
   "20": {
    "string_id": 10597,
@@ -44,7 +44,7 @@
   "21": {
    "string_id": 10597,
    "text": "Бандит",
-   "why": "m05_BanditShooter_lvl3, the same bandit a level up; the prefix shows its own level."
+   "why": "m05_BanditShooter_lvl3, the same bandit a level up; the level prefix is dropped on the wire (server/orig_texts.py), as for every mob."
   },
   "250": {
    "string_id": 8831,
@@ -64,7 +64,7 @@
   "17": {
    "string_id": 50247,
    "text": "Курьер",
-   "why": "m05_BanditCourier_lvl2, the courier of 28 «Гонец» whom Сейфул's «Пути информации» sends the player to intercept (texts.xml 59859-59860): '[3] Курьер' of the m05 block, the only courier in it. The level prefix is rewritten to his own (2)."
+   "why": "m05_BanditCourier_lvl2, the courier of 28 «Гонец» whom Сейфул's «Пути информации» sends the player to intercept (texts.xml 59859-59860): '[3] Курьер' of the m05 block, the only courier in it. The level prefix is dropped on the wire (server/orig_texts.py), as for every mob."
   },
   "1405": {
    "string_id": 50244,
@@ -1389,7 +1389,7 @@
   "851": {
    "string_id": 10597,
    "text": "Бандит",
-   "why": "DESIGNED. m05_BanditShooter_lvl4, the seven shooters of the Перебитый отряд (48): '[2] Бандит', the row of the same line's shooters of levels 2 and 3 (20, 21); the prefix shows its own level."
+   "why": "DESIGNED. m05_BanditShooter_lvl4, the seven shooters of the Перебитый отряд (48): '[2] Бандит', the row of the same line's shooters of levels 2 and 3 (20, 21); the level prefix is dropped on the wire (server/orig_texts.py), as for every mob."
   },
   "664": {
    "string_id": 10597,
@@ -1489,7 +1489,7 @@
   "60": {
    "string_id": 10597,
    "text": "Бандит",
-   "why": "DESIGNED. m05_BanditAssaultGunner_lvl6, the ten ambushers of «Место засады» (121, Q_VH_Interception, 5985,1721), where «Радиоперехват» (62723-62726) sends the player for the supply group's five boxes. Neither the m05 block (50242-) nor Halfa's quest-mob block (10590-10616) has a bandit gunner of level 6, and the wiki's page of the place lists no mobs; so the row of the same line's shooters (20, 21, 851), '[2] Бандит'; the prefix shows its own level."
+   "why": "DESIGNED. m05_BanditAssaultGunner_lvl6, the ten ambushers of «Место засады» (121, Q_VH_Interception, 5985,1721), where «Радиоперехват» (62723-62726) sends the player for the supply group's five boxes. Neither the m05 block (50242-) nor Halfa's quest-mob block (10590-10616) has a bandit gunner of level 6, and the wiki's page of the place lists no mobs; so the row of the same line's shooters (20, 21, 851), '[2] Бандит'; the level prefix is dropped on the wire (server/orig_texts.py), as for every mob."
   },
   "1011": {
    "string_id": 46362,
@@ -1554,7 +1554,7 @@
   "566": {
    "string_id": 50334,
    "text": "Головорез",
-   "why": "olm_safeguard1_lvl_4, Большой Мвамба's guards in his camp 31 (data/placements.json, the owner's of 2026-10-02: «Мвамба это головорез афроамериканец, соратники похожие должны быть»). The same art as Мвамба (mob-m20), level 4, an assault rifle, and no location puts the type down. 'Головорез' (50334) is the original's own word for the slave traders' thugs drawn in that art ([9] Головорез 8897, [11]..[14] Головорез 50276-50298); this row is the one without a level, which server/orig_texts.py gives the level 4 the type fights at."
+   "why": "olm_safeguard1_lvl_4, Большой Мвамба's guards in his camp 31 (data/placements.json, the owner's of 2026-10-02: «Мвамба это головорез афроамериканец, соратники похожие должны быть»). The same art as Мвамба (mob-m20), level 4, an assault rifle, and no location puts the type down. 'Головорез' (50334) is the original's own word for the slave traders' thugs drawn in that art ([9] Головорез 8897, [11]..[14] Головорез 50276-50298); this row is the one without a level, and on the wire no mob's name carries one (server/orig_texts.py, the owner's of 2026-10-12)."
   },
   "315": {
    "string_id": 8891,
@@ -1679,7 +1679,7 @@
   "327": {
    "string_id": 8905,
    "text": "Папаша Абу<Br>Работорговцы",
-   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: mrare_Abu_lvl18, the camp's boss, 'Папаша Абу' (50434 sends the player to «Надзирателя Лаки и Папашу Абу» in the slave traders' camp). The prefix shows the level he fights at."
+   "why": "The slave traders' ranks, texts.xml 8890-8906 ('[10] Казначей', '[8] Проводник', '[8] Смотритель', '[8] Громила', '[8] Погонщик', '[9] Караванщик', '[9] Охотник', '[9] Головорез', '[9] Загонщик', '[10] Караван-Баши', '[10] Страж', '[10] Мучитель', '[10] Конвоир', '[10] Санденс Кид', '[11] Надзиратель аки', '[12] Папаша Абу', '[10] Ящик'), taken in the order of the types, level by level, as the ranks of Вади-Хальфа's four factions are (8823-8885): st_ 315-318, 319-322 and 323-326 (levels 8, 9 and 10, each Karavanshik, Smotritel, Gromila, Pogonshik). It is borne out by the internal words where the block repeats them -- Smotritel, Gromila, Pogonshik at level 8 (8892-8894), Karavanshik at level 9 (8895), the caravan's chief Караван-Баши at 10 -- and each rank climbs a line: Проводник, Караванщик, Караван-Баши; Смотритель, Охотник, Страж; Громила, Головорез, Мучитель; Погонщик, Загонщик, Конвоир. The matcher's picks from 50271-50290 ('[11]'-'[13] ... Работорговцы') were another block's, the slave traders of the level-11-13 camps, and gave 320 and 324 one row. Лагерь Работорговцев (88) and its chief's place (89), the owner's Абри of 2026-10-12. This one: mrare_Abu_lvl18, the camp's boss, 'Папаша Абу' (50434 sends the player to «Надзирателя Лаки и Папашу Абу» in the slave traders' camp). The level prefix is dropped on the wire (server/orig_texts.py), as for every mob."
   },
   "328": {
    "string_id": 8904,
@@ -2169,7 +2169,7 @@
   "2405": {
    "string_id": 9498,
    "text": "Крыса<Br>Дикое животное",
-   "why": "Medium. mRat_8 (art f8_rat) in the Свалка Автомобилей (289, data/camp_fill.json): the rats' run 9494-9502 has 'Крыса, Дикое животное' at 12, 16 and 20 and other beasts at other levels ('[8] Сурикат', 9496, the only level-8 row, a meerkat where the sprite is a rat). The plain rat's row, the prefix rewritten to the level it fights at."
+   "why": "Medium. mRat_8 (art f8_rat) in the Свалка Автомобилей (289, data/camp_fill.json): the rats' run 9494-9502 has 'Крыса, Дикое животное' at 12, 16 and 20 and other beasts at other levels ('[8] Сурикат', 9496, the only level-8 row, a meerkat where the sprite is a rat). The plain rat's row; the level prefix is dropped on the wire (server/orig_texts.py), as for every mob."
   },
   "2406": {
    "string_id": 9498,
@@ -2189,7 +2189,7 @@
   "5631": {
    "string_id": 9050,
    "text": "Хиппи<Br>Дети цветов",
-   "why": "DESIGNED. hippie_3 (art mob-m18, as 1175 and 1176) at «Хиппи в пустыне» (191): the third of the hippies, whose two rows 9048 and 9050 hold the other two; the same words, the prefix rewritten to the level it fights at."
+   "why": "DESIGNED. hippie_3 (art mob-m18, as 1175 and 1176) at «Хиппи в пустыне» (191): the third of the hippies, whose two rows 9048 and 9050 hold the other two; the same words; the level prefix is dropped on the wire (server/orig_texts.py), as for every mob."
   },
   "2426": {
    "string_id": 60277,
@@ -2255,6 +2255,26 @@
    "string_id": 50655,
    "text": "Пулеметы и патроны",
    "why": "dn_MachineGuns, the machine-gun trader the wiki's article «Пулеметы и патроны» puts on the Черный рынок of Донгола (103, 5879x2012: РПД, AUG /Hbar, 7.62x39, 5.56x45), and the market's page names him beside Серхио. The original's run of the gun stalls' titles 50655-50659 ('Пулеметы и патроны', 'Автоматы и патроны', 'Пистолеты и патроны', 'Винтовки и патроны', 'Дробовики и патроны'); its first, the words Абу-Хамед's machine-gun stall (1216, ah_MachineGuns) shows by the wiki. No file of the location puts him down: data/placements.json does (2026-10-12)."
+  },
+  "132": {
+   "string_id": 50336,
+   "text": "Громила<Br>Работорговцы",
+   "why": "DESIGNED, not recovered: m510_Slave_trader_lvl8 (art mob-m7, as Амин 135 and Джохар 134), the three slave traders of 68 «Тайная Сделка» (5876,2019), to whom Джохар, Амин's helper, sells the stolen medicine of the «Амин» chain (48555-48559: 'хотел продать работорговцам'). Shown to players by its internal name until 2026-10-12, the level in it. No row names a 'Работорговец' alone. The original's block of m510 names without a level (50323 Скотовод Халид = 855, 50324 Пастух = 856, 50335 Живодер = 158) writes 'Папаша Абу' (50328) for m510_Father_Aby_lvl8, the type right before this one in mobs.xml, and right after it 'Громила<Br> Работорговцы' (50329). The same words stand again at 50336, taken here for the spelling (50329 has a space after the break); the slavers' rank '[8] Громила<Br>Работорговцы' (8893) is this type's own level. On the wire 'Громила<br>Работорговцы'."
+  },
+  "158": {
+   "string_id": 50335,
+   "text": "Живодер",
+   "why": "m510_zhivoder_lvl8 (art mob-m17), the four flayers of 73 «Донгола: Живодеры» (5878,2011). Shown to players by its internal name until 2026-10-12, the level in it. 'Живодер' (50335) is zhivoder letter for letter, a row without a level in the original's block of m510 names (50323 Скотовод Халид = 855, 50324 Пастух = 856, 50334 Головорез); the ranks of the Живодеры Элфрида (8907-8923) start at level 10 and each names a rank."
+  },
+  "407": {
+   "string_id": 8956,
+   "text": "ШефДженсен<Br>Миротворцы",
+   "why": "mrare_chief_lvl30, the boss of 98 «Лагерь Миротворцев» (5920,2010; also in 1171). Shown to players by its internal name until 2026-10-12, the level in it. The Peacekeepers' block 8941-8958 ends with their two chiefs, '[17] МаксКоул' (8955) and '[18] ШефДженсен' (8956): chief is Шеф, and the original's quest 50437 sends the player 'в лагерь Миротворцев и найди там МаксКоула и Шефа Дженсен ... Они выходят на осмотр лагеря в 18:00 и 22:00', as 50434 does for the slavers' bosses Надзиратель Лаки (328, 8904) and Папаша Абу (327, 8905). The joined 'ШефДженсен' is mended on the wire to 'Шеф Дженсен', as 50437 spells him (server/orig_texts.py NAME_TYPOS)."
+  },
+  "408": {
+   "string_id": 8955,
+   "text": "МаксКоул<Br>Миротворцы",
+   "why": "mrare_koul_lvl28, the boss of 99, which no door, side or quest way from the map reaches (2026-10-12): Koul is Коул, '[17] МаксКоул' (8955), the other chief 50437 names (see 407). 50437 writes him joined as well, so the name stays as the file has it."
   }
  },
  "none": {

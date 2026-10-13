@@ -338,14 +338,16 @@ try:
           (events.kept(BAND), band["quest"], band["exchang"], mail.postable(BAND),
            barter.tradable(BAND), combat.drops_on_death(BAND), events.kept(TALON)),
           (True, 1, 0, False, False, False, False))
-    # The level each fights at in front of a mob's name (names._mob_level):
-    # which also says events.py did not leave mobs half-imported when
-    # names.ALL was built.
-    check("the prison's people and prisoners go by theirs, a mob with its level",
+    # A mob by its name alone, no level in front (orig_texts.person_name;
+    # the owner, 2026-10-12): the level it fights at stays its own.
+    check("the prison's people and prisoners go by theirs, a mob without its level",
           [names.text(t) for t in [TOMAS] + MEDICS + [GODFATHER, 1113, 1117, GUARD_IN]],
           ["Томас<br>Выход из тюрьмы", "Джеф<br>Патологоанатом", "Аль-Назир<br>Коронер",
-           "Томпсон<br>Судмедэксперт", "[8] Беглый каторжник<br>Хранитель общака",
-           "[8] Заключенный", "[8] Заключенный", "[20] Макисе Курису"])
+           "Томпсон<br>Судмедэксперт", "Беглый каторжник<br>Хранитель общака",
+           "Заключенный", "Заключенный", "Макисе Курису"])
+    import mobs
+    check("  ..and the prisoners still fight at theirs",
+          [mobs.stats(t).level for t in (GODFATHER, 1113, 1117, GUARD_IN)], [8, 8, 8, 20])
 
     # The blocks: sides into each other, no map, the armbands kept in.
     ends = {}

@@ -80,7 +80,7 @@ for _knob in ("LAVA_QUESTS", "LAVA_PLACEMENTS", "LAVA_PASSAGES", "LAVA_WEAR_DROP
     os.environ.pop(_knob, None)
 
 sys.path.insert(0, HERE)
-import names  # noqa: E402  (first: the level its mobs' names carry is rewritten at import)
+import names  # noqa: E402
 import accounts  # noqa: E402
 import bosses  # noqa: E402
 import inventory  # noqa: E402

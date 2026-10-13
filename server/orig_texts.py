@@ -48,16 +48,17 @@ THE CLEANING, RULE BY RULE
   people           "Борис<Br>Пистолеты и патроны" -> "Борис<br>Пистолеты и патроны"
       Lower case, because GameEvents.parseNamePers only recognises "<br>" when
       it turns a name into "Имя <Роль>" for the event log.
-                    "[3] Бугор Асмунд" -> "[0] Бугор Асмунд"
-      A mob's level is written into its name and the client shows it as is --
-      it adds a level prefix only to players. The file's number agrees with
-      the mob's real level for 102 of 252 mobs, so the prefix is rewritten
-      with the level the mob actually fights at, rather than let a player read
-      a number that is not true.
-                    "Серая крыса" -> "[2] Серая крыса"
-      A few rows chosen by hand (data/orig_names_manual.json) name a mob
-      without writing a level at all; it is added, so that no mob of the
-      world reads like a person who happens to stand among them.
+                    "[3] Бугор Асмунд" -> "Бугор Асмунд"
+      The original writes a mob's level into its name, and the client would
+      show it as is. The owner's word of 2026-10-12: «у мобов надо в начале
+      убрать подписи уровня» -- a mob is called by its name alone. Until then
+      the prefix was rewritten with the level the mob fights at (the file's
+      number agreed with it for fewer than half of them) and added to the
+      rows chosen by hand that write none ("Серая крыса"); now it goes from
+      every name, whatever the row wrote. The level is still the client's to
+      show: the server sends it in a mob's userInfo (combat.mob_info), and
+      CharInfo.addLevelMc puts a shield beside the name with the difference
+      from the player's own, -4 .. +4 (mobLevel_mc).
 
   every string      "%sex??:а%" -> "%sex?:а%"
       2 521 rows carry a doubled "?". ParseString takes everything after the
@@ -226,13 +227,11 @@ def item_desc(raw):
     return clean(_NAME_TAGS.sub("", raw))
 
 
-def person_name(raw, level=None):
-    """A name over somebody's head."""
+def person_name(raw):
+    """A name over somebody's head: a level written in front of it goes."""
     if not raw:
         return raw
-    text = _BR.sub("<br>", raw)
-    if level is not None and _MOB_LEVEL.match(text):
-        text = _MOB_LEVEL.sub("[%d] " % int(level), text, count=1)
+    text = _MOB_LEVEL.sub("", _BR.sub("<br>", raw), count=1)
     return clean(text)
 
 
@@ -276,8 +275,14 @@ DOUBTFUL_STRINGS = frozenset((9163, 48871, 48872))
 #        traders' chief's place (328, mrare_Lucky_lvl16). His type's own word
 #        is Lucky, and the quest that sends the player to him writes
 #        «найди там Надзирателя Лаки» (50434): the file lost a letter.
+#   8956 "[18] ШефДженсен<Br>Миротворцы" -- the boss of the Peacekeepers'
+#        camp (407, mrare_chief_lvl30, by hand in orig_names_manual.json).
+#        The quest that sends the player to him writes «найди там МаксКоула
+#        и Шефа Дженсен» (50437): the file lost a space. МаксКоул (8955) is
+#        joined there too, so his row stays as it is.
 NAME_TYPOS = {
     8904: ("Надзиратель аки", "Надзиратель Лаки"),
+    8956: ("ШефДженсен", "Шеф Дженсен"),
 }
 
 # Lines of a name that offer work the server cut, dropped on the wire by the
@@ -329,31 +334,19 @@ def item_descs():
     return _cleaned("desc", item_desc)
 
 
-def person_names(level_of=None):
-    """type_id -> the original's name over its head, cleaned.
-
-    level_of(type_id) gives the level a mob really fights at; the prefix the
-    file wrote is replaced with it.
-    """
+def person_names():
+    """type_id -> the original's name over its head, cleaned: a mob's with
+    no level in front (person_name)."""
     out = {}
     for t, r in _NPCS.items():
         if not r.get("name") or r.get("string_id") in DOUBTFUL_STRINGS:
             continue
-        tid = int(t)
-        lvl = None
-        if level_of is not None:
-            try:
-                lvl = level_of(tid)
-            except Exception:
-                lvl = None
         name = r["name"]
         typo = NAME_TYPOS.get(r.get("string_id"))
         if typo:
             name = name.replace(*typo)
         name = cut_lines(name, NAME_CUTS.get(r.get("string_id"), ()))
-        if r.get("kind") == "mob" and lvl is not None and not _MOB_LEVEL.match(name):
-            name = "[%d] %s" % (int(lvl), name)
-        out[tid] = person_name(name, lvl)
+        out[int(t)] = person_name(name)
     return out
 
 
