@@ -62,8 +62,10 @@ MT = world.mob_types()
 with open(os.path.join(ROOT, "data", "orig_names_manual.json"), encoding="utf-8") as _fh:
     MANUAL = json.load(_fh)
 # Named by nobody, each with its reason in the file: the whole remainder.
+# Донгола (2026-10-13) added three who do not stand: the two of «Упавший
+# спутник» and the black market's test trader.
 REMAINDER = {int(k) for k in MANUAL["none"]}
-MAX_REMAINDER = 8
+MAX_REMAINDER = 9
 
 # The places the restoration opens. Not the premium masters' camp 124, off the
 # map since the owner's cut of (P) (2026-09-30, data/retired.json), nor the
