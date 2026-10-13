@@ -151,6 +151,15 @@ WIKI_LEVELS = {
 # 10579, 10581) and the wiki («Барон Дайсон ... Уровень: 12», «Телохранитель
 # Дайсона 12 ур») give them. A level set here beats every guess, the tier's
 # and the town's included.
+#
+# And Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13, the
+# town's band 12-16): the two treasurers of the ДСР's and the Peacekeepers'
+# camps (jm_/pc_Kaznachei, who stand all day) and Вильям Блейд at their rows'
+# levels ([14] 8924, [16] 8941, [14] 8937); the camps' ammunition boxes at
+# the middle of their camp's band, 12-14 and 14-16, as Вади-Хальфа's and
+# Абри's are; and Крисп, the Магриб officer of «Патруль Магриба» (115), at the
+# middle of the town's band -- his m1520_ tier would make him 18, and «Секреты
+# Магриба» sends a player of the town after him.
 DESIGNED_LEVELS = {
     "nubia_boss": 5,
     "nc_box_ammo": 1,
@@ -172,6 +181,12 @@ DESIGNED_LEVELS = {
     "Abri_Manticore_Tech": 12,
     "Abri_Dayson": 12,
     "Abri_Dyson_Guard": 12,
+    "jm_Kaznachei": 14,
+    "pc_Kaznachei": 16,
+    "jm_WilliamBlade": 14,
+    "jm_box_ammo": 13,
+    "pc_box_ammo": 15,
+    "m1520_magrib_officer_q": 14,
 }
 
 # --- kinds set by hand ------------------------------------------------------
@@ -186,10 +201,29 @@ DESIGNED_LEVELS = {
 # «Кустарный ПП» (the wiki's «Шахтер Магриб»: «Оружие: Кустарный ПП»), not
 # the knife the word "miner" gives (the owner, 2026-10-09: «Шахтеры с
 # ножами»). A sub-machine gun's class, and its 9 mm in the bag.
+# DESIGNED: the three commanders of the ДСР (jm_Komandir_lvl12/13/14, 362,
+# 366, 370) are made bosses by the word komandir, but their rows are ranks of
+# the camp's block 8925-8936 beside the militiaman and the soldier: «[12]
+# Командир», «[13] Командир Группы», «[14] Полевой Командир», and the line of
+# Люшер and Рашид asks for two commanders of a group as it asks for veterans.
+# In Донгола's camps (the owner's Донгола, 2026-10-13, decision 21 of its
+# plan) they are rank and file: as bosses they would keep the bosses' hours
+# and a boss's numbers, and no ambush or patrol would take them.
+# DESIGNED, and a new use of the table: Джохар and Амин (m510_Johar_lvl8 134,
+# m510_Amin_lvl8 135) of «Амин» are level 8 by their names, which nothing
+# above may overrule, while their rows say «[12] Джохар<Br>помощник Амина»
+# (50285) and «[13] Амин» (50286), and the town they stand in is for 12-16.
+# Here, for the first time, the table rewrites a level a name gives (decision
+# 52 of the plan; README and UNDONE say so too).
 DESIGNED_KINDS = {
     "m_turret_lvl6": {"role": "turret", "weapon_class": "machine_gun", "hex_ms": 0},
     "mg_miner_lvl8": {"weapon_class": "smg"},
     "mg_miner_lvl9": {"weapon_class": "smg"},
+    "jm_Komandir_lvl12": {"role": "mob"},
+    "jm_Komandir_lvl13": {"role": "mob"},
+    "jm_Komandir_lvl14": {"role": "mob"},
+    "m510_Johar_lvl8": {"level": 12, "level_source": "designed"},
+    "m510_Amin_lvl8": {"level": 13, "level_source": "designed"},
 }
 
 # --- weapon class from a word in the name ---------------------------------

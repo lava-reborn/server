@@ -15,7 +15,9 @@ The cells
   place: the 8-neighbourhood of both, the two places taken out. That is 12
   cells round each camp pair of Вади-Хальфа (80/82, 81/83, 84/86, 85/87)
   and of Абри (88/89, 92/90: the owner's «В Абри добавь мобов в лагеря и
-  в окрестности», 2026-10-12, ORDERED) and 8 round the Nubian valley's
+  в окрестности», 2026-10-12, ORDERED) and of Донгола (93/91, 98/99: the
+  owner's «и потом сделай донголу тоже», 2026-10-13, ORDERED) and 8 round
+  the Nubian valley's
   «Лагерь бандитов» (34). A cell is left
   out (and the run says so) where it is a settlement, a place taken out of
   the game (world.retired_cells), the rock of the rim, impassable, or on the
@@ -71,6 +73,8 @@ RINGS = {
     34: (None, "Лагерь бандитов"),
     88: (89, "Лагерь Работорговцев"),
     92: (90, "Лагерь Живодеров"),
+    93: (91, "Лагерь ДСР"),
+    98: (99, "Лагерь Миротворцев"),
 }
 # The owner's word each ring answers: Вади-Хальфа's and the valley's, unless
 # named here.
@@ -79,6 +83,10 @@ ORDERED = {
          "лагеря и в окрестности». "),
     92: ("DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в "
          "лагеря и в окрестности». "),
+    93: ("DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and "
+         "their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). "),
+    98: ("DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and "
+         "their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). "),
 }
 
 # Fighters of a camp that stay in it, with why.
@@ -86,6 +94,8 @@ LEFT_OUT = {
     590: "st_Kaznachei, the slave traders' treasurer, who stands in the camp 88 all day "
          "(server/bosses.py ALL_DAY); a boss by role, so no ring takes him anyway",
     591: "zd_Kaznachei, the flayers' treasurer in 92, as 590",
+    592: "jm_Kaznachei, the ДСР's treasurer in Донгола's camp 93, as 590",
+    593: "pc_Kaznachei, the Peacekeepers' treasurer in 98, as 590",
     336: "lu_Looser_lvl2, the sectarian of «Театр жизни»; «Заказ» names the sect "
          "«все кроме Неудачников»",
     303: "mg_Officer_lvl6: the Магриб's officers stand only where «Порядок (часть 2)» "

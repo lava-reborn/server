@@ -77,6 +77,13 @@ try:
                     (5851, 1992), (5850, 1999), (5850, 2008), (5871, 2003), (5871, 2004), (6145, 1999),
                     (6153, 1994), (6158, 2000), (6149, 2009), (6174, 1982)}
     LABEL_ONLY |= RIVER_ALL_SQ
+    # Донгола's (2026-10-13) adds eleven: «Улучшение сетов 14-16», the clan
+    # bases «Хогвартс» and «Врачи без границ» two each, Delta Force's base
+    # square and its three arenas above the block post, «Памятник
+    # Воину-Освободителю» and the butchers' black square with its «!».
+    DONGOLA_SQ = {(5877, 2013), (5928, 1976), (5927, 1976), (5937, 2004), (5936, 2004), (5955, 2031),
+                  (5955, 2030), (5956, 2030), (5956, 2031), (5876, 2004), (5881, 2005)}
+    LABEL_ONLY |= DONGOLA_SQ
     ABRI_CUT = [(5860, 1836), (5860, 1837), (5861, 1836), (5863, 1837), (5866, 1836),
                 (5906, 1888), (5906, 1889), (5865, 1835), (5924, 1838)]
     # The camps across the river of Вади-Хальфа (429) and Донгола (431), and
@@ -90,6 +97,10 @@ try:
                  (5867, 1827), (5868, 1828), (5868, 1829), (5869, 1828), (5840, 1600), (5840, 1601),
                  (5864, 2001), (5863, 2002), (5851, 1986), (5851, 1991), (6168, 1988), (6167, 1989),
                  (6145, 1993)]
+    # Донгола's cut (2026-10-13): the craftsmen 455, 460, 518, the clothing
+    # market 469, the ФСЦ airfield 530 and Delta Force's block post 382, each
+    # with its square.
+    DONGOLA_CUT = [(5876, 2013), (5878, 2014), (5878, 2015), (5878, 2013), (5879, 2011), (5955, 2032)]
     # Two retired places had no square of their own in the picture: Абри's ФСЦ
     # airfield 529 (its name over the river's dark bank) and Blackwater's block
     # post 317 (the base's square is on 5923,1838 beside it). The plan lists
@@ -101,18 +112,22 @@ try:
                   (5869, 1828), (5840, 1600), (5840, 1601), (5851, 1986), (5851, 1991), (6145, 1993)]
     check("every cell of data/retired.json loses its square, by itself",
           sorted(retired - set(plan.cells)), [])
-    check("  ..those are the forty of the eight cuts: the (P) camps 124, 125, 130, Halfa's 468, 452,"
+    check("  ..those are the forty-six of the nine cuts: the (P) camps 124, 125, 130, Halfa's 468, 452,"
           " 456, 457, its ФСЦ's airfield 528 and base НИЛ-1 522, Абри's craftsmen 453, 454, 458, 459,"
           " air base 427, clan base Liberty 328, 327, ФСЦ airfield 529 and Blackwater's block post 317,"
-          " the camps across the river 429 and 431, Абри's clothing market 378, and the nineteen of the"
-          " places across the river",
+          " the camps across the river 429 and 431, Абри's clothing market 378, the nineteen of the"
+          " places across the river, and Донгола's craftsmen 455, 460, 518, clothing market 469, ФСЦ"
+          " airfield 530 and Delta Force's block post 382",
           sorted(retired),
           sorted([(5876, 2012), (5942, 1723), (5968, 1726), (5969, 1729), (5969, 1731), (5969, 1732),
-                  (5970, 1727), (5970, 1732), (6182, 1975)] + ABRI_CUT + RIVER_CUT + RIVER_ALL))
-    check("  ..and data/map_cells.json adds the twenty-seven cells that had a name or a mark and no place:"
+                  (5970, 1727), (5970, 1732), (6182, 1975)] + ABRI_CUT + RIVER_CUT + RIVER_ALL
+                 + DONGOLA_CUT))
+    check("  ..and data/map_cells.json adds the thirty-eight cells that had a name or a mark and no place:"
           " «Улучшение сетов 6-8», the KKND base, the kimberlite pipe, «Улучшение сетов 10-12», Абри's"
           " green mark, the second «Автосвалка», the two of Liberty by Абу-Хамед, Blackwater's, the"
-          " camps across the river of Абу-Хамед and Абри, and the sixteen squares of the far banks",
+          " camps across the river of Абу-Хамед and Абри, the sixteen squares of the far banks, and"
+          " Донгола's eleven: «Улучшение сетов 14-16», the clan bases «Хогвартс» and «Врачи без границ»"
+          " two each, Delta Force's base and its three arenas, the monument's and the butchers'",
           sorted(set(plan.cells) - retired), sorted(LABEL_ONLY))
     check("  ..and the pirates' squares by Абу-Хамед, where the camp 432 stood on the first, stay",
           sorted(c for c in [(6160, 1975), (6161, 1973)] if c in plan.cells), [])
@@ -124,10 +139,11 @@ try:
                        and c not in plan.bare)
     check("every hidden name with no place under it is decided: its square goes, stays with a why, or the"
           " picture has none there ('bare', with its why)", undecided, [])
-    check("  ..the 'bare' ones are the thirty-four names across the river with no place and no square:"
+    check("  ..the 'bare' ones are the thirty-eight names with no place and no square: across the river"
           " Доктор «Д»'s columns, Эван's pasture and quarry, the north-west corner's six, the island «Эдем»'s"
-          " four", (len(plan.bare), sorted(set(plan.bare) - hidden), sorted(set(plan.bare) & live)),
-          (34, [], []))
+          " four; by Донгола its three (P) remnants and «Лагерь экспедиции»",
+          (len(plan.bare), sorted(set(plan.bare) - hidden), sorted(set(plan.bare) & live)),
+          (38, [], []))
     check("  ..the kimberlite pipe's goes too, on the owner's word of 2026-10-10; nothing is kept now",
           (sorted(plan.keep), "owner" in plan.cells.get((6265, 1821), "")), ([], True))
     check("  ..and the farm's cell keeps its square: only the New Year name over it is hidden",
@@ -156,7 +172,10 @@ try:
           " «Лагерь» of the camps across the river two each, right of the camps' squares: Вади-Хальфа's in"
           " tile 13753, Абри's in 14774, Донгола's in 16055 (the line and its «р»'s tail); across the river"
           " the three villages' «Поселок» (13753, 14774, 16054) and the island's two lines by Донгола (the"
-          " picture's small grey crosses stay: they stand on the towns' bank and in the lake too)",
+          " picture's small grey crosses stay: they stand on the towns' bank and in the lake too); by"
+          " Донгола the three clan bases' «База …», two lines each, right of their squares: «Хогвартс» in"
+          " 15801 (and its «р»'s tail), «Врачи без границ» in 16057 (and the tails of its «р» and «ц»),"
+          " «Delta Force» in 16314",
           [(b, was, M.tile_of(b[0], b[1]), M.tile_of(b[2], b[3])) for b, was, _ in plan.captions],
           [((47879, 14049, 47920, 14057), "Кланбаза KKND", 14011, 14011),
            ((47879, 14058, 47910, 14067), "Кланбаза KKND", 14011, 14011),
@@ -172,15 +191,26 @@ try:
            ((46732, 14710, 46771, 14720), "Поселок", 14774, 14774),
            ((46809, 15991, 46845, 16001), "Поселок", 16054, 16054),
            ((46962, 16002, 47031, 16011), "Частный остров / Господина ПэЖэ", 16055, 16055),
-           ((46961, 16011, 47034, 16020), "Частный остров / Господина ПэЖэ", 16055, 16055)])
+           ((46961, 16011, 47034, 16020), "Частный остров / Господина ПэЖэ", 16055, 16055),
+           ((47436, 15796, 47456, 15804), "База Хогвартс", 15801, 15801),
+           ((47436, 15804, 47475, 15812), "База Хогвартс", 15801, 15801),
+           ((47460, 15812, 47463, 15814), "База Хогвартс", 15801, 15801),
+           ((47511, 16024, 47531, 16032), "База Врачи без границ", 16057, 16057),
+           ((47510, 16032, 47584, 16040), "База Врачи без границ", 16057, 16057),
+           ((47516, 16040, 47519, 16042), "База Врачи без границ", 16057, 16057),
+           ((47556, 16040, 47559, 16042), "База Врачи без границ", 16057, 16057),
+           ((47661, 16246, 47681, 16254), "База Delta Force", 16314, 16314),
+           ((47661, 16254, 47707, 16262), "База Delta Force", 16314, 16314)])
     check("the tiles a change can touch, a square's frame reaching a pixel past its cell: НИЛ-1's and the"
           " camp 429's, Halfa's two, KKND's and the two below it, the kimberlite pipe's, Абри's island"
           " camp's, Абри's, Blackwater's east of it, the two of Liberty by Абри, Абу-Хамед's two, Донгола's,"
           " Абу-Хамед's camp's across the river; and the war zones' (Донгола's on two, 16054 the other);"
           " across the river the hangar's 15808, and the north-west corner's 12982 with the row above the"
-          " picture, 12726, which no client has",
+          " picture, 12726, which no client has; by Донгола its cut's (16055, and 16311 a pixel past"
+          " 5878,2015) and the three clan bases' (15801, 16057, 16314)",
           plan.tiles(), [12726, 12982, 13753, 13754, 14010, 14011, 14266, 14267, 14531, 14774, 14775, 14777,
-                         15032, 15288, 15808, 15809, 15811, 16054, 16055, 16064])
+                         15032, 15288, 15801, 15808, 15809, 15811, 16054, 16055, 16057, 16064, 16311,
+                         16314])
     # The camps across the river had each a war zone painted round them
     # (the owner, 2026-10-12: «ты с карты не убрал лагеря за рекой»): a red
     # tint over a circle 245 pixels across with dark blue arrows into it,
@@ -810,12 +840,19 @@ try:
             odd.update({c: (0, 0, ("tan",)) for c in ((5941, 1703), (5944, 1712), (5943, 1722), (5844, 1832),
                                                        (5849, 1830), (5850, 1850), (5851, 1992), (5850, 2008),
                                                        (5864, 2001), (6153, 1994), (6149, 2009), (6168, 1988))})
-            check("each of the fifty-three cells with a square has it found: thirty green (Blackwater's"
-                  " and Le_Mon's with their black centres among them), KKND's dark red with white a pixel high,"
-                  " Liberty's two and Le_Mon's dark red with white, the second «Автосвалка»'s and the four"
-                  " staffs' dark red, the kimberlite pipe's black-and-orange hatch, Halfa's ФСЦ airfield's blue"
-                  " with «!», the hangar's white, the twelve tan ones across the river and Абу-Хамед's pyramid's,"
-                  " a pixel low",
+            # Донгола's (2026-10-13): its airfield's blue with «!», the clan
+            # bases' dark red with white, Delta Force's arenas' dark red, the
+            # butchers' black with «!»; its other nine green.
+            odd.update({(5879, 2011): (0, 0, ("blue", "white")), (5881, 2005): (0, 0, ("black", "white"))})
+            odd.update({c: (0, 0, ("red", "white")) for c in ((5928, 1976), (5937, 2004), (5955, 2031))})
+            odd.update({c: (0, 0, ("red",)) for c in ((5955, 2030), (5956, 2030), (5956, 2031))})
+            check("each of the seventy cells with a square has it found: thirty-nine green (Blackwater's,"
+                  " Le_Mon's and Донгола's clan bases' block posts with their black centres among them), KKND's"
+                  " dark red with white a pixel high, Liberty's two, Le_Mon's and Донгола's three clan bases'"
+                  " dark red with white, the second «Автосвалка»'s, the four staffs' and Delta Force's three"
+                  " arenas' dark red, the kimberlite pipe's black-and-orange hatch, Halfa's and Донгола's ФСЦ"
+                  " airfields' blue with «!», Донгола's butchers' black with «!», the hangar's white, the twelve"
+                  " tan ones across the river and Абу-Хамед's pyramid's, a pixel low",
                   {c: (sq[0] - 8 * c[0], sq[1] - 8 * c[1], sq[2]) for c, sq in real["found"].items()},
                   {c: odd.get(c, (0, 0, ("green",))) for c in plan.cells if c not in NO_SQUARE})
             check("  ..and nothing is reported missing but the fourteen retired places that had none of their"
@@ -828,16 +865,19 @@ try:
                   sorted({M.tile_of(X0 + 4, Y0 + 4) for X0, Y0, _k in real["found"].values()
                           if [(c.h, c.v) for c in J.Jpeg(read(M.tile_path(M.tile_of(X0 + 4, Y0 + 4)))).comps]
                           != [(1, 1)] * 3}), [])
-            check("fifteen tiles change: 13753 for НИЛ-1 and the camp 429 with its letters and war zone, 13754"
+            check("nineteen tiles change: 13753 for НИЛ-1 and the camp 429 with its letters and war zone, 13754"
                   " and 14010 in Halfa, 14011 for KKND, 14531 the kimberlite pipe, 14774 Абри's island camp and its"
                   " zone, 14775 Абри, 14777 Blackwater, 15288 Liberty by Абри, 15808 the hangar across the river"
                   " from Абу-Хамед, 15809 Абу-Хамед, 15811 Liberty by Абу-Хамед, 16054 and 16055 Донгола's camp's"
                   " zone, 16055 Донгола and its camp, 16064 Абу-Хамед's camp across the river and its zone; the"
-                  " far banks' squares and letters in the zones' tiles (13753, 14774, 16054, 16055, 16064)",
+                  " far banks' squares and letters in the zones' tiles (13753, 14774, 16054, 16055, 16064); by"
+                  " Донгола its cut's 16055 and 16311 (the frame of 5878,2015), «Хогвартс» 15801, «Врачи без"
+                  " границ» 16057, Delta Force 16314",
                   sorted(real["out"]),
                   sorted(M.tile_path(n) for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15288,
-                                                  15808, 15809, 15811, 16054, 16055, 16064)))
-            check("no square is left on the sixty-seven cells", {c: real["after_sq"].at(*c) for c in plan.cells},
+                                                  15801, 15808, 15809, 15811, 16054, 16055, 16057, 16064,
+                                                  16311, 16314)))
+            check("no square is left on the eighty-four cells", {c: real["after_sq"].at(*c) for c in plan.cells},
                   {c: None for c in plan.cells})
             around = sorted({(x + dx, y + dy) for x, y in plan.cells for dx in range(-3, 4) for dy in range(-3, 4)}
                             - set(plan.cells))
@@ -852,12 +892,13 @@ try:
                           (5969, 1733): ("tan",), (5971, 1731): ("tan",), (5968, 1727): ("green",),
                           (5969, 1727): ("green",), (5971, 1727): ("black", "orange"), (5970, 1728): ("red",),
                           (5876, 2011): ("green",), (5877, 2012): ("green",),
-                          (5876, 2013): ("green",), (6183, 1975): ("green",), (6182, 1976): ("green",),
-                          (5876, 2004): ("green",), (5877, 2004): ("green",)}
+                          (6183, 1975): ("green",), (6182, 1976): ("green",),
+                          (5877, 2004): ("green",)}
             check("  ..among them the owner's neighbours named in the research: the masters' camp 95, arena 78,"
                   " the black market 102, «Генри Мл.» 43, the crates 108, the old market; around the airfield"
-                  " the quarter 36, the dump 100's hatch and the arena 59; Донгола's 96, 97 and 455 and the green"
-                  " pair on its bank by the island (5876/5877,2004); Абу-Хамед's 127 and 126 (the digs and the"
+                  " the quarter 36, the dump 100's hatch and the arena 59; Донгола's 96 and 97 and the fallen"
+                  " satellite's green (5877,2004; the craftsmen 455 beside them and the monument's green on"
+                  " 5876,2004 go since Донгола's cut of 2026-10-13); Абу-Хамед's 127 and 126 (the digs and the"
                   " ФСЦ's bases across the river go since 2026-10-13)",
                   {c: (real["after_sq"].at(*c) or (0, 0, None))[2] for c in KEPT_HALFA}, KEPT_HALFA)
             KEPT_ABRI = {(5860, 1835): ("green",), (5861, 1835): ("green",), (5862, 1835): ("green",),
@@ -879,8 +920,8 @@ try:
             check("only blocks with a pixel painted change; every other block of every tile keeps its"
                   " coefficients (%d changed)" % count,
                   (stray, count > 0),
-                  ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15288, 15808, 15809,
-                                    15811, 16054, 16055, 16064)}, True))
+                  ({n: [] for n in (13753, 13754, 14010, 14011, 14531, 14774, 14775, 14777, 15288, 15801, 15808,
+                                    15809, 15811, 16054, 16055, 16057, 16064, 16311, 16314)}, True))
             most, share = moved(real, every)
             check("  ..and a pixel not painted in such a block moves by its rounding: %d at most, %.0f%% of those"
                   " that move by 2 or less" % (most, 100 * share), (most <= 16, share >= 0.9), (True, True))
@@ -911,13 +952,14 @@ try:
             # the island's two lines by Донгола run over the river's own dark
             # strips and the banks' grain: under half there
             loose = {("Частный остров / Господина ПэЖэ", 16055)}
-            check("the three «Лагерь» of the camps across the river and the letters across the river"
-                  " are gone: the steps of brightness in their boxes after are under two fifths of before (%s)"
+            check("the three «Лагерь» of the camps across the river, the letters across the river and the"
+                  " three «База …» by Донгола are gone: the steps of brightness in their boxes after are under two fifths of before (%s)"
                   % ", ".join("%s %d: %d -> %d" % (w, k, b, a) for (w, k), (b, a) in sorted(camps.items())),
                   {k: a < (0.5 if k in loose else 0.4) * b for k, (b, a) in camps.items()},
                   {k: True for k in [("Лагерь", 13753), ("Лагерь", 14774), ("Лагерь", 16055), ("Поселок", 13753),
                                      ("Поселок", 14774), ("Поселок", 16054),
-                                     ("Частный остров / Господина ПэЖэ", 16055)]})
+                                     ("Частный остров / Господина ПэЖэ", 16055), ("База Хогвартс", 15801),
+                                     ("База Врачи без границ", 16057), ("База Delta Force", 16314)]})
             def own_ground(rr, c):
                 """The share of the ground round a square (a band four pixels
                 wide outside its frame, after) of the square's own colours."""

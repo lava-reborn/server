@@ -78,10 +78,20 @@ log = logging.getLogger("lava")
 # the slave traders 8-10 (88) and the flayers 10-12 (92), fifteen cells
 # apart, by the same rule: twenty-five from them is the town's desert, the
 # fields, the totem, Зубери's digs, the oasis of Карло Меони and the roads to
-# the works; the two towns' rings never meet.
+# the works; the two towns' rings never meet. Донгола's two (the owner's «и
+# потом сделай донголу тоже», 2026-10-13), the ДСР 12-14 (93) and the
+# Peacekeepers 14-16 (98), forty-five cells apart, by the same rule: the road to
+# the mines and the prison, the oasis «Аль-Захаб», the warehouses, the cells
+# the map names «Засада» (5905-5913 by 2001-2006, wasteland since). Its ring
+# reaches over the Nile to the west, where nobody walks: south of the
+# station the owner's wall stands on the bank, and by the pier it is closed
+# (data/terrain_verified.json), so an ambush, met only on a cell a player
+# walks onto, is never met across the river (server/test_dongola_world.py
+# holds that once, by a walk from the station). It never meets Абри's.
 REGIONS = (
     {"town": "Вади-Хальфа", "camps": (80, 81, 84, 85), "reach": 25},
     {"town": "Абри", "camps": (88, 92), "reach": 25},
+    {"town": "Донгола", "camps": (93, 98), "reach": 25},
 )
 
 # One roll per cell entered on the map: about one encounter in thirty cells

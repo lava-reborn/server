@@ -192,7 +192,9 @@ PRICHAL, PRICHAL_CELL = 41, (5965, 1728)
 PORT_AB, PORT_AB_CELL = 187, (5860, 1835)
 PIER_DN, PIER_DN_CELL = 445, (5873, 2012)
 # The towns' banks: the places that stay, their neighbours across the water
-# among them (the research of 2026-10-13, FIND.md).
+# among them (the research of 2026-10-13, FIND.md). Донгола's camps' second
+# cells hold their chiefs' places 91 and 99, and its clothing market 469 is
+# cut, since the owner's Донгола of the same day (server/test_dongola_cut.py).
 BANKS = {
     "Вади-Хальфа": {(5970, 1724): 80, (5971, 1723): 82, (5978, 1727): 81, (5979, 1728): 83,
                     (5974, 1739): 84, (5975, 1738): 86, (5993, 1721): 85, (5992, 1720): 87,
@@ -203,9 +205,9 @@ BANKS = {
              (5885, 1836): 220, PORT_AB_CELL: PORT_AB, (5861, 1835): 188, (5862, 1835): 255,
              (5860, 1838): 191, (5861, 1844): 285, (5862, 1846): 189},
     "Керма": {(5861, 1946): 298},
-    "Донгола": {(5882, 2036): 93, (5883, 2035): 93, (5920, 2010): 98, (5921, 2011): 98,
+    "Донгола": {(5882, 2036): 91, (5883, 2035): 93, (5920, 2010): 99, (5921, 2011): 98,
                 (5878, 2011): 73, (5876, 2011): 96, (5877, 2012): 97, PIER_DN_CELL: PIER_DN,
-                (5873, 2009): 105, (5878, 2013): 469},
+                (5873, 2009): 105},
     "Абу-Хамед": {(6274, 1952): 168, (6273, 1953): 263, (6183, 1977): 131, (6183, 1975): 127,
                   (6182, 1977): 446, (6183, 1974): 467, (6182, 1976): 126, (6126, 1980): 194,
                   (6154, 1963): 118},
@@ -412,10 +414,14 @@ try:
             or world.belongs_here(t, MT[t][1], world.entity_root(t, MT[t][0]), world.location(i).war, i)]),
           (108, sorted([474, 475, 476, 979, 980, 981, 985, 1206, 545, 546, 553, 554, 561, 562, 569, 570, 571, 572,
                         573, 574, 925] + list(range(994, 1002))), []))
+    # Delta Force's 5308 stood in its clan base's files 380, 381 and 388 too, the
+    # banker 4017 in «Врачи без границ»'s 1195 and the clan upgrader 4581 in
+    # Delta Force's garage 959, until the owner's cut of Донгола (2026-10-13)
+    # took those bases out of the game.
     ELSEWHERE = {114: [44], 257: [1007], 436: [1007], 437: [1007], 438: [1007],
                  2172: [609, 656, 706, 735, 926, 928, 932, 1044], 2393: [766], 2394: [766], 2395: [766],
-                 2396: [766], 2403: [766], 4017: [1010, 1186, 1187, 1191, 1192, 1193, 1194, 1195],
-                 4581: [929, 930, 933, 959], 5308: [380, 381, 388], 4427: [118]}
+                 2396: [766], 2403: [766], 4017: [1010, 1186, 1187, 1191, 1192, 1193, 1194, 1201],
+                 4581: [929, 930, 933], 4427: [118]}
     rooms_of = {}
 
     def stands(t, where):
@@ -431,7 +437,8 @@ try:
                  for t in people}
     check("every one of them stood in the cut places alone, but the cows (Вади-Хальфа's pasture 44), the tombs' waves"
           " (Донгола's dungeon 1007), the band leader, Абри's ore refinery's people (its cash machine 2402 held out"
-          " of it), the bankers, the clan upgrader, Delta Force and the warehouse's clan flag (the base 118)",
+          " of it), the bankers, the clan upgrader and the warehouse's clan flag (the base 118); Delta Force's"
+          " stands nowhere since Донгола's cut took its base",
           {t: w[:8] for t, w in elsewhere.items() if w}, ELSEWHERE)
     alone = sorted(t for t in people if not elsewhere[t])
     givers = {t for t in people if quests.given_by(t) or quests.taken_by(t)}
@@ -536,10 +543,11 @@ try:
           {c: boxed(8 * c[0] + 4, 8 * c[1] + 4) for c in CROSSES}, {c: [] for c in CROSSES})
     named_no_place = sorted(c for c in HIDDEN if c not in ON_CELLS)
     check("every hidden name with no place under it is decided: its square goes, or the picture has none there"
-          " ('bare', 34)",
-          ([c for c in named_no_place if c not in plan.cells and c not in plan.bare], len(plan.bare),
-           sorted(c for c, why in plan.bare.items() if why.startswith(CUT_WHY)) == sorted(plan.bare)),
-          ([], 34, True))
+          " ('bare', 34; Донгола's cut of the same day adds four of its own by the town)",
+          ([c for c in named_no_place if c not in plan.cells and c not in plan.bare],
+           len([c for c, why in plan.bare.items() if why.startswith(CUT_WHY)]),
+           sorted(c for c, why in plan.bare.items() if not why.startswith(CUT_WHY))),
+          ([], 34, [(5873, 2008), (5876, 2007), (5885, 2035), (5912, 1993)]))
     check("  ..and no 'bare' cell is a square's", sorted(set(plan.bare) & (set(SQ_PLACES) | set(SQ_NAMES))), [])
     check("the tiles a change can touch take in 15808, the white square of «Ангар в джунглях»",
           15808 in plan.tiles(), True)

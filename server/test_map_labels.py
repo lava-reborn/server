@@ -62,9 +62,11 @@ for x, y, was, new in edits:
 check("nothing else moved: the file less the hidden rows, the retexted ones retexted in place",
       out, want)
 # And the slums of Абри lose theirs, a line of their name (the owner's Абри,
-# 2026-10-12: a name of the map knows no season; server/test_abri_cut.py).
+# 2026-10-12: a name of the map knows no season; server/test_abri_cut.py), and
+# Донгола's pier its own (the owner's Донгола, 2026-10-13;
+# server/test_dongola_cut.py).
 check("the other New Year trees, inside other places' names, stay",
-      out.count("Новогодняя Елка".encode()), raw.count("Новогодняя Елка".encode()) - 2)
+      out.count("Новогодняя Елка".encode()), raw.count("Новогодняя Елка".encode()) - 3)
 
 # The owner's cut of (P) (2026-09-30): the premium masters' camps 124, 125 and
 # 130 are off the map (data/retired.json), and no name over a cell promises a
@@ -98,8 +100,9 @@ check("  ..while the file had ten",
            if PREMIUM_WORD.search(M.html.unescape(m.group(0).decode("utf-8")))]), 10)
 check("  ..the factories keep their calibres, Вади-Хальфа's as its plant makes them",
       texts_at(out, 6017, 1726), ["Производство боеприпасов Вади Хальфы:<br>12-й калибр<br>СП-10"])
-check("  ..Донгола's quarter its quests and the ingots, not the premium bar",
-      texts_at(out, 5877, 2011), ["Жилой квартал Донголы:<BR>Задания.<BR>Обмен золотых слитков"])
+check("  ..Донгола's quarter its quests, not the premium bar (nor the ingots' exchange since the owner's"
+      " Донгола of 2026-10-13: Мортимер exchanges them in the new market)",
+      texts_at(out, 5877, 2011), ["Жилой квартал Донголы:<BR>Задания."])
 
 # The owner's cut of Вади-Хальфа (2026-10-09, «убери из хальфы следующие
 # локации: торговцы одеждой, улучшение сетов 6-8, ремесленники по одежде 6, 7
@@ -146,11 +149,12 @@ check("  ..so no name around Вади-Хальфа offers any of it, where the f
 # Абри's craftsmen's names went with the cut of Абри (2026-10-12,
 # server/test_abri_cut.py), its clothing market's with the owner's «и ещё
 # убери локацию торговцы одеждой в Абри» the same day
-# (server/test_river_camps_cut.py).
-check("  ..while Донгола and Абу-Хамед keep their clothing markets' names and their craftsmen's",
+# (server/test_river_camps_cut.py), and Донгола's with the cut of Донгола
+# (2026-10-13, server/test_dongola_cut.py).
+check("  ..while Абу-Хамед keeps its clothing market's name and its craftsmen's (Донгола's went with its"
+      " cut of 2026-10-13)",
       [texts_at(out, *c) for c in ((5878, 2013), (6183, 1974), (5876, 2013), (6184, 1973))],
-      [["Торговцы одеждой"]] * 2 + [["Ремесленники по одежде 14 уровень"],
-                                    ["Ремесленники по одежде 17 уровень"]])
+      [[], ["Торговцы одеждой"], [], ["Ремесленники по одежде 17 уровень"]])
 with open(os.path.join(os.path.dirname(HERE), "data", "map_labels.json"), encoding="utf-8") as _fh:
     LABELS = json.load(_fh)["labels"]
 OLD_MARKET_CELL, PREMIUM_CAMP_CELL = (5968, 1727), (5968, 1726)
@@ -216,11 +220,11 @@ check("  ..eight of them retexted to the boss clock: the four camps and their ch
 # (5866,1836) and its airfield beside it (5865,1835) stayed too, until the
 # cut of Абри took them (2026-10-12, server/test_abri_cut.py), and so did the
 # bases НИЛ-2..4 across the river, until the cut of everything across it
-# (2026-10-13, server/test_river_all_cut.py).
+# (2026-10-13, server/test_river_all_cut.py), and Донгола's airfield (5879,2011),
+# until the cut of Донгола the same day (server/test_dongola_cut.py).
 print("the cut of Вади-Хальфа's ФСЦ")
 FSC_CUT = {FSC_AIRFIELD_CELL: "Аэроплощадка ФСЦ", (5942, 1723): 'База ФСЦ "НИЛ-1"'}
-FSC_KEPT = {(6185, 1977): "Аэроплощадка ФСЦ",
-            (5879, 2011): "Аэроплощадка ФСЦ", (5863, 1946): "Аэроплощадка ФСЦ",
+FSC_KEPT = {(6185, 1977): "Аэроплощадка ФСЦ", (5863, 1946): "Аэроплощадка ФСЦ",
             (6032, 1951): "Аэроплощадка ФСЦ", (6017, 2086): "Аэроплощадка ФСЦ"}
 FSC_FAR = {(5849, 1851): 'База ФСЦ "НИЛ-2"', (5863, 2002): 'База ФСЦ "НИЛ-3"',
            (6167, 1989): 'База ФСЦ "НИЛ-4"'}
@@ -234,10 +238,10 @@ check("  ..and the bases НИЛ-2..4 across the river, which kept theirs, are hi
       ({c: texts_at(raw, *c) for c in FSC_FAR}, {c: texts_at(out, *c) for c in FSC_FAR}),
       ({c: [t] for c, t in FSC_FAR.items()}, {c: [] for c in FSC_FAR}))
 FSC_WORD = re.compile(r"ФСЦ|ЦСЦ")
-check("  ..so of the file's twelve names of the ФСЦ the map shows five (Абри's air base and"
-      " airfield gone since 2026-10-12, the bases НИЛ-2..4 since 2026-10-13)",
+check("  ..so of the file's twelve names of the ФСЦ the map shows four (Абри's air base and"
+      " airfield gone since 2026-10-12, the bases НИЛ-2..4 and Донгола's airfield since 2026-10-13)",
       (len(rows_in(raw, (0, 99999, 0, 99999), FSC_WORD)),
-       len(rows_in(out, (0, 99999, 0, 99999), FSC_WORD))), (12, 5))
+       len(rows_in(out, (0, 99999, 0, 99999), FSC_WORD))), (12, 4))
 check("the ФСЦ cut's own edits are its two cells and no other",
       sorted((e["x"], e["y"]) for e in LABELS
              if e.get("why", "").startswith("The owner's cut of Вади-Хальфа's ФСЦ, 2026-10-10")),
@@ -255,10 +259,11 @@ PIER_DN = (5873, 2012)
 check("«Лагерь за рекой» has no cell of the map any more, where the file had three",
       ({c: texts_at(out, *c) for c in RIVER_HIDDEN}, {c: texts_at(raw, *c) for c in RIVER_HIDDEN}),
       ({c: [] for c in RIVER_HIDDEN}, {c: ["Лагерь за рекой"] for c in RIVER_HIDDEN}))
-check("Донгола's pier drops «Отправка на фронт» and keeps its quests and its tree",
+check("Донгола's pier drops «Отправка на фронт» and keeps its quests (its New Year tree went too, with"
+      " the owner's Донгола of 2026-10-13: the row's one edit carries both)",
       (texts_at(raw, *PIER_DN), texts_at(out, *PIER_DN)),
       (["Причал Донголы:<BR>Задания.<br>Отправка на фронт.<br>Новогодняя Елка"],
-       ["Причал Донголы:<BR>Задания.<br>Новогодняя Елка"]))
+       ["Причал Донголы:<BR>Задания."]))
 check("  ..the only name of the file that offered the front",
       (rows_in(raw, (0, 99999, 0, 99999), re.compile("фронт", re.I)),
        rows_in(out, (0, 99999, 0, 99999), re.compile("фронт", re.I))),
@@ -275,8 +280,9 @@ check("the river cut's own edits are those four cells and no other (Абри's c
 # comes says the owner's hours, written out for bosses.DEFAULT_HOURS; the
 # camps whose bosses leave gold (data/loot_manual.json) say so -- Абри's two
 # since the owner's «Там голду дают 6 (работорговцы) и 8 (живодеры)»
-# (2026-10-12) --, the far camps, whose bosses leave none, name the fight with
-# the chief. A name with no boss
+# (2026-10-12), Донгола's two since the owner's Донгола (2026-10-13, 10 and 12
+# ounces) --, the far camp, whose bosses leave none, names the fight with the
+# chief. A name with no boss
 # of the clock behind it stays the original's, and is listed here; the staffs
 # and the dig 433 promised what nothing on the server keeps, and lose those
 # lines (below). The warehouses' «Хозяин склада» keeps his own hour since
@@ -288,12 +294,14 @@ import bosses  # noqa: E402
 check("the labels below were written for these hours: change them together",
       (bosses.parse_hours(bosses.DEFAULT_HOURS), bosses.DEFAULT_STAY), ([840, 1080, 1320], 60.0))
 GOLD_CAMPS = [(5970, 1724), (5978, 1727), (5974, 1739), (5993, 1721),           # 80, 81, 84, 85
-              (5880, 1844), (5868, 1854)]                                       # Абри: 88, 92
+              (5880, 1844), (5868, 1854),                                       # Абри: 88, 92
+              (5883, 2035), (5921, 2011)]                                       # Донгола: 93, 98
 GOLD_CHIEFS = [(5971, 1723), (5979, 1728), (5975, 1738), (5992, 1720),          # 82, 83, 86, 87
-               (5881, 1843), (5869, 1855)]                                      # Абри: 89, 90
+               (5881, 1843), (5869, 1855),                                      # Абри: 89, 90
+               (5882, 2036), (5920, 2010)]                                      # Донгола: 91, 99
 VALLEY_CAMP = (6272, 1840)                                     # Лагерь бандитов 34, Лидер 2103
-FAR_CAMPS = [(5883, 2035), (5921, 2011), (6273, 1953)]         # ДСР 93, Миротворцы, 263
-FAR_CHIEFS = [(5882, 2036), (5920, 2010), (6274, 1952)]        # their chiefs' places, 168
+FAR_CAMPS = [(6273, 1953)]                                     # База Северного Альянса 263
+FAR_CHIEFS = [(6274, 1952)]                                    # its chief's place, 168
 HALFA_WAREHOUSES = [(5998, 1697), (6002, 1738), (5957, 1743)]                   # 111, 110, 109
 WAREHOUSES = HALFA_WAREHOUSES + [(5913, 1976), (5931, 2031), (5883, 2060), (6183, 1976)]
 MKS_BASE = (6036, 2019)                                        # База МКС 257, 2251
@@ -317,18 +325,19 @@ def one_each(cells):
     return {c: [True] for c in cells}
 
 
-check("the four camps of Вади-Хальфа, Абри's two and the valley's Лагерь бандитов, whose bosses"
-      " leave gold, name the gold and the owner's hours",
+check("the four camps of Вади-Хальфа, Абри's two, Донгола's two and the valley's Лагерь бандитов, whose"
+      " bosses leave gold, name the gold and the owner's hours",
       say(GOLD_CAMPS + [VALLEY_CAMP], "Сражение за золото в 14:00, 18:00 и 22:00"),
       one_each(GOLD_CAMPS + [VALLEY_CAMP]))
 check("  ..and their chiefs' places say who comes with it",
       say(GOLD_CHIEFS, "В 14:00, 18:00 и 22:00 часто кто-то приезжает с золотом."),
       one_each(GOLD_CHIEFS))
-check("the far camps, whose bosses leave neither gold nor blueprints, name the fight with the chief",
+check("the far camp, the Северный Альянс's base, whose bosses leave neither gold nor blueprints, names the"
+      " fight with the chief",
       say(FAR_CAMPS, "Сражение с главарем в 14:00, 18:00 и 22:00"), one_each(FAR_CAMPS))
-check("  ..their chiefs' cells the hours", say(FAR_CHIEFS, "В 14:00, 18:00 и 22:00 часто кто-то"
+check("  ..its chief's cell the hours", say(FAR_CHIEFS, "В 14:00, 18:00 и 22:00 часто кто-то"
                                                            " приезжает.<br>"), one_each(FAR_CHIEFS))
-check("  ..and none of them promises gold",
+check("  ..and neither promises gold",
       [c for c in FAR_CAMPS + FAR_CHIEFS for t in texts_at(out, *c) if "золот" in t], [])
 check("the 24 villages' headmen and the МКС base's stock chief come at the owner's hours",
       (say(VILLAGES, "Староста присутствует в 14:00, 18:00 и 22:00"),

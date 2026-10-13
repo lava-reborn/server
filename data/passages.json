@@ -377,6 +377,197 @@
     "target_loc_id": 1030,
     "why": "RECOVERED. Abri_Plumbum_Mine_lvl2, the bottom of the mine (the client has no third tier for Абри): its one door, a, 11 cells in two galleries (8-52, 20-112), has W_Pointer_Up beside each gallery (11,108) and (50,19): up, to the first tier 1030. exits.json guessed the same by file name, at low. The owner's Абри, 2026-10-12: the mines' tiers open (data/build_questgen_production.py, the town АБ)."
    }
+  },
+  "155": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 616,
+    "why": "DESIGNED target, RECOVERED door. DN_mine_entrance, «Пустошь: Шахта» (5895,2026), the first of the three entrances the map and the wiki give «Шахты Донголы» (5895, 5896, 5900 × 2026; data/settlements_verified.json). Its one door, b (48-50, 27-29), is under a drawn door, DN_Backdoor03 (52,25); no file of the mine carries a sign saying where. Down to the first tier's file DN_mine_lvl2 (616, «Шахта: Первый ярус.»), whose door a leads back up -- the layout of Вади-Хальфа's twin mine (2026-10-09, the owner's: 154 - 617 - 1016 - 1024, 158 - 613 - 1024, 160 - 1012 - the tunnels - 1024), file for file: here 155 - 616 - 1015 - 1023, 157 - 614 - 1023, 161 - 1013 - the tunnels - 1023. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+   }
+  },
+  "157": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 614,
+    "why": "DESIGNED target, RECOVERED door. DN_mine_entrance2 (5896,2026), the second entrance: its one door, b (10-15, 95-101), with no sign and no door drawn over it, as Вади-Хальфа's 158. Down to the first tier's file DN_mine_lvl1 (614, «Шахта: Первый ярус») (see 155). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+   }
+  },
+  "161": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1013,
+    "why": "DESIGNED target, RECOVERED door. DN_mine_entrance3 (5900,2026), the third entrance: its one door, b (14-17, 96-98), under a drawn door, DN_Backdoor04 (14,91), as Вади-Хальфа's 160. Down to the second tier's east end, DN_mine_lvl4 (1013, «Шахта: Второй ярус»), which has no other door: a shaft straight down, the east one, as 5900 is the easternmost of the three (see 155). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+   }
+  },
+  "614": {
+   "a": {
+    "confidence": "medium",
+    "own_cell": true,
+    "source": "designed",
+    "target_loc_id": 157,
+    "why": "DESIGNED. DN_mine_lvl1, «Шахта: Первый ярус»: door a (north-east, 51-52, 21-23), up, back to the second entrance, 157, arrived at on its own cell (own_cell, travel.plan_exit: the mine is one, entered by three entrances), as Вади-Хальфа's 613 (see 155). data/exits.json guessed 616 (low): not taken. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1023,
+    "why": "DESIGNED. DN_mine_lvl1: door b (south-west, 6-10, 109-114), down, to the second tier's middle file, DN_mine_lvl6 (1023, «Шахта: Второй ярус»), whose door a comes up in the same corner -- the pairing data/exits.json guessed by file name (low), taken."
+   }
+  },
+  "616": {
+   "a": {
+    "confidence": "medium",
+    "own_cell": true,
+    "source": "designed",
+    "target_loc_id": 155,
+    "why": "DESIGNED. DN_mine_lvl2, «Шахта: Первый ярус.»: door a (south-west, 8-10, 114-116), up, back to the first entrance, 155, arrived at on its own cell (own_cell, travel.plan_exit), as Вади-Хальфа's 617 (see 155). data/exits.json guessed 1214 (low): not taken. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1015,
+    "why": "DESIGNED. DN_mine_lvl2: door b (north-east, 50-52, 20-22), down, to the second tier's west end, DN_mine_lvl5 (1015, «Шахта: Второй ярус»), whose door a comes up in the same corner, as Вади-Хальфа's 617 to 1016. data/exits.json guessed 614 (low): not taken."
+   }
+  },
+  "1013": {
+   "a": {
+    "confidence": "medium",
+    "own_cell": true,
+    "source": "designed",
+    "target_loc_id": 161,
+    "why": "DESIGNED. DN_mine_lvl4, «Шахта: Второй ярус»: its one door, a (north-east, 51-52, 21-23), up, to the third entrance, 161, arrived at on its own cell (own_cell, travel.plan_exit); its west side joins it to the rest of the tier ('sides'). data/exits.json guessed 1015 (low): not taken. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+   }
+  },
+  "1015": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 616,
+    "why": "DESIGNED. DN_mine_lvl5, «Шахта: Второй ярус»: its one door, a (north-east, 51-52, 21-23), up, to the first tier's file 616 it is entered from; its east side joins it to the rest of the tier ('sides'). data/exits.json guessed 1013 (low): not taken."
+   }
+  },
+  "1023": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 614,
+    "why": "DESIGNED. DN_mine_lvl6, «Шахта: Второй ярус»: door a (south-west, 8-12, 106-114), up, to the first tier, 614 -- the pairing data/exits.json guessed (low), taken."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1214,
+    "why": "DESIGNED. DN_mine_lvl6: door b (north-east, 45-46, 19-21), down, to the third tier, DN_mine_lvl3 (1214, «Шахта: Третий ярус.»: eleven «[17] Шахтер<Br>Миротворцы», 841), whose one door comes up in the same corner. data/exits.json guessed 1015 (low): not taken."
+   }
+  },
+  "1214": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1023,
+    "why": "DESIGNED. DN_mine_lvl3, «Шахта: Третий ярус.», the bottom of the mine: its one door, a (north-east, 50-52, 20-22), up, to the second tier's middle file, 1023. data/exits.json guessed 616 (low): not taken."
+   }
+  },
+  "597": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1007,
+    "why": "DESIGNED target, RECOVERED door. Dongola_t_lvl01, «Подземелье: Первый уровень»: door b (south, 37-40, 80-83) has a ladder drawn on it (s_ladder, 39,82): down, to the second level, Dongola_t_lvl02 (1007, «Подземелье: Второй уровень»), whose one door a, under its own ladder (36,82), data/exits.json leads back here at medium. exits.json guessed 1007 for this door too, at low. Its door a (20-22, 56-58), with no sign, stays the guess exits.json rates low, which the server does not follow: where it led is not known, and no way from the map into the dungeon is recorded. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."
+   }
+  },
+  "663": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1031,
+    "why": "RECOVERED. DN_Copper_Mine_Enter, the control room of Донгола's медная шахта («Комната управления»: the sorter 1369 and «Выход из шахты» 1342): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1031 «Медная Шахта 1» (DN_Copper_Mine_lvl1), as Абри's control rooms (660-662) and Вади-Хальфа's (657). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
+  },
+  "664": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1032,
+    "why": "RECOVERED. DN_Nitre_Mine_Enter, the control room of Донгола's выработка селитры («Комната управления»: the sorter 1365 and «Выход из карьера» 1338): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1032 «Выработка селитры 1» (DN_Nitre_Mine_lvl1), as Абри's control rooms (660-662) and Вади-Хальфа's (657). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
+  },
+  "665": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1033,
+    "why": "RECOVERED. DN_Plumbum_Mine_Enter, the control room of Донгола's свинцовая шахта («Комната управления»: the sorter 1361 and «Выход из шахты» 1334): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1033 «Свинцовая шахта 1» (DN_Plumbum_Mine_lvl1), as Абри's control rooms (660-662) and Вади-Хальфа's (657). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
+  },
+  "1031": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 663,
+    "why": "RECOVERED. DN_Copper_Mine_lvl1: door a, the small one (9-11, 30-32), has W_Pointer_Exit beside it (8,31): out, back to the control room 663. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1224, at low; the signs settle it, as in Абри's mines (1028-1030). The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1224,
+    "why": "RECOVERED. DN_Copper_Mine_lvl1: door b, 13 cells in two galleries, south-west and north-east (9-52, 21-109), each gallery with W_Pointer_Down beside it (12,105) and (50,21): down, to the second tier, 1224 «Медная Шахта 2» (DN_Copper_Mine_lvl2). exits.json sent it back up to 663, at low. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
+  },
+  "1032": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 664,
+    "why": "RECOVERED. DN_Nitre_Mine_lvl1: door a, the small one (6-7, 29-32), has W_Pointer_Exit beside it (5,32): out, back to the control room 664. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1225, at low; the signs settle it, as in Абри's mines (1028-1030). The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1225,
+    "why": "RECOVERED. DN_Nitre_Mine_lvl1: door b, 14 cells in two galleries, south-west and north-east (8-52, 21-115), each gallery with W_Pointer_Down beside it (11,110) and (50,20): down, to the second tier, 1225 «Выработка селитры 2» (DN_Nitre_Mine_lvl2). exits.json sent it back up to 664, at low. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
+  },
+  "1033": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 665,
+    "why": "RECOVERED. DN_Plumbum_Mine_lvl1: door a, the small one (6-7, 29-30), has W_Pointer_Exit beside it (11,31): out, back to the control room 665. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1226, at low; the signs settle it, as in Абри's mines (1028-1030). The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1226,
+    "why": "RECOVERED. DN_Plumbum_Mine_lvl1: door b, 12 cells in two galleries, south-west and north-east (9-52, 21-114), each gallery with W_Pointer_Down beside it (12,111) and (54,24): down, to the second tier, 1226 «Свинцовая шахта 2» (DN_Plumbum_Mine_lvl2). exits.json sent it back up to 665, at low. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
+  },
+  "1224": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1031,
+    "why": "RECOVERED. DN_Copper_Mine_lvl2, the bottom of the mine (the client has no third tier for Донгола): its one door, a, 10 cells in two galleries (7-52, 21-106), has W_Pointer_Up beside each gallery (12,103) and (51,20): up, to the first tier 1031. exits.json guessed the same by file name, at low. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
+  },
+  "1225": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1032,
+    "why": "RECOVERED. DN_Nitre_Mine_lvl2, the bottom of the mine (the client has no third tier for Донгола): its one door, a, 10 cells in two galleries (7-52, 21-106), has W_Pointer_Up beside each gallery (12,102) and (50,19): up, to the first tier 1032. exits.json guessed the same by file name, at low. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
+  },
+  "1226": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1033,
+    "why": "RECOVERED. DN_Plumbum_Mine_lvl2, the bottom of the mine (the client has no third tier for Донгола): its one door, a, 11 cells in two galleries (7-52, 20-114), has W_Pointer_Up beside each gallery (16,112) and (50,19): up, to the first tier 1033. exits.json guessed the same by file name, at low. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
+   }
   }
  },
  "sides": {
@@ -528,6 +719,172 @@
     "target_loc_id": 193,
     "why": "DESIGNED topology on the files' own sides: back from the Амазонка's 192 over its south edge to Ведич's copy in 193, whose «С меня хватит!» (474) leads home to the market."
    }
+  },
+  "622": {
+   "W": {
+    "target_loc_id": 618,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's prison (644-648). The prison of Донгола, m11 (the uprising under the yard 159, 5903,1996, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 622 (Prison_3) on all four; 618 (Prison_1, titled «Северный блок», the western gate's), east only; 619 (Prison_2, titled «Восточный блок», the southern gate's), north only; the northern cells 620 (Prison_4), south only; the eastern cells 621 (Prison_5), west only. So each opening of the centre leads to the file whose one opening faces it, and the guards' blocks lie west and south of it, the cells north and east; 618 signs its one opening W_Pointer_East (31,71), by a ladder down from the yard (32,64). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the centre's west, into the western gate's block 618."
+   },
+   "S": {
+    "target_loc_id": 619,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's prison (644-648). The prison of Донгола, m11 (the uprising under the yard 159, 5903,1996, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 622 (Prison_3) on all four; 618 (Prison_1, titled «Северный блок», the western gate's), east only; 619 (Prison_2, titled «Восточный блок», the southern gate's), north only; the northern cells 620 (Prison_4), south only; the eastern cells 621 (Prison_5), west only. So each opening of the centre leads to the file whose one opening faces it, and the guards' blocks lie west and south of it, the cells north and east; 618 signs its one opening W_Pointer_East (31,71), by a ladder down from the yard (32,64). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the centre's south, into the southern gate's block 619."
+   },
+   "N": {
+    "target_loc_id": 620,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's prison (644-648). The prison of Донгола, m11 (the uprising under the yard 159, 5903,1996, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 622 (Prison_3) on all four; 618 (Prison_1, titled «Северный блок», the western gate's), east only; 619 (Prison_2, titled «Восточный блок», the southern gate's), north only; the northern cells 620 (Prison_4), south only; the eastern cells 621 (Prison_5), west only. So each opening of the centre leads to the file whose one opening faces it, and the guards' blocks lie west and south of it, the cells north and east; 618 signs its one opening W_Pointer_East (31,71), by a ladder down from the yard (32,64). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the centre's north, into the northern cells 620."
+   },
+   "E": {
+    "target_loc_id": 621,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's prison (644-648). The prison of Донгола, m11 (the uprising under the yard 159, 5903,1996, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 622 (Prison_3) on all four; 618 (Prison_1, titled «Северный блок», the western gate's), east only; 619 (Prison_2, titled «Восточный блок», the southern gate's), north only; the northern cells 620 (Prison_4), south only; the eastern cells 621 (Prison_5), west only. So each opening of the centre leads to the file whose one opening faces it, and the guards' blocks lie west and south of it, the cells north and east; 618 signs its one opening W_Pointer_East (31,71), by a ladder down from the yard (32,64). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the centre's east, into the eastern cells 621."
+   }
+  },
+  "618": {
+   "E": {
+    "target_loc_id": 622,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's prison (644-648). The prison of Донгола, m11 (the uprising under the yard 159, 5903,1996, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 622 (Prison_3) on all four; 618 (Prison_1, titled «Северный блок», the western gate's), east only; 619 (Prison_2, titled «Восточный блок», the southern gate's), north only; the northern cells 620 (Prison_4), south only; the eastern cells 621 (Prison_5), west only. So each opening of the centre leads to the file whose one opening faces it, and the guards' blocks lie west and south of it, the cells north and east; 618 signs its one opening W_Pointer_East (31,71), by a ladder down from the yard (32,64). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the western block's one opening, east, into the centre."
+   }
+  },
+  "619": {
+   "N": {
+    "target_loc_id": 622,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's prison (644-648). The prison of Донгола, m11 (the uprising under the yard 159, 5903,1996, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 622 (Prison_3) on all four; 618 (Prison_1, titled «Северный блок», the western gate's), east only; 619 (Prison_2, titled «Восточный блок», the southern gate's), north only; the northern cells 620 (Prison_4), south only; the eastern cells 621 (Prison_5), west only. So each opening of the centre leads to the file whose one opening faces it, and the guards' blocks lie west and south of it, the cells north and east; 618 signs its one opening W_Pointer_East (31,71), by a ladder down from the yard (32,64). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the southern block's one opening, north, into the centre."
+   }
+  },
+  "620": {
+   "S": {
+    "target_loc_id": 622,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's prison (644-648). The prison of Донгола, m11 (the uprising under the yard 159, 5903,1996, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 622 (Prison_3) on all four; 618 (Prison_1, titled «Северный блок», the western gate's), east only; 619 (Prison_2, titled «Восточный блок», the southern gate's), north only; the northern cells 620 (Prison_4), south only; the eastern cells 621 (Prison_5), west only. So each opening of the centre leads to the file whose one opening faces it, and the guards' blocks lie west and south of it, the cells north and east; 618 signs its one opening W_Pointer_East (31,71), by a ladder down from the yard (32,64). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the northern cells' one opening, south, back to the centre."
+   }
+  },
+  "621": {
+   "W": {
+    "target_loc_id": 622,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's prison (644-648). The prison of Донгола, m11 (the uprising under the yard 159, 5903,1996, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 622 (Prison_3) on all four; 618 (Prison_1, titled «Северный блок», the western gate's), east only; 619 (Prison_2, titled «Восточный блок», the southern gate's), north only; the northern cells 620 (Prison_4), south only; the eastern cells 621 (Prison_5), west only. So each opening of the centre leads to the file whose one opening faces it, and the guards' blocks lie west and south of it, the cells north and east; 618 signs its one opening W_Pointer_East (31,71), by a ladder down from the yard (32,64). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the eastern cells' one opening, west, back to the centre."
+   }
+  },
+  "631": {
+   "N": {
+    "target_loc_id": 632,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's quarry (626-630). The quarry of Донгола, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 631 DN_Stone_Mine_C, on all four; the north pit 632 (DN_Stone_Mine_N: Олег the foreman, 983, and the healer Грегори, 138), south only; the south pit 633 (DN_Stone_Mine_S), north only; 634 (DN_Stone_Mine_E2), west only; 635 (DN_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: north, to the north pit, where the way in arrives."
+   },
+   "S": {
+    "target_loc_id": 633,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's quarry (626-630). The quarry of Донгола, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 631 DN_Stone_Mine_C, on all four; the north pit 632 (DN_Stone_Mine_N: Олег the foreman, 983, and the healer Грегори, 138), south only; the south pit 633 (DN_Stone_Mine_S), north only; 634 (DN_Stone_Mine_E2), west only; 635 (DN_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: south, to the south pit."
+   },
+   "W": {
+    "target_loc_id": 635,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's quarry (626-630). The quarry of Донгола, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 631 DN_Stone_Mine_C, on all four; the north pit 632 (DN_Stone_Mine_N: Олег the foreman, 983, and the healer Грегори, 138), south only; the south pit 633 (DN_Stone_Mine_S), north only; 634 (DN_Stone_Mine_E2), west only; 635 (DN_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: west, to DN_Stone_Mine_W2, whose one opening faces east."
+   },
+   "E": {
+    "target_loc_id": 634,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's quarry (626-630). The quarry of Донгола, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 631 DN_Stone_Mine_C, on all four; the north pit 632 (DN_Stone_Mine_N: Олег the foreman, 983, and the healer Грегори, 138), south only; the south pit 633 (DN_Stone_Mine_S), north only; 634 (DN_Stone_Mine_E2), west only; 635 (DN_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: east, to DN_Stone_Mine_E2, whose one opening faces west."
+   }
+  },
+  "632": {
+   "S": {
+    "target_loc_id": 631,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's quarry (626-630). The quarry of Донгола, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 631 DN_Stone_Mine_C, on all four; the north pit 632 (DN_Stone_Mine_N: Олег the foreman, 983, and the healer Грегори, 138), south only; the south pit 633 (DN_Stone_Mine_S), north only; 634 (DN_Stone_Mine_E2), west only; 635 (DN_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the north pit's one opening, south, back to the centre."
+   }
+  },
+  "633": {
+   "N": {
+    "target_loc_id": 631,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's quarry (626-630). The quarry of Донгола, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 631 DN_Stone_Mine_C, on all four; the north pit 632 (DN_Stone_Mine_N: Олег the foreman, 983, and the healer Грегори, 138), south only; the south pit 633 (DN_Stone_Mine_S), north only; 634 (DN_Stone_Mine_E2), west only; 635 (DN_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the south pit's one opening, north, back to the centre."
+   }
+  },
+  "634": {
+   "W": {
+    "target_loc_id": 631,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's quarry (626-630). The quarry of Донгола, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 631 DN_Stone_Mine_C, on all four; the north pit 632 (DN_Stone_Mine_N: Олег the foreman, 983, and the healer Грегори, 138), south only; the south pit 633 (DN_Stone_Mine_S), north only; 634 (DN_Stone_Mine_E2), west only; 635 (DN_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the east pit's one opening, west, back to the centre."
+   }
+  },
+  "635": {
+   "E": {
+    "target_loc_id": 631,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's quarry (626-630). The quarry of Донгола, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 631 DN_Stone_Mine_C, on all four; the north pit 632 (DN_Stone_Mine_N: Олег the foreman, 983, and the healer Грегори, 138), south only; the south pit 633 (DN_Stone_Mine_S), north only; 634 (DN_Stone_Mine_E2), west only; 635 (DN_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: the west pit's one opening, east, back to the centre."
+   }
+  },
+  "1013": {
+   "W": {
+    "target_loc_id": 1022,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_lvl4, the gallery's east end: its mouth to the west into the last tunnel, 1022, over its east edge."
+   }
+  },
+  "1015": {
+   "E": {
+    "target_loc_id": 1023,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_lvl5, the gallery's west end: its mouth to the east into 1023, over its west edge."
+   }
+  },
+  "1023": {
+   "W": {
+    "target_loc_id": 1015,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_lvl6: its west edge into 1015, the gallery's west end."
+   },
+   "E": {
+    "target_loc_id": 1020,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_lvl6: its east edge into the first tunnel, 1020."
+   }
+  },
+  "1020": {
+   "W": {
+    "target_loc_id": 1023,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_tunel1_horizont: its west edge into 1023."
+   },
+   "E": {
+    "target_loc_id": 1021,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_tunel1_horizont: its east edge on into the second tunnel, 1021."
+   }
+  },
+  "1021": {
+   "W": {
+    "target_loc_id": 1020,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_tunel2_horizont: its west edge back into the first tunnel, 1020."
+   },
+   "E": {
+    "target_loc_id": 1022,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_tunel2_horizont: its east edge on into the third tunnel, 1022."
+   }
+  },
+  "1022": {
+   "W": {
+    "target_loc_id": 1021,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_tunel3_horizont: its west edge back into the second tunnel, 1021."
+   },
+   "E": {
+    "target_loc_id": 1013,
+    "why": "DESIGNED topology on the files' own sides, as Вади-Хальфа's mine (1012 W there). The second tier of Донгола's mine, «Шахта: Второй ярус» and «Шахта: Туннели»/«Тунели», is one gallery from west to east: DN_mine_lvl5 (1015), open only to the east (57-59, 30-32), DN_mine_lvl6 (1023), open along both edges (west 59-75, east 60-75), the three tunnels DN_mine_tunel1..3_horizont (1020-1022), each open along its west and east edges and nothing else, and DN_mine_lvl4 (1013), open only to the west (8-11, 30-32). Each side leads into the next file over its opposite edge. 1023, under 614, is where 1015 (under 616) and the tunnels from 1013 (under 161) meet, and above the third tier. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: DN_mine_tunel3_horizont: its east edge into 1013, the gallery's east end."
+   }
+  },
+  "607": {
+   "S": {
+    "target_loc_id": 608,
+    "why": "DESIGNED topology on the files' own sides. Донгола's sewers under the quarter 79: 607 Dongola_Sewers01 «Донгола: Канализация.» (the policeman Тариф, 674, and a БОМЖ, 676), open only to the south (59-63, 118-128), and 608 Dongola_Sewers02 «Донгола: Коллектор.» (the policeman Наим, 675, the tramps and Люшер's fanatics and fighters), open only to the north (3-8, 25-34): the one leads into the other, never onto the map. The third file, 1009 Dongola_Sewers03 «Подвал» (the box of weapon parts, 677), has neither side nor door: quest ways join it to the collector ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: 607's south, into the collector."
+   }
+  },
+  "608": {
+   "N": {
+    "target_loc_id": 607,
+    "why": "DESIGNED topology on the files' own sides. Донгола's sewers under the quarter 79: 607 Dongola_Sewers01 «Донгола: Канализация.» (the policeman Тариф, 674, and a БОМЖ, 676), open only to the south (59-63, 118-128), and 608 Dongola_Sewers02 «Донгола: Коллектор.» (the policeman Наим, 675, the tramps and Люшер's fanatics and fighters), open only to the north (3-8, 25-34): the one leads into the other, never onto the map. The third file, 1009 Dongola_Sewers03 «Подвал» (the box of weapon parts, 677), has neither side nor door: quest ways join it to the collector ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: 608's north, back into 607."
+   }
+  },
+  "703": {
+   "S": {
+    "target_loc_id": 705,
+    "why": "DESIGNED topology on the files' own sides. «Зона 49» is three files of one drawing (Sewers02) with one opening each, drawn on the same spot (43-44, 85-87) under a different side: 703 DN_Zone49_1 south, 704 DN_Zone49_2 east, 705 DN_Zone49_3 north, each with Генри Джонс (1842) and eleven «Плохой парень<Br>Селениты»; the cellar 702 DN_Zone49_Prison (Генри Джонс 1841 and his box 1844) has none, and quest ways join it to 703 ('quest'). 703's south and 705's north face each other and lead into each other. 704's east faces neither, and the pictures, one and the same, cannot choose: it leads into 703, the zone's first file, the one the cellar opens into, so that whoever is in 704 comes out where the zone starts; the way into 704 is a quest way. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: 703's south, into 705."
+   }
+  },
+  "705": {
+   "N": {
+    "target_loc_id": 703,
+    "why": "DESIGNED topology on the files' own sides. «Зона 49» is three files of one drawing (Sewers02) with one opening each, drawn on the same spot (43-44, 85-87) under a different side: 703 DN_Zone49_1 south, 704 DN_Zone49_2 east, 705 DN_Zone49_3 north, each with Генри Джонс (1842) and eleven «Плохой парень<Br>Селениты»; the cellar 702 DN_Zone49_Prison (Генри Джонс 1841 and his box 1844) has none, and quest ways join it to 703 ('quest'). 703's south and 705's north face each other and lead into each other. 704's east faces neither, and the pictures, one and the same, cannot choose: it leads into 703, the zone's first file, the one the cellar opens into, so that whoever is in 704 comes out where the zone starts; the way into 704 is a quest way. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: 705's north, back into 703."
+   }
+  },
+  "704": {
+   "E": {
+    "target_loc_id": 703,
+    "why": "DESIGNED topology on the files' own sides. «Зона 49» is three files of one drawing (Sewers02) with one opening each, drawn on the same spot (43-44, 85-87) under a different side: 703 DN_Zone49_1 south, 704 DN_Zone49_2 east, 705 DN_Zone49_3 north, each with Генри Джонс (1842) and eleven «Плохой парень<Br>Селениты»; the cellar 702 DN_Zone49_Prison (Генри Джонс 1841 and his box 1844) has none, and quest ways join it to 703 ('quest'). 703's south and 705's north face each other and lead into each other. 704's east faces neither, and the pictures, one and the same, cannot choose: it leads into 703, the zone's first file, the one the cellar opens into, so that whoever is in 704 comes out where the zone starts; the way into 704 is a quest way. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: 704's east, into 703."
+   }
   }
  },
  "no_map": {
@@ -557,7 +914,33 @@
   "1215": {"why": "DESIGNED. VH_mine_lvl3, the third tier (see 613)."},
   "1017": {"why": "DESIGNED. VH_mine_tunel1_horizont, the second tier's tunnels (see 613)."},
   "1018": {"why": "DESIGNED. VH_mine_tunel2_horizont (see 613)."},
-  "1019": {"why": "DESIGNED. VH_mine_tunel3_horizont (see 613)."}
+  "1019": {"why": "DESIGNED. VH_mine_tunel3_horizont (see 613)."},
+  "618": {"why": "DESIGNED, as Вади-Хальфа's 644. The prison's western block (Prison_1), entered by the western gate at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre and a death, which sends home; their sides lead into each other ('sides'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
+  "619": {"why": "DESIGNED. The prison's southern block (Prison_2), entered by the southern gate: as 618."},
+  "620": {"why": "DESIGNED. The prison's northern cells (Prison_4): the prisoners of the uprising; its one side back to the centre."},
+  "621": {"why": "DESIGNED. The prison's eastern cells (Prison_5): the prisoners of the uprising; its one side back to the centre."},
+  "622": {"why": "DESIGNED. The prison's centre block (Prison_3): Томас (876) and his «Выход» (163) back to the yard 159, the godfather and the medics of the uprising; its four sides lead to the other four files."},
+  "631": {"why": "DESIGNED, as Вади-Хальфа's 626. The quarry's centre: its sides lead into the pits, and the way out is Олег's «Покинуть каменоломню» in the north pit 632 ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
+  "632": {"why": "DESIGNED. The quarry's north pit, where Джамшут's way arrives and Олег's leaves, back to the new market 197; its south side leads into the centre. The healer Грегори (138) takes no home here (server.py home_here refuses a no_map place), as Деда Джоф in Вади-Хальфа's 627."},
+  "633": {"why": "DESIGNED. The quarry's south pit: its one side back to the centre."},
+  "634": {"why": "DESIGNED. The quarry's east pit: its one side back to the centre."},
+  "635": {"why": "DESIGNED. The quarry's west pit: its one side back to the centre."},
+  "614": {"why": "DESIGNED, as Вади-Хальфа's mine (613; 2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту»). Донгола's mine's first tier, DN_mine_lvl1: out only by its door up to the second entrance (157), or down. Every file under the three entrances is in this list: the mine is left by the doors it was entered by, never by the map button or /home in the middle of a raid. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
+  "616": {"why": "DESIGNED. DN_mine_lvl2, the first tier's other file: up to the first entrance (155), or down (see 614)."},
+  "1013": {"why": "DESIGNED. DN_mine_lvl4, the second tier's east end: up to the third entrance (161) (see 614)."},
+  "1015": {"why": "DESIGNED. DN_mine_lvl5, the second tier's west end: up to 616 (see 614)."},
+  "1023": {"why": "DESIGNED. DN_mine_lvl6, the second tier's middle file (see 614)."},
+  "1214": {"why": "DESIGNED. DN_mine_lvl3, the third tier (see 614)."},
+  "1020": {"why": "DESIGNED. DN_mine_tunel1_horizont, the second tier's tunnels (see 614)."},
+  "1021": {"why": "DESIGNED. DN_mine_tunel2_horizont (see 614)."},
+  "1022": {"why": "DESIGNED. DN_mine_tunel3_horizont (see 614)."},
+  "607": {"why": "DESIGNED. Донгола's sewers, «Донгола: Канализация.» (Dongola_Sewers01), under the town: in from the quarter 79 and out to it by quest ways ('quest'), into the collector 608 by its one side ('sides'), never onto the map. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
+  "608": {"why": "DESIGNED. The collector (Dongola_Sewers02): its one side back to 607; the cellar 1009 by quest ways."},
+  "1009": {"why": "DESIGNED. The cellar (Dongola_Sewers03): no side and no door; in and out by quest ways from and to the collector 608."},
+  "702": {"why": "DESIGNED. Зона 49's cellar (DN_Zone49_Prison): no side and no door; joined to 703 by quest ways both ways, and to the surface by a way out ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
+  "703": {"why": "DESIGNED. Зона 49 (DN_Zone49_1): its one side, south, into 705 ('sides'); the cellar 702 by quest ways."},
+  "704": {"why": "DESIGNED. Зона 49 (DN_Zone49_2): its one side, east, into 703 ('sides'); entered by a quest way."},
+  "705": {"why": "DESIGNED. Зона 49 (DN_Zone49_3): its one side, north, back into 703 ('sides')."}
  },
  "walk_in": {},
  "quest": {

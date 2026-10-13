@@ -1351,4 +1351,52 @@ ok(up.character(keeper)["loc"] == 433 and accounts.ran(up.db, accounts.RIVER_ALL
    "второе открытие ничего не повторяет")
 up.close()
 
+# --- чистка Донголы -------------------------------------------------------------------
+# run_once от 2026-10-13 (accounts.relocate_dongola_cut; README «Донгола»): кто стоит
+# в убранных местах Донголы (ремесленники, вещевой рынок, аэроплощадка ФСЦ, кланбазы,
+# копия лагеря Миротворцев, «Засада») или прописан там -- на Вокзал Донголы 49
+# (5877,2010); журналы не трогаются. Здесь -- что IN и UPDATE идут в Postgres и второе
+# открытие ничего не повторяет. Полный набор на SQLite -- server/test_dongola_cut.py
+# (раздел 7).
+store = fresh_store()
+aid, _ = store.register("донгола", "пароль")
+who = {}
+for name, loc, home in (("в469", 469, 49), ("в455", 455, 49), ("в382", 382, 49), ("в1171", 1171, 49),
+                        ("в389", 389, 49), ("прописан в530", 197, 530), ("в378", 378, 187),
+                        ("на вокзале", 49, 49)):
+    c, _ = store.create_character(aid, name, 0, 1)
+    store.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 5878, gy = 2013, on_map = 0,"
+                     " home_loc = ?, home_gx = 5878, home_gy = 2013 WHERE id = ?", (loc, home, c))
+    who[name] = c
+store.db.commit()
+keeper = who["в469"]
+for t in (119, 11500):
+    store.take_quest(keeper, t, {}, True)
+store.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.DONGOLA_CUT_FIX,))
+store.db.commit()
+store.close()
+
+up = accounts.Store()
+rows = {n: up.character(c) for n, c in who.items()}
+ok({n: (r["loc"], r["gx"], r["gy"], r["on_map"], r["pos"]) for n, r in rows.items()}
+   == {"в469": (49, 5877, 2010, 0, None), "в455": (49, 5877, 2010, 0, None), "в382": (49, 5877, 2010, 0, None),
+       "в1171": (49, 5877, 2010, 0, None), "в389": (49, 5877, 2010, 0, None),
+       "прописан в530": (197, 5878, 2013, 0, 77), "в378": (378, 5878, 2013, 0, 77),
+       "на вокзале": (49, 5878, 2013, 0, 77)},
+   "из 469/455/382/1171/389 -- на Вокзал Донголы, 378 (вещевой рынок Абри, давно прошло) и вокзал не"
+   " тронуты: %s" % {n: (r["loc"], r["pos"]) for n, r in rows.items()})
+ok((rows["прописан в530"]["home_loc"], rows["прописан в530"]["home_gx"], rows["прописан в530"]["home_gy"])
+   == (49, 5877, 2010), "прописка в 530 -- Вокзал Донголы")
+ok(sorted(r["type"] for r in up.quests(keeper)) == [119, 11500],
+   "журнал не тронут: %s" % sorted(r["type"] for r in up.quests(keeper)))
+ok(accounts.relocate_dongola_cut(up.db) == dict(moved=0, homes=0), "повторный проход ничего не находит")
+up.db.commit()
+up.db.execute("UPDATE characters SET loc = 469 WHERE id = ?", (keeper,))
+up.db.commit()
+up.close()
+up = accounts.Store()
+ok(up.character(keeper)["loc"] == 469 and accounts.ran(up.db, accounts.DONGOLA_CUT_FIX),
+   "второе открытие ничего не повторяет")
+up.close()
+
 print("storage(pg): %d проверок, все зелёные" % checks)

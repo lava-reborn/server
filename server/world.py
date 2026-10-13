@@ -72,10 +72,14 @@ USERINFO = {
 # Abri_travel, «Луиджи<Br>водитель») in Абри's Портовый рынок 187, the
 # driver of the ride back to Вади-Хальфа, whose wiki page lists «Здесь можно
 # осуществить регистрацию трофеев» beside his trade and repairs (the owner's
-# Абри, 2026-10-12): Хассир's twin at the other end of the road.
+# Абри, 2026-10-12): Хассир's twin at the other end of the road. And
+# Нур-ад-Дин (156, dn_travel, «Нур-ад-Дин<Br>водитель») at the station of
+# Донгола 49, whose wiki page has him register trophies and sell the tickets
+# (the owner's Донгола, 2026-10-13): the town has no butchers' place of its
+# own -- the map's «Мясники, скупка трофеев» is a label with no file.
 TROPHY_REGISTRARS = frozenset({939, 940, 941, 942, 943, 1132,
                                2033, 2034, 2035, 2036,
-                               5193, 105, 1179})
+                               5193, 105, 1179, 156})
 
 
 def entity_root(type_id, root):
@@ -834,6 +838,11 @@ EVENT_TOKENS = {"vov", "vbg", "lemon", "ny", "9may", "presents", "lotery",
 # (1172, «Лотерейщик») and Abri_lotery_g (1171, «Лотерейщик<Br>Золотая
 # лотерея»), whose «lotery» is the same token: the town's lotteries all year,
 # as Вади-Хальфа's (the owner's Абри, 2026-10-12, decision 24 of its plan).
+#
+# And Донгола's, by the same token (the owner's Донгола, 2026-10-13,
+# decision 29 of its plan): dn_lotery (663, «Лотерейщик») in the old and the
+# new market, dn_lotery_g (712, «Лотерейщик Золотая лотерея») in the black
+# market -- the markets' map labels promise «Лотерея».
 SEASON_KEPT = {
     35: frozenset({662}),           # Вади Хальфа: рынок
     104: frozenset({662}),          # Портовый рынок
@@ -841,6 +850,9 @@ SEASON_KEPT = {
     36: frozenset({1977, 423}),     # жилой квартал
     41: frozenset({425}),           # Причал
     187: frozenset({1171, 1172}),   # Абри: Портовый рынок
+    50: frozenset({663}),           # Донгола: Рынок (старый)
+    197: frozenset({663}),          # Донгола: Новый рынок
+    103: frozenset({712}),          # Черный рынок Донголы
 }
 
 # The objects that do stand, by location: the things of Вади-Хальфа's quests,
@@ -860,7 +872,11 @@ SEASON_KEPT = {
 # zd_box_ammo 2164 in 92), as Вади-Хальфа's camps have theirs; and the six
 # dracaenas m00_Dracena (857) of «Сокровища» (189), whose leaves «Заполучить
 # амазонку (Часть 1)» and whose roots Хаксли's chain ask for, falling off
-# them by the quests' own rows (data/quests.json objs[].mobs).
+# them by the quests' own rows (data/quests.json objs[].mobs). Донгола's (the
+# owner's «и потом сделай донголу тоже», 2026-10-13): the ammunition boxes of
+# the ДСР's and the Peacekeepers' camps (jm_box_ammo 2165 in 93, pc_box_ammo
+# 2167 in 98), and the stones Stone_DN (980, «Порода») of the quarry's four
+# pits, as Вади-Хальфа's quarry has its Stone_WH.
 STANDING_OBJECTS = {
     43: frozenset({41}),
     46: frozenset({50}),
@@ -882,6 +898,12 @@ STANDING_OBJECTS = {
     88: frozenset({2163}),          # Лагерь Работорговцев (Абри)
     92: frozenset({2164}),          # Лагерь Живодеров (Абри)
     189: frozenset({857}),          # «Сокровища», Q_Abri_Crocodile
+    93: frozenset({2165}),          # Лагерь ДСР (Донгола)
+    98: frozenset({2167}),          # Лагерь Миротворцев (Донгола)
+    631: frozenset({980}),          # DN_Stone_Mine_C
+    633: frozenset({980}),          # DN_Stone_Mine_S
+    634: frozenset({980}),          # DN_Stone_Mine_E2
+    635: frozenset({980}),          # DN_Stone_Mine_W2
 }
 
 # The ranges where a shot goes over the booth's counter. In TIR_01..06 the

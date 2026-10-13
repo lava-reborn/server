@@ -204,8 +204,10 @@ def clock():
 # of the slave traders' camp (88) and zd_Kaznachei (591) of the flayers' (92):
 # bosses by role who stand in their camps all day, as the colonists' one does,
 # and carry no ingot -- the camps' gold is their two bosses' who keep the
-# hours (data/loot_manual.json).
-ALL_DAY = frozenset({696, 586, 590, 591})
+# hours (data/loot_manual.json). And Донгола's two (the owner's «и потом
+# сделай донголу тоже», 2026-10-13), jm_Kaznachei (592) of the ДСР's camp (93)
+# and pc_Kaznachei (593) of the Peacekeepers' (98), the same way.
+ALL_DAY = frozenset({696, 586, 590, 591, 592, 593})
 
 # The warehouses' «Хозяин склада», who keep WAREHOUSE_HOURS: the bosses of
 # the stok_ files, each the one boss of its warehouse (data/mob_types.json

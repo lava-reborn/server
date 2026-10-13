@@ -175,17 +175,19 @@ check("an Up_Camp copy of the colonists' camp keeps its ammunition box out",
       stood(room(1057))[409], 0)
 # Each place the table lets an object stand, by where it is: a map cell of
 # Вади-Хальфа outside the valley, or an interior of the town's own -- the
-# range TIR_01..06 or the quarry's pits -- which have no cell of their own.
-HALFA_INSIDE = re.compile(r"^(TIR_0[1-6]|WH_Stone_Mine_)")
+# range TIR_01..06 or the quarry's pits -- which have no cell of their own;
+# and since the owner's Донгола (2026-10-13) the pits of Донгола's quarry.
+HALFA_INSIDE = re.compile(r"^(TIR_0[1-6]|WH_Stone_Mine_|DN_Stone_Mine_)")
 check("no object stands by the table in the Nubian valley, nor anywhere but the towns' cells"
-      " (Вади-Хальфа's, Абри's) and Вади-Хальфа's range and quarry",
+      " (Вади-Хальфа's, Абри's, Донгола's), Вади-Хальфа's range and the two towns' quarries",
       sorted(i for i in world.STANDING_OBJECTS
              if (world.in_noob_valley(*world.cell_of(i)) if world.cell_of(i)
                  else not HALFA_INSIDE.match(world.location(i).fn))), [])
-check("  ..the interiors among them are the range's six and the quarry's four",
+check("  ..the interiors among them are the range's six and the two quarries' four each",
       sorted(world.location(i).fn for i in world.STANDING_OBJECTS if not world.cell_of(i)),
       sorted(["TIR_01", "TIR_02", "TIR_03", "TIR_04", "TIR_05", "TIR_06",
-              "WH_Stone_Mine_C", "WH_Stone_Mine_S", "WH_Stone_Mine_W2", "WH_Stone_Mine_E2"]))
+              "WH_Stone_Mine_C", "WH_Stone_Mine_S", "WH_Stone_Mine_W2", "WH_Stone_Mine_E2",
+              "DN_Stone_Mine_C", "DN_Stone_Mine_S", "DN_Stone_Mine_W2", "DN_Stone_Mine_E2"]))
 
 # --- the objects ---------------------------------------------------------------------------
 tir = [stood(room(i)) for i in (1048, 1233, 1260, 1276, 1280, 1282)]
@@ -466,9 +468,10 @@ def goods_from(type_id):
 
 
 # The town each place of the season list is: Абри's port market since the
-# owner's Абри of 2026-10-12 (its lottery sellers 1171, 1172), Вади-Хальфа's
-# the rest.
-TOWN_OF = {187: "Абри"}
+# owner's Абри of 2026-10-12 (its lottery sellers 1171, 1172), Донгола's old,
+# new and black markets since the owner's Донгола of 2026-10-13 (663, 712),
+# Вади-Хальфа's the rest.
+TOWN_OF = {187: "Абри", 50: "Донгола", 197: "Донгола", 103: "Донгола"}
 kept_traders = sorted({(n.type_id, TOWN_OF.get(i, "Вади-Хальфа"))
                        for i in world.SEASON_KEPT for n in room(i).npcs.values()
                        if n.type_id in world.SEASON_KEPT[i] and n.root == world.TRADER})

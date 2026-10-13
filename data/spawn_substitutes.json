@@ -29,7 +29,7 @@
   "inst": 6,
   "inv": 37,
   "ja": 12,
-  "jm": 10,
+  "jm": 12,
   "kv": 28,
   "labor": 33,
   "lib": 3,
@@ -245,9 +245,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "jm_WilliamBlade",
-   "picked_level": 1,
-   "type_id": 1565
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
   },
   "2528": {
    "faction": "jm",
@@ -257,9 +257,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "jm_WilliamBlade",
-   "picked_level": 1,
-   "type_id": 1565
+   "name": "jm_Komandir_lvl12",
+   "picked_level": 12,
+   "type_id": 362
   },
   "2529": {
    "faction": "pc",
@@ -497,9 +497,9 @@
    "how": "camp_fn",
    "level": 7,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "2549": {
    "faction": "pc",
@@ -737,9 +737,9 @@
    "how": "camp_fn",
    "level": 8,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "2569": {
    "faction": "pc",
@@ -977,9 +977,9 @@
    "how": "camp_fn",
    "level": 10,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "2589": {
    "faction": "pc",
@@ -1217,9 +1217,9 @@
    "how": "camp_fn",
    "level": 11,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "2609": {
    "faction": "pc",
@@ -1457,9 +1457,9 @@
    "how": "camp_fn",
    "level": 12,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "2629": {
    "faction": "pc",
@@ -1697,9 +1697,9 @@
    "how": "camp_fn",
    "level": 14,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "2649": {
    "faction": "pc",
@@ -1937,9 +1937,9 @@
    "how": "camp_fn",
    "level": 15,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "2669": {
    "faction": "pc",
@@ -2177,9 +2177,9 @@
    "how": "camp_fn",
    "level": 16,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "2689": {
    "faction": "pc",
@@ -2587,9 +2587,9 @@
    "how": "camp_fn",
    "level": 18,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "2731": {
    "faction": "pt",
@@ -2803,9 +2803,9 @@
    "how": "camp_fn",
    "level": 19,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "2749": {
    "faction": "pc",
@@ -3043,9 +3043,9 @@
    "how": "camp_fn",
    "level": 20,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "2769": {
    "faction": "pc",
@@ -4977,9 +4977,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "jm_WilliamBlade",
-   "picked_level": 1,
-   "type_id": 1565
+   "name": "jm_Boevik_lvl12",
+   "picked_level": 12,
+   "type_id": 365
   },
   "3191": {
    "faction": "jm",
@@ -4989,9 +4989,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "jm_WilliamBlade",
-   "picked_level": 1,
-   "type_id": 1565
+   "name": "jm_Komandir_lvl12",
+   "picked_level": 12,
+   "type_id": 362
   },
   "3192": {
    "faction": "jm",
@@ -5013,9 +5013,9 @@
    "how": "camp_fn",
    "level": 7,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "3196": {
    "faction": "jm",
@@ -5037,9 +5037,9 @@
    "how": "camp_fn",
    "level": 10,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "3198": {
    "faction": "jm",
@@ -5061,9 +5061,9 @@
    "how": "camp_fn",
    "level": 11,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "3200": {
    "faction": "jm",
@@ -5085,9 +5085,9 @@
    "how": "camp_fn",
    "level": 12,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl12",
+   "name": "jm_Komandir_lvl12",
    "picked_level": 12,
-   "type_id": 363
+   "type_id": 362
   },
   "3202": {
    "faction": "jm",
@@ -5109,9 +5109,9 @@
    "how": "camp_fn",
    "level": 14,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "3204": {
    "faction": "jm",
@@ -5133,9 +5133,9 @@
    "how": "camp_fn",
    "level": 15,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "3206": {
    "faction": "jm",
@@ -5157,9 +5157,9 @@
    "how": "camp_fn",
    "level": 16,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "3208": {
    "faction": "jm",
@@ -5181,9 +5181,9 @@
    "how": "camp_fn",
    "level": 17,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "3210": {
    "faction": "jm",
@@ -5205,9 +5205,9 @@
    "how": "camp_fn",
    "level": 18,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "3212": {
    "faction": "jm",
@@ -5229,9 +5229,9 @@
    "how": "camp_fn",
    "level": 19,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "3214": {
    "faction": "jm",
@@ -5253,9 +5253,9 @@
    "how": "camp_fn",
    "level": 20,
    "level_source": "files",
-   "name": "jm_Opolchenec_lvl14",
+   "name": "jm_Komandir_lvl14",
    "picked_level": 14,
-   "type_id": 371
+   "type_id": 370
   },
   "3218": {
    "faction": "pc",

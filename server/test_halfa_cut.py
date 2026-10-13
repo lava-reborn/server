@@ -231,13 +231,14 @@ try:
     # 5160 stood in the two markets alone. KKND's mobs 5316 and 5317 stood in
     # the clan base Le_Mon on Донгола's island too (474, 979), until the
     # owner's cut of everything across the river (2026-10-13,
-    # server/test_river_all_cut.py).
+    # server/test_river_all_cut.py). 5161 and 5181 stood in Донгола's clothing
+    # market 469 too, until the owner's cut of Донгола (2026-10-13,
+    # server/test_dongola_cut.py).
     check("  ..the ones that stand elsewhere too: the set trader 5161 and the miner's clothes 5181"
-          " in the markets of Абу-Хамед and Донгола; the set trader 5160 nowhere since Абри's market"
-          " went too, KKND's mobs nowhere since Le_Mon's base did",
+          " in Абу-Хамед's market; the set trader 5160 nowhere since Абри's market went too, KKND's"
+          " mobs nowhere since Le_Mon's base did",
           {t: elsewhere[t] for t in (5160, 5161, 5181, 5316, 5317)},
-          {5160: [], 5161: [("file", 467), ("file", 469)], 5181: [("file", 467), ("file", 469)],
-           5316: [], 5317: []})
+          {5160: [], 5161: [("file", 467)], 5181: [("file", 467)], 5316: [], 5317: []})
     check("nobody standing only in a retired place gives or takes a quest",
           {t: (quests.given_by(t), quests.taken_by(t)) for t in only_here
            if quests.given_by(t) or quests.taken_by(t)}, {})
@@ -504,8 +505,9 @@ FSC = {528: (5970, 1727), 522: (5942, 1723)}
 FSC_UPGRADERS = (8213, 8214)                     # FSC_U_000001/2, art 118
 FSC_PILOTS = (7921, 8210, 8211, 8212)            # ADMIN_Q_000042, 000049-51
 NIL1_TYPES = (7529, 8621, 8622, 8624, 8625, 8626, 8635, 8636, 8687)
-OTHER_AIRFIELDS = (527, 530, 531)                # Абу-Хамед, Донгола, Керма: on cells
-# Абри's airfield 529 went with the cut of Абри (2026-10-12, server/test_abri_cut.py).
+OTHER_AIRFIELDS = (527, 531)                     # Абу-Хамед, Керма: on cells
+# Абри's airfield 529 went with the cut of Абри (2026-10-12, server/test_abri_cut.py),
+# Донгола's 530 with the cut of Донгола (2026-10-13, server/test_dongola_cut.py).
 # The resistance camp 429 and its Доберман and Хэтфилд went with the cut of
 # the camps across the river (2026-10-12, server/test_river_camps_cut.py).
 CSC_PEOPLE = {41: (5685, 5686), 35: (2276,)}
@@ -554,9 +556,10 @@ try:
     # НИЛ-2..4 across the river stood on 5849,1851, 5863,2002 and 6167,1989
     # until the cut of everything across the river (2026-10-13,
     # server/test_river_all_cut.py).
-    check("  ..and so do the other towns' airfields; the bases НИЛ-2..4 are on no cell since",
-          [world.cell_of(i) for i in OTHER_AIRFIELDS + (523, 524, 525)],
-          [(6185, 1977), (5879, 2011), (5863, 1946), None, None, None])
+    check("  ..and so do the other towns' airfields; the bases НИЛ-2..4 and Донгола's airfield 530 are"
+          " on no cell since",
+          [world.cell_of(i) for i in OTHER_AIRFIELDS + (523, 524, 525, 530)],
+          [(6185, 1977), (5863, 1946), None, None, None, None])
 
     # no way in, and none out through them
     fsc_files = sorted(int(os.path.basename(p)[:-4])
@@ -613,8 +616,8 @@ try:
     # the people
     check("in the airfield a room stood the two FSC upgraders 8213/8214 alone; in the base nobody",
           {i: stood_in(i) for i in FSC}, {528: list(FSC_UPGRADERS), 522: []})
-    check("  ..the upgraders stand in the airfields of Абу-Хамед, Донгола and Керма too, so"
-          " neither is retired; their windows were empty there as here",
+    check("  ..the upgraders stand in the airfields of Абу-Хамед and Керма too, so neither is"
+          " retired; their windows were empty there as here",
           ({i: [t for t in FSC_UPGRADERS if t in stood_in(i)] for i in OTHER_AIRFIELDS},
            [t for t in FSC_UPGRADERS if t in world.retired_creatures()],
            [setcraft.window(t)["in_types"] for t in FSC_UPGRADERS]),

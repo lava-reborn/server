@@ -13,7 +13,8 @@ one, 6 ounces; the flayers one of five and a stack of three of one, 8. The
 numbers are the owner's as said (the halving of 2026-10-11 was over
 before). The camps' treasurers (590, 591) stand all day and carry none, and
 nobody else of Абри does. A window of the boss hours holds 52 ounces for
-the whole server: Вади-Хальфа's 22, the valley's 2 and Абри's 28.
+the whole server: Вади-Хальфа's 22, the valley's 2 and Абри's 28; 96 since
+Донгола's 44 (the owner's Донгола, 2026-10-13, server/test_dongola_ingots.py).
 
 Мортимер (1188) stands in the port market 187 (data/placements.json) as
 well as in the slums 255: the same stall, the ingots for gold at face
@@ -32,6 +33,7 @@ for each, and no gold out of the air.
 """
 import asyncio
 import glob
+import json
 import os
 import random
 import socket
@@ -79,7 +81,7 @@ BOSSES = {
 FACTION_OUNCES = {"работорговцы": 6, "живодеры": 8}
 TREASURERS = (590, 591)
 ABU = 327
-WINDOW_OUNCES = 52
+WINDOW_OUNCES = 96
 MT = world.mob_types()
 
 
@@ -143,9 +145,13 @@ check("nobody else of Абри's camps and quest places carries an ingot",
 # and comes once a window: the window's gold is the sum of their bags.
 rollers = sorted(int(t) for t in mobs.TYPES if {r[0] for r in mobs.loot_table(int(t))} & set(INGOTS))
 places = {t: set() for t in rollers}
+# A place out of the game stands nobody (data/retired.json places): Донгола's
+# copy 1171 of the Peacekeepers' camp put Шеф Дженсен down a second time.
+with open(os.path.join(os.path.dirname(HERE), "data", "retired.json"), encoding="utf-8") as _fh:
+    RETIRED_PLACES = {int(k) for k in json.load(_fh)["places"] if not k.startswith("_")}
 for p in glob.glob(os.path.join(world.RES, "locations", "static", "*.xml")):
     lid = int(os.path.basename(p)[:-4])
-    if lid in world.retired_creatures():
+    if lid in RETIRED_PLACES:
         continue
     try:
         loc = world.location(lid)
@@ -167,7 +173,7 @@ check("every carrier of a certain ingot keeps the hours and stands in one place"
       {t: (bosses.keeps_hours(t), len(places[t])) for t in rollers},
       {t: (True, 1) for t in rollers})
 check("a window of the boss hours holds %d ounces for the whole server: Вади-Хальфа's 22, the"
-      " valley's 2, Абри's 28" % WINDOW_OUNCES,
+      " valley's 2, Абри's 28, Донгола's 44" % WINDOW_OUNCES,
       (sum(window.values()), sum(window[t] for t in BOSSES), window.get(2103)),
       (WINDOW_OUNCES, 28, 2))
 check("  ..three windows a day: %d ounces" % (3 * WINDOW_OUNCES),

@@ -172,15 +172,18 @@ check("what the body carries adds no ingot (mobs.loot_for)",
 rollers = sorted(int(t) for t in mobs.TYPES
                  if {r[0] for r in mobs.loot_table(int(t))} & set(INGOTS))
 # Абри's four hour-keeping bosses carry theirs since the owner's Абри of
-# 2026-10-12 (server/test_abri_ingots.py holds them).
+# 2026-10-12 (server/test_abri_ingots.py holds them), Донгола's four since
+# the owner's Донгола of 2026-10-13 (server/test_dongola_ingots.py).
 ABRI_BOSSES = [327, 328, 360, 361]
-check("nobody else's table holds an ingot but the valley's boss, his two of one, and Абри's"
-      " four bosses",
+DONGOLA_BOSSES = [374, 375, 407, 408]
+check("nobody else's table holds an ingot but the valley's boss, his two of one, and Абри's and"
+      " Донгола's four bosses each",
       (rollers, [(i, c) for i, c, _v in mobs.loot_table(VALLEY_BOSS) if i in INGOTS],
        count_of(VALLEY_BOSS, I1)),
-      (sorted(list(BOSSES) + [VALLEY_BOSS] + ABRI_BOSSES), [(I1, 1.0)], 2))
-check("  ..and the ingot of ten drops from nobody",
-      [t for t in rollers if I10 in {r[0] for r in mobs.loot_table(t)}], [])
+      (sorted(list(BOSSES) + [VALLEY_BOSS] + ABRI_BOSSES + DONGOLA_BOSSES), [(I1, 1.0)], 2))
+check("  ..and the ingot of ten drops from Донгола's four bosses alone (no creature dropped it from"
+      " 2026-10-11 to 2026-10-13)",
+      [t for t in rollers if I10 in {r[0] for r in mobs.loot_table(t)}], DONGOLA_BOSSES)
 check("  ..Halfa's all-day bosses carry none, ordinary or for a quest",
       [i for t in ALL_DAY for i, *_r in mobs.loot_table(t) + mobs.quest_table(t) if i in INGOTS],
       [])

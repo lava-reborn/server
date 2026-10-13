@@ -29,7 +29,14 @@ his the placer stood in the north-west corner, 322 and 323 -- with the
 ninety-seven files that never had a cell and belong there: the tombs, Доктор
 «Д»'s bunkers, laboratories and pass, the gorges' pieces, the clan bases'
 files, the resistance's quest wasteland, the event «9 мая», the warehouse
-288 under «Ангар в джунглях».
+288 under «Ангар в джунглях»; and the cut of Донгола (2026-10-13: «и потом
+сделай донголу тоже», the cut of Абри's kinds by the decisions taken for
+him) the craftsmen's quarters 455, 460 and 518, the clothing market 469, the
+ФСЦ airfield 530 and the clan base Delta Force's block post 382, with the
+quarter 448 behind «Улучшение сетов 14-16», the three clan bases' files and
+the copy 1171 of the Peacekeepers' camp, which never had a cell, and the
+quest file 389 «Засада», which the placer had put on the 33 cells of that
+name (wasteland of the Peacekeepers' ambushes now, so no cell of retired.json).
 data/retired.json lists them, data/settlements_verified.json
 nulls their cells, and data/place_settlements.py leaves them out of the
 candidates. The trap this
@@ -40,7 +47,7 @@ left their cells, and with other nulls the valley's Arena 167 -- Сет's
 stall and the one place for PvP -- left 6270,1831; the four nulls of
 Halfa's cut alone took 447 off 5968,1719). So the placer is run twice here,
 as the table stands and with the cuts undone, and the two may differ in
-exactly the forty-one intended cells; and the table on disk is the placer's own
+exactly the eighty intended cells; and the table on disk is the placer's own
 output, so that difference is the difference between the map before the
 cuts and the map now. Retired, a file still bends a neighbour's margin it
 was the close rival in: Абу-Хамед's camp 432, out of the running, lets the
@@ -86,11 +93,22 @@ RIVER_ALL = {"5943,1722": 433, "5941,1697": 508, "5850,1850": 434, "5849,1851": 
              "5844,1831": 502, "5867,1827": 321, "5868,1828": 325, "5868,1829": 325, "5869,1828": 324,
              "5840,1600": 322, "5840,1601": 323, "5864,2001": 435, "5863,2002": 524, "5851,1986": 516,
              "5851,1991": 988, "6168,1988": 436, "6167,1989": 525, "6145,1993": 517}
-INTENDED = dict(PREMIUM, **HALFA, **FSC, **ABRI, **RIVER, **ABRI_CLOTHES, **RIVER_ALL)
+# Донгола's cut: the craftsmen, the clothing market, the ФСЦ airfield, Delta
+# Force's block post; and the 33 cells «Засада» of the quest file 389.
+DONGOLA = {"5876,2013": 455, "5878,2014": 460, "5878,2015": 518, "5878,2013": 469, "5879,2011": 530,
+           "5955,2032": 382}
+AMBUSH = {"%d,%d" % c: 389 for c in [
+    (5911, 2001), (5912, 2001), (5913, 2001), (5908, 2002), (5909, 2002), (5910, 2002), (5911, 2002),
+    (5912, 2002), (5913, 2002), (5907, 2003), (5908, 2003), (5909, 2003), (5910, 2003), (5911, 2003),
+    (5912, 2003), (5913, 2003), (5905, 2004), (5906, 2004), (5907, 2004), (5908, 2004), (5909, 2004),
+    (5910, 2004), (5911, 2004), (5912, 2004), (5913, 2004), (5907, 2005), (5908, 2005), (5909, 2005),
+    (5910, 2005), (5911, 2005), (5912, 2005), (5911, 2006), (5912, 2006)]}
+INTENDED = dict(PREMIUM, **HALFA, **FSC, **ABRI, **RIVER, **ABRI_CLOTHES, **RIVER_ALL, **DONGOLA,
+                **AMBUSH)
 # retired.json's cells are the town's ground for the encounters, and the
 # map's squares on them are painted over: all but 6160,1975, whose square is
-# the pirates'.
-RETIRED_CELLS = {k: v for k, v in INTENDED.items() if k != "6160,1975"}
+# the pirates', and the cells «Засада», the Peacekeepers' wasteland.
+RETIRED_CELLS = {k: v for k, v in INTENDED.items() if k != "6160,1975" and k not in AMBUSH}
 # Held by the cut of the camps across the river, as they were: 168 on its
 # cell, «Аванпост Северного Альянса» wasteland; and by the cut of everything
 # across the river «Ангар в джунглях» wasteland.
@@ -121,6 +139,14 @@ RIVER_ALL_OFF_CELL = ([963, 964, 965, 966, 1197, 1198, 1199, 1200, 1003, 1004, 1
                        986, 987, 989, 990, 507, 509, 510, 511, 512, 268, 269, 270, 271, 273, 503, 505, 506, 514,
                        515, 595, 441, 442, 443, 444, 924, 925, 288]
                       + list(range(539, 575)) + list(range(994, 1002)))
+# The cut of Донгола's off-cell files: the quarter 448 behind «Улучшение сетов
+# 14-16», the clan bases Delta Force's (the yard, the back door, the arenas,
+# the staging post, the bunker, its garage and workshop, the leader's room),
+# «Хогвартс»'s and «Врачи без границ»'s, and the copy 1171 of the
+# Peacekeepers' camp.
+DONGOLA_OFF_CELL = ([448, 380, 381, 385, 386, 387, 388, 958, 959, 960, 1196,
+                     534, 535, 536, 537, 593, 594, 991, 992, 993, 1207,
+                     337, 338, 339, 342, 346, 350, 354, 358, 362, 366, 955, 956, 957, 1195, 1171])
 
 
 def load(name):
@@ -139,10 +165,12 @@ retired = load("retired.json")
 check("data/retired.json takes out the three premium masters' camps, Halfa's clothing market"
       " and craftsmen's quarters, the KKND base, the ФСЦ's airfield and base НИЛ-1, Абри's"
       " craftsmen's quarters, air base, set upgraders' quarter, clan bases and ФСЦ airfield, the"
-      " four camps across the river and Абри's clothing market, and everything across the river, each"
-      " with its why",
+      " four camps across the river and Абри's clothing market, everything across the river, and"
+      " Донгола's craftsmen's quarters, set upgraders' quarter, clothing market, ФСЦ airfield, clan bases,"
+      " the copy of the Peacekeepers' camp and the file «Засада», each with its why",
       (sorted(int(k) for k in retired["places"]), all(retired["places"].values())),
-      (sorted(set(INTENDED.values()) | set(KKND + ABRI_OFF_CELL + RIVER_OFF_CELL + RIVER_ALL_OFF_CELL)),
+      (sorted(set(INTENDED.values()) | set(KKND + ABRI_OFF_CELL + RIVER_OFF_CELL + RIVER_ALL_OFF_CELL
+                                           + DONGOLA_OFF_CELL)),
        True))
 check("  ..and settlements_verified.json nulls each one's old cell, with its why",
       [(k, verified["cells"].get(k, "absent"), bool(verified["why"].get(k)))
@@ -165,12 +193,14 @@ before = cells(place_settlements.Placer(fixed=before_fixed, retired=()).run())
 check("the map before the cuts had the three camps, the market, the three quarters, the"
       " airfield, the base НИЛ-1, Абри's four quarters, its air base, the clan base Liberty, the"
       " ФСЦ airfield 529, Blackwater's block post, the three camps across the river, Абри's"
-      " clothing market and the eighteen places of the far banks on their cells",
+      " clothing market, the eighteen places of the far banks, Донгола's six and «Засада» on its 33"
+      " cells on their cells",
       {k: before.get(k) for k in INTENDED}, INTENDED)
 check("  ..and the three cells held as the clues gave them", {k: before.get(k) for k in HELD}, HELD)
 diff = {k: (before.get(k), now.get(k)) for k in sorted(set(before) | set(now))
         if before.get(k) != now.get(k)}
-check("and the cuts changed exactly those forty-one cells, nothing else on the map",
+check("and the cuts changed exactly those eighty cells, nothing else on the map (the valley's own"
+      " «Засада», 6270,1830, wasteland both times)",
       diff, {k: (v, None) for k, v in INTENDED.items()})
 unheld = cells(place_settlements.Placer(
     fixed={k: v for k, v in verified["cells"].items() if k not in HELD}).run())
@@ -202,7 +232,8 @@ check("  ..and Абри's neighbours of the cuts: the port market 187, the quart
       {"5860,1835": 187, "5861,1835": 188, "5862,1835": 255, "5862,1836": 261, "5863,1835": 289,
        "5864,1835": 290, "5864,1836": 368, "5864,1838": 262, "5860,1838": 191, "5914,1854": 204})
 check("  ..and the towns' banks across the water from the far banks: Донгола's port 445, «Побережье»"
-      " 105, masters 96 and 97, slaughterhouse 73, the camps 93 and 98; Абу-Хамед's port 446, quarter"
+      " 105, masters 96 and 97, slaughterhouse 73, the chiefs' places 91 and 99 (the camps 93 and 98"
+      " until Донгола's of 2026-10-13); Абу-Хамед's port 446, quarter"
       " 127, masters 131, the camp of the Северный Альянс 168 and its base 263, the base СМЕРШ 194;"
       " Вади-Хальфа's pasture 44 and Причал 41; Абри's hippies 191 and the treasure 189",
       {k: now.get(k) for k in ("5873,2012", "5873,2009", "5876,2011", "5877,2012", "5878,2011",
@@ -210,9 +241,15 @@ check("  ..and the towns' banks across the water from the far banks: Донго�
                                "6274,1952", "6273,1953", "6126,1980", "5957,1733", "5965,1728",
                                "5860,1838", "5862,1846")},
       {"5873,2012": 445, "5873,2009": 105, "5876,2011": 96, "5877,2012": 97, "5878,2011": 73,
-       "5882,2036": 93, "5920,2010": 98, "6182,1977": 446, "6183,1975": 127, "6183,1977": 131,
+       "5882,2036": 91, "5920,2010": 99, "6182,1977": 446, "6183,1975": 127, "6183,1977": 131,
        "6274,1952": 168, "6273,1953": 263, "6126,1980": 194, "5957,1733": 44, "5965,1728": 41,
        "5860,1838": 191, "5862,1846": 189})
+check("  ..Донгола's off-cell files on no cell, before the cut or after it, nor the file «Засада»"
+      " anywhere but its 33 cells before",
+      (sorted(k for k, v in list(before.items()) + list(now.items()) if v in DONGOLA_OFF_CELL),
+       sorted(k for k, v in before.items() if v == 389) == sorted(AMBUSH), now.get("6270,1830"),
+       before.get("6270,1830")),
+      ([], True, None, None))
 check("  ..the far banks' files behind the cells (the tombs, Доктор «Д»'s bunkers, laboratories and pass, the"
       " gorges' pieces, Эван's works, the clan base Le_Mon, the quest wasteland, «9 мая», the warehouse 288) on"
       " no cell, before the cut or after it",

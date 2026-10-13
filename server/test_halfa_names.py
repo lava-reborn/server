@@ -104,6 +104,9 @@ PLACES = (TOWN + QUEST_PLACES + CAMPS + OUTSKIRTS + RANGE + QUARRY + ORE_MINES +
 SET_ASIDE = {
     283: "Apoc_Oasis on 5972,1738, whose cell the Halfa plan gives the hermit's 61 "
          "(the owner's default 2)",
+    702: "Зона 49's cellar (DN_Zone49_Prison), Донгола's: Каспар's «Мухаммед Ахмед (часть 10)» "
+         "(733) leads there from the quarter 36 (the owner's Донгола, 2026-10-13); its people "
+         "are held by server/test_dongola_world",
 }
 MARGIN = 5                  # cells around the places' own box that are the town's too
 

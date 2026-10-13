@@ -749,6 +749,7 @@ def migrate(db):
     run_once(db, RIVER_CAMPS_FIX, relocate_river_camps)
     run_once(db, ABRI_CLOTHES_FIX, relocate_abri_clothes)
     run_once(db, RIVER_ALL_FIX, relocate_river_all)
+    run_once(db, DONGOLA_CUT_FIX, relocate_dongola_cut)
     # Only with the client's tables to tell a premium thing by: a process
     # without them (a tool run outside the container) leaves the fix for
     # the next start that has them, rather than writing it down as done
@@ -1130,6 +1131,33 @@ def relocate_river_all(db):
     a = _move_out(db, RIVER_ALL_FIX, RIVER_ALL_ABRI, ABRI_CUT_TO)
     b = _move_out(db, RIVER_ALL_FIX, RIVER_ALL_PRICHAL, RETIRED_PLACES_TO)
     return dict(moved=a["moved"] + b["moved"], homes=a["homes"] + b["homes"])
+
+
+# The owner's cut of Донгола (2026-10-13, «и потом сделай донголу тоже»: the
+# cut of Абри's kinds, by the decisions taken for him): the clothing
+# craftsmen's quarters 455, 460, 518, the set upgraders' quarter 448, the
+# clothing market 469, the ФСЦ airfield 530, every file of the clan bases
+# Delta Force (382 on its cell, the rest never on one), «Хогвартс» and «Врачи
+# без границ», the copy 1171 of the Peacekeepers' camp and the quest file 389
+# of the 33 «Засада» cells are off the map (data/retired.json places). A
+# character saved in one, or calling one home, goes to Донгола's own door,
+# the station 49 (5877,2010), where the rides land and the town's healer
+# takes homes, rather than across the desert to Причал. No journal step: no
+# quest gives, takes, asks for or points into these places
+# (server/test_dongola_cut.py holds that).
+DONGOLA_CUT_FIX = "retire-dongola-cut-2026-10-13"
+DONGOLA_CUT_PLACES = (455, 460, 518, 448, 469, 530,
+                      382, 380, 381, 385, 386, 387, 388, 958, 959, 960, 1196,
+                      534, 535, 536, 537, 593, 594, 991, 992, 993, 1207,
+                      337, 338, 339, 342, 346, 350, 354, 358, 362, 366, 955, 956, 957, 1195,
+                      1171, 389)
+DONGOLA_CUT_TO = (49, 5877, 2010)
+
+
+def relocate_dongola_cut(db):
+    """Whoever is in a place of Донгола's cut, or calls one home, to the
+    town's station 49; returns the counts it logs."""
+    return _move_out(db, DONGOLA_CUT_FIX, DONGOLA_CUT_PLACES, DONGOLA_CUT_TO)
 
 
 # The same cut for the things: a premium thing (items.premium, 6 860 types)

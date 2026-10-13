@@ -74,8 +74,10 @@ CAMP_FACTIONS = {
 # zd_ButchKassidy), whom data/placements.json puts down in their camps. With
 # their rows' levels (data/build_mob_types.py DESIGNED_LEVELS, 2026-10-12) they
 # would otherwise be the nearest level of their faction for the Up_Camp copies'
-# lost types and stand there by the dozen.
-NAMED = {1563, 1564}
+# lost types and stand there by the dozen. And Вильям Блейд of Донгола's ДСР
+# camp (jm_WilliamBlade, «[14] Вильям Блейд<Br>ДСР», 8937), put down by hand in
+# the camp 93 the same way (the owner's Донгола, 2026-10-13).
+NAMED = {1563, 1564, 1565}
 # Prefixes that are a season or a test, never a company.
 EVENT_PREFIXES = {"vov", "may", "event", "eventboss", "test", "admin", "ny",
                   "hw", "xmas", "vbg", "clan", "kb"}
@@ -102,8 +104,8 @@ def camp_level(fn):
     return int(m.group(1)) if m else None
 
 
-# DESIGNED: who stands in the empty (type 0) slots of Вади-Хальфа's and Абри's
-# camps and quest places, slot by slot in the file's order. location ->
+# DESIGNED: who stands in the empty (type 0) slots of Вади-Хальфа's, Абри's and
+# Донгола's camps and quest places, slot by slot in the file's order. location ->
 # (faction prefix, or None for stand-ins of another name; (lowest, highest)
 # level; the types; why). The bands are the map's tooltips on the camps («Для
 # игроков 0-2 уровней» ...); every kind of the faction's fighters that falls in
@@ -222,6 +224,35 @@ CAMP_FILL = {
           "животное», 9498), at the town's band, nine of level 8 and four of 12 in the file's "
           "thirteen empty slots. The junk piles of the dump's searches stand by hand "
           "(data/placements.json)."),
+    # Донгола, the owner's order of 2026-10-13: «и потом сделай донголу тоже»,
+    # as Абри's «В Абри добавь мобов в лагеря и в окрестности». The ДСР's
+    # ranks are their block's (8925-8936: Командир, Ополченец, Солдат, Боевик
+    # at 12; Командир Группы, Доброволец, Ветеран, Диверсант at 13; Полевой
+    # Командир, Рядовой, Спецназ, Командос at 14), the Peacekeepers' theirs
+    # (8942-8953); every rank the town's quests ask for stands: the «[12]
+    # Боевик» of «Мясники», the commanders of a group, veterans and saboteurs
+    # of Люшер's line, the «[15] Сержант» of «Мухаммед Ахмед».
+    93: ("jm", (12, 14),
+         [362, 363, 365, 366, 368, 369, 370, 372, 373, 592],
+         "Лагерь ДСР (Bandit_Camp7), «Для игроков 12-14 уровней» (tooltip 5883,2035): the ДСР's "
+         "jm_ of levels 12-14 round their boss Полковник Халил (374), and their treasurer "
+         "jm_Kaznachei (592, «[14] Казначей<Br>ДСР», 8924), who stands all day (server/bosses.py "
+         "ALL_DAY). Вильям Блейд (1565) is put down by hand (data/placements.json), so that no "
+         "ambush draws on him."),
+    91: ("jm", (12, 14),
+         [364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 365],
+         "Джибрил Ибрагим's meeting place (MW_bandits7_boss) beside the camp 93: the ДСР of levels "
+         "12-14 round their chief, the kinds 93 leaves out (364, 367, 371) among them, the «[12] "
+         "Боевик» twice."),
+    98: ("pc", (14, 16),
+         [395, 396, 397, 398, 399, 400, 401, 402, 403, 593],
+         "Лагерь Миротворцев (Bandit_Camp8), «Для игроков 14-16 уровней» (tooltip 5921,2011): the "
+         "Peacekeepers pc_ of levels 14-16 round their boss Шеф Дженсен (407), and their treasurer "
+         "pc_Kaznachei (593, «[16] Казначей<Br>Миротворцы», 8941), who stands all day."),
+    99: ("pc", (14, 16),
+         [399, 400, 401, 402, 403, 404, 405, 406, 404, 405, 406],
+         "Макс Коул's meeting place (MW_bandits8_boss) beside the camp 98: the Peacekeepers of "
+         "levels 15-16 round their chief, the kinds 98 leaves out (404-406) twice each."),
 }
 
 
@@ -249,8 +280,8 @@ def camp_fill(mt, types):
         fill[str(loc_id)] = dict(fn=loc.fn, faction=faction, band=[lo, hi], types=picked, why=why)
     return {
         "_": "DESIGNED, not recovered: who stands in the empty (type 0) spawn slots of "
-             "Вади-Хальфа's and Абри's camps and quest places, one type per slot in the file's order. "
-             "Applied by server/rooms.py in war=1 locations, to these files only; every other "
+             "Вади-Хальфа's, Абри's and Донгола's camps and quest places, one type per slot in the "
+             "file's order. Applied by server/rooms.py in war=1 locations, to these files only; every other "
              "file's empty slot stays empty. Built by data/build_spawn_substitutes.py "
              "(CAMP_FILL), which says why for each.",
         "designed": True,

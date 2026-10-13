@@ -162,13 +162,15 @@ finally:
 
 # Вади-Хальфа's eight hour-keeping bosses carry their factions' ingots
 # since 2026-10-09 (test_halfa_ingots holds them), Абри's four since
-# 2026-10-12 (test_abri_ingots).
+# 2026-10-12 (test_abri_ingots), Донгола's four since 2026-10-13
+# (test_dongola_ingots).
 HALFA_BOSSES = [269, 270, 283, 284, 299, 300, 313, 314]
 ABRI_BOSSES = [327, 328, 360, 361]
-check("nobody else rolls for any gold ingot but the bosses of Вади-Хальфа and of Абри",
+DONGOLA_BOSSES = [374, 375, 407, 408]
+check("nobody else rolls for any gold ingot but the bosses of Вади-Хальфа, of Абри and of Донгола",
       sorted(int(t) for t in mobs.TYPES if int(t) != BOSS
              and {r[0] for r in mobs.loot_table(int(t))} & set(INGOTS)),
-      HALFA_BOSSES + ABRI_BOSSES)
+      HALFA_BOSSES + ABRI_BOSSES + DONGOLA_BOSSES)
 
 # Where he stands: location 34 and no other file, no stand-in for a missing
 # creature; and of the valley's settlements his camp is one of the two with

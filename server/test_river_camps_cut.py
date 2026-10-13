@@ -115,9 +115,15 @@ PRICHAL, PRICHAL_CELL = 41, (5965, 1728)
 PIER_DN = (5873, 2012)                                  # Причал Донголы 445
 PIER_DN_WAS = "Причал Донголы:<BR>Задания.<br>Отправка на фронт.<br>Новогодняя Елка"
 PIER_DN_NOW = "Причал Донголы:<BR>Задания.<br>Новогодняя Елка"
+# The pier's row since the owner's Донгола (2026-10-13), whose cut took the
+# New Year tree off it too: the one edit of the row carries both cuts.
+PIER_DN_ROW = "Причал Донголы:<BR>Задания."
 BOAT_OUT, BOAT_BACK = 412, 413
 ONEILL, DOBERMAN = 5685, 5694
 # The towns' banks: the places that stay (FIND.md, the research of 2026-10-12).
+# Донгола's camps' second cells hold their chiefs' places 91 and 99, and its
+# clothing market 469 is cut, since the owner's Донгола of 2026-10-13
+# (server/test_dongola_cut.py, server/test_dongola_world.py).
 BANKS = {
     "Вади-Хальфа": {(5970, 1724): 80, (5971, 1723): 82, (5978, 1727): 81, (5979, 1728): 83,
                     (5974, 1739): 84, (5975, 1738): 86, (5993, 1721): 85, (5992, 1720): 87,
@@ -125,9 +131,8 @@ BANKS = {
                     (5968, 1728): 94, (5969, 1728): 95, PRICHAL_CELL: PRICHAL},
     "Абри": {(5880, 1844): 88, (5881, 1843): 89, (5868, 1854): 92, (5869, 1855): 90,
              (5885, 1836): 220, (5860, 1835): 187, (5861, 1835): 188, (5862, 1835): 255},
-    "Донгола": {(5882, 2036): 93, (5883, 2035): 93, (5920, 2010): 98, (5921, 2011): 98,
-                (5878, 2011): 73, (5876, 2011): 96, (5877, 2012): 97, (5873, 2012): 445,
-                (5878, 2013): 469},
+    "Донгола": {(5882, 2036): 91, (5883, 2035): 93, (5920, 2010): 99, (5921, 2011): 98,
+                (5878, 2011): 73, (5876, 2011): 96, (5877, 2012): 97, (5873, 2012): 445},
     "Абу-Хамед": {(6274, 1952): 168, (6273, 1953): 263, (6183, 1977): 131, (6183, 1975): 127,
                   (6182, 1977): 446, (6183, 1974): 467},
 }
@@ -188,8 +193,8 @@ try:
     check("  ..the files stay, so a character saved inside still loads",
           [world.location(i).fn for i in sorted(CAMPS)], [FILES[i] for i in sorted(CAMPS)])
     check("the towns' banks keep every place: Вади-Хальфа's camps, chiefs, bandits and masters,"
-          " Абри's camps, Мантикора and market, Донгола's ДСР, Миротворцы, masters, port and market,"
-          " Абу-Хамед's Северный Альянс, masters, quarter, port and market",
+          " Абри's camps, Мантикора and market, Донгола's ДСР, Миротворцы (and their chiefs' places since"
+          " 2026-10-13), masters and port, Абу-Хамед's Северный Альянс, masters, quarter, port and market",
           {town: {c: table.get(c) for c in cells} for town, cells in BANKS.items()}, BANKS)
     check("  ..and across the river the digs 433-436, the ФСЦ's bases НИЛ-2..4, the gorges and the"
           " evacuation zones, which this cut left, are wasteland since the next one",
@@ -349,9 +354,10 @@ try:
     ours = {(e["x"], e["y"]): (e["was"], bool(e.get("hide")), e.get("text")) for e in LABELS
             if e.get("why", "").startswith(CUT_WHY)}
     want_ours = {c: (t, True, None) for c, t in HIDDEN.items()}
-    want_ours[PIER_DN] = (PIER_DN_WAS, False, PIER_DN_NOW)
+    want_ours[PIER_DN] = (PIER_DN_WAS, False, PIER_DN_ROW)
     check("data/map_labels.json hides «Лагерь за рекой» on its three cells, takes «Отправка на"
-          " фронт» off Донгола's pier, and edits nothing else for the cut", ours, want_ours)
+          " фронт» off Донгола's pier (its row taking the New Year tree off too since Донгола's cut of"
+          " 2026-10-13), and edits nothing else for the cut", ours, want_ours)
     EVERYWHERE = (0, 99999, 0, 99999)
     original = [r for r in rows_in(raw, EVERYWHERE) if r[2] == "Лагерь за рекой"]
     if len(original) == 3:
@@ -385,11 +391,12 @@ try:
     # 431. Абу-Хамед's pier 446 (5691 and 5692), Вади-Хальфа's 41 (О'Нилл
     # and Беккет) and Абри's port market (МакКей and Вулси) never named it.
     PIER_BOX = (PIER_DN[0], PIER_DN[0], PIER_DN[1], PIER_DN[1])
-    check("Донгола's pier keeps its name, its quests and its tree, without «Отправка на фронт» (an"
-          " installed client's file, the release's, may have it so already)",
-          ([t for _x, _y, t in rows_in(raw, PIER_BOX)] in ([PIER_DN_WAS], [PIER_DN_NOW]),
+    check("Донгола's pier keeps its name and its quests, without «Отправка на фронт» nor, since"
+          " Донгола's cut of 2026-10-13, the New Year tree (an installed client's file, the release's,"
+          " may have it so already)",
+          ([t for _x, _y, t in rows_in(raw, PIER_BOX)] in ([PIER_DN_WAS], [PIER_DN_NOW], [PIER_DN_ROW]),
            [t for _x, _y, t in rows_in(out, PIER_BOX)]),
-          (True, [PIER_DN_NOW]))
+          (True, [PIER_DN_ROW]))
     check("  ..so no name on the map offers the front any more",
           [(x, y) for x, y, t in rows_in(out, EVERYWHERE) if "фронт" in t.lower()], [])
     for lid, crew in ((445, (5689, 5690)), (446, (5691, 5692)), (PRICHAL, (ONEILL, ONEILL + 1))):

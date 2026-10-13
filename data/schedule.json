@@ -38,6 +38,23 @@
   "feb23": {
    "dates": [["02-20", "02-26"]],
    "why": "DESIGNED dates, the owner's default (plan, decision 22: a week around the day). Its content (48959-48961, fevral23_exit 988 at 5851,1991) is around Абри and Мероэ, none of it in Вади-Хальфа's band."
+  },
+  "lusher_road1": {
+   "daily": ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"],
+   "minutes": 10,
+   "why": "RECOVERED times, DESIGNED pairing (the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 43 of its plan). Рашид's line sends the player to ambush Люшер's masters on the roads 144-146 («Пустошь: дорога», Q_DN_Road01-03), each master marked on the map in turn by the Сакиб of the road before: «Устрой засаду на Мастера Люшера. Он появляется в 00 минут каждый час в месте, отмеченном на твоей карте» (48683). The first master, on the first road (144), from the hour on; ten minutes, DESIGNED: the text gives no end, and at ten past the second comes."
+  },
+  "lusher_road2": {
+   "of": "lusher_road1",
+   "from": 10,
+   "to": 15,
+   "why": "RECOVERED times, DESIGNED pairing (the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 43 of its plan). Рашид's line sends the player to ambush Люшер's masters on the roads 144-146 («Пустошь: дорога», Q_DN_Road01-03), each master marked on the map in turn by the Сакиб of the road before: «Он появляется там в 10 минут каждый час и будет доступен в течении 5 минут» (48686): the second master, on the second road (145)."
+  },
+  "lusher_road3": {
+   "of": "lusher_road1",
+   "from": 20,
+   "to": 25,
+   "why": "RECOVERED times, DESIGNED pairing (the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 43 of its plan). Рашид's line sends the player to ambush Люшер's masters on the roads 144-146 («Пустошь: дорога», Q_DN_Road01-03), each master marked on the map in turn by the Сакиб of the road before: «Он появляется там ровно в 20 минут каждый час и будет доступен в течении 5 минут» (48690): the third master, on the third road (146)."
   }
  },
  "spawns": [
@@ -70,6 +87,24 @@
    "loc": 646,
    "types": [877, 878, 879],
    "why": "RECOVERED people, place and time. uf_RewardMan_1..3, «Джеф<Br>Патологоанатом», «Аль-Назир<Br>Коронер», «Томпсон<Br>Судмедэксперт» (62318-62320; the wiki: «Центральный блок» тюрьмы), who take the armbands, for the last five minutes of the uprising."
+  },
+  {
+   "window": "lusher_road1",
+   "loc": 144,
+   "types": [817],
+   "why": "RECOVERED creature and time, DESIGNED place (decision 43). m510_MasterLusher_1, «Мастер Люшера» (10609), on the first road 144 (5900,2017): he stands there only from the hour on (lusher_road1); the road's Сакиб (829) stands all the time."
+  },
+  {
+   "window": "lusher_road2",
+   "loc": 145,
+   "types": [818],
+   "why": "The same for m510_MasterLusher_2 on the second road 145 (5894,2019), from ten past for five minutes (lusher_road2)."
+  },
+  {
+   "window": "lusher_road3",
+   "loc": 146,
+   "types": [819],
+   "why": "The same for m510_MasterLusher_3 on the third road 146 (5876,2031), from twenty past for five minutes (lusher_road3)."
   }
  ],
  "held_out": [
@@ -102,6 +137,41 @@
    "loc": 188,
    "types": [5105],
    "why": "The owner's cut of Абри, 2026-10-12 («... улучшение сетов 10-12 ...»): Npc_Upgrader000003, «Рудольф<br>Обмен одежды на вырост [9-12]» (the original's name), the set upgrader of Абри's band in its Жилой квартал (Abri_Settelment), the one file he stands in. His window is empty, as every set upgrader's is since the cut of Вади-Хальфа (server/setcraft.py), and he gives and takes no quest: he was the service the order takes away and nothing else, so he does not stand. Вади-Хальфа's Генри ст stays where he is because he gives quests (104, 105, 119, 132)."
+  },
+  {
+   "loc": 197,
+   "types": [5106],
+   "why": "The owner's cut of Донгола, 2026-10-13 («и потом сделай донголу тоже»: the cut of Абри's kinds, decision 11 of its plan, taken for him): Npc_Upgrader000004, «Адольф<br>Обмен одежды на вырост [13-16]» (10480), the set upgrader of Донгола's band in its new market. Nobody upgrades a set since 2026-10-09 (server/setcraft.py: the only slice is off), so his window was empty, and he gives and takes no quest; Абри's Рудольф 5105 is held out of 188 the same way."
+  },
+  {
+   "loc": 50,
+   "types": [232],
+   "why": "The same for dn_upg_muaz, «Муаз<br>Обмен одежды на вырост» (62324), in Донгола's old market: an empty window and no quest (decision 11)."
+  },
+  {
+   "loc": 103,
+   "types": [5, 5113],
+   "why": "The same for the black market of Донгола (decision 11): Simple_Upgrader «Мастер Тиль», whose window is empty since the set upgrade went off (2026-10-09) and whose quests are Вади-Хальфа's -- his way 146 is recorded under the town's black market 102 (data/passages.json quest), so here he would refuse it --; and Npc_Trader000002, the original's «Тестовый торгвец» (10401), a test trader with an empty stall (data/orig_names_manual.json 'none')."
+  },
+  {
+   "loc": 445,
+   "types": [6560],
+   "why": "The same for Донгола's port (decision 10): Npc_Commoner000798, «Майор Свейн<br>Delta Force» (10350), the man of the clan base Delta Force, which is cut with all its files (data/retired.json): no quest, no service."
+  },
+  {
+   "loc": 77,
+   "types": [4047, 6896],
+   "why": "Донгола's «Упавший спутник» (77, on 5877,2004 since the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 12 of its plan): cosm_NPC_1 and Abri_Archa have no row, no wiki page and no role (data/orig_names_manual.json 'none'), and would show their internal names: the place is one to look at."
+  },
+  {
+   "loc": 618,
+   "types": [2176],
+   "why": "DESIGNED, as Вади-Хальфа's 644 (above; the owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»), decision 46 of its plan): zapadlist_dvor, «Макисе Курису» (60386), the guard with the crutch, at the entrance of Донгола's Prison_1 («Тюрьма: Северный блок», the western gate's), where the gate leads in; his level 20 is the place's, and the blocks are for the uprising."
+  },
+  {
+   "loc": 619,
+   "types": [2176],
+   "why": "The same guard at the entrance of Донгола's Prison_2 («Тюрьма: Восточный блок», the southern gate's), for the same reason."
   }
  ],
  "quests": [

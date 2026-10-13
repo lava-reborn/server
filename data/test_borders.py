@@ -23,7 +23,7 @@ What is checked here:
     over the edge the player came in by, and backing out lands where it
     started -- never an error, never a black screen;
   * and the walk: breadth-first from the cell a character starts on, every
-    one of the 254 settlements of data/settlements.json is reachable on foot,
+    one of the 228 settlements of data/settlements.json is reachable on foot,
     the Nubian valley and the camp of the New Colonists among them.
 
 Runs under WSL with the client resources present:
@@ -180,9 +180,11 @@ def check_exits(ring):
     if by_hand:
         print("  %d settlement exits meet a hand-drawn wall, which outranks"
               " them: %s" % (len(by_hand), by_hand[:4]))
-    # 944 since the owner's cut of everything across the river (2026-10-13)
-    # took nineteen settlement cells off the map.
-    assert settlement_exits >= 944, \
+    # 833 since the owner's Донгола (2026-10-13) took 39 settlement cells off
+    # the map (the 33 «Засада» of 389 among them) and put 13 places on; 944
+    # after the cut of everything across the river the same day, which took
+    # nineteen.
+    assert settlement_exits >= 833, \
         "borders: only %d settlement exits to check" % settlement_exits
     print("all %d exits of the %d placed locations lead onto the map, the %d"
           " of the settlements among them; %d of the ring's meet the lake and"
@@ -340,7 +342,7 @@ def check_walk():
           % (wide, high, len(blocked)))
 
     settled = world.settlements()
-    assert len(settled) >= 254, "borders: only %d settlements" % len(settled)
+    assert len(settled) >= 228, "borders: only %d settlements" % len(settled)
 
     # The world is no longer one piece, and that is a decision rather than a
     # fault: the owner drew a wall round the Nubian valley, so the starting

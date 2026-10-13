@@ -1,5 +1,5 @@
 {
- "_": "DESIGNED, not recovered: who stands in the empty (type 0) spawn slots of Вади-Хальфа's and Абри's camps and quest places, one type per slot in the file's order. Applied by server/rooms.py in war=1 locations, to these files only; every other file's empty slot stays empty. Built by data/build_spawn_substitutes.py (CAMP_FILL), which says why for each.",
+ "_": "DESIGNED, not recovered: who stands in the empty (type 0) spawn slots of Вади-Хальфа's, Абри's and Донгола's camps and quest places, one type per slot in the file's order. Applied by server/rooms.py in war=1 locations, to these files only; every other file's empty slot stays empty. Built by data/build_spawn_substitutes.py (CAMP_FILL), which says why for each.",
  "designed": true,
  "fill": {
   "122": {
@@ -363,6 +363,28 @@
    ],
    "why": "Бетти's meeting place (MW_bandits6_boss) beside the camp 92: the flayers of levels 11-12 round their chief, the kinds 92 leaves out (354, 358, 359) among them, 354 and 358 twice."
   },
+  "91": {
+   "band": [
+    12,
+    14
+   ],
+   "faction": "jm",
+   "fn": "MW_bandits7_boss",
+   "types": [
+    364,
+    365,
+    366,
+    367,
+    368,
+    369,
+    370,
+    371,
+    372,
+    373,
+    365
+   ],
+   "why": "Джибрил Ибрагим's meeting place (MW_bandits7_boss) beside the camp 93: the ДСР of levels 12-14 round their chief, the kinds 93 leaves out (364, 367, 371) among them, the «[12] Боевик» twice."
+  },
   "92": {
    "band": [
     10,
@@ -383,6 +405,70 @@
     591
    ],
    "why": "Лагерь Живодеров (Bandit_Camp6), «Для игроков 10-12 уровней» (tooltip 5868,1854): the flayers zd_ of levels 10-12 round their boss Элфрид (360), and their treasurer zd_Kaznachei (591, «[12] Казначей<Br>Живодеры Элфрида», 8907), who stands all day. Бутч Кэссиди (1564) is put down by hand (data/placements.json)."
+  },
+  "93": {
+   "band": [
+    12,
+    14
+   ],
+   "faction": "jm",
+   "fn": "Bandit_Camp7",
+   "types": [
+    362,
+    363,
+    365,
+    366,
+    368,
+    369,
+    370,
+    372,
+    373,
+    592
+   ],
+   "why": "Лагерь ДСР (Bandit_Camp7), «Для игроков 12-14 уровней» (tooltip 5883,2035): the ДСР's jm_ of levels 12-14 round their boss Полковник Халил (374), and their treasurer jm_Kaznachei (592, «[14] Казначей<Br>ДСР», 8924), who stands all day (server/bosses.py ALL_DAY). Вильям Блейд (1565) is put down by hand (data/placements.json), so that no ambush draws on him."
+  },
+  "98": {
+   "band": [
+    14,
+    16
+   ],
+   "faction": "pc",
+   "fn": "Bandit_Camp8",
+   "types": [
+    395,
+    396,
+    397,
+    398,
+    399,
+    400,
+    401,
+    402,
+    403,
+    593
+   ],
+   "why": "Лагерь Миротворцев (Bandit_Camp8), «Для игроков 14-16 уровней» (tooltip 5921,2011): the Peacekeepers pc_ of levels 14-16 round their boss Шеф Дженсен (407), and their treasurer pc_Kaznachei (593, «[16] Казначей<Br>Миротворцы», 8941), who stands all day."
+  },
+  "99": {
+   "band": [
+    14,
+    16
+   ],
+   "faction": "pc",
+   "fn": "MW_bandits8_boss",
+   "types": [
+    399,
+    400,
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    404,
+    405,
+    406
+   ],
+   "why": "Макс Коул's meeting place (MW_bandits8_boss) beside the camp 98: the Peacekeepers of levels 15-16 round their chief, the kinds 98 leaves out (404-406) twice each."
   }
  }
 }
