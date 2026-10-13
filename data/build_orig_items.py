@@ -86,6 +86,11 @@ by a later one, and only "high" and "medium" records are written.
     [G][10], [G][12], Хаксли's ammunition coupons, the junkyard's tools,
     Одноухий's gypsum, wire and bandages, and Фрея Каплан's 24 gifts, each a
     hand-checked name and description pair of its run (ABRI_TRADE_ROWS).
+ 7l. The things Донгола's quests hand out and ask for that no rule above
+    names, hand-checked name and description pairs (DONGOLA_QUEST_ROWS).
+ 7m. What Донгола's stalls sell (2026-10-13): the lottery tickets [14] and
+    [G][14] and Тариф's envelope, each a hand-checked name and description
+    pair of its run (DONGOLA_TRADE_ROWS).
  8. Everything else: the wiki name from data/items_wiki.json equals exactly
     one row (brackets, $-suffix, case, ё and quotes ignored); "high" when the
     row after it is the wiki description too. Types of firearm_families.json
@@ -1236,6 +1241,32 @@ def abri_quest_records(T, objects):
     return out
 
 
+# --- 7l. the things of Донгола's quests -----------------------------------------------------
+
+# The Донгола restoration (2026-10-13, the owner's «и потом сделай донголу
+# тоже»): the things its quests hand out and ask for that no rule above names
+# -- an objects.xml name each, its name row and its description row (None
+# where the original has none), hand-checked against the run of texts.xml
+# that names it. What Донгола's stalls sell is DONGOLA_TRADE_ROWS (7m).
+DONGOLA_QUEST_ROWS = {}
+
+
+def dongola_quest_records(T, objects):
+    by_name = {name: tid for tid, (root, name) in objects.items()}
+    names = {text for _n, _d, text in DONGOLA_QUEST_ROWS.values()}
+    out = {}
+    for name, (nid, did, text) in sorted(DONGOLA_QUEST_ROWS.items()):
+        # Вади-Хальфа's guard: the name row is the name, and the description
+        # row, where there is one, is prose -- no "$", no bracket, no name.
+        if T[nid] != text or (did is not None and (
+                "$" in T[did] or "[" in T[did] or T[did] in names or len(T[did]) < 20)):
+            raise SystemExit("texts.xml rows %s/%s do not look like %s" % (nid, did, name))
+        if name not in by_name:
+            raise SystemExit("objects.xml has no object %s" % name)
+        out[by_name[name]] = (nid, did, "high")
+    return out
+
+
 # --- 7i. the prison's armband ------------------------------------------------------------
 
 # What the prisoners of Вади-Хальфа's uprising carry and its medics pay for
@@ -1436,6 +1467,43 @@ def abri_trade_records(T, objects):
     return out
 
 
+# --- 7m. what Донгола's stalls sell -------------------------------------------------------
+
+# The Донгола restoration (2026-10-13): the things its stalls sell that
+# reached the player under objects.xml's own words, or by rule 8 alone.
+#   * the lottery tickets of Донгола's lottery men (663, the old and the new
+#     market; 712, the black market): «Лотерейный билет [14]» and «[G][14]»
+#     (6923 and 6926 of the tickets' run, beside rule 7k's), objects.xml's
+#     DnLoteryKey_13_14 and DnLoteryKey_g_13_14 by their band -- the articles
+#     «Лотерейный билет (14)» and «(G)(14)» take part in «Лотерея Донголы
+#     (13-14)» and «Золотая Лотерея Донголы (13-14)»; both share the [8]
+#     ticket's words, 6919, as Абри's do;
+#   * Тариф's envelope, qEnvelope 1309 «Конверт» (6240/6241), what the
+#     policeman sells at the sewer's door («Ну что, покупаешь конверт?»,
+#     60015) and the one thing of his article's «Торговля»; rule 8 found it
+#     by the wiki's name, and it is pinned here with the rest.
+# The bus tickets Луиджи and Нур-ад-Дин sell (ticket_Abri_to_DN,
+# ticket_DN_to_Abri) are rule 7i's (WILD_ROWS), Элизабет Стюарт's gifts rule
+# 7k's (Фрея Каплан's 24). Pinned 2026-10-13.
+DONGOLA_TRADE_ROWS = {"DnLoteryKey_13_14": (6923, 6919, "Лотерейный билет [14]"),
+                      "DnLoteryKey_g_13_14": (6926, 6919, "Лотерейный билет [G][14]"),
+                      "qEnvelope": (6240, 6241, "Конверт")}
+
+
+def dongola_trade_records(T, objects):
+    by_name = {name: tid for tid, (root, name) in objects.items()}
+    out = {}
+    for name, (nid, did, text) in sorted(DONGOLA_TRADE_ROWS.items()):
+        # The name row is the name, and the description row is prose -- no
+        # "$", no bracket.
+        if T[nid] != text or "$" in T[did] or "[" in T[did] or len(T[did]) < 20:
+            raise SystemExit("texts.xml rows %d/%d do not look like %s" % (nid, did, name))
+        if name not in by_name:
+            raise SystemExit("objects.xml has no object %s" % name)
+        out[by_name[name]] = (nid, did, "high")
+    return out
+
+
 # --- 7i. the wild and the leftovers -------------------------------------------------------
 
 # What the treasure digs, Уорхол's collection and the rides to other towns
@@ -1574,6 +1642,8 @@ RULE = ("type_id -> original texts.xml rows (html-unescaped, otherwise verbatim)
         "Абри's quest things (ABRI_QUEST_ROWS), what Абри's stalls sell (the lottery tickets "
         "6919..6925, the ammunition coupons 6684..6690, the junkyard's tools 8238..8260 and "
         "1610, the event's gypsum, wire and bandages 49079..49084, the gifts 1265..1308), "
+        "Донгола's quest things (DONGOLA_QUEST_ROWS), what Донгола's stalls sell (the lottery "
+        "tickets 6923 and 6926, the envelope 6240/6241), "
         "and an exact wiki name for the rest. See data/build_orig_items.py.")
 
 
@@ -1603,6 +1673,8 @@ def build(texts_path):
              ("halfa_quest", halfa_records(T, objects)),
              ("abri_quest", abri_quest_records(T, objects)),
              ("abri_trade", abri_trade_records(T, objects)),
+             ("dongola_quest", dongola_quest_records(T, objects)),
+             ("dongola_trade", dongola_trade_records(T, objects)),
              ("belt", belt_records(T, objects)),
              ("miner_wear", miner_records(T, objects)),
              ("prison", prison_records(T, objects)),
