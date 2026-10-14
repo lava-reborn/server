@@ -395,10 +395,12 @@ try:
                      (items.params_of(g6)["cost"], items.params_of(g6)["g_cost"])),
           ("Чек на одежду [6]", "Чек на одежду [6] (G)", (0, setcraft.cheque_price(6, "G"))))
     # One mechanism: Абри's slice gives Абри's rows (Пустынник[10]; Чёрный
-    # Ловелас[12] is a quest set, not reworked).
+    # Ловелас[12] is a quest set, not reworked). Numbered in the module's
+    # own free block (11500-11999): 12000 and up are Абу-Хамед's since the
+    # Боевая Академия (2026-10-14, setcraft.TYPE_RANGE).
     abri = dict(band=(10, 12), parts_band=(10, 12), upgraders={},
                 craftsmen={10: 90000, 11: 90015, 12: 90030},
-                types={"rework": 12000, "parts": 12200, "cheque": 12400, "end": 12500})
+                types={"rework": 11500, "parts": 11600, "cheque": 11800, "end": 11900})
     got = setcraft.generate(abri)
     check("the same generator fed Абри's slice: Пустынник[10] A and G, 100 + 100 + 4 rows",
           (len(got), sorted({(q["level"], q["max_level"]) for q in got}),

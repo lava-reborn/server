@@ -169,8 +169,12 @@ TREASURERS = (5767, 5768, 5769)
 # (P), pupil (A), slot by slot, helm to boots (9691-9705).
 RANK = {"G": 0, "P": 1, "A": 2}
 
-# The rows this module's generator writes (data/questgen_setcraft.json).
-TYPE_RANGE = range(11000, 13000)
+# The rows this module's generator writes (data/questgen_setcraft.json):
+# 11000-11999. The plan's register gives 12000-12999 to Абу-Хамед's
+# generators -- the Боевая Академия's lessons stand there since the owner's
+# «сделай потом абу хамед в таком же формате» (2026-10-14,
+# data/questgen_academy.json) -- so no row of theirs counts as a craftsman's.
+TYPE_RANGE = range(11000, 12000)
 
 # A town's slice: the band of rungs its upgraders lead up to and its
 # craftsmen rework, the band of its parts upgrade, which upgrader does

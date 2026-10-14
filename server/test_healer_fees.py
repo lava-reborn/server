@@ -120,9 +120,10 @@ for p, name in sorted(PLACE_CITY.items()):
 check("the healers of the places a city's place leads to: the town's fee -- Ведич's copy in the"
       " Пустошь of the Амазонка (1178 at 193, by 473 from Абри's port market and 474 back, any"
       " time) 150, not the designed 10; Деда Джоф at the quarry (627, from the pier) 150;"
-      " Грегори in Донгола's quarry (632, by Джамшут's 708 from the new market, 2026-10-13) 500",
+      " Грегори in Донгола's quarry (632, by Джамшут's 708 from the new market, 2026-10-13) 500;"
+      " Роуз in Абу-Хамед's quarry (636, by Ибрахим's 903 from the quarter, 2026-10-14) 500",
       NEXT, {193: {1178: ("Абри", 150)}, 627: {100: ("Вади-Хальфа", 150)},
-             632: {138: ("Донгола", 500)}})
+             632: {138: ("Донгола", 500)}, 636: {728: ("Абу-Хамед", 500)}})
 
 # --- 3. the file -----------------------------------------------------------------------------
 print()
