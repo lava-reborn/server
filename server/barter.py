@@ -153,13 +153,14 @@ def tradable(type_id):
     """Whether a thing may change hands at all: the client's own test is the
     static exchang flag (BarterInterface.checkSellItem), and a modified
     client would not make it. Quest things stay with the quest, as they do
-    in the post and at the auction, and premium things are out of the game
-    (items.premium). Gold items also stay with their owner, even when the
+    in the post and at the auction, and what is out of the game -- premium
+    things and those the owner took out by name -- does not change hands
+    (items.out_of_game). Gold items also stay with their owner, even when the
     original exchange flag permits them."""
     import combat  # late: combat imports inventory and its session handlers
     si = items.params_of(type_id) or {}
     return bool(si.get("exchang")) and not si.get("quest") \
-        and not items.premium(type_id) and not combat.gold_item(type_id)
+        and not items.out_of_game(type_id) and not combat.gold_item(type_id)
 
 
 class Side:

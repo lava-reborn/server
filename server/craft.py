@@ -238,12 +238,14 @@ def salvageable(type_id):
     without one is the designed stand-in, a pistol whatever it is), and none
     of what a player would lose by it: nothing premium, nothing gold
     (combat.gold_item, the owner's «голд-предметы»), no modification (an
-    upgrade paid for), nothing a quest lends."""
+    upgrade paid for), nothing a quest lends. Nor anything the owner took
+    out by name (items.out_of_game, data/retired.json items): no bench takes
+    a Steyr TMP or a Chang Feng apart."""
     import combat                      # late: combat imports items, items this
     import items
     import quests
     t = int(type_id)
-    if t not in items.wiki() or items.premium(t) or combat.gold_item(t) \
+    if t not in items.wiki() or items.out_of_game(t) or combat.gold_item(t) \
             or mod_of(t) or quests.lent(t):
         return None
     cls, level = weapon_of(t), gun_level(t)

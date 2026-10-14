@@ -805,7 +805,8 @@ def generate(slice_):
     """Every row of a slice: rework, parts upgrade, cheques, each family
     numbered from its own first type (slice_["types"]); with nobody to give
     or take them while the slice's "rows" are off (switched_off). Refuses a
-    row that names a premium thing or strays out of its block."""
+    row that names a thing out of the game (items.out_of_game: premium, or
+    data/retired.json items) or strays out of its block."""
     types = slice_["types"]
     rework = rework_rows(slice_, types["rework"])
     parts = parts_rows(slice_, types["parts"])
@@ -820,8 +821,9 @@ def generate(slice_):
         if q["type"] not in TYPE_RANGE:
             raise ValueError("setcraft: quest %d is outside %r" % (q["type"], TYPE_RANGE))
         named = q["rew_obj"] + [o["obj"] for o in q.get("objs", [])]
-        if any(items.premium(t) for t in named):
-            raise ValueError("setcraft: quest %d names a premium thing" % q["type"])
+        if any(items.out_of_game(t) for t in named):
+            raise ValueError("setcraft: quest %d names a thing out of the game ((P), or"
+                             " data/retired.json items)" % q["type"])
     if off(slice_, "rows"):
         switched_off(rows, off(slice_, "rows"))
     return rows

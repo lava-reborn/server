@@ -160,7 +160,9 @@ def postable(type_id):
     at every take of «Новые вопросы» (quests.START_OBJ_NOT_ON_GROUND). And
     never a premium thing (items.premium), which is out of the game and
     does not change hands, as at the barter and the auction (the owner's
-    cut of (P), 2026-09-30). Gold items use the same binding rule as barter."""
+    cut of (P), 2026-09-30), nor one the owner took out by name
+    (items.out_of_game, data/retired.json items: Steyr TMP and Chang Feng,
+    2026-10-14). Gold items use the same binding rule as barter."""
     from barter import tradable
     return tradable(type_id)
 

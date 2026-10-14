@@ -302,6 +302,8 @@ RU = [
      "исключает то, что сам требует (%s): его никому не предложат"),
     (r"names things the game does not have: (.*)", "таких предметов в игре нет: %s"),
     (r"names premium things, out of the game: (.*)", "премиум-предметы выведены из игры: %s"),
+    (r"names things out of the game \(data/retired.json items\): (.*)",
+     "эти предметы владелец вывел из игры (data/retired.json): %s"),
     (r"lends what a stall sells: (.*)", "даёт на время то, что продаётся в лавке: %s"),
     (r"hands over what is worth something away from it: (.*) \(",
      "при взятии выдаёт то, что ценно вне квеста: %s"),
@@ -463,7 +465,8 @@ _REFS_LOCK = threading.Lock()
 
 
 def refs(scan=True):
-    """What the page picks from: items (with icons, no premium ones),
+    """What the page picks from: items (with icons, none out of the game --
+    no premium ones and none of data/retired.json items, items.out_of_game),
     creatures (with levels and roles), the NPC classes that can hand out and
     take quests, locations, and where each creature stands."""
     global _REFS
@@ -473,7 +476,7 @@ def refs(scan=True):
         icons = _icons()
         item_rows = []
         for t in items.catalogue():
-            if items.premium(t):
+            if items.out_of_game(t):
                 continue
             si = items.params_of(t) or {}
             item_rows.append({"t": t, "n": split_name(names.text(items.STRING_ID_OFFSET + t))[0],

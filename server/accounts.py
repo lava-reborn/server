@@ -478,6 +478,7 @@ LEDGER_SOURCES = {
     "clan_create": "a clan founded: its fee, a sink (ref: the clan)",
     "clan": "afro between a purse and its clan's treasury (ref: the clan)",
     "clan_disband": "a disbanded clan's treasury paid into a purse (ref: the clan)",
+    "retired": "things the owner took out of the game, paid back at a stall's price (retire_items)",
     "other": "a change no command named (a timer's)",
 }
 LEDGER_OTHER = "other"
@@ -762,6 +763,16 @@ def migrate(db):
         else:
             run_once(db, PREMIUM_THINGS_FIX,
                      lambda d: retire_premium_things(d, premium))
+    # The same for what the owner took out by name (data/retired.json items:
+    # Steyr TMP and Chang Feng, 2026-10-14), its copies paid back at a
+    # stall's price: the prices are the client's tables' too.
+    if not ran(db, RETIRED_ITEMS_FIX):
+        test = retired_test()
+        if test is None:
+            log.warning("  ..    %s waits: the client's objects.xml is not here to price"
+                        " a retired thing by", RETIRED_ITEMS_FIX)
+        else:
+            run_once(db, RETIRED_ITEMS_FIX, lambda d: retire_items(d, *test))
 
 
 def ran(db, name):
@@ -1263,6 +1274,199 @@ def retire_premium_things(db, premium=None):
                 " out of %d letter(s)", PREMIUM_THINGS_FIX, counts["items"], counts["types"],
                 counts["ground"], counts["lots"], counts["bids"], counts["parcels"],
                 counts["letters"])
+    return counts
+
+
+# The owner's «у STEYR TMP нет картинки и у Chang Feng тоже, убери их из
+# игры» (2026-10-14): every type the original names Steyr TMP or Chang Feng
+# is out of the game (data/retired.json items, items.retired, out_of_game)
+# -- no stall, loot, quest, craft or admin hands one out, no letter, lot or
+# barter passes one on -- and the copies already in the game go, once per
+# database, from where the (P) things went (retire_premium_things): the
+# bags, banks, bodies and the ground, the auction (the lot with it, its
+# standing bid back to the bidder by letter) and the letters (the snapshot
+# alone; an offer left with nothing asks nothing). One thing differs: these
+# were sold. Донгола's «Пистолет-пулеметы и патроны» (1211, the black market
+# 103) and «Оружие» (1229, 195) had both guns, A for afro and (G) for gold,
+# on their band 12-16, and the town's masters made their modifications. So
+# what a character held is paid back at a stall's price -- the price a stall
+# asks for the type, afro for an ordinary one and gold for a (G), as many
+# times as the pieces -- straight into the purse (the ledger's "retired"),
+# with a letter from the server saying what went and what came; a premium
+# copy pays nothing, as the cut of (P) paid nothing (no stall ever sold one).
+# Whose a thing was: the character whose bag or bank holds it, the seller
+# of a lot, the addressee of a letter -- the sender of an offer still
+# unanswered (a trade letter not returned), which stays his until paid for;
+# nobody's on the ground. And the journals: the twelve recipes of Донгола's
+# masters Басам (347) and Фахад (387) that took or gave one (the weapon
+# craft's 10283-10285, 10289-10291, 10315-10317, 10321-10323) are gone from
+# data/questgen_weaponcraft.json, so they leave the journals as the cut of
+# Хальфа's rows did; the history of hand-ins stays. A process without the
+# client's tables (no price, no name to tell) leaves the fix for the next
+# start that has them, as the (P) one does.
+RETIRED_ITEMS_FIX = "retire-guns-2026-10-14"
+RETIRED_RECIPES = (10283, 10284, 10285, 10289, 10290, 10291,
+                   10315, 10316, 10317, 10321, 10322, 10323)
+RETIRED_SUBJECT = "Steyr TMP и Chang Feng выведены из игры"
+RETIRED_BODY = ("У этих стволов нет картинки, и владелец убрал их из игры. Изъято: %s. "
+                "Цена лавки зачислена на ваш счёт: %s.")
+
+
+def retired_test():
+    """(the retired types, price, name) when the client's tables are there
+    to price and name a thing by; None when they are not. price(type) is
+    (afro, gold) a stall asks for one, (0, 0) for a premium copy; name(type)
+    the name the player reads. Late, as premium_test."""
+    try:
+        import items
+        if not items.catalogue():
+            return None
+    except (ImportError, OSError) as exc:
+        log.warning("  ..    no item tables for %s: %s", RETIRED_ITEMS_FIX, exc)
+        return None
+
+    def price(t):
+        if items.premium(t):
+            return 0, 0
+        p = items.params_of(t) or {}
+        return int(p.get("cost") or 0), int(p.get("g_cost") or 0)
+
+    def name(t):
+        import names
+        return names.text(items.STRING_ID_OFFSET + int(t)).split("$")[0].strip()
+
+    return frozenset(items.retired_items()), price, name
+
+
+def _money_words(afro, gold):
+    parts = (["%d афро" % afro] if afro else []) + (["%.2f G" % (gold / 100.0)] if gold else [])
+    return " и ".join(parts) or "ничего (копии (P) не продавались)"
+
+
+def retire_items(db, retired=None, price=None, name=None):
+    """Every copy of a retired type out of the database, its owner paid
+    back (the comment above); returns the counts it logs."""
+    if retired is None or price is None or name is None:
+        test = retired_test()
+        if test is None:
+            raise RuntimeError("%s: no item tables to price a thing by" % RETIRED_ITEMS_FIX)
+        retired, price, name = test
+    types = sorted(int(t) for t in retired)
+    counts = dict(items=0, ground=0, lots=0, bids=0, letters=0, parcels=0, journal=0,
+                  owners=0, afro=0, gold=0)
+    owed = {}                       # char_id -> [afro, gold, {name: pieces}]
+
+    def owe(char_id, t, n):
+        if not char_id:
+            return                  # the ground's, nobody's
+        afro, gold = price(t)
+        rec = owed.setdefault(int(char_id), [0, 0, {}])
+        rec[0] += afro * n
+        rec[1] += gold * n
+        rec[2][name(t)] = rec[2].get(name(t), 0) + n
+
+    retired = frozenset(types)
+    if types:
+        marks = ", ".join("?" * len(types))
+        rows = db.execute("SELECT uniq, char_id, type_id, count FROM items"
+                          " WHERE type_id IN (%s)" % marks, types).fetchall()
+        uniqs = [r["uniq"] for r in rows]
+        for r in rows:
+            owe(r["char_id"], int(r["type_id"]), max(1, int(r["count"] or 1)))
+        for i in range(0, len(uniqs), 500):
+            part = uniqs[i:i + 500]
+            counts["ground"] += len(db.execute(
+                "SELECT uniq FROM ground WHERE uniq IN (%s)" % ", ".join("?" * len(part)),
+                part).fetchall())
+            db.execute("DELETE FROM ground WHERE uniq IN (%s)" % ", ".join("?" * len(part)),
+                       part)
+        db.execute("DELETE FROM items WHERE type_id IN (%s)" % marks, types)
+        counts["items"] = len(uniqs)
+
+    now = int(time.time())
+    for lot in db.execute("SELECT id, type_id, item_json, seller, bidder, bid, currency"
+                          " FROM auction_lots ORDER BY id").fetchall():
+        if int(lot["type_id"]) not in retired:
+            continue
+        try:
+            n = int((json.loads(lot["item_json"] or "{}") or {}).get("count") or 1)
+        except (ValueError, AttributeError):
+            n = 1
+        owe(lot["seller"], int(lot["type_id"]), max(1, n))
+        if lot["bidder"] and lot["bid"]:
+            gold = int(lot["currency"]) == 1          # auction.GOLD, as money_text
+            what = ("%.2f G" % (lot["bid"] / 100.0)) if gold else ("%d афро" % lot["bid"])
+            db.execute(
+                "INSERT INTO mail (to_char, from_char, type, subject, body, sent_at,"
+                " afro, gold, items_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (lot["bidder"], _SYSTEM_SENDER, _LETTER, "Аукцион: ставка возвращена",
+                 "Лот снят: Steyr TMP и Chang Feng выведены из игры. Возвращаем вашу"
+                 " ставку %s." % what,
+                 now, 0 if gold else lot["bid"], lot["bid"] if gold else 0, "[]"))
+            counts["bids"] += 1
+        db.execute("DELETE FROM auction_lots WHERE id = ?", (lot["id"],))
+        counts["lots"] += 1
+
+    for row in db.execute("SELECT id, type, to_char, from_char, returned, items_json"
+                          " FROM mail WHERE items_json <> '[]' ORDER BY id").fetchall():
+        try:
+            snaps = json.loads(row["items_json"] or "[]")
+        except ValueError:
+            continue
+        if not isinstance(snaps, list):
+            continue
+        gone = [s for s in snaps
+                if isinstance(s, dict) and int(s.get("type_id") or 0) in retired]
+        if not gone:
+            continue
+        kept = [s for s in snaps if s not in gone]
+        offer = int(row["type"]) in _TRADE_LETTERS and not row["returned"]
+        whose = row["from_char"] if offer and row["from_char"] else row["to_char"]
+        for s in gone:
+            owe(whose, int(s["type_id"]), max(1, int(s.get("count") or 1)))
+        if not kept and offer:
+            db.execute("UPDATE mail SET items_json = ?, afro = 0, gold = 0 WHERE id = ?",
+                       ("[]", row["id"]))
+        else:
+            db.execute("UPDATE mail SET items_json = ? WHERE id = ?",
+                       (json.dumps(kept), row["id"]))
+        counts["letters"] += 1
+        counts["parcels"] += len(gone)
+
+    for char_id, (afro, gold, things) in sorted(owed.items()):
+        purse = db.execute("SELECT afro, gold FROM characters WHERE id = ?",
+                           (char_id,)).fetchone()
+        if purse is None:
+            continue                # a character deleted since: nobody to pay
+        if afro or gold:
+            new_afro, new_gold = int(purse["afro"] or 0) + afro, int(purse["gold"] or 0) + gold
+            book(db, char_id, new_afro, new_gold, "retired")
+            db.execute("UPDATE characters SET afro = ?, gold = ? WHERE id = ?",
+                       (new_afro, new_gold, char_id))
+            counts["afro"] += afro
+            counts["gold"] += gold
+        listed = ", ".join("%s x%d" % (n, k) for n, k in sorted(things.items()))
+        db.execute(
+            "INSERT INTO mail (to_char, from_char, type, subject, body, sent_at,"
+            " afro, gold, items_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (char_id, _SYSTEM_SENDER, _LETTER, RETIRED_SUBJECT,
+             RETIRED_BODY % (listed, _money_words(afro, gold)), now, 0, 0, "[]"))
+        counts["owners"] += 1
+
+    if RETIRED_RECIPES:
+        counts["journal"] = len(db.execute(
+            "SELECT q_id FROM char_quests WHERE type IN (%s)"
+            % ", ".join("?" * len(RETIRED_RECIPES)), RETIRED_RECIPES).fetchall())
+        db.execute("DELETE FROM char_quests WHERE type IN (%s)"
+                   % ", ".join("?" * len(RETIRED_RECIPES)), RETIRED_RECIPES)
+
+    # A warning for the reason relocate_retired_places' is one.
+    log.warning("  ..    %s: %d retired thing(s) gone from bags, banks and the ground (%d of"
+                " them lying there), %d lot(s) (%d bid(s) sent back), %d out of %d"
+                " letter(s); %d owner(s) told, %d afro and %.2f G paid back; %d recipe(s) out"
+                " of the journals", RETIRED_ITEMS_FIX, counts["items"], counts["ground"],
+                counts["lots"], counts["bids"], counts["parcels"], counts["letters"],
+                counts["owners"], counts["afro"], counts["gold"] / 100.0, counts["journal"])
     return counts
 
 

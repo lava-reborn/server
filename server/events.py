@@ -339,8 +339,9 @@ class Schedule:
             if not str(rec.get("why") or "").strip():
                 out.append("%s: no why" % what)
             obj = int(rec.get("obj", 0))
-            if items.params_of(obj) is None or items.premium(obj):
-                out.append("%s: no thing of the game's, or a premium one" % what)
+            if items.params_of(obj) is None or items.out_of_game(obj):
+                out.append("%s: no thing of the game's, or one out of the game ((P), or"
+                           " data/retired.json items)" % what)
             if not 0 < float(rec.get("chance", 1)) <= 1 or int(rec.get("num", 1)) < 1:
                 out.append("%s: a chance in (0, 1] and at least one piece" % what)
             for loc in _types(rec.get("locs")):

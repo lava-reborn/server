@@ -329,7 +329,7 @@ def stock_for(trader_type, loc_id=None):
     the owner's choice, and the rule stays a rule.
     """
     chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(_own_list(trader_type)))
-    return [t for t in chosen if not premium(t)]
+    return [t for t in chosen if not out_of_game(t)]
 
 
 def own_stock(trader_type):
@@ -341,7 +341,7 @@ def own_stock(trader_type):
     untouched Save leaves the file as it was and an empty GOLD_POUCHES still
     takes every (G) pouch the rule put on a stall off it. A gold copy the
     owner put on the list by hand is the owner's, and stays."""
-    return [t for t in _own_list(trader_type) if not premium(t)]
+    return [t for t in _own_list(trader_type) if not out_of_game(t)]
 
 
 def _own_list(trader_type):
@@ -429,6 +429,59 @@ def premium(type_id):
 _PREMIUM = {}
 _ORIG_NAMES = None
 _PREMIUM_NAME = re.compile(r"(?:^|_)(?:P|pm)(?:_|$)")
+
+
+# Things the owner took out of the game by name, type by type: data/
+# retired.json "items", type id -> why, the list beside the places and the
+# creatures. The first of them (2026-10-14, «у STEYR TMP нет картинки и у
+# Chang Feng тоже, убери их из игры»): every type the original names Steyr
+# TMP or Chang Feng, 106 of them -- the A, (G) and (P) guns, their
+# modifications, the mobs' copies and Le Mon's (S) (CL) ones. The client
+# draws no picture for most: classes/FireArm/<name>/ico.swf of the whole
+# Steyr TMP line and of a part of Chang Feng's is no SWF in the original
+# (the owner's own client and client/base.txt alike), and the owner took
+# both guns out whole. One list, asked through out_of_game by every place
+# that hands a thing out or passes it on, so a stall, a table or a builder
+# added later (a city's band, a weapon craft) leaves them out with no word
+# of its own.
+_RETIRED = None
+
+
+def retired_items():
+    """type id -> why, of data/retired.json 'items', read once. No file or
+    no such section is nothing retired; a key that is no type id stops the
+    server, since a list read wrong would quietly sell what the owner took
+    out."""
+    global _RETIRED
+    if _RETIRED is None:
+        out = {}
+        try:
+            with open(os.path.join(DATA, "retired.json"), encoding="utf-8") as fh:
+                rows = json.load(fh).get("items") or {}
+        except OSError:
+            rows = {}
+        for k, why in rows.items():
+            if str(k).startswith("_"):
+                continue
+            try:
+                out[int(k)] = str(why)
+            except ValueError:
+                raise ValueError("data/retired.json items: %r is no type id" % k)
+        _RETIRED = out
+    return _RETIRED
+
+
+def retired(type_id):
+    """Whether the owner took this type out of the game (retired_items)."""
+    return int(type_id) in retired_items()
+
+
+def out_of_game(type_id):
+    """Whether a thing is out of the game: a premium one (premium, the cut
+    of (P)) or one the owner took out by name (retired). What a stall, a
+    loot table, a quest row, a craft, a letter, a lot, a barter, a death and
+    the admin's gift all ask, so that no way in or across is left open."""
+    return retired(type_id) or premium(type_id)
 
 
 def no_combat(type_id):
@@ -1334,6 +1387,7 @@ def preload():
     """
     catalogue()
     wiki()
+    retired_items()
     heal_manual()
     heal_over_article()
     coldarm_manual()

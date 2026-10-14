@@ -349,8 +349,11 @@ def clean(text):
 
 
 def servable(t):
-    """A thing a row may name: the game has it, and it is not premium."""
-    return t is not None and items.params_of(t) is not None and not items.premium(t)
+    """A thing a row may name: the game has it, and it is not out of the
+    game -- no premium thing, none the owner took out by name
+    (items.out_of_game, data/retired.json items: no recipe of Steyr TMP or
+    Chang Feng since 2026-10-14; their keys keep their types in "types")."""
+    return t is not None and items.params_of(t) is not None and not items.out_of_game(t)
 
 
 def line_of(t):
@@ -520,6 +523,9 @@ def recipe_row(city, gun, line, effect, level, givers, ids, texts, numbered):
     if not givers:
         report["upgrade"].append("%s: no master of %s [%s] in %s"
                                  % (why, craft.weapon_of(gun), line, city["name"]))
+        return None
+    if not servable(gun):
+        report["upgrade"].append("%s: the gun is out of the game (items.out_of_game)" % why)
         return None
     if not servable(mod):
         report["upgrade"].append("%s: no modification %s" % (why, effect))
@@ -744,7 +750,8 @@ def assembly_rows(city, texts, parts, given):
             if re.search(r"детали от ([^,.<]+)", start) else None
         cands = [t for (k, line, _lvl), ts in GUNS.items()
                  if k == ALIASES.get(m.group("gun").strip().lower(), m.group("gun").strip().lower())
-                 and line == "A" for t in ts if t in WIKI and craft.weapon_of(t) == cls]
+                 and line == "A" for t in ts if t in WIKI and craft.weapon_of(t) == cls
+                 and servable(t)]
         if not city.get("gunsmiths"):
             continue
         if len(cands) != 1:
