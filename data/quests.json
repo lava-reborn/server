@@ -13725,11 +13725,10 @@
       "take": [1423],
       "objs": [
         {"obj": 4778, "num": 1},
-        {"obj": 332, "num": 1}
+        {"obj": 6059, "num": 1}
       ],
       "start_obj": [
-        {"obj": 4778, "num": 1},
-        {"obj": 332, "num": 1}
+        {"obj": 4778, "num": 1}
       ],
       "rew_obj": [],
       "num_rew_obj": [],
@@ -13742,7 +13741,7 @@
       "need_quest": 516,
       "loc": 48006955,
       "finish_loc": 50997095,
-      "why": "RECOVERED texts (texts.xml 47176-47179), Ан-Насир's missing caravans after «Переговоры» (516; 47176-47212, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14, the plan's decision 29): Ан-Насир (1654, «Ан-Насир<Br>Мельник», Абри's Портовый рынок 187); the dying caravan man Рэт (1423, «Рэт<Br>Караванщик», 47256) at «Место преступления» (223 Event_RunningMan_3 on 6225,1895, the WORLD package; L169 «Жертва: Рэт») and the dug sand by the fire (1422) at «Костёр» (222 Event_RunningMan_2 on 6172,1902, L170); Мастер Люшера Сэмир (826) and the Техномастер (646) in Донгола's Рынок 50; «Саморез» Мауризио (6522) at the petrol station «Свалка» 60 by Вади-Хальфа; Механик Сейид (719) and Офицер Раис (859) of the base of Магриб 52. «Раненый»: «Возьми для него лекарства ... Караван должен был остановиться рядом с Абу-Хамедом в точке 6225.00:1895.00» (516's finish): Ан-Насир hands over his note «Записка» (4778 qTxt, named 6057, described by 6485 «На куске старой газеты точка с надписью «Абу-Хамед» со стрелкой к другой точке «Кор-н 6225 – 1895»») and the medicine «Лекарства» (332 qMedicine), both worth nothing away from the quest, and the dying man takes them -- «Он передал для вас лекарство и написал записку как вас найти», «Где же эта записка и лекарство». DESIGNED giver: the start is the scene at the body, and 516 is a one-off many players have handed in already, so the things come with this quest's take. Level 16 DESIGNED, Абу-Хамед's band, the place's; +20 Медицина. A one-off, as the whole chain."
+      "why": "RECOVERED texts (texts.xml 47176-47179), Ан-Насир's missing caravans after «Переговоры» (516; 47176-47212, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14, the plan's decision 29): Ан-Насир (1654, «Ан-Насир<Br>Мельник», Абри's Портовый рынок 187); the dying caravan man Рэт (1423, «Рэт<Br>Караванщик», 47256) at «Место преступления» (223 Event_RunningMan_3 on 6225,1895, the WORLD package; L169 «Жертва: Рэт») and the dug sand by the fire (1422) at «Костёр» (222 Event_RunningMan_2 on 6172,1902, L170); Мастер Люшера Сэмир (826) and the Техномастер (646) in Донгола's Рынок 50; «Саморез» Мауризио (6522) at the petrol station «Свалка» 60 by Вади-Хальфа; Механик Сейид (719) and Офицер Раис (859) of the base of Магриб 52. «Раненый»: «Возьми для него лекарства ... Караван должен был остановиться рядом с Абу-Хамедом в точке 6225.00:1895.00» (516's finish): Ан-Насир hands over his note «Записка» (4778 qTxt, named 6057, described by 6485 «На куске старой газеты точка с надписью «Абу-Хамед» со стрелкой к другой точке «Кор-н 6225 – 1895»», worth nothing away from the quest), and the dying man takes it and a medicine -- «Он передал для вас лекарство и написал записку как вас найти», «Где же эта записка и лекарство»: DESIGNED, the band's combat medicine «Перевязочный Пакет» (6059, sold at Абу-Хамед's station by Киплер), bought by the player, since the quest thing «Лекарства» (332) is what Донгола's «Амин» (641) asks of Джохар, and handed over here it would be that step for nothing. DESIGNED giver: the start is the scene at the body, and 516 is a one-off many players have handed in already, so the note comes with this quest's take. Level 16 DESIGNED, Абу-Хамед's band, the place's; +20 Медицина. A one-off, as the whole chain."
     },
     {
       "type": 926,
@@ -13768,19 +13767,14 @@
     },
     {
       "type": 927,
-      "kind": "bring_l_obj",
+      "kind": "del_obj",
       "name": "Мародерство.",
       "start": "- Получив столь жалкую добычу вы переворачиваете труп и находите саперную лопатку, а на песке видите начерченную схему. Стрелка указывает на юго-запад и у окончания несколько цифр - 6172,1902. Зуд исследователя не дает вам покоя и приторочив лопатку на пояс вы выдвигаетесь в путь.",
       "notfinish": "",
       "finish": "<i>Пройдя по указанным координатам, вы, увидев костер, подбегаете к нему.<Br>На удивление костер горит, хотя рядом нет свежих следов людей. Рядом с костром видно перекопанный песок.<Br><i>Вот и пригодилась найденная лопатка.<Br>Копнув вы замечаете в ней серебристый блеск.",
       "give": [1423],
       "take": [1422],
-      "objs": [
-        {"obj": 3191, "num": 1}
-      ],
-      "start_obj": [
-        {"obj": 3191, "num": 1}
-      ],
+      "obj": 0,
       "rew_obj": [],
       "num_rew_obj": [],
       "rew_afro": 0,
@@ -13792,23 +13786,18 @@
       "need_quest": 926,
       "loc": 50997095,
       "finish_loc": 50562926,
-      "why": "RECOVERED texts (texts.xml 47183-47185), Ан-Насир's missing caravans after «Переговоры» (516; 47176-47212, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14, the plan's decision 29): Ан-Насир (1654, «Ан-Насир<Br>Мельник», Абри's Портовый рынок 187); the dying caravan man Рэт (1423, «Рэт<Br>Караванщик», 47256) at «Место преступления» (223 Event_RunningMan_3 on 6225,1895, the WORLD package; L169 «Жертва: Рэт») and the dug sand by the fire (1422) at «Костёр» (222 Event_RunningMan_2 on 6172,1902, L170); Мастер Люшера Сэмир (826) and the Техномастер (646) in Донгола's Рынок 50; «Саморез» Мауризио (6522) at the petrol station «Свалка» 60 by Вади-Хальфа; Механик Сейид (719) and Офицер Раис (859) of the base of Магриб 52. «Мародерство.»: the sapper's spade under the body «Саперная лопата» (3191 qShovel, handed over at the take, worth nothing) and the scheme in the sand, «несколько цифр - 6172,1902»: handed in at the dug sand by the fire (1422, 222), «Вот и пригодилась найденная лопатка». +20 Медицина DESIGNED."
+      "why": "RECOVERED texts (texts.xml 47183-47185), Ан-Насир's missing caravans after «Переговоры» (516; 47176-47212, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14, the plan's decision 29): Ан-Насир (1654, «Ан-Насир<Br>Мельник», Абри's Портовый рынок 187); the dying caravan man Рэт (1423, «Рэт<Br>Караванщик», 47256) at «Место преступления» (223 Event_RunningMan_3 on 6225,1895, the WORLD package; L169 «Жертва: Рэт») and the dug sand by the fire (1422) at «Костёр» (222 Event_RunningMan_2 on 6172,1902, L170); Мастер Люшера Сэмир (826) and the Техномастер (646) in Донгола's Рынок 50; «Саморез» Мауризио (6522) at the petrol station «Свалка» 60 by Вади-Хальфа; Механик Сейид (719) and Офицер Раис (859) of the base of Магриб 52. «Мародерство.»: the sapper's spade under the body and the scheme in the sand, «несколько цифр - 6172,1902»: handed in at the dug sand by the fire (1422, 222), «Вот и пригодилась найденная лопатка». The spade lives in the texts alone, DESIGNED: «Саперная лопата» (3191) is what Бари sells for the digs (0,20 G), and handed over at a take it would be one for nothing every time the quest is dropped and taken again. +20 Медицина DESIGNED."
     },
     {
       "type": 928,
-      "kind": "bring_l_obj",
+      "kind": "del_obj",
       "name": "Вскрытый тайник",
       "start": "- Смахнув ладонью песок с блестящего предмета, вы понимаете что нашли солдатский жетон. Скорее всего его обронил тот, кто рылся до вас в этой ямке. Поднеся пластинку ближе к глазам читаете надпись- \"Тускенские Рейдеры. Шарад Д. Сэмир\". Память моментально выдала, что имя знакомо. С безумным взглядом этот человек стоит на рынке Донголы. Надо бы проведать его и расспросить. Не зря это имя вам называл мельник.",
       "notfinish": "",
       "finish": "Зайдя на рынок, вы сразу направились к Люшеровцу. Не раздумывая бьете его головой в нос.",
       "give": [1422],
       "take": [826],
-      "objs": [
-        {"obj": 4306, "num": 1}
-      ],
-      "start_obj": [
-        {"obj": 4306, "num": 1}
-      ],
+      "obj": 0,
       "rew_obj": [],
       "num_rew_obj": [],
       "rew_afro": 0,
@@ -13820,7 +13809,7 @@
       "need_quest": 927,
       "loc": 50562926,
       "finish_loc": 48154586,
-      "why": "RECOVERED texts (texts.xml 47186-47188), Ан-Насир's missing caravans after «Переговоры» (516; 47176-47212, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14, the plan's decision 29): Ан-Насир (1654, «Ан-Насир<Br>Мельник», Абри's Портовый рынок 187); the dying caravan man Рэт (1423, «Рэт<Br>Караванщик», 47256) at «Место преступления» (223 Event_RunningMan_3 on 6225,1895, the WORLD package; L169 «Жертва: Рэт») and the dug sand by the fire (1422) at «Костёр» (222 Event_RunningMan_2 on 6172,1902, L170); Мастер Люшера Сэмир (826) and the Техномастер (646) in Донгола's Рынок 50; «Саморез» Мауризио (6522) at the petrol station «Свалка» 60 by Вади-Хальфа; Механик Сейид (719) and Офицер Раис (859) of the base of Магриб 52. «Вскрытый тайник»: the soldier's tag dug out of the hole «Жетон военнослужащего» (4306 qToken_V, 6190/6191; objects.xml has no tag of the «Тускенские Рейдеры» of its own, DESIGNED), «Шарад Д. Сэмир»: brought to Сэмир on Донгола's market. +20 Медицина DESIGNED."
+      "why": "RECOVERED texts (texts.xml 47186-47188), Ан-Насир's missing caravans after «Переговоры» (516; 47176-47212, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14, the plan's decision 29): Ан-Насир (1654, «Ан-Насир<Br>Мельник», Абри's Портовый рынок 187); the dying caravan man Рэт (1423, «Рэт<Br>Караванщик», 47256) at «Место преступления» (223 Event_RunningMan_3 on 6225,1895, the WORLD package; L169 «Жертва: Рэт») and the dug sand by the fire (1422) at «Костёр» (222 Event_RunningMan_2 on 6172,1902, L170); Мастер Люшера Сэмир (826) and the Техномастер (646) in Донгола's Рынок 50; «Саморез» Мауризио (6522) at the petrol station «Свалка» 60 by Вади-Хальфа; Механик Сейид (719) and Офицер Раис (859) of the base of Магриб 52. «Вскрытый тайник»: the soldier's tag in the hole, «Тускенские Рейдеры. Шарад Д. Сэмир», and the player goes to Сэмир on Донгола's market. The tag lives in the texts alone, DESIGNED: objects.xml has no tag of the «Тускенские Рейдеры», and the soldier's tags it has are other quests' (4306 is Донгола's «Мухаммед Ахмед»'s). +20 Медицина DESIGNED."
     },
     {
       "type": 929,

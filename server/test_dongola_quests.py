@@ -383,11 +383,12 @@ try:
 
     # The prison.
     sched = events.table()
-    check("the prison: «Выход» (163) leads from 622 up to the yard 159, the gates of 159 down"
-          " to 618 and 619, «Поехали!» from the station to the yard and «Назад в Донголу» back",
+    check("the prison: «Выход» (163) leads from 622 up to the yard 159 (and, since 2026-10-14,"
+          " from Абу-Хамед's 651 to its yard 177), the gates of 159 down to 618 and 619,"
+          " «Поехали!» from the station to the yard and «Назад в Донголу» back",
           (sorted(ways.get(163, ())), sorted(ways.get(634, ())), sorted(ways.get(635, ())),
            sorted(ways.get(632, ())), sorted(ways.get(633, ()))),
-          ([(622, 159), (646, 176)], [(159, 618)], [(159, 619)], [(DN_STATION, 159)],
+          ([(622, 159), (646, 176), (651, 177)], [(159, 618)], [(159, 619)], [(DN_STATION, 159)],
            [(159, DN_STATION)]))
     w = sched.window("prison_dn")
     check("  ..the uprising at the label's 12:00, 16:00 and 23:00 for half an hour, the gates"

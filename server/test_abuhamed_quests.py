@@ -292,6 +292,10 @@ try:
               + [t for t, _n in q.start_obj]} | set(keepsakes.pool())
     dropped = {o for q in real.values() if q.give for _m, o, _c in q.drops if stands.get(_m)}
     dropped |= {o for m in stands for o, _c in mobs.quest_table(m)}
+    # ..and what data/schedule.json's loot puts on a creature in a place: the
+    # prisons' armband (164-168).
+    dropped |= {o for (lid, m), drops in events.table().loot.items()
+                if lid in stands.get(m, ()) for o, _n, _c in drops}
     asked = sorted({o for t in live for o, _n in real[t].wants()})
     check("every thing a row asks for can be had: dropped while the quest wants it by somebody"
           " standing in the open places, sold at a stall there, or handed out by a row",

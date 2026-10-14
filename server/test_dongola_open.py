@@ -1074,9 +1074,10 @@ try:
     here = inhabitants(arrival, lid)
     cheat(c, "/money 110 0")
     stall, opened = open_stall(c, here, NUR)
-    check("Нур-ад-Дин's stall: «Билет в Абри из Донголы» for 110 afro",
+    check("Нур-ад-Дин's stall: «Билет в Абри из Донголы» for 110 afro (beside the tickets to"
+          " Абу-Хамед and back since 2026-10-14)",
           (stall, opened, buy(c, CID, stall, TICKET_TO_ABRI)),
-          ([TICKET_TO_ABRI], [0], ([0], 1, 110, 0)))
+          ([TICKET_TO_ABRI, 1567, 1639], [0], ([0], 1, 110, 0)))
     close_stall(c)
     afro0 = money(CID)[0]
     ack, lid, arrival = ride(c, here, NUR, TICKET_ABRI)
