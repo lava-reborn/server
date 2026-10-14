@@ -24,8 +24,9 @@ factory, calibres, band and type range) and its name to OPEN; the code does
 not know which city it builds.
 
 Types: CITIES[..]["base"] on, a block of 100 a city; Вади-Хальфа's is
-13000-13099, Абри's 13100-13199, Донгола's 13200-13299 (the registry's
-generators, 10000-29999; 10000-12999 are the weapon and set crafts').
+13000-13099, Абри's 13100-13199, Донгола's 13200-13299, Абу-Хамед's
+13300-13399 (the registry's generators, 10000-29999; 10000-12999 are the
+weapon and set crafts').
 
     LAVA_RES=/mnt/c/Users/gmkrt/OneDrive/Desktop/lava/res python3 data/build_questgen_production.py
 
@@ -57,9 +58,13 @@ CALIBRES = ("12мм", "9мм", "5.56х45", "7.62х54", "7.62х51", "0.45", "7.62
 # Ammo_SS190_KS, the rounds «9мм НАТО $КС» and «5.7x28 $КС»; Донгола's
 # «5.56x45ММ НАТО» and «ПАБ-9» Ammo_556x45_KS and Ammo_SP_5_6_KS, «5.56х45мм
 # НАТО $КС» and «ПАБ–9 $КС» (CALIBRES writes the first with a Cyrillic «х»,
-# as the texts do).
+# as the texts do); Абу-Хамед's «7.62x54R», «7.62x51ММ НАТО» and «8.6x70
+# (.338 Lapua Magnum)» Ammo_762x54R_KS, Ammo_762x51_KS and Ammo_86x70_KS,
+# «7.62х54R $КС», «7.62х51мм НАТО $КС» and «8.6x70 $КС» (the first two with
+# the Cyrillic «х» of CALIBRES).
 CALIBRE_WORD = {"12мм": "12mm", "СП-10": "SP_10_12", "9мм": "9mmNato", "5.7x28": "SS190",
-                "5.56х45": "556x45", "ПАБ-9": "SP_5_6"}
+                "5.56х45": "556x45", "ПАБ-9": "SP_5_6",
+                "7.62х54": "762x54R", "7.62х51": "762x51", "8.6x70": "86x70"}
 
 # The blocks of the family: the first CrBQ number of each, its name row (None:
 # the file has none), its finish row (None: none either; FINISH_BORROWED is
@@ -140,8 +145,22 @@ CITIES = {
                sorters={"plumbum": 1361, "nitre": 1365, "copper": 1369},
                lines={"plumbum": 1373, "nitre": 1377, "copper": 1381},
                assembler=1385, calibres=("5.56х45", "ПАБ-9")),
+    # Абу-Хамед (2026-10-14, the owner's «сделай потом абу хамед в таком же
+    # формате»): the terminals AH_plumbum/nitre/copper_sorting in the control
+    # rooms 668/667/666 of its lead, saltpetre and copper mines («Шахта
+    # Абу-Хамеда: Добыча свинца / селитры / меди<br>Вход разрешен персонажам
+    # 15-20 ур.», L317-L319), the processing centre 217's AH_bullet/powder/
+    # shell_creator («Центр Переработки Абу-Хамеда», L316), the factory 216's
+    # AH_ammo_creator, whose label reads «Производство боеприпасов
+    # Абу-Хамеда: 7.62x54R (P), 7.62x51ММ НАТО (P), 8.6x70 (.338 Lapua
+    # Magnum) (P)» (L315); the band of the mines' gates, 15-20: a character
+    # of the 15th enters Донгола's mines and Абу-Хамед's both.
+    "АХ": dict(index=3, band=(15, 20), base=13300,
+               sorters={"plumbum": 1362, "nitre": 1366, "copper": 1370},
+               lines={"plumbum": 1374, "nitre": 1378, "copper": 1382},
+               assembler=1386, calibres=("7.62х54", "7.62х51", "8.6x70")),
 }
-OPEN = ("ВХ", "АБ", "ДН")
+OPEN = ("ВХ", "АБ", "ДН", "АХ")
 
 _ITEM = re.compile(r'<item id="(\d+)">(.*?)</item>', re.S)
 _START = re.compile(r"^<hint><B>CrBQ№(\d+)</B></hint>")
