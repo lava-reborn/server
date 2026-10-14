@@ -191,10 +191,13 @@ for (key, qtype), rec in sorted(WAYS.items()):
     # (630-799, 2026-10-13): the rides for a fare, the chains' steps that
     # lead on (Рашид's car, the sewers for an envelope, Zone 49 and the
     # basement), the quarry's contract and the mines' gates of 12-15 --
-    # which server/test_dongola_quests holds. Every other way is held to
-    # the bare ride here.
+    # which server/test_dongola_quests holds; and Абу-Хамед's (880-999,
+    # 2026-10-14): the quarry's contract of 16-20, the mines' gates of
+    # 15-20 and Гатера's car for a diamond -- which server/
+    # test_abuhamed_quests holds. Every other way is held to the bare ride
+    # here.
     if not (qtype == 1682 or 351 <= qtype <= 449 or 279 <= qtype <= 286
-            or 450 <= qtype <= 599 or 630 <= qtype <= 799):
+            or 450 <= qtype <= 599 or 630 <= qtype <= 799 or 880 <= qtype <= 999):
         check("%s: quest %d is a way and nothing else" % (key, qtype),
               (q.kind, q.obj, q.rew_obj, q.rew_afro, q.rew_gold, q.repeatable,
                q.rew_loc, q.level, q.need_all, q.need_any),
