@@ -894,8 +894,8 @@ META = {
         "(data/own_items.json, each a copy of its quest piece's picture): then the set is sold, "
         "the quest pieces its A and our types its G (Чёрный Ловелас, the owner's 'за афро и за "
         "голд', 2026-10-13; Тёмное Эхо with Абу-Хамед, the owner's 'сделай потом абу хамед в "
-        "таком же формате', 2026-10-14). A quest piece among A ones is matched in G by the G of the series "
-        "the rest of the set is. No P anywhere: the owner took premium out of the game "
+        "таком же формате', 2026-10-14). A quest piece among A ones is matched in G by the G of "
+        "the series the rest of the set is. No P anywhere: the owner took premium out of the game "
         "(items.premium).",
         "set key = set_type = the texts.xml row of the name of the set these very types formed in "
         "the original (the block 10938-11289): Колонист[N] for Set_M_LVL_N, Беженец[N] for "
@@ -904,9 +904,8 @@ META = {
         "set's A keeps it). Stable, unique, below 100 000, and the row the types already "
         "answered to. A set of our own types, which no row of the original names, is keyed by "
         "its first piece: Чёрный Ловелас (G) 60000, Тёмное Эхо (G) 60005. The owner's names are "
-        "his own: Странник "
-        "sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник on Колонист[7]'s, "
-        "Спецназ on Колонист[17]'s.",
+        "his own: Странник sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник on "
+        "Колонист[7]'s, Спецназ on Колонист[17]'s.",
         "Магриб is the owner's name for Bs_M_LVL_16, whose icons are a steel helmet, a field "
         "shirt, a plate vest, army trousers and boots: the wiki's Армейские вещи ('used "
         "everywhere, the military of Магриб among them'), whose pieces ask Стрельба 6, the rung "
@@ -1295,8 +1294,8 @@ def main():
         "server/shop_bands.py; the owner's 'по уровню городов', 2026-10-10) -- Локсли (%d, "
         "'Одежда и Броня') the valley's; a quest (Q) set exists as data only, for quests and "
         "drops to come (none on the ladder since 2026-10-14). Чёрный Ловелас, the quest series "
-        "Bs_U_LVL_12, is sold for afro and "
-        "for gold (the owner's 'поставь ловеласа у Гали и за афро и за голд', 2026-10-13): its "
+        "Bs_U_LVL_12, is sold for afro and for gold (the owner's 'поставь ловеласа у Гали и за "
+        "афро и за голд', 2026-10-13): its "
         "quest pieces are its A, five types of our own its G (data/own_items.json). So is "
         "Тёмное Эхо, the quest series Bs_U_LVL_16, the 17th rung, since Абу-Хамед (the owner's "
         "'сделай потом абу хамед в таком же формате', 2026-10-14): until then no stall sold a "
