@@ -1103,6 +1103,92 @@ ok((up.character(keeper)["loc"], [r["type_id"] for r in up.items_of(keeper)].cou
 ok(items.premium(MASK_P), "маска отшельника -- в самом деле (P)")
 up.close()
 
+# --- Steyr TMP и Chang Feng: вещи и цена лавки -----------------------------------
+# run_once от 2026-10-14 (accounts.retire_items; README «Steyr TMP и Chang Feng»):
+# копии обоих стволов уходят из рюкзака, банка, с земли, с аукциона (ставка
+# письмом назад) и из писем, хозяину -- цена лавки на счёт (строка журнала денег
+# «retired») и письмо, из журналов -- двенадцать рецептов Басама и Фахада.
+# Торговое предложение, где после изъятия что-то осталось, возвращается
+# отправителю без цены, как по «отказаться» (mail.rmvml). Здесь
+# -- что те же IN, DELETE, UPDATE кошелька, INSERT журнала и писем идут в Postgres
+# и что вторым открытием ничего не повторяется. Полный набор на SQLite --
+# server/test_retired_guns.py.
+STEYR, STEYR_CLIP, CHANG, CHANG_G = 25501, 25504, 25527, 25528
+store = fresh_store()
+aid, _ = store.register("стволы", "пароль")
+who = {}
+for name in ("держатель", "продавец", "покупатель", "адресат"):
+    who[name], _ = store.create_character(aid, name, 0, 1)
+holder, seller, bidder, addressee = (who[n] for n in ("держатель", "продавец",
+                                                      "покупатель", "адресат"))
+before = {n: store.money(c) for n, c in who.items()}
+r_bag = store.create_item(holder, STEYR, 0)
+r_bank = store.create_item(holder, STEYR_CLIP, 0, slot=inventory.BANK)
+r_gold = store.create_item(holder, CHANG_G, 0)
+r_kept = store.create_item(holder, BERETTA, 0)
+r_lying = store.create_item(0, CHANG, 0)
+store.lay_down({r_lying["uniq"]: 9e9}, (103, None, None), 100)
+r_sale = store.create_item(seller, CHANG, 0)
+gsnap = {"uniq": r_sale["uniq"], "type_id": CHANG, "root": 0, "count": 1}
+glot = store.auction_list(r_sale["uniq"], seller, dict(
+    type_id=CHANG, root=0, item_json=json.dumps(gsnap), seller=seller, seller_name="продавец",
+    currency=0, start_bid=100, buyout=0, fee=0, hours=24, created_at=int(time.time()),
+    ends_at=time.time() + 86400))
+store.db.execute("UPDATE auction_lots SET bid = 300, bidder = ?, bidder_name = 'покупатель'"
+                 " WHERE id = ?", (bidder, glot["id"]))
+store.mail_send(addressee, seller, mail.LETTER, "подарок", "", 10, 0, json.dumps(
+    [{"uniq": 910, "type_id": STEYR, "root": 0, "count": 1},
+     {"uniq": 911, "type_id": BERETTA, "root": 0, "count": 1}]))
+# Предложение Chang Feng (G) с Береттой за 80 000 афро: цена -- за обе вещи.
+r_offer = store.mail_send(addressee, seller, mail.TRADE, "предложение", "", 80000, 5, json.dumps(
+    [{"uniq": 912, "type_id": CHANG_G, "root": 0, "count": 1},
+     {"uniq": 913, "type_id": BERETTA, "root": 0, "count": 1}]), when=1)
+for t in (accounts.RETIRED_RECIPES[0], 119):
+    store.take_quest(holder, t, {}, True)
+store.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.RETIRED_ITEMS_FIX,))
+store.db.commit()
+store.close()
+
+up = accounts.Store()
+ok([up.item(r["uniq"]) is None for r in (r_bag, r_bank, r_gold, r_lying)] == [True] * 4
+   and up.item(r_kept["uniq"]) is not None
+   and up.db.execute("SELECT COUNT(*) c FROM ground").fetchone()["c"] == 0,
+   "Steyr TMP и Chang Feng ушли из рюкзака, банка и с земли, Беретта осталась")
+ok(up.db.execute("SELECT COUNT(*) c FROM auction_lots").fetchone()["c"] == 0, "лот снят")
+paid = {n: tuple(a - b for a, b in zip(up.money(c), before[n])) for n, c in who.items()}
+ok(paid == {"держатель": (79400, 1921), "продавец": (47900, 1921), "покупатель": (0, 0),
+            "адресат": (39700, 0)},
+   "цена лавки на счёт: %s" % paid)
+ok(sorted((r["char_id"], r["afro"], r["gold"]) for r in up.ledger()
+          if r["source"] == "retired")
+   == sorted([(holder, 79400, 1921), (seller, 47900, 1921), (addressee, 39700, 0)]),
+   "каждая выплата -- строка журнала денег «retired»")
+back = dict(up.mail_letter(r_offer["id"]))
+ok((json.loads(back["items_json"]), back["to_char"], back["from_char"], back["returned"],
+    back["read"], back["to_deleted"], back["from_deleted"], back["afro"], back["gold"],
+    back["sent_at"] > 1)
+   == ([{"uniq": 913, "type_id": BERETTA, "root": 0, "count": 1}], seller, seller, 1, 0, 0, 1,
+       0, 0, True),
+   "предложение с Береттой вернулось продавцу и ничего не просит: %s" % back)
+letters = [dict(r) for r in up.db.execute("SELECT * FROM mail ORDER BY id")]
+ok(sorted(r["to_char"] for r in letters if r["subject"] == accounts.RETIRED_SUBJECT)
+   == sorted([holder, seller, addressee])
+   and [(r["to_char"], r["afro"]) for r in letters
+        if r["subject"] == "Аукцион: ставка возвращена"] == [(bidder, 300)],
+   "письма хозяевам и ставка назад письмом")
+ok([json.loads(r["items_json"]) for r in letters if r["subject"] == "подарок"]
+   == [[{"uniq": 911, "type_id": BERETTA, "root": 0, "count": 1}]],
+   "из письма -- только Steyr TMP")
+ok(sorted(r["type"] for r in up.quests(holder)) == [119], "рецепт ушёл из журнала, 119 остался")
+ok(accounts.ran(up.db, accounts.RETIRED_ITEMS_FIX), "отмечена")
+up.create_item(holder, STEYR, 0)
+up.db.commit()
+up.close()
+up = accounts.Store()
+ok([r["type_id"] for r in up.items_of(holder)].count(STEYR) == 1,
+   "второе открытие ничего не повторяет")
+up.close()
+
 # --- чистка Хальфы: места и журналы ---------------------------------------------
 # run_once от 2026-10-09 (accounts.relocate_halfa_cut; README «Чистка Хальфы»):
 # кто стоит в вещевом рынке 468, у ремесленников 452/456/457 или в файлах

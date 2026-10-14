@@ -388,7 +388,8 @@ def drops_on_death(type_id):
 
       * a gold thing (gold_item) -- «если голд-предметы, то они не падают»;
       * a premium one (items.premium): out of the game, and priced in gold
-        anyway;
+        anyway; and so one the owner took out by name (items.out_of_game,
+        data/retired.json items): a bag on the ground would pass it on;
       * a quest's own thing, the quest flag of its frame: it belongs to the
         quest, as at the stall, in the post, at the auction and in a barter
         (Inventory.sell, mail, auction, barter.tradable), and no mob drops
@@ -424,7 +425,7 @@ def drops_on_death(type_id):
         return False
     if quests.kept_on_death(type_id):
         return False
-    return not items.premium(type_id) and not gold_item(type_id)
+    return not items.out_of_game(type_id) and not gold_item(type_id)
 
 
 def pieces_of(row):
@@ -3044,8 +3045,8 @@ class RoomCombat:
         for type_id, count in mobs.loot_for(mob.stats, RNG, mob.quest_wants) \
                 + events.loot(self.room.loc.id, mob.type_id, RNG) \
                 + production.yield_of(mob.type_id):
-            if items.premium(type_id):
-                continue            # out of the game; see items.premium
+            if items.out_of_game(type_id):
+                continue            # (P) or retired by name; see items.out_of_game
             if type_id in items.GOLD_INGOTS and not gold_ok:
                 continue            # gold off the hours' bosses only, above
             if thing and type_id == mobs.FALLBACK_LOOT:

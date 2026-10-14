@@ -34,6 +34,11 @@ ADMIN_PASSWORD = "secret"
 # answer the game server writes for it (server.PREMIUM_REFUSED).
 MASK_P = 6511
 REFUSED_P = "предмет %d — (P), выведен из игры, не выдаётся" % MASK_P
+# Steyr TMP and Chang Feng (G), out of the game by the owner's word of
+# 2026-10-14 (data/retired.json items), and the answer (server.RETIRED_REFUSED).
+STEYR, CHANG_G = 25501, 25528
+REFUSED_STEYR = "предмет %d (Steyr TMP) — выведен из игры, не выдаётся" % STEYR
+REFUSED_CHANG_G = "предмет %d (Chang Feng (G)) — выведен из игры, не выдаётся" % CHANG_G
 # The premium vehicles, «Газ 67 Б (P)» and «Летающая тарелка»
 # (transport.premium), and the answer for them (server.PREMIUM_TRANSPORT_REFUSED).
 GAZ_P, SAUCER_P = 8, 12
@@ -411,6 +416,20 @@ try:
     db.close()
     check("вещь (P) не в игре -- не выдаётся, и сказано почему",
           (said, owned), (REFUSED_P, 0))
+    # Так же стволы, которые владелец вывел по имени (2026-10-14, «у STEYR TMP нет
+    # картинки и у Chang Feng тоже, убери их из игры»; data/retired.json items).
+    post(HTTP_PORT, "/admin/do",
+         {"kind": "item", "char_id": str(_char_id), "type_id": str(STEYR),
+          "count": "1"}, cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    db = storage.connect(DB)
+    said = db.execute("SELECT result FROM admin_actions WHERE kind = 'item'"
+                      " ORDER BY id DESC").fetchone()["result"]
+    owned = db.execute("SELECT COUNT(*) c FROM items WHERE type_id = ?",
+                       (STEYR,)).fetchone()["c"]
+    db.close()
+    check("Steyr TMP не в игре -- не выдаётся, и сказано, какой предмет и почему",
+          (said, owned), (REFUSED_STEYR, 0))
     # Так же транспорт (P): панель его не предлагает, а запрос в обход
     # формы game server отклоняет и вне игры.
     post(HTTP_PORT, "/admin/do",
@@ -447,6 +466,18 @@ try:
     check("и в игре вещь (P) не выдаётся: ни строки в рюкзак, ни ss_obj_status",
           (said, [f for f in frames if f.startswith("ss_obj_status")]),
           (REFUSED_P, []))
+    post(HTTP_PORT, "/admin/do",
+         {"kind": "item", "char_id": str(_char_id), "type_id": str(CHANG_G),
+          "count": "1"}, cookie=COOKIE)
+    check("очередь разобрана", wait_done(), True)
+    frames = cl.frames(1.0)
+    db = storage.connect(DB)
+    said = db.execute("SELECT result FROM admin_actions WHERE kind = 'item'"
+                      " ORDER BY id DESC").fetchone()["result"]
+    db.close()
+    check("и Chang Feng (G) в игре не выдаётся: ни строки в рюкзак, ни ss_obj_status",
+          (said, [f for f in frames if f.startswith("ss_obj_status")]),
+          (REFUSED_CHANG_G, []))
     # The point of the whole queue: the session holds this character, and its
     # save() at logout must not write the pre-change number back over it.
     cl.close()

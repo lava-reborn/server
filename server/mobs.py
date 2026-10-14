@@ -446,13 +446,14 @@ def junk(level, rng):
 
 
 def droppable(type_id):
-    """Whether a type may lie in a corpse's bag. Not premium, which is out of
-    the game (items.premium); not a quest item, which belongs to its quest;
+    """Whether a type may lie in a corpse's bag. Nothing out of the game
+    (items.out_of_game: premium, or taken out by name in data/retired.json
+    items); not a quest item, which belongs to its quest;
     and something a trader pays for -- a thing that can be neither used nor
     sold would be litter the player cannot even get rid of (the blueprints
     in the table have no price: the upgrader they are for does not exist)."""
     si = items.params_of(type_id)
-    return bool(si) and not items.premium(type_id) and not si.get("quest") \
+    return bool(si) and not items.out_of_game(type_id) and not si.get("quest") \
         and si.get("cost", 0) > 0
 
 
@@ -621,12 +622,12 @@ _ONE_OF_GROUPS = {}
 
 
 def one_of_droppable(type_id):
-    """A thing a ONE_OF row may put in a bag: one the game has, not premium
-    and not a quest's. Unlike droppable(), a thing priced in gold alone is
-    welcome: the gold belts are worn, not litter, though no trader pays
-    afro for them."""
+    """A thing a ONE_OF row may put in a bag: one the game has, not out of
+    the game (items.out_of_game) and not a quest's. Unlike droppable(), a
+    thing priced in gold alone is welcome: the gold belts are worn, not
+    litter, though no trader pays afro for them."""
     si = items.params_of(type_id)
-    return bool(si) and not items.premium(type_id) and not si.get("quest")
+    return bool(si) and not items.out_of_game(type_id) and not si.get("quest")
 
 
 def one_of_groups(type_id):
@@ -651,9 +652,10 @@ _QUEST_TABLES = {}
 
 def quest_droppable(type_id):
     """Whether a quest row may put a type in a bag: a thing the game has
-    and not a premium one. Price and the quest flag do not count here
-    (QUEST_TIER): the thing belongs to the quest that asks for it."""
-    return bool(items.params_of(type_id)) and not items.premium(type_id)
+    and not one out of the game (items.out_of_game). Price and the quest
+    flag do not count here (QUEST_TIER): the thing belongs to the quest
+    that asks for it."""
+    return bool(items.params_of(type_id)) and not items.out_of_game(type_id)
 
 
 def quest_table(type_id):
@@ -726,7 +728,8 @@ def loot_for(st, rng, wanted=()):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
     brought it down still need (quest_roll; wanted, the types). combat.
-    drop_loot still turns away anything premium, whatever a list says."""
+    drop_loot still turns away anything out of the game (items.out_of_game),
+    whatever a list says."""
     return carried(st, rng) + roll_table(st.type_id, rng) + \
         quest_roll(st.type_id, wanted, rng)
 

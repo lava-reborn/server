@@ -96,6 +96,15 @@ with open(os.path.join(ROOT, "data", "sets.json"), encoding="utf-8") as _fh:
     SETS_DOC = json.load(_fh)["sets"]
 with open(os.path.join(ROOT, "data", "shop_bands.json"), encoding="utf-8") as _fh:
     BANDS_DOC = json.load(_fh)
+# What the owner took out of the game by name (data/retired.json items: Steyr TMP and
+# Chang Feng, 2026-10-14), read here from the file: no band holds one
+# (server/test_retired_guns.py).
+with open(os.path.join(ROOT, "data", "retired.json"), encoding="utf-8") as _fh:
+    GONE = {int(k) for k in json.load(_fh).get("items", {}) if not k.startswith("_")}
+
+
+def out_of_game(t):
+    return items.premium(t) or t in GONE
 
 # --- 1. the chain ------------------------------------------------------------------------
 print("the chain of cities")
@@ -250,7 +259,7 @@ def expect(kind, lo, hi):
         p = items.params_of(t)
         priced = (p["g_cost"] > 0 and not p["cost"]) if gold else (p["cost"] > 0 and not p["g_cost"])
         text = names.ALL.get(OFF + t, "")
-        if not priced or items.premium(t) or p.get("quest") or quests.lent(t) \
+        if not priced or out_of_game(t) or p.get("quest") or quests.lent(t) \
                 or text == name or "(Q)" in text:
             continue
         if lo <= level_of(t) <= hi:
@@ -277,11 +286,11 @@ for t, places in sorted(WHERE.items()):
                 wrong[(p, t)] = (sorted(set(band_part) - want), sorted(want - set(band_part)))
             if band_part != stall[:len(band_part)] or \
                     rest != [x for x in own if not weapon_or_piece(x) and not med_line(x)
-                             and not items.premium(x)] or rest != stall[len(stall) - len(rest):]:
+                             and not out_of_game(x)] or rest != stall[len(stall) - len(rest):]:
                 gone_own[(p, t)] = rest
         else:
             cut = [x for x in own if not weapon_or_piece(x) or lo <= level_of(x) <= hi]
-            if stall != [x for x in cut if not items.premium(x)]:
+            if stall != [x for x in cut if not out_of_game(x)]:
                 wrong[(p, t)] = ("own list cut", stall)
 check("each seller at each of its city's places: exactly the band's things of its kinds,"
       " the ordinary and the gold one both (a seller of no kinds: its own list cut)", wrong, {})
@@ -313,9 +322,11 @@ COUNTS = {
     # The black market's machine guns at «Пулеметы и патроны» (1208), whom the wiki's article
     # puts there; Серхио (1214), who had his list by a shifted link, sells battle medicine.
     # The oasis's «Торговец патронами» (1230) its rounds alone, a seller of no kinds since
-    # 2026-10-13 (his own list cut to the band; server/test_dongola_trade.py).
-    "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (6, 6), 1153: (3, 3), 1208: (2, 2),
-                1229: (25, 25), 1213: (25, 25), 1233: (25, 25), 5161: (25, 25), 2391: (0, 8),
+    # 2026-10-13 (his own list cut to the band; server/test_dongola_trade.py). Steyr TMP
+    # and Chang Feng, A and (G), left «Пистолет-пулеметы и патроны» (1211) and «Оружие»
+    # (1229) with the owner's «убери их из игры» (2026-10-14): two fewer of each currency.
+    "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (4, 4), 1153: (3, 3), 1208: (2, 2),
+                1229: (23, 23), 1213: (25, 25), 1233: (25, 25), 5161: (25, 25), 2391: (0, 8),
                 207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0),
                 1230: (0, 0)},
     # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
@@ -367,11 +378,12 @@ check("no weapon or set piece out of its city's band on any stall of a city's pl
 ALL_ON = sorted({x for s in stalls.values() for x in s})
 BAND_ON = sorted({x for (p, t), s in stalls.items() if shop_bands.SELLERS[t]
                   for x in s if weapon_or_piece(x)})
-check("  ..no premium, no modification, no quest or lent thing, no (Q), no designed stand-in"
-      " on a seller's band", [x for x in BAND_ON if items.premium(x) or craft.mod_of(x)
-                              or items.params_of(x).get("quest") or quests.lent(x)
-                              or "(Q)" in names.ALL.get(OFF + x, "")
-                              or (x not in PIECES and x not in WIKI)], [])
+check("  ..no premium, nothing retired by name, no modification, no quest or lent thing, no (Q),"
+      " no designed stand-in on a seller's band",
+      [x for x in BAND_ON if out_of_game(x) or craft.mod_of(x)
+       or items.params_of(x).get("quest") or quests.lent(x)
+       or "(Q)" in names.ALL.get(OFF + x, "")
+       or (x not in PIECES and x not in WIKI)], [])
 check("  ..each priced in its own currency: afro alone for the ordinary, gold alone for the"
       " (G) -- never both, which the stall would buy back for afro",
       [x for x in BAND_ON if bool(items.params_of(x)["cost"]) == bool(items.params_of(x)["g_cost"])],

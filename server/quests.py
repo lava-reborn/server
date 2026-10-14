@@ -815,7 +815,9 @@ QUESTS = load()
 def check_items(table=None):
     """Every thing a quest row names is one the game has (items.params_of)
     and no premium one (items.premium, out of the game since the owner's
-    cut of (P)), and what one hands over at the take is worth nothing away from it
+    cut of (P)) or one the owner took out by name (items.retired,
+    data/retired.json items), and what one hands over at the take is worth
+    nothing away from it
     (START_OBJ_WORTHLESS_ONLY): of this module's table, or of the one given
     (type -> Quest, as load returns it).
 
@@ -842,8 +844,9 @@ def check_items(table=None):
 
 def item_problems(table=None):
     """check_items's findings, every one of them, in words: per quest the
-    things the game does not have, the premium ones, the lent ones a stall
-    sells, the dear ones handed over (the order check_items raises them in)."""
+    things the game does not have, the premium ones, the ones retired by
+    name, the lent ones a stall sells, the dear ones handed over (the order
+    check_items raises them in)."""
     import items                       # late: see check_items
     import npcs
     table = QUESTS if table is None else table
@@ -868,6 +871,17 @@ def item_problems(table=None):
         if premium:
             found.append("quest %d names premium things, out of the game: %s"
                          % (q.type, ", ".join(premium)))
+        # Nor one the owner took out by name (data/retired.json items,
+        # items.retired: Steyr TMP and Chang Feng, 2026-10-14), by the same
+        # rule: a row naming one -- a weapon craft's recipe built before the
+        # cut, a reward written by hand -- stops the server, rather than
+        # handing out what no stall or corpse may.
+        gone = ["%s %d" % (field, t) for field, t in q.things()
+                if items.params_of(t) is not None and items.retired(t)
+                and not items.premium(t)]
+        if gone:
+            found.append("quest %d names things out of the game (data/retired.json items): %s"
+                         % (q.type, ", ".join(gone)))
         on_sale = ["%d (trader %d)" % (t, sold[t]) for t in sorted(q.lent) if t in sold]
         if on_sale:
             found.append("quest %d lends what a stall sells: %s"

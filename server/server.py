@@ -84,6 +84,10 @@ CHEATS = os.environ.get("LAVA_CHEATS", "").strip().lower() not in (
 # the panel's log (Session.admin_give, apply_admin_action): (P) is out of the
 # game, for an admin too (the owner's cut of (P), 2026-09-30).
 PREMIUM_REFUSED = "предмет %d — (P), выведен из игры, не выдаётся"
+# And of a thing the owner took out by name (items.retired, data/retired.json
+# items: Steyr TMP and Chang Feng, «убери их из игры», 2026-10-14), its name
+# beside the number so the log says which.
+RETIRED_REFUSED = "предмет %d (%s) — выведен из игры, не выдаётся"
 # And of a premium vehicle (transport.premium: 8 «Газ 67 Б (P)», 12 «Летающая
 # тарелка»), from Session.admin_transport and the panel's offline path.
 PREMIUM_TRANSPORT_REFUSED = "транспорт %d — (P), выведен из игры, не выдаётся"
@@ -1755,15 +1759,18 @@ class Session:
         Never a premium thing (items.premium): (P) is out of the game, and
         this -- with the panel's offline path in apply_admin_action -- was
         the one way left for one to reach a bag (the owner's cut of (P),
-        2026-09-30, «можно ли админу выдавать (P)? Нельзя»).
+        2026-09-30, «можно ли админу выдавать (P)? Нельзя»). Nor one the
+        owner took out by name (items.retired: Steyr TMP and Chang Feng,
+        2026-10-14), by the same rule (refused_gift).
         """
         if not self.char_id:
             return "персонаж не выбран"
         type_id, count = int(type_id), int(count)
         if items.params_of(type_id) is None:
             return "предмета %d нет в каталоге" % type_id
-        if items.premium(type_id):
-            return PREMIUM_REFUSED % type_id
+        refused = refused_gift(type_id)
+        if refused:
+            return refused
         if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
             count = 1
         count = max(1, min(count, 999))
@@ -4129,6 +4136,19 @@ def admin_progress_text(kind, args, state):
     return "уровень: %s" % state
 
 
+def refused_gift(type_id):
+    """What an admin's gift of this type is refused with, or None: a premium
+    thing (PREMIUM_REFUSED) and one the owner took out by name
+    (RETIRED_REFUSED, items.retired) are out of the game for an admin too,
+    in the game (Session.admin_give) and out of it (apply_admin_action)."""
+    if items.premium(type_id):
+        return PREMIUM_REFUSED % type_id
+    if items.retired(type_id):
+        return RETIRED_REFUSED % (
+            type_id, names.text(items.STRING_ID_OFFSET + type_id).split("$")[0].strip())
+    return None
+
+
 def apply_admin_action(row):
     """Carry out one queued action and say what happened.
 
@@ -4220,8 +4240,9 @@ def apply_admin_action(row):
         type_id = int(args["type_id"])
         if items.params_of(type_id) is None:
             return "предмета %d нет в каталоге" % type_id
-        if items.premium(type_id):            # as Session.admin_give
-            return PREMIUM_REFUSED % type_id
+        refused = refused_gift(type_id)      # as Session.admin_give
+        if refused:
+            return refused
         count = int(args.get("count", 1))
         if items.root_of(type_id) not in items.HEAPABLE_ROOTS:
             count = 1

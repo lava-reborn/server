@@ -34,7 +34,9 @@ anybody touching a list:
   that has its article's table (data/items_wiki.json -- without one a gun is
   the designed stand-in, 120 afro and no level), a name, and a price in its
   own currency, afro for the ordinary one and gold for the (G); nothing
-  premium, nothing a quest owns or lends, no modification. A set piece is
+  out of the game (items.out_of_game: no premium thing, none the owner took
+  out by name, data/retired.json items -- Steyr TMP and Chang Feng since
+  2026-10-14), nothing a quest owns or lends, no modification. A set piece is
   one of an A or G set of the owner's ladder (data/sets.json), mod00 -- by
   the file's variant, not the piece's internal name: Чёрный Ловелас[12]'s A
   is the original's quest series (_Q_), its G types of our own
@@ -323,7 +325,10 @@ def wares():
         # The name the player reads: a piece of the ladder shows the set
         # file's, over the original's «... (Q)» (names.SET_ITEM_NAMES).
         shown = set_names.get(t) or orig.get(t) or ""
-        if not priced or items.premium(t) or p.get("quest") or quests.lent(t) \
+        # Nothing out of the game (items.out_of_game): no (P), and nothing
+        # the owner took out by name (data/retired.json items) -- whatever
+        # band, so a city added later sells none of them either.
+        if not priced or items.out_of_game(t) or p.get("quest") or quests.lent(t) \
                 or not _named(t) or _NOT_SHOP_NAME.search(shown):
             continue
         if level is None:
