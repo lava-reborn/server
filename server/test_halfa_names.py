@@ -63,9 +63,11 @@ with open(os.path.join(ROOT, "data", "orig_names_manual.json"), encoding="utf-8"
     MANUAL = json.load(_fh)
 # Named by nobody, each with its reason in the file: the whole remainder.
 # Донгола (2026-10-13) added three who do not stand: the two of «Упавший
-# спутник» and the black market's test trader.
+# спутник» and the black market's test trader. Абу-Хамед (2026-10-14) three
+# more who do not stand: the station's trader without a row and the two
+# masters' twins whose rows are the other place's masters.
 REMAINDER = {int(k) for k in MANUAL["none"]}
-MAX_REMAINDER = 9
+MAX_REMAINDER = 12
 
 # The places the restoration opens. Not the premium masters' camp 124, off the
 # map since the owner's cut of (P) (2026-09-30, data/retired.json), nor the

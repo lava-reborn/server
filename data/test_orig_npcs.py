@@ -71,8 +71,14 @@ MIN_MOB_KIND = 308
 # helpers, the quarry's owner and foreman, Бамбук, the knives' and the sets'
 # traders, the colonel of the dump 695, Альма, Али-Малистик, the doctor's
 # junior helper and the New Year's children -- and "suggest" fell from 639
-# to 601.
-MIN_SUGGEST = 601
+# to 601. Абу-Хамед's people by hand (2026-10-14, the owner's «сделай потом
+# абу хамед в таком же формате»): 32 more -- the bank's Давид, the masters
+# (G) of the quarter, the technogeek, the quarry's foreman, the customs man
+# of the port, the clothes', the sets', the knives' and the oasis' ammunition
+# traders, the shell line of the works, the Alliance's defector, its ranks
+# and a teacher of the Academy, Вюрт's box, the doctor's junior helper and
+# Кодого -- and "suggest" fell from 601 to 569.
+MIN_SUGGEST = 569
 
 
 def canonical(doc):

@@ -3115,6 +3115,791 @@
    "string_id": 10326,
    "text": "Ямка",
    "why": "Npc_Commoner000762 (art 1f_SmallHole), the hole of Q_Tresure4 on 5899,2003 (253, the map's L220 «Сокровища Зубери»): the family's holes 759-763 share the one row 10326 'Ямка' (see 6512 and 6516). Донгола (the owner's «и потом сделай донголу тоже», 2026-10-13)."
+  },
+  "726": {
+   "string_id": 9620,
+   "text": "Омар<Br>Обучение специализациям",
+   "why": "ah_trainer at the station 126: the spec trainers' rows 9619/9620 ('Зоричев<Br>Обучение специализациям', 'Омар<Br>Обучение специализациям'), Зоричев being Вади-Хальфа's trainer (Simple_SpecTrainer 4); the map's L158 «Вокзал: ... Обучение специализациям». Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "728": {
+   "string_id": 50007,
+   "text": "Роуз<Br>Лекарь",
+   "why": "ah_Healer, Абу-Хамед's healer at the station 126 and the quarry's first pit 636 (and Мероэ's «Городишко» 58, which uses the town's people): the healers' block 50005-50010 ('Деда Джоф', 'Грегори', 'Роуз', 'Ланд Байрон', 'Андрей Евгеньевич', 'Альфред Петрович', each '<Br>Лекарь'): the towns' healers in the towns' order -- Вади-Хальфа's Деда Джоф (wh_Healer), Донгола's Грегори (138), Абу-Хамед's Роуз -- then the prison yards' in the same order, Ланд Байрон (2111), Андрей Евгеньевич (2109), Альфред Петрович. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "2112": {
+   "string_id": 50010,
+   "text": "Альфред Петрович<Br>Лекарь",
+   "why": "ah_prison_Healer in the prison yard 177: the healers' block 50005-50010 ('Деда Джоф', 'Грегори', 'Роуз', 'Ланд Байрон', 'Андрей Евгеньевич', 'Альфред Петрович', each '<Br>Лекарь'): the towns' healers in the towns' order -- Вади-Хальфа's Деда Джоф (wh_Healer), Донгола's Грегори (138), Абу-Хамед's Роуз -- then the prison yards' in the same order, Ланд Байрон (2111), Андрей Евгеньевич (2109), Альфред Петрович. The prison yard 177 (Тюремный двор, the map's L154 «Тюрьма Абу-Хамеда: Усиление режима в 12:00, 16:00 и 23:00»), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "740": {
+   "string_id": 47258,
+   "text": "Веласкес<Br>водитель",
+   "why": "ah_travel, the driver at the station 126: the Абу-Хамед block of the people's rows 47249-47259 ('Ибрахим<Br>Владелец каменоломни', 'Гюнтер<Br>Прораб', 'Джек Скарабей<Br>Капитан', 'Человек в костюме', 'Старик Том Райц', 'Райнхольд Вюрт<Br>Коллекционер', 'Грязный ящик<Br>Райнхольда Вюрта', 'Рэт<Br>Караванщик', 'Леонофф<Br>механник МКС', 'Веласкес<Br>водитель', 'Муамар<Br>Лотерейщик'), whose named ones (1015 Джек Скарабей, 1757 Том Райц, 1761 Вюрт) the matcher already ties to the town's AH_ types. The wiki's Веласкес of the station («Трофеи»); his rides 277/284 back to Донгола. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "741": {
+   "string_id": 47259,
+   "text": "Муамар<Br>Лотерейщик",
+   "why": "ah_lotery in the port 446: the Абу-Хамед block of the people's rows 47249-47259 ('Ибрахим<Br>Владелец каменоломни', 'Гюнтер<Br>Прораб', 'Джек Скарабей<Br>Капитан', 'Человек в костюме', 'Старик Том Райц', 'Райнхольд Вюрт<Br>Коллекционер', 'Грязный ящик<Br>Райнхольда Вюрта', 'Рэт<Br>Караванщик', 'Леонофф<Br>механник МКС', 'Веласкес<Br>водитель', 'Муамар<Br>Лотерейщик'), whose named ones (1015 Джек Скарабей, 1757 Том Райц, 1761 Вюрт) the matcher already ties to the town's AH_ types. The map's L160 «Причал: ... Лотерейщики». Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "742": {
+   "string_id": 46945,
+   "text": "Лотерейщик<Br>Золотая лотерея",
+   "why": "ah_lotery_g in the port 446, MEDIUM: the gold lottery's own row 46945, which Абри's twin Abri_lotery_g (1171) takes; the town's block has no second lottery seller. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "762": {
+   "string_id": 50408,
+   "text": "Кирилл<Br>Аренда транспорта",
+   "why": "ah_Lessor in the port 446 (and Мероэ's 58): the lessors' run 50405-50410 ('Марат' and 'Мухсин' -- Донгола's 655 and Абри's 1173 --, 'БМД ...', 'Кирилл<Br>Аренда транспорта', 'Нуман' -- the oasis' 660 --, 'Тьерри Сабин' -- the oases' --): the one lessor's row nobody takes is the last town's; the map's L160 «Причал: ... аренда». Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "984": {
+   "string_id": 47249,
+   "text": "Ибрахим<Br>Владелец каменоломни",
+   "why": "AH_Stone_Owner in the quarter 127: the Абу-Хамед block of the people's rows 47249-47259 ('Ибрахим<Br>Владелец каменоломни', 'Гюнтер<Br>Прораб', 'Джек Скарабей<Br>Капитан', 'Человек в костюме', 'Старик Том Райц', 'Райнхольд Вюрт<Br>Коллекционер', 'Грязный ящик<Br>Райнхольда Вюрта', 'Рэт<Br>Караванщик', 'Леонофф<Br>механник МКС', 'Веласкес<Br>водитель', 'Муамар<Br>Лотерейщик'), whose named ones (1015 Джек Скарабей, 1757 Том Райц, 1761 Вюрт) the matcher already ties to the town's AH_ types. The map's L156 «Жилой квартал: ... Каменоломня»; his twins Равшан (978) and Джамшут (982) own the quarries of Вади-Хальфа and Донгола. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "985": {
+   "string_id": 47250,
+   "text": "Гюнтер<Br>Прораб",
+   "why": "AH_Stone_Brigadir in the quarry's first pit 636: the Абу-Хамед block of the people's rows 47249-47259 ('Ибрахим<Br>Владелец каменоломни', 'Гюнтер<Br>Прораб', 'Джек Скарабей<Br>Капитан', 'Человек в костюме', 'Старик Том Райц', 'Райнхольд Вюрт<Br>Коллекционер', 'Грязный ящик<Br>Райнхольда Вюрта', 'Рэт<Br>Караванщик', 'Леонофф<Br>механник МКС', 'Веласкес<Br>водитель', 'Муамар<Br>Лотерейщик'), whose named ones (1015 Джек Скарабей, 1757 Том Райц, 1761 Вюрт) the matcher already ties to the town's AH_ types. The foreman, as Большой Сэм (979) is Вади-Хальфа's; over the wiki's bare 'Гюнтер'. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1219": {
+   "string_id": 62163,
+   "text": "Марат<Br>Одежда, разгрузки и пояса",
+   "why": "ah_wear at the station 126: the town traders' rows 62160-62166 ('Дари<Br>Торговец комплектами' -- Донгола's set trader --, 'Серхио<Br>Боевая медицина', 'Фарюк<Br>Лекарства и еда', 'Марат<Br>Одежда, разгрузки и пояса', 'Симона<Br>Торговец комплектами', 'Киплер<Br>Боевая медицина', 'Курт<Br>Лекарства и еда'); Киплер and Курт are this station's 1221/1222 by the matcher, Марат and Симона the station's ah_wear and ah_set_trd beside them. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1223": {
+   "string_id": 62164,
+   "text": "Симона<Br>Торговец комплектами",
+   "why": "ah_set_trd (art 1f_Zula) at the station 126: the town traders' rows 62160-62166, see 1219. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "2274": {
+   "string_id": 62138,
+   "text": "Шрам<Br>Торговец ножами",
+   "why": "ah_knife_trd at the station 126: the knife traders' rows 62136-62138 ('Однопальцый', 'Одноногий', 'Шрам', each '<Br>Торговец ножами') in the towns' order -- Абри's Однопальцый, Донгола's Одноногий, Абу-Хамед's Шрам. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "2282": {
+   "string_id": 51648,
+   "text": "Точильный камень<Br>Абу-Хамеда",
+   "why": "ah_modif_knifes (art 1f_Grindstone) at the station 126: the run 51645-51648 'Точильный камень' of Вади-Хальфа, Абри, Донгола, Абу-Хамед, the last one the town's own. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1390": {
+   "string_id": 10531,
+   "text": "Водитель автобуса<Br>до завода",
+   "why": "AH_factory_bus_driver at the station 126: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14. The bus has no ride (the plan's cut list)."
+  },
+  "1503": {
+   "string_id": 48444,
+   "text": "Ученый МКС<Br>Сбор игнимбритов за серебро",
+   "why": "dom_DreadNPC at the station 126 (art a5-Machinegunner), MEDIUM: the МКС's rows 48443-48445 ('Лаборант МКС<Br>Фильтрация игнимбритов', 'Ученый МКС<Br>Сбор игнимбритов за серебро', 'Интендант МКС<Br>Обмен экипировки') next to the town's types dom_ConvertResNPC 1502 (the filtering at the processing base 217) and dom_DreadNPC 1503; the ignimbrites are Мероэ's, so he stands without his work. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1502": {
+   "string_id": 48443,
+   "text": "Лаборант МКС<Br>Фильтрация игнимбритов",
+   "why": "dom_ConvertResNPC at the processing base 217, MEDIUM: the МКС's rows 48443-48445, see 1503; the filtering stands at the base of the ores' processing. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1407": {
+   "string_id": 50515,
+   "text": "Лаборант СА<Br>Перебежчик",
+   "why": "merger_npc in the town's centre 128: 50515 'Лаборант СА<Br>Перебежчик' after the rows of the assembly of the experiment's equipment (50512-50514) which merger_ does; the matcher's own medium pick. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "6830": {
+   "string_id": 10356,
+   "text": "Ящик с деньгами<Br>Главный склад Абух-Хамеда",
+   "why": "Npc_Commoner000807, the box of the warehouse in the town's centre 128 (stok_AH_vostok): the warehouse boxes' rows 10353-10357 ('Ящик с деньгами<Br>Северный склад', 'Восточный склад', 'Южный склад', 'Главный склад Абух-Хамеда', 'Ангары Северного Альянса'), the commoners' family on the offset that gives 6826-6829 their warehouses' rows; the town's misspelling is mended on the wire (server/orig_texts.py NAME_TYPOS). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "7454": {
+   "string_id": 9616,
+   "text": "[17] Хозяин склада<Br>Главный склад",
+   "why": "boss_AH_vostok, the master of the warehouse in the town's centre 128, MEDIUM-STRONG: the masters' rows 9610-9616 ('[8] Хозяин склада<Br>Северный склад' .. '[17] Хозяин склада<Br>Главный склад') follow the types 7448-7453 of the other warehouses in their order; the seventh, the 'Главный склад', is the one his box's row names (10356). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "796": {
+   "string_id": 46942,
+   "text": "Техногик<Br>расшифровка чертежей",
+   "why": "ah_technogeek in the quarter 127: 46942 'Техногик<Br>расшифровка чертежей', the matcher's own medium pick over the wiki's bare 'Техногик'; he decodes the blueprints of 17-20 (48028-48035). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "2018": {
+   "string_id": 62130,
+   "text": "Младший<Br>помощник Доктора",
+   "why": "Dr_Gofus_assistent_AH in the quarter 127 (and Мероэ's 58): 62130 'Младший<Br>помощник Доктора', the row of its twins 2015 (Вади-Хальфа), 2016 (Абри) and 2017 (Донгола). The matcher's medium guess and the wiki gave it the doctor's own 'Доктор Гофус' (10440). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1762": {
+   "string_id": 47255,
+   "text": "Грязный ящик<Br>Райнхольда Вюрта",
+   "why": "AH_Box_Vurt in the quarter 127: the Абу-Хамед block of the people's rows 47249-47259 ('Ибрахим<Br>Владелец каменоломни', 'Гюнтер<Br>Прораб', 'Джек Скарабей<Br>Капитан', 'Человек в костюме', 'Старик Том Райц', 'Райнхольд Вюрт<Br>Коллекционер', 'Грязный ящик<Br>Райнхольда Вюрта', 'Рэт<Br>Караванщик', 'Леонофф<Br>механник МКС', 'Веласкес<Br>водитель', 'Муамар<Br>Лотерейщик'), whose named ones (1015 Джек Скарабей, 1757 Том Райц, 1761 Вюрт) the matcher already ties to the town's AH_ types. Over the wiki's 'Грязный ящик Вюрта'. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "729": {
+   "string_id": 47817,
+   "text": "Давид<Br>Банкир",
+   "why": "ah_David_bank at the station 126 (and Мероэ's 58): 47817 'Давид<Br>Банкир', the matcher's own medium pick, which agrees with the name the type showed (the source moves to the original); the map's L158 «Вокзал: ... Банк». Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1968": {
+   "string_id": 59619,
+   "text": "Анвар Хасимбек<Br>Подарки",
+   "why": "AH_romantik_trader in the quarter 127: the gift traders' rows 59617-59622 (Элизабет Стюарт's children 'Чарльз Стюарт' and 'Анна-Мария' -- Донгола's --, then 'Анвар Хасимбек<Br>Подарки', 'Хаим<Br>сын Анвара<Br>упаковка подарков', 'Юдифь<Br>дочь Анвара<Br>распаковка подарков'), the trader and his two children as the types AH_romantik_trader / _Upgrader_1 / _Upgrader_2; the wiki's list of the quarter names Анвар Хасимбек, Хаим, Юдифь. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "2006": {
+   "string_id": 59620,
+   "text": "Хаим<Br>сын Анвара<Br>упаковка подарков",
+   "why": "AH_romantik_Upgrader_1 in the quarter 127: the gift traders' rows, see 1968. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "2007": {
+   "string_id": 59621,
+   "text": "Юдифь<Br>дочь Анвара<Br>распаковка подарков",
+   "why": "AH_romantik_Upgrader_2 in the quarter 127: the gift traders' rows, see 1968. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "5107": {
+   "string_id": 10481,
+   "text": "Ундольф<Br>Обмен одежды на вырост [17-20]",
+   "why": "Npc_Upgrader000005 in the quarter 127: the upgraders' family on its offset 10476 ('Басым-албанец', 'Тестовый Апгрейдер', 'Брендольф ... [6-8]', 'Рудольф ... [9-12]', 'Адольф ... [13-16]', 'Ундольф ... [17-20]'), member 5 -> 10481; Абри's Рудольф 5105 and Донгола's Адольф 5106 are members 3 and 4. He does not stand (data/schedule.json held_out, as Рудольф and Адольф): the sets' upgrades are off. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1421": {
+   "string_id": 49531,
+   "text": "Охранник Илья<Br>Учебный центр Говарда Хаксли",
+   "why": "exp_by_gold_NPC in the quarter 127, MEDIUM-STRONG: The Academy's block 49526-49535: the guide's lines 'Вход в учебный центр' (49526-49528), 'Выход из обучающего центра' (49529/49530), then 'Охранник Илья<Br>Учебный центр Говарда Хаксли' and the four teachers 'Учитель<Br>Рукопашные навыки', 'Обучение стрельбе', 'Навыки доктора', 'Промышленность', in the order of the types exp_by_gold_NPC 1421 / out_exp_by_gold_NPC 1424 and melee_ 1425, ranged_ 1426, medicine_ 1427, scouting_ 1428 of «Боевая Академия» 1295 (Bunker_Univer). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14. The guard who leads in ('Я могу проводить вас в учебный центр Говарда Хаксли', 49527), art a2-Sergant; the wiki's list of the quarter names Охранник Илья."
+  },
+  "1424": {
+   "string_id": 49531,
+   "text": "Охранник Илья<Br>Учебный центр Говарда Хаксли",
+   "why": "out_exp_by_gold_NPC in the Academy 1295, MEDIUM: The Academy's block 49526-49535: the guide's lines 'Вход в учебный центр' (49526-49528), 'Выход из обучающего центра' (49529/49530), then 'Охранник Илья<Br>Учебный центр Говарда Хаксли' and the four teachers 'Учитель<Br>Рукопашные навыки', 'Обучение стрельбе', 'Навыки доктора', 'Промышленность', in the order of the types exp_by_gold_NPC 1421 / out_exp_by_gold_NPC 1424 and melee_ 1425, ranged_ 1426, medicine_ 1427, scouting_ 1428 of «Боевая Академия» 1295 (Bunker_Univer). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14. 'out' is the guide outside ('Я могу проводить вас в город', 49530), the same art a2-Sergant as 1421: the same guard."
+  },
+  "1425": {
+   "string_id": 49532,
+   "text": "Учитель<Br>Рукопашные навыки",
+   "why": "melee_exp_by_gold_NPC in the Academy 1295: The Academy's block 49526-49535: the guide's lines 'Вход в учебный центр' (49526-49528), 'Выход из обучающего центра' (49529/49530), then 'Охранник Илья<Br>Учебный центр Говарда Хаксли' and the four teachers 'Учитель<Br>Рукопашные навыки', 'Обучение стрельбе', 'Навыки доктора', 'Промышленность', in the order of the types exp_by_gold_NPC 1421 / out_exp_by_gold_NPC 1424 and melee_ 1425, ranged_ 1426, medicine_ 1427, scouting_ 1428 of «Боевая Академия» 1295 (Bunker_Univer). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1426": {
+   "string_id": 49533,
+   "text": "Учитель<Br>Обучение стрельбе",
+   "why": "ranged_exp_by_gold_NPC in the Academy 1295: The Academy's block 49526-49535: the guide's lines 'Вход в учебный центр' (49526-49528), 'Выход из обучающего центра' (49529/49530), then 'Охранник Илья<Br>Учебный центр Говарда Хаксли' and the four teachers 'Учитель<Br>Рукопашные навыки', 'Обучение стрельбе', 'Навыки доктора', 'Промышленность', in the order of the types exp_by_gold_NPC 1421 / out_exp_by_gold_NPC 1424 and melee_ 1425, ranged_ 1426, medicine_ 1427, scouting_ 1428 of «Боевая Академия» 1295 (Bunker_Univer). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1427": {
+   "string_id": 49534,
+   "text": "Учитель<Br>Навыки доктора",
+   "why": "medicine_exp_by_gold_NPC in the Academy 1295: The Academy's block 49526-49535: the guide's lines 'Вход в учебный центр' (49526-49528), 'Выход из обучающего центра' (49529/49530), then 'Охранник Илья<Br>Учебный центр Говарда Хаксли' and the four teachers 'Учитель<Br>Рукопашные навыки', 'Обучение стрельбе', 'Навыки доктора', 'Промышленность', in the order of the types exp_by_gold_NPC 1421 / out_exp_by_gold_NPC 1424 and melee_ 1425, ranged_ 1426, medicine_ 1427, scouting_ 1428 of «Боевая Академия» 1295 (Bunker_Univer). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14. The matcher's medium 49396 ('Навык медицины 1') is a lesson's name, not a person."
+  },
+  "1428": {
+   "string_id": 49535,
+   "text": "Учитель<Br>Промышленность",
+   "why": "scouting_exp_by_gold_NPC in the Academy 1295, MEDIUM: The Academy's block 49526-49535: the guide's lines 'Вход в учебный центр' (49526-49528), 'Выход из обучающего центра' (49529/49530), then 'Охранник Илья<Br>Учебный центр Говарда Хаксли' and the four teachers 'Учитель<Br>Рукопашные навыки', 'Обучение стрельбе', 'Навыки доктора', 'Промышленность', in the order of the types exp_by_gold_NPC 1421 / out_exp_by_gold_NPC 1424 and melee_ 1425, ranged_ 1426, medicine_ 1427, scouting_ 1428 of «Боевая Академия» 1295 (Bunker_Univer). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14. The fourth teacher; the skills with lessons are four (ближний бой, стрельба, медицина, промышленность, 49374-49415), and the fourth row is the industry's."
+  },
+  "1727": {
+   "string_id": 60592,
+   "text": "Гатера<Br>Авантюрист",
+   "why": "inst_NPC_bandit_2inst in the port 446: the bandits' revenge block 60590-60593 ('Абимбола', 'Эммануил Людвигович<Br>Инженер-Технолог МКС', 'Гатера<Br>Авантюрист', 'Машина Гатеры') in the order of the types inst_NPC_Abimbola 1726, inst_NPC_Emmanuil 2118 (both the matcher's high rows), inst_NPC_bandit_2inst 1727; Гатера drives to the bandits (60550-60589). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1693": {
+   "string_id": 60593,
+   "text": "Машина Гатеры",
+   "why": "db_entrance_NPC (art spr-fiat-500), the car in every bandits' place 689-694: 60593 'Машина Гатеры', the last row of the block 60590-60593 (see 1727); its way back is «Что, обратно захотелось?» (60588/60589). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1079": {
+   "string_id": 10335,
+   "text": "Таможенник Магриба",
+   "why": "ah_MagribCustom in the port 446: 10335 'Таможенник Магриба', the matcher's medium pick, the row Донгола's dn_pm_MagribCustom (812) takes by the matcher's high. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "5691": {
+   "string_id": 9671,
+   "text": "Полковник Шеппрад<Br>Армия ЦСЦ",
+   "why": "Npc_Commoner000097 (art 101) in the port 446: the ЦСЦ army's rows 9668-9672 ('Рядовой Вулси', 'Майор Картер', 'Рядовой Хиггинсон', 'Полковник Шеппрад', 'Рядовой Макгиллион', each '<Br>Армия ЦСЦ') on the commoners' offset 9574, which the matcher holds high for Commoner000091-096 (5685-5690 -> 9665-9670) and 000099-101 (5693-5695 -> 9673-9675) on both sides of this pair; arts 101 and 100 alternate officer and private along the whole run. The matcher's medium 9672 for the trader 6514 (Npc_Trader000073) is a guess by art (a8_DarkEcho), not by the family. He stands without quests (the plan's decision 36). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "5692": {
+   "string_id": 9672,
+   "text": "Рядовой Макгиллион<Br>Армия ЦСЦ",
+   "why": "Npc_Commoner000098 (art 100) in the port 446: the ЦСЦ army's rows, see 5691. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "2065": {
+   "string_id": 62186,
+   "text": "Кодого<Br>Авантюрист",
+   "why": "Touareg_travel_1 on the road 129, MEDIUM: 62186 'Кодого<Br>Авантюрист', the first row of the Tuaregs' chain (62186-62240: «Золото джунглей», the scouts Сундиат Кейта and Мохтар), whose Кодого is the town's adventurer by the road; the type's word is the Tuaregs' travel. His work is cut (the gold of his book-keeping bypasses the bosses), he stands with an empty window. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "880": {
+   "string_id": 48848,
+   "text": "Снабженец<Br>Патроны и лекарства",
+   "why": "uf_SupplyMan_g in the yard 177: 48848 'Снабженец<Br>Патроны и лекарства', the row Донгола's uf_SupplyMan_g_DN (2181) takes. The prison yard 177 (Тюремный двор, the map's L154 «Тюрьма Абу-Хамеда: Усиление режима в 12:00, 16:00 и 23:00»), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1793": {
+   "string_id": 62315,
+   "text": "Охранник<Br>Западная сторона",
+   "why": "uf_EnterMan_North_AH in the yard 177: 62315 'Охранник<Br>Западная сторона', the row of its twins 1791 (Вади-Хальфа) and 1792 (Донгола); his gate is «Тюрьма: западные ворота» (62275). The prison yard 177 (Тюремный двор, the map's L154 «Тюрьма Абу-Хамеда: Усиление режима в 12:00, 16:00 и 23:00»), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1796": {
+   "string_id": 62316,
+   "text": "Охранник<Br>Южная сторона",
+   "why": "uf_EnterMan_South_AH in the yard 177: 62316 'Охранник<Br>Южная сторона', the row of its twins 1794 and 1795; his gate is «Тюрьма: южные ворота» (62274). The prison yard 177 (Тюремный двор, the map's L154 «Тюрьма Абу-Хамеда: Усиление режима в 12:00, 16:00 и 23:00»), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1118": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m19_uf_Competitor_1, the prisoners of the cells 652/653: 60388 'Заключенный', the row of their twins 932-936 (Вади-Хальфа) and 1113-1117 (Донгола). Абу-Хамед's prison (Prison_1..5_AH, 649-653, under the yard 177; m19, the twin of Вади-Хальфа's m8 prison 644-648 and Донгола's m11 618-622), the rows its twins' people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1119": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m19_uf_Competitor_2, the prisoners of the cells 652/653: 60388 'Заключенный', the row of their twins 932-936 (Вади-Хальфа) and 1113-1117 (Донгола). Абу-Хамед's prison (Prison_1..5_AH, 649-653, under the yard 177; m19, the twin of Вади-Хальфа's m8 prison 644-648 and Донгола's m11 618-622), the rows its twins' people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1120": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m19_uf_Competitor_3, the prisoners of the cells 652/653: 60388 'Заключенный', the row of their twins 932-936 (Вади-Хальфа) and 1113-1117 (Донгола). Абу-Хамед's prison (Prison_1..5_AH, 649-653, under the yard 177; m19, the twin of Вади-Хальфа's m8 prison 644-648 and Донгола's m11 618-622), the rows its twins' people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1121": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m19_uf_Competitor_4, the prisoners of the cells 652/653: 60388 'Заключенный', the row of their twins 932-936 (Вади-Хальфа) and 1113-1117 (Донгола). Абу-Хамед's prison (Prison_1..5_AH, 649-653, under the yard 177; m19, the twin of Вади-Хальфа's m8 prison 644-648 and Донгола's m11 618-622), the rows its twins' people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1122": {
+   "string_id": 60388,
+   "text": "Заключенный",
+   "why": "m19_uf_Competitor_5, the prisoners of the cells 652/653: 60388 'Заключенный', the row of their twins 932-936 (Вади-Хальфа) and 1113-1117 (Донгола). Абу-Хамед's prison (Prison_1..5_AH, 649-653, under the yard 177; m19, the twin of Вади-Хальфа's m8 prison 644-648 and Донгола's m11 618-622), the rows its twins' people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2175": {
+   "string_id": 60387,
+   "text": "Хранитель общака",
+   "why": "m19_uf_godfather_3, the godfather of the centre block 651: 60387 'Беглый каторжник<Br>Хранитель общака', the row of his twins 2173 and 2174. Абу-Хамед's prison (Prison_1..5_AH, 649-653, under the yard 177; m19, the twin of Вади-Хальфа's m8 prison 644-648 and Донгола's m11 618-622), the rows its twins' people take (60386 'Макисе Курису', 60387 'Беглый каторжник<Br>Хранитель общака', 60388 'Заключенный'), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1232": {
+   "string_id": 62154,
+   "text": "Торговец патронами",
+   "why": "ah_oasis_ammo: 62154 'Торговец патронами', the oases' ammunition traders' row (1227, 1228, 1230 of Вади-Хальфа, Абри, Донгола); the map's L211 «Оазис \"Аль-Кусай\": ... отборные и прочие боеприпасы». The oasis «Аль-Кусай» 196 (the map's L211), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1270": {
+   "string_id": 46359,
+   "text": "Лекарь",
+   "why": "ah_oasis_healer: 46359 'Лекарь', the oases' healers' row (1234, 1266, 1268), the plain word of the role block 46350-46360. The oasis «Аль-Кусай» 196 (the map's L211), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1756": {
+   "string_id": 60230,
+   "text": "Осколок скалы (АХ)",
+   "why": "AH_Rock (art 1f_Plumbum): the rocks' run 60227-60230 'Осколок скалы (ВХ)', '(Аб)', '(Дн)', '(АХ)', one to a town's oasis, the last Абу-Хамед's. The oasis «Аль-Кусай» 196 (the map's L211), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2301": {
+   "string_id": 50410,
+   "text": "Тьерри Сабин<Br>",
+   "why": "oasis_Lessor_4: 50410 'Тьерри Сабин<Br>', the oases' lessor (2298-2300 of the other three oases), the buggy pilot who drives between them. The oasis «Аль-Кусай» 196 (the map's L211), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "730": {
+   "string_id": 48071,
+   "text": "Оружейник<Br>Винтовки",
+   "why": "ah_craft_RifleCrafter: the gunsmiths' rows 48071-48076 ('Оружейник<Br>Винтовки', 'Дробовики', 'Автоматы', 'Пистолеты', 'Пистолет-пулеметы', 'Пулеметы') by the class each type's word names, in the masters' place 624 of the mountain paths (L232-L234 «Горные тропы»), as Донгола's 244/246/247. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "732": {
+   "string_id": 48076,
+   "text": "Оружейник<Br>Пулеметы",
+   "why": "ah_craft_MachGunCrafter: the gunsmiths' rows 48071-48076 by the class the type's word names, in the masters' place 624 (see 730). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "733": {
+   "string_id": 48073,
+   "text": "Оружейник<Br>Автоматы",
+   "why": "ah_craft_AssRifleCrafter: the gunsmiths' rows 48071-48076 by the class the type's word names, in the masters' place 624 (see 730). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1323": {
+   "string_id": 10521,
+   "text": "Вход в шахту<Br>Добыча свинца",
+   "why": "AH_EnterPlumbumNPC1, the lead mine's mouth 215: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1327": {
+   "string_id": 10522,
+   "text": "Вход на карьер<Br>Добыча селитры",
+   "why": "AH_EnterNitreNPC1, the saltpetre pit's mouth 214: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1331": {
+   "string_id": 10523,
+   "text": "Вход в шахту<Br>Добыча меди",
+   "why": "AH_EnterCopperNPC1, the copper mine's mouth 213: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1335": {
+   "string_id": 10524,
+   "text": "Выход из шахты",
+   "why": "AH_ExitPlumbumNPC1, the lead mine's control room 668: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1339": {
+   "string_id": 10525,
+   "text": "Выход из карьера",
+   "why": "AH_ExitNitreNPC1, the saltpetre pit's control room 667: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1343": {
+   "string_id": 10524,
+   "text": "Выход из шахты",
+   "why": "AH_ExitCopperNPC1, the copper mine's control room 666: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1362": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "AH_plumbum_sorting in 668: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1366": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "AH_nitre_sorting in 667: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1370": {
+   "string_id": 10526,
+   "text": "Сортировка",
+   "why": "AH_copper_sorting in 666: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1374": {
+   "string_id": 10527,
+   "text": "Производство пуль",
+   "why": "AH_bullet_creator in the processing base 217: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1378": {
+   "string_id": 10528,
+   "text": "Производство пороха",
+   "why": "AH_powder_creator in the processing base 217: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1382": {
+   "string_id": 10529,
+   "text": "Производство гильз",
+   "why": "AH_shell_creator in the processing base 217: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14. The matcher's medium 48871 ('Ущелье 1') is a place of the 2012 event's map (server/orig_texts.py DOUBTFUL_STRINGS)."
+  },
+  "1386": {
+   "string_id": 10530,
+   "text": "Производство патронов",
+   "why": "AH_ammo_creator, the assembler of the works 216: The works' rows 10521-10531 ('Вход в шахту<Br>Добыча свинца', 'Вход на карьер<Br>Добыча селитры', 'Вход в шахту<Br>Добыча меди', 'Выход из шахты', 'Выход из карьера', 'Сортировка', 'Производство пуль', 'Производство пороха', 'Производство гильз', 'Производство патронов', 'Водитель автобуса<Br>до завода'), taken as Вади-Хальфа's, Абри's and Донгола's twins of these types take them. Абу-Хамед's copper, lead and saltpetre works (213-217, 666-668; the map's L315-L319), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1717": {
+   "string_id": 48069,
+   "text": "Злой шахтёр<Br>Стахановцы",
+   "why": "Craft_Miner_4, the angry miners of every tier: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as the rocks of the series of Вади-Хальфа, Абри and Донгола take them. Абу-Хамед's tiers 1034-1036 and 1227-1229, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1311": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "AH_Stone_Plumbum_1 in its first tier 1036: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as the rocks of the series of Вади-Хальфа, Абри and Донгола take them. Абу-Хамед's tiers 1034-1036 and 1227-1229, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1348": {
+   "string_id": 48066,
+   "text": "Свинцовая порода",
+   "why": "AH_Stone_Plumbum_2 in its second tier 1229: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as the rocks of the series of Вади-Хальфа, Абри and Донгола take them. Абу-Хамед's tiers 1034-1036 and 1227-1229, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1315": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "AH_Source_Nitre_1 in its first tier 1035: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as the rocks of the series of Вади-Хальфа, Абри and Донгола take them. Абу-Хамед's tiers 1034-1036 and 1227-1229, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1353": {
+   "string_id": 48067,
+   "text": "Источник селитры",
+   "why": "AH_Source_Nitre_2 in its second tier 1228: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as the rocks of the series of Вади-Хальфа, Абри and Донгола take them. Абу-Хамед's tiers 1034-1036 and 1227-1229, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1319": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "AH_Stone_Copper_1 in its first tier 1034: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as the rocks of the series of Вади-Хальфа, Абри and Донгола take them. Абу-Хамед's tiers 1034-1036 and 1227-1229, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1358": {
+   "string_id": 48068,
+   "text": "Медная порода",
+   "why": "AH_Stone_Copper_2 in its second tier 1227: The miners' block 48065-48070 ('Порода', 'Свинцовая порода', 'Источник селитры', 'Медная порода', 'Злой шахтёр<Br>Стахановцы', 'Электрощит'), as the rocks of the series of Вади-Хальфа, Абри and Донгола take them. Абу-Хамед's tiers 1034-1036 and 1227-1229, the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "981": {
+   "string_id": 48065,
+   "text": "Порода",
+   "why": "Stone_AH, the stones of the quarry 637-640: 48065 'Порода', the row of Вади-Хальфа's and Донгола's quarry stones 977 and 980. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "748": {
+   "string_id": 51673,
+   "text": "Мастер Гияс<Br>улучшение автоматов",
+   "why": "ah_trmodif_assrifle_g, the assault rifles' master (G): The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The quarter 127 (the map's L156 «Жилой квартал: Мастера (G)»); the wiki's list of the quarter names Зияд, Гияс and Заки there. The matcher's own medium pick. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "749": {
+   "string_id": 51672,
+   "text": "Мастер Аншан<Br>улучшение пистолетов",
+   "why": "ah_trmodif_pistol_g, the pistols' master (G): The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The quarter 127 (the map's L156 «Жилой квартал: Мастера (G)»); the wiki's list of the quarter names Зияд, Гияс and Заки there. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "751": {
+   "string_id": 51674,
+   "text": "Мастер Заки<Br>улучшение пулеметов",
+   "why": "ah_trmodif_machingun_g, the machine guns' master (G): The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The quarter 127 (the map's L156 «Жилой квартал: Мастера (G)»); the wiki's list of the quarter names Зияд, Гияс and Заки there. The matcher's own medium pick; the wiki has Заки sell the blueprints of 19 for the machine guns (G). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "752": {
+   "string_id": 51675,
+   "text": "Мастер Зияд<Br>улучшение винтовок",
+   "why": "ah_trmodif_rifle_g, the rifles' master (G): The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The quarter 127 (the map's L156 «Жилой квартал: Мастера (G)»); the wiki's list of the quarter names Зияд, Гияс and Заки there. The matcher's own medium pick, the row its twin UpGuns_Npc_Trader000033 (7341) beside him takes by the matcher's high, as Вади-Хальфа's Азам stands as 380 and 7310 in one place. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "753": {
+   "string_id": 51671,
+   "text": "Мастер Корлу<Br>улучшение пистолет-пулеметов",
+   "why": "ah_trmodif_submachgun_g, the sub-machine guns' master (G): The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The quarter 127 (the map's L156 «Жилой квартал: Мастера (G)»); the wiki's list of the quarter names Зияд, Гияс and Заки there. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "755": {
+   "string_id": 51676,
+   "text": "Подмастерье Имран<Br>улучшение автоматов",
+   "why": "ah_modif_assrifle, the assault rifles' apprentice (A): The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The masters' camp 131 (L161 «Лагерь мастеров: улучшение оружия (A)»); the wiki's «Лагерь Мастеров Абу-Хамеда II» lists Имран, Камаль, Катада. The row its twin UpGuns_Npc_Trader000034 (7342) beside him takes by the matcher's high. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "758": {
+   "string_id": 51677,
+   "text": "Подмастерье Камаль<Br>улучшение пулеметов",
+   "why": "ah_modif_machingun, the machine guns' apprentice (A): The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The masters' camp 131 (L161 «Лагерь мастеров: улучшение оружия (A)»); the wiki's «Лагерь Мастеров Абу-Хамеда II» lists Имран, Камаль, Катада. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "759": {
+   "string_id": 51678,
+   "text": "Подмастерье Катада<Br>улучшение винтовок",
+   "why": "ah_modif_rifle, the rifles' apprentice (A): The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The masters' camp 131 (L161 «Лагерь мастеров: улучшение оружия (A)»); the wiki's «Лагерь Мастеров Абу-Хамеда II» lists Имран, Камаль, Катада. The wiki's Катада upgrades rifles there. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "4583": {
+   "string_id": 51679,
+   "text": "Подмастерье Гринефилд<Br>улучшение пистолет-пулеметов",
+   "why": "ah_trmodif_submachgun in the masters' camp 131, MEDIUM: The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The masters' camp 131 (L161 «Лагерь мастеров: улучшение оружия (A)»); the wiki's «Лагерь Мастеров Абу-Хамеда II» lists Имран, Камаль, Катада. By class and order; the wiki (low) gave this type's stall to the premium masters Басам and Баха of the cut 130. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "4584": {
+   "string_id": 51680,
+   "text": "Подмастерье Вася<Br>улучшение пистолетов",
+   "why": "ah_trmodif_pistol in the masters' camp 131, MEDIUM: The masters' block 51667-51680 (Мастер Азиза, Аммар, Баха, Басам -- the premium camp 130's, cut with (P); Мастер Корлу, Аншан, Гияс, Заки, Зияд; Подмастерье Имран, Камаль, Катада, Гринефилд, Вася), each with the class he works on in his second line, after Донгола's block 51653-51665 the same way. The masters' camp 131 (L161 «Лагерь мастеров: улучшение оружия (A)»); the wiki's «Лагерь Мастеров Абу-Хамеда II» lists Имран, Камаль, Катада. By class and order (see 4583). Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "4680": {
+   "string_id": 10660,
+   "text": "Карен ван Бурен<Br>Пилот вертолета",
+   "why": "ah_city_travel (art 1f_Pilot_Vert) at the station 126, MEDIUM: the town has no pilot's row of its own; every town's pilot is Карен ван Бурен -- Вади-Хальфа's 4670 (62147), Абри's 4672 (62148), Донгола's 4676 (10660) -- and the original's notice 46629 «Карен ван Бурен начинает коммерческие полеты между городами» says it is one pilot flying between the towns, so the station takes Донгола's row of the same helicopter. The flights are cut; she stands without them. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "11": {
+   "string_id": 10633,
+   "text": "Хилая собака",
+   "why": "mStarvingDog, the dog beside its master's skeleton in 66 (S_Truppointer, the map's L179 «Собака и скелет хозяина» on 6182,1868), MEDIUM: the starving dogs' rows 10633-10636 ('[0] Хилая собака', '[1] Голодная собака', '[2] Дикая собака', '[6] Озверевшая собака') go by the family's levels -- mStarvingDog_lvl1 (82), _lvl2 (83) and _lvl6 (723) take the last three --, and the first is the family's head without a level in its name. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1423": {
+   "string_id": 47256,
+   "text": "Рэт<Br>Караванщик",
+   "why": "Event_StalkerRat (art 1f_DeadMan) in «Место преступления» 223, MEDIUM: the Абу-Хамед block of the people's rows 47249-47259 ('Ибрахим<Br>Владелец каменоломни', 'Гюнтер<Br>Прораб', 'Джек Скарабей<Br>Капитан', 'Человек в костюме', 'Старик Том Райц', 'Райнхольд Вюрт<Br>Коллекционер', 'Грязный ящик<Br>Райнхольда Вюрта', 'Рэт<Br>Караванщик', 'Леонофф<Br>механник МКС', 'Веласкес<Br>водитель', 'Муамар<Br>Лотерейщик'), whose named ones (1015 Джек Скарабей, 1757 Том Райц, 1761 Вюрт) the matcher already ties to the town's AH_ types. The map's L169 «Место преступления / Жертва: Рэт» stands on the cell 47175 sends the player to («Караван должен был остановиться рядом с Абу-Хамедом в точке 6225.00:1895.00»), and the art is a dead man's. Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14)."
+  },
+  "1702": {
+   "string_id": 48417,
+   "text": "Тафари",
+   "why": "inst_db_boss_1, the boss of 690: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1703": {
+   "string_id": 48418,
+   "text": "Подельник Тафари",
+   "why": "inst_add_1, the four men of 690: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1706": {
+   "string_id": 48419,
+   "text": "Злобный крокодил",
+   "why": "inst_db_boss_2 (art crocodile), the eight crocodiles of 691: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1708": {
+   "string_id": 48420,
+   "text": "Гвала",
+   "why": "inst_db_boss_2_3, the boss of 691: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1709": {
+   "string_id": 48421,
+   "text": "Изингома",
+   "why": "inst_db_boss3_1, one of the three of 692: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1710": {
+   "string_id": 48422,
+   "text": "Гамюка",
+   "why": "inst_db_boss3_2, the middle one of the three of 692: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1711": {
+   "string_id": 48423,
+   "text": "Мэйтата",
+   "why": "inst_db_boss3_3, one of the three of 692: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1718": {
+   "string_id": 48424,
+   "text": "Абрафо",
+   "why": "inst_db_boss_4, the boss of 693: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1719": {
+   "string_id": 48425,
+   "text": "Охранник Абрафо",
+   "why": "inst_db_add_4, the four guards of 693: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1720": {
+   "string_id": 48426,
+   "text": "Джитинджи",
+   "why": "inst_db_boss_5, the boss of 694: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1722": {
+   "string_id": 48427,
+   "text": "Квадво",
+   "why": "inst_db_add_5_1 in 694: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1723": {
+   "string_id": 48428,
+   "text": "Квабена",
+   "why": "inst_db_add_5_2 in 694: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1724": {
+   "string_id": 48429,
+   "text": "Квеку",
+   "why": "inst_db_add_5_3 in 694: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1725": {
+   "string_id": 48430,
+   "text": "Хамизи",
+   "why": "inst_db_add_5_4 in 694: Абимбола's bandits' block 48417-48430 ('Тафари', 'Подельник Тафари', 'Злобный крокодил', 'Гвала', 'Изингома', 'Гамюка', 'Мэйтата', 'Абрафо', 'Охранник Абрафо', 'Джитинджи', 'Квадво', 'Квабена', 'Квеку', 'Хамизи') in the order of the instances' types 1702-1725 (inst_db_boss_1, inst_add_1, inst_db_boss_2, inst_db_boss_2_3, inst_db_boss3_1..3, inst_db_boss_4, inst_db_add_4, inst_db_boss_5, inst_db_add_5_1..4) and of their places 690 «Тафари», 691 «Гвала», 692 «Гамюка», 693 «Абафо», 694 «Джитинджи». Абимбола's texts agree: Гвала feeds «своим ручным крокодилам» (60535), Гамюка hides «за спины двух своих товарищей» (60539) and Гатера drives «хоть к Гамюке, хоть к Мэйтате, хоть к Изингоме» (60580), Абрафо burns the village «со своими товарищами» (60543). the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2113": {
+   "string_id": 60555,
+   "text": "Ящик Тафари",
+   "why": "db_box_NPC1, the box in 690: the boxes' rows 60555-60559 ('Ящик Тафари', 'Ящик Гвала', 'Ящик Гамюки', 'Ящик Абрафо', 'Ящик Джитинджи') after the box's own lines 60553 «На ящике висит навесной замок...» and 60554 «Находку надо показать Абимболе», in the order of the types and of the places 690-694. the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2114": {
+   "string_id": 60556,
+   "text": "Ящик Гвала",
+   "why": "db_box_NPC2, the box in 691: the boxes' rows 60555-60559 ('Ящик Тафари', 'Ящик Гвала', 'Ящик Гамюки', 'Ящик Абрафо', 'Ящик Джитинджи') after the box's own lines 60553 «На ящике висит навесной замок...» and 60554 «Находку надо показать Абимболе», in the order of the types and of the places 690-694. the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2115": {
+   "string_id": 60557,
+   "text": "Ящик Гамюки",
+   "why": "db_box_NPC3, the box in 692: the boxes' rows 60555-60559 ('Ящик Тафари', 'Ящик Гвала', 'Ящик Гамюки', 'Ящик Абрафо', 'Ящик Джитинджи') after the box's own lines 60553 «На ящике висит навесной замок...» and 60554 «Находку надо показать Абимболе», in the order of the types and of the places 690-694. the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2116": {
+   "string_id": 60558,
+   "text": "Ящик Абрафо",
+   "why": "db_box_NPC4, the box in 693: the boxes' rows 60555-60559 ('Ящик Тафари', 'Ящик Гвала', 'Ящик Гамюки', 'Ящик Абрафо', 'Ящик Джитинджи') after the box's own lines 60553 «На ящике висит навесной замок...» and 60554 «Находку надо показать Абимболе», in the order of the types and of the places 690-694. the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2117": {
+   "string_id": 60559,
+   "text": "Ящик Джитинджи",
+   "why": "db_box_NPC5, the box in 694: the boxes' rows 60555-60559 ('Ящик Тафари', 'Ящик Гвала', 'Ящик Гамюки', 'Ящик Абрафо', 'Ящик Джитинджи') after the box's own lines 60553 «На ящике висит навесной замок...» and 60554 «Находку надо показать Абимболе», in the order of the types and of the places 690-694. the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "930": {
+   "string_id": 8978,
+   "text": "[18] Шахтер<Br>Пираты Сомали",
+   "why": "pt_miner_lvl18, the miners of the Dark Mine's first three tiers (615, 1014, 1216): The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The miners' rows close it, [18] and [19] as the types' levels. The map's L162 «Тёмная шахта: алмазы» (156), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "931": {
+   "string_id": 8979,
+   "text": "[19] Шахтер<Br>Пираты Сомали",
+   "why": "pt_miner_lvl19, the miners of the Dark Mine's tiers four and five (1254, 1273): see 930. the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "765": {
+   "string_id": 8962,
+   "text": "[16] Боцман<Br>Пираты Сомали",
+   "why": "pt_bocman_lvl16: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "766": {
+   "string_id": 8963,
+   "text": "[16] Канонир<Br>Пираты Сомали",
+   "why": "pt_headhunter_lvl16: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "767": {
+   "string_id": 8964,
+   "text": "[16] Кондуктор<Br>Пираты Сомали",
+   "why": "pt_capitan_lvl16: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "768": {
+   "string_id": 8965,
+   "text": "[16] Пороховая обезьяна<Br>Пираты Сомали",
+   "why": "pt_matros_lvl16: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "769": {
+   "string_id": 8966,
+   "text": "[17] Мичман<Br>Пираты Сомали",
+   "why": "pt_bocman_lvl17: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "770": {
+   "string_id": 8967,
+   "text": "[17] Абордажник<Br>Пираты Сомали",
+   "why": "pt_headhunter_lvl17: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "771": {
+   "string_id": 8968,
+   "text": "[17] Кавторанг<Br>Пираты Сомали",
+   "why": "pt_capitan_lvl17: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "772": {
+   "string_id": 8969,
+   "text": "[17] Юнга<Br>Пираты Сомали",
+   "why": "pt_matros_lvl17: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "773": {
+   "string_id": 8970,
+   "text": "[18] Квартмейстер",
+   "why": "pt_bocman_lvl18: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The row's stray space before <Br> is mended on the wire (NAME_TYPOS). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "774": {
+   "string_id": 8971,
+   "text": "[18] Мастер Абордажник<Br>Пираты Сомали",
+   "why": "pt_headhunter_lvl18: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "775": {
+   "string_id": 8972,
+   "text": "[18] Капраз<Br>Пираты Сомали",
+   "why": "pt_capitan_lvl18: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "776": {
+   "string_id": 8973,
+   "text": "[18] Матрос<Br>Пираты Сомали",
+   "why": "pt_matros_lvl18: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2169": {
+   "string_id": 8977,
+   "text": "[18] Ящик<Br>Пираты Сомали",
+   "why": "pt_box_ammo, the boxes of the pirates' camp 132: The pirates' block 8961-8979 ('[18] Казначей', the ranks '[16] Боцман', 'Канонир', 'Кондуктор', 'Пороховая обезьяна', '[17] Мичман', 'Абордажник', 'Кавторанг', 'Юнга', '[18] Квартмейстер', 'Мастер Абордажник', 'Капраз', 'Матрос', then 'Том Морган', the two bosses, '[18] Ящик' and the two miners, each '<Br>Пираты Сомали'). The twelve ranks follow the types pt_bocman/headhunter/capitan/matros of levels 16, 17, 18 by their position in the block, the rule of Абри's and Донгола's camps: the block's ends are the matcher's own high rows (765 Боцман, 776 Матрос), and each level's four sit under its own [N]. The matcher had 767, 768, 769, 772, 773 and 775 from the blocks of the МКС smugglers (10619-10622) and of the Магриб's pirates (10624-10629). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1750": {
+   "string_id": 50316,
+   "text": "Йохан Демперс<Br>Пират",
+   "why": "pt_Dempers: the Krüger letter's men 50315-50317 ('Гейнц Тейлор <Br>Наемник СА', 'Йохан Демперс<Br>Пират', 'Рудольф Треурнихт<Br>Майор'), the three of «Письмо Президента Крюгера» (50044: «наемник Гейнц Тейлор, пират Йохан Демперс, майор СА Рудольф Треурнихт и шахтер Хорст Кленз»), in the order of the types Oasis_AH_Teilor 1749, pt_Dempers 1750, na_Rudolf 1751; «пирата Йохана Демперса у лагеря пиратов» -- he stands in the pirates' camp 132. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1749": {
+   "string_id": 50315,
+   "text": "Гейнц Тейлор <Br>Наемник СА",
+   "why": "Oasis_AH_Teilor: the Krüger letter's men 50315-50317 (see 1750); «Наемника Гейнца Тейлора можно встретить у аванпоста СА» (50044) -- he stands in the outpost 168. The row's stray space before <Br> is mended on the wire (NAME_TYPOS). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1751": {
+   "string_id": 50317,
+   "text": "Рудольф Треурнихт<Br>Майор",
+   "why": "na_Rudolf: the Krüger letter's men 50315-50317 (see 1750); «майора Рудольфа Треурнихта у Базы СА» (50044) -- he stands in the base 263. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1025": {
+   "string_id": 8981,
+   "text": "[16] Рекрут<Br>Северный Альянс",
+   "why": "na_recruit_lvl16: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1026": {
+   "string_id": 8982,
+   "text": "[16] Рядовой<Br>Северный Альянс",
+   "why": "na_private_lvl16: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1027": {
+   "string_id": 8983,
+   "text": "[16] Капрал<Br>Северный Альянс",
+   "why": "na_corporal_lvl16: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1028": {
+   "string_id": 8984,
+   "text": "[16] Стрелок<Br>Северный Альянс",
+   "why": "na_shooter_lvl16: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1029": {
+   "string_id": 8985,
+   "text": "[17] Рядовой-рекрут<Br>Северный Альянс",
+   "why": "na_recruit_lvl17: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1030": {
+   "string_id": 8986,
+   "text": "[17] Мастер-сержант<Br>Северный Альянс",
+   "why": "na_master_sergeant_lvl17: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1031": {
+   "string_id": 8987,
+   "text": "[17] Cержант-майор<Br>Северный Альянс",
+   "why": "na_sergeant_major_lvl17: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The row's first letter is a Latin C, mended on the wire (NAME_TYPOS). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1032": {
+   "string_id": 8988,
+   "text": "[17] Скаут<Br>Северный Альянс",
+   "why": "na_scout_lvl17: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1033": {
+   "string_id": 8989,
+   "text": "[18] Часовой<Br>Северный Альянс",
+   "why": "na_sentinel_lvl18: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1034": {
+   "string_id": 8990,
+   "text": "[18] Сержант<Br>Северный Альянс",
+   "why": "na_sergeant_lvl18: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1035": {
+   "string_id": 8991,
+   "text": "[18] Капитан<Br>Северный Альянс",
+   "why": "na_captain_lvl18: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1036": {
+   "string_id": 8992,
+   "text": "[18] Снайпер<Br>Северный Альянс",
+   "why": "na_sniper_lvl18: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2311": {
+   "string_id": 8989,
+   "text": "[18] Часовой<Br>Северный Альянс",
+   "why": "na_sentinel_lvl18a: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The a-copies of the [18] ranks (art a8_DarkEcho, the base's) take the rows of their originals, MEDIUM. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2312": {
+   "string_id": 8990,
+   "text": "[18] Сержант<Br>Северный Альянс",
+   "why": "na_sergeant_lvl18a: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. An a-copy of 1034, MEDIUM (see 2311). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2313": {
+   "string_id": 8991,
+   "text": "[18] Капитан<Br>Северный Альянс",
+   "why": "na_captain_lvl18a: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. An a-copy of 1035, MEDIUM (see 2311). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2314": {
+   "string_id": 8992,
+   "text": "[18] Снайпер<Br>Северный Альянс",
+   "why": "na_sniper_lvl18a: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. An a-copy of 1036, MEDIUM (see 2311). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1736": {
+   "string_id": 8993,
+   "text": "[20] Бухгалтер<Br>Северный Альянс",
+   "why": "na_Kaznachei_lvl19: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The book-keeper stands at the base by the level of his type (19); the row writes [20]. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1728": {
+   "string_id": 8994,
+   "text": "[19] РядовойIкласса<Br>Северный Альянс",
+   "why": "na_private_1_lvl19: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The row's lost spaces are mended on the wire (NAME_TYPOS). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1729": {
+   "string_id": 8995,
+   "text": "[19] Штаб-Сержант<Br>Северный Альянс",
+   "why": "na_staff_sergeant_lvl19: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1730": {
+   "string_id": 8996,
+   "text": "[19] Подполковник<Br>Северный Альянс",
+   "why": "na_colonel_lvl19: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1731": {
+   "string_id": 8997,
+   "text": "[19] Элитный снайпер<Br>Северный Альянс",
+   "why": "na_sniper_elite_lvl19: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2316": {
+   "string_id": 8999,
+   "text": "[20] Штурмовик<Br>Северный Альянс",
+   "why": "na_private_1_lvl19a: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The a-copies of the [19] ranks (art a9_Dreadnought) take the [20] rows 8999-9002 in their order, MEDIUM: the base's heavier armour of the same ranks. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2317": {
+   "string_id": 9000,
+   "text": "[20] Капрал<Br>Северный Альянс",
+   "why": "na_staff_sergeant_lvl19a: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. See 2316, MEDIUM. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2318": {
+   "string_id": 9001,
+   "text": "[20] Полковник<Br>Северный Альянс",
+   "why": "na_colonel_lvl19a: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. See 2316, MEDIUM; the matcher's own medium pick. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2319": {
+   "string_id": 9002,
+   "text": "[20] Элитныйснайпер<Br>Северный Альянс",
+   "why": "na_sniper_elite_lvl19a: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. See 2316, MEDIUM; the row's lost space is mended on the wire (NAME_TYPOS). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1732": {
+   "string_id": 9003,
+   "text": "[20] Стрелок поддержки<Br>Северный Альянс",
+   "why": "na_support_gunner_lvl20: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1733": {
+   "string_id": 9004,
+   "text": "[20] Рейнджер<Br>Северный Альянс",
+   "why": "na_ranger_lvl20: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1734": {
+   "string_id": 9005,
+   "text": "[20] Командер<Br>Северный Альянс",
+   "why": "na_commander_lvl20: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "1735": {
+   "string_id": 9006,
+   "text": "[20] Меткий стрелок<Br>Северный Альянс",
+   "why": "na_sharpshooter_lvl20: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2170": {
+   "string_id": 9007,
+   "text": "[20] Джеймс Бейкер<Br>Северный Альянс",
+   "why": "na_JamesBaker: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. «[20] Джеймс Бейкер» of the base, the plan's stage 7; he stands in the base 263. The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
+  },
+  "2171": {
+   "string_id": 9011,
+   "text": "[21] Ящик<Br>Северный Альянс",
+   "why": "na_box_ammo: The Northern Alliance's block 8980-9011 ('[18] Казначей', the ranks [16] 'Рекрут', 'Рядовой', 'Капрал', 'Стрелок', [17] 'Рядовой-рекрут', 'Мастер-сержант', 'Сержант-майор', 'Скаут', [18] 'Часовой', 'Сержант', 'Капитан', 'Снайпер', '[20] Бухгалтер', [19] 'Рядовой I класса', 'Штаб-Сержант', 'Подполковник', 'Элитный снайпер', '[21] Прототип', [20] 'Штурмовик', 'Капрал', 'Полковник', 'Элитный снайпер', 'Стрелок поддержки', 'Рейнджер', 'Командер', 'Меткий стрелок', 'Джеймс Бейкер', 'Крис Кайл', the two bosses and '[21] Ящик', each '<Br>Северный Альянс'), the ranks by position under their [N], the rule of Абри's and Донгола's camps; the matcher's medium picks agree where it made one. The boxes of the outpost 168 and the base 263 (one type in both). The Somali pirates' camp 132/133 (L285/L286), the Alliance's outpost 168 (L284) and base 263/274 (L287/L288), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
   }
  },
  "none": {
@@ -3126,6 +3911,9 @@
   "8214": "FSC_U_000002, the other of the pair at every Аэроплощадка (see 8213).",
   "4047": "cosm_NPC_1 in «Упавший спутник» (Sputnik_Enter, 77, on 5877,2004 since the owner's «и потом сделай донголу тоже», 2026-10-13): no row -- the satellite's place has none of its own -- no wiki page, no role. He does not stand (data/schedule.json held_out), so nobody sees him.",
   "6896": "Abri_Archa in «Упавший спутник» (77): no row and no role (art 1f_npc10); it does not stand (data/schedule.json held_out, see 4047).",
-  "5113": "Npc_Trader000002 in the black market of Донгола (103): on the traders' offset 10399 its row is 10401 'Тестовый торгвец', a test template of the original the builder drops as it drops every 'Тестовый' (TEMPLATE_PREFIX), and its stall is empty. He does not stand (data/schedule.json held_out, the owner's «и потом сделай донголу тоже», 2026-10-13), so nobody sees him."
+  "5113": "Npc_Trader000002 in the black market of Донгола (103): on the traders' offset 10399 its row is 10401 'Тестовый торгвец', a test template of the original the builder drops as it drops every 'Тестовый' (TEMPLATE_PREFIX), and its stall is empty. He does not stand (data/schedule.json held_out, the owner's «и потом сделай донголу тоже», 2026-10-13), so nobody sees him.",
+  "7247": "Npc_Trader000095 (art 1f_Arab_boroda) at the station 126: no row and no role -- the traders' family has no row for member 95 on any of its offsets, the wiki's list of the station names nobody left for him, and a few rows nearby speak of the clothes' exchange, which is cut. He does not stand (data/schedule.json held_out, as Донгола's 5113), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14.",
+  "7339": "UpGuns_Npc_Trader000031 in the masters' camp 131: on the family's offset 51642 (7341 -> Зияд, 7342 -> Имран by the matcher's high) member 31 is 51673 'Мастер Гияс<Br>улучшение автоматов', the master (G) the wiki and the type ah_trmodif_assrifle_g (748) put in the quarter 127; the offset and the place disagree, and the other way round (51678 'Подмастерье Катада', the camp's) breaks the offset. No stall and no quest (the masters of his class, 748 and 755, stand). He does not stand (data/schedule.json held_out), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14.",
+  "7344": "UpGuns_Npc_Trader000036 in the quarter 127: on the family's offset 51642 member 36 is 51678 'Подмастерье Катада<Br>улучшение винтовок', the apprentice (A) the wiki and the type ah_modif_rifle (759) put in the masters' camp 131 -- the mirror of 7339. No stall and no quest. He does not stand (data/schedule.json held_out), the owner's «сделай потом абу хамед в таком же формате», 2026-10-14."
  }
 }

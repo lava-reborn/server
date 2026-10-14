@@ -294,10 +294,11 @@ try:
     check("nobody who stands in Абри's places shows his mobs.xml name, the remainder the manual"
           " file lists under \"none\" included: none of it stands here (the ФСЦ airfield's two went"
           " with 529)", {t: sorted(w) for t, w in shown.items()}, {})
-    check("  ..that remainder is the nine types the original has no name for, Абри's none of them"
+    check("  ..that remainder is the twelve types the original has no name for, Абри's none of them"
           " (the two of Донгола's «Упавший спутник» and its black market's test trader since"
-          " 2026-10-13, who do not stand)",
-          sorted(REMAINDER), [639, 4047, 5113, 5208, 6896, 7660, 8213, 8214, 8236])
+          " 2026-10-13, Абу-Хамед's trader of the station and the masters' twins 7339/7344 since"
+          " 2026-10-14, who do not stand)",
+          sorted(REMAINDER), [639, 4047, 5113, 5208, 6896, 7247, 7339, 7344, 7660, 8213, 8214, 8236])
     check("  ..the New Year of 2014's two in the quarter named too, for their season",
           [t for t in (2426, 2427) if internal(t)], [])
     check("the smelter's machines name what they do and no work of the cut diamond line"
