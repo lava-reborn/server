@@ -139,11 +139,16 @@ LADDER = (
     rung(16, "Красное Эхо", 1601, "Exzo_M_LVL_8", {"A": 10961, "G": 10965},
          ("Шлем Красного Эхо", "Поддоспешник Красного Эхо", "Корпус Красного Эхо",
           "Моторика Красного Эхо", "Боты Красного Эхо"), (), ("table", "Красное Эхо")),
-    rung(17, "Тёмное Эхо", 119, "Bs_U_LVL_16", {"Q": 11125},
+    # The quest series of the 17th rung, sold the same way since the Абу-Хамед
+    # restoration (2026-10-14): its quest pieces the A, keyed by its [Q] row,
+    # five types of our own the G (60005-60009), keyed by the first. Its numbers
+    # and bonuses are its wiki pages' lone column, the G's at 4000 : 1.
+    rung(17, "Тёмное Эхо", 119, "Bs_U_LVL_16", {"A": 11125, "G": 60005},
          ("Шлем Тёмного Эха", "Жилет Тёмного Эха", "Броня Тёмного Эха", "Моторика Тёмного Эха",
           "Ступни Тёмного Эха"),
          dict(helm="Шлем Темного Эха", shirt="Жилет Темного Эха", armor="Броня Темного Эха",
-              pants="Моторика Темного Эха", boots="Ступни Темного Эха"), ("text", "Темное Эхо")),
+              pants="Моторика Темного Эха", boots="Ступни Темного Эха"), ("text", "Темное Эхо"),
+         named={"A": "Q"}),
     rung(18, "Дредноут", 77, "Exzo_M_LVL_18", {"A": 11016, "G": 11018},
          ("Шлем Дредноута", "Жилет Дредноута", "Броня Дредноута", "Моторика Дредноута",
           "Ступни Дредноута"), None, ("design", None)),
@@ -170,7 +175,7 @@ ALL_TYPES = [t for g in GROUPS for t in g["types"]]
 LOXLEY = [t for g in GROUPS if g["level"] <= SOLD_UP_TO for t in g["types"]]
 print()
 print("the ladder")
-check("15 rungs, 29 sets, 145 pieces", (len(LADDER), len(GROUPS), len(ALL_TYPES)), (15, 29, 145))
+check("15 rungs, 30 sets, 150 pieces", (len(LADDER), len(GROUPS), len(ALL_TYPES)), (15, 30, 150))
 check("data/sets.json holds these sets and nothing else",
       sorted(sets.SETS), sorted(g["key"] for g in GROUPS))
 check("..and these pieces", sorted(sets.ITEMS), sorted(ALL_TYPES))
@@ -193,15 +198,18 @@ check("each group of five is one set, keyed by its texts.xml row, and that set i
 check("no P anywhere: the A and G of the series, and the quest family's one Q",
       [cat[t][1] for g in GROUPS for t in g["types"]
        if cat[t][1].split("_")[-2] != g["named"].get(g["v"], g["v"]) or items.premium(t)], [])
-check("the quest family (Bs_U) is Q, every other series A and G -- and Чёрный Ловелас, "
-      "sold for afro and gold: A of its quest pieces, G of our own types",
+check("the quest family (Bs_U) on the ladder sold for afro and gold: Чёрный Ловелас (2026-10-13)"
+      " and Тёмное Эхо (2026-10-14), A of its quest pieces, G of our own types; every other"
+      " series A and G",
       {r["word"]: sorted(r["keys"]) for r in LADDER if r["series"].startswith("Bs_U")},
-      {"Чёрный Ловелас": ["A", "G"], "Тёмное Эхо": ["Q"]})
+      {"Чёрный Ловелас": ["A", "G"], "Тёмное Эхо": ["A", "G"]})
 check("  ..its G: the five types of data/own_items.json, each drawing its A piece's picture",
       [(t, items.own(t), cat[t], own_items.load()[t]["like"]) for g in GROUPS
-       if g["word"] == "Чёрный Ловелас" and g["v"] == "G" for t in g["types"]],
+       if g["series"].startswith("Bs_U") and g["v"] == "G" for t in g["types"]],
       [(60000 + i, True, (items.WEAR, "%s_Bs_U_LVL_12_G_mod00" % p), 11721 + i)
-       for i, p in enumerate(PIECES)])
+       for i, p in enumerate(PIECES)]
+      + [(60005 + i, True, (items.WEAR, "%s_Bs_U_LVL_16_G_mod00" % p), 36056 + i)
+         for i, p in enumerate(PIECES)])
 check("the P copies of the ladder belong to no set and stand on no stall",
       [t for r in LADDER if "A" in r["keys"] and not r["named"] for p in PIECES
        for t in [by_name["%s_%s_P_mod00" % (p, r["series"])]]
@@ -479,7 +487,7 @@ def between(level, rungs):
 
 def base_types(r):
     v = "A" if "A" in r["keys"] else "Q"
-    return [by_name["%s_%s_%s_mod00" % (p, r["series"], v)] for p in PIECES]
+    return [by_name["%s_%s_%s_mod00" % (p, r["series"], r["named"].get(v, v))] for p in PIECES]
 
 
 def gold_types(r):
@@ -515,8 +523,9 @@ check("the three rungs the wiki has no numbers for sit between their neighbours"
                 "Дредноут": ("Тёмное Эхо", "Апокалипсис", 0.333),
                 "Паладин": ("Тёмное Эхо", "Апокалипсис", 0.667)})
 check("  ..and every number of their pieces is the rule's", designed_off, {})
-check("  ..the G between the neighbours' G for Чёрный Ловелас alone: Тёмное Эхо, under Дредноут"
-      " and Паладин, has no G", from_gold, ["Чёрный Ловелас"])
+check("  ..the G between the neighbours' G: Чёрный Ловелас's, and Дредноут's and Паладин's since"
+      " Тёмное Эхо under them has its G (2026-10-14; its numbers its A's, the pages' one column)",
+      from_gold, ["Чёрный Ловелас", "Дредноут", "Паладин"])
 check("  ..Броня Дредноута 806 armour for 280 000 afro, Броня Паладина (G) 975 for 80 G, "
       "Броня Чёрного Ловеласа 109 for 50 000, its (G) 130 for 12.50 G",
       [(items.params_of(by_name[n])["armor_class"], items.params_of(by_name[n])["cost"],

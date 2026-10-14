@@ -162,7 +162,7 @@ CLASS_WORDS = (("пистолета", "pistol"), ("винтовки", "rifle"), 
 TIER_WORDS = (("кустарн", 0), ("стар", 1), ("обычн", 2), ("заводск", 3), ("идеальн", 4))
 # «Разобрать сломаный <это> Nкл.» and «детали от <этого>» -- longest first.
 KIND_WORDS = (("пистолет—пулемет", "smg"), ("пистолет-пулемет", "smg"), ("пулемет", "mg"),
-              ("пистолет", "pistol"), ("винтовк", "rifle"), ("дробовик", "shotgun"),
+              ("пистолет", "pistol"), ("винтовк", "rifle"), ("винтовок", "rifle"), ("дробовик", "shotgun"),
               ("автомат", "assault"))
 
 # The original's words for a blueprint's effect -> the effect (craft.EFFECTS)
@@ -288,6 +288,45 @@ CITIES = [
          gunsmiths={"rifle": 244, "mg": 246, "assault": 247, "smg": 249},
          decoder=651,
          stalls={"assault": (580,), "mg": (583,), "rifle": (584,), "smg": (585,)}),
+    # Абу-Хамед (2026-10-14, the owner's «сделай потом абу хамед в таком же
+    # формате»), the band 17-20, DESIGNED (the owner's decision 34): 16 is
+    # Донгола's. Its masters by their original names (texts.xml 51671-51680)
+    # in «Лагерь мастеров: улучшение оружия (A)» (131, L161) and the living
+    # quarter's «Мастера (G)» (127, L156): Подмастерье Имран A
+    # (ah_modif_assrifle 755) and Мастер Гияс G (ah_trmodif_assrifle_g 748)
+    # assault rifles; Подмастерье Камаль A (ah_modif_machingun 758) and
+    # Мастер Заки G (751) machine guns; Подмастерье Катада A (ah_modif_rifle
+    # 759) and Мастер Зияд G (752) rifles; Подмастерье Гринефилд A
+    # (ah_trmodif_submachgun 4583) and Мастер Корлу G (753) sub-machine guns;
+    # Подмастерье Вася A (ah_trmodif_pistol 4584) and Мастер Аншан G (749)
+    # pistols. The client has no ah_modif_*_g: the (G) types are traders
+    # (ah_trmodif_*_g, root 1), what Донгола's blueprint stalls 580/583-585
+    # are, while Донгола's (G) masters are others (382, 385-387). So here
+    # the trader (G) of a class both upgrades and sells its blueprints,
+    # DESIGNED. No pistol or sub-machine gun of 17-20 has the wiki's table
+    # (Thompson M1928 is 15у), so those four keys make no row. The camps
+    # whose chiefs drop the blueprints: Лагерь Пиратов Сомали (132) and its
+    # chief's cell (133) with the Аванпост Северного Альянса (168) 17-18, by
+    # their labels' «16+» and «16-18» less Донгола's 16; the База Северного
+    # Альянса (263) and its chief's cell (274) 19-20, its label's «19-20».
+    # «Точильный камень<Br>Абу-Хамеда» (2282, the station 126, texts.xml
+    # 51648) sharpens Кукри (18у) and Мачете (20у), the knives of the town's
+    # band Шрам sells beside it (his article: «Заточка и Эргономика Кукри
+    # (18у)», «... Мачете (20у)»); Такоуба (16у) is Донгола's whetstone's.
+    # The gunsmiths «Оружейник<Br>Винтовки / Пулеметы / Автоматы» of «Горные
+    # тропы: Мастера» (624; 730, 732, 733), the decoder Техногик (796, the
+    # living quarter, 46942 «Техногик<Br>расшифровка чертежей»).
+    dict(name="abu_hamed", band=(17, 20),
+         masters={("assault", "A"): [755], ("assault", "G"): [748],
+                  ("mg", "A"): [758], ("mg", "G"): [751],
+                  ("rifle", "A"): [759], ("rifle", "G"): [752],
+                  ("smg", "A"): [4583], ("smg", "G"): [753],
+                  ("pistol", "A"): [4584], ("pistol", "G"): [749]},
+         camps=[((17, 18), (132, 133, 168)), ((19, 20), (263, 274))],
+         whetstones={2282: (18, 20)},
+         gunsmiths={"rifle": 730, "mg": 732, "assault": 733},
+         decoder=796,
+         stalls={"assault": (748,), "mg": (751,), "rifle": (752,)}),
 ]
 
 # What the craft adds to a stall with no list of the owner's (the table's
@@ -310,8 +349,10 @@ EXTRA_STALLS = {1152: dict(blueprints=(5192, 2279), knives=(2279,))}
 # "stock" (EXTRA_STALLS) would not reach. His knives are Абри's band's
 # (data/shop_bands.json). Одноногий (1153, Донгола's black market) Донгола's
 # whetstone's (2281), his whole list in the file; his knives are Донгола's
-# band's.
-KNIFE_STALLS = {1164: (2280,), 1153: (2281,)}
+# band's. Шрам (2274, Абу-Хамед's station) Абу-Хамед's whetstone's (2282),
+# his whole list in the file (his article named two of the six); his
+# knives are Абу-Хамед's band's.
+KNIFE_STALLS = {1164: (2280,), 1153: (2281,), 2274: (2282,)}
 
 
 # --- the tables of the game -------------------------------------------------------------

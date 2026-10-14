@@ -9,6 +9,10 @@
    "name": "Точность и дистанция стрельбы (16у)$BP",
    "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
   },
+  "1284": {
+   "name": "Точность и дистанция стрельбы (18у)$BP",
+   "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
+  },
   "1488": {
    "name": "Идеальный автоматный ствол",
    "why": "RECOVERED: texts.xml 8028-8029; the words line (quality and part) for the name, DESIGNED."
@@ -27,6 +31,18 @@
   },
   "2465": {
    "name": "Точность и дистанция стрельбы (15у)$BP",
+   "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
+  },
+  "2466": {
+   "name": "Точность и дистанция стрельбы (17у)$BP",
+   "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
+  },
+  "2468": {
+   "name": "Точность и дистанция стрельбы (19у)$BP",
+   "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
+  },
+  "2469": {
+   "name": "Точность и дистанция стрельбы (20у)$BP",
    "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
   },
   "2577": {
@@ -304,6 +320,18 @@
   "2645": {
    "name": "Заводской пулеметный приклад",
    "why": "RECOVERED: texts.xml 8136-8137; the words line (quality and part) for the name, DESIGNED."
+  },
+  "26581": {
+   "name": "Урон (20у)$BP",
+   "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
+  },
+  "37646": {
+   "name": "Урон и размер обоймы (20у)$BP",
+   "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
+  },
+  "37680": {
+   "name": "Урон и размер обоймы (20у)$BP",
+   "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
   },
   "451": {
    "name": "Обычный ствол от винтовки",
@@ -16954,6 +16982,3795 @@
   },
   {
    "craft": {
+    "blueprint": 4179,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 25319,
+    "key": "upgrade:abu_hamed:50743",
+    "level": 17,
+    "line": "A",
+    "mod": 25322
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    755
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN F2000: точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25319
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 4179,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25322
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN F2000 и Чертеж: точность (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    755
+   ],
+   "type": 10327,
+   "why": "RECOVERED: texts.xml [50743, 50744, 47221, 25011] (name, start, notfinish, finish), the gun 25319, its modification 25322, the blueprint 4179 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 4180,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 25319,
+    "key": "upgrade:abu_hamed:50745",
+    "level": 17,
+    "line": "A",
+    "mod": 25325
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    755
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN F2000: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25319
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 4180,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25325
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN F2000 и Чертеж: дистанция стрельбы (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    755
+   ],
+   "type": 10328,
+   "why": "RECOVERED: texts.xml [50745, 50746, 47221, 25011] (name, start, notfinish, finish), the gun 25319, its modification 25325, the blueprint 4180 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2466,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25319,
+    "key": "upgrade:abu_hamed:50747",
+    "level": 17,
+    "line": "A",
+    "mod": 25331
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    755
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN F2000: точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25319
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2466,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25331
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN F2000 и Чертеж: точность и дистанция стрельбы (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    755
+   ],
+   "type": 10329,
+   "why": "RECOVERED: texts.xml [50747, 50748, 47221, 25011] (name, start, notfinish, finish), the gun 25319, its modification 25331, the blueprint 2466 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2451,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25022,
+    "key": "upgrade:abu_hamed:50991",
+    "level": 17,
+    "line": "A",
+    "mod": 25025
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25022
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2451,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25025
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN M249 и Чертеж: урон (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10330,
+   "why": "RECOVERED: texts.xml [50991, 50992, 47221, 25011] (name, start, notfinish, finish), the gun 25022, its modification 25025, the blueprint 2451 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2452,
+    "effect": "reloadspeed",
+    "family": "upgrade",
+    "gun": 25022,
+    "key": "upgrade:abu_hamed:50993",
+    "level": 17,
+    "line": "A",
+    "mod": 25028
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249: скорость перезарядки",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25022
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2452,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25028
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN M249 и Чертеж: скорость перезарядки (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10331,
+   "why": "RECOVERED: texts.xml [50993, 50994, 47221, 25011] (name, start, notfinish, finish), the gun 25022, its modification 25028, the blueprint 2452 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2466,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25022,
+    "key": "upgrade:abu_hamed:50995",
+    "level": 17,
+    "line": "A",
+    "mod": 25034
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249: точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25022
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2466,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25034
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN M249 и Чертеж: точность и дистанция стрельбы (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10332,
+   "why": "RECOVERED: texts.xml [50995, 50996, 47221, 25011] (name, start, notfinish, finish), the gun 25022, its modification 25034, the blueprint 2466 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2400,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25022,
+    "key": "upgrade:abu_hamed:50997",
+    "level": 17,
+    "line": "A",
+    "mod": 25031
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25022
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2400,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25031
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN M249 и Чертеж: прочность (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10333,
+   "why": "RECOVERED: texts.xml [50997, 50998, 47221, 25011] (name, start, notfinish, finish), the gun 25022, its modification 25031, the blueprint 2400 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1277,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 25039,
+    "key": "upgrade:abu_hamed:50999",
+    "level": 18,
+    "line": "A",
+    "mod": 25042
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4: точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25039
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1277,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25042
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Bren L4 и Чертеж: точность (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10334,
+   "why": "RECOVERED: texts.xml [50999, 51000, 47221, 25011] (name, start, notfinish, finish), the gun 25039, its modification 25042, the blueprint 1277 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1272,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 25039,
+    "key": "upgrade:abu_hamed:51001",
+    "level": 18,
+    "line": "A",
+    "mod": 26149
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4: размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25039
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1272,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26149
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Bren L4 и Чертеж: размер обоймы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10335,
+   "why": "RECOVERED: texts.xml [51001, 51002, 47221, 25011] (name, start, notfinish, finish), the gun 25039, its modification 26149, the blueprint 1272 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1284,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25039,
+    "key": "upgrade:abu_hamed:51003",
+    "level": 18,
+    "line": "A",
+    "mod": 25051
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4: точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25039
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1284,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25051
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Bren L4 и Чертеж: точность и дистанция стрельбы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10336,
+   "why": "RECOVERED: texts.xml [51003, 51004, 47221, 25011] (name, start, notfinish, finish), the gun 25039, its modification 25051, the blueprint 1284 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1281,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25039,
+    "key": "upgrade:abu_hamed:51005",
+    "level": 18,
+    "line": "A",
+    "mod": 25048
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25039
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1281,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25048
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Bren L4 и Чертеж: прочность (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10337,
+   "why": "RECOVERED: texts.xml [51005, 51006, 47221, 25011] (name, start, notfinish, finish), the gun 25039, its modification 25048, the blueprint 1281 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1276,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 25055,
+    "key": "upgrade:abu_hamed:51007",
+    "level": 18,
+    "line": "A",
+    "mod": 25058
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25055
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1276,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25058
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести M60 и Чертеж: дистанция стрельбы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10338,
+   "why": "RECOVERED: texts.xml [51007, 51008, 47221, 25011] (name, start, notfinish, finish), the gun 25055, its modification 25058, the blueprint 1276 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1282,
+    "effect": "weight",
+    "family": "upgrade",
+    "gun": 25055,
+    "key": "upgrade:abu_hamed:51009",
+    "level": 18,
+    "line": "A",
+    "mod": 25067
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60: вес",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25055
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1282,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25067
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести M60 и Чертеж: вес (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10339,
+   "why": "RECOVERED: texts.xml [51009, 51010, 47221, 25011] (name, start, notfinish, finish), the gun 25055, its modification 25067, the blueprint 1282 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1284,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25055,
+    "key": "upgrade:abu_hamed:51011",
+    "level": 18,
+    "line": "A",
+    "mod": 25070
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60: точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25055
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1284,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25070
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести M60 и Чертеж: точность и дистанция стрельбы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10340,
+   "why": "RECOVERED: texts.xml [51011, 51012, 47221, 25011] (name, start, notfinish, finish), the gun 25055, its modification 25070, the blueprint 1284 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1281,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25055,
+    "key": "upgrade:abu_hamed:51013",
+    "level": 18,
+    "line": "A",
+    "mod": 25064
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25055
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1281,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25064
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести M60 и Чертеж: прочность (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10341,
+   "why": "RECOVERED: texts.xml [51013, 51014, 47221, 25011] (name, start, notfinish, finish), the gun 25055, its modification 25064, the blueprint 1281 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2453,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25074,
+    "key": "upgrade:abu_hamed:51023",
+    "level": 19,
+    "line": "A",
+    "mod": 25077
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25074
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2453,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25077
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПК и Чертеж: урон (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10342,
+   "why": "RECOVERED: texts.xml [51023, 51024, 47221, 25011] (name, start, notfinish, finish), the gun 25074, its modification 25077, the blueprint 2453 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2455,
+    "effect": "reloadspeed",
+    "family": "upgrade",
+    "gun": 25074,
+    "key": "upgrade:abu_hamed:51025",
+    "level": 19,
+    "line": "A",
+    "mod": 25080
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК: скорость перезарядки",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25074
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2455,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25080
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПК и Чертеж: скорость перезарядки (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10343,
+   "why": "RECOVERED: texts.xml [51025, 51026, 47221, 25011] (name, start, notfinish, finish), the gun 25074, its modification 25080, the blueprint 2455 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2468,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25074,
+    "key": "upgrade:abu_hamed:51027",
+    "level": 19,
+    "line": "A",
+    "mod": 25086
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК: точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25074
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2468,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25086
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПК и Чертеж: точность и дистанция стрельбы (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10344,
+   "why": "RECOVERED: texts.xml [51027, 51028, 47221, 25011] (name, start, notfinish, finish), the gun 25074, its modification 25086, the blueprint 2468 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2401,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25074,
+    "key": "upgrade:abu_hamed:51029",
+    "level": 19,
+    "line": "A",
+    "mod": 25083
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25074
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2401,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25083
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПК и Чертеж: прочность (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10345,
+   "why": "RECOVERED: texts.xml [51029, 51030, 47221, 25011] (name, start, notfinish, finish), the gun 25074, its modification 25083, the blueprint 2401 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2455,
+    "effect": "reloadspeed",
+    "family": "upgrade",
+    "gun": 25093,
+    "key": "upgrade:abu_hamed:51031",
+    "level": 19,
+    "line": "A",
+    "mod": 25096
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG: скорость перезарядки",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25093
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2455,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25096
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN MAG и Чертеж: скорость перезарядки (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10346,
+   "why": "RECOVERED: texts.xml [51031, 51032, 47221, 25011] (name, start, notfinish, finish), the gun 25093, its modification 25096, the blueprint 2455 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2456,
+    "effect": "weight",
+    "family": "upgrade",
+    "gun": 25093,
+    "key": "upgrade:abu_hamed:51033",
+    "level": 19,
+    "line": "A",
+    "mod": 25099
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG: вес",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25093
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2456,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25099
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN MAG и Чертеж: вес (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10347,
+   "why": "RECOVERED: texts.xml [51033, 51034, 47221, 25011] (name, start, notfinish, finish), the gun 25093, its modification 25099, the blueprint 2456 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2468,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25093,
+    "key": "upgrade:abu_hamed:51035",
+    "level": 19,
+    "line": "A",
+    "mod": 25105
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG: точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25093
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2468,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25105
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN MAG и Чертеж: точность и дистанция стрельбы (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10348,
+   "why": "RECOVERED: texts.xml [51035, 51036, 47221, 25011] (name, start, notfinish, finish), the gun 25093, its modification 25105, the blueprint 2468 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2401,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25093,
+    "key": "upgrade:abu_hamed:51037",
+    "level": 19,
+    "line": "A",
+    "mod": 25102
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25093
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2401,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25102
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN MAG и Чертеж: прочность (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10349,
+   "why": "RECOVERED: texts.xml [51037, 51038, 47221, 25011] (name, start, notfinish, finish), the gun 25093, its modification 25102, the blueprint 2401 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2457,
+    "effect": "weight",
+    "family": "upgrade",
+    "gun": 25110,
+    "key": "upgrade:abu_hamed:51039",
+    "level": 20,
+    "line": "A",
+    "mod": 25113
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег: вес",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25110
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2457,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25113
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПКП Печенег и Чертеж: вес (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10350,
+   "why": "RECOVERED: texts.xml [51039, 51040, 47221, 25011] (name, start, notfinish, finish), the gun 25110, its modification 25113, the blueprint 2457 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2458,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 25110,
+    "key": "upgrade:abu_hamed:51041",
+    "level": 20,
+    "line": "A",
+    "mod": 26152
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег: размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25110
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2458,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26152
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПКП Печенег и Чертеж: размер обоймы (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10351,
+   "why": "RECOVERED: texts.xml [51041, 51042, 47221, 25011] (name, start, notfinish, finish), the gun 25110, its modification 26152, the blueprint 2458 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2469,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25110,
+    "key": "upgrade:abu_hamed:51043",
+    "level": 20,
+    "line": "A",
+    "mod": 25122
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег: точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25110
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2469,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25122
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПКП Печенег и Чертеж: точность и дистанция стрельбы (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10352,
+   "why": "RECOVERED: texts.xml [51043, 51044, 47221, 25011] (name, start, notfinish, finish), the gun 25110, its modification 25122, the blueprint 2469 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2402,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25110,
+    "key": "upgrade:abu_hamed:51045",
+    "level": 20,
+    "line": "A",
+    "mod": 25119
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25110
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2402,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25119
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПКП Печенег и Чертеж: прочность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10353,
+   "why": "RECOVERED: texts.xml [51045, 51046, 47221, 25011] (name, start, notfinish, finish), the gun 25110, its modification 25119, the blueprint 2402 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2459,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 25129,
+    "key": "upgrade:abu_hamed:51047",
+    "level": 20,
+    "line": "A",
+    "mod": 25132
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3: точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25129
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2459,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25132
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MG-3 и Чертеж: точность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10354,
+   "why": "RECOVERED: texts.xml [51047, 51048, 47221, 25011] (name, start, notfinish, finish), the gun 25129, its modification 25132, the blueprint 2459 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2457,
+    "effect": "weight",
+    "family": "upgrade",
+    "gun": 25129,
+    "key": "upgrade:abu_hamed:51049",
+    "level": 20,
+    "line": "A",
+    "mod": 25135
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3: вес",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25129
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2457,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25135
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MG-3 и Чертеж: вес (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10355,
+   "why": "RECOVERED: texts.xml [51049, 51050, 47221, 25011] (name, start, notfinish, finish), the gun 25129, its modification 25135, the blueprint 2457 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2469,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25129,
+    "key": "upgrade:abu_hamed:51051",
+    "level": 20,
+    "line": "A",
+    "mod": 25141
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3: точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25129
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2469,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25141
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MG-3 и Чертеж: точность и дистанция стрельбы (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10356,
+   "why": "RECOVERED: texts.xml [51051, 51052, 47221, 25011] (name, start, notfinish, finish), the gun 25129, its modification 25141, the blueprint 2469 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2402,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25129,
+    "key": "upgrade:abu_hamed:51053",
+    "level": 20,
+    "line": "A",
+    "mod": 25138
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    758
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25129
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2402,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25138
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MG-3 и Чертеж: прочность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    758
+   ],
+   "type": 10357,
+   "why": "RECOVERED: texts.xml [51053, 51054, 47221, 25011] (name, start, notfinish, finish), the gun 25129, its modification 25138, the blueprint 2402 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2451,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25023,
+    "key": "upgrade:abu_hamed:51071",
+    "level": 17,
+    "line": "G",
+    "mod": 25026
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25023
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2451,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25026
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN M249 (G) и Чертеж: урон (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10358,
+   "why": "RECOVERED: texts.xml [51071, 51072, 47221, 25011] (name, start, notfinish, finish), the gun 25023, its modification 25026, the blueprint 2451 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2452,
+    "effect": "reloadspeed",
+    "family": "upgrade",
+    "gun": 25023,
+    "key": "upgrade:abu_hamed:51073",
+    "level": 17,
+    "line": "G",
+    "mod": 25029
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249 (G): скорость перезарядки",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25023
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2452,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25029
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN M249 (G) и Чертеж: скорость перезарядки (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10359,
+   "why": "RECOVERED: texts.xml [51073, 51074, 47221, 25011] (name, start, notfinish, finish), the gun 25023, its modification 25029, the blueprint 2452 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2466,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25023,
+    "key": "upgrade:abu_hamed:51075",
+    "level": 17,
+    "line": "G",
+    "mod": 25035
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249 (G): точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25023
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2466,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25035
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN M249 (G) и Чертеж: точность и дистанция стрельбы (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10360,
+   "why": "RECOVERED: texts.xml [51075, 51076, 47221, 25011] (name, start, notfinish, finish), the gun 25023, its modification 25035, the blueprint 2466 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2400,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25023,
+    "key": "upgrade:abu_hamed:51077",
+    "level": 17,
+    "line": "G",
+    "mod": 25032
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249 (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25023
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2400,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25032
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN M249 (G) и Чертеж: прочность (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10361,
+   "why": "RECOVERED: texts.xml [51077, 51078, 47221, 25011] (name, start, notfinish, finish), the gun 25023, its modification 25032, the blueprint 2400 (17у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1277,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 25040,
+    "key": "upgrade:abu_hamed:51079",
+    "level": 18,
+    "line": "G",
+    "mod": 25043
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4 (G): точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25040
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1277,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25043
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Bren L4 (G) и Чертеж: точность (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10362,
+   "why": "RECOVERED: texts.xml [51079, 51080, 47221, 25011] (name, start, notfinish, finish), the gun 25040, its modification 25043, the blueprint 1277 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1272,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 25040,
+    "key": "upgrade:abu_hamed:51081",
+    "level": 18,
+    "line": "G",
+    "mod": 26150
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4 (G): размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25040
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1272,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26150
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Bren L4 (G) и Чертеж: размер обоймы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10363,
+   "why": "RECOVERED: texts.xml [51081, 51082, 47221, 25011] (name, start, notfinish, finish), the gun 25040, its modification 26150, the blueprint 1272 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1284,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25040,
+    "key": "upgrade:abu_hamed:51083",
+    "level": 18,
+    "line": "G",
+    "mod": 25052
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4 (G): точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25040
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1284,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25052
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Bren L4 (G) и Чертеж: точность и дистанция стрельбы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10364,
+   "why": "RECOVERED: texts.xml [51083, 51084, 47221, 25011] (name, start, notfinish, finish), the gun 25040, its modification 25052, the blueprint 1284 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1284,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25056,
+    "key": "upgrade:abu_hamed:51085",
+    "level": 18,
+    "line": "G",
+    "mod": 25071
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60 (G): точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25056
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1284,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25071
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести M60 (G) и Чертеж: точность и дистанция стрельбы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10365,
+   "why": "RECOVERED: texts.xml [51085, 51086, 47221, 25011] (name, start, notfinish, finish), the gun 25056, its modification 25071, the blueprint 1284 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1281,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25040,
+    "key": "upgrade:abu_hamed:51087",
+    "level": 18,
+    "line": "G",
+    "mod": 25049
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4 (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25040
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1281,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25049
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Bren L4 (G) и Чертеж: прочность (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10366,
+   "why": "RECOVERED: texts.xml [51087, 51088, 47221, 25011] (name, start, notfinish, finish), the gun 25040, its modification 25049, the blueprint 1281 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1276,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 25056,
+    "key": "upgrade:abu_hamed:51089",
+    "level": 18,
+    "line": "G",
+    "mod": 25059
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25056
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1276,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25059
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести M60 (G) и Чертеж: дистанция стрельбы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10367,
+   "why": "RECOVERED: texts.xml [51089, 51090, 47221, 25011] (name, start, notfinish, finish), the gun 25056, its modification 25059, the blueprint 1276 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1282,
+    "effect": "weight",
+    "family": "upgrade",
+    "gun": 25056,
+    "key": "upgrade:abu_hamed:51091",
+    "level": 18,
+    "line": "G",
+    "mod": 25068
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60 (G): вес",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25056
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1282,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25068
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести M60 (G) и Чертеж: вес (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10368,
+   "why": "RECOVERED: texts.xml [51091, 51092, 47221, 25011] (name, start, notfinish, finish), the gun 25056, its modification 25068, the blueprint 1282 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1281,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25056,
+    "key": "upgrade:abu_hamed:51093",
+    "level": 18,
+    "line": "G",
+    "mod": 25065
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60 (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25056
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1281,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25065
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести M60 (G) и Чертеж: прочность (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10369,
+   "why": "RECOVERED: texts.xml [51093, 51094, 47221, 25011] (name, start, notfinish, finish), the gun 25056, its modification 25065, the blueprint 1281 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2453,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25075,
+    "key": "upgrade:abu_hamed:51095",
+    "level": 19,
+    "line": "G",
+    "mod": 25078
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25075
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2453,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25078
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПК (G) и Чертеж: урон (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10370,
+   "why": "RECOVERED: texts.xml [51095, 51096, 47221, 25011] (name, start, notfinish, finish), the gun 25075, its modification 25078, the blueprint 2453 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2455,
+    "effect": "reloadspeed",
+    "family": "upgrade",
+    "gun": 25075,
+    "key": "upgrade:abu_hamed:51097",
+    "level": 19,
+    "line": "G",
+    "mod": 25081
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК (G): скорость перезарядки",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25075
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2455,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25081
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПК (G) и Чертеж: скорость перезарядки (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10371,
+   "why": "RECOVERED: texts.xml [51097, 51098, 47221, 25011] (name, start, notfinish, finish), the gun 25075, its modification 25081, the blueprint 2455 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2468,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25075,
+    "key": "upgrade:abu_hamed:51099",
+    "level": 19,
+    "line": "G",
+    "mod": 25087
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК (G): точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25075
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2468,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25087
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПК (G) и Чертеж: точность и дистанция стрельбы (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10372,
+   "why": "RECOVERED: texts.xml [51099, 51100, 47221, 25011] (name, start, notfinish, finish), the gun 25075, its modification 25087, the blueprint 2468 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2401,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25075,
+    "key": "upgrade:abu_hamed:51101",
+    "level": 19,
+    "line": "G",
+    "mod": 25084
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25075
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2401,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25084
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПК (G) и Чертеж: прочность (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10373,
+   "why": "RECOVERED: texts.xml [51101, 51102, 47221, 25011] (name, start, notfinish, finish), the gun 25075, its modification 25084, the blueprint 2401 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2455,
+    "effect": "reloadspeed",
+    "family": "upgrade",
+    "gun": 25094,
+    "key": "upgrade:abu_hamed:51103",
+    "level": 19,
+    "line": "G",
+    "mod": 25097
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG (G): скорость перезарядки",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25094
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2455,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25097
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN MAG (G) и Чертеж: скорость перезарядки (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10374,
+   "why": "RECOVERED: texts.xml [51103, 51104, 47221, 25011] (name, start, notfinish, finish), the gun 25094, its modification 25097, the blueprint 2455 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2456,
+    "effect": "weight",
+    "family": "upgrade",
+    "gun": 25094,
+    "key": "upgrade:abu_hamed:51105",
+    "level": 19,
+    "line": "G",
+    "mod": 25100
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG (G): вес",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25094
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2456,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25100
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN MAG (G) и Чертеж: вес (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10375,
+   "why": "RECOVERED: texts.xml [51105, 51106, 47221, 25011] (name, start, notfinish, finish), the gun 25094, its modification 25100, the blueprint 2456 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2468,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25094,
+    "key": "upgrade:abu_hamed:51107",
+    "level": 19,
+    "line": "G",
+    "mod": 25106
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG (G): точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25094
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2468,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25106
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN MAG (G) и Чертеж: точность и дистанция стрельбы (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10376,
+   "why": "RECOVERED: texts.xml [51107, 51108, 47221, 25011] (name, start, notfinish, finish), the gun 25094, its modification 25106, the blueprint 2468 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2401,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25094,
+    "key": "upgrade:abu_hamed:51109",
+    "level": 19,
+    "line": "G",
+    "mod": 25103
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25094
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2401,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25103
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN MAG (G) и Чертеж: прочность (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10377,
+   "why": "RECOVERED: texts.xml [51109, 51110, 47221, 25011] (name, start, notfinish, finish), the gun 25094, its modification 25103, the blueprint 2401 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2457,
+    "effect": "weight",
+    "family": "upgrade",
+    "gun": 25111,
+    "key": "upgrade:abu_hamed:51111",
+    "level": 20,
+    "line": "G",
+    "mod": 25114
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег (G): вес",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25111
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2457,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25114
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПКП Печенег (G) и Чертеж: вес (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10378,
+   "why": "RECOVERED: texts.xml [51111, 51112, 47221, 25011] (name, start, notfinish, finish), the gun 25111, its modification 25114, the blueprint 2457 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2458,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 25111,
+    "key": "upgrade:abu_hamed:51113",
+    "level": 20,
+    "line": "G",
+    "mod": 26153
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег (G): размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25111
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2458,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26153
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПКП Печенег (G) и Чертеж: размер обоймы (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10379,
+   "why": "RECOVERED: texts.xml [51113, 51114, 47221, 25011] (name, start, notfinish, finish), the gun 25111, its modification 26153, the blueprint 2458 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2469,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25111,
+    "key": "upgrade:abu_hamed:51115",
+    "level": 20,
+    "line": "G",
+    "mod": 25123
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег (G): точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25111
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2469,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25123
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПКП Печенег (G) и Чертеж: точность и дистанция стрельбы (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10380,
+   "why": "RECOVERED: texts.xml [51115, 51116, 47221, 25011] (name, start, notfinish, finish), the gun 25111, its modification 25123, the blueprint 2469 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2402,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25111,
+    "key": "upgrade:abu_hamed:51117",
+    "level": 20,
+    "line": "G",
+    "mod": 25120
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25111
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2402,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25120
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести ПКП Печенег (G) и Чертеж: прочность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10381,
+   "why": "RECOVERED: texts.xml [51117, 51118, 47221, 25011] (name, start, notfinish, finish), the gun 25111, its modification 25120, the blueprint 2402 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2459,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 25130,
+    "key": "upgrade:abu_hamed:51119",
+    "level": 20,
+    "line": "G",
+    "mod": 25133
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3 (G): точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25130
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2459,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25133
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MG-3 (G) и Чертеж: точность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10382,
+   "why": "RECOVERED: texts.xml [51119, 51120, 47221, 25011] (name, start, notfinish, finish), the gun 25130, its modification 25133, the blueprint 2459 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2457,
+    "effect": "weight",
+    "family": "upgrade",
+    "gun": 25130,
+    "key": "upgrade:abu_hamed:51121",
+    "level": 20,
+    "line": "G",
+    "mod": 25136
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3 (G): вес",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25130
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2457,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25136
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MG-3 (G) и Чертеж: вес (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10383,
+   "why": "RECOVERED: texts.xml [51121, 51122, 47221, 25011] (name, start, notfinish, finish), the gun 25130, its modification 25136, the blueprint 2457 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2469,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25130,
+    "key": "upgrade:abu_hamed:51123",
+    "level": 20,
+    "line": "G",
+    "mod": 25142
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3 (G): точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25130
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2469,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25142
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MG-3 (G) и Чертеж: точность и дистанция стрельбы (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10384,
+   "why": "RECOVERED: texts.xml [51123, 51124, 47221, 25011] (name, start, notfinish, finish), the gun 25130, its modification 25142, the blueprint 2469 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2402,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25130,
+    "key": "upgrade:abu_hamed:51125",
+    "level": 20,
+    "line": "G",
+    "mod": 25139
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    751
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3 (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25130
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2402,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25139
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MG-3 (G) и Чертеж: прочность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    751
+   ],
+   "type": 10385,
+   "why": "RECOVERED: texts.xml [51125, 51126, 47221, 25011] (name, start, notfinish, finish), the gun 25130, its modification 25139, the blueprint 2402 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1271,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25819,
+    "key": "upgrade:abu_hamed:51897",
+    "level": 18,
+    "line": "A",
+    "mod": 25822
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25819
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1271,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25822
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести HK PSG-1 и Чертеж: урон (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10386,
+   "why": "RECOVERED: texts.xml [51897, 51898, 47221, 25011] (name, start, notfinish, finish), the gun 25819, its modification 25822, the blueprint 1271 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1280,
+    "effect": "perception",
+    "family": "upgrade",
+    "gun": 25819,
+    "key": "upgrade:abu_hamed:51899",
+    "level": 18,
+    "line": "A",
+    "mod": 25825
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1: восприятие",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25819
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1280,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25825
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести HK PSG-1 и Чертеж: восприятие (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10387,
+   "why": "RECOVERED: texts.xml [51899, 51900, 47221, 25011] (name, start, notfinish, finish), the gun 25819, its modification 25825, the blueprint 1280 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 37644,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25819,
+    "key": "upgrade:abu_hamed:51901",
+    "level": 18,
+    "line": "A",
+    "mod": 25831
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25819
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 37644,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25831
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести HK PSG-1 и Чертеж: урон и размер обоймы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10388,
+   "why": "RECOVERED: texts.xml [51901, 51902, 47221, 25011] (name, start, notfinish, finish), the gun 25819, its modification 25831, the blueprint 37644 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1281,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25819,
+    "key": "upgrade:abu_hamed:51903",
+    "level": 18,
+    "line": "A",
+    "mod": 25828
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25819
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1281,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25828
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести HK PSG-1 и Чертеж: прочность (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10389,
+   "why": "RECOVERED: texts.xml [51903, 51904, 47221, 25011] (name, start, notfinish, finish), the gun 25819, its modification 25828, the blueprint 1281 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2453,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25835,
+    "key": "upgrade:abu_hamed:51905",
+    "level": 19,
+    "line": "A",
+    "mod": 25838
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25835
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2453,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25838
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Brugger & Thomet APR 338 и Чертеж: урон (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10390,
+   "why": "RECOVERED: texts.xml [51905, 51906, 47221, 25011] (name, start, notfinish, finish), the gun 25835, its modification 25838, the blueprint 2453 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2454,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 25835,
+    "key": "upgrade:abu_hamed:51907",
+    "level": 19,
+    "line": "A",
+    "mod": 25841
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338: размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25835
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2454,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25841
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Brugger & Thomet APR 338 и Чертеж: размер обоймы (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10391,
+   "why": "RECOVERED: texts.xml [51907, 51908, 47221, 25011] (name, start, notfinish, finish), the gun 25835, its modification 25841, the blueprint 2454 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 37645,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25835,
+    "key": "upgrade:abu_hamed:51909",
+    "level": 19,
+    "line": "A",
+    "mod": 25847
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25835
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 37645,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25847
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Brugger & Thomet APR 338 и Чертеж: урон и размер обоймы (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10392,
+   "why": "RECOVERED: texts.xml [51909, 51910, 47221, 25011] (name, start, notfinish, finish), the gun 25835, its modification 25847, the blueprint 37645 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2401,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25835,
+    "key": "upgrade:abu_hamed:51911",
+    "level": 19,
+    "line": "A",
+    "mod": 25844
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25835
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2401,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25844
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Brugger & Thomet APR 338 и Чертеж: прочность (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10393,
+   "why": "RECOVERED: texts.xml [51911, 51912, 47221, 25011] (name, start, notfinish, finish), the gun 25835, its modification 25844, the blueprint 2401 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 26581,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26865,
+    "key": "upgrade:abu_hamed:51913",
+    "level": 20,
+    "line": "A",
+    "mod": 26868
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "СВД-С: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26865
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 26581,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26868
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести СВД-С и Чертеж: урон (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10394,
+   "why": "RECOVERED: texts.xml [51913, 51914, 47221, 25011] (name, start, notfinish, finish), the gun 26865, its modification 26868, the blueprint 26581 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2459,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 26865,
+    "key": "upgrade:abu_hamed:51915",
+    "level": 20,
+    "line": "A",
+    "mod": 26871
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "СВД-С: точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26865
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2459,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26871
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести СВД-С и Чертеж: точность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10395,
+   "why": "RECOVERED: texts.xml [51915, 51916, 47221, 25011] (name, start, notfinish, finish), the gun 26865, its modification 26871, the blueprint 2459 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 37646,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26865,
+    "key": "upgrade:abu_hamed:51917",
+    "level": 20,
+    "line": "A",
+    "mod": 26877
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "СВД-С: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26865
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 37646,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26877
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести СВД-С и Чертеж: урон и размер обоймы (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10396,
+   "why": "RECOVERED: texts.xml [51917, 51918, 47221, 25011] (name, start, notfinish, finish), the gun 26865, its modification 26877, the blueprint 37646 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2402,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 26865,
+    "key": "upgrade:abu_hamed:51919",
+    "level": 20,
+    "line": "A",
+    "mod": 26874
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    759
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "СВД-С: повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26865
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2402,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26874
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести СВД-С и Чертеж: прочность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    759
+   ],
+   "type": 10397,
+   "why": "RECOVERED: texts.xml [51919, 51920, 47221, 25011] (name, start, notfinish, finish), the gun 26865, its modification 26874, the blueprint 2402 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1271,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25820,
+    "key": "upgrade:abu_hamed:51985",
+    "level": 18,
+    "line": "G",
+    "mod": 25823
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25820
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1271,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25823
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести HK PSG-1 (G) и Чертеж: урон (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10398,
+   "why": "RECOVERED: texts.xml [51985, 51986, 47221, 25011] (name, start, notfinish, finish), the gun 25820, its modification 25823, the blueprint 1271 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1280,
+    "effect": "perception",
+    "family": "upgrade",
+    "gun": 25820,
+    "key": "upgrade:abu_hamed:51987",
+    "level": 18,
+    "line": "G",
+    "mod": 25826
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1 (G): восприятие",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25820
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1280,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25826
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести HK PSG-1 (G) и Чертеж: восприятие (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10399,
+   "why": "RECOVERED: texts.xml [51987, 51988, 47221, 25011] (name, start, notfinish, finish), the gun 25820, its modification 25826, the blueprint 1280 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
     "blueprint": 6608,
     "family": "knife",
     "gun": 6231,
@@ -17983,6 +21800,264 @@
    ],
    "type": 10423,
    "why": "RECOVERED: texts.xml 50961-50962, the wiki's «Заточка и Эргономика Такоубы» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe."
+  },
+  {
+   "craft": {
+    "blueprint": 6632,
+    "family": "knife",
+    "gun": 6271,
+    "key": "knife:abu_hamed:50963",
+    "level": 18,
+    "mod": 6272
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2282
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Заточка Кукри",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6271
+    },
+    {
+     "num": 1,
+     "obj": 6632
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6272
+   ],
+   "service": true,
+   "start": "Тупой нож - вещь в хозяйстве или на войне бесполезная. Вот, острый нож - совсем другое дело! И под ребро мягче зайдет, и побриться можно, и колбасы настругать. Африканское нанотехнологичное устройство Точильный круг - вот, что нужно, чтобы все тупые стали острыми! Как говориться: Кручу-верчу, заточить хочу!<Br><Br>Для заточки нужен сам нож и подходящий чертёж.<Br><b>Задача:</b>Принести Кукри (G) и Чертеж: Заточка Кукри <Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2282
+   ],
+   "type": 10424,
+   "why": "RECOVERED: texts.xml 50963-50964, the wiki's «Заточка Кукри» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe."
+  },
+  {
+   "craft": {
+    "blueprint": 6633,
+    "family": "knife",
+    "gun": 6271,
+    "key": "knife:abu_hamed:50965",
+    "level": 18,
+    "mod": 6273
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2282
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Эргономика Кукри",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6271
+    },
+    {
+     "num": 1,
+     "obj": 6633
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6273
+   ],
+   "service": true,
+   "start": "Неудобная рукоять, причина многих неудач. Неудобство в использовании, расходование большего количества сил на удар. С плохой рукоятью, нож менее надежен и прочен. Для замены рукояти нужен сам нож и подходящий чертёж.<Br><b>Задача:</b>Принести Кукри (G) и Чертеж: Эргономика Кукри<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2282
+   ],
+   "type": 10425,
+   "why": "RECOVERED: texts.xml 50965-50966, the wiki's «Эргономика Кукри» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe."
+  },
+  {
+   "craft": {
+    "blueprint": 6634,
+    "family": "knife",
+    "gun": 6271,
+    "key": "knife:abu_hamed:50967",
+    "level": 18,
+    "mod": 6274
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2282
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Заточка и Эргономика Кукри",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6271
+    },
+    {
+     "num": 1,
+     "obj": 6634
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6274
+   ],
+   "service": true,
+   "start": "Сделать из кухонного ножа мачете, конечно, на точильном круге не получится. Но, не забывайте, что при помощи некоторых нехитрых манипуляций можно и самые безобидные пилки для ногтей превратить в грозное оружие. Необходимо только заточить лезвие и сделать удобную рукоять.  Лишь бы чертежи подходящие нашлись. Для заточки и замены рукояти нужен сам нож и подходящие чертёжи.<Br><b>Задача:</b>Принести Кукри (G) и Чертеж: Заточка и Эргономика Кукри <Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2282
+   ],
+   "type": 10426,
+   "why": "RECOVERED: texts.xml 50967-50968, the wiki's «Заточка и Эргономика Кукри» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe."
+  },
+  {
+   "craft": {
+    "blueprint": 6635,
+    "family": "knife",
+    "gun": 6276,
+    "key": "knife:abu_hamed:50969",
+    "level": 20,
+    "mod": 6277
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2282
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Заточка Мачете",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6276
+    },
+    {
+     "num": 1,
+     "obj": 6635
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6277
+   ],
+   "service": true,
+   "start": "Тупой нож - вещь в хозяйстве или на войне бесполезная. Вот, острый нож - совсем другое дело! И под ребро мягче зайдет, и побриться можно, и колбасы настругать. Африканское нанотехнологичное устройство Точильный круг - вот, что нужно, чтобы все тупые стали острыми! Как говориться: Кручу-верчу, заточить хочу!<Br><Br>Для заточки нужен сам нож и подходящий чертёж.<Br><b>Задача:</b>Принести Мачете (G) и Чертеж: Заточка Мачете <Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2282
+   ],
+   "type": 10427,
+   "why": "RECOVERED: texts.xml 50969-50970, the wiki's «Заточка Мачете» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe."
+  },
+  {
+   "craft": {
+    "blueprint": 6636,
+    "family": "knife",
+    "gun": 6276,
+    "key": "knife:abu_hamed:50971",
+    "level": 20,
+    "mod": 6278
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2282
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Эргономика Мачете",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6276
+    },
+    {
+     "num": 1,
+     "obj": 6636
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6278
+   ],
+   "service": true,
+   "start": "Неудобная рукоять, причина многих неудач. Неудобство в использовании, расходование большего количества сил на удар. С плохой рукоятью, нож менее надежен и прочен. Для замены рукояти нужен сам нож и подходящий чертёж.<Br><b>Задача:</b>Принести Мачете (G) и Чертеж: Эргономика Мачете<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2282
+   ],
+   "type": 10428,
+   "why": "RECOVERED: texts.xml 50971-50972, the wiki's «Эргономика Мачете» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe."
+  },
+  {
+   "craft": {
+    "blueprint": 6637,
+    "family": "knife",
+    "gun": 6276,
+    "key": "knife:abu_hamed:50973",
+    "level": 20,
+    "mod": 6279
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2282
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Заточка и Эргономика Мачете",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6276
+    },
+    {
+     "num": 1,
+     "obj": 6637
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6279
+   ],
+   "service": true,
+   "start": "Сделать из кухонного ножа мачете, конечно, на точильном круге не получится. Но, не забывайте, что при помощи некоторых нехитрых манипуляций можно и самые безобидные пилки для ногтей превратить в грозное оружие. Необходимо только заточить лезвие и сделать удобную рукоять.  Лишь бы чертежи подходящие нашлись. Для заточки и замены рукояти нужен сам нож и подходящие чертёжи.<Br><b>Задача:</b>Принести Мачете (G) и Чертеж: Заточка и Эргономика Мачете <Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2282
+   ],
+   "type": 10429,
+   "why": "RECOVERED: texts.xml 50973-50974, the wiki's «Заточка и Эргономика Мачете» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe."
   },
   {
    "cost_afro": 1433,
@@ -19251,6 +23326,286 @@
    ],
    "type": 10522,
    "why": "RECOVERED: texts.xml 25447-25448 and the finish 25402; the fee 1433 afro and 143 «Переработка» the text's; one part of the class drawn, those the text lists (7924-8139, level 16). DESIGNED: the gunsmith of the class stands for the bench («На этом верстаке»); class 1 takes a broken gun of levels 0-16, from its parts' level up to the next class's, the cheapest in the bag and never a gold, modified or lent one, as the start's last line says."
+  },
+  {
+   "cost_afro": 40300,
+   "craft": {
+    "class": 5,
+    "family": "salvage",
+    "key": "salvage:abu_hamed:25417",
+    "levels": [
+     19,
+     20
+    ],
+    "weapon": "rifle"
+   },
+   "finish": "Хм, вот что получилось тут наковырять.",
+   "give": [
+    730
+   ],
+   "kind": "del_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Разобрать сломаную винтовку 5кл.",
+   "notfinish": "",
+   "obj": 0,
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2612,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2615,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2618,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2621,
+     "w": 1
+    }
+   ],
+   "rew_spec_xp": {
+    "recycling": 4030
+   },
+   "service": true,
+   "start": "<hint><B>№0000310</B></hint><Br>На этом верстаке можно разобрать сломаную винтовку 5кл. и достать из неё какую либо одну деталь. Например что то одно из этого : идеальный ствол от винтовки, идеальная ложа винтовки, идеальный затвор для винтовки, идеальный казенник для винтовки. При разборе сломанного оружия на базе берется утилизационный сбор в размере 40300 афро.<Br><Br><b>Требуется открытая специализация \"Переработка\" для зачисления опыта 4030 единиц.</b></Br><Br><Br><b>Внимание:</b> на верстак пойдёт самое дешёвое сломанное оружие этого класса 19-20 уровня из рюкзака. Золотое, улучшенное и выданное по заданию оружие не разбирается.",
+   "take": [
+    730
+   ],
+   "type": 10523,
+   "why": "RECOVERED: texts.xml 25417-25418 and the finish 25402; the fee 40300 afro and 4030 «Переработка» the text's; one part of the class drawn, those the text lists (7924-8139, level 19). DESIGNED: the gunsmith of the class stands for the bench («На этом верстаке»); class 5 takes a broken gun of levels 19-20, from its parts' level up to the next class's, the cheapest in the bag and never a gold, modified or lent one, as the start's last line says."
+  },
+  {
+   "cost_afro": 1433,
+   "craft": {
+    "class": 2,
+    "family": "salvage",
+    "key": "salvage:abu_hamed:25449",
+    "levels": [
+     17,
+     17
+    ],
+    "weapon": "mg"
+   },
+   "finish": "Хм, вот что получилось тут наковырять.",
+   "give": [
+    732
+   ],
+   "kind": "del_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Разобрать сломаный пулемет 2кл.",
+   "notfinish": "",
+   "obj": 0,
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2634,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2637,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2640,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2643,
+     "w": 1
+    }
+   ],
+   "rew_spec_xp": {
+    "recycling": 143
+   },
+   "service": true,
+   "start": "<hint><B>№0000326</B></hint><Br>На этом верстаке можно разобрать сломаный пулемет 2кл. и достать из него какую либо одну деталь. Например что то одно из этого : старый пулеметный ствол, старая пулеметная ствольная коробка, старая пулеметная затворная рама, старый пулеметный приклад. При разборе сломанного оружия на базе берется утилизационный сбор в размере 1433 афро.<Br><Br><b>Требуется открытая специализация \"Переработка\" для зачисления опыта 143 единиц.</b></Br><Br><Br><b>Внимание:</b> на верстак пойдёт самое дешёвое сломанное оружие этого класса 17-17 уровня из рюкзака. Золотое, улучшенное и выданное по заданию оружие не разбирается.",
+   "take": [
+    732
+   ],
+   "type": 10524,
+   "why": "RECOVERED: texts.xml 25449-25450 and the finish 25402; the fee 1433 afro and 143 «Переработка» the text's; one part of the class drawn, those the text lists (7924-8139, level 17). DESIGNED: the gunsmith of the class stands for the bench («На этом верстаке»); class 2 takes a broken gun of levels 17-17, from its parts' level up to the next class's, the cheapest in the bag and never a gold, modified or lent one, as the start's last line says."
+  },
+  {
+   "cost_afro": 6900,
+   "craft": {
+    "class": 3,
+    "family": "salvage",
+    "key": "salvage:abu_hamed:25451",
+    "levels": [
+     18,
+     18
+    ],
+    "weapon": "mg"
+   },
+   "finish": "Хм, вот что получилось тут наковырять.",
+   "give": [
+    732
+   ],
+   "kind": "del_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Разобрать сломаный пулемет 3кл.",
+   "notfinish": "",
+   "obj": 0,
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2635,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2638,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2641,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2644,
+     "w": 1
+    }
+   ],
+   "rew_spec_xp": {
+    "recycling": 690
+   },
+   "service": true,
+   "start": "<hint><B>№0000327</B></hint><Br>На этом верстаке можно разобрать сломаный пулемет 3кл. и достать из него какую либо одну деталь. Например что то одно из этого : обычный пулеметный ствол, обычная пулеметная ствольная коробка, обычная пулеметная затворная рама, обычный пулеметный приклад. При разборе сломанного оружия на базе берется утилизационный сбор в размере 6900 афро.<Br><Br><b>Требуется открытая специализация \"Переработка\" для зачисления опыта 690 единиц.</b></Br><Br><Br><b>Внимание:</b> на верстак пойдёт самое дешёвое сломанное оружие этого класса 18-18 уровня из рюкзака. Золотое, улучшенное и выданное по заданию оружие не разбирается.",
+   "take": [
+    732
+   ],
+   "type": 10525,
+   "why": "RECOVERED: texts.xml 25451-25452 and the finish 25402; the fee 6900 afro and 690 «Переработка» the text's; one part of the class drawn, those the text lists (7924-8139, level 18). DESIGNED: the gunsmith of the class stands for the bench («На этом верстаке»); class 3 takes a broken gun of levels 18-18, from its parts' level up to the next class's, the cheapest in the bag and never a gold, modified or lent one, as the start's last line says."
+  },
+  {
+   "cost_afro": 19033,
+   "craft": {
+    "class": 4,
+    "family": "salvage",
+    "key": "salvage:abu_hamed:25453",
+    "levels": [
+     19,
+     19
+    ],
+    "weapon": "mg"
+   },
+   "finish": "Хм, вот что получилось тут наковырять.",
+   "give": [
+    732
+   ],
+   "kind": "del_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Разобрать сломаный пулемет 4кл.",
+   "notfinish": "",
+   "obj": 0,
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2636,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2639,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2642,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2645,
+     "w": 1
+    }
+   ],
+   "rew_spec_xp": {
+    "recycling": 1903
+   },
+   "service": true,
+   "start": "<hint><B>№0000328</B></hint><Br>На этом верстаке можно разобрать сломаный пулемет 4кл. и достать из него какую либо одну деталь. Например что то одно из этого : заводской пулеметный ствол, заводская пулеметная ствольная коробка, заводская пулеметная затворная рама, заводской пулеметный приклад. При разборе сломанного оружия на базе берется утилизационный сбор в размере 19033 афро.<Br><Br><b>Требуется открытая специализация \"Переработка\" для зачисления опыта 1903 единиц.</b></Br><Br><Br><b>Внимание:</b> на верстак пойдёт самое дешёвое сломанное оружие этого класса 19-19 уровня из рюкзака. Золотое, улучшенное и выданное по заданию оружие не разбирается.",
+   "take": [
+    732
+   ],
+   "type": 10526,
+   "why": "RECOVERED: texts.xml 25453-25454 and the finish 25402; the fee 19033 afro and 1903 «Переработка» the text's; one part of the class drawn, those the text lists (7924-8139, level 19). DESIGNED: the gunsmith of the class stands for the bench («На этом верстаке»); class 4 takes a broken gun of levels 19-19, from its parts' level up to the next class's, the cheapest in the bag and never a gold, modified or lent one, as the start's last line says."
+  },
+  {
+   "cost_afro": 40300,
+   "craft": {
+    "class": 5,
+    "family": "salvage",
+    "key": "salvage:abu_hamed:25455",
+    "levels": [
+     20,
+     20
+    ],
+    "weapon": "mg"
+   },
+   "finish": "Хм, вот что получилось тут наковырять.",
+   "give": [
+    732
+   ],
+   "kind": "del_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Разобрать сломаный пулемет 5кл.",
+   "notfinish": "",
+   "obj": 0,
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 526,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 531,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 536,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 541,
+     "w": 1
+    }
+   ],
+   "rew_spec_xp": {
+    "recycling": 4030
+   },
+   "service": true,
+   "start": "<hint><B>№0000329</B></hint><Br>На этом верстаке можно разобрать сломаный пулемет 5кл и достать из него какую либо одну деталь. Например что то одно из этого : идеальный пулеметный ствол, идеальная пулеметная ствольная коробка, идеальная пулеметная затворная рама, идеальный пулеметный приклад. При разборе сломанного оружия на базе берется утилизационный сбор в размере 40300 афро.<Br><Br><b>Требуется открытая специализация \"Переработка\" для зачисления опыта 4030 единиц.</b></Br><Br><Br><b>Внимание:</b> на верстак пойдёт самое дешёвое сломанное оружие этого класса 20-20 уровня из рюкзака. Золотое, улучшенное и выданное по заданию оружие не разбирается.",
+   "take": [
+    732
+   ],
+   "type": 10527,
+   "why": "RECOVERED: texts.xml 25455-25456 and the finish 25402; the fee 40300 afro and 4030 «Переработка» the text's; one part of the class drawn, those the text lists (7924-8139, level 20). DESIGNED: the gunsmith of the class stands for the bench («На этом верстаке»); class 5 takes a broken gun of levels 20-20, from its parts' level up to the next class's, the cheapest in the bag and never a gold, modified or lent one, as the start's last line says."
   },
   {
    "craft": {
@@ -21041,6 +25396,682 @@
    "why": "RECOVERED: texts.xml 46289-46291, the parts the start names (7924-8139), the gun 24989. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
   },
   {
+   "craft": {
+    "family": "assembly",
+    "gun": 25022,
+    "key": "assembly:abu_hamed:46295",
+    "weapon": "mg"
+   },
+   "finish": "Отлично, из этого можно собрать FN M249(A)",
+   "give": [
+    732
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN M249(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 2634
+    },
+    {
+     "num": 1,
+     "obj": 2637
+    },
+    {
+     "num": 1,
+     "obj": 2640
+    },
+    {
+     "num": 1,
+     "obj": 2643
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25022
+   ],
+   "rew_spec_xp": {
+    "recycling": 450
+   },
+   "service": true,
+   "start": "Хочешь сделать FN M249(A)? Старые и кустарные детали сгодятся. И рассмотри их повнимательнее, убедись что это действительно детали от пулемета, а не от автомата или винтовки.<Br><b>Задача:</b> принести 4 детали: Старый Ствол, Старая Ствольная Коробка, Старая Затворная Рама, Старый приклад<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 450 единиц.</b>",
+   "take": [
+    732
+   ],
+   "type": 10635,
+   "why": "RECOVERED: texts.xml 46295-46297, the parts the start names (7924-8139), the gun 25022. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25039,
+    "key": "assembly:abu_hamed:46298",
+    "weapon": "mg"
+   },
+   "finish": "Отлично, из этого можно собрать Bren L4(A)",
+   "give": [
+    732
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Bren L4(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 2635
+    },
+    {
+     "num": 1,
+     "obj": 2638
+    },
+    {
+     "num": 1,
+     "obj": 2641
+    },
+    {
+     "num": 1,
+     "obj": 2644
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25039
+   ],
+   "rew_spec_xp": {
+    "recycling": 450
+   },
+   "service": true,
+   "start": "Хочешь сделать Bren L4(A)? Раздобудь мне несколько деталей, сойдут и кустарные. Но рассмотри их повнимательнее и убедись что это действительно детали от пулемета, а не от автомата или винтовки.<Br><b>Задача:</b> принести 4 детали: Обычный Ствол, Обычная Ствольная Коробка, Обычная Затворная Рама, Обычный приклад<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 450 единиц.</b>",
+   "take": [
+    732
+   ],
+   "type": 10636,
+   "why": "RECOVERED: texts.xml 46298-46300, the parts the start names (7924-8139), the gun 25039. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25055,
+    "key": "assembly:abu_hamed:46301",
+    "weapon": "mg"
+   },
+   "finish": "Отлично, из этого можно собрать M60(A)",
+   "give": [
+    732
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "M60(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 2635
+    },
+    {
+     "num": 1,
+     "obj": 2638
+    },
+    {
+     "num": 1,
+     "obj": 2641
+    },
+    {
+     "num": 1,
+     "obj": 2644
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25055
+   ],
+   "rew_spec_xp": {
+    "recycling": 450
+   },
+   "service": true,
+   "start": "Хочешь сделать M60(A)? Старые и кустарные детали сгодятся. И рассмотри их повнимательнее, убедись что это действительно детали от пулемета, а не от автомата или винтовки.<Br><b>Задача:</b> принести 4 детали: Обычный Ствол, Обычная Ствольная Коробка, Обычная Затворная Рама, Обычный приклад<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 450 единиц.</b>",
+   "take": [
+    732
+   ],
+   "type": 10637,
+   "why": "RECOVERED: texts.xml 46301-46303, the parts the start names (7924-8139), the gun 25055. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25074,
+    "key": "assembly:abu_hamed:46304",
+    "weapon": "mg"
+   },
+   "finish": "Отлично, из этого можно собрать ПК(A)",
+   "give": [
+    732
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПК(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 2636
+    },
+    {
+     "num": 1,
+     "obj": 2639
+    },
+    {
+     "num": 1,
+     "obj": 2642
+    },
+    {
+     "num": 1,
+     "obj": 2645
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25074
+   ],
+   "rew_spec_xp": {
+    "recycling": 900
+   },
+   "service": true,
+   "start": "Хочешь сделать ПК(A)? Принеси мне детали от пулемета, сгодятся и старые. И рассмотри их повнимательнее, убедись что это действительно детали от пулемета, а не от автомата или винтовки.<Br><b>Задача:</b> принести 4 детали: Заводской Ствол, Заводская Ствольная Коробка, Заводская Затворная Рама, Заводской приклад<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 900 единиц.</b>",
+   "take": [
+    732
+   ],
+   "type": 10638,
+   "why": "RECOVERED: texts.xml 46304-46306, the parts the start names (7924-8139), the gun 25074. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25093,
+    "key": "assembly:abu_hamed:46307",
+    "weapon": "mg"
+   },
+   "finish": "Отлично, из этого можно собрать FN MAG(A)",
+   "give": [
+    732
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN MAG(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 2636
+    },
+    {
+     "num": 1,
+     "obj": 2639
+    },
+    {
+     "num": 1,
+     "obj": 2642
+    },
+    {
+     "num": 1,
+     "obj": 2645
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25093
+   ],
+   "rew_spec_xp": {
+    "recycling": 900
+   },
+   "service": true,
+   "start": "Хочешь сделать FN MAG(A)? Нужны обычные детали, но рама и приклад могут быть и старыми. И рассмотри их повнимательнее, убедись что это действительно детали от пулемета, а не от автомата или винтовки.<Br><b>Задача:</b> принести 4 детали: Заводской Ствол, Заводская Ствольная Коробка, Заводская Затворная Рама, Заводской приклад<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 900 единиц.</b>",
+   "take": [
+    732
+   ],
+   "type": 10639,
+   "why": "RECOVERED: texts.xml 46307-46309, the parts the start names (7924-8139), the gun 25093. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25110,
+    "key": "assembly:abu_hamed:46310",
+    "weapon": "mg"
+   },
+   "finish": "Отлично, из этого можно собрать ПКП Печенег(A)",
+   "give": [
+    732
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "ПКП Печенег(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 526
+    },
+    {
+     "num": 1,
+     "obj": 531
+    },
+    {
+     "num": 1,
+     "obj": 536
+    },
+    {
+     "num": 1,
+     "obj": 541
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25110
+   ],
+   "rew_spec_xp": {
+    "recycling": 900
+   },
+   "service": true,
+   "start": "Хочешь сделать ПКП Печенег(A)? Сгодятся обычные детали. И рассмотри их повнимательнее, убедись что это действительно детали от пулемета, а не от автомата или винтовки.<Br><b>Задача:</b> принести 4 детали: Идеальный Ствол, Идеальная Ствольная Коробка, Идеальная Затворная Рама, Идеальный приклад<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 900 единиц.</b>",
+   "take": [
+    732
+   ],
+   "type": 10640,
+   "why": "RECOVERED: texts.xml 46310-46312, the parts the start names (7924-8139), the gun 25110. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25129,
+    "key": "assembly:abu_hamed:46313",
+    "weapon": "mg"
+   },
+   "finish": "Отлично, из этого можно собрать MG-3(A)",
+   "give": [
+    732
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "MG-3(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 526
+    },
+    {
+     "num": 1,
+     "obj": 531
+    },
+    {
+     "num": 1,
+     "obj": 536
+    },
+    {
+     "num": 1,
+     "obj": 541
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25129
+   ],
+   "rew_spec_xp": {
+    "recycling": 900
+   },
+   "service": true,
+   "start": "Хочешь сделать MG-3(A)? Сгодятся обычные детали. И рассмотри их повнимательнее, убедись что это действительно детали от пулемета, а не от автомата или винтовки.<Br><b>Задача:</b> принести 4 детали: Идеальный Ствол, Идеальная Ствольная Коробка, Идеальная Затворная Рама, Идеальный приклад<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 900 единиц.</b>",
+   "take": [
+    732
+   ],
+   "type": 10641,
+   "why": "RECOVERED: texts.xml 46313-46315, the parts the start names (7924-8139), the gun 25129. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25723,
+    "key": "assembly:dongola:46210",
+    "weapon": "rifle"
+   },
+   "finish": "Отлично, из этого можно собрать M14(A)",
+   "give": [
+    244
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 16,
+   "name": "M14(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 456
+    },
+    {
+     "num": 1,
+     "obj": 461
+    },
+    {
+     "num": 1,
+     "obj": 2611
+    },
+    {
+     "num": 1,
+     "obj": 2620
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25723
+   ],
+   "rew_spec_xp": {
+    "recycling": 120
+   },
+   "service": true,
+   "start": "Принеси мне несколько деталей и я научу тебя как собирать M14(A). Подойдут детали от старых винтовок. Но рассмотри их повнимательнее и убедись что это действительно детали от винтовки, а не от автомата.<Br><b>Задача:</b> принести 4 детали: Старый Ствол, Обычная Ложа, Обычный Затвор, Старый Казенник<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 120 единиц.</b>",
+   "take": [
+    244
+   ],
+   "type": 10642,
+   "why": "RECOVERED: texts.xml 46210-46212, the parts the start names (7924-8139), the gun 25723. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25739,
+    "key": "assembly:dongola:46213",
+    "weapon": "rifle"
+   },
+   "finish": "Отлично, из этого можно собрать Steyr Scout Tactical(A)",
+   "give": [
+    244
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 16,
+   "name": "Steyr Scout Tactical(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 451
+    },
+    {
+     "num": 1,
+     "obj": 456
+    },
+    {
+     "num": 1,
+     "obj": 461
+    },
+    {
+     "num": 1,
+     "obj": 466
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25739
+   ],
+   "rew_spec_xp": {
+    "recycling": 120
+   },
+   "service": true,
+   "start": "Хочешь собрать Steyr Scout Tactical(A)? Принеси мне детали от винтовок. Сгодятся старые, но не все. Но рассмотри их повнимательнее и убедись что это действительно детали от винтовки, а не от автомата.<Br><b>Задача:</b> принести 4 детали: Обычный Ствол, Обычная Ложа, Обычный Затвор, Обычный Казенник<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 120 единиц.</b>",
+   "take": [
+    244
+   ],
+   "type": 10643,
+   "why": "RECOVERED: texts.xml 46213-46215, the parts the start names (7924-8139), the gun 25739. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25784,
+    "key": "assembly:dongola:46216",
+    "weapon": "rifle"
+   },
+   "finish": "Отлично, из этого можно собрать СВД(A)",
+   "give": [
+    244
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 16,
+   "name": "СВД(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 452
+    },
+    {
+     "num": 1,
+     "obj": 456
+    },
+    {
+     "num": 1,
+     "obj": 461
+    },
+    {
+     "num": 1,
+     "obj": 467
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25784
+   ],
+   "rew_spec_xp": {
+    "recycling": 450
+   },
+   "service": true,
+   "start": "СВД(A) надумал собирать? Принеси мне детали от винтовок. Обычные детали, не старые. Но рассмотри их повнимательнее и убедись что это действительно детали от винтовки, а не от автомата.<Br><b>Задача:</b> принести 4 детали: Заводской Ствол, Обычная Ложа, Обычный Затвор, Заводской Казенник<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 450 единиц.</b>",
+   "take": [
+    244
+   ],
+   "type": 10644,
+   "why": "RECOVERED: texts.xml 46216-46218, the parts the start names (7924-8139), the gun 25784. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25803,
+    "key": "assembly:dongola:46219",
+    "weapon": "rifle"
+   },
+   "finish": "Отлично, из этого можно собрать US Army M24(A)",
+   "give": [
+    244
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 16,
+   "name": "US Army M24(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 452
+    },
+    {
+     "num": 1,
+     "obj": 457
+    },
+    {
+     "num": 1,
+     "obj": 462
+    },
+    {
+     "num": 1,
+     "obj": 467
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25803
+   ],
+   "rew_spec_xp": {
+    "recycling": 450
+   },
+   "service": true,
+   "start": "US Army M24(A) надумал собирать? Принеси мне детали от винтовок. Обычные детали, не старые. Но рассмотри их повнимательнее и убедись что это действительно детали от винтовки, а не от автомата.<Br><b>Задача:</b> принести 4 детали: Заводской Ствол, Заводская Ложа, Заводской Затвор, Заводской Казенник<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 450 единиц.</b>",
+   "take": [
+    244
+   ],
+   "type": 10645,
+   "why": "RECOVERED: texts.xml 46219-46221, the parts the start names (7924-8139), the gun 25803. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25819,
+    "key": "assembly:abu_hamed:46222",
+    "weapon": "rifle"
+   },
+   "finish": "Отлично, из этого можно собрать HK PSG-1(A)",
+   "give": [
+    730
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 457
+    },
+    {
+     "num": 1,
+     "obj": 462
+    },
+    {
+     "num": 1,
+     "obj": 2612
+    },
+    {
+     "num": 1,
+     "obj": 2621
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25819
+   ],
+   "rew_spec_xp": {
+    "recycling": 450
+   },
+   "service": true,
+   "start": "HK PSG-1(A) надумал собирать? Принеси мне детали от винтовок. Обычные детали, не старые. Но рассмотри их повнимательнее и убедись что это действительно детали от винтовки, а не от автомата.<Br><b>Задача:</b> принести 4 детали: Идеальный Ствол, Заводская Ложа, Заводской Затвор, Идеальный Казенник<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 450 единиц.</b>",
+   "take": [
+    730
+   ],
+   "type": 10646,
+   "why": "RECOVERED: texts.xml 46222-46224, the parts the start names (7924-8139), the gun 25819. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
+   "craft": {
+    "family": "assembly",
+    "gun": 25835,
+    "key": "assembly:abu_hamed:46225",
+    "weapon": "rifle"
+   },
+   "finish": "Отлично, из этого можно собрать Brugger & Thomet APR 338(A)",
+   "give": [
+    730
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338(A)",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 2612
+    },
+    {
+     "num": 1,
+     "obj": 2615
+    },
+    {
+     "num": 1,
+     "obj": 2618
+    },
+    {
+     "num": 1,
+     "obj": 2621
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25835
+   ],
+   "rew_spec_xp": {
+    "recycling": 900
+   },
+   "service": true,
+   "start": "Brugger & Thomet APR 338(A) надумал собирать? Принеси мне детали от винтовок. Обычные детали, не старые. Но рассмотри их повнимательнее и убедись что это действительно детали от винтовки, а не от автомата.<Br><b>Задача:</b> принести 4 детали: Идеальный Ствол, Идеальная Ложа, Идеальный Затвор, Идеальный Казенник<Br><Br><b>Требуется открытая специализация «Переработка» для зачисления опыта 900 единиц.</b>",
+   "take": [
+    730
+   ],
+   "type": 10647,
+   "why": "RECOVERED: texts.xml 46225-46227, the parts the start names (7924-8139), the gun 25835. DESIGNED: the gunsmith of the class, the generic notfinish 47221."
+  },
+  {
    "cost_afro": 312,
    "craft": {
     "family": "decode",
@@ -22093,6 +27124,792 @@
    ],
    "type": 10712,
    "why": "RECOVERED: texts.xml 48028-48029, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+  },
+  {
+   "cost_afro": 60000,
+   "craft": {
+    "family": "decode",
+    "key": "decode:abu_hamed:48030",
+    "level": 17
+   },
+   "finish": "Отлично, сейчас попробую расшифровать...",
+   "give": [
+    796
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Чертежи 17-го уровня",
+   "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
+   "objs": [
+    {
+     "drop": 0.02,
+     "mobs": [
+      769,
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2416,
+     "one_of": "craft_codified"
+    }
+   ],
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2400,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2451,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2452,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 4179,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 4180,
+     "w": 1
+    }
+   ],
+   "service": true,
+   "start": "Если найдешь зашифрованный чертеж 17-го уровня, то сразу приноси его ко мне.<Br><Br><b>Задача:</b> принести зашифрованный чертеж 17-го уровня.<Br><Br><b>Внимание:</b> с вашего счёта будет списано 60000 афро.",
+   "take": [
+    796
+   ],
+   "type": 10713,
+   "why": "RECOVERED: texts.xml 48030-48031, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+  },
+  {
+   "cost_afro": 72000,
+   "craft": {
+    "family": "decode",
+    "key": "decode:abu_hamed:48032",
+    "level": 18
+   },
+   "finish": "Отлично, сейчас попробую расшифровать...",
+   "give": [
+    796
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Чертежи 18-го уровня",
+   "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
+   "objs": [
+    {
+     "drop": 0.02,
+     "mobs": [
+      769,
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1270,
+     "one_of": "craft_codified"
+    }
+   ],
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 1271,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 1272,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 1276,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 1277,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 1280,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 1281,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 1282,
+     "w": 1
+    }
+   ],
+   "service": true,
+   "start": "Если найдешь зашифрованный чертеж 18-го уровня, то сразу приноси его ко мне.<Br><Br><b>Задача:</b> принести зашифрованный чертеж 18-го уровня.<Br><Br><b>Внимание:</b> с вашего счёта будет списано 72000 афро.",
+   "take": [
+    796
+   ],
+   "type": 10714,
+   "why": "RECOVERED: texts.xml 48032-48033, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+  },
+  {
+   "cost_afro": 84000,
+   "craft": {
+    "family": "decode",
+    "key": "decode:abu_hamed:48034",
+    "level": 19
+   },
+   "finish": "Отлично, сейчас попробую расшифровать...",
+   "give": [
+    796
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Чертежи 19-го уровня",
+   "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
+   "objs": [
+    {
+     "drop": 0.02,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2417,
+     "one_of": "craft_codified"
+    }
+   ],
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2401,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2453,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2454,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2455,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2456,
+     "w": 1
+    }
+   ],
+   "service": true,
+   "start": "Если найдешь зашифрованный чертеж 19-го уровня, то сразу приноси его ко мне.<Br><Br><b>Задача:</b> принести зашифрованный чертеж 19-го уровня.<Br><Br><b>Внимание:</b> с вашего счёта будет списано 84000 афро.",
+   "take": [
+    796
+   ],
+   "type": 10715,
+   "why": "RECOVERED: texts.xml 48034-48035, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+  },
+  {
+   "cost_afro": 85200,
+   "craft": {
+    "family": "decode",
+    "key": "decode:abu_hamed:48036",
+    "level": 20
+   },
+   "finish": "Отлично, сейчас попробую расшифровать...",
+   "give": [
+    796
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Чертежи 20-го уровня",
+   "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
+   "objs": [
+    {
+     "drop": 0.02,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2418,
+     "one_of": "craft_codified"
+    }
+   ],
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2402,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2457,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2458,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2459,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 26581,
+     "w": 1
+    }
+   ],
+   "service": true,
+   "start": "Если найдешь зашифрованный чертеж 20-го уровня, то сразу неси его мне.<Br><Br><b>Задача:</b> принести зашифрованный чертеж 20-го уровня.<Br><Br><b>Внимание:</b> с вашего счёта будет списано 85200 афро.",
+   "take": [
+    796
+   ],
+   "type": 10716,
+   "why": "RECOVERED: texts.xml 48036-48037, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+  },
+  {
+   "craft": {
+    "blueprint": 37678,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25820,
+    "key": "upgrade:abu_hamed:51989",
+    "level": 18,
+    "line": "G",
+    "mod": 25832
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25820
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 37678,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25832
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести HK PSG-1 (G) и Чертеж: урон и размер обоймы (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10800,
+   "why": "RECOVERED: texts.xml [51989, 51990, 47221, 25011] (name, start, notfinish, finish), the gun 25820, its modification 25832, the blueprint 37678 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 1281,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25820,
+    "key": "upgrade:abu_hamed:51991",
+    "level": 18,
+    "line": "G",
+    "mod": 25829
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "HK PSG-1 (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25820
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      771,
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 1281,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25829
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести HK PSG-1 (G) и Чертеж: прочность (18у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10801,
+   "why": "RECOVERED: texts.xml [51991, 51992, 47221, 25011] (name, start, notfinish, finish), the gun 25820, its modification 25829, the blueprint 1281 (18у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2453,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25836,
+    "key": "upgrade:abu_hamed:51993",
+    "level": 19,
+    "line": "G",
+    "mod": 25839
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25836
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2453,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25839
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Brugger & Thomet APR 338 (G) и Чертеж: урон (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10802,
+   "why": "RECOVERED: texts.xml [51993, 51994, 47221, 25011] (name, start, notfinish, finish), the gun 25836, its modification 25839, the blueprint 2453 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2454,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 25836,
+    "key": "upgrade:abu_hamed:51995",
+    "level": 19,
+    "line": "G",
+    "mod": 25842
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338 (G): размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25836
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2454,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25842
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Brugger & Thomet APR 338 (G) и Чертеж: размер обоймы (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10803,
+   "why": "RECOVERED: texts.xml [51995, 51996, 47221, 25011] (name, start, notfinish, finish), the gun 25836, its modification 25842, the blueprint 2454 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 37679,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25836,
+    "key": "upgrade:abu_hamed:51997",
+    "level": 19,
+    "line": "G",
+    "mod": 25848
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25836
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 37679,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25848
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Brugger & Thomet APR 338 (G) и Чертеж: урон и размер обоймы (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10804,
+   "why": "RECOVERED: texts.xml [51997, 51998, 47221, 25011] (name, start, notfinish, finish), the gun 25836, its modification 25848, the blueprint 37679 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2401,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25836,
+    "key": "upgrade:abu_hamed:51999",
+    "level": 19,
+    "line": "G",
+    "mod": 25845
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "Brugger & Thomet APR 338 (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25836
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2401,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25845
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Brugger & Thomet APR 338 (G) и Чертеж: прочность (19у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10805,
+   "why": "RECOVERED: texts.xml [51999, 52000, 47221, 25011] (name, start, notfinish, finish), the gun 25836, its modification 25845, the blueprint 2401 (19у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 26581,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26867,
+    "key": "upgrade:abu_hamed:52001",
+    "level": 20,
+    "line": "G",
+    "mod": 26870
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "СВД-С (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26867
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 26581,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26870
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести СВД-С (G) и Чертеж: урон (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10806,
+   "why": "RECOVERED: texts.xml [52001, 52002, 47221, 25011] (name, start, notfinish, finish), the gun 26867, its modification 26870, the blueprint 26581 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2459,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 26867,
+    "key": "upgrade:abu_hamed:52003",
+    "level": 20,
+    "line": "G",
+    "mod": 26873
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "СВД-С (G): точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26867
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2459,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26873
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести СВД-С (G) и Чертеж: точность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10807,
+   "why": "RECOVERED: texts.xml [52003, 52004, 47221, 25011] (name, start, notfinish, finish), the gun 26867, its modification 26873, the blueprint 2459 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 37680,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26867,
+    "key": "upgrade:abu_hamed:52005",
+    "level": 20,
+    "line": "G",
+    "mod": 26879
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "СВД-С (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26867
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 37680,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26879
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести СВД-С (G) и Чертеж: урон и размер обоймы (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10808,
+   "why": "RECOVERED: texts.xml [52005, 52006, 47221, 25011] (name, start, notfinish, finish), the gun 26867, its modification 26879, the blueprint 37680 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2402,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 26867,
+    "key": "upgrade:abu_hamed:52007",
+    "level": 20,
+    "line": "G",
+    "mod": 26876
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    752
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "СВД-С (G): повышение прочности",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26867
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      1037,
+      1038
+     ],
+     "num": 1,
+     "obj": 2402,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26876
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести СВД-С (G) и Чертеж: прочность (20у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    752
+   ],
+   "type": 10809,
+   "why": "RECOVERED: texts.xml [52007, 52008, 47221, 25011] (name, start, notfinish, finish), the gun 26867, its modification 26876, the blueprint 2402 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
   }
  ],
  "stock": {
@@ -22128,7 +27945,20 @@
   ]
  },
  "types": {
+  "assembly:abu_hamed:46222": 10646,
+  "assembly:abu_hamed:46225": 10647,
+  "assembly:abu_hamed:46295": 10635,
+  "assembly:abu_hamed:46298": 10636,
+  "assembly:abu_hamed:46301": 10637,
+  "assembly:abu_hamed:46304": 10638,
+  "assembly:abu_hamed:46307": 10639,
+  "assembly:abu_hamed:46310": 10640,
+  "assembly:abu_hamed:46313": 10641,
   "assembly:dongola:46207": 10619,
+  "assembly:dongola:46210": 10642,
+  "assembly:dongola:46213": 10643,
+  "assembly:dongola:46216": 10644,
+  "assembly:dongola:46219": 10645,
   "assembly:dongola:46228": 10620,
   "assembly:dongola:46231": 10621,
   "assembly:dongola:46238": 10622,
@@ -22163,6 +27993,10 @@
   "assembly:halfa:46201": 10616,
   "assembly:halfa:46259": 10617,
   "assembly:halfa:46262": 10618,
+  "decode:abu_hamed:48030": 10713,
+  "decode:abu_hamed:48032": 10714,
+  "decode:abu_hamed:48034": 10715,
+  "decode:abu_hamed:48036": 10716,
   "decode:dongola:48020": 10708,
   "decode:dongola:48022": 10709,
   "decode:dongola:48024": 10710,
@@ -22182,6 +28016,12 @@
   "knife:abri:50945": 10415,
   "knife:abri:50947": 10416,
   "knife:abri:50949": 10417,
+  "knife:abu_hamed:50963": 10424,
+  "knife:abu_hamed:50965": 10425,
+  "knife:abu_hamed:50967": 10426,
+  "knife:abu_hamed:50969": 10427,
+  "knife:abu_hamed:50971": 10428,
+  "knife:abu_hamed:50973": 10429,
   "knife:dongola:50951": 10418,
   "knife:dongola:50953": 10419,
   "knife:dongola:50955": 10420,
@@ -22200,6 +28040,11 @@
   "knife:valley:50921": 10403,
   "knife:valley:50923": 10404,
   "knife:valley:50925": 10405,
+  "salvage:abu_hamed:25417": 10523,
+  "salvage:abu_hamed:25449": 10524,
+  "salvage:abu_hamed:25451": 10525,
+  "salvage:abu_hamed:25453": 10526,
+  "salvage:abu_hamed:25455": 10527,
   "salvage:dongola:25411": 10510,
   "salvage:dongola:25413": 10511,
   "salvage:dongola:25415": 10512,
@@ -22223,6 +28068,89 @@
   "salvage:halfa:25423": 10507,
   "salvage:halfa:25425": 10508,
   "salvage:halfa:25437": 10509,
+  "upgrade:abu_hamed:50743": 10327,
+  "upgrade:abu_hamed:50745": 10328,
+  "upgrade:abu_hamed:50747": 10329,
+  "upgrade:abu_hamed:50991": 10330,
+  "upgrade:abu_hamed:50993": 10331,
+  "upgrade:abu_hamed:50995": 10332,
+  "upgrade:abu_hamed:50997": 10333,
+  "upgrade:abu_hamed:50999": 10334,
+  "upgrade:abu_hamed:51001": 10335,
+  "upgrade:abu_hamed:51003": 10336,
+  "upgrade:abu_hamed:51005": 10337,
+  "upgrade:abu_hamed:51007": 10338,
+  "upgrade:abu_hamed:51009": 10339,
+  "upgrade:abu_hamed:51011": 10340,
+  "upgrade:abu_hamed:51013": 10341,
+  "upgrade:abu_hamed:51023": 10342,
+  "upgrade:abu_hamed:51025": 10343,
+  "upgrade:abu_hamed:51027": 10344,
+  "upgrade:abu_hamed:51029": 10345,
+  "upgrade:abu_hamed:51031": 10346,
+  "upgrade:abu_hamed:51033": 10347,
+  "upgrade:abu_hamed:51035": 10348,
+  "upgrade:abu_hamed:51037": 10349,
+  "upgrade:abu_hamed:51039": 10350,
+  "upgrade:abu_hamed:51041": 10351,
+  "upgrade:abu_hamed:51043": 10352,
+  "upgrade:abu_hamed:51045": 10353,
+  "upgrade:abu_hamed:51047": 10354,
+  "upgrade:abu_hamed:51049": 10355,
+  "upgrade:abu_hamed:51051": 10356,
+  "upgrade:abu_hamed:51053": 10357,
+  "upgrade:abu_hamed:51071": 10358,
+  "upgrade:abu_hamed:51073": 10359,
+  "upgrade:abu_hamed:51075": 10360,
+  "upgrade:abu_hamed:51077": 10361,
+  "upgrade:abu_hamed:51079": 10362,
+  "upgrade:abu_hamed:51081": 10363,
+  "upgrade:abu_hamed:51083": 10364,
+  "upgrade:abu_hamed:51085": 10365,
+  "upgrade:abu_hamed:51087": 10366,
+  "upgrade:abu_hamed:51089": 10367,
+  "upgrade:abu_hamed:51091": 10368,
+  "upgrade:abu_hamed:51093": 10369,
+  "upgrade:abu_hamed:51095": 10370,
+  "upgrade:abu_hamed:51097": 10371,
+  "upgrade:abu_hamed:51099": 10372,
+  "upgrade:abu_hamed:51101": 10373,
+  "upgrade:abu_hamed:51103": 10374,
+  "upgrade:abu_hamed:51105": 10375,
+  "upgrade:abu_hamed:51107": 10376,
+  "upgrade:abu_hamed:51109": 10377,
+  "upgrade:abu_hamed:51111": 10378,
+  "upgrade:abu_hamed:51113": 10379,
+  "upgrade:abu_hamed:51115": 10380,
+  "upgrade:abu_hamed:51117": 10381,
+  "upgrade:abu_hamed:51119": 10382,
+  "upgrade:abu_hamed:51121": 10383,
+  "upgrade:abu_hamed:51123": 10384,
+  "upgrade:abu_hamed:51125": 10385,
+  "upgrade:abu_hamed:51897": 10386,
+  "upgrade:abu_hamed:51899": 10387,
+  "upgrade:abu_hamed:51901": 10388,
+  "upgrade:abu_hamed:51903": 10389,
+  "upgrade:abu_hamed:51905": 10390,
+  "upgrade:abu_hamed:51907": 10391,
+  "upgrade:abu_hamed:51909": 10392,
+  "upgrade:abu_hamed:51911": 10393,
+  "upgrade:abu_hamed:51913": 10394,
+  "upgrade:abu_hamed:51915": 10395,
+  "upgrade:abu_hamed:51917": 10396,
+  "upgrade:abu_hamed:51919": 10397,
+  "upgrade:abu_hamed:51985": 10398,
+  "upgrade:abu_hamed:51987": 10399,
+  "upgrade:abu_hamed:51989": 10800,
+  "upgrade:abu_hamed:51991": 10801,
+  "upgrade:abu_hamed:51993": 10802,
+  "upgrade:abu_hamed:51995": 10803,
+  "upgrade:abu_hamed:51997": 10804,
+  "upgrade:abu_hamed:51999": 10805,
+  "upgrade:abu_hamed:52001": 10806,
+  "upgrade:abu_hamed:52003": 10807,
+  "upgrade:abu_hamed:52005": 10808,
+  "upgrade:abu_hamed:52007": 10809,
   "upgrade:dongola:50669": 10132,
   "upgrade:dongola:50671": 10133,
   "upgrade:dongola:50673": 10134,

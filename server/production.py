@@ -78,6 +78,18 @@ ORE_ROCKS = {
     1226: frozenset({1347}),        # Свинцовая шахта 2, DN_Stone_Plumbum_2
     1032: frozenset({1314}),        # Выработка селитры 1, DN_Source_Nitre_1
     1225: frozenset({1352}),        # Выработка селитры 2, DN_Source_Nitre_2
+    # Абу-Хамед's three ore mines («Шахта Абу-Хамеда: Добыча меди / свинца /
+    # селитры<br>Вход разрешен персонажам 15-20 ур.», 2026-10-14, the owner's
+    # «сделай потом абу хамед в таком же формате»): two tiers each, as
+    # Абри's and Донгола's -- 10 and 9 rocks of copper, 15 and 11 of lead, 10
+    # and 10 sources of saltpetre; the panel and the guards as in
+    # Вади-Хальфа's.
+    1034: frozenset({1319}),        # Медная Шахта 1, AH_Stone_Copper_1
+    1227: frozenset({1358}),        # Медная шахта 2, AH_Stone_Copper_2
+    1036: frozenset({1311}),        # Свинцовая шахта 1, AH_Stone_Plumbum_1
+    1229: frozenset({1348}),        # Свинцовая шахта 2, AH_Stone_Plumbum_2
+    1035: frozenset({1315}),        # Выработка селитры 1, AH_Source_Nitre_1
+    1228: frozenset({1353}),        # Выработка селитры 2, AH_Source_Nitre_2
 }
 
 # What a rock leaves when broken: (ore, pieces). The town's own ore, the (ВХ)
@@ -100,6 +112,12 @@ ORE_YIELD = {
     1318: (3646, 1), 1357: (3646, 1),                      # copper
     1310: (3638, 1), 1347: (3638, 1),                      # lead
     1314: (3642, 1), 1352: (3642, 1),                      # saltpetre
+    # Абу-Хамед's rocks leave Абу-Хамед's ore, the (АХ) copy (copper_ore_4,
+    # plumbum_ore_4, nitre_ore_4): the wiki's «(АХ) Свинцовая руда ...
+    # Мобы-хранители: Свинцовая порода».
+    1319: (3647, 1), 1358: (3647, 1),                      # copper
+    1311: (3639, 1), 1348: (3639, 1),                      # lead
+    1315: (3643, 1), 1353: (3643, 1),                      # saltpetre
 }
 
 # «Добыча», the specialisation of Промышленность a broken rock trains beside

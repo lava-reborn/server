@@ -319,9 +319,13 @@ COUNTS = {
                 207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0),
                 1230: (0, 0)},
     # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
+    # Тёмное Эхо[17], A and G, on its set sellers' stalls since 2026-10-14 (the
+    # Абу-Хамед restoration: the 17th rung's quest set sold as Чёрный Ловелас);
+    # the oasis's «Торговец патронами» (1232) his rounds alone, a seller of no
+    # kinds, as Донгола's 1230 (server/test_abuhamed_trade.py).
     "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (0, 0),
-                  1223: (20, 20), 1219: (20, 20), 5161: (20, 20), 2391: (0, 9), 207: (0, 0),
-                  1222: (0, 0), 880: (0, 0)},
+                  1223: (25, 25), 1219: (25, 25), 5161: (25, 25), 2391: (0, 9), 207: (0, 0),
+                  1222: (0, 0), 880: (0, 0), 1232: (0, 0)},
 }
 got = {}
 for (p, t), stall in stalls.items():
@@ -448,12 +452,14 @@ check("no stall of a city longer than 64 things (Локсли's 51 was the longe
       " drew before), and its frame under 4 KiB: the longest the prison yards' supply men's"
       " (2026-10-12), 61, their town's battle line and the 49 rounds of their article -- 880"
       " of Абу-Хамед's the first of the three by type; of the weapon and set stalls Галия's"
-      " (1233) on Донгола's black market, 60: its band's 50 set pieces (Чёрный Ловелас among"
-      " them since 2026-10-13) and the ten pouches of her article (Дари's, 1213, until their"
-      " link was set right the same day)",
+      " (1233) on Донгола's black market and Марат's (1219) at Абу-Хамед's station, 60 each:"
+      " their bands' 50 set pieces (Чёрный Ловелас among Донгола's since 2026-10-13, Тёмное Эхо"
+      " among Абу-Хамед's since 2026-10-14) and ten pouches (Галия's article's, Дари's, 1213,"
+      " until their link was set right the same day; Марат's after hers, 2026-10-14)",
       (len(biggest[1]) <= 64, frame < 4096, biggest[0], len(biggest[1]),
-       max((len(s), (p, t)) for (p, t), s in stalls.items() if t not in (880, 2180, 2181))),
-      (True, True, (177, 880), 61, (60, (103, 1233))))
+       sorted((len(s), (p, t)) for (p, t), s in stalls.items()
+              if t not in (880, 2180, 2181))[-2:]),
+      (True, True, (177, 880), 61, [(60, (103, 1233)), (60, (126, 1219))]))
 check("  ..and every thing on them a type the client has, so it draws an icon: one of"
       " objects.xml, or one of ours whose row and icon the release adds"
       " (data/own_items.json, client/build.py)",
@@ -463,7 +469,7 @@ check("the place decides: 5161 sells Абри's 8-12, Донгола's 12-16 and
       " a purchase index taken at another place would buy another thing",
       (sorted({level_of(x) for x in stalls[(378, 5161)]}), sorted({level_of(x) for x in stalls[(469, 5161)]}),
        sorted({level_of(x) for x in stalls[(467, 5161)]}), stalls[(378, 5161)][0] != stalls[(469, 5161)][0]),
-      ([8, 10, 12], [12, 13, 14, 15, 16], [16, 18, 19, 20], True))
+      ([8, 10, 12], [12, 13, 14, 15, 16], [16, 17, 18, 19, 20], True))
 check("  ..outside the cities' places, and with no place at all, a stall is its own list",
       (items.stock_for(2391, 287) == items.stock_for(2391), items.stock_for(5161, None),
        items.stock_for(1201)[:2]), (True, [], [25938, 25951]))
@@ -584,13 +590,16 @@ check("  ..the pouch sellers and their pouches: Ваккас (Вади-Халь�
       " list since 2026-10-12, the wiki's link had given it to the driver Луиджи, 1179) and"
       " Галия (Донгола, 103: 1233 by her own list since 2026-10-13, the wiki's link had given"
       " it to Дари, 1213) what their articles list, «автоматчика», «пулеметчика» and"
-      " «рукопашника» among them since their link",
+      " «рукопашника» among them since their link; Марат (Абу-Хамед, 126: 1219, «Одежда,"
+      " разгрузки и пояса», since 2026-10-14) Галия's five, his article being lost",
       POUCH_STALLS,
       {("own", 1165): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601],
        ("own", 1204): [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
+       ("own", 1219): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
        ("own", 1233): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
        (102, 1204): [3582, 3604, 3581, 3603, 3579, 3601, 3578, 3600, 5613, 5614],
        (103, 1233): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
+       (126, 1219): [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601],
        (187, 1165): [3577, 3599, 3581, 3603, 5613, 5614, 3578, 3600, 3579, 3601]})
 check("items.with_gold_pouches: a (G) already on a list moves after its ordinary one, a (G)"
       " without it stays put, nothing else moves, and twice is once",

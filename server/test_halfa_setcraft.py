@@ -92,13 +92,16 @@ try:
     ladder_ag = [r for r in setcraft.LADDER if r["variant"] in ("A", "G")]
     # Чёрный Ловелас[12], sold for afro and gold since 2026-10-13, is not
     # reworked, as it was not while a quest set: its A is the quest series
-    # (_Q_, mods without pictures), its G our own types with no mods.
+    # (_Q_, mods without pictures), its G our own types with no mods. So is
+    # Тёмное Эхо[17], sold the same way since 2026-10-14 (the Абу-Хамед
+    # restoration, server/test_abuhamed_trade.py).
     lovelace = [r for r in ladder_ag if r["level"] == 12]
+    dark_echo = [r for r in ladder_ag if r["level"] == 17]
     check("every A and G piece of the owner's ladder has its ten mods in objects.xml, but"
-          " Чёрный Ловелас's ten, which are not reworked",
+          " Чёрный Ловелас's ten and Тёмное Эхо's ten, which are not reworked",
           (len(setcraft.CHAINS), setcraft.MISSING, sorted(setcraft.NOT_REWORKED)),
-          (5 * (len(ladder_ag) - len(lovelace)), [],
-           sorted(t for r in lovelace for t in r["members"].values())))
+          (5 * (len(ladder_ag) - len(lovelace) - len(dark_echo)), [],
+           sorted(t for r in lovelace + dark_echo for t in r["members"].values())))
     check("  ..those: its A the quest pieces 11721-11725, its G our own 60000-60004",
           sorted((r["variant"], sorted(r["members"].values())) for r in lovelace),
           [("A", list(range(11721, 11726))), ("G", list(range(60000, 60005)))])

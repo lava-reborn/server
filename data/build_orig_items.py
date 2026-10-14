@@ -91,6 +91,12 @@ by a later one, and only "high" and "medium" records are written.
  7m. What Донгола's stalls sell (2026-10-13): the lottery tickets [14] and
     [G][14] and Тариф's envelope, each a hand-checked name and description
     pair of its run (DONGOLA_TRADE_ROWS).
+ 7n. The things Абу-Хамед's quests hand out and ask for that no rule above
+    names, hand-checked name and description pairs (ABUHAMED_QUEST_ROWS).
+ 7o. What Абу-Хамед's stalls sell (2026-10-14): the lottery tickets [16],
+    [18], [19] and their [G] copies, and Веласкес's ticket to Донгола with
+    its words, each a hand-checked name and description pair of its run
+    (ABUHAMED_TRADE_ROWS).
  8. Everything else: the wiki name from data/items_wiki.json equals exactly
     one row (brackets, $-suffix, case, ё and quotes ignored); "high" when the
     row after it is the wiki description too. Types of firearm_families.json
@@ -1286,6 +1292,33 @@ def dongola_quest_records(T, objects):
     return out
 
 
+# --- 7n. the things of Абу-Хамед's quests ---------------------------------------------------
+
+# The Абу-Хамед restoration (2026-10-14, the owner's «сделай потом абу хамед в
+# таком же формате»): the things its quests hand out and ask for that no rule
+# above names -- an objects.xml name each, its name row and its description
+# row (None where the original has none), hand-checked against the run of
+# texts.xml that names it. What Абу-Хамед's stalls sell is
+# ABUHAMED_TRADE_ROWS (7o).
+ABUHAMED_QUEST_ROWS = {}
+
+
+def abuhamed_quest_records(T, objects):
+    by_name = {name: tid for tid, (root, name) in objects.items()}
+    names = {text for _n, _d, text in ABUHAMED_QUEST_ROWS.values()}
+    out = {}
+    for name, (nid, did, text) in sorted(ABUHAMED_QUEST_ROWS.items()):
+        # Вади-Хальфа's guard: the name row is the name, and the description
+        # row, where there is one, is prose -- no "$", no bracket, no name.
+        if T[nid] != text or (did is not None and (
+                "$" in T[did] or "[" in T[did] or T[did] in names or len(T[did]) < 20)):
+            raise SystemExit("texts.xml rows %s/%s do not look like %s" % (nid, did, name))
+        if name not in by_name:
+            raise SystemExit("objects.xml has no object %s" % name)
+        out[by_name[name]] = (nid, did, "high")
+    return out
+
+
 # --- 7i. the prison's armband ------------------------------------------------------------
 
 # What the prisoners of Вади-Хальфа's uprising carry and its medics pay for
@@ -1523,6 +1556,52 @@ def dongola_trade_records(T, objects):
     return out
 
 
+# --- 7o. what Абу-Хамед's stalls sell -----------------------------------------------------
+
+# The Абу-Хамед restoration (2026-10-14, the owner's «сделай потом абу хамед в
+# таком же формате»): the things its stalls sell that reached the player under
+# objects.xml's own words, or with no words at all.
+#   * the lottery tickets of Абу-Хамед's lottery men (Муамар 741 and the gold
+#     lottery 742, the pier 446): «Лотерейный билет [16]», «[18]», «[19]» and
+#     «[G][16]», «[G][18]», «[G][19]» (6927-6932, the end of the tickets' run
+#     after rules 7k's and 7m's), objects.xml's AhLoteryKey_15_16, _17_18,
+#     _19_19 and _g_15_16, _g_17_18, _g_19_19 by their bands -- the articles
+#     «Лотерейный билет (16)» ... «(G)(19)» take part in «Лотерея Абу-Хамеда
+#     (15-16)», «(17-18)», «(19)» and their «Золотая» twins, and «(19)» names
+#     Муамар its seller; all six share the [8] ticket's words, 6919, as
+#     Абри's and Донгола's do;
+#   * Веласкес's «Билет в Донголу из Абу-Хамеда» (ah_dongola_ticket_g, 6911):
+#     the run has no words after its name, and rule 7i gave it none; its
+#     article's description, «Линованная бумажка. Карандашом намарано адна
+#     паездка в Данголу», is texts.xml 6906 word for word, the words of Абри's
+#     ticket to Донгола two rows above. Moved here from rule 7i (WILD_ROWS)
+#     with them.
+# The ticket from Донгола (ah_ticket, 6916/6917) keeps rule 7i's pair.
+# Pinned 2026-10-14.
+ABUHAMED_TRADE_ROWS = {"AhLoteryKey_15_16": (6927, 6919, "Лотерейный билет [16]"),
+                       "AhLoteryKey_17_18": (6928, 6919, "Лотерейный билет [18]"),
+                       "AhLoteryKey_19_19": (6929, 6919, "Лотерейный билет [19]"),
+                       "AhLoteryKey_g_15_16": (6930, 6919, "Лотерейный билет [G][16]"),
+                       "AhLoteryKey_g_17_18": (6931, 6919, "Лотерейный билет [G][18]"),
+                       "AhLoteryKey_g_19_19": (6932, 6919, "Лотерейный билет [G][19]"),
+                       "ah_dongola_ticket_g": (6911, 6906, "Билет в Донголу из Абу-Хамеда")}
+
+
+def abuhamed_trade_records(T, objects):
+    by_name = {name: tid for tid, (root, name) in objects.items()}
+    out = {}
+    for name, (nid, did, text) in sorted(ABUHAMED_TRADE_ROWS.items()):
+        # The name row is the name, and the description row is prose -- no
+        # "$", no bracket, not a name of the tickets' run.
+        if T[nid] != text or "$" in T[did] or "[" in T[did] or T[did].startswith("Билет") \
+                or len(T[did]) < 20:
+            raise SystemExit("texts.xml rows %d/%d do not look like %s" % (nid, did, name))
+        if name not in by_name:
+            raise SystemExit("objects.xml has no object %s" % name)
+        out[by_name[name]] = (nid, did, "high")
+    return out
+
+
 # --- 7i. the wild and the leftovers -------------------------------------------------------
 
 # What the treasure digs, Уорхол's collection and the rides to other towns
@@ -1542,9 +1621,10 @@ def dongola_trade_records(T, objects):
 #   * the tickets of the tickets' run 6901-6917 that rule 7f leaves: Абри to
 #     Вади Хальфа and Донгола and back (ticket_Abri_to_WH, _Abri_to_DN,
 #     _DN_to_Abri: 6903-6908), and Абу-Хамед's by their internal names:
-#     ah_dongola_ticket_g "Билет в Донголу из Абу-Хамеда" (6911, no
-#     description), ah_Meroe_ticket_g and Meroe_ah_ticket_g to and from
-#     Мероэ (6912-6915), ah_ticket "Билет в Абу-Хамед из Донголы" (6916/6917).
+#     ah_Meroe_ticket_g and Meroe_ah_ticket_g to and from Мероэ (6912-6915),
+#     ah_ticket "Билет в Абу-Хамед из Донголы" (6916/6917). Its twin
+#     ah_dongola_ticket_g "Билет в Донголу из Абу-Хамеда" (6911) is rule 7o's
+#     since 2026-10-14, with its article's words.
 WILD_ROWS = {"qMapTreasureIsland_%d" % (k + 1): (6047, 6048 + k, "Карта сокровищ")
              for k in range(7)}
 WILD_ROWS.update(("collection_lamantin_%d" % (k + 1), (8474 + 2 * k, 8475 + 2 * k, word))
@@ -1555,7 +1635,6 @@ WILD_ROWS.update(("collection_lamantin_%d" % (k + 1), (8474 + 2 * k, 8475 + 2 * 
 WILD_ROWS.update({"ticket_Abri_to_WH": (6903, 6904, "Билет в Вади Хальфу из Абри"),
                   "ticket_Abri_to_DN": (6905, 6906, "Билет в Донголу из Абри"),
                   "ticket_DN_to_Abri": (6907, 6908, "Билет в Абри из Донголы"),
-                  "ah_dongola_ticket_g": (6911, None, "Билет в Донголу из Абу-Хамеда"),
                   "ah_Meroe_ticket_g": (6912, 6913, "Билет в Мероэ из Абу-Хамеда"),
                   "Meroe_ah_ticket_g": (6914, 6915, "Билет в Абу-Хамед из Мероэ"),
                   "ah_ticket": (6916, 6917, "Билет в Абу-Хамед из Донголы")})
@@ -1663,6 +1742,8 @@ RULE = ("type_id -> original texts.xml rows (html-unescaped, otherwise verbatim)
         "1610, the event's gypsum, wire and bandages 49079..49084, the gifts 1265..1308), "
         "Донгола's quest things (DONGOLA_QUEST_ROWS), what Донгола's stalls sell (the lottery "
         "tickets 6923 and 6926, the envelope 6240/6241), "
+        "Абу-Хамед's quest things (ABUHAMED_QUEST_ROWS), what Абу-Хамед's stalls sell (the "
+        "lottery tickets 6927..6932, the ticket to Донгола 6911 with its words 6906), "
         "and an exact wiki name for the rest. See data/build_orig_items.py.")
 
 
@@ -1694,6 +1775,8 @@ def build(texts_path):
              ("abri_trade", abri_trade_records(T, objects)),
              ("dongola_quest", dongola_quest_records(T, objects)),
              ("dongola_trade", dongola_trade_records(T, objects)),
+             ("abuhamed_quest", abuhamed_quest_records(T, objects)),
+             ("abuhamed_trade", abuhamed_trade_records(T, objects)),
              ("belt", belt_records(T, objects)),
              ("miner_wear", miner_records(T, objects)),
              ("prison", prison_records(T, objects)),

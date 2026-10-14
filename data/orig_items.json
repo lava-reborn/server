@@ -18,7 +18,7 @@
     "medium": 28
    },
    "SimpleObject": {
-    "high": 438,
+    "high": 444,
     "medium": 354
    },
    "Trophy": {
@@ -29,7 +29,7 @@
     "medium": 5509
    }
   },
-  "rule": "type_id -> original texts.xml rows (html-unescaped, otherwise verbatim). Firearm lines <-> 'Имя[тир][уровень]$Класс' blocks per (class, level): lines with _pm/_gold copies <-> std blocks (A+P+G and [M] or >=12 mod descriptions), without <-> Q/RW blocks, mob-only <-> [M] blocks, both sides ascending (index / row id); high = equal counts, medium = fewer blocks. Then clan copies, USSR/NY2016 pistols, ammo (calibre + quality code), wear (Mob, Bs_U), the sets Bs/Set/Exzo of levels 0-8 by their words (Колонист[2] named as level 0), trophies 800..813, medicine/food/water blocks 320..415 by level band with the packs 450..457 and the bar 464..475, the knife line 1488..1580 level by level (A, G, three G mods), the Nubian mine's gold sand 7352/7353 and small emeralds 7243/7244, the gold ingots New_Gold_Ingot_1/5/10 7636..7641, the Nubian valley's animal parts and quest things 6089..6163 and 6344, Вади-Хальфа's quest things (its run 6167..6341, the journal 5795..5834, the training guns 1094..1823 and 2012, the certificate 6604, the stone block 7253, the lottery and boat tickets 6901..6920), the belts on sale and their (G) copies 47822..47853, Вади-Хальфа's miner's clothes and their (G) copies 22856..22875, the plant's ore, sorted ore and sacks of the five cities 7189..7240 and the quarry's stones, polishing mix and its components 7255..7265, Абри's quest things (ABRI_QUEST_ROWS), what Абри's stalls sell (the lottery tickets 6919..6925, the ammunition coupons 6684..6690, the junkyard's tools 8238..8260 and 1610, the event's gypsum, wire and bandages 49079..49084, the gifts 1265..1308), Донгола's quest things (DONGOLA_QUEST_ROWS), what Донгола's stalls sell (the lottery tickets 6923 and 6926, the envelope 6240/6241), and an exact wiki name for the rest. See data/build_orig_items.py.",
+  "rule": "type_id -> original texts.xml rows (html-unescaped, otherwise verbatim). Firearm lines <-> 'Имя[тир][уровень]$Класс' blocks per (class, level): lines with _pm/_gold copies <-> std blocks (A+P+G and [M] or >=12 mod descriptions), without <-> Q/RW blocks, mob-only <-> [M] blocks, both sides ascending (index / row id); high = equal counts, medium = fewer blocks. Then clan copies, USSR/NY2016 pistols, ammo (calibre + quality code), wear (Mob, Bs_U), the sets Bs/Set/Exzo of levels 0-8 by their words (Колонист[2] named as level 0), trophies 800..813, medicine/food/water blocks 320..415 by level band with the packs 450..457 and the bar 464..475, the knife line 1488..1580 level by level (A, G, three G mods), the Nubian mine's gold sand 7352/7353 and small emeralds 7243/7244, the gold ingots New_Gold_Ingot_1/5/10 7636..7641, the Nubian valley's animal parts and quest things 6089..6163 and 6344, Вади-Хальфа's quest things (its run 6167..6341, the journal 5795..5834, the training guns 1094..1823 and 2012, the certificate 6604, the stone block 7253, the lottery and boat tickets 6901..6920), the belts on sale and their (G) copies 47822..47853, Вади-Хальфа's miner's clothes and their (G) copies 22856..22875, the plant's ore, sorted ore and sacks of the five cities 7189..7240 and the quarry's stones, polishing mix and its components 7255..7265, Абри's quest things (ABRI_QUEST_ROWS), what Абри's stalls sell (the lottery tickets 6919..6925, the ammunition coupons 6684..6690, the junkyard's tools 8238..8260 and 1610, the event's gypsum, wire and bandages 49079..49084, the gifts 1265..1308), Донгола's quest things (DONGOLA_QUEST_ROWS), what Донгола's stalls sell (the lottery tickets 6923 and 6926, the envelope 6240/6241), Абу-Хамед's quest things (ABUHAMED_QUEST_ROWS), what Абу-Хамед's stalls sell (the lottery tickets 6927..6932, the ticket to Донгола 6911 with its words 6906), and an exact wiki name for the rest. See data/build_orig_items.py.",
   "source": "/mnt/c/Users/gmkrt/Downloads/texts.xml",
   "source_md5": "7a10e992003480a76546b6c824b3dbc2",
   "source_size": 20433511
@@ -9885,8 +9885,8 @@
   },
   "1639": {
    "confidence": "high",
-   "desc": null,
-   "desc_id": null,
+   "desc": "Линованная бумажка. Карандашом намарано адна паездка в Данголу",
+   "desc_id": 6906,
    "name": "Билет в Донголу из Абу-Хамеда",
    "name_id": 6911,
    "root": "SimpleObject"
@@ -26873,6 +26873,38 @@
    "desc_id": 6919,
    "name": "Лотерейный билет [G][14]",
    "name_id": 6926,
+   "root": "SimpleObject"
+  },
+  "2652": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [16]",
+   "name_id": 6927,
+   "root": "SimpleObject"
+  },
+  "2653": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [18]",
+   "name_id": 6928,
+   "root": "SimpleObject"
+  },
+  "2654": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [G][16]",
+   "name_id": 6930,
+   "root": "SimpleObject"
+  },
+  "2655": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [G][18]",
+   "name_id": 6931,
    "root": "SimpleObject"
   },
   "26590": {
@@ -45929,6 +45961,22 @@
    "desc_id": 6381,
    "name": "Апельсин",
    "name_id": 6380,
+   "root": "SimpleObject"
+  },
+  "3574": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [19]",
+   "name_id": 6929,
+   "root": "SimpleObject"
+  },
+  "3575": {
+   "confidence": "high",
+   "desc": "Принять участие в лотерее и получить вознаграждение, мог любой желающий кто приобрел лотерейный билет.",
+   "desc_id": 6919,
+   "name": "Лотерейный билет [G][19]",
+   "name_id": 6932,
    "root": "SimpleObject"
   },
   "3577": {

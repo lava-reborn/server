@@ -235,8 +235,10 @@ try:
             with open(os.path.join(world.RES, *like.split("/")), "rb") as fh:
                 served_icons[mine] = get("/res/" + mine) == fh.read()
         check("each one's icon served, its quest piece's picture byte for byte:"
-              " classes/WearItem/helm_Bs_U_LVL_12_G_mod00/ico.swf and the four others",
-              served_icons, dict.fromkeys(["classes/WearItem/%s_Bs_U_LVL_12_G_mod00/ico.swf" % s
+              " classes/WearItem/helm_Bs_U_LVL_12_G_mod00/ico.swf and the four others, and"
+              " since 2026-10-14 Тёмное Эхо (G)'s five, helm_Bs_U_LVL_16_G_mod00 ...",
+              served_icons, dict.fromkeys(["classes/WearItem/%s_Bs_U_LVL_%d_G_mod00/ico.swf"
+                                           % (s, lvl) for lvl in (12, 16)
                                            for s in ("helm", "shirt", "armor", "pants", "boots")],
                                           True))
     else:

@@ -88,6 +88,7 @@ ORE_TIERS = {1025: 1316, 1218: 1354, 1255: 1355, 1027: 1308, 1220: 1344, 1257: 1
              1026: 1312, 1219: 1349, 1256: 1350}
 ABRI_ORE_TIERS = (1028, 1029, 1030, 1221, 1222, 1223)
 DONGOLA_ORE_TIERS = (1031, 1032, 1033, 1224, 1225, 1226)    # 2026-10-13, test_dongola_trade
+ABUHAMED_ORE_TIERS = (1034, 1035, 1036, 1227, 1228, 1229)   # 2026-10-14, test_abuhamed_trade
 ROCKS_STAND = {1025: 20, 1218: 10, 1255: 5, 1027: 20, 1220: 15, 1257: 12, 1026: 10, 1219: 9,
                1256: 7}
 PANEL, GUARD = 2022, 1714
@@ -205,12 +206,14 @@ try:
     check("world.STANDING_OBJECTS is unchanged: the rocks stand by production's own table",
           any(i in world.STANDING_OBJECTS for i in ORE_TIERS), False)
     # Абри's mines stand their own rocks since 2026-10-12 (test_abri_trade), Донгола's
-    # since 2026-10-13 (test_dongola_trade).
+    # since 2026-10-13 (test_dongola_trade), Абу-Хамед's since 2026-10-14
+    # (test_abuhamed_trade).
     others = {i: world.location(i) for i in range(1, 1400)
               if world.path_for(i) and i not in ORE_TIERS and i not in ABRI_ORE_TIERS
-              and i not in DONGOLA_ORE_TIERS
+              and i not in DONGOLA_ORE_TIERS and i not in ABUHAMED_ORE_TIERS
               and any(t in production.ORE_YIELD for _c, t in world.location(i).spawns)}
-    check("no other file stands the town's rocks (but Абри's and Донгола's tiers theirs)",
+    check("no other file stands the town's rocks (but Абри's, Донгола's and Абу-Хамед's"
+          " tiers theirs)",
           {i: stood(i) for i in others if any(t in production.ORE_YIELD for t in stood(i))}, {})
     check("a rock is an immobile, harmless object of level 5",
           [(mobs.stats(t).role, mobs.stats(t).moves, mobs.stats(t).can_attack, mobs.stats(t).level)
