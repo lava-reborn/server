@@ -103,6 +103,13 @@ does):
                 taken, unless every one of them is learned -- the
                 original's «Требуется открытая специализация для зачисления
                 опыта» (50441). A quest already in the log stays his;
+  until_max     a lesson's (true): not offered, not taken and not handed in
+                once all the experience it pays would go where there is no
+                level left -- every skill of its rew_xp at
+                progression.SKILL_MAX, every specialisation of its
+                rew_spec_xp at SPEC_MAX (Quest.maxed): its fee would buy
+                nothing. A quest carried past that stays in the log, its
+                hand-in refused with the reason in chat, and nothing paid;
   cost_afro, cost_gold
                 a fee charged at the hand-in (gold in hundredths, as
                 rew_gold): «с вашего счёта будет списано …». It is part of
@@ -427,6 +434,10 @@ class Quest:
                              % (self.type, unknown))
         self.rew_spec_xp = [(SPEC_KEYS[k], int(v)) for k, v in spec_xp.items() if int(v) > 0]
         self.requires_spec = [SPEC_KEYS[k] for k in needs]
+        # A lesson stops at the top (the docstring's until_max).
+        self.until_max = bool(row.get("until_max"))
+        if self.until_max and not (self.rew_xp or self.rew_spec_xp):
+            raise ValueError("quest %d: until_max, and it pays no experience" % self.type)
         # The fee, charged at the hand-in and part of completeness (the
         # docstring); gold in hundredths, as rew_gold.
         self.cost_afro = int(row.get("cost_afro", 0))
@@ -586,6 +597,18 @@ class Quest:
     def over_cap(self, level):
         """Past max_level: the quest is no longer this player's."""
         return self.max_level is not None and level > self.max_level
+
+    def maxed(self, skill, spec):
+        """Whether a lesson (until_max) would pay nothing: the levels of
+        every skill of its rew_xp at progression.SKILL_MAX and of every
+        specialisation of its rew_spec_xp at SPEC_MAX, skill and spec being
+        a character's tables ([level, xp, xp to next] by index). False for
+        a quest that is no lesson. A specialisation not learned is
+        requires_spec's to refuse."""
+        if not self.until_max:
+            return False
+        return all(skill[i][0] >= progression.SKILL_MAX for i, _xp in self.rew_xp) \
+            and all(spec[i][0] >= progression.SPEC_MAX for i, _xp in self.rew_spec_xp)
 
     def done_for_today(self, handed_today):
         """Whether per_day is spent, handed_today being this type's hand-ins

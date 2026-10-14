@@ -2738,15 +2738,16 @@ class Session:
         (excluded) -- which q_st asks through here, and q_co
         writes: the hand-in that makes the history is what closes it. A
         quest that pays into a specialisation may ask for it learned
-        (requires_spec). A kill quest whose fee is paid at the take
-        (quests.Quest.fee_at_take) is not offered to a purse short of it,
-        and a quest that lends what is used up by its use -- rounds,
-        medicine (quests.lends_consumables) -- lends it once a day: the day
-        it did, it is not offered again (Store.lent_at), whether it was
-        handed in or dropped since -- unless it was dropped with all of it
-        back, nothing used (cmd_q_ca strikes the loan, and so does keep_lent
-        taking all of it back away from its stay_in): a lesson dropped by
-        mistake is the player's to take again at once.
+        (requires_spec), and a lesson is gone once what it trains is at
+        the top (until_max, quests.Quest.maxed). A kill quest whose fee is
+        paid at the take (quests.Quest.fee_at_take) is not offered to a
+        purse short of it, and a quest that lends what is used up by its
+        use -- rounds, medicine (quests.lends_consumables) -- lends it once
+        a day: the day it did, it is not offered again (Store.lent_at),
+        whether it was handed in or dropped since -- unless it was dropped
+        with all of it back, nothing used (cmd_q_ca strikes the loan, and so
+        does keep_lent taking all of it back away from its stay_in): a
+        lesson dropped by mistake is the player's to take again at once.
         """
         if quest.over_cap(self.skill_level()):
             return False
@@ -2769,6 +2770,8 @@ class Session:
         if not self.char_id:
             return not (quest.need_all or quest.need_any or quest.requires_spec)
         if any(self.character().spec[i][0] < 0 for i in quest.requires_spec):
+            return False
+        if quest.maxed(self.character().skill, self.character().spec):
             return False
         if quest.fee_at_take and not self.fee_ready(quest):
             return False
@@ -3155,7 +3158,9 @@ class Session:
         journal. Which inhabitant it is handed to is asked of the room first,
         as for any quest, so one handed in anywhere but beside its NPC moves
         nobody. A quest past its cap (max_level) is refused first, a way
-        too: the taker's window no longer lists it (quest_available).
+        too: the taker's window no longer lists it (quest_available). So is
+        a lesson whose skill or specialisation has reached the top since it
+        was taken (quests: until_max), the reason in chat and no fee taken.
         """
         q_id = int(p.get("q_id", 0))
         row = STORE.quest(q_id)
@@ -3179,6 +3184,17 @@ class Session:
             log.info("  ..    quest #%d (%s) not handed in by %s: %s",
                      q_id, quest.name, self.nick, refusal)
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        # A lesson taken before its skill or specialisation reached the top
+        # (quests: until_max) takes no fee for nothing: refused, the reason
+        # in chat, the quest left in the journal to be dropped.
+        ch = self.character()
+        if quest.maxed(ch.skill, ch.spec):
+            log.info("  ..    quest #%d (%s) not handed in by %s: nothing left to train",
+                     q_id, quest.name, self.nick)
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.say("Урок ничего не даст: %s уже на высшем уровне"
+                     % ("специализация" if quest.rew_spec_xp else "навык"))
             return
         way = travel.is_quest_way(quest.type)
         if way:

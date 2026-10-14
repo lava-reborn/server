@@ -48,13 +48,16 @@ In process:
     for a quarter of an hour;
   * the Академия: 75 lessons, level 17, once a day, each after the one
     before it in its group, the specialisations' only for a learned one,
-    the fee the text's gold and silver at 10:1; the fastest way up 17 -> 20
+    the fee the text's gold and silver at 10:1, none once its skill is at 20
+    or its specialisation at 5 (until_max); the fastest way up 17 -> 20
     by one skill's lessons alone takes nine days or more and costs 1500 G or
     more, and no skill takes more than 10.55 million a day; «Ножи для
     учеников» asks the learned unarmed specialisation and pays into it;
   * Абимбола: «Ящик X» takes the key X and gives «Вещи X», «Убить X» names
     the bandit (Гвала 1708, never his crocodiles 1706), «Собрать X» makes the
-    Паладин's pieces 11559-11563;
+    Паладин's pieces 11559-11563; Гатера's diamond drops off the Тёмная
+    шахта's miners alone and no stall buys it, and no creature but a boss of
+    the hours carries a quest row worth more than 1 000 afro a kill at a stall;
   * «Письмо Президента Крюгера ч.2»: its parts off the miners 930/931, and
     the second Кленз 1760 stands nowhere;
   * «Коллекция водителя джихад-такси» (272): its six pieces named, a live
@@ -72,6 +75,7 @@ On a socket (a server of the suite's own, LAVA_CHEATS) only the rides:
 """
 import itertools
 import json
+import math
 import os
 import re
 import socket
@@ -89,11 +93,15 @@ for _knob in ("LAVA_QUESTS", "LAVA_PLACEMENTS", "LAVA_PASSAGES", "LAVA_START",
 
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
+import barter  # noqa: E402
+import bosses  # noqa: E402
+import combat  # noqa: E402
 import events  # noqa: E402
 import holdings  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import keepsakes  # noqa: E402
+import mail  # noqa: E402
 import mobs  # noqa: E402
 import names  # noqa: E402
 import orig_texts  # noqa: E402
@@ -157,6 +165,19 @@ BANDITS = {943: (1702, 955, 2113, 5583, 4160, 960), 944: (1708, 956, 2114, 5584,
            947: (1720, 959, 2117, 5587, 4164, 964)}
 CROCODILE, DIAMOND, MINERS = 1706, 5545, [930, 931]
 PALADIN = {960: 11559, 961: 11560, 962: 11563, 963: 11561, 964: 11562}
+# DESIGNED: the most a quest row of a creature that is no boss of the hours may
+# be worth at a stall, a kill (the dearest today: some 220, Донгола's ДСР).
+QUEST_ROW_CAP = 1000
+
+
+def sold_for(t):
+    """What a stall pays for one of a thing (Inventory.sell), or 0: nothing for a
+    thing with no afro price, a quest's or a trophy (inventory.SELL_GOLD_ONLY off)."""
+    si = items.params_of(t) or {}
+    if not si.get("cost") or si.get("quest") or items.root_of(t) == items.TROPHY:
+        return 0
+    return max(1, int(math.floor(si["cost"] / float(si.get("sell_num", 1)) * inventory.SMOD
+                                 * si.get("sell_mod", 1))))
 GOLD_FEES = {276: 25, 277: 10, 897: 50}
 
 
@@ -304,6 +325,25 @@ try:
           " «Квестовый» of data/loot_manual.json), the miners standing",
           (sorted(m for m in MT if DIAMOND in dict(mobs.quest_table(m))),
            all(stands.get(m) for m in MINERS)), (MINERS, True))
+    check("  ..and no stall buys it (items.QUEST_FARES_UNSOLD, cost 0): a quest row asks while the"
+          " bag is short, «Отправиться к X» repeats and takes no place in the journal, and at the"
+          " article's 70 000 a miner gave some 7 000 afro a kill; it still drops for the quest,"
+          " changes hands by barter and the post, and falls off a dead player",
+          (sold_for(DIAMOND), DIAMOND in items.QUEST_FARES_UNSOLD, mobs.quest_droppable(DIAMOND),
+           barter.tradable(DIAMOND), mail.postable(DIAMOND), combat.drops_on_death(DIAMOND),
+           combat.gold_item(DIAMOND)), (0, True, True, True, True, True, False))
+    # What a quest row of a creature that is no boss of the hours is worth at a
+    # stall, a kill: chance times the price a stall pays, summed. Such a row
+    # rolls whenever an open quest of a killer is short of the thing, so with a
+    # repeatable quest nothing bounds it but the creature's respawn. The bosses
+    # come three times a day and carry the camps' blueprints for the upgrades.
+    worth = sorted(((round(sum(c * sold_for(o) for o, c in mobs.quest_table(m)), 1), m)
+                    for m in MT if mobs.quest_table(m) and not bosses.keeps_hours(m)),
+                   reverse=True)
+    check("no creature but a boss of the hours carries a quest row worth more than %d afro a kill"
+          " at a stall (an ordinary creature of 16-20 leaves some 360 a kill)" % QUEST_ROW_CAP,
+          [(v, m) for v, m in worth if v > QUEST_ROW_CAP], [])
+    print("  (the dearest quest rows a kill: %s)" % worth[:3])
     check("  ..the bandits' keys off their bosses, «Вещи X» out of their boxes, the dreadnought's"
           " parts from Абимбола's «Убить X» alone",
           ({t: sorted((m, o) for m, o, _c in real[row].drops) for t, (_b, row, _x, _k, _l, _p)
@@ -491,6 +531,20 @@ try:
     check("  ..the fee the start's gold and its silver at 10:1: 6, 12, 25, 50 and 100 G",
           sorted({tuple(q.cost_gold for q in g) for g in groups.values()}),
           [(600, 1200, 2500, 5000, 10000)])
+
+    def tables(skill_at, spec_at):
+        """A character's skill and specialisation tables, every one at a level."""
+        return ([[skill_at, 0, 1] for _ in range(progression.SKILLS)],
+                [[spec_at, 0, 1] for _ in range(progression.SPECS)])
+
+    check("  ..none past the top (until_max): a skill's lesson pays nothing once the skill is at"
+          " 20, a specialisation's once it is at 5, so neither is offered, taken nor handed in"
+          " (Quest.maxed; on the wire: server/test_abuhamed_open.py)",
+          ({real[t].until_max for t in lessons},
+           [(real[t].maxed(*tables(19, 4)), real[t].maxed(*tables(20, 4)),
+             real[t].maxed(*tables(19, 5))) for t in (12070, 12000)],
+           [t for t in quests.QUESTS if t not in lessons and quests.get(t).until_max]),
+          ({True}, [(False, True, False), (False, False, True)], []))
     check("  ..given by the teacher of the group, in the Академия",
           sorted({(k[0], tuple(sorted({w for q in g for w in q.give}))) for k, g in groups.items()}
                  ), sorted({("skill", (1425,)), ("skill", (1426,)), ("skill", (1427,)),

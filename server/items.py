@@ -887,6 +887,25 @@ OWN_ARTICLE_PRICE.update((t, 100) for t in CRAT_TOOLS)
 # rule). It keeps its use: strength and dexterity +1 for an hour, two bites.
 QUEST_GIFTS_UNSOLD = frozenset({3914})
 
+# Things a quest asks for that fall only for it (mobs.QUEST_TIER) and that the
+# wiki prices for a stall: no price either (cost 0). «Алмаз» (5545), the
+# fare Гатера takes for «Отправиться к X» (data/quests.json 949-953): the Dark
+# Mine's miners (930, 931) drop it at 0.1 while a quest of one who hurt them
+# asks for it, and his bag holds fewer than it asks. The bag sets the bound:
+# «Отправиться к X» is repeatable, a way that takes no place in the journal,
+# and its taker who never picks a diamond up keeps it asking.
+# At the article's 100 000 a stall paid 70 000 a diamond, some 7 000 afro a
+# miner's kill against some 360 for any other creature of 16-20, with no
+# ceiling but the miners' respawn -- a tap past the bosses' gold (the owner's
+# Абу-Хамед, 2026-10-14, DESIGNED; abuhamed/DESIGN.md 9 named this lever).
+# The shipped client refuses the sale by itself on cost 0 (TradeInterface.
+# checkSellItem: «Вы не можете продать некоторые предметы», see inventory.
+# SELL_GOLD_ONLY). The fare, the drop (mobs.quest_droppable asks no price),
+# the barter and the post are as before; the auction takes no thing without
+# an afro price (its commission is a share of that price, as its window
+# shows it), so diamonds change hands by barter and by post.
+QUEST_FARES_UNSOLD = frozenset({5545})
+
 # The miner's clothes «Шахтерская одежда» (5181) sells: Вади-Хальфа's
 # helm_..boots_minecraft_U_LVL_WH_A_mod00 34480-34484 and their gold copies
 # 34490-34494, named and described by the original (texts.xml 22856-22875,
@@ -1041,7 +1060,7 @@ def static_info(type_id):
             info[1]["cost"] = 0
         if type_id in OWN_ARTICLE_PRICE:
             info[1]["cost"] = OWN_ARTICLE_PRICE[type_id]
-        if type_id in QUEST_GIFTS_UNSOLD:
+        if type_id in QUEST_GIFTS_UNSOLD or type_id in QUEST_FARES_UNSOLD:
             info[1]["cost"] = 0
         # A gold ingot is worth its ounces: in gold, and in afro at the one
         # rate (GOLD_INGOTS).

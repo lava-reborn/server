@@ -28,13 +28,17 @@ data/build_orig_misc.py VERIFIED.
 
 The wiki's (data/quests_wiki.json 764-783, 1045-1124): every lesson asks level
 17 and the one before it in its group (children/parents), and each may be
-taken again: once a day here (per_day 1), since the engine has no ceiling a
-lesson could ask of the skill, and the first lesson, the cheapest experience
+taken again: once a day here (per_day 1), since a lesson asks no level of
+its skill below the top, and the first lesson, the cheapest experience
 for a gold ounce, would otherwise raise a character 16 -> 20 for some 740 G
 in a row. With the chain and the day, one skill takes at most 10.55 million
 a day for 193 G: a character 17 -> 20 by the Академия alone is nine days and
-some 1 690 G (server/test_abuhamed_quests holds the floor). A lesson is a
-service (outside the daily limit, as the exams are).
+some 1 690 G (server/test_abuhamed_quests holds the floor). Nor is a lesson
+offered, taken or handed in once its skill is at level 20 or its
+specialisation at 5 (until_max, server/quests.py Quest.maxed): the start
+names no ceiling, and the experience would be clamped there and the fee
+taken for nothing. A lesson is a service (outside the daily limit, as the
+exams are).
 
 Numbers: 12000-12074 (the plan's register gives Абу-Хамед's generators
 12000-12999; the wiki's own numbers are taken by the exams and the
@@ -125,6 +129,7 @@ def lesson(texts, qtype, name_id, n, key, kind, wiki, teacher, prev):
     else:
         row["rew_spec_xp"] = {key: amount}
         row["requires_spec"] = key
+    row["until_max"] = True
     row.update({"cost_gold": total * 100, "repeatable": 1, "per_day": 1, "service": True,
                 "level": LEVEL, "q_type": 0})
     if prev:
@@ -138,14 +143,17 @@ def lesson(texts, qtype, name_id, n, key, kind, wiki, teacher, prev):
         "for its price, «%d унций золота и %s в %d унций серебра», written as the one sum in "
         "gold, %d G (silver at the FSC's 10:1, 44112: no source of silver on this server). "
         "Level 17 and %s, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest "
-        "lesson is not bought again and again. A service: outside the daily limit."
+        "lesson is not bought again and again; and none once %s is at the top (until_max), "
+        "DESIGNED: its fee would buy nothing. A service: outside the daily limit."
         % (AH, wiki + n - 1, name, name_id, name_id + 1, NOTFINISH, FINISH, teacher, amount,
            "into the skill %s (rew_xp)" % key if kind == "skill" else
            "into the specialisation %s alone, and only if it is learned (rew_spec_xp, "
            "requires_spec: «Требуется открытая специализация для зачисления опыта»)" % key,
            gold, "один слиток" if count == "один" else "два слитка", bar, total,
            "after the lesson before it (need_quest %d)" % prev if prev else
-           "the first of its group, asking no lesson before it"))
+           "the first of its group, asking no lesson before it",
+           "the skill (level 20, progression.SKILL_MAX)" if kind == "skill" else
+           "the specialisation (level 5, progression.SPEC_MAX)"))
     return row
 
 

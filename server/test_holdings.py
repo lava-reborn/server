@@ -33,7 +33,12 @@ and a real database:
     journal; the day turning at 03:00 Moscow time; the box shown under a new
     id when its window opens and shuts, and when the holder changes;
   * the admin's hold and release (clan_admin.py) through the queue, and
-    tools/admin_account.py's holdings, clan-hold and clan-release.
+    tools/admin_account.py's holdings, clan-hold and clan-release;
+  * Абу-Хамед's Центр (128), the one site whose box keeps its own window
+    (wh_box_ah, 19:00-19:15): taken at 20:00 by two members of level 19 who
+    kill its master (7454), the flag naming them; its box (6830, row 771)
+    paying 48 000 afro and 50 rounds at 19:05, once a day, and shut at 19:20
+    while the Северный склад's still pays.
 
     LAVA_RES=.../lava/res python3 server/test_holdings.py
 
@@ -98,6 +103,8 @@ SEVER, ELSEWHERE = 111, 1380           # the Северный склад, and a 
 FLAG, BOX, BOSS = 1011, 6824, 7448
 BOX_ROW = quests.get(765)
 WALTHER = 25636                         # a gun to mend (test_repair's)
+# Абу-Хамед's Центр: its room, its master, its box and the box's row.
+CENTER, AH_BOSS, AH_BOX, AH_ROW = 128, 7454, 6830, quests.get(771)
 
 
 def at(h, m=0, s=0, day=5):
@@ -797,12 +804,85 @@ async def main():
           [(r["how"], r["clan_id"], r["prev"]) for r in log_rows(2)],
           [("admin", None, jackals), ("admin", jackals, wolves)])
 
+    # --- Абу-Хамед's Центр (128): a box of a quarter of an hour ----------------------------------
+    # The one site whose box keeps a window of its own, wh_box_ah, the label's
+    # «Дележ добычи с 19:00 до 19:15» (L327), a quarter of wh_box's hour: taken
+    # by the kill of its master at 20:00 by two members of level 19, its box
+    # paid 19:00-19:15 and not at 19:20, when the Северный склад's still pays.
+    falcons = found(dora, "Соколы")
+    admit(falcons, dick)
+    for s in (dora, dick):
+        joined(s, 72)
+        level(s, 19)
+        into(s, CENTER)
+    ah_room = server.ROOMS.get(CENTER)
+    ah_rc = combat.room_combat(ah_room, STORE)
+    ah_boss = next(m for m in ah_rc.mobs.values() if m.type_id == AH_BOSS)
+    ah_flag = next(e for e, n in ah_room.npcs.items() if n.type_id == FLAG)
+    site = holdings.site_at(CENTER)
+    check("the Центр Абу-Хамеда (128) is a site of level 19, its master the boss whose kill"
+          " takes it, there at 20:00 alone; its box's row 771, the holders'",
+          (site.key, site.min_level, holdings.site_for(CENTER, AH_BOSS).key,
+           bosses.hours_of(AH_BOSS), site.box, AH_ROW.holders, AH_ROW.level),
+          ("wh_ah_center", 19, "wh_ah_center", [20 * 60], AH_BOX, "wh_ah_center", 19))
+    NOW[0] = at(20, 5, day=50)
+    ah_rc.keep_hours()
+    check("  ..20:05: the master is there", ah_boss.alive and ah_boss.eid in ah_room.npcs, True)
+    for s in (dora, dick):
+        take(s)
+        s.combat.award_xp(progression.SHOOTING, None, 300, ah_boss)
+    ah_rc.kill(ah_boss, dick.combat)
+    await asyncio.sleep(0.3)
+    held = STORE.holding("wh_ah_center")
+    check("  ..two Соколы of level 19 hurt him and kill him: they take it, a 'capture' row",
+          (held and held["clan_id"], [(r["how"], r["clan_id"], r["by_char"])
+                                      for r in STORE.holding_log("wh_ah_center", 1)]),
+          (falcons, [("capture", falcons, dick.char_id)]))
+    check("  ..the flag sent again in the room, naming the Соколы",
+          sorted({(p.get("clan"), p["can_trade"]) for p in named(take(dora), "userInfo_Trader")
+                  if p["id"] == ah_flag}), [(falcons, 0)])
+
+    def ah_box():
+        return next(e for e, n in ah_room.npcs.items() if n.type_id == AH_BOX)
+
+    NOW[0] = at(18, 59, day=51)
+    ah_rc.keep_hours()
+    check("18:59 the next day: the box's row is nobody's", dora.quest_available(AH_ROW), False)
+    NOW[0] = at(19, 5, day=51)
+    ah_rc.keep_hours()
+    check("19:05: the row is on offer to both holders", [s.quest_available(AH_ROW)
+                                                         for s in (dora, dick)], [True, True])
+    afro0 = dora.character().afro
+    rounds0 = sum(r["count"] for r in STORE.items_of(dora.char_id) if r["type_id"] == 6099)
+    take(dora)
+    run(dora, "q_st;mob=%d;q_idx=0;" % ah_box())
+    got = take(dora)
+    q_id = named(got, "q_di_del_obj")[0]["q_id"] if named(got, "q_di_del_obj") else 0
+    run(dora, "q_co;q_id=%d;mob=%d;obj_idx=0;" % (q_id, ah_box()))
+    done = take(dora)
+    check("  ..dora takes it at the box and hands it in: 48 000 afro and 50 rounds of 7.62x54R",
+          (acks(got), acks(done)[-1:], dora.character().afro - afro0,
+           sum(r["count"] for r in STORE.items_of(dora.char_id) if r["type_id"] == 6099)
+           - rounds0), ([0], [0], 48000, 50))
+    check("  ..and not on offer to her a second time that day", dora.quest_available(AH_ROW),
+          False)
+    NOW[0] = at(19, 20, day=51)
+    check("19:20: shut for dick, who has not collected -- while the Северный склад's box of"
+          " 19:00-20:00 still pays", (dick.quest_available(AH_ROW),
+                                      events.quest_open(AH_ROW.type, False),
+                                      events.quest_open(BOX_ROW.type, False)),
+          (False, False, True))
+    take(dick)
+    run(dick, "q_st;mob=%d;q_idx=0;" % ah_box())
+    check("  ..and his take refused", acks(take(dick))[:1] != [0], True)
+
     check("no clan command was answered twice", CLANS.double_acks, [])
     for s in list(server.SESSIONS):
         s.close()
-    for bag in rc.loot.values():
-        if bag.expiry is not None:
-            bag.expiry.cancel()
+    for combat_ in (rc, ah_rc):
+        for bag in combat_.loot.values():
+            if bag.expiry is not None:
+                bag.expiry.cancel()
 
 
 try:

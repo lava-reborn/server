@@ -323,12 +323,19 @@ try:
           sorted(c for c in HIDDEN if c not in rows_in(raw, BOX) or c in rows_in(out, BOX)), [])
     TEXTS = {(6183, 1975): "Жилой квартал Абу-Хамеда: <BR> Мастера: улучшение оружия (G)<br>Аукцион<br>"
                            "Каменоломня<br>Доктор Гофус - стимуляторы.",
-             (6182, 1977): "Причал Абу-Хамеда:<BR> Торговец амулетами, сувенирами ,аренда транспорта "
-                           "<BR>Лотерейщики<br>Обмен золотых слитков"}
+             (6182, 1977): "Причал Абу-Хамеда:<BR> Аренда транспорта <BR>Лотерейщики<br>"
+                           "Обмен золотых слитков",
+             (6218, 1968): "Темная шахта Абу-Хамеда:<BR>Добыча алмазов для Гатеры."}
     retexts = {(e["x"], e["y"]): e["text"] for e in LABELS if "text" in e and not e.get("add")
                and BOX[0] <= e["x"] <= BOX[1] and BOX[2] <= e["y"] <= BOX[3]}
-    check("the quarter loses Юсуф's exchange of the sets (G), the pier its New Year tree",
+    check("the quarter loses Юсуф's exchange of the sets (G), the pier its New Year tree and its"
+          " trader of amulets and souvenirs (the file's is the New Year's 724, out with the season),"
+          " the Dark Mine's diamonds are Гатера's (they drop for his fare alone)",
           {c: retexts.get(c) for c in TEXTS}, TEXTS)
+    pier = stood_in(446)
+    check("  ..the pier's file has the New Year's souvenir seller (724), who does not stand there;"
+          " Кирилл (762), who rents the transport, does",
+          (724 in standing(446), 724 in pier, 762 in pier), (True, False, True))
     CAMPS = {(6160, 1975), (6161, 1973), (6210, 1986), (6273, 1953), (6274, 1952)}
     check("  ..the other retexts over Абу-Хамед are the camps' gold and clock and the (P) works': no other",
           sorted(set(retexts) - set(TEXTS)), sorted(CAMPS | {(6139, 1950)}))

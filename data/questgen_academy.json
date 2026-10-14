@@ -44,6 +44,7 @@
     "assault": 400000
    },
    "requires_spec": "assault",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -52,7 +53,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1045 «Специализация автоматы 1» (texts.xml 49456 name, 49457 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1045 «Специализация автоматы 1» (texts.xml 49456 name, 49457 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12001,
@@ -74,6 +75,7 @@
     "assault": 600000
    },
    "requires_spec": "assault",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -83,7 +85,7 @@
    "need_quest": 12000,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1046 «Специализация автоматы 2» (texts.xml 49458 name, 49459 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12000), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1046 «Специализация автоматы 2» (texts.xml 49458 name, 49459 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12000), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12002,
@@ -105,6 +107,7 @@
     "assault": 900000
    },
    "requires_spec": "assault",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -114,7 +117,7 @@
    "need_quest": 12001,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1047 «Специализация автоматы 3» (texts.xml 49460 name, 49461 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12001), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1047 «Специализация автоматы 3» (texts.xml 49460 name, 49461 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12001), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12003,
@@ -136,6 +139,7 @@
     "assault": 1350000
    },
    "requires_spec": "assault",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -145,7 +149,7 @@
    "need_quest": 12002,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1048 «Специализация автоматы 4» (texts.xml 49462 name, 49463 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12002), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1048 «Специализация автоматы 4» (texts.xml 49462 name, 49463 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12002), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12004,
@@ -167,6 +171,7 @@
     "assault": 2025000
    },
    "requires_spec": "assault",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -176,7 +181,7 @@
    "need_quest": 12003,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1049 «Специализация автоматы 5» (texts.xml 49464 name, 49465 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12003), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1049 «Специализация автоматы 5» (texts.xml 49464 name, 49465 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation assault alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12003), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12005,
@@ -198,6 +203,7 @@
     "rifles": 400000
    },
    "requires_spec": "rifles",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -206,7 +212,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1052 «Специализация винтовки 1» (texts.xml 49466 name, 49467 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1052 «Специализация винтовки 1» (texts.xml 49466 name, 49467 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12006,
@@ -228,6 +234,7 @@
     "rifles": 600000
    },
    "requires_spec": "rifles",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -237,7 +244,7 @@
    "need_quest": 12005,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1053 «Специализация винтовки 2» (texts.xml 49468 name, 49469 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12005), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1053 «Специализация винтовки 2» (texts.xml 49468 name, 49469 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12005), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12007,
@@ -259,6 +266,7 @@
     "rifles": 900000
    },
    "requires_spec": "rifles",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -268,7 +276,7 @@
    "need_quest": 12006,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1054 «Специализация винтовки 3» (texts.xml 49470 name, 49471 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12006), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1054 «Специализация винтовки 3» (texts.xml 49470 name, 49471 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12006), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12008,
@@ -290,6 +298,7 @@
     "rifles": 1350000
    },
    "requires_spec": "rifles",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -299,7 +308,7 @@
    "need_quest": 12007,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1055 «Специализация винтовки 4» (texts.xml 49472 name, 49473 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12007), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1055 «Специализация винтовки 4» (texts.xml 49472 name, 49473 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12007), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12009,
@@ -321,6 +330,7 @@
     "rifles": 2025000
    },
    "requires_spec": "rifles",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -330,7 +340,7 @@
    "need_quest": 12008,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1056 «Специализация винтовки 5» (texts.xml 49474 name, 49475 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12008), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1056 «Специализация винтовки 5» (texts.xml 49474 name, 49475 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation rifles alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12008), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12010,
@@ -352,6 +362,7 @@
     "mining": 400000
    },
    "requires_spec": "mining",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -360,7 +371,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1059 «Специализация добыча 1» (texts.xml 49516 name, 49517 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 400000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1059 «Специализация добыча 1» (texts.xml 49516 name, 49517 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 400000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12011,
@@ -382,6 +393,7 @@
     "mining": 600000
    },
    "requires_spec": "mining",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -391,7 +403,7 @@
    "need_quest": 12010,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1060 «Специализация добыча 2» (texts.xml 49518 name, 49519 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 600000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12010), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1060 «Специализация добыча 2» (texts.xml 49518 name, 49519 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 600000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12010), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12012,
@@ -413,6 +425,7 @@
     "mining": 900000
    },
    "requires_spec": "mining",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -422,7 +435,7 @@
    "need_quest": 12011,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1061 «Специализация добыча 3» (texts.xml 49520 name, 49521 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 900000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12011), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1061 «Специализация добыча 3» (texts.xml 49520 name, 49521 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 900000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12011), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12013,
@@ -444,6 +457,7 @@
     "mining": 1350000
    },
    "requires_spec": "mining",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -453,7 +467,7 @@
    "need_quest": 12012,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1062 «Специализация добыча 4» (texts.xml 49522 name, 49523 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 1350000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12012), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1062 «Специализация добыча 4» (texts.xml 49522 name, 49523 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 1350000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12012), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12014,
@@ -475,6 +489,7 @@
     "mining": 2025000
    },
    "requires_spec": "mining",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -484,7 +499,7 @@
    "need_quest": 12013,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1063 «Специализация добыча 5» (texts.xml 49524 name, 49525 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 2025000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12013), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1063 «Специализация добыча 5» (texts.xml 49524 name, 49525 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 2025000 of experience into the specialisation mining alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12013), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12015,
@@ -506,6 +521,7 @@
     "shotguns": 400000
    },
    "requires_spec": "shotguns",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -514,7 +530,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1067 «Специализация дробовики 1» (texts.xml 49446 name, 49447 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1067 «Специализация дробовики 1» (texts.xml 49446 name, 49447 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12016,
@@ -536,6 +552,7 @@
     "shotguns": 600000
    },
    "requires_spec": "shotguns",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -545,7 +562,7 @@
    "need_quest": 12015,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1068 «Специализация дробовики 2» (texts.xml 49448 name, 49449 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12015), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1068 «Специализация дробовики 2» (texts.xml 49448 name, 49449 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12015), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12017,
@@ -567,6 +584,7 @@
     "shotguns": 900000
    },
    "requires_spec": "shotguns",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -576,7 +594,7 @@
    "need_quest": 12016,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1069 «Специализация дробовики 3» (texts.xml 49450 name, 49451 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12016), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1069 «Специализация дробовики 3» (texts.xml 49450 name, 49451 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12016), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12018,
@@ -598,6 +616,7 @@
     "shotguns": 1350000
    },
    "requires_spec": "shotguns",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -607,7 +626,7 @@
    "need_quest": 12017,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1070 «Специализация дробовики 4» (texts.xml 49452 name, 49453 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12017), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1070 «Специализация дробовики 4» (texts.xml 49452 name, 49453 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12017), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12019,
@@ -629,6 +648,7 @@
     "shotguns": 2025000
    },
    "requires_spec": "shotguns",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -638,7 +658,7 @@
    "need_quest": 12018,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1071 «Специализация дробовики 5» (texts.xml 49454 name, 49455 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12018), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1071 «Специализация дробовики 5» (texts.xml 49454 name, 49455 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation shotguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12018), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12020,
@@ -660,6 +680,7 @@
     "first_aid": 400000
    },
    "requires_spec": "first_aid",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -668,7 +689,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1074 «Специализация первая помощь 1» (texts.xml 49506 name, 49507 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 400000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1074 «Специализация первая помощь 1» (texts.xml 49506 name, 49507 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 400000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12021,
@@ -690,6 +711,7 @@
     "first_aid": 600000
    },
    "requires_spec": "first_aid",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -699,7 +721,7 @@
    "need_quest": 12020,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1075 «Специализация первая помощь 2» (texts.xml 49508 name, 49509 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 600000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12020), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1075 «Специализация первая помощь 2» (texts.xml 49508 name, 49509 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 600000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12020), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12022,
@@ -721,6 +743,7 @@
     "first_aid": 900000
    },
    "requires_spec": "first_aid",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -730,7 +753,7 @@
    "need_quest": 12021,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1076 «Специализация первая помощь 3» (texts.xml 49510 name, 49511 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 900000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12021), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1076 «Специализация первая помощь 3» (texts.xml 49510 name, 49511 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 900000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12021), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12023,
@@ -752,6 +775,7 @@
     "first_aid": 1350000
    },
    "requires_spec": "first_aid",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -761,7 +785,7 @@
    "need_quest": 12022,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1077 «Специализация первая помощь 4» (texts.xml 49512 name, 49513 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 1350000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12022), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1077 «Специализация первая помощь 4» (texts.xml 49512 name, 49513 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 1350000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12022), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12024,
@@ -783,6 +807,7 @@
     "first_aid": 2025000
    },
    "requires_spec": "first_aid",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -792,7 +817,7 @@
    "need_quest": 12023,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1078 «Специализация первая помощь 5» (texts.xml 49514 name, 49515 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 2025000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12023), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1078 «Специализация первая помощь 5» (texts.xml 49514 name, 49515 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 2025000 of experience into the specialisation first_aid alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12023), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12025,
@@ -814,6 +839,7 @@
     "pistols": 400000
    },
    "requires_spec": "pistols",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -822,7 +848,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1084 «Специализация пистолеты 1» (texts.xml 49436 name, 49437 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1084 «Специализация пистолеты 1» (texts.xml 49436 name, 49437 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12026,
@@ -844,6 +870,7 @@
     "pistols": 600000
    },
    "requires_spec": "pistols",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -853,7 +880,7 @@
    "need_quest": 12025,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1085 «Специализация пистолеты 2» (texts.xml 49438 name, 49439 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12025), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1085 «Специализация пистолеты 2» (texts.xml 49438 name, 49439 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12025), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12027,
@@ -875,6 +902,7 @@
     "pistols": 900000
    },
    "requires_spec": "pistols",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -884,7 +912,7 @@
    "need_quest": 12026,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1086 «Специализация пистолеты 3» (texts.xml 49440 name, 49441 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12026), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1086 «Специализация пистолеты 3» (texts.xml 49440 name, 49441 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12026), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12028,
@@ -906,6 +934,7 @@
     "pistols": 1350000
    },
    "requires_spec": "pistols",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -915,7 +944,7 @@
    "need_quest": 12027,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1087 «Специализация пистолеты 4» (texts.xml 49442 name, 49443 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12027), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1087 «Специализация пистолеты 4» (texts.xml 49442 name, 49443 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12027), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12029,
@@ -937,6 +966,7 @@
     "pistols": 2025000
    },
    "requires_spec": "pistols",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -946,7 +976,7 @@
    "need_quest": 12028,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1088 «Специализация пистолеты 5» (texts.xml 49444 name, 49445 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12028), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1088 «Специализация пистолеты 5» (texts.xml 49444 name, 49445 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation pistols alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12028), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12030,
@@ -968,6 +998,7 @@
     "smg": 400000
    },
    "requires_spec": "smg",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -976,7 +1007,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1089 «Специализация пистолеты-пулемёты 1» (texts.xml 49486 name, 49487 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1089 «Специализация пистолеты-пулемёты 1» (texts.xml 49486 name, 49487 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12031,
@@ -998,6 +1029,7 @@
     "smg": 600000
    },
    "requires_spec": "smg",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -1007,7 +1039,7 @@
    "need_quest": 12030,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1090 «Специализация пистолеты-пулемёты 2» (texts.xml 49488 name, 49489 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12030), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1090 «Специализация пистолеты-пулемёты 2» (texts.xml 49488 name, 49489 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12030), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12032,
@@ -1029,6 +1061,7 @@
     "smg": 900000
    },
    "requires_spec": "smg",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -1038,7 +1071,7 @@
    "need_quest": 12031,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1091 «Специализация пистолеты-пулемёты 3» (texts.xml 49490 name, 49491 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12031), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1091 «Специализация пистолеты-пулемёты 3» (texts.xml 49490 name, 49491 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12031), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12033,
@@ -1060,6 +1093,7 @@
     "smg": 1350000
    },
    "requires_spec": "smg",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -1069,7 +1103,7 @@
    "need_quest": 12032,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1092 «Специализация пистолеты-пулемёты 4» (texts.xml 49492 name, 49493 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12032), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1092 «Специализация пистолеты-пулемёты 4» (texts.xml 49492 name, 49493 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12032), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12034,
@@ -1091,6 +1125,7 @@
     "smg": 2025000
    },
    "requires_spec": "smg",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -1100,7 +1135,7 @@
    "need_quest": 12033,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1093 «Специализация пистолеты-пулемёты 5» (texts.xml 49494 name, 49495 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12033), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1093 «Специализация пистолеты-пулемёты 5» (texts.xml 49494 name, 49495 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation smg alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12033), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12035,
@@ -1122,6 +1157,7 @@
     "machineguns": 400000
    },
    "requires_spec": "machineguns",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -1130,7 +1166,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1099 «Специализация пулемёты 1» (texts.xml 49476 name, 49477 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1099 «Специализация пулемёты 1» (texts.xml 49476 name, 49477 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 400000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12036,
@@ -1152,6 +1188,7 @@
     "machineguns": 600000
    },
    "requires_spec": "machineguns",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -1161,7 +1198,7 @@
    "need_quest": 12035,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1100 «Специализация пулемёты 2» (texts.xml 49478 name, 49479 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12035), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1100 «Специализация пулемёты 2» (texts.xml 49478 name, 49479 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 600000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12035), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12037,
@@ -1183,6 +1220,7 @@
     "machineguns": 900000
    },
    "requires_spec": "machineguns",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -1192,7 +1230,7 @@
    "need_quest": 12036,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1101 «Специализация пулемёты 3» (texts.xml 49480 name, 49481 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12036), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1101 «Специализация пулемёты 3» (texts.xml 49480 name, 49481 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 900000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12036), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12038,
@@ -1214,6 +1252,7 @@
     "machineguns": 1350000
    },
    "requires_spec": "machineguns",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -1223,7 +1262,7 @@
    "need_quest": 12037,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1102 «Специализация пулемёты 4» (texts.xml 49482 name, 49483 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12037), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1102 «Специализация пулемёты 4» (texts.xml 49482 name, 49483 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1350000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12037), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12039,
@@ -1245,6 +1284,7 @@
     "machineguns": 2025000
    },
    "requires_spec": "machineguns",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -1254,7 +1294,7 @@
    "need_quest": 12038,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1103 «Специализация пулемёты 5» (texts.xml 49484 name, 49485 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12038), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1103 «Специализация пулемёты 5» (texts.xml 49484 name, 49485 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2025000 of experience into the specialisation machineguns alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12038), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12040,
@@ -1276,6 +1316,7 @@
     "blades": 400000
    },
    "requires_spec": "blades",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -1284,7 +1325,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1104 «Специализация режущего оружия 1» (texts.xml 49426 name, 49427 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 400000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1104 «Специализация режущего оружия 1» (texts.xml 49426 name, 49427 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 400000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12041,
@@ -1306,6 +1347,7 @@
     "blades": 600000
    },
    "requires_spec": "blades",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -1315,7 +1357,7 @@
    "need_quest": 12040,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1105 «Специализация режущего оружия 2» (texts.xml 49428 name, 49429 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 600000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12040), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1105 «Специализация режущего оружия 2» (texts.xml 49428 name, 49429 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 600000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12040), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12042,
@@ -1337,6 +1379,7 @@
     "blades": 900000
    },
    "requires_spec": "blades",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -1346,7 +1389,7 @@
    "need_quest": 12041,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1106 «Специализация режущего оружия 3» (texts.xml 49430 name, 49431 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 900000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12041), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1106 «Специализация режущего оружия 3» (texts.xml 49430 name, 49431 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 900000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12041), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12043,
@@ -1368,6 +1411,7 @@
     "blades": 1350000
    },
    "requires_spec": "blades",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -1377,7 +1421,7 @@
    "need_quest": 12042,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1107 «Специализация режущего оружия 4» (texts.xml 49432 name, 49433 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 1350000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12042), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1107 «Специализация режущего оружия 4» (texts.xml 49432 name, 49433 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 1350000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12042), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12044,
@@ -1399,6 +1443,7 @@
     "blades": 2025000
    },
    "requires_spec": "blades",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -1408,7 +1453,7 @@
    "need_quest": 12043,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1108 «Специализация режущего оружия 5» (texts.xml 49434 name, 49435 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 2025000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12043), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1108 «Специализация режущего оружия 5» (texts.xml 49434 name, 49435 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 2025000 of experience into the specialisation blades alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12043), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12045,
@@ -1430,6 +1475,7 @@
     "unarmed": 400000
    },
    "requires_spec": "unarmed",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -1438,7 +1484,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1112 «Специализация рукопашного боя 1» (texts.xml 49416 name, 49417 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 400000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1112 «Специализация рукопашного боя 1» (texts.xml 49416 name, 49417 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 400000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12046,
@@ -1460,6 +1506,7 @@
     "unarmed": 600000
    },
    "requires_spec": "unarmed",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -1469,7 +1516,7 @@
    "need_quest": 12045,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1113 «Специализация рукопашного боя 2» (texts.xml 49418 name, 49419 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 600000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12045), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1113 «Специализация рукопашного боя 2» (texts.xml 49418 name, 49419 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 600000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12045), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12047,
@@ -1491,6 +1538,7 @@
     "unarmed": 900000
    },
    "requires_spec": "unarmed",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -1500,7 +1548,7 @@
    "need_quest": 12046,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1114 «Специализация рукопашного боя 3» (texts.xml 49420 name, 49421 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 900000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12046), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1114 «Специализация рукопашного боя 3» (texts.xml 49420 name, 49421 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 900000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12046), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12048,
@@ -1522,6 +1570,7 @@
     "unarmed": 1350000
    },
    "requires_spec": "unarmed",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -1531,7 +1580,7 @@
    "need_quest": 12047,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1115 «Специализация рукопашного боя 4» (texts.xml 49422 name, 49423 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 1350000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12047), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1115 «Специализация рукопашного боя 4» (texts.xml 49422 name, 49423 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 1350000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12047), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12049,
@@ -1553,6 +1602,7 @@
     "unarmed": 2025000
    },
    "requires_spec": "unarmed",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -1562,7 +1612,7 @@
    "need_quest": 12048,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1116 «Специализация рукопашного боя 5» (texts.xml 49424 name, 49425 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 2025000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12048), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1116 «Специализация рукопашного боя 5» (texts.xml 49424 name, 49425 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 2025000 of experience into the specialisation unarmed alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12048), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12050,
@@ -1584,6 +1634,7 @@
     "surgery": 400000
    },
    "requires_spec": "surgery",
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -1592,7 +1643,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1120 «Специализация хирургия 1» (texts.xml 49496 name, 49497 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 400000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1120 «Специализация хирургия 1» (texts.xml 49496 name, 49497 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 400000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12051,
@@ -1614,6 +1665,7 @@
     "surgery": 600000
    },
    "requires_spec": "surgery",
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -1623,7 +1675,7 @@
    "need_quest": 12050,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1121 «Специализация хирургия 2» (texts.xml 49498 name, 49499 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 600000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12050), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1121 «Специализация хирургия 2» (texts.xml 49498 name, 49499 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 600000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12050), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12052,
@@ -1645,6 +1697,7 @@
     "surgery": 900000
    },
    "requires_spec": "surgery",
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -1654,7 +1707,7 @@
    "need_quest": 12051,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1122 «Специализация хирургия 3» (texts.xml 49500 name, 49501 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 900000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12051), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1122 «Специализация хирургия 3» (texts.xml 49500 name, 49501 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 900000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12051), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12053,
@@ -1676,6 +1729,7 @@
     "surgery": 1350000
    },
    "requires_spec": "surgery",
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -1685,7 +1739,7 @@
    "need_quest": 12052,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1123 «Специализация хирургия 4» (texts.xml 49502 name, 49503 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 1350000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12052), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1123 «Специализация хирургия 4» (texts.xml 49502 name, 49503 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 1350000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12052), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12054,
@@ -1707,6 +1761,7 @@
     "surgery": 2025000
    },
    "requires_spec": "surgery",
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -1716,7 +1771,7 @@
    "need_quest": 12053,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1124 «Специализация хирургия 5» (texts.xml 49504 name, 49505 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 2025000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12053), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 1124 «Специализация хирургия 5» (texts.xml 49504 name, 49505 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 2025000 of experience into the specialisation surgery alone, and only if it is learned (rew_spec_xp, requires_spec: «Требуется открытая специализация для зачисления опыта»), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12053), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the specialisation (level 5, progression.SPEC_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12055,
@@ -1737,6 +1792,7 @@
    "rew_xp": {
     "melee": 800000
    },
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -1745,7 +1801,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 764 «Навык ближнего боя 1» (texts.xml 49374 name, 49375 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 800000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 764 «Навык ближнего боя 1» (texts.xml 49374 name, 49375 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 800000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12056,
@@ -1766,6 +1822,7 @@
    "rew_xp": {
     "melee": 1200000
    },
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -1775,7 +1832,7 @@
    "need_quest": 12055,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 765 «Навык ближнего боя 2» (texts.xml 49378 name, 49379 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 1200000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12055), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 765 «Навык ближнего боя 2» (texts.xml 49378 name, 49379 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 1200000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12055), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12057,
@@ -1796,6 +1853,7 @@
    "rew_xp": {
     "melee": 1800000
    },
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -1805,7 +1863,7 @@
    "need_quest": 12056,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 766 «Навык ближнего боя 3» (texts.xml 49380 name, 49381 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 1800000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12056), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 766 «Навык ближнего боя 3» (texts.xml 49380 name, 49381 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 1800000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12056), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12058,
@@ -1826,6 +1884,7 @@
    "rew_xp": {
     "melee": 2700000
    },
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -1835,7 +1894,7 @@
    "need_quest": 12057,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 767 «Навык ближнего боя 4» (texts.xml 49382 name, 49383 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 2700000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12057), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 767 «Навык ближнего боя 4» (texts.xml 49382 name, 49383 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 2700000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12057), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12059,
@@ -1856,6 +1915,7 @@
    "rew_xp": {
     "melee": 4050000
    },
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -1865,7 +1925,7 @@
    "need_quest": 12058,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 768 «Навык ближнего боя 5» (texts.xml 49384 name, 49385 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 4050000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12058), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 768 «Навык ближнего боя 5» (texts.xml 49384 name, 49385 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1425 in the Боевая Академия (1295): 4050000 of experience into the skill melee (rew_xp), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12058), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12060,
@@ -1886,6 +1946,7 @@
    "rew_xp": {
     "medicine": 800000
    },
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -1894,7 +1955,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 769 «Навык медицины 1» (texts.xml 49396 name, 49397 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 800000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 769 «Навык медицины 1» (texts.xml 49396 name, 49397 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 800000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12061,
@@ -1915,6 +1976,7 @@
    "rew_xp": {
     "medicine": 1200000
    },
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -1924,7 +1986,7 @@
    "need_quest": 12060,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 770 «Навык медицины 2» (texts.xml 49398 name, 49399 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 1200000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12060), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 770 «Навык медицины 2» (texts.xml 49398 name, 49399 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 1200000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12060), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12062,
@@ -1945,6 +2007,7 @@
    "rew_xp": {
     "medicine": 1800000
    },
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -1954,7 +2017,7 @@
    "need_quest": 12061,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 771 «Навык медицины 3» (texts.xml 49400 name, 49401 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 1800000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12061), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 771 «Навык медицины 3» (texts.xml 49400 name, 49401 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 1800000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12061), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12063,
@@ -1975,6 +2038,7 @@
    "rew_xp": {
     "medicine": 2700000
    },
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -1984,7 +2048,7 @@
    "need_quest": 12062,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 772 «Навык медицины 4» (texts.xml 49402 name, 49403 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 2700000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12062), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 772 «Навык медицины 4» (texts.xml 49402 name, 49403 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 2700000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12062), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12064,
@@ -2005,6 +2069,7 @@
    "rew_xp": {
     "medicine": 4050000
    },
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -2014,7 +2079,7 @@
    "need_quest": 12063,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 773 «Навык медицины 5» (texts.xml 49404 name, 49405 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 4050000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12063), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 773 «Навык медицины 5» (texts.xml 49404 name, 49405 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1427 in the Боевая Академия (1295): 4050000 of experience into the skill medicine (rew_xp), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12063), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12065,
@@ -2035,6 +2100,7 @@
    "rew_xp": {
     "industry": 800000
    },
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -2043,7 +2109,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 774 «Навык промышленности 1» (texts.xml 49406 name, 49407 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 800000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 774 «Навык промышленности 1» (texts.xml 49406 name, 49407 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 800000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12066,
@@ -2064,6 +2130,7 @@
    "rew_xp": {
     "industry": 1200000
    },
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -2073,7 +2140,7 @@
    "need_quest": 12065,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 775 «Навык промышленности 2» (texts.xml 49408 name, 49409 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 1200000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12065), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 775 «Навык промышленности 2» (texts.xml 49408 name, 49409 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 1200000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12065), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12067,
@@ -2094,6 +2161,7 @@
    "rew_xp": {
     "industry": 1800000
    },
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -2103,7 +2171,7 @@
    "need_quest": 12066,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 776 «Навык промышленности 3» (texts.xml 49410 name, 49411 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 1800000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12066), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 776 «Навык промышленности 3» (texts.xml 49410 name, 49411 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 1800000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12066), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12068,
@@ -2124,6 +2192,7 @@
    "rew_xp": {
     "industry": 2700000
    },
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -2133,7 +2202,7 @@
    "need_quest": 12067,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 777 «Навык промышленности 4» (texts.xml 49412 name, 49413 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 2700000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12067), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 777 «Навык промышленности 4» (texts.xml 49412 name, 49413 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 2700000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12067), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12069,
@@ -2154,6 +2223,7 @@
    "rew_xp": {
     "industry": 4050000
    },
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -2163,7 +2233,7 @@
    "need_quest": 12068,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 778 «Навык промышленности 5» (texts.xml 49414 name, 49415 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 4050000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12068), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 778 «Навык промышленности 5» (texts.xml 49414 name, 49415 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1428 in the Боевая Академия (1295): 4050000 of experience into the skill industry (rew_xp), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12068), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12070,
@@ -2184,6 +2254,7 @@
    "rew_xp": {
     "shooting": 800000
    },
+   "until_max": true,
    "cost_gold": 600,
    "repeatable": 1,
    "per_day": 1,
@@ -2192,7 +2263,7 @@
    "q_type": 0,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 779 «Навык стрельбы 1» (texts.xml 49386 name, 49387 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 800000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 779 «Навык стрельбы 1» (texts.xml 49386 name, 49387 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 800000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «5 унций золота и один слиток в 10 унций серебра», written as the one sum in gold, 6 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and the first of its group, asking no lesson before it, the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12071,
@@ -2213,6 +2284,7 @@
    "rew_xp": {
     "shooting": 1200000
    },
+   "until_max": true,
    "cost_gold": 1200,
    "repeatable": 1,
    "per_day": 1,
@@ -2222,7 +2294,7 @@
    "need_quest": 12070,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 780 «Навык стрельбы 2» (texts.xml 49388 name, 49389 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1200000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12070), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 780 «Навык стрельбы 2» (texts.xml 49388 name, 49389 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1200000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «10 унций золота и два слитка в 10 унций серебра», written as the one sum in gold, 12 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12070), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12072,
@@ -2243,6 +2315,7 @@
    "rew_xp": {
     "shooting": 1800000
    },
+   "until_max": true,
    "cost_gold": 2500,
    "repeatable": 1,
    "per_day": 1,
@@ -2252,7 +2325,7 @@
    "need_quest": 12071,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 781 «Навык стрельбы 3» (texts.xml 49390 name, 49391 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1800000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12071), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 781 «Навык стрельбы 3» (texts.xml 49390 name, 49391 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 1800000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «20 унций золота и один слиток в 50 унций серебра», written as the one sum in gold, 25 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12071), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12073,
@@ -2273,6 +2346,7 @@
    "rew_xp": {
     "shooting": 2700000
    },
+   "until_max": true,
    "cost_gold": 5000,
    "repeatable": 1,
    "per_day": 1,
@@ -2282,7 +2356,7 @@
    "need_quest": 12072,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 782 «Навык стрельбы 4» (texts.xml 49392 name, 49393 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2700000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12072), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 782 «Навык стрельбы 4» (texts.xml 49392 name, 49393 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 2700000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «40 унций золота и один слиток в 100 унций серебра», written as the one sum in gold, 50 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12072), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   },
   {
    "type": 12074,
@@ -2303,6 +2377,7 @@
    "rew_xp": {
     "shooting": 4050000
    },
+   "until_max": true,
    "cost_gold": 10000,
    "repeatable": 1,
    "per_day": 1,
@@ -2312,7 +2387,7 @@
    "need_quest": 12073,
    "loc": 50653111,
    "finish_loc": 50653111,
-   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 783 «Навык стрельбы 5» (texts.xml 49394 name, 49395 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 4050000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12073), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again. A service: outside the daily limit."
+   "why": "RECOVERED texts and sums, DESIGNED fee and workings (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 26). The wiki's 783 «Навык стрельбы 5» (texts.xml 49394 name, 49395 start, 49377 notfinish, 49376 finish, the series' last two stored once), given and taken by the teacher 1426 in the Боевая Академия (1295): 4050000 of experience into the skill shooting (rew_xp), the start's. The start is the original's but for its price, «80 унций золота и два слитка в 100 унций серебра», written as the one sum in gold, 100 G (silver at the FSC's 10:1, 44112: no source of silver on this server). Level 17 and after the lesson before it (need_quest 12073), the wiki's; once a day (per_day 1), DESIGNED, so that the cheapest lesson is not bought again and again; and none once the skill (level 20, progression.SKILL_MAX) is at the top (until_max), DESIGNED: its fee would buy nothing. A service: outside the daily limit."
   }
  ]
 }

@@ -66,7 +66,9 @@ in for the walking and the earning.
                of a specialisation not learned and the second lesson of a
                skill not on offer, «Навык стрельбы 1» (12070) for 6 ounces of
                the ingots' gold and 800 000 of shooting, not again the same
-               day; «Выход из обучающего центра» (966) back to the quarter
+               day; the second taken at 17 and refused at 20 with its fee
+               kept, and not on offer at 20 (until_max); «Выход из
+               обучающего центра» (966) back to the quarter
   the Dark Mine down from its mouth (156) through the first tier (615) to the
                second (1014) by the doors, the miners of both shot down, the
                map out of reach there, and up again onto the mouth's own cell
@@ -1264,6 +1266,32 @@ try:
           ([0, 0], 600, 800000))
     check("  ..not again the same day; the second lesson now on offer",
           (status(c, SHOOTING_1), status(c, SHOOTING_2)), (0, 1))
+    # A lesson pays nothing past the top (quests: until_max): taken at 17 and
+    # brought to the teacher with shooting at 20, it is refused before its fee,
+    # which the purse could pay; and at 20 it is not on offer. Shooting goes
+    # back to 17 after, the gold lent for the fee back to the cheat.
+    took, q_two = take(c, here, SHOOTING_TEACHER, SHOOTING_2)
+    cheat(c, "/skill %d 20" % progression.SHOOTING)
+    cheat(c, "/money 0 1200")
+    purse1 = money(CID)
+    done = hand_in(c, here, SHOOTING_TEACHER, q_two)
+    with open(SRV.log, encoding=ENC, errors="replace") as fh:
+        said = [line.split("not said to Traveller: ", 1)[1] for line in fh.read().splitlines()
+                if "not said to Traveller: Урок" in line]
+    st = store()
+    carried = st.has_quest(CID, SHOOTING_2)
+    st.close()
+    check("  ..«Навык стрельбы 2» (12071) taken at 17 and handed in with shooting at 20: refused"
+          " (4, server.RES_NOT_AVAILABLE), the reason said, its 12 G kept, the lesson left in"
+          " the journal",
+          (acks(took), acks(done)[:1], said, money(CID) == purse1, carried),
+          ([0], [4], ["Урок ничего не даст: навык уже на высшем уровне"],
+           True, True))
+    c.send("q_ca;q_id=%d;" % q_two)
+    c.frames(0.6)
+    check("  ..dropped, and not on offer at 20", status(c, SHOOTING_2), 0)
+    cheat(c, "/skill %d 17" % progression.SHOOTING)
+    cheat(c, "/money 0 -1200")
     ack, lid, arrival = ride(c, here, ILYA_IN, ACADEMY_OUT)
     check("  ..«Выход из обучающего центра» (966) at Илья: back to the quarter", (ack, lid),
           ([0, 0], QUARTER))
