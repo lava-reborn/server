@@ -213,6 +213,11 @@
    "loc": 619,
    "types": [2176],
    "why": "The same guard at the entrance of Донгола's Prison_2 («Тюрьма: Восточный блок», the southern gate's), for the same reason."
+  },
+  {
+   "loc": 96,
+   "types": [5110, 5111],
+   "why": "The same for Донгола's masters' camp of the assault rifles and machine guns (decision 11, by the review of 2026-10-14): Npc_Commoner000035 and 000036, «Мастер Ибн Аббас Фирас<Br>Улучшение пулеметов» and «Мастер Ибн аль-Хайтам<Br>Улучшение пулеметов» (9627, 9628, the commoners' family on its offset 9592), an older pair of machine-gun masters the wiki's «Лагерь Мастеров Донголы I» does not name. The camp's machine-gun upgrade is Подмастерье Али's 345 (A) and Мастер Гази's 385 (G) (data/build_weaponcraft.py); these two give and take no row and sell nothing, so a player would find two more machine-gun masters with empty windows. They stand in this file alone; the driver Абрам Васильевич 5109 of the same family stays (an empty window, UNDONE «Зафиксированные умолчания Донголы» 32)."
   }
  ],
  "quests": [

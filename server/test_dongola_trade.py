@@ -504,6 +504,23 @@ check("the decoder Техногик (651, the black market): «Чертежи N-
          all(level_of_bp(o["obj"]) == r["craft"]["level"] for o in r["rew_random"]),
          bool(r["objs"][0].get("mobs"))) for r in dec], DECODER in standing(BLACK)),
       ([([DECODER], n, True, True, True) for n in range(12, 17)], True))
+
+
+def decode_margin(r):
+    """What a decode leaves its player, the drawn blueprint sold back at once
+    (the draw's mean sale less the fee), and a tenth of what the draw is worth
+    (the mean price): data/build_weaponcraft.py DECODE_FEE."""
+    worth = sum(items.params_of(o["obj"])["cost"] for o in r["rew_random"]) / len(r["rew_random"])
+    sale = sum(sold_for(o["obj"]) for o in r["rew_random"]) / len(r["rew_random"])
+    return sale - r["cost_afro"], worth / 10.0
+
+
+check("  ..and no farm: a decoded blueprint sold back nets at most a tenth of its price, at 13-16"
+      " too, where the articles price the blueprints over craft.LADDER (40 000 / 50 000 / 69 000 /"
+      " 80 000): the fee is 60 % of the draw's price -- 18 000, 24 000, 30 000, 41 400, 48 000",
+      ([r["craft"]["level"] for r in dec if decode_margin(r)[0] > decode_margin(r)[1]],
+       [r["cost_afro"] for r in dec]),
+      ([], [18000, 24000, 30000, 41400, 48000]))
 check("«Точильный камень Донголы» (2281, the black market) sharpens Боевой нож (G) (14у) and"
       " Такоуба (G) (16у) three ways each, in the original's words",
       (sorted((r["craft"]["gun"], r["craft"]["blueprint"], r["rew_obj"][0]) for r in kni),

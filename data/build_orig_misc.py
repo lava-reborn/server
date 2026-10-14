@@ -820,7 +820,8 @@ VERIFIED = {
     # 630-799, each text read in texts.xml by hand; a slot None is one the file has
     # no line for, or a name the row writes itself (data/quests.json says which, row
     # by row). The rows not here are DESIGNED (the mines' gates 715-720, the
-    # lotteries' starts 721/722, the ways 706/707/748/749/762, the boss hours of 653).
+    # lotteries' names and starts 721/722, the ways 706/707/748/749/762, the fees
+    # of the ways into Zone 49 733/744, the boss hours of 653).
     630: (46965, 48539, 48540, 48541),
     631: (46961, 48542, 48543, 48544),
     632: (62262, 62264, None, 59830),
@@ -908,7 +909,6 @@ VERIFIED = {
     730: (47047, 47048, None, 47049),
     731: (47050, 47051, None, 47052),
     732: (47053, 47054, None, 47055),
-    733: (47056, 47057, None, 47058),
     734: (47117, 47118, None, 47119),
     735: (47120, 47121, None, 47122),
     738: (47063, 47064, None, 47065),
@@ -917,7 +917,6 @@ VERIFIED = {
     741: (47066, 47067, None, 47068),
     742: (47072, 47073, 47074, None),
     743: (47075, 47076, None, 47077),
-    744: (47078, 47079, None, 47080),
     745: (47081, 47082, None, 47083),
     746: (47084, 47085, None, 47086),
     747: (47087, 47088, None, 47089),

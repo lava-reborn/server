@@ -38,7 +38,7 @@ in for the walking and the earning.
   the mine     «Спуститься в шахту» (715) at the copper mine's mouth (208)
                into the control room (663), its door b to the first tier
                (1031) and the tier's a back, «Выйти из шахты» (718) up
-  a lottery    «Лотерея Донголы (13-14)» (721): the ticket for 2 400 afro at
+  a lottery    «Лотерея Донголы (12-16)» (721): the ticket for 2 400 afro at
                the old market's lottery man, one of the draw's prizes
   the gold     at six in the evening the four bosses: Полковник Халил (93)
                and Джибрил Ибрагим (91) of the ДСР, 10 ounces each in one
@@ -800,7 +800,7 @@ SRV = Server("traveller", "2026-10-13T18:00:05", world.cell_of(STATION_WH))
 try:
     # --- Вади-Хальфа: the ride, and «Амин» on the way --------------------------------------
     # The town's band 12-16: a character of the thirteenth level (the
-    # lottery's ticket [14] wants 13-14, the mines' gates 12-15, the quarry
+    # lotteries 12-16, the mines' gates 12-15, the quarry
     # 12-16).
     c, CID, lid, arrival = newcomer("Traveller", 13)
     here = inhabitants(arrival, lid)
@@ -967,7 +967,7 @@ try:
     done = hand_in(c, here, LOTTERY_MAN, q)
     after = held(CID)
     prizes = {o for o, _n, _w in quests.get(LOTTERY).rew_random}
-    check("  ..«Лотерея Донголы (13-14)» (721): the ticket gone, one of the draw's prizes in the"
+    check("  ..«Лотерея Донголы (12-16)» (721): the ticket gone, one of the draw's prizes in the"
           " bag", (acks(got), acks(done)[:1], after[LOT_TICKET],
                    len([t for t in prizes if after[t] > before[t]])), ([0], [0], 0, 1))
 
@@ -1057,7 +1057,7 @@ try:
     done = hand_in(c, here, GOLD_LOTTERY_MAN, q)
     after = held(CID)
     prizes = {o for o, _n, _w in quests.get(GOLD_LOTTERY).rew_random}
-    check("  ..«Золотая Лотерея Донголы (13-14)» (722): the ticket gone, one of the prizes in the"
+    check("  ..«Золотая Лотерея Донголы (12-16)» (722): the ticket gone, one of the prizes in the"
           " bag", (acks(got), acks(done)[:1], after[GOLD_LOT_TICKET],
                    len([t for t in prizes if after[t] > before[t]])), ([0], [0], 0, 1))
     check("  ..of the 43.60 gold 10.70 left", money(CID)[1] - purse0[1],

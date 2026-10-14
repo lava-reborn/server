@@ -491,6 +491,19 @@ try:
                 for o in r["rew_random"])) for r in family("decode")],
           [([DECODER], n, True, True) for n in range(1, 9)])
 
+    def decode_margin(r):
+        """The draw's mean sale back to a stall (Inventory.sell: cost x SMOD,
+        floored) less the fee, and a tenth of the draw's mean price."""
+        prices = [items.params_of(o["obj"]) for o in r["rew_random"]]
+        sale = sum(int(p["cost"] * inventory.SMOD * p.get("sell_mod", 1)) for p in prices)
+        worth = sum(p["cost"] for p in prices) / float(len(prices))
+        return sale / float(len(prices)) - r["cost_afro"], worth / 10.0
+
+    check("  ..and no farm: a decoded blueprint sold back nets at most a tenth of its price"
+          " (data/build_weaponcraft.py DECODE_FEE, 60 % of the draw's price)",
+          [r["craft"]["level"] for r in family("decode")
+           if decode_margin(r)[0] > decode_margin(r)[1]], [])
+
     # The way into the quarter and back went with the premium masters' camp
     # 124 it started from (the owner's cut of (P), 2026-09-30): Мастер Азам
     # stands nowhere, neither row has a giver, no passage is left, and the

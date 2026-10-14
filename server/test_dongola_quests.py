@@ -23,7 +23,9 @@ In process:
     rows not pinned are exactly the DESIGNED ones, and no DESIGNED line says
     «не ..., а ...»;
   * every thing a row names is an objects.xml object with a name and a
-    description of its own, none premium; every thing asked for can be had --
+    description of its own, none premium, and drawn -- its picture in the
+    original's res or in client/files (the coin 46652, the release's copy of
+    the original's qSilverReal); every thing asked for can be had --
     dropped while the quest wants it by somebody standing in the open places,
     sold at a stall there, or handed out by a row; no row pays gold or an
     ingot;
@@ -34,13 +36,15 @@ In process:
     608/1009, 702/703); from every interior of Донгола -- the prison, the
     quarry, the mine, the sewers, Zone 49 -- the free ways (level 0, no chain,
     nothing asked, no window), its sides and its doors lead to a place of the
-    map;
+    map; the ways into Zone 49 cost the fares of the rides to Донгола from the
+    same towns (733 as 630, 744 as 275), the Zone's own stay free;
   * the prison: «Выход» (163) is a way under '622' up to the yard 159, the
     gates lead to 618 and 619, the windows prison_dn* keep the label's hours,
     the prisoners drop the armband 2476 in 620-622, and the one keep_in row of
     2476 holds both prisons' blocks; 164-168 name both prisons' prisoners;
   * the mines' gates: three ways down at levels 12-15, three up at any level;
-    the lotteries: every prize worth less than its ticket; the warehouses:
+    the lotteries: every prize worth less than its ticket, open to the town's
+    band 12-16 and named for it; the warehouses:
     three sites, their boxes 768-770 in the window wh_box;
   * «Коллекция водителя шайтан-арбы»: its six pieces named and described,
     a live collection (keepsakes), Уорхол gives 270 and 271;
@@ -57,6 +61,7 @@ On a socket (a server of the suite's own, LAVA_CHEATS) only the rides:
 
     LAVA_RES=.../lava/res python3 server/test_dongola_quests.py
 """
+import hashlib
 import json
 import os
 import re
@@ -82,8 +87,10 @@ import items  # noqa: E402
 import keepsakes  # noqa: E402
 import names  # noqa: E402
 import orig_texts  # noqa: E402
+import own_items  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
+import shop_bands  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
 from protocol import decode  # noqa: E402
@@ -113,8 +120,19 @@ EXPECT = {"rides": [630, 631], "prison": list(range(632, 637)),
           "spell": list(range(750, 757)), "messenger": [757, 758],
           "reserve": [762], "boxes": [768, 769, 770]}
 # Not pinned to the original: their texts are DESIGNED, or a start is ours
-# (the lotteries' prize lists without the (P) guns, the boss hours of 653).
-DESIGNED = {653, 706, 707, 715, 716, 717, 718, 719, 720, 721, 722, 748, 749, 762}
+# (the lotteries' names for the town's band and prize lists without the (P)
+# guns, the fee lines of the ways into Zone 49, the boss hours of 653).
+DESIGNED = {653, 706, 707, 715, 716, 717, 718, 719, 720, 721, 722, 733, 744, 748, 749, 762}
+# The ways into Zone 49 and the rides to Донгола whose fares they cost (the
+# review of 2026-10-14): Каспар's from Вади-Хальфа's quarter as Хассир's,
+# Генри Джонс's from Абри's slums as Луиджи's.
+ZONE_IN = {733: 630, 744: 275}
+# The band of Донгола's lotteries: the town's.
+TOWN_BAND = (12, 16)
+# The coin «Серебристая монета» (46652, qSilverReal_one), whose picture the
+# release ships (client/files): the original's qSilverReal/ico.swf.
+COIN, COIN_ICON = 46652, "classes/SimpleObject/qSilverReal_one/ico.swf"
+COIN_ORIGINAL = "classes/SimpleObject/qSilverReal/ico.swf"
 # Вади-Хальфа's and Абри's rows that waited for Донгола and are on now.
 WAITED = [254, 257, 258, 260, 261, 271, 275, 281, 282]
 NUR, HASSIR, LUIGI, STATION, DN_STATION, PORT = 156, 105, 1179, 37, 49, 187
@@ -218,8 +236,9 @@ try:
     with open(os.path.join(ROOT, "data", "orig_misc.json"), encoding=ENC) as fh:
         pinned = {int(k): v["ids"] for k, v in json.load(fh)["quests"].items()}
     check("the texts pinned to the original (data/build_orig_misc.py VERIFIED): every row but"
-          " the DESIGNED ones (the mines' gates, the lotteries' starts, the DESIGNED ways, the"
-          " boss hours of 653)", sorted(set(mine) - set(pinned)), sorted(DESIGNED))
+          " the DESIGNED ones (the mines' gates, the lotteries' names and starts, the DESIGNED"
+          " ways, the fee lines of the ways into Zone 49, the boss hours of 653)",
+          sorted(set(mine) - set(pinned)), sorted(DESIGNED))
     orig = orig_texts.quests()
     check("  ..laid over the table's (but what a row keeps as its own, own_texts)",
           [(t, key) for t in mine for k, key in enumerate(quests.TEXT_KEYS)
@@ -241,6 +260,32 @@ try:
           [o for o in things if not names.known(items.STRING_ID_OFFSET + o)
            or not names.known(items.DESC_ID_OFFSET + o)
            or item_name(o) in (None, "", cat[o][1]) or items.premium(o)], [])
+
+    def icon(o):
+        """Where the client looks for a thing's picture (SSEmulator.getIcon):
+        a type of our own draws the one of the type it is like."""
+        t = own_items.load()[o]["like"] if items.own(o) else o
+        return own_items.icon_path(*cat[t])
+
+    def drawn(rel):
+        """The picture is in the client: the original's res, or the release's
+        own files (client/files), which the launcher puts beside them."""
+        return any(os.path.isfile(os.path.join(base, *rel.split("/")))
+                   for base in (world.RES, os.path.join(ROOT, "client", "files")))
+
+    check("  ..and drawn: every one has its picture, in the original's res or in client/files --"
+          " the coin «Серебристая монета» 46652 too, which Хоу Сян's «Сокровища» (257) asks"
+          " fifteen of (the original ships it as qSilverReal, its row says qSilverReal_one)",
+          ([o for o in things if not drawn(icon(o))], icon(COIN)), ([], COIN_ICON))
+    with open(os.path.join(ROOT, "client", "base.txt"), encoding=ENC) as fh:
+        base_rows = [ln.rstrip("\n").split("\t") for ln in fh]
+    base_sha = {r[2]: r[0] for r in base_rows
+                if len(r) == 3 and r[2] in (COIN_ICON, COIN_ORIGINAL)}
+    with open(os.path.join(ROOT, "client", "files", *COIN_ICON.split("/")), "rb") as fh:
+        coin_sha = hashlib.sha256(fh.read()).hexdigest()
+    check("  ..the coin's picture is the release's copy of the original's qSilverReal, byte for"
+          " byte (client/base.txt), at a path the original lacks",
+          (coin_sha == base_sha.get(COIN_ORIGINAL), COIN_ICON in base_sha), (True, False))
     traders = {w for w in stands if MT.get(w) and MT[w][0] == world.TRADER}
     on_sale = {o for w in traders for lid in stands[w] for o in items.stock_for(w, lid)}
     # Handed out by a row, or -- a live collection's pieces -- put in a
@@ -316,6 +361,22 @@ try:
     check("Хассир, Луиджи and Нур-ад-Дин list their rides where q_idx finds them",
           (quests.given_by(HASSIR), quests.given_by(LUIGI), quests.given_by(NUR)),
           ([273, 279, 158, 159, 630], [274, 275, 280, 281], [282, 631, 632, 636]))
+    # With «Осмотр пирамиды» (741) and «Выбраться наверх» (748) free, a free
+    # way into Zone 49 was a free ride to Донгола's station (the review of
+    # 2026-10-14).
+    check("the ways into Zone 49 cost the fare of the ride to Донгола from the same town:"
+          " Каспар's (733) from Вади-Хальфа's quarter as Хассир's 630, Генри Джонс's (744) from"
+          " Абри's slums as Луиджи's 275; each start says what is taken, and both stay"
+          " repeatable, so that nobody who left the Zone is shut out of its chain",
+          {t: (real[t].cost_afro, real[t].repeatable, sorted(to for _f, to in ways.get(t, ())),
+               "будет списано %d афро" % real[t].cost_afro in real[t].texts[quests.START])
+           for t in ZONE_IN},
+          {t: (real[ride].cost_afro, 1, [702] if t == 733 else [704], True)
+           for t, ride in ZONE_IN.items()})
+    check("  ..the Zone's own ways stay free: into the first room (741), back to the cellar (749),"
+          " out to Донгола's station (748)",
+          [(t, real[t].cost_afro, real[t].has_fee) for t in (741, 748, 749)],
+          [(741, 0, False), (748, 0, False), (749, 0, False)])
 
     # The prison.
     sched = events.table()
@@ -375,6 +436,13 @@ try:
     check("  ..at the tickets' prices: 2400 afro and 3 G (the TRADE package's stalls)",
           {t: worth(ticket, 1, gold) for t, (ticket, _p, gold) in LOTTERIES.items()},
           {t: price for t, (_k, price, _g) in LOTTERIES.items()})
+    check("  ..open to the town's band 12-16, the stalls' whole band of buyers, and named for it:"
+          " a 15th or 16th who buys a ticket can play it (the original's «(13-14)» left them a"
+          " ticket no row took, the gold one lost whole)",
+          ({t: (real[t].level, real[t].max_level, real[t].name) for t in LOTTERIES},
+           tuple(shop_bands.band(50)), tuple(shop_bands.band(103))),
+          ({721: TOWN_BAND + ("Лотерея Донголы (12-16)",),
+            722: TOWN_BAND + ("Золотая Лотерея Донголы (12-16)",)}, TOWN_BAND, TOWN_BAND))
     with open(os.path.join(ROOT, "data", "holdings.json"), encoding=ENC) as fh:
         sites = json.load(fh)["sites"]
     check("the warehouses: three sites of data/holdings.json, their boxes' rows 768-770 the"

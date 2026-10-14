@@ -28,3 +28,14 @@ launcher has put this release in it (tools/test_deploy_slice.py). Put the
 original back from LAVA.zip, or point `LAVA_RES_SRC` at a res that has it.
 server/test_abri_world.py holds this copy to client/base.txt's original but
 for `title`, and takes either file from the res the server reads.
+
+`classes/SimpleObject/qSilverReal_one/ico.swf` is the original's
+`classes/SimpleObject/qSilverReal/ico.swf` byte for byte (client/base.txt).
+The coin «Серебристая монета» (46652) is the objects.xml row
+`qSilverReal_one`, and the client draws a thing from
+`classes/<folder>/<the row's name>/ico.swf` (SSEmulator.getIcon); the
+original ships the picture only under the name without `_one`, which no row
+has, so the coin was an empty cell in the bag, among Мастер Тиль's rewards
+and in the window of Хоу Сян's «Сокровища» (257), which asks for fifteen of
+them (the review of Донгола, 2026-10-14). It is outside the slice the server
+reads. server/test_dongola_quests.py holds the copy to the original's bytes.

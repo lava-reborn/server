@@ -34,7 +34,8 @@ What the cut is, each part held here (the pattern of server/test_abri_cut.py):
      good: the set upgraders Адольф 5106 (197) and Муаз 232 (50), Мастер Тиль
      5 and the test trader 5113 (103), Майор Свейн 6560 of Delta Force (445),
      the two of «Упавший спутник» (77), «Макисе Курису» 2176 in the prison's
-     two gated blocks (618, 619);
+     two gated blocks (618, 619), the two machine-gun masters with no row
+     5110/5111 in the masters' camp 96 (the review of 2026-10-14);
   6. the town's ground: the cut's cells are the town's still for the
      encounters (world.retired_cells), so no ambush is met on them or beside
      them; the cells «Засада» are not -- the Peacekeepers' ambushes are met
@@ -66,6 +67,7 @@ sys.path.insert(0, HERE)
 
 import accounts  # noqa: E402
 import encounters  # noqa: E402
+import items  # noqa: E402
 import map_cells  # noqa: E402
 import map_labels  # noqa: E402
 import names  # noqa: E402
@@ -403,15 +405,22 @@ try:
     check("shop_bands reads the same: the airfield and the clan bases are no town's",
           [shop_bands.city(i) for i in (530, 382, 448)], [None, None, None])
     HELD = {197: [5106], 50: [232], 103: [5, 5113], 445: [6560], 77: [4047, 6896], 618: [2176],
-            619: [2176]}
+            619: [2176], 96: [5110, 5111]}
     held = {r["loc"]: sorted(r["types"]) for r in SCHEDULE["held_out"] if r["loc"] in HELD}
     check("held out for good: Адольф 5106 in the new market, Муаз 232 in the old, Мастер Тиль 5 and the"
           " test trader 5113 in the black market, Майор Свейн 6560 in the port, the two of «Упавший"
-          " спутник», «Макисе Курису» 2176 in the prison's two gated blocks", held, HELD)
+          " спутник», «Макисе Курису» 2176 in the prison's two gated blocks, the two machine-gun"
+          " masters with no row 5110/5111 in the masters' camp 96", held, HELD)
     check("  ..so the rooms stand them nowhere there, while their files have them",
           ({lid: [t for t in types if t in stood_in(lid)] for lid, types in HELD.items()},
            {lid: [t for t in types if t not in standing(lid)] for lid, types in HELD.items()}),
           ({lid: [] for lid in HELD}, {lid: [] for lid in HELD}))
+    check("  ..the masters' camp 96 keeps the four who upgrade there (Сафи 335, Али 345, Самир 382,"
+          " Гази 385); the two held out give, take and sell nothing",
+          (sorted(t for t in stood_in(96) if t in (335, 345, 382, 385)),
+           [(quests.given_by(t), quests.taken_by(t), list(items.stock_for(t, 96) or ()))
+            for t in (5110, 5111)]),
+          ([335, 345, 382, 385], [([], [], [])] * 2))
 except Exception:
     import traceback
     fails.append("the shops broke:\n" + traceback.format_exc())

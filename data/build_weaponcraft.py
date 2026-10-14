@@ -59,10 +59,11 @@ plan's «видны только в своём поясе»):
             one before it gives every part.
   decode    «Чертежи N-го уровня» (47998-48037) at the decoder (Техногик):
             the «Зашифрованный чертеж (Nу)» -> one blueprint of that level
-            drawn, for a fee (DECODE_FEE of the level's price, DESIGNED: a
-            decoded blueprint sold back to a stall nets no more than a tenth
-            of its price). The encrypted blueprint drops in the camps of its
-            level, from anybody there, for a player with the row open
+            drawn, for a fee (DECODE_FEE of what the draw is worth, the
+            prizes' mean afro price, DESIGNED: a decoded blueprint sold back
+            to a stall nets no more than a tenth of its price). The
+            encrypted blueprint drops in the camps of its level, from
+            anybody there, for a player with the row open
             (DESIGNED chance CODIFIED_DROP, one a corpse at most); nothing
             else gives it, so a level no camp of the city holds has no row.
 
@@ -78,6 +79,7 @@ Output is deterministic: sort_keys, indent=1, ensure_ascii=False, no dates.
 """
 import collections
 import json
+import math
 import os
 import re
 import sys
@@ -118,9 +120,14 @@ FAMILIES = {"upgrade": [(10000, 10399), (10800, 10999)], "knife": [(10400, 10499
 BLUEPRINT_DROP = 0.1
 CODIFIED_DROP = 0.02
 ONE_OF_BLUEPRINT, ONE_OF_CODIFIED = "craft_blueprint", "craft_codified"
-# DESIGNED: the decoder's fee, a share of the level's blueprint price
-# (craft.LADDER): a decoded blueprint sold back (inventory.SMOD 0.7) nets a
-# tenth of its price, so an encrypted one is worth using, not farming.
+# DESIGNED: the decoder's fee, a share of what the draw is worth -- the mean
+# afro price of the row's prizes, which are drawn alike: a decoded blueprint
+# sold back (inventory.SMOD 0.7) nets a tenth of its price, so an encrypted
+# one is worth using, not farming. The fee was a share of the level's price
+# (craft.LADDER) until the review of 2026-10-14: it is the articles' price
+# for 0-12, but Донгола's 13-16 blueprints are priced 40 000 / 50 000 /
+# 69 000 / 80 000 by their articles over the ladder's 35 000-50 000, and a
+# decode there left 17-33 % of the prize after the sale, with no limit.
 DECODE_FEE = 0.6
 
 # A salvage class takes the broken guns from its parts' level (objects.xml
@@ -836,7 +843,10 @@ def decode_rows(city, texts, upgrades):
             continue
         slot = {"obj": codified, "num": 1,
                 "mobs": dropping, "drop": CODIFIED_DROP, "one_of": ONE_OF_CODIFIED}
-        fee = int(craft.LADDER[level][0] * DECODE_FEE)
+        # What the draw is worth: the prizes' mean afro price (drawn alike,
+        # w 1 each, below). Rounded up, so the sale never nets past a tenth.
+        worth = sum(items.params_of(t)["cost"] for t in prizes) / float(len(prizes))
+        fee = int(math.ceil(round(worth * DECODE_FEE, 6)))
         out.append(service(city, dict(
             kind="bring_l_obj", name=clean(texts[i]),
             # The fee said the way the original says its own («Внимание: с
@@ -852,7 +862,8 @@ def decode_rows(city, texts, upgrades):
             why="RECOVERED: texts.xml %d-%d, the notfinish %d and finish %d (the Техногик's "
                 "lines). DESIGNED: one blueprint of the level drawn (the ones the city's "
                 "recipes ask for and the ones the original names), the fee %d%% of the "
-                "level's price and its line in the start, the drop off the camps of the level."
+                "prizes' mean price and its line in the start, the drop off the camps of the "
+                "level."
                 % (i, i + 1, DECODE_NOTFINISH, DECODE_FINISH, int(DECODE_FEE * 100)))))
     return out
 

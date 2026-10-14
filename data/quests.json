@@ -11805,7 +11805,7 @@
     {
       "type": 721,
       "kind": "bring_l_obj",
-      "name": "Лотерея Донголы (13-14)",
+      "name": "Лотерея Донголы (12-16)",
       "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть что-нибудь из этого списка:<Br>Отборные патроны 7.62х39мм<Br>Отборные патроны 7.62х51мм НАТО<Br>Отборные патроны 9мм НАТО<Br>Отборные патроны 8.6x70 (.338 Lapua Magnum)<Br>Твоя удача у тебя в руках!",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
@@ -11826,17 +11826,17 @@
       ],
       "repeatable": 1,
       "service": true,
-      "level": 13,
-      "max_level": 14,
+      "level": 12,
+      "max_level": 16,
       "q_type": 0,
       "loc": 48154586,
       "finish_loc": 48154586,
-      "why": "RECOVERED texts (texts.xml 50462 name, 50463 start; the notfinish and finish of Вади-Хальфа's lottery, 50448 and 50449, the file stores once) -- but for the start's list of prizes, where the (P) guns are cut (the owner's cut of (P), 2026-09-30), and so is «Индивидуальная аптечка (10)», whose A kit is in no objects.xml row, DESIGNED, so the start is ours and the row not in data/build_orig_misc.py VERIFIED, as Вади-Хальфа's 308/309 and Абри's 518-521 -- and ticket, DESIGNED prizes (the owner's «и потом сделай донголу тоже», 2026-10-13). Лотерейщик (663, dn_lotery, the Старый и Новый рынок 50/197; the lottery men stand all the year, world.SEASON_KEPT), «Лотерея Донголы (13-14)»: bring the ticket «Лотерейный билет [14]» (2648, sold at the same stall, the TRADE package, 2400 afro), and one prize is drawn (rew_random, equal weights), each worth a little less than the ticket at the stalls' prices: 149 «Ammo_762x39_OT» (6122), 2384 afro; 199 «Ammo_762x51_OT» (6119), 2388 afro; 399 «Ammo_9mmNato_OT» (6116), 2394 afro; 149 «Ammo_86x70_OT» (6126), 2384 afro. Levels 13-14 (the name's band). A service: repeatable, outside the daily limit."
+      "why": "RECOVERED texts (texts.xml 50463 start; the notfinish and finish of Вади-Хальфа's lottery, 50448 and 50449, the file stores once) -- but for the start's list of prizes, where the (P) guns are cut (the owner's cut of (P), 2026-09-30), and so is «Индивидуальная аптечка (10)», whose A kit is in no objects.xml row, DESIGNED, so the start is ours and the row not in data/build_orig_misc.py VERIFIED, as Вади-Хальфа's 308/309 and Абри's 518-521 -- and ticket, DESIGNED prizes (the owner's «и потом сделай донголу тоже», 2026-10-13). Лотерейщик (663, dn_lotery, the Старый и Новый рынок 50/197; the lottery men stand all the year, world.SEASON_KEPT), «Лотерея Донголы»: bring the ticket «Лотерейный билет [14]» (2648, sold at the same stall, the TRADE package, 2400 afro), and one prize is drawn (rew_random, equal weights), each worth a little less than the ticket at the stalls' prices: 149 «Ammo_762x39_OT» (6122), 2384 afro; 199 «Ammo_762x51_OT» (6119), 2388 afro; 399 «Ammo_9mmNato_OT» (6116), 2394 afro; 149 «Ammo_86x70_OT» (6126), 2384 afro. A service: repeatable, outside the daily limit. Levels 12-16, Донгола's band, the name «(12-16)» DESIGNED for it: the original's «(13-14)» (50462) left the 15th and 16th to Абу-Хамед's «(15-16)» lottery, a closed town, while the stall sold them a ticket no row would take -- the gold one lost whole, no stall buying it back (the review of 2026-10-14)."
     },
     {
       "type": 722,
       "kind": "bring_l_obj",
-      "name": "Золотая Лотерея Донголы (13-14)",
+      "name": "Золотая Лотерея Донголы (12-16)",
       "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть что-нибудь из этого списка:<Br>Экспансивные патроны 9мм НАТО<Br>Экспансивные патроны 7.62х39мм<Br>Экспансивные патроны 7.62х51мм НАТО<Br>Экспансивные патроны 8.6x70 (.338 Lapua Magnum)<Br>Твоя удача у тебя в руках!",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
@@ -11857,12 +11857,12 @@
       ],
       "repeatable": 1,
       "service": true,
-      "level": 13,
-      "max_level": 14,
+      "level": 12,
+      "max_level": 16,
       "q_type": 0,
       "loc": 48162780,
       "finish_loc": 48162780,
-      "why": "RECOVERED texts (texts.xml 50464 name, 50465 start; the notfinish and finish of Вади-Хальфа's lottery, 50448 and 50449, the file stores once) -- but for the start's list of prizes, where the (P) guns are cut (the owner's cut of (P), 2026-09-30), DESIGNED, so the start is ours and the row not in data/build_orig_misc.py VERIFIED, as Вади-Хальфа's 308/309 and Абри's 518-521 -- and ticket, DESIGNED prizes (the owner's «и потом сделай донголу тоже», 2026-10-13). Лотерейщик, Золотая лотерея (712, dn_lotery_g, the Чёрный рынок 103), «Золотая Лотерея Донголы (13-14)»: bring the ticket «Лотерейный билет [G][14]» (2651, sold at the same stall for gold only, the TRADE package, 3 G), and one prize is drawn, each worth a little less than the ticket at the gold stalls' prices: 299 «Ammo_9mmNato_EK_G» (6152), 2,99 G; 299 «Ammo_762x39_EK_G» (6158), 2,99 G; 299 «Ammo_762x51_EK_G» (6155), 2,99 G; 299 «Ammo_86x70_EK_G» (6162), 2,99 G. Gold things only (no stall buys them back). Levels 13-14. A service."
+      "why": "RECOVERED texts (texts.xml 50465 start; the notfinish and finish of Вади-Хальфа's lottery, 50448 and 50449, the file stores once) -- but for the start's list of prizes, where the (P) guns are cut (the owner's cut of (P), 2026-09-30), DESIGNED, so the start is ours and the row not in data/build_orig_misc.py VERIFIED, as Вади-Хальфа's 308/309 and Абри's 518-521 -- and ticket, DESIGNED prizes (the owner's «и потом сделай донголу тоже», 2026-10-13). Лотерейщик, Золотая лотерея (712, dn_lotery_g, the Чёрный рынок 103), «Золотая Лотерея Донголы»: bring the ticket «Лотерейный билет [G][14]» (2651, sold at the same stall for gold only, the TRADE package, 3 G), and one prize is drawn, each worth a little less than the ticket at the gold stalls' prices: 299 «Ammo_9mmNato_EK_G» (6152), 2,99 G; 299 «Ammo_762x39_EK_G» (6158), 2,99 G; 299 «Ammo_762x51_EK_G» (6155), 2,99 G; 299 «Ammo_86x70_EK_G» (6162), 2,99 G. Gold things only (no stall buys them back). A service. Levels 12-16, Донгола's band, the name «(12-16)» DESIGNED for it: the original's «(13-14)» (50464) left the 15th and 16th to Абу-Хамед's «(15-16)» lottery, a closed town, while the stall sold them a ticket no row would take -- the gold one lost whole, no stall buying it back (the review of 2026-10-14)."
     },
     {
       "type": 725,
@@ -12051,8 +12051,8 @@
       "type": 733,
       "kind": "del_obj",
       "name": "Мухаммед Ахмед (часть 10)",
-      "start": "Я Каспар. Ты кто так%sex?ой:ая%? Проваливай с моих глаз.<Br><Br>*Вы пытаетесь все же рассказать Каспару про Мухаммеда Ахмеда. Услышав это имя Каспар меняется в лице.*<Br><Br>Я попробую отвести туда, где его видели последний раз мои люди. Только придется надеть мешок на голову, что бы ты не знал%sex?:а% где это место.",
-      "notfinish": "",
+      "start": "Я Каспар. Ты кто так%sex?ой:ая%? Проваливай с моих глаз.<Br><Br>*Вы пытаетесь все же рассказать Каспару про Мухаммеда Ахмеда. Услышав это имя Каспар меняется в лице.*<Br><Br>Я попробую отвести туда, где его видели последний раз мои люди. Только придется надеть мешок на голову, что бы ты не знал%sex?:а% где это место.<Br><Br><b>Внимание:</b> с вашего счёта будет списано 200 афро.",
+      "notfinish": "Для оплаты дороги вам необходимо 200 афро.",
       "finish": "Ну, вот это волшебное место, здесь и помер твой Джонс.",
       "give": [49],
       "take": [49],
@@ -12061,6 +12061,7 @@
       "num_rew_obj": [],
       "rew_afro": 0,
       "rew_gold": 0,
+      "cost_afro": 200,
       "rew_loc": 1,
       "repeatable": 1,
       "level": 0,
@@ -12068,7 +12069,7 @@
       "need_quest": 732,
       "loc": 48899775,
       "finish_loc": 0,
-      "why": "RECOVERED texts (texts.xml 47056-47058), «Мухаммед Ахмед» parts 2-10 (47031-47058; the owner's «и потом сделай донголу тоже», 2026-10-13), after Камал's part 1 (507, Абри's Трущобы 255): Айна (139, the Причал 445), Агата (388, the station 49), the Миротворцы's «[15] Сержант» (399, the camp 98), Тахир (108), Бари the blind (6520) and Каспар (49) of Вади-Хальфа's quarter 36, Лейла (860, the Старый рынок 50) and Zone 49, where Генри Джонс -- Мухаммед Ахмед -- is held. Part 10: «Я попробую отвести туда, где его видели последний раз мои люди. Только придется надеть мешок на голову» -- a way (data/passages.json 'quest' under '36', DESIGNED) from Каспар to the cellar of Zone 49, 702 «Подвал» (DN_Zone49_Prison), where Генри Джонс sits; «Ну, вот это волшебное место». Repeatable after part 9: Каспар takes the player back there any time, the cellar having no door of its own."
+      "why": "RECOVERED texts (texts.xml 47056-47058), «Мухаммед Ахмед» parts 2-10 (47031-47058; the owner's «и потом сделай донголу тоже», 2026-10-13), after Камал's part 1 (507, Абри's Трущобы 255): Айна (139, the Причал 445), Агата (388, the station 49), the Миротворцы's «[15] Сержант» (399, the camp 98), Тахир (108), Бари the blind (6520) and Каспар (49) of Вади-Хальфа's quarter 36, Лейла (860, the Старый рынок 50) and Zone 49, where Генри Джонс -- Мухаммед Ахмед -- is held. Part 10: «Я попробую отвести туда, где его видели последний раз мои люди. Только придется надеть мешок на голову» -- a way (data/passages.json 'quest' under '36', DESIGNED) from Каспар to the cellar of Zone 49, 702 «Подвал» (DN_Zone49_Prison), where Генри Джонс sits; «Ну, вот это волшебное место». Repeatable after part 9: Каспар takes the player back there any time, the cellar having no door of its own; a one-off would strand whoever leaves the Zone before «В город за патронами» (743) opens the way back from Абри. The fee, 200 afro (cost_afro), is the price of Хассир's ride 630, so the Zone is no free ride to Донгола's station: with «Осмотр пирамиды» (741) and «Выбраться наверх» (748) free, this way was one from Вади-Хальфа's quarter for nothing, as often as liked (the review of 2026-10-14). Its line in the start and the notfinish are DESIGNED, so the row is not in data/build_orig_misc.py VERIFIED."
     },
     {
       "type": 734,
@@ -12257,8 +12258,8 @@
       "type": 744,
       "kind": "del_obj",
       "name": "Путь в пирамиду",
-      "start": "Запас взял%sex?:а%? Я очень люблю трогательную музыку. Сыграй мне военный марш. Да погромче... Двигаться будем с одной скоростью....с моей!",
-      "notfinish": "",
+      "start": "Запас взял%sex?:а%? Я очень люблю трогательную музыку. Сыграй мне военный марш. Да погромче... Двигаться будем с одной скоростью....с моей!<Br><Br><b>Внимание:</b> с вашего счёта будет списано 100 афро.",
+      "notfinish": "Для оплаты дороги вам необходимо 100 афро.",
       "finish": "Надо приступать к решительному штурму.",
       "give": [1843],
       "take": [1843],
@@ -12267,6 +12268,7 @@
       "num_rew_obj": [],
       "rew_afro": 0,
       "rew_gold": 0,
+      "cost_afro": 100,
       "rew_loc": 1,
       "repeatable": 1,
       "level": 0,
@@ -12274,7 +12276,7 @@
       "need_quest": 743,
       "loc": 48023339,
       "finish_loc": 0,
-      "why": "RECOVERED texts (texts.xml 47078-47080), Доктор Джонс and Zone 49 (47059-47089; the owner's «и потом сделай донголу тоже», 2026-10-13): Генри Джонс in the cellar 702 (1841) with his box (1844, «Ящик Джонса», DESIGNED name), in the three rooms of Zone 49 703-705 (1842) and in Абри's Трущобы (1843), and the Selenites «Плохой парень<Br>Селениты» of the rooms, [7] in 703 (1847), [15] in 704 (1845), [17] in 705 (1846). Zone 49 is no place of the map: the rooms open into each other by their sides (the WORLD package), and the cellar, which has neither sides nor doors, by ways (DESIGNED); none leads straight onto the map (no_map). «Путь в пирамиду»: «Запас взял? ... Надо приступать к решительному штурму» -- a way (under '255', DESIGNED) from Абри's Трущобы back into Zone 49, its second room 704. Repeatable after 743: the way into the Zone for whoever has been there."
+      "why": "RECOVERED texts (texts.xml 47078-47080), Доктор Джонс and Zone 49 (47059-47089; the owner's «и потом сделай донголу тоже», 2026-10-13): Генри Джонс in the cellar 702 (1841) with his box (1844, «Ящик Джонса», DESIGNED name), in the three rooms of Zone 49 703-705 (1842) and in Абри's Трущобы (1843), and the Selenites «Плохой парень<Br>Селениты» of the rooms, [7] in 703 (1847), [15] in 704 (1845), [17] in 705 (1846). Zone 49 is no place of the map: the rooms open into each other by their sides (the WORLD package), and the cellar, which has neither sides nor doors, by ways (DESIGNED); none leads straight onto the map (no_map). «Путь в пирамиду»: «Запас взял? ... Надо приступать к решительному штурму» -- a way (under '255', DESIGNED) from Абри's Трущобы back into Zone 49, its second room 704. Repeatable after 743: the way into the Zone for whoever has been there. The fee, 100 afro (cost_afro), is the price of Луиджи's ride 275, so the Zone is no free ride to Донгола's station: with «Осмотр пирамиды» (741) and «Выбраться наверх» (748) free, this way was one from Абри's Трущобы for nothing, as often as liked (the review of 2026-10-14). Its line in the start and the notfinish are DESIGNED, so the row is not in data/build_orig_misc.py VERIFIED."
     },
     {
       "type": 745,
