@@ -289,6 +289,16 @@
    "loc": 127,
    "types": [7344],
    "why": "The same for the quarter: UpGuns_Npc_Trader000036, whose row by the offset (51678) is the camp's apprentice (A) Катада, who stands in 131 as ah_modif_rifle (759) -- the mirror of 7339."
+  },
+  {
+   "loc": 127,
+   "types": [7341],
+   "why": "The same for the quarter's twin of the rifles' master (decision 9 of the plan, by the integration of 2026-10-14, as Донгола's review held its masters' camp's two empty machine-gun masters 5110/5111 out of 96): UpGuns_Npc_Trader000033, «Мастер Зияд<Br>улучшение винтовок» (51675, the matcher's high), beside Мастер Зияд ah_trmodif_rifle_g (752) by the same row, who sells the town's rifle blueprints and does its rifle upgrades (data/build_weaponcraft.py). This one gives and takes no row and sells nothing (data/npcs.json stock, empty), so a player would find a second Мастер Зияд with an empty window beside the first. He stands in this file alone."
+  },
+  {
+   "loc": 131,
+   "types": [7342],
+   "why": "The same for the masters' camp's twin of the assault rifles' apprentice: UpGuns_Npc_Trader000034, «Подмастерье Имран<Br>улучшение автоматов» (51676, the matcher's high), beside Подмастерье Имран ah_modif_assrifle (755) by the same row, who does the town's assault rifle upgrades (A); no row, no stall of his own. He stands in this file alone."
   }
  ],
  "quests": [

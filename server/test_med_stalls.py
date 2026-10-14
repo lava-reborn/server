@@ -463,11 +463,12 @@ def title(t):
 
 check("every trader of a city's place the original titles a medicine or food seller is a seller"
       " of medicine in the file: Йонас «Патроны и лекарства» on the valley's truck and the"
-      " Снабженец Хальфы of the prison yard among them, whose stalls stood empty, and Донгола's"
-      " of its yard (2181, standing since his name came, 2026-10-13)",
+      " Снабженец Хальфы of the prison yard among them, whose stalls stood empty, Донгола's"
+      " of its yard (2181, standing since his name came, 2026-10-13) and Абу-Хамед's of its"
+      " yard (880, named since 2026-10-14)",
       (sorted({(t, title(t)) for (p, t) in STALLS if title(t) in TITLES and t not in MEDICS}),
        sorted({t for (p, t) in STALLS if title(t) == "Патроны и лекарства"})),
-      ([], [2180, 2181, 5225]))
+      ([], [880, 2180, 2181, 5225]))
 check("  ..and no seller of medicine there opens an empty window",
       sorted((p, t) for (p, t), s in STALLS.items() if t in MEDICS and not s), [])
 

@@ -206,16 +206,12 @@ for _p in sorted(glob.glob(os.path.join(world.RES, "locations", "static", "*.xml
 check("  ..no other location's file has one of them", _elsewhere, [])
 with open(os.path.join(os.path.dirname(HERE), "data", "holdings.json"), encoding=ENC) as _fh:
     _sites = json.load(_fh)["sites"]
-# Абу-Хамед's Центр (wh_ah_center, its master 7454) is a site since the
-# owner's Абу-Хамед of 2026-10-14; its row of data/holdings.json is the
-# QUESTS package's (abuhamed/handoff-quests.md, «Для WORLD»), so it is
-# expected here once the row is in.
-_ah_center = [(7454, True)] if "wh_ah_center" in _sites else []
 check("  ..and the capturable sites' bosses (data/holdings.json) are masters: Вади-Хальфа's"
       " three and, since 2026-10-13, Донгола's, and, since 2026-10-14, Абу-Хамед's Центр",
       sorted((s["boss"], s["boss"] in bosses.WAREHOUSE_MASTERS)
              for k, s in _sites.items() if not k.startswith("_")),
-      [(7448, True), (7449, True), (7450, True), (7451, True), (7452, True), (7453, True)] + _ah_center)
+      [(7448, True), (7449, True), (7450, True), (7451, True), (7452, True), (7453, True),
+       (7454, True)])
 
 check("hours parse as minutes, sorted and once each",
       bosses.parse_hours(" 20, 18 ,18"), [18 * 60, 20 * 60])

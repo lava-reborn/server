@@ -486,10 +486,12 @@ try:
             taken[(lid, s)] = (ex.loc_id, ex.gx, ex.gy)
             if (ex.gx, ex.gy) != tuple(want):
                 shifted.append((lid, s, start, (ex.gx, ex.gy)))
-    check("only the three doors up into the mine's entrances arrive on the far side's cell"
-          " (own_cell): Вади-Хальфа's, and since 2026-10-13 Донгола's, its twin file for file"
-          " (616 → 155, 614 → 157, 1013 → 161)", own,
-          [(613, "a"), (614, "a"), (616, "a"), (617, "a"), (1012, "a"), (1013, "a")])
+    check("only the doors up into the mines' entrances arrive on the far side's cell"
+          " (own_cell): Вади-Хальфа's three, since 2026-10-13 Донгола's, its twin file for"
+          " file (616 → 155, 614 → 157, 1013 → 161), and since 2026-10-14 Абу-Хамед's Dark"
+          " Mine (615 → 156)", own,
+          [(613, "a"), (614, "a"), (615, "a"), (616, "a"), (617, "a"), (1012, "a"),
+           (1013, "a")])
     check("  ..every other of the game's %d doors keeps the cell it is taken from" % len(taken),
           shifted, [])
     check("  ..among them the «Горные тропы» doors 598/162 and 623/53, as before the mine",

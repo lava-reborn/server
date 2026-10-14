@@ -123,9 +123,13 @@ OASIS_ROUNDS = [6104, 6105, 6106, 6108, 6107, 6110, 6111, 6115, 6116, 6117, 6118
 UNLISTED = (749, 753, 4583, 4584, 7344, 7339, 7341, 7342)   # masters with no stall of their own
 # The package WORLD holds the trader 7247, with no row and no role, out of the station
 # (data/schedule.json held_out) and stands the lottery men all year (world.SEASON_KEPT):
-# 741 and 742 at the port. Until it is merged 7247 stands there with an empty stall and
-# the lottery men nowhere -- their lists decided all the same.
-HELD_OUT = {STATION: {7247}}
+# 741 and 742 at the port. It holds out the masters' twins too, UpGuns types whose rows
+# name masters standing by types of their own: 7344 of the quarter and 7339 of the
+# masters' camp (Катада and Гияс, each in the other place), and, since the integration,
+# 7341 and 7342 beside the very masters they double (Зияд, Имран), as Донгола's review
+# held out its two empty machine-gun masters. Their stalls stay decided, empty, should
+# they ever stand again.
+HELD_OUT = {STATION: {7247}, QUARTER: {7344, 7341}, MASTERS_CAMP: {7339, 7342}}
 WORLD_PUTS = {PORT: {LOTTERY, GOLD_LOTTERY}}
 
 # Each trader of Абу-Хамед's places and what decides its stall there, 2026-10-14
@@ -285,8 +289,8 @@ check("every trader standing in a place of Абу-Хамед has its stall decid
       " the town's band, the wiki's list kept, or none), and the table names nobody who stands"
       " nowhere",
       ({p: sorted(t for t in AT[p] if t not in DECIDED[p]) for p in ABUHAMED_PLACES},
-       {p: sorted(t for t in DECIDED[p] if t not in AT[p] and t not in WORLD_PUTS.get(p, ()))
-        for p in ABUHAMED_PLACES}),
+       {p: sorted(t for t in DECIDED[p] if t not in AT[p] and t not in WORLD_PUTS.get(p, ())
+                  and t not in HELD_OUT.get(p, ())) for p in ABUHAMED_PLACES}),
       ({p: [] for p in ABUHAMED_PLACES}, {p: [] for p in ABUHAMED_PLACES}))
 check("  ..and no trader stands in any other place of Абу-Хамед the plan's walk reaches",
       {p: stood(p) for p in REACHED if stood(p)}, {})

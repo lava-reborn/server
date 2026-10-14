@@ -32,7 +32,8 @@ What the cut is, each part held here (the pattern of server/test_dongola_cut.py)
      places, as Абри's keeps 378 and Донгола's 469 (nobody opens its room);
      held out of their rooms for good: the set upgrader Ундольф 5107 (127),
      the trader with no row 7247 (126), the money box of another place 6521
-     (123), the masters' twins 7339 (131) and 7344 (127); «Макисе Курису» 2176
+     (123), the masters' twins 7339 and 7342 (131) and 7344 and 7341 (127);
+     «Макисе Курису» 2176
      stands in the prison's two gated blocks (649, 650), the town's band being
      his;
   6. the town's ground: the cut's cells are the town's still for the
@@ -377,13 +378,14 @@ try:
           ([126, 127, 128, 129, 131, 177, 196, 446, 467], [467]))
     check("shop_bands reads the same: the airfield, the quarters and the clan bases are no town's",
           [shop_bands.city(i) for i in (527, 451, 449, 194, 118)], [None] * 5)
-    HELD = {127: [5107, 7344], 126: [7247], 123: [6521], 131: [7339]}
+    HELD = {127: [5107, 7341, 7344], 126: [7247], 123: [6521], 131: [7339, 7342]}
     held = {}
     for r in SCHEDULE["held_out"]:
         if r["loc"] in HELD:
             held.setdefault(r["loc"], []).extend(r["types"])
     check("held out for good: Ундольф 5107 in the quarter, the station's trader with no row 7247, the money"
-          " box 6521 of «Место крушения.», the masters' twins 7339 (the camp) and 7344 (the quarter)",
+          " box 6521 of «Место крушения.», the masters' twins 7339 and 7342 (the camp) and 7344 and"
+          " 7341 (the quarter)",
           {k: sorted(v) for k, v in held.items()}, HELD)
     check("  ..so the rooms stand them nowhere there, while their files have them",
           ({lid: [t for t in types if t in stood_in(lid)] for lid, types in HELD.items()},
