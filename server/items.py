@@ -786,9 +786,21 @@ GOLD_INGOTS = {7620: 100, 4796: 500, 4797: 1000}
 # gold lottery's ticket «Лотерейный билет (G)(14)» (712, the black market),
 # 3 G, its article's, gold alone as its Абри twins' (2400 afro beside it in
 # the article), RECOVERED (2026-10-13).
+#
+# And Абу-Хамед's (2026-10-14, the owner's «сделай потом абу хамед в таком
+# же формате»), RECOVERED, each its article's gold price and gold alone:
+# the gold lottery's (742, the pier 446) «Лотерейный билет (G)(16)»,
+# «(G)(18)», «(G)(19)», 3 G, 3.5 G and 4.5 G (3000, 3700 and 4730 afro
+# beside them in the articles, the plain tickets' prices); the bus tickets
+# «Билет в Абу-Хамед из Донголы» 0.25 G (Нур-ад-Дин's) and «Билет в Донголу
+# из Абу-Хамеда» 0.10 G (Веласкес's), whose articles name no afro price --
+# each the fare of its ride, 276 and 277 (data/quests.json, cost_gold 25
+# and 10), so no ticket is dearer than the ride it stands for.
 GOLD_LINE_BLUEPRINTS = frozenset(range(37664, 37681))
 ARTICLE_GOLD_PRICE = {2649: 200, 2650: 250,           # DnLoteryKey_g_9_10, _g_11_12
                       2651: 300,                      # DnLoteryKey_g_13_14
+                      2654: 300, 2655: 350, 3575: 450,  # AhLoteryKey_g_15_16, _17_18, _19_19
+                      1567: 25, 1639: 10,             # ah_ticket, ah_dongola_ticket_g
                       6294: 10, 6295: 100, 6296: 1000}  # kupon_ammo_20, _300, _5000
 GOLD_PRICE_ONLY = frozenset({1333}) | GOLD_LINE_BLUEPRINTS | frozenset(ARTICLE_GOLD_PRICE)
 
@@ -847,12 +859,18 @@ def gold_round(p):
 # 46966, data/quests.json 275), so a ticket at 200 nobody would buy. In Абри
 # no ticket costs more than its ride either (6544 100 against 100, 6545 150
 # against 400).
+#
+# And of Абу-Хамед's (2026-10-14): Муамар's (741, the pier 446) «Лотерейный
+# билет (16)» 3000, «(18)» 3700 and «(19)» 4730, their articles' --
+# RECOVERED.
 CRAT_TOOLS = (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038, 7039, 7040, 7041, 7042)
 OWN_ARTICLE_PRICE = {1307: 500,
                      6544: 100, 6545: 150,          # ticket_WH_to_Abri, ticket_Abri_to_WH
                      6546: 100, 6547: 110,          # ticket_Abri_to_DN, ticket_DN_to_Abri
                      2646: 1000, 2647: 1700,        # DnLoteryKey_9_10, _11_12
                      2648: 2400,                    # DnLoteryKey_13_14
+                     2652: 3000, 2653: 3700,        # AhLoteryKey_15_16, _17_18
+                     3574: 4730,                    # AhLoteryKey_19_19
                      5740: 50, 5741: 50, 5742: 50}  # qGypsum_2012, qWire_2012, qBandages_2012
 OWN_ARTICLE_PRICE.update((t, 100) for t in CRAT_TOOLS)
 

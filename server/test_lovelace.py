@@ -136,9 +136,11 @@ check("a table of our own types is refused where it would clash with the origina
           {"60001": {"name": "helm_x", "like": 60000}})],        # like one of ours
       [False, True, True, True, True, True, True, True])
 # The objects.xml of a client the launcher installed is the release's: our
-# rows in it, as that release had them -- this one's, or an older one's.
+# rows in it, as that release had them -- this one's, or an older one's. The
+# type taken out is 60099, none of ours (60005-60009 are Тёмное Эхо's G since
+# 2026-10-14).
 STALE = dict(cat)
-STALE.update({60000: (1, "helm_renamed_G_mod00"), 60009: (1, "helm_dropped_G_mod00")})
+STALE.update({60000: (1, "helm_renamed_G_mod00"), 60099: (1, "helm_dropped_G_mod00")})
 check("  ..and a release's objects.xml read as the original is not: its rows in our range are"
       " ours, as they are now or as an older release had them (a rename, a type taken out)",
       (refused({"items": ok}, dict(cat)), refused({"items": ok}, STALE),
@@ -149,7 +151,7 @@ HEAD = (b"<?xml version='1.0'?>\n<data>\n<object type_id=\"11721\" "
 MINE = {60000: (1, "helm_Bs_U_LVL_12_G_mod00")}
 xml = own_items.objects_xml(HEAD + b"</data>", MINE)
 stale_xml = (HEAD + b'<object type_id="60000" root_type_id= "1" name="helm_renamed_G_mod00" />\n'
-             b'<object type_id="60009" root_type_id= "1" name="helm_dropped_G_mod00" />\n</data>')
+             b'<object type_id="60099" root_type_id= "1" name="helm_dropped_G_mod00" />\n</data>')
 check("  ..the row the release writes, in the original's format, once however often it is laid,"
       " and the same file out of a release's with stale rows of ours",
       (xml, own_items.objects_xml(xml, MINE) == xml, own_items.objects_xml(stale_xml, MINE) == xml),
@@ -158,7 +160,7 @@ check("  ..the row the release writes, in the original's format, once however of
 with open(os.path.join(world.RES, "database", "objects.xml"), "rb") as fh:
     ORIGINAL = own_items.objects_xml(fh.read(), {})       # the original's, whatever the res
 OLDER = ORIGINAL.replace(b"</data>", b'<object type_id="60000" root_type_id= "1" name="helm_ren'
-                         b'amed_G_mod00" />\n<object type_id="60009" root_type_id= "1" name="hel'
+                         b'amed_G_mod00" />\n<object type_id="60099" root_type_id= "1" name="hel'
                          b'm_dropped_G_mod00" />\n</data>')
 _read, _was = world._read, items._CATALOGUE
 try:
@@ -171,7 +173,7 @@ finally:
     world._read, items._CATALOGUE = _read, _was
 check("  ..the server reads an older release's objects.xml as it reads the original:"
       " items.catalogue() has the current rows of ours and none of the stale",
-      (seen == cat, seen.get(60000), 60009 in seen), (True, (1, "helm_Bs_U_LVL_12_G_mod00"), False))
+      (seen == cat, seen.get(60000), 60099 in seen), (True, (1, "helm_Bs_U_LVL_12_G_mod00"), False))
 check("  ..and the release made out of it is the release made out of the original",
       own_items.release_xml(OLDER) == own_items.release_xml(ORIGINAL) != ORIGINAL, True)
 
@@ -200,8 +202,8 @@ if all(os.path.isfile(os.path.join(world.RES, *p.split("/"))) for p in ICONS.val
         with open(os.path.join(world.RES, *like.split("/")), "rb") as fh:
             pictures[mine] = served("/res/" + mine) == (200, fh.read())
     check("  ..and each one's icon, its quest piece's picture byte for byte, at the path the client"
-          " builds from that row", pictures,
-          {own_items.icon_path(*cat[t]): True for t in G_TYPES})
+          " builds from that row (Тёмное Эхо's G among them since 2026-10-14)", pictures,
+          {own_items.icon_path(*cat[t]): True for t in own_items.load()})
 else:
     print("  --  no quest pieces' icons in %s; the stand's icons are not checked" % world.RES)
 
@@ -361,10 +363,12 @@ check("  ..as every rung's A and G (the original's [A] and [G] rows): two of П�
       " three of Пустынник (G)", sets.pieces(desert), {DESERT_A: 2, DESERT_G: 3})
 check("the figure: res 111 for five of either, the wearer's own for a mix, as for Пустынник",
       (sets.look(A_TYPES), sets.look(G_TYPES), sets.look(mix), sets.look(desert)), (111, 111, 0, 0))
+DARK_ECHO = list(range(36056, 36061)) + list(range(60005, 60010))   # sold since 2026-10-14
 check("not reworked, as while it was a quest set: its A's mods have no pictures, its G has"
-      " none (setcraft.NOT_REWORKED); every other rung of the ladder is",
+      " none (setcraft.NOT_REWORKED); every other rung of the ladder is, but Тёмное Эхо[17],"
+      " sold the same way since 2026-10-14 (server/test_abuhamed_trade.py)",
       (sorted(setcraft.NOT_REWORKED), [t for t in A_TYPES + G_TYPES if t in setcraft.CHAINS],
-       setcraft.MISSING), (sorted(A_TYPES + G_TYPES), [], []))
+       setcraft.MISSING), (sorted(A_TYPES + G_TYPES + DARK_ECHO), [], []))
 
 # --- 5. Гали's stall ---------------------------------------------------------------------
 print()

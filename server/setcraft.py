@@ -26,7 +26,9 @@ owner's «за афро и за голд», 2026-10-13) is neither: its A is the
 original's quest series, whose mods the client has no pictures for, and its
 G five types of our own (data/own_items.json) with no mods at all. Its ten
 pieces are NOT_REWORKED, as they were while the set was a quest set; the
-window still upgrades into it and out of it at mod00 (window_entries).
+window still upgrades into it and out of it at mod00 (window_entries). So
+are Тёмное Эхо[17]'s, sold the same way since the Абу-Хамед restoration
+(2026-10-14): nothing here names either, the rule reads the pieces.
 
 THE UPGRADER'S WINDOW (ss_create;s_type=5; the window itself is upgrader.py's,
 shared with the weapon recipes of craft.py). userInfo_Upgrader carries three

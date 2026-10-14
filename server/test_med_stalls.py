@@ -441,7 +441,7 @@ for name, lo, hi, _places in shop_bands.CITIES:
                        sorted(on_sale.get(name, set()) - want))
 check("every city has its tiers on sale, every row of both lines in afro and in gold, and nothing"
       " else of them: the valley 0_3-4_7, Вади-Хальфа 0_3-8_11, Абри 4_7-12_15, Донгола"
-      " 8_11-16_19 (open since 2026-10-13), Абу-Хамед 12_15-20 (closed, its stalls laid)",
+      " 8_11-16_19 (open since 2026-10-13), Абу-Хамед 12_15-20 (open since 2026-10-14)",
       (holes, COVERED_CITIES),
       ({}, ("Нубийская долина", "Вади-Хальфа", "Абри", "Донгола", "Абу-Хамед")))
 sellers_of = {}
@@ -483,8 +483,10 @@ check("  ..none on the stall of a trader of a city's place that is no medicine s
       sorted((p, t) for (p, t), s in STALLS.items() if t not in MEDICS
              and any(line_med(x) for x in s)), [])
 check("  ..nor the May «Перевязочный Пакет» (26590) the name of Киплер's article tied to Марат"
-      " (1219): his own list is empty, his stall the town's sets",
-      (npcs.stock(1219), [x for x in STALLS[(126, 1219)] if cat[x][0] == items.HEAL]), ([], []))
+      " (1219): his own list his pouches alone (2026-10-14, server/test_abuhamed_trade.py), his"
+      " stall the town's sets and those",
+      (npcs.stock(1219), [x for x in STALLS[(126, 1219)] if cat[x][0] == items.HEAL]),
+      ([3577, 3580, 5613, 3578, 3579], []))
 check("  ..the currencies of only: Джут's stalls gold alone, the grocers' afro alone",
       sorted({(t, gold_only(x)) for (p, t), s in STALLS.items() if shop_bands.only(t)
               for x in s if line_med(x)}),

@@ -1,12 +1,12 @@
 {
  "_meta": {
   "about": "Clothing sets: which five pieces make one, what each piece is called and worth, what the set adds, what a full set draws its wearer as. Read by server/sets.py at start; a file that does not parse or does not validate stops the server (the set names are string ids the HTTP preload must carry). Keys starting with _ never reach the wire. Built by data/build_sets.py from the owner's wardrobe layout; edit the layout and rebuild, or edit here by hand and keep the rules.",
-  "decided": "Owner's wardrobe layout (main.json): 15 sets on the ladder, Беженец 1, Колонист 2, Странник 4, Магриб 6, Налетчик 8, Пустынник 10, Чёрный Ловелас 12, Спецназ 13, Легионер 14, Штурм-М 15, Красное Эхо 16, Тёмное Эхо 17, Дредноут 18, Паладин 19, Апокалипсис 20. Every set seller sells the A and G sets of his city's band, A then G, helm to boots, mod00 only (data/shop_bands.json, server/shop_bands.py; the owner's 'по уровню городов', 2026-10-10) -- Локсли (5213, 'Одежда и Броня') the valley's; the quest (Q) sets exist as data only, for quests and drops to come. Чёрный Ловелас, the quest series Bs_U_LVL_12, is sold for afro and for gold (the owner's 'поставь ловеласа у Гали и за афро и за голд', 2026-10-13): its quest pieces are its A, five types of our own its G (data/own_items.json).",
+  "decided": "Owner's wardrobe layout (main.json): 15 sets on the ladder, Беженец 1, Колонист 2, Странник 4, Магриб 6, Налетчик 8, Пустынник 10, Чёрный Ловелас 12, Спецназ 13, Легионер 14, Штурм-М 15, Красное Эхо 16, Тёмное Эхо 17, Дредноут 18, Паладин 19, Апокалипсис 20. Every set seller sells the A and G sets of his city's band, A then G, helm to boots, mod00 only (data/shop_bands.json, server/shop_bands.py; the owner's 'по уровню городов', 2026-10-10) -- Локсли (5213, 'Одежда и Броня') the valley's; a quest (Q) set exists as data only, for quests and drops to come (none on the ladder since 2026-10-14). Чёрный Ловелас, the quest series Bs_U_LVL_12, is sold for afro and for gold (the owner's 'поставь ловеласа у Гали и за афро и за голд', 2026-10-13): its quest pieces are its A, five types of our own its G (data/own_items.json). So is Тёмное Эхо, the quest series Bs_U_LVL_16, the 17th rung, since Абу-Хамед (the owner's 'сделай потом абу хамед в таком же формате', 2026-10-14): until then no stall sold a set of 17.",
   "real": "FROM THE WIKI wherever it has the number: the 2013 tables of these very sets and their pieces (data/wiki/pages.json, parsed into data/wiki_items.json), each member's _wiki naming the page and the column. Names and descriptions from the original texts.xml or the wiki, as each piece's _desc says (none: the wiki page's).",
   "designed": "DESIGNED only where the wiki is silent or contradicts itself, and each such place says so in its set's _designed: a variant column the wiki does not have, the ladder's Стрельба where a page asks another, four prices a page gives that its own set page refutes, three sets with no numbers on the wiki at all (Чёрный Ловелас's pieces, Дредноут, Паладин), interpolated between their neighbours on the ladder, and Чёрный Ловелас's bonus, which its page copies from Штурм-М[15], designed the same way since the set is sold.",
   "rules": [
-   "Pieces: the layout's A piece for each slot (or quest piece, _Q_); the G variant is the G of the same series and level, the same icon in gold. A set of quest pieces is its one variant, Q -- unless its series has a G of our own for every piece (data/own_items.json, each a copy of its quest piece's picture): then the set is sold, the quest pieces its A and our types its G (Чёрный Ловелас, the owner's 'за афро и за голд', 2026-10-13). A quest piece among A ones is matched in G by the G of the series the rest of the set is. No P anywhere: the owner took premium out of the game (items.premium).",
-   "set key = set_type = the texts.xml row of the name of the set these very types formed in the original (the block 10938-11289): Колонист[N] for Set_M_LVL_N, Беженец[N] for Bs_M_LVL_N, Легионер / Красное ЭXO / Темное ЭXO / Штурм-М / Дредноут / Паладин / Апокалипсис[N] for Exzo_M_LVL_N, the [Q] rows for the quest family Bs_U (a sold quest set's A keeps it). Stable, unique, below 100 000, and the row the types already answered to. A set of our own types, which no row of the original names, is keyed by its first piece: Чёрный Ловелас (G) 60000. The owner's names are his own: Странник sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник on Колонист[7]'s, Спецназ on Колонист[17]'s.",
+   "Pieces: the layout's A piece for each slot (or quest piece, _Q_); the G variant is the G of the same series and level, the same icon in gold. A set of quest pieces is its one variant, Q -- unless its series has a G of our own for every piece (data/own_items.json, each a copy of its quest piece's picture): then the set is sold, the quest pieces its A and our types its G (Чёрный Ловелас, the owner's 'за афро и за голд', 2026-10-13; Тёмное Эхо with Абу-Хамед, the owner's 'сделай потом абу хамед в таком же формате', 2026-10-14). A quest piece among A ones is matched in G by the G of the series the rest of the set is. No P anywhere: the owner took premium out of the game (items.premium).",
+   "set key = set_type = the texts.xml row of the name of the set these very types formed in the original (the block 10938-11289): Колонист[N] for Set_M_LVL_N, Беженец[N] for Bs_M_LVL_N, Легионер / Красное ЭXO / Темное ЭXO / Штурм-М / Дредноут / Паладин / Апокалипсис[N] for Exzo_M_LVL_N, the [Q] rows for the quest family Bs_U (a sold quest set's A keeps it). Stable, unique, below 100 000, and the row the types already answered to. A set of our own types, which no row of the original names, is keyed by its first piece: Чёрный Ловелас (G) 60000, Тёмное Эхо (G) 60005. The owner's names are his own: Странник sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник on Колонист[7]'s, Спецназ on Колонист[17]'s.",
    "Магриб is the owner's name for Bs_M_LVL_16, whose icons are a steel helmet, a field shirt, a plate vest, army trousers and boots: the wiki's Армейские вещи ('used everywhere, the military of Магриб among them'), whose pieces ask Стрельба 6, the rung he put it on. Its numbers, names and bonus are that page's.",
    "name: written the way texts.xml writes one, [level][variant] and all, with the ladder's level, and cleaned by server/orig_texts.item_name: [A] and the level go, [G] shows as ' (G)', [Q] as ' (Q)' like every quest thing in the game.",
    "res: the figure (res/personages/<res>, a folder with its .xml) the layout gives, else the one suggested to the owner; the same on every variant; 0 leaves the wearer's own.",
@@ -32,7 +32,7 @@
    "Легионер (level 14): A 10954, G 10956 -- Exzo_M_LVL_6",
    "Штурм-М (level 15): A 11002, G 11004 -- Exzo_M_LVL_16",
    "Красное Эхо (level 16): A 10961, G 10965 -- Exzo_M_LVL_8",
-   "Тёмное Эхо (level 17): Q 11125 -- Bs_U_LVL_16",
+   "Тёмное Эхо (level 17): A 11125, G 60005 -- Bs_U_LVL_16",
    "Дредноут (level 18): A 11016, G 11018 -- Exzo_M_LVL_18",
    "Паладин (level 19): A 11030, G 11033 -- Exzo_M_LVL_19",
    "Апокалипсис (level 20): A 11043, G 11046 -- Exzo_M_LVL_20"
@@ -539,14 +539,14 @@
    }
   },
   "11125": {
-   "name": "Тёмное Эхо[17][Q]",
+   "name": "Тёмное Эхо[17][A]",
    "desc": "Модификация известного сета, переработанного учеными МКС с использованием редкоземельных элементов.",
    "_layout": "sekjzpi9",
    "_source": "key texts.xml 11125, the row of the set these types formed in the original; desc texts.xml 10972; numbers wiki, each piece's own page (its _wiki); bonus wiki Темное Эхо, transcribed from its wikitext (one column)",
-   "_designed": ["Стрельба 17 on every piece, the set's level (the wiki's pieces ask 18)", "the wiki's pieces have one column per favoured attribute; the first is taken, as the rule says"],
+   "_designed": ["A: the quest series' own pieces (_Q_), sold for afro since Абу-Хамед, the owner's 'сделай потом абу хамед в таком же формате' (2026-10-14): the 17th rung had no set on sale; G: types of our own, 60005, 60006, 60007, 60008, 60009 (data/own_items.json), each its A piece's picture: the original has no G of this series", "Стрельба 17 on every piece, the set's level (the wiki's pieces ask 18)", "the wiki's pieces have one column per favoured attribute; the first is taken, as the rule says"],
    "family": "Bs_U",
    "level": 17,
-   "variant": "Q",
+   "variant": "A",
    "res": 119,
    "bonus": {
     "2": {"st": 38, "ce": 6},
@@ -555,11 +555,35 @@
     "5": {"st": 250, "cp": 16, "Ловкость": 3, "Телосложение": 4, "Восприятие": 4}
    },
    "members": {
-    "helm": {"type": 36056, "name": "Шлем Тёмного Эха[17][Q]", "desc": "Шлем укреплен дополнительными силовыми пластинами и пуленепробиваемым стеклом.", "_wiki": "Шлем Темного Эха (the first of its 3 columns, Сила)", "armor_class": 53, "max_break_abs": 3375, "weight": 6750, "cost": 200000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 93, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}},
-    "shirt": {"type": 36057, "name": "Жилет Тёмного Эха[17][Q]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": "Жилет Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2025, "weight": 4050, "cost": 120000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 171, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1, "Восприятие": 1}},
-    "armor": {"type": 36058, "name": "Броня Тёмного Эха[17][Q]", "desc": "Встроенная система гашения отдачи и электронная система прицеливания.", "_wiki": "Броня Темного Эха (the first of its 3 columns, Сила)", "armor_class": 638, "max_break_abs": 4050, "weight": 8100, "cost": 240000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 104, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 2, "Восприятие": 1}},
-    "pants": {"type": 36059, "name": "Моторика Тёмного Эха[17][Q]", "desc": "Уровень брони облегчен. Моторика позволяет передвигаться бегом.", "_wiki": "Моторика Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2700, "weight": 5400, "cost": 160000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 165, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 1, "Сила": 1}},
-    "boots": {"type": 36060, "name": "Ступни Тёмного Эха[17][Q]", "desc": "Тюнингованные сервоприводы обеспечивают обратную связь за 0.01 мс.", "_wiki": "Ступни Темного Эха (the first of its 3 columns, Сила)", "armor_class": 29, "max_break_abs": 1350, "weight": 2700, "cost": 80000, "g_cost": 0, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 55, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1}}
+    "helm": {"type": 36056, "name": "Шлем Тёмного Эха[17][A]", "desc": "Шлем укреплен дополнительными силовыми пластинами и пуленепробиваемым стеклом.", "_wiki": "Шлем Темного Эха (the first of its 3 columns, Сила)", "armor_class": 53, "max_break_abs": 3375, "weight": 6750, "cost": 200000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 93, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}},
+    "shirt": {"type": 36057, "name": "Жилет Тёмного Эха[17][A]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": "Жилет Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2025, "weight": 4050, "cost": 120000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 171, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1, "Восприятие": 1}},
+    "armor": {"type": 36058, "name": "Броня Тёмного Эха[17][A]", "desc": "Встроенная система гашения отдачи и электронная система прицеливания.", "_wiki": "Броня Темного Эха (the first of its 3 columns, Сила)", "armor_class": 638, "max_break_abs": 4050, "weight": 8100, "cost": 240000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 104, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 2, "Восприятие": 1}},
+    "pants": {"type": 36059, "name": "Моторика Тёмного Эха[17][A]", "desc": "Уровень брони облегчен. Моторика позволяет передвигаться бегом.", "_wiki": "Моторика Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2700, "weight": 5400, "cost": 160000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 165, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 1, "Сила": 1}},
+    "boots": {"type": 36060, "name": "Ступни Тёмного Эха[17][A]", "desc": "Тюнингованные сервоприводы обеспечивают обратную связь за 0.01 мс.", "_wiki": "Ступни Темного Эха (the first of its 3 columns, Сила)", "armor_class": 29, "max_break_abs": 1350, "weight": 2700, "cost": 80000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 55, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1}}
+   }
+  },
+  "60005": {
+   "name": "Тёмное Эхо[17][G]",
+   "desc": "Модификация известного сета, переработанного учеными МКС с использованием редкоземельных элементов.",
+   "_layout": "sekjzpi9",
+   "_source": "key 60005, its first piece, a type of our own: no row of the original names it; desc texts.xml 10972; numbers wiki, each piece's own page (its _wiki); bonus wiki Темное Эхо, transcribed from its wikitext (one column)",
+   "_designed": ["A: the quest series' own pieces (_Q_), sold for afro since Абу-Хамед, the owner's 'сделай потом абу хамед в таком же формате' (2026-10-14): the 17th rung had no set on sale; G: types of our own, 60005, 60006, 60007, 60008, 60009 (data/own_items.json), each its A piece's picture: the original has no G of this series", "Стрельба 17 on every piece, the set's level (the wiki's pieces ask 18)", "the wiki's pieces have no G column: the afro column's numbers, priced in gold at 4000 afro = 1 G", "the wiki's pieces have one column per favoured attribute; the first is taken, as the rule says"],
+   "family": "Bs_U",
+   "level": 17,
+   "variant": "G",
+   "res": 119,
+   "bonus": {
+    "2": {"st": 38, "ce": 6},
+    "3": {"st": 100, "Сила": 1, "Ловкость": 1},
+    "4": {"st": 150, "ce": 10, "Сила": 3, "Интеллект": 2},
+    "5": {"st": 250, "cp": 16, "Ловкость": 3, "Телосложение": 4, "Восприятие": 4}
+   },
+   "members": {
+    "helm": {"type": 60005, "name": "Шлем Тёмного Эха[17][G]", "desc": "Шлем укреплен дополнительными силовыми пластинами и пуленепробиваемым стеклом.", "_wiki": "Шлем Темного Эха (the first of its 3 columns, Сила)", "armor_class": 53, "max_break_abs": 3375, "weight": 6750, "cost": 0, "g_cost": 5000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 93, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}},
+    "shirt": {"type": 60006, "name": "Жилет Тёмного Эха[17][G]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": "Жилет Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2025, "weight": 4050, "cost": 0, "g_cost": 3000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 171, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1, "Восприятие": 1}},
+    "armor": {"type": 60007, "name": "Броня Тёмного Эха[17][G]", "desc": "Встроенная система гашения отдачи и электронная система прицеливания.", "_wiki": "Броня Темного Эха (the first of its 3 columns, Сила)", "armor_class": 638, "max_break_abs": 4050, "weight": 8100, "cost": 0, "g_cost": 6000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 104, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 2, "Восприятие": 1}},
+    "pants": {"type": 60008, "name": "Моторика Тёмного Эха[17][G]", "desc": "Уровень брони облегчен. Моторика позволяет передвигаться бегом.", "_wiki": "Моторика Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2700, "weight": 5400, "cost": 0, "g_cost": 4000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 165, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 1, "Сила": 1}},
+    "boots": {"type": 60009, "name": "Ступни Тёмного Эха[17][G]", "desc": "Тюнингованные сервоприводы обеспечивают обратную связь за 0.01 мс.", "_wiki": "Ступни Темного Эха (the first of its 3 columns, Сила)", "armor_class": 29, "max_break_abs": 1350, "weight": 2700, "cost": 0, "g_cost": 2000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 55, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1}}
    }
   },
   "11016": {
@@ -591,7 +615,7 @@
    "desc": "Новый комплект брони для выполнения самых сложных боевых операций.",
    "_layout": "snz2pqdc",
    "_source": "key texts.xml 11018, the row of the set these types formed in the original; desc texts.xml 11011; numbers designed; bonus designed",
-   "_designed": ["no numbers on the wiki: every piece designed between Тёмное Эхо (17) and Апокалипсис (20), t = 1/3, by the rule in _meta", "G: the A's numbers, priced at 4000 afro = 1 G", "bonus: no set page on the wiki; each K and each bonus between Тёмное Эхо (17) and Апокалипсис (20), 0 where one has none, half up"],
+   "_designed": ["no numbers on the wiki: every piece designed between Тёмное Эхо (17) and Апокалипсис (20), t = 1/3, by the rule in _meta", "G: between Тёмное Эхо (G) and Апокалипсис (G), their G pieces, priced as the A at 4000 afro = 1 G", "bonus: no set page on the wiki; each K and each bonus between Тёмное Эхо (17) and Апокалипсис (20) (their G columns), 0 where one has none, half up"],
    "family": "Exzo_M",
    "level": 18,
    "variant": "G",
@@ -639,7 +663,7 @@
    "desc": "Паладин - попытка дальнейшего улучшения тактической брони Дредноут. Благодаря нанесению оксида титана броня приобрела желто-золотой оттенок, что является дополнительной маскировкой в условиях пустыни.",
    "_layout": "siwh0q40",
    "_source": "key texts.xml 11033, the row of the set these types formed in the original; desc texts.xml 11031; numbers designed; bonus designed",
-   "_designed": ["no numbers on the wiki: every piece designed between Тёмное Эхо (17) and Апокалипсис (20), t = 2/3, by the rule in _meta", "G: the A's numbers, priced at 4000 afro = 1 G", "bonus: no set page on the wiki; each K and each bonus between Тёмное Эхо (17) and Апокалипсис (20), 0 where one has none, half up"],
+   "_designed": ["no numbers on the wiki: every piece designed between Тёмное Эхо (17) and Апокалипсис (20), t = 2/3, by the rule in _meta", "G: between Тёмное Эхо (G) and Апокалипсис (G), their G pieces, priced as the A at 4000 afro = 1 G", "bonus: no set page on the wiki; each K and each bonus between Тёмное Эхо (17) and Апокалипсис (20) (their G columns), 0 where one has none, half up"],
    "family": "Exzo_M",
    "level": 19,
    "variant": "G",

@@ -144,7 +144,7 @@ check("  ..5160 and 5161 their city's band at its market, nothing of their own",
       ({k: ladder(*band) for k, band in CITY_MARKETS.items()}, [], []))
 check("  ..which is Беженец to Магриб, Налетчик and Пустынник; Абри's Налетчик to Чёрный"
       " Ловелас (sold since 2026-10-13), Донгола's Чёрный Ловелас to Красное Эхо, Абу-Хамед's"
-      " Красное Эхо to Апокалипсис",
+      " Красное Эхо to Апокалипсис (Тёмное Эхо sold since 2026-10-14)",
       {k: sorted({s["name"].split("[")[0] for s in SETS.values()
                   if s["members"]["helm"]["type"] in items.stock_for(*k)})
        for k in [(5158, None), (5159, None)] + list(CITY_MARKETS)},
@@ -153,7 +153,7 @@ check("  ..which is Беженец to Магриб, Налетчик and Пус�
        (5160, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
        (5161, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
        (5161, 469): ["Красное Эхо", "Легионер", "Спецназ", "Чёрный Ловелас", "Штурм-М"],
-       (5161, 467): ["Апокалипсис", "Дредноут", "Красное Эхо", "Паладин"]})
+       (5161, 467): ["Апокалипсис", "Дредноут", "Красное Эхо", "Паладин", "Тёмное Эхо"]})
 SOLD = sorted({t for tr, place in [(5158, None), (5159, None), (1204, 102), (1205, 102),
                                    (5181, 378)] + list(CITY_MARKETS)
                for t in items.stock_for(tr, place)})

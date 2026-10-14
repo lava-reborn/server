@@ -147,7 +147,9 @@ DECIDED = {
 # The lists of data/npcs.json this restoration wrote (or kept: Мортимер's, Абу-бакр's
 # beans, Хассир's). The blueprint stalls' are build_weaponcraft --stock's (below).
 OWN = {
-    NUR: [TICKET_FROM_DONGOLA],
+    # and since 2026-10-14 the tickets of Абу-Хамед's ride, there and back
+    # (server/test_abuhamed_trade.py)
+    NUR: [TICKET_FROM_DONGOLA, 1567, 1639],
     LUIGI: [TICKET_TO_HALFA, TICKET_TO_DONGOLA, TICKET_FROM_DONGOLA],
     HASSIR: [TICKET_TO_ABRI, TICKET_TO_HALFA],
     TARIF: [ENVELOPE],
@@ -240,14 +242,15 @@ check("  ..no ticket dearer than its ride for afro: 6546 against Луиджи's 
       (price(TICKET_TO_DONGOLA)[0] <= quests.get(275).cost_afro,
        price(TICKET_TO_ABRI)[0] <= quests.get(273).cost_afro), (True, True))
 check("  ..the tickets the original's rows of the run 6901-6908 (rule 7i), the route of Хальфа's"
-      " direct ride and Абу-Хамед's on sale nowhere", (orig(TICKET_TO_DONGOLA),
+      " direct ride on sale nowhere, and Абу-Хамед's ticket from Донгола at Нур-ад-Дин since"
+      " 2026-10-14 (server/test_abuhamed_trade.py)", (orig(TICKET_TO_DONGOLA),
                                                          orig(TICKET_FROM_DONGOLA),
                                                          sorted({t for tr in set(
                                                              items.stock_table()) | set(
                                                              npcs.STOCK) for t in
                                                              items.stock_for(tr)} & {290, 336,
                                                                                      1567})),
-      ((6905, 6906), (6907, 6908), []))
+      ((6905, 6906), (6907, 6908), [1567]))
 check("the lottery tickets of Донгола's lottery men: [14] 2400 afro, the gold [G][14] 3 G in gold"
       " alone (its article: 2400 afro or 3 G; Абри's and Вади-Хальфа's gold ones the same)",
       [(cat[t][1], price(t)) for t in (KEY, GOLD_KEY)],
@@ -730,9 +733,10 @@ async def main():
     REFUSED = [inventory.RES_REFUSED]
 
     stall, opened = open_stall(sess, STATION, NUR)
-    check("Нур-ад-Дин (Донгола's station): his window the ticket to Абри, 110 afro",
+    check("Нур-ад-Дин (Донгола's station): his window the ticket to Абри, 110 afro, and since"
+          " 2026-10-14 Абу-Хамед's two",
           (stall, opened, buy(sess, stall, TICKET_FROM_DONGOLA, BUY)),
-          ([TICKET_FROM_DONGOLA], [0], ([0], [TICKET_FROM_DONGOLA], 110, 0)))
+          ([TICKET_FROM_DONGOLA, 1567, 1639], [0], ([0], [TICKET_FROM_DONGOLA], 110, 0)))
     check("  ..a ticket sold back for 0.7 of it: 77 afro", sell(sess, TICKET_FROM_DONGOLA),
           ([0], False, 77, 0))
     close_stall(sess)

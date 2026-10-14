@@ -138,17 +138,22 @@ check("a record that is another article's: its own article's price",
 # junkyard's tools -- and the chain's gypsum, wire and bandages at a designed 50.
 # And Донгола's (2026-10-13): the ticket to Абри 110 and the lottery tickets
 # [14] 2400 and [G][14] 3 G, their articles'; the ticket from Абри 100, the
-# fare of the same ride (DESIGNED, server/test_dongola_trade.py).
-check("  ..and Абри's and Донгола's things with an article and no record: theirs, afro or"
-      " gold alone",
+# fare of the same ride (DESIGNED, server/test_dongola_trade.py). And
+# Абу-Хамед's (2026-10-14): the lottery tickets [16] 3000, [18] 3700, [19] 4730
+# and their [G] 3 G, 3.5 G, 4.5 G, the bus tickets from Донгола 0.25 G and to it
+# 0.10 G -- their articles', in gold alone (server/test_abuhamed_trade.py).
+check("  ..and Абри's, Донгола's and Абу-Хамед's things with an article and no record:"
+      " theirs, afro or gold alone",
       ({t: items.params_of(t)["cost"] for t in items.OWN_ARTICLE_PRICE if t != 1307},
        {t: (items.params_of(t)["cost"], items.params_of(t)["g_cost"])
         for t in items.ARTICLE_GOLD_PRICE}),
       (dict([(6544, 100), (6545, 150), (6546, 100), (6547, 110), (2646, 1000), (2647, 1700),
-             (2648, 2400), (5740, 50), (5741, 50), (5742, 50)]
+             (2648, 2400), (2652, 3000), (2653, 3700), (3574, 4730),
+             (5740, 50), (5741, 50), (5742, 50)]
             + [(t, 100) for t in (7025, 7026, 7027, 7028, 7029, 7036, 7037, 7038, 7039, 7040,
                                   7041, 7042)]),
-       {2649: (0, 200), 2650: (0, 250), 2651: (0, 300), 6294: (0, 10), 6295: (0, 100),
+       {2649: (0, 200), 2650: (0, 250), 2651: (0, 300), 2654: (0, 300), 2655: (0, 350),
+        3575: (0, 450), 1567: (0, 25), 1639: (0, 10), 6294: (0, 10), 6295: (0, 100),
         6296: (0, 1000)}))
 
 # --- every unlinked type keeps the designed frame ------------------------------

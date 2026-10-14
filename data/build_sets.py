@@ -39,7 +39,7 @@ WHAT COMES FROM WHERE
            of quest pieces is its one variant, Q -- unless its series has a
            G of our own for every piece (data/own_items.json): then it is
            sold, the quest pieces its A and ours its G (Чёрный Ловелас,
-           2026-10-13); a quest piece among A ones
+           2026-10-13; Тёмное Эхо, 2026-10-14); a quest piece among A ones
            (Красное Эхо's boots) is matched in the G variant by the G of the
            series the rest of the set is. No P anywhere: the owner took
            premium out of the game (items.premium).
@@ -109,7 +109,8 @@ SERIES = re.compile(r"^(helm|shirt|armor|pants|boots)_((?:Bs|Set|Exzo)_[MU])_LVL
 # family Bs_U has only [Q] rows. A quest set that is sold (pieces_of: its
 # series has a G of our own, data/own_items.json) keeps its [Q] row for the
 # A, the row its types answered to; its G no row of the original names, and
-# it is keyed by its first piece, our type (Чёрный Ловелас[12]: 60000).
+# it is keyed by its first piece, our type (Чёрный Ловелас[12]: 60000;
+# Тёмное Эхо[17]: 60005, since Абу-Хамед, 2026-10-14).
 SET_ROWS = {
     ("Bs_M", 0): {"A": 11218, "G": 11221}, ("Bs_M", 2): {"A": 11222, "G": 11224},
     ("Bs_M", 3): {"A": 11225, "G": 11227}, ("Bs_M", 4): {"A": 11228, "G": 11230},
@@ -140,9 +141,24 @@ SET_ROWS = {
     ("Exzo_M", 19): {"A": 11030, "G": 11033}, ("Exzo_M", 20): {"A": 11043, "G": 11046},
     ("Bs_U", 10): {"Q": 11116}, ("Bs_U", 11): {"Q": 11118},
     ("Bs_U", 12): {"Q": 11120, "A": 11120, "G": 60000},
-    ("Bs_U", 14): {"Q": 11122}, ("Bs_U", 15): {"Q": 11123}, ("Bs_U", 16): {"Q": 11125},
+    ("Bs_U", 14): {"Q": 11122}, ("Bs_U", 15): {"Q": 11123},
+    ("Bs_U", 16): {"Q": 11125, "A": 11125, "G": 60005},
     ("Bs_U", 17): {"Q": 11126}, ("Bs_U", 18): {"Q": 11127}, ("Bs_U", 19): {"Q": 11128},
     ("Bs_U", 20): {"Q": 11129},
+}
+
+# The quest series sold for afro and for gold (a G of our own for every
+# piece, data/own_items.json), each with the words of the decision that sold
+# it, which its sets' _designed repeat. Тёмное Эхо[17], the ladder's 17th
+# rung, was a quest set no stall sold; the plan gave it to its stage 6 (the
+# [Q] reward of «Странные осадки», 1132) and called the rung's want of a set
+# a known hole. Абу-Хамед's band 16-20 sells it now, as Чёрный Ловелас (the
+# owner's decision 32 of Абу-Хамед's plan, against that line of the plan):
+# its pieces stay the same types, so 1132 may still hand them out.
+SOLD_SINCE = {
+    ("Bs_U", 12): "the owner's 'за афро и за голд' (2026-10-13)",
+    ("Bs_U", 16): "Абу-Хамед, the owner's 'сделай потом абу хамед в таком же формате' "
+                  "(2026-10-14): the 17th rung had no set on sale",
 }
 
 # The figure offered to the owner for each set (res/personages/<res>), taken
@@ -643,7 +659,8 @@ def pieces_of(row, cat, by_name):
     and said so. Unless the quest series has a G of our own for every piece
     (data/own_items.json, a copy of that very piece's picture): then the set
     is sold, its quest pieces are its A, priced in afro, and our types its G
-    (Чёрный Ловелас[12], the owner's «за афро и за голд», 2026-10-13)."""
+    (Чёрный Ловелас[12], the owner's «за афро и за голд», 2026-10-13;
+    Тёмное Эхо[17] with Абу-Хамед, 2026-10-14: SOLD_SINCE)."""
     parsed = {}
     for slot in SLOTS:
         t = int(row["slots"][slot])
@@ -672,10 +689,13 @@ def pieces_of(row, cat, by_name):
             raise SystemExit("%s: a quest set is sold when every piece has a G of our own copying "
                              "its picture (data/own_items.json); not so for %s"
                              % (row["name"], ", ".join(wrong)))
-        notes.append("A: the quest series' own pieces (_Q_), sold for afro since the owner's "
-                     "'за афро и за голд' (2026-10-13); G: types of our own, %s "
-                     "(data/own_items.json), each its A piece's picture: the original has no G "
-                     "of this series" % ", ".join(str(gold[s]) for s in SLOTS))
+        if (family, level) not in SOLD_SINCE:
+            raise SystemExit("%s: a quest set sold for afro and gold says since when and why "
+                             "(SOLD_SINCE)" % row["name"])
+        notes.append("A: the quest series' own pieces (_Q_), sold for afro since %s; G: types of "
+                     "our own, %s (data/own_items.json), each its A piece's picture: the "
+                     "original has no G of this series"
+                     % (SOLD_SINCE[(family, level)], ", ".join(str(gold[s]) for s in SLOTS)))
         return {"A": quest, "G": gold}, family, level, notes
     main = {}
     for _t, f, lvl, v in parsed.values():
@@ -873,7 +893,8 @@ META = {
         "one variant, Q -- unless its series has a G of our own for every piece "
         "(data/own_items.json, each a copy of its quest piece's picture): then the set is sold, "
         "the quest pieces its A and our types its G (Чёрный Ловелас, the owner's 'за афро и за "
-        "голд', 2026-10-13). A quest piece among A ones is matched in G by the G of the series "
+        "голд', 2026-10-13; Тёмное Эхо with Абу-Хамед, the owner's 'сделай потом абу хамед в "
+        "таком же формате', 2026-10-14). A quest piece among A ones is matched in G by the G of the series "
         "the rest of the set is. No P anywhere: the owner took premium out of the game "
         "(items.premium).",
         "set key = set_type = the texts.xml row of the name of the set these very types formed in "
@@ -882,7 +903,8 @@ META = {
         "Апокалипсис[N] for Exzo_M_LVL_N, the [Q] rows for the quest family Bs_U (a sold quest "
         "set's A keeps it). Stable, unique, below 100 000, and the row the types already "
         "answered to. A set of our own types, which no row of the original names, is keyed by "
-        "its first piece: Чёрный Ловелас (G) 60000. The owner's names are his own: Странник "
+        "its first piece: Чёрный Ловелас (G) 60000, Тёмное Эхо (G) 60005. The owner's names are "
+        "his own: Странник "
         "sits on Колонист[11]'s row, Магриб on Беженец[16]'s, Пустынник on Колонист[7]'s, "
         "Спецназ on Колонист[17]'s.",
         "Магриб is the owner's name for Bs_M_LVL_16, whose icons are a steel helmet, a field "
@@ -1271,10 +1293,14 @@ def main():
         "Owner's wardrobe layout (%s): %d sets on the ladder, %s. Every set seller sells the A "
         "and G sets of his city's band, A then G, helm to boots, mod00 only (data/shop_bands.json, "
         "server/shop_bands.py; the owner's 'по уровню городов', 2026-10-10) -- Локсли (%d, "
-        "'Одежда и Броня') the valley's; the quest (Q) sets exist as data only, for quests "
-        "and drops to come. Чёрный Ловелас, the quest series Bs_U_LVL_12, is sold for afro and "
+        "'Одежда и Броня') the valley's; a quest (Q) set exists as data only, for quests and "
+        "drops to come (none on the ladder since 2026-10-14). Чёрный Ловелас, the quest series "
+        "Bs_U_LVL_12, is sold for afro and "
         "for gold (the owner's 'поставь ловеласа у Гали и за афро и за голд', 2026-10-13): its "
-        "quest pieces are its A, five types of our own its G (data/own_items.json)."
+        "quest pieces are its A, five types of our own its G (data/own_items.json). So is "
+        "Тёмное Эхо, the quest series Bs_U_LVL_16, the 17th rung, since Абу-Хамед (the owner's "
+        "'сделай потом абу хамед в таком же формате', 2026-10-14): until then no stall sold a "
+        "set of 17."
         % (os.path.basename(args.layout), len(plans),
                                 ", ".join("%s %d" % (p["name"], p["level"]) for p in plans),
                                 LOXLEY))
