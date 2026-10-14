@@ -1107,7 +1107,9 @@ up.close()
 # run_once от 2026-10-14 (accounts.retire_items; README «Steyr TMP и Chang Feng»):
 # копии обоих стволов уходят из рюкзака, банка, с земли, с аукциона (ставка
 # письмом назад) и из писем, хозяину -- цена лавки на счёт (строка журнала денег
-# «retired») и письмо, из журналов -- двенадцать рецептов Басама и Фахада. Здесь
+# «retired») и письмо, из журналов -- двенадцать рецептов Басама и Фахада.
+# Торговое предложение, где после изъятия что-то осталось, возвращается
+# отправителю без цены, как по «отказаться» (mail.rmvml). Здесь
 # -- что те же IN, DELETE, UPDATE кошелька, INSERT журнала и писем идут в Postgres
 # и что вторым открытием ничего не повторяется. Полный набор на SQLite --
 # server/test_retired_guns.py.
@@ -1137,6 +1139,10 @@ store.db.execute("UPDATE auction_lots SET bid = 300, bidder = ?, bidder_name = '
 store.mail_send(addressee, seller, mail.LETTER, "подарок", "", 10, 0, json.dumps(
     [{"uniq": 910, "type_id": STEYR, "root": 0, "count": 1},
      {"uniq": 911, "type_id": BERETTA, "root": 0, "count": 1}]))
+# Предложение Chang Feng (G) с Береттой за 80 000 афро: цена -- за обе вещи.
+r_offer = store.mail_send(addressee, seller, mail.TRADE, "предложение", "", 80000, 5, json.dumps(
+    [{"uniq": 912, "type_id": CHANG_G, "root": 0, "count": 1},
+     {"uniq": 913, "type_id": BERETTA, "root": 0, "count": 1}]), when=1)
 for t in (accounts.RETIRED_RECIPES[0], 119):
     store.take_quest(holder, t, {}, True)
 store.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.RETIRED_ITEMS_FIX,))
@@ -1150,13 +1156,20 @@ ok([up.item(r["uniq"]) is None for r in (r_bag, r_bank, r_gold, r_lying)] == [Tr
    "Steyr TMP и Chang Feng ушли из рюкзака, банка и с земли, Беретта осталась")
 ok(up.db.execute("SELECT COUNT(*) c FROM auction_lots").fetchone()["c"] == 0, "лот снят")
 paid = {n: tuple(a - b for a, b in zip(up.money(c), before[n])) for n, c in who.items()}
-ok(paid == {"держатель": (79400, 1921), "продавец": (47900, 0), "покупатель": (0, 0),
+ok(paid == {"держатель": (79400, 1921), "продавец": (47900, 1921), "покупатель": (0, 0),
             "адресат": (39700, 0)},
    "цена лавки на счёт: %s" % paid)
 ok(sorted((r["char_id"], r["afro"], r["gold"]) for r in up.ledger()
           if r["source"] == "retired")
-   == sorted([(holder, 79400, 1921), (seller, 47900, 0), (addressee, 39700, 0)]),
+   == sorted([(holder, 79400, 1921), (seller, 47900, 1921), (addressee, 39700, 0)]),
    "каждая выплата -- строка журнала денег «retired»")
+back = dict(up.mail_letter(r_offer["id"]))
+ok((json.loads(back["items_json"]), back["to_char"], back["from_char"], back["returned"],
+    back["read"], back["to_deleted"], back["from_deleted"], back["afro"], back["gold"],
+    back["sent_at"] > 1)
+   == ([{"uniq": 913, "type_id": BERETTA, "root": 0, "count": 1}], seller, seller, 1, 0, 0, 1,
+       0, 0, True),
+   "предложение с Береттой вернулось продавцу и ничего не просит: %s" % back)
 letters = [dict(r) for r in up.db.execute("SELECT * FROM mail ORDER BY id")]
 ok(sorted(r["to_char"] for r in letters if r["subject"] == accounts.RETIRED_SUBJECT)
    == sorted([holder, seller, addressee])

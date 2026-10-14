@@ -36,7 +36,10 @@ What the cut is, each part held here:
      the bags, banks, bodies, the ground, the auction and the letters, pays
      each owner a stall's price back into the purse (the ledger's
      "retired"), tells him by letter, sends a standing bid back, empties an
-     offer, takes the twelve recipes out of the journals -- once; a process
+     offer, sends an offer that keeps the rest of its parcel back to its
+     sender asking nothing (its price was for the whole parcel, and he is
+     paid for what went), takes the twelve recipes out of the journals --
+     once; a process
      without the client's tables waits. The same on Postgres:
      server/test_storage_pg.py.
 
@@ -527,6 +530,11 @@ try:
     back = st.mail_send(addressee, offerer, mail.TRADE, "returned", "", 0, 0,
                         json.dumps([snap(903, STEYR)]))
     st.db.execute("UPDATE mail SET to_char = ?, returned = 1 WHERE id = ?", (offerer, back["id"]))
+    # An offer of a Steyr TMP with an UMP for 80 000 afro, already read: its
+    # price was for both, and the offerer is paid for the Steyr.
+    mixed = st.mail_send(addressee, offerer, mail.TRADE_EXPRESS, "mixed", "", 80000, 5,
+                         json.dumps([snap(904, STEYR), snap(905, UMP)]), when=1)
+    st.db.execute("UPDATE mail SET read = 1 WHERE id = ?", (mixed["id"],))
     for t in (RECIPES[0], RECIPES[-1], 119):
         st.take_quest(holder, t, {}, True)
     done = st.take_quest(holder, RECIPES[1], {}, True)
@@ -565,6 +573,12 @@ try:
           [(json.loads(by_subject[s]["items_json"]), by_subject[s]["afro"])
            for s in ("gift", "offer", "returned")],
           [([snap(901, UMP)], 10), ([], 0), ([], 0)])
+    m = by_subject["mixed"]
+    check("  ..an offer that keeps its UMP goes back to the offerer with it, asking nothing, as"
+          " «отказаться» sends it: the addressee cannot buy one gun at the price of two",
+          (json.loads(m["items_json"]), m["to_char"], m["from_char"], m["returned"], m["read"],
+           m["to_deleted"], m["from_deleted"], m["afro"], m["gold"], m["sent_at"] > 1),
+          ([snap(905, UMP)], offerer, offerer, 1, 0, 0, 1, 0, 0, True))
     check("  ..the standing bid back to its bidder by letter",
           [(r["to_char"], r["from_char"], r["afro"], r["gold"]) for r in letters
            if r["subject"] == "Аукцион: ставка возвращена"], [(bidder, 0, 150, 0)])
@@ -572,10 +586,10 @@ try:
             for n in ("holder", "seller", "bidder", "addressee", "offerer")}
     check("each owner paid a stall's price into the purse: the holder his Steyr TMP and its"
           " modification in afro, his Chang Feng (G) in gold, nothing for the (P) one; the seller"
-          " his lot; the addressee the gift's Steyr TMP (G); the offerer his offer still"
+          " his lot; the addressee the gift's Steyr TMP (G); the offerer his offers still"
           " unanswered and the letter that came back to him; the bidder nothing",
           paid, {"holder": (79400, 1921), "seller": (47900, 0), "bidder": (0, 0),
-                 "addressee": (0, 1428), "offerer": (47900 + 39700, 0)})
+                 "addressee": (0, 1428), "offerer": (47900 + 39700 + 39700, 0)})
     rows = [r for r in st.ledger() if r["source"] == "retired"]
     check("  ..each payment a row of the ledger, «retired», the purse and the ledger agreeing",
           (sorted((r["char_id"], r["afro"], r["gold"]) for r in rows),
@@ -583,7 +597,7 @@ try:
                and sum(x["gold"] for x in st.ledger(c)) == st.money(c)[1]
                for c in (holder, seller, addressee, offerer))),
           (sorted([(holder, 79400, 1921), (seller, 47900, 0), (addressee, 0, 1428),
-                   (offerer, 87600, 0)]), True))
+                   (offerer, 127300, 0)]), True))
     told = {r["to_char"]: r for r in letters if r["subject"] == accounts.RETIRED_SUBJECT}
     check("  ..and a letter to each, from the server, with no money in it, saying what went"
           " and what came",
@@ -599,8 +613,8 @@ try:
           ([119], True))
     check("  ..the counts as the log has them: nothing left the second time",
           accounts.retire_items(st.db, *accounts.retired_test()),
-          dict(items=0, ground=0, lots=0, bids=0, letters=0, parcels=0, journal=0, owners=0,
-               afro=0, gold=0))
+          dict(items=0, ground=0, lots=0, bids=0, letters=0, parcels=0, returned=0, journal=0,
+               owners=0, afro=0, gold=0))
     st.create_item(holder, STEYR, 0)
     st.db.commit()
     st.close()

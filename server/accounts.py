@@ -1297,9 +1297,12 @@ def retire_premium_things(db, premium=None):
 # Whose a thing was: the character whose bag or bank holds it, the seller
 # of a lot, the addressee of a letter -- the sender of an offer still
 # unanswered (a trade letter not returned), which stays his until paid for;
-# nobody's on the ground. And the journals: the twelve recipes of Донгола's
-# masters Басам (347) and Фахад (387) that took or gave one (the weapon
-# craft's 10283-10285, 10289-10291, 10315-10317, 10321-10323) are gone from
+# nobody's on the ground. An offer that keeps part of its parcel goes back
+# to its sender with the rest, asking nothing, as «отказаться» sends it:
+# its price was for the whole parcel, and he is paid for what went. And
+# the journals: the twelve recipes of Донгола's masters Басам (347) and
+# Фахад (387) that took or gave one (the weapon craft's 10283-10285,
+# 10289-10291, 10315-10317, 10321-10323) are gone from
 # data/questgen_weaponcraft.json, so they leave the journals as the cut of
 # Хальфа's rows did; the history of hand-ins stays. A process without the
 # client's tables (no price, no name to tell) leaves the fix for the next
@@ -1352,8 +1355,8 @@ def retire_items(db, retired=None, price=None, name=None):
             raise RuntimeError("%s: no item tables to price a thing by" % RETIRED_ITEMS_FIX)
         retired, price, name = test
     types = sorted(int(t) for t in retired)
-    counts = dict(items=0, ground=0, lots=0, bids=0, letters=0, parcels=0, journal=0,
-                  owners=0, afro=0, gold=0)
+    counts = dict(items=0, ground=0, lots=0, bids=0, letters=0, parcels=0, returned=0,
+                  journal=0, owners=0, afro=0, gold=0)
     owed = {}                       # char_id -> [afro, gold, {name: pieces}]
 
     def owe(char_id, t, n):
@@ -1427,6 +1430,15 @@ def retire_items(db, retired=None, price=None, name=None):
         if not kept and offer:
             db.execute("UPDATE mail SET items_json = ?, afro = 0, gold = 0 WHERE id = ?",
                        ("[]", row["id"]))
+        elif offer and row["from_char"] and row["from_char"] != row["to_char"]:
+            # The asking price was for the whole parcel, and the sender is
+            # paid for what went: the rest goes back to him the way the
+            # offer window's «отказаться» sends it (mail.rmvml), asking
+            # nothing, so nobody pays for the same gun twice.
+            db.execute("UPDATE mail SET items_json = ?, to_char = ?, returned = 1, read = 0,"
+                       " to_deleted = 0, from_deleted = 1, sent_at = ?, afro = 0, gold = 0"
+                       " WHERE id = ?", (json.dumps(kept), row["from_char"], now, row["id"]))
+            counts["returned"] += 1
         else:
             db.execute("UPDATE mail SET items_json = ? WHERE id = ?",
                        (json.dumps(kept), row["id"]))
@@ -1463,9 +1475,10 @@ def retire_items(db, retired=None, price=None, name=None):
     # A warning for the reason relocate_retired_places' is one.
     log.warning("  ..    %s: %d retired thing(s) gone from bags, banks and the ground (%d of"
                 " them lying there), %d lot(s) (%d bid(s) sent back), %d out of %d"
-                " letter(s); %d owner(s) told, %d afro and %.2f G paid back; %d recipe(s) out"
-                " of the journals", RETIRED_ITEMS_FIX, counts["items"], counts["ground"],
-                counts["lots"], counts["bids"], counts["parcels"], counts["letters"],
+                " letter(s) (%d offer(s) sent back to the sender with the rest); %d owner(s)"
+                " told, %d afro and %.2f G paid back; %d recipe(s) out of the journals",
+                RETIRED_ITEMS_FIX, counts["items"], counts["ground"], counts["lots"],
+                counts["bids"], counts["parcels"], counts["letters"], counts["returned"],
                 counts["owners"], counts["afro"], counts["gold"] / 100.0, counts["journal"])
     return counts
 
