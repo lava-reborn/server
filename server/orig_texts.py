@@ -286,11 +286,28 @@ DOUBTFUL_STRINGS = frozenset((9163, 48871, 48872))
 #        2026-10-13, decision 23 of its plan).
 #   9514 "[1] Cобака<Br>Дикое животное" -- the flayers' dogs of Донгола
 #        (230, mEnvironmentDog): its first letter is a Latin C.
+# Абу-Хамед's (the owner's «сделай потом абу хамед в таком же формате»,
+# 2026-10-14), its camps' ranks and the box of its warehouse:
+#   8970 "[18] Квартмейстер <Br>Пираты Сомали" (773) and 50315 "Гейнц Тейлор
+#        <Br>Наемник СА" (1749) -- a stray space before the break, which the
+#        client would show at the end of the line.
+#   8987 "[17] Cержант-майор<Br>Северный Альянс" (1031) -- a Latin C again.
+#   8994 "[19] РядовойIкласса<Br>Северный Альянс" (1728, a Latin I) and 9002
+#        "[20] Элитныйснайпер<Br>Северный Альянс" (2319) -- lost spaces; the
+#        rank beside them is "[19] Элитный снайпер" (8997).
+#   10356 "Ящик с деньгами<Br>Главный склад Абух-Хамеда" (6830) -- the town
+#        is Абу-Хамед in every other row.
 NAME_TYPOS = {
     8904: ("Надзиратель аки", "Надзиратель Лаки"),
     8955: ("МаксКоул", "Макс Коул"),
     8956: ("ШефДженсен", "Шеф Дженсен"),
+    8970: ("Квартмейстер <Br>", "Квартмейстер<Br>"),
+    8987: ("Cержант-майор", "Сержант-майор"),
+    8994: ("РядовойIкласса", "Рядовой I класса"),
+    9002: ("Элитныйснайпер", "Элитный снайпер"),
     9514: ("Cобака", "Собака"),
+    10356: ("Абух-Хамеда", "Абу-Хамеда"),
+    50315: ("Гейнц Тейлор <Br>", "Гейнц Тейлор<Br>"),
 }
 
 # Lines of a name that offer work the server cut, dropped on the wire by the
