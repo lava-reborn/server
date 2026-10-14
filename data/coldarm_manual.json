@@ -1,7 +1,7 @@
 {
  "_meta": {
   "about": "Numbers for cold arms whose wiki table leaves a hole the game cannot live with, laid over the frame by server/items.py after the wiki's own (same keys, frame shape unchanged). A key is taken only where the wiki gives no positive value for it, and a price only where the wiki gives none in either currency, so a fuller table, should one turn up, wins. DESIGNED, NOT RECOVERED: the original server kept these numbers and they are lost. Each record says in _designed what was chosen and in _source what is real.",
-  "decided": "2026-09-24, owner: Одноглазый (5222, Караван) sells cold arms for levels 0-8, the plain and the gold copy of each like Борис sells his pistols, nothing premium. The level-0 one, knife_lvl0_A (the wiki's Булыжник), is the only one whose article lacks numbers a stall needs. 2026-10-12, the Абри restoration (the owner's «Добавь каждому продавцу нужные предметы»): Фрея Каплан's 24 gifts (gift_kid_1..10, gift_girl_1..10, gift_0..3), whose articles give every number a stall needs but the action points and whose icons tie no record of data/items_wiki.json but Букет's -- without these records they were the designed frame's weapons, 13-40 damage at 70-700 afro.",
+  "decided": "2026-09-24, owner: Одноглазый (5222, Караван) sells cold arms for levels 0-8, the plain and the gold copy of each like Борис sells his pistols, nothing premium. The level-0 one, knife_lvl0_A (the wiki's Булыжник), is the only one whose article lacks numbers a stall needs. 2026-10-12, the Абри restoration (the owner's «Добавь каждому продавцу нужные предметы»): Фрея Каплан's 24 gifts (gift_kid_1..10, gift_girl_1..10, gift_0..3), whose articles give every number a stall needs but the action points and whose icons tie no record of data/items_wiki.json but Букет's -- without these records they were the designed frame's weapons, 13-40 damage at 70-700 afro. 2026-10-14, the Абу-Хамед restoration (the owner's «сделай потом абу хамед в таком же формате»): the three sharpened Мачете (G) of «Точильный камень Абу-Хамеда» (2282, data/build_weaponcraft.py), whose articles «Мачете Mod I/II/III» draw the plain knife's icon (Knife lvl20 G.png), so the linker tied them to Мачете (G) itself below its confidence and data/items_wiki.json has no record of theirs -- without these records a sharpened Мачете was the designed frame's knife, 95 wear at 70 afro. Their numbers are the articles' all, nothing designed.",
   "fields": "ss_si_coldarm names as in server/items.py; cost in afro, g_cost in hundredths of G (0.01 G = 1), like items_wiki.json. Keys starting with _ never reach the wire."
  },
  "items": {
@@ -370,6 +370,63 @@
    "exchang": 0,
    "strike_cost": 5,
    "cost": 1000
+  },
+  "6277": {
+   "_name": "Мачете (G)$Острый",
+   "_source": "wiki article «Мачете Mod III» (the quest «Заточка Мачете», «Точильный камень Абу-Хамеда» 2282): Урон по здоровью 158-337, Очки действия 15, Максимальная дистанция 1.7, Износ 7000, Вес 700 г, Необходимые навыки Ближний бой 20, Допустимость обмена и продажи Нет, Базовая цена 15 G. data/items_wiki.json has no record: the article draws Мачете (G)'s icon, Knife lvl20 G.png, and the linker left it to that knife (wiki_links.json, confidence 0.47); its sharpened twins of Кукри (18у) have theirs",
+   "_designed": "nothing: every number is its article's",
+   "h_damage_min": 158,
+   "h_damage_max": 337,
+   "st_damage_min": 0,
+   "st_damage_max": 0,
+   "max_range": 1.7,
+   "max_break_abs": 7000,
+   "weight": 700,
+   "exchang": 0,
+   "strike_cost": 15,
+   "need_skills": [
+    20
+   ],
+   "need_skills_m": 1,
+   "g_cost": 1500
+  },
+  "6278": {
+   "_name": "Мачете (G)$Эргономичный",
+   "_source": "wiki article «Мачете Mod II» (the quest «Эргономика Мачете», «Точильный камень Абу-Хамеда» 2282): Урон по здоровью 149-312, Очки действия 11, Максимальная дистанция 1.7, Износ 7000, Вес 700 г, Необходимые навыки Ближний бой 20, Допустимость обмена и продажи Нет, Базовая цена 15 G. data/items_wiki.json has no record: the article draws Мачете (G)'s icon, Knife lvl20 G.png, and the linker left it to that knife (wiki_links.json, confidence 0.47); its sharpened twins of Кукри (18у) have theirs",
+   "_designed": "nothing: every number is its article's",
+   "h_damage_min": 149,
+   "h_damage_max": 312,
+   "st_damage_min": 0,
+   "st_damage_max": 0,
+   "max_range": 1.7,
+   "max_break_abs": 7000,
+   "weight": 700,
+   "exchang": 0,
+   "strike_cost": 11,
+   "need_skills": [
+    20
+   ],
+   "need_skills_m": 1,
+   "g_cost": 1500
+  },
+  "6279": {
+   "_name": "Мачете (G)$Острый и Эргономичный",
+   "_source": "wiki article «Мачете Mod I» (the quest «Заточка и Эргономика Мачете», «Точильный камень Абу-Хамеда» 2282): Урон по здоровью 158-337, Очки действия 11, Максимальная дистанция 1.7, Износ 7000, Вес 700 г, Необходимые навыки Ближний бой 20, Допустимость обмена и продажи Нет, Базовая цена 20 G. data/items_wiki.json has no record: the article draws Мачете (G)'s icon, Knife lvl20 G.png, and the linker left it to that knife (wiki_links.json, confidence 0.47); its sharpened twins of Кукри (18у) have theirs",
+   "_designed": "nothing: every number is its article's",
+   "h_damage_min": 158,
+   "h_damage_max": 337,
+   "st_damage_min": 0,
+   "st_damage_max": 0,
+   "max_range": 1.7,
+   "max_break_abs": 7000,
+   "weight": 700,
+   "exchang": 0,
+   "strike_cost": 11,
+   "need_skills": [
+    20
+   ],
+   "need_skills_m": 1,
+   "g_cost": 2000
   }
  }
 }

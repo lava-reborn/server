@@ -106,11 +106,16 @@ def city_of(r):
     return r["craft"]["key"].split(":")[1]
 
 
+# The cities after Абри, each with its own suite: Донгола's rows (2026-10-13, its
+# band 9-16, its own masters, stalls, gunsmiths, decoder and whetstone) are
+# server/test_dongola_trade.py's, Абу-Хамед's (2026-10-14, its band 17-20)
+# server/test_abuhamed_trade.py's.
+LATER = ("dongola", "abu_hamed")
+
+
 def family(name):
-    """A family's rows of the cities before Донгола: Донгола's (2026-10-13, its band
-    9-16, its own masters, stalls, gunsmiths, decoder and whetstone) are
-    server/test_dongola_trade.py's."""
-    return [r for r in ROWS if r["craft"]["family"] == name and city_of(r) != "dongola"]
+    """A family's rows of the cities before Донгола (LATER)."""
+    return [r for r in ROWS if r["craft"]["family"] == name and city_of(r) not in LATER]
 
 
 def things(r):
@@ -126,13 +131,14 @@ def stood(loc_id):
 # --- in process: the table ----------------------------------------------------------------
 try:
     check("every craft row is a repeatable service of Вади-Хальфа's band (or the valley's"
-          " 0-4 at its whetstone, Абри's 8-12 at its own, Донгола's 9-16 since 2026-10-13) in"
-          " 10000-10999, of the loaded table",
+          " 0-4 at its whetstone, Абри's 8-12 at its own, Донгола's 9-16 since 2026-10-13,"
+          " Абу-Хамед's 17-20 since 2026-10-14) in 10000-10999, of the loaded table",
           sorted({(r["repeatable"], r["service"], r["level"], r["max_level"],
                    10000 <= r["type"] <= 10999, quests.get(r["type"]) is not None)
                   for r in ROWS}),
           [(1, True, 0, 4, True, True), (1, True, 0, 8, True, True),
-           (1, True, 8, 12, True, True), (1, True, 9, 16, True, True)])
+           (1, True, 8, 12, True, True), (1, True, 9, 16, True, True),
+           (1, True, 17, 20, True, True)])
     check("  ..Абри's rows its whetstone's alone (2026-10-12: no upgrader of Абри's in the"
           " client)", sorted({(r["craft"]["family"], tuple(r["give"])) for r in ROWS
                               if (r["level"], r["max_level"]) == (8, 12)}),
@@ -285,14 +291,14 @@ try:
         print("  --  no %s: the generator's band filter is checked on the table only" % source)
 
     # The blueprints drop only in the camps of their level (Донгола's camps:
-    # test_dongola_trade).
+    # test_dongola_trade; Абу-Хамед's: test_abuhamed_trade).
     camp_of = {}
     for (lo, hi), locs in CAMPS:
         for loc in locs:
             for t in stood(loc):
                 camp_of.setdefault(t, set()).add((lo, hi))
     stray = []
-    for r in (r for r in ROWS if city_of(r) != "dongola"):
+    for r in (r for r in ROWS if city_of(r) not in LATER):
         level = r["craft"].get("level")
         for o in r.get("objs", []):
             for m in o.get("mobs", []):
