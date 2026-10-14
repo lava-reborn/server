@@ -13,7 +13,10 @@ In process, on the real table and the real world:
     ride's far end there; since 2026-10-13 Донгола too (the owner's «и
     потом сделай донголу тоже»): its digs, Хоу Сян's maps, Уорхол's
     «Коллекция водителя шайтан-арбы» and the rides between Абри and
-    Донгола -- and the rest are switched off (give/take []),
+    Донгола; since 2026-10-14 Абу-Хамед too (the owner's «сделай потом
+    абу хамед в таком же формате»): Уорхол's «Коллекция водителя
+    джихад-такси» and the rides between Донгола and Абу-Хамед -- and the
+    rest are switched off (give/take []),
     each saying why and how to switch it on; the live NPCs stand where
     their rows put them;
   * their texts the original's (VERIFIED in data/build_orig_misc.py where
@@ -24,10 +27,11 @@ In process, on the real table and the real world:
   * the digs: each draw worth less, at the gold prices of the stalls, than
     the map it takes costs; Уорхол's reward a Самоучитель 11 times in 19;
   * the rides: built -- a fee or a ticket, a way record naming the town it
-    leads to; between Вади-Хальфа and Абри (273, 274, 279, 280) and between
-    Абри and Донгола (275, 281, 282) offered by the drivers, with their ways
-    in data/passages.json, the rest, to and from the closed towns, not
-    offered and with no way;
+    leads to; between Вади-Хальфа and Абри (273, 274, 279, 280), between
+    Абри and Донгола (275, 281, 282) and between Донгола and Абу-Хамед (276,
+    277, 283, 284) offered by the drivers, with their ways in
+    data/passages.json, the rest, to and from Мероэ, not offered and with no
+    way;
   * encounters: the four bands of the town's camps; never a valley cell,
     never a settlement's cell or one beside it, nor a retired place's
     (world.retired_cells) or one beside it; the nests of the desert
@@ -120,7 +124,7 @@ WOULD = {250: dict(npc=BARI, at=36), 256: dict(npc=KAMAL, at=255),
          259: dict(npc=806, at=1010),
          267: dict(npc=939, at=164), 268: dict(npc=939, at=164), 269: dict(npc=939, at=164),
          270: dict(npc=WARHOL, at=60), 271: dict(npc=WARHOL, at=60, rides=[279, 280, 281, 282]),
-         272: dict(npc=WARHOL, at=60, rides=[283, 284, 285, 286])}
+         272: dict(npc=WARHOL, at=60, rides=[283, 284])}
 WOULD.update({t: dict(npc=h, at=at, needs=[m, SHOVEL]) for t, (h, at, m) in ZUBERI.items()})
 WOULD.update({t: dict(npc=s, at=at, needs=[m, SHOVEL]) for t, (s, at, m) in SKULLS.items()})
 WOULD.update({t: dict(npc=d, at=at, target=to) for t, (d, at, to) in RIDES.items()})
@@ -134,14 +138,21 @@ LIVE = {250, 251, 263, 270} | {252, 253, 255, 256, 265, 266, 267, 273, 274, 279,
 # 68 and 146 (260, 261), Уорхол's drivers' collection (271) and the rides between Абри
 # and Донгола (275, 281, 282).
 LIVE |= {254, 257, 258, 260, 261, 271, 275, 281, 282}
-OPEN_RIDES = {273, 274, 279, 280, 275, 281, 282}
+# Since 2026-10-14 Абу-Хамед is open too (the owner's «сделай потом абу хамед в таком же
+# формате»): Уорхол's «Коллекция водителя джихад-такси» (272), its reward the tickets of
+# the road between Донгола and Абу-Хамед (Мероэ's are out of it), and the rides of that
+# road (276, 277, 283, 284).
+LIVE |= {272, 276, 277, 283, 284}
+OPEN_RIDES = {273, 274, 279, 280, 275, 281, 282, 276, 277, 283, 284}
 # Камал sells the maps too, the original's seller, beside Бари who stood in for him.
 SELLERS = {250: [BARI, KAMAL]}
 # The towns open today, by their markets: each one's region is the sixty cells around.
-TOWNS = {"Вади-Хальфа": 35, "Абри": 187, "Донгола": 49}
+TOWNS = {"Вади-Хальфа": 35, "Абри": 187, "Донгола": 49, "Абу-Хамед": 126}
 # Вади-Хальфа's four camps (the wasteland's bands around it); any other band is Абри's
 # or, since 2026-10-13, Донгола's (the WORLD package's ring, encounters.REGIONS).
 HALFA_CAMPS, ABRI_CAMPS, DONGOLA_CAMPS = (80, 81, 84, 85), (88, 92), (93, 98)
+# Since 2026-10-14 Абу-Хамед's three (the WORLD package's ring, encounters.REGIONS).
+ABUHAMED_CAMPS = (132, 168, 263)
 PAID_OR_TICKET = {t: TICKETS.get(t) for t in RIDES}
 
 
@@ -223,10 +234,10 @@ try:
         return ok
 
     check("the rows live are those the world lets be done from the open towns today, Вади-Хальфа,"
-          " Абри and Донгола: the NPC in a place of a town's region, the maps sold, the creatures"
-          " there, the steps before live, a ride's far end there, every thing named -- the"
-          " Мясники's later steps, the rides to the closed towns and the closed towns' digs"
-          " switched off",
+          " Абри, Донгола and Абу-Хамед: the NPC in a place of a town's region, the maps sold, the"
+          " creatures there, the steps before live, a ride's far end there, every thing named --"
+          " the Мясники's later steps, the rides to Мероэ and the closed towns' digs switched"
+          " off",
           sorted(t for t in WILD if on_by_rule(t)), sorted(LIVE))
     check("  ..which is exactly the rows with a giver and a taker in the table",
           sorted(t for t in WILD if rows[t].give or rows[t].take), sorted(LIVE))
@@ -302,9 +313,11 @@ try:
           [pinned[t][1:] for t in (267, 268, 269)],
           [[60512, 60513, 60514], [60515, 60516, 60517], [60518, 60519, 60520]])
     orig = orig_texts.quests()
-    check("  ..laid over the table's",
+    check("  ..laid over the table's (but what a row keeps as its own: 272's start, since"
+          " 2026-10-14 the original's less Мероэ's tickets)",
           [t for t in WILD for k, key in enumerate(("name", "start", "notfinish", "finish"))
-           if orig.get(t, {}).get(key) and rows[t].texts[k] != quests.served(rows[t], k, orig[t][key])], [])
+           if orig.get(t, {}).get(key) and key not in rows[t].own_texts
+           and rows[t].texts[k] != quests.served(rows[t], k, orig[t][key])], [])
     blob = names.document_bytes()
     check("every string id of theirs is in the preload and the launcher's table",
           [sid for q in rows.values() for sid in q.string_ids()
@@ -331,10 +344,10 @@ try:
            for t, v in unknown.items() if v and t not in LIVE},
           {t: [] for t, v in unknown.items() if v and t not in LIVE})
     check("  ..which are those (the hippies' blood, 7123, named with Абри: build_orig_items"
-          " rule 7j; the six pieces of 271 with Донгола, rule 7l)",
+          " rule 7j; the six pieces of 271 with Донгола, rule 7l; those of 272 and the ticket"
+          " 1639 with Абу-Хамед, rules 7n and 7o)",
           {t: v for t, v in unknown.items() if v},
-          {268: [7125, 7126, 7127], 269: [7124, 7125, 7126, 7127],
-           272: [1639] + list(range(6599, 6605)), 284: [1639]})
+          {268: [7125, 7126, 7127], 269: [7124, 7125, 7126, 7127]})
     check("  ..Дирижер's map of the camel stables and the collection's pieces, by name",
           [names.ALL[items.STRING_ID_OFFSET + t] for t in [MAP_D] + LAMANTIN[:1]] +
           ["5972х1735" in names.ALL[items.DESC_ID_OFFSET + MAP_D]],
@@ -386,10 +399,10 @@ try:
                  for b, _r in encounters.bands() if b.camp in HALFA_CAMPS)
     check("the town's wasteland belongs to its four camps, each band's creatures in its band",
           got, [(80, 0, 2, True), (81, 2, 4, True), (84, 4, 6, True), (85, 6, 8, True)])
-    check("  ..and every other band is one of Абри's two camps or Донгола's two"
-          " (encounters.REGIONS)",
+    check("  ..and every other band is one of Абри's two camps, Донгола's two or Абу-Хамед's"
+          " three (encounters.REGIONS)",
           sorted({b.camp for b, _r in encounters.bands()} - set(HALFA_CAMPS) - set(ABRI_CAMPS)
-                 - set(DONGOLA_CAMPS)), [])
+                 - set(DONGOLA_CAMPS) - set(ABUHAMED_CAMPS)), [])
     x0, y0, x1, y1 = world.NOOB_VALLEY
     check("never in the Nubian valley",
           [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)
@@ -558,8 +571,9 @@ try:
     keepsakes.CHANCE = 1.0
     try:
         check("keepsakes: the pieces of the live collections only (Ламантин's and, since"
-              " 2026-10-13, the шайтан-арба's 6593-6598; the джихад-такси's is switched off)",
-              keepsakes.pool(), LAMANTIN + list(range(6593, 6599)))
+              " 2026-10-13, the шайтан-арба's 6593-6598, since 2026-10-14 the джихад-такси's"
+              " 6599-6604)",
+              keepsakes.pool(), LAMANTIN + list(range(6593, 6599)) + list(range(6599, 6605)))
         check("  ..nothing for a hand-in by somebody who collects nothing",
               keepsakes.find(real[251], set(), Rng()), [])
         check("  ..nothing after a service (the map bought) or a collection's own hand-in",

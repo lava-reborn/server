@@ -35,10 +35,32 @@
    "to": 30,
    "why": "RECOVERED, as prison_wh_medics (the owner's «и потом сделай донголу тоже», 2026-10-13). The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 622), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
   },
+  "prison_ah": {
+   "daily": ["12:00", "16:00", "23:00"],
+   "minutes": 30,
+   "why": "RECOVERED (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The uprising in Абу-Хамед's prison (m19, the blocks 649-653 under the yard 177, 6193,1966): the yard's map label «Тюрьма Абу-Хамеда:<br>Усиление режима в 12:00, 16:00 и 23:00» (L154, res/database/locations.xml), the guard's call 62258 («каждый день в 12:00, 16:00 и 23:00 ... всего пол часа») and its hint «\"Охранять\" заключенных нужно в течение 30 минут», as Вади-Хальфа's prison_wh and Донгола's prison_dn, at the same hours."
+  },
+  "prison_ah_gates": {
+   "of": "prison_ah",
+   "from": -15,
+   "to": 30,
+   "why": "RECOVERED lead, DESIGNED end, as prison_wh_gates and prison_dn_gates (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14): the label's «Внимание!!! Необходимо прибывать за 15 минут до встречи с охранниками». The gates of the prison open a quarter of an hour before the uprising and stay open while it lasts: the guards' ways into the blocks (882, 883), the station's ride to the yard (880) and the guard's hand-in of the invitation (884)."
+  },
+  "prison_ah_medics": {
+   "of": "prison_ah",
+   "from": 25,
+   "to": 30,
+   "why": "RECOVERED, as prison_wh_medics and prison_dn_medics (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 651), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
+  },
   "wh_box": {
    "daily": ["19:00"],
    "minutes": 60,
    "why": "RECOVERED. The money boxes of Вади-Хальфа's three склады 109-111: the map labels' «Дележ добычи с 19:00 до 20:00» (res/database/locations.xml 315-317). Opens the holders' daily rows (data/holdings.json, server/holdings.py); the warehouse master keeps an hour of his own and comes once a day, right after the box: 20:00 by default (bosses.WAREHOUSE_HOURS, LAVA_WAREHOUSE_HOURS; the owner's «на складах хозяин должен прриходить один раз!!!», 2026-10-12), so a clan collects at seven and defends at eight."
+  },
+  "wh_box_ah": {
+   "daily": ["19:00"],
+   "minutes": 15,
+   "why": "RECOVERED (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 12). The money box of Абу-Хамед's Центр 128 (stok_AH_vostok): the map's L327 «Дележ добычи с 19:00 до 19:15» -- a quarter of an hour, shorter than the hour of Вади-Хальфа's and Донгола's boxes (wh_box, «с 19:00 до 20:00»), so a window of its own. Opens the holders' daily row 771 (data/holdings.json wh_ah_center, server/holdings.py)."
   },
   "ny": {
    "dates": [["12-20", "01-15"]],
@@ -146,6 +168,30 @@
    "loc": 622,
    "types": [877, 878, 879],
    "why": "RECOVERED people, place and time (the owner's «и потом сделай донголу тоже», 2026-10-13). Джеф, Аль-Назир and Томпсон (877-879) stand in Донгола's centre block too (its file), and take the armbands there for the last five minutes of its uprising."
+  },
+  {
+   "window": "prison_ah",
+   "loc": 652,
+   "types": [1118, 1119, 1120, 1121, 1122],
+   "why": "RECOVERED creatures and place, the window's time (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The prisoners m19_uf_Competitor_1..5 («Заключенный», 60388) in the northern cells (Prison_4_AH, «Тюрьма: Северные камеры»), ten of them: they break out when the uprising begins and are gone when it ends, as 647's and 620's."
+  },
+  {
+   "window": "prison_ah",
+   "loc": 653,
+   "types": [1118, 1119, 1120, 1121, 1122],
+   "why": "RECOVERED creatures and place, the window's time (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The prisoners of the eastern cells (Prison_5_AH, «Тюрьма: Восточные камеры»), ten of them, as the northern ones."
+  },
+  {
+   "window": "prison_ah",
+   "loc": 651,
+   "types": [2175],
+   "why": "RECOVERED creature and place, the window's time (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The godfather m19_uf_godfather_3, «Беглый каторжник<Br>Хранитель общака» (60387), in the centre block (Prison_3_AH), as 2173 in 646 and 2174 in 622: a boss, once an uprising."
+  },
+  {
+   "window": "prison_ah_medics",
+   "loc": 651,
+   "types": [877, 878, 879],
+   "why": "RECOVERED people, place and time (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). Джеф, Аль-Назир and Томпсон (877-879) stand in Абу-Хамед's centre block too (its file), and take the armbands there for the last five minutes of its uprising."
   }
  ],
  "held_out": [
@@ -256,6 +302,24 @@
    "types": [768, 769, 770],
    "gate": "both",
    "why": "RECOVERED times (the owner's «и потом сделай донголу тоже», 2026-10-13). Донгола's «Патроны и афро владельцам склада», taken and handed in at the box only while the share-out lasts: the labels L323-L325 «Дележ добычи с 19:00 до 20:00», the hour of Вади-Хальфа's (a row of its own, so that 765-767's stays as it is); who may take them is data/holdings.json's (holders)."
+  },
+  {
+   "window": "prison_ah_gates",
+   "types": [880, 882, 883],
+   "gate": "both",
+   "why": "RECOVERED times (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The ride to the prison, «Поехали!» (62262/62265: «В 12:00, 16:00 или 23:00 отправиться в тюрьму»), and the guards' gates «Тюрьма: западные/южные ворота» (62275/62274) lead there only for the uprising, from a quarter of an hour before it."
+  },
+  {
+   "window": "prison_ah_gates",
+   "types": [884],
+   "gate": "hand_in",
+   "why": "RECOVERED (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). Абу-Хамед's «Охранник санатория особого режима» is taken at the station any time and handed in at the prison when the guard needs hands (62259), as 158 and 636."
+  },
+  {
+   "window": "wh_box_ah",
+   "types": [771],
+   "gate": "both",
+   "why": "RECOVERED times (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The Центр's «Патроны и афро владельцам склада» (771), taken and handed in at the box only while the share-out lasts: the label L327 «Дележ добычи с 19:00 до 19:15»; who may take it is data/holdings.json's (holders)."
   }
  ],
  "loot": [
@@ -274,13 +338,21 @@
    "num": 1,
    "chance": 1.0,
    "why": "RECOVERED thing, DESIGNED chance, as the row of Вади-Хальфа's blocks (the owner's «и потом сделай донголу тоже», 2026-10-13): the prisoners and the godfather of Донгола's uprising carry the same Red_Bandage, «Красная повязка ВХ» (7323/7324), which Джеф, Аль-Назир and Томпсон take in both prisons (164-168, the plan's decision 26: Донгола's own 4165 Red_Bandage_DN is not used, and the player reads the band's name «ВХ» here too). One each, in the cells and the centre only."
+  },
+  {
+   "locs": [651, 652, 653],
+   "mobs": [1118, 1119, 1120, 1121, 1122, 2175],
+   "obj": 2476,
+   "num": 1,
+   "chance": 1.0,
+   "why": "RECOVERED thing, DESIGNED chance, as the rows of Вади-Хальфа's and Донгола's blocks (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14): the prisoners and the godfather of Абу-Хамед's uprising carry the same Red_Bandage, «Красная повязка ВХ» (7323/7324), which Джеф, Аль-Назир and Томпсон take in all three prisons (164-168; the plan's decision 8: Абу-Хамед's own 4166 Red_Bandage_AH, «Красная повязка АХ» 7326, is not used, one armband for the three, as Донгола's). One each, in the cells and the centre only."
   }
  ],
  "keep_in": [
   {
    "types": [2476],
-   "locs": [644, 645, 646, 647, 648, 618, 619, 620, 621, 622],
-   "why": "RECOVERED rule. Томас, who leads out of the prison, «При выходе отбирает все повязки» (the wiki's «Томас»): the armbands stay in the blocks, whichever way the player leaves -- Томас's «Выход», a death sent home, a login elsewhere. DESIGNED: and no other way either -- the frame of a thing kept in carries the quest flag and no exchange (server/events.py kept, items.static_info), so no letter, lot, barter or stall takes one out, and a death does not drop it. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the row holds Донгола's blocks too, 618-622: one row for the one armband of both prisons, since server/events.py take_back reads every keep_in row on its own -- a second row for 2476 would take the armbands away in Донгола's blocks for not being Вади-Хальфа's, and the other way round. The prisons touch nowhere: leaving either is leaving the row's places."
+   "locs": [644, 645, 646, 647, 648, 618, 619, 620, 621, 622, 649, 650, 651, 652, 653],
+   "why": "RECOVERED rule. Томас, who leads out of the prison, «При выходе отбирает все повязки» (the wiki's «Томас»): the armbands stay in the blocks, whichever way the player leaves -- Томас's «Выход», a death sent home, a login elsewhere. DESIGNED: and no other way either -- the frame of a thing kept in carries the quest flag and no exchange (server/events.py kept, items.static_info), so no letter, lot, barter or stall takes one out, and a death does not drop it. Since 2026-10-13 (the owner's «и потом сделай донголу тоже», 2026-10-13) the row holds Донгола's blocks too, 618-622: one row for the one armband of both prisons, since server/events.py take_back reads every keep_in row on its own -- a second row for 2476 would take the armbands away in Донгола's blocks for not being Вади-Хальфа's, and the other way round. The prisons touch nowhere: leaving either is leaving the row's places. Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14) the row holds Абу-Хамед's blocks too, 649-653, by the same rule: one row for the one armband of the three prisons. The prisons touch nowhere: leaving any is leaving the row's places."
   }
  ]
 }

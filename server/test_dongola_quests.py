@@ -8,7 +8,8 @@ In process:
 
   * every row of 630-799 (but Вади-Хальфа's boxes 765-767) sits in its block
     of the plan (DESIGN.md 5.0) and is on (a giver and a taker); the blocks
-    cut stay empty -- Абу-Хамед's boxes 771-772, «Секреты Магриба» 773-788,
+    cut stay empty -- Абу-Хамед's box 772 (771, the Центр's, is Абу-Хамед's
+    since 2026-10-14: server/test_abuhamed_quests), «Секреты Магриба» 773-788,
     the raids 789-795 -- and the rows of 250-286 that wait for no closed town
     are on: Хоу Сян's and Мун Сон Мён's map and shovel (257, 258), the dig of
     5899.2003 (254) and the skulls of 68 and 146 (260, 261), Энди Уорхол's
@@ -99,7 +100,9 @@ import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
 MT = world.mob_types()
-DONGOLA = [t for t in range(630, 800) if t not in (765, 766, 767)]
+# 771, the box of Абу-Хамед's Центр, is Абу-Хамед's since 2026-10-14 (the owner's
+# «сделай потом абу хамед в таком же формате»; server/test_abuhamed_quests).
+DONGOLA = [t for t in range(630, 800) if t not in (765, 766, 767, 771)]
 # The plan's blocks (DESIGN.md 5.0); the cut ones stay empty.
 BLOCKS = {"rides": range(630, 632), "prison": range(632, 638), "amin": range(638, 645),
           "friends": range(645, 654), "meeting": range(654, 666), "butchers": range(666, 671),
@@ -107,7 +110,7 @@ BLOCKS = {"rides": range(630, 632), "prison": range(632, 638), "amin": range(638
           "quarry": range(708, 715), "gates": range(715, 721), "lottery": range(721, 725),
           "muhammad": range(725, 738), "jones": range(738, 750), "spell": range(750, 757),
           "messenger": range(757, 762), "reserve": range(762, 765),
-          "boxes": range(768, 771), "boxes_ah": range(771, 773), "magrib": range(773, 789),
+          "boxes": range(768, 771), "boxes_ah": range(772, 773), "magrib": range(773, 789),
           "raids": range(789, 796), "reserve2": range(796, 800)}
 CUT = ("boxes_ah", "magrib", "raids", "reserve2")
 EXPECT = {"rides": [630, 631], "prison": list(range(632, 637)),
@@ -360,7 +363,7 @@ try:
           {t: (frm, to, 0, 1) for t, (_d, frm, to) in RIDES.items()})
     check("Хассир, Луиджи and Нур-ад-Дин list their rides where q_idx finds them",
           (quests.given_by(HASSIR), quests.given_by(LUIGI), quests.given_by(NUR)),
-          ([273, 279, 158, 159, 630], [274, 275, 280, 281], [282, 631, 632, 636]))
+          ([273, 279, 158, 159, 630], [274, 275, 280, 281], [276, 282, 283, 631, 632, 636]))
     # With «Осмотр пирамиды» (741) and «Выбраться наверх» (748) free, a free
     # way into Zone 49 was a free ride to Донгола's station (the review of
     # 2026-10-14).
@@ -400,15 +403,18 @@ try:
            ["12:00", "16:00", "23:00"],
            [("prison_dn_gates", "both")] * 3 + [("prison_dn_gates", "hand_in")]))
     check("  ..the prisoners and the godfather drop the armband in 620-622, one each, and the"
-          " one keep_in row of 2476 holds both prisons' blocks",
+          " one keep_in row of 2476 holds both prisons' blocks (since 2026-10-14 Абу-Хамед's"
+          " too)",
           (sorted((loc, mob) for (loc, mob), drops in sched.loot.items()
                   if loc in BLOCKS_DN and (BAND, 1, 1.0) in drops),
            [sorted(locs) for types, locs in sched.keep_in if BAND in types]),
           (sorted((loc, mob) for loc in (620, 621, 622) for mob in PRISONERS_DN),
-           [sorted(BLOCKS_WH + BLOCKS_DN)]))
-    check("  ..the armbands' rows (164-168) name both prisons' prisoners as who drops them",
+           [sorted(BLOCKS_WH + BLOCKS_DN + [649, 650, 651, 652, 653])]))
+    check("  ..the armbands' rows (164-168) name both prisons' prisoners as who drops them"
+          " (and since 2026-10-14 Абу-Хамед's)",
           {t: sorted(m for _o, _n, ms in real[t].objs for m in ms) for t in range(164, 169)},
-          {t: sorted([1113, 1114, 1115, 1116, 1117, 2173] + PRISONERS_DN)
+          {t: sorted([1113, 1114, 1115, 1116, 1117, 2173] + PRISONERS_DN
+                     + [1118, 1119, 1120, 1121, 1122, 2175])
            for t in range(164, 169)})
     check("  ..Донгола's «Охранник санатория особого режима» (636): Нур-ад-Дин's, handed in to"
           " the southern guard 1795 at the gates, 158's start word for word",
@@ -457,7 +463,8 @@ try:
     # Уорхол's collection and «Посланник Смерти».
     pieces = list(range(6593, 6599))
     check("«Коллекция водителя шайтан-арбы» (271): its six pieces named and described, a live"
-          " collection, and Уорхол gives 270 and 271",
+          " collection, and Уорхол gives 270 and 271 (and since 2026-10-14 the джихад-такси's"
+          " 272)",
           ([item_name(o) for o in pieces],
            [names.known(items.DESC_ID_OFFSET + o) for o in pieces],
            [(t, live_) for t, live_, _p in keepsakes.collections()],
@@ -465,7 +472,7 @@ try:
           (["Балонник (Коллекция)", "Прикуриватель (Коллекция)", "Дворники (Коллекция)",
             "Домкрат (Коллекция)", "Ароматизатор (Коллекция)",
             "Зеркало заднего вида (Коллекция)"], [True] * 6,
-           [(270, True), (271, True), (272, False)], [270, 271]))
+           [(270, True), (271, True), (272, True)], [270, 271, 272]))
     check("«Посланник Смерти»: part 1 alone (757, the trinket to Лейла), parts 2-6 not in the"
           " table, the why saying why",
           (real[757].give, real[757].take, real[757].obj,

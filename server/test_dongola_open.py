@@ -830,11 +830,17 @@ try:
 
     # --- the station of Донгола --------------------------------------------------------
     shown = infos(arrival)
-    check("Донгола's station as the client is shown it: Нур-ад-Дин with the rides to Абри and"
-          " Вади-Хальфа, the prison's ride and the prison guard's invitation, and the ticket to Абри",
+    # Since 2026-10-14 (the owner's «сделай потом абу хамед в таком же формате») the
+    # station's driver drives to Абу-Хамед too, for 0,25 G or the ticket 1567, and sells
+    # that ticket and the one back, 1639 (server/test_abuhamed_quests, the TRADE
+    # package's stall).
+    check("Донгола's station as the client is shown it: Нур-ад-Дин with the rides to"
+          " Абу-Хамед, Абри and Вади-Хальфа, the prison's ride and the prison guard's"
+          " invitation, and the tickets to Абри and to Абу-Хамед and back",
           (shown.get(NUR, ("", {}))[1].get("give_quests"),
            shown.get(NUR, ("", {}))[1].get("type_list")),
-          ([TICKET_ABRI, RIDE_BACK_WH, PRISON_RIDE, 636], [TICKET_TO_ABRI]))
+          ([276, TICKET_ABRI, 283, RIDE_BACK_WH, PRISON_RIDE, 636],
+           [TICKET_TO_ABRI, 1567, 1639]))
     check("  ..arrived beside Нур-ад-Дин's way back",
           first(arrival, "lenter").get("pos")
           == travel.door_arrival(world.location(DN_STATION), STATION_WH), True)

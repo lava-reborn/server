@@ -1388,6 +1388,18 @@
     "cells": [[33, 79], [32, 80], [34, 80], [33, 81]],
     "target_loc_id": 69,
     "why": "DESIGNED way, RECOVERED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 49: Рашид (146) stands at (33,80); «Старые приятели (часть 6)» (48582-48584, «мы поедем туда, откуда можно будет пробраться в лагерь наших противников ... Что ж, в путь.») takes the player to «Старые приятели» (69, 5881,1999), where Рашид, Шамиль and the car stand. The cells are the ground beside him."
+   },
+   {
+    "quest": 276,
+    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "target_loc_id": 126,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 49 «Донгола: Вокзал»: Нур-ад-Дин (156) at (37,47); «Поездка в Абу-Хамед» (276, 47239-47242, 0,25 G) is the ride to Абу-Хамед's station 126 (6182,1976). The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 283,
+    "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
+    "target_loc_id": 126,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 49: Нур-ад-Дин's «Проездной в Абу-Хамед» (283), the same ride to 126 for the ticket 1567. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
    }
   ],
   "622": [
@@ -1604,6 +1616,204 @@
     "cells": [[10, 118], [9, 119], [8, 119], [9, 120]],
     "target_loc_id": 704,
     "why": "RECOVERED way («Путь в пирамиду»), DESIGNED place (the owner's «и потом сделай донголу тоже», 2026-10-13). 255 «Абри: Трущобы»: Генри Джонс (1843, AB_Djons3) at (9,118); «Путь в пирамиду» (47078-47080) leads back into Zone 49, its second room 704 (DN_Zone49_2). The cells are the ground beside him, where a player coming from the Zone arrives (743)."
+   }
+  ],
+  "126": [
+   {
+    "quest": 277,
+    "cells": [[32, 72], [34, 72], [33, 73], [34, 71]],
+    "target_loc_id": 49,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126 «Абухамед: Вокзал» (Abuhamed_RailMarket, 6182,1976): Веласкес (740, «Веласкес<Br>водитель», 47258) stands at (33,72); «Поездка в Донголу» (277, 46965/47222-47224, 0,10 G) is the ride to Донгола's station 49. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 284,
+    "cells": [[32, 72], [34, 72], [33, 73], [34, 71]],
+    "target_loc_id": 49,
+    "why": "RECOVERED ride and texts, DESIGNED way (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126: Веласкес's «Проездной в Донголу» (284), the same ride to 49 for the ticket 1639. The cells are the ground at the driver's feet, where a player driven the other way arrives (travel.door_arrival)."
+   },
+   {
+    "quest": 880,
+    "cells": [[32, 72], [34, 72], [33, 73], [34, 71]],
+    "target_loc_id": 177,
+    "why": "RECOVERED way and time, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 126: Веласкес's «Поехали!» (62262/62265, «Вас отправят в тюрьму около Абу-Хамеда») is the ride to the prison's yard (177, 6193,1966), open from a quarter of an hour before an uprising to its end (data/schedule.json prison_ah_gates). The cells are his rides' ground, where a player driven back from the prison arrives."
+   }
+  ],
+  "651": [
+   {
+    "quest": 163,
+    "cells": [[31, 73], [30, 74], [32, 74], [31, 75]],
+    "target_loc_id": 177,
+    "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 651 «Тюрьма: Центральный блок.» (Prison_3_AH, Абу-Хамед's copy of 646 and 622): «Томас<Br>Выход из тюрьмы» (876, uf_ExitMan, 62317) at (31,74), and his «Выход» (163, 62276-62278), handed back to him, leads up to the yard (177) at any time; the armbands stay below (data/schedule.json keep_in). The row is Вади-Хальфа's, of the same Томас: without this record it is refused here (the rule of 'quest' above), and the blocks would have no way out. The cells are the ground at his feet, as under '646' and '622'."
+   }
+  ],
+  "177": [
+   {
+    "quest": 881,
+    "cells": [[32, 42], [31, 43], [33, 43], [32, 44]],
+    "target_loc_id": 126,
+    "why": "RECOVERED way, DESIGNED giver and place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 177 «Тюремный двор» (Prison_Entrance_AH, 6193,1966): «Назад в Абу-Хамед» (62270/62271) is the ride back to the station (126); the supply man «Снабженец» (880) at (32,43) drives, as 2180 and 2181 in the other yards. The cells are the ground by him, where a player driven to the prison arrives."
+   },
+   {
+    "quest": 882,
+    "cells": [[17, 38], [16, 39], [17, 37], [15, 39]],
+    "target_loc_id": 649,
+    "why": "RECOVERED way and time, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 177: «Охранник<Br>Западная сторона» (1793) at (16,38), and his «Тюрьма: западные ворота» (62275), handed back to him at the uprising (data/schedule.json prison_ah_gates), takes the player down into 649 (Prison_1_AH). The cells are the ground at his feet."
+   },
+   {
+    "quest": 883,
+    "cells": [[41, 37], [40, 38], [39, 38], [41, 38]],
+    "target_loc_id": 650,
+    "why": "RECOVERED way and time, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 177: «Охранник<Br>Южная сторона» (1796) at (40,37), and his «Тюрьма: южные ворота» (62274), handed back to him at the uprising, takes the player down into 650 (Prison_2_AH). The cells are the ground at his feet."
+   }
+  ],
+  "127": [
+   {
+    "quest": 903,
+    "cells": [[51, 21], [50, 19], [52, 21], [51, 22]],
+    "target_loc_id": 636,
+    "why": "RECOVERED way (the wiki's «Работа в Каменоломне»: «после выполнения задания Вас переместят в другое место»), DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 127 «Абухамед: Жилой квартал»: Ибрахим (984) stands at (51,20); his contract takes the player into the quarry's north pit, 636, beside Гюнтер. The cells are the ground beside him, where a player leaving the quarry arrives."
+   },
+   {
+    "quest": 965,
+    "cells": [[41, 11], [40, 12], [41, 12], [42, 11]],
+    "target_loc_id": 1295,
+    "why": "RECOVERED way and giver (the wiki's «Вход в учебный центр»: «Учебный центр Абу-Хамеда»), DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 127 «Абухамед: Жилой квартал»: Охранник Илья (1421) stands at (40,11); his way leads into the Боевая Академия (1295), which has no cell. The cells are the ground beside him, where a player leaving the Академия arrives."
+   }
+  ],
+  "636": [
+   {
+    "quest": 904,
+    "cells": [[55, 18], [56, 19], [55, 17], [55, 19]],
+    "target_loc_id": 127,
+    "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 636 «Каменоломня.» (AH_Stone_Mine_N), the quarry's north pit: Гюнтер (985) stands at (56,18), and his «Покинуть каменоломню.» leads back to the Жилой квартал (127), where Ибрахим signs the contract. The cells are the ground beside him, where a player sent in by Ибрахим arrives."
+   }
+  ],
+  "213": [
+   {
+    "quest": 910,
+    "cells": [[30, 57], [31, 58], [30, 58], [32, 58]],
+    "target_loc_id": 666,
+    "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 213, the entrance of Абу-Хамед's mine of меди (L317), draws its door with the gatekeeper (1331) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 666. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "214": [
+   {
+    "quest": 911,
+    "cells": [[30, 57], [31, 58], [30, 58], [32, 58]],
+    "target_loc_id": 667,
+    "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 214, the entrance of Абу-Хамед's mine of селитры (L319), draws its door with the gatekeeper (1327) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 667. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "215": [
+   {
+    "quest": 912,
+    "cells": [[30, 57], [31, 58], [30, 58], [32, 58]],
+    "target_loc_id": 668,
+    "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 215, the entrance of Абу-Хамед's mine of свинца (L318), draws its door with the gatekeeper (1323) in front of it at (31,57) and no zone to go in by. His quest takes the player down to the control room, 668. The cells are the ground at his feet, below the door, where a player coming up arrives."
+   }
+  ],
+  "666": [
+   {
+    "quest": 913,
+    "cells": [[14, 26], [13, 27], [14, 25], [12, 27]],
+    "target_loc_id": 213,
+    "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 666 «Комната управления»: «Выход из шахты/карьера» (1343) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 213. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "667": [
+   {
+    "quest": 914,
+    "cells": [[14, 26], [13, 27], [14, 25], [12, 27]],
+    "target_loc_id": 214,
+    "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 667 «Комната управления»: «Выход из шахты/карьера» (1339) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 214. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "668": [
+   {
+    "quest": 915,
+    "cells": [[14, 26], [13, 27], [14, 25], [12, 27]],
+    "target_loc_id": 215,
+    "why": "DESIGNED way, RECOVERED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 668 «Комната управления»: «Выход из шахты/карьера» (1335) stands at (13,26), its door b leads on into the tiers and nothing leads up. His quest takes the player back to the surface, 215. The cells are the ground beside him, where a player coming down arrives."
+   }
+  ],
+  "1295": [
+   {
+    "quest": 966,
+    "cells": [[5, 43], [3, 45], [4, 46], [6, 43]],
+    "target_loc_id": 127,
+    "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 1295 «Боевая Академия.»: Илья inside (1424) stands at (4,44); «Выход из обучающего центра» leads back to the Жилой квартал (127) at any time: the Академия's free way out (it has no side and no door). The cells are the ground beside him, where a player led in by Илья arrives."
+   }
+  ],
+  "446": [
+   {
+    "quest": 949,
+    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "target_loc_id": 690,
+    "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Тафари» takes the player in his car to the hide-out 690 (Тафари), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
+   },
+   {
+    "quest": 950,
+    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "target_loc_id": 691,
+    "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Гвале» takes the player in his car to the hide-out 691 (Гвала), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
+   },
+   {
+    "quest": 951,
+    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "target_loc_id": 692,
+    "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Гамюке» takes the player in his car to the hide-out 692 (Гамюки), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
+   },
+   {
+    "quest": 952,
+    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "target_loc_id": 693,
+    "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Абрафо» takes the player in his car to the hide-out 693 (Абрафо), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
+   },
+   {
+    "quest": 953,
+    "cells": [[57, 68], [58, 69], [57, 67], [57, 69]],
+    "target_loc_id": 694,
+    "why": "RECOVERED way, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 446 «Абухамед: Порт»: Гатера (1727) at (58,68); «Отправиться к Джитинджи» takes the player in his car to the hide-out 694 (Джитинджи), which has no cell and no side. The cells are the ground beside him, where a player driven back from a hide-out arrives."
+   }
+  ],
+  "690": [
+   {
+    "quest": 954,
+    "cells": [[2, 64], [1, 65], [3, 65], [2, 66]],
+    "target_loc_id": 446,
+    "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 690, Тафари's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
+   }
+  ],
+  "691": [
+   {
+    "quest": 954,
+    "cells": [[2, 64], [1, 65], [3, 65], [2, 66]],
+    "target_loc_id": 446,
+    "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 691, Гвала's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
+   }
+  ],
+  "692": [
+   {
+    "quest": 954,
+    "cells": [[2, 66], [3, 67], [2, 68], [1, 66]],
+    "target_loc_id": 446,
+    "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 692, Гамюка's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
+   }
+  ],
+  "693": [
+   {
+    "quest": 954,
+    "cells": [[35, 56], [34, 57], [35, 55], [33, 57]],
+    "target_loc_id": 446,
+    "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 693, Абрафо's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
+   }
+  ],
+  "694": [
+   {
+    "quest": 954,
+    "cells": [[3, 60], [2, 61], [4, 61], [3, 62]],
+    "target_loc_id": 446,
+    "why": "RECOVERED way and giver, DESIGNED place (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). 694, Джитинджи's hide-out: Гатера's car (1693) stands at its edge; «Что, обратно захотелось?» (954, «Ну поехали. Довезу бесплатно.») drives back to the Причал 446 at any time, the hide-out's free way out (it has no side and no door). The cells are the ground by the car, where a player driven in arrives."
    }
   ]
  }

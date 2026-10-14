@@ -21,9 +21,11 @@ and a real database:
     disband drops the holding; and no outcome ever reaches a chat channel,
     only the log and clan_holding_log;
   * the flag: per viewer in a site room -- clan= and a fellow after the
-    frame, repair for the holders alone, nothing for sale -- and Абу-Хамед's
-    flag (128) as it always was, mending for anybody (Донгола's three are
-    sites since 2026-10-13, the owner's «и потом сделай донголу тоже»);
+    frame, repair for the holders alone, nothing for sale -- and the flag
+    of the «Склад» 1380, which has no cell and no site, as it always was,
+    mending for anybody (Донгола's three are sites since 2026-10-13, the
+    owner's «и потом сделай донголу тоже», and Абу-Хамед's Центр 128 since
+    2026-10-14, «сделай потом абу хамед в таком же формате»);
   * the box: «Патроны и афро владельцам склада» (765) between 19:00 and
     20:00 to a member of the holding clan of a day's standing at the site's
     level, once a day, one character of an account; refused at the hand-in
@@ -92,7 +94,7 @@ STORE = server.STORE
 CLANS = server.CLANS
 from testkit import check, fails  # noqa: E402
 
-SEVER, ELSEWHERE = 111, 128            # the Северный склад, and Абу-Хамед's (no site yet)
+SEVER, ELSEWHERE = 111, 1380           # the Северный склад, and a «Склад» that is no site
 FLAG, BOX, BOSS = 1011, 6824, 7448
 BOX_ROW = quests.get(765)
 WALTHER = 25636                         # a gun to mend (test_repair's)
@@ -293,7 +295,7 @@ async def main():
     check("the boss keeps the warehouse masters' hour, 20:00 alone",
           (bosses.hours_of(BOSS),
            [bosses.hours_of(site.boss) for site in holdings.sites().values()]),
-          ([20 * 60], [[20 * 60]] * 6))
+          ([20 * 60], [[20 * 60]] * 7))
     seen = []
     for h in (14, 18, 22, 20):
         NOW[0] = at(h, 5)
@@ -570,7 +572,7 @@ async def main():
     droom = server.ROOMS.get(ELSEWHERE)
     dflag = next(e for e, n in droom.npcs.items() if n.type_id == FLAG)
     got = flag_frames(carl, dflag)
-    check("Абу-Хамед's flag (128), a warehouse nobody can take yet: its frame as before --"
+    check("the flag of the «Склад» 1380, a warehouse nobody can take: its frame as before --"
           " for sale and mending, no clan, no fellow",
           ([n for n, _p in got], got[0][1]["can_trade"], got[0][1]["can_repair"],
            "clan" in got[0][1]), (["userInfo_Trader"], 1, 1, False))
@@ -590,7 +592,7 @@ async def main():
         got = acks(take(sess))
         return got, STORE.item(row["uniq"])["brk"] > 100
 
-    check("repair at Абу-Хамед's flag: anybody, carl in no clan", mend(carl, dflag),
+    check("repair at the flag of 1380: anybody, carl in no clan", mend(carl, dflag),
           ([0, 0], True))
     into(carl, SEVER)
     check("repair at the Северный склад's flag: the holders' (alice)", mend(alice, flag),
@@ -749,8 +751,8 @@ async def main():
           ("склад «Северный склад Вади-Хальфы» уже не за кланом «Шакалы»", 0))
     check("a site that is not: said so, with the ones there are",
           order("hold", clan=wolves, site="склад"),
-          "склада «склад» нет (есть: wh_dn_sever, wh_dn_ug, wh_dn_vostok, wh_sever, wh_ug,"
-          " wh_vostok)")
+          "склада «склад» нет (есть: wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
+          " wh_sever, wh_ug, wh_vostok)")
 
     # --- a disband ------------------------------------------------------------------------------
     eagles = found(dora, "Орлы")
@@ -772,7 +774,7 @@ async def main():
     # --- the tool --------------------------------------------------------------------------------
     order("hold", clan=wolves, site="wh_sever")
     code, out = tool("holdings")
-    check("tool: holdings lists the six sites, who holds each, and the last changes",
+    check("tool: holdings lists the seven sites, who holds each, and the last changes",
           (code, any(line.startswith("wh_sever") and "Волки (id %d)" % wolves in line
                      for line in out.splitlines()),
            any(line.startswith("wh_ug") and "nobody" in line for line in out.splitlines()),
@@ -780,8 +782,8 @@ async def main():
     code, out = tool("clan-hold", "Шакалы", "--wait", "0.5")
     check("tool: clan-hold without --site is refused, nothing queued",
           (code, list(STORE.admin_pending())),
-          ("clan-hold needs --site, one of: wh_dn_sever, wh_dn_ug, wh_dn_vostok, wh_sever,"
-           " wh_ug, wh_vostok", []))
+          ("clan-hold needs --site, one of: wh_ah_center, wh_dn_sever, wh_dn_ug, wh_dn_vostok,"
+           " wh_sever, wh_ug, wh_vostok", []))
     code, out = tool("clan-hold", "Шакалы", "--site", "wh_sever", "--wait", "0.5")
     pending = [json.loads(r["args_json"]) for r in STORE.admin_pending()]
     check("tool: clan-hold queues the order, the clan by id, and with no game says it waits",

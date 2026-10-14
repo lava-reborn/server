@@ -365,12 +365,15 @@ try:
           [travel.no_map(lid) for lid in BLOCKS + [YARD]], [True] * 5 + [False])
     # Since 2026-10-13 the one keep_in row of the armband holds Донгола's
     # blocks too, and its prisoners drop it there (server/test_dongola_quests);
+    # since 2026-10-14 Абу-Хамед's the same (server/test_abuhamed_quests);
     # Вади-Хальфа's part of both is as it was.
     DN_BLOCKS, DN_CELLS = [618, 619, 620, 621, 622], (620, 621, 622)
+    AH_BLOCKS, AH_CELLS = [649, 650, 651, 652, 653], (651, 652, 653)
     check("the armbands stay in the blocks, and drop only there, off the prisoners and the"
-          " godfather, one each (with Донгола's prison beside)",
-          (SCHEDULE.keep_in, sorted(k for k in SCHEDULE.loot if k[0] not in DN_CELLS)),
-          ([(frozenset([BAND]), frozenset(BLOCKS + DN_BLOCKS))],
+          " godfather, one each (with Донгола's and Абу-Хамед's prisons beside)",
+          (SCHEDULE.keep_in, sorted(k for k in SCHEDULE.loot
+                                    if k[0] not in DN_CELLS + AH_CELLS)),
+          ([(frozenset([BAND]), frozenset(BLOCKS + DN_BLOCKS + AH_BLOCKS))],
            sorted((loc, mob) for loc in (CENTRE, NORTH_CELLS, EAST_CELLS)
                   for mob in PRISONERS + [GODFATHER])))
     rng = __import__("random").Random(3)
@@ -621,13 +624,16 @@ async def _rooms():
               " warehouses' three money boxes by their share-out's (wh_box, server/"
               "holdings.py): nobody in the blocks (Томас's way and the medics' rows are no"
               " window's); since 2026-10-13 Донгола's the same: Нур-ад-Дин and its two"
-              " guards by its gates' window, its three boxes by wh_box",
+              " guards by its gates' window, its three boxes by wh_box; since 2026-10-14"
+              " Абу-Хамед's: Веласкес and its two guards by its gates' window, the box of"
+              " the Центр by its own quarter of an hour, wh_box_ah",
               {t: [w.name for w in ws] for t, ws in SCHEDULE.marked().items()},
               {HASSIR: ["prison_wh_gates"], WEST_GUARD: ["prison_wh_gates"],
                SOUTH_GUARD: ["prison_wh_gates"], 6824: ["wh_box"], 6825: ["wh_box"],
                6826: ["wh_box"], 156: ["prison_dn_gates"], 1792: ["prison_dn_gates"],
                1795: ["prison_dn_gates"], 6827: ["wh_box"], 6828: ["wh_box"],
-               6829: ["wh_box"]})
+               6829: ["wh_box"], 740: ["prison_ah_gates"], 1793: ["prison_ah_gates"],
+               1796: ["prison_ah_gates"], 6830: ["wh_box_ah"]})
     finally:
         bosses.clock = real_clock
         store.close()

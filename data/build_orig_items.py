@@ -1300,7 +1300,59 @@ def dongola_quest_records(T, objects):
 # row (None where the original has none), hand-checked against the run of
 # texts.xml that names it. What Абу-Хамед's stalls sell is
 # ABUHAMED_TRADE_ROWS (7o).
-ABUHAMED_QUEST_ROWS = {}
+#   * the letter of Президент Крюгер in four parts (qLetter_transvaal_1..4,
+#     6429-6433, one description 6430) and the four letters to the oases
+#     (qLetter_Hedrik .. qLetter_Preller, 6434-6441), «Письмо Президента
+#     Крюгера» and the archives (887-892); only the second part had a name;
+#   * the archives' boxes, qArhive_Box_WH/AB/DN/AH and Вюрт's fake one _RV:
+#     one name «Ящик с архивом» (6442), each box its own words 6443-6447
+#     (*Archiv WH* .. *Archiv AH*, *Kruger henkil?kohtainen arkisto*); rule 8
+#     gave all five the wiki's «Ящик с архивом (АБ)» and the AB box's words;
+#   * Ан-Насир's note «Записка» (qTxt 4778): its name 6057 had no words,
+#     6485 («... «Кор-н 6225 – 1895»») is the note of «Раненый» (925);
+#   * what was on the five bandits, qBossLoot1..5 (4160-4164): the file's
+#     run 6512-6517 names them «Вещи Тафари» .. «Вещи Джитинджи», one
+#     description 6513 between the first two -- rule 8 called all five
+#     «Вещи Абрафо»; Абимбола's «Убить X» (943-947) asks each by name;
+#   * the dreadnought's «Блок управления» (dread_vest_4, 5573), the one part
+#     with no name: 7620/7621 between «Радиатор» (dread_vest_3, 7618/7619)
+#     and «Электронный шлейф» (dread_vest_6, 7622/7623), and Эммануил's list
+#     of the armour (60569) names it;
+#   * «Алмаз» (diamond 5545): its name 7251 and the words of the brilliant
+#     beside it, 7655 «Красивый брильянт, неожиданно правильной огранки»,
+#     the wiki's for «Алмаз» word for word: Гатера's fare (949-953);
+#   * the six pieces of Энди Уорхол's «Коллекция водителя джихад-такси»
+#     (272), collection_travel_g_1..6 by texts.xml 8438-8449, «Автомагнитола
+#     (Коллекция)» .. «Руль (Коллекция)», in objects.xml's order -- the rule
+#     of the шайтан-арба's pieces (7l).
+# Pinned 2026-10-14.
+ABUHAMED_QUEST_ROWS = {"qLetter_transvaal_1": (6429, 6430, "Первая часть письма"),
+                       "qLetter_transvaal_2": (6431, 6430, "Вторая часть письма"),
+                       "qLetter_transvaal_3": (6432, 6430, "Третья часть письма"),
+                       "qLetter_transvaal_4": (6433, 6430, "Четвертая часть письма"),
+                       "qLetter_Hedrik": (6434, 6435, "Письмо Хедрику Муннику"),
+                       "qLetter_Braal": (6436, 6437, "Письмо господину де Браалю"),
+                       "qLetter_Klians": (6438, 6439, "Письмо господину Кляйнхансу"),
+                       "qLetter_Preller": (6440, 6441, "Письмо господину Прелле"),
+                       "qArhive_Box_WH": (6442, 6443, "Ящик с архивом"),
+                       "qArhive_Box_AB": (6442, 6444, "Ящик с архивом"),
+                       "qArhive_Box_DN": (6442, 6445, "Ящик с архивом"),
+                       "qArhive_Box_AH": (6442, 6446, "Ящик с архивом"),
+                       "qArhive_Box_RV": (6442, 6447, "Ящик с архивом"),
+                       "qTxt": (6057, 6485, "Записка"),
+                       "qBossLoot1": (6512, 6513, "Вещи Тафари"),
+                       "qBossLoot2": (6514, 6513, "Вещи Гвалы"),
+                       "qBossLoot3": (6515, 6513, "Вещи Гамюки"),
+                       "qBossLoot4": (6516, 6513, "Вещи Абрафо"),
+                       "qBossLoot5": (6517, 6513, "Вещи Джитинджи"),
+                       "dread_vest_4": (7620, 7621, "Блок управления"),
+                       "diamond": (7251, 7655, "Алмаз"),
+                       "collection_travel_g_1": (8438, 8439, "Автомагнитола (Коллекция)"),
+                       "collection_travel_g_2": (8440, 8441, "Аккумулятор (Коллекция)"),
+                       "collection_travel_g_3": (8442, 8443, "Колесо (Коллекция)"),
+                       "collection_travel_g_4": (8444, 8445, "Автомобильный номер (Коллекция)"),
+                       "collection_travel_g_5": (8446, 8447, "Табличка маршрута (Коллекция)"),
+                       "collection_travel_g_6": (8448, 8449, "Руль (Коллекция)")}
 
 
 def abuhamed_quest_records(T, objects):
