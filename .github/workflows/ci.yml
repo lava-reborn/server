@@ -11,9 +11,9 @@
 #              cache under that digest or fetches them, forgets the key, and
 #              checks the string table.
 #   suite      every server/, data/, tools/ and client/ suite on SQLite,
-#              in three shards side by side, each four at once, longest
+#              in three shards side by side, each three at once, longest
 #              first by the last run's durations, with the known failures of
-#              tools/known_failures.txt and one rerun, four at once, for
+#              tools/known_failures.txt and one rerun, three at once, for
 #              anything else that fails (none past ten failures: that many is
 #              a break, not a crowd).
 #   suites     the shards as one: every suite ran, and once
@@ -337,9 +337,13 @@ jobs:
 
   # The SQLite suites in three shards side by side, on three runners: each
   # cuts the same set the same way, by the durations assets handed over,
-  # and runs its part four at once, longest first. Four at once, three
-  # shards: twelve suites in all, about the 3.4 GB measured for twelve,
-  # beside Postgres's ~1.2 GB at four, within the runners' 6 GB.
+  # and runs its part three at once, longest first. Three at once, three
+  # shards: nine suites in all. Four at once (twelve, about the 3.4 GB
+  # measured on 2026-10-12, beside Postgres's ~1.2 GB) outgrew the runners'
+  # 6 GB on 2026-10-14: with Донгола and Абу-Хамед every server holds a
+  # bigger world, the longest suites (the towns' end-to-end paths) all start
+  # first, and 32 python processes filled 4.7 GB a minute and a half in;
+  # the kernel killed the shards (exit 137).
   suite:
     name: suites on SQLite, shard ${{ matrix.shard }}/3
     needs: assets
@@ -396,7 +400,7 @@ jobs:
 
       # The runner cuts the set and orders its part by the summary.txt in
       # its output folder: the same text on every shard.
-      - name: a third of the suites, four at once, longest first
+      - name: a third of the suites, three at once, longest first
         id: run
         run: |
           export LAVA_RES=$HOME/lava-assets/res LAVA_ORIG_TEXTS=$HOME/lava-assets/texts.xml
@@ -405,9 +409,9 @@ jobs:
           if [ -n "$DURATIONS" ]; then
             printf '%s\n' "$DURATIONS" > "$out/summary.txt"
           fi
-          bash tools/run_suite.sh --known tools/known_failures.txt --rerun \
+          bash tools/run_suite.sh --known tools/known_failures.txt --rerun --rerun-jobs 3 \
             --shard ${{ matrix.shard }}/3 \
-            --summary "$GITHUB_STEP_SUMMARY" . "$out" 4
+            --summary "$GITHUB_STEP_SUMMARY" . "$out" 3
         env:
           DURATIONS: ${{ needs.assets.outputs.durations }}
 
