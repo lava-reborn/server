@@ -160,6 +160,21 @@ WIKI_LEVELS = {
 # Абри's are; and Крисп, the Магриб officer of «Патруль Магриба» (115), at the
 # middle of the town's band -- his m1520_ tier would make him 18, and «Секреты
 # Магриба» sends a player of the town after him.
+#
+# And Абу-Хамед (the owner's «сделай потом абу хамед в таком же формате»,
+# 2026-10-14, the town's band 16-20): the treasurers of the pirates' camp and
+# the Alliance's outpost (pt_/na_Kaznachei, who stand all day) at their rows'
+# level ([18] 8961, 8980); the camps' ammunition boxes at the middle of their
+# camps' bands -- the pirates' 16-18, and one type for the outpost 16-18 and
+# the base 19-20, so 18; the men of «Письмо Президента Крюгера» (50044):
+# Гейнц Тейлор at the wiki's 19 (WIKI_LEVELS has it, the town's band came
+# first), Джеймс Бейкер at his row's [20] (9007), and Йохан Демперс and
+# Рудольф Треурнихт, whose rows (50316, 50317) write no level, at the middle
+# of the pirates' camp and the base's lower rung, 17 and 19; and the bandits
+# of Абимбола's revenge in their five places 690-694, a party's fight: the
+# bosses Тафари, Гвала, Гамюка with Изингома and Мэйтата, Абрафо and
+# Джитинджи at the top of the band, 20, their men at 18 (the original writes
+# no level for any of them, 48417-48430, and their types say none).
 DESIGNED_LEVELS = {
     "nubia_boss": 5,
     "nc_box_ammo": 1,
@@ -187,6 +202,27 @@ DESIGNED_LEVELS = {
     "jm_box_ammo": 13,
     "pc_box_ammo": 15,
     "m1520_magrib_officer_q": 14,
+    "pt_Kaznachei": 18,
+    "na_Kaznachei": 18,
+    "pt_box_ammo": 17,
+    "na_box_ammo": 18,
+    "Oasis_AH_Teilor": 19,
+    "na_JamesBaker": 20,
+    "pt_Dempers": 17,
+    "na_Rudolf": 19,
+    "inst_db_boss_1": 20,
+    "inst_db_boss_2_3": 20,
+    "inst_db_boss3_1": 20,
+    "inst_db_boss3_2": 20,
+    "inst_db_boss3_3": 20,
+    "inst_db_boss_4": 20,
+    "inst_db_boss_5": 20,
+    "inst_add_1": 18,
+    "inst_db_add_4": 18,
+    "inst_db_add_5_1": 18,
+    "inst_db_add_5_2": 18,
+    "inst_db_add_5_3": 18,
+    "inst_db_add_5_4": 18,
 }
 
 # --- kinds set by hand ------------------------------------------------------
@@ -215,6 +251,23 @@ DESIGNED_LEVELS = {
 # (50285) and «[13] Амин» (50286), and the town they stand in is for 12-16.
 # Here, for the first time, the table rewrites a level a name gives (decision
 # 52 of the plan; README and UNDONE say so too).
+# DESIGNED, Абу-Хамед (the owner's «сделай потом абу хамед в таком же
+# формате», 2026-10-14): the pirates' capitans (pt_capitan_lvl16/17/18, 767,
+# 771, 775) and the Alliance's colonels (na_colonel_lvl19 1730,
+# na_colonel_lvl19a 2318) are made bosses by their words, but their rows are
+# ranks of the camps' blocks beside the sailors and the privates: «[16]
+# Кондуктор», «[17] Кавторанг», «[18] Капраз» (8964, 8968, 8972), «[19]
+# Подполковник» (8996), «[20] Полковник» (9001). In the camps' fill they are
+# rank and file, as Донгола's commanders (decision 21 of the plan): as bosses
+# they would keep the hours and no ambush or patrol would take them -- 771
+# stood in the pirates' chief's place 133 by its file and kept the clock
+# there. The Alliance's «[21] Прототип» (na_prototype_lvl21, 2315) fights at
+# 20, the base's band and the server's ceiling (decision 40), and the eight
+# crocodiles of Гвала's place 691 (inst_db_boss_2, art crocodile, «Злобный
+# крокодил», 48419: «своим ручным крокодилам», 60535) are beasts of 18, as
+# every other crocodile of the game is an animal with its jaws (mCrocodile
+# 130 and its family), not eight bosses of 20 with a boss's pistol; Гвала
+# himself is inst_db_boss_2_3 (1708).
 DESIGNED_KINDS = {
     "m_turret_lvl6": {"role": "turret", "weapon_class": "machine_gun", "hex_ms": 0},
     "mg_miner_lvl8": {"weapon_class": "smg"},
@@ -224,6 +277,14 @@ DESIGNED_KINDS = {
     "jm_Komandir_lvl14": {"role": "mob"},
     "m510_Johar_lvl8": {"level": 12, "level_source": "designed"},
     "m510_Amin_lvl8": {"level": 13, "level_source": "designed"},
+    "pt_capitan_lvl16": {"role": "mob"},
+    "pt_capitan_lvl17": {"role": "mob"},
+    "pt_capitan_lvl18": {"role": "mob"},
+    "na_colonel_lvl19": {"role": "mob"},
+    "na_colonel_lvl19a": {"role": "mob"},
+    "na_prototype_lvl21": {"level": 20, "level_source": "designed"},
+    "inst_db_boss_2": {"role": "animal", "weapon_class": "fist", "level": 18,
+                       "level_source": "designed"},
 }
 
 # --- weapon class from a word in the name ---------------------------------

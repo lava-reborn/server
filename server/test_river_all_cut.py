@@ -195,6 +195,11 @@ PIER_DN, PIER_DN_CELL = 445, (5873, 2012)
 # among them (the research of 2026-10-13, FIND.md). Донгола's camps' second
 # cells hold their chiefs' places 91 and 99, and its clothing market 469 is
 # cut, since the owner's Донгола of the same day (server/test_dongola_cut.py).
+# Абу-Хамед's clothing market 467, СМЕРШ's base 194 and the abandoned clan
+# base 118 are cut, its base's second cell holds its chief's place 274, the
+# outpost 168 stands on its own label and the pirates' camp 132 with its
+# chief's place 133 on theirs, since the owner's Абу-Хамед of 2026-10-14
+# (server/test_abuhamed_cut.py, server/test_abuhamed_world.py).
 BANKS = {
     "Вади-Хальфа": {(5970, 1724): 80, (5971, 1723): 82, (5978, 1727): 81, (5979, 1728): 83,
                     (5974, 1739): 84, (5975, 1738): 86, (5993, 1721): 85, (5992, 1720): 87,
@@ -208,9 +213,9 @@ BANKS = {
     "Донгола": {(5882, 2036): 91, (5883, 2035): 93, (5920, 2010): 99, (5921, 2011): 98,
                 (5878, 2011): 73, (5876, 2011): 96, (5877, 2012): 97, PIER_DN_CELL: PIER_DN,
                 (5873, 2009): 105},
-    "Абу-Хамед": {(6274, 1952): 168, (6273, 1953): 263, (6183, 1977): 131, (6183, 1975): 127,
-                  (6182, 1977): 446, (6183, 1974): 467, (6182, 1976): 126, (6126, 1980): 194,
-                  (6154, 1963): 118},
+    "Абу-Хамед": {(6274, 1952): 274, (6273, 1953): 263, (6183, 1977): 131, (6183, 1975): 127,
+                  (6182, 1977): 446, (6182, 1976): 126, (6210, 1986): 168, (6160, 1975): 132,
+                  (6161, 1973): 133},
 }
 # Left out of the cut, and on no cell as before: the older gorges' gate 272
 # «Перевал Смерти.» and its 504 «Перевал смерти» (their name stands on the
@@ -363,10 +368,10 @@ try:
     check("no walk from Причал, Абри's port, Донгола's port, Абу-Хамед's port or Керма's «Берег Дракона» reaches"
           " a cut place's cell, a hidden name's or a square's of the far banks",
           sorted(c for c in set(CELLS) | HIDDEN | set(SQ_NAMES) if c in walked), [])
-    check("  ..while every place of the towns' banks is walked to as before (the quarter 447, the station 126"
-          " and the masters' camp 131 aside: they stand on the owner's wall itself)",
+    check("  ..while every place of the towns' banks is walked to as before (the quarter 447 aside: it stands"
+          " on the owner's wall itself; Абу-Хамед's station 126 and masters' camp 131 came off it on 2026-10-14)",
           sorted(c for cells in BANKS.values() for c in cells
-                 if c not in walked and c not in ((5968, 1719), (6182, 1976), (6183, 1977))), [])
+                 if c not in walked and c not in ((5968, 1719),)), [])
     open_before = walk([PIER_DN_CELL], lambda c: c in WALL_DN or world.passable(*c))
     check("  ..where without the ten cells Донгола's port walked to the dig 435, the base 524, the gorge 516, the"
           " evacuation zone 988 and the staff",
@@ -417,11 +422,16 @@ try:
     # Delta Force's 5308 stood in its clan base's files 380, 381 and 388 too, the
     # banker 4017 in «Врачи без границ»'s 1195 and the clan upgrader 4581 in
     # Delta Force's garage 959, until the owner's cut of Донгола (2026-10-13)
-    # took those bases out of the game.
+    # took those bases out of the game; the band leader 2172 in the bunkers of
+    # the abandoned clan base, СМЕРШ and ZEON (609, 656, 926), the banker 4017
+    # in the shelters of ZEON, ВЭС and СМЕРШ (1186, 1192, 1193), the clan
+    # upgrader 4581 in ZEON's garage 930 and the warehouse's clan flag 4427 in
+    # the abandoned clan base 118, until the owner's cut of Абу-Хамед
+    # (2026-10-14) took those.
     ELSEWHERE = {114: [44], 257: [1007], 436: [1007], 437: [1007], 438: [1007],
-                 2172: [609, 656, 706, 735, 926, 928, 932, 1044], 2393: [766], 2394: [766], 2395: [766],
-                 2396: [766], 2403: [766], 4017: [1010, 1186, 1187, 1191, 1192, 1193, 1194, 1201],
-                 4581: [929, 930, 933], 4427: [118]}
+                 2172: [706, 735, 928, 932, 1044, 1231], 2393: [766], 2394: [766], 2395: [766],
+                 2396: [766], 2403: [766], 4017: [1010, 1187, 1191, 1194, 1201],
+                 4581: [929, 933]}
     rooms_of = {}
 
     def stands(t, where):
@@ -437,8 +447,8 @@ try:
                  for t in people}
     check("every one of them stood in the cut places alone, but the cows (Вади-Хальфа's pasture 44), the tombs' waves"
           " (Донгола's dungeon 1007), the band leader, Абри's ore refinery's people (its cash machine 2402 held out"
-          " of it), the bankers, the clan upgrader and the warehouse's clan flag (the base 118); Delta Force's"
-          " stands nowhere since Донгола's cut took its base",
+          " of it), the bankers and the clan upgrader; Delta Force's stands nowhere since Донгола's cut took its"
+          " base, the warehouse's clan flag nowhere since Абу-Хамед's took the base 118",
           {t: w[:8] for t, w in elsewhere.items() if w}, ELSEWHERE)
     alone = sorted(t for t in people if not elsewhere[t])
     givers = {t for t in people if quests.given_by(t) or quests.taken_by(t)}
@@ -505,11 +515,11 @@ try:
                                             if (x, y) not in HIDDEN])
         check("  ..and every name off the far banks is as the edits without this cut's leave it, row for row",
               [r for r in after if not far(r[:2])], [r for r in rows_of(others) if not far(r[:2])])
-        check("  ..the pirates, the base СМЕРШ and the piers among them",
+        check("  ..the pirates and the piers among them (the base СМЕРШ's name went with Абу-Хамед's cut)",
               sorted({(x, y) for x, y, _t in after
                       if (x, y) in ((6160, 1975), (6161, 1973), (6126, 1980), (5965, 1728), PIER_DN_CELL,
                                     (6182, 1977))}),
-              sorted([(6160, 1975), (6161, 1973), (6126, 1980), (5965, 1728), PIER_DN_CELL, (6182, 1977)]))
+              sorted([(6160, 1975), (6161, 1973), (5965, 1728), PIER_DN_CELL, (6182, 1977)]))
     else:
         # An installed client's file is the release's, with names hidden.
         print("  -- %s is not the original's: the map's names are held on the edits alone"
@@ -543,11 +553,12 @@ try:
           {c: boxed(8 * c[0] + 4, 8 * c[1] + 4) for c in CROSSES}, {c: [] for c in CROSSES})
     named_no_place = sorted(c for c in HIDDEN if c not in ON_CELLS)
     check("every hidden name with no place under it is decided: its square goes, or the picture has none there"
-          " ('bare', 34; Донгола's cut of the same day adds four of its own by the town)",
+          " ('bare', 34; Донгола's cut of the same day adds four of its own by the town, Абу-Хамед's of"
+          " 2026-10-14 two)",
           ([c for c in named_no_place if c not in plan.cells and c not in plan.bare],
            len([c for c, why in plan.bare.items() if why.startswith(CUT_WHY)]),
            sorted(c for c, why in plan.bare.items() if not why.startswith(CUT_WHY))),
-          ([], 34, [(5873, 2008), (5876, 2007), (5885, 2035), (5912, 1993)]))
+          ([], 34, [(5873, 2008), (5876, 2007), (5885, 2035), (5912, 1993), (6140, 1869), (6272, 1942)]))
     check("  ..and no 'bare' cell is a square's", sorted(set(plan.bare) & (set(SQ_PLACES) | set(SQ_NAMES))), [])
     check("the tiles a change can touch take in 15808, the white square of «Ангар в джунглях»",
           15808 in plan.tiles(), True)

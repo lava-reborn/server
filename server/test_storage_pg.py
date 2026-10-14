@@ -1399,4 +1399,52 @@ ok(up.character(keeper)["loc"] == 469 and accounts.ran(up.db, accounts.DONGOLA_C
    "второе открытие ничего не повторяет")
 up.close()
 
+# --- чистка Абу-Хамеда ----------------------------------------------------------------
+# run_once от 2026-10-14 (accounts.relocate_abuhamed_cut; README «Абу-Хамед»): кто
+# стоит в убранных местах Абу-Хамеда (ремесленники, улучшение сетов, вещевой рынок,
+# аэроплощадка ФСЦ, кланбазы СМЕРШ, ВЭС и ZEON, заброшенная кланбаза) или прописан
+# там -- на Вокзал Абу-Хамеда 126 (6182,1976); журналы не трогаются. Здесь -- что IN
+# и UPDATE идут в Postgres и второе открытие ничего не повторяет. Полный набор на
+# SQLite -- server/test_abuhamed_cut.py (раздел 7).
+store = fresh_store()
+aid, _ = store.register("абухамед", "пароль")
+who = {}
+for name, loc, home in (("в467", 467, 126), ("в451", 451, 126), ("в194", 194, 126), ("в118", 118, 126),
+                        ("в609", 609, 126), ("прописан в527", 127, 527), ("в469", 469, 49),
+                        ("на вокзале", 126, 126)):
+    c, _ = store.create_character(aid, name, 0, 1)
+    store.db.execute("UPDATE characters SET loc = ?, pos = 77, gx = 6184, gy = 1974, on_map = 0,"
+                     " home_loc = ?, home_gx = 6184, home_gy = 1974 WHERE id = ?", (loc, home, c))
+    who[name] = c
+store.db.commit()
+keeper = who["в467"]
+for t in (119, 11500):
+    store.take_quest(keeper, t, {}, True)
+store.db.execute("DELETE FROM migrations WHERE name = ?", (accounts.ABUHAMED_CUT_FIX,))
+store.db.commit()
+store.close()
+
+up = accounts.Store()
+rows = {n: up.character(c) for n, c in who.items()}
+ok({n: (r["loc"], r["gx"], r["gy"], r["on_map"], r["pos"]) for n, r in rows.items()}
+   == {"в467": (126, 6182, 1976, 0, None), "в451": (126, 6182, 1976, 0, None),
+       "в194": (126, 6182, 1976, 0, None), "в118": (126, 6182, 1976, 0, None),
+       "в609": (126, 6182, 1976, 0, None), "прописан в527": (127, 6184, 1974, 0, 77),
+       "в469": (469, 6184, 1974, 0, 77), "на вокзале": (126, 6184, 1974, 0, 77)},
+   "из 467/451/194/118/609 -- на Вокзал Абу-Хамеда, 469 (вещевой рынок Донголы, давно прошло) и вокзал"
+   " не тронуты: %s" % {n: (r["loc"], r["pos"]) for n, r in rows.items()})
+ok((rows["прописан в527"]["home_loc"], rows["прописан в527"]["home_gx"], rows["прописан в527"]["home_gy"])
+   == (126, 6182, 1976), "прописка в 527 -- Вокзал Абу-Хамеда")
+ok(sorted(r["type"] for r in up.quests(keeper)) == [119, 11500],
+   "журнал не тронут: %s" % sorted(r["type"] for r in up.quests(keeper)))
+ok(accounts.relocate_abuhamed_cut(up.db) == dict(moved=0, homes=0), "повторный проход ничего не находит")
+up.db.commit()
+up.db.execute("UPDATE characters SET loc = 467 WHERE id = ?", (keeper,))
+up.db.commit()
+up.close()
+up = accounts.Store()
+ok(up.character(keeper)["loc"] == 467 and accounts.ran(up.db, accounts.ABUHAMED_CUT_FIX),
+   "второе открытие ничего не повторяет")
+up.close()
+
 print("storage(pg): %d проверок, все зелёные" % checks)

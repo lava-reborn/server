@@ -218,6 +218,31 @@
    "loc": 96,
    "types": [5110, 5111],
    "why": "The same for Донгола's masters' camp of the assault rifles and machine guns (decision 11, by the review of 2026-10-14): Npc_Commoner000035 and 000036, «Мастер Ибн Аббас Фирас<Br>Улучшение пулеметов» and «Мастер Ибн аль-Хайтам<Br>Улучшение пулеметов» (9627, 9628, the commoners' family on its offset 9592), an older pair of machine-gun masters the wiki's «Лагерь Мастеров Донголы I» does not name. The camp's machine-gun upgrade is Подмастерье Али's 345 (A) and Мастер Гази's 385 (G) (data/build_weaponcraft.py); these two give and take no row and sell nothing, so a player would find two more machine-gun masters with empty windows. They stand in this file alone; the driver Абрам Васильевич 5109 of the same family stays (an empty window, UNDONE «Зафиксированные умолчания Донголы» 32)."
+  },
+  {
+   "loc": 127,
+   "types": [5107],
+   "why": "The owner's cut of Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»: the cut of Абри's and Донгола's kinds, decision 9 of its plan, taken for him): Npc_Upgrader000005, «Ундольф<Br>Обмен одежды на вырост [17-20]» (10481), the set upgrader of Абу-Хамед's band in its Жилой квартал. Nobody upgrades a set since 2026-10-09 (server/setcraft.py: the only slice is off), so his window was empty, and he gives and takes no quest; Абри's Рудольф 5105 and Донгола's Адольф 5106 are held out the same way."
+  },
+  {
+   "loc": 126,
+   "types": [7247],
+   "why": "The same for Абу-Хамед's station (decision 37): Npc_Trader000095 (art 1f_Arab_boroda), a trader with no row in the original and no role -- no stall of his own, no quest, no wiki page -- who would show his internal name (data/orig_names_manual.json 'none'), as Донгола's test trader 5113."
+  },
+  {
+   "loc": 123,
+   "types": [6521],
+   "why": "The same for «Место крушения.» (Q_ufo_crash, on 6102,1848 since the owner's Абу-Хамед, decision 14 of its plan): Npc_Commoner000765, a money box whose row is 10357 «Ящик с деньгами<Br>Ангары Северного Альянса» -- the box of the hangars 288 across the river, which are cut --, with no quest and no service: the place is one to look at, as Донгола's «Упавший спутник» 77."
+  },
+  {
+   "loc": 131,
+   "types": [7339],
+   "why": "The same for Абу-Хамед's masters' camp: UpGuns_Npc_Trader000031, whose row by its family's offset (51673) is the master (G) Гияс of the quarter 127, who stands there as ah_trmodif_assrifle_g (748); no stall, no window and no quest of his own (data/build_weaponcraft.py names the camp's masters by their own types), so a player would find either a second Гияс in the wrong place or a man under his internal name (data/orig_names_manual.json 'none')."
+  },
+  {
+   "loc": 127,
+   "types": [7344],
+   "why": "The same for the quarter: UpGuns_Npc_Trader000036, whose row by the offset (51678) is the camp's apprentice (A) Катада, who stands in 131 as ah_modif_rifle (759) -- the mirror of 7339."
   }
  ],
  "quests": [

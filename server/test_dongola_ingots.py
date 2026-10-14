@@ -17,7 +17,10 @@ Peacekeepers one of ten and a stack of two of one (7620), 12. The camps'
 treasurers (592, 593) stand all day and carry none, and nobody else of
 Донгола does; the copy 1171 of the Peacekeepers' camp is out of the game, so
 Дженсен stands in one place. A window of the boss hours holds 96 ounces for
-the whole server: Вади-Хальфа's 22, the valley's 2, Абри's 28 and Донгола's 44.
+the whole server: Вади-Хальфа's 22, the valley's 2, Абри's 28 and Донгола's 44;
+170 since Абу-Хамед's 74 (the owner's Абу-Хамед, 2026-10-14,
+server/test_abuhamed_ingots.py), whose five bosses carry the ingot of ten
+too.
 
 Мортимер (1188) stands in Донгола's new market 197 by the original's file
 (its map name: «Обмен золотых слитков»): his stall of the three ingots for
@@ -84,7 +87,9 @@ BOSSES = {
 FACTION_OUNCES = {"ДСР": 10, "Миротворцы": 12}
 TREASURERS = (592, 593)
 KHALIL = 374
-WINDOW_OUNCES, DONGOLA_OUNCES = 96, 44
+WINDOW_OUNCES, DONGOLA_OUNCES = 170, 44
+# Абу-Хамед's five bosses carry the ingot of ten since 2026-10-14.
+ABUHAMED_BOSSES = [777, 778, 1037, 1038, 8620]
 MT = world.mob_types()
 
 
@@ -143,8 +148,9 @@ for lid in (93, 91, 98, 99, 67, 68, 69, 112, 113, 114, 115, 144, 145, 146, 147, 
 check("nobody else of Донгола's camps, quest places, mine, sewers, prison and Зона 49 carries an ingot",
       sorted(t for t in dongola_types - set(BOSSES)
              if {r[0] for r in mobs.loot_table(t)} & set(INGOTS)), [])
-check("the ingot of ten falls from Донгола's four alone",
-      sorted(int(t) for t in mobs.TYPES if I10 in {r[0] for r in mobs.loot_table(int(t))}), sorted(BOSSES))
+check("the ingot of ten falls from Донгола's four and Абу-Хамед's five alone",
+      sorted(int(t) for t in mobs.TYPES if I10 in {r[0] for r in mobs.loot_table(int(t))}),
+      sorted(list(BOSSES) + ABUHAMED_BOSSES))
 
 
 # --- the budget of a window ----------------------------------------------------------------
@@ -180,7 +186,7 @@ check("every carrier of a certain ingot keeps the hours and stands in one place"
       {t: (bosses.keeps_hours(t), len(places[t])) for t in rollers},
       {t: (True, 1) for t in rollers})
 check("a window of the boss hours holds %d ounces for the whole server: Вади-Хальфа's 22, the"
-      " valley's 2, Абри's 28, Донгола's %d" % (WINDOW_OUNCES, DONGOLA_OUNCES),
+      " valley's 2, Абри's 28, Донгола's %d, Абу-Хамед's 74" % (WINDOW_OUNCES, DONGOLA_OUNCES),
       (sum(window.values()), sum(window[t] for t in BOSSES), window.get(2103)),
       (WINDOW_OUNCES, DONGOLA_OUNCES, 2))
 check("  ..Дженсен among them once: the copy 1171 of his camp is out of the game",

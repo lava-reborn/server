@@ -568,6 +568,169 @@
     "target_loc_id": 1033,
     "why": "RECOVERED. DN_Plumbum_Mine_lvl2, the bottom of the mine (the client has no third tier for Донгола): its one door, a, 11 cells in two galleries (7-52, 20-114), has W_Pointer_Up beside each gallery (16,112) and (50,19): up, to the first tier 1033. exits.json guessed the same by file name, at low. The owner's Донгола, 2026-10-13: the mines' tiers open (decision 28 of its plan)."
    }
+  },
+  "156": {
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 615,
+    "why": "DESIGNED target, RECOVERED door. Top_Mine_Entrance, «Темная Шахта: Вход»: its one door, b (44-50, 36-42), the mine's mouth, to which data/exits.json gives no target. Down to the first tier, Top_Mine_lvl1 (615, «Темная Шахта: первый ярус»), whose door a, north-east, leads back up. The Dark Mine of Абу-Хамед (the map's L162 «Темная шахта Абу-Хамеда: Добыча алмазов» on 6218,1968) is the entrance Top_Mine_Entrance (156) and five tiers, Top_Mine_lvl1..5 (615, 1014, 1216, 1254, 1273), one under the other: no file of them carries a sign, and data/exits.json only guessed by file name (low, which travel.DOOR_CONFIDENCE does not open). The letters go by the corners: every tier's two doors are a small one at the north-east (51-52, 21-23 or so) and a wide one at the south-west, and each tier's door down lies in the corner where the next tier's door up opens, the corners alternating down the shaft, and the last tier has the north-east door alone; so a is up and b down on every tier, as the signs of every other mine of the game have them (663, 1031, 1224 above). The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»); the owner's word of 2026-10-09 on the mines, «из нутри шахты надо запретить выходить на глобальную карту», holds it closed to the map ('no_map')."
+   }
+  },
+  "615": {
+   "a": {
+    "confidence": "medium",
+    "own_cell": true,
+    "source": "designed",
+    "target_loc_id": 156,
+    "why": "DESIGNED. Top_Mine_lvl1, «Темная Шахта: первый ярус»: door a (north-east, 51-52, 21-23), up, back to the entrance 156, arrived at on its own cell (own_cell, travel.plan_exit), as Вади-Хальфа's 617 and Донгола's 616. data/exits.json guessed 1014 (low): not taken. The Dark Mine of Абу-Хамед (the map's L162 «Темная шахта Абу-Хамеда: Добыча алмазов» on 6218,1968) is the entrance Top_Mine_Entrance (156) and five tiers, Top_Mine_lvl1..5 (615, 1014, 1216, 1254, 1273), one under the other: no file of them carries a sign, and data/exits.json only guessed by file name (low, which travel.DOOR_CONFIDENCE does not open). The letters go by the corners: every tier's two doors are a small one at the north-east (51-52, 21-23 or so) and a wide one at the south-west, and each tier's door down lies in the corner where the next tier's door up opens, the corners alternating down the shaft, and the last tier has the north-east door alone; so a is up and b down on every tier, as the signs of every other mine of the game have them (663, 1031, 1224 above). The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»); the owner's word of 2026-10-09 on the mines, «из нутри шахты надо запретить выходить на глобальную карту», holds it closed to the map ('no_map')."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1014,
+    "why": "DESIGNED. Top_Mine_lvl1: door b (south-west, 9-11, 111-114), down, to the second tier Top_Mine_lvl2 (1014), whose door a comes up in the same corner (see 156)."
+   }
+  },
+  "1014": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 615,
+    "why": "DESIGNED. Top_Mine_lvl2, «Темная шахта: Второй ярус»: door a (south-west, 6-10, 114-118), up, to the first tier 615, whose door down is in the same corner. data/exits.json had it down to 1216 (low): not taken (see 156)."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1216,
+    "why": "DESIGNED. Top_Mine_lvl2: door b (north-east, 50-52, 20-22), down, to the third tier Top_Mine_lvl3 (1216), whose door a comes up in the same corner. data/exits.json had it up to 615 (low): not taken (see 156)."
+   }
+  },
+  "1216": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1014,
+    "why": "DESIGNED. Top_Mine_lvl3, «Темная шахта: третий ярус»: door a (north-east, 50-52, 20-22), up, to the second tier 1014 (see 156)."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1254,
+    "why": "DESIGNED. Top_Mine_lvl3: door b (south-west, 9-14, 108-115), down, to the fourth tier Top_Mine_lvl4 (1254), whose door a comes up in the same corner (see 156)."
+   }
+  },
+  "1254": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1216,
+    "why": "DESIGNED. Top_Mine_lvl4, «Темная шахта: четвертый ярус»: door a (south-west, 7-12, 104-109), up, to the third tier 1216 (see 156)."
+   },
+   "b": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1273,
+    "why": "DESIGNED. Top_Mine_lvl4: door b (north-east, 51-52, 21-23), down, to the fifth tier Top_Mine_lvl5 (1273), whose one door comes up in the same corner (see 156)."
+   }
+  },
+  "1273": {
+   "a": {
+    "confidence": "medium",
+    "source": "designed",
+    "target_loc_id": 1254,
+    "why": "DESIGNED. Top_Mine_lvl5, «Темная шахта: пятый ярус», the bottom of the shaft: its one door, a (north-east, 51-52, 21-23), up, to the fourth tier 1254; data/exits.json guessed the same, at low (see 156)."
+   }
+  },
+  "666": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1034,
+    "why": "RECOVERED. AH_Copper_Mine_Enter, the control room of Абу-Хамед's медная шахта («Комната управления»: the sorter 1370 and the way out 1343): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1034 «Медная Шахта 1» (AH_Copper_Mine_lvl1), as Донгола's control rooms (663-665). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
+  },
+  "667": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1035,
+    "why": "RECOVERED. AH_Nitre_Mine_Enter, the control room of Абу-Хамед's выработка селитры («Комната управления»: the sorter 1366 and the way out 1339): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1035 «Выработка селитры 1» (AH_Nitre_Mine_lvl1), as Донгола's control rooms (663-665). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
+  },
+  "668": {
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1036,
+    "why": "RECOVERED. AH_Plumbum_Mine_Enter, the control room of Абу-Хамед's свинцовая шахта («Комната управления»: the sorter 1362 and the way out 1335): its one door, b, at the west (0-5, 24-38), has W_Pointer_Enter beside it (1,35): in, to the first tier, 1036 «Свинцовая шахта 1» (AH_Plumbum_Mine_lvl1), as Донгола's control rooms (663-665). exits.json guessed the same by file name and rated it low, which travel.DOOR_CONFIDENCE does not open; the sign settles it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
+  },
+  "1034": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 666,
+    "why": "RECOVERED. AH_Copper_Mine_lvl1: door a, the small one (9-11, 30-32), has W_Pointer_Exit beside it (8,31): out, back to the control room 666. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1227, at low; the signs settle it, as in Абри's and Донгола's mines. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1227,
+    "why": "RECOVERED. AH_Copper_Mine_lvl1: door b, 15 cells in two galleries (11-52, 21-109), each gallery with W_Pointer_Down beside it (11,103) and (50,19): down, to the second tier, 1227 «Медная  шахта 2» (AH_Copper_Mine_lvl2). exits.json sent it back up to 666, at low. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
+  },
+  "1035": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 667,
+    "why": "RECOVERED. AH_Nitre_Mine_lvl1: door a, the small one (6-7, 29-30), has W_Pointer_Exit beside it (5,31): out, back to the control room 667. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1228, at low; the signs settle it, as in Абри's and Донгола's mines. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1228,
+    "why": "RECOVERED. AH_Nitre_Mine_lvl1: door b, 18 cells in two galleries (8-52, 21-115), each gallery with W_Pointer_Down beside it (11,110) and (50,21): down, to the second tier, 1228 «Выработка селитры 2» (AH_Nitre_Mine_lvl2). exits.json sent it back up to 667, at low. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
+  },
+  "1036": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 668,
+    "why": "RECOVERED. AH_Plumbum_Mine_lvl1: door a, the small one (5-10, 18-23), has W_Pointer_Exit beside it (11,18): out, back to the control room 668. exits.json had the letters the other way round (a deeper, b back -- the convention it calls unverified) and sent this door down to 1229, at low; the signs settle it, as in Абри's and Донгола's mines. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   },
+   "b": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1229,
+    "why": "RECOVERED. AH_Plumbum_Mine_lvl1: door b, 15 cells in two galleries (8-52, 20-118), each gallery with W_Pointer_Down beside it (6,113) and (50,19): down, to the second tier, 1229 «Свинцовая шахта 2» (AH_Plumbum_Mine_lvl2). exits.json sent it back up to 668, at low. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
+  },
+  "1227": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1034,
+    "why": "RECOVERED. AH_Copper_Mine_lvl2, the bottom of the mine (the client has no third tier for Абу-Хамед): its one door, a, 11 cells in two galleries (9-52, 20-112), has W_Pointer_Up beside each gallery (11,109) and (50,19): up, to the first tier 1034. exits.json guessed the same by file name, at low. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
+  },
+  "1228": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1035,
+    "why": "RECOVERED. AH_Nitre_Mine_lvl2, the bottom of the mine (the client has no third tier for Абу-Хамед): its one door, a, 11 cells in two galleries (8-52, 21-107), has W_Pointer_Up beside each gallery (10,104) and (51,20): up, to the first tier 1035. exits.json guessed the same by file name, at low. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
+  },
+  "1229": {
+   "a": {
+    "confidence": "high",
+    "source": "sign",
+    "target_loc_id": 1036,
+    "why": "RECOVERED. AH_Plumbum_Mine_lvl2, the bottom of the mine (the client has no third tier for Абу-Хамед): its one door, a, 13 cells in two galleries (9-52, 20-112), has W_Pointer_Up beside each gallery (11,108) and (50,19): up, to the first tier 1036. exits.json guessed the same by file name, at low. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»): the mines' tiers open, as Донгола's (decision 28 of its plan)."
+   }
   }
  },
  "sides": {
@@ -885,6 +1048,90 @@
     "target_loc_id": 703,
     "why": "DESIGNED topology on the files' own sides. «Зона 49» is three files of one drawing (Sewers02) with one opening each, drawn on the same spot (43-44, 85-87) under a different side: 703 DN_Zone49_1 south, 704 DN_Zone49_2 east, 705 DN_Zone49_3 north, each with Генри Джонс (1842) and eleven «Плохой парень<Br>Селениты»; the cellar 702 DN_Zone49_Prison (Генри Джонс 1841 and his box 1844) has none, and quest ways join it to 703 ('quest'). 703's south and 705's north face each other and lead into each other. 704's east faces neither, and the pictures, one and the same, cannot choose: it leads into 703, the zone's first file, the one the cellar opens into, so that whoever is in 704 comes out where the zone starts; the way into 704 is a quest way. The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»). Here: 704's east, into 703."
    }
+  },
+  "651": {
+   "W": {
+    "target_loc_id": 649,
+    "why": "DESIGNED topology on the files' own sides, as the prisons of Вади-Хальфа (644-648) and Донгола (618-622). The prison of Абу-Хамед, m19 (the uprising under the yard 177, 6193,1966, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 651 (Prison_3_AH, «Центральный блок.») on all four; 649 (Prison_1_AH, «Северный блок», the western gate's), east only; 650 (Prison_2_AH, «Восточный блок», the southern gate's), north only; the northern cells 652 (Prison_4_AH), south only; the eastern cells 653 (Prison_5_AH), west only. So each opening of the centre leads to the file whose one opening faces it, as in the twins. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the centre's west, into the western gate's block 649."
+   },
+   "S": {
+    "target_loc_id": 650,
+    "why": "DESIGNED topology on the files' own sides, as the prisons of Вади-Хальфа (644-648) and Донгола (618-622). The prison of Абу-Хамед, m19 (the uprising under the yard 177, 6193,1966, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 651 (Prison_3_AH, «Центральный блок.») on all four; 649 (Prison_1_AH, «Северный блок», the western gate's), east only; 650 (Prison_2_AH, «Восточный блок», the southern gate's), north only; the northern cells 652 (Prison_4_AH), south only; the eastern cells 653 (Prison_5_AH), west only. So each opening of the centre leads to the file whose one opening faces it, as in the twins. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the centre's south, into the southern gate's block 650."
+   },
+   "N": {
+    "target_loc_id": 652,
+    "why": "DESIGNED topology on the files' own sides, as the prisons of Вади-Хальфа (644-648) and Донгола (618-622). The prison of Абу-Хамед, m19 (the uprising under the yard 177, 6193,1966, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 651 (Prison_3_AH, «Центральный блок.») on all four; 649 (Prison_1_AH, «Северный блок», the western gate's), east only; 650 (Prison_2_AH, «Восточный блок», the southern gate's), north only; the northern cells 652 (Prison_4_AH), south only; the eastern cells 653 (Prison_5_AH), west only. So each opening of the centre leads to the file whose one opening faces it, as in the twins. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the centre's north, into the northern cells 652."
+   },
+   "E": {
+    "target_loc_id": 653,
+    "why": "DESIGNED topology on the files' own sides, as the prisons of Вади-Хальфа (644-648) and Донгола (618-622). The prison of Абу-Хамед, m19 (the uprising under the yard 177, 6193,1966, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 651 (Prison_3_AH, «Центральный блок.») on all four; 649 (Prison_1_AH, «Северный блок», the western gate's), east only; 650 (Prison_2_AH, «Восточный блок», the southern gate's), north only; the northern cells 652 (Prison_4_AH), south only; the eastern cells 653 (Prison_5_AH), west only. So each opening of the centre leads to the file whose one opening faces it, as in the twins. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the centre's east, into the eastern cells 653."
+   }
+  },
+  "649": {
+   "E": {
+    "target_loc_id": 651,
+    "why": "DESIGNED topology on the files' own sides, as the prisons of Вади-Хальфа (644-648) and Донгола (618-622). The prison of Абу-Хамед, m19 (the uprising under the yard 177, 6193,1966, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 651 (Prison_3_AH, «Центральный блок.») on all four; 649 (Prison_1_AH, «Северный блок», the western gate's), east only; 650 (Prison_2_AH, «Восточный блок», the southern gate's), north only; the northern cells 652 (Prison_4_AH), south only; the eastern cells 653 (Prison_5_AH), west only. So each opening of the centre leads to the file whose one opening faces it, as in the twins. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the western block's one opening, east, back to the centre."
+   }
+  },
+  "650": {
+   "N": {
+    "target_loc_id": 651,
+    "why": "DESIGNED topology on the files' own sides, as the prisons of Вади-Хальфа (644-648) and Донгола (618-622). The prison of Абу-Хамед, m19 (the uprising under the yard 177, 6193,1966, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 651 (Prison_3_AH, «Центральный блок.») on all four; 649 (Prison_1_AH, «Северный блок», the western gate's), east only; 650 (Prison_2_AH, «Восточный блок», the southern gate's), north only; the northern cells 652 (Prison_4_AH), south only; the eastern cells 653 (Prison_5_AH), west only. So each opening of the centre leads to the file whose one opening faces it, as in the twins. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the southern block's one opening, north, back to the centre."
+   }
+  },
+  "652": {
+   "S": {
+    "target_loc_id": 651,
+    "why": "DESIGNED topology on the files' own sides, as the prisons of Вади-Хальфа (644-648) and Донгола (618-622). The prison of Абу-Хамед, m19 (the uprising under the yard 177, 6193,1966, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 651 (Prison_3_AH, «Центральный блок.») on all four; 649 (Prison_1_AH, «Северный блок», the western gate's), east only; 650 (Prison_2_AH, «Восточный блок», the southern gate's), north only; the northern cells 652 (Prison_4_AH), south only; the eastern cells 653 (Prison_5_AH), west only. So each opening of the centre leads to the file whose one opening faces it, as in the twins. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the northern cells' one opening, south, back to the centre."
+   }
+  },
+  "653": {
+   "W": {
+    "target_loc_id": 651,
+    "why": "DESIGNED topology on the files' own sides, as the prisons of Вади-Хальфа (644-648) and Донгола (618-622). The prison of Абу-Хамед, m19 (the uprising under the yard 177, 6193,1966, whose label says «Усиление режима в 12:00, 16:00 и 23:00»), is five files with no map cell that open only by their sides: the centre block 651 (Prison_3_AH, «Центральный блок.») on all four; 649 (Prison_1_AH, «Северный блок», the western gate's), east only; 650 (Prison_2_AH, «Восточный блок», the southern gate's), north only; the northern cells 652 (Prison_4_AH), south only; the eastern cells 653 (Prison_5_AH), west only. So each opening of the centre leads to the file whose one opening faces it, as in the twins. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the eastern cells' one opening, west, back to the centre."
+   }
+  },
+  "637": {
+   "N": {
+    "target_loc_id": 636,
+    "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: north, to the north pit, where the way in arrives."
+   },
+   "S": {
+    "target_loc_id": 639,
+    "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: south, to the south pit."
+   },
+   "E": {
+    "target_loc_id": 638,
+    "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: east, to the east pit."
+   },
+   "W": {
+    "target_loc_id": 640,
+    "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: west, to the west pit."
+   }
+  },
+  "636": {
+   "S": {
+    "target_loc_id": 637,
+    "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the north pit's one opening, south, back to the centre."
+   }
+  },
+  "639": {
+   "N": {
+    "target_loc_id": 637,
+    "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the south pit's one opening, north, back to the centre."
+   }
+  },
+  "638": {
+   "W": {
+    "target_loc_id": 637,
+    "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the east pit's one opening, west, back to the centre."
+   }
+  },
+  "640": {
+   "E": {
+    "target_loc_id": 637,
+    "why": "DESIGNED topology on the files' own sides, as the quarries of Вади-Хальфа (626-630) and Донгола (631-635). The quarry of Абу-Хамед, «Каменоломня.», is five files with no map cell that open only by their sides: the centre, 637 AH_Stone_Mine_C, on all four; the north pit 636 (AH_Stone_Mine_N: Гюнтер the foreman, 985, and the healer Роуз, 728), south only; the south pit 639 (AH_Stone_Mine_S), north only; 638 (AH_Stone_Mine_E2), west only; 640 (AH_Stone_Mine_W2), east only. So each opening of the centre leads to the pit whose one opening faces it. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»). Here: the west pit's one opening, east, back to the centre."
+   }
   }
  },
  "no_map": {
@@ -940,7 +1187,28 @@
   "702": {"why": "DESIGNED. Зона 49's cellar (DN_Zone49_Prison): no side and no door; joined to 703 by quest ways both ways, and to the surface by a way out ('quest'). The owner's Донгола, 2026-10-13 («и потом сделай донголу тоже»)."},
   "703": {"why": "DESIGNED. Зона 49 (DN_Zone49_1): its one side, south, into 705 ('sides'); the cellar 702 by quest ways."},
   "704": {"why": "DESIGNED. Зона 49 (DN_Zone49_2): its one side, east, into 703 ('sides'); entered by a quest way."},
-  "705": {"why": "DESIGNED. Зона 49 (DN_Zone49_3): its one side, north, back into 703 ('sides')."}
+  "705": {"why": "DESIGNED. Зона 49 (DN_Zone49_3): its one side, north, back into 703 ('sides')."},
+  "649": {"why": "DESIGNED, as Вади-Хальфа's 644 and Донгола's 618. The prison's western block (Prison_1_AH), entered by the western gate at the uprising: the blocks are left only by Томас's «Выход» (163) in the centre and a death, which sends home; their sides lead into each other ('sides'). The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."},
+  "650": {"why": "DESIGNED. The prison's southern block (Prison_2_AH), entered by the southern gate (see 649)."},
+  "651": {"why": "DESIGNED. The prison's centre block (Prison_3_AH): Томас (876) and his «Выход» (163) back to the yard 177, the godfather and the medics of the uprising; its four sides lead to the other four files."},
+  "652": {"why": "DESIGNED. The prison's northern cells (Prison_4_AH): its one side back to the centre (see 649)."},
+  "653": {"why": "DESIGNED. The prison's eastern cells (Prison_5_AH): its one side back to the centre (see 649)."},
+  "637": {"why": "DESIGNED, as Вади-Хальфа's 626 and Донгола's 631. The quarry's centre: its sides lead into the pits, and the way out is Гюнтер's «Покинуть каменоломню» in the north pit 636 ('quest'). The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."},
+  "636": {"why": "DESIGNED. The quarry's north pit, where Ибрахим's way arrives and Гюнтер's leaves, back to the quarter 127; its south side leads into the centre. The healer Роуз (728) takes no home here (server.py home_here refuses a no_map place), as Грегори in Донгола's 632."},
+  "638": {"why": "DESIGNED. The quarry's east pit: its one side back to the centre."},
+  "639": {"why": "DESIGNED. The quarry's south pit: its one side back to the centre."},
+  "640": {"why": "DESIGNED. The quarry's west pit: its one side back to the centre."},
+  "615": {"why": "DESIGNED, as the mines of Вади-Хальфа (613; 2026-10-09, the owner: «из нутри шахты надо запретить выходить на глобальную карту») and Донгола (614). The Dark Mine's first tier, Top_Mine_lvl1: out only by its door up to the entrance 156, or down. Every tier under the entrance is in this list: the mine is left by the door it was entered by, never by the map button or /home in the middle of a raid. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате»)."},
+  "1014": {"why": "DESIGNED. Top_Mine_lvl2, the Dark Mine's second tier: up or down only (see 615)."},
+  "1216": {"why": "DESIGNED. Top_Mine_lvl3, the Dark Mine's third tier: up or down only (see 615)."},
+  "1254": {"why": "DESIGNED. Top_Mine_lvl4, the Dark Mine's fourth tier: up or down only (see 615)."},
+  "1273": {"why": "DESIGNED. Top_Mine_lvl5, the bottom of the Dark Mine: up only (see 615)."},
+  "1295": {"why": "DESIGNED. «Боевая Академия.» (Bunker_Univer): no side and no door of its own; entered by Охранник Илья's way from the quarter 127 and left by Илья's way back inside ('quest'), the lessons are taken here. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате») (decision 26 of its plan)."},
+  "690": {"why": "DESIGNED. «Тафари» (Test_2), the first of the five places of Абимбола's bandits: no side and no door; Гатера's car brings a party in from the port 446 and «Что, обратно захотелось?» at the car (1693) takes it back ('quest'). A button to the map in the middle of the fight would leave the party's way back behind. The owner's Абу-Хамед, 2026-10-14 («сделай потом абу хамед в таком же формате») (decision 27 of its plan)."},
+  "691": {"why": "DESIGNED. «Гвала» (Test_3): as 690."},
+  "692": {"why": "DESIGNED. «Гамюка» (Test_4): as 690."},
+  "693": {"why": "DESIGNED. «Абафо» (Test_5), Абрафо's: as 690."},
+  "694": {"why": "DESIGNED. «Джитинджи» (Test_6): as 690."}
  },
  "walk_in": {},
  "quest": {

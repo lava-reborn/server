@@ -12,7 +12,7 @@ replaced it). This checks:
     characters its own legend declares;
   * server/world.passable takes the water from it and nothing else, and the
     world reaches past the picture's own rectangle;
-  * every one of the 228 settlement cells and every one of the 414 cells
+  * every one of the 227 settlement cells and every one of the 414 cells
     with a map tooltip is walkable -- those are cells players stood on;
   * the reading is internally whole, and data/map_terrain_report.md still
     describes the table it was written for.
@@ -195,10 +195,11 @@ def main():
     blocked = [c for c in settled if rows[c[1] - gy0][c[0] - gx0] not in PASSABLE]
     assert not blocked, "terrain: %d settlements on ground nobody can walk: %s" % (
         len(blocked), sorted(blocked)[:10])
-    # 228 since the owner's Донгола (2026-10-13): the 33 «Засада» cells of 389 and the
-    # six of its cut went, thirteen restored places came (254 after the cut of
-    # everything across the river the same day).
-    assert len(settled) >= 228, "terrain: only %d settlements to check" % len(settled)
+    # 227 since the owner's Абу-Хамед (2026-10-14): the nine cells of its cut went,
+    # eight restored places came; 228 after the owner's Донгола (2026-10-13): the
+    # 33 «Засада» cells of 389 and the six of its cut went, thirteen restored
+    # places came (254 after the cut of everything across the river the same day).
+    assert len(settled) >= 227, "terrain: only %d settlements to check" % len(settled)
     marks = hints()
     stuck = [c for c in marks if rows[c[1] - gy0][c[0] - gx0] not in PASSABLE]
     assert not stuck, "terrain: %d tooltip cells on ground nobody can walk: %s" % (

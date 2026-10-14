@@ -14,7 +14,9 @@ numbers are the owner's as said (the halving of 2026-10-11 was over
 before). The camps' treasurers (590, 591) stand all day and carry none, and
 nobody else of Абри does. A window of the boss hours holds 52 ounces for
 the whole server: Вади-Хальфа's 22, the valley's 2 and Абри's 28; 96 since
-Донгола's 44 (the owner's Донгола, 2026-10-13, server/test_dongola_ingots.py).
+Донгола's 44 (the owner's Донгола, 2026-10-13, server/test_dongola_ingots.py),
+170 since Абу-Хамед's 74 (the owner's Абу-Хамед, 2026-10-14,
+server/test_abuhamed_ingots.py).
 
 Мортимер (1188) stands in the port market 187 (data/placements.json) as
 well as in the slums 255: the same stall, the ingots for gold at face
@@ -81,7 +83,7 @@ BOSSES = {
 FACTION_OUNCES = {"работорговцы": 6, "живодеры": 8}
 TREASURERS = (590, 591)
 ABU = 327
-WINDOW_OUNCES = 96
+WINDOW_OUNCES = 170
 MT = world.mob_types()
 
 
@@ -173,7 +175,7 @@ check("every carrier of a certain ingot keeps the hours and stands in one place"
       {t: (bosses.keeps_hours(t), len(places[t])) for t in rollers},
       {t: (True, 1) for t in rollers})
 check("a window of the boss hours holds %d ounces for the whole server: Вади-Хальфа's 22, the"
-      " valley's 2, Абри's 28, Донгола's 44" % WINDOW_OUNCES,
+      " valley's 2, Абри's 28, Донгола's 44, Абу-Хамед's 74" % WINDOW_OUNCES,
       (sum(window.values()), sum(window[t] for t in BOSSES), window.get(2103)),
       (WINDOW_OUNCES, 28, 2))
 check("  ..three windows a day: %d ounces" % (3 * WINDOW_OUNCES),

@@ -16,8 +16,11 @@ The cells
   cells round each camp pair of Вади-Хальфа (80/82, 81/83, 84/86, 85/87)
   and of Абри (88/89, 92/90: the owner's «В Абри добавь мобов в лагеря и
   в окрестности», 2026-10-12, ORDERED) and of Донгола (93/91, 98/99: the
-  owner's «и потом сделай донголу тоже», 2026-10-13, ORDERED) and 8 round
-  the Nubian valley's
+  owner's «и потом сделай донголу тоже», 2026-10-13, ORDERED), as many
+  round Абу-Хамед's pirates and the Northern Alliance's base (132/133,
+  263/274) and 8 round its outpost (168), which has no chief's place in the
+  client (the owner's «сделай потом абу хамед в таком же формате»,
+  2026-10-14, ORDERED), and 8 round the Nubian valley's
   «Лагерь бандитов» (34). A cell is left
   out (and the run says so) where it is a settlement, a place taken out of
   the game (world.retired_cells), the rock of the rim, impassable, or on the
@@ -75,6 +78,9 @@ RINGS = {
     92: (90, "Лагерь Живодеров"),
     93: (91, "Лагерь ДСР"),
     98: (99, "Лагерь Миротворцев"),
+    132: (133, "Лагерь Пиратов Сомали"),
+    168: (None, "Аванпост Северного Альянса"),
+    263: (274, "База Северного Альянса"),
 }
 # The owner's word each ring answers: Вади-Хальфа's and the valley's, unless
 # named here.
@@ -87,6 +93,15 @@ ORDERED = {
          "their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). "),
     98: ("DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and "
          "their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). "),
+    132: ("DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the "
+          "camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в "
+          "окрестности»). "),
+    168: ("DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the "
+          "camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в "
+          "окрестности»). "),
+    263: ("DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the "
+          "camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в "
+          "окрестности»). "),
 }
 
 # Fighters of a camp that stay in it, with why.
@@ -96,6 +111,15 @@ LEFT_OUT = {
     591: "zd_Kaznachei, the flayers' treasurer in 92, as 590",
     592: "jm_Kaznachei, the ДСР's treasurer in Донгола's camp 93, as 590",
     593: "pc_Kaznachei, the Peacekeepers' treasurer in 98, as 590",
+    764: "pt_Kaznachei, the Somali pirates' treasurer in Абу-Хамед's camp 132, as 590",
+    1024: "na_Kaznachei, the Northern Alliance's treasurer at its outpost 168 (by hand, "
+          "data/placements.json), as 590",
+    1736: "na_Kaznachei_lvl19, the Alliance's book-keeper at its base 263, as 590",
+    1749: "Oasis_AH_Teilor, Гейнц Тейлор of «Письмо Президента Крюгера», one man, by hand at "
+          "the outpost 168",
+    1750: "pt_Dempers, Йохан Демперс of the same letter, one man, by hand in the camp 132",
+    1751: "na_Rudolf, Рудольф Треурнихт of the same letter, one man, by hand at the base 263",
+    2170: "na_JamesBaker, «[20] Джеймс Бейкер», one man, by hand at the base 263",
     336: "lu_Looser_lvl2, the sectarian of «Театр жизни»; «Заказ» names the sect "
          "«все кроме Неудачников»",
     303: "mg_Officer_lvl6: the Магриб's officers stand only where «Порядок (часть 2)» "
@@ -234,16 +258,21 @@ def _why(camp, x, y, loc, pool):
                 name, camp, cx, cy, x, y, loc.file, ", ".join(str(t) for t in pool),
                 world.location(camp).fn, TILE))
     else:
-        hx, hy = world.cell_of(chief)
+        if chief is None:
+            # Абу-Хамед's outpost 168: the client has no chief's place for it.
+            where = "%d on %d,%d, whose chief stands in the camp itself" % (camp, cx, cy)
+        else:
+            hx, hy = world.cell_of(chief)
+            where = "%d on %d,%d, and its chief's place %d on %d,%d" % (camp, cx, cy, chief, hx, hy)
         text = head + (
-            "The patrol of «%s» (%d on %d,%d, and its chief's place %d on %d,%d) on the "
+            "The patrol of «%s» (%s) on the "
             "neighbour cell %d,%d (open desert, %s): the camp's map label promises «патрули "
             "вокруг позволяют окупить затраты» (res/database/locations.xml), and "
             "encounters.near_town keeps every ambush off this cell. Eight of the camp's own "
             "fighters (data/camp_fill.json) on the slot cells of the original's wasteland "
             "tile MW_023 (static %d); they come back on the respawn timer like the camp's. "
             "Built by data/build_camp_patrols.py." % (
-                name, camp, cx, cy, chief, hx, hy, x, y, loc.file, TILE))
+                name, where, x, y, loc.file, TILE))
     anchor = ANCHORS.get((x, y))
     if anchor:
         text += " " + anchor[1]

@@ -750,6 +750,7 @@ def migrate(db):
     run_once(db, ABRI_CLOTHES_FIX, relocate_abri_clothes)
     run_once(db, RIVER_ALL_FIX, relocate_river_all)
     run_once(db, DONGOLA_CUT_FIX, relocate_dongola_cut)
+    run_once(db, ABUHAMED_CUT_FIX, relocate_abuhamed_cut)
     # Only with the client's tables to tell a premium thing by: a process
     # without them (a tool run outside the container) leaves the fix for
     # the next start that has them, rather than writing it down as done
@@ -1158,6 +1159,33 @@ def relocate_dongola_cut(db):
     """Whoever is in a place of Донгола's cut, or calls one home, to the
     town's station 49; returns the counts it logs."""
     return _move_out(db, DONGOLA_CUT_FIX, DONGOLA_CUT_PLACES, DONGOLA_CUT_TO)
+
+
+# The owner's cut of Абу-Хамед (2026-10-14, «сделай потом абу хамед в таком
+# же формате»: the cut of Абри's and Донгола's kinds, by the decisions taken
+# for him): the clothing craftsmen's quarters 451, 461, 462, 463, 519, the
+# set upgraders' quarter 449, the clothing market 467, the ФСЦ airfield 527,
+# every file of the clan bases СМЕРШ (194 on its cell, the rest never on
+# one), ВЭС and ZEON, and the abandoned clan base 118 with its bunker 609 are
+# off the map (data/retired.json places). A character saved in one, or
+# calling one home, goes to the town's own door, the station 126
+# (6182,1976), where the ride from Донгола lands and the town's healer takes
+# homes; the owner's wall is off its cell since the same day
+# (data/terrain_verified.json). No journal step: no quest gives, takes, asks
+# for or points into these places (server/test_abuhamed_cut.py holds that).
+ABUHAMED_CUT_FIX = "retire-abuhamed-cut-2026-10-14"
+ABUHAMED_CUT_PLACES = (451, 461, 462, 463, 519, 449, 467, 527,
+                       194, 254, 521, 656, 942, 1193,
+                       149, 333, 533, 343, 347, 351, 355, 359, 363, 367, 948, 949, 950, 1192,
+                       309, 310, 318, 926, 930, 947, 1186,
+                       118, 609)
+ABUHAMED_CUT_TO = (126, 6182, 1976)
+
+
+def relocate_abuhamed_cut(db):
+    """Whoever is in a place of Абу-Хамед's cut, or calls one home, to the
+    town's station 126; returns the counts it logs."""
+    return _move_out(db, ABUHAMED_CUT_FIX, ABUHAMED_CUT_PLACES, ABUHAMED_CUT_TO)
 
 
 # The same cut for the things: a premium thing (items.premium, 6 860 types)

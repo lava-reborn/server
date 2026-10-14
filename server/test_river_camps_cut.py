@@ -19,7 +19,10 @@ cut is, each part held here (the pattern of server/test_abri_cut.py):
      digs, the ФСЦ's bases, the gorges and the staffs across the river
      stayed too, until the cut of everything across the river, 2026-10-13:
      server/test_river_all_cut.py); the camp of the Северный Альянс 168 and
-     its base 263 by Абу-Хамед are held where they were;
+     its base 263 by Абу-Хамед were held where they were, until the owner's
+     Абу-Хамед (2026-10-14) put the outpost 168 on its own label, the base's
+     chief's place 274 on 6274,1952 and the pirates' camp 132 and its chief's
+     place 133 on 6160,1975 and 6161,1973 (server/test_abuhamed_world.py);
   2. no way in: no door the server follows, no passage, side or quest way,
      no quest's ride and no quest's marker leads into one of them; the boat
      from Причал to 429 and back (412, 413) has lost its ways and stays off;
@@ -123,7 +126,10 @@ ONEILL, DOBERMAN = 5685, 5694
 # The towns' banks: the places that stay (FIND.md, the research of 2026-10-12).
 # Донгола's camps' second cells hold their chiefs' places 91 and 99, and its
 # clothing market 469 is cut, since the owner's Донгола of 2026-10-13
-# (server/test_dongola_cut.py, server/test_dongola_world.py).
+# (server/test_dongola_cut.py, server/test_dongola_world.py); the base's
+# second cell holds its chief's place 274, the outpost 168 stands on its own
+# label, and the clothing market 467 is cut, since the owner's Абу-Хамед of
+# 2026-10-14 (server/test_abuhamed_cut.py, server/test_abuhamed_world.py).
 BANKS = {
     "Вади-Хальфа": {(5970, 1724): 80, (5971, 1723): 82, (5978, 1727): 81, (5979, 1728): 83,
                     (5974, 1739): 84, (5975, 1738): 86, (5993, 1721): 85, (5992, 1720): 87,
@@ -133,8 +139,8 @@ BANKS = {
              (5885, 1836): 220, (5860, 1835): 187, (5861, 1835): 188, (5862, 1835): 255},
     "Донгола": {(5882, 2036): 91, (5883, 2035): 93, (5920, 2010): 99, (5921, 2011): 98,
                 (5878, 2011): 73, (5876, 2011): 96, (5877, 2012): 97, (5873, 2012): 445},
-    "Абу-Хамед": {(6274, 1952): 168, (6273, 1953): 263, (6183, 1977): 131, (6183, 1975): 127,
-                  (6182, 1977): 446, (6183, 1974): 467},
+    "Абу-Хамед": {(6274, 1952): 274, (6273, 1953): 263, (6183, 1977): 131, (6183, 1975): 127,
+                  (6182, 1977): 446, (6210, 1986): 168},
 }
 # Across the river, beside the camps: the digs, the ФСЦ's bases (НИЛ-1, 522,
 # went on 2026-10-10), the gorges and the evacuation zones -- all of them out
@@ -184,12 +190,15 @@ try:
           {i: c for c, i in world.retired_cells().items() if i in CAMPS}, LISTED)
     table = world.settlements()
     check("none of them on any cell", [c for c, i in table.items() if i in CAMPS], [])
-    check("  ..their three old cells nulled with their why in data/settlements_verified.json",
+    check("  ..their old cells nulled with their why in data/settlements_verified.json, but 6160,1975,"
+          " which the pirates' camp 132 holds since the owner's Абу-Хамед (2026-10-14)",
           {i: (VERIFIED["cells"].get("%d,%d" % c, "absent"), ORDER in VERIFIED["why"].get("%d,%d" % c, ""))
-           for i, c in CAMPS.items() if c}, {i: (None, True) for i, c in CAMPS.items() if c})
-    check("every cell of theirs leads into the wasteland: the three they stood on, Абу-Хамед's camp's"
-          " own across the river and Абри's island camp's square",
-          {c: world.location_at(*c) == world.pack(*c) for c in CELLS}, {c: True for c in CELLS})
+           for i, c in CAMPS.items() if c},
+          {i: (None, True) if i != 432 else (132, False) for i, c in CAMPS.items() if c})
+    check("every other cell of theirs leads into the wasteland: the two they stood on across the river,"
+          " Абу-Хамед's camp's own across the river and Абри's island camp's square",
+          {c: world.location_at(*c) == world.pack(*c) for c in CELLS if c != CAMPS[432]},
+          {c: True for c in CELLS if c != CAMPS[432]})
     check("  ..the files stay, so a character saved inside still loads",
           [world.location(i).fn for i in sorted(CAMPS)], [FILES[i] for i in sorted(CAMPS)])
     check("the towns' banks keep every place: Вади-Хальфа's camps, chiefs, bandits and masters,"
@@ -200,16 +209,18 @@ try:
           " evacuation zones, which this cut left, are wasteland since the next one",
           ({c: table.get(c) for c in ACROSS}, sorted(i for i in ACROSS.values() if i not in ALL_RETIRED)),
           ({c: None for c in ACROSS}, []))
-    check("by Абу-Хамед the camp of the Северный Альянс 168 and «Аванпост Северного Альянса» are held"
-          " as they were (432's going would move 168 there): data/settlements_verified.json",
+    check("by Абу-Хамед the camp of the Северный Альянс 168 and «Аванпост Северного Альянса» were held"
+          " as they were (432's going would move 168 there), until the owner's Абу-Хамед (2026-10-14) put"
+          " 168 on the outpost's label and the base's chief's place 274 on the other: both pinned in"
+          " data/settlements_verified.json",
           ({c: table.get(c) for c in HELD},
            {c: VERIFIED["cells"].get("%d,%d" % c, "absent") for c in HELD},
            [bool(VERIFIED["why"].get("%d,%d" % c)) for c in HELD]),
-          (HELD, HELD, [True, True]))
-    check("  ..and the pirates' two names by Абу-Хамед, where 432 stood, lead into the wasteland as"
-          " the second always did; the pirates' camp 132 on no cell, as before",
-          ([world.location_at(*c) == world.pack(*c) for c in PIRATES], world.cell_of(132)),
-          ([True, True], None))
+          ({(6274, 1952): 274, (6210, 1986): 168}, {(6274, 1952): 274, (6210, 1986): 168}, [True, True]))
+    check("  ..and the pirates' two names by Абу-Хамед, where 432 stood, lead into the pirates' camp 132"
+          " and its chief's place 133 since the owner's Абу-Хамед",
+          ([world.location_at(*c) for c in PIRATES], world.cell_of(132)),
+          ([132, 133], PIRATES[0]))
 except Exception:
     import traceback
     fails.append("the places broke:\n" + traceback.format_exc())

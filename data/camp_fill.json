@@ -21,6 +21,70 @@
    ],
    "why": "«Механик ДСР» (Q_VH_Mechanic, tooltip 5988,1714): the mechanic 717 and the ДСР of levels 7-8 texts.xml names for this line -- [7] Ополченец, [8] Диверсант, [7] Боевик, [8] Старший офицер, [7] Новобранец (10611-10615) -- whose creatures are not in mobs.xml (the ДСР jm_ it has are levels 12-14). Stand-ins of the level and a soldier's art that no location puts down: Ополченец m05_BanditShooter_lvl7 (62), Боевик m510_BanditAssaultRifle_lvl7 (90), Новобранец m510_Courier_lvl7 (51) -- all three in the mechanic's own art, mob-m2 -- Диверсант m510_BanditShotgunner_lvl8 (87), Старший офицер inv_8_cap (1040), two officers for «Операция \"Возмездие\"» (texts.xml 62728: «уничтожить 5 старших офицеров ДСР»). The rule that the officers come running at the shooting is not built: they stand from the start."
   },
+  "132": {
+   "band": [
+    16,
+    18
+   ],
+   "faction": "pt",
+   "fn": "Bandit_Camp9",
+   "types": [
+    765,
+    766,
+    767,
+    768,
+    769,
+    770,
+    772,
+    773,
+    774,
+    776,
+    764
+   ],
+   "why": "Лагерь Пиратов Сомали (Bandit_Camp9), «Для игроков 16+ уровней» (tooltip 6160,1975): the Somali pirates pt_ of levels 16-18 round their boss Коммодор Марабу (777), and their treasurer pt_Kaznachei (764, «[18] Казначей<Br>Пираты Сомали», 8961), who stands all day (server/bosses.py ALL_DAY). Йохан Демперс (1750) is put down by hand (data/placements.json), so that no ambush draws on him."
+  },
+  "133": {
+   "band": [
+    16,
+    18
+   ],
+   "faction": "pt",
+   "fn": "MW_bandits9_boss",
+   "types": [
+    765,
+    766,
+    767,
+    768,
+    770,
+    772,
+    774,
+    775,
+    776
+   ],
+   "why": "Капитан Нгоро's meeting place (MW_bandits9_boss) beside the camp 132, where its file stands him with a Мичман (769) and a Кавторанг (771): the pirates of levels 16-18 round their chief, the Капраз (775) the camp leaves out among them."
+  },
+  "168": {
+   "band": [
+    16,
+    18
+   ],
+   "faction": "na",
+   "fn": "Bandit_Camp_10",
+   "types": [
+    1025,
+    1026,
+    1027,
+    1028,
+    1029,
+    1030,
+    1031,
+    1032,
+    1033,
+    1034,
+    1036
+   ],
+   "why": "Аванпост Северного Альянса (Bandit_Camp_10), «Для игроков 16-18 уровней» (tooltip 6210,1986): the Alliance's na_ of levels 16-18 round Генерал Шерхан (8620, the outpost's boss by its file); eleven slots for the twelve ranks, the «[18] Капитан» (1035) left out, a boss by his type. The treasurer na_Kaznachei (1024) and Гейнц Тейлор (1749) are put down by hand (data/placements.json)."
+  },
   "191": {
    "band": [
     9,
@@ -78,6 +142,46 @@
     1676
    ],
    "why": "The Тотем (Q_Abri_Totem, 5864,1838): Багира's quests at the totem want the skulls of Больная Гиена (1675, «Жертва Духам», 47020-47023) and ten Голодная Гиена killed (1676, «Охота: Голодные Гиены», 47024-47027); four of each in the file's eight empty slots."
+  },
+  "263": {
+   "band": [
+    19,
+    20
+   ],
+   "faction": "na",
+   "fn": "Bandit_Camp_11",
+   "types": [
+    1728,
+    1729,
+    1730,
+    1731,
+    1732,
+    1733,
+    1734,
+    1735,
+    2315,
+    1736
+   ],
+   "why": "База Северного Альянса (Bandit_Camp_11), «Для игроков 19-20 уровней» (tooltip 6273,1953): the Alliance of levels 19-20 round Генерал Шерхан (1037): the eight ranks of 8994-8997 and 9003-9006, the «Прототип» (2315, at 20 by data/build_mob_types.py DESIGNED_KINDS) and the book-keeper na_Kaznachei_lvl19 (1736, «[20] Бухгалтер<Br>Северный Альянс», 8993), who stands all day. Рудольф Треурнихт (1751) and Джеймс Бейкер (2170) are put down by hand."
+  },
+  "274": {
+   "band": [
+    19,
+    20
+   ],
+   "faction": "na",
+   "fn": "MW_bandits11_boss",
+   "types": [
+    2316,
+    2317,
+    2318,
+    2319,
+    1731,
+    1735,
+    2315,
+    1733
+   ],
+   "why": "Бригадир Табаки's meeting place (MW_bandits11_boss) beside the base 263: the Alliance of levels 19-20 round their chief, the ranks of 8999-9002 the base leaves out (2316-2319) and its snipers, the «Прототип» and a ranger."
   },
   "289": {
    "band": [

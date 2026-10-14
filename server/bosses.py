@@ -206,8 +206,23 @@ def clock():
 # and carry no ingot -- the camps' gold is their two bosses' who keep the
 # hours (data/loot_manual.json). And Донгола's two (the owner's «и потом
 # сделай донголу тоже», 2026-10-13), jm_Kaznachei (592) of the ДСР's camp (93)
-# and pc_Kaznachei (593) of the Peacekeepers' (98), the same way.
-ALL_DAY = frozenset({696, 586, 590, 591, 592, 593})
+# and pc_Kaznachei (593) of the Peacekeepers' (98), the same way. And
+# Абу-Хамед's (the owner's «сделай потом абу хамед в таком же формате»,
+# 2026-10-14): the pirates' treasurer pt_Kaznachei (764) in their camp (132),
+# the Northern Alliance's na_Kaznachei (1024) at its outpost (168) and its
+# book-keeper na_Kaznachei_lvl19 (1736) at its base (263), the same way; and
+# the bandits of Абимбола's revenge, the bosses of the five places Гатера
+# drives a party to (690-694): Тафари (1702), Гвала (1708), Гамюка and his two
+# (1709-1711), Абрафо (1718) and Джитинджи (1720), whom «Убить X» sends the
+# player after at any hour -- kept to the clock they would be there three
+# hours a day, and a party that paid Гатера its diamond outside them would
+# find an empty place. Гвала's crocodiles (1706) are no bosses
+# (data/build_mob_types.py DESIGNED_KINDS), and the godfather of the prison's
+# centre block (2175) comes with the uprising's window, as Вади-Хальфа's and
+# Донгола's do (data/schedule.json).
+ALL_DAY = frozenset({696, 586, 590, 591, 592, 593,
+                     764, 1024, 1736,
+                     1702, 1708, 1709, 1710, 1711, 1718, 1720})
 
 # The warehouses' «Хозяин склада», who keep WAREHOUSE_HOURS: the bosses of
 # the stok_ files, each the one boss of its warehouse (data/mob_types.json

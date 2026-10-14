@@ -41,14 +41,14 @@
   "na": 30,
   "nc": 11,
   "ng": 3,
-  "oasis": 19,
+  "oasis": 18,
   "olc": 12,
   "olm": 70,
   "ownloc": 23,
   "pc": 15,
   "pm": 4,
   "prisoner": 3,
-  "pt": 15,
+  "pt": 14,
   "raid": 4,
   "rb": 3,
   "set": 6,
@@ -293,9 +293,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "pt_Dempers",
-   "picked_level": 1,
-   "type_id": 1750
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
   },
   "2532": {
    "faction": "pt",
@@ -305,23 +305,11 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "pt_Klenz1",
-   "picked_level": 1,
-   "type_id": 1760
+   "name": "pt_capitan_lvl16",
+   "picked_level": 16,
+   "type_id": 767
   },
   "2533": {
-   "faction": "na",
-   "files": [
-    1113
-   ],
-   "how": "camp_fn",
-   "level": 6,
-   "level_source": "files",
-   "name": "na_JamesBaker",
-   "picked_level": 1,
-   "type_id": 2170
-  },
-  "2534": {
    "faction": "na",
    "files": [
     1113
@@ -332,6 +320,18 @@
    "name": "na_Pilot_First",
    "picked_level": 1,
    "type_id": 1889
+  },
+  "2534": {
+   "faction": "na",
+   "files": [
+    1113
+   ],
+   "how": "camp_fn",
+   "level": 6,
+   "level_source": "files",
+   "name": "na_Pilot_Raider",
+   "picked_level": 1,
+   "type_id": 1891
   },
   "2535": {
    "faction": "nc",
@@ -533,9 +533,9 @@
    "how": "camp_fn",
    "level": 7,
    "level_source": "files",
-   "name": "pt_Dempers",
-   "picked_level": 1,
-   "type_id": 1750
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
   },
   "2552": {
    "faction": "pt",
@@ -545,23 +545,11 @@
    "how": "camp_fn",
    "level": 7,
    "level_source": "files",
-   "name": "pt_Klenz1",
-   "picked_level": 1,
-   "type_id": 1760
+   "name": "pt_capitan_lvl16",
+   "picked_level": 16,
+   "type_id": 767
   },
   "2553": {
-   "faction": "na",
-   "files": [
-    1119
-   ],
-   "how": "camp_fn",
-   "level": 7,
-   "level_source": "files",
-   "name": "na_JamesBaker",
-   "picked_level": 1,
-   "type_id": 2170
-  },
-  "2554": {
    "faction": "na",
    "files": [
     1119
@@ -572,6 +560,18 @@
    "name": "na_Pilot_First",
    "picked_level": 1,
    "type_id": 1889
+  },
+  "2554": {
+   "faction": "na",
+   "files": [
+    1119
+   ],
+   "how": "camp_fn",
+   "level": 7,
+   "level_source": "files",
+   "name": "na_Pilot_Raider",
+   "picked_level": 1,
+   "type_id": 1891
   },
   "2555": {
    "faction": "nc",
@@ -773,9 +773,9 @@
    "how": "camp_fn",
    "level": 8,
    "level_source": "files",
-   "name": "pt_Dempers",
-   "picked_level": 1,
-   "type_id": 1750
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
   },
   "2572": {
    "faction": "pt",
@@ -785,23 +785,11 @@
    "how": "camp_fn",
    "level": 8,
    "level_source": "files",
-   "name": "pt_Klenz1",
-   "picked_level": 1,
-   "type_id": 1760
+   "name": "pt_capitan_lvl16",
+   "picked_level": 16,
+   "type_id": 767
   },
   "2573": {
-   "faction": "na",
-   "files": [
-    1120
-   ],
-   "how": "camp_fn",
-   "level": 8,
-   "level_source": "files",
-   "name": "na_JamesBaker",
-   "picked_level": 1,
-   "type_id": 2170
-  },
-  "2574": {
    "faction": "na",
    "files": [
     1120
@@ -812,6 +800,18 @@
    "name": "na_Pilot_First",
    "picked_level": 1,
    "type_id": 1889
+  },
+  "2574": {
+   "faction": "na",
+   "files": [
+    1120
+   ],
+   "how": "camp_fn",
+   "level": 8,
+   "level_source": "files",
+   "name": "na_Pilot_Raider",
+   "picked_level": 1,
+   "type_id": 1891
   },
   "2575": {
    "faction": "nc",
@@ -1025,9 +1025,9 @@
    "how": "camp_fn",
    "level": 10,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "2593": {
    "faction": "na",
@@ -1265,9 +1265,9 @@
    "how": "camp_fn",
    "level": 11,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "2613": {
    "faction": "na",
@@ -1505,9 +1505,9 @@
    "how": "camp_fn",
    "level": 12,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "2633": {
    "faction": "na",
@@ -1745,9 +1745,9 @@
    "how": "camp_fn",
    "level": 14,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "2653": {
    "faction": "na",
@@ -1985,9 +1985,9 @@
    "how": "camp_fn",
    "level": 15,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "2673": {
    "faction": "na",
@@ -2225,9 +2225,9 @@
    "how": "camp_fn",
    "level": 16,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "2693": {
    "faction": "na",
@@ -2611,9 +2611,9 @@
    "how": "camp_fn",
    "level": 18,
    "level_source": "files",
-   "name": "pt_headhunter_lvl18",
+   "name": "pt_capitan_lvl18",
    "picked_level": 18,
-   "type_id": 774
+   "type_id": 775
   },
   "2733": {
    "faction": "na",
@@ -2839,9 +2839,9 @@
    "how": "camp_fn",
    "level": 19,
    "level_source": "files",
-   "name": "pt_Klenz",
+   "name": "pt_miner_lvl19",
    "picked_level": 19,
-   "type_id": 1752
+   "type_id": 931
   },
   "2752": {
    "faction": "pt",
@@ -2863,9 +2863,9 @@
    "how": "camp_fn",
    "level": 19,
    "level_source": "files",
-   "name": "na_private_1_lvl19",
+   "name": "na_colonel_lvl19",
    "picked_level": 19,
-   "type_id": 1728
+   "type_id": 1730
   },
   "2754": {
    "faction": "na",
@@ -2875,9 +2875,9 @@
    "how": "camp_fn",
    "level": 19,
    "level_source": "files",
-   "name": "na_private_1_lvl19a",
+   "name": "na_colonel_lvl19a",
    "picked_level": 19,
-   "type_id": 2316
+   "type_id": 2318
   },
   "2755": {
    "faction": "nc",
@@ -3079,9 +3079,9 @@
    "how": "camp_fn",
    "level": 20,
    "level_source": "files",
-   "name": "pt_Klenz",
+   "name": "pt_miner_lvl19",
    "picked_level": 19,
-   "type_id": 1752
+   "type_id": 931
   },
   "2772": {
    "faction": "pt",
@@ -3115,9 +3115,9 @@
    "how": "camp_fn",
    "level": 20,
    "level_source": "files",
-   "name": "na_ranger_lvl20",
+   "name": "na_prototype_lvl21",
    "picked_level": 20,
-   "type_id": 1733
+   "type_id": 2315
   },
   "2814": {
    "faction": "nc",
@@ -5553,9 +5553,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "pt_Dempers",
-   "picked_level": 1,
-   "type_id": 1750
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
   },
   "3244": {
    "faction": "pt",
@@ -5565,9 +5565,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "pt_Klenz1",
-   "picked_level": 1,
-   "type_id": 1760
+   "name": "pt_capitan_lvl16",
+   "picked_level": 16,
+   "type_id": 767
   },
   "3245": {
    "faction": "pt",
@@ -5577,9 +5577,9 @@
    "how": "camp_fn",
    "level": 7,
    "level_source": "files",
-   "name": "pt_Dempers",
-   "picked_level": 1,
-   "type_id": 1750
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
   },
   "3246": {
    "faction": "pt",
@@ -5589,9 +5589,9 @@
    "how": "camp_fn",
    "level": 7,
    "level_source": "files",
-   "name": "pt_Klenz1",
-   "picked_level": 1,
-   "type_id": 1760
+   "name": "pt_capitan_lvl16",
+   "picked_level": 16,
+   "type_id": 767
   },
   "3247": {
    "faction": "pt",
@@ -5601,9 +5601,9 @@
    "how": "camp_fn",
    "level": 8,
    "level_source": "files",
-   "name": "pt_Dempers",
-   "picked_level": 1,
-   "type_id": 1750
+   "name": "pt_bocman_lvl16",
+   "picked_level": 16,
+   "type_id": 765
   },
   "3248": {
    "faction": "pt",
@@ -5613,9 +5613,9 @@
    "how": "camp_fn",
    "level": 8,
    "level_source": "files",
-   "name": "pt_Klenz1",
-   "picked_level": 1,
-   "type_id": 1760
+   "name": "pt_capitan_lvl16",
+   "picked_level": 16,
+   "type_id": 767
   },
   "3249": {
    "faction": "pt",
@@ -5637,9 +5637,9 @@
    "how": "camp_fn",
    "level": 10,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "3251": {
    "faction": "pt",
@@ -5661,9 +5661,9 @@
    "how": "camp_fn",
    "level": 11,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "3253": {
    "faction": "pt",
@@ -5685,9 +5685,9 @@
    "how": "camp_fn",
    "level": 12,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "3255": {
    "faction": "pt",
@@ -5709,9 +5709,9 @@
    "how": "camp_fn",
    "level": 14,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "3257": {
    "faction": "pt",
@@ -5733,9 +5733,9 @@
    "how": "camp_fn",
    "level": 15,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "3259": {
    "faction": "pt",
@@ -5757,9 +5757,9 @@
    "how": "camp_fn",
    "level": 16,
    "level_source": "files",
-   "name": "pt_headhunter_lvl16",
+   "name": "pt_capitan_lvl16",
    "picked_level": 16,
-   "type_id": 766
+   "type_id": 767
   },
   "3261": {
    "faction": "pt",
@@ -5781,9 +5781,9 @@
    "how": "camp_fn",
    "level": 17,
    "level_source": "files",
-   "name": "pt_headhunter_lvl17",
+   "name": "pt_capitan_lvl17",
    "picked_level": 17,
-   "type_id": 770
+   "type_id": 771
   },
   "3263": {
    "faction": "pt",
@@ -5805,9 +5805,9 @@
    "how": "camp_fn",
    "level": 18,
    "level_source": "files",
-   "name": "pt_headhunter_lvl18",
+   "name": "pt_capitan_lvl18",
    "picked_level": 18,
-   "type_id": 774
+   "type_id": 775
   },
   "3265": {
    "faction": "pt",
@@ -5817,9 +5817,9 @@
    "how": "camp_fn",
    "level": 19,
    "level_source": "files",
-   "name": "pt_Klenz",
+   "name": "pt_miner_lvl19",
    "picked_level": 19,
-   "type_id": 1752
+   "type_id": 931
   },
   "3266": {
    "faction": "pt",
@@ -5841,9 +5841,9 @@
    "how": "camp_fn",
    "level": 20,
    "level_source": "files",
-   "name": "pt_Klenz",
+   "name": "pt_miner_lvl19",
    "picked_level": 19,
-   "type_id": 1752
+   "type_id": 931
   },
   "3268": {
    "faction": "pt",
@@ -5865,9 +5865,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "na_JamesBaker",
+   "name": "na_Pilot_First",
    "picked_level": 1,
-   "type_id": 2170
+   "type_id": 1889
   },
   "3270": {
    "faction": "na",
@@ -5877,9 +5877,9 @@
    "how": "camp_fn",
    "level": 6,
    "level_source": "files",
-   "name": "na_Pilot_First",
+   "name": "na_Pilot_Raider",
    "picked_level": 1,
-   "type_id": 1889
+   "type_id": 1891
   },
   "3271": {
    "faction": "na",
@@ -5889,9 +5889,9 @@
    "how": "camp_fn",
    "level": 7,
    "level_source": "files",
-   "name": "na_JamesBaker",
+   "name": "na_Pilot_First",
    "picked_level": 1,
-   "type_id": 2170
+   "type_id": 1889
   },
   "3272": {
    "faction": "na",
@@ -5901,9 +5901,9 @@
    "how": "camp_fn",
    "level": 7,
    "level_source": "files",
-   "name": "na_Pilot_First",
+   "name": "na_Pilot_Raider",
    "picked_level": 1,
-   "type_id": 1889
+   "type_id": 1891
   },
   "3273": {
    "faction": "na",
@@ -5913,9 +5913,9 @@
    "how": "camp_fn",
    "level": 8,
    "level_source": "files",
-   "name": "na_JamesBaker",
+   "name": "na_Pilot_First",
    "picked_level": 1,
-   "type_id": 2170
+   "type_id": 1889
   },
   "3274": {
    "faction": "na",
@@ -5925,9 +5925,9 @@
    "how": "camp_fn",
    "level": 8,
    "level_source": "files",
-   "name": "na_Pilot_First",
+   "name": "na_Pilot_Raider",
    "picked_level": 1,
-   "type_id": 1889
+   "type_id": 1891
   },
   "3275": {
    "faction": "na",
@@ -6129,9 +6129,9 @@
    "how": "camp_fn",
    "level": 19,
    "level_source": "files",
-   "name": "na_private_1_lvl19",
+   "name": "na_colonel_lvl19",
    "picked_level": 19,
-   "type_id": 1728
+   "type_id": 1730
   },
   "3292": {
    "faction": "na",
@@ -6141,9 +6141,9 @@
    "how": "camp_fn",
    "level": 19,
    "level_source": "files",
-   "name": "na_private_1_lvl19a",
+   "name": "na_colonel_lvl19a",
    "picked_level": 19,
-   "type_id": 2316
+   "type_id": 2318
   },
   "3293": {
    "faction": "na",
@@ -6165,9 +6165,9 @@
    "how": "camp_fn",
    "level": 20,
    "level_source": "files",
-   "name": "na_ranger_lvl20",
+   "name": "na_prototype_lvl21",
    "picked_level": 20,
-   "type_id": 1733
+   "type_id": 2315
   },
   "7456": {
    "faction": "labor",

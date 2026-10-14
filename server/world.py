@@ -76,10 +76,15 @@ USERINFO = {
 # Нур-ад-Дин (156, dn_travel, «Нур-ад-Дин<Br>водитель») at the station of
 # Донгола 49, whose wiki page has him register trophies and sell the tickets
 # (the owner's Донгола, 2026-10-13): the town has no butchers' place of its
-# own -- the map's «Мясники, скупка трофеев» is a label with no file.
+# own -- the map's «Мясники, скупка трофеев» is a label with no file. And
+# Веласкес (740, ah_travel, «Веласкес<Br>водитель») at the station of
+# Абу-Хамед 126, whose wiki page lists «Трофеи: Здесь вы можете
+# зарегистрировать свои трофеи» beside his tickets and repairs (the owner's
+# «сделай потом абу хамед в таком же формате», 2026-10-14): Абу-Хамед's
+# «Мясники, скупка трофеев» is a label with no file as well.
 TROPHY_REGISTRARS = frozenset({939, 940, 941, 942, 943, 1132,
                                2033, 2034, 2035, 2036,
-                               5193, 105, 1179, 156})
+                               5193, 105, 1179, 156, 740})
 
 
 def entity_root(type_id, root):
@@ -843,6 +848,17 @@ EVENT_TOKENS = {"vov", "vbg", "lemon", "ny", "9may", "presents", "lotery",
 # decision 29 of its plan): dn_lotery (663, «Лотерейщик») in the old and the
 # new market, dn_lotery_g (712, «Лотерейщик Золотая лотерея») in the black
 # market -- the markets' map labels promise «Лотерея».
+#
+# And Абу-Хамед's (the owner's «сделай потом абу хамед в таком же формате»,
+# 2026-10-14): ah_lotery (741, «Муамар<Br>Лотерейщик») and ah_lotery_g (742,
+# «Лотерейщик<Br>Золотая лотерея») in the port 446, whose label promises
+# «Лотерейщики» -- the file is the New Year's copy of the port
+# (NY_AH_port_old), the town's one port all the same. And the two places of
+# Ан-Насир's chain on their cells, whose files are named «Event_RunningMan»
+# after the chain, not after a season: the dead caravaneer Рэт
+# (Event_StalkerRat 1423) at «Место преступления / Жертва: Рэт» (223, the
+# map's L169) and the dug-up sand beside «Костёр» (Event_StalkerVulture 1422,
+# 222, L170), the chain's points 6225,1895 and 6172,1902 (texts 47175, 47184).
 SEASON_KEPT = {
     35: frozenset({662}),           # Вади Хальфа: рынок
     104: frozenset({662}),          # Портовый рынок
@@ -853,6 +869,9 @@ SEASON_KEPT = {
     50: frozenset({663}),           # Донгола: Рынок (старый)
     197: frozenset({663}),          # Донгола: Новый рынок
     103: frozenset({712}),          # Черный рынок Донголы
+    446: frozenset({741, 742}),     # Абу-Хамед: Порт
+    222: frozenset({1422}),         # «Костёр», Event_RunningMan_2
+    223: frozenset({1423}),         # «Место преступления», Event_RunningMan_3
 }
 
 # The objects that do stand, by location: the things of Вади-Хальфа's quests,
@@ -876,7 +895,11 @@ SEASON_KEPT = {
 # owner's «и потом сделай донголу тоже», 2026-10-13): the ammunition boxes of
 # the ДСР's and the Peacekeepers' camps (jm_box_ammo 2165 in 93, pc_box_ammo
 # 2167 in 98), and the stones Stone_DN (980, «Порода») of the quarry's four
-# pits, as Вади-Хальфа's quarry has its Stone_WH.
+# pits, as Вади-Хальфа's quarry has its Stone_WH. Абу-Хамед's (the owner's
+# «сделай потом абу хамед в таком же формате», 2026-10-14): the ammunition
+# boxes of the pirates' camp (pt_box_ammo 2169 in 132) and of the Northern
+# Alliance's outpost and base (na_box_ammo 2171 in 168 and 263), and the
+# stones Stone_AH (981) of the quarry's four pits 637-640.
 STANDING_OBJECTS = {
     43: frozenset({41}),
     46: frozenset({50}),
@@ -904,6 +927,13 @@ STANDING_OBJECTS = {
     633: frozenset({980}),          # DN_Stone_Mine_S
     634: frozenset({980}),          # DN_Stone_Mine_E2
     635: frozenset({980}),          # DN_Stone_Mine_W2
+    132: frozenset({2169}),         # Лагерь Пиратов Сомали (Абу-Хамед)
+    168: frozenset({2171}),         # Аванпост Северного Альянса
+    263: frozenset({2171}),         # База Северного Альянса
+    637: frozenset({981}),          # AH_Stone_Mine_C
+    638: frozenset({981}),          # AH_Stone_Mine_E2
+    639: frozenset({981}),          # AH_Stone_Mine_S
+    640: frozenset({981}),          # AH_Stone_Mine_W2
 }
 
 # The ranges where a shot goes over the booth's counter. In TIR_01..06 the

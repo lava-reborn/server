@@ -88,10 +88,21 @@ log = logging.getLogger("lava")
 # (data/terrain_verified.json), so an ambush, met only on a cell a player
 # walks onto, is never met across the river (server/test_dongola_world.py
 # holds that once, by a walk from the station). It never meets Абри's.
+# Абу-Хамед's three (the owner's «сделай потом абу хамед в таком же формате»,
+# 2026-10-14), the Somali pirates 16-18 (132, west of the town), the
+# Alliance's outpost 16-18 (168, south-east) and its base 19-20 (263, far to
+# the east), by the same rule: the oasis «Аль-Кусай», the works' road, the
+# prison, the Dark Mine and the mountain paths, the base's eastern desert.
+# The rings reach into the Nile's loop and over its far bank, which the
+# owner's wall closes (data/terrain_verified.json): only the cells a walk from
+# the station reaches are met (server/test_abuhamed_world.py holds that once).
+# The town itself and its gates take no ambush (near_town), and it never
+# meets Донгола's.
 REGIONS = (
     {"town": "Вади-Хальфа", "camps": (80, 81, 84, 85), "reach": 25},
     {"town": "Абри", "camps": (88, 92), "reach": 25},
     {"town": "Донгола", "camps": (93, 98), "reach": 25},
+    {"town": "Абу-Хамед", "camps": (132, 168, 263), "reach": 25},
 )
 
 # One roll per cell entered on the map: about one encounter in thirty cells

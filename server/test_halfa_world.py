@@ -176,18 +176,20 @@ check("an Up_Camp copy of the colonists' camp keeps its ammunition box out",
 # Each place the table lets an object stand, by where it is: a map cell of
 # Вади-Хальфа outside the valley, or an interior of the town's own -- the
 # range TIR_01..06 or the quarry's pits -- which have no cell of their own;
-# and since the owner's Донгола (2026-10-13) the pits of Донгола's quarry.
-HALFA_INSIDE = re.compile(r"^(TIR_0[1-6]|WH_Stone_Mine_|DN_Stone_Mine_)")
+# and since the owner's Донгола (2026-10-13) the pits of Донгола's quarry,
+# since the owner's Абу-Хамед (2026-10-14) those of Абу-Хамед's.
+HALFA_INSIDE = re.compile(r"^(TIR_0[1-6]|WH_Stone_Mine_|DN_Stone_Mine_|AH_Stone_Mine_)")
 check("no object stands by the table in the Nubian valley, nor anywhere but the towns' cells"
-      " (Вади-Хальфа's, Абри's, Донгола's), Вади-Хальфа's range and the two towns' quarries",
+      " (Вади-Хальфа's, Абри's, Донгола's, Абу-Хамед's), Вади-Хальфа's range and the three towns' quarries",
       sorted(i for i in world.STANDING_OBJECTS
              if (world.in_noob_valley(*world.cell_of(i)) if world.cell_of(i)
                  else not HALFA_INSIDE.match(world.location(i).fn))), [])
-check("  ..the interiors among them are the range's six and the two quarries' four each",
+check("  ..the interiors among them are the range's six and the three quarries' four each",
       sorted(world.location(i).fn for i in world.STANDING_OBJECTS if not world.cell_of(i)),
       sorted(["TIR_01", "TIR_02", "TIR_03", "TIR_04", "TIR_05", "TIR_06",
               "WH_Stone_Mine_C", "WH_Stone_Mine_S", "WH_Stone_Mine_W2", "WH_Stone_Mine_E2",
-              "DN_Stone_Mine_C", "DN_Stone_Mine_S", "DN_Stone_Mine_W2", "DN_Stone_Mine_E2"]))
+              "DN_Stone_Mine_C", "DN_Stone_Mine_S", "DN_Stone_Mine_W2", "DN_Stone_Mine_E2",
+              "AH_Stone_Mine_C", "AH_Stone_Mine_S", "AH_Stone_Mine_W2", "AH_Stone_Mine_E2"]))
 
 # --- the objects ---------------------------------------------------------------------------
 tir = [stood(room(i)) for i in (1048, 1233, 1260, 1276, 1280, 1282)]

@@ -121,7 +121,7 @@ LABEL_ONLY = [(5866, 1837), (5862, 1837), (5863, 1836), (6248, 1979), (6248, 198
 PORT, PORT_CELL = 187, (5860, 1835)
 AIRFIELD, AIRFIELD_CELL = 529, (5865, 1835)
 FSC_UPGRADERS = (8213, 8214)
-OTHER_AIRFIELDS = (527, 531)                     # Абу-Хамед, Керма (Донгола's 530 cut 2026-10-13)
+OTHER_AIRFIELDS = (531,)                         # Керма (Донгола's 530 cut 2026-10-13, Абу-Хамед's 527 2026-10-14)
 BLACKWATER = (4685, 7029, 4779, 4780, 4781, 4782, 4783, 4784, 4625, 4627, 4628)
 RUDOLF, QUARTER = 5105, 188
 MT = world.mob_types()
@@ -287,8 +287,8 @@ try:
            [names.ALL.get(t) == MT[t][1] for t in FSC_UPGRADERS],
            [setcraft.window(t)["in_types"] for t in FSC_UPGRADERS]),
           (None, list(FSC_UPGRADERS), [True, True], [[], []]))
-    check("  ..they stand on in the airfields of Абу-Хамед and Керма (Донгола's went with its cut of"
-          " 2026-10-13), so neither is a retired creature", ({i: [t for t in FSC_UPGRADERS if t in stood_in(i)] for i in OTHER_AIRFIELDS},
+    check("  ..they stand on in Керма's airfield (Донгола's went with its cut of 2026-10-13, Абу-Хамед's"
+          " with its own of 2026-10-14), so neither is a retired creature", ({i: [t for t in FSC_UPGRADERS if t in stood_in(i)] for i in OTHER_AIRFIELDS},
                                 [t for t in FSC_UPGRADERS if t in world.retired_creatures()]),
           ({i: list(FSC_UPGRADERS) for i in OTHER_AIRFIELDS}, []))
     check("the clan base Blackwater's block post 317 stood eleven people, none named by the original,"
@@ -582,10 +582,10 @@ try:
           ([5160, 5161, MINERS], {t: ([], []) for t in (5160, 5161, MINERS)}))
     where = {t: sorted(i for i in files if t in standing(i) and i not in ALL_RETIRED)
              for t in SETS + (MINERS,)}
-    check("  ..5161 and 5181 stand in the clothing market of Абу-Хамед (Донгола's 469 went with its cut"
-          " of 2026-10-13); 5160, whose other market was Вади-Хальфа's 468 (cut 2026-10-09), stands"
-          " nowhere now",
-          where, {5160: [], 5161: [467], MINERS: [467]})
+    check("  ..none of them stands anywhere now: 5161 and 5181 stood in the clothing markets of Донгола"
+          " and Абу-Хамед until their cuts (469 2026-10-13, 467 2026-10-14); 5160, whose other market was"
+          " Вади-Хальфа's 468 (cut 2026-10-09), went with Абри's",
+          where, {5160: [], 5161: [], MINERS: []})
     sold = {t: sorted(items.stock_for(t, CLOTHES)) for t in SETS}
     port = set(items.stock_for(ALIMA, PORT)) | set(items.stock_for(GALI, PORT))
     check("  ..the thirty things the two set traders sold here, Абри's band 8-12 (Налетчик, Пустынник"

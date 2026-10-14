@@ -15,9 +15,13 @@ written by data/build_camp_patrols.py, on the real table and the real world:
     and their chiefs' places, 88/89 (the slave traders, 8-10) and 92/90 (the
     flayers, 10-12), eight of their fighters each, and since the owner's «и
     потом сделай донголу тоже» (2026-10-13) the 12 round each of Донгола's,
-    93/91 (the ДСР, 12-14) and 98/99 (the Peacekeepers, 14-16); every ring
-    cell is open desert, at war, passable, no settlement and no place taken
-    out of the game;
+    93/91 (the ДСР, 12-14) and 98/99 (the Peacekeepers, 14-16), and since the
+    owner's «сделай потом абу хамед в таком же формате» (2026-10-14) Абу-Хамед's:
+    the 11 round the Somali pirates' 132/133 (16-18; three cells of the river
+    below the camp are no ground), the 8 round the Northern Alliance's outpost
+    168 (16-18, no chief's place in the client) and the 12 round its base
+    263/274 (19-20); every ring cell is open desert, at war, passable, no
+    settlement and no place taken out of the game;
   * the cells the lavabook names for the camps' quests stand the kinds
     those quests want there: «Учет» and «Раббин аль-Гуд» on 5970,1725,
     «Заказ» on 5977,1727, «Как слышно?» and «Бандитская активность» on
@@ -26,9 +30,11 @@ written by data/build_camp_patrols.py, on the real table and the real world:
   * the table: every row can stand (rooms.placement_problems), the patrol
     rows are exactly the builder's, the hand rows of 184, 31 and 102 are
     as they were, and Абри's (Мортимер in 187, Санденс Кид in 88, Бутч
-    Кэссиди in 92, the dump's eight junk piles in 289) and Донгола's
-    (the machine-gun trader in its black market, 1208 in 103, and Вильям
-    Блейд in the ДСР's camp, 1565 in 93) are all there are besides;
+    Кэссиди in 92, the dump's eight junk piles in 289), Донгола's (the
+    machine-gun trader in its black market, 1208 in 103, and Вильям Блейд in
+    the ДСР's camp, 1565 in 93) and Абу-Хамед's (Йохан Демперс in 132, Гейнц
+    Тейлор and the treasurer at the outpost 168, Рудольф Треурнихт and Джеймс
+    Бейкер at the base 263) are all there are besides;
   * no ambush on a ring cell, as before (encounters.band_at, near_town);
   * a patrol fighter killed comes back on the respawn timer, on its cell.
 
@@ -77,11 +83,13 @@ with open(os.path.join(ROOT, "data", "camp_fill.json"), encoding="utf-8") as _fh
 
 # camp -> its chief's place, the creatures per cell
 CAMPS = {80: (82, 8), 81: (83, 8), 84: (86, 8), 85: (87, 8), 34: (None, 4),
-         88: (89, 8), 92: (90, 8), 93: (91, 8), 98: (99, 8)}
+         88: (89, 8), 92: (90, 8), 93: (91, 8), 98: (99, 8),
+         132: (133, 8), 168: (None, 8), 263: (274, 8)}
 VALLEY_CAMP, VALLEY_KINDS = 34, {20, 21, 251}
 SLOTS8 = [(20, 34), (35, 44), (20, 54), (29, 70), (50, 74), (15, 84), (39, 95), (25, 104)]
 SLOTS4 = [(20, 34), (29, 70), (50, 74), (25, 104)]
-LOOSER, TREASURERS, OFFICERS = 336, (586, 590, 591, 592, 593), {303, 307, 311}
+LOOSER, TREASURERS, OFFICERS = 336, (586, 590, 591, 592, 593, 764, 1024, 1736), {303, 307, 311}
+NAMED = (1563, 1564, 1565, 1749, 1750, 1751, 2170)
 # The lavabook's cells, and the quests whose kinds stand there.
 UCHET, ZAKAZ, KAK_SLYSHNO, PORYADOK = (5970, 1725), (5977, 1727), (5974, 1738), (5992, 1722)
 # The hand rows: Ибрахим's tools box, Мвамба's three thugs, Мортимер; and
@@ -89,7 +97,9 @@ UCHET, ZAKAZ, KAK_SLYSHNO, PORYADOK = (5970, 1725), (5977, 1727), (5974, 1738), 
 # Кэссиди in their camps, the car dump's eight junk piles; and Донгола's
 # machine-gun trader «Пулеметы и патроны» (1208) on its black market, the
 # medicine by the cities' tiers of the same day; and Вильям Блейд in the
-# ДСР's camp (the owner's Донгола, 2026-10-13).
+# ДСР's camp (the owner's Донгола, 2026-10-13); and the men of «Письмо
+# Президента Крюгера» in Абу-Хамед's camps, with the outpost's treasurer (the
+# owner's Абу-Хамед, 2026-10-14).
 HAND = {184: [(1135, [56, 88], False)],
         31: [(566, [34, 61], True), (566, [30, 70], True), (566, [39, 70], True)],
         102: [(1188, [40, 59], False)],
@@ -98,16 +108,21 @@ HAND = {184: [(1135, [56, 88], False)],
         88: [(1563, [40, 36], False)],
         92: [(1564, [39, 40], False)],
         93: [(1565, [38, 53], False)],
+        132: [(1750, [31, 45], False)],
+        168: [(1749, [45, 32], False), (1024, [26, 37], False)],
+        263: [(1751, [39, 40], False), (2170, [40, 62], False)],
         289: [(2367, [28, 69], False), (2368, [14, 95], False), (2369, [20, 13], False),
               (2370, [20, 85], False), (2371, [36, 114], False), (2372, [23, 9], False),
               (2373, [24, 80], False), (2374, [41, 38], False)]}
 
 
 def ring(camp):
+    """The open ground touching a camp or its chief's place: the river below
+    Абу-Хамед's pirates (6159-6161,1976) is no cell to stand a patrol on."""
     chief = CAMPS[camp][0]
     places = [world.cell_of(camp)] + ([world.cell_of(chief)] if chief else [])
     cells = {(x + dx, y + dy) for x, y in places for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
-    return sorted(cells - set(places), key=lambda c: (c[1], c[0]))
+    return sorted((c for c in cells - set(places) if world.passable(*c)), key=lambda c: (c[1], c[0]))
 
 
 def band(camp):
@@ -125,9 +140,11 @@ def camp_kinds(camp):
     if camp not in FILL:
         return {t for _c, t in world.location(camp).spawns if t and mobs.stats(t).role == "mob"}
     # The fill of both, and the fighters the files stand themselves (the four
-    # slave traders of Абри's chief's place 89).
-    return ({t for lid in (camp, chief) for t in FILL[lid]["types"]}
-            | {t for lid in (camp, chief) for _c, t in world.location(lid).spawns
+    # slave traders of Абри's chief's place 89); Абу-Хамед's outpost 168 has
+    # no chief's place.
+    places = [lid for lid in (camp, chief) if lid]
+    return ({t for lid in places for t in FILL[lid]["types"]}
+            | {t for lid in places for _c, t in world.location(lid).spawns
                if t and mobs.stats(t).role == "mob"})
 
 
@@ -140,10 +157,12 @@ STOOD = {}                      # (x, y) -> [type id] as rooms.Room stands them
 # --- the rings ------------------------------------------------------------------------------
 print("the rings")
 try:
-    check("104 cells hold a patrol: 12 round each of the four camps of Вади-Хальфа, of Абри's two and"
-          " of Донгола's two, 8 round the valley's «Лагерь бандитов»",
+    check("135 cells hold a patrol: 12 round each of the four camps of Вади-Хальфа, of Абри's two and"
+          " of Донгола's two, 8 round the valley's «Лагерь бандитов», and round Абу-Хамед's three 11"
+          " (the pirates, by the river), 8 (the outpost) and 12 (the base)",
           (len(patrol), {camp: len(cells) for camp, cells in RINGS.items()}),
-          (104, {80: 12, 81: 12, 84: 12, 85: 12, 34: 8, 88: 12, 92: 12, 93: 12, 98: 12}))
+          (135, {80: 12, 81: 12, 84: 12, 85: 12, 34: 8, 88: 12, 92: 12, 93: 12, 98: 12,
+                 132: 11, 168: 8, 263: 12}))
     check("  ..and they are exactly the open-desert cells touching a camp or its chief's place",
           sorted(patrol), sorted(world.pack(x, y) for cells in RINGS.values() for x, y in cells))
     check("  ..each row naming its own camp",
@@ -193,8 +212,8 @@ try:
           {camp: sorted(set(build_camp_patrols.kinds(camp))
                         | {t for c, (ks, _w) in build_camp_patrols.ANCHORS.items()
                            if c in RINGS[camp] for t in ks}) for camp in CAMPS})
-    check("800 fighters in all (416 of Вади-Хальфа and the valley, 192 of Абри, 192 of Донгола)",
-          sum(len(v) for v in STOOD.values()), 800)
+    check("1048 fighters in all (416 of Вади-Хальфа and the valley, 192 of Абри, 192 of Донгола, 248 of"
+          " Абу-Хамед)", sum(len(v) for v in STOOD.values()), 1048)
 except Exception:
     fails.append("the rings broke:\n" + traceback.format_exc())
 
@@ -223,8 +242,9 @@ try:
           sorted(c for c, ts in STOOD.items() if c != PORYADOK and OFFICERS & set(ts)), [])
     every = [t for ts in STOOD.values() for t in ts]
     check("no ring cell stands «Неудачник» 336, a treasurer (586, Абри's 590 and 591, Донгола's 592"
-          " and 593), Санденс Кид, Бутч Кэссиди or Вильям Блейд, or anybody who keeps the bosses' hours",
-          sorted({t for t in every if t in (LOOSER,) + TREASURERS + (1563, 1564, 1565)
+          " and 593, Абу-Хамед's 764, 1024 and 1736), Санденс Кид, Бутч Кэссиди, Вильям Блейд or the men of"
+          " Крюгер's letter, or anybody who keeps the bosses' hours",
+          sorted({t for t in every if t in (LOOSER,) + TREASURERS + NAMED
                   or bosses.keeps_hours(t) or mobs.stats(t).role != "mob"}), [])
 except Exception:
     fails.append("the lavabook's cells broke:\n" + traceback.format_exc())
@@ -244,15 +264,18 @@ try:
            if not recs[0]["why"].startswith(
                "DESIGNED, the owner's (2026-10-12, «Делаем Абри»)" if recs[0]["patrol"] in (88, 92)
                else "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже»"
-               if recs[0]["patrol"] in (93, 98) else "DESIGNED, the owner's (2026-10-11)")
+               if recs[0]["patrol"] in (93, 98)
+               else "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате»"
+               if recs[0]["patrol"] in (132, 168, 263) else "DESIGNED, the owner's (2026-10-11)")
            or any(r["why"] != "As the first row of %d (%d,%d)." % ((lid,) + world.unpack(lid))
                   for r in recs[1:])], [])
     # The owner's places of ours (data/locations, the location editor) stand
     # whom he puts there: their rows are the editor's and its checks', not
     # hand rows of the original's places.
     OURS = set(world.overlay_ids())
-    check("the hand rows of 184, 31 and 102 are as they were, and Абри's of 187, 88, 92 and 289"
-          " and Донгола's of 103 and 93 are the only others (the places of ours aside)",
+    check("the hand rows of 184, 31 and 102 are as they were, and Абри's of 187, 88, 92 and 289,"
+          " Донгола's of 103 and 93 and Абу-Хамед's of 132, 168 and 263 are the only others (the places"
+          " of ours aside)",
           {lid: [(r["type"], r["cell"], bool(r.get("escort"))) for r in recs if "patrol" not in r]
            for lid, recs in table.items() if any("patrol" not in r for r in recs)
            and not (lid in OURS and lid >= world.FIRST_NEW_ID)}, HAND)

@@ -284,12 +284,17 @@ try:
           " login screen", [t for t in sorted(people) if t in MT and not names.known(t)], [])
     elsewhere = {t: sorted(w[1] for w in put[t] if w[1] not in ALL_RETIRED)
                  for t in (5161, 5162, 5163, 5181, 5767, 5770, 8213, 8214, 407, 2167)}
-    check("who stands elsewhere too stands there still: the clothing market's traders in Абу-Хамед's"
-          " 467, the craftsmen's treasurers and Гуго Борхардт in Вади-Хальфа's quarters, the ФСЦ"
-          " upgraders at Абу-Хамед's and Керма's airfields, Шеф Дженсен and his boxes in the camp 98",
+    # Абу-Хамед's clothing market 467, its set upgraders' quarter 449 and its
+    # airfield 527 went with the owner's cut of Абу-Хамед (2026-10-14,
+    # server/test_abuhamed_cut.py): the clothing market's traders stand nowhere
+    # since, the treasurers and Гуго Борхардт in Вади-Хальфа's quarter 447, the
+    # upgraders at Керма's airfield.
+    check("who stands elsewhere too stands there still: the craftsmen's treasurers and Гуго Борхардт in"
+          " Вади-Хальфа's quarter 447, the ФСЦ upgraders at Керма's airfield, Шеф Дженсен and his boxes in"
+          " the camp 98; the clothing market's traders, whose other market was Абу-Хамед's 467, nowhere",
           {t: [i for i in v if i in (467, 447, 449, 527, 531, 98)] for t, v in elsewhere.items()},
-          {5161: [467], 5162: [467], 5163: [467], 5181: [467], 5767: [447, 449], 5770: [447, 449],
-           8213: [527, 531], 8214: [527, 531], 407: [98], 2167: [98]})
+          {5161: [], 5162: [], 5163: [], 5181: [], 5767: [447], 5770: [447],
+           8213: [531], 8214: [531], 407: [98], 2167: [98]})
     check("  ..so none of them is a retired creature",
           [t for t in elsewhere if world.retired_creature(t)], [])
     check("Шеф Дженсен stands in one place now, the camp 98: its copy 1171 is out",
@@ -387,7 +392,7 @@ try:
           ([], []))
     check("  ..and the three bases' letters «База …» go with them",
           sorted(c["was"] for c in CELLS_DOC["captions"] if c["was"].startswith("База ")
-                 and "Liberty" not in c["was"]),
+                 and c["why"].startswith("The owner's cut of Донгола")),
           ["База Delta Force", "База Врачи без границ", "База Хогвартс"])
 except Exception:
     import traceback

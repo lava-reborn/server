@@ -76,8 +76,19 @@ CAMP_FACTIONS = {
 # would otherwise be the nearest level of their faction for the Up_Camp copies'
 # lost types and stand there by the dozen. And Вильям Блейд of Донгола's ДСР
 # camp (jm_WilliamBlade, «[14] Вильям Блейд<Br>ДСР», 8937), put down by hand in
-# the camp 93 the same way (the owner's Донгола, 2026-10-13).
-NAMED = {1563, 1564, 1565}
+# the camp 93 the same way (the owner's Донгола, 2026-10-13). And Абу-Хамед's
+# men of «Письмо Президента Крюгера» (50044; the owner's «сделай потом абу
+# хамед в таком же формате», 2026-10-14): Гейнц Тейлор (1749) at the
+# Alliance's outpost 168, Йохан Демперс (1750) in the pirates' camp 132,
+# Рудольф Треурнихт (1751) and Джеймс Бейкер (2170) at the base 263, put down
+# by hand, and Хорст Кленз (1752), whom the Dark Mine's mouth 156 stands by
+# its file -- before this Демперс stood in for the lost types of the copy
+# 1112 fourteen times and Бейкер in 1113 twelve; and Кленз's twin 1760
+# (pt_Klenz1), whose place is the МКС's store by Мероэ and who stands
+# nowhere, so that he stands in for nobody either; and Том Морган (2168,
+# «[18] Том Морган<Br>Пираты Сомали», 8974), who has no art (mobs.xml
+# resource "") and whom the client would draw as nothing.
+NAMED = {1563, 1564, 1565, 1749, 1750, 1751, 1752, 1760, 2168, 2170}
 # Prefixes that are a season or a test, never a company.
 EVENT_PREFIXES = {"vov", "may", "event", "eventboss", "test", "admin", "ny",
                   "hw", "xmas", "vbg", "clan", "kb"}
@@ -253,6 +264,45 @@ CAMP_FILL = {
          [399, 400, 401, 402, 403, 404, 405, 406, 404, 405, 406],
          "Макс Коул's meeting place (MW_bandits8_boss) beside the camp 98: the Peacekeepers of "
          "levels 15-16 round their chief, the kinds 98 leaves out (404-406) twice each."),
+    # Абу-Хамед, the owner's order of 2026-10-14: «сделай потом абу хамед в
+    # таком же формате», as Абри's «В Абри добавь мобов в лагеря и в
+    # окрестности». The pirates' ranks are their block's (8962-8973: Боцман,
+    # Канонир, Кондуктор, Пороховая обезьяна at 16; Мичман, Абордажник,
+    # Кавторанг, Юнга at 17; Квартмейстер, Мастер Абордажник, Капраз, Матрос at
+    # 18), the Northern Alliance's theirs (8981-8992 at 16-18, 8994-9006 at
+    # 19-20); every rank the town's quests ask for stands: the «[16] Капрал» of
+    # «Ножи для учеников» at the outpost, the elite snipers of the base.
+    132: ("pt", (16, 18),
+          [765, 766, 767, 768, 769, 770, 772, 773, 774, 776, 764],
+          "Лагерь Пиратов Сомали (Bandit_Camp9), «Для игроков 16+ уровней» (tooltip 6160,1975): the "
+          "Somali pirates pt_ of levels 16-18 round their boss Коммодор Марабу (777), and their "
+          "treasurer pt_Kaznachei (764, «[18] Казначей<Br>Пираты Сомали», 8961), who stands all day "
+          "(server/bosses.py ALL_DAY). Йохан Демперс (1750) is put down by hand "
+          "(data/placements.json), so that no ambush draws on him."),
+    133: ("pt", (16, 18),
+          [765, 766, 767, 768, 770, 772, 774, 775, 776],
+          "Капитан Нгоро's meeting place (MW_bandits9_boss) beside the camp 132, where its file "
+          "stands him with a Мичман (769) and a Кавторанг (771): the pirates of levels 16-18 round "
+          "their chief, the Капраз (775) the camp leaves out among them."),
+    168: ("na", (16, 18),
+          [1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1036],
+          "Аванпост Северного Альянса (Bandit_Camp_10), «Для игроков 16-18 уровней» (tooltip "
+          "6210,1986): the Alliance's na_ of levels 16-18 round Генерал Шерхан (8620, the outpost's "
+          "boss by its file); eleven slots for the twelve ranks, the «[18] Капитан» (1035) left out, "
+          "a boss by his type. The treasurer na_Kaznachei (1024) and Гейнц Тейлор (1749) are put down "
+          "by hand (data/placements.json)."),
+    263: ("na", (19, 20),
+          [1728, 1729, 1730, 1731, 1732, 1733, 1734, 1735, 2315, 1736],
+          "База Северного Альянса (Bandit_Camp_11), «Для игроков 19-20 уровней» (tooltip 6273,1953): "
+          "the Alliance of levels 19-20 round Генерал Шерхан (1037): the eight ranks of 8994-8997 "
+          "and 9003-9006, the «Прототип» (2315, at 20 by data/build_mob_types.py DESIGNED_KINDS) and "
+          "the book-keeper na_Kaznachei_lvl19 (1736, «[20] Бухгалтер<Br>Северный Альянс», 8993), who "
+          "stands all day. Рудольф Треурнихт (1751) and Джеймс Бейкер (2170) are put down by hand."),
+    274: ("na", (19, 20),
+          [2316, 2317, 2318, 2319, 1731, 1735, 2315, 1733],
+          "Бригадир Табаки's meeting place (MW_bandits11_boss) beside the base 263: the Alliance of "
+          "levels 19-20 round their chief, the ranks of 8999-9002 the base leaves out (2316-2319) and "
+          "its snipers, the «Прототип» and a ranger."),
 }
 
 
