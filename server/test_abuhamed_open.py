@@ -70,7 +70,8 @@ in for the walking and the earning.
                kept, and not on offer at 20 (until_max); «Выход из
                обучающего центра» (966) back to the quarter
   the Dark Mine down from its mouth (156) through the first tier (615) to the
-               second (1014) by the doors, the miners of both shot down, the
+               second (1014) by the doors, the miners shot down that
+               follow the player to a door and hold its exit timer, the
                map out of reach there, and up again onto the mouth's own cell
   on foot      out of the station onto the map and four cells west into the
                wasteland, back and into the masters' camp (131) off the map,
@@ -768,21 +769,28 @@ def walk_to(c, loc, pos, goal, avoid=()):
     return path[-1]
 
 
-def through(c, loc_id, side, pos):
+def through(c, loc_id, side, pos, foes=(), gun=None):
     """Walk onto an exit of a location -- door a or b, or a side W/N/E/S --
     and press «в другую локацию» (chWorld;to=1): (ack, lcall id, arrival).
     A fight's exit timer (LAVA_LEAVE_COMBAT) refusing a press, the next
-    comes after it."""
+    comes after it -- and before it, with a gun given, every one of foes
+    (entity ids) still up is shot: a creature that followed the player to
+    the door is beside him now, in sight, and its blows hold the timer
+    however long he waits."""
     loc = world.location(loc_id)
     cells = {cell for cell, s in travel.exit_sides(loc).items()
              if s == side and cell not in loc.obstacles}
     walk_to(c, loc, pos, cells)
     got = []
-    for _ in range(5):
+    foes = list(foes)
+    for _ in range(8):
         c.send("chWorld;to=1;")
         got = c.until(lambda f: f[0] == "lcall" or (f[0] == "cmdAck" and f[1].get("res")), 4)
         if named(got, "lcall") or acks(got)[:1] == [0]:
             break
+        for eid in list(foes) if gun else ():
+            if shoot(c, gun, eid, 4) is not None:
+                foes.remove(eid)
         time.sleep(2.5)
     lid, arrival = moved(c, got)
     return acks(got)[-1:], lid, arrival
@@ -895,9 +903,10 @@ def boss_bag(c, gun, where, boss):
 
 def clear_room(c, gun, arrival, types, tries=10):
     """Shoot every creature of the given types an arrival showed: the ones
-    that fell."""
+    still up (a wall between takes every shot: the first tier's two miners
+    stand behind one, out of sight of the door the player comes in by)."""
     ents = [p["id"] for p in named(arrival, "userInfo") if p["name"] in types]
-    return [i for i in ents if shoot(c, gun, i, tries) is not None]
+    return [i for i in ents if shoot(c, gun, i, tries) is None]
 
 
 def ounces(bag):
@@ -1305,14 +1314,18 @@ try:
     ack, lid, tier1 = through(c, DARK_MOUTH, "b", first(arrival, "lenter").get("pos"))
     check("  ..its door b down to the first tier (615), the pirates' miners there",
           (ack, lid, MINER in inhabitants(tier1, lid)), ([0], DARK_1, True))
-    clear_room(c, GUN, tier1, {MINER}, tries=20)
+    # The miners a wall hides from the door are shot when they follow the
+    # player to the next one (through: foes): alive, their blows hold the
+    # exit timer (39) for as long as they live.
+    up = clear_room(c, GUN, tier1, {MINER}, tries=5)
     check("  ..where the map is out of reach", map_refused(c), (True, False))
-    ack, lid, tier2 = through(c, DARK_1, "b", first(tier1, "lenter").get("pos"))
+    ack, lid, tier2 = through(c, DARK_1, "b", first(tier1, "lenter").get("pos"), up, GUN)
     check("  ..the tier's door b down to the second (1014)", (ack, lid), ([0], DARK_2))
-    clear_room(c, GUN, tier2, {MINER}, tries=20)
-    ack, lid, back = through(c, DARK_2, "a", first(tier2, "lenter").get("pos"))
+    up = clear_room(c, GUN, tier2, {MINER}, tries=5)
+    ack, lid, back = through(c, DARK_2, "a", first(tier2, "lenter").get("pos"), up, GUN)
     check("  ..its door a back up to the first", (ack, lid), ([0], DARK_1))
-    ack, lid, mouth = through(c, DARK_1, "a", first(back, "lenter").get("pos"))
+    up = [p["id"] for p in named(back, "userInfo") if p["name"] == MINER]
+    ack, lid, mouth = through(c, DARK_1, "a", first(back, "lenter").get("pos"), up, GUN)
     got = to_map(c)
     check("  ..and the first's door a up to the mouth, onto its own cell: the map from there opens"
           " on 6218,1968", (ack, lid, [(p.get("x"), p.get("y")) for p in named(got, "gmap")]),
