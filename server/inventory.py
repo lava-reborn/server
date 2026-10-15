@@ -166,10 +166,14 @@ SELL_GOLD_ONLY = False
 # 2800 afro, and came back with nine tenths of its ceiling (REPAIR_KEEPS):
 # never cheaper than a new one, so nobody had a reason to mend anything.
 # Neither rmod nor any type's repair_mod survives from the original; this
-# one figure, sent with every trader, sets the price for every thing:
-# three tenths of the price for a gun mended from broken, 840 afro for the
-# P99. LAVA_REPAIR_MOD moves it.
-RMOD = float(os.environ.get("LAVA_REPAIR_MOD", "0.3"))
+# one figure, sent with every trader, sets the price for every thing, and
+# every type's repair_mod is 1. The owner's rule (2026-10-15): a repair never
+# costs more than a tenth of the thing's price. At three tenths a Бизон
+# ПП-19 (G), 19.21 G, at a sixth of its durability asked 239 164 afro or
+# 4.78 G to mend; at a tenth it is 79 721 afro or 1.59 G, a thing mended
+# from broken pays exactly a tenth (280 afro for a P99 of 2800), and less
+# the less it is worn. LAVA_REPAIR_MOD moves it.
+RMOD = float(os.environ.get("LAVA_REPAIR_MOD", "0.1"))
 # What a repair leaves of the ceiling (max_break_cur), whichever currency
 # pays for it. The original says so in its own words, the hint of «Мертвые
 # беззащитны» (texts.xml 59813; quest 23 here, Ибрахим's in the valley,

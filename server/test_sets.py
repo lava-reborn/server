@@ -913,7 +913,7 @@ check("pieces counts per set", sets.pieces(nal8[:3] + kol2[:2] + [4380]),
 # counts only whole pieces. It is mended in either currency, priced from its
 # gold price changed at the repair rate (inventory.repair_base_price, the
 # owner's rule of 2026-10-05, PR #41; the patched window prints the same):
-# the 3 G vest broken is 3 * 50 000 * rmod 0.3 = 45 000 afro or 0.90 G. It
+# the 3 G vest broken is 3 * 50 000 * rmod 0.1 = 15 000 afro or 0.30 G. It
 # comes back to nine tenths of the ceiling it had (inventory.REPAIR_KEEPS),
 # and is restored as new for its gold price.
 print()
@@ -932,7 +932,7 @@ class Mender:
 
     def __init__(self):
         self.char = progression.Character.load(rstore, rcid)
-        self.char.afro, self.char.gold = 44999, 1000
+        self.char.afro, self.char.gold = 14999, 1000
         self.frames = []
 
     def character(self):
@@ -967,23 +967,23 @@ def mend(code):
 
 top = vsi["max_break_abs"]
 once, twice = top * 9 // 10, top * 9 // 10 * 9 // 10
-check("a G piece broken, one afro short of its 45 000: refused 21, nothing moves",
-      mend(inventory.UPD_REPAIR), ([inventory.RES_NO_MONEY], 0, top, 44999, 1000))
-mender.char.afro = 50000
-check("  ..with 50 000 afro: mended for 45 000, three tenths of 3 G at the rate, to nine"
+check("a G piece broken, one afro short of its 15 000: refused 21, nothing moves",
+      mend(inventory.UPD_REPAIR), ([inventory.RES_NO_MONEY], 0, top, 14999, 1000))
+mender.char.afro = 20000
+check("  ..with 20 000 afro: mended for 15 000, a tenth of 3 G at the rate, to nine"
       " tenths of its ceiling",
       mend(inventory.UPD_REPAIR), ([0], once, once, 5000, 1000))
 rstore.update_item(row["uniq"], brk=0)
-check("  ..broken again, for gold: 0.90 G, a tenth off the ceiling it had",
-      mend(inventory.UPD_REPAIR_GOLD), ([0], twice, twice, 5000, 910))
+check("  ..broken again, for gold: 0.30 G, a tenth off the ceiling it had",
+      mend(inventory.UPD_REPAIR_GOLD), ([0], twice, twice, 5000, 970))
 check("  ..restored for its gold price, as new",
-      mend(inventory.UPD_RESTORE), ([0], top, top, 5000, 910 - vsi["g_cost"]))
+      mend(inventory.UPD_RESTORE), ([0], top, top, 5000, 970 - vsi["g_cost"]))
 # The window offers "Восстановить" for anything with a g_cost, so this is a
 # press a player can make: a 3 would put up "Сервер не отвечает"
 # (ErrorReport); a press with nothing to do is answered 0 and charged
 # nothing (Inventory.repair).
 check("  ..and as new, a restore has nothing to buy back: 0, nothing paid",
-      mend(inventory.UPD_RESTORE), ([0], top, top, 5000, 910 - vsi["g_cost"]))
+      mend(inventory.UPD_RESTORE), ([0], top, top, 5000, 970 - vsi["g_cost"]))
 rstore.close()
 
 # --- a table that is wrong stops the server ------------------------------------
