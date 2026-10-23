@@ -1,6 +1,9 @@
 """Weapon eligibility, reset during aiming, and Halfa's existing knife ladder.
 
 Only an in-memory database; no game server or production data.
+Reset frames follow PersEquip.ss_obj_status; cancelled bursts close the
+Location.faShot sequence before authoritative Fighter.c_ap (see
+recon/analysis/combat.md). Client rendering is not exercised here.
 """
 import os
 import sys
@@ -11,14 +14,14 @@ from types import SimpleNamespace
 os.environ.pop("LAVA_DB_URL", None)
 os.environ["LAVA_DB"] = ":memory:"
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import accounts
-import combat
-import craft
-import inventory
-import items
-import progression
-import quests
-from testkit import check, fails
+import accounts  # noqa: E402
+import combat  # noqa: E402
+import craft  # noqa: E402
+import inventory  # noqa: E402
+import items  # noqa: E402
+import progression  # noqa: E402
+import quests  # noqa: E402
+from testkit import check, fails  # noqa: E402
 
 ch = progression.Character()
 ch.skill[progression.SHOOTING][0] = 20
@@ -81,7 +84,15 @@ sess.push_money = lambda: None
 ns["training_upd"](sess, dict(s_status=progression.UPD_FORGET, obj="1"))
 check("trainer resets blade specialisation", ch.spec_level(1), -1)
 check("weapon still exists in the bag", store.item(r["uniq"])["slot"], inventory.BAG)
-check("live client receives removal", any(cmd == "ss_obj_move" and p["to"] == inventory.BAG for cmd, p in frames), True)
+check("live client rebuilds the same item in its current slot",
+      [(p["obj"], p["status"]) for cmd, p in frames if cmd == "ss_obj_status"][-2:],
+      [(inventory.oid_of(r), 0), (inventory.oid_of(r), 1)])
+check("reset preserves exactly one item", len([x for x in inv.rows() if x["uniq"] == r["uniq"]]), 1)
+frames.clear()
+inv.ss_move(dict(obj=inventory.oid_of(store.item(r["uniq"])),
+                 **{"from": inventory.BAG, "to": inventory.PRIMARY}))
+check("subsequent equip is rejected by requirements rather than a stale slot",
+      [p["res"] for cmd, p in frames if cmd == "cmdAck"], [inventory.RES_LEVEL])
 
 # Already queued attacks cannot bypass a reset. Any damage/payment call would
 # fail this small stand-in, which deliberately exposes neither operation.
@@ -96,12 +107,23 @@ for t, callback in ((6241, "strike"), (25566, "fire")):
         room=SimpleNamespace(broadcast=events.append)), dead=False, ap=60,
         aim=None, strike=None, eid=99, store=SimpleNamespace(item=lambda _: bad),
         preparing=lambda: False, ack=lambda code: events.append(code))
+    session.send = lambda cmd, **p: events.append((cmd, p))
+    fighter.c_ap = lambda: combat.Fighter.c_ap(fighter)
     combat.Fighter.use_fire(fighter, dict(obj="1", target="invalid"))
     check("use gate precedes targeting: " + callback, events[0], inventory.RES_LEVEL)
     events.clear()
     if callback == "fire":
-        combat.Fighter.fire_now(fighter, 1, None, 0, SimpleNamespace(num_shots=3), 8)
-        check("cancelled burst closes all announced pairs", len(events), 6)
+        for reason, changed in (("requirements", bad), ("missing", None),
+                                ("owner", dict(bad, char_id=8)),
+                                ("slot", dict(bad, slot=inventory.BAG)),
+                                ("broken", dict(bad, brk=0))):
+            events.clear()
+            fighter.store.item = lambda _, current=changed: current
+            combat.Fighter.fire_now(fighter, 1, None, 0, SimpleNamespace(num_shots=3), 8)
+            check("cancelled burst closes all pairs: " + reason,
+                  [p["status"] for cmd, p in events if cmd == "faShot"], [1, 0]*3)
+            check("cancelled burst restores AP after animation: " + reason,
+                  events[-1], ("c_ap", dict(ap=60)))
     else:
         combat.Fighter.strike_now(fighter, None, 0, (10, 20), 1, 8, 1)
         check("cancelled strike closes animation", events[0][0], "caMiss")

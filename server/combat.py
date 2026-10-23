@@ -1535,6 +1535,10 @@ class Fighter:
             for _ in range(weapon.num_shots):
                 rc.room.broadcast(("faShot", dict(id=self.eid, status=1)))
                 rc.room.broadcast(("faShot", dict(id=self.eid, status=0)))
+            # faShot animates a shot and predicts AP use on the client.
+            # Restore the authoritative balance after the last pair; an
+            # invalidated attack still consumes no server-side resources.
+            self.c_ap()
             return
         if rounds is None:
             rounds = weapon.num_shots
@@ -1610,11 +1614,6 @@ class Fighter:
         sess = self.sess
         rc = self.rc
         ch = self.character()
-        why = inventory.weapon_requirement_error(row, ch) if row is not None else None
-        if why:
-            self.ack(inventory.RES_LEVEL)
-            sess.answer(why)
-            return
         strength = ch.attr(progression.STRENGTH)
         if row is None:
             cost, delay, spec = FIST_AP, 0.0, SPEC_FIST

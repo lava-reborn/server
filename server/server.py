@@ -886,11 +886,8 @@ class Session:
         self.inv.refresh_gear(push=False)
         while self.inv.over_level_to_bag():
             self.inv.refresh_gear(push=False)
-        # The gear's bonuses are not saved with the character: they follow
-        # from what it has on, counted here once and after every change.
-        # Nothing is pushed -- the client asks for rp_info and the bars
-        # itself once it stands somewhere.
-        self.inv.refresh_gear(push=False)
+        # The initial refresh and each removal above leave gear current.
+        # Nothing is pushed until the client asks for its character data.
         self.training = None
         # Whether this one is lying dead is the characters row's business,
         # not the Character's (accounts.CHARACTER_COLUMNS): combat.py wrote

@@ -1245,8 +1245,10 @@ class Inventory:
         for r in moved:
             self.store.update_item(r["uniq"], slot=BAG)
             if notify:
-                self.send("ss_obj_move", id=0, obj=BigUInt(oid_of(r)), to=BAG,
-                          **{"from": r["slot"]})
+                # ss_obj_move only updates other players in the client.
+                # Rebuild our own item from its now-current database slot.
+                self.push_status(r, 0)
+                self.push_status(r, 1)
         # Live reset: do not claim that the client has redrawn the transfer.
         # Login notes describe the inventory the client is about to load.
         if not notify:

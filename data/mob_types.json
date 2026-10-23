@@ -7802,17 +7802,17 @@
    "weapon_class": "assault_rifle"
   },
   "406": {
-    "body": "man",
-    "hex_ms": 200,
-    "level": 16,
-    "level_source": "name",
-    "name": "pc_shturmovik_lvl16",
-    "resource": "a4",
-    "role": "mob",
-    "root": 0,
-    "spawn_locations": 3,
-    "weapon_class": "assault_rifle",
-    "loot_ammo_type": 6110
+   "body": "man",
+   "hex_ms": 200,
+   "level": 16,
+   "level_source": "name",
+   "loot_ammo_type": 6110,
+   "name": "pc_shturmovik_lvl16",
+   "resource": "a4",
+   "role": "mob",
+   "root": 0,
+   "spawn_locations": 3,
+   "weapon_class": "assault_rifle"
   },
   "407": {
    "body": "man",
@@ -19887,42 +19887,42 @@
    "weapon_class": "fist"
   },
   "840": {
-    "body": "man",
-    "hex_ms": 200,
-    "level": 16,
-    "level_source": "name",
-    "name": "pc_miner_lvl16",
-    "resource": "a4",
-    "role": "mob",
-    "root": 0,
-    "spawn_locations": 8,
-    "weapon_class": "assault_rifle",
-    "weapon_type_id": 25265,
-    "ap_max": 110,
-    "loot_ammo_type": 6121,
-    "loot_ammo_count": [
-      2,
-      6
-    ]
+   "ap_max": 110,
+   "body": "man",
+   "hex_ms": 200,
+   "level": 16,
+   "level_source": "name",
+   "loot_ammo_count": [
+    2,
+    6
+   ],
+   "loot_ammo_type": 6121,
+   "name": "pc_miner_lvl16",
+   "resource": "a4",
+   "role": "mob",
+   "root": 0,
+   "spawn_locations": 8,
+   "weapon_class": "assault_rifle",
+   "weapon_type_id": 25265
   },
   "841": {
-    "body": "man",
-    "hex_ms": 200,
-    "level": 17,
-    "level_source": "name",
-    "name": "pc_miner_lvl17",
-    "resource": "a4",
-    "role": "mob",
-    "root": 0,
-    "spawn_locations": 2,
-    "weapon_class": "assault_rifle",
-    "weapon_type_id": 25303,
-    "ap_max": 115,
-    "loot_ammo_type": 6124,
-    "loot_ammo_count": [
-      2,
-      6
-    ]
+   "ap_max": 115,
+   "body": "man",
+   "hex_ms": 200,
+   "level": 17,
+   "level_source": "name",
+   "loot_ammo_count": [
+    2,
+    6
+   ],
+   "loot_ammo_type": 6124,
+   "name": "pc_miner_lvl17",
+   "resource": "a4",
+   "role": "mob",
+   "root": 0,
+   "spawn_locations": 2,
+   "weapon_class": "assault_rifle",
+   "weapon_type_id": 25303
   },
   "842": {
    "body": "man",
