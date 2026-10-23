@@ -19,7 +19,11 @@ and a new key takes the next type of its family's blocks, FAMILIES).
 The families, each a repeatable service (quests.py: service -- neither
 counted nor refused by the daily limit, no place in the server's journal),
 open to the city's band (level = its low end, max_level = its high end: the
-plan's «видны только в своём поясе»):
+plan's «видны только в своём поясе»). Weapon blueprint application and decoding
+(upgrade, knife and decode) remains open through player level 20 in halfa,
+abri, dongola and abu_hamed. Player thresholds are 0, 6, 9 and 17
+respectively; recipe bands remain unchanged. The band
+still selects recipes and drops, independently of player eligibility:
 
   upgrade   «<gun> [(G)]: <effect>» -- bring the gun and the blueprint, get
             the gun's modification. The newest edition's pairs of name and
@@ -65,7 +69,9 @@ plan's «видны только в своём поясе»):
             encrypted blueprint drops in the camps of its level, from
             anybody there, for a player with the row open
             (DESIGNED chance CODIFIED_DROP, one a corpse at most); nothing
-            else gives it, so a level no camp of the city holds has no row.
+            else gave it originally. Scheduled camp bosses now also drop their
+            fixed level independently of quests (bosses.BLUEPRINTS); this
+            supplies Dongola's additional decoding services for levels 9-11.
 
 Beside the rows, "items": names for what the original names only in words
 -- the gunsmith's parts (7924-8139, the quality and the part: «Кустарный
@@ -232,7 +238,7 @@ CITIES = [
          # Гобино «Оружейный механик С Веселого Праздника» (7548, oasis 62).
          q_masters=[5771, 7548],
          camps=[((0, 2), (80, 82)), ((3, 4), (81, 83)), ((5, 6), (84, 86)), ((7, 8), (85, 87))],
-         whetstones={2279: (6, 8)},
+         whetstones={2279: (2, 4, 6, 8)},
          # «Горные тропы: Мастера» (599): the gunsmiths «Оружейник<Br>
          # Винтовки / Дробовики / Пистолеты / Пистолет-пулеметы».
          gunsmiths={"rifle": 238, "shotgun": 239, "pistol": 242, "smg": 243},
@@ -484,6 +490,14 @@ def in_band(city, level):
 def service(city, row):
     """The keys every craft row has."""
     lo, hi = city["band"]
+    # Recipe selection still uses the city's weapon band. Players keep
+    # access to blueprint upgrades and decoding through level 20. Abri
+    # opens at player level 6; other services keep their original limits.
+    if city["name"] in ("halfa", "abri", "dongola", "abu_hamed") \
+            and row["craft"]["family"] in ("upgrade", "knife", "decode"):
+        if city["name"] == "abri":
+            lo = 6
+        hi = 20
     row.update(repeatable=1, service=True, level=lo, max_level=hi)
     return row
 
@@ -867,7 +881,14 @@ def decode_rows(city, texts, upgrades):
         if r["craft"]["effect"] in STEMS:
             used[r["craft"]["level"]].add(r["craft"]["blueprint"])
     for i in range(47998, 48038, 2):
-        m = re.match(r"^Чертежи (\d+)-го уровня$", texts[i])
+        level_hint = (i - 47998) // 2 + 1
+        if city["name"] == "dongola" and level_hint in (9, 10, 11):
+            # New services use the known level-8 wording as a template.
+            title = texts[48012].replace("8-го", "%d-го" % level_hint)
+            start_text = texts[48013].replace("8-го", "%d-го" % level_hint)
+        else:
+            title, start_text = texts[i], texts[i + 1]
+        m = re.match(r"^Чертежи (\d+)-го уровня$", title)
         if not m:
             continue
         level = int(m.group(1))
@@ -882,24 +903,24 @@ def decode_rows(city, texts, upgrades):
             report["decode"].append("%d %s: nothing to draw" % (i, texts[i]))
             continue
         dropping = camp_mobs(city, level, chiefs_only=False)
-        if not dropping:
-            # Nothing else gives the encrypted blueprint (no loot table,
-            # no stall): a row for it could never be done. Донгола's
-            # 9-11, whose levels no camp of the town holds.
+        if not dropping and codified not in bosses.BLUEPRINTS.values():
+            # A recipe must have an acquisition source: its camps or the
+            # explicit scheduled-boss table (including Abri's levels 9-11).
             report["decode"].append("%d %s: no camp of %s drops it"
                                     % (i, texts[i], city["name"]))
             continue
-        slot = {"obj": codified, "num": 1,
-                "mobs": dropping, "drop": CODIFIED_DROP, "one_of": ONE_OF_CODIFIED}
+        slot = {"obj": codified, "num": 1}
+        if dropping:
+            slot.update(mobs=dropping, drop=CODIFIED_DROP, one_of=ONE_OF_CODIFIED)
         # What the draw is worth: the prizes' mean afro price (drawn alike,
         # w 1 each, below). Rounded up, so the sale never nets past a tenth.
         worth = sum(items.params_of(t)["cost"] for t in prizes) / float(len(prizes))
         fee = int(math.ceil(round(worth * DECODE_FEE, 6)))
         out.append(service(city, dict(
-            kind="bring_l_obj", name=clean(texts[i]),
+            kind="bring_l_obj", name=clean(title),
             # The fee said the way the original says its own («Внимание: с
             # вашего счёта будет списано ...», 25399): DESIGNED words.
-            start=clean(texts[i + 1]) + "<Br><Br><b>Внимание:</b> с вашего счёта будет "
+            start=clean(start_text) + "<Br><Br><b>Внимание:</b> с вашего счёта будет "
                                         "списано %d афро." % fee,
             notfinish=clean(texts[DECODE_NOTFINISH]), finish=clean(texts[DECODE_FINISH]),
             give=[city["decoder"]], take=[city["decoder"]],
@@ -913,6 +934,12 @@ def decode_rows(city, texts, upgrades):
                 "prizes' mean price and its line in the start, the drop off the camps of the "
                 "level."
                 % (i, i + 1, DECODE_NOTFINISH, DECODE_FINISH, int(DECODE_FEE * 100)))))
+        if city["name"] == "dongola" and level in (9, 10, 11):
+            out[-1]["why"] = (
+                "DESIGNED: decoding levels 9-11 at Dongola Tech Geek 651, for player "
+                "levels 9-20; encrypted blueprints come from the explicit camp-boss "
+                "table independently of quests. Text adapted from the known level-8 "
+                "template (48012-48013), with the existing fee and prize rules.")
     return out
 
 

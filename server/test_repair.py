@@ -435,11 +435,11 @@ check("  ..ЭК(G) 9мм: the pack of 20 was 2 G, now 0.20 G; the tooltip's 0.01
 check("  ..bought at a hundredth a round, 5000 for 50 G",
       [inventory.buy_price(rounds[t], items.AMMO, n, True) for t in (6152, 6179, OT)
        for n in (1, 7, 20, 5000)], [1, 7, 20, 5000] * 3)
-check("the premium КС keep their 2 G a pack, out of the game; the 9мм даренные their 0.20 G"
+check("the premium КС keep their 2 G a pack, out of the game; the 9мм даренные zero G"
       " and 20 afro; the stun bolts, the snowballs and «Бьют прямо в сердце» both prices",
       ([(rounds[t]["cost"], rounds[t]["g_cost"], rounds[t]["premium"]) for t in (6128, 6188)],
        [(rounds[t]["cost"], rounds[t]["g_cost"]) for t in (4780, 3819, 6201)]),
-      ([(0, 200, 1), (20, 20, 0)], [(20, 20), (2000, 2000), (20000, 300)]))
+      ([(0, 200, 1), (20, 0, 0)], [(20, 20), (2000, 2000), (20000, 300)]))
 check("«Пистолеты и патроны» sells gold rounds at a hundredth a round",
       [(t, inventory.buy_price(rounds[t], items.AMMO, 1, True))
        for t in items.stock_for(PISTOLS) if t in rounds and items.gold_round(rounds[t])],

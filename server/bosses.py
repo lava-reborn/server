@@ -248,6 +248,59 @@ def keeps_hours(type_id):
             and world.creature_role(type_id) == "boss")
 
 
+# One encrypted blueprint per successful boss roll, independent of quests.
+# Keys deliberately include the location: copies and the outpost's Sherhan
+# (168, 8620) do not inherit a camp leader's drop.
+BLUEPRINT_OVERLEVEL_DROP = 0.02
+BLUEPRINTS = {
+    (82, 269): 2408, (80, 270): 1131,       # colonists: 1, 2
+    (83, 284): 2409, (81, 283): 1132,       # sectarians: 3, 4
+    (86, 300): 2410, (84, 299): 1133,       # Janjaweed: 5, 6
+    (87, 314): 2411, (85, 313): 1134,       # Magrib: 7, 8
+    (89, 328): 2412, (88, 327): 1135,       # slave traders: 9, 10
+    (90, 361): 2413, (92, 360): 1136,       # flayers: 11, 12
+    (91, 375): 2414, (93, 374): 1137,       # DSR: 13, 14
+    (99, 408): 2415, (98, 407): 1138,       # Peacekeepers: 15, 16
+    (133, 778): 2416, (132, 777): 1270,     # pirates: 17, 18
+    (274, 1038): 2417, (263, 1037): 2418,   # Alliance base: 19, 20
+}
+
+
+def blueprint_for(loc_id, type_id):
+    """The fixed encrypted blueprint of this scheduled camp boss, or None.
+
+    Like gold, the new drop is disabled when the hours rule is off: the
+    ordinary respawn timer must not turn it into an unlimited farm.
+    """
+    if not keeps_hours(type_id):
+        return None
+    return BLUEPRINTS.get((loc_id, type_id))
+
+
+def blueprint_base_percent(blueprint_level):
+    """Base chance by blueprint tier, before the finisher's overlevel penalty."""
+    if blueprint_level >= 16:
+        return 2
+    if blueprint_level >= 12:
+        return 5
+    if blueprint_level >= 10:
+        return 10
+    return 21 - max(1, blueprint_level)
+
+
+def blueprint_drop_chance(player_level, blueprint_level):
+    """Tier chance times 100/80/60/40% for excess 0/1/2/3, with a 2% floor.
+
+    A finisher four or more levels above the blueprint always gets 2%.
+    Boss combat level and active quests do not affect this roll.
+    """
+    excess = max(0, player_level - blueprint_level)
+    if excess >= 4:
+        return BLUEPRINT_OVERLEVEL_DROP
+    return max(BLUEPRINT_OVERLEVEL_DROP,
+               blueprint_base_percent(blueprint_level) * (5 - excess) / 500.0)
+
+
 def hours_of(type_id):
     """The hours a boss of this type keeps: a warehouse master's own
     WAREHOUSE_HOURS, unless they are off, and HOURS for every other boss."""

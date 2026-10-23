@@ -71,7 +71,7 @@ MASTERS = {338: ("pistol", "A"), 377: ("pistol", "G"), 339: ("shotgun", "A"),
 Q_MASTERS = [5771, 7548]
 RAKIN = 7311
 GUNSMITHS = {"rifle": 238, "shotgun": 239, "pistol": 242, "smg": 243}
-WHETSTONES = {5192: (2, 4), 2279: (6, 8), 2280: (10, 12)}
+WHETSTONES = {5192: (2, 4), 2279: (2, 4, 6, 8), 2280: (10, 12)}
 ABRI_WHETSTONE, ABRI_KNIVES, ABRI_PORT = 2280, 1164, 187     # Абри's (2026-10-12)
 DECODER = 652
 # The blueprints' stalls. The premium masters 702, 704 and 705, whose stalls
@@ -130,18 +130,18 @@ def stood(loc_id):
 
 # --- in process: the table ----------------------------------------------------------------
 try:
-    check("every craft row is a repeatable service of Вади-Хальфа's band (or the valley's"
-          " 0-4 at its whetstone, Абри's 8-12 at its own, Донгола's 9-16 since 2026-10-13,"
+    check("blueprint upgrades and decoding stay open through level 20; other craft services keep Вади-Хальфа's band (or the valley's"
+          " 0-4 at its whetstone, Абри's 6-20 at its own, Донгола's 9-16 since 2026-10-13,"
           " Абу-Хамед's 17-20 since 2026-10-14) in 10000-10999, of the loaded table",
           sorted({(r["repeatable"], r["service"], r["level"], r["max_level"],
                    10000 <= r["type"] <= 10999, quests.get(r["type"]) is not None)
                   for r in ROWS}),
-          [(1, True, 0, 4, True, True), (1, True, 0, 8, True, True),
-           (1, True, 8, 12, True, True), (1, True, 9, 16, True, True),
+          [(1, True, 0, 4, True, True), (1, True, 0, 8, True, True), (1, True, 0, 20, True, True),
+           (1, True, 6, 20, True, True), (1, True, 9, 16, True, True), (1, True, 9, 20, True, True),
            (1, True, 17, 20, True, True)])
-    check("  ..Абри's rows its whetstone's alone (2026-10-12: no upgrader of Абри's in the"
-          " client)", sorted({(r["craft"]["family"], tuple(r["give"])) for r in ROWS
-                              if (r["level"], r["max_level"]) == (8, 12)}),
+    check("  ..Abri keeps its existing whetstone recipes, now for player levels 6-20",
+          sorted({(r["craft"]["family"], tuple(r["give"])) for r in ROWS
+                  if city_of(r) == "abri"}),
           [("knife", (ABRI_WHETSTONE,))])
     check("  ..the families", {f: len(family(f)) for f in
                                ("upgrade", "knife", "salvage", "assembly", "decode")},

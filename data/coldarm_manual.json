@@ -374,7 +374,7 @@
   "6277": {
    "_name": "Мачете (G)$Острый",
    "_source": "wiki article «Мачете Mod III» (the quest «Заточка Мачете», «Точильный камень Абу-Хамеда» 2282): Урон по здоровью 158-337, Очки действия 15, Максимальная дистанция 1.7, Износ 7000, Вес 700 г, Необходимые навыки Ближний бой 20, Допустимость обмена и продажи Нет, Базовая цена 15 G. data/items_wiki.json has no record: the article draws Мачете (G)'s icon, Knife lvl20 G.png, and the linker left it to that knife (wiki_links.json, confidence 0.47); its sharpened twins of Кукри (18у) have theirs",
-   "_designed": "nothing: every number is its article's",
+   "_designed": "nothing: every number is its article's Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
    "h_damage_min": 158,
    "h_damage_max": 337,
    "st_damage_min": 0,
@@ -388,12 +388,16 @@
     20
    ],
    "need_skills_m": 1,
-   "g_cost": 1500
+   "g_cost": 1500,
+   "need_specs_m": 2,
+   "need_specs": [
+    4
+   ]
   },
   "6278": {
    "_name": "Мачете (G)$Эргономичный",
    "_source": "wiki article «Мачете Mod II» (the quest «Эргономика Мачете», «Точильный камень Абу-Хамеда» 2282): Урон по здоровью 149-312, Очки действия 11, Максимальная дистанция 1.7, Износ 7000, Вес 700 г, Необходимые навыки Ближний бой 20, Допустимость обмена и продажи Нет, Базовая цена 15 G. data/items_wiki.json has no record: the article draws Мачете (G)'s icon, Knife lvl20 G.png, and the linker left it to that knife (wiki_links.json, confidence 0.47); its sharpened twins of Кукри (18у) have theirs",
-   "_designed": "nothing: every number is its article's",
+   "_designed": "nothing: every number is its article's Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
    "h_damage_min": 149,
    "h_damage_max": 312,
    "st_damage_min": 0,
@@ -407,12 +411,16 @@
     20
    ],
    "need_skills_m": 1,
-   "g_cost": 1500
+   "g_cost": 1500,
+   "need_specs_m": 2,
+   "need_specs": [
+    4
+   ]
   },
   "6279": {
    "_name": "Мачете (G)$Острый и Эргономичный",
    "_source": "wiki article «Мачете Mod I» (the quest «Заточка и Эргономика Мачете», «Точильный камень Абу-Хамеда» 2282): Урон по здоровью 158-337, Очки действия 11, Максимальная дистанция 1.7, Износ 7000, Вес 700 г, Необходимые навыки Ближний бой 20, Допустимость обмена и продажи Нет, Базовая цена 20 G. data/items_wiki.json has no record: the article draws Мачете (G)'s icon, Knife lvl20 G.png, and the linker left it to that knife (wiki_links.json, confidence 0.47); its sharpened twins of Кукри (18у) have theirs",
-   "_designed": "nothing: every number is its article's",
+   "_designed": "nothing: every number is its article's Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
    "h_damage_min": 158,
    "h_damage_max": 337,
    "st_damage_min": 0,
@@ -426,7 +434,243 @@
     20
    ],
    "need_skills_m": 1,
-   "g_cost": 2000
+   "g_cost": 2000,
+   "need_specs_m": 2,
+   "need_specs": [
+    4
+   ]
+  },
+  "6241": {
+   "_name": "Тесак (G)",
+   "_designed": "Owner 2026-10-23: require blade specialisation level 1, like the afro Tesak. Modified versions inherit the base requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    1
+   ]
+  },
+  "6242": {
+   "_name": "Тесак (G)",
+   "_designed": "Owner 2026-10-23: sharpened Tesak G keeps the same blade specialisation level 1 requirement as its base.",
+   "need_specs_m": 2,
+   "need_specs": [
+    1
+   ]
+  },
+  "6243": {
+   "_name": "Тесак (G)",
+   "_designed": "Owner 2026-10-23: sharpened Tesak G keeps the same blade specialisation level 1 requirement as its base.",
+   "need_specs_m": 2,
+   "need_specs": [
+    1
+   ]
+  },
+  "6244": {
+   "_name": "Тесак (G)",
+   "_designed": "Owner 2026-10-23: sharpened Tesak G keeps the same blade specialisation level 1 requirement as its base.",
+   "need_specs_m": 2,
+   "need_specs": [
+    1
+   ]
+  },
+  "6246": {
+   "_name": "knife_lvl8_G",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    1
+   ]
+  },
+  "6247": {
+   "_name": "knife_lvl8_G_damage",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    1
+   ]
+  },
+  "6248": {
+   "_name": "knife_lvl8_G_actionpoint",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    1
+   ]
+  },
+  "6249": {
+   "_name": "knife_lvl8_G_damage_actionpoints",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    1
+   ]
+  },
+  "6251": {
+   "_name": "knife_lvl10_G",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    2
+   ]
+  },
+  "6252": {
+   "_name": "knife_lvl10_G_damage",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    2
+   ]
+  },
+  "6253": {
+   "_name": "knife_lvl10_G_actionpoint",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    2
+   ]
+  },
+  "6254": {
+   "_name": "knife_lvl10_G_damage_actionpoints",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    2
+   ]
+  },
+  "6256": {
+   "_name": "knife_lvl12_G",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    2
+   ]
+  },
+  "6257": {
+   "_name": "knife_lvl12_G_damage",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    2
+   ]
+  },
+  "6258": {
+   "_name": "knife_lvl12_G_actionpoint",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    2
+   ]
+  },
+  "6259": {
+   "_name": "knife_lvl12_G_damage_actionpoints",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    2
+   ]
+  },
+  "6261": {
+   "_name": "knife_lvl14_G",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    3
+   ]
+  },
+  "6262": {
+   "_name": "knife_lvl14_G_damage",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    3
+   ]
+  },
+  "6263": {
+   "_name": "knife_lvl14_G_actionpoint",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    3
+   ]
+  },
+  "6264": {
+   "_name": "knife_lvl14_G_damage_actionpoints",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    3
+   ]
+  },
+  "6266": {
+   "_name": "knife_lvl16_G",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    3
+   ]
+  },
+  "6267": {
+   "_name": "knife_lvl16_G_damage",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    3
+   ]
+  },
+  "6268": {
+   "_name": "knife_lvl16_G_actionpoint",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    3
+   ]
+  },
+  "6269": {
+   "_name": "knife_lvl16_G_damage_actionpoints",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    3
+   ]
+  },
+  "6271": {
+   "_name": "knife_lvl18_G",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    4
+   ]
+  },
+  "6272": {
+   "_name": "knife_lvl18_G_damage",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    4
+   ]
+  },
+  "6273": {
+   "_name": "knife_lvl18_G_actionpoint",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    4
+   ]
+  },
+  "6274": {
+   "_name": "knife_lvl18_G_damage_actionpoints",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    4
+   ]
+  },
+  "6276": {
+   "_name": "knife_lvl20_G",
+   "_designed": "Owner 2026-10-23: blade specialisation requirement matches the existing afro knife of the same level; sharpened variants keep the same requirement.",
+   "need_specs_m": 2,
+   "need_specs": [
+    4
+   ]
   }
  }
 }

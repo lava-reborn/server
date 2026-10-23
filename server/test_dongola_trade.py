@@ -403,7 +403,7 @@ check("Донгола's rows: repeatable services of the band 9-16 (the owner's 
       (sorted({(r["repeatable"], r["service"], r["level"], r["max_level"]) for r in DN_ROWS}),
        sorted({r["craft"]["family"] for r in DN_ROWS}),
        [r["type"] for r in DN_ROWS if quests.get(r["type"]) is None]),
-      ([(1, True, 9, 16)], ["assembly", "decode", "knife", "salvage", "upgrade"], []))
+      ([(1, True, 9, 16), (1, True, 9, 20)], ["assembly", "decode", "knife", "salvage", "upgrade"], []))
 check("the masters stand in the masters' camps the labels name: assault rifles and machine guns"
       " in 96, rifles and sub-machine guns in 97",
       ({t: t in standing(96) for t in (335, 382, 345, 385)},
@@ -442,7 +442,7 @@ for r in ups:
         for m in o.get("mobs", []):
             if not any(lo <= r["craft"]["level"] <= hi for lo, hi in camp_bosses.get(m, ())):
                 stray.append((r["type"], m))
-check("the stat blueprints of 12-16 drop off the chiefs of the camps of their level (Лагерь"
+check("the stat blueprints of 9-16 drop off the chiefs of the camps of their level (Лагерь"
       " ДСР 93/91 12-14, Лагерь Миротворцев 98/99 15-16), those of 10-11 off nobody: bought",
       (stray, sorted({r["craft"]["level"] for r in ups if r["objs"][1].get("mobs")}),
        sorted({r["craft"]["level"] for r in ups if not r["objs"][1].get("mobs")})),
@@ -490,6 +490,7 @@ check("  ..and every gun of a recipe on sale, the ordinary and the (G): of 12-16
       (sorted({r["craft"]["gun"] for r in ups if r["craft"]["level"] >= LO} - gun_stalls),
        sorted({r["craft"]["gun"] for r in ups} - city_guns)), ([], []))
 sal, ass, dec, kni = fam("salvage"), fam("assembly"), fam("decode"), fam("knife")
+dec.sort(key=lambda r: r["craft"]["level"])
 check("the gunsmiths of «Горные тропы» (625): salvage and assembly at the gunsmith of the class,"
       " every part an assembly asks one a salvage row draws",
       (sorted({(r["give"][0], r["craft"]["weapon"]) for r in sal}),
@@ -500,13 +501,13 @@ check("the gunsmiths of «Горные тропы» (625): salvage and assembly 
        sorted(GUNSMITHS.values()) == sorted(t for t in standing(625))),
       (sorted((s, c) for c, s in GUNSMITHS.items()), sorted((s, c) for c, s in GUNSMITHS.items()),
        [], True))
-check("the decoder Техногик (651, the black market): «Чертежи N-го уровня» for 12-16, the"
-      " levels the camps drop the encrypted blueprint at (9-11 none: no row could be done), a"
+check("the decoder Техногик (651, the black market): «Чертежи N-го уровня» for 9-16, including"
+      " 9-11 supplied by scheduled Abri bosses, a"
       " fee, a blueprint of the level drawn",
       ([(r["give"], r["craft"]["level"], r["cost_afro"] > 0,
          all(level_of_bp(o["obj"]) == r["craft"]["level"] for o in r["rew_random"]),
-         bool(r["objs"][0].get("mobs"))) for r in dec], DECODER in standing(BLACK)),
-      ([([DECODER], n, True, True, True) for n in range(12, 17)], True))
+         (bool(r["objs"][0].get("mobs")) or r["craft"]["level"] in (9, 10, 11))) for r in dec], DECODER in standing(BLACK)),
+      ([([DECODER], n, True, True, True) for n in range(9, 17)], True))
 
 
 def decode_margin(r):
@@ -523,7 +524,7 @@ check("  ..and no farm: a decoded blueprint sold back nets at most a tenth of it
       " 80 000): the fee is 60 % of the draw's price -- 18 000, 24 000, 30 000, 41 400, 48 000",
       ([r["craft"]["level"] for r in dec if decode_margin(r)[0] > decode_margin(r)[1]],
        [r["cost_afro"] for r in dec]),
-      ([], [18000, 24000, 30000, 41400, 48000]))
+      ([], [9000, 12000, 15000, 18000, 24000, 30000, 41400, 48000]))
 check("«Точильный камень Донголы» (2281, the black market) sharpens Боевой нож (G) (14у) and"
       " Такоуба (G) (16у) three ways each, in the original's words",
       (sorted((r["craft"]["gun"], r["craft"]["blueprint"], r["rew_obj"][0]) for r in kni),

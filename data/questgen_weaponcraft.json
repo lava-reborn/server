@@ -524,7 +524,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Наган 1895: увеличение дистанции стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -575,7 +575,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Наган 1895: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -626,7 +626,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "С. и В. специальный: повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -677,7 +677,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "С. и В. специальный: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -728,7 +728,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Беретта 92: увеличение размера обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -779,7 +779,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Беретта 92: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -830,7 +830,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Браунинг: повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -881,7 +881,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Браунинг: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -932,7 +932,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96: увеличение дистанции стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -983,7 +983,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1034,7 +1034,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "CZ 75: увеличение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1085,7 +1085,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "CZ 75: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1136,7 +1136,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Colt 1911: повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1187,7 +1187,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Colt 1911: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1238,7 +1238,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Glock 17: увеличение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1289,7 +1289,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Glock 17: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1340,7 +1340,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Walther P99: повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1391,7 +1391,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Walther P99: увеличение дистанции стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1442,7 +1442,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "СПС: увеличение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1493,7 +1493,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "СПС: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1544,7 +1544,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Desert Eagle: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1595,7 +1595,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Desert Eagle: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1646,7 +1646,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Наган 1895 (G): увеличение дистанции стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1697,7 +1697,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Наган 1895 (G): повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1748,7 +1748,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "С. и В. специальный (G): повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1799,7 +1799,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "С. и В. специальный (G): повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1850,7 +1850,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Беретта 92 (G): увеличение размера обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1901,7 +1901,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Беретта 92 (G): повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -1952,7 +1952,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Браунинг (G): повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2003,7 +2003,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Браунинг (G): повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2054,7 +2054,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "CZ 75 (G): увеличение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2105,7 +2105,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "CZ 75 (G): повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2156,7 +2156,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Colt 1911 (G): повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2207,7 +2207,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Colt 1911 (G): повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2258,7 +2258,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Glock 17 (G): увеличение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2309,7 +2309,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Glock 17 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2360,7 +2360,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Walther P99 (G): повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2411,7 +2411,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Walther P99 (G): увеличение дистанции стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2462,7 +2462,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "СПС (G): увеличение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2513,7 +2513,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "СПС (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2564,7 +2564,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Самодельная винтовка: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2615,7 +2615,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Самодельная винтовка: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2666,7 +2666,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Rasheed/Rashid: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2717,7 +2717,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Rasheed/Rashid: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2768,7 +2768,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Li-Enfield: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2819,7 +2819,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Li-Enfield: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2870,7 +2870,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Li-Enfield: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2921,7 +2921,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Самодельная винтовка (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -2972,7 +2972,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Самодельная винтовка (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3023,7 +3023,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Rasheed/Rashid (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3074,7 +3074,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Rasheed/Rashid (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3125,7 +3125,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Li-Enfield (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3176,7 +3176,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Li-Enfield (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3227,7 +3227,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Li-Enfield (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3278,7 +3278,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Обрез: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3329,7 +3329,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Самопальный дробовик: повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3380,7 +3380,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Обрез: время прицеливания",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3431,7 +3431,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Самопальный дробовик: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3482,7 +3482,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "ИЖ-27: повышение ловкости",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3533,7 +3533,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "ИЖ-27: повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3584,7 +3584,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Scattergun patrol: скорость перезарядки",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3635,7 +3635,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Scattergun patrol: время прицеливания",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3686,7 +3686,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Scattergun patrol: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3737,7 +3737,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Сайга-12: повышение ловкости",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3788,7 +3788,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Сайга-12: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3839,7 +3839,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Сайга-12: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3890,7 +3890,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Mossberg 590: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3941,7 +3941,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Mossberg 590: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -3992,7 +3992,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Mossberg 590: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4043,7 +4043,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "SPAS-12: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4094,7 +4094,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "SPAS-12: скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4145,7 +4145,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "SPAS-12: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4196,7 +4196,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Benelli M4: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4247,7 +4247,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Benelli M4: дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4298,7 +4298,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Benelli M4: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4349,7 +4349,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Jackhammer: время прицеливания",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4400,7 +4400,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Jackhammer: скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4451,7 +4451,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Jackhammer: прочность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4502,7 +4502,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Jackhammer: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4553,7 +4553,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "USAS-12: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4604,7 +4604,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "USAS-12: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4655,7 +4655,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "USAS-12: прочность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4706,7 +4706,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "USAS-12: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4757,7 +4757,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Обрез (G): повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4808,7 +4808,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Самопальный дробовик (G): повышение урона",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4859,7 +4859,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Обрез (G): время прицеливания",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4910,7 +4910,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Самопальный дробовик (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -4961,7 +4961,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "ИЖ-27 (G): повышение ловкости",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5012,7 +5012,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "ИЖ-27 (G): повышение точности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5063,7 +5063,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Scattergun patrol (G): скорость перезарядки",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5114,7 +5114,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Scattergun patrol (G): время прицеливания",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5165,7 +5165,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Scattergun patrol (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5216,7 +5216,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Сайга-12 (G): повышение ловкости",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5267,7 +5267,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Сайга-12 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5318,7 +5318,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Сайга-12 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5369,7 +5369,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Mossberg 590 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5420,7 +5420,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Mossberg 590 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5471,7 +5471,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Mossberg 590 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5522,7 +5522,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "SPAS-12 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5573,7 +5573,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "SPAS-12 (G): скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5624,7 +5624,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "SPAS-12 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5675,7 +5675,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Benelli M4 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5726,7 +5726,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Benelli M4 (G): дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5777,7 +5777,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Benelli M4 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5828,7 +5828,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Jackhammer (G): время прицеливания",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5879,7 +5879,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Jackhammer (G): скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5930,7 +5930,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Jackhammer (G): прочность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -5981,7 +5981,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Jackhammer (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6032,7 +6032,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "USAS-12 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6083,7 +6083,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "USAS-12 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6134,7 +6134,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "USAS-12 (G): прочность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6185,7 +6185,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "USAS-12 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6236,7 +6236,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Кустарный ПП: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6287,7 +6287,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Borzh: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6338,7 +6338,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Borzh: время прицеливания",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6389,7 +6389,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Borzh: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6440,7 +6440,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Кустарный ПП (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6491,7 +6491,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Borzh (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6542,7 +6542,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Borzh (G): время прицеливания",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6593,7 +6593,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Borzh (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6645,7 +6645,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: точность на 20%.",
    "notfinish": "<hint><B>Задание №B00000013</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6698,7 +6698,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: урон на 10%.",
    "notfinish": "<hint><B>Задание №B00000014</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6751,7 +6751,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: дальность на 2 единицы.",
    "notfinish": "<hint><B>Задание №B00000015</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6804,7 +6804,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: время прицеливания -15%.",
    "notfinish": "<hint><B>Задание №B00000016</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6857,7 +6857,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: ОД на перезарядку -20%.",
    "notfinish": "<hint><B>Задание №B00000017</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6910,7 +6910,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: ОД на выстрел -20%.",
    "notfinish": "<hint><B>Задание №B00000018</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -6963,7 +6963,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: увеличена обойма.",
    "notfinish": "<hint><B>Задание №B00000019</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7016,7 +7016,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: прочность увеличена в 2 раза.",
    "notfinish": "<hint><B>Задание №B00000020</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7069,7 +7069,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: ловкость +2.",
    "notfinish": "<hint><B>Задание №B00000021</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7122,7 +7122,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: восприятие +2",
    "notfinish": "<hint><B>Задание №B00000022</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7175,7 +7175,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: точность на 20% и дальность на 2 единицы.",
    "notfinish": "<hint><B>Задание №B00000023</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7228,7 +7228,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Маузер C96[Q][2]: урон на 10% и увеличена обойма.",
    "notfinish": "<hint><B>Задание №B00000024</B></Br></hint><Br>Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7280,7 +7280,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Самодельный автомат: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7331,7 +7331,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Type56: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7382,7 +7382,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Type56: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7433,7 +7433,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Type56: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7484,7 +7484,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АК-47: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7535,7 +7535,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АК-47: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7586,7 +7586,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АК-47: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7637,7 +7637,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Galil AR: скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7688,7 +7688,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Galil AR: ловкость",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7739,7 +7739,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Galil AR: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7790,7 +7790,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G3: точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7841,7 +7841,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G3: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7892,7 +7892,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G3: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7943,7 +7943,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "FN-FALL: ловкость",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -7994,7 +7994,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "FN-FALL: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8045,7 +8045,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "FN-FALL: точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8096,7 +8096,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "FN-FALL: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8147,7 +8147,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M16A2: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8198,7 +8198,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M16A2: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8249,7 +8249,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M16A2: точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8300,7 +8300,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M16A2: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8351,7 +8351,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "L85: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8402,7 +8402,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "L85: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8453,7 +8453,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "L85: точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8504,7 +8504,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "L85: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8555,7 +8555,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G36: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8606,7 +8606,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G36: восприятие",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8657,7 +8657,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G36: точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8708,7 +8708,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G36: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8759,7 +8759,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АС Вал: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8810,7 +8810,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АС Вал: дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8861,7 +8861,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АС Вал: точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8912,7 +8912,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АС Вал: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -8963,7 +8963,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Самодельный автомат (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9014,7 +9014,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Type56 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9065,7 +9065,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Type56 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9116,7 +9116,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Type56 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9167,7 +9167,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АК-47 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9218,7 +9218,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АК-47 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9269,7 +9269,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АК-47 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9320,7 +9320,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Galil AR (G): скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9371,7 +9371,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Galil AR (G): ловкость",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9422,7 +9422,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Galil AR (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9473,7 +9473,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G3 (G): точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9524,7 +9524,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G3 (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9575,7 +9575,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G3 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9626,7 +9626,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "FN-FALL (G): ловкость",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9677,7 +9677,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "FN-FALL (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9728,7 +9728,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "FN-FALL (G): точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9779,7 +9779,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "FN-FALL (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9830,7 +9830,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M16A2 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9881,7 +9881,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M16A2 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9932,7 +9932,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M16A2 (G): точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -9983,7 +9983,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M16A2 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10034,7 +10034,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "L85 (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10085,7 +10085,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "L85 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10136,7 +10136,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "L85 (G): точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10187,7 +10187,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "L85 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10238,7 +10238,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G36 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10289,7 +10289,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G36 (G): восприятие",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10340,7 +10340,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G36 (G): точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10391,7 +10391,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "G36 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10442,7 +10442,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АС Вал (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10493,7 +10493,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АС Вал (G): дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10544,7 +10544,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АС Вал (G): точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10595,7 +10595,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "АС Вал (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10646,7 +10646,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "РПД: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10697,7 +10697,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "РПД: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10748,7 +10748,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "РПД: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10799,7 +10799,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "РПД: точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10850,7 +10850,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "AUG /Hbar: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10901,7 +10901,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "AUG /Hbar: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -10952,7 +10952,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "AUG /Hbar: точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11003,7 +11003,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "РПД (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11054,7 +11054,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "РПД (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11105,7 +11105,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "РПД (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11156,7 +11156,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "РПД (G): точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11207,7 +11207,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "AUG /Hbar (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11258,7 +11258,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "AUG /Hbar (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11309,7 +11309,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "AUG /Hbar (G): точность и дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11360,7 +11360,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "AUG /Hbar (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11411,7 +11411,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Mauser K98k: восприятие",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11456,7 +11456,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Mauser K98k: ловкость",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11501,7 +11501,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Mauser K98k: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11546,7 +11546,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M14: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11591,7 +11591,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M14: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11636,7 +11636,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M14: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11681,7 +11681,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M14: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11726,7 +11726,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Steyr Scout Tactical: скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11777,7 +11777,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Steyr Scout Tactical: восприятие",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11828,7 +11828,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Steyr Scout Tactical: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11879,7 +11879,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Steyr Scout Tactical: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11930,7 +11930,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Armalite AR-10(t): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -11981,7 +11981,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Armalite AR-10(t): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12032,7 +12032,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Armalite AR-10(t): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12083,7 +12083,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "SIG-Sauer SSG 2000: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12134,7 +12134,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "SIG-Sauer SSG 2000: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12185,7 +12185,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "SIG-Sauer SSG 2000 : урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12236,7 +12236,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "СВД: скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12287,7 +12287,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "СВД: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12338,7 +12338,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "СВД: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12389,7 +12389,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "СВД: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12440,7 +12440,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "US Army M24: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12491,7 +12491,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "US Army M24: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12542,7 +12542,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "US Army M24: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12593,7 +12593,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "US Army M24: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12644,7 +12644,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Mauser K98k (G): восприятие",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12689,7 +12689,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Mauser K98k (G): ловкость",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12734,7 +12734,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Mauser K98k (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12779,7 +12779,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M14 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12824,7 +12824,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M14 (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12869,7 +12869,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M14 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12914,7 +12914,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "M14 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -12959,7 +12959,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Steyr Scout Tactical (G): скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13010,7 +13010,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Steyr Scout Tactical (G): восприятие",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13061,7 +13061,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Steyr Scout Tactical (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13112,7 +13112,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Steyr Scout Tactical (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13163,7 +13163,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Armalite AR-10(t) (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13214,7 +13214,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Armalite AR-10(t) (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13265,7 +13265,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Armalite AR-10(t) (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13316,7 +13316,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "SIG-Sauer SSG 2000 (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13367,7 +13367,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "SIG-Sauer SSG 2000 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13418,7 +13418,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "SIG-Sauer SSG 2000 (G) : урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13469,7 +13469,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "СВД (G): скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13520,7 +13520,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "СВД (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13571,7 +13571,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "СВД (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13622,7 +13622,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "СВД (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13673,7 +13673,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "US Army M24 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13724,7 +13724,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "US Army M24 (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13775,7 +13775,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "US Army M24 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13826,7 +13826,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "US Army M24 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13877,7 +13877,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Узи: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13922,7 +13922,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Узи: скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -13967,7 +13967,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Узи: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14012,7 +14012,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Узи: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14057,7 +14057,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Ingram MAC 10: скорость перезарядки",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14102,7 +14102,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Ingram MAC 10: дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14147,7 +14147,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Ingram MAC 10: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14192,7 +14192,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Ingram MAC 10: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14237,7 +14237,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Thompson: вес",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14282,7 +14282,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Thompson: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14327,7 +14327,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Thompson: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14372,7 +14372,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Thompson: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14417,7 +14417,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "MP5: точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14468,7 +14468,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "MP5: дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14519,7 +14519,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "MP5: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14570,7 +14570,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "MP5: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14621,7 +14621,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "P90: урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14672,7 +14672,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "P90: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14723,7 +14723,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "P90: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14774,7 +14774,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "P90: повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14825,7 +14825,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "UMP: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14876,7 +14876,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "UMP: скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14927,7 +14927,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "UMP: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -14978,7 +14978,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Бизон ПП-19: размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15029,7 +15029,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Бизон ПП-19: скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15080,7 +15080,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Бизон ПП-19: урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15131,7 +15131,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Узи (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15176,7 +15176,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Узи (G): скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15221,7 +15221,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Узи (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15266,7 +15266,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Узи (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15311,7 +15311,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Ingram MAC 10 (G): скорость перезарядки",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15356,7 +15356,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Ingram MAC 10 (G): дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15401,7 +15401,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Ingram MAC 10 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15446,7 +15446,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Ingram MAC 10 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15491,7 +15491,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Thompson (G): вес",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15536,7 +15536,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Thompson (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15581,7 +15581,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Thompson (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15626,7 +15626,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Thompson (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15671,7 +15671,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "MP5 (G): точность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15722,7 +15722,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "MP5 (G): дистанция стрельбы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15773,7 +15773,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "MP5 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15824,7 +15824,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "MP5 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15875,7 +15875,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "P90 (G): урон",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15926,7 +15926,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "P90 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -15977,7 +15977,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "P90 (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -16028,7 +16028,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "P90 (G): повышение прочности",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -16079,7 +16079,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "UMP (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -16130,7 +16130,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "UMP (G): скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -16181,7 +16181,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "UMP (G): урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -16232,7 +16232,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Бизон ПП-19 (G): размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -16283,7 +16283,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Бизон ПП-19 (G) : скорострельность",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -16334,7 +16334,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Бизон ПП-19 (G) : урон и размер обоймы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20397,7 +20397,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Заточка Тесака",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20440,7 +20440,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Эргономика Тесака",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20483,7 +20483,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Заточка и Эргономика Тесака",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20526,7 +20526,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Заточка Охотничего ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20569,7 +20569,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Эргономика Охотничего ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20612,7 +20612,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Заточка и Эргономика Охотничего ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20654,8 +20654,8 @@
     2280
    ],
    "kind": "bring_l_obj",
-   "level": 8,
-   "max_level": 12,
+   "level": 6,
+   "max_level": 20,
    "name": "Заточка Нож кастета",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20697,8 +20697,8 @@
     2280
    ],
    "kind": "bring_l_obj",
-   "level": 8,
-   "max_level": 12,
+   "level": 6,
+   "max_level": 20,
    "name": "Эргономика Нож кастета",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20740,8 +20740,8 @@
     2280
    ],
    "kind": "bring_l_obj",
-   "level": 8,
-   "max_level": 12,
+   "level": 6,
+   "max_level": 20,
    "name": "Заточка и Эргономика Нож кастета",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20783,8 +20783,8 @@
     2280
    ],
    "kind": "bring_l_obj",
-   "level": 8,
-   "max_level": 12,
+   "level": 6,
+   "max_level": 20,
    "name": "Заточка Штык ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20826,8 +20826,8 @@
     2280
    ],
    "kind": "bring_l_obj",
-   "level": 8,
-   "max_level": 12,
+   "level": 6,
+   "max_level": 20,
    "name": "Эргономика Штык ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20869,8 +20869,8 @@
     2280
    ],
    "kind": "bring_l_obj",
-   "level": 8,
-   "max_level": 12,
+   "level": 6,
+   "max_level": 20,
    "name": "Заточка и Эргономика Штык ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20913,7 +20913,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Заточка Боевого ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20956,7 +20956,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Эргономика Боевого ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -20999,7 +20999,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Заточка и Эргономика Боевого ножа",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -21042,7 +21042,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Заточка Такоубы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -21085,7 +21085,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Эргономика Такоубы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -21128,7 +21128,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Заточка и Эргономика Такоубы",
    "notfinish": "Само собой ничего не сделается.",
    "num_rew_obj": [
@@ -21413,6 +21413,264 @@
    ],
    "type": 10429,
    "why": "RECOVERED: texts.xml 50973-50974, the wiki's «Заточка и Эргономика Мачете» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe."
+  },
+  {
+   "craft": {
+    "blueprint": 6608,
+    "family": "knife",
+    "gun": 6231,
+    "key": "knife:halfa:50915",
+    "level": 2,
+    "mod": 6232
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2279
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Заточка Самодельного ножа",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6231
+    },
+    {
+     "num": 1,
+     "obj": 6608
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6232
+   ],
+   "service": true,
+   "start": "Тупой нож - вещь в хозяйстве или на войне бесполезная. Вот, острый нож - совсем другое дело! И под ребро мягче зайдет, и побриться можно, и колбасы настругать. Африканское нанотехнологичное устройство Точильный круг - вот, что нужно, чтобы все тупые стали острыми! Как говориться: Кручу-верчу, заточить хочу!<Br><Br>Для заточки нужен сам нож и подходящий чертёж.<Br><b>Задача:</b>Принести Самодельный Нож (G) и Чертеж: Заточка Самодельного Ножа<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2279
+   ],
+   "type": 10430,
+   "why": "RECOVERED: texts.xml 50915-50916, the wiki's «Заточка Самодельного ножа» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe. Owner 2026-10-23: reuse the existing sharpening recipe at Halfa whetstone 2279."
+  },
+  {
+   "craft": {
+    "blueprint": 6609,
+    "family": "knife",
+    "gun": 6231,
+    "key": "knife:halfa:50917",
+    "level": 2,
+    "mod": 6233
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2279
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Эргономика Самодельного ножа",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6231
+    },
+    {
+     "num": 1,
+     "obj": 6609
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6233
+   ],
+   "service": true,
+   "start": "Неудобная рукоять, причина многих неудач. Неудобство в использовании, расходование большего количества сил на удар. С плохой рукоятью, нож менее надежен и прочен. Для замены рукояти нужен сам нож и подходящий чертёж.<Br><b>Задача:</b>Принести Самодельный Нож (G) и Чертеж: Эргономика Самодельного Ножа<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2279
+   ],
+   "type": 10431,
+   "why": "RECOVERED: texts.xml 50917-50918, the wiki's «Эргономика Самодельного ножа» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe. Owner 2026-10-23: reuse the existing sharpening recipe at Halfa whetstone 2279."
+  },
+  {
+   "craft": {
+    "blueprint": 6610,
+    "family": "knife",
+    "gun": 6231,
+    "key": "knife:halfa:50919",
+    "level": 2,
+    "mod": 6234
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2279
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Заточка и Эргономика Самодельного ножа",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6231
+    },
+    {
+     "num": 1,
+     "obj": 6610
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6234
+   ],
+   "service": true,
+   "start": "Сделать из кухонного ножа мачете, конечно, на точильном круге не получится. Но, не забывайте, что при помощи некоторых нехитрых манипуляций можно и самые безобидные пилки для ногтей превратить в грозное оружие. Необходимо только заточить лезвие и сделать удобную рукоять.  Лишь бы чертежи подходящие нашлись. Для заточки и замены рукояти нужен сам нож и подходящие чертёжи.<Br><b>Задача:</b>Принести Самодельный Нож (G) и Чертеж: Заточка и Эргономика Самодельного Ножа<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2279
+   ],
+   "type": 10432,
+   "why": "RECOVERED: texts.xml 50919-50920, the wiki's «Заточка и Эргономика Самодельного ножа» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe. Owner 2026-10-23: reuse the existing sharpening recipe at Halfa whetstone 2279."
+  },
+  {
+   "craft": {
+    "blueprint": 6611,
+    "family": "knife",
+    "gun": 6236,
+    "key": "knife:halfa:50921",
+    "level": 4,
+    "mod": 6237
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2279
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Заточка Кухонного ножа",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6236
+    },
+    {
+     "num": 1,
+     "obj": 6611
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6237
+   ],
+   "service": true,
+   "start": "Тупой нож - вещь в хозяйстве или на войне бесполезная. Вот, острый нож - совсем другое дело! И под ребро мягче зайдет, и побриться можно, и колбасы настругать. Африканское нанотехнологичное устройство Точильный круг - вот, что нужно, чтобы все тупые стали острыми! Как говориться: Кручу-верчу, заточить хочу!<Br><Br>Для заточки нужен сам нож и подходящий чертёж.<Br><b>Задача:</b>Принести Кухонный нож (G) и Чертеж: Заточка Кухонного ножа<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2279
+   ],
+   "type": 10433,
+   "why": "RECOVERED: texts.xml 50921-50922, the wiki's «Заточка Кухонного ножа» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe. Owner 2026-10-23: reuse the existing sharpening recipe at Halfa whetstone 2279."
+  },
+  {
+   "craft": {
+    "blueprint": 6612,
+    "family": "knife",
+    "gun": 6236,
+    "key": "knife:halfa:50923",
+    "level": 4,
+    "mod": 6238
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2279
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Эргономика Кухонного ножа",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6236
+    },
+    {
+     "num": 1,
+     "obj": 6612
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6238
+   ],
+   "service": true,
+   "start": "Неудобная рукоять, причина многих неудач. Неудобство в использовании, расходование большего количества сил на удар. С плохой рукоятью, нож менее надежен и прочен. Для замены рукояти нужен сам нож и подходящий чертёж.<Br><b>Задача:</b>Принести Кухонный нож (G) и Чертеж: Эргономика Кухонного ножа<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2279
+   ],
+   "type": 10434,
+   "why": "RECOVERED: texts.xml 50923-50924, the wiki's «Эргономика Кухонного ножа» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe. Owner 2026-10-23: reuse the existing sharpening recipe at Halfa whetstone 2279."
+  },
+  {
+   "craft": {
+    "blueprint": 6613,
+    "family": "knife",
+    "gun": 6236,
+    "key": "knife:halfa:50925",
+    "level": 4,
+    "mod": 6239
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    2279
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Заточка и Эргономика Кухонного ножа",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 6236
+    },
+    {
+     "num": 1,
+     "obj": 6613
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    6239
+   ],
+   "service": true,
+   "start": "Сделать из кухонного ножа мачете, конечно, на точильном круге не получится. Но, не забывайте, что при помощи некоторых нехитрых манипуляций можно и самые безобидные пилки для ногтей превратить в грозное оружие. Необходимо только заточить лезвие и сделать удобную рукоять.  Лишь бы чертежи подходящие нашлись. Для заточки и замены рукояти нужен сам нож и подходящие чертёжи.<Br><b>Задача:</b>Принести Кухонный нож (G) и Чертеж: Заточка и Эргономика Кухонного ножа<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    2279
+   ],
+   "type": 10435,
+   "why": "RECOVERED: texts.xml 50925-50926, the wiki's «Заточка и Эргономика Кухонного ножа» at the whetstone; the generic notfinish 47221 and finish 25011 the wiki gives every recipe. Owner 2026-10-23: reuse the existing sharpening recipe at Halfa whetstone 2279."
   },
   {
    "cost_afro": 1433,
@@ -25439,7 +25697,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Чертежи 1-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -25504,7 +25762,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Чертежи 2-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -25609,7 +25867,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Чертежи 3-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -25671,7 +25929,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Чертежи 4-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -25748,7 +26006,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Чертежи 5-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -25824,7 +26082,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Чертежи 6-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -25910,7 +26168,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Чертежи 7-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -25980,7 +26238,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 0,
-   "max_level": 8,
+   "max_level": 20,
    "name": "Чертежи 8-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -26065,7 +26323,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Чертежи 12-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -26157,7 +26415,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Чертежи 13-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -26239,7 +26497,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Чертежи 14-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -26326,7 +26584,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Чертежи 15-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -26402,7 +26660,7 @@
    ],
    "kind": "bring_l_obj",
    "level": 9,
-   "max_level": 16,
+   "max_level": 20,
    "name": "Чертежи 16-го уровня",
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
@@ -26827,6 +27085,215 @@
    ],
    "type": 10716,
    "why": "RECOVERED: texts.xml 48036-48037, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+  },
+  {
+   "cost_afro": 9000,
+   "craft": {
+    "family": "decode",
+    "key": "decode:dongola:48014",
+    "level": 9
+   },
+   "finish": "Отлично, сейчас попробую расшифровать...",
+   "give": [
+    651
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Чертежи 9-го уровня",
+   "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
+   "objs": [
+    {
+     "num": 1,
+     "obj": 2412
+    }
+   ],
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2396,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2432,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2433,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2434,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2435,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 3432,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 3433,
+     "w": 1
+    }
+   ],
+   "service": true,
+   "start": "Если найдешь зашифрованный чертеж 9-го уровня, то сразу приноси его ко мне.<Br><Br><b>Задача:</b> принести зашифрованный чертеж 9-го уровня.<Br><Br><b>Внимание:</b> с вашего счёта будет списано 9000 афро.",
+   "take": [
+    651
+   ],
+   "type": 10717,
+   "why": "DESIGNED: decoding levels 9-11 at Dongola Tech Geek 651, for player levels 9-20; encrypted blueprints come from the explicit camp-boss table independently of quests. Text adapted from the known level-8 template (48012-48013), with the existing fee and prize rules."
+  },
+  {
+   "cost_afro": 12000,
+   "craft": {
+    "family": "decode",
+    "key": "decode:dongola:48016",
+    "level": 10
+   },
+   "finish": "Отлично, сейчас попробую расшифровать...",
+   "give": [
+    651
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Чертежи 10-го уровня",
+   "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
+   "objs": [
+    {
+     "num": 1,
+     "obj": 1135
+    }
+   ],
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 801,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 802,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 804,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 806,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 816,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 817,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 818,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 819,
+     "w": 1
+    }
+   ],
+   "service": true,
+   "start": "Если найдешь зашифрованный чертеж 10-го уровня, то сразу приноси его ко мне.<Br><Br><b>Задача:</b> принести зашифрованный чертеж 10-го уровня.<Br><Br><b>Внимание:</b> с вашего счёта будет списано 12000 афро.",
+   "take": [
+    651
+   ],
+   "type": 10718,
+   "why": "DESIGNED: decoding levels 9-11 at Dongola Tech Geek 651, for player levels 9-20; encrypted blueprints come from the explicit camp-boss table independently of quests. Text adapted from the known level-8 template (48012-48013), with the existing fee and prize rules."
+  },
+  {
+   "cost_afro": 15000,
+   "craft": {
+    "family": "decode",
+    "key": "decode:dongola:48018",
+    "level": 11
+   },
+   "finish": "Отлично, сейчас попробую расшифровать...",
+   "give": [
+    651
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Чертежи 11-го уровня",
+   "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
+   "objs": [
+    {
+     "num": 1,
+     "obj": 2413
+    }
+   ],
+   "repeatable": 1,
+   "rew_random": [
+    {
+     "num": 1,
+     "obj": 2397,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2436,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2437,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2438,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2439,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 2440,
+     "w": 1
+    },
+    {
+     "num": 1,
+     "obj": 3434,
+     "w": 1
+    }
+   ],
+   "service": true,
+   "start": "Если найдешь зашифрованный чертеж 11-го уровня, то сразу приноси его ко мне.<Br><Br><b>Задача:</b> принести зашифрованный чертеж 11-го уровня.<Br><Br><b>Внимание:</b> с вашего счёта будет списано 15000 афро.",
+   "take": [
+    651
+   ],
+   "type": 10719,
+   "why": "DESIGNED: decoding levels 9-11 at Dongola Tech Geek 651, for player levels 9-20; encrypted blueprints come from the explicit camp-boss table independently of quests. Text adapted from the known level-8 template (48012-48013), with the existing fee and prize rules."
   },
   {
    "craft": {
@@ -27426,6 +27893,9 @@
   "decode:abu_hamed:48032": 10714,
   "decode:abu_hamed:48034": 10715,
   "decode:abu_hamed:48036": 10716,
+  "decode:dongola:48014": 10717,
+  "decode:dongola:48016": 10718,
+  "decode:dongola:48018": 10719,
   "decode:dongola:48020": 10708,
   "decode:dongola:48022": 10709,
   "decode:dongola:48024": 10710,
@@ -27457,6 +27927,12 @@
   "knife:dongola:50957": 10421,
   "knife:dongola:50959": 10422,
   "knife:dongola:50961": 10423,
+  "knife:halfa:50915": 10430,
+  "knife:halfa:50917": 10431,
+  "knife:halfa:50919": 10432,
+  "knife:halfa:50921": 10433,
+  "knife:halfa:50923": 10434,
+  "knife:halfa:50925": 10435,
   "knife:halfa:50927": 10406,
   "knife:halfa:50929": 10407,
   "knife:halfa:50931": 10408,

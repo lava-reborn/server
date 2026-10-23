@@ -228,6 +228,7 @@ TRAINING_ROUNDS = 3727
 # purchase of 5000 is one stack of 5000, and no other number could let the
 # window offer it; it was 200. Rounds only: the client asks "how many" for
 # nothing else (Trade.buy sends 1), and junk keeps its stack of 50.
+STARTER_ROUNDS = 6188          # only Самострел and its modified variants
 AMMO_PACK = 20
 AMMO_STACK = 5000
 
@@ -495,6 +496,25 @@ def no_combat(type_id):
     0 AP among them."""
     entry = catalogue().get(type_id)
     return bool(entry and entry[0] == HEAL and entry[1].startswith("Med_Pacific_"))
+
+
+# TODO(buff-effects): remove this temporary gate only after timed effects
+# alter combat/progression, expire correctly and survive relog as intended.
+# Then update test_stimulant_block.py; purchasing stays available meanwhile.
+STIMULANT_EFFECTS_ENABLED = False
+STIMULANT_UNAVAILABLE = (
+    "Использование стимуляторов временно недоступно: их эффекты пока не работают. "
+    "Предмет не израсходован.")
+
+
+def stimulant_unavailable(type_id):
+    """Block only HEAL items promising an unimplemented temporary effect."""
+    if STIMULANT_EFFECTS_ENABLED or root_of(type_id) != HEAL:
+        return False
+    p = params_of(type_id) or {}
+    return bool(p.get("bonus_act_time") or p.get("effects") or
+                any(p.get(k) for k in ("str_bonus", "dex_bonus", "sta_bonus",
+                                       "per_bonus", "int_bonus")))
 
 
 # --- the wiki -------------------------------------------------------------
@@ -1125,6 +1145,9 @@ def static_info(type_id):
         # worth (GOLD_AMMO_ROUND).
         if root_of(type_id) == AMMO and gold_round(info[1]):
             info[1]["g_cost"] = GOLD_AMMO_ROUND * info[1]["sell_num"]
+        # Gift rounds must remain affordable through the ordinary client.
+        if type_id == STARTER_ROUNDS:
+            info[1].update(cost=AMMO_PACK, g_cost=0)
         # A thing a quest lends (quests.lent) is the quest's, not the
         # player's: the quest flag and no exchange, the two things the
         # stall, the barter, the post and the auction ask (Inventory.sell,

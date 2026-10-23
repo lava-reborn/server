@@ -5,6 +5,98 @@
   "fields": "by_type: mob type id -> rows {type, tier ('Обычный' or 'Ценный', as in loot_wiki.json, or 'Квестовый': rolled only for a quest that asks for the thing, on its own and outside the cap), chance; 1.0 is certain and outside the cap; count, how many of the thing the row puts in the bag when it lies there, 1 without one (mobs.count_of: a stack of that many); or, in place of tier and chance, one_of (a group name) and weight: exactly one row of the group lies in the bag on every kill, picked by weight, outside the cap (mobs.one_of_groups)}. items: type id -> ss_si_simple_obj fields as in server/items.py (cost in afro, g_cost in hundredths of G, weight in grams, max_count the most one stack holds), plus drop_on_death (1 can fall off a corpse, 0 never)."
  },
  "by_type": {
+    "838": [
+      {
+        "type": 2258,
+        "_name": "Золотой песок",
+        "tier": "Обычный",
+        "chance": 0.75,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+      },
+      {
+        "type": 3159,
+        "_name": "Небольшие изумруды",
+        "tier": "Ценный",
+        "chance": 0.15,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+      },
+      {
+        "type": 6946,
+        "_name": "Серебряный портсигар",
+        "tier": "Ценный",
+        "chance": 0.05,
+        "_source": "DESIGNED: owner confirmed 2026-10-23; same chance as Nubian mine marauders, no quest required."
+      }
+    ],
+    "839": [
+      {
+        "type": 2258,
+        "_name": "Золотой песок",
+        "tier": "Обычный",
+        "chance": 0.75,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+      },
+      {
+        "type": 3159,
+        "_name": "Небольшие изумруды",
+        "tier": "Ценный",
+        "chance": 0.15,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+      },
+      {
+        "type": 6946,
+        "_name": "Серебряный портсигар",
+        "tier": "Ценный",
+        "chance": 0.05,
+        "_source": "DESIGNED: owner confirmed 2026-10-23; same chance as Nubian mine marauders, no quest required."
+      }
+    ],
+    "840": [
+      {
+        "type": 2258,
+        "_name": "Золотой песок",
+        "tier": "Обычный",
+        "chance": 1.0,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+      },
+      {
+        "type": 3159,
+        "_name": "Небольшие изумруды",
+        "tier": "Ценный",
+        "chance": 0.25,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+      },
+      {
+        "type": 6953,
+        "_name": "Золотой портсигар",
+        "tier": "Ценный",
+        "chance": 0.05,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Peacekeeper miners 840/841, independent of quests."
+      }
+    ],
+    "841": [
+      {
+        "type": 2258,
+        "_name": "Золотой песок",
+        "tier": "Обычный",
+        "chance": 1.0,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+      },
+      {
+        "type": 3159,
+        "_name": "Небольшие изумруды",
+        "tier": "Ценный",
+        "chance": 0.25,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+      },
+      {
+        "type": 6953,
+        "_name": "Золотой портсигар",
+        "tier": "Ценный",
+        "chance": 0.05,
+        "_source": "DESIGNED: owner confirmed 2026-10-22; Peacekeeper miners 840/841, independent of quests."
+      }
+    ],
   "12": [
    {
     "type": 260,

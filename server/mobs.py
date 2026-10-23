@@ -264,7 +264,7 @@ class MobStats:
         self.hit = float(row["hit"])
         self.dodge = float(row["dodge"])
         self.armor = float(row["armor"])
-        self.ap_max = int(row["ap"])
+        self.ap_max = int(info.get("ap_max", row["ap"]))
         self.xp_mult = float(role["xp_mult"])
         # The curve's 4 * hp, kept for its record only: what a kill pays is
         # progression.mob_xp, priced by level (the owner's rule, 2026-09-24).
@@ -274,7 +274,9 @@ class MobStats:
         self.shots = max(1, int(weapon["shots"]))
         self.attack_ap = int(weapon["ap"])
         self.ranged = self.weapon_class in RANGED
-        self.weapon_type_id = WEAPON_ITEM.get(self.weapon_class)
+        self.weapon_type_id = info.get("weapon_type_id", WEAPON_ITEM.get(self.weapon_class))
+        self.loot_ammo_type = info.get("loot_ammo_type")
+        self.loot_ammo_count = tuple(info.get("loot_ammo_count", (3, 10)))
         self.can_attack = (self.role != "object" and self.weapon_class != "none"
                            and self.dmg_max > 0 and self.aggro > 0)
         self.moves = self.hex_ms > 0 and self.role != "object"
@@ -680,7 +682,7 @@ def quest_table(type_id):
     return rows
 
 
-def quest_roll(type_id, wanted, rng):
+def quest_roll(type_id, wanted, rng, excluded_groups=()):
     """[(type_id, 1)] of the quest rows that came up for a corpse, given the
     things a quest of those who brought it down still asks for (wanted, as
     RoomCombat.kill works it out). A row for a thing nobody wants is not
@@ -693,6 +695,8 @@ def quest_roll(type_id, wanted, rng):
         if t not in wanted:
             continue
         group = quests.drop_group(t)
+        if group in excluded_groups:
+            continue
         if group is not None:
             best, members = groups.get(group, (0.0, []))
             groups[group] = (max(best, chance), members + [t])
@@ -714,7 +718,8 @@ def carried(st, rng):
     out = []
     si = items.params_of(st.weapon_type_id) if st.weapon_type_id else None
     if si and st.ranged and si.get("comp_array"):
-        out.append((si["comp_array"][0], rng.randint(3, 10)))
+        out.append((getattr(st, "loot_ammo_type", None) or si["comp_array"][0],
+                    rng.randint(*getattr(st, "loot_ammo_count", (3, 10)))))
     elif "ammo" in st.name.lower():
         out.append((items.AMMO_9MM[0], items.AMMO_PACK))
     if st.role in HUMAN_ROLES:
@@ -724,14 +729,24 @@ def carried(st, rng):
     return out or [(FALLBACK_LOOT, 1)]
 
 
-def loot_for(st, rng, wanted=()):
+def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
     """[(type_id, count)] for a corpse of this type: what it carried, then
     what its kind's table rolled, then the quest rows for what those who
     brought it down still need (quest_roll; wanted, the types). combat.
     drop_loot still turns away anything out of the game (items.out_of_game),
     whatever a list says."""
-    return carried(st, rng) + roll_table(st.type_id, rng) + \
-        quest_roll(st.type_id, wanted, rng)
+    import bosses                  # late: keep module initialization separate
+    blueprint = bosses.blueprint_for(loc_id, st.type_id)
+    excluded = ("craft_codified",) if blueprint is not None else ()
+    out = carried(st, rng) + roll_table(st.type_id, rng) + \
+        quest_roll(st.type_id, wanted, rng, excluded_groups=excluded)
+    if blueprint is not None and killer_level is not None:
+        # Compare with the dropped blueprint, not the boss's combat level.
+        blueprint_level = int(items.catalogue()[blueprint][1].rsplit("_", 1)[1])
+        chance = bosses.blueprint_drop_chance(killer_level, blueprint_level)
+        if rng.random() < chance:
+            out.append((blueprint, 1))
+    return out
 
 
 _STATS = {}
