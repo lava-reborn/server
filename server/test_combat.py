@@ -203,7 +203,8 @@ check("a burst at a mark past the gun's reach: every bullet comes down within re
 # shrank with what was left (the last round fired one pellet in six).
 class _Mag(object):
     def __init__(self, type_id, ammo):
-        self.row = dict(uniq=7, char_id=1, type_id=type_id, ammo_count=ammo, brk=500)
+        self.row = dict(uniq=7, char_id=1, type_id=type_id, ammo_count=ammo, brk=500,
+                        root=items.FIRE_ARM, slot=inventory.PRIMARY)
 
     def item(self, uniq):
         return dict(self.row)
@@ -228,8 +229,13 @@ def _pull(type_id, mode, ammo, drop=0):
                          "within_fire": lambda *a: False,
                          "burst": lambda _rc, _sh, _t, _c, _w, live, *_a:
                          flew.append(live) or (0, 0, 0, False)})()
+    char = progression.Character()
+    for skill in char.skill:
+        skill[0] = 20
+    for spec in char.spec:
+        spec[0] = 5
     sess = type("S", (), {"char_id": 1, "send": lambda *a, **k: None,
-                          "character": lambda *a: None,
+                          "character": lambda *a: char,
                           "inv": type("I", (), {"store": mag,
                                                 "push_di": lambda *a: None})()})()
     fighter = _PullFighter(sess)
@@ -397,6 +403,10 @@ async def _aimed_weapon(type_id, mode=0):
     ground.ws = False
     rc = SimpleNamespace(room=ground, set_ws=lambda ws: setattr(ground, "ws", ws))
     ch = progression.Character()
+    for skill in ch.skill:
+        skill[0] = 20
+    for spec in ch.spec:
+        spec[0] = 5
     sess = SimpleNamespace(on_map=False, loc=_open, pos=_row, pid=1,
                            character=lambda: ch, send=lambda *a, **k: None,
                            inv=SimpleNamespace(find=lambda obj: row))
@@ -1051,10 +1061,10 @@ try:
 
     # --- the level the pistol asks -----------------------------------------------
     # СПС asks Стрельба 5 of whoever holds it (inventory.py, "the level") and
-    # a newborn is level 0. The level is the best skill, whichever it is, so
-    # the character is made a level-5 industrialist between two sessions --
-    # not a shooter: what a shot at the dog teaches is weighed below, and a
-    # Стрельба five levels above the dog would be taught nothing.
+    # a newborn is level 0. The shooter must meet the declared skill and
+    # pistol specialisation too; INDUSTRY alone no longer permits the gun.
+    # This over-level shooter gets no XP from the level-one dog. Training
+    # and settlement are checked with the eligible novice blade below.
     c.send("logout;")
     c.frames(0.3)
     c.s.close()
@@ -1062,6 +1072,8 @@ try:
     char_id = store.db.execute("SELECT id FROM characters WHERE name = 'gunner'").fetchone()["id"]
     ch = progression.Character.load(store, char_id)
     ch.skill[progression.INDUSTRY] = [LEVEL, 0, progression.skill_xp_max(LEVEL)]
+    ch.skill[progression.SHOOTING] = [LEVEL, 0, progression.skill_xp_max(LEVEL)]
+    ch.spec[2][0] = 1  # SPS requires pistol specialisation 1.
     ch.recalc()
     ch.save(store)
     # A home registered before registration was restricted stays valid.
@@ -1224,8 +1236,8 @@ try:
               tail[:3], ["usrUp", "c_ap", "ss_di_firearm"])
         check("the dog's bar dropped",
               [p["hcur"] < dog_hp for n, p in got if n == "usrUp" and p["id"] == dog], [True])
-        check("experience pushed for shooting",
-              [bool(p["xp_skills_mask"] & 2) for p in named(got, "rp_info")][:1], [True])
+        check("an eligible level-five shooter gets no XP from the level-one dog",
+              [p for p in named(got, "rp_info") if p.get("xp_skills_mask", 0) & 2], [])
     else:
         check("after the pair: c_ap, then the magazine", tail[:2], ["c_ap", "ss_di_firearm"])
     check("the burst cost one shot's action points", named(got, "c_ap")[0]["ap"], 50 + 5 * LEVEL - COST)
@@ -1398,11 +1410,8 @@ try:
     # is printed on its own behind the line (RoomCombat.kill releases it
     # before calm()).
     _names = [n for n, _ in tail]
-    check("the kill's experience is pushed before the war ends, and only once after the kill",
-          (_names.index("rp_info", i_dead) < _names.index("lch", _names.index("rp_info", i_dead))
-           if "rp_info" in _names[i_dead:] else None,
-           sum(1 for n in _names[i_dead:_names.index("lch", i_dead + 1) + 1] if n == "rp_info")),
-          (True, 1))
+    check("the over-level shooter's kill awards no extra XP",
+          [p for n, p in tail if n == "rp_info" and p.get("xp_skills_mask", 0) & 2], [])
     got = c.until(lambda f: f[0] == "ss_loot", 4)
     check("the corpse fades and a bag appears where it fell",
           only(got, "lch", "ss_loot"),
@@ -1564,7 +1573,7 @@ try:
     c.s.close()
 
     # --- a knife, in the hand of a character who has only ever shot -----------------------------
-    # Стрельба 6 and Ближний бой 0, written into the database the way a
+    # Стрельба 6 and Ближний бой 1 (the Shilo requirement), written into the database the way a
     # character who shot his way up would have them; the pistol goes to the
     # bag and a stall's knife into the hand. A blow that does not crit lands
     # on the dog's stamina first (wiki "Ближний бой"), and the dog has as
@@ -1573,7 +1582,7 @@ try:
     # whole to the dog's price.
     store = accounts.Store(DB)
     ch = progression.Character.load(store, char_id)
-    ch.skill[progression.MELEE] = [0, 0, progression.skill_xp_max(0)]
+    ch.skill[progression.MELEE] = [1, 0, progression.skill_xp_max(1)]
     ch.skill[progression.SHOOTING] = [6, 0, progression.skill_xp_max(6)]
     ch.recalc()
     ch.hp = ch.sp = None
@@ -1594,8 +1603,8 @@ try:
     check("the dog is home again for the knife", spawns.get(DOG_HOME), dog)
     c.send("rp_get_info;")
     rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
-    check("a shooter's hands: Стрельба 6, Ближний бой 0 of 100",
-          (rp["a_skills"][:2], rp["xp_skills"][:2], rp["xp_max_skills"][0]), ([0, 6], [0, 0], 100))
+    check("a shooter's hands: Стрельба 6, Ближний бой 1 of 200 (eligible for Shilo)",
+          (rp["a_skills"][:2], rp["xp_skills"][:2], rp["xp_max_skills"][0]), ([1, 6], [0, 0], 200))
     # Into the dog's aggro radius; it comes the rest of the way itself.
     pos, got = walk(c, loc, pos,
                     lambda cell: mobs.hex_distance(cell, DOG_HOME, loc.width) <= dog_stats.aggro - 0.5,
@@ -1603,10 +1612,11 @@ try:
     dog_cell = last_cell(got, dog, DOG_HOME)
     # What the server must have paid, worked out from what the blows did:
     # each the part of the dog's health and stamina it took, of the price of
-    # a mob one level above the blade (20, times the dog's 0.7), and the kill
+    # a mob at the blade's level (10, times the dog's 0.7), and the kill
     # whatever those parts left of a whole (progression.mob_xp,
     # Fighter.award_xp, RoomCombat.settle_xp).
     mirror = progression.Character()
+    mirror.skill[progression.MELEE] = [1, 0, progression.skill_xp_max(1)]
     whole, paid = float(dog_stats.hp_max + dog_stats.sp_max), [0.0]
 
     def pay(share):
@@ -1651,8 +1661,8 @@ try:
     check("and not one of them Стрельба", shooting_pushed, 0)
     c.send("rp_get_info;")
     rp = named(c.until(lambda f: f[0] == "rp_info"), "rp_info")[0]
-    check("the kill paid Ближний бой the dog's whole price, 20 times its 0.7",
-          (rp["a_skills"][0], rp["xp_skills"][0]), (0, round(20 * dog_stats.xp_mult)))
+    check("the kill paid Ближний бой the equal-level dog's whole price, 10 times its 0.7",
+          (rp["a_skills"][0], rp["xp_skills"][0]), (1, round(10 * dog_stats.xp_mult)))
     check("to exactly what the owner's rule makes of those blows",
           [rp["a_skills"][0], rp["xp_skills"][0]], mirror.skill[progression.MELEE][:2])
     check("while Стрельба is where it was", (rp["a_skills"][1], rp["xp_skills"][1]), (6, 0))
@@ -1662,6 +1672,11 @@ try:
         tail += c.until(ws_off, 1.5)
     check("a knife kill ends the war state as a shot does",
           [p for n, p in tail if n == "lch" and "ws" in p], [{"ws": 0}])
+    settled_names = [n for n, _ in tail]
+    dead_at = next(i for i, (n, p) in enumerate(tail) if n == "lch" and p.get("dead") == dog)
+    stop_at = next(i for i, (n, p) in enumerate(tail) if n == "lch" and p.get("ws") == 0)
+    check("the eligible blade's kill settles XP once, before peace",
+          settled_names[dead_at + 1:stop_at].count("rp_info"), 1)
     c.send("chWorld;")
     got = c.frames()
     check("and the way out is open at once",

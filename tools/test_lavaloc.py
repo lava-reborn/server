@@ -117,11 +117,17 @@ try:
             W = m["width"]
             got = (loc.title, loc.fn, loc.width, loc.height, loc.war, loc.pvp,
                    loc.obstacles, loc.entries, loc.spawns)
+            expected_spawns = [(L.cell_num(x, y, W), t) for x, y, t in L.mob_slots(m)]
+            if lid == 161 and m["attrs"].get("fn") == "DN_mine_entrance3":
+                # The runtime correction changes only the stray Magrib type;
+                # the resource file and all spawn cells stay unchanged.
+                expected_spawns = [(cell, 406 if t == 312 else t)
+                                   for cell, t in expected_spawns]
             want = (m["attrs"].get("title", ""), m["attrs"].get("fn", ""), W, m["height"],
                     int(m["attrs"].get("war", 0)), int(m["attrs"].get("pvp") != "0"),
                     {L.cell_num(x, y, W) for x, y, _ in m["lists"]["obstacles"]},
                     [L.cell_num(x, y, W) for x, y, _ in m["lists"]["inzones"]],
-                    [(L.cell_num(x, y, W), t) for x, y, t in L.mob_slots(m)])
+                    expected_spawns)
             if got != want:
                 bad_world.append(lid)
         if lid is not None and str(lid) in SIDES_TABLE and SIDES_TABLE[str(lid)] != L.exits_row(m):

@@ -667,6 +667,9 @@ def knife_rows(city, texts):
             why="RECOVERED: texts.xml %d-%d, the wiki's «%s» at the whetstone; the "
                 "generic notfinish %d and finish %d the wiki gives every recipe."
                 % (i - 1, i, texts[i - 1], NOTFINISH, FINISH))))
+        if city["name"] == "halfa" and level in (2, 4):
+            out[-1]["why"] += (
+                " Owner 2026-10-23: reuse the existing sharpening recipe at Halfa whetstone 2279.")
     return out
 
 

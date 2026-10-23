@@ -472,6 +472,7 @@ class _Store(object):
 
 class _Killer(object):
     is_player = True
+    level = 0
     eid = rooms.player_id(7)
 
     def __init__(self, have):

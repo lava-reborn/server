@@ -56,6 +56,8 @@ sys.path.insert(0, HERE)
 os.environ.pop("LAVA_LEAVE_COMBAT", None)
 import accounts      # noqa: E402
 import combat        # noqa: E402
+import inventory     # noqa: E402
+import items         # noqa: E402
 import mobs          # noqa: E402
 import progression   # noqa: E402
 import rooms         # noqa: E402
@@ -88,15 +90,25 @@ class _Room(object):
 
 
 class _Store(object):
-    """No gun row anywhere: a burst fired through it clicks every chamber,
-    a miss each, which is all the provocation test below needs."""
+    """An eligible gun with empty chambers, for the dry-burst provocation test."""
+
+    def __init__(self):
+        self.row = dict(uniq=0, char_id=0, type_id=25566,
+                        root=items.FIRE_ARM, slot=inventory.PRIMARY,
+                        ammo_count=0, brk=100)
 
     def item(self, uniq):
-        return None
+        return dict(self.row) if uniq == 0 else None
+
+    def update_item(self, uniq, **fields):
+        self.row.update(fields)
 
 
 class _Inv(object):
     store = _Store()
+
+    def push_di(self, row):
+        pass
 
     def wear_worn(self, n):
         pass
@@ -112,6 +124,7 @@ class _Seat(object):
         self.inv = _Inv()
         self.sent = []
         self.char = progression.Character()
+        self.char.skill[progression.SHOOTING][0] = 1
         self.combat = combat.Fighter(self)
         self.combat.regen_at = float("inf")
         room.players[self] = None

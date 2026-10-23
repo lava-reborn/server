@@ -145,7 +145,7 @@ try:
           [("knife", (ABRI_WHETSTONE,))])
     check("  ..the families", {f: len(family(f)) for f in
                                ("upgrade", "knife", "salvage", "assembly", "decode")},
-          {"upgrade": 132, "knife": 18, "salvage": 10, "assembly": 19, "decode": 8})
+          {"upgrade": 132, "knife": 24, "salvage": 10, "assembly": 19, "decode": 8})
     check("  ..each row's type the one its key was given (the table's \"types\"), no type"
           " given twice",
           ([r["type"] for r in ROWS if DOC["types"].get(r["craft"]["key"]) != r["type"]],
@@ -392,7 +392,7 @@ try:
           (sorted({r["craft"]["gun"] for r in halfa_stone} - set(items.stock_for(1152))),
            sorted({r["craft"]["blueprint"] for r in halfa_stone} - set(items.stock_for(1152))),
            1152 in stood(BLACK_MARKET), WHETSTONE in stood(BLACK_MARKET),
-           sorted({r["craft"]["gun"] for r in halfa_stone})), ([], [], True, True, [6241, 6246]))
+           sorted({r["craft"]["gun"] for r in halfa_stone})), ([], [], True, True, [6231, 6236, 6241, 6246]))
     sold = {t for s in (576, 578, 7311, Q_STALL, 1152) for t in items.stock_for(s)}
     check("  ..so every recipe's blueprint is on sale in Вади-Хальфа (the pistols' at Мастер"
           " Клара's, 575, as the wiki's list had it)",

@@ -123,8 +123,9 @@ check("the hand-made rows change the tables of the two marauders and of no other
 check("and, of theirs, only by the sand, the emerald and the owner's junk",
       [sorted(set(now[t]) - set(bare[t])) for t in BANDITS],
       [sorted([(SAND, DESIGNED[t][SAND], False), (EMERALD, 0.1, True)] + JUNK + GOLD_ROWS) for t in BANDITS])
-check("nobody else rolls for either", sorted(t for t, rows in now.items()
-                                             if t not in BANDITS and {r[0] for r in rows} & {SAND, EMERALD}), [])
+check("only the four explicitly configured Magrib/Peacekeeper miners also roll for these", sorted(t for t, rows in now.items()
+                                             if t not in BANDITS and {r[0] for r in rows} & {SAND, EMERALD}),
+      [838, 839, 840, 841])  # Magrib/Peacekeeper miners: explicit owner additions.
 
 # Where they stand: the mine's files, and no stand-in for a missing creature.
 where = {}

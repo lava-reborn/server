@@ -547,9 +547,10 @@ try:
                                                     corpse[CORPORAL]),
           (sum(miners.values()), sum(stood(i)[MINER_9] for i in VH_TIERS + VH_TUNNELS)),
           (31, 16))
-    check("  ..their loot no richer than the men of their level already on the map: the"
-          " [8] miner's table the Ефрейтор's, the [9]'s the same but for its level's valuable",
-          (mobs.loot_table(MINER) == mobs.loot_table(CORPORAL),
+    check("  ..miners keep the corporal's ordinary loot, plus their explicit sand, emerald"
+          " and silver case; the [9]'s non-valuable rows match the [8]'s",
+          ([r for r in mobs.loot_table(MINER) if r[0] not in (2258, 3159, 6946)]
+           == mobs.loot_table(CORPORAL),
            [r for r in mobs.loot_table(MINER_9) if not r[2]]
            == [r for r in mobs.loot_table(MINER) if not r[2]]), (True, True))
     check("«Просьба о помощи» (221) is on, at Фрэнк (the wiki's «Боец сопротивления»)",
