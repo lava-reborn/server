@@ -474,8 +474,7 @@ for trader, who in sorted(LISTS.items()):
     check("  ..every one servable",
           {t: w for t, w in ((t, unservable(t)) for t in wire) if w}, {})
 # What this change chose itself, beyond the owner's own lists, is priced in
-# one currency. (Борис's 6188, "9мм дареные", carries both from its wiki
-# page -- 1 afro and 0.01 G a round -- and his copies carry it as he does.)
+# one currency. Gift rounds 6188 now cost afro alone as well.
 chosen = KNIVES + [t for t in ROUNDS if t not in own]
 check("the knives and the rounds beyond Борис's own are each priced once",
       [t for t in chosen if not priced_once(t)], [])

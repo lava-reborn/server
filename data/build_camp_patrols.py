@@ -47,7 +47,8 @@ Where in the cell
   MW_023 (static 1319) are the patrol's cells: eight in Вади-Хальфа, four
   of them (SLOTS4) in the valley, so the valley's camp stays the larger
   group. Each is checked here on the cell's own template: on the grid, no
-  obstacle, no exit, no nest, nobody's spawn.
+  obstacle, no exit, no nest, nobody's spawn. Unsafe slots are moved to
+  nearby ground reachable from an entrance. Reachable original slots stay put.
 
 Every row carries "patrol": <camp id>. main() drops every such row from
 data/placements.json, puts the new ones in, leaves the hand rows alone,
@@ -227,6 +228,54 @@ def ring(camp, said=None):
     return out
 
 
+def accessible_cells(loc):
+    """Ground reachable from a valid entrance; calculated only by the builder."""
+    from collections import deque
+    from progression import hex_neighbours
+    reached = {c for c in loc.entries
+               if 0 <= c < loc.width * loc.height and c not in loc.obstacles}
+    if not reached:
+        raise ValueError("%s: no walkable entrance" % loc.file)
+    queue = deque(sorted(reached))
+    while queue:
+        for cell in hex_neighbours(queue.popleft(), loc.width, loc.height):
+            if cell not in reached and cell not in loc.obstacles:
+                reached.add(cell)
+                queue.append(cell)
+    return reached
+
+
+def patrol_slots(loc, slots):
+    """Move only isolated slots to the nearest reachable free ground.
+
+    Reserve original positions so relocating one mob cannot displace another.
+    This runs offline, never in the combat loop.
+    """
+    import encounters
+    import travel
+    from mobs import hex_distance
+    reached = accessible_cells(loc)
+    forbidden = ({c for c, _t in loc.spawns} | set(travel.exit_sides(loc))
+                 | set(encounters.nests(loc)))
+    forbidden.update(r["cell"][1] * loc.width + r["cell"][0]
+                     for r in world.placed_in(loc.id) if "patrol" not in r)
+    original = {y * loc.width + x for x, y in slots}
+    available = reached - forbidden
+    selected = set()
+    result = []
+    for x, y in slots:
+        cell = y * loc.width + x
+        if cell not in reached:
+            candidates = available - original - selected
+            if not candidates:
+                raise ValueError("%s: no reachable patrol slot" % loc.file)
+            cell = min(candidates, key=lambda c: (hex_distance(cell, c, loc.width), c))
+        selected.add(cell)
+        result.append((cell % loc.width, cell // loc.width))
+    _check_slots(loc, result)
+    return tuple(result)
+
+
 def _check_slots(loc, slots):
     import encounters
     import travel
@@ -301,7 +350,7 @@ def rows():
             key = world.pack(x, y)
             loc = world.location(key)
             assert loc.war, "%d,%d (%s) is at peace" % (x, y, loc.file)
-            _check_slots(loc, slots)
+            safe_slots = patrol_slots(loc, slots)
             anchor = ANCHORS.get((x, y))
             if anchor:
                 picked = list(anchor[0])
@@ -313,7 +362,7 @@ def rows():
             out[key] = [
                 dict(type=t, cell=[sx, sy], patrol=camp,
                      why=first if j == 0 else "As the first row of %d (%d,%d)." % (key, x, y))
-                for j, (t, (sx, sy)) in enumerate(zip(picked, slots))]
+                for j, (t, (sx, sy)) in enumerate(zip(picked, safe_slots))]
     missing = set(ANCHORS) - set(seen)
     assert not missing, "anchors on no ring: %s" % sorted(missing)
     return out

@@ -412,6 +412,10 @@ def apply(trader_type, loc_id, own):
     if which is None or b is None:
         return list(own)
     low, top = b
+    # Halfa's knife merchant also serves players arriving at level one.
+    # Keep every other seller and city band unchanged.
+    if trader_type == 1152 and loc_id == 102:
+        low = 1
     if which:
         return goods(which, low, top, ONLY.get(trader_type)) \
             + [t for t in own if not band_ware(t)]

@@ -403,12 +403,12 @@ with open(os.path.join(ROOT, "data", "questgen_weaponcraft.json"), encoding="utf
     CRAFT_DOC = json.load(_fh)
 stone = [r for r in CRAFT_DOC["quests"] if r["give"] == [WHETSTONE]]
 check("«Точильный камень Абри» (2280, the port market) sharpens Нож кастет (G) and Штык нож (G)"
-      " three ways each, for the band 8-12, repeatable services",
+      " three ways each, for player levels 6-20, repeatable services",
       sorted((r["craft"]["gun"], r["craft"]["blueprint"], r["rew_obj"][0], r["level"],
               r["max_level"], r["repeatable"], r["service"]) for r in stone),
-      [(6251, 6620, 6252, 8, 12, 1, True), (6251, 6621, 6253, 8, 12, 1, True),
-       (6251, 6622, 6254, 8, 12, 1, True), (6256, 6623, 6257, 8, 12, 1, True),
-       (6256, 6624, 6258, 8, 12, 1, True), (6256, 6625, 6259, 8, 12, 1, True)])
+      [(6251, 6620, 6252, 6, 20, 1, True), (6251, 6621, 6253, 6, 20, 1, True),
+       (6251, 6622, 6254, 6, 20, 1, True), (6256, 6623, 6257, 6, 20, 1, True),
+       (6256, 6624, 6258, 6, 20, 1, True), (6256, 6625, 6259, 6, 20, 1, True)])
 check("  ..in the original's words, loaded (quests.get), the whetstone standing in the port"
       " market", ([quests.get(r["type"]).texts[quests.NAME] for r in stone],
                   WHETSTONE in standing(PORT)),
@@ -419,9 +419,9 @@ check("  ..its blueprints and knives (G) on Одноухий's stall beside it, 
                  sorted({r["craft"]["gun"] for r in stone} - set(STALLS[(PORT, ONE_EAR)])),
                  [gold_only(t) for t in KNIFE_PRINTS]), ([], [], [True] * 6))
 check("  ..and no other craft of Абри's: no upgrade, salvage, assembly or decoding row in the"
-      " band 8-12 (no upgrader of Абри's in the client)",
+      " city (existing services only)",
       sorted({r["craft"]["family"] for r in CRAFT_DOC["quests"]
-              if (r["level"], r["max_level"]) == (LO, HI)}), ["knife"])
+              if r["craft"]["key"].split(":")[1] == "abri"}), ["knife"])
 
 # --- 4. the plant ---------------------------------------------------------------------------
 print()

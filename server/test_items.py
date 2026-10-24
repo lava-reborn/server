@@ -410,7 +410,8 @@ check("and its rounds", all(a in items.stock_for(1200) for a in items.AMMO_9MM),
 check("with the wiki's other pistol calibres behind them",
       6093 in items.stock_for(1200) and 6094 in items.stock_for(1200), True)
 check("the knife trader sells what his page lists", 6235 in items.stock_for(1152), True)
-check("but not the gold copy", 6236 in items.stock_for(1152), False)
+check("Halfa's knife trader also sells the G kitchen knife for its sharpening recipes",
+      6236 in items.stock_for(1152), True)
 check("a trader without a page has no stock", items.stock_for(999999), [])
 check("dozens of traders got a wiki stock", len(table) >= 70, True)
 bad = {t: [i for i in ids if i not in cat] for t, ids in table.items()}

@@ -166,6 +166,12 @@ def sturdy(mob):
 def gun(sess, type_id, mode, ammo):
     """A gun of this type in the hand, this mode on, ammo rounds of its own
     calibre in it; whatever was in the hand goes to the bag."""
+    # This suite exercises flight and settlement, not refusal of an
+    # underqualified shooter (covered by test_weapon_requirements).
+    for skill in sess.character().skill:
+        skill[0] = 20
+    for spec in sess.character().spec:
+        spec[0] = 5
     store = sess.inv.store
     for r in sess.inv.rows():
         if r["slot"] == inventory.PRIMARY:

@@ -174,6 +174,8 @@ class Stand:
     def say(self, text, group=0):
         self.said.append(text)
 
+    answer = say
+
 
 def put(type_id, slot):
     f = inventory.new_fields(type_id)

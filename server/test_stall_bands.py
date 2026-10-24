@@ -281,7 +281,10 @@ for t, places in sorted(WHERE.items()):
         if kinds:
             want = set()
             for k in kinds:
-                want |= expect(k, lo, hi)
+                # Explicit owner exception: Halfa's knife seller also carries
+                # the level-one/two starter line, without lowering other stalls.
+                floor = 1 if (p, t, k) == (102, 1152, "knives") else lo
+                want |= expect(k, floor, hi)
             if sorted(band_part) != sorted(want) or len(band_part) != len(set(band_part)):
                 wrong[(p, t)] = (sorted(set(band_part) - want), sorted(want - set(band_part)))
             if band_part != stall[:len(band_part)] or \
@@ -310,7 +313,7 @@ def ag(stall):
 COUNTS = {
     "Нубийская долина": {5212: (9, 8), 5221: (9, 8), 5222: (4, 2), 5213: (15, 15), 5223: (15, 15),
                          1187: (6, 0), 5211: (0, 0), 5224: (0, 0), 5217: (0, 0), 5225: (0, 0)},
-    "Вади-Хальфа": {1200: (4, 4), 1201: (10, 10), 1202: (3, 3), 1203: (2, 2), 1152: (3, 3),
+    "Вади-Хальфа": {1200: (4, 4), 1201: (10, 10), 1202: (3, 3), 1203: (2, 2), 1152: (5, 4),
                     1224: (19, 19), 1205: (15, 15), 1204: (15, 15), 650: (15, 15), 2391: (0, 7),
                     1206: (0, 0), 1207: (0, 0), 202: (0, 0), 81: (0, 0), 2180: (0, 0)},
     # The set sellers of Абри (8-12) and Донгола (12-16) hold Чёрный Ловелас[12], A and G,
@@ -373,7 +376,9 @@ print()
 print("nothing out of band, nothing excluded")
 check("no weapon or set piece out of its city's band on any stall of a city's place",
       sorted((p, t, x, level_of(x)) for (p, t), s in stalls.items() for x in s
-             if weapon_or_piece(x) and not PLACE_CITY[p][1] <= level_of(x) <= PLACE_CITY[p][2]),
+             if weapon_or_piece(x) and not (
+                 (1 if (p, t) == (102, 1152) and x in (6229, 6230, 6231)
+                  else PLACE_CITY[p][1]) <= level_of(x) <= PLACE_CITY[p][2])),
       [])
 ALL_ON = sorted({x for s in stalls.values() for x in s})
 BAND_ON = sorted({x for (p, t), s in stalls.items() if shop_bands.SELLERS[t]

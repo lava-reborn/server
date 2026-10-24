@@ -889,6 +889,7 @@ class Fighter:
         self.aim = None         # TimerHandle: a burst waiting for fire_times
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
+        self.damage_revision = 0  # Damage since the start of peaceful healing.
         self.loot = None        # cell of the bag the loot window is open on
         # Index sets of an rp_info being held back (hold_stats): a burst
         # that kills is paid twice in one breath, for the harm and at the
@@ -983,6 +984,7 @@ class Fighter:
         # per hit, chosen by the roll -- this is the only place every hit on a
         # player passes through, from a mob, from a burst or from a blade.
         if hdmg > 0 or sdmg > 0:
+            self.damage_revision = getattr(self, "damage_revision", 0) + 1
             try:
                 self.sess.inv.wear_worn(1)
             except Exception:                    # never let a bag fault stop a fight
@@ -1401,6 +1403,11 @@ class Fighter:
         if obj not in ("", "0") and row is None:
             self.ack(inventory.RES_NOT_FOUND)
             return
+        why = inventory.weapon_requirement_error(row, self.character()) if row is not None else None
+        if why:
+            self.ack(inventory.RES_LEVEL)
+            sess.answer(why)
+            return
         ttype, tid = parse_target(p.get("target"))
         if ttype is None:
             self.ack(inventory.RES_REFUSED)
@@ -1521,6 +1528,18 @@ class Fighter:
         row = self.store.item(uniq)
         if row is not None and row["char_id"] != self.sess.char_id:
             row = None
+        if (row is None or row["slot"] != inventory.PRIMARY or row["brk"] <= 0
+                or inventory.weapon_requirement_error(row, self.character())):
+            # Requirements may have changed during aiming. Finish the animation
+            # without damage, ammunition, durability or AP consumption.
+            for _ in range(weapon.num_shots):
+                rc.room.broadcast(("faShot", dict(id=self.eid, status=1)))
+                rc.room.broadcast(("faShot", dict(id=self.eid, status=0)))
+            # faShot animates a shot and predicts AP use on the client.
+            # Restore the authoritative balance after the last pair; an
+            # invalidated attack still consumes no server-side resources.
+            self.c_ap()
+            return
         if rounds is None:
             rounds = weapon.num_shots
         spent = min(rounds, row["ammo_count"]) if row else 0
@@ -1558,6 +1577,8 @@ class Fighter:
             self.sess.inv.push_di(self.store.item(uniq))
         # The burst's pay and the kill's settlement in one rp_info
         # (hold_stats); release even if the kill raises.
+        blueprint_killer_level = (self.level if killed or any(
+            dead for _body, _h, _s, dead, _pool in others) else None)
         self.hold_stats()
         try:
             if target is not None and not target.is_player:
@@ -1578,13 +1599,13 @@ class Fighter:
             for body, _h, _s, _dead, _pool in others:
                 rc.after_hostile(self, body)
             if killed:
-                rc.kill(target, self)
+                rc.kill(target, self, blueprint_killer_level=blueprint_killer_level)
             for body, _h, _s, dead, _pool in others:
                 if dead:
                     # kill() lets the held rp_info go; each kill's price in
                     # one frame of its own.
                     self.hold_stats()
-                    rc.kill(body, self)
+                    rc.kill(body, self, blueprint_killer_level=blueprint_killer_level)
         finally:
             self.release_stats()
 
@@ -1634,6 +1655,13 @@ class Fighter:
         sess = self.sess
         ch = self.character()
         loc = sess.loc
+        if uniq is not None:
+            row = self.store.item(uniq)
+            if (row is None or row["char_id"] != sess.char_id
+                    or row["slot"] != inventory.PRIMARY or row["brk"] <= 0
+                    or inventory.weapon_requirement_error(row, ch)):
+                rc.room.broadcast(("caMiss", dict(id=self.eid, hex=hexcell if target is None else target.cell)))
+                return
         aim_cell = target.cell if target is not None else hexcell
         killed = False
         reach = (target is not None and target.present(rc)
@@ -1663,6 +1691,7 @@ class Fighter:
             self.sess.inv.wear_uniq(uniq, 1)
         # The blow's pay and the kill's settlement in one rp_info
         # (hold_stats), as for a burst.
+        blueprint_killer_level = self.level if killed else None
         self.hold_stats()
         try:
             if hit and not target.is_player:
@@ -1683,7 +1712,7 @@ class Fighter:
             if reach:
                 rc.after_hostile(self, target)
             if killed:
-                rc.kill(target, self)
+                rc.kill(target, self, blueprint_killer_level=blueprint_killer_level)
         finally:
             self.release_stats()
 
@@ -1697,6 +1726,10 @@ class Fighter:
         row = sess.inv.find(p.get("obj"))
         if row is None or row["root"] != items.HEAL:
             self.ack(inventory.RES_NOT_FOUND)
+            return
+        if items.stimulant_unavailable(row["type_id"]):
+            self.ack(inventory.RES_REFUSED)
+            sess.answer(items.STIMULANT_UNAVAILABLE)
             return
         if row["use_count"] <= 0:
             self.ack(inventory.RES_NO_ITEM)
@@ -1713,6 +1746,9 @@ class Fighter:
                 self.ack(RES_TOO_FAR)
                 return
             target = other
+        if getattr(target, "dead", False):
+            self.ack(inventory.RES_REFUSED)
+            return
         if self.healing is not None:
             self.ack(inventory.RES_NOT_READY)
             return
@@ -1731,19 +1767,35 @@ class Fighter:
         self.ack(inventory.RES_OK)
         if rc is not None and rc.room.ws:
             self.ap = max(0, self.ap - cost)
+        peace_damage = None
+        if items.no_combat(row["type_id"]):
+            peace_damage = (getattr(self, "damage_revision", 0),
+                            getattr(target, "damage_revision", 0))
         self.healing = asyncio.get_running_loop().call_later(
             pace.paced(si.get("heal_time", 0) / 1000.0),
-            self.heal_now, row["uniq"], target)
+            self.heal_now, row["uniq"], target, peace_damage)
 
-    def heal_now(self, uniq, target):
+    def heal_now(self, uniq, target, peace_damage=None):
         self.healing = None
         row = self.store.item(uniq)
         if row is None or row["char_id"] != self.sess.char_id or self.dead:
+            return
+        if items.stimulant_unavailable(row["type_id"]):
+            self.sess.answer(items.STIMULANT_UNAVAILABLE)
+            return
+        if target.dead:
+            return
+        if peace_damage is not None and peace_damage != (
+                getattr(self, "damage_revision", 0),
+                getattr(target, "damage_revision", 0)):
+            self.sess.answer("Лечение прервано полученным уроном. Предмет не израсходован.")
             return
         si = items.params_of(row["type_id"]) or {}
         ch = self.character()
         patient = target.character()
         v = patient.vitals()
+        if v["hcur"] <= 0:
+            return
         # Wiki "Медицина": the skill moves the floor towards the ceiling by
         # skill/20 of the span; the specialisation (surgery under 30% HP,
         # first aid above) scales both by 1 + 0.2 per level.
@@ -2800,7 +2852,7 @@ class RoomCombat:
                 side.hit_exchanged(t)
 
     # --- death, corpse, bag, respawn ----------------------------------------------------
-    def kill(self, victim, killer):
+    def kill(self, victim, killer, *, blueprint_killer_level=None):
         if victim.is_player:
             victim.die(killer)
             if killer is not None and killer.is_player and killer is not victim:
@@ -2811,6 +2863,11 @@ class RoomCombat:
             self.calm()
             return
         mob = victim
+        # Player attacks pass their level before any XP from this attack,
+        # including collateral hits. The corpse materializes its loot later.
+        mob.blueprint_killer_level = (
+            (killer.level if blueprint_killer_level is None else blueprint_killer_level)
+            if killer is not None and killer.is_player else None)
         mob.alive = False
         mob.target = None
         if mob.aim is not None:
@@ -3042,7 +3099,9 @@ class RoomCombat:
         # What a timed event puts on top, by place (events.loot): a
         # prisoner's red armband in the uprising. An ore rock leaves its ore
         # beside the loot (production.yield_of).
-        for type_id, count in mobs.loot_for(mob.stats, RNG, mob.quest_wants) \
+        for type_id, count in mobs.loot_for(mob.stats, RNG, mob.quest_wants,
+                              loc_id=self.room.loc.id,
+                              killer_level=getattr(mob, "blueprint_killer_level", None)) \
                 + events.loot(self.room.loc.id, mob.type_id, RNG) \
                 + production.yield_of(mob.type_id):
             if items.out_of_game(type_id):

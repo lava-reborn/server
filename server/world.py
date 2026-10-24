@@ -449,6 +449,11 @@ class Location:
         self.entries = [self._cell(c) for c in _chunks(txt, "inzones", 4)]
         self.spawns = [(self._cell(c), int(c[4:8], 16))
                        for c in _chunks(txt, "mobs", 8)]
+        # DN_mine_entrance3 has one stray level-8 Magrib soldier among six
+        # level-16 Peacekeepers. Keep that slot with the entrance's guards.
+        if loc_id == 161 and self.fn == "DN_mine_entrance3":
+            self.spawns = [(cell, 406 if type_id == 312 else type_id)
+                           for cell, type_id in self.spawns]
 
     def _cell(self, chunk):
         gx, gy = int(chunk[0:2], 16), int(chunk[2:4], 16)

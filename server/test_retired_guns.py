@@ -257,7 +257,7 @@ class _Store:
 
 
 _loot_for, _ev, _yield = mobs.loot_for, events.loot, production.yield_of
-mobs.loot_for = lambda st, rng, wanted=(): [(STEYR, 1), (UMP, 1), (CHANG_G, 1), (STEYR_P, 1)]
+mobs.loot_for = lambda st, rng, wanted=(), **context: [(STEYR, 1), (UMP, 1), (CHANG_G, 1), (STEYR_P, 1)]
 events.loot = lambda loc, mob, rng: [(CHANG, 1)]
 production.yield_of = lambda t: [(STEYR_CLIP, 1)]
 try:

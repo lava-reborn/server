@@ -1869,9 +1869,70 @@ def fn_sublocation_global():
     return a
 
 
+def fn_quick_med_pick():
+    """Pick a non-buff entry; battle medicine in war, peace/bag first otherwise.
+
+    PersEquip keeps arrays sorted by restoration. Walk backwards, retaining
+    the first (strongest) entry at each priority. Manual inventory use is
+    untouched. HealItem.initialize and Bag.chekExist define the fields here.
+    """
+    a = Asm()
+    a.push("war").push(0).var("_global").member("lol", "core").push("Master").op("getmember")
+    a.push("getInstance").op("callmethod").member("currentLocation", "warStatus").op("definelocal")
+    a.push("best", None).op("definelocal")
+    a.push("bestRank", -1).op("definelocal")
+    a.push("i").var("entries").member("length").push(1).op("subtract").op("definelocal")
+    a.label("loop")
+    a.var("i").push(0).op("less2").iftrue("out")
+    a.push("entry").var("entries").var("i").op("getmember").op("definelocal")
+    a.push("item").var("entry").member("item").op("definelocal")
+    for field in ("bonus_act_time", "str_bonus", "dex_bonus", "sta_bonus", "per_bonus", "int_bonus"):
+        a.push(field, 1).var("item").push("getProp").op("callmethod").iftrue("next")
+    a.push("_effects", 1).var("item").push("getProp").op("callmethod").member("length").iftrue("next")
+    a.push("use_count", 1).var("item").push("getProp").op("callmethod").op("not").iftrue("next")
+    a.push("cost").push("heal_cost", 1).var("item").push("getProp").op("callmethod").op("definelocal")
+    a.push("rank", 0).op("definelocal")
+    a.var("war").op("not").iftrue("peace")
+    # Peace medicine has zero AP cost and is forbidden during combat.
+    a.var("cost").op("not").iftrue("next")
+    a.push(0).var("_global").member("lol", "core").push("Master").op("getmember").push("getInstance").op("callmethod")
+    a.member("gamer", "apManager", "maxAP").var("cost").op("less2").iftrue("next")
+    a.push(True).iftrue("compare")
+    a.label("peace")
+    a.var("cost").iftrue("bag")
+    a.push("rank", 2).op("definelocal")
+    a.label("bag")
+    a.var("item").push(1).var("equip").member("bag").push("chekExist").op("callmethod").op("not").iftrue("compare")
+    a.push("rank").var("rank").push(1).op("add2").op("definelocal")
+    a.label("compare")
+    a.var("bestRank").var("rank").op("less2").op("not").iftrue("next")
+    a.push("best").var("entry").op("definelocal")
+    a.push("bestRank").var("rank").op("definelocal")
+    a.label("next")
+    a.push("i").var("i").push(1).op("subtract").op("definelocal")
+    a.push(True).iftrue("loop")
+    a.label("out")
+    a.var("best").op("return")
+    return a
+
+
+def fn_quick_med_use(array, original):
+    """Pass one eligible entry to the original handler, then restore its array."""
+    a = Asm()
+    a.push("saved").var("this").member(array).op("definelocal")
+    a.push("picked").var("saved").var("this").push(2, "__quickMedPick").op("callfunc").op("definelocal")
+    a.var("picked").op("not").iftrue("out")
+    a.var("this").push(array).var("picked").push(1).op("initarray").op("setmember")
+    a.push(0).var("this").push(original).op("callmethod").op("pop")
+    a.var("this").push(array).var("saved").op("setmember")
+    a.label("out")
+    return a
+
+
 def injected():
     a = Asm()
     for name, fn, params in (
+            ("__quickMedPick", fn_quick_med_pick, ("equip", "entries")),
             ("__wideDraw", fn_draw, ("bd", "host", "a", "d", "tx", "ty",
                                      "cx", "cy", "cw", "ch")),
             ("__wideFill", fn_fill, ("mc", "bd", "x0", "y0", "x1", "y1")),
@@ -1900,6 +1961,10 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("core", "player", "PersEquip"), "useHealItem", "__quickHealOrig",
+         (), fn_quick_med_use("healArr", "__quickHealOrig")),
+        (("core", "player", "PersEquip"), "useEatItem", "__quickEatOrig",
+         (), fn_quick_med_use("eatArr", "__quickEatOrig")),
         (("gpui", "view", "ExtViewFrame"), "boundOX", "__wideBoundXOrig",
          (), fn_location_bound("X")),
         (("gpui", "view", "ExtViewFrame"), "boundOY", "__wideBoundYOrig",

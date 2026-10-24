@@ -203,8 +203,10 @@ try:
               % (name, camp, len(cells), n), (counts, wrong), ({n}, []))
         check("  ..of levels %d-%d, the camp's band, none above it" % (lo, hi),
               all(lo <= lv <= hi for lv in levels), True)
-        check("  ..on the slot cells of MW_023", slots,
-              {tuple(sorted(SLOTS8 if n == 8 else SLOTS4))})
+        check("  ..on MW_023 slots corrected only where isolated", slots,
+              {tuple(sorted(build_camp_patrols.patrol_slots(
+                  world.location(world.pack(x, y)), SLOTS8 if n == 8 else SLOTS4)))
+               for x, y in cells})
     check("the valley's ring: its bandits 20, 21 and 251, four to a cell",
           sorted({t for c in RINGS[VALLEY_CAMP] for t in STOOD[c]}), sorted(VALLEY_KINDS))
     check("the whole range of each camp's patrol kinds stands somewhere on its ring",

@@ -326,7 +326,7 @@ DI_COMMAND = {
 # holds no ordinary 9мм НАТО at all, so load() would answer RES_WRONG_AMMO
 # either way round.
 STARTER_PISTOL = 25562          # pistols_1_lvl_0, "Самострел", a clip of five
-STARTER_AMMO = 6188             # "9мм даренные", sold twenty to the pack
+STARTER_AMMO = items.STARTER_ROUNDS             # "9мм даренные", sold twenty to the pack
 STARTER_KIT = ((STARTER_PISTOL, 1), (STARTER_AMMO, items.AMMO_PACK))
 
 # The gun goes into the hand, not the bag. Firing and striking both refuse
@@ -617,28 +617,10 @@ def card_repeat(rows):
 # their own name, the whole Беженец rung among them -- and a rule the
 # tooltip never shows would be a rule nobody could follow. So a thing that
 # asks for nothing is for everybody. The character's level is its best
-# skill (progression.Character.level), the figure the client shows as
-# "уровень"; which skill the thing names does not matter, only how high,
-# and so a knife-fighter of level 8 may wear the Налетчик set that says
-# "Стрельба 8". The client's own check stays what it always was: a
-# warning that a thing whose skill is not met "будет ломаться быстрее",
-# which the player may wave away (EquipInterface.checkForWarning).
-#
-# Attributes, specialisations and the fighter's reputation a thing may ask
-# for are no level and stay that warning. Medicine is outside the rule
-# altogether: it is not worn, lends nothing held (GEAR_ROOTS), and the
-# client's quick heal takes it straight from the bag, so a gate on the hand
-# would only be a refusal the heal button walks around. Rounds ask for no
-# skill at all, so loading a gun is not gated either; a gun that may not be
-# held can still be loaded in the bag.
-#
-# The only way onto the body is ss_move (PersEquip.requestTranfer); buying,
-# looting, the bank, the post and a barter all land in the bag, and so does
-# a thing above one's level: buying it is allowed, as in the original,
-# whose stall says nothing about levels. What an existing character already
-# wears above its level goes back to the bag at the next login
-# (Inventory.over_level_to_bag), which costs nothing -- the bag has no
-# cells, and the weight counts the bag and the body alike.
+# skill (progression.Character.level), the figure shown on the card.
+# Weapons additionally require every declared skill and specialisation,
+# both when equipped and when used; armour retains the general-level rule.
+# Medicine and ammunition are not wearable gear. Buying remains unrestricted.
 
 def item_level(type_id):
     """The level a type asks of whoever wears or holds it; 0 for none."""
@@ -646,9 +628,33 @@ def item_level(type_id):
     return max(unpacked(si.get("need_skills_m"), si.get("need_skills"), progression.SKILLS))
 
 
-def wearable(row, level):
-    """Whether a character of this level may have this row on the body."""
-    return row["root"] not in GEAR_ROOTS or item_level(row["type_id"]) <= level
+def weapon_requirement_error(row, character):
+    """The same declared skill/spec requirements for equipping and attacking.
+
+    Use effective skills, as on the character card; an unlearned spec is -1,
+    so even a declared requirement of zero requires learning that spec.
+    """
+    if row["root"] not in (items.FIRE_ARM, items.COLD_ARM):
+        return None
+    if item_level(row["type_id"]) > character.level:
+        return level_line(row, character.level)
+    si = items.params_of(row["type_id"]) or {}
+    for field, size, value, titles in (
+            ("skills", progression.SKILLS, character.skill_level, progression.SKILL_TITLES),
+            ("specs", progression.SPECS, character.spec_level, progression.SPEC_TITLES)):
+        mask = si.get("need_" + field + "_m", 0) or 0
+        levels = unpacked(mask, si.get("need_" + field), size)
+        for i, needed in enumerate(levels):
+            if mask >> i & 1 and value(i) < needed:
+                return '«%s»: требуется «%s» %d, у вас %d' % (
+                    item_title(row["type_id"]), titles[i], needed, value(i))
+    return None
+
+
+def wearable(row, level, character=None):
+    """Body level gate, plus weapon skill/spec gates when a character is known."""
+    return ((row["root"] not in GEAR_ROOTS or item_level(row["type_id"]) <= level)
+            and (character is None or weapon_requirement_error(row, character) is None))
 
 
 def item_title(type_id):
@@ -1227,28 +1233,27 @@ class Inventory:
                      len(moved), moved)
         return moved
 
-    def over_level_to_bag(self):
-        """Take off whatever the character's level does not reach yet.
+    def over_level_to_bag(self, notify=False):
+        """Move ineligible gear to the bag on login or specialisation reset.
 
-        For those who put a thing on before the level rule existed, or
-        whose thing a data file has since moved up a rung: nothing is lost
-        and nothing lingers half-worn. Leaving it on without its bonuses
-        would not hold -- the card adds a worn thing's action points and
-        crit by itself (CharInterface.showOD/showKrit), and a gun in the
-        hand fires -- while the bag takes anything, having no cells, and
-        carries it at the same weight. Called once per load, like
-        unfit_to_bag and after it, before the gear is counted and before
-        the client has asked for a slot; the lines saying what went where
-        wait in level_notes for the first lenter. The level can only grow
-        (a skill never falls), so nothing needs taking off mid-session.
-        Returns the uniqs it moved.
+        notify=True also updates the live client. Items are preserved.
         """
-        level = self.sess.character().level
+        ch = self.sess.character()
+        level = ch.level
         moved = [r for r in self.rows()
-                 if r["slot"] in BODY_SLOTS and not wearable(r, level)]
+                 if r["slot"] in BODY_SLOTS and not wearable(r, level, ch)]
         for r in moved:
             self.store.update_item(r["uniq"], slot=BAG)
-        self.level_notes = ["Перенесено в рюкзак — %s" % level_line(r, level) for r in moved]
+            if notify:
+                # ss_obj_move only updates other players in the client.
+                # Rebuild our own item from its now-current database slot.
+                self.push_status(r, 0)
+                self.push_status(r, 1)
+        # Live reset: do not claim that the client has redrawn the transfer.
+        # Login notes describe the inventory the client is about to load.
+        if not notify:
+            self.level_notes += ["Перенесено в рюкзак — %s" % (
+                weapon_requirement_error(r, ch) or level_line(r, level)) for r in moved]
         if moved:
             log.info("  ..    %d item(s) above level %d put back in the bag: %s",
                      len(moved), level, [r["uniq"] for r in moved])
@@ -1553,11 +1558,12 @@ class Inventory:
         # and whatever it pushes out, which lands where the first came from
         # -- a hand, when the two hands trade places. The client shows 45's
         # own words and puts the thing back; the chat says which level.
-        level = self.sess.character().level
+        ch = self.sess.character()
+        level = ch.level
         for thing, slot in ((row, dst), (displaced, src)):
-            if thing and slot in BODY_SLOTS and not wearable(thing, level):
+            if thing and slot in BODY_SLOTS and not wearable(thing, level, ch):
                 self.ack(RES_LEVEL)
-                self.sess.say(level_line(thing, level))
+                self.sess.answer(weapon_requirement_error(thing, ch) or level_line(thing, level))
                 return
         self.store.update_item(row["uniq"], slot=dst)
         if displaced:
