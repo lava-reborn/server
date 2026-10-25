@@ -13,12 +13,11 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace as NS
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 os.environ.pop("LAVA_DB_URL", None)
 os.environ["LAVA_DB"] = ":memory:"
-os.environ.setdefault("LAVA_RES", "D:/lava-reborn/res")
 sys.path.insert(0, str(ROOT / "tools"))
 logging.disable(logging.CRITICAL)
 
@@ -259,6 +258,29 @@ class UpgradeOperations(unittest.TestCase):
         self.assertNotIn(ammo, self.s.inv.bag_pieces())
         self.assertEqual(self.acks(), [1])
         self.assertFalse(any(n.startswith("ss_") for n, _p in self.frames))
+
+    def test_window_rollback_keeps_reload_and_success_leaves_no_stale_notification(self):
+        window = self.window()
+        uniq = self.gun["uniq"]
+        timer = Mock()
+        self.s.inv.reloads[uniq] = timer
+        with patch.object(self.s.inv, "give_pieces", side_effect=RuntimeError("reward failed")):
+            window.ss_upd(self.params)
+        timer.cancel.assert_not_called()
+        self.assertIs(self.s.inv.reloads[uniq], timer)
+        self.frames.clear()
+        self.s.inv.reloaded(uniq)
+        self.assertNotIn(uniq, self.s.inv.reloads)
+        self.assertTrue(any(n == "ss_di_firearm" for n, _p in self.frames))
+        self.frames.clear()
+        self.s.inv.reloads[uniq] = timer
+        window.ss_upd(self.params)
+        self.assertEqual(self.acks(), [0])
+        self.assertIsNone(self.store.item(uniq))
+        self.frames.clear()
+        self.s.inv.reloaded(uniq)
+        self.assertNotIn(uniq, self.s.inv.reloads)
+        self.assertEqual(self.frames, [])
 
     def test_window_rejects_wrong_output_and_replay_without_consumption(self):
         window = self.window()

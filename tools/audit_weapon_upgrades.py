@@ -14,7 +14,6 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 os.environ.pop('LAVA_DB_URL', None)
 os.environ['LAVA_DB'] = ':memory:'
-os.environ.setdefault('LAVA_RES', 'D:/lava-reborn/res')
 sys.path.insert(0, str(ROOT / 'server'))
 logging.disable(logging.CRITICAL)
 import craft  # noqa: E402

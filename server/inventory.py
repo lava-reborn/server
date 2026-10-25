@@ -1670,6 +1670,12 @@ class Inventory:
             self.push_di(row)
 
     def forget_reload(self, uniq):
+        # A transactional deletion may roll back. Keep its timer until the
+        # normal deadline: reloaded checks ownership/existence, so a committed
+        # deletion is a no-op and a rollback still delivers completion. Item
+        # serials are never reused (accounts.items AUTOINCREMENT).
+        if getattr(getattr(self.store, "db", None), "_atomic_depth", 0):
+            return
         handle = self.reloads.pop(uniq, None)
         if handle:
             handle.cancel()

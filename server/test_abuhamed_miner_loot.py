@@ -6,7 +6,6 @@ from pathlib import Path
 import random
 from types import SimpleNamespace as NS
 import unittest
-from unittest.mock import patch
 
 os.environ.pop('LAVA_DB_URL', None)
 os.environ['LAVA_DB'] = ':memory:'
@@ -19,15 +18,24 @@ import mobs
 import world
 from testkit import run_cases
 
-CHANCES = {2258: 1, 3159: .25, 6959: .03, 6953: .1, 6946: .1}
+CHANCES = {2258: 1, 3159: .25, 6953: .05, 6946: .1}
 
 
 class AbuHamedMinerLoot(unittest.TestCase):
+    def test_other_miners_keep_their_existing_chances(self):
+        for kind, sand, emerald, case in ((838, .75, .15, 6946), (839, .75, .15, 6946),
+                                          (840, 1, .25, 6953), (841, 1, .25, 6953)):
+            table = {t: c for t, c, _ in mobs.loot_table(kind)}
+            self.assertEqual((table[2258], table[3159], table[case]), (sand, emerald, .05))
+            self.assertFalse(mobs.independent_loot(kind))
+
     def test_chances_and_exact_boundaries(self):
         for kind in (930, 931):
             table = mobs.loot_table(kind)
             self.assertEqual({t: c for t, c, _ in table if t in CHANCES}, CHANCES)
             self.assertNotIn(6928, [t for t, _, _ in table])
+            self.assertNotIn(6959, [t for t, _, _ in table])
+            self.assertNotIn(6959, mobs.independent_loot(kind))
             for target, chance in CHANCES.items():
                 if chance == 1:
                     continue
@@ -78,13 +86,23 @@ class AbuHamedMinerLoot(unittest.TestCase):
         self.assertTrue(combat.Fighter.ss_get_di(NS(sess=sess), dict(obj=obj)))
         self.assertEqual(frames[0][1]['ammo_type'], 6109)
 
-    def test_quest_diamond_and_golden_diamond_are_distinct(self):
+    def test_quest_diamond_is_preserved_and_golden_diamond_does_not_drop(self):
         for kind in (930, 931):
+            self.assertIn((5545, .1), mobs.quest_table(kind))
             for wanted in ((), (5545,)):
-                with patch.object(mobs, 'carried', return_value=[]):
-                    drops = mobs.loot_for(mobs.stats(kind), NS(random=lambda: 0), wanted)
+                # Include carried junk and ammunition: no alternative drop
+                # path may reintroduce the removed saleable diamond.
+                rng = random.Random(1)
+                rng.random = lambda: 0
+                drops = mobs.loot_for(mobs.stats(kind), rng, wanted)
                 self.assertEqual(any(t == 5545 for t, _ in drops), bool(wanted))
-                self.assertIn((6959, 1), drops)
+                # Force the quest's own boundary, independently of junk RNG.
+                quest_drops = mobs.quest_roll(kind, wanted, NS(random=lambda: 0))
+                self.assertEqual(any(t == 5545 for t, _ in quest_drops), bool(wanted))
+                self.assertNotIn(6959, [t for t, _ in drops + quest_drops])
+            for value, expected in ((.099999, True), (.1, False)):
+                drops = mobs.quest_roll(kind, (5545,), NS(random=lambda: value))
+                self.assertEqual(any(t == 5545 for t, _ in drops), expected)
         self.assertEqual(items.params_of(6959)['cost'], 3000)
         self.assertFalse(items.out_of_game(6959))
 

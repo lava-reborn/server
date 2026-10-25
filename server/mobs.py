@@ -513,17 +513,21 @@ def loot_table(type_id):
 
     The wiki's rows that resolve to something droppable and the hand-made
     ones of data/loot_manual.json, the higher chance kept where an item is
-    listed twice; and for a man, the valuable of his level. Built once per
-    type.
+    listed twice, unless a manual row has exact_chance=true; and for a man,
+    the valuable of his level. Built once per type. An exact manual chance
+    also takes precedence over that generic level drop.
     """
     rows = _TABLES.get(type_id)
     if rows is not None:
         return rows
     st = stats(type_id)
     got = {}
+    exact = set()
 
-    def add(t, chance, valuable):
+    def add(t, chance, valuable, exact_chance=False):
         if t is None or chance <= 0 or not droppable(t):
+            return
+        if t in exact and not exact_chance:
             return
         # Listed twice, an item keeps the better chance and the tier of the
         # row that gave it. The one case in the data is on purpose: twelve
@@ -535,8 +539,10 @@ def loot_table(type_id):
         # cap of two nearly every time: +21 % afro a kill of a level-2
         # colonist, the kind that already pays the most (UNDONE,
         # лут-баланс).
-        if t not in got or chance > got[t][0]:
+        if exact_chance or t not in got or chance > got[t][0]:
             got[t] = (chance, valuable)
+        if exact_chance:
+            exact.add(t)
 
     for rec in _loot_wiki().get(str(type_id), []):
         valuable = LOOT_TIERS.get(rec.get("tier"))
@@ -551,7 +557,8 @@ def loot_table(type_id):
             continue
         valuable = LOOT_TIERS.get(rec.get("tier"))
         if valuable is not None and rec.get("type"):
-            add(int(rec["type"]), float(rec.get("chance", 0)), valuable)
+            add(int(rec["type"]), float(rec.get("chance", 0)), valuable,
+                exact_chance=rec.get("exact_chance") is True)
     if st.role in HUMAN_ROLES:
         add(level_piece(VALUABLE_SERIES, st.level), VALUABLE_CHANCE, True)
     # What the body has anyway is not rolled for a second time: the dog's

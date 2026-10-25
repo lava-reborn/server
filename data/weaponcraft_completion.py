@@ -44,7 +44,8 @@ def additions(city, existing, *, blueprint, eligible, params, service,
     Halfa's shotgun masters also serve 9-12: Abri and Dongola have none.
     Its rifle apprentice handles the starter AK. Other cities keep their masters.
     """
-    load = lambda name: json.loads((DATA / name).read_text(encoding="utf-8"))
+    def load(name):
+        return json.loads((DATA / name).read_text(encoding="utf-8"))
     families = load("firearm_families.json")["lines"]
     wiki = load("items_wiki.json")["items"]
     seen = {(r["craft"]["gun"], r["craft"]["effect"])

@@ -827,17 +827,10 @@
     "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
    },
    {
-    "type": 6959,
-    "_name": "Золотой Алмаз",
-    "chance": 0.03,
-    "tier": "Ценный",
-    "independent": true,
-    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
-   },
-   {
     "type": 6953,
     "_name": "Золотой портсигар",
-    "chance": 0.1,
+    "chance": 0.05,
+    "exact_chance": true,
     "tier": "Ценный",
     "independent": true,
     "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
@@ -877,17 +870,10 @@
     "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
    },
    {
-    "type": 6959,
-    "_name": "Золотой Алмаз",
-    "chance": 0.03,
-    "tier": "Ценный",
-    "independent": true,
-    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
-   },
-   {
     "type": 6953,
     "_name": "Золотой портсигар",
-    "chance": 0.1,
+    "chance": 0.05,
+    "exact_chance": true,
     "tier": "Ценный",
     "independent": true,
     "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
