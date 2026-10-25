@@ -144,6 +144,7 @@ import events  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import mobs  # noqa: E402
+import npcs  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
 import rooms  # noqa: E402
@@ -767,7 +768,9 @@ def walk_to(c, loc, pos, goal, avoid=()):
         # test_abri_open's does -- a stand-in for the walk round a camp.
         path = [min(goals, key=lambda cell: mobs.hex_distance(cell, pos, loc.width))]
     c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path))
-    c.frames(0.3 + 0.25 * len(path))
+    got = c.frames(0.3 + mobs.HEX_MS / 1000.0 * max(0, len(path) - 1))
+    if any(p.get("dead") == 0 for p in named(got, "lch")):
+        raise AssertionError("Test character died while walking in %s" % loc.id)
     return path[-1]
 
 
@@ -782,9 +785,40 @@ def through(c, loc_id, side, pos, foes=(), gun=None):
     loc = world.location(loc_id)
     cells = {cell for cell, s in travel.exit_sides(loc).items()
              if s == side and cell not in loc.obstacles}
-    walk_to(c, loc, pos, cells)
-    got = []
     foes = list(foes)
+    if gun and foes:
+        # Respond when sight opens, rather than crossing the entire firing
+        # lane and only fighting after a door refuses the wounded player.
+        path = mobs.find_path(loc, pos, lambda cell: cell in cells, set(), limit=20000)
+        if not path:
+            raise AssertionError("No walking route to exit %s in %s" % (side, loc_id))
+        mark = next((i for i in range(len(c.seen) - 1, -1, -1)
+                     if c.seen[i][0] == "lenter"), 0)
+        reach = items.params_of(ADMIN_GUN)["max_range"][0]
+        for cell in path:
+            if cell != pos:
+                pos = walk_to(c, loc, pos, cell)
+            placed, dead = {}, set()
+            for command, p in c.seen[mark:]:
+                if command == "lch" and "newUser" in p:
+                    placed[p["newUser"]] = p["pos"]
+                elif command == "userMove" and p.get("path"):
+                    placed[p["id"]] = p["path"][-1]
+                elif command == "lch" and "dead" in p:
+                    dead.add(p["dead"])
+            for eid in list(foes):
+                if eid in dead:
+                    foes.remove(eid)
+                elif eid in placed and mobs.hex_distance(pos, placed[eid], loc.width) <= reach \
+                        and mobs.line_of_fire(loc, pos, placed[eid]) is None:
+                    if shoot(c, gun, eid, 4) is not None:
+                        foes.remove(eid)
+            if not foes:
+                walk_to(c, loc, pos, cells)
+                break
+    else:
+        walk_to(c, loc, pos, cells)
+    got = []
     for _ in range(8):
         c.send("chWorld;to=1;")
         got = c.until(lambda f: f[0] == "lcall" or (f[0] == "cmdAck" and f[1].get("res")), 4)
@@ -1316,6 +1350,19 @@ try:
         armour = give(c, sets.SETS[11004]["members"][piece])
         c.send("ss_move;obj=x%s;to=%d;from=2048;" % (armour, slot))
         check("mine route: level-17 armour G %s equipped" % piece, acks(c.frames()), [0])
+    # Restore through the actual healer after equipping: earlier fights
+    # can leave partial HP. Keep real damage, AI, level and exit refusals.
+    lid, clinic = goto(c, STATION)
+    healer_type = next(t for _cell, t in world.location(STATION).spawns
+                       if t and MT[t][0] == world.HEALER)
+    healer = inhabitants(clinic, lid)[healer_type][0]
+    cheat(c, "/money %d 0" % npcs.healer_price(healer_type, 10))
+    c.send("on_conv;mob=%d;op=1;" % healer)
+    healed = c.frames()
+    vitals = [p for p in named(healed, "usrUp") if p.get("id") == 0]
+    check("mine route: healer restores full HP and stamina before entry",
+          (acks(healed), [(p["hcur"] == p["hmax"], p["scur"] == p["smax"]) for p in vitals]),
+          ([0], [(True, True)]))
     reload(c, GUN)
     lid, arrival = goto(c, DARK_MOUTH)
     here = inhabitants(arrival, lid)
