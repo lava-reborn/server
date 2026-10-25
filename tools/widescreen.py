@@ -2073,6 +2073,9 @@ def fn_action_cancel():
     a.var("p").member("release").op("not").iftrue("event")
     a.push(0).var("this").member("master", "gamer", "itemActivator").push("breakAction").op("callmethod").op("pop")
     a.label("event")
+    # userMove has already cleared the bar and started the new route.
+    # breakAction only releases the item latch; do not dispatch movement twice.
+    a.var("p").member("moving").iftrue("out")
     a.push("type", "moveWalker", "id", 0, 2).op("initobject")
     a.push(1).var("this").push("dispatchEvent").op("callmethod").op("pop")
     a.label("out")

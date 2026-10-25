@@ -343,7 +343,7 @@ def _order(type_id):
     kind, level, line, tier = wares()[type_id]
     if kind == "sets":
         # A set whole, helm to boots, the ordinary before the gold one.
-        family = sets.SETS[sets.set_of(type_id)]["name"].removesuffix(" (G)")
+        family = sets.SETS[sets.set_of(type_id)]["family"]
         return level, family, tier, line
     # A gun or a knife by its line, the ordinary right before its gold; a
     # medicine by the rows of its tier, the afro ones before the gold.

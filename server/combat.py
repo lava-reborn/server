@@ -890,6 +890,7 @@ class Fighter:
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
         self.reloading = None   # TimerHandle: ammunition is applied on completion
+        self.reload_plan = None
         self.healing_peace = True
         self.action_revision = 0
         self.walk_ap = None     # (cells, start time, already charged steps)
@@ -1129,7 +1130,7 @@ class Fighter:
         the room is at war, which the client also subtracts by itself
         (APManager.gamerMove); c_ap after the next action corrects drift."""
         Fighter.settle_walk(self, stop=True)
-        Fighter.cancel_pending(self, notify=True)
+        Fighter.cancel_pending(self, notify=True, moving=True)
         walk = getattr(self.sess, "walk", None)
         if walk is not None:
             path, began = walk
@@ -1153,13 +1154,6 @@ class Fighter:
             self.ap = max(0, self.ap - cost)
         self.walk_ap = None if stop or steps == len(cells) - 1 else (cells, began, steps)
 
-    def cancel_aim(self):
-        for name in ("aim", "strike"):
-            handle = getattr(self, name)
-            if handle is not None:
-                handle.cancel()
-                setattr(self, name, None)
-
     def primary_changed(self):
         """An accepted active-slot change abandons aim and reloading.
 
@@ -1176,7 +1170,7 @@ class Fighter:
         Fighter.settle_walk(self, stop=True)
         Fighter.cancel_pending(self)
 
-    def cancel_pending(self, notify=False, replacing=False):
+    def cancel_pending(self, notify=False, replacing=False, moving=False):
         """Invalidate callbacks as well as removing their timer handles."""
         had = False
         had_heal = getattr(self, "healing", None) is not None
@@ -1192,13 +1186,15 @@ class Fighter:
             self.sess.inv.cancel_reloads()
         self.action_revision = getattr(self, "action_revision", 0) + 1
         if had and notify:
-            Fighter.action_cancelled(self, release=not replacing, stop_aim=had_aim)
+            Fighter.action_cancelled(self, release=not replacing, stop_aim=had_aim, moving=moving)
             if had_heal or had_reload:
                 self.c_ap()
 
-    def action_cancelled(self, release=True, stop_aim=False):
+    def action_cancelled(self, release=True, stop_aim=False, moving=False):
         """Stop the owner's UI and, for aiming, the observers' animation."""
         params = dict(release=int(release))
+        if moving:
+            params["moving"] = 1
         if stop_aim:
             params["stop_aim"] = 1
         self.sess.send("actionCancel", **params)
@@ -1917,11 +1913,14 @@ class Fighter:
         self.healing = None
         row = self.store.item(uniq)
         if row is None or row["char_id"] != self.sess.char_id or self.dead:
+            self.sess.send("actionCancel", release=1)
             return
         if items.stimulant_unavailable(row["type_id"]):
+            self.sess.send("actionCancel", release=1)
             self.sess.answer(items.STIMULANT_UNAVAILABLE)
             return
         if target.dead:
+            self.sess.send("actionCancel", release=1)
             return
         si = items.params_of(row["type_id"]) or {}
         peace = items.no_combat(row["type_id"])
@@ -1939,8 +1938,10 @@ class Fighter:
         patient = target.character()
         v = patient.vitals()
         if v["hcur"] <= 0:
+            self.sess.send("actionCancel", release=1)
             return
         if self.ap < ap_cost:
+            self.sess.send("actionCancel", release=1)
             return
         # Wiki "Медицина": the skill moves the floor towards the ceiling by
         # skill/20 of the span; the specialisation (surgery under 30% HP,

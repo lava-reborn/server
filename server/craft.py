@@ -55,6 +55,7 @@ and this one asks items, quests, inventory and combat late, inside the
 functions.
 """
 import copy
+from functools import lru_cache
 import json
 import logging
 import os
@@ -389,19 +390,26 @@ def lay_stat_corrections(type_id, p):
     if _STAT_CORRECTIONS is None:
         with open(os.path.join(DATA, "weaponcraft_corrections.json"), encoding="utf-8") as fh:
             _STAT_CORRECTIONS = {int(k): v for k, v in json.load(fh)["items"].items()}
-    correction = _STAT_CORRECTIONS.get(type_id)
-    if correction is None:
-        return
+    if type_id in _STAT_CORRECTIONS:
+        p.update(copy.deepcopy(_stat_fields(type_id)))
+
+
+@lru_cache(maxsize=None)
+def _stat_fields(type_id):
+    """Build deterministic corrections once; callers receive independent lists."""
+    correction = _STAT_CORRECTIONS[type_id]
     import items
     base, effect = mod_of(type_id)
     original = items.params_of(base)
     changed = copy.deepcopy(original)
     _apply(changed, effect)
+    p = {}
     for key in correction.get("from_effect", ()):
         p[key] = changed[key]
     for key in correction.get("from_base", ()):
         p[key] = copy.deepcopy(original[key])
     p.update(copy.deepcopy(correction.get("values", {})))
+    return p
 
 
 # --- the upgrader's window -------------------------------------------------------------

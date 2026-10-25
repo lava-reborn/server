@@ -1,6 +1,5 @@
 """Repair-only A/G counterparts; sale prices and restoration are independent."""
 from functools import lru_cache
-import json
 
 LEVEL_MULTIPLIERS = {
     10: 4.75, 11: 4.5, 12: 4.25, 13: 3.75, 14: 3.5, 15: 2.75,
@@ -22,9 +21,10 @@ def counterparts():
     import items
     import sets
     import setcraft
+    import craft
 
     cat = items.catalogue()
-    by_name = {name: t for t, (_, name) in cat.items()}
+    by_name = craft._by_name()
     pairs = {}
     for t, (root, name) in cat.items():
         if root not in (items.FIRE_ARM, items.COLD_ARM):
@@ -39,22 +39,27 @@ def counterparts():
         if base is not None and cat[base][0] == root:
             pairs[t] = base
     # Match the actual ladder, including the sets with our own type IDs.
-    with open(sets.PATH, encoding='utf-8') as source:
-        ladder = json.load(source)['sets'].values()
+    ladder = sets.SETS.values()
     afro = {(s['level'], s['family']): s for s in ladder
             if s['variant'] == 'A'}
     for s in ladder:
         a = afro.get((s['level'], s['family']))
         if s['variant'] != 'G' or not a:
             continue
-        for slot, piece in s['members'].items():
-            gold = piece['type']
-            base = a['members'][slot]['type']
+        for slot, gold in s['members'].items():
+            base = a['members'][slot]
             pairs[gold] = base
             gc, ac = setcraft.chain_of(gold), setcraft.chain_of(base)
             if gc and ac:
                 pairs.update(zip(gc, ac))
     return pairs
+
+
+@lru_cache(maxsize=None)
+def afro_cost(type_id):
+    """Cache the fixed A valuation without sharing mutable item frames."""
+    import items
+    return items.static_info(type_id)[1].get('cost', 0)
 
 
 def valuation(type_id, params):
@@ -74,7 +79,7 @@ def valuation(type_id, params):
     level = max(params.get('need_skills') or [0])
     if level < 1:
         return None
-    a = items.static_info(base)[1]
-    if not a.get('cost'):
+    cost = afro_cost(base)
+    if not cost:
         return None
-    return a['cost'] * multiplier(level)
+    return cost * multiplier(level)

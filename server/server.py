@@ -3084,7 +3084,7 @@ class Session:
         # (a salvage's broken gun, fee_ready).
         self.fee_recount()
 
-    def quest_write(self, handler, p, *, acknowledge_failure=True, after_commit=None):
+    def quest_write(self, handler, p):
         """Commit resources/history together, then publish the original frames."""
         if not self.char_id:
             return handler(p)
@@ -3128,17 +3128,10 @@ class Session:
             self.close(force=True)
             return
         if failed is not None:
-            if acknowledge_failure:
-                self.send("cmdAck", res=1)
-            else:
-                # A delayed action already acknowledged its start. A second
-                # cmdAck would consume the next request's FIFO entry.
-                self.send("actionCancel", release=1)
+            self.send("cmdAck", res=1)
             self.answer("Операция не выполнена. Предметы и награда не изменены. Повторите попытку.")
             return False
         try:
-            if after_commit is not None:
-                after_commit()
             for command, params in frames:
                 original_send(command, **params)
         finally:

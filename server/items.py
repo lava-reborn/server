@@ -1169,6 +1169,7 @@ def static_info(type_id):
                 bit = 1 << 6  # PersAttributes: Ручные пулеметы.
                 offset = (mask & (bit - 1)).bit_count()
                 values = list(info[1].get("need_specs") or [])
+                values.extend([0] * max(0, mask.bit_count() - len(values)))
                 if mask & bit:
                     values[offset] = level - 16
                 else:

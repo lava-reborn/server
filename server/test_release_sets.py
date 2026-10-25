@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace as NS
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 os.environ.pop('LAVA_DB_URL', None)
 os.environ['LAVA_DB'] = ':memory:'
@@ -47,8 +47,14 @@ class ReleaseSets(unittest.TestCase):
                 a, g = stock[start:start + 5], stock[start + 5:start + 10]
                 self.assertTrue(all(sets.variant_of(t) == 'A' for t in a))
                 self.assertTrue(all(sets.variant_of(t) == 'G' for t in g))
-                self.assertEqual(sets.SETS[sets.set_of(a[0])]['name'],
-                                 sets.SETS[sets.set_of(g[0])]['name'].removesuffix(' (G)'))
+                self.assertEqual(sets.SETS[sets.set_of(a[0])]['family'],
+                                 sets.SETS[sets.set_of(g[0])]['family'])
+
+    def test_stock_order_uses_family_even_when_gold_display_name_changes(self):
+        before = shop_bands.goods(('sets',), 16, 20)
+        gold = sets.SETS[60005]
+        with patch.dict(gold, name='AAA renamed gold set'):
+            self.assertEqual(shop_bands.goods(('sets',), 16, 20), before)
 
     def test_declared_levels_use_highest_base_skill(self):
         for sid, level in ((11002, 17), (11004, 17), (11125, 18), (60005, 18),

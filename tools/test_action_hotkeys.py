@@ -120,6 +120,21 @@ class ClientActions(unittest.TestCase):
         execute(w.fn_action_cancel().assemble(), dict(this=loc, obj=NS(param={'release': 1})))
         self.assertEqual(calls, ['release', dict(type='moveWalker', id=0)])
 
+    def test_started_movement_only_releases_item_without_another_move_event(self):
+        # ItemActivator.breakAction clears its interval, useFireArm and
+        # coolDownBlock; it does not call releaseAPCost or touch the walker.
+        state = NS(ap=25, path=[1, 2, 3], coolDownBlock=True, useFireArm=True)
+        events = []
+        def release():
+            state.coolDownBlock = state.useFireArm = False
+        loc = NS(master=NS(gamer=NS(itemActivator=NS(breakAction=release))),
+                 dispatchEvent=events.append)
+        for _ in range(2):
+            execute(w.fn_action_cancel().assemble(), dict(this=loc,
+                    obj=NS(param={'moving': 1, 'release': 1})))
+        self.assertEqual((state.ap, state.path, events), (25, [1, 2, 3], []))
+        self.assertFalse(state.coolDownBlock or state.useFireArm)
+
     def test_replacement_ack_keeps_original_handler_and_opens_next_request(self):
         obj = NS(coolDownBlock=True)
         calls = []

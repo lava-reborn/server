@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace as NS
 import unittest
+from unittest.mock import patch
 
 os.environ.pop('LAVA_DB_URL', None)
 os.environ['LAVA_DB'] = ':memory:'
@@ -21,6 +22,14 @@ from avm_test import execute
 
 
 class RepairPolicy(unittest.TestCase):
+    def test_afro_valuation_is_built_once_and_reused(self):
+        repair_policy.afro_cost.cache_clear()
+        p = items.params_of(26062)
+        with patch.object(items, 'static_info', wraps=items.static_info) as info:
+            for _ in range(3):
+                self.assertEqual(repair_policy.valuation(26062, p), 32500 * 4.25)
+            self.assertLessEqual(info.call_count, 1)
+
     def test_real_pairs_all_wear_and_ceiling_cases(self):
         checked = 0
         for gold, afro in repair_policy.counterparts().items():

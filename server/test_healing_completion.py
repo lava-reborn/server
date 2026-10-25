@@ -41,6 +41,28 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
         timer.cancel()
         return args
 
+    async def test_failed_completion_releases_client_item_without_spending(self):
+        for reason in ('ap', 'dead', 'zero_hp', 'missing'):
+            with self.subTest(reason=reason):
+                f, ch, room, used = self.fixture(6055)
+                room.ws = True
+                frames = []
+                f.sess.send = lambda name, **p: frames.append((name, p))
+                args = self.start(f)
+                before = ch.hp
+                if reason == 'ap':
+                    f.ap = 0
+                elif reason == 'dead':
+                    f.dead = True
+                elif reason == 'zero_hp':
+                    ch.hp = before = 0
+                else:
+                    f.store.item = lambda _: None
+                frames.clear()
+                f.heal_now(*args)
+                self.assertIn(('actionCancel', dict(release=1)), frames)
+                self.assertEqual((ch.hp, used), (before, []))
+
     async def test_peace_cannot_finish_after_combat_starts_without_damage(self):
         f, ch, room, used = self.fixture()
         args = self.start(f)

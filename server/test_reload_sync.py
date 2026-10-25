@@ -119,7 +119,7 @@ class ReloadSync(unittest.IsolatedAsyncioTestCase):
                 self.invoke(saved)
                 self.assertEqual(self.resources(), (0, 50, 100))
                 self.assertIsNone(self.f.reloading)
-                self.assertFalse(self.s.inv.reloads)
+                self.assertIsNone(self.f.reload_plan)
                 self.assertTrue(any(n == 'actionCancel' for n, _ in self.frames))
 
     async def test_accepted_healing_replaces_reload_and_rejected_medicine_preserves_it(self):
@@ -164,6 +164,27 @@ class ReloadSync(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.resources(), (0, 50, 100))
         self.assertEqual([p['res'] for n, p in self.frames if n == 'cmdAck'], [0])
         self.assertFalse(any(n.startswith('ss_') for n, _ in self.frames))
+
+    async def test_reload_does_not_use_quest_transaction_or_copy_character(self):
+        saved = self.start()
+        with patch.object(self.s, 'quest_write', side_effect=AssertionError('quest path used')):
+            self.invoke(saved)
+        self.assertGreater(self.resources()[0], 0)
+
+    async def test_unconfirmed_commit_discards_frames_and_closes_safely(self):
+        saved = self.start()
+        raw = self.store.db.raw
+        def commit():
+            raw.commit()
+            raise ConnectionError('commit reply lost')
+        proxy = NS(commit=commit, rollback=raw.rollback)
+        with patch.object(type(self.store.db), 'raw', property(lambda db: proxy)), \
+                patch.object(self.s, 'close') as closed:
+            self.invoke(saved)
+        closed.assert_called_once_with(force=True)
+        self.assertFalse(any(n.startswith('ss_') for n, _ in self.frames))
+        self.assertEqual(len([n for n, _ in self.frames if n == 'cmdAck']), 1)
+        self.assertIsNone(self.f.reload_plan)
 
     async def test_changed_ammunition_owner_cannot_be_consumed(self):
         saved = self.start()

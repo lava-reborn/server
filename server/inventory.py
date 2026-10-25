@@ -80,6 +80,7 @@ import progression
 import quests
 import sets
 import setcraft
+import storage
 import trophies
 import world
 from protocol import BigUInt, Str
@@ -902,8 +903,6 @@ class Inventory:
         self.trade = None
         # Entity id of the bank NPC whose window is open, or None.
         self.bank = None
-        self.reloads = {}       # uniq -> asyncio.TimerHandle
-        self.reload_plans = {}  # validated input IDs; no ammunition moves yet
         # Serials of things this character has on the table in a barter
         # (barter.py): find() does not see them until they come off it.
         self.locked = set()
@@ -1401,10 +1400,7 @@ class Inventory:
     def close(self):
         """Connection gone: nothing to save (the database is current), but
         a reload still pending must not fire into a closed socket."""
-        for handle in self.reloads.values():
-            handle.cancel()
-        self.reloads.clear()
-        self.reload_plans.clear()
+        self.cancel_reloads()
         self.trade = None
         self.bank = None
         self.locked.clear()
@@ -1638,7 +1634,7 @@ class Inventory:
         if stack["type_id"] not in si.get("comp_array", []):
             self.ack(RES_WRONG_AMMO)
             return
-        if gun["uniq"] in self.reloads:
+        if self.reloading(gun["uniq"]):
             self.ack(RES_NOT_READY)
             return
         clip = si.get("clip_size", 1)
@@ -1657,14 +1653,13 @@ class Inventory:
             return
         revision = combat.Fighter.begin_action(fighter)
         self.ack(RES_OK)
-        self.reload_plans[gun["uniq"]] = dict(
+        fighter.reload_plan = dict(
             uniq=gun["uniq"], type_id=gun["type_id"], slot=gun["slot"],
             ammo_count=gun["ammo_count"], ammo_type=gun["ammo_type"],
             stack=stack["uniq"], stack_type=stack["type_id"], stack_slot=stack["slot"], cost=cost)
         delay = pace.paced(si.get("reload_time", 0) / 1000.0)
         combat.Fighter.schedule_action(fighter, revision, "reloading", delay,
                                       self.reloaded, gun["uniq"])
-        self.reloads[gun["uniq"]] = fighter.reloading
         fighter.c_ap()  # Correct the client's AP prediction at the start ack.
 
     def finish_reload(self, plan):
@@ -1707,21 +1702,57 @@ class Inventory:
         plan["loaded"] = True
 
     def reloaded(self, uniq):
-        handle = self.reloads.pop(uniq, None)
-        plan = self.reload_plans.pop(uniq, None)
-        if handle is None or plan is None:
+        fighter = self.sess.combat
+        plan = getattr(fighter, "reload_plan", None)
+        if plan is None or plan["uniq"] != uniq:
             return
-        def pay_ap():
-            if plan.get("loaded"):
-                self.sess.combat.ap -= plan["cost"]
-        self.sess.quest_write(self.finish_reload, plan, acknowledge_failure=False, after_commit=pay_ap)
+        fighter.reloading = None
+        fighter.reload_plan = None
+        # Only item rows change here: no character copy, quest lock or quest
+        # history. Publish ammunition frames only after a confirmed commit.
+        original_send = self.sess.send
+        had_send = "send" in self.sess.__dict__
+        frames = []
+        self.sess.send = lambda command, **params: frames.append((command, params))
+        failed = None
+        try:
+            with storage.atomic(self.store.db):
+                self.finish_reload(plan)
+        except Exception as exc:
+            failed = exc
+            log.exception("  !!    reload failed for character %s", self.char_id)
+        finally:
+            if had_send:
+                self.sess.send = original_send
+            else:
+                del self.sess.send
+        if isinstance(failed, storage.CommitError):
+            # COMMIT may have succeeded. Continuing as though it rolled back
+            # would leave the client's ammunition and AP untrustworthy.
+            self.sess.close(force=True)
+            return
+        if failed is not None:
+            self.sess.send("actionCancel", release=1)
+            self.sess.answer("Перезарядка не выполнена. Патроны не израсходованы.")
+            return
+        if plan.get("loaded"):
+            fighter.ap -= plan["cost"]
+        for command, params in frames:
+            original_send(command, **params)
+
+    def reloading(self, uniq):
+        plan = getattr(getattr(self.sess, "combat", None), "reload_plan", None)
+        return plan is not None and plan["uniq"] == uniq
 
     def cancel_reloads(self):
         """Discard delayed plans; their inputs have not moved."""
-        for handle in self.reloads.values():
-            handle.cancel()
-        self.reloads.clear()
-        self.reload_plans.clear()
+        fighter = getattr(self.sess, "combat", None)
+        if fighter is not None:
+            handle = getattr(fighter, "reloading", None)
+            if handle is not None:
+                handle.cancel()
+                fighter.reloading = None
+            fighter.reload_plan = None
 
     def forget_reload(self, uniq):
         # A transactional deletion may roll back. Keep its timer until the
@@ -1730,16 +1761,10 @@ class Inventory:
         # serials are never reused (accounts.items AUTOINCREMENT).
         if getattr(getattr(self.store, "db", None), "_atomic_depth", 0):
             return
-        handle = self.reloads.get(uniq)
         fighter = getattr(self.sess, "combat", None)
-        if handle is not None and getattr(fighter, "reloading", None) is handle:
+        if self.reloading(uniq):
             import combat
             combat.Fighter.cancel_pending(fighter, notify=True)
-            return
-        handle = self.reloads.pop(uniq, None)
-        self.reload_plans.pop(uniq, None)
-        if handle:
-            handle.cancel()
 
     def eject(self, gun):
         """Rounds out of the gun into a fresh stack in the bag. Always a new
@@ -1760,7 +1785,7 @@ class Inventory:
         if not gun or gun["root"] != items.FIRE_ARM:
             self.ack(RES_NOT_FOUND)
             return
-        if gun["uniq"] in self.reloads:
+        if self.reloading(gun["uniq"]):
             self.ack(RES_NOT_READY)
             return
         if not gun["ammo_count"]:

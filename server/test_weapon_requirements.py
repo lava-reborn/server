@@ -10,6 +10,7 @@ import sys
 import ast
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 os.environ.pop("LAVA_DB_URL", None)
 os.environ["LAVA_DB"] = ":memory:"
@@ -22,6 +23,19 @@ import items  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
 from testkit import check, fails  # noqa: E402
+
+# Malformed dense source lists must not break the machine-gun frame.
+overlay = items._overlay
+for mask, values, expected in ((1 << 6, None, [4]),
+                               ((1 << 2) | (1 << 6) | (1 << 8), [3], [3, 4, 0])):
+    def incomplete(type_id, params, rec):
+        overlay(type_id, params, rec)
+        if type_id == 25006:
+            params.update(need_skills=[20], need_specs_m=mask, need_specs=values)
+    with patch.object(items, '_overlay', side_effect=incomplete):
+        p = items.params_of(25006)
+    check('machine-gun requirement pads a short list: %s' % mask,
+          (p['need_specs_m'], p['need_specs']), (mask, expected))
 
 ch = progression.Character()
 ch.skill[progression.SHOOTING][0] = 20
