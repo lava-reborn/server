@@ -688,7 +688,7 @@ def hunt(c, got, loc_id, targets, pos):
             goal = spots[0][1]
             path = mobs.find_path(loc, pos, lambda cell: cell == goal, wary, limit=20000)
             c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
-            out += c.frames(0.15 * len(path or [0]) + 0.8)
+            out += c.frames(mobs.HEX_MS / 1000.0 * len(path or [0]) + 0.8)
             pos = goal
             for _ in range(30):
                 c.send("ss_use;type=16;obj=x%s;target=%s;" % (GUN, entity(eid)))
@@ -974,6 +974,8 @@ try:
            [ANESTHETIC], None, [8]))
     check("  ..not offered again today", status(c, CHIP_Q), 0)
     history_back(CID, [MATCHES_Q, CHIP_Q])
+    c.send("q_list;")  # External SQL time travel needs a fresh display snapshot.
+    c.frames(0.2)
     check("a day later, both are offered again", [status(c, t) for t in (MATCHES_Q, CHIP_Q)],
           [1, 1])
     got, q = take(c, here, CHIP_Q)
@@ -1179,6 +1181,8 @@ try:
     check("the flags to Норман, Сейфул and Корбен wait for Наби's line",
           [status(c, t) for t in (WHERE_NORMAN, WHERE_SEIFUL, WHERE_CORBEN)], [0, 0, 0])
     hand_in_story(CID, [30, 33, 35])
+    c.send("q_list;")  # The fixture wrote from a different Store.
+    c.frames(0.2)
     check("  ..and are offered once it has sent the player their way",
           [status(c, t) for t in (WHERE_NORMAN, WHERE_SEIFUL, WHERE_CORBEN)], [1, 1, 1])
     got, q = take(c, here, WHERE_NORMAN)

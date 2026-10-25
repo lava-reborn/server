@@ -100,6 +100,7 @@ import craft           # noqa: E402
 import items           # noqa: E402
 import mobs            # noqa: E402
 import names           # noqa: E402
+import weaponcraft_completion  # noqa: E402
 import orig_texts      # noqa: E402
 import rooms           # noqa: E402
 import world           # noqa: E402
@@ -231,6 +232,7 @@ CITIES = [
          masters={("pistol", "A"): [338], ("pistol", "G"): [377], ("pistol", "Q"): [338],
                   ("shotgun", "A"): [339], ("shotgun", "G"): [378],
                   ("rifle", "A"): [341], ("rifle", "G"): [380],
+                  ("assault", "A"): [341],  # starter AK, completion services
                   ("smg", "A"): [7311], ("smg", "G"): [7311]},
          # The [Q] masters: the Квартал ремесленников (447, «Мастера
          # улучшения: -Оружия [Q] "Веселый праздник"», map label 5968,1719),
@@ -248,7 +250,8 @@ CITIES = [
          # repeated these one for one: they stand nowhere since the owner's
          # cut of (P) (2026-09-30, data/retired.json), and their lists left
          # data/npcs.json.
-         stalls={"shotgun": (576, 7309), "rifle": (578, 7310), "smg": (7311,)}),
+         stalls={"pistol": (575,), "shotgun": (576, 7309),
+                 "rifle": (578, 7310), "assault": (578, 7310), "smg": (7311,)}),
     # Абри (2026-10-12): its whetstone, «Точильный камень<Br>Абри» (2280,
     # Портовый рынок 187, texts.xml 51646), sharpens the knives of the town's
     # band its knife trader sells, Нож кастет (10у) and Штык нож (12у): the
@@ -270,8 +273,8 @@ CITIES = [
     # (347, 387). The band 9-16, DESIGNED (the owner's decision 27): the
     # masters' blueprint stalls of the original start at 9у (Фахад's), and
     # 9-12, which Абри has no master for, is served here. No shotgun master:
-    # the shotguns of 9-12 (Вепрь-12, Remington ...) have nobody to upgrade
-    # them. The camps whose chiefs drop the blueprints: Лагерь ДСР (93) and
+    # the shotguns of 9-12 are served by Halfa completion services
+    # (weaponcraft_completion.py), without changing the cities' recipe bands. The camps whose chiefs drop the blueprints: Лагерь ДСР (93) and
     # its chiefs' second cell (91) 12-14, Лагерь Миротворцев (98, 99) 15-16,
     # by their labels' «12-14» and «14-16» without the overlap. The
     # whetstone «Точильный камень<Br>Донголы» (2281, the black market 103)
@@ -957,7 +960,12 @@ def build(texts, types=None):
     fams = collections.OrderedDict((f, []) for f in FAMILIES)
     placed, given = set(), set()
     for city in CITIES:
-        ups = upgrade_rows(city, texts)
+        # Explicit completions keep their IDs when source rows begin resolving.
+        ups = [r for r in upgrade_rows(city, texts)
+               if not weaponcraft_completion.owns_recipe(r)]
+        ups += weaponcraft_completion.additions(
+            city, ups, blueprint=blueprint, eligible=servable, params=items.params_of,
+            service=service, camp_mobs=camp_mobs, titles=EFFECT_TITLE)
         fams["upgrade"] += ups
         fams["knife"] += knife_rows(city, texts)
         salvage = salvage_rows(city, texts, parts, placed)
@@ -1060,7 +1068,9 @@ def stock(doc):
                     got.append(c["blueprint"])
             got.sort(key=lambda t: (int(re.search(r"lvl(\d+)$", CAT[t][1]).group(1)), t))
             for s in stalls:
-                out[s] = got
+                # Shared stalls (starter AK / rifles) retain both classes.
+                out[s] = sorted(set(out.get(s, ())) | set(got),
+                                key=lambda t: (int(re.search(r"lvl(\d+)$", CAT[t][1]).group(1)), t))
     for s, stones in KNIFE_STALLS.items():
         out[s] = sorted({r["craft"]["blueprint"] for r in rows
                          if r["craft"]["family"] == "knife" and set(stones) & set(r["give"])})

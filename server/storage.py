@@ -45,6 +45,44 @@ class IntegrityError(Exception):
     """Нарушение уникальности — одинаково для обеих баз."""
 
 
+class CommitError(Exception):
+    """The driver failed to confirm COMMIT; its outcome may be unknown."""
+
+
+@contextlib.contextmanager
+def atomic(db):
+    """Defer Store commits until the complete operation succeeds.
+
+    SQLite reserves the writer before validation; PostgreSQL's caller locks
+    the character. A caught inner failure still makes the unit rollback-only.
+    """
+    depth = getattr(db, "_atomic_depth", 0)
+    if not depth:
+        db.commit()
+        db._atomic_failed = False
+        db.execute("BEGIN IMMEDIATE" if isinstance(db, SqliteDB) else "BEGIN")
+    db._atomic_depth = depth + 1
+    try:
+        yield db
+        if not depth:
+            if db._atomic_failed:
+                raise RuntimeError("transaction was aborted by a nested operation")
+            try:
+                db.raw.commit()
+            except Exception as exc:
+                raise CommitError("could not confirm transaction commit") from exc
+    except BaseException:
+        db._atomic_failed = True
+        if not depth:
+            with contextlib.suppress(Exception):
+                db.raw.rollback()
+        raise
+    finally:
+        db._atomic_depth = depth
+        if not depth:
+            db._atomic_failed = False
+
+
 def using_postgres():
     return bool(DB_URL)
 
@@ -119,13 +157,18 @@ class SqliteDB:
         return self
 
     def __exit__(self, *exc):
+        if getattr(self, "_atomic_depth", 0):
+            if exc[0] is not None:
+                self._atomic_failed = True
+            return False
         return self._db.__exit__(*exc)
 
     def create_schema(self, schema_sql):
         self._db.executescript(schema_sql)
 
     def commit(self):
-        self._db.commit()
+        if not getattr(self, "_atomic_depth", 0):
+            self._db.commit()
 
     def close(self):
         self._db.close()
@@ -195,6 +238,8 @@ class PostgresDB:
         # запрос оставил бы без базы каждого игрока. В SQLite неудачный
         # оператор соседей не трогает, и здесь так же. Соединение, которого
         # уже нет, откатывать нечем: наверх уходит исходная ошибка.
+        if getattr(self, "_atomic_depth", 0):
+            self._atomic_failed = True
         try:
             self._conn.rollback()
         except self._psycopg.Error:
@@ -307,6 +352,10 @@ class PostgresDB:
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        if getattr(self, "_atomic_depth", 0):
+            if exc_type is not None:
+                self._atomic_failed = True
+            return False
         if exc_type is None:
             self._conn.commit()
         else:
@@ -314,7 +363,8 @@ class PostgresDB:
         return False
 
     def commit(self):
-        self._conn.commit()
+        if not getattr(self, "_atomic_depth", 0):
+            self._conn.commit()
 
     def close(self):
         self._conn.close()

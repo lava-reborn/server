@@ -345,10 +345,9 @@ MEDS = sorted({shop_bands.level_of(x) for s in STALLS.values() for x in s
                if shop_bands.medicine(x)})
 check("  ..the medicine of three tiers by their floors: 12_15, 16_19, 20 (the band's and the"
       " one under it)", MEDS, [12, 16, 20])
-check("Тёмное Эхо[17], A and G, on the set sellers' stalls (Марат, Симона): the 17th rung of the"
-      " ladder, which no stall sold before 2026-10-14",
-      {t: sorted(set(DARK_A + DARK_G) - set(STALLS[(STATION, t)])) for t in (MARAT, SIMONA)},
-      {MARAT: [], SIMONA: []})
+check("Тёмное Эхо[18], A and G, sold by Симона; Марат retains only pouches",
+      (sorted(set(DARK_A + DARK_G) - set(STALLS[(STATION, SIMONA)])),
+       sorted(set(DARK_A + DARK_G) & set(STALLS[(STATION, MARAT)]))), ([], []))
 check("  ..its pieces: the quest series' for afro (200 000, 120 000, 240 000, 160 000, 80 000),"
       " ours for gold at 4000 : 1 (50, 30, 60, 40, 20 G) -- 800 000 afro or 200 G the set",
       ([price(t) for t in DARK_A], [price(t) for t in DARK_G],
@@ -363,11 +362,10 @@ check("  ..named as the ladder names them, the quest pieces without their «(Q)�
        [(own_items.load()[t]["like"], items.own(t)) for t in DARK_G]),
       (["Шлем Тёмного Эха", "Шлем Тёмного Эха (G)"], [11125], [60005], [],
        [(a, True) for a in DARK_A]))
-check("Симона: the town's sets and nothing of her own; Марат: the town's sets, then his"
-      " pouches, each with its (G) right after it -- 60 things, as Галия's",
+check("Симона: all 60 set pieces; Марат: ten pouches, each with its G right after it",
       (STALLS[(STATION, SIMONA)] == shop_bands.goods(("sets",), LO, HI),
        STALLS[(STATION, MARAT)][-10:], len(STALLS[(STATION, MARAT)])),
-      (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601], 60))
+      (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601], 10))
 check("  ..the pouches at their articles' prices: автоматчика 50 000 / 10 G, пулемётчика"
       " 100 000 / 20 G, рукопашника 40 000 / 8 G, снайпера 20 000 / 4 G, спецназовца 40 000 / 8 G",
       [(price(t), price(items.GOLD_POUCHES[t])) for t in POUCHES],
@@ -453,13 +451,11 @@ check("each recipe at the master of its gun's class and line, A or G, its gun of
         or r["craft"]["gun"] not in items.wiki()
         or level_of_bp(r["craft"]["blueprint"]) != r["craft"]["level"]]),
       ([], ["A", "G"], []))
-check("  ..the masters with recipes: the assault rifles' (A), the machine guns' and the rifles'"
-      " both ways (no pistol or sub-machine gun of 17-20 has the wiki's table, and no (G)"
-      " assault rifle a recipe of the band)",
+check("  ..assault rifles, machine guns and rifles have recipes for both A and G",
       (sorted({r["give"][0] for r in ups}),
        collections.Counter((craft.weapon_of(r["craft"]["gun"]), r["craft"]["line"])
                            for r in ups)),
-      ([751, 752, 755, 758, 759], {("assault", "A"): 3, ("mg", "A"): 28, ("mg", "G"): 28,
+      ([748, 751, 752, 755, 758, 759], {("assault", "A"): 3, ("assault", "G"): 3, ("mg", "A"): 28, ("mg", "G"): 28,
                                    ("rifle", "A"): 12, ("rifle", "G"): 12}))
 worse = []
 for r in ups + fam("knife"):
@@ -790,16 +786,16 @@ async def main():
 
     stall, opened = open_stall(sess, STATION, MARAT)
     piece_g = DARK_G[0]
-    check("Марат: his window the town's sets and his pouches; «Подсумки автоматчика» for afro,"
-          " the (G) one for gold, the helmet of Тёмное Эхо (G) for its 50 ounces",
+    check("Марат: pouches for afro and gold, no armour in his window",
           (stall == items.stock_for(MARAT, STATION), opened, buy(sess, stall, 3577, BUY),
-           buy(sess, stall, 3599, GOLD), buy(sess, stall, piece_g, BUY),
-           buy(sess, stall, piece_g, GOLD)),
-          (True, [0], ([0], [3577], 50000, 0), ([0], [3599], 0, 1000), (REFUSED, [], 0, 0),
-           ([0], [piece_g], 0, 5000)))
+           buy(sess, stall, 3599, GOLD), piece_g in stall),
+          (True, [0], ([0], [3577], 50000, 0), ([0], [3599], 0, 1000), False))
     close_stall(sess)
 
     stall, opened = open_stall(sess, STATION, SIMONA)
+    check("Симона sells the gold Dark Echo helmet for gold alone",
+          (buy(sess, stall, piece_g, BUY), buy(sess, stall, piece_g, GOLD)),
+          ((REFUSED, [], 0, 0), ([0], [piece_g], 0, 5000)))
     piece_a = DARK_A[-1]
     check("Симона: her window the town's sets; the boots of Тёмное Эхо for 80 000 afro, for gold"
           " refused; sold back for 0.7",

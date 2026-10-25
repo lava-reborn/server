@@ -29,27 +29,30 @@ for t in blocked:
                       for war in (False, True)):
         row = dict(type_id=t, root=items.HEAL, use_count=3, uniq=1, char_id=7)
         before = dict(row)
-        acks, messages = [], []
+        acks, messages, frames = [], [], []
         sess = SimpleNamespace(inv=SimpleNamespace(find=lambda _p: row), answer=messages.append,
-                               char_id=7)
+                               char_id=7, send=lambda name, **p: frames.append((name, p)))
         fighter = SimpleNamespace(sess=sess, rc=SimpleNamespace(room=SimpleNamespace(ws=war)),
                                   ap=60, healing=None, ack=acks.append)
         combat.Fighter.use_heal(fighter, dict(obj="item", target="other"), kind)
         if (row != before or fighter.ap != 60 or fighter.healing is not None
-                or acks != [inventory.RES_REFUSED] or messages != [items.STIMULANT_UNAVAILABLE]):
+                or acks != [inventory.RES_REFUSED] or messages != [items.STIMULANT_UNAVAILABLE]
+                or frames):
             errors.append((t, kind, war))
         # No consumption even if an old scheduled callback reaches heal_now.
         fighter.store = SimpleNamespace(item=lambda _u: row)
         fighter.dead = False
         combat.Fighter.heal_now(fighter, 1, None)
-        if row != before or len(messages) != 2:
+        if (row != before or len(messages) != 2 or fighter.ap != 60
+                or acks != [inventory.RES_REFUSED]
+                or frames != [("actionCancel", {"release": 1})]):
             errors.append((t, "callback"))
 check("all %d blocked types preserve doses/AP on self and target, in/out of battle, including callbacks" % len(blocked), errors, [])
 
 async def ordinary_heal():
     row = dict(type_id=6055, root=items.HEAL, use_count=1, uniq=1)
     acks = []
-    sess = SimpleNamespace(inv=SimpleNamespace(find=lambda _p: row))
+    sess = SimpleNamespace(inv=SimpleNamespace(find=lambda _p: row), send=lambda *a,**kw:None)
     fighter = SimpleNamespace(sess=sess, rc=None, ap=60, healing=None, ack=acks.append, heal_now=lambda *a: None)
     combat.Fighter.use_heal(fighter, dict(obj="item"), inventory.USE_IDLE)
     check("ordinary healing still starts", (acks, fighter.healing is not None), ([inventory.RES_OK], True))

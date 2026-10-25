@@ -77,7 +77,8 @@ DECODER = 652
 # The blueprints' stalls. The premium masters 702, 704 and 705, whose stalls
 # repeated these, stand nowhere since the owner's cut of (P) (2026-09-30,
 # data/retired.json), and their lists are gone from data/npcs.json.
-STALLS = {"shotgun": (576, 7309), "rifle": (578, 7310), "smg": (7311,)}
+STALLS = {"pistol": (575,), "shotgun": (576, 7309), "rifle": (578, 7310),
+          "assault": (578, 7310), "smg": (7311,)}
 Q_STALL = 5770
 CAMPS = [((0, 2), (80, 82)), ((3, 4), (81, 83)), ((5, 6), (84, 86)), ((7, 8), (85, 87))]
 WAY_IN, WAY_OUT = 414, 415
@@ -145,7 +146,7 @@ try:
           [("knife", (ABRI_WHETSTONE,))])
     check("  ..the families", {f: len(family(f)) for f in
                                ("upgrade", "knife", "salvage", "assembly", "decode")},
-          {"upgrade": 132, "knife": 24, "salvage": 10, "assembly": 19, "decode": 8})
+          {"upgrade": 186, "knife": 24, "salvage": 10, "assembly": 19, "decode": 8})
     check("  ..each row's type the one its key was given (the table's \"types\"), no type"
           " given twice",
           ([r["type"] for r in ROWS if DOC["types"].get(r["craft"]["key"]) != r["type"]],
@@ -163,8 +164,10 @@ try:
     check("the recipes' guns are of the band, A and G lines, but the (Q) Маузер C96 of"
           " «Веселый праздник»; each at the master of its class and line",
           (sorted({r["craft"]["line"] for r in ups}),
-           [r["type"] for r in ups if not BAND[0] <= r["craft"]["level"] <= BAND[1]],
+           [r["type"] for r in ups if not (BAND[0] <= r["craft"]["level"] <= BAND[1]
+                    or craft.weapon_of(r["craft"]["gun"]) == "shotgun" and 9 <= r["craft"]["level"] <= 12)],
            [r["type"] for r in ups if r["craft"]["line"] in "AG" and r["give"] != [RAKIN]
+            and not (r["craft"]["gun"] == 26242 and r["give"] == [341])
             and MASTERS.get(r["give"][0]) != (craft.weapon_of(r["craft"]["gun"]),
                                               r["craft"]["line"])],
            sorted({t for r in ups if r["craft"]["line"] == "Q" for t in r["give"]})),
@@ -182,7 +185,7 @@ try:
           " stand-in), and the blueprint of the recipe's own level",
           ([r["type"] for r in ups if r["craft"]["gun"] not in items.wiki()],
            [r["type"] for r in ups if not items.catalogue()[r["craft"]["blueprint"]][1]
-            .endswith("lvl%d" % r["craft"]["level"])]), ([], []))
+            .endswith("lvl%d" % r["craft"].get("blueprint_level", r["craft"]["level"]))]), ([], []))
     check("  ..in the original's words: name, start, «Само собой ничего не сделается.»,"
           " «Готово, пользуйся.»",
           (quests.get(10009).name, "Задача:</b> принести Маузер C96 и Чертеж: урон (2у)"
@@ -228,10 +231,11 @@ try:
         # Few: most guns above the 8th level have no table of the wiki's
         # yet, and a recipe waits for its gun's (the report's «left out»).
         check("the same generator given Абри's band 9-12 returns that band's recipes and no"
-              " other: all of 9-12, no premium line, none of Вади-Хальфа's",
+              " other: all of 9-12, no premium line; Halfa also serves that band's shotguns",
               (len(got) > 0, all(9 <= r["craft"]["level"] <= 12 for r in got),
                {r["craft"]["line"] for r in got} <= {"A", "G"},
-               sorted({r["craft"]["gun"] for r in got} & guns)), (True, True, True, []))
+               sorted(g for g in {r["craft"]["gun"] for r in got} & guns
+                      if craft.weapon_of(g) != "shotgun")), (True, True, True, []))
         check("  ..and rebuilt now, Вади-Хальфа's table is the one on disk",
               json.dumps(build_weaponcraft.build(texts), sort_keys=True),
               json.dumps(DOC, sort_keys=True))
@@ -310,7 +314,7 @@ try:
                           for m in o.get("mobs", [])}),
            sorted({round(o["drop"], 2) for r in ROWS for o in r.get("objs", [])
                    if o.get("drop")})), ([], ["boss"], [0.02, 0.1]))
-    level_of_bp = {r["craft"]["blueprint"]: r["craft"]["level"] for r in ups}
+    level_of_bp = {r["craft"]["blueprint"]: r["craft"].get("blueprint_level", r["craft"]["level"]) for r in ups}
     level_of_bp.update({r["objs"][0]["obj"]: r["craft"]["level"] for r in family("decode")})
     check("  ..a camp of 0-2 drops nothing above the 2nd level, a camp of 7-8 nothing below"
           " the 7th",
@@ -345,7 +349,7 @@ try:
         if r["craft"]["line"] in "AG":
             by_class.setdefault(craft.weapon_of(r["craft"]["gun"]), set()).add(r["craft"]["blueprint"])
     check("the empty blueprint stalls sell their master's class's blueprints, all of them",
-          {cls: [set(items.stock_for(s)) == by_class[cls] for s in stalls]
+          {cls: [set(items.stock_for(s)) == set().union(*(by_class[c] for c, peers in STALLS.items() if s in peers)) for s in stalls]
            for cls, stalls in STALLS.items()},
           {cls: [True] * len(stalls) for cls, stalls in STALLS.items()})
     check("  ..the quarter's trader the [Q] Маузер's twelve, Однопальцый (1152) the valley's"
@@ -426,7 +430,7 @@ try:
           (g_only, on_sale, set(gold_named) <= items.GOLD_PRICE_ONLY,
            sorted({(items.params_of(t)["cost"], items.params_of(t)["g_cost"] > 0,
                     combat.gold_item(t), combat.drops_on_death(t)) for t in gold_named})),
-          ([37665, 37666, 37667, 37668], [37665, 37666, 37667, 37668], True,
+          (list(range(37665, 37673)), list(range(37665, 37673)), True,
            [(0, True, True, False)]))
     shared = sorted(t for t, lines in asked.items() if lines & {"A", "Q"})
     check("  ..while every blueprint the afro line or the [Q] one asks keeps its afro price",

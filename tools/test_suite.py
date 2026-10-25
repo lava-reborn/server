@@ -252,6 +252,32 @@ if os.name != "nt":
           (_summary[0] != "0", _alive), (True, False))
     shutil.rmtree(_hang, ignore_errors=True)
 
+# --- regression cases use the same JSON report and failing exit code ---------
+with tempfile.TemporaryDirectory(prefix="suite_cases_") as _cases:
+    _helper_path = os.path.join(os.path.dirname(HERE), "server")
+    _case_bodies = {
+        "success": "    def test_rule(self):\n        self.assertEqual(1, 1)\n",
+        "failure": "    def test_rule(self):\n        self.assertEqual(1, 2)\n",
+        "fixture": "    @classmethod\n    def setUpClass(cls):\n        raise RuntimeError('fixture failed')\n"
+                   "    def test_rule(self):\n        pass\n",
+        "subtest": "    def test_rule(self):\n        with self.subTest(value=1):\n            self.assertEqual(1, 2)\n",
+        "skip": "    def test_rule(self):\n        self.skipTest('not exercised')\n",
+    }
+    for _mode, _body in _case_bodies.items():
+        _report_path = os.path.join(_cases, _mode + ".jsonl")
+        _source = ("import unittest\nfrom testkit import run_cases\n"
+                   "class ImportedFixture(unittest.TestCase):\n"
+                   "    def test_must_not_be_collected(self):\n        self.fail('duplicate fixture')\n"
+                   "class Case(unittest.TestCase):\n" + _body + "run_cases(Case)\n")
+        _result = subprocess.run(
+            [sys.executable, "-B", "-c", _source], capture_output=True, text=True,
+            env=dict(os.environ, PYTHONPATH=_helper_path, LAVA_TEST_REPORT=_report_path))
+        _rows = [json.loads(line) for line in open(_report_path, encoding="utf-8")]
+        _ok = _mode == "success"
+        check("regression %s: one reported scenario, explicit fixture selection, correct exit" % _mode,
+              (_result.returncode, [row["ok"] for row in _rows]),
+              (0 if _ok else 1, [_ok]))
+
 shutil.rmtree(ROOT, ignore_errors=True)
 shutil.rmtree(_bare, ignore_errors=True)
 

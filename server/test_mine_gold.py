@@ -123,9 +123,9 @@ check("the hand-made rows change the tables of the two marauders and of no other
 check("and, of theirs, only by the sand, the emerald and the owner's junk",
       [sorted(set(now[t]) - set(bare[t])) for t in BANDITS],
       [sorted([(SAND, DESIGNED[t][SAND], False), (EMERALD, 0.1, True)] + JUNK + GOLD_ROWS) for t in BANDITS])
-check("only the four explicitly configured Magrib/Peacekeeper miners also roll for these", sorted(t for t, rows in now.items()
+check("only the configured Magrib, Peacekeeper and Abu-Hamed miners also roll for these", sorted(t for t, rows in now.items()
                                              if t not in BANDITS and {r[0] for r in rows} & {SAND, EMERALD}),
-      [838, 839, 840, 841])  # Magrib/Peacekeeper miners: explicit owner additions.
+      [838, 839, 840, 841, 930, 931])
 
 # Where they stand: the mine's files, and no stand-in for a missing creature.
 where = {}
@@ -612,6 +612,8 @@ try:
                      " WHERE char_id = ? AND type = ?", (CHAR, GOLD))
     probe.db.commit()
     probe.close()
+    c.send("q_list;")  # Drop the display cache after the fixture's external SQL edit.
+    c.frames(0.2)
     c.send("q_status;q_type=%d;" % GOLD)
     check("its hand-in a day back, it is on offer again",
           [p["status"] for p in named(c.frames(), "q_status")], [1])

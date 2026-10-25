@@ -329,7 +329,7 @@ COUNTS = {
     # and Chang Feng, A and (G), left «Пистолет-пулеметы и патроны» (1211) and «Оружие»
     # (1229) with the owner's «убери их из игры» (2026-10-14): two fewer of each currency.
     "Донгола": {1209: (10, 10), 1210: (5, 5), 1211: (4, 4), 1153: (3, 3), 1208: (2, 2),
-                1229: (23, 23), 1213: (25, 25), 1233: (25, 25), 5161: (25, 25), 2391: (0, 8),
+                1229: (23, 23), 1213: (20, 20), 1233: (20, 20), 5161: (20, 20), 2391: (0, 8),
                 207: (0, 0), 1214: (0, 0), 1215: (0, 0), 155: (0, 0), 2181: (0, 0),
                 1230: (0, 0)},
     # Киплер (1221) sells battle medicine; the town's knives are Шрам's (2274) alone.
@@ -338,7 +338,7 @@ COUNTS = {
     # the oasis's «Торговец патронами» (1232) his rounds alone, a seller of no
     # kinds, as Донгола's 1230 (server/test_abuhamed_trade.py).
     "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (0, 0),
-                  1223: (25, 25), 1219: (25, 25), 5161: (25, 25), 2391: (0, 9), 207: (0, 0),
+                  1223: (30, 30), 1219: (0, 0), 5161: (30, 30), 2391: (0, 9), 207: (0, 0),
                   1222: (0, 0), 880: (0, 0), 1232: (0, 0)},
 }
 got = {}
@@ -468,15 +468,12 @@ frame = max(len(protocol.frame("userInfo_Trader", id=1, name=t, type_list=s, pmo
 check("no stall of a city longer than 64 things (Локсли's 51 was the longest the live game"
       " drew before), and its frame under 4 KiB: the longest the prison yards' supply men's"
       " (2026-10-12), 61, their town's battle line and the 49 rounds of their article -- 880"
-      " of Абу-Хамед's the first of the three by type; of the weapon and set stalls Галия's"
-      " (1233) on Донгола's black market and Марат's (1219) at Абу-Хамед's station, 60 each:"
-      " their bands' 50 set pieces (Чёрный Ловелас among Донгола's since 2026-10-13, Тёмное Эхо"
-      " among Абу-Хамед's since 2026-10-14) and ten pouches (Галия's article's, Дари's, 1213,"
-      " until their link was set right the same day; Марат's after hers, 2026-10-14)",
+      " of Абу-Хамед's the first of the three by type; armour-only stalls in Абу-Хамед"
+      " hold 60 pieces. Марат holds ten pouches separately, by the owner's 2026-10-25 rule",
       (len(biggest[1]) <= 64, frame < 4096, biggest[0], len(biggest[1]),
        sorted((len(s), (p, t)) for (p, t), s in stalls.items()
               if t not in (880, 2180, 2181))[-2:]),
-      (True, True, (177, 880), 61, [(60, (103, 1233)), (60, (126, 1219))]))
+      (True, True, (177, 880), 61, [(60, (126, 1223)), (60, (467, 5161))]))
 check("  ..and every thing on them a type the client has, so it draws an icon: one of"
       " objects.xml, or one of ours whose row and icon the release adds"
       " (data/own_items.json, client/build.py)",
@@ -486,7 +483,7 @@ check("the place decides: 5161 sells Абри's 8-12, Донгола's 12-16 and
       " a purchase index taken at another place would buy another thing",
       (sorted({level_of(x) for x in stalls[(378, 5161)]}), sorted({level_of(x) for x in stalls[(469, 5161)]}),
        sorted({level_of(x) for x in stalls[(467, 5161)]}), stalls[(378, 5161)][0] != stalls[(469, 5161)][0]),
-      ([8, 10, 12], [12, 13, 14, 15, 16], [16, 17, 18, 19, 20], True))
+      ([8, 10, 12], [12, 13, 14, 16], [16, 17, 18, 19, 20], True))
 check("  ..outside the cities' places, and with no place at all, a stall is its own list",
       (items.stock_for(2391, 287) == items.stock_for(2391), items.stock_for(5161, None),
        items.stock_for(1201)[:2]), (True, [], [25938, 25951]))

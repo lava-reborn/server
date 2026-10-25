@@ -245,6 +245,8 @@ def parse(doc):
         if variant not in VARIANTS:
             raise ValueError("%s: variant %r is none of %s" % (where, variant, "/".join(VARIANTS[1:])))
         table[set_type] = dict(name=orig_texts.item_name(name), desc=orig_texts.text(desc),
+                               family=rec.get("family") or str(set_type),
+                               level=_int(where + ".level", rec.get("level", 0)),
                                res=_int(where + ".res", rec.get("res", 0)), variant=variant,
                                bonus=bonus, members=members, names=names, descs=descs)
     return table, set_of, pieces

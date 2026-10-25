@@ -95,7 +95,10 @@ def rung(level, word, res, series, keys, words, pages=(), bonus=None, named=None
     variant's own -- a sold quest series' A is _Q_."""
     if pages is not None:
         pages = tuple(dict(pages).get(s, w) for s, w in zip(PIECES, words))
-    return dict(level=level, word=word, res=res, series=series, keys=keys, words=words,
+    # Keep the original balance anchors: this release changes equip levels,
+    # not the interpolation or the armour/price numbers of neighbouring sets.
+    equip_level = {"Штурм-М": 17, "Тёмное Эхо": 18}.get(word, level)
+    return dict(level=level, equip_level=equip_level, word=word, res=res, series=series, keys=keys, words=words,
                 pages=pages, bonus=bonus, named=named or {})
 
 
@@ -185,7 +188,7 @@ check("the file says each set's rung, variant and series as the page has it",
       [(g["key"], RAW[str(g["key"])].get("level"), RAW[str(g["key"])].get("variant"),
         RAW[str(g["key"])].get("family")) for g in GROUPS
        if (RAW[str(g["key"])].get("level"), RAW[str(g["key"])].get("variant"),
-           RAW[str(g["key"])].get("family")) != (g["level"], g["v"], g["series"].split("_LVL_")[0])],
+           RAW[str(g["key"])].get("family")) != (g["equip_level"], g["v"], g["series"].split("_LVL_")[0])],
       [])
 wrong = []
 for g in GROUPS:
@@ -418,7 +421,7 @@ for g in GROUPS:
         need = {}
         for wkey in ("Необходимые атрибуты", "Необходимые навыки", "Необходимые специализации"):
             need.update(flat((sec.get(wkey) or [{}] * 3)[i]))
-        need["Стрельба"] = g["level"]
+        need["Стрельба"] = g["equip_level"]
         want["need"] = need
         got = served(t)
         for k in want:
@@ -571,8 +574,8 @@ for g in GROUPS:
                 why.append("need_%s mask %r vs %r" % (kind, m, vals))
         # Стрельба is skill bit 1: the rung's level.
         shoot = (p.get("need_skills_m", 0), p.get("need_skills", []))
-        if shoot != (2, [g["level"]]):
-            why.append("Стрельба %r at level %d" % (shoot, g["level"]))
+        if shoot != (2, [g["equip_level"]]):
+            why.append("Стрельба %r at level %d" % (shoot, g["equip_level"]))
         if not p.get("need_attribs_m", 0) & 4:
             why.append("no Телосложение asked")
         if why:
@@ -748,7 +751,11 @@ want = {}
 for g in GROUPS:
     kind, page = g["bonus"]
     if kind == "table":
-        want[g["key"]] = frame_of(g, table_bonus(page, g["v"]))
+        bonus = table_bonus(page, g["v"])
+        if g["word"] == "Красное Эхо":
+            for line in bonus.values():
+                line.pop("Стрельба", None)  # Explicit release rule, both variants.
+        want[g["key"]] = frame_of(g, bonus)
     elif kind == "text":
         want[g["key"]] = frame_of(g, text_bonus(page))
     elif kind == "none":
@@ -882,9 +889,10 @@ check("Странник: the wiki's one column in both variants, Интелек�
       (f["bonus_5_attribs_m"], f["bonus_5_attribs"], sets.frame(11193)["bonus_5_attribs_m"]),
       (4 | 8 | 16, [1, 1, 1], 4 | 8 | 16))
 f = sets.frame(10961)
-check("Красное Эхо: a skill among the bonuses -- Ближний бой at three, Стрельба at five (skill bits 0, 1)",
-      ((f["bonus_3_skills_m"], f["bonus_3_skills"]), (f["bonus_5_skills_m"], f["bonus_5_skills"])),
-      ((1, [1]), (2, [1])))
+check("Красное Эхо keeps melee at three pieces, but neither A nor G adds shooting at five",
+      ((f["bonus_3_skills_m"], f["bonus_3_skills"]),
+       [(sets.frame(t).get("bonus_5_skills_m", 0), sets.frame(t).get("bonus_5_skills", []))
+        for t in (10961, 10965)]), ((1, [1]), [(0, []), (0, [])]))
 check("an unknown set: its own type, the empty name, no description",
       sets.frame(424242), dict(type=424242, res=0, name=quests.EMPTY_STRING_ID, desc=""))
 check("and the empty name is one the client has", names.known(quests.EMPTY_STRING_ID), True)
@@ -932,7 +940,7 @@ class Mender:
 
     def __init__(self):
         self.char = progression.Character.load(rstore, rcid)
-        self.char.afro, self.char.gold = 44999, 1000
+        self.char.afro, self.char.gold = 17999, 1000
         self.frames = []
 
     def character(self):
@@ -967,23 +975,23 @@ def mend(code):
 
 top = vsi["max_break_abs"]
 once, twice = top * 9 // 10, top * 9 // 10 * 9 // 10
-check("a G piece broken, one afro short of its 45 000: refused 21, nothing moves",
-      mend(inventory.UPD_REPAIR), ([inventory.RES_NO_MONEY], 0, top, 44999, 1000))
+check("a level-8 G vest costs A's 12000 times five times 0.3: one afro short is refused",
+      mend(inventory.UPD_REPAIR), ([inventory.RES_NO_MONEY], 0, top, 17999, 1000))
 mender.char.afro = 50000
-check("  ..with 50 000 afro: mended for 45 000, three tenths of 3 G at the rate, to nine"
+check("  ..with 50 000 afro: mended for 18 000, to nine"
       " tenths of its ceiling",
-      mend(inventory.UPD_REPAIR), ([0], once, once, 5000, 1000))
+      mend(inventory.UPD_REPAIR), ([0], once, once, 32000, 1000))
 rstore.update_item(row["uniq"], brk=0)
-check("  ..broken again, for gold: 0.90 G, a tenth off the ceiling it had",
-      mend(inventory.UPD_REPAIR_GOLD), ([0], twice, twice, 5000, 910))
+check("  ..broken again, for gold: 0.36 G, a tenth off the ceiling it had",
+      mend(inventory.UPD_REPAIR_GOLD), ([0], twice, twice, 32000, 964))
 check("  ..restored for its gold price, as new",
-      mend(inventory.UPD_RESTORE), ([0], top, top, 5000, 910 - vsi["g_cost"]))
+      mend(inventory.UPD_RESTORE), ([0], top, top, 32000, 964 - vsi["g_cost"]))
 # The window offers "Восстановить" for anything with a g_cost, so this is a
 # press a player can make: a 3 would put up "Сервер не отвечает"
 # (ErrorReport); a press with nothing to do is answered 0 and charged
 # nothing (Inventory.repair).
 check("  ..and as new, a restore has nothing to buy back: 0, nothing paid",
-      mend(inventory.UPD_RESTORE), ([0], top, top, 5000, 910 - vsi["g_cost"]))
+      mend(inventory.UPD_RESTORE), ([0], top, top, 32000, 964 - vsi["g_cost"]))
 rstore.close()
 
 # --- a table that is wrong stops the server ------------------------------------

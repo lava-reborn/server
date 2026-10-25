@@ -1,0 +1,253 @@
+{
+ "_": "Confirmed malformed modification tables, applied after the wiki overlay. from_effect copies only named fields from the base gun with the existing craft.EFFECTS rule; from_base restores an unintended change. Literal values repair isolated typos using the A counterpart or the existing +10% damage rule. Source wiki data remains unchanged.",
+ "items": {
+  "25052": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": "Bren L4 G precision/range modification must retain the base gun's damage. Its burst mode incorrectly lost health damage (46-122 became 42-112)."
+  },
+  "25080": {
+   "from_effect": [
+    "reload_cost"
+   ]
+  },
+  "25081": {
+   "from_effect": [
+    "reload_cost"
+   ]
+  },
+  "25096": {
+   "from_effect": [
+    "reload_cost"
+   ]
+  },
+  "25097": {
+   "from_effect": [
+    "reload_cost"
+   ]
+  },
+  "25142": {
+   "values": {
+    "target_size": [
+     0.82,
+     0.945,
+     1.76
+    ]
+   },
+   "why": "MG-3 Mod XIV G has 9.45 in burst mode where its A counterpart has 0.945; accuracy must improve, not deteriorate tenfold. Preserve the other documented ranges and modes."
+  },
+  "25207": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25208": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25236": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25237": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25293": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared perception bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25294": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared perception bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25440": {
+   "from_effect": [
+    "reload_cost"
+   ]
+  },
+  "25441": {
+   "from_effect": [
+    "reload_cost"
+   ]
+  },
+  "25710": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared perception bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25711": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared perception bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25713": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25714": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25736": {
+   "values": {
+    "h_damage_max": [
+     244,
+     0,
+     323
+    ]
+   },
+   "why": "M14 G aimed maximum 294 became 234 in the damage/clip modification. Existing +10% rule gives round(294 * 1.1) = 323, consistent with its other damage fields."
+  },
+  "25745": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared perception bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25746": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared perception bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25825": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared perception bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25826": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared perception bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25862": {
+   "from_base": [
+    "fire_times"
+   ],
+   "from_effect": [
+    "target_size"
+   ]
+  },
+  "25863": {
+   "from_base": [
+    "fire_times"
+   ],
+   "from_effect": [
+    "target_size"
+   ]
+  },
+  "25879": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25880": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25889": {
+   "from_effect": [
+    "reload_cost"
+   ]
+  },
+  "25890": {
+   "from_effect": [
+    "reload_cost"
+   ]
+  },
+  "25902": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25903": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25922": {
+   "from_effect": [
+    "clip_size"
+   ]
+  },
+  "25986": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "25987": {
+   "from_effect": [
+    "bonus_attribs_m",
+    "bonus_attribs"
+   ],
+   "why": "The wiki modification lacks the declared agility bonus. Apply the existing +2 attribute rule without changing other fields."
+  },
+  "26149": {
+   "from_effect": [
+    "clip_size"
+   ]
+  },
+  "26150": {
+   "from_effect": [
+    "clip_size"
+   ]
+  },
+  "26192": {
+   "from_effect": [
+    "clip_size"
+   ]
+  },
+  "26193": {
+   "from_effect": [
+    "clip_size"
+   ]
+  }
+ }
+}

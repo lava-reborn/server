@@ -96,7 +96,7 @@ try:
     # Тёмное Эхо[17], sold the same way since 2026-10-14 (the Абу-Хамед
     # restoration, server/test_abuhamed_trade.py).
     lovelace = [r for r in ladder_ag if r["level"] == 12]
-    dark_echo = [r for r in ladder_ag if r["level"] == 17]
+    dark_echo = [r for r in ladder_ag if r["set_type"] in (11125, 60005)]
     check("every A and G piece of the owner's ladder has its ten mods in objects.xml, but"
           " Чёрный Ловелас's ten and Тёмное Эхо's ten, which are not reworked",
           (len(setcraft.CHAINS), setcraft.MISSING, sorted(setcraft.NOT_REWORKED)),

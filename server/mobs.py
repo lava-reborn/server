@@ -513,17 +513,21 @@ def loot_table(type_id):
 
     The wiki's rows that resolve to something droppable and the hand-made
     ones of data/loot_manual.json, the higher chance kept where an item is
-    listed twice; and for a man, the valuable of his level. Built once per
-    type.
+    listed twice, unless a manual row has exact_chance=true; and for a man,
+    the valuable of his level. Built once per type. An exact manual chance
+    also takes precedence over that generic level drop.
     """
     rows = _TABLES.get(type_id)
     if rows is not None:
         return rows
     st = stats(type_id)
     got = {}
+    exact = set()
 
-    def add(t, chance, valuable):
+    def add(t, chance, valuable, exact_chance=False):
         if t is None or chance <= 0 or not droppable(t):
+            return
+        if t in exact and not exact_chance:
             return
         # Listed twice, an item keeps the better chance and the tier of the
         # row that gave it. The one case in the data is on purpose: twelve
@@ -535,8 +539,10 @@ def loot_table(type_id):
         # cap of two nearly every time: +21 % afro a kill of a level-2
         # colonist, the kind that already pays the most (UNDONE,
         # лут-баланс).
-        if t not in got or chance > got[t][0]:
+        if exact_chance or t not in got or chance > got[t][0]:
             got[t] = (chance, valuable)
+        if exact_chance:
+            exact.add(t)
 
     for rec in _loot_wiki().get(str(type_id), []):
         valuable = LOOT_TIERS.get(rec.get("tier"))
@@ -551,7 +557,8 @@ def loot_table(type_id):
             continue
         valuable = LOOT_TIERS.get(rec.get("tier"))
         if valuable is not None and rec.get("type"):
-            add(int(rec["type"]), float(rec.get("chance", 0)), valuable)
+            add(int(rec["type"]), float(rec.get("chance", 0)), valuable,
+                exact_chance=rec.get("exact_chance") is True)
     if st.role in HUMAN_ROLES:
         add(level_piece(VALUABLE_SERIES, st.level), VALUABLE_CHANCE, True)
     # What the body has anyway is not rolled for a second time: the dog's
@@ -564,6 +571,17 @@ def loot_table(type_id):
 
 
 _COUNTS = {}
+_INDEPENDENT = {}
+
+
+def independent_loot(type_id):
+    """Explicit per-kind rolls whose stated chances are outside MAX_DROPS."""
+    if type_id not in _INDEPENDENT:
+        _INDEPENDENT[type_id] = frozenset(
+            int(r['type']) for r in _loot_manual().get(str(type_id), [])
+            if r.get('independent') is True and r.get('type')
+            and r.get('tier') in LOOT_TIERS and not r.get(ONE_OF))
+    return _INDEPENDENT[type_id]
 
 
 def count_of(type_id, t):
@@ -594,17 +612,21 @@ def roll_table(type_id, rng):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
     kept. A row at SURE is certain: in the bag every time, without a die and
-    outside the cap. The count is the row's own (count_of), 1 but where the
+    outside the cap. Explicit independent rows also do not consume or
+    compete for the cap; their individual chances remain literal.
+    The count is the row's own (count_of), 1 but where the
     owner's file says more. Then one thing of each ONE_OF group
     (one_of_groups)."""
     out = []
     kept = 0
+    independent = independent_loot(type_id)
     for t, chance, _valuable in loot_table(type_id):
         if chance >= SURE:
             out.append((t, count_of(type_id, t)))
-        elif rng.random() < chance and kept < MAX_DROPS:
+        elif rng.random() < chance and (t in independent or kept < MAX_DROPS):
             out.append((t, count_of(type_id, t)))
-            kept += 1
+            if t not in independent:
+                kept += 1
     for group in one_of_groups(type_id):
         pick = rng.random() * sum(w for _t, w in group)
         for t, w in group:
@@ -759,7 +781,7 @@ def stats(type_id):
     return st
 
 
-def virtual_di(uniq, type_id, root):
+def virtual_di(uniq, type_id, root, ammo_type=None):
     """ss_di_* fields for a virtual instance (uniq >= VIRTUAL_BASE): a clean,
     loaded weapon, so the client shows nothing odd about it. None for a
     serial that is not virtual."""
@@ -771,7 +793,7 @@ def virtual_di(uniq, type_id, root):
         comp = si.get("comp_array") or [0]
         return "ss_di_firearm", {"break": brk, "max_break_cur": brk,
                                  "ammo_count": si.get("clip_size", 1),
-                                 "ammo_type": comp[0], "cur_mode": 0}
+                                 "ammo_type": ammo_type if ammo_type in comp else comp[0], "cur_mode": 0}
     if root == items.COLD_ARM:
         return "ss_di_coldarm", {"break": brk, "max_break_cur": brk}
     return "ss_di_wear", {"break": brk, "max_break_cur": brk}

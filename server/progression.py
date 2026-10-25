@@ -893,6 +893,19 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
     return mob_price(mob_level) * GAP_SHARE[gap] * share * xp_mult
 
 
+def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
+    """Combat only: a trained skill at 17+ receives at most one XP per mob.
+
+    Cap the whole kill after the mob multiplier, then apportion it between
+    hits and death settlement. Capping each hit would pay once per hit.
+    Keep zero-XP targets at zero and retain the lower-skill formula exactly.
+    Mining and other experience sources continue using their existing rules.
+    """
+    if skill_level < 17:
+        return mob_xp(mob_level, skill_level, share, xp_mult)
+    return min(1.0, mob_xp(mob_level, skill_level, 1.0, xp_mult)) * share
+
+
 # --- the fighter's skill from a kill of a player: DESIGNED ---------------------
 # «Навык бойца» (rep, RANKS) has no source in anything that survived: the
 # client only shows it and announces its rise, and the wiki leaves the article

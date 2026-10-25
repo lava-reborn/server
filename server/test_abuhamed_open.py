@@ -55,7 +55,7 @@ in for the walking and the earning.
   Мортимер     on the pier (446): the ingots for gold at face value, never
                for afro; every one of the 21 ingots cashed, 0.05 less each,
                the ledger a row a cashing
-  the stalls   the station's band 16-20, afro and gold: Марат's Тёмное Эхо
+  the stalls   the station's band 16-20, afro and gold: Симона's Тёмное Эхо
                (its helmet for afro, its (G) for the ingots' gold), the
                rifles' stall (a US Army M24 for afro), Шрам's knives (a
                Кукри (G) for gold, for afro refused); a lottery (917) for
@@ -144,9 +144,11 @@ import events  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import mobs  # noqa: E402
+import npcs  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
 import rooms  # noqa: E402
+import sets  # noqa: E402
 import shop_bands  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
@@ -218,6 +220,7 @@ KLENZ, MINER = 1752, 930
 MUAMAR, GOLD_LOTTERY_MAN, ABIMBOLA, GATERA, CAR, TAFARI = 741, 742, 1726, 1727, 1693, 1702
 ILYA, ILYA_IN, SHOOTING_TEACHER = 1421, 1424, 1426
 MARAT, RIFLES_STALL, SCAR, RIFLE_GUNSMITH = 1219, 1218, 2274, 730
+SIMONA = 1223
 RAT, DUG_SAND, NITRE_GATE, WORKS_LINE = 1423, 1422, 1327, 1386
 WEST_GUARD, SOUTH_GUARD, SUPPLY, PRISON_HEALER, TOMAS = 1793, 1796, 880, 2112, 876
 PRISONERS = (1118, 1119, 1120, 1121, 1122)
@@ -765,7 +768,9 @@ def walk_to(c, loc, pos, goal, avoid=()):
         # test_abri_open's does -- a stand-in for the walk round a camp.
         path = [min(goals, key=lambda cell: mobs.hex_distance(cell, pos, loc.width))]
     c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path))
-    c.frames(0.3 + 0.25 * len(path))
+    got = c.frames(0.3 + mobs.HEX_MS / 1000.0 * max(0, len(path) - 1))
+    if any(p.get("dead") == 0 for p in named(got, "lch")):
+        raise AssertionError("Test character died while walking in %s" % loc.id)
     return path[-1]
 
 
@@ -780,9 +785,40 @@ def through(c, loc_id, side, pos, foes=(), gun=None):
     loc = world.location(loc_id)
     cells = {cell for cell, s in travel.exit_sides(loc).items()
              if s == side and cell not in loc.obstacles}
-    walk_to(c, loc, pos, cells)
-    got = []
     foes = list(foes)
+    if gun and foes:
+        # Respond when sight opens, rather than crossing the entire firing
+        # lane and only fighting after a door refuses the wounded player.
+        path = mobs.find_path(loc, pos, lambda cell: cell in cells, set(), limit=20000)
+        if not path:
+            raise AssertionError("No walking route to exit %s in %s" % (side, loc_id))
+        mark = next((i for i in range(len(c.seen) - 1, -1, -1)
+                     if c.seen[i][0] == "lenter"), 0)
+        reach = items.params_of(ADMIN_GUN)["max_range"][0]
+        for cell in path:
+            if cell != pos:
+                pos = walk_to(c, loc, pos, cell)
+            placed, dead = {}, set()
+            for command, p in c.seen[mark:]:
+                if command == "lch" and "newUser" in p:
+                    placed[p["newUser"]] = p["pos"]
+                elif command == "userMove" and p.get("path"):
+                    placed[p["id"]] = p["path"][-1]
+                elif command == "lch" and "dead" in p:
+                    dead.add(p["dead"])
+            for eid in list(foes):
+                if eid in dead:
+                    foes.remove(eid)
+                elif eid in placed and mobs.hex_distance(pos, placed[eid], loc.width) <= reach \
+                        and mobs.line_of_fire(loc, pos, placed[eid]) is None:
+                    if shoot(c, gun, eid, 4) is not None:
+                        foes.remove(eid)
+            if not foes:
+                walk_to(c, loc, pos, cells)
+                break
+    else:
+        walk_to(c, loc, pos, cells)
+    got = []
     for _ in range(8):
         c.send("chWorld;to=1;")
         got = c.until(lambda f: f[0] == "lcall" or (f[0] == "cmdAck" and f[1].get("res")), 4)
@@ -1210,11 +1246,11 @@ try:
     here = inhabitants(arrival, lid)
     lo, hi = shop_bands.band(STATION)
     seen_stalls = {}
-    for trader in (MARAT, RIFLES_STALL, SCAR):
+    for trader in (MARAT, SIMONA, RIFLES_STALL, SCAR):
         stall, _opened = open_stall(c, here, trader)
         close_stall(c)
         seen_stalls[trader] = stall
-    check("the station's band is the town's, 16-20; Марат's sets, the rifles' stall and Шрам's"
+    check("the station's band is the town's, 16-20; Марат's pouches, Симона's sets, the rifles' stall and Шрам's"
           " knives sell nothing of their kind out of it, each for afro and for gold",
           ((lo, hi), {t: ([x for x in s if shop_bands.band_ware(x) and not shop_bands.fits(x, lo, hi)],
                           any(priced(x) == (True, False) for x in s),
@@ -1222,11 +1258,11 @@ try:
                       for t, s in seen_stalls.items()}),
           ((16, 20), {t: ([], True, True) for t in seen_stalls}))
     cheat(c, "/money %d 0" % (200000 + 67400))
-    stall, opened = open_stall(c, here, MARAT)
+    stall, opened = open_stall(c, here, SIMONA)
     bought = [buy(c, CID, stall, DARK_HELMET), buy(c, CID, stall, DARK_HELMET_G, gold=True)]
     close_stall(c)
-    check("Марат: Тёмное Эхо's helmet for 200 000 afro, its (G) for 50 of the ingots' gold -- the"
-          " set of 17, sold since Абу-Хамед",
+    check("Симона: Тёмное Эхо's helmet for 200 000 afro, its (G) for 50 of the ingots' gold -- the"
+          " set of 18, sold since Абу-Хамед",
           (DARK_HELMET in stall, DARK_HELMET_G in stall, opened, bought),
           (True, True, [0], [([0], 1, 200000, 0), ([0], 1, 0, 5000)]))
     stall, opened = open_stall(c, here, RIFLES_STALL)
@@ -1307,6 +1343,26 @@ try:
     check("of the 72.95 gold 5.45 left", money(CID)[1], 7295 - 5000 - 800 - 350 - 600)
 
     # --- the Dark Mine: down two tiers and up ------------------------------------------------
+    # This scene checks passages, not survival of a naked character. The
+    # miners now shoot F2000s: equip legal level-17 armour before entering.
+    # Keep their real damage/AI, the player's level, and the exit refusals.
+    for slot, piece in zip(inventory.SET_SLOTS, sets.SLOTS):
+        armour = give(c, sets.SETS[11004]["members"][piece])
+        c.send("ss_move;obj=x%s;to=%d;from=2048;" % (armour, slot))
+        check("mine route: level-17 armour G %s equipped" % piece, acks(c.frames()), [0])
+    # Restore through the actual healer after equipping: earlier fights
+    # can leave partial HP. Keep real damage, AI, level and exit refusals.
+    lid, clinic = goto(c, STATION)
+    healer_type = next(t for _cell, t in world.location(STATION).spawns
+                       if t and MT[t][0] == world.HEALER)
+    healer = inhabitants(clinic, lid)[healer_type][0]
+    cheat(c, "/money %d 0" % npcs.healer_price(healer_type, 10))
+    c.send("on_conv;mob=%d;op=1;" % healer)
+    healed = c.frames()
+    vitals = [p for p in named(healed, "usrUp") if p.get("id") == 0]
+    check("mine route: healer restores full HP and stamina before entry",
+          (acks(healed), [(p["hcur"] == p["hmax"], p["scur"] == p["smax"]) for p in vitals]),
+          ([0], [(True, True)]))
     reload(c, GUN)
     lid, arrival = goto(c, DARK_MOUTH)
     here = inhabitants(arrival, lid)
@@ -1321,6 +1377,8 @@ try:
     check("  ..where the map is out of reach", map_refused(c), (True, False))
     ack, lid, tier2 = through(c, DARK_1, "b", first(tier1, "lenter").get("pos"), up, GUN)
     check("  ..the tier's door b down to the second (1014)", (ack, lid), ([0], DARK_2))
+    if lid != DARK_2:
+        raise RuntimeError("Dark Mine transition failed; stop instead of using a missing position")
     up = clear_room(c, GUN, tier2, {MINER}, tries=5)
     ack, lid, back = through(c, DARK_2, "a", first(tier2, "lenter").get("pos"), up, GUN)
     check("  ..its door a back up to the first", (ack, lid), ([0], DARK_1))

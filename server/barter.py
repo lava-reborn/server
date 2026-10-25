@@ -484,7 +484,7 @@ class Barter:
             self.ack(RES_CANT)
             self.sess.say("Эту вещь нельзя передать")
             return
-        if row["uniq"] in inv.reloads:
+        if inv.reloading(row["uniq"]):
             self.ack(RES_NOT_READY)
             return
         me.items[row["uniq"]] = row

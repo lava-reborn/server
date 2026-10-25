@@ -77,7 +77,13 @@ SCALARS = ("weight", "cost", "g_cost", "exchang", "premium", "quest", "clip_size
            "reload_cost", "max_break_abs", "weapon_type", "armor_class", "slot_type",
            "min_h_rest", "max_h_rest", "use_count", "heal_cost", "strike_cost",
            "max_count", "range_mod", "acc_mod", "dam_mod", "st_mod")
-for t in rnd.sample(linked, 20):
+with open(os.path.join(HERE, "..", "data", "weaponcraft_corrections.json"), encoding="utf-8") as fh:
+    corrected = {int(t) for t in json.load(fh)["items"]}
+# Always cover corrected weapons as well as the random wiki sample. The
+# effect itself is checked by test_weapon_upgrade_integrity; other wiki
+# fields must still survive the deliberate overlay unchanged.
+sample = sorted(set(rnd.sample(linked, 20)) | ((corrected | set(craft.DURABILITY_CORRECTIONS)) & set(linked)))
+for t in sample:
     rec = wiki[t]
     cmd, p = items.static_info(t)
     root = cat[t][0]
@@ -101,6 +107,9 @@ for t in rnd.sample(linked, 20):
     # (items.heal_over_article; every one of them held below).
     ours = dict(ours, **{k: v for k, v in items.heal_over_article().get(t, {}).items()
                          if not k.startswith("_")})
+    craft.lay_stat_corrections(t, ours)
+    if t in craft.DURABILITY_CORRECTIONS:
+        ours["max_break_abs"] = craft.DURABILITY_CORRECTIONS[t]
     for key in SCALARS:
         if key in rec and key in p and key not in ours:
             want = rec[key]
@@ -111,7 +120,7 @@ for t in rnd.sample(linked, 20):
             if p[key] != want:
                 mismatch[key] = (p[key], want)
     for key in ("h_damage_min", "h_damage_max", "fire_costs", "opt_range"):
-        if key in rec and isinstance(rec[key], list) and p.get(key) != rec[key]:
+        if key in rec and key not in ours and isinstance(rec[key], list) and p.get(key) != rec[key]:
             mismatch[key] = (p.get(key), rec[key])
     check("%d %s (%s): wiki numbers on the wire" % (t, cat[t][1], rec["name_ru"]),
           mismatch, {})
@@ -233,7 +242,10 @@ for t in linked + sorted(manual) + pieces + sorted(set(cold) - set(linked)) + so
     missing = set(d) - set(p)
     if missing:
         why.append("keys lost %s" % sorted(missing))
-    extra = set(p) - set(d) - set(items.NEED_BONUS_KEYS)
+    extra = set(p) - set(d) - set(items.NEED_BONUS_KEYS) - {"repair_cost"}
+    if "repair_cost" in p and (root not in (items.FIRE_ARM, items.COLD_ARM, items.WEAR)
+                               or not p.get("g_cost") or p["repair_cost"] <= 0):
+        why.append("invalid repair-only valuation")
     if extra:
         why.append("keys added %s" % sorted(extra))
     if not all(numbers_only(v) for v in p.values()):

@@ -10,6 +10,7 @@ import sys
 import ast
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 os.environ.pop("LAVA_DB_URL", None)
 os.environ["LAVA_DB"] = ":memory:"
@@ -23,12 +24,50 @@ import progression  # noqa: E402
 import quests  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
+# Malformed dense source lists must not break the machine-gun frame.
+overlay = items._overlay
+for mask, values, expected in ((1 << 6, None, [4]),
+                               ((1 << 2) | (1 << 6) | (1 << 8), [3], [3, 4, 0])):
+    def incomplete(type_id, params, rec):
+        overlay(type_id, params, rec)
+        if type_id == 25006:
+            params.update(need_skills=[20], need_specs_m=mask, need_specs=values)
+    with patch.object(items, '_overlay', side_effect=incomplete):
+        p = items.params_of(25006)
+    check('machine-gun requirement pads a short list: %s' % mask,
+          (p['need_specs_m'], p['need_specs']), (mask, expected))
+
 ch = progression.Character()
 ch.skill[progression.SHOOTING][0] = 20
 
 def row(t, slot=inventory.PRIMARY):
     return dict(uniq=1, char_id=7, type_id=t, root=items.root_of(t), slot=slot,
                 brk=100, ammo_count=10)
+
+# --- machine-gun specialisation, ordinary/gold and their modifications ------
+machineguns = []
+for t, (root, _name) in items.catalogue().items():
+    if root != items.FIRE_ARM:
+        continue
+    si = items.params_of(t)
+    level = inventory.item_level(t)
+    if si.get('weapon_type') != items.MACHINEGUN or not 16 <= level <= 20:
+        continue
+    machineguns.append((t, level))
+wrong = []
+for t, level in machineguns:
+    character = progression.Character()
+    character.skill[progression.SHOOTING][0] = level
+    for spec in character.spec:
+        spec[0] = 5
+    for trained, allowed in ((level - 17, False), (level - 16, True)):
+        character.spec[6][0] = trained
+        if inventory.wearable(row(t), character.level, character) != allowed:
+            wrong.append((t, level, trained, allowed))
+check('every level-16..20 machine gun and modification enforces the exact spec boundary', wrong, [])
+check('machine-gun coverage includes all five item levels in both A and G',
+      {(level, bool(items.params_of(t).get('g_cost'))) for t, level in machineguns},
+      {(level, gold) for level in range(16, 21) for gold in (False, True)})
 
 check("high shooting does not replace melee", inventory.wearable(row(6231), ch.level, ch), False)
 ch.skill[progression.MELEE][0] = 2
@@ -104,7 +143,7 @@ for t, callback in ((6241, "strike"), (25566, "fire")):
                               inv=SimpleNamespace(find=lambda _: bad), on_map=False,
                               answer=events.append)
     fighter = SimpleNamespace(sess=session, character=lambda: ch, rc=SimpleNamespace(
-        room=SimpleNamespace(broadcast=events.append)), dead=False, ap=60,
+        room=SimpleNamespace(ws=False, broadcast=events.append)), dead=False, ap=60,
         aim=None, strike=None, eid=99, store=SimpleNamespace(item=lambda _: bad),
         preparing=lambda: False, ack=lambda code: events.append(code))
     session.send = lambda cmd, **p: events.append((cmd, p))

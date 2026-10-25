@@ -54,6 +54,8 @@ Nothing here is imported at load but json/os/re: items imports this module,
 and this one asks items, quests, inventory and combat late, inside the
 functions.
 """
+import copy
+from functools import lru_cache
 import json
 import logging
 import os
@@ -112,11 +114,16 @@ LADDER = {0: (520, 13), 1: (520, 13), 2: (1000, 25), 3: (1520, 38), 4: (2000, 50
           17: (55000, 1375), 18: (60000, 1500), 19: (65000, 1625), 20: (70000, 1750)}
 _TWO_EFFECTS = ("damage_25", "damage_clipsize", "precision_shotrange")
 
+# Correct malformed Mod VIII tables after the wiki overlay. The owner chose
+# the usual x2 rule: AUG 2750 -> 5500; Bren L4 A/G 2500 -> 5000.
+DURABILITY_CORRECTIONS = {25015: 5500, 25048: 5000, 25049: 5000}
+
 _ROWS = None
 _ITEMS = None
 _STOCK = None
 _MODS = None
 _BY_NAME = None
+_STAT_CORRECTIONS = None
 
 
 # --- the companion table ------------------------------------------------------------
@@ -370,8 +377,39 @@ def lay_frame(type_id, p, rec):
             cost, gold = LADDER.get(int(m.group(3)), LADDER[20])
             two = m.group(1) == "bpb" or m.group(2).startswith(_TWO_EFFECTS)
             p.update(cost=cost * (2 if two else 1), g_cost=gold * (2 if two else 1))
+    if type_id in DURABILITY_CORRECTIONS:
+        p["max_break_abs"] = DURABILITY_CORRECTIONS[type_id]
+    lay_stat_corrections(type_id, p)
     if type_id in _table() and _table()[type_id].get("desc"):
         p["desc"] = items.DESC_ID_OFFSET + type_id
+
+
+def lay_stat_corrections(type_id, p):
+    """Repair confirmed bad effect fields; retain other documented values."""
+    global _STAT_CORRECTIONS
+    if _STAT_CORRECTIONS is None:
+        with open(os.path.join(DATA, "weaponcraft_corrections.json"), encoding="utf-8") as fh:
+            _STAT_CORRECTIONS = {int(k): v for k, v in json.load(fh)["items"].items()}
+    if type_id in _STAT_CORRECTIONS:
+        p.update(copy.deepcopy(_stat_fields(type_id)))
+
+
+@lru_cache(maxsize=None)
+def _stat_fields(type_id):
+    """Build deterministic corrections once; callers receive independent lists."""
+    correction = _STAT_CORRECTIONS[type_id]
+    import items
+    base, effect = mod_of(type_id)
+    original = items.params_of(base)
+    changed = copy.deepcopy(original)
+    _apply(changed, effect)
+    p = {}
+    for key in correction.get("from_effect", ()):
+        p[key] = changed[key]
+    for key in correction.get("from_base", ()):
+        p[key] = copy.deepcopy(original[key])
+    p.update(copy.deepcopy(correction.get("values", {})))
+    return p
 
 
 # --- the upgrader's window -------------------------------------------------------------

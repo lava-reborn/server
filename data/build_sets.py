@@ -1026,6 +1026,8 @@ def build(layout_path, res_dir):
             if key in table:
                 raise SystemExit("set_type %d twice" % key)
             table[key] = rec
+    import set_release_rules
+    set_release_rules.apply(table)
     check_prices(plans, built)
     return plans, built, table, skipped
 

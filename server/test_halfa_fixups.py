@@ -109,20 +109,19 @@ with open(os.path.join(ROOT, "data", "sets.json"), encoding="utf-8") as _fh:
 
 def set_of(level, variant):
     """The five pieces of the ladder's set of that level and variant, or []."""
-    for s in SETS.values():
-        if s["level"] == level and s["variant"] == variant:
-            return [s["members"][k]["type"] for k in SLOTS]
-    return []
+    return [s["members"][k]["type"]
+            for s in sorted(SETS.values(), key=lambda s: s.get("family", ""))
+            if s["level"] == level and s["variant"] == variant for k in SLOTS]
 
 
 def ladder(lo, hi):
     """What a trader of levels lo..hi sells: every set of the ladder in the
-    band, by level, A then G, helm to boots. A quest (Q) set is on the
+    band, by level and stable family, A then G, helm to boots. A quest (Q) set is on the
     ladder as data only (sets.json _meta.decided), so it is on no stall."""
     out = []
-    for level in sorted({s["level"] for s in SETS.values()}):
-        if lo <= level <= hi:
-            out += set_of(level, "A") + set_of(level, "G")
+    for s in sorted(SETS.values(), key=lambda s: (s["level"], s["family"], s["variant"])):
+        if lo <= s["level"] <= hi and s["variant"] in ("A", "G"):
+            out += [s["members"][k]["type"] for k in SLOTS]
     return out
 
 
@@ -142,6 +141,19 @@ CITY_MARKETS = {(5160, 378): (8, 12), (5161, 378): (8, 12), (5161, 469): (12, 16
 check("  ..5160 and 5161 their city's band at its market, nothing of their own",
       ({k: items.stock_for(*k) for k in CITY_MARKETS}, items.stock_for(5160), items.stock_for(5161)),
       ({k: ladder(*band) for k, band in CITY_MARKETS.items()}, [], []))
+piece_order = {p["type"]: (s["level"], s["family"], s["variant"], slot)
+               for s in SETS.values() for slot, p in s["members"].items()}
+broken_pairs = []
+for market in CITY_MARKETS:
+    stock = items.stock_for(*market)
+    for start in range(0, len(stock), 10):
+        group = [piece_order[t] for t in stock[start:start + 10]]
+        level, family = group[0][:2]
+        expected = [(level, family, variant, slot) for variant in ("A", "G") for slot in SLOTS]
+        if group != expected:
+            broken_pairs.append((market, start, group))
+check("  ..every family stays whole: five A pieces then its five G pieces, including shared levels",
+      broken_pairs, [])
 check("  ..which is Беженец to Магриб, Налетчик and Пустынник; Абри's Налетчик to Чёрный"
       " Ловелас (sold since 2026-10-13), Донгола's Чёрный Ловелас to Красное Эхо, Абу-Хамед's"
       " Красное Эхо to Апокалипсис (Тёмное Эхо sold since 2026-10-14)",
@@ -152,8 +164,8 @@ check("  ..which is Беженец to Магриб, Налетчик and Пус�
        (5159, None): ["Налетчик", "Пустынник"],
        (5160, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
        (5161, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
-       (5161, 469): ["Красное Эхо", "Легионер", "Спецназ", "Чёрный Ловелас", "Штурм-М"],
-       (5161, 467): ["Апокалипсис", "Дредноут", "Красное Эхо", "Паладин", "Тёмное Эхо"]})
+       (5161, 469): ["Красное Эхо", "Легионер", "Спецназ", "Чёрный Ловелас"],
+       (5161, 467): ["Апокалипсис", "Дредноут", "Красное Эхо", "Паладин", "Тёмное Эхо", "Штурм-М"]})
 SOLD = sorted({t for tr, place in [(5158, None), (5159, None), (1204, 102), (1205, 102),
                                    (5181, 378)] + list(CITY_MARKETS)
                for t in items.stock_for(tr, place)})

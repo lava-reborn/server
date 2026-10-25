@@ -889,7 +889,13 @@ class Fighter:
         self.aim = None         # TimerHandle: a burst waiting for fire_times
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
+        self.reloading = None   # TimerHandle: ammunition is applied on completion
+        self.reload_plan = None
+        self.healing_peace = True
+        self.action_revision = 0
+        self.walk_ap = None     # (cells, start time, already charged steps)
         self.damage_revision = 0  # Damage since the start of peaceful healing.
+        self.hit_revision = 0     # Hits given/taken since healing started.
         self.loot = None        # cell of the bag the loot window is open on
         # Index sets of an rp_info being held back (hold_stats): a burst
         # that kills is paid twice in one breath, for the harm and at the
@@ -1123,23 +1129,112 @@ class Fighter:
         cancelled here and nothing is charged. Steps cost 1 AP each while
         the room is at war, which the client also subtracts by itself
         (APManager.gamerMove); c_ap after the next action corrects drift."""
-        self.cancel_aim()
+        Fighter.settle_walk(self, stop=True)
+        Fighter.cancel_pending(self, notify=True, moving=True)
+        walk = getattr(self.sess, "walk", None)
+        if walk is not None:
+            path, began = walk
+            self.walk_ap = (path, began, 0)
+            return
         rc = self.rc
         if rc is not None and rc.room.ws:
             self.ap = max(0, self.ap - max(0, len(cells) - 1))
 
-    def cancel_aim(self):
-        for name in ("aim", "strike"):
-            handle = getattr(self, name)
+    def settle_walk(self, t=None, stop=False):
+        """Charge completed steps, never the unwalked end of a route."""
+        pending = getattr(self, "walk_ap", None)
+        if pending is None:
+            return
+        cells, began, paid = pending
+        t = now() if t is None else t
+        steps = min(len(cells) - 1, max(0, int((t - began) * 1000 // mobs.HEX_MS)))
+        cost = max(0, steps - paid)
+        rc = self.rc
+        if cost and rc is not None and rc.room.ws:
+            self.ap = max(0, self.ap - cost)
+        self.walk_ap = None if stop or steps == len(cells) - 1 else (cells, began, steps)
+
+    def primary_changed(self):
+        """An accepted active-slot change abandons aim and reloading.
+
+        Invalidate the callback even if the player switches back before its
+        deadline. Melee swings and healing keep their existing behaviour.
+        """
+        had_reload = getattr(self, "reloading", None) is not None
+        if getattr(self, "aim", None) is not None or had_reload:
+            Fighter.cancel_pending(self, notify=True)
+            if not had_reload:  # cancel_pending already corrected reload AP.
+                self.c_ap()
+
+    def cancel_timers(self):
+        Fighter.settle_walk(self, stop=True)
+        Fighter.cancel_pending(self)
+
+    def cancel_pending(self, notify=False, replacing=False, moving=False):
+        """Invalidate callbacks as well as removing their timer handles."""
+        had = False
+        had_heal = getattr(self, "healing", None) is not None
+        had_aim = getattr(self, "aim", None) is not None
+        had_reload = getattr(self, "reloading", None) is not None
+        for name in ("aim", "strike", "healing", "reloading"):
+            handle = getattr(self, name, None)
             if handle is not None:
                 handle.cancel()
                 setattr(self, name, None)
+                had = True
+        if had_reload:
+            self.sess.inv.cancel_reloads()
+        self.action_revision = getattr(self, "action_revision", 0) + 1
+        if had and notify:
+            Fighter.action_cancelled(self, release=not replacing, stop_aim=had_aim, moving=moving)
+            if had_heal or had_reload:
+                self.c_ap()
 
-    def cancel_timers(self):
-        self.cancel_aim()
-        if self.healing is not None:
-            self.healing.cancel()
-            self.healing = None
+    def action_cancelled(self, release=True, stop_aim=False, moving=False):
+        """Stop the owner's UI and, for aiming, the observers' animation."""
+        params = dict(release=int(release))
+        if moving:
+            params["moving"] = 1
+        if stop_aim:
+            params["stop_aim"] = 1
+        self.sess.send("actionCancel", **params)
+        room = getattr(self.sess, "room", None)
+        if stop_aim and room is not None:
+            room.broadcast(("actionCancel", dict(id=self.eid, stop_aim=1)),
+                           exclude=self.sess)
+
+    def begin_action(self):
+        """Called only after the replacement has passed its start checks."""
+        Fighter.settle_walk(self, stop=True)
+        Fighter.cancel_pending(self, notify=True, replacing=True)
+        sess = self.sess
+        if getattr(sess, "walk", None) is not None:
+            cell = sess.live_cell()
+            sess.pos = cell
+            sess.cancel_passage()
+            sess.send("actionCancel", pos=cell)
+            if sess.room is not None:
+                sess.room.broadcast(("actionCancel", dict(id=self.eid, pos=cell)),
+                                    exclude=sess)
+            self.c_ap()  # breakMove emits finishPart; correct its AP prediction.
+        return self.action_revision
+
+    def finish_action(self, revision, kind, callback, args):
+        if revision != getattr(self, "action_revision", 0) or self.dead:
+            return
+        setattr(self, kind, None)
+        # Consume the revision before execution: a duplicate callback is inert.
+        self.action_revision += 1
+        try:
+            callback(*args)
+        finally:
+            if kind in ("healing", "reloading"):
+                self.c_ap()
+
+    def schedule_action(self, revision, kind, delay, callback, *args):
+        handle = asyncio.get_running_loop().call_later(
+            delay, Fighter.finish_action, self, revision, kind, callback, args)
+        setattr(self, kind, handle)
 
     def restore(self, row):
         """A character has just been loaded: take its death back up.
@@ -1194,6 +1289,22 @@ class Fighter:
         caHit: the client has restarted its exit countdown on it, and so
         does the server (in_combat)."""
         self.last_hit = now() if t is None else t
+        self.hit_revision = getattr(self, "hit_revision", 0) + 1
+        if (getattr(self, "healing", None) is not None
+                and getattr(self, "healing_peace", True)):
+            Fighter.cancel_pending(self, notify=True)
+
+    def heal_wait(self, target=None):
+        """Personal hit-based cooldown; room war or mere aiming is irrelevant."""
+        t = now()
+        return max(0.0, *(LEAVE_COMBAT_TIMEOUT - (t - getattr(side, "last_hit", -1e9))
+                          for side in (self, target) if side is not None))
+
+    def peace_heal_blocked(self, target=None):
+        """Ordinary medicine is forbidden in room war or the personal hit timer."""
+        rc = self.rc
+        return bool((rc is not None and rc.room.ws)
+                    or Fighter.heal_wait(self, target) > 0)
 
     def engage_player(self, other, t=None):
         """Remember this pair, without refreshing unrelated opponents."""
@@ -1261,6 +1372,7 @@ class Fighter:
         return True
 
     def c_ap(self):
+        Fighter.settle_walk(self)
         self.sess.send("c_ap", ap=int(self.ap))
 
     def newbie_ground(self):
@@ -1364,7 +1476,14 @@ class Fighter:
         if not parsed:
             return False
         uniq, type_id, root = parsed
-        di = mobs.virtual_di(uniq, type_id, root)
+        ammo_type = None
+        room = getattr(self.sess, 'room', None)
+        npc = room.npcs.get(uniq - mobs.VIRTUAL_BASE) if room is not None else None
+        if npc is not None and npc.root == world.MOB:
+            stats = mobs.stats(npc.type_id)
+            if stats.weapon_type_id == type_id:
+                ammo_type = stats.loot_ammo_type
+        di = mobs.virtual_di(uniq, type_id, root, ammo_type=ammo_type)
         if di is None:
             return False
         cmd, fields = di
@@ -1447,9 +1566,6 @@ class Fighter:
                 self.ack(inventory.RES_NOT_FOUND)
                 return
             hexcell = tid
-        if self.aim is not None or self.strike is not None:
-            self.ack(inventory.RES_NOT_READY)
-            return
         if row is None or row["root"] == items.COLD_ARM:
             self.strike_with(row, target, hexcell)
             return
@@ -1477,9 +1593,11 @@ class Fighter:
         # cannot walk, and nothing in its table says «too far»; a player who
         # sees the bullets fall short needs no words.
         cost = si["fire_costs"][mode]
+        Fighter.settle_walk(self)
         if rc.room.ws and self.ap < cost:
             self.refuse_no_ap()
             return
+        revision = Fighter.begin_action(self)
         self.ack(inventory.RES_OK)
         # Raising the gun is already hostile: the room goes to war here, and
         # self.aim, set below before any tick can run, keeps it there while
@@ -1511,7 +1629,7 @@ class Fighter:
                                          num_shots=weapon.num_shots)))
         # The aim bar on the client runs fire_times[cur_mode] from faAim to
         # the first faShot (WeaponPan.aim); the burst waits the same.
-        self.aim = asyncio.get_running_loop().call_later(
+        Fighter.schedule_action(self, revision, "aim",
             pace.paced(si.get("fire_times", [700])[mode] / 1000.0),
             self.fire_now, row["uniq"], target, hexcell, weapon, cost, rounds)
 
@@ -1524,6 +1642,10 @@ class Fighter:
         self.aim = None
         rc = self.rc
         if rc is None or self.dead:
+            return
+        if rc.room.ws and self.ap < cost:
+            Fighter.action_cancelled(self, stop_aim=True)
+            self.c_ap()
             return
         row = self.store.item(uniq)
         if row is not None and row["char_id"] != self.sess.char_id:
@@ -1611,6 +1733,13 @@ class Fighter:
 
     def strike_with(self, row, target, hexcell):
         """A swing: fist (5 AP, damage from strength) or the blade in hand."""
+        if self.strike is not None:
+            # Space/click spam must not restart a melee wind-up. Acknowledge
+            # the repeated request silently, keeping the original target and
+            # deadline; caHit/caMiss will release the client's AP latch once.
+            self.ack(inventory.RES_OK)
+            return
+        Fighter.settle_walk(self)
         sess = self.sess
         rc = self.rc
         ch = self.character()
@@ -1633,6 +1762,7 @@ class Fighter:
         if rc.room.ws and self.ap < cost:
             self.refuse_no_ap()
             return
+        revision = Fighter.begin_action(self)
         self.ack(inventory.RES_OK)
         rc.set_ws(True)
         # The blade is carried into strike_now so the swing can wear it:
@@ -1642,15 +1772,19 @@ class Fighter:
         if delay:
             # The strike bar runs strike_time from the send to caHit/caMiss
             # (WeaponPan.strike); a fist has none and lands at once.
-            self.strike = asyncio.get_running_loop().call_later(
+            Fighter.schedule_action(self, revision, "strike",
                 pace.paced(delay), self.strike_now, *args)
         else:
-            self.strike_now(*args)
+            Fighter.finish_action(self, revision, "strike", self.strike_now, args)
 
     def strike_now(self, target, hexcell, dmg_range, spec, cost, uniq=None):
         self.strike = None
         rc = self.rc
         if rc is None or self.dead:
+            return
+        if rc.room.ws and self.ap < cost:
+            self.sess.send("actionCancel", release=1)
+            self.c_ap()
             return
         sess = self.sess
         ch = self.character()
@@ -1749,52 +1883,65 @@ class Fighter:
         if getattr(target, "dead", False):
             self.ack(inventory.RES_REFUSED)
             return
-        if self.healing is not None:
-            self.ack(inventory.RES_NOT_READY)
-            return
-        if rc is not None and rc.room.ws and items.no_combat(row["type_id"]):
-            # "Нельзя использовать в бою", and with heal_cost 0 the AP check
-            # below would let it through every time. The client's quick heal
-            # offers it all the same (items.no_combat), so this is the one
-            # place that holds the line; one refusal, as any other.
-            self.ack(inventory.RES_REFUSED)
-            return
         si = items.params_of(row["type_id"]) or {}
         cost = si.get("heal_cost", 0)
+        peace = items.no_combat(row["type_id"])
+        if peace and Fighter.peace_heal_blocked(self, target):
+            self.ack(inventory.RES_NOT_READY)
+            sess.answer("Обычное лечение недоступно во время боя и в течение %d секунд после нанесённого или полученного урона." % LEAVE_COMBAT_TIMEOUT)
+            return
+        Fighter.settle_walk(self)
         if rc is not None and rc.room.ws and self.ap < cost:
             self.refuse_no_ap()
             return
+        revision = Fighter.begin_action(self)
         self.ack(inventory.RES_OK)
-        if rc is not None and rc.room.ws:
-            self.ap = max(0, self.ap - cost)
-        peace_damage = None
-        if items.no_combat(row["type_id"]):
-            peace_damage = (getattr(self, "damage_revision", 0),
-                            getattr(target, "damage_revision", 0))
-        self.healing = asyncio.get_running_loop().call_later(
-            pace.paced(si.get("heal_time", 0) / 1000.0),
-            self.heal_now, row["uniq"], target, peace_damage)
+        # Recreate the accepted heal's bar after cancellation of the old one.
+        # The item id avoids relying on ItemActivator's mutable __usedItem.
+        delay = pace.paced(si.get("heal_time", 0) / 1000.0)
+        sess.send("actionStart", heal_obj=BigUInt(inventory.oid_of(row)),
+                  duration=int(delay * 1000))
+        ap_cost = cost if rc is not None and rc.room.ws else 0
+        peace_damage = (getattr(self, "damage_revision", 0) + getattr(self, "hit_revision", 0),
+                        getattr(target, "damage_revision", 0) + getattr(target, "hit_revision", 0)) if peace else None
+        self.healing_peace = peace
+        Fighter.schedule_action(self, revision, "healing",
+            delay,
+            self.heal_now, row["uniq"], target, peace_damage, ap_cost)
 
-    def heal_now(self, uniq, target, peace_damage=None):
+    def heal_now(self, uniq, target, peace_damage=None, ap_cost=0):
         self.healing = None
         row = self.store.item(uniq)
         if row is None or row["char_id"] != self.sess.char_id or self.dead:
+            self.sess.send("actionCancel", release=1)
             return
         if items.stimulant_unavailable(row["type_id"]):
+            self.sess.send("actionCancel", release=1)
             self.sess.answer(items.STIMULANT_UNAVAILABLE)
             return
         if target.dead:
-            return
-        if peace_damage is not None and peace_damage != (
-                getattr(self, "damage_revision", 0),
-                getattr(target, "damage_revision", 0)):
-            self.sess.answer("Лечение прервано полученным уроном. Предмет не израсходован.")
+            self.sess.send("actionCancel", release=1)
             return
         si = items.params_of(row["type_id"]) or {}
+        peace = items.no_combat(row["type_id"])
+        if peace and Fighter.peace_heal_blocked(self, target):
+            self.sess.send("actionCancel", release=1)
+            self.sess.answer("Обычное лечение прервано: начался бой или действует %d-секундный таймер после урона." % LEAVE_COMBAT_TIMEOUT)
+            return
+        if peace and peace_damage is not None and peace_damage != (
+                getattr(self, "damage_revision", 0) + getattr(self, "hit_revision", 0),
+                getattr(target, "damage_revision", 0) + getattr(target, "hit_revision", 0)):
+            self.sess.send("actionCancel", release=1)
+            self.sess.answer("Лечение прервано полученным уроном. Предмет не израсходован.")
+            return
         ch = self.character()
         patient = target.character()
         v = patient.vitals()
         if v["hcur"] <= 0:
+            self.sess.send("actionCancel", release=1)
+            return
+        if self.ap < ap_cost:
+            self.sess.send("actionCancel", release=1)
             return
         # Wiki "Медицина": the skill moves the floor towards the ceiling by
         # skill/20 of the span; the specialisation (surgery under 30% HP,
@@ -1808,6 +1955,8 @@ class Fighter:
         rested = min(v["smax"] - v["scur"], int(RNG.uniform(slo, shi) * mult))
         patient.hp = v["hcur"] + max(0, healed)
         patient.sp = v["scur"] + max(0, rested)
+        if ap_cost:
+            self.ap -= ap_cost
         room = self.sess.room
         frame = ("heal", dict(id=self.eid, target=target.eid,
                               hp=patient.hp, sp=patient.sp))
@@ -1880,15 +2029,17 @@ class Fighter:
         rp_info, pushed for the indexes that moved; a level-up (constitution)
         and a level of a strength or agility specialisation move a bar's
         maximum, which travels by usrUp (progression.moves_vitals). An
-        object pays nothing (OBJECTS_PAY_XP)."""
+        object pays nothing (OBJECTS_PAY_XP). From trained skill 17 the
+        whole kill price is capped at one before dividing it across hits;
+        the same rule applies to the death settlement."""
         if share <= 0:
             return
         ch = self.character()
         st = target.stats
         if not OBJECTS_PAY_XP and getattr(st, "role", None) == "object":
             return
-        xp = ch.carry_xp(skill, progression.mob_xp(
-            target.level, ch.skill_level(skill), share, getattr(st, "xp_mult", 1)))
+        xp = ch.carry_xp(skill, progression.combat_mob_xp(
+            target.level, ch.skill[skill][0], share, getattr(st, "xp_mult", 1)))
         if xp <= 0:
             return
         changed = ch.gain_xp(skill, xp, spec, spec_on_top=True)
@@ -2401,6 +2552,8 @@ class RoomCombat:
         self.keep_hours()
         t = now()
         fighters = self.fighters()
+        for f in fighters:
+            Fighter.settle_walk(f, t)
         if self.room.ws:
             ticks = int((t - self.ap_last) / AP_TICK)
             if ticks:
@@ -2480,6 +2633,9 @@ class RoomCombat:
         on = bool(on)
         if self.room.ws == on:
             return
+        t = now()
+        for f in self.fighters():
+            Fighter.settle_walk(f, t)
         self.room.ws = on
         self.room.broadcast(("lch", dict(ws=int(on))))
         self.ap_last = now()

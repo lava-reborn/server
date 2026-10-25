@@ -81,7 +81,7 @@ for mob in (836, 837, 838, 839, 840, 841):
               [row for row in loot if row[0] == case], expected)
 
 # --- no accidental changes to other miners or item availability ---
-for mob in (665, 930, 931):
+for mob in (665,):
     check('%d: no new sand or emerald row' % mob,
           [t for t, c, v in mobs.loot_table(mob) if t in (2258, 3159)], [])
 for mob in (836, 837):

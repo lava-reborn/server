@@ -715,6 +715,11 @@ try:
         # ... and the resize hook's names, each in its class's own code.
         pools = [set(w.constant_pool(payload[2:])) for code, payload, _ in real[:ours]
                  if code == 59]
+        check("real client: confirmed healing and observer aim hooks exist before injection",
+              [names for names in ({"WeaponPan", "healTimeBar", "startTimeBar"},
+                                   {"DisplayLocScene", "init", "kill", "getWalker"},
+                                   {"ItemFactory", "getItem"})
+               if not any(names <= pool for pool in pools)], [])
         check("real client: the names the map's resize hook reads are in frame 1",
               [names for names in ({"GlobalMapInterface", "resizeStage", "displayMap",
                                     "globalMapFrame"},
