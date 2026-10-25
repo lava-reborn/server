@@ -12,6 +12,7 @@
 python -B server/test_action_order.py
 python -B server/test_action_sync.py
 python -B server/test_healing_completion.py
+python -B server/test_reload_sync.py
 python -B server/test_quest_state.py
 python -B server/test_quest_transactions.py
 python -B server/test_weaponcraft_completion.py
@@ -59,6 +60,15 @@ python -B tools/test_widescreen.py
 отсутствует, квестовый Алмаз сохраняет прежние условия и границу 10%.
 Тест улучшений также проверяет активную перезарядку: откат сохраняет её
 завершение, успешное удаление не порождает кадр для старого экземпляра.
+
+`test_reload_sync.py` проверяет отложенное списание патронов и ОД, отмену
+сменой оружия, движением, принятым выстрелом и лечением, сохранение при
+отказе команды, повторный callback, ошибку записи и изменение входных
+предметов. Используется SQLite в памяти без ожиданий и игровых симуляций.
+Набор включается в CI общим обнаружением `server/test_*.py`.
+Сокетный `test_inventory.py` проверяет единственную выдачу нового состояния
+патронов и магазина после завершения; точный порядок относительно дедлайна
+проверяет in-process набор, независимо от скорости машины CI.
 
 ## Какие бывают наборы
 

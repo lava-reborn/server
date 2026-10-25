@@ -263,7 +263,13 @@ class UpgradeOperations(unittest.TestCase):
         window = self.window()
         uniq = self.gun["uniq"]
         timer = Mock()
+        self.s.combat = NS(ap=100)
+        ammo = self.give(items.params_of(self.gun["type_id"])["comp_array"][0], count=3)
+        plan = dict(uniq=uniq, type_id=self.gun["type_id"], slot=self.gun["slot"],
+                    ammo_count=self.gun["ammo_count"], ammo_type=self.gun["ammo_type"],
+                    stack=ammo["uniq"], stack_type=ammo["type_id"], stack_slot=ammo["slot"], cost=0)
         self.s.inv.reloads[uniq] = timer
+        self.s.inv.reload_plans[uniq] = plan
         with patch.object(self.s.inv, "give_pieces", side_effect=RuntimeError("reward failed")):
             window.ss_upd(self.params)
         timer.cancel.assert_not_called()
@@ -274,6 +280,7 @@ class UpgradeOperations(unittest.TestCase):
         self.assertTrue(any(n == "ss_di_firearm" for n, _p in self.frames))
         self.frames.clear()
         self.s.inv.reloads[uniq] = timer
+        self.s.inv.reload_plans[uniq] = dict(plan, loaded=False)
         window.ss_upd(self.params)
         self.assertEqual(self.acks(), [0])
         self.assertIsNone(self.store.item(uniq))

@@ -395,17 +395,19 @@ try:
     # test the magazine with.
     c.send("ss_use;target=x%s;obj=x%s;type=1;" % (rounds, pistol))
     got = c.frames()
-    check("load: ack, then the stack is charged at once",
-          [n for n, _ in got], ["cmdAck", "ss_di_heap"])
+    check("load: ack before ammunition changes", got[0][0], "cmdAck")
     check("accepted", got[0][1]["res"], 0)
     clip = PISTOL_SI["clip_size"]
+    got += c.frames(wait=PISTOL_SI["reload_time"] / 1000.0 + 1)
+    charged = [p for n, p in got if n == "ss_di_heap"]
+    loaded = [p for n, p in got if n == "ss_di_firearm"]
+    check("reload commits one stack update and one gun update",
+          (len(charged), len(loaded)), (1, 1))
     check("the stack lost a magazine's worth",
-          (str(got[1][1]["obj"]), got[1][1]["size"]),
+          (str(charged[0]["obj"]), charged[0]["size"]),
           (rounds, items.AMMO_PACK - clip))
-    got = c.frames(wait=PISTOL_SI["reload_time"] / 1000.0 + 1)
-    check("after reload_time the gun reports", [n for n, _ in got], ["ss_di_firearm"])
     check("loaded with that type",
-          (got[0][1]["ammo_count"], got[0][1]["ammo_type"]), (clip, ROUNDS))
+          (loaded[0]["ammo_count"], loaded[0]["ammo_type"]), (clip, ROUNDS))
 
     c.send("ss_use;target=x%s;obj=x%s;type=1;" % (rounds, pistol))
     got = c.frames()

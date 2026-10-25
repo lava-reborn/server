@@ -903,6 +903,7 @@ class Inventory:
         # Entity id of the bank NPC whose window is open, or None.
         self.bank = None
         self.reloads = {}       # uniq -> asyncio.TimerHandle
+        self.reload_plans = {}  # validated input IDs; no ammunition moves yet
         # Serials of things this character has on the table in a barter
         # (barter.py): find() does not see them until they come off it.
         self.locked = set()
@@ -1403,6 +1404,7 @@ class Inventory:
         for handle in self.reloads.values():
             handle.cancel()
         self.reloads.clear()
+        self.reload_plans.clear()
         self.trade = None
         self.bank = None
         self.locked.clear()
@@ -1621,8 +1623,8 @@ class Inventory:
         After res=0 the client shows a reload bar and waits for
         ss_di_firearm with the new ammo_count/ammo_type; the stack it loaded
         from is only ever changed by ss_di_heap or removed by ss_obj_status.
-        The stack is charged at once, the gun reports after reload_time,
-        which is what the bar on the client is counting down.
+        Ammo and AP are charged only after reload_time. Accepted replacement
+        actions cancel the pending operation without moving either resource.
         """
         gun = self.find(p.get("obj"))
         stack = self.find(p.get("target"))
@@ -1643,7 +1645,50 @@ class Inventory:
         if gun["ammo_count"] >= clip and gun["ammo_type"] == stack["type_id"]:
             self.ack(RES_LOADED)
             return
+        import combat                   # late: combat imports inventory
+        fighter = self.sess.combat
+        combat.Fighter.settle_walk(fighter)
+        cost = si.get("reload_cost", 0) if fighter.rc is not None and fighter.rc.room.ws else 0
+        if fighter.dead or fighter.preparing():
+            self.ack(RES_NOT_READY)
+            return
+        if fighter.ap < cost:
+            fighter.refuse_no_ap()
+            return
+        revision = combat.Fighter.begin_action(fighter)
         self.ack(RES_OK)
+        self.reload_plans[gun["uniq"]] = dict(
+            uniq=gun["uniq"], type_id=gun["type_id"], slot=gun["slot"],
+            ammo_count=gun["ammo_count"], ammo_type=gun["ammo_type"],
+            stack=stack["uniq"], stack_type=stack["type_id"], stack_slot=stack["slot"], cost=cost)
+        delay = pace.paced(si.get("reload_time", 0) / 1000.0)
+        combat.Fighter.schedule_action(fighter, revision, "reloading", delay,
+                                      self.reloaded, gun["uniq"])
+        self.reloads[gun["uniq"]] = fighter.reloading
+        fighter.c_ap()  # Correct the client's AP prediction at the start ack.
+
+    def finish_reload(self, plan):
+        """Revalidate and move ammunition under the character transaction lock."""
+        gun, stack = self.store.item(plan["uniq"]), self.store.item(plan["stack"])
+        if gun is None:
+            # A committed upgrade/deletion consumed this serial. Never clear
+            # a newer client's bar on behalf of an item that no longer exists.
+            return
+        valid = (stack is not None
+                 and gun["char_id"] == stack["char_id"] == self.char_id
+                 and gun["type_id"] == plan["type_id"] and gun["slot"] == plan["slot"]
+                 and gun["ammo_count"] == plan["ammo_count"] and gun["ammo_type"] == plan["ammo_type"]
+                 and gun["uniq"] not in self.locked and stack["uniq"] not in self.locked
+                 and stack["slot"] == plan["stack_slot"] and stack["type_id"] == plan["stack_type"]
+                 and stack["count"] > 0 and self.sess.combat.ap >= plan["cost"])
+        if not valid:
+            self.sess.send("actionCancel", release=1)
+            return
+        si = items.params_of(gun["type_id"]) or {}
+        if stack["type_id"] not in si.get("comp_array", []):
+            self.sess.send("actionCancel", release=1)
+            return
+        clip = si.get("clip_size", 1)
         if gun["ammo_count"] and gun["ammo_type"] != stack["type_id"]:
             # Other rounds still in it: they come back as a stack of their
             # own before the new ones go in, the way unloading does.
@@ -1658,16 +1703,25 @@ class Inventory:
             self.push_di(stack)
         self.store.update_item(gun["uniq"], ammo_count=gun["ammo_count"] + take,
                                ammo_type=stack["type_id"])
-        delay = pace.paced(si.get("reload_time", 0) / 1000.0)
-        loop = asyncio.get_running_loop()
-        self.reloads[gun["uniq"]] = loop.call_later(delay, self.reloaded,
-                                                    gun["uniq"])
+        self.push_di(self.store.item(gun["uniq"]))
+        plan["loaded"] = True
 
     def reloaded(self, uniq):
-        self.reloads.pop(uniq, None)
-        row = self.store.item(uniq)
-        if row and row["char_id"] == self.char_id:
-            self.push_di(row)
+        handle = self.reloads.pop(uniq, None)
+        plan = self.reload_plans.pop(uniq, None)
+        if handle is None or plan is None:
+            return
+        def pay_ap():
+            if plan.get("loaded"):
+                self.sess.combat.ap -= plan["cost"]
+        self.sess.quest_write(self.finish_reload, plan, acknowledge_failure=False, after_commit=pay_ap)
+
+    def cancel_reloads(self):
+        """Discard delayed plans; their inputs have not moved."""
+        for handle in self.reloads.values():
+            handle.cancel()
+        self.reloads.clear()
+        self.reload_plans.clear()
 
     def forget_reload(self, uniq):
         # A transactional deletion may roll back. Keep its timer until the
@@ -1676,7 +1730,14 @@ class Inventory:
         # serials are never reused (accounts.items AUTOINCREMENT).
         if getattr(getattr(self.store, "db", None), "_atomic_depth", 0):
             return
+        handle = self.reloads.get(uniq)
+        fighter = getattr(self.sess, "combat", None)
+        if handle is not None and getattr(fighter, "reloading", None) is handle:
+            import combat
+            combat.Fighter.cancel_pending(fighter, notify=True)
+            return
         handle = self.reloads.pop(uniq, None)
+        self.reload_plans.pop(uniq, None)
         if handle:
             handle.cancel()
 

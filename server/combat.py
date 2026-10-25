@@ -889,6 +889,7 @@ class Fighter:
         self.aim = None         # TimerHandle: a burst waiting for fire_times
         self.strike = None      # TimerHandle: a swing waiting for strike_time
         self.healing = None     # TimerHandle: a heal waiting for heal_time
+        self.reloading = None   # TimerHandle: ammunition is applied on completion
         self.healing_peace = True
         self.action_revision = 0
         self.walk_ap = None     # (cells, start time, already charged steps)
@@ -1160,14 +1161,16 @@ class Fighter:
                 setattr(self, name, None)
 
     def primary_changed(self):
-        """An accepted active-slot change immediately abandons firearm aim.
+        """An accepted active-slot change abandons aim and reloading.
 
         Invalidate the callback even if the player switches back before its
         deadline. Melee swings and healing keep their existing behaviour.
         """
-        if getattr(self, "aim", None) is not None:
+        had_reload = getattr(self, "reloading", None) is not None
+        if getattr(self, "aim", None) is not None or had_reload:
             Fighter.cancel_pending(self, notify=True)
-            self.c_ap()
+            if not had_reload:  # cancel_pending already corrected reload AP.
+                self.c_ap()
 
     def cancel_timers(self):
         Fighter.settle_walk(self, stop=True)
@@ -1178,16 +1181,19 @@ class Fighter:
         had = False
         had_heal = getattr(self, "healing", None) is not None
         had_aim = getattr(self, "aim", None) is not None
-        for name in ("aim", "strike", "healing"):
+        had_reload = getattr(self, "reloading", None) is not None
+        for name in ("aim", "strike", "healing", "reloading"):
             handle = getattr(self, name, None)
             if handle is not None:
                 handle.cancel()
                 setattr(self, name, None)
                 had = True
+        if had_reload:
+            self.sess.inv.cancel_reloads()
         self.action_revision = getattr(self, "action_revision", 0) + 1
         if had and notify:
             Fighter.action_cancelled(self, release=not replacing, stop_aim=had_aim)
-            if had_heal:
+            if had_heal or had_reload:
                 self.c_ap()
 
     def action_cancelled(self, release=True, stop_aim=False):
@@ -1226,7 +1232,7 @@ class Fighter:
         try:
             callback(*args)
         finally:
-            if kind == "healing":
+            if kind in ("healing", "reloading"):
                 self.c_ap()
 
     def schedule_action(self, revision, kind, delay, callback, *args):
