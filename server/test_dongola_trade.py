@@ -344,7 +344,7 @@ check("Дари: the town's sets and nothing of his own; Галия: the town's 
       " pouches, each with its (G) right after it",
       (STALLS[(BLACK, DARI)] == shop_bands.goods(("sets",), LO, HI), STALLS[(BLACK, GALIA)][-10:],
        len(STALLS[(BLACK, GALIA)])),
-      (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601], 60))
+      (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601], 50))
 check("Одноногий: the town's knives and his whetstone's six blueprints after them",
       STALLS[(BLACK, ONE_LEG)], shop_bands.goods(("knives",), LO, HI) + list(KNIFE_PRINTS))
 check("the oasis's «Торговец патронами» (1230): every СТ and ОТ of his list, nothing cut",

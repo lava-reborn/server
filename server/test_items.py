@@ -233,7 +233,10 @@ for t in linked + sorted(manual) + pieces + sorted(set(cold) - set(linked)) + so
     missing = set(d) - set(p)
     if missing:
         why.append("keys lost %s" % sorted(missing))
-    extra = set(p) - set(d) - set(items.NEED_BONUS_KEYS)
+    extra = set(p) - set(d) - set(items.NEED_BONUS_KEYS) - {"repair_cost"}
+    if "repair_cost" in p and (root not in (items.FIRE_ARM, items.COLD_ARM, items.WEAR)
+                               or not p.get("g_cost") or p["repair_cost"] <= 0):
+        why.append("invalid repair-only valuation")
     if extra:
         why.append("keys added %s" % sorted(extra))
     if not all(numbers_only(v) for v in p.values()):

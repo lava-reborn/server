@@ -64,6 +64,8 @@ def execute(code, env):
                     raise AssertionError(kind)
         elif op == 0x1C:  # GetVariable
             stack.append(env.get(stack.pop()))
+        elif op == 0x34:  # GetTime
+            stack.append(env['getTimer']())
         elif op == 0x4E:  # GetMember
             key, obj = stack.pop(), stack.pop()
             stack.append(get(obj, key))
@@ -99,10 +101,12 @@ def execute(code, env):
             stack.append(not stack.pop())
         elif op == 0x17:  # Pop
             stack.pop()
-        elif op in (0x0B, 0x47, 0x48):  # Subtract / Add2 / Less2
+        elif op in (0x0B, 0x0C, 0x47, 0x48):  # Subtract / Multiply / Add2 / Less2
             b, a = stack.pop(), stack.pop()
             if op == 0x0B:
                 stack.append(a - b)
+            elif op == 0x0C:
+                stack.append(a * b)
             elif op == 0x48:
                 stack.append(a < b)
             else:

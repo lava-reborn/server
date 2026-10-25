@@ -18,6 +18,7 @@ python -B server/test_weaponcraft_completion.py
 python -B server/test_weapon_upgrade_integrity.py
 python -B server/test_repair_policy.py
 python -B server/test_release_sets.py
+python -B server/test_weapon_requirements.py
 python -B server/test_abuhamed_miner_loot.py
 python -B server/test_combat_xp_cap.py
 python -B tools/test_action_hotkeys.py
@@ -40,6 +41,18 @@ python -B tools/test_widescreen.py
 совместимые обычные патроны и суммарный лимит боевого опыта за одного моба
 при прокачиваемом навыке 17+. Реальное поведение ОС/Flash и PostgreSQL
 при аварийном отказе этими in-process наборами не подтверждается.
+
+Хоткей медицины отдельно проверяется после снятия ws при ещё активном
+личном таймере, на границе его истечения и после нового попадания.
+Ассортимент проверяется в `test_stall_bands.py`, `test_abuhamed_trade.py`
+и `test_dongola_trade.py`: доступность A/G, порядок полных комплектов,
+лимит 64 товара и покупка в правильной валюте. У Марата только подсумки;
+полная полоса комплектов Абу-Хамеда остаётся у Симоны.
+
+Тестовые правки истории через отдельное SQL-подключение должны запросить
+`q_list` перед проверкой доступности: такое изменение намеренно не обходит
+двухсекундный снимок подключения. Боевые фикстуры ждут `mobs.HEX_MS` за шаг;
+ранний выстрел по правилам отменяет остаток пути.
 
 ## Какие бывают наборы
 

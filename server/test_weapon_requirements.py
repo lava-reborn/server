@@ -30,6 +30,31 @@ def row(t, slot=inventory.PRIMARY):
     return dict(uniq=1, char_id=7, type_id=t, root=items.root_of(t), slot=slot,
                 brk=100, ammo_count=10)
 
+# --- machine-gun specialisation, ordinary/gold and their modifications ------
+machineguns = []
+for t, (root, _name) in items.catalogue().items():
+    if root != items.FIRE_ARM:
+        continue
+    si = items.params_of(t)
+    level = inventory.item_level(t)
+    if si.get('weapon_type') != items.MACHINEGUN or not 16 <= level <= 20:
+        continue
+    machineguns.append((t, level))
+wrong = []
+for t, level in machineguns:
+    character = progression.Character()
+    character.skill[progression.SHOOTING][0] = level
+    for spec in character.spec:
+        spec[0] = 5
+    for trained, allowed in ((level - 17, False), (level - 16, True)):
+        character.spec[6][0] = trained
+        if inventory.wearable(row(t), character.level, character) != allowed:
+            wrong.append((t, level, trained, allowed))
+check('every level-16..20 machine gun and modification enforces the exact spec boundary', wrong, [])
+check('machine-gun coverage includes all five item levels in both A and G',
+      {(level, bool(items.params_of(t).get('g_cost'))) for t, level in machineguns},
+      {(level, gold) for level in range(16, 21) for gold in (False, True)})
+
 check("high shooting does not replace melee", inventory.wearable(row(6231), ch.level, ch), False)
 ch.skill[progression.MELEE][0] = 2
 check("homemade knife works at melee two without a declared spec", inventory.wearable(row(6231), ch.level, ch), True)

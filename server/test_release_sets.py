@@ -17,6 +17,7 @@ import inventory
 import items
 import progression
 import sets
+import shop_bands
 from testkit import run_cases
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +29,27 @@ from avm_test import execute
 
 
 class ReleaseSets(unittest.TestCase):
+    def test_armour_stocks_fit_client_and_keep_complete_pairs(self):
+        # Two families now share level 18. Keep each A/G pair together and
+        # all six complete pairs available, without overflowing a 64-cell shop.
+        pieces = set(sets.ITEMS)
+        marat = items.stock_for(1219, 126)
+        self.assertEqual(len(marat), 10)
+        self.assertFalse(pieces.intersection(marat))
+        expected = {t for t, ware in shop_bands.wares().items()
+                    if ware[0] == 'sets' and 16 <= ware[1] <= 20}
+        for trader, loc in ((1223, 126), (5161, 467)):
+            stock = items.stock_for(trader, loc)
+            self.assertEqual(set(stock), expected)
+            self.assertEqual(len(stock), 60)
+            self.assertLessEqual(len(stock), 64)
+            for start in range(0, len(stock), 10):
+                a, g = stock[start:start + 5], stock[start + 5:start + 10]
+                self.assertTrue(all(sets.variant_of(t) == 'A' for t in a))
+                self.assertTrue(all(sets.variant_of(t) == 'G' for t in g))
+                self.assertEqual(sets.SETS[sets.set_of(a[0])]['name'],
+                                 sets.SETS[sets.set_of(g[0])]['name'].removesuffix(' (G)'))
+
     def test_declared_levels_use_highest_base_skill(self):
         for sid, level in ((11002, 17), (11004, 17), (11125, 18), (60005, 18),
                            (10961, 16), (10965, 16)):

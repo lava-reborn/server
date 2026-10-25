@@ -109,10 +109,9 @@ with open(os.path.join(ROOT, "data", "sets.json"), encoding="utf-8") as _fh:
 
 def set_of(level, variant):
     """The five pieces of the ladder's set of that level and variant, or []."""
-    for s in SETS.values():
-        if s["level"] == level and s["variant"] == variant:
-            return [s["members"][k]["type"] for k in SLOTS]
-    return []
+    return [s["members"][k]["type"]
+            for s in sorted(SETS.values(), key=lambda s: s.get("family", ""))
+            if s["level"] == level and s["variant"] == variant for k in SLOTS]
 
 
 def ladder(lo, hi):
@@ -120,9 +119,9 @@ def ladder(lo, hi):
     band, by level, A then G, helm to boots. A quest (Q) set is on the
     ladder as data only (sets.json _meta.decided), so it is on no stall."""
     out = []
-    for level in sorted({s["level"] for s in SETS.values()}):
-        if lo <= level <= hi:
-            out += set_of(level, "A") + set_of(level, "G")
+    for s in sorted(SETS.values(), key=lambda s: (s["level"], s["name"].split("[")[0], s["variant"])):
+        if lo <= s["level"] <= hi and s["variant"] in ("A", "G"):
+            out += [s["members"][k]["type"] for k in SLOTS]
     return out
 
 
@@ -152,8 +151,8 @@ check("  ..which is Беженец to Магриб, Налетчик and Пус�
        (5159, None): ["Налетчик", "Пустынник"],
        (5160, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
        (5161, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
-       (5161, 469): ["Красное Эхо", "Легионер", "Спецназ", "Чёрный Ловелас", "Штурм-М"],
-       (5161, 467): ["Апокалипсис", "Дредноут", "Красное Эхо", "Паладин", "Тёмное Эхо"]})
+       (5161, 469): ["Красное Эхо", "Легионер", "Спецназ", "Чёрный Ловелас"],
+       (5161, 467): ["Апокалипсис", "Дредноут", "Красное Эхо", "Паладин", "Тёмное Эхо", "Штурм-М"]})
 SOLD = sorted({t for tr, place in [(5158, None), (5159, None), (1204, 102), (1205, 102),
                                    (5181, 378)] + list(CITY_MARKETS)
                for t in items.stock_for(tr, place)})

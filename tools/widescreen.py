@@ -393,7 +393,7 @@ UNDEF = object()
 OPS = {
     "end": 0x00, "subtract": 0x0B, "multiply": 0x0C, "divide": 0x0D,
     "not": 0x12, "pop": 0x17,
-    "getvar": 0x1C, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
+    "getvar": 0x1C, "gettime": 0x34, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
     "add2": 0x47, "less2": 0x48, "equals2": 0x49, "getmember": 0x4E,
     "setmember": 0x4F, "callmethod": 0x52, "newmethod": 0x53,
     "initarray": 0x42, "initobject": 0x43, "newobject": 0x40,
@@ -1920,16 +1920,37 @@ def fn_sublocation_global():
     return a
 
 
+def fn_quick_med_hit():
+    """Keep the personal medicine deadline when battleMode clears the exit UI.
+
+    Location.startExitTimer is dispatched only for a hit given or received.
+    Store on that location, not the reusable UI, so a new location inherits
+    no deadline. No extra interval, network request or exit-button change.
+    """
+    a = Asm()
+    a.var("this").member("currentLocation").push("__quickMedUntil")
+    a.op("gettime").push(0).var("_global").member("lol", "core", "GConstatns")
+    a.push("getLeaveCombatLocationPause").op("callmethod").push(1000).op("multiply")
+    a.op("add2").op("setmember")
+    a.push(0).var("this").push("__quickMedHitOrig").op("callmethod").op("pop")
+    return a
+
+
 def fn_quick_med_pick():
-    """Pick a non-buff entry; battle medicine in war, peace/bag first otherwise.
+    """Pick battle medicine in room war or the personal hit cooldown.
 
     PersEquip keeps arrays sorted by restoration. Walk backwards, retaining
     the first (strongest) entry at each priority. Manual inventory use is
     untouched. HealItem.initialize and Bag.chekExist define the fields here.
     """
     a = Asm()
-    a.push("war").push(0).var("_global").member("lol", "core").push("Master").op("getmember")
-    a.push("getInstance").op("callmethod").member("currentLocation", "warStatus").op("definelocal")
+    a.push("location").push(0).var("_global").member("lol", "core").push("Master").op("getmember")
+    a.push("getInstance").op("callmethod").member("currentLocation").op("definelocal")
+    a.push("war").var("location").member("warStatus").op("definelocal")
+    a.var("war").iftrue("state_ready")
+    a.var("location").member("__quickMedUntil").op("not").iftrue("state_ready")
+    a.push("war").op("gettime").var("location").member("__quickMedUntil").op("less2").op("definelocal")
+    a.label("state_ready")
     a.push("best", None).op("definelocal")
     a.push("bestRank", -1).op("definelocal")
     a.push("i").var("entries").member("length").push(1).op("subtract").op("definelocal")
@@ -1944,8 +1965,11 @@ def fn_quick_med_pick():
     a.push("cost").push("heal_cost", 1).var("item").push("getProp").op("callmethod").op("definelocal")
     a.push("rank", 0).op("definelocal")
     a.var("war").op("not").iftrue("peace")
-    # In a room at war only battle medicine is eligible, even before a hit.
+    # Room war blocks even before a hit; its end does not clear the hit timer.
     a.var("cost").op("not").iftrue("next")
+    # The server charges healing AP only in room war, not during a lone
+    # personal cooldown after the room has calmed.
+    a.var("location").member("warStatus").op("not").iftrue("compare")
     a.push(0).var("_global").member("lol", "core").push("Master").op("getmember").push("getInstance").op("callmethod")
     a.member("gamer", "apManager", "maxAP").var("cost").op("less2").iftrue("next")
     a.push(True).iftrue("compare")
@@ -2164,6 +2188,8 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("gpui", "LocationInterface"), "startExitTimer", "__quickMedHitOrig",
+         (), fn_quick_med_hit()),
         (("gpui", "WeaponPan"), "healTimeBar", "__confirmedHealOrig",
          ("obj",), fn_confirmed_heal_bar()),
         (("core", "location", "DisplayLocScene"), "init", "__sceneActionInitOrig",

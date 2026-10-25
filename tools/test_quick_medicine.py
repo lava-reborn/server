@@ -1,4 +1,9 @@
-"""Execute the emitted quick-heal AVM1 against mixed inventories and battle states."""
+"""Execute quick-heal AVM1 against mixed inventories and battle states.
+
+LocationInterface.startExitTimer receives personal hits (Location.faHit/caHit).
+Its separate medicine deadline must survive battleMode(false), which deletes
+the visible exit countdown; test actual assembled code with a controlled clock.
+"""
 import os
 import sys
 from types import SimpleNamespace as NS
@@ -17,9 +22,9 @@ class Item:
     def getProp(self, key):
         return self.props.get(key, 0)
 
-def run(entries, bag, war, array='healArr', max_ap=100):
+def run(entries, bag, war, array='healArr', max_ap=100, location=None, now_ms=0):
     gamer = NS(apManager=NS(maxAP=max_ap))
-    master = NS(currentLocation=NS(warStatus=war), gamer=gamer)
+    master = NS(currentLocation=location or NS(warStatus=war), gamer=gamer)
     global_obj = NS(lol=NS(core=NS(Master=NS(getInstance=lambda: master))))
     equip = NS(bag=NS(chekExist=lambda item: item in bag))
     original_array = [dict(item=i, max_h_rest=i.props['max_h_rest']) for i in sorted(entries, key=lambda i: i.props['max_h_rest'])]
@@ -28,7 +33,7 @@ def run(entries, bag, war, array='healArr', max_ap=100):
     original = '__quickHealOrig' if array == 'healArr' else '__quickEatOrig'
     setattr(equip, original, lambda: sent.append(getattr(equip, array)[0]['item'].name))
     env = {'this': equip, '_global': global_obj}
-    env['__quickMedPick'] = lambda equip, entries: execute(w.fn_quick_med_pick().assemble(), dict(equip=equip, entries=entries, _global=global_obj))
+    env['__quickMedPick'] = lambda equip, entries: execute(w.fn_quick_med_pick().assemble(), dict(equip=equip, entries=entries, _global=global_obj, getTimer=lambda: now_ms))
     execute(w.fn_quick_med_use(array, original).assemble(), env)
     assert getattr(equip, array) is original_array, 'original arrays must be restored'
     return sent
@@ -49,6 +54,34 @@ check('too expensive battle item is skipped', run([combat], [combat], True, max_
 check('strongest eligible medicine is selected', run([combat, Item('strong', 200, 8)], [combat], True), ['strong'])
 check('empty inventory is safe', run([], [], False), [])
 check('stamina hotkey uses the same filtering', run([peace, combat, buff], [peace, combat, buff], True, array='eatArr'), ['combat'])
+
+# --- personal cooldown after the room's last enemy dies ---------------------
+location = NS(warStatus=True)
+timer_calls = []
+ui = NS(currentLocation=location, __quickMedHitOrig=lambda: timer_calls.append('exit'))
+timer_env = dict(this=ui, getTimer=lambda: 1000,
+                 _global=NS(lol=NS(core=NS(GConstatns=NS(getLeaveCombatLocationPause=lambda: 15)))))
+execute(w.fn_quick_med_hit().assemble(), timer_env)
+location.warStatus = False
+# battleMode(false) removes the UI countdown, not the location's hit deadline.
+ui.exitTime = 0
+check('both hotkeys keep battle medicine after room peace until the personal deadline',
+      (timer_calls, [run([peace, combat], [peace, combat], False, array=arr,
+                        location=location, now_ms=15999)
+                     for arr in ('healArr', 'eatArr')],
+       run([peace, combat], [peace, combat], False, location=location, now_ms=16000)),
+      (['exit'], [['combat'], ['combat']], ['peace']))
+check('personal cooldown excludes ordinary medicine and retains server room-war AP rules',
+      (run([peace], [peace], False, location=location, now_ms=2000),
+       run([peace, combat], [peace, combat], False, max_ap=5, location=location, now_ms=2000),
+       run([peace, combat], [peace, combat], True, max_ap=5)),
+      ([], ['combat'], []))
+timer_env['getTimer'] = lambda: 12000
+execute(w.fn_quick_med_hit().assemble(), timer_env)
+check('another hit renews the deadline and a fresh location retains peaceful selection',
+      (run([peace, combat], [peace, combat], False, location=location, now_ms=20000),
+       run([peace, combat], [peace, combat], False, now_ms=20000), timer_calls),
+      (['combat'], ['peace'], ['exit', 'exit']))
 check('both wrappers included in client injection', all((n.encode() in w.injected() for n in ('__quickHealOrig', '__quickEatOrig', '__quickMedPick'))), True)
 # Cross-check client filtering against the effective server catalogue.
 if os.environ.get('LAVA_RES'):

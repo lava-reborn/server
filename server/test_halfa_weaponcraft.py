@@ -231,10 +231,11 @@ try:
         # Few: most guns above the 8th level have no table of the wiki's
         # yet, and a recipe waits for its gun's (the report's «left out»).
         check("the same generator given Абри's band 9-12 returns that band's recipes and no"
-              " other: all of 9-12, no premium line, none of Вади-Хальфа's",
+              " other: all of 9-12, no premium line; Halfa also serves that band's shotguns",
               (len(got) > 0, all(9 <= r["craft"]["level"] <= 12 for r in got),
                {r["craft"]["line"] for r in got} <= {"A", "G"},
-               sorted({r["craft"]["gun"] for r in got} & guns)), (True, True, True, []))
+               sorted(g for g in {r["craft"]["gun"] for r in got} & guns
+                      if craft.weapon_of(g) != "shotgun")), (True, True, True, []))
         check("  ..and rebuilt now, Вади-Хальфа's table is the one on disk",
               json.dumps(build_weaponcraft.build(texts), sort_keys=True),
               json.dumps(DOC, sort_keys=True))

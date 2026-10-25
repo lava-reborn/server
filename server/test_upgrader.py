@@ -88,6 +88,11 @@ class Sess:
     def __init__(self, room, rows):
         self.room, self.inv = room, Inv(rows)
 
+    def quest_write(self, callback, *args):
+        # These cases exercise window routing/refusals, without any writes.
+        # Atomic commits/rollback use the real Session in upgrade integrity tests.
+        callback(*args)
+
 
 gun_row = {"root": items.FIRE_ARM, "type_id": MAUSER_Q, "slot": inventory.BAG, "uniq": 1}
 helm_row = {"root": items.WEAR, "type_id": helm, "slot": inventory.BAG, "uniq": 2}

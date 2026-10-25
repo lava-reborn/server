@@ -1159,6 +1159,21 @@ def static_info(type_id):
         import events                   # late: it reads data/schedule.json
         if quests.lent(type_id) or events.kept(type_id):
             info[1].update(quest=1, exchang=0)
+        # Owner rule 2026-10-25: machine guns 16..20 require a learned
+        # machine-gun specialisation at levels 0..4. Derived A/G mods use
+        # the same public item level. Other requirement bits stay intact.
+        if root_of(type_id) == FIRE_ARM and info[1].get("weapon_type") == MACHINEGUN:
+            level = max(info[1].get("need_skills") or [0])
+            if 16 <= level <= 20:
+                mask = info[1].get("need_specs_m", 0) or 0
+                bit = 1 << 6  # PersAttributes: Ручные пулеметы.
+                offset = (mask & (bit - 1)).bit_count()
+                values = list(info[1].get("need_specs") or [])
+                if mask & bit:
+                    values[offset] = level - 16
+                else:
+                    values.insert(offset, level - 16)
+                info[1].update(need_specs_m=mask | bit, need_specs=values)
         # Last, so neither the design nor the wiki can argue with it.
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:

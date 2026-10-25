@@ -147,6 +147,7 @@ import mobs  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
 import rooms  # noqa: E402
+import sets  # noqa: E402
 import shop_bands  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
@@ -1307,6 +1308,13 @@ try:
     check("of the 72.95 gold 5.45 left", money(CID)[1], 7295 - 5000 - 800 - 350 - 600)
 
     # --- the Dark Mine: down two tiers and up ------------------------------------------------
+    # This scene checks passages, not survival of a naked character. The
+    # miners now shoot F2000s: equip legal level-17 armour before entering.
+    # Keep their real damage/AI, the player's level, and the exit refusals.
+    for slot, piece in zip(inventory.SET_SLOTS, sets.SLOTS):
+        armour = give(c, sets.SETS[11004]["members"][piece])
+        c.send("ss_move;obj=x%s;to=%d;from=2048;" % (armour, slot))
+        check("mine route: level-17 armour G %s equipped" % piece, acks(c.frames()), [0])
     reload(c, GUN)
     lid, arrival = goto(c, DARK_MOUTH)
     here = inhabitants(arrival, lid)
@@ -1321,6 +1329,8 @@ try:
     check("  ..where the map is out of reach", map_refused(c), (True, False))
     ack, lid, tier2 = through(c, DARK_1, "b", first(tier1, "lenter").get("pos"), up, GUN)
     check("  ..the tier's door b down to the second (1014)", (ack, lid), ([0], DARK_2))
+    if lid != DARK_2:
+        raise RuntimeError("Dark Mine transition failed; stop instead of using a missing position")
     up = clear_room(c, GUN, tier2, {MINER}, tries=5)
     ack, lid, back = through(c, DARK_2, "a", first(tier2, "lenter").get("pos"), up, GUN)
     check("  ..its door a back up to the first", (ack, lid), ([0], DARK_1))

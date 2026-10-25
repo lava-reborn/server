@@ -305,15 +305,15 @@ check("the weapon craft: no recipe takes or gives one; the twelve of Донго�
        [t for t in RECIPES if quests.get(t) is not None],
        sorted(t for t in CRAFT["types"].values() if t in RECIPES)),
       ([], [], sorted(RECIPES)))
-check("  ..Басам's and Фахад's recipes (their quests and craft.upgrader_lists): 26 each where"
-      " there were 32 (the six of Steyr TMP and Chang Feng gone), UMP's and Бизон ПП-19's three"
+check("  ..Басам's and Фахад's recipes: 36 each after A/G completion; retired types stay out,"
+      " UMP's and Бизон ПП-19's three"
       " among them, none taking or giving one of the two",
       {npc: (len(quests.given_by(npc)), len(craft.upgrader_lists(npc)["in_types"]),
              [craft.upgrader_lists(npc)["in_types"].count(g) for g in guns],
              sorted(set(craft.upgrader_lists(npc)["in_types"]
                         + craft.upgrader_lists(npc)["out_types"]) & set(GONE)))
        for npc, guns in ((BASAM, (UMP, BIZON)), (FAHAD, (UMP_G, BIZON_G)))},
-      {BASAM: (26, 26, [3, 3], []), FAHAD: (26, 26, [3, 3], [])})
+      {BASAM: (36, 36, [3, 3], []), FAHAD: (36, 36, [3, 3], [])})
 check("  ..no bench takes one apart (craft.salvageable), as it takes UMP",
       ([t for t in GONE if craft.salvageable(t)], craft.salvageable(UMP)), ([], ("smg", 13)))
 
@@ -469,12 +469,12 @@ async def main():
            if n.startswith("userInfo") and n != "userInfo_Player" and "name" in p}
     kind, info = met.get(BASAM, (None, {}))
     offered = as_list(info.get("give_quests"))
-    check("Басам (347, the masters' camp 97): the recipes his frame offers are the table's 26,"
+    check("Басам (347, the masters' camp 97): the recipes his frame offers are the table's 36,"
           " none of the twelve, UMP's and Бизон's among them",
           (kind, len(offered), sorted(set(offered) & set(RECIPES)),
            sorted({quests.get(q).rew_obj[0] for q in offered} & set(GONE)),
            sorted({craft.rows()[q]["gun"] for q in offered} & {UMP, BIZON})),
-          ("userInfo_Commoner", 26, [], [], sorted([UMP, BIZON])))
+          ("userInfo_Commoner", 36, [], [], sorted([UMP, BIZON])))
     sess.writer.close()
 
 
