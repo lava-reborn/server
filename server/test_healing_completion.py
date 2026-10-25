@@ -27,10 +27,12 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
         ch.hp = 30
         events, consumed = ([], [])
         room = NS(ws=False, broadcast=lambda frame, **kw: events.append(frame))
-        sess = NS(char_id=1, room=room, inv=NS(find=lambda _: row, push_status=lambda *a: None, wear_worn=lambda *a: None), answer=events.append, push_stats=lambda **k: None, push_vitals=lambda: None, send=lambda *a, **kw: None)
+        frames = []
+        sess = NS(char_id=1, room=room, inv=NS(find=lambda _: row, push_status=lambda *a: None, wear_worn=lambda *a: None), answer=events.append, push_stats=lambda **k: None, push_vitals=lambda: None, send=lambda name, **p: frames.append((name, p)))
         f = NS(sess=sess, rc=NS(room=room), ap=100, healing=None, dead=False, eid=1, damage_revision=0, character=lambda: ch, ack=events.append, store=NS(item=lambda _: row, delete_item=consumed.append))
         f.heal_now = lambda *args: combat.Fighter.heal_now(f, *args)
         f.c_ap = lambda: None
+        f.frames = frames
         return (f, ch, room, consumed)
 
     def start(self, f):
@@ -90,6 +92,7 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
         f.heal_now(*args)
         self.assertEqual(ch.hp, 0)
         self.assertEqual(used, [])
+        self.assertIn(('actionCancel', dict(release=1)), f.frames)
 
     async def test_other_patient_dies_or_has_zero_hp(self):
         for dead in (False, True):
@@ -100,6 +103,7 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
             f.heal_now(1, target)
             self.assertEqual(patient.hp, 0)
             self.assertEqual(used, [])
+            self.assertEqual(f.frames, [('actionCancel', dict(release=1))])
 
     async def test_other_patient_damage_interrupts_peace_healing(self):
         f, ch, room, used = self.fixture()
