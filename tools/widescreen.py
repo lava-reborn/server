@@ -396,7 +396,7 @@ OPS = {
     "getvar": 0x1C, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
     "add2": 0x47, "less2": 0x48, "equals2": 0x49, "getmember": 0x4E,
     "setmember": 0x4F, "callmethod": 0x52, "newmethod": 0x53,
-    "initarray": 0x42, "newobject": 0x40,
+    "initarray": 0x42, "initobject": 0x43, "newobject": 0x40,
 }
 
 
@@ -1108,6 +1108,53 @@ def fn_services():
     return a
 
 
+def fn_repair_initialize():
+    """Retain the repair-only valuation from the static item frame."""
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__repairInitializeOrig")
+    a.op("callmethod").op("pop")
+    a.var("this").push("repair_cost").var("obj").member("repair_cost").op("setmember")
+    return a
+
+
+def fn_armor_skills():
+    """Armour warning uses the highest skill, matching the server level gate."""
+    a = Asm()
+    a.var("this").member("currDDOperation", "fromItem", "rootID")
+    a.push(1).op("equals2").op("not").iftrue("original")
+    a.push("needed", 0).op("definelocal")
+    a.push("i", 0).op("definelocal")
+    a.label("loop")
+    a.var("i").var("arr").member("length").op("less2").op("not").iftrue("compare")
+    a.var("arr").var("i").op("getmember").op("not").iftrue("next")
+    a.var("needed").var("arr").var("i").op("getmember").op("less2").op("not").iftrue("next")
+    a.push("needed").var("arr").var("i").op("getmember").op("definelocal")
+    a.label("next").push("i").var("i").push(1).op("add2").op("definelocal")
+    a.push(True).iftrue("loop")
+    a.label("compare").push("attributes").push(0).var("lol").member("core", "Master")
+    a.push("getInstance").op("callmethod").member("gamer", "attributes")
+    a.op("definelocal")
+    a.push("best", 0).op("definelocal")
+    a.push("i", 0).op("definelocal")
+    a.label("skills")
+    a.var("i").var("attributes").member("skillArray", "length")
+    a.op("less2").op("not").iftrue("level")
+    a.push("base").var("attributes").member("skillArray").var("i")
+    a.op("getmember").member("value").op("definelocal")
+    a.var("base").op("not").iftrue("skill_next")
+    a.var("best").var("base").op("less2").op("not").iftrue("skill_next")
+    a.push("best").var("base").op("definelocal")
+    a.label("skill_next").push("i").var("i").push(1).op("add2").op("definelocal")
+    a.push(True).iftrue("skills")
+    a.label("level").var("best").var("needed").op("less2").op("not").iftrue("allowed")
+    a.push("<b>Уровень персонажа не ниже ").var("needed").op("add2")
+    a.push("</b>\r").op("add2").op("return")
+    a.label("allowed").push("").op("return")
+    a.label("original").var("titleArr").var("arr").push(2).var("this")
+    a.push("__armorSkillsOrig").op("callmethod").op("return")
+    return a
+
+
 def fn_repair_cost():
     """Item.getProp: value gold-only items in afro in SS_REPAIR only.
 
@@ -1120,9 +1167,13 @@ def fn_repair_cost():
     a.push("value").var("prop").push(1).var("this")
     a.push("__repairGetPropOrig").op("callmethod").op("definelocal")
     a.var("prop").push("cost").op("equals2").op("not").iftrue("original")
-    a.var("value").iftrue("original")
     a.var("lol").member("gpui", "StaffInterface", "ssType")
     a.push("repair").op("equals2").op("not").iftrue("original")
+    a.push("matched").push("repair_cost", 1).var("this")
+    a.push("__repairGetPropOrig").op("callmethod").op("definelocal")
+    a.var("matched").op("not").iftrue("fallback")
+    a.var("matched").op("return")
+    a.label("fallback").var("value").iftrue("original")
     a.push("gold").push("g_cost", 1).var("this")
     a.push("__repairGetPropOrig").op("callmethod").op("definelocal")
     a.var("gold").op("not").iftrue("original")
@@ -1893,7 +1944,7 @@ def fn_quick_med_pick():
     a.push("cost").push("heal_cost", 1).var("item").push("getProp").op("callmethod").op("definelocal")
     a.push("rank", 0).op("definelocal")
     a.var("war").op("not").iftrue("peace")
-    # Peace medicine has zero AP cost and is forbidden during combat.
+    # In a room at war only battle medicine is eligible, even before a hit.
     a.var("cost").op("not").iftrue("next")
     a.push(0).var("_global").member("lol", "core").push("Master").op("getmember").push("getInstance").op("callmethod")
     a.member("gamer", "apManager", "maxAP").var("cost").op("less2").iftrue("next")
@@ -1929,9 +1980,161 @@ def fn_quick_med_use(array, original):
     return a
 
 
+def fn_hotkey_reconcile(original, releasing=False):
+    """Discard keys whose key-up Windows consumed (layout switch/Alt-Tab).
+    Notify listeners too: clearing the stack alone leaves hand-scroll active.
+    Keep filters, text focus, bindings and keys still physically held intact.
+    """
+    a = Asm()
+    a.push("old").var("this").member("keyStack").op("definelocal")
+    a.push("seen", 0).op("initarray").op("definelocal")
+    a.push("released", 0).op("initarray").op("definelocal")
+    a.var("this").push("keyStack", 0).op("initarray").op("setmember")
+    a.var("this").push("keyPressStack", 0).op("initarray").op("setmember")
+    a.push("i", 0).op("definelocal")
+    a.var("old").op("not").iftrue("done")
+    a.label("loop")
+    a.var("i").var("old").member("length").op("less2").op("not").iftrue("done")
+    a.push("code").var("old").var("i").op("getmember").op("definelocal")
+    a.var("seen").push("code").var("code").op("add2").op("getmember").iftrue("next")
+    a.var("seen").push("code").var("code").op("add2").push(True).op("setmember")
+    a.var("code").push(1).var("Key").push("isDown").op("callmethod").op("not").iftrue("released")
+    a.var("this").member("keyPressStack").push("code").var("code").op("add2").var("code").op("setmember")
+    a.var("code").push(1).var("this").member("keyStack").push("push").op("callmethod").op("pop")
+    a.push(True).iftrue("next")
+    a.label("released")
+    if releasing:
+        # The original onKeyUp delivers this release itself; do not duplicate it.
+        a.var("code").push(0).var("Key").push("getCode").op("callmethod").op("equals2").iftrue("next")
+    a.var("code").push(1).var("released").push("push").op("callmethod").op("pop")
+    a.label("next")
+    a.push("i").var("i").push(1).op("add2").op("definelocal")
+    a.push(True).iftrue("loop")
+    a.label("done")
+    # Rebuild all held-key state before notifying UI listeners. In particular,
+    # LocationInterface.keyRelease_func must disable ViewFrame's handDrag.
+    a.push("i", 0).op("definelocal")
+    a.label("notify")
+    a.var("i").var("released").member("length").op("less2").op("not").iftrue("original")
+    a.push("type", "KEY_RELEASE", "code").var("released").var("i").op("getmember")
+    a.push(2).op("initobject").push(1).var("this").push("dispatchEvent").op("callmethod").op("pop")
+    a.push("i").var("i").push(1).op("add2").op("definelocal")
+    a.push(True).iftrue("notify")
+    a.label("original")
+    a.push(0).var("this").push(original).op("callmethod").op("pop")
+    return a
+
+
+def fn_action_cancel():
+    """Clear only the old time bar; never touch cmdAck's FIFO or fire hooks."""
+    a = Asm()
+    a.push("p").var("obj").member("param").op("definelocal")
+    a.push("id").var("p").member("id").op("definelocal")
+    a.var("id").iftrue("position")
+    a.push("id", 0).op("definelocal")
+    a.label("position")
+    a.var("p").member("pos").push(UNDEF).op("equals2").iftrue("aim")
+    a.push("walker").var("id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("walker").op("not").iftrue("out")
+    a.var("p").member("pos").push(1).var("walker").push("breakMove").op("callmethod").op("pop")
+    for field, busy in (("prevNumPos", False), ("numPos", True)):
+        a.var("walker").member(field).push(1).var("this").push("getCellFromNumber").op("callmethod")
+        a.push("busy", busy).op("setmember")
+    a.label("aim")
+    a.var("p").member("stop_aim").op("not").iftrue("bar")
+    a.push("type", "cancelAim", "id").var("id").push(2).op("initobject")
+    a.push(1).var("this").push("dispatchEvent").op("callmethod").op("pop")
+    a.label("bar")
+    a.var("id").iftrue("out")
+    a.var("p").member("release").op("not").iftrue("event")
+    a.push(0).var("this").member("master", "gamer", "itemActivator").push("breakAction").op("callmethod").op("pop")
+    a.label("event")
+    a.push("type", "moveWalker", "id", 0, 2).op("initobject")
+    a.push(1).var("this").push("dispatchEvent").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_action_start():
+    """Start the accepted medicine's bar after old-action cancellation."""
+    a = Asm()
+    a.push("item").var("obj").member("param", "heal_obj").push(1)
+    a.var("_global").member("lol", "core", "objects", "ItemFactory")
+    a.push("getItem").op("callmethod").op("definelocal")
+    a.var("item").op("not").iftrue("out")
+    a.push("type", "HEAL", "param").var("item")
+    a.push("confirmed", True, "duration").var("obj").member("param", "duration")
+    a.push(4).op("initobject")
+    a.push(1).var("this").member("master", "gamer").push("dispatchEvent").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_confirmed_heal_bar():
+    """Local key presses must not replace a bar before server acceptance."""
+    a = Asm()
+    a.var("obj").member("confirmed").op("not").iftrue("out")
+    a.var("obj").push(1).var("this").push("__confirmedHealOrig").op("callmethod").op("pop")
+    a.var("obj").member("duration").op("not").iftrue("out")
+    a.var("obj").member("duration").push(1).var("this").push("startTimeBar").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_scene_cancel_aim():
+    """Lower a cancelled aim without synthesizing a shot or changing motion."""
+    a = Asm()
+    a.push("walker").var("obj").member("id").push(1)
+    a.var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("walker").op("not").iftrue("out")
+    a.var("walker").member("behavior").push("fire_in").op("equals2").op("not").iftrue("out")
+    a.var("walker").push("burstArr", 0).op("initarray").op("setmember")
+    for field in ("fireCount", "__fireCount"):
+        a.var("walker").push(field, 0).op("setmember")
+    a.var("walker").push("behavior", "fire_out").op("setmember")
+    a.label("out")
+    return a
+
+
+def fn_scene_action_listener(original, remove=False):
+    a = Asm()
+    if not remove:
+        a.push(0).var("this").push(original).op("callmethod").op("pop")
+    a.var("_global").member("__sceneCancelAim").var("this").push("cancelAim", 3)
+    a.var("this").member("currentLocation")
+    a.push("removeEventListener" if remove else "addEventListener").op("callmethod").op("pop")
+    if remove:
+        a.push(0).var("this").push(original).op("callmethod").op("pop")
+    return a
+
+
+def fn_action_use_ack():
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__actionAckOrig").op("callmethod").op("pop")
+    # Only one command remains in flight; after its ack the player may
+    # replace the delayed effect instead of waiting for the old shot.
+    a.var("this").push("coolDownBlock", False).op("setmember")
+    return a
+
+
+def fn_action_listener(original, remove=False):
+    a = Asm()
+    if not remove:
+        a.push(0).var("this").push(original).op("callmethod").op("pop")
+    for event, handler in (("actionCancel", "__actionCancel"), ("actionStart", "__actionStart")):
+        a.var("_global").member(handler).var("this").push(event, 3)
+        a.var("this").member("XMC").push("removeEventListener" if remove else "addEventListener").op("callmethod").op("pop")
+    if remove:
+        a.push(0).var("this").push(original).op("callmethod").op("pop")
+    return a
+
+
 def injected():
     a = Asm()
     for name, fn, params in (
+            ("__actionCancel", fn_action_cancel, ("obj",)),
+            ("__actionStart", fn_action_start, ("obj",)),
+            ("__sceneCancelAim", fn_scene_cancel_aim, ("obj",)),
             ("__quickMedPick", fn_quick_med_pick, ("equip", "entries")),
             ("__wideDraw", fn_draw, ("bd", "host", "a", "d", "tx", "ty",
                                      "cx", "cy", "cw", "ch")),
@@ -1961,6 +2164,22 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("gpui", "WeaponPan"), "healTimeBar", "__confirmedHealOrig",
+         ("obj",), fn_confirmed_heal_bar()),
+        (("core", "location", "DisplayLocScene"), "init", "__sceneActionInitOrig",
+         (), fn_scene_action_listener("__sceneActionInitOrig")),
+        (("core", "location", "DisplayLocScene"), "kill", "__sceneActionKillOrig",
+         (), fn_scene_action_listener("__sceneActionKillOrig", remove=True)),
+        (("core", "objects", "ItemActivator"), "useAck", "__actionAckOrig",
+         ("obj",), fn_action_use_ack()),
+        (("services", "HotKeyManager"), "onKeyDown", "__keysDownOrig",
+         (), fn_hotkey_reconcile("__keysDownOrig")),
+        (("services", "HotKeyManager"), "onKeyUp", "__keysUpOrig",
+         (), fn_hotkey_reconcile("__keysUpOrig", releasing=True)),
+        (("core", "location", "Location"), "init", "__actionInitOrig",
+         (), fn_action_listener("__actionInitOrig")),
+        (("core", "location", "Location"), "kill", "__actionKillOrig",
+         (), fn_action_listener("__actionKillOrig", remove=True)),
         (("core", "player", "PersEquip"), "useHealItem", "__quickHealOrig",
          (), fn_quick_med_use("healArr", "__quickHealOrig")),
         (("core", "player", "PersEquip"), "useEatItem", "__quickEatOrig",
@@ -1975,6 +2194,10 @@ def injected():
          ("afro_cost",), fn_repair_gold()),
         (("core", "objects", "Item"), "getProp", "__repairGetPropOrig",
          ("prop",), fn_repair_cost()),
+        (("core", "objects", "Item"), "initialize", "__repairInitializeOrig",
+         ("obj",), fn_repair_initialize()),
+        (("gpui", "EquipInterface"), "checkSkills", "__armorSkillsOrig",
+         ("arr", "titleArr"), fn_armor_skills()),
         (("gpui", "LocationInterface"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper(MARK)),
         (("gpui", "LocationInterface"), "goToForum", "__siteForumOrig",

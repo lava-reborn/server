@@ -95,6 +95,9 @@ CREATE TABLE IF NOT EXISTS char_quests_done (
     type     INTEGER NOT NULL,
     done_at  INTEGER NOT NULL
 );
+CREATE INDEX IF NOT EXISTS quests_by_char_type ON char_quests (char_id, type);
+CREATE INDEX IF NOT EXISTS quests_done_by_char_type_time
+    ON char_quests_done (char_id, type, done_at, id);
 CREATE TABLE IF NOT EXISTS mail (
     -- One row per letter, seen from two sides: the addressee's inbox and
     -- the sender's outbox are the same row under two deletion flags, so a
@@ -1571,6 +1574,12 @@ class Store:
         # under LEDGER_OTHER. The game server is one thread: a command runs
         # to its end before the next one starts.
         self.money_source = None
+        self.quest_revisions = {}
+
+    def quests_changed(self, char_id):
+        """Invalidate online availability snapshots after a quest write."""
+        char_id = int(char_id)
+        self.quest_revisions[char_id] = self.quest_revisions.get(char_id, 0) + 1
 
     @contextlib.contextmanager
     def booked_as(self, source, ref=0):
@@ -2017,6 +2026,7 @@ class Store:
                         [(int(char_id), int(quest_type), int(when or time.time()))],
                         conflict=("char_id", "type"))
         self.db.commit()
+        self.quests_changed(char_id)
 
     def forget_lent(self, char_id, quest_type):
         """The loan struck: all of it came back unused (server.py
@@ -2024,6 +2034,7 @@ class Store:
         self.db.execute("DELETE FROM char_lent WHERE char_id = ? AND type = ?",
                         (int(char_id), int(quest_type)))
         self.db.commit()
+        self.quests_changed(char_id)
 
     # --- items -----------------------------------------------------------
     # One row per item instance; a stack of ammunition is one row with a
@@ -2356,6 +2367,7 @@ class Store:
             (char_id, quest_type, json.dumps(progress), 1 if complete else 0,
              int(time.time())), returning="q_id")
         self.db.commit()
+        self.quests_changed(char_id)
         return q_id
 
     def update_quest(self, q_id, progress, complete):
@@ -2364,18 +2376,37 @@ class Store:
             (json.dumps(progress), 1 if complete else 0, q_id))
         self.db.commit()
 
-    def drop_quest(self, q_id):
+    def drop_quest(self, q_id, char_id=None):
+        if char_id is None:
+            row = self.quest(q_id)
+            char_id = row["char_id"] if row else None
         self.db.execute("DELETE FROM char_quests WHERE q_id = ?", (q_id,))
         self.db.commit()
+        if char_id is not None:
+            self.quests_changed(char_id)
 
-    def finish_quest(self, q_id, char_id, quest_type, when=None):
+    def lock_quest_character(self, char_id):
+        """Serialize this character's quest writes inside storage.atomic."""
+        lock = " FOR UPDATE" if storage.using_postgres() else ""
+        return self.db.execute("SELECT id FROM characters WHERE id = ?" + lock,
+                               (char_id,)).fetchone() is not None
+
+    def finish_quest(self, q_id, char_id, quest_type, when=None, require_active=False):
         """Hand the instance in: it leaves the log and joins the history that
         non-repeatable checks and the daily count are answered from."""
-        self.db.execute("DELETE FROM char_quests WHERE q_id = ?", (q_id,))
+        if require_active:
+            deleted = self.db.execute(
+                "DELETE FROM char_quests WHERE q_id = ? AND char_id = ? AND type = ?",
+                (q_id, char_id, quest_type))
+            if deleted.rowcount != 1:
+                raise ValueError("quest instance is no longer active")
+        else:
+            self.db.execute("DELETE FROM char_quests WHERE q_id = ?", (q_id,))
         self.db.execute(
             "INSERT INTO char_quests_done (char_id, type, done_at) VALUES (?, ?, ?)",
             (char_id, quest_type, int(when or time.time())))
         self.db.commit()
+        self.quests_changed(char_id)
 
     def quest_done(self, char_id, quest_type):
         return self.db.execute(

@@ -564,6 +564,17 @@ def loot_table(type_id):
 
 
 _COUNTS = {}
+_INDEPENDENT = {}
+
+
+def independent_loot(type_id):
+    """Explicit per-kind rolls whose stated chances are outside MAX_DROPS."""
+    if type_id not in _INDEPENDENT:
+        _INDEPENDENT[type_id] = frozenset(
+            int(r['type']) for r in _loot_manual().get(str(type_id), [])
+            if r.get('independent') is True and r.get('type')
+            and r.get('tier') in LOOT_TIERS and not r.get(ONE_OF))
+    return _INDEPENDENT[type_id]
 
 
 def count_of(type_id, t):
@@ -594,17 +605,21 @@ def roll_table(type_id, rng):
     """[(type_id, count)] off loot_table: every row rolled, so the dice
     spent do not depend on what came up, and the first MAX_DROPS successes
     kept. A row at SURE is certain: in the bag every time, without a die and
-    outside the cap. The count is the row's own (count_of), 1 but where the
+    outside the cap. Explicit independent rows also do not consume or
+    compete for the cap; their individual chances remain literal.
+    The count is the row's own (count_of), 1 but where the
     owner's file says more. Then one thing of each ONE_OF group
     (one_of_groups)."""
     out = []
     kept = 0
+    independent = independent_loot(type_id)
     for t, chance, _valuable in loot_table(type_id):
         if chance >= SURE:
             out.append((t, count_of(type_id, t)))
-        elif rng.random() < chance and kept < MAX_DROPS:
+        elif rng.random() < chance and (t in independent or kept < MAX_DROPS):
             out.append((t, count_of(type_id, t)))
-            kept += 1
+            if t not in independent:
+                kept += 1
     for group in one_of_groups(type_id):
         pick = rng.random() * sum(w for _t, w in group)
         for t, w in group:
@@ -759,7 +774,7 @@ def stats(type_id):
     return st
 
 
-def virtual_di(uniq, type_id, root):
+def virtual_di(uniq, type_id, root, ammo_type=None):
     """ss_di_* fields for a virtual instance (uniq >= VIRTUAL_BASE): a clean,
     loaded weapon, so the client shows nothing odd about it. None for a
     serial that is not virtual."""
@@ -771,7 +786,7 @@ def virtual_di(uniq, type_id, root):
         comp = si.get("comp_array") or [0]
         return "ss_di_firearm", {"break": brk, "max_break_cur": brk,
                                  "ammo_count": si.get("clip_size", 1),
-                                 "ammo_type": comp[0], "cur_mode": 0}
+                                 "ammo_type": ammo_type if ammo_type in comp else comp[0], "cur_mode": 0}
     if root == items.COLD_ARM:
         return "ss_di_coldarm", {"break": brk, "max_break_cur": brk}
     return "ss_di_wear", {"break": brk, "max_break_cur": brk}

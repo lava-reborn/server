@@ -104,7 +104,7 @@ for t, callback in ((6241, "strike"), (25566, "fire")):
                               inv=SimpleNamespace(find=lambda _: bad), on_map=False,
                               answer=events.append)
     fighter = SimpleNamespace(sess=session, character=lambda: ch, rc=SimpleNamespace(
-        room=SimpleNamespace(broadcast=events.append)), dead=False, ap=60,
+        room=SimpleNamespace(ws=False, broadcast=events.append)), dead=False, ap=60,
         aim=None, strike=None, eid=99, store=SimpleNamespace(item=lambda _: bad),
         preparing=lambda: False, ack=lambda code: events.append(code))
     session.send = lambda cmd, **p: events.append((cmd, p))

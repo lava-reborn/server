@@ -34,8 +34,8 @@
    "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
   },
   "2466": {
-   "name": "Точность и дистанция стрельбы (17у)$BP",
-   "why": "DESIGNED: the recipe's own words for its blueprint, as the original names the blueprints it does name."
+   "name": "FN F2000[G][17]$Автомат",
+   "why": "DESIGNED: existing base weapon name for completion modification."
   },
   "2468": {
    "name": "Точность и дистанция стрельбы (19у)$BP",
@@ -27806,6 +27806,3581 @@
    ],
    "type": 10809,
    "why": "RECOVERED: texts.xml [52007, 52008, 47221, 25011] (name, start, notfinish, finish), the gun 26867, its modification 26876, the blueprint 2402 (20у). DESIGNED: the band 17-20 of abu_hamed, the blueprint's drop off the camps' chiefs of its level."
+  },
+  {
+   "craft": {
+    "blueprint": 2420,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26242,
+    "key": "upgrade:halfa:completion-26242-damage",
+    "level": 1,
+    "line": "A",
+    "mod": 40787
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    341
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "АК: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26242
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      269,
+      270
+     ],
+     "num": 1,
+     "obj": 2420,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    40787
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести АК и Чертеж: Урон (1у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    341
+   ],
+   "type": 10810,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2421,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 26242,
+    "key": "upgrade:halfa:completion-26242-precision",
+    "level": 1,
+    "line": "A",
+    "mod": 40784
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    341
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "АК: точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26242
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      269,
+      270
+     ],
+     "num": 1,
+     "obj": 2421,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    40784
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести АК и Чертеж: Точность (1у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    341
+   ],
+   "type": 10811,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2420,
+    "blueprint_level": 1,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25562,
+    "key": "upgrade:halfa:completion-25562-damage",
+    "level": 0,
+    "line": "A",
+    "mod": 43341
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    338
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Самострел: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25562
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      269,
+      270
+     ],
+     "num": 1,
+     "obj": 2420,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    43341
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Самострел и Чертеж: Урон (1у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    338
+   ],
+   "type": 10812,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2421,
+    "blueprint_level": 1,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 25562,
+    "key": "upgrade:halfa:completion-25562-precision",
+    "level": 0,
+    "line": "A",
+    "mod": 43338
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    338
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Самострел: точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25562
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      269,
+      270
+     ],
+     "num": 1,
+     "obj": 2421,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    43338
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Самострел и Чертеж: Точность (1у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    338
+   ],
+   "type": 10813,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 759,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25657,
+    "key": "upgrade:halfa:completion-25657-damage",
+    "level": 6,
+    "line": "G",
+    "mod": 25660
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    377
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Desert Eagle (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25657
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      299,
+      300
+     ],
+     "num": 1,
+     "obj": 759,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25660
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Desert Eagle (G) и Чертеж: Урон (6у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    377
+   ],
+   "type": 10814,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 765,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 25657,
+    "key": "upgrade:halfa:completion-25657-precision",
+    "level": 6,
+    "line": "G",
+    "mod": 25663
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    377
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Desert Eagle (G): точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25657
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      299,
+      300
+     ],
+     "num": 1,
+     "obj": 765,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25663
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Desert Eagle (G) и Чертеж: Точность (6у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    377
+   ],
+   "type": 10815,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 802,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 26009,
+    "key": "upgrade:halfa:completion-26009-clipsize",
+    "level": 10,
+    "line": "A",
+    "mod": 26204
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Valtro PM-5: размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26009
+    },
+    {
+     "num": 1,
+     "obj": 802
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26204
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Valtro PM-5 и Чертеж: Размер обоймы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10816,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 801,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26009,
+    "key": "upgrade:halfa:completion-26009-damage",
+    "level": 10,
+    "line": "A",
+    "mod": 26015
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Valtro PM-5: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26009
+    },
+    {
+     "num": 1,
+     "obj": 801
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26015
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Valtro PM-5 и Чертеж: Урон (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10817,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 802,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 26010,
+    "key": "upgrade:halfa:completion-26010-clipsize",
+    "level": 10,
+    "line": "G",
+    "mod": 26205
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Valtro PM-5 (G): размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26010
+    },
+    {
+     "num": 1,
+     "obj": 802
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26205
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Valtro PM-5 (G) и Чертеж: Размер обоймы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10818,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 801,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26010,
+    "key": "upgrade:halfa:completion-26010-damage",
+    "level": 10,
+    "line": "G",
+    "mod": 26016
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Valtro PM-5 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26010
+    },
+    {
+     "num": 1,
+     "obj": 801
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26016
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Valtro PM-5 (G) и Чертеж: Урон (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10819,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37670,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26010,
+    "key": "upgrade:halfa:completion-26010-damage_clipsize",
+    "level": 10,
+    "line": "G",
+    "mod": 26019
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Valtro PM-5 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26010
+    },
+    {
+     "num": 1,
+     "obj": 37670
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26019
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Valtro PM-5 (G) и Чертеж: Урон и размер обоймы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10820,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 3434,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26035,
+    "key": "upgrade:halfa:completion-26035-damage",
+    "level": 11,
+    "line": "A",
+    "mod": 26041
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger SP 312: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26035
+    },
+    {
+     "num": 1,
+     "obj": 3434
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26041
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger SP 312 и Чертеж: Урон (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10821,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2437,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26035,
+    "key": "upgrade:halfa:completion-26035-shotrange",
+    "level": 11,
+    "line": "A",
+    "mod": 26038
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger SP 312: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26035
+    },
+    {
+     "num": 1,
+     "obj": 2437
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26038
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger SP 312 и Чертеж: Дистанция стрельбы (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10822,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 3434,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26036,
+    "key": "upgrade:halfa:completion-26036-damage",
+    "level": 11,
+    "line": "G",
+    "mod": 26042
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger SP 312 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26036
+    },
+    {
+     "num": 1,
+     "obj": 3434
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26042
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger SP 312 (G) и Чертеж: Урон (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10823,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37671,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26036,
+    "key": "upgrade:halfa:completion-26036-damage_clipsize",
+    "level": 11,
+    "line": "G",
+    "mod": 26045
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger SP 312 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26036
+    },
+    {
+     "num": 1,
+     "obj": 37671
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26045
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger SP 312 (G) и Чертеж: Урон и размер обоймы (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10824,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2437,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26036,
+    "key": "upgrade:halfa:completion-26036-shotrange",
+    "level": 11,
+    "line": "G",
+    "mod": 26039
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger SP 312 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26036
+    },
+    {
+     "num": 1,
+     "obj": 2437
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26039
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger SP 312 (G) и Чертеж: Дистанция стрельбы (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10825,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 822,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26061,
+    "key": "upgrade:halfa:completion-26061-damage",
+    "level": 12,
+    "line": "A",
+    "mod": 26067
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 1100: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26061
+    },
+    {
+     "num": 1,
+     "obj": 822
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26067
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 1100 и Чертеж: Урон (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10826,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 827,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26061,
+    "key": "upgrade:halfa:completion-26061-shotrange",
+    "level": 12,
+    "line": "A",
+    "mod": 26064
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 1100: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26061
+    },
+    {
+     "num": 1,
+     "obj": 827
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26064
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 1100 и Чертеж: Дистанция стрельбы (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10827,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 822,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26062,
+    "key": "upgrade:halfa:completion-26062-damage",
+    "level": 12,
+    "line": "G",
+    "mod": 26068
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 1100 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26062
+    },
+    {
+     "num": 1,
+     "obj": 822
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26068
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 1100 (G) и Чертеж: Урон (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10828,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37672,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26062,
+    "key": "upgrade:halfa:completion-26062-damage_clipsize",
+    "level": 12,
+    "line": "G",
+    "mod": 26071
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 1100 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26062
+    },
+    {
+     "num": 1,
+     "obj": 37672
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26071
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 1100 (G) и Чертеж: Урон и размер обоймы (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10829,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 827,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26062,
+    "key": "upgrade:halfa:completion-26062-shotrange",
+    "level": 12,
+    "line": "G",
+    "mod": 26065
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 1100 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26062
+    },
+    {
+     "num": 1,
+     "obj": 827
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26065
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 1100 (G) и Чертеж: Дистанция стрельбы (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10830,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 3432,
+    "effect": "agility",
+    "family": "upgrade",
+    "gun": 25983,
+    "key": "upgrade:halfa:completion-25983-agility",
+    "level": 9,
+    "line": "A",
+    "mod": 25986
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Вепрь-12: ловкость",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25983
+    },
+    {
+     "num": 1,
+     "obj": 3432
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25986
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Вепрь-12 и Чертеж: Ловкость (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10831,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2432,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25983,
+    "key": "upgrade:halfa:completion-25983-damage",
+    "level": 9,
+    "line": "A",
+    "mod": 25989
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Вепрь-12: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25983
+    },
+    {
+     "num": 1,
+     "obj": 2432
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25989
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Вепрь-12 и Чертеж: Урон (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10832,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 3432,
+    "effect": "agility",
+    "family": "upgrade",
+    "gun": 25984,
+    "key": "upgrade:halfa:completion-25984-agility",
+    "level": 9,
+    "line": "G",
+    "mod": 25987
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Вепрь-12 (G): ловкость",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25984
+    },
+    {
+     "num": 1,
+     "obj": 3432
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25987
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Вепрь-12 (G) и Чертеж: Ловкость (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10833,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2432,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25984,
+    "key": "upgrade:halfa:completion-25984-damage",
+    "level": 9,
+    "line": "G",
+    "mod": 25990
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Вепрь-12 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25984
+    },
+    {
+     "num": 1,
+     "obj": 2432
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25990
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Вепрь-12 (G) и Чертеж: Урон (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10834,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37669,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25984,
+    "key": "upgrade:halfa:completion-25984-damage_clipsize",
+    "level": 9,
+    "line": "G",
+    "mod": 25993
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Вепрь-12 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25984
+    },
+    {
+     "num": 1,
+     "obj": 37669
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25993
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Вепрь-12 (G) и Чертеж: Урон и размер обоймы (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10835,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 801,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26022,
+    "key": "upgrade:halfa:completion-26022-damage",
+    "level": 10,
+    "line": "A",
+    "mod": 26028
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Franchi SPAS-15: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26022
+    },
+    {
+     "num": 1,
+     "obj": 801
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26028
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Franchi SPAS-15 и Чертеж: Урон (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10836,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 806,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26022,
+    "key": "upgrade:halfa:completion-26022-shotrange",
+    "level": 10,
+    "line": "A",
+    "mod": 26025
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Franchi SPAS-15: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26022
+    },
+    {
+     "num": 1,
+     "obj": 806
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26025
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Franchi SPAS-15 и Чертеж: Дистанция стрельбы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10837,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 801,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26023,
+    "key": "upgrade:halfa:completion-26023-damage",
+    "level": 10,
+    "line": "G",
+    "mod": 26029
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Franchi SPAS-15 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26023
+    },
+    {
+     "num": 1,
+     "obj": 801
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26029
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Franchi SPAS-15 (G) и Чертеж: Урон (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10838,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37670,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26023,
+    "key": "upgrade:halfa:completion-26023-damage_clipsize",
+    "level": 10,
+    "line": "G",
+    "mod": 26032
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Franchi SPAS-15 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26023
+    },
+    {
+     "num": 1,
+     "obj": 37670
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26032
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Franchi SPAS-15 (G) и Чертеж: Урон и размер обоймы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10839,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 806,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26023,
+    "key": "upgrade:halfa:completion-26023-shotrange",
+    "level": 10,
+    "line": "G",
+    "mod": 26026
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Franchi SPAS-15 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26023
+    },
+    {
+     "num": 1,
+     "obj": 806
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26026
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Franchi SPAS-15 (G) и Чертеж: Дистанция стрельбы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10840,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 3434,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26048,
+    "key": "upgrade:halfa:completion-26048-damage",
+    "level": 11,
+    "line": "A",
+    "mod": 26054
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger P 350: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26048
+    },
+    {
+     "num": 1,
+     "obj": 3434
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26054
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger P 350 и Чертеж: Урон (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10841,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2437,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26048,
+    "key": "upgrade:halfa:completion-26048-shotrange",
+    "level": 11,
+    "line": "A",
+    "mod": 26051
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger P 350: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26048
+    },
+    {
+     "num": 1,
+     "obj": 2437
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26051
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger P 350 и Чертеж: Дистанция стрельбы (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10842,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 3434,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26049,
+    "key": "upgrade:halfa:completion-26049-damage",
+    "level": 11,
+    "line": "G",
+    "mod": 26055
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger P 350 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26049
+    },
+    {
+     "num": 1,
+     "obj": 3434
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26055
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger P 350 (G) и Чертеж: Урон (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10843,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37671,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26049,
+    "key": "upgrade:halfa:completion-26049-damage_clipsize",
+    "level": 11,
+    "line": "G",
+    "mod": 26058
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger P 350 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26049
+    },
+    {
+     "num": 1,
+     "obj": 37671
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26058
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger P 350 (G) и Чертеж: Урон и размер обоймы (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10844,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2437,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26049,
+    "key": "upgrade:halfa:completion-26049-shotrange",
+    "level": 11,
+    "line": "G",
+    "mod": 26052
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger P 350 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26049
+    },
+    {
+     "num": 1,
+     "obj": 2437
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26052
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger P 350 (G) и Чертеж: Дистанция стрельбы (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10845,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 822,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26074,
+    "key": "upgrade:halfa:completion-26074-damage",
+    "level": 12,
+    "line": "A",
+    "mod": 26080
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 11-87: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26074
+    },
+    {
+     "num": 1,
+     "obj": 822
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26080
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 11-87 и Чертеж: Урон (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10846,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 827,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26074,
+    "key": "upgrade:halfa:completion-26074-shotrange",
+    "level": 12,
+    "line": "A",
+    "mod": 26077
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 11-87: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26074
+    },
+    {
+     "num": 1,
+     "obj": 827
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26077
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 11-87 и Чертеж: Дистанция стрельбы (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10847,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 822,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 26075,
+    "key": "upgrade:halfa:completion-26075-damage",
+    "level": 12,
+    "line": "G",
+    "mod": 26081
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 11-87 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26075
+    },
+    {
+     "num": 1,
+     "obj": 822
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26081
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 11-87 (G) и Чертеж: Урон (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10848,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37672,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26075,
+    "key": "upgrade:halfa:completion-26075-damage_clipsize",
+    "level": 12,
+    "line": "G",
+    "mod": 26084
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 11-87 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26075
+    },
+    {
+     "num": 1,
+     "obj": 37672
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26084
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 11-87 (G) и Чертеж: Урон и размер обоймы (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10849,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 827,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 26075,
+    "key": "upgrade:halfa:completion-26075-shotrange",
+    "level": 12,
+    "line": "G",
+    "mod": 26078
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 11-87 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26075
+    },
+    {
+     "num": 1,
+     "obj": 827
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26078
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 11-87 (G) и Чертеж: Дистанция стрельбы (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10850,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 3433,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 25996,
+    "key": "upgrade:halfa:completion-25996-clipsize",
+    "level": 9,
+    "line": "A",
+    "mod": 26002
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Striker: размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25996
+    },
+    {
+     "num": 1,
+     "obj": 3433
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26002
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Striker и Чертеж: Размер обоймы (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10851,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2432,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25996,
+    "key": "upgrade:halfa:completion-25996-damage",
+    "level": 9,
+    "line": "A",
+    "mod": 25999
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Striker: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25996
+    },
+    {
+     "num": 1,
+     "obj": 2432
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25999
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Striker и Чертеж: Урон (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10852,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 3433,
+    "effect": "clipsize",
+    "family": "upgrade",
+    "gun": 25997,
+    "key": "upgrade:halfa:completion-25997-clipsize",
+    "level": 9,
+    "line": "G",
+    "mod": 26003
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Striker (G): размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25997
+    },
+    {
+     "num": 1,
+     "obj": 3433
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26003
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Striker (G) и Чертеж: Размер обоймы (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10853,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2432,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25997,
+    "key": "upgrade:halfa:completion-25997-damage",
+    "level": 9,
+    "line": "G",
+    "mod": 26000
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Striker (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25997
+    },
+    {
+     "num": 1,
+     "obj": 2432
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26000
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Striker (G) и Чертеж: Урон (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10854,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37669,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25997,
+    "key": "upgrade:halfa:completion-25997-damage_clipsize",
+    "level": 9,
+    "line": "G",
+    "mod": 26006
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    378
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Striker (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25997
+    },
+    {
+     "num": 1,
+     "obj": 37669
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26006
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Striker (G) и Чертеж: Урон и размер обоймы (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    378
+   ],
+   "type": 10855,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 881,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25006,
+    "key": "upgrade:dongola:completion-25006-attrition_x2",
+    "level": 16,
+    "line": "A",
+    "mod": 25015
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    345
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "AUG /Hbar: прочность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25006
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      407,
+      408
+     ],
+     "num": 1,
+     "obj": 881,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25015
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести AUG /Hbar и Чертеж: Прочность (16у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    345
+   ],
+   "type": 10856,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 818,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25405,
+    "key": "upgrade:dongola:completion-25405-attrition_x2",
+    "level": 10,
+    "line": "A",
+    "mod": 25414
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Беретта M12: прочность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25405
+    },
+    {
+     "num": 1,
+     "obj": 818
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25414
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Беретта M12 и Чертеж: Прочность (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10857,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 801,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25405,
+    "key": "upgrade:dongola:completion-25405-damage",
+    "level": 10,
+    "line": "A",
+    "mod": 25408
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Беретта M12: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25405
+    },
+    {
+     "num": 1,
+     "obj": 801
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25408
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Беретта M12 и Чертеж: Урон (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10858,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 806,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 25405,
+    "key": "upgrade:dongola:completion-25405-shotrange",
+    "level": 10,
+    "line": "A",
+    "mod": 25411
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Беретта M12: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25405
+    },
+    {
+     "num": 1,
+     "obj": 806
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25411
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Беретта M12 и Чертеж: Дистанция стрельбы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10859,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 818,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25406,
+    "key": "upgrade:dongola:completion-25406-attrition_x2",
+    "level": 10,
+    "line": "G",
+    "mod": 25415
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Беретта M12 (G): прочность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25406
+    },
+    {
+     "num": 1,
+     "obj": 818
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25415
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Беретта M12 (G) и Чертеж: Прочность (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10860,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 801,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25406,
+    "key": "upgrade:dongola:completion-25406-damage",
+    "level": 10,
+    "line": "G",
+    "mod": 25409
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Беретта M12 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25406
+    },
+    {
+     "num": 1,
+     "obj": 801
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25409
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Беретта M12 (G) и Чертеж: Урон (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10861,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37670,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25406,
+    "key": "upgrade:dongola:completion-25406-damage_clipsize",
+    "level": 10,
+    "line": "G",
+    "mod": 25418
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Беретта M12 (G): урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25406
+    },
+    {
+     "num": 1,
+     "obj": 37670
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25418
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Беретта M12 (G) и Чертеж: Урон и размер обоймы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10862,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 806,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 25406,
+    "key": "upgrade:dongola:completion-25406-shotrange",
+    "level": 10,
+    "line": "G",
+    "mod": 25412
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Беретта M12 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25406
+    },
+    {
+     "num": 1,
+     "obj": 806
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25412
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Беретта M12 (G) и Чертеж: Дистанция стрельбы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10863,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2396,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25373,
+    "key": "upgrade:dongola:completion-25373-attrition_x2",
+    "level": 9,
+    "line": "A",
+    "mod": 25382
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Stan MK3: прочность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25373
+    },
+    {
+     "num": 1,
+     "obj": 2396
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25382
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stan MK3 и Чертеж: Прочность (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10864,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2432,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25373,
+    "key": "upgrade:dongola:completion-25373-damage",
+    "level": 9,
+    "line": "A",
+    "mod": 25376
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Stan MK3: урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25373
+    },
+    {
+     "num": 1,
+     "obj": 2432
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25376
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stan MK3 и Чертеж: Урон (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10865,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2433,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 25373,
+    "key": "upgrade:dongola:completion-25373-shotrange",
+    "level": 9,
+    "line": "A",
+    "mod": 25379
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Stan MK3: дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25373
+    },
+    {
+     "num": 1,
+     "obj": 2433
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25379
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stan MK3 и Чертеж: Дистанция стрельбы (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10866,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2396,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25374,
+    "key": "upgrade:dongola:completion-25374-attrition_x2",
+    "level": 9,
+    "line": "G",
+    "mod": 25383
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Stan MK3 (G): прочность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25374
+    },
+    {
+     "num": 1,
+     "obj": 2396
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25383
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stan MK3 (G) и Чертеж: Прочность (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10867,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2432,
+    "effect": "damage",
+    "family": "upgrade",
+    "gun": 25374,
+    "key": "upgrade:dongola:completion-25374-damage",
+    "level": 9,
+    "line": "G",
+    "mod": 25377
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Stan MK3 (G): урон",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25374
+    },
+    {
+     "num": 1,
+     "obj": 2432
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25377
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stan MK3 (G) и Чертеж: Урон (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10868,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2433,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 25374,
+    "key": "upgrade:dongola:completion-25374-shotrange",
+    "level": 9,
+    "line": "G",
+    "mod": 25380
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Stan MK3 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25374
+    },
+    {
+     "num": 1,
+     "obj": 2433
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25380
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stan MK3 (G) и Чертеж: Дистанция стрельбы (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10869,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2435,
+    "effect": "aimtime",
+    "family": "upgrade",
+    "gun": 25389,
+    "key": "upgrade:dongola:completion-25389-aimtime",
+    "level": 9,
+    "line": "A",
+    "mod": 25392
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "MP-40: время прицеливания",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25389
+    },
+    {
+     "num": 1,
+     "obj": 2435
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25392
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MP-40 и Чертеж: Время прицеливания (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10870,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2396,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25389,
+    "key": "upgrade:dongola:completion-25389-attrition_x2",
+    "level": 9,
+    "line": "A",
+    "mod": 25398
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "MP-40: прочность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25389
+    },
+    {
+     "num": 1,
+     "obj": 2396
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25398
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MP-40 и Чертеж: Прочность (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10871,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2434,
+    "effect": "shotspeed",
+    "family": "upgrade",
+    "gun": 25389,
+    "key": "upgrade:dongola:completion-25389-shotspeed",
+    "level": 9,
+    "line": "A",
+    "mod": 25395
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "MP-40: скорострельность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25389
+    },
+    {
+     "num": 1,
+     "obj": 2434
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25395
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MP-40 и Чертеж: Скорострельность (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10872,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2435,
+    "effect": "aimtime",
+    "family": "upgrade",
+    "gun": 25390,
+    "key": "upgrade:dongola:completion-25390-aimtime",
+    "level": 9,
+    "line": "G",
+    "mod": 25393
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "MP-40 (G): время прицеливания",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25390
+    },
+    {
+     "num": 1,
+     "obj": 2435
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25393
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MP-40 (G) и Чертеж: Время прицеливания (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10873,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2396,
+    "effect": "attrition_x2",
+    "family": "upgrade",
+    "gun": 25390,
+    "key": "upgrade:dongola:completion-25390-attrition_x2",
+    "level": 9,
+    "line": "G",
+    "mod": 25399
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "MP-40 (G): прочность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25390
+    },
+    {
+     "num": 1,
+     "obj": 2396
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25399
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MP-40 (G) и Чертеж: Прочность (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10874,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2434,
+    "effect": "shotspeed",
+    "family": "upgrade",
+    "gun": 25390,
+    "key": "upgrade:dongola:completion-25390-shotspeed",
+    "level": 9,
+    "line": "G",
+    "mod": 25396
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    387
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "MP-40 (G): скорострельность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25390
+    },
+    {
+     "num": 1,
+     "obj": 2434
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25396
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести MP-40 (G) и Чертеж: Скорострельность (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    387
+   ],
+   "type": 10875,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 4179,
+    "effect": "precision",
+    "family": "upgrade",
+    "gun": 25320,
+    "key": "upgrade:abu_hamed:completion-25320-precision",
+    "level": 17,
+    "line": "G",
+    "mod": 25323
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    748
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN F2000 (G): точность",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25320
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 4179,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25323
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN F2000 (G) и Чертеж: Точность (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    748
+   ],
+   "type": 10876,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 2466,
+    "effect": "precision_shotrange",
+    "family": "upgrade",
+    "gun": 25320,
+    "key": "upgrade:abu_hamed:completion-25320-precision_shotrange",
+    "level": 17,
+    "line": "G",
+    "mod": 25332
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    748
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN F2000 (G): точность и дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25320
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 2466,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25332
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN F2000 (G) и Чертеж: Точность и дистанция стрельбы (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    748
+   ],
+   "type": 10877,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 4180,
+    "effect": "shotrange",
+    "family": "upgrade",
+    "gun": 25320,
+    "key": "upgrade:abu_hamed:completion-25320-shotrange",
+    "level": 17,
+    "line": "G",
+    "mod": 25326
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    748
+   ],
+   "kind": "bring_l_obj",
+   "level": 17,
+   "max_level": 20,
+   "name": "FN F2000 (G): дистанция стрельбы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25320
+    },
+    {
+     "drop": 0.1,
+     "mobs": [
+      777,
+      778,
+      8620
+     ],
+     "num": 1,
+     "obj": 4180,
+     "one_of": "craft_blueprint"
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25326
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести FN F2000 (G) и Чертеж: Дистанция стрельбы (17у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    748
+   ],
+   "type": 10878,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37636,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26009,
+    "key": "upgrade:halfa:completion-26009-damage_clipsize",
+    "level": 10,
+    "line": "A",
+    "mod": 26018
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Valtro PM-5: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26009
+    },
+    {
+     "num": 1,
+     "obj": 37636
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26018
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Valtro PM-5 и Чертеж: Урон и размер обоймы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10879,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37637,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26035,
+    "key": "upgrade:halfa:completion-26035-damage_clipsize",
+    "level": 11,
+    "line": "A",
+    "mod": 26044
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger SP 312: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26035
+    },
+    {
+     "num": 1,
+     "obj": 37637
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26044
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger SP 312 и Чертеж: Урон и размер обоймы (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10880,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37638,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26061,
+    "key": "upgrade:halfa:completion-26061-damage_clipsize",
+    "level": 12,
+    "line": "A",
+    "mod": 26070
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 1100: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26061
+    },
+    {
+     "num": 1,
+     "obj": 37638
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26070
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 1100 и Чертеж: Урон и размер обоймы (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10881,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37635,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25983,
+    "key": "upgrade:halfa:completion-25983-damage_clipsize",
+    "level": 9,
+    "line": "A",
+    "mod": 25992
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Вепрь-12: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25983
+    },
+    {
+     "num": 1,
+     "obj": 37635
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25992
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Вепрь-12 и Чертеж: Урон и размер обоймы (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10882,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37636,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26022,
+    "key": "upgrade:halfa:completion-26022-damage_clipsize",
+    "level": 10,
+    "line": "A",
+    "mod": 26031
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Franchi SPAS-15: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26022
+    },
+    {
+     "num": 1,
+     "obj": 37636
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26031
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Franchi SPAS-15 и Чертеж: Урон и размер обоймы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10883,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37637,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26048,
+    "key": "upgrade:halfa:completion-26048-damage_clipsize",
+    "level": 11,
+    "line": "A",
+    "mod": 26057
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Stoeger P 350: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26048
+    },
+    {
+     "num": 1,
+     "obj": 37637
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26057
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Stoeger P 350 и Чертеж: Урон и размер обоймы (11у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10884,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37638,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 26074,
+    "key": "upgrade:halfa:completion-26074-damage_clipsize",
+    "level": 12,
+    "line": "A",
+    "mod": 26083
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Remington 11-87: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 26074
+    },
+    {
+     "num": 1,
+     "obj": 37638
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26083
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Remington 11-87 и Чертеж: Урон и размер обоймы (12у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10885,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37635,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25996,
+    "key": "upgrade:halfa:completion-25996-damage_clipsize",
+    "level": 9,
+    "line": "A",
+    "mod": 26005
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    339
+   ],
+   "kind": "bring_l_obj",
+   "level": 0,
+   "max_level": 20,
+   "name": "Striker: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25996
+    },
+    {
+     "num": 1,
+     "obj": 37635
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    26005
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Striker и Чертеж: Урон и размер обоймы (9у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    339
+   ],
+   "type": 10886,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
+  },
+  {
+   "craft": {
+    "blueprint": 37636,
+    "effect": "damage_clipsize",
+    "family": "upgrade",
+    "gun": 25405,
+    "key": "upgrade:dongola:completion-25405-damage_clipsize",
+    "level": 10,
+    "line": "A",
+    "mod": 25417
+   },
+   "finish": "Готово, пользуйся.",
+   "give": [
+    347
+   ],
+   "kind": "bring_l_obj",
+   "level": 9,
+   "max_level": 20,
+   "name": "Беретта M12: урон и размер обоймы",
+   "notfinish": "Само собой ничего не сделается.",
+   "num_rew_obj": [
+    1
+   ],
+   "objs": [
+    {
+     "num": 1,
+     "obj": 25405
+    },
+    {
+     "num": 1,
+     "obj": 37636
+    }
+   ],
+   "repeatable": 1,
+   "rew_obj": [
+    25417
+   ],
+   "service": true,
+   "start": "Хочешь улучшить свое оружие? Мне нужен соответствующий чертеж и, собственно, само оружие.<Br><b>Задача:</b> принести Беретта M12 и Чертеж: Урон и размер обоймы (10у)<Br><Br><b>Внимание!!! Каждый экземпляр оружия можно улучшить только один раз.</b>",
+   "take": [
+    347
+   ],
+   "type": 10887,
+   "why": "DESIGNED, owner 2026-10-24: complete missing A/G upgrades with existing items; documented Mod tables, or damage/precision for starter weapons. Samostrel uses level-1 blueprints. Halfa shotgun masters also serve levels 9-12; its rifle apprentice serves the starter AK. No existing recipe is replaced."
   }
  ],
  "stock": {
@@ -28058,6 +31633,9 @@
   "upgrade:abu_hamed:52003": 10807,
   "upgrade:abu_hamed:52005": 10808,
   "upgrade:abu_hamed:52007": 10809,
+  "upgrade:abu_hamed:completion-25320-precision": 10876,
+  "upgrade:abu_hamed:completion-25320-precision_shotrange": 10877,
+  "upgrade:abu_hamed:completion-25320-shotrange": 10878,
   "upgrade:dongola:50669": 10132,
   "upgrade:dongola:50671": 10133,
   "upgrade:dongola:50673": 10134,
@@ -28253,6 +31831,27 @@
   "upgrade:dongola:59449": 10324,
   "upgrade:dongola:59451": 10325,
   "upgrade:dongola:59453": 10326,
+  "upgrade:dongola:completion-25006-attrition_x2": 10856,
+  "upgrade:dongola:completion-25373-attrition_x2": 10864,
+  "upgrade:dongola:completion-25373-damage": 10865,
+  "upgrade:dongola:completion-25373-shotrange": 10866,
+  "upgrade:dongola:completion-25374-attrition_x2": 10867,
+  "upgrade:dongola:completion-25374-damage": 10868,
+  "upgrade:dongola:completion-25374-shotrange": 10869,
+  "upgrade:dongola:completion-25389-aimtime": 10870,
+  "upgrade:dongola:completion-25389-attrition_x2": 10871,
+  "upgrade:dongola:completion-25389-shotspeed": 10872,
+  "upgrade:dongola:completion-25390-aimtime": 10873,
+  "upgrade:dongola:completion-25390-attrition_x2": 10874,
+  "upgrade:dongola:completion-25390-shotspeed": 10875,
+  "upgrade:dongola:completion-25405-attrition_x2": 10857,
+  "upgrade:dongola:completion-25405-damage": 10858,
+  "upgrade:dongola:completion-25405-damage_clipsize": 10887,
+  "upgrade:dongola:completion-25405-shotrange": 10859,
+  "upgrade:dongola:completion-25406-attrition_x2": 10860,
+  "upgrade:dongola:completion-25406-damage": 10861,
+  "upgrade:dongola:completion-25406-damage_clipsize": 10862,
+  "upgrade:dongola:completion-25406-shotrange": 10863,
   "upgrade:halfa:24656": 10120,
   "upgrade:halfa:24659": 10121,
   "upgrade:halfa:24662": 10122,
@@ -28384,6 +31983,60 @@
   "upgrade:halfa:59363": 10116,
   "upgrade:halfa:59365": 10117,
   "upgrade:halfa:59367": 10118,
-  "upgrade:halfa:59369": 10119
+  "upgrade:halfa:59369": 10119,
+  "upgrade:halfa:completion-25562-damage": 10812,
+  "upgrade:halfa:completion-25562-precision": 10813,
+  "upgrade:halfa:completion-25657-damage": 10814,
+  "upgrade:halfa:completion-25657-precision": 10815,
+  "upgrade:halfa:completion-25983-agility": 10831,
+  "upgrade:halfa:completion-25983-damage": 10832,
+  "upgrade:halfa:completion-25983-damage_clipsize": 10882,
+  "upgrade:halfa:completion-25984-agility": 10833,
+  "upgrade:halfa:completion-25984-damage": 10834,
+  "upgrade:halfa:completion-25984-damage_clipsize": 10835,
+  "upgrade:halfa:completion-25996-clipsize": 10851,
+  "upgrade:halfa:completion-25996-damage": 10852,
+  "upgrade:halfa:completion-25996-damage_clipsize": 10886,
+  "upgrade:halfa:completion-25997-clipsize": 10853,
+  "upgrade:halfa:completion-25997-damage": 10854,
+  "upgrade:halfa:completion-25997-damage_clipsize": 10855,
+  "upgrade:halfa:completion-26009-clipsize": 10816,
+  "upgrade:halfa:completion-26009-damage": 10817,
+  "upgrade:halfa:completion-26009-damage_clipsize": 10879,
+  "upgrade:halfa:completion-26010-clipsize": 10818,
+  "upgrade:halfa:completion-26010-damage": 10819,
+  "upgrade:halfa:completion-26010-damage_clipsize": 10820,
+  "upgrade:halfa:completion-26022-damage": 10836,
+  "upgrade:halfa:completion-26022-damage_clipsize": 10883,
+  "upgrade:halfa:completion-26022-shotrange": 10837,
+  "upgrade:halfa:completion-26023-damage": 10838,
+  "upgrade:halfa:completion-26023-damage_clipsize": 10839,
+  "upgrade:halfa:completion-26023-shotrange": 10840,
+  "upgrade:halfa:completion-26035-damage": 10821,
+  "upgrade:halfa:completion-26035-damage_clipsize": 10880,
+  "upgrade:halfa:completion-26035-shotrange": 10822,
+  "upgrade:halfa:completion-26036-damage": 10823,
+  "upgrade:halfa:completion-26036-damage_clipsize": 10824,
+  "upgrade:halfa:completion-26036-shotrange": 10825,
+  "upgrade:halfa:completion-26048-damage": 10841,
+  "upgrade:halfa:completion-26048-damage_clipsize": 10884,
+  "upgrade:halfa:completion-26048-shotrange": 10842,
+  "upgrade:halfa:completion-26049-damage": 10843,
+  "upgrade:halfa:completion-26049-damage_clipsize": 10844,
+  "upgrade:halfa:completion-26049-shotrange": 10845,
+  "upgrade:halfa:completion-26061-damage": 10826,
+  "upgrade:halfa:completion-26061-damage_clipsize": 10881,
+  "upgrade:halfa:completion-26061-shotrange": 10827,
+  "upgrade:halfa:completion-26062-damage": 10828,
+  "upgrade:halfa:completion-26062-damage_clipsize": 10829,
+  "upgrade:halfa:completion-26062-shotrange": 10830,
+  "upgrade:halfa:completion-26074-damage": 10846,
+  "upgrade:halfa:completion-26074-damage_clipsize": 10885,
+  "upgrade:halfa:completion-26074-shotrange": 10847,
+  "upgrade:halfa:completion-26075-damage": 10848,
+  "upgrade:halfa:completion-26075-damage_clipsize": 10849,
+  "upgrade:halfa:completion-26075-shotrange": 10850,
+  "upgrade:halfa:completion-26242-damage": 10810,
+  "upgrade:halfa:completion-26242-precision": 10811
  }
 }

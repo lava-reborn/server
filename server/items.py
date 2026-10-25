@@ -1163,6 +1163,10 @@ def static_info(type_id):
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
             info[1].update(admin)
+        import repair_policy
+        repair_cost = repair_policy.valuation(type_id, info[1])
+        if repair_cost is not None:
+            info[1]['repair_cost'] = repair_cost
     return info
 
 

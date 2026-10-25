@@ -114,6 +114,44 @@ def check(label, got, want):
     return ok
 
 
+def run_cases(*classes):
+    """Run explicitly named regression cases through the common check report.
+
+    TestCase supplies assertions, async loop isolation and fixture cleanup;
+    testkit remains the reporting/exit interface used by the suite runner.
+    Imported fixture classes are not collected a second time.
+    """
+    import io
+    import unittest
+
+    reported = set()
+
+    class Result(unittest.TextTestResult):
+        def stopTest(self, test):
+            errors = [detail for case, detail in self.failures + self.errors
+                      if case == test or getattr(case, "test_case", None) == test]
+            errors += ["skipped: " + reason for case, reason in self.skipped if case == test]
+            errors += [detail for case, detail in self.expectedFailures if case == test]
+            if test in self.unexpectedSuccesses:
+                errors.append("unexpected success")
+            label = test.shortDescription() or test._testMethodName.removeprefix("test_").replace("_", " ")
+            check(label, "\n".join(errors) if errors else True, True)
+            reported.add(test)
+            super().stopTest(test)
+
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(cls)
+                               for cls in classes)
+    if not suite.countTestCases():
+        check("the regression suite contains test cases", False, True)
+    result = unittest.TextTestRunner(stream=io.StringIO(), resultclass=Result).run(suite)
+    for test, detail in result.errors + result.failures:
+        if test not in reported and getattr(test, "test_case", None) not in reported:
+            check("fixture: " + str(test), detail, True)
+    if fails:
+        print("\n".join(fails))
+    raise SystemExit(1 if fails or not result.wasSuccessful() else 0)
+
+
 # How long a suite waits for its server to listen. Alone one starts in about
 # two seconds; CI on GitHub's runners started a dozen at once on two cores,
 # and a window of ten made a quarter of the suites fail in the crowd and pass

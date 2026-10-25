@@ -809,6 +809,46 @@
     "chance": 0.1,
     "_source": "RECOVERED holder: the wiki's loot of the Dark Mine's miners, «[18] Шахтер<Br>Пираты Сомали» (930, 8978) and «[19] ...» (931, 8979), lists «Алмаз» (data/loot_wiki.json 930/931, tier unknown, which server/mobs.loot_table drops), and the mine's own label says «Темная шахта Абу-Хамеда: Добыча алмазов» (L162); the owner's «сделай потом абу хамед в таком же формате», 2026-10-14",
     "_designed": "the tier «Квестовый» and the chance: the diamond falls only while somebody who brought the miner down has a quest open that asks for it and has fewer than it asks (server/mobs.py QUEST_TIER, quest_roll) -- Гатера's «Отправиться к X», whose fare is a diamond (60574: «Задача: принести бриллиант»; the diamond's own description is «Красивый брильянт, неожиданно правильной огранки», 7655) -- one in ten such kills (decision 27 of the plan). Nobody else drops it: the wiki's other rows of «Алмаз» stay dropped, and Абри's diamond line stays cut (README «Абри»). No stall buys it (server/items.py QUEST_FARES_UNSOLD, 2026-10-14): at the article's 100 000 a stall paid 70 000 (inventory.SMOD), some 7 000 afro a miner's kill with no ceiling, since the row asks while the bag is short and «Отправиться к X» repeats"
+   },
+   {
+    "type": 2258,
+    "_name": "Золотой песок",
+    "chance": 1,
+    "tier": "Обычный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
+   },
+   {
+    "type": 3159,
+    "_name": "Небольшие изумруды",
+    "chance": 0.25,
+    "tier": "Ценный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
+   },
+   {
+    "type": 6959,
+    "_name": "Золотой Алмаз",
+    "chance": 0.03,
+    "tier": "Ценный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
+   },
+   {
+    "type": 6953,
+    "_name": "Золотой портсигар",
+    "chance": 0.1,
+    "tier": "Ценный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
+   },
+   {
+    "type": 6946,
+    "_name": "Серебряный портсигар",
+    "chance": 0.1,
+    "tier": "Ценный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
    }
   ],
   "931": [
@@ -819,6 +859,46 @@
     "chance": 0.1,
     "_source": "RECOVERED holder: the wiki's loot of the Dark Mine's miners, «[18] Шахтер<Br>Пираты Сомали» (930, 8978) and «[19] ...» (931, 8979), lists «Алмаз» (data/loot_wiki.json 930/931, tier unknown, which server/mobs.loot_table drops), and the mine's own label says «Темная шахта Абу-Хамеда: Добыча алмазов» (L162); the owner's «сделай потом абу хамед в таком же формате», 2026-10-14",
     "_designed": "the tier «Квестовый» and the chance: the diamond falls only while somebody who brought the miner down has a quest open that asks for it and has fewer than it asks (server/mobs.py QUEST_TIER, quest_roll) -- Гатера's «Отправиться к X», whose fare is a diamond (60574: «Задача: принести бриллиант»; the diamond's own description is «Красивый брильянт, неожиданно правильной огранки», 7655) -- one in ten such kills (decision 27 of the plan). Nobody else drops it: the wiki's other rows of «Алмаз» stay dropped, and Абри's diamond line stays cut (README «Абри»). No stall buys it (server/items.py QUEST_FARES_UNSOLD, 2026-10-14): at the article's 100 000 a stall paid 70 000 (inventory.SMOD), some 7 000 afro a miner's kill with no ceiling, since the row asks while the bag is short and «Отправиться к X» repeats"
+   },
+   {
+    "type": 2258,
+    "_name": "Золотой песок",
+    "chance": 1,
+    "tier": "Обычный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
+   },
+   {
+    "type": 3159,
+    "_name": "Небольшие изумруды",
+    "chance": 0.25,
+    "tier": "Ценный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
+   },
+   {
+    "type": 6959,
+    "_name": "Золотой Алмаз",
+    "chance": 0.03,
+    "tier": "Ценный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
+   },
+   {
+    "type": 6953,
+    "_name": "Золотой портсигар",
+    "chance": 0.1,
+    "tier": "Ценный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
+   },
+   {
+    "type": 6946,
+    "_name": "Серебряный портсигар",
+    "chance": 0.1,
+    "tier": "Ценный",
+    "independent": true,
+    "_source": "Owner 2026-10-25: Abu-Hamed Somali miners; independent of quests and the ordinary two-drop cap."
    }
   ]
  },

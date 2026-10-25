@@ -811,6 +811,22 @@ def table_problems(out):
 
 QUESTS = load()
 
+# Static table: build the NPC/dependency index once at server startup, rather
+# than scanning every quest for every NPC during a character's location load.
+_STATUS_TYPES_BY_NPC = {}
+for _q in QUESTS.values():
+    _related = {_q.type, *_q.need_all, *_q.need_any, *_q.branch, *_q.excludes}
+    for _npc in set(_q.give + _q.take):
+        _STATUS_TYPES_BY_NPC.setdefault(_npc, set()).update(_related)
+
+
+def status_types_for(npc_types):
+    """Quest types and direct availability dependencies of these NPCs."""
+    out = set()
+    for npc in npc_types:
+        out.update(_STATUS_TYPES_BY_NPC.get(npc, ()))
+    return out
+
 
 def check_items(table=None):
     """Every thing a quest row names is one the game has (items.params_of)

@@ -629,9 +629,8 @@ try:
     _, pos_b = enter(b)
 
     # --- nor is a heal of his own cut short ---------------------------------------
-    # Walking does not cancel a heal (Fighter.moved drops the aim alone), and
-    # an lcall would (Fighter.left): the way handed in and the walk-in alike
-    # wait for it to land, and say nothing, there being nothing to tell.
+    # A quest transition waits for the pending heal. An accepted walk now
+    # cancels it, so walking under the sign transitions without a late heal.
     def bandage_on(c):
         c.send("userMsg;entry=@/give %d@;group=0;" % BANDAGE)
         got = c.until(lambda f: f[0] == "userMsg")
@@ -656,9 +655,9 @@ try:
     path, got = run_for_exit(b, pos_b)
     if not calls(got):
         got += b.until(lambda f: f[0] == "lcall", BANDAGE_S + RETRY + 2)
-    check("under the sign with the bandage still on: it lands, then he goes up",
+    check("walking under the sign cancels the bandage and goes up without a late heal",
           ([n for n, _ in got if n in ("heal", "lcall")], calls(got), lines(got)),
-          (["heal", "lcall"], [MOUTH], []))
+          (["lcall"], [MOUTH], []))
 
     a.send("logout;")
     b.send("logout;")

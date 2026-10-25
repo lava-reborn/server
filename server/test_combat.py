@@ -615,10 +615,8 @@ FIRST_Q = _scratch_q + 1 if storage.using_postgres() else 1
 check("a fourth is not counted", quests.kill_progress(_scratch, _cid, 82), [])
 
 
-# --- medicines that are for peace only, and a refusal for want of AP ------------
-# The Med_Pacific_ series says "Нельзя использовать в бою" and costs 0 AP, so
-# only the server can keep it out of a fight; a refusal for AP brings the
-# client's bar down to the pool, so it does not let the next one through too.
+# --- ordinary medicine: room war/personal timer; battle medicine: AP -----------
+# Room war blocks ordinary medicine even before a hit. Battle medicine stays usable.
 class _Medic(combat.Fighter):
     rc = None           # the room's combat, set by hand: only its ws is read
 
@@ -638,6 +636,9 @@ class _MedicSession(object):
 
     def send_player_info(self):
         self.send("userInfo_Player", afro=self.char.afro)
+
+    def answer(self, text):
+        self.send("userMsg", entry=text)
 
 
 def _at_war(ws):
@@ -659,17 +660,32 @@ async def _heals():
     for_war = inventory.oid_of(_scratch.create_item(
         _cid, 7100, items.HEAL, slot=inventory.BAG, use_count=1))
     medic.rc, medic.ap = _at_war(True), 100
+    medic.last_hit = combat.now()
     medic.use_heal({"obj": peace_only}, inventory.USE_IDLE)
-    check("a peace-only medicine in a fight: one refusal, nothing started",
-          (ms.sent, medic.healing, medic.ap), ([("cmdAck", {"res": inventory.RES_REFUSED})], None, 100))
+    check("personal hit cooldown refuses healing without spending",
+          ([p["res"] for n,p in ms.sent if n == "cmdAck"], medic.healing, medic.ap),
+          ([inventory.RES_NOT_READY], None, 100))
+    medic.last_hit, ms.sent = -1e9, []
+    medic.use_heal({"obj": peace_only}, inventory.USE_IDLE)
+    check("a room at war without the personal timer refuses ordinary medicine",
+          ([p["res"] for n,p in ms.sent if n == "cmdAck"],
+           [str(p["heal_obj"]) for n,p in ms.sent if n == "actionStart"],
+           medic.healing is not None), ([inventory.RES_NOT_READY], [], False))
+    medic.cancel_timers()
+    ms.sent, medic.ap, medic.last_hit = [], 100, combat.now()
+    medic.use_heal({"obj": for_war}, inventory.USE_IDLE)
+    check("battle medicine starts during the personal hit timer",
+          ([p["res"] for n,p in ms.sent if n == "cmdAck"], medic.healing is not None),
+          ([inventory.RES_OK], True))
+    medic.cancel_timers()
     ms.sent, medic.ap = [], 2
     medic.use_heal({"obj": for_war}, inventory.USE_IDLE)
     check("a battle medicine without the AP: res=11, then the pool as it stands",
           ms.sent, [("cmdAck", {"res": inventory.RES_NO_AP}), ("c_ap", {"ap": 2})])
-    ms.sent, medic.rc = [], _at_war(False)
+    ms.sent, medic.rc, medic.last_hit = [], _at_war(False), -1e9
     medic.use_heal({"obj": peace_only}, inventory.USE_IDLE)
     check("the peace-only one out of a fight: accepted",
-          (ms.sent, medic.healing is not None), ([("cmdAck", {"res": 0})], True))
+          ([p["res"] for n,p in ms.sent if n == "cmdAck"], medic.healing is not None), ([0], True))
     medic.cancel_timers()
     # A medicine made when its type held more uses than it does now sells
     # for one of itself, not twenty: 6071 was twenty uses, is one today.
@@ -1208,6 +1224,21 @@ try:
     check("the dog is out of its aggro radius but in pistol range",
           dog_stats.aggro < mobs.hex_distance(pos, DOG_HOME, loc.width) <= PISTOL_SI["max_range"][0],
           True)
+    # A real socket: switching away and back cannot revive the old aim.
+    c.send("ss_use;type=16;obj=x%s;target=%s;" % (pistol, entity(dog)))
+    aiming = c.until(lambda f: f[0] == "faAim" and f[1].get("id") == 0)
+    check("weapon-switch scenario accepted the initial aim", bool(named(aiming, "faAim")), True)
+    c.send("ss_move;obj=x%s;from=512;to=513;" % pistol)
+    switched = c.until(lambda f: f[0] == "actionCancel")
+    check("accepted weapon switch cancels own aim immediately",
+          named(switched, "actionCancel"), [dict(release=1, stop_aim=1)])
+    c.send("ss_move;obj=x%s;from=513;to=512;" % pistol)
+    switched += c.frames(2.0)
+    check("no old shot after switching back", named(switched, "faShot"), [])
+    c.send("ss_get_di;obj=x%s;" % pistol)
+    unchanged = named(c.frames(), "ss_di_firearm")[0]
+    check("cancelled aim keeps rounds and durability",
+          (unchanged["ammo_count"], unchanged["break"]), (ammo, brk))
     tracker = FireTracker()
     c.send("ss_use;type=16;obj=x%s;target=%s;" % (pistol, entity(dog)))
     got = c.frames(0.3)
@@ -1555,7 +1586,9 @@ try:
     check("wounded as written", (named(got, "usrUp")[0]["hcur"], named(got, "usrUp")[0]["scur"]), (60, 0))
     c.send("ss_use;type=2;obj=x%s;" % heal_oid)
     got = c.frames(0.3)
-    check("a bandage: one ack at once", got, [("cmdAck", {"res": 0})])
+    check("a bandage: one ack and confirmed bar at once",
+          (named(got, "cmdAck"), [str(p["heal_obj"]) for p in named(got, "actionStart")]),
+          ([{"res": 0}], [heal_oid]))
     got = c.until(lambda f: f[0] == "ss_obj_status", HEAL_SI["heal_time"] / 1000.0 + 1.5)
     got += c.frames(0.3)         # the experience follows the item's removal
     heal = named(got, "heal")

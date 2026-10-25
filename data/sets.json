@@ -443,13 +443,13 @@
    }
   },
   "11002": {
-   "name": "Штурм-М[15][A]",
+   "name": "Штурм-М[17][A]",
    "desc": "Современные наработки в области Экзоскелета, только успевшие поступить в гвардейские части для тестирования.",
    "_layout": "ssxdot7n",
    "_source": "key texts.xml 11002, the row of the set these types formed in the original; desc texts.xml 10988; numbers wiki, each piece's own page (its _wiki); bonus wiki Штурм-М",
-   "_designed": ["Стрельба 15 on every piece, the set's level (the wiki's pieces ask 17)", "Броня Штурм-М A: price 210000 -- the page's 2 100 000 afro, a zero too many; its 52.5 G x 4000 and the set page's 700 000 afro say 210 000", "Моторика Штурм-М A: price 140000 -- the page's 120 000 afro; its 35 G x 4000 and the set page's 700 000 afro say 140 000"],
+   "_designed": ["Броня Штурм-М A: price 210000 -- the page's 2 100 000 afro, a zero too many; its 52.5 G x 4000 and the set page's 700 000 afro say 210 000", "Моторика Штурм-М A: price 140000 -- the page's 120 000 afro; its 35 G x 4000 and the set page's 700 000 afro say 140 000", "Release 2026-10-25: equip level 17, checked against the highest base skill; armour numbers and prices retained"],
    "family": "Exzo_M",
-   "level": 15,
+   "level": 17,
    "variant": "A",
    "res": 80,
    "bonus": {
@@ -459,21 +459,21 @@
     "5": {"st": 200, "cp": 17, "Сила": 2, "Телосложение": 3, "Восприятие": 2}
    },
    "members": {
-    "helm": {"type": 11289, "name": "Шлем Штурм-М[15][A]", "desc": "Иногда кажется, что этот шлем самостоятельнее его обладателя.", "_wiki": "Шлем Штурм-М (A column)", "_desc": "wiki Шлем Штурм-М, its doubled first letter ('ИИногда') dropped", "armor_class": 43, "max_break_abs": 3125, "weight": 6250, "cost": 175000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 80, "bonus_od": 9, "bonus_cp": 4, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Восприятие": 1, "Интеллект": 1}},
-    "shirt": {"type": 11290, "name": "Жилет Штурм-М[15][A]", "desc": "Датчики системы жизнеобеспечения и контроля состояния, очень комфортно.", "_wiki": "Жилет Штурм-М (A column)", "armor_class": 45, "max_break_abs": 1875, "weight": 3750, "cost": 105000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 135, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Ловкость": 1}},
-    "armor": {"type": 11291, "name": "Броня Штурм-М[15][A]", "desc": "Армированный корпус модульного типа, защита всех жизненно важных органов от внешних воздействий.", "_wiki": "Броня Штурм-М (A column)", "armor_class": 469, "max_break_abs": 3750, "weight": 7500, "cost": 210000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 85, "bonus_od": 9, "bonus_cp": 4, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Сила": 1}},
-    "pants": {"type": 11292, "name": "Моторика Штурм-М[15][A]", "desc": "Перераспределение нагрузки и возможность жесткой фиксации, это только пара особенностей из большого списка.", "_wiki": "Моторика Штурм-М (A column)", "armor_class": 45, "max_break_abs": 2500, "weight": 5000, "cost": 140000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 130, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Ловкость": 1}},
-    "boots": {"type": 11293, "name": "Боты Штурм-М[15][A]", "desc": "Штурмовые бутсы протестированы в боевых операциях, в том числе и в горах, пересечённой местности и джунглях. Для подошвы используется кожа и углеродный материал обеспечивающий защиту от огня и жары и стальной нержавеющий шнур.", "_wiki": "Боты Штурм-М (A column)", "armor_class": 22, "max_break_abs": 1250, "weight": 2500, "cost": 70000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 45, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}}
+    "helm": {"type": 11289, "name": "Шлем Штурм-М[17][A]", "desc": "Иногда кажется, что этот шлем самостоятельнее его обладателя.", "_wiki": "Шлем Штурм-М (A column)", "_desc": "wiki Шлем Штурм-М, its doubled first letter ('ИИногда') dropped", "armor_class": 43, "max_break_abs": 3125, "weight": 6250, "cost": 175000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 80, "bonus_od": 9, "bonus_cp": 4, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 17}, "_bonus_attribs": {"Восприятие": 1, "Интеллект": 1}},
+    "shirt": {"type": 11290, "name": "Жилет Штурм-М[17][A]", "desc": "Датчики системы жизнеобеспечения и контроля состояния, очень комфортно.", "_wiki": "Жилет Штурм-М (A column)", "armor_class": 45, "max_break_abs": 1875, "weight": 3750, "cost": 105000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 135, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 1}},
+    "armor": {"type": 11291, "name": "Броня Штурм-М[17][A]", "desc": "Армированный корпус модульного типа, защита всех жизненно важных органов от внешних воздействий.", "_wiki": "Броня Штурм-М (A column)", "armor_class": 469, "max_break_abs": 3750, "weight": 7500, "cost": 210000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 85, "bonus_od": 9, "bonus_cp": 4, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1}},
+    "pants": {"type": 11292, "name": "Моторика Штурм-М[17][A]", "desc": "Перераспределение нагрузки и возможность жесткой фиксации, это только пара особенностей из большого списка.", "_wiki": "Моторика Штурм-М (A column)", "armor_class": 45, "max_break_abs": 2500, "weight": 5000, "cost": 140000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 130, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 1}},
+    "boots": {"type": 11293, "name": "Боты Штурм-М[17][A]", "desc": "Штурмовые бутсы протестированы в боевых операциях, в том числе и в горах, пересечённой местности и джунглях. Для подошвы используется кожа и углеродный материал обеспечивающий защиту от огня и жары и стальной нержавеющий шнур.", "_wiki": "Боты Штурм-М (A column)", "armor_class": 22, "max_break_abs": 1250, "weight": 2500, "cost": 70000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 28, "bonus_st": 45, "bonus_od": 9, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 17}}
    }
   },
   "11004": {
-   "name": "Штурм-М[15][G]",
+   "name": "Штурм-М[17][G]",
    "desc": "Современные наработки в области Экзоскелета, только успевшие поступить в гвардейские части для тестирования.",
    "_layout": "ssxdot7n",
    "_source": "key texts.xml 11004, the row of the set these types formed in the original; desc texts.xml 10988; numbers wiki, each piece's own page (its _wiki); bonus wiki Штурм-М",
-   "_designed": ["Стрельба 15 on every piece, the set's level (the wiki's pieces ask 17)"],
+   "_designed": ["Release 2026-10-25: equip level 17, checked against the highest base skill; armour numbers and prices retained"],
    "family": "Exzo_M",
-   "level": 15,
+   "level": 17,
    "variant": "G",
    "res": 80,
    "bonus": {
@@ -483,11 +483,11 @@
     "5": {"st": 200, "cp": 19, "Сила": 3, "Телосложение": 4, "Восприятие": 3}
    },
    "members": {
-    "helm": {"type": 11309, "name": "Шлем Штурм-М[15][G]", "desc": "Иногда кажется, что этот шлем самостоятельнее его обладателя.", "_wiki": "Шлем Штурм-М (G column)", "_desc": "wiki Шлем Штурм-М, its doubled first letter ('ИИногда') dropped", "armor_class": 48, "max_break_abs": 3125, "weight": 6250, "cost": 0, "g_cost": 4375, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 84, "bonus_od": 10, "bonus_cp": 4, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Восприятие": 2, "Интеллект": 1}},
-    "shirt": {"type": 11310, "name": "Жилет Штурм-М[15][G]", "desc": "Датчики системы жизнеобеспечения и контроля состояния, очень комфортно.", "_wiki": "Жилет Штурм-М (G column)", "armor_class": 55, "max_break_abs": 1875, "weight": 3750, "cost": 0, "g_cost": 2625, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 144, "bonus_od": 10, "bonus_cp": 4, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Ловкость": 2}},
-    "armor": {"type": 11311, "name": "Броня Штурм-М[15][G]", "desc": "Армированный корпус модульного типа, защита всех жизненно важных органов от внешних воздействий.", "_wiki": "Броня Штурм-М (G column)", "armor_class": 547, "max_break_abs": 3750, "weight": 7500, "cost": 0, "g_cost": 5250, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 89, "bonus_od": 10, "bonus_cp": 5, "bonus_ce": 5, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Сила": 1}},
-    "pants": {"type": 11312, "name": "Моторика Штурм-М[15][G]", "desc": "Перераспределение нагрузки и возможность жесткой фиксации, это только пара особенностей из большого списка.", "_wiki": "Моторика Штурм-М (G column)", "armor_class": 55, "max_break_abs": 2500, "weight": 5000, "cost": 0, "g_cost": 3500, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 136, "bonus_od": 10, "bonus_cp": 3, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 15}, "_bonus_attribs": {"Ловкость": 2}},
-    "boots": {"type": 11313, "name": "Боты Штурм-М[15][G]", "desc": "Штурмовые бутсы протестированы в боевых операциях, в том числе и в горах, пересечённой местности и джунглях. Для подошвы используется кожа и углеродный материал обеспечивающий защиту от огня и жары и стальной нержавеющий шнур.", "_wiki": "Боты Штурм-М (G column)", "armor_class": 25, "max_break_abs": 1250, "weight": 2500, "cost": 0, "g_cost": 1750, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 47, "bonus_od": 10, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 15}}
+    "helm": {"type": 11309, "name": "Шлем Штурм-М[17][G]", "desc": "Иногда кажется, что этот шлем самостоятельнее его обладателя.", "_wiki": "Шлем Штурм-М (G column)", "_desc": "wiki Шлем Штурм-М, its doubled first letter ('ИИногда') dropped", "armor_class": 48, "max_break_abs": 3125, "weight": 6250, "cost": 0, "g_cost": 4375, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 84, "bonus_od": 10, "bonus_cp": 4, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 17}, "_bonus_attribs": {"Восприятие": 2, "Интеллект": 1}},
+    "shirt": {"type": 11310, "name": "Жилет Штурм-М[17][G]", "desc": "Датчики системы жизнеобеспечения и контроля состояния, очень комфортно.", "_wiki": "Жилет Штурм-М (G column)", "armor_class": 55, "max_break_abs": 1875, "weight": 3750, "cost": 0, "g_cost": 2625, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 144, "bonus_od": 10, "bonus_cp": 4, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 2}},
+    "armor": {"type": 11311, "name": "Броня Штурм-М[17][G]", "desc": "Армированный корпус модульного типа, защита всех жизненно важных органов от внешних воздействий.", "_wiki": "Броня Штурм-М (G column)", "armor_class": 547, "max_break_abs": 3750, "weight": 7500, "cost": 0, "g_cost": 5250, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 89, "bonus_od": 10, "bonus_cp": 5, "bonus_ce": 5, "need": {"Телосложение": 17, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1}},
+    "pants": {"type": 11312, "name": "Моторика Штурм-М[17][G]", "desc": "Перераспределение нагрузки и возможность жесткой фиксации, это только пара особенностей из большого списка.", "_wiki": "Моторика Штурм-М (G column)", "armor_class": 55, "max_break_abs": 2500, "weight": 5000, "cost": 0, "g_cost": 3500, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 136, "bonus_od": 10, "bonus_cp": 3, "bonus_ce": 4, "need": {"Телосложение": 17, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 2}},
+    "boots": {"type": 11313, "name": "Боты Штурм-М[17][G]", "desc": "Штурмовые бутсы протестированы в боевых операциях, в том числе и в горах, пересечённой местности и джунглях. Для подошвы используется кожа и углеродный материал обеспечивающий защиту от огня и жары и стальной нержавеющий шнур.", "_wiki": "Боты Штурм-М (G column)", "armor_class": 25, "max_break_abs": 1250, "weight": 2500, "cost": 0, "g_cost": 1750, "premium": 0, "exchang": 0, "bonus_hp": 30, "bonus_st": 47, "bonus_od": 10, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 17, "Стрельба": 17}}
    }
   },
   "10961": {
@@ -495,7 +495,7 @@
    "desc": "Экзоскелет — устройство, предназначенное для увеличения силы человека за счёт внешнего каркаса. Он повторяет биомеханику человека и пропорционально увеличивает усилия при движениях. Первые образцы были разработаны в 60-х годах.",
    "_layout": "s6ry01n2",
    "_source": "key texts.xml 10961, the row of the set these types formed in the original; desc texts.xml 10958; numbers wiki, each piece's own page (its _wiki); bonus wiki Красное Эхо",
-   "_designed": ["Стрельба 16 on every piece, the set's level (the wiki's pieces ask 14 / 15)"],
+   "_designed": ["Стрельба 16 on every piece, the set's level (the wiki's pieces ask 14 / 15)", "Release 2026-10-25: shooting skill bonus removed, A and G"],
    "family": "Exzo_M",
    "level": 16,
    "variant": "A",
@@ -504,7 +504,7 @@
     "2": {"hp": 30, "st": 53},
     "3": {"st": 75, "Сила": 1, "Ближний бой": 1},
     "4": {"hp": 50, "od": 10, "ce": 14, "Восприятие": 1},
-    "5": {"st": 124, "cp": 14, "Телосложение": 2, "Интеллект": 2, "Стрельба": 1}
+    "5": {"st": 124, "cp": 14, "Телосложение": 2, "Интеллект": 2}
    },
    "members": {
     "helm": {"type": 10749, "name": "Шлем Красного Эхо[16][A]", "desc": "Вес шлема должен лежать на экзоскелете так что владельцу не о чем беспокоится, если конечно у него он есть. Встроен кондиционер, тактический анализатор, детектор движения и ПНВ.", "_wiki": "Шлем Красного Эхо (A column)", "_desc": "texts.xml 12336 (the wiki's line is about the dead man who wore it)", "armor_class": 31, "max_break_abs": 2625, "weight": 5250, "cost": 125000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 24, "bonus_st": 66, "bonus_od": 7, "bonus_cp": 3, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 16}, "_bonus_attribs": {"Восприятие": 1}},
@@ -519,7 +519,7 @@
    "desc": "Экзоскелет — устройство, предназначенное для увеличения силы человека за счёт внешнего каркаса. Он повторяет биомеханику человека и пропорционально увеличивает усилия при движениях. Первые образцы были разработаны в 60-х годах.",
    "_layout": "s6ry01n2",
    "_source": "key texts.xml 10965, the row of the set these types formed in the original; desc texts.xml 10958; numbers wiki, each piece's own page (its _wiki); bonus wiki Красное Эхо",
-   "_designed": ["Стрельба 16 on every piece, the set's level (the wiki's pieces ask 14 / 15)"],
+   "_designed": ["Стрельба 16 on every piece, the set's level (the wiki's pieces ask 14 / 15)", "Release 2026-10-25: shooting skill bonus removed, A and G"],
    "family": "Exzo_M",
    "level": 16,
    "variant": "G",
@@ -528,7 +528,7 @@
     "2": {"hp": 40, "st": 54},
     "3": {"st": 95, "Сила": 1, "Ближний бой": 2},
     "4": {"hp": 50, "od": 15, "ce": 16, "Восприятие": 1},
-    "5": {"st": 160, "cp": 16, "Телосложение": 2, "Интеллект": 2, "Стрельба": 2}
+    "5": {"st": 160, "cp": 16, "Телосложение": 2, "Интеллект": 2}
    },
    "members": {
     "helm": {"type": 10769, "name": "Шлем Красного Эхо[16][G]", "desc": "Вес шлема должен лежать на экзоскелете так что владельцу не о чем беспокоится, если конечно у него он есть. Встроен кондиционер, тактический анализатор, детектор движения и ПНВ.", "_wiki": "Шлем Красного Эхо (G column)", "_desc": "texts.xml 12336 (the wiki's line is about the dead man who wore it)", "armor_class": 36, "max_break_abs": 2625, "weight": 5250, "cost": 0, "g_cost": 3125, "premium": 0, "exchang": 0, "bonus_hp": 26, "bonus_st": 72, "bonus_od": 8, "bonus_cp": 4, "bonus_ce": 3, "need": {"Телосложение": 15, "Стрельба": 16}, "_bonus_attribs": {"Восприятие": 1}},
@@ -539,13 +539,13 @@
    }
   },
   "11125": {
-   "name": "Тёмное Эхо[17][A]",
+   "name": "Тёмное Эхо[18][A]",
    "desc": "Модификация известного сета, переработанного учеными МКС с использованием редкоземельных элементов.",
    "_layout": "sekjzpi9",
    "_source": "key texts.xml 11125, the row of the set these types formed in the original; desc texts.xml 10972; numbers wiki, each piece's own page (its _wiki); bonus wiki Темное Эхо, transcribed from its wikitext (one column)",
-   "_designed": ["A: the quest series' own pieces (_Q_), sold for afro since Абу-Хамед, the owner's 'сделай потом абу хамед в таком же формате' (2026-10-14): the 17th rung had no set on sale; G: types of our own, 60005, 60006, 60007, 60008, 60009 (data/own_items.json), each its A piece's picture: the original has no G of this series", "Стрельба 17 on every piece, the set's level (the wiki's pieces ask 18)", "the wiki's pieces have one column per favoured attribute; the first is taken, as the rule says"],
+   "_designed": ["A: the quest series' own pieces (_Q_), sold for afro since Абу-Хамед, the owner's 'сделай потом абу хамед в таком же формате' (2026-10-14): the 17th rung had no set on sale; G: types of our own, 60005, 60006, 60007, 60008, 60009 (data/own_items.json), each its A piece's picture: the original has no G of this series", "the wiki's pieces have one column per favoured attribute; the first is taken, as the rule says", "Release 2026-10-25: equip level 18, checked against the highest base skill; armour numbers and prices retained"],
    "family": "Bs_U",
-   "level": 17,
+   "level": 18,
    "variant": "A",
    "res": 119,
    "bonus": {
@@ -555,21 +555,21 @@
     "5": {"st": 250, "cp": 16, "Ловкость": 3, "Телосложение": 4, "Восприятие": 4}
    },
    "members": {
-    "helm": {"type": 36056, "name": "Шлем Тёмного Эха[17][A]", "desc": "Шлем укреплен дополнительными силовыми пластинами и пуленепробиваемым стеклом.", "_wiki": "Шлем Темного Эха (the first of its 3 columns, Сила)", "armor_class": 53, "max_break_abs": 3375, "weight": 6750, "cost": 200000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 93, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}},
-    "shirt": {"type": 36057, "name": "Жилет Тёмного Эха[17][A]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": "Жилет Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2025, "weight": 4050, "cost": 120000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 171, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1, "Восприятие": 1}},
-    "armor": {"type": 36058, "name": "Броня Тёмного Эха[17][A]", "desc": "Встроенная система гашения отдачи и электронная система прицеливания.", "_wiki": "Броня Темного Эха (the first of its 3 columns, Сила)", "armor_class": 638, "max_break_abs": 4050, "weight": 8100, "cost": 240000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 104, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 2, "Восприятие": 1}},
-    "pants": {"type": 36059, "name": "Моторика Тёмного Эха[17][A]", "desc": "Уровень брони облегчен. Моторика позволяет передвигаться бегом.", "_wiki": "Моторика Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2700, "weight": 5400, "cost": 160000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 165, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 1, "Сила": 1}},
-    "boots": {"type": 36060, "name": "Ступни Тёмного Эха[17][A]", "desc": "Тюнингованные сервоприводы обеспечивают обратную связь за 0.01 мс.", "_wiki": "Ступни Темного Эха (the first of its 3 columns, Сила)", "armor_class": 29, "max_break_abs": 1350, "weight": 2700, "cost": 80000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 55, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1}}
+    "helm": {"type": 36056, "name": "Шлем Тёмного Эха[18][A]", "desc": "Шлем укреплен дополнительными силовыми пластинами и пуленепробиваемым стеклом.", "_wiki": "Шлем Темного Эха (the first of its 3 columns, Сила)", "armor_class": 53, "max_break_abs": 3375, "weight": 6750, "cost": 200000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 93, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 18}},
+    "shirt": {"type": 36057, "name": "Жилет Тёмного Эха[18][A]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": "Жилет Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2025, "weight": 4050, "cost": 120000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 171, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 18}, "_bonus_attribs": {"Сила": 1, "Восприятие": 1}},
+    "armor": {"type": 36058, "name": "Броня Тёмного Эха[18][A]", "desc": "Встроенная система гашения отдачи и электронная система прицеливания.", "_wiki": "Броня Темного Эха (the first of its 3 columns, Сила)", "armor_class": 638, "max_break_abs": 4050, "weight": 8100, "cost": 240000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 104, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 18}, "_bonus_attribs": {"Сила": 2, "Восприятие": 1}},
+    "pants": {"type": 36059, "name": "Моторика Тёмного Эха[18][A]", "desc": "Уровень брони облегчен. Моторика позволяет передвигаться бегом.", "_wiki": "Моторика Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2700, "weight": 5400, "cost": 160000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 165, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 18}, "_bonus_attribs": {"Ловкость": 1, "Сила": 1}},
+    "boots": {"type": 36060, "name": "Ступни Тёмного Эха[18][A]", "desc": "Тюнингованные сервоприводы обеспечивают обратную связь за 0.01 мс.", "_wiki": "Ступни Темного Эха (the first of its 3 columns, Сила)", "armor_class": 29, "max_break_abs": 1350, "weight": 2700, "cost": 80000, "g_cost": 0, "premium": 0, "exchang": 1, "bonus_hp": 60, "bonus_st": 55, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 18}, "_bonus_attribs": {"Сила": 1}}
    }
   },
   "60005": {
-   "name": "Тёмное Эхо[17][G]",
+   "name": "Тёмное Эхо[18][G]",
    "desc": "Модификация известного сета, переработанного учеными МКС с использованием редкоземельных элементов.",
    "_layout": "sekjzpi9",
    "_source": "key 60005, its first piece, a type of our own: no row of the original names it; desc texts.xml 10972; numbers wiki, each piece's own page (its _wiki); bonus wiki Темное Эхо, transcribed from its wikitext (one column)",
-   "_designed": ["A: the quest series' own pieces (_Q_), sold for afro since Абу-Хамед, the owner's 'сделай потом абу хамед в таком же формате' (2026-10-14): the 17th rung had no set on sale; G: types of our own, 60005, 60006, 60007, 60008, 60009 (data/own_items.json), each its A piece's picture: the original has no G of this series", "Стрельба 17 on every piece, the set's level (the wiki's pieces ask 18)", "the wiki's pieces have no G column: the afro column's numbers, priced in gold at 4000 afro = 1 G", "the wiki's pieces have one column per favoured attribute; the first is taken, as the rule says"],
+   "_designed": ["A: the quest series' own pieces (_Q_), sold for afro since Абу-Хамед, the owner's 'сделай потом абу хамед в таком же формате' (2026-10-14): the 17th rung had no set on sale; G: types of our own, 60005, 60006, 60007, 60008, 60009 (data/own_items.json), each its A piece's picture: the original has no G of this series", "the wiki's pieces have no G column: the afro column's numbers, priced in gold at 4000 afro = 1 G", "the wiki's pieces have one column per favoured attribute; the first is taken, as the rule says", "Release 2026-10-25: equip level 18, checked against the highest base skill; armour numbers and prices retained"],
    "family": "Bs_U",
-   "level": 17,
+   "level": 18,
    "variant": "G",
    "res": 119,
    "bonus": {
@@ -579,11 +579,11 @@
     "5": {"st": 250, "cp": 16, "Ловкость": 3, "Телосложение": 4, "Восприятие": 4}
    },
    "members": {
-    "helm": {"type": 60005, "name": "Шлем Тёмного Эха[17][G]", "desc": "Шлем укреплен дополнительными силовыми пластинами и пуленепробиваемым стеклом.", "_wiki": "Шлем Темного Эха (the first of its 3 columns, Сила)", "armor_class": 53, "max_break_abs": 3375, "weight": 6750, "cost": 0, "g_cost": 5000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 93, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}},
-    "shirt": {"type": 60006, "name": "Жилет Тёмного Эха[17][G]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": "Жилет Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2025, "weight": 4050, "cost": 0, "g_cost": 3000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 171, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1, "Восприятие": 1}},
-    "armor": {"type": 60007, "name": "Броня Тёмного Эха[17][G]", "desc": "Встроенная система гашения отдачи и электронная система прицеливания.", "_wiki": "Броня Темного Эха (the first of its 3 columns, Сила)", "armor_class": 638, "max_break_abs": 4050, "weight": 8100, "cost": 0, "g_cost": 6000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 104, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 2, "Восприятие": 1}},
-    "pants": {"type": 60008, "name": "Моторика Тёмного Эха[17][G]", "desc": "Уровень брони облегчен. Моторика позволяет передвигаться бегом.", "_wiki": "Моторика Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2700, "weight": 5400, "cost": 0, "g_cost": 4000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 165, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Ловкость": 1, "Сила": 1}},
-    "boots": {"type": 60009, "name": "Ступни Тёмного Эха[17][G]", "desc": "Тюнингованные сервоприводы обеспечивают обратную связь за 0.01 мс.", "_wiki": "Ступни Темного Эха (the first of its 3 columns, Сила)", "armor_class": 29, "max_break_abs": 1350, "weight": 2700, "cost": 0, "g_cost": 2000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 55, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 17}, "_bonus_attribs": {"Сила": 1}}
+    "helm": {"type": 60005, "name": "Шлем Тёмного Эха[18][G]", "desc": "Шлем укреплен дополнительными силовыми пластинами и пуленепробиваемым стеклом.", "_wiki": "Шлем Темного Эха (the first of its 3 columns, Сила)", "armor_class": 53, "max_break_abs": 3375, "weight": 6750, "cost": 0, "g_cost": 5000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 93, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 18}},
+    "shirt": {"type": 60006, "name": "Жилет Тёмного Эха[18][G]", "desc": "Внутренний жилет армирован кевларом.", "_wiki": "Жилет Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2025, "weight": 4050, "cost": 0, "g_cost": 3000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 171, "bonus_od": 14, "bonus_cp": 4, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 18}, "_bonus_attribs": {"Сила": 1, "Восприятие": 1}},
+    "armor": {"type": 60007, "name": "Броня Тёмного Эха[18][G]", "desc": "Встроенная система гашения отдачи и электронная система прицеливания.", "_wiki": "Броня Темного Эха (the first of its 3 columns, Сила)", "armor_class": 638, "max_break_abs": 4050, "weight": 8100, "cost": 0, "g_cost": 6000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 104, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 18}, "_bonus_attribs": {"Сила": 2, "Восприятие": 1}},
+    "pants": {"type": 60008, "name": "Моторика Тёмного Эха[18][G]", "desc": "Уровень брони облегчен. Моторика позволяет передвигаться бегом.", "_wiki": "Моторика Темного Эха (the first of its 3 columns, Сила)", "armor_class": 66, "max_break_abs": 2700, "weight": 5400, "cost": 0, "g_cost": 4000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 165, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 7, "need": {"Телосложение": 18, "Стрельба": 18}, "_bonus_attribs": {"Ловкость": 1, "Сила": 1}},
+    "boots": {"type": 60009, "name": "Ступни Тёмного Эха[18][G]", "desc": "Тюнингованные сервоприводы обеспечивают обратную связь за 0.01 мс.", "_wiki": "Ступни Темного Эха (the first of its 3 columns, Сила)", "armor_class": 29, "max_break_abs": 1350, "weight": 2700, "cost": 0, "g_cost": 2000, "premium": 0, "exchang": 0, "bonus_hp": 60, "bonus_st": 55, "bonus_od": 14, "bonus_cp": 3, "bonus_ce": 6, "need": {"Телосложение": 18, "Стрельба": 18}, "_bonus_attribs": {"Сила": 1}}
    }
   },
   "11016": {

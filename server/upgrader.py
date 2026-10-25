@@ -141,9 +141,25 @@ class Window:
         if row is None:
             sess.inv.ack(inventory.RES_NOT_FOUND)
             return True
+        if service_of(row) is craft:
+            sess.quest_write(self.upgrade_weapon, p)
+            return True
         try:
             out = int(p.get("param", 0) or 0)
         except (TypeError, ValueError):
             out = 0
         service_of(row).upgrade(sess, self.master(), row, out)
         return True
+
+    def upgrade_weapon(self, p):
+        """Re-read the item under the character's transaction lock."""
+        sess = self.sess
+        row = sess.inv.find(p.get("obj"))
+        if row is None:
+            sess.inv.ack(inventory.RES_NOT_FOUND)
+            return
+        try:
+            out = int(p.get("param", 0) or 0)
+        except (TypeError, ValueError):
+            out = 0
+        craft.upgrade(sess, self.master(), row, out)

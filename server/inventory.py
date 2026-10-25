@@ -779,6 +779,8 @@ def repair_base_price(si):
     The client patch supplies this value from Item.getProp("cost") while
     the repair window is open. Trade prices and sale eligibility stay intact.
     """
+    if si.get("repair_cost") is not None:
+        return as_sent(si["repair_cost"])
     cost = as_sent(si.get("cost", 0) or 0)
     if not cost:
         cost = (as_sent(si.get("g_cost", 0) or 0)
@@ -1569,6 +1571,10 @@ class Inventory:
         if displaced:
             self.store.update_item(displaced["uniq"], slot=src)
         self.ack(RES_OK)
+        if PRIMARY in (src, dst):
+            # Only an accepted move changes the active weapon. An unrelated
+            # bag/secondary move or a refused switch must preserve the aim.
+            self.sess.combat.primary_changed()
         # Meant for everyone else in the location, so they redraw this
         # player's figure; PlayerRegister.ss_obj_move ignores it for
         # Gamer.ID, so the sender's own copy is harmless. There is no room

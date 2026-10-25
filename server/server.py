@@ -14,6 +14,7 @@ Two rules govern nearly every handler here (see PROTOCOL.md):
     reopens and it stalls with no error shown.
 """
 import asyncio
+import copy
 import json
 import logging
 import math
@@ -54,9 +55,11 @@ import rooms
 import progression
 import production
 import quests
+import quest_state
 import sets
 import setcraft
 import site_orders
+import storage
 import stopwarn
 import transport
 import travel
@@ -614,6 +617,8 @@ class Session:
         except Exception:
             # A bug in one handler must not drop the player's connection.
             log.exception("  !!    handler for %r failed", cmd)
+        if self.closed:
+            return
         if cmd in GEAR_COMMANDS:
             # After the handler, whatever it did: its cmdAck is already out,
             # and a handler that failed half-way may still have moved things.
@@ -913,6 +918,9 @@ class Session:
 
     @pos.setter
     def pos(self, cell):
+        fighter = getattr(self, "combat", None)
+        if fighter is not None:
+            combat.Fighter.settle_walk(fighter, stop=True)
         self._pos = cell
         self.walk = None
 
@@ -920,6 +928,9 @@ class Session:
         """The last hex the figure has finished stepping onto: the client's
         own walker.numPos, which it moves only at the end of each step
         (LocWalker.finishPathPart) and which the next moveTo starts from."""
+        fighter = getattr(self, "combat", None)
+        if fighter is not None:
+            combat.Fighter.settle_walk(fighter)
         walk = self.walk
         if walk is None:
             return self._pos
@@ -1253,6 +1264,7 @@ class Session:
         for one as soon as the lenter frame lands, so the acknowledgement is
         the failure path only.
         """
+        self._quest_status_snapshot = None
         if not self.char_id:
             # Not a player: nothing to put in a room. The refusal is the one
             # case where lenter is acknowledged (see above).
@@ -2652,6 +2664,7 @@ class Session:
         instance -- one request in flight at a time, so a missing answer
         anywhere wedges the whole quest pipeline.
         """
+        self._quest_status_snapshot = None
         rows = STORE.quests(self.char_id) if self.char_id else []
         self.send("q_list", q_id=[r["q_id"] for r in rows],
                   q_types=[r["type"] for r in rows])
@@ -2726,7 +2739,7 @@ class Session:
         """The player's best skill level, the number quest.level is held to."""
         return self.character().level
 
-    def quest_available(self, quest):
+    def quest_available(self, quest, state=None):
         """Whether this player may take or carry the quest right now.
 
         "Available" on the client gates both lists: a type with status=0
@@ -2763,7 +2776,8 @@ class Session:
         """
         if quest.over_cap(self.skill_level()):
             return False
-        carried = bool(self.char_id) and STORE.has_quest(self.char_id, quest.type)
+        carried = bool(self.char_id) and (quest.type in state.active if state is not None
+                                        else STORE.has_quest(self.char_id, quest.type))
         # A row a timed window keeps (events.py, data/schedule.json quests):
         # on offer -- and, carried, at its taker's -- only while it is open.
         if not events.quest_open(quest.type, carried):
@@ -2787,23 +2801,33 @@ class Session:
             return False
         if quest.fee_at_take and not self.fee_ready(quest):
             return False
-        if quests.lends_consumables(quest) \
-                and (STORE.lent_at(self.char_id, quest.type) or 0) >= self.day_start():
+        if quests.lends_consumables(quest):
+            lent_at = (state.loans.get(quest.type) if state is not None
+                       else STORE.lent_at(self.char_id, quest.type))
+            if lent_at is not None and lent_at >= self.day_start():
+                return False
+        done = state.done if state is not None else lambda t: STORE.quest_done(self.char_id, t)
+        if not quest.repeatable and done(quest.type):
             return False
-        if not quest.repeatable and STORE.quest_done(self.char_id, quest.type):
-            return False
-        if quest.per_day and quest.done_for_today(STORE.quests_done_since(
-                self.char_id, self.day_start(), [quest.type])):
+        if quest.per_day and quest.done_for_today(state.today(quest.type) if state is not None
+                else STORE.quests_done_since(self.char_id, self.day_start(), [quest.type])):
             return False
         # A plant's line resting after its cycle (quests: cooldown).
-        if quest.cooldown and STORE.quests_done_since(
-                self.char_id, int(time.time()) - quest.cooldown, [quest.type]):
+        if quest.cooldown:
+            since = int(time.time()) - quest.cooldown
+            if state is not None:
+                last = state.last(quest.type)
+                cooling = last is not None and last >= since
+            else:
+                cooling = STORE.quests_done_since(self.char_id, since, [quest.type])
+            if cooling:
+                return False
+        excluded = self.excluded(quest, state) if state is not None else self.excluded(quest)
+        if excluded:
             return False
-        if self.excluded(quest):
-            return False
-        return quest.prerequisites_met(lambda t: STORE.quest_done(self.char_id, t))
+        return quest.prerequisites_met(done)
 
-    def excluded(self, quest):
+    def excluded(self, quest, state=None):
         """Whether the other branch keeps this quest from this character
         (quests: excludes): one of the types it names is in his log or his
         history. Not when a quest of its own branch (Quest.branch) was the
@@ -2818,13 +2842,54 @@ class Session:
         never has a step of the other branch in his log or his history, so
         for him neither opens anything."""
         cid = self.char_id
-        if not quest.excluded_by(lambda t: STORE.has_quest(cid, t)
-                                 or STORE.quest_done(cid, t)):
+        touched = (lambda t: t in state.active or state.done(t)) if state is not None else \
+                  (lambda t: STORE.has_quest(cid, t) or STORE.quest_done(cid, t))
+        if not quest.excluded_by(touched):
             return False
-        if STORE.first_done(cid, quest.branch + quest.excludes) in quest.branch:
+        first = (state.first_done(quest.branch + quest.excludes) if state is not None
+                 else STORE.first_done(cid, quest.branch + quest.excludes))
+        if first in quest.branch:
             return False
-        carried = (quests.get(r["type"]) for r in STORE.quests(cid))
+        types = state.active if state is not None else (r["type"] for r in STORE.quests(cid))
+        carried = (quests.get(t) for t in types)
         return not any(q is not None and quest.feeds(q) for q in carried)
+
+    def quest_status_state(self, quest_type=None):
+        """Share history across status requests, never across an entry/write.
+
+        Two-second expiry also bounds stale display after an external DB edit.
+        Action handlers deliberately keep using uncached availability checks.
+        """
+        if not self.char_id:
+            return None
+        now = time.monotonic()
+        loc = getattr(self, "loc", None)
+        key = (self.char_id, STORE.quest_revisions.get(self.char_id, 0),
+               self.day_start(), getattr(loc, "id", None))
+        cached = getattr(self, "_quest_status_snapshot", None)
+        requested = set()
+        if quest_type is not None:
+            requested.add(quest_type)
+            q = quests.get(quest_type)
+            if q is not None:
+                requested.update(q.need_all + q.need_any + q.branch + q.excludes)
+        missing = (cached is not None and cached[2].types is not None
+                   and not requested <= cached[2].types)
+        if cached is None or cached[0] != key or cached[1] <= now or missing:
+            types = None
+            if loc is not None:
+                room = getattr(self, "room", None)
+                npcs_here = ({n.type_id for n in room.npcs.values()} if room is not None
+                             else {t for _cell, t in loc.spawns})
+                offered = quests.status_types_for(npcs_here)
+                offered.update(requested)
+                if missing and cached[0] == key:
+                    offered.update(cached[2].types)
+                types = set(offered)
+            state = quest_state.QuestState(STORE.db, self.char_id, key[2], types)
+            self._quest_status_snapshot = (key, now + quest_state.SNAPSHOT_TTL, state)
+            return state
+        return cached[2]
 
     def box_refusal(self, quest):
         """Why a warehouse box's row (quests: holders) is not this
@@ -2972,7 +3037,7 @@ class Session:
             self.send("q_status", type=quest_type, status=0, name=0, q_type=0)
             return
         self.send("q_status", type=quest_type,
-                  status=1 if self.quest_available(quest) else 0,
+                  status=1 if self.quest_available(quest, self.quest_status_state(quest_type)) else 0,
                   name=quest.string_id(quests.NAME), q_type=quest.q_type)
 
     def cmd_q_si(self, p):
@@ -3019,7 +3084,66 @@ class Session:
         # (a salvage's broken gun, fee_ready).
         self.fee_recount()
 
+    def quest_write(self, handler, p):
+        """Commit resources/history together, then publish the original frames."""
+        if not self.char_id:
+            return handler(p)
+        character = self.character()
+        before = copy.deepcopy(character.__dict__)
+        fee_shown, skill_shown = dict(self.fee_shown), dict(self.skill_shown)
+        original_send = self.send
+        had_send = "send" in self.__dict__
+        frames = []
+        self.send = lambda command, **params: frames.append((command, params))
+        failed = None
+        way = None
+        try:
+            with storage.atomic(STORE.db):
+                if not STORE.lock_quest_character(self.char_id):
+                    raise ValueError("quest character no longer exists")
+                way = handler(p)
+        except Exception as exc:
+            failed = exc
+            character.__dict__.clear()
+            character.__dict__.update(before)
+            self.fee_shown, self.skill_shown = fee_shown, skill_shown
+            self._quest_status_snapshot = None
+            log.exception("  !!    quest operation failed for character %s", self.char_id)
+        finally:
+            if had_send:
+                self.send = original_send
+            else:
+                del self.send
+        if isinstance(failed, storage.CommitError):
+            # A lost database reply can mean COMMIT already succeeded. Never
+            # save the old purse/stats over it or continue with stale items.
+            try:
+                self.char = progression.Character.load(STORE, self.char_id)
+                if way is not None and STORE.quest(way[0]) is None:
+                    # The paid trip committed but will not run on this socket.
+                    self.refund_way(way[1])
+            except Exception:
+                self.char = None
+                log.exception("  !!    recovering quest character %s failed", self.char_id)
+            self.close(force=True)
+            return
+        if failed is not None:
+            self.send("cmdAck", res=1)
+            self.answer("Операция не выполнена. Предметы и награда не изменены. Повторите попытку.")
+            return
+        try:
+            for command, params in frames:
+                original_send(command, **params)
+        finally:
+            # The hand-in is committed even if its reply cannot be delivered.
+            # A paid way must still move the player or arrange its refund.
+            if way is not None:
+                self.hand_in_way(*way)
+
     def cmd_q_st(self, p):
+        self.quest_write(self.take_quest, p)
+
+    def take_quest(self, p):
         """Take a quest: q_idx is a position in the NPC's give_quests, not a type.
 
         On success the ack is followed at once by the instance's q_di_*,
@@ -3121,6 +3245,9 @@ class Session:
             + sum(weigh(t, n) for t, n in pieces) > inventory.MAX_WEIGHT
 
     def cmd_q_co(self, p):
+        self.quest_write(self.hand_in_quest, p)
+
+    def hand_in_quest(self, p):
         """Hand a quest in. Rewards go out before the ack: the client listens
         for them between sending and the ack (QuestInspector.takeQuest), and
         the purse only changes through a fresh userInfo_Player. Afterwards
@@ -3140,12 +3267,9 @@ class Session:
         wherever it is kept, as a dropped quest gives it back (Quest.returns,
         Inventory.reclaim_pieces), all before the reward.
 
-        The history is written before the reward is made: a hand-in that
-        failed between the two would lose a reward, where the other order
-        would leave a quest paid and still in the journal, to be paid again.
-        Nothing in the table can make it fail there -- every thing a row
-        names is one the game has, or the server does not start
-        (quests.check_items).
+        The history and reward are written inside quest_write's transaction:
+        neither can commit alone. A failure rolls back the instance, its
+        inputs and rewards; success frames are published after the commit.
 
         The reward, in this order, all before the ack: the thing chosen
         (rew_obj[obj_idx], Quest.reward_item) as num_rew_obj pieces into
@@ -3263,7 +3387,7 @@ class Session:
         for obj, num in quest.returns():
             self.inv.reclaim_pieces(obj, num)
         craft.hand_in(self, quest)
-        STORE.finish_quest(q_id, self.char_id, quest.type)
+        STORE.finish_quest(q_id, self.char_id, quest.type, require_active=True)
         self.fee_shown.pop(q_id, None)
         self.skill_shown.pop(q_id, None)
         for obj, num in reward:
@@ -3299,7 +3423,7 @@ class Session:
                  ", spec xp %s" % quest.rew_spec_xp if quest.rew_spec_xp else "")
         self.send("cmdAck", res=0)
         if way:
-            self.hand_in_way(q_id, quest)
+            return q_id, quest
 
     def pay_xp(self, rewards, spec_rewards=()):
         """Experience a quest pays (rew_xp: (skill, points)), all of it into
@@ -3473,6 +3597,9 @@ class Session:
         self.enter_location()
 
     def cmd_q_ca(self, p):
+        self.quest_write(self.cancel_quest, p)
+
+    def cancel_quest(self, p):
         """Drop a quest from the journal; nothing is recorded of it.
 
         What its giver handed over at the take (start_obj) goes back with
@@ -3494,7 +3621,7 @@ class Session:
             self.send("cmdAck", res=RES_NO_SUCH)
             return
         quest = quests.get(row["type"])
-        STORE.drop_quest(q_id)
+        STORE.drop_quest(q_id, self.char_id)
         self.fee_shown.pop(q_id, None)
         self.skill_shown.pop(q_id, None)
         short = False

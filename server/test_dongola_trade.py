@@ -418,7 +418,7 @@ check("each recipe at the master of its gun's class and line, A or G, its gun of
         or r["craft"]["gun"] not in items.wiki()
         or level_of_bp(r["craft"]["blueprint"]) != r["craft"]["level"]]),
       ([], ["A", "G"], []))
-check("  ..every master with recipes (no shotgun master: the shotguns of 9-12 have none)",
+check("  ..every master with recipes (no shotgun master: Halfa serves the shotguns of 9-12)",
       sorted({r["give"][0] for r in ups}), sorted(MASTERS))
 worse = []
 for r in ups + fam("knife"):
@@ -427,9 +427,9 @@ for r in ups + fam("knife"):
     if b < a or price(r["craft"]["gun"]) != price(r["craft"]["mod"]) and r in ups:
         worse.append(r["type"])
 check("  ..a modification at its gun's price and never a lower wear ceiling (the article's slip"
-      " AUG /Hbar Mod VIII, 550 against 2750, makes no row)",
-      (worse, [r["craft"]["key"] for r in ups if r["craft"]["key"] == "upgrade:dongola:50989"]),
-      ([], []))
+      " AUG /Hbar Mod VIII is corrected from 550 to 5500)",
+      (worse, [r["craft"]["mod"] for r in ups if r["craft"]["gun"] == 25006 and r["craft"]["effect"] == "attrition_x2"]),
+      ([], [25015]))
 camp_bosses = {}
 for (lo, hi), locs in CHIEFS.items():
     for loc in locs:
@@ -443,10 +443,10 @@ for r in ups:
             if not any(lo <= r["craft"]["level"] <= hi for lo, hi in camp_bosses.get(m, ())):
                 stray.append((r["type"], m))
 check("the stat blueprints of 9-16 drop off the chiefs of the camps of their level (Лагерь"
-      " ДСР 93/91 12-14, Лагерь Миротворцев 98/99 15-16), those of 10-11 off nobody: bought",
+      " ДСР 93/91 12-14, Лагерь Миротворцев 98/99 15-16), those of 9-11 off nobody: bought",
       (stray, sorted({r["craft"]["level"] for r in ups if r["objs"][1].get("mobs")}),
        sorted({r["craft"]["level"] for r in ups if not r["objs"][1].get("mobs")})),
-      ([], [12, 13, 14, 15, 16], [10, 11]))
+      ([], [12, 13, 14, 15, 16], [9, 10, 11]))
 by_class = {}
 for r in ups:
     by_class.setdefault(craft.weapon_of(r["craft"]["gun"]), set()).add(r["craft"]["blueprint"])
@@ -461,11 +461,11 @@ check("the masters' blueprint stalls of the markets 50 and 197 (580 Самир, 
       ({cls: [] for cls in BLUEPRINT_STALLS}, {cls: True for cls in BLUEPRINT_STALLS},
        {s: (True, True) for s in BLUEPRINT_STALLS.values()}))
 HALFA_STALLS = (576, 578, 7309, 7310, 7311)
-check("  ..a city's blueprints at its own stalls: Донгола's of 10-16, Вади-Хальфа's of 8 at"
-      " most, so neither town's stall sells the other's",
+check("  ..a city's blueprints at its own stalls: Донгола's of 9-16, Вади-Хальфа's including shotguns to 12 at"
+      " most, each stall follows its masters' services",
       (sorted({level_of_bp(t) for s in BLUEPRINT_STALLS.values() for t in npcs.stock(s)}),
        max(level_of_bp(t) for s in HALFA_STALLS for t in npcs.stock(s))),
-      ([10, 11, 12, 13, 14, 15, 16], 8))
+      ([9, 10, 11, 12, 13, 14, 15, 16], 12))
 sys.path.insert(0, os.path.join(ROOT, "data"))
 source = os.environ.get("LAVA_ORIG_TEXTS") or "/mnt/c/Users/gmkrt/Downloads/texts.xml"
 if os.path.isfile(source):
