@@ -760,9 +760,12 @@ try:
     gun7 = give(a, BERETTA)
     clip = give(a, ROUNDS, CLIP)
     a.send("ss_use;type=%d;obj=x%s;target=x%s;" % (inventory.USE_LOAD, gun7, clip))
-    check("loaded", a.frames(0.3)[0], ("cmdAck", {"res": 0}))
+    loaded = a.frames(items.params_of(BERETTA)["reload_time"] / 1000.0 + 1)
+    check("loaded", loaded[0], ("cmdAck", {"res": 0}))
+    check("reload completed before listing",
+          [p['ammo_count'] for p in named(loaded, 'ss_di_firearm')], [CLIP])
     got = create(a, gun7, hours=168, a_bid=100, a_buyout=300)
-    check("listed straight away, mid-reload", got[0], ("cmdAck", {"res": 0}))
+    check("listed after reload", got[0], ("cmdAck", {"res": 0}))
     check("and the reload no longer reports a gun that is gone",
           [p for n, p in a.frames(2.0) if n == "ss_di_firearm"], [])
     di = named(search(b, name="берет"), "ss_di_firearm")
@@ -776,6 +779,26 @@ try:
     di = named(b.frames(), "ss_di_firearm")[0]
     check("and Bob's new pistol arrives loaded",
           (di["ammo_count"], di["ammo_type"]), (CLIP, ROUNDS))
+    unpack_newest(a)
+
+    # A pending reload has not moved ammunition. Listing the gun cancels it
+    # and must not put the seller's rounds into a buyer's future weapon.
+    pending = give(a, BERETTA)
+    reserve = give(a, ROUNDS, CLIP)
+    a.send("ss_use;type=%d;obj=x%s;target=x%s;" % (inventory.USE_LOAD, pending, reserve))
+    a.frames(0.1)
+    got = create(a, pending, hours=168, a_bid=100, a_buyout=300)
+    check("listing mid-reload acknowledges once", named(got, 'cmdAck'), [{'res': 0}])
+    check("listing cancels the pending bar", named(got, 'actionCancel'), [{'release': 1}])
+    check("cancelled reload never reports a loaded gun",
+          named(a.frames(items.params_of(BERETTA)['reload_time'] / 1000.0 + 1), 'ss_di_firearm'), [])
+    a.send("ss_get_di;obj=x%s;" % reserve)
+    check("cancelled reload leaves ammunition with the seller",
+          named(a.frames(), 'ss_di_heap')[0]['size'], CLIP)
+    di = named(search(b, name="берет"), "ss_di_firearm")
+    check("the mid-reload lot stays empty",
+          [(str(p['obj']), p['ammo_count'], p['ammo_type']) for p in di], [(pending, 0, 0)])
+    op(a, auction.TAKEOFF, pending)
     unpack_newest(a)
 
     # --- a gold lot, from a client that can make one ------------------------------

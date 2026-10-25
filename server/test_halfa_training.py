@@ -765,9 +765,18 @@ def arm(c):
 
 def load(c, gun, rounds):
     """Load the gun from the stack: the ack (and the magazine report)."""
-    c.send("ss_use;target=x%s;obj=x%s;type=1;" % (rounds, gun))
-    got = c.until(lambda f: f[0] == "ss_di_firearm" or (f[0] == "cmdAck" and f[1]["res"]), 3)
-    return got + c.sync()
+    out = []
+    for _ in range(100):
+        c.send("ss_use;target=x%s;obj=x%s;type=1;" % (rounds, gun))
+        got = c.until(lambda f: f[0] == "ss_di_firearm" or (f[0] == "cmdAck" and f[1]["res"]), 3)
+        got += c.sync()
+        if inventory.RES_NO_AP not in acks(got):
+            return out + got
+        # Reload now pays its own AP cost. As with shooting, wait for the
+        # authoritative refill rather than abandoning the training quest.
+        out += [f for f in got if f[0] != 'cmdAck']
+        out += c.frames(0.1)
+    raise AssertionError('AP did not recover for reloading')
 
 
 def more_rounds(c, arrival, loc_id):

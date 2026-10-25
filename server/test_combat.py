@@ -1151,7 +1151,7 @@ try:
     # --- the errand, and a home to come back to ----------------------------------
     c.send("q_st;mob=%d;q_idx=%d;" % (TECHNOGEEK, quests.given_by(652).index(5)))
     got = c.frames()
-    check("the dog quest is taken", got,
+    check("the dog quest is taken", [f for f in got if f[0] != "c_ap"],
           [("cmdAck", {"res": 0}),
            ("q_di_kill_mobs", dict(q_id=FIRST_Q, q_type=5, complete=0, kill_num=[0]))])
     # The old home survives, but the technogeek cannot register a new one.

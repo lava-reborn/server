@@ -208,7 +208,12 @@ try:
 
     def load():
         c.send("ss_use;target=x%s;obj=x%s;type=1;" % (ammo, gun))
-        c.frames(1.0)
+        got = c.until(lambda f: f[0] == "ss_di_firearm" or
+                      (f[0] == "cmdAck" and f[1]["res"]),
+                      items.params_of(CROSSBOW)["reload_time"] / 1000.0 + 2)
+        check("reload completes before firing or moving",
+              [p['ammo_count'] for n, p in got if n == 'ss_di_firearm'],
+              [items.params_of(CROSSBOW)['clip_size']])
 
     load()
     good = lambda cell: (mobs.hex_distance(cell, tcell, W) <= reach - 1

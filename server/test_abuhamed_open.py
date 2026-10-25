@@ -55,7 +55,7 @@ in for the walking and the earning.
   Мортимер     on the pier (446): the ingots for gold at face value, never
                for afro; every one of the 21 ingots cashed, 0.05 less each,
                the ledger a row a cashing
-  the stalls   the station's band 16-20, afro and gold: Марат's Тёмное Эхо
+  the stalls   the station's band 16-20, afro and gold: Симона's Тёмное Эхо
                (its helmet for afro, its (G) for the ingots' gold), the
                rifles' stall (a US Army M24 for afro), Шрам's knives (a
                Кукри (G) for gold, for afro refused); a lottery (917) for
@@ -219,6 +219,7 @@ KLENZ, MINER = 1752, 930
 MUAMAR, GOLD_LOTTERY_MAN, ABIMBOLA, GATERA, CAR, TAFARI = 741, 742, 1726, 1727, 1693, 1702
 ILYA, ILYA_IN, SHOOTING_TEACHER = 1421, 1424, 1426
 MARAT, RIFLES_STALL, SCAR, RIFLE_GUNSMITH = 1219, 1218, 2274, 730
+SIMONA = 1223
 RAT, DUG_SAND, NITRE_GATE, WORKS_LINE = 1423, 1422, 1327, 1386
 WEST_GUARD, SOUTH_GUARD, SUPPLY, PRISON_HEALER, TOMAS = 1793, 1796, 880, 2112, 876
 PRISONERS = (1118, 1119, 1120, 1121, 1122)
@@ -1211,11 +1212,11 @@ try:
     here = inhabitants(arrival, lid)
     lo, hi = shop_bands.band(STATION)
     seen_stalls = {}
-    for trader in (MARAT, RIFLES_STALL, SCAR):
+    for trader in (MARAT, SIMONA, RIFLES_STALL, SCAR):
         stall, _opened = open_stall(c, here, trader)
         close_stall(c)
         seen_stalls[trader] = stall
-    check("the station's band is the town's, 16-20; Марат's sets, the rifles' stall and Шрам's"
+    check("the station's band is the town's, 16-20; Марат's pouches, Симона's sets, the rifles' stall and Шрам's"
           " knives sell nothing of their kind out of it, each for afro and for gold",
           ((lo, hi), {t: ([x for x in s if shop_bands.band_ware(x) and not shop_bands.fits(x, lo, hi)],
                           any(priced(x) == (True, False) for x in s),
@@ -1223,11 +1224,11 @@ try:
                       for t, s in seen_stalls.items()}),
           ((16, 20), {t: ([], True, True) for t in seen_stalls}))
     cheat(c, "/money %d 0" % (200000 + 67400))
-    stall, opened = open_stall(c, here, MARAT)
+    stall, opened = open_stall(c, here, SIMONA)
     bought = [buy(c, CID, stall, DARK_HELMET), buy(c, CID, stall, DARK_HELMET_G, gold=True)]
     close_stall(c)
-    check("Марат: Тёмное Эхо's helmet for 200 000 afro, its (G) for 50 of the ingots' gold -- the"
-          " set of 17, sold since Абу-Хамед",
+    check("Симона: Тёмное Эхо's helmet for 200 000 afro, its (G) for 50 of the ingots' gold -- the"
+          " set of 18, sold since Абу-Хамед",
           (DARK_HELMET in stall, DARK_HELMET_G in stall, opened, bought),
           (True, True, [0], [([0], 1, 200000, 0), ([0], 1, 0, 5000)]))
     stall, opened = open_stall(c, here, RIFLES_STALL)
