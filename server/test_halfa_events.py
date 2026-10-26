@@ -112,8 +112,10 @@ try:
           + [slots("prison_wh", [at(11, 59, 59), at(12, 29, 59), at(12, 30), at(15, 59), at(23, 29),
                                  at(23, 30), at(0, 10, day=29), at(18), at(20)])],
           [[True], [True], [True], [False, True, False, False, True, False, False, False, False]])
-    check("  ..which is not the bosses' 14/18/22: the prison keeps its label's hours",
-          (bosses.slot(at(12)), bosses.slot(at(18)) is not None), (None, True))
+    check("  ..the prison keeps its own half-hour window, even where boss hours overlap",
+          (bosses.slot(at(12)), bosses.slot(at(18)),
+           slots("prison_wh", [at(12, 30), at(18), at(23)])),
+          (at(12), at(18), [False, False, True]))
     check("its gates: from a quarter of an hour before to the end ('прибывать за 15 минут')",
           slots("prison_wh_gates", [at(11, 44, 59), at(11, 45), at(12, 29, 59), at(12, 30),
                                     at(22, 45), at(15, 50)]),

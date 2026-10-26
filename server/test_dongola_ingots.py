@@ -93,7 +93,7 @@ BOSSES = {
 FACTION_OUNCES = {"ДСР": 3, "Миротворцы": 3}
 TREASURERS = (592, 593)
 KHALIL = 374
-WINDOW_OUNCES, DONGOLA_OUNCES = 22, 4
+WINDOW_OUNCES, DONGOLA_OUNCES = 49, 12
 # Абу-Хамед's five bosses carry the ingot of ten since 2026-10-14.
 ABUHAMED_BOSSES = [777, 778, 1037, 1038, 8620]
 MT = world.mob_types()
@@ -192,13 +192,13 @@ check("every carrier of a certain ingot keeps the hours and stands in one place"
       {t: (bosses.keeps_hours(t), len(places[t])) for t in rollers},
       {t: (True, 1) for t in rollers})
 check("a window of the boss hours holds %d ounces for the whole server: Вади-Хальфа's 8, the"
-      " valley's 1, Абри's 4, Донгола's %d, Абу-Хамед's 5" % (WINDOW_OUNCES, DONGOLA_OUNCES),
+      " valley's 1, Абри's 8, Донгола's %d, Абу-Хамед's 20" % (WINDOW_OUNCES, DONGOLA_OUNCES),
       (sum(window.values()), sum(window[t] for t in BOSSES), window.get(2103)),
       (WINDOW_OUNCES, DONGOLA_OUNCES, 1))
 check("  ..Дженсен among them once: the copy 1171 of his camp is out of the game",
       (sorted(places.get(407, ())), 1171 in RETIRED_PLACES), ([98], True))
-check("  ..three windows a day: %d ounces" % (3 * WINDOW_OUNCES),
-      len(bosses.parse_hours(bosses.DEFAULT_HOURS)) * sum(window.values()), 3 * WINDOW_OUNCES)
+check("  ..twelve windows a day: %d ounces" % (12 * WINDOW_OUNCES),
+      len(bosses.parse_hours(bosses.DEFAULT_HOURS)) * sum(window.values()), 12 * WINDOW_OUNCES)
 
 
 # --- a hundred bags each, through RoomCombat and a real database -----------------------
@@ -298,9 +298,9 @@ async def _restart():
         room, rc, koul = room_99(store)
         rc.keep_hours()
         out["after a restart in the window"] = (koul.eid in room.npcs, koul.away)
-        now[0] = _msk(22, 0, 5)
+        now[0] = _msk(20, 0, 5)
         rc.keep_hours()
-        out["at ten he comes"] = (koul.eid in room.npcs, koul.alive)
+        out["at eight he comes"] = (koul.eid in room.npcs, koul.alive)
         store.close()
     finally:
         bosses.clock, combat.CORPSE_DELAY = real
@@ -324,8 +324,8 @@ check("with the rule off, every boss's bag holds his loot and no ingot",
       _run(_rule_off(), "the rule off"), {t: (False, True, []) for t in BOSSES})
 check("Макс Коул killed in his window stays away through a restart until the next one",
       _run(_restart(), "a restart in the window"),
-      {"stands at six": True, "his bag": [(I1, 1)], "written down": True,
-       "after a restart in the window": (False, True), "at ten he comes": (True, True)})
+      {"stands at six": True, "his bag": [(I1, 3)], "written down": True,
+       "after a restart in the window": (False, True), "at eight he comes": (True, True)})
 
 
 # --- Мортимер in the new market -------------------------------------------------------------

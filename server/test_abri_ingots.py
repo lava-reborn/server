@@ -89,7 +89,7 @@ BOSSES = {
 FACTION_OUNCES = {"работорговцы": 2, "живодеры": 2}
 TREASURERS = (590, 591)
 ABU = 327
-WINDOW_OUNCES = 22
+WINDOW_OUNCES = 49
 MT = world.mob_types()
 
 
@@ -181,11 +181,11 @@ check("every carrier of a certain ingot keeps the hours and stands in one place"
       {t: (bosses.keeps_hours(t), len(places[t])) for t in rollers},
       {t: (True, 1) for t in rollers})
 check("a window of the boss hours holds %d ounces for the whole server: Вади-Хальфа's 8, the"
-      " valley's 1, Абри's 4, Донгола's 4, Абу-Хамед's 5" % WINDOW_OUNCES,
+      " valley's 1, Абри's 8, Донгола's 12, Абу-Хамед's 20" % WINDOW_OUNCES,
       (sum(window.values()), sum(window[t] for t in BOSSES), window.get(2103)),
-      (WINDOW_OUNCES, 4, 1))
-check("  ..three windows a day: %d ounces" % (3 * WINDOW_OUNCES),
-      len(bosses.parse_hours(bosses.DEFAULT_HOURS)) * sum(window.values()), 3 * WINDOW_OUNCES)
+      (WINDOW_OUNCES, 8, 1))
+check("  ..twelve windows a day: %d ounces" % (12 * WINDOW_OUNCES),
+      len(bosses.parse_hours(bosses.DEFAULT_HOURS)) * sum(window.values()), 12 * WINDOW_OUNCES)
 
 
 # --- a hundred bags each, through RoomCombat and a real database -----------------------
@@ -285,9 +285,9 @@ async def _restart():
         room, rc, betty = room_90(store)
         rc.keep_hours()
         out["after a restart in the window"] = (betty.eid in room.npcs, betty.away)
-        now[0] = _msk(22, 0, 5)
+        now[0] = _msk(20, 0, 5)
         rc.keep_hours()
-        out["at ten she comes"] = (betty.eid in room.npcs, betty.alive)
+        out["at eight she comes"] = (betty.eid in room.npcs, betty.alive)
         store.close()
     finally:
         bosses.clock, combat.CORPSE_DELAY = real
@@ -311,8 +311,8 @@ check("with the rule off, every boss's bag holds his loot and no ingot",
       _run(_rule_off(), "the rule off"), {t: (False, True, []) for t in BOSSES})
 check("Бетти killed in her window stays away through a restart until the next one",
       _run(_restart(), "a restart in the window"),
-      {"stands at six": True, "her bag": [(I1, 1)], "written down": True,
-       "after a restart in the window": (False, True), "at ten she comes": (True, True)})
+      {"stands at six": True, "her bag": [(I1, 2)], "written down": True,
+       "after a restart in the window": (False, True), "at eight she comes": (True, True)})
 
 
 # --- Мортимер in the port market -------------------------------------------------------------

@@ -94,7 +94,7 @@ BOSSES = {
 FACTION_OUNCES = {"Пираты": 4, "Аванпост": 4, "База": 4}
 TREASURERS = {764: 132, 1024: 168, 1736: 263}
 MARABU = 777
-WINDOW_OUNCES, ABUHAMED_OUNCES = 22, 5
+WINDOW_OUNCES, ABUHAMED_OUNCES = 49, 20
 DONGOLA = (374, 375, 407, 408)
 MT = world.mob_types()
 
@@ -201,18 +201,18 @@ check("every carrier of a certain ingot keeps the hours and stands in one place"
       {t: (bosses.keeps_hours(t), len(places[t])) for t in rollers},
       {t: (True, 1) for t in rollers})
 check("a window of the boss hours holds %d ounces for the whole server: Вади-Хальфа's 8, the"
-      " valley's 1, Абри's 4, Донгола's 4, Абу-Хамед's %d" % (WINDOW_OUNCES, ABUHAMED_OUNCES),
+      " valley's 1, Абри's 8, Донгола's 12, Абу-Хамед's %d" % (WINDOW_OUNCES, ABUHAMED_OUNCES),
       (sum(window.values()), sum(window[t] for t in BOSSES), sum(window[t] for t in DONGOLA),
        window.get(2103)),
-      (WINDOW_OUNCES, ABUHAMED_OUNCES, 4, 1))
+      (WINDOW_OUNCES, ABUHAMED_OUNCES, 12, 1))
 check("  ..the two Шерханы each once, in their own camps: the outpost 168 and the base 263",
       (sorted(places.get(8620, ())), sorted(places.get(1037, ()))), ([168], [263]))
-check("  ..three windows a day: %d ounces" % (3 * WINDOW_OUNCES),
-      len(bosses.parse_hours(bosses.DEFAULT_HOURS)) * sum(window.values()), 3 * WINDOW_OUNCES)
-check("  ..in Абу-Хамед's window five ingots, which Мортимер's fee of 0.05 an ingot takes 0.25 ounces of",
+check("  ..twelve windows a day: %d ounces" % (12 * WINDOW_OUNCES),
+      len(bosses.parse_hours(bosses.DEFAULT_HOURS)) * sum(window.values()), 12 * WINDOW_OUNCES)
+check("  ..in Абу-Хамед's window twenty ingots, which Мортимер's fee of 0.05 an ingot takes one ounce of",
       (sum(n for t in BOSSES for n in BOSSES[t][2].values()),
        sum(n for t in BOSSES for n in BOSSES[t][2].values()) * (100 - quests.get(CASH[I1]).rew_gold)),
-      (5, 25))
+      (20, 100))
 
 
 # --- a hundred bags each, through RoomCombat and a real database -----------------------
@@ -312,9 +312,9 @@ async def _restart():
         room, rc, tabaqui = room_274(store)
         rc.keep_hours()
         out["after a restart in the window"] = (tabaqui.eid in room.npcs, tabaqui.away)
-        now[0] = _msk(22, 0, 5)
+        now[0] = _msk(20, 0, 5)
         rc.keep_hours()
-        out["at ten he comes"] = (tabaqui.eid in room.npcs, tabaqui.alive)
+        out["at eight he comes"] = (tabaqui.eid in room.npcs, tabaqui.alive)
         store.close()
     finally:
         bosses.clock, combat.CORPSE_DELAY = real
@@ -338,8 +338,8 @@ check("with the rule off, every boss's bag holds his loot and no ingot",
       _run(_rule_off(), "the rule off"), {t: (False, True, []) for t in BOSSES})
 check("Бригадир Табаки killed in his window stays away through a restart until the next one",
       _run(_restart(), "a restart in the window"),
-      {"stands at six": True, "his bag": [(I1, 1)], "written down": True,
-       "after a restart in the window": (False, True), "at ten he comes": (True, True)})
+      {"stands at six": True, "his bag": [(I1, 4)], "written down": True,
+       "after a restart in the window": (False, True), "at eight he comes": (True, True)})
 
 
 # --- Мортимер in the port --------------------------------------------------------------------
