@@ -13,6 +13,7 @@ from unittest.mock import patch
 sys.path.insert(0, os.path.dirname(__file__))
 import bosses
 import combat
+import holdings
 import items
 import mobs
 import quests
@@ -49,6 +50,21 @@ for t in (12, 14, 836, 930, 931):
     if st.hp_max != max(1, round(row['hp'] * role['hp_mult'])):
         ordinary_errors.append(t)
 check('ordinary mobs and miners keep their HP', ordinary_errors, [])
+
+# Warehouse capture is a separate rule: each clan's harm is capped at the
+# actual boss pool. Increased HP must not turn its tie fixture into a loss.
+master = mobs.stats(7448)
+pool = master.hp_max + master.sp_max
+fighters = [dict(char=char, clan=clan, clan_name=str(clan), here=True,
+                 alive=True, level=8, harm=harm)
+            for char, clan, harm in ((1, 1, 5 * pool), (2, 1, 5 * pool),
+                                     (3, 2, pool // 2), (4, 2, pool - pool // 2))]
+snapshot = dict(pool=pool, fighters=fighters, killer=4, killer_clan=2)
+check('warehouse capture tie uses the actual HP and stamina pool',
+      holdings.winner(snapshot, squad=2, min_level=8), (2, '2', pool, 4))
+fighters[-1]['harm'] -= 1
+check('a killing blow cannot beat a clan with more capped harm',
+      holdings.winner(snapshot, squad=2, min_level=8)[:3], (1, '1', pool))
 
 carriers = {int(t) for t in mobs.TYPES
             if any(i in items.GOLD_INGOTS for i, _c, _v in mobs.loot_table(int(t)))}

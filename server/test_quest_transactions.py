@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 logging.disable(logging.CRITICAL)
 import accounts  # noqa: E402
 import inventory  # noqa: E402
+import items  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
 import server  # noqa: E402
@@ -108,6 +109,10 @@ class QuestTransactions(unittest.TestCase):
 
     def test_halfa_provisions_consumes_purchased_ful_and_rewards_once(self):
         self.q = quests.QUESTS[148]
+        # The medical range is location-specific; the unscoped stock only
+        # holds the trader's extra quest goods, including the distinct qFul.
+        for loc in (35, 176):
+            self.assertIn(6899, items.stock_for(81, loc))
         self.s.npc_type = lambda _id: 718
         for _ in range(5):
             self.give(333)

@@ -108,8 +108,10 @@ import events  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import mobs  # noqa: E402
+import npcs  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
+import sets  # noqa: E402
 import shop_bands  # noqa: E402
 import travel  # noqa: E402
 import world  # noqa: E402
@@ -661,6 +663,17 @@ def boss_bag(c, gun, where, boss):
     other fighter's reach, shoot whoever would see the player at his bag,
     walk to the bag and take it whole -- (fell?, the ingots taken {type:
     pieces})."""
+    lid, clinic = goto(c, DN_STATION)
+    healer_type = next(t for _cell, t in world.location(DN_STATION).spawns
+                       if t and MT[t][0] == world.HEALER)
+    healer = inhabitants(clinic, lid)[healer_type][0]
+    cheat(c, "/money %d 0" % npcs.healer_price(healer_type, 10))
+    c.send("on_conv;mob=%d;op=1;" % healer)
+    healed = c.frames()
+    vitals = [p for p in named(healed, "usrUp") if p.get("id") == 0]
+    check("boss route: healer restores HP and stamina before each fight",
+          (acks(healed), [(p["hcur"] == p["hmax"], p["scur"] == p["smax"]) for p in vitals]),
+          ([0], [(True, True)]))
     reload(c, gun)
     lid, arrival = goto(c, where)
     mark = len(c.seen) - len(arrival)     # the frames before are other rooms', their ids too
@@ -980,19 +993,22 @@ try:
     # --- the gold: the four bosses at six -------------------------------------------------
     GUN = give(c, ADMIN_GUN)
     wield(c, GUN)
+    # This scene checks boss loot, not a naked character's endurance.
+    # Equip legal level-12 armour; keep real mob damage and aggro.
+    for slot, piece in zip(inventory.SET_SLOTS, sets.SLOTS):
+        armour = give(c, sets.SETS[11120]["members"][piece])
+        c.send("ss_move;obj=x%s;to=%d;from=2048;" % (armour, slot))
+        check("boss route: legal armour %s equipped" % piece, acks(c.frames()), [0])
     bags = {}
     for boss, where in ((KHALIL, CAMP_DSR), (JIBRIL, CHIEF_DSR), (JENSEN, CAMP_PK),
                         (COLE, CHIEF_PK)):
         fell, bag = boss_bag(c, GUN, where, boss)
         bags[boss] = (fell, bag, ounces(bag))
-    check("at six the ДСР's bosses fall, Полковник Халил in the camp (93) and Джибрил Ибрагим in his"
-          " place (91), an ingot of ten each; the Peacekeepers', Шеф Дженсен in the camp (98) and"
-          " Макс Коул in his place (99), an ingot of ten and two of one each",
-          bags, {KHALIL: (True, {I10: 1}, 10), JIBRIL: (True, {I10: 1}, 10),
-                 JENSEN: (True, {I10: 1, I1: 2}, 12), COLE: (True, {I10: 1, I1: 2}, 12)})
+    check("at six all four bosses fall and each leaves one one-ounce ingot",
+          bags, {boss: (True, {I1: 1}, 1) for boss in (KHALIL, JIBRIL, JENSEN, COLE)})
     have = held(CID)
-    check("  ..44 ounces in ingots in the bag", {t: have[t] for t in INGOTS},
-          {I1: 4, I5: 0, I10: 4})
+    check("  ..four ounces in ingots in the bag", {t: have[t] for t in INGOTS},
+          {I1: 4, I5: 0, I10: 0})
 
     # --- Мортимер in the new market --------------------------------------------------------
     lid, arrival = goto(c, NEW_MARKET)
@@ -1003,20 +1019,19 @@ try:
           (list(INGOTS), [0], ([inventory.RES_REFUSED], 0, 0, 0)))
     close_stall(c)
     purse0, cashed = money(CID), []
-    for t in [I10] * 4 + [I1] * 4:
+    for t in [I1] * 4:
         before = money(CID)
         got, q = take(c, here, MORTIMER, CASH[t])
         done = hand_in(c, here, MORTIMER, q)
         cashed.append((CASH[t], acks(got) + acks(done)[:1], money(CID)[1] - before[1]))
-    check("every ingot cashed at his: «Обналичить 10 унций» four times, «Обналичить 1 унцию» four"
-          " times, 0.05 less each", cashed, [(303, [0, 0], 995)] * 4 + [(301, [0, 0], 95)] * 4)
-    check("  ..44 ounces of loot made 43.60 on the account, no afro, the ingots gone",
+    check("every ingot cashed at his: «Обналичить 1 унцию» four times, 0.05 less each", cashed, [(301, [0, 0], 95)] * 4)
+    check("  ..four ounces of loot made 3.80 on the account, no afro, the ingots gone",
           (money(CID)[1] - purse0[1], money(CID)[0] - purse0[0],
-           [held(CID)[t] for t in INGOTS]), (4360, 0, [0, 0, 0]))
+           [held(CID)[t] for t in INGOTS]), (380, 0, [0, 0, 0]))
     rows = [(r["source"], r["ref"], r["gold"]) for r in ledger(CID) if r["source"] == "quest"
             and r["ref"] in CASH.values()]
     check("  ..the ledger: a row for each cashing under its quest",
-          sorted(rows), sorted([("quest", 303, 995)] * 4 + [("quest", 301, 95)] * 4))
+          sorted(rows), [("quest", 301, 95)] * 4)
 
     # --- the black market's stalls: the band 12-16, afro and gold ---------------------------
     lid, arrival = goto(c, BLACK)
@@ -1035,7 +1050,9 @@ try:
                           any(priced(x) == (False, True) for x in s))
                       for t, s in seen_stalls.items()}),
           ((12, 16), {t: ([], True, True) for t in seen_stalls}))
-    cheat(c, "/money %d 0" % (42000 + 67400))
+    # Purchases exercise prices independently of the temporary loot budget.
+    shopping_gold = 10000
+    cheat(c, "/money %d %d" % (42000 + 67400, shopping_gold))
     stall, opened = open_stall(c, here, DARI)
     bought = [buy(c, CID, stall, HELMET), buy(c, CID, stall, HELMET_G, gold=True)]
     close_stall(c)
@@ -1066,8 +1083,8 @@ try:
     check("  ..«Золотая Лотерея Донголы (12-16)» (722): the ticket gone, one of the prizes in the"
           " bag", (acks(got), acks(done)[:1], after[GOLD_LOT_TICKET],
                    len([t for t in prizes if after[t] > before[t]])), ([0], [0], 0, 1))
-    check("  ..of the 43.60 gold 10.70 left", money(CID)[1] - purse0[1],
-          4360 - 1050 - 1428 - 512 - 300)
+    check("  ..shop funding plus boss proceeds cover all purchases",
+          money(CID)[1] - purse0[1], shopping_gold + 380 - 1050 - 1428 - 512 - 300)
 
     # --- home: to Абри, back, and to Вади-Хальфа ----------------------------------------
     lid, arrival = goto(c, DN_STATION)

@@ -225,8 +225,8 @@ RAT, DUG_SAND, NITRE_GATE, WORKS_LINE = 1423, 1422, 1327, 1386
 WEST_GUARD, SOUTH_GUARD, SUPPLY, PRISON_HEALER, TOMAS = 1793, 1796, 880, 2112, 876
 PRISONERS = (1118, 1119, 1120, 1121, 1122)
 MARABU, NGORO, SHERKHAN_OUTPOST, SHERKHAN_BASE, TABAKI = 777, 778, 8620, 1037, 1038
-BOSSES = {MARABU: (PIRATES, 14), NGORO: (PIRATES_CHIEF, 14), SHERKHAN_OUTPOST: (OUTPOST, 14),
-          SHERKHAN_BASE: (BASE, 16), TABAKI: (BASE_CHIEF, 16)}
+BOSSES = {MARABU: (PIRATES, 1), NGORO: (PIRATES_CHIEF, 1), SHERKHAN_OUTPOST: (OUTPOST, 1),
+          SHERKHAN_BASE: (BASE, 1), TABAKI: (BASE_CHIEF, 1)}
 NAMED = (1749, 1750, 1751, 1752, 1760, 2168, 2170)
 # The things.
 TICKET_TO_AH, TICKET_TO_DN = 1567, 1639
@@ -346,11 +346,9 @@ try:
                          if not lo <= mobs.stats(t).level <= hi}))
            for lid, (lo, hi) in BANDS.items()},
           {lid: (True, []) for lid in BANDS})
-    check("the five bosses stand in their places and carry their ingots on every kill: Марабу,"
-          " Нгоро and the outpost's Шерхан 14 ounces, an ingot of ten and four of one; the"
-          " base's Шерхан and Табаки 16, an ingot of ten, one of five and one of one",
+    check("the five bosses stand in their places and each carries one one-ounce ingot",
           {b: (standing(lid)[b], sure_ounces(b)) for b, (lid, _o) in BOSSES.items()},
-          {b: (1, (o, {I10: 1, I1: 4} if o == 14 else {I10: 1, I5: 1, I1: 1}))
+          {b: (1, (o, {I1: 1}))
            for b, (_lid, o) in BOSSES.items()})
     check("the places of Абу-Хамед the path starts from all stand on map cells",
           [lid for lid in ABUHAMED if world.cell_of(lid) is None], [])
@@ -1203,17 +1201,11 @@ try:
     for boss, (where, _o) in BOSSES.items():
         fell, bag = boss_bag(c, GUN, where, boss)
         bags[boss] = (fell, bag, ounces(bag))
-    check("at six the pirates' bosses fall, Коммодор Марабу in the camp (132) and Капитан Нгоро in"
-          " his place (133), and the outpost's Генерал Шерхан (168): an ingot of ten and four of"
-          " one each, 14 ounces; the base's Генерал Шерхан (263) and Бригадир Табаки in his"
-          " place (274): an ingot of ten, one of five and one of one each, 16 ounces",
-          bags, {MARABU: (True, {I10: 1, I1: 4}, 14), NGORO: (True, {I10: 1, I1: 4}, 14),
-                 SHERKHAN_OUTPOST: (True, {I10: 1, I1: 4}, 14),
-                 SHERKHAN_BASE: (True, {I10: 1, I5: 1, I1: 1}, 16),
-                 TABAKI: (True, {I10: 1, I5: 1, I1: 1}, 16)})
+    check("at six all five bosses fall and each leaves one one-ounce ingot",
+          bags, {boss: (True, {I1: 1}, 1) for boss in BOSSES})
     have = held(CID)
-    check("  ..74 ounces in 21 ingots in the bag", {t: have[t] for t in INGOTS},
-          {I1: 14, I5: 2, I10: 5})
+    check("  ..five ounces in five ingots in the bag", {t: have[t] for t in INGOTS},
+          {I1: 5, I5: 0, I10: 0})
 
     # --- Мортимер on the pier --------------------------------------------------------------
     lid, arrival = goto(c, PORT)
@@ -1224,22 +1216,20 @@ try:
           (list(INGOTS), [0], ([inventory.RES_REFUSED], 0, 0, 0)))
     close_stall(c)
     purse0, cashed = money(CID), []
-    for t in [I10] * 5 + [I5] * 2 + [I1] * 14:
+    for t in [I1] * 5:
         before = money(CID)
         got, q = take(c, here, MORTIMER, CASH[t])
         done = hand_in(c, here, MORTIMER, q)
         cashed.append((CASH[t], acks(got) + acks(done)[:1], money(CID)[1] - before[1]))
-    check("every ingot cashed at his: «Обналичить 10 унций» five times, «Обналичить 5 унций» twice,"
-          " «Обналичить 1 унцию» fourteen times, 0.05 less each", cashed,
-          [(303, [0, 0], 995)] * 5 + [(302, [0, 0], 495)] * 2 + [(301, [0, 0], 95)] * 14)
-    check("  ..74 ounces of loot made 72.95 on the account, no afro, the ingots gone",
+    check("every ingot cashed at his: «Обналичить 1 унцию» five times, 0.05 less each", cashed,
+          [(301, [0, 0], 95)] * 5)
+    check("  ..five ounces of loot made 4.75 on the account, no afro, the ingots gone",
           (money(CID)[1] - purse0[1], money(CID)[0] - purse0[0],
-           [held(CID)[t] for t in INGOTS]), (7295, 0, [0, 0, 0]))
+           [held(CID)[t] for t in INGOTS]), (475, 0, [0, 0, 0]))
     rows = [(r["source"], r["ref"], r["gold"]) for r in ledger(CID) if r["source"] == "quest"
             and r["ref"] in CASH.values()]
     check("  ..the ledger: a row for each cashing under its quest",
-          sorted(rows), sorted([("quest", 303, 995)] * 5 + [("quest", 302, 495)] * 2
-                               + [("quest", 301, 95)] * 14))
+          sorted(rows), [("quest", 301, 95)] * 5)
 
     # --- the station's stalls: the band 16-20, afro and gold ---------------------------------
     lid, arrival = goto(c, STATION)
@@ -1257,7 +1247,9 @@ try:
                           any(priced(x) == (False, True) for x in s))
                       for t, s in seen_stalls.items()}),
           ((16, 20), {t: ([], True, True) for t in seen_stalls}))
-    cheat(c, "/money %d 0" % (200000 + 67400))
+    # Shop and lesson coverage must not depend on the boss reward budget.
+    shopping_gold = 10000
+    cheat(c, "/money %d %d" % (200000 + 67400, shopping_gold))
     stall, opened = open_stall(c, here, SIMONA)
     bought = [buy(c, CID, stall, DARK_HELMET), buy(c, CID, stall, DARK_HELMET_G, gold=True)]
     close_stall(c)
@@ -1340,7 +1332,8 @@ try:
     ack, lid, arrival = ride(c, here, ILYA_IN, ACADEMY_OUT)
     check("  ..«Выход из обучающего центра» (966) at Илья: back to the quarter", (ack, lid),
           ([0, 0], QUARTER))
-    check("of the 72.95 gold 5.45 left", money(CID)[1], 7295 - 5000 - 800 - 350 - 600)
+    check("shop funding plus boss proceeds cover purchases and the lesson",
+          money(CID)[1], shopping_gold + 475 - 5000 - 800 - 350 - 600)
 
     # --- the Dark Mine: down two tiers and up ------------------------------------------------
     # This scene checks passages, not survival of a naked character. The

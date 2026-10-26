@@ -151,9 +151,9 @@ for lid in (93, 91, 98, 99, 67, 68, 69, 112, 113, 114, 115, 144, 145, 146, 147, 
 check("nobody else of Донгола's camps, quest places, mine, sewers, prison and Зона 49 carries an ingot",
       sorted(t for t in dongola_types - set(BOSSES)
              if {r[0] for r in mobs.loot_table(t)} & set(INGOTS)), [])
-check("the ingot of ten falls from Донгола's four and Абу-Хамед's five alone",
+check("no creature drops a ten-ounce ingot under the temporary hotfix",
       sorted(int(t) for t in mobs.TYPES if I10 in {r[0] for r in mobs.loot_table(int(t))}),
-      sorted(list(BOSSES) + ABUHAMED_BOSSES))
+      [])
 
 
 # --- the budget of a window ----------------------------------------------------------------

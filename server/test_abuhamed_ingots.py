@@ -160,9 +160,9 @@ check("nobody else of Абу-Хамед's camps, town, quest places, mines, pris
       " places carries an ingot",
       sorted(t for t in town_types - set(BOSSES)
              if {r[0] for r in mobs.loot_table(t)} & set(INGOTS)), [])
-check("the ingot of ten falls from Донгола's four and Абу-Хамед's five alone",
+check("no creature drops a ten-ounce ingot under the temporary hotfix",
       sorted(int(t) for t in mobs.TYPES if I10 in {r[0] for r in mobs.loot_table(int(t))}),
-      sorted(set(BOSSES) | set(DONGOLA)))
+      [])
 
 
 # --- the budget of a window ----------------------------------------------------------------
