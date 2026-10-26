@@ -87,7 +87,7 @@ class ClientActions(unittest.TestCase):
     def test_stop_walk_uses_no_fifo_skip(self):
         events = []
         cells = {1: NS(busy=True), 2: NS(busy=False)}
-        walker = NS(prevNumPos=1, numPos=1)
+        walker = NS(prevNumPos=1, numPos=1, finishPos=8)
 
         def stop(pos):
             events.append(('stop', pos))
@@ -98,10 +98,65 @@ class ClientActions(unittest.TestCase):
         self.assertFalse(cells[1].busy)
         self.assertTrue(cells[2].busy)
         self.assertEqual(events[0], ('stop', 2))
+        self.assertEqual(walker.finishPos, 2)
+
+    def test_stopped_route_can_be_requested_again_without_cursor_motion(self):
+        sent = []
+        cells = {1: NS(busy=True), 2: NS(busy=False)}
+        walker = NS(prevNumPos=1, numPos=1, finishPos=8)
+        walker.breakMove = lambda pos: setattr(walker, 'numPos', pos)
+        loc = NS(getWalker=lambda _: walker, getCellFromNumber=cells.get,
+                 dispatchEvent=lambda _: None)
+        # An accepted reload stops the route at the server cell. The same
+        # destination must pass Location.movePlayer's duplicate guard again.
+        execute(w.fn_action_cancel().assemble(), dict(this=loc,
+                obj=NS(param={'pos': 2})))
+        for target in (8, 8):
+            if target != walker.numPos and target != walker.finishPos:
+                sent.append(target)
+                walker.finishPos = target
+        self.assertEqual(sent, [8])
+        self.assertEqual(walker.numPos, 2)
+
+    def test_bar_only_cancel_does_not_forget_pending_route(self):
+        walker = NS(numPos=1, finishPos=8)
+        loc = NS(getWalker=lambda _: walker, dispatchEvent=lambda _: None)
+        execute(w.fn_action_cancel().assemble(), dict(this=loc, obj=NS(param={})))
+        self.assertEqual(walker.finishPos, 8)
+
+    def test_medicine_ap_check_uses_selected_item_and_preserves_other_actions(self):
+        state = NS(warStatus=True)
+        constants = NS(HEAL_ITEM=2, USE_IDLE=1, USE_TARGET=2)
+        glob = NS(lol=NS(core=NS(objects=NS(Item=constants),
+                               Master=NS(getInstance=lambda: NS(currentLocation=state)))))
+        for kind in (1, 2):
+            for ap, cost, want in ((5, 4, True), (4, 4, True), (3, 4, False)):
+                calls = []
+                medicine = NS(rootID=2, getAP=lambda: cost)
+                activator = NS(__usedItem=medicine, useType=kind,
+                               coolDownBlock=True, gamer=NS(apManager=NS(ap=ap)))
+                setattr(activator, '__medicineCanUseOrig', lambda: calls.append('weapon') or False)
+                got = execute(w.fn_medicine_can_use().assemble(), dict(this=activator, _global=glob))
+                self.assertEqual(got, want)
+                self.assertEqual(calls, [])
+                self.assertEqual(activator.gamer.apManager.ap, ap)
+                self.assertTrue(activator.coolDownBlock)
+        state.warStatus = False
+        activator.gamer.apManager.ap = 0
+        self.assertTrue(execute(w.fn_medicine_can_use().assemble(), dict(this=activator, _global=glob)))
+        state.warStatus = True
+        for item, kind in ((None, 1), (NS(rootID=0), 4), (medicine, 0)):
+            for original_result in (False, True):
+                calls = []
+                setattr(activator, '__usedItem', item)
+                activator.useType = kind
+                setattr(activator, '__medicineCanUseOrig', lambda: calls.append('original') or original_result)
+                self.assertEqual(execute(w.fn_medicine_can_use().assemble(), dict(this=activator, _global=glob)), original_result)
+                self.assertEqual(calls, ['original'])
 
     def test_hooks_in_injection(self):
         blob = w.injected()
-        for name in ('__keysDownOrig', '__keysUpOrig', '__actionInitOrig', '__actionKillOrig', '__actionCancel'):
+        for name in ('__keysDownOrig', '__keysUpOrig', '__actionInitOrig', '__actionKillOrig', '__actionCancel', '__medicineCanUseOrig'):
             self.assertIn(name.encode(), blob)
 
     def test_remote_stop_does_not_clear_own_bar(self):

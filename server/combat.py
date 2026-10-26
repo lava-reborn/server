@@ -1294,17 +1294,9 @@ class Fighter:
                 and getattr(self, "healing_peace", True)):
             Fighter.cancel_pending(self, notify=True)
 
-    def heal_wait(self, target=None):
-        """Personal hit-based cooldown; room war or mere aiming is irrelevant."""
-        t = now()
-        return max(0.0, *(LEAVE_COMBAT_TIMEOUT - (t - getattr(side, "last_hit", -1e9))
-                          for side in (self, target) if side is not None))
-
-    def peace_heal_blocked(self, target=None):
-        """Ordinary medicine is forbidden in room war or the personal hit timer."""
-        rc = self.rc
-        return bool((rc is not None and rc.room.ws)
-                    or Fighter.heal_wait(self, target) > 0)
+    def medicine_blocked(self, peace):
+        """Medicine category follows room war only, never the exit timer."""
+        return bool(peace and self.rc is not None and self.rc.room.ws)
 
     def engage_player(self, other, t=None):
         """Remember this pair, without refreshing unrelated opponents."""
@@ -1886,9 +1878,9 @@ class Fighter:
         si = items.params_of(row["type_id"]) or {}
         cost = si.get("heal_cost", 0)
         peace = items.no_combat(row["type_id"])
-        if peace and Fighter.peace_heal_blocked(self, target):
+        if Fighter.medicine_blocked(self, peace):
             self.ack(inventory.RES_NOT_READY)
-            sess.answer("Обычное лечение недоступно во время боя и в течение %d секунд после нанесённого или полученного урона." % LEAVE_COMBAT_TIMEOUT)
+            sess.answer("Обычное лечение недоступно во время боя.")
             return
         Fighter.settle_walk(self)
         if rc is not None and rc.room.ws and self.ap < cost:
@@ -1924,9 +1916,9 @@ class Fighter:
             return
         si = items.params_of(row["type_id"]) or {}
         peace = items.no_combat(row["type_id"])
-        if peace and Fighter.peace_heal_blocked(self, target):
+        if Fighter.medicine_blocked(self, peace):
             self.sess.send("actionCancel", release=1)
-            self.sess.answer("Обычное лечение прервано: начался бой или действует %d-секундный таймер после урона." % LEAVE_COMBAT_TIMEOUT)
+            self.sess.answer("Обычное лечение прервано: начался бой.")
             return
         if peace and peace_damage is not None and peace_damage != (
                 getattr(self, "damage_revision", 0) + getattr(self, "hit_revision", 0),

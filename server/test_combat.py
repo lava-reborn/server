@@ -662,7 +662,7 @@ async def _heals():
     medic.rc, medic.ap = _at_war(True), 100
     medic.last_hit = combat.now()
     medic.use_heal({"obj": peace_only}, inventory.USE_IDLE)
-    check("personal hit cooldown refuses healing without spending",
+    check("room war refuses ordinary healing without spending",
           ([p["res"] for n,p in ms.sent if n == "cmdAck"], medic.healing, medic.ap),
           ([inventory.RES_NOT_READY], None, 100))
     medic.last_hit, ms.sent = -1e9, []

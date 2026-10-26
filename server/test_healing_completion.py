@@ -145,39 +145,54 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
                     self.assertGreater(ch.hp, 30)
                     self.assertEqual(used, [1])
 
-    async def test_personal_timer_blocks_ordinary_medicine_without_spending(self):
+    async def test_medicine_category_follows_room_war_not_recent_hits(self):
         for war in (False, True):
-            f, ch, room, used = self.fixture(6043)
-            room.ws = war
-            f.last_hit = 99
-            acks = []
-            f.ack = acks.append
-            with patch.object(combat, 'now', return_value=100):
-                combat.Fighter.use_heal(f, dict(obj='1'), inventory.USE_IDLE)
-            self.assertEqual(acks, [inventory.RES_NOT_READY])
-            self.assertIsNone(f.healing)
-            self.assertEqual((ch.hp, f.ap, used), (30, 100, []))
+            for type_id in (6043, 6055):
+                f, ch, room, used = self.fixture(type_id)
+                room.ws = war
+                f.last_hit = 99
+                acks = []
+                f.ack = acks.append
+                with patch.object(combat, 'now', return_value=100):
+                    allowed = type_id == 6055 or not war
+                    if allowed:
+                        args = self.start(f)
+                        f.heal_now(*args)
+                        self.assertEqual(acks, [inventory.RES_OK])
+                        self.assertEqual(used, [1])
+                    else:
+                        combat.Fighter.use_heal(f, dict(obj='1'), inventory.USE_IDLE)
+                        self.assertEqual(acks, [inventory.RES_NOT_READY])
+                        self.assertIsNone(f.healing)
+                        self.assertEqual((ch.hp, f.ap, used), (30, 100, []))
 
-    async def test_personal_timer_allows_battle_medicine(self):
-        for war in (False, True):
-            f, ch, room, used = self.fixture(6055)
-            room.ws = war
-            f.last_hit = 99
-            with patch.object(combat, 'now', return_value=100):
-                args = self.start(f)
-                f.heal_now(*args)
-            self.assertGreater(ch.hp, 30)
-            self.assertEqual(used, [1])
+    async def test_room_peace_immediately_allows_ordinary_medicine(self):
+        f, ch, room, used = self.fixture(6043)
+        room.ws = True
+        f.ap_max = 100
+        f.sess.on_map = False
+        rc = combat.RoomCombat.__new__(combat.RoomCombat)
+        rc.room, rc.mobs = room, {}
+        rc.fighters = lambda: [f]
+        f.rc = rc
+        with patch.object(combat, 'now', return_value=100):
+            combat.Fighter.hit_exchanged(f)
+            rc.set_ws(False)
+            self.assertEqual(combat.Fighter.exit_timer_left(f), 0)
+            args = self.start(f)
+            f.heal_now(*args)
+        self.assertEqual(used, [1])
 
-    async def test_timer_expiry_allows_both_medicine_types_in_peace(self):
-        for type_id in (6043, 6055):
-            f, ch, room, used = self.fixture(type_id)
-            room.ws = False
-            f.last_hit = 100 - combat.LEAVE_COMBAT_TIMEOUT
-            with patch.object(combat, 'now', return_value=100):
-                args = self.start(f)
-                f.heal_now(*args)
-            self.assertEqual(used, [1])
+    async def test_room_peace_keeps_pending_battle_heal(self):
+        f, ch, room, used = self.fixture(6055)
+        room.ws = True
+        args = self.start(f)
+        room.ws = False
+        f.heal_now(*args)
+        self.assertGreater(ch.hp, 30)
+        self.assertEqual(used, [1])
+        self.assertEqual(f.ap, 100 - items.params_of(6055)['heal_cost'])
+        self.assertNotIn(('actionCancel', dict(release=1)), f.frames)
 
     async def test_hit_given_or_taken_cancels_pending_heal_immediately(self):
         for type_id in (6043,):
@@ -191,27 +206,24 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
                 f.heal_now(*args)
             self.assertEqual((ch.hp, f.ap, used), (30, 100, []))
 
-    async def test_patient_personal_timer_cannot_be_bypassed_by_another_healer(self):
-        f, ch, room, used = self.fixture(6043)
-        target = NS(is_player=True, dead=False, last_hit=99, cell=1)
-        f.cell = 0
-        f.sess.loc = NS(width=20, height=20)
-        f.rc.actor = lambda _: target
-        acks = []
-        f.ack = acks.append
-        with patch.object(combat, 'now', return_value=100):
-            combat.Fighter.use_heal(f, dict(obj='1', target='100000002'), inventory.USE_TARGET)
-        self.assertEqual(acks, [inventory.RES_NOT_READY])
-        self.assertEqual(used, [])
-
-    async def test_patient_hit_during_healing_preserves_medicine_and_ap(self):
+    async def test_patient_recent_hit_does_not_block_ordinary_healing_in_peace(self):
         f, ch, room, used = self.fixture(6043)
         patient = progression.Character()
         patient.hp = 25
-        target = NS(dead=False, last_hit=99, character=lambda: patient, eid=2)
+        target = NS(is_player=True, dead=False, last_hit=99, cell=1,
+                    character=lambda: patient, eid=2)
+        f.cell = 0
+        f.sess.loc = NS(width=20, height=20)
+        f.rc.actor = lambda _: target
         with patch.object(combat, 'now', return_value=100):
-            f.heal_now(1, target, (0, 0), 8)
-        self.assertEqual((patient.hp, f.ap, used), (25, 100, []))
+            combat.Fighter.use_heal(f, dict(obj='1', target='100000002'), inventory.USE_TARGET)
+            self.assertIsNotNone(f.healing)
+            timer = f.healing
+            args = timer._args[-1]
+            timer.cancel()
+            f.heal_now(*args)
+        self.assertEqual(used, [1])
+        self.assertGreater(patient.hp, 25)
 
     async def test_hit_does_not_cancel_pending_battle_medicine(self):
         f, ch, room, used = self.fixture(6055)
@@ -228,7 +240,7 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(ch.hp, 30)
         self.assertEqual(used, [1])
 
-    async def test_battle_medicine_heals_patient_with_active_hit_timer(self):
+    async def test_battle_medicine_heals_patient_during_room_war(self):
         f, ch, room, used = self.fixture(6055)
         patient = progression.Character()
         patient.hp = 25

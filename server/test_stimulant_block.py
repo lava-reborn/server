@@ -50,7 +50,7 @@ for t in blocked:
 check("all %d blocked types preserve doses/AP on self and target, in/out of battle, including callbacks" % len(blocked), errors, [])
 
 async def ordinary_heal():
-    row = dict(type_id=6055, root=items.HEAL, use_count=1, uniq=1)
+    row = dict(type_id=6043, root=items.HEAL, use_count=1, uniq=1)
     acks = []
     sess = SimpleNamespace(inv=SimpleNamespace(find=lambda _p: row), send=lambda *a,**kw:None)
     fighter = SimpleNamespace(sess=sess, rc=None, ap=60, healing=None, ack=acks.append, heal_now=lambda *a: None)

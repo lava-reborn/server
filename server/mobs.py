@@ -257,6 +257,8 @@ class MobStats:
         role = ROLES.get(self.role, ROLES["mob"])
         weapon = WEAPONS.get(self.weapon_class, WEAPONS["fist"])
         self.hp_max = max(1, int(round(row["hp"] * role["hp_mult"])))
+        # Temporary boss hotfix. Apply to HP only: hp_mult also scales SP.
+        self.hp_max = max(1, int(round(self.hp_max * role.get("hp_hotfix_mult", 1.0))))
         self.sp_max = max(0, int(round(row["sp"] * role["hp_mult"])))
         self.dmg_min = int(round(row["dmg_min"] * weapon["dmg_mult"] * role["dmg_mult"]))
         self.dmg_max = max(self.dmg_min,

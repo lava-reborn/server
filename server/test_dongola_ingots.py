@@ -17,8 +17,8 @@ Peacekeepers one of ten and a stack of two of one (7620), 12. The camps'
 treasurers (592, 593) stand all day and carry none, and nobody else of
 Донгола does; the copy 1171 of the Peacekeepers' camp is out of the game, so
 Дженсен stands in one place. A window of the boss hours holds 96 ounces for
-the whole server: Вади-Хальфа's 22, the valley's 2, Абри's 28 and Донгола's 44;
-170 since Абу-Хамед's 74 (the owner's Абу-Хамед, 2026-10-14,
+the whole server: Вади-Хальфа's 8, the valley's 1, Абри's 4 and Донгола's 4;
+170 since Абу-Хамед's 5 (the owner's Абу-Хамед, 2026-10-14,
 server/test_abuhamed_ingots.py), whose five bosses carry the ingot of ten
 too.
 
@@ -37,6 +37,9 @@ ingot cashed at Мортимер's in 197 -- one ack, the ledger with its row, a
 gold out of the air.
 
     LAVA_RES=.../res python3 server/test_dongola_ingots.py
+
+Current owner hotfix (2026-10-26) supersedes historical sums above: one
+1 G ingot per existing carrier. Exchanges and existing ingots are unchanged.
 """
 import asyncio
 import glob
@@ -81,13 +84,13 @@ CASH = {I1: 301, I5: 302, I10: 303}
 ADMIN_GUN, ROUNDS = 1534, 6092
 BOSSES = {
     # type: (faction, the place he stands in, the ingots of his bag)
-    374: ("ДСР", 93, {I10: 1}), 375: ("ДСР", 91, {I10: 1}),
-    407: ("Миротворцы", 98, {I10: 1, I1: 2}), 408: ("Миротворцы", 99, {I10: 1, I1: 2}),
+    374: ("ДСР", 93, {I1: 1}), 375: ("ДСР", 91, {I1: 1}),
+    407: ("Миротворцы", 98, {I1: 1}), 408: ("Миротворцы", 99, {I1: 1}),
 }
-FACTION_OUNCES = {"ДСР": 10, "Миротворцы": 12}
+FACTION_OUNCES = {"ДСР": 1, "Миротворцы": 1}
 TREASURERS = (592, 593)
 KHALIL = 374
-WINDOW_OUNCES, DONGOLA_OUNCES = 170, 44
+WINDOW_OUNCES, DONGOLA_OUNCES = 22, 4
 # Абу-Хамед's five bosses carry the ingot of ten since 2026-10-14.
 ABUHAMED_BOSSES = [777, 778, 1037, 1038, 8620]
 MT = world.mob_types()
@@ -122,13 +125,13 @@ check("  ..and the treasurers stand in the camps all day, carrying no ingot",
        [i for t in TREASURERS for i, *_r in mobs.loot_table(t) + mobs.quest_table(t) if i in INGOTS]),
       ([[93], [98]], [False, False], []))
 _one = {t: ingots_of(mobs.roll_table(t, random.Random(t))) for t in BOSSES}
-check("a kill of either of a faction's bosses: 10 and 12 ounces, the ladder's next rung",
+check("a kill of either of a faction's bosses: one ounce per existing gold carrier (temporary hotfix)",
       {f: sorted({ounces(_one[t]) for t, (ff, _w, _b) in BOSSES.items() if ff == f})
        for f in FACTION_OUNCES}, {f: [n] for f, n in FACTION_OUNCES.items()})
 check("each row certain (chance 1.0), outside the cap",
       {t: sorted(i for i, c, _v in mobs.loot_table(t) if c >= mobs.SURE) for t in BOSSES},
       {t: sorted(b) for t, (_f, _w, b) in BOSSES.items()})
-check("  ..an ingot of ten and the ones in a stack (mobs.count_of)",
+check("  ..one ingot of one ounce (mobs.count_of)",
       {t: {i: mobs.count_of(t, i) for i in b} for t, (_f, _w, b) in BOSSES.items()},
       {t: b for t, (_f, _w, b) in BOSSES.items()})
 rng = random.Random(20261013)
@@ -185,10 +188,10 @@ window = {t: sum(items.GOLD_INGOTS[i] * mobs.count_of(t, i) for i, c, _v in mobs
 check("every carrier of a certain ingot keeps the hours and stands in one place",
       {t: (bosses.keeps_hours(t), len(places[t])) for t in rollers},
       {t: (True, 1) for t in rollers})
-check("a window of the boss hours holds %d ounces for the whole server: Вади-Хальфа's 22, the"
-      " valley's 2, Абри's 28, Донгола's %d, Абу-Хамед's 74" % (WINDOW_OUNCES, DONGOLA_OUNCES),
+check("a window of the boss hours holds %d ounces for the whole server: Вади-Хальфа's 8, the"
+      " valley's 1, Абри's 4, Донгола's %d, Абу-Хамед's 5" % (WINDOW_OUNCES, DONGOLA_OUNCES),
       (sum(window.values()), sum(window[t] for t in BOSSES), window.get(2103)),
-      (WINDOW_OUNCES, DONGOLA_OUNCES, 2))
+      (WINDOW_OUNCES, DONGOLA_OUNCES, 1))
 check("  ..Дженсен among them once: the copy 1171 of his camp is out of the game",
       (sorted(places.get(407, ())), 1171 in RETIRED_PLACES), ([98], True))
 check("  ..three windows a day: %d ounces" % (3 * WINDOW_OUNCES),
@@ -318,7 +321,7 @@ check("with the rule off, every boss's bag holds his loot and no ingot",
       _run(_rule_off(), "the rule off"), {t: (False, True, []) for t in BOSSES})
 check("Макс Коул killed in his window stays away through a restart until the next one",
       _run(_restart(), "a restart in the window"),
-      {"stands at six": True, "his bag": [(I10, 1), (I1, 2)], "written down": True,
+      {"stands at six": True, "his bag": [(I1, 1)], "written down": True,
        "after a restart in the window": (False, True), "at ten he comes": (True, True)})
 
 
@@ -587,19 +590,19 @@ try:
         stacks = sorted((t, probe.item(u)["count"]) for u, t, _r in oids if t in INGOTS)
         probe.close()
         print("  ..  Полковник Халил left %s" % sorted(t for _u, t, _r in oids))
-        check("in it: one ingot of ten, 10 ounces", stacks, [(I10, 1)])
+        check("in it: one ingot of one ounce", stacks, [(I1, 1)])
         c.send("ss_upd;s_status=3;obj=x0;param=1;")
         check("taken whole, one ack", acks(c.frames(0.8))[:1], [0])
         c.send("ss_upd;s_status=0;obj=x0;param=1;")
         c.frames(0.3)
-    check("10 ounces in the bag", (bag_of(CHAR, I10), bag_of(CHAR, I1)), (1, 0))
+    check("one ounce in the bag", (bag_of(CHAR, I10), bag_of(CHAR, I1)), (0, 1))
 
     # --- cashed at Мортимер's, in the new market ----------------------------------------------
     arrival, pos = goto(c, MARKET)
     mid = npc(arrival, MORTIMER).get("id", 0)
     purse0 = money(CHAR)
     cashed = []
-    for t in (I10,):
+    for t in (I1,):
         before = money(CHAR)
         c.send("q_st;mob=%d;q_idx=%d;" % (mid, quests.given_by(MORTIMER).index(CASH[t])))
         got = c.frames(0.8)
@@ -608,13 +611,13 @@ try:
         got = c.frames(0.8)
         after = money(CHAR)
         cashed.append((t, acks(got), after[1] - before[1], after[0] - before[0]))
-    check("cashing the ten: one ack, 9.95 on the account, no afro", cashed, [(I10, [0], 995, 0)])
+    check("cashing the one-ounce ingot: one ack, 0.95 on the account, no afro", cashed, [(I1, [0], 95, 0)])
     check("  ..the ingot gone from the bag", [bag_of(CHAR, t) for t in INGOTS], [0, 0, 0])
-    check("  ..10 ounces of loot made 9.95 on the account, the fee 0.05 once for the one ingot: no gold"
-          " out of the air", money(CHAR)[1] - purse0[1], 995)
+    check("  ..one ounce of loot made 0.95 on the account, the fee 0.05 once for the one ingot: no gold"
+          " out of the air", money(CHAR)[1] - purse0[1], 95)
     rows = [(r["source"], r["ref"], r["afro"], r["gold"]) for r in ledger(CHAR)]
     check("the ledger: the cashing under quest and its type",
-          [r for r in rows if r[0] == "quest"], [("quest", 303, 0, 995)])
+          [r for r in rows if r[0] == "quest"], [("quest", 301, 0, 95)])
     check("  ..and the ledger holds what the purse holds",
           (sum(r[2] for r in rows), sum(r[3] for r in rows)), money(CHAR))
     c.send("logout;")
