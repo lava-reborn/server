@@ -1,4 +1,4 @@
-"""Temporary boss HP x1.5 and one gold ingot for existing carriers only.
+"""Temporary boss HP x1.5 and regional gold rewards for existing carriers only.
 
 Owner decision, 2026-10-26. One deterministic loot check per carrier,
 no sockets, simulations or farm measurements. Existing exchange prices,
@@ -71,8 +71,11 @@ carriers = {int(t) for t in mobs.TYPES
 check('gold carriers remain exactly the existing twenty two boss types', carriers, CARRIERS)
 gold = {t: [(i, n) for i, n in mobs.roll_table(t, random.Random(t))
             if i in items.GOLD_INGOTS] for t in CARRIERS}
-check('each existing carrier drops exactly one one-ounce ingot',
-      gold, {t: [(7620, 1)] for t in CARRIERS})
+check('each existing carrier drops its regional one-ounce ingot count',
+      gold, {t: [(7620, n)] for n, types in ((1, {2103, 269, 270, 283, 284, 299, 300, 313, 314}),
+                                    (2, {327, 328, 360, 361}),
+                                    (3, {374, 375, 407, 408}),
+                                    (4, {777, 778, 8620, 1037, 1038})) for t in types})
 
 def bag(hours):
     rows = []
@@ -90,7 +93,7 @@ on, off = bag([14 * 60, 18 * 60, 22 * 60]), bag([])
 check('real corpse creation preserves the scheduled-boss gold restriction',
       ([(r['type_id'], r['count']) for r in on if r['type_id'] in items.GOLD_INGOTS],
        [r['type_id'] for r in off if r['type_id'] in items.GOLD_INGOTS]),
-      ([(7620, 1)], []))
+      ([(7620, 4)], []))
 check('disabling boss hours leaves non-gold corpse loot unchanged',
       [(r['type_id'], r['count']) for r in on if r['type_id'] not in items.GOLD_INGOTS],
       [(r['type_id'], r['count']) for r in off])

@@ -1004,11 +1004,11 @@ try:
                         (COLE, CHIEF_PK)):
         fell, bag = boss_bag(c, GUN, where, boss)
         bags[boss] = (fell, bag, ounces(bag))
-    check("at six all four bosses fall and each leaves one one-ounce ingot",
-          bags, {boss: (True, {I1: 1}, 1) for boss in (KHALIL, JIBRIL, JENSEN, COLE)})
+    check("at six all four bosses fall and each leaves 3 one-ounce ingots",
+          bags, {boss: (True, {I1: 3}, 3) for boss in (KHALIL, JIBRIL, JENSEN, COLE)})
     have = held(CID)
-    check("  ..four ounces in ingots in the bag", {t: have[t] for t in INGOTS},
-          {I1: 4, I5: 0, I10: 0})
+    check("  ..12 ounces in ingots in the bag", {t: have[t] for t in INGOTS},
+          {I1: 12, I5: 0, I10: 0})
 
     # --- Мортимер in the new market --------------------------------------------------------
     lid, arrival = goto(c, NEW_MARKET)
@@ -1019,19 +1019,19 @@ try:
           (list(INGOTS), [0], ([inventory.RES_REFUSED], 0, 0, 0)))
     close_stall(c)
     purse0, cashed = money(CID), []
-    for t in [I1] * 4:
+    for t in [I1] * 12:
         before = money(CID)
         got, q = take(c, here, MORTIMER, CASH[t])
         done = hand_in(c, here, MORTIMER, q)
         cashed.append((CASH[t], acks(got) + acks(done)[:1], money(CID)[1] - before[1]))
-    check("every ingot cashed at his: «Обналичить 1 унцию» four times, 0.05 less each", cashed, [(301, [0, 0], 95)] * 4)
-    check("  ..four ounces of loot made 3.80 on the account, no afro, the ingots gone",
+    check("every ingot cashed at his: «Обналичить 1 унцию» 12 times, 0.05 less each", cashed, [(301, [0, 0], 95)] * 12)
+    check("  ..12 ounces of loot made 11.40 on the account, no afro, the ingots gone",
           (money(CID)[1] - purse0[1], money(CID)[0] - purse0[0],
-           [held(CID)[t] for t in INGOTS]), (380, 0, [0, 0, 0]))
+           [held(CID)[t] for t in INGOTS]), (1140, 0, [0, 0, 0]))
     rows = [(r["source"], r["ref"], r["gold"]) for r in ledger(CID) if r["source"] == "quest"
             and r["ref"] in CASH.values()]
     check("  ..the ledger: a row for each cashing under its quest",
-          sorted(rows), [("quest", 301, 95)] * 4)
+          sorted(rows), [("quest", 301, 95)] * 12)
 
     # --- the black market's stalls: the band 12-16, afro and gold ---------------------------
     lid, arrival = goto(c, BLACK)
@@ -1084,7 +1084,7 @@ try:
           " bag", (acks(got), acks(done)[:1], after[GOLD_LOT_TICKET],
                    len([t for t in prizes if after[t] > before[t]])), ([0], [0], 0, 1))
     check("  ..shop funding plus boss proceeds cover all purchases",
-          money(CID)[1] - purse0[1], shopping_gold + 380 - 1050 - 1428 - 512 - 300)
+          money(CID)[1] - purse0[1], shopping_gold + 1140 - 1050 - 1428 - 512 - 300)
 
     # --- home: to Абри, back, and to Вади-Хальфа ----------------------------------------
     lid, arrival = goto(c, DN_STATION)

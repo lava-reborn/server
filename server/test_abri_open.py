@@ -807,14 +807,14 @@ try:
 
     # --- the gold: the camps at six ------------------------------------------------------
     fell, bag_abu = boss_bag(c, GUN, CAMP_ST, ABU)
-    check("at six Папаша Абу in the slave traders' camp (88) falls; one one-ounce ingot",
-          (fell, bag_abu, ounces(bag_abu)), (True, {I1: 1}, 1))
+    check("at six Папаша Абу in the slave traders' camp (88) falls; 2 one-ounce ingots",
+          (fell, bag_abu, ounces(bag_abu)), (True, {I1: 2}, 2))
     fell, bag_elfrid = boss_bag(c, GUN, CAMP_ZD, ELFRID)
-    check("  ..Элфрид in the flayers' camp (92) falls; one one-ounce ingot",
-          (fell, bag_elfrid, ounces(bag_elfrid)), (True, {I1: 1}, 1))
+    check("  ..Элфрид in the flayers' camp (92) falls; 2 one-ounce ingots",
+          (fell, bag_elfrid, ounces(bag_elfrid)), (True, {I1: 2}, 2))
     have = held(CID)
-    check("  ..two ounces in ingots in the bag", {t: have[t] for t in INGOTS},
-          {I1: 2, I5: 0, I10: 0})
+    check("  ..4 ounces in ingots in the bag", {t: have[t] for t in INGOTS},
+          {I1: 4, I5: 0, I10: 0})
 
     # --- Мортимер in the port market ------------------------------------------------------
     lid, arrival = goto(c, PORT)
@@ -825,20 +825,20 @@ try:
                                                              ([inventory.RES_REFUSED], 0, 0, 0)))
     close_stall(c)
     purse0, cashed = money(CID), []
-    for t in [I1] * 2:
+    for t in [I1] * 4:
         before = money(CID)
         got, q = take(c, here, MORTIMER, CASH[t])
         done = hand_in(c, here, MORTIMER, q)
         cashed.append((CASH[t], acks(got) + acks(done)[:1], money(CID)[1] - before[1]))
-    check("every ingot cashed at his: «Обналичить 1 унцию» twice,"
-          " 0.05 less each", cashed, [(301, [0, 0], 95)] * 2)
-    check("  ..two ounces of loot made 1.90 on the account, no afro, the ingots gone",
+    check("every ingot cashed at his: «Обналичить 1 унцию» 4 times,"
+          " 0.05 less each", cashed, [(301, [0, 0], 95)] * 4)
+    check("  ..4 ounces of loot made 3.80 on the account, no afro, the ingots gone",
           (money(CID)[1] - purse0[1], money(CID)[0] - purse0[0],
-           [held(CID)[t] for t in INGOTS]), (190, 0, [0, 0, 0]))
+           [held(CID)[t] for t in INGOTS]), (380, 0, [0, 0, 0]))
     rows = [(r["source"], r["ref"], r["gold"]) for r in ledger(CID) if r["source"] == "quest"
             and r["ref"] in CASH.values()]
     check("  ..the ledger: a row for each cashing under its quest",
-          sorted(rows), [("quest", 301, 95)] * 2)
+          sorted(rows), [("quest", 301, 95)] * 4)
 
     # --- spending: a lottery ticket and a coupon --------------------------------------------
     stall, opened = open_stall(c, here, LOTTERY_MAN)

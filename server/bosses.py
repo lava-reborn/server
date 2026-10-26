@@ -1,4 +1,9 @@
-"""Bosses keep hours: they stand in their place only at set times of day.
+"""Bosses keep hours: every two hours from 00:00 Moscow time.
+
+Owner update, 2026-10-26: all even hours, with the existing one-hour stay.
+Warehouse masters retain their separate once-a-day schedule.
+
+Historical decisions below describe the previous schedules.
 
 The owner's rule (2026-09-24): «босс постоянно не должен быть в локации, а
 только в 18 и 20 часов», and on 2026-10-02 «добавь ещё боссов на 14
@@ -35,7 +40,8 @@ like every boss; killed, he is gone until tomorrow's hour, and at 14, 18
 and 22 he does not come. A master killed in his window hands the warehouse
 to a clan (holdings.py), so a day settles it once.
 
-    LAVA_BOSS_HOURS  "14,18,22"       the hours, H or H:MM on that clock.
+    LAVA_BOSS_HOURS  "0,2,4,...,22"    the hours, H or H:MM on that clock.
+                                      Default: every even hour, 00:00 to 22:00.
                                       "off" turns the rule off, and a boss is
                                       an ordinary mob again, which drops no
                                       gold ingot (combat.RoomCombat.
@@ -106,7 +112,7 @@ def parse_hours(raw, name="LAVA_BOSS_HOURS"):
     return sorted(out)
 
 
-DEFAULT_HOURS = "14,18,22"
+DEFAULT_HOURS = "0,2,4,6,8,10,12,14,16,18,20,22"
 DEFAULT_STAY = 60.0
 # The warehouse masters' hour (the module's docstring). It lives here so that
 # a server started without compose's defaults (a test, a bare docker run)
@@ -120,8 +126,8 @@ def hours_from(raw, name="LAVA_BOSS_HOURS", default=DEFAULT_HOURS):
     """LAVA_BOSS_HOURS -- or another setting of hours, LAVA_WAREHOUSE_HOURS
     -- as the rule reads it. Only "off" turns it off. Unset or blank is the
     owner's hours -- "LAVA_BOSS_HOURS=" in a shell or an env file outside
-    compose, whose ${...:-14,18,22} covers only its own case, must not
-    quietly leave every boss standing all day -- and so is a value in which
+    compose, whose default covers only its own case, must not quietly
+    leave every boss standing all day -- and so is a value in which
     not one hour could be read."""
     raw = (raw or "").strip()
     if not raw:
@@ -379,4 +385,4 @@ def say_hours(short=False):
     if short and not any(m % 60 for m in HOURS):
         last = HOURS[-1] // 60
         return "в %s %s" % (_and([str(m // 60) for m in HOURS]), _hours_word(last))
-    return "в " + _and(["%d:%02d" % divmod(m, 60) for m in HOURS])
+    return "в " + _and(["%02d:%02d" % divmod(m, 60) for m in HOURS])

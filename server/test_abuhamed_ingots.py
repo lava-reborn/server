@@ -1,4 +1,7 @@
-"""The gold ingots of Абу-Хамед's bosses, and Мортимер in its port.
+"""Current owner rule: 4 one-ounce ingots per existing gold-carrying boss.
+Historical reward decisions follow; assertions use the current regional rule.
+
+The gold ingots of Абу-Хамед's bosses, and Мортимер in its port.
 
 The owner's order of 2026-10-14: «сделай потом абу хамед в таком же формате»
 -- Абу-Хамед the way Абри and Донгола were made, Абри's order saying «Там
@@ -38,8 +41,8 @@ and no gold out of the air.
 
     LAVA_RES=.../res python3 server/test_abuhamed_ingots.py
 
-Current owner hotfix (2026-10-26) supersedes historical sums above: one
-1 G ingot per existing carrier. Exchanges and existing ingots are unchanged.
+Current owner rule (2026-10-26) supersedes historical sums above: 4
+one-ounce ingots per existing carrier. Exchanges and existing ingots are unchanged.
 """
 import asyncio
 import glob
@@ -84,11 +87,11 @@ CASH = {I1: 301, I5: 302, I10: 303}
 ADMIN_GUN, ROUNDS = 1534, 6092
 BOSSES = {
     # type: (the camp's sum, the place he stands in, the ingots of his bag)
-    777: ("Пираты", 132, {I1: 1}), 778: ("Пираты", 133, {I1: 1}),
-    8620: ("Аванпост", 168, {I1: 1}),
-    1037: ("База", 263, {I1: 1}), 1038: ("База", 274, {I1: 1}),
+    777: ("Пираты", 132, {I1: 4}), 778: ("Пираты", 133, {I1: 4}),
+    8620: ("Аванпост", 168, {I1: 4}),
+    1037: ("База", 263, {I1: 4}), 1038: ("База", 274, {I1: 4}),
 }
-FACTION_OUNCES = {"Пираты": 1, "Аванпост": 1, "База": 1}
+FACTION_OUNCES = {"Пираты": 4, "Аванпост": 4, "База": 4}
 TREASURERS = {764: 132, 1024: 168, 1736: 263}
 MARABU = 777
 WINDOW_OUNCES, ABUHAMED_OUNCES = 22, 5
@@ -130,14 +133,14 @@ check("  ..and the pirates' «Кавторанг» (771), a boss by his type's w
       (world.creature_role(771), bosses.keeps_hours(771),
        [i for i, *_r in mobs.loot_table(771) if i in INGOTS]), ("mob", False, []))
 _one = {t: ingots_of(mobs.roll_table(t, random.Random(t))) for t in BOSSES}
-check("a kill of any gold-carrying camp boss: one ounce under the temporary"
-      " ladder's next rung",
+check("a kill of any gold-carrying camp boss: four ounces under the regional"
+      " reward rule",
       {f: sorted({ounces(_one[t]) for t, (ff, _w, _b) in BOSSES.items() if ff == f})
        for f in FACTION_OUNCES}, {f: [n] for f, n in FACTION_OUNCES.items()})
 check("each row certain (chance 1.0), outside the cap",
       {t: sorted(i for i, c, _v in mobs.loot_table(t) if c >= mobs.SURE) for t in BOSSES},
       {t: sorted(b) for t, (_f, _w, b) in BOSSES.items()})
-check("  ..one ingot of one ounce (mobs.count_of)",
+check("  ..4 one-ounce ingots (mobs.count_of)",
       {t: {i: mobs.count_of(t, i) for i in b} for t, (_f, _w, b) in BOSSES.items()},
       {t: b for t, (_f, _w, b) in BOSSES.items()})
 rng = random.Random(20261014)
@@ -605,19 +608,19 @@ try:
         stacks = sorted((t, probe.item(u)["count"]) for u, t, _r in oids if t in INGOTS)
         probe.close()
         print("  ..  Коммодор Марабу left %s" % sorted(t for _u, t, _r in oids))
-        check("in it: one ingot of one ounce", stacks, [(I1, 1)])
+        check("in it: 4 one-ounce ingots", stacks, [(I1, 4)])
         c.send("ss_upd;s_status=3;obj=x0;param=1;")
         check("taken whole, one ack", acks(c.frames(0.8))[:1], [0])
         c.send("ss_upd;s_status=0;obj=x0;param=1;")
         c.frames(0.3)
-    check("one ounce in the bag", (bag_of(CHAR, I10), bag_of(CHAR, I1)), (0, 1))
+    check("4 ounces in the bag", (bag_of(CHAR, I10), bag_of(CHAR, I1)), (0, 4))
 
     # --- cashed at Мортимер's, in the port ---------------------------------------------------
     arrival, pos = goto(c, MARKET)
     mid = npc(arrival, MORTIMER).get("id", 0)
     purse0 = money(CHAR)
     cashed = []
-    for t in (I1,):
+    for t in (I1,) * 4:
         before = money(CHAR)
         c.send("q_st;mob=%d;q_idx=%d;" % (mid, quests.given_by(MORTIMER).index(CASH[t])))
         got = c.frames(0.8)
@@ -627,13 +630,13 @@ try:
         after = money(CHAR)
         cashed.append((t, acks(got), after[1] - before[1], after[0] - before[0]))
     check("cashing the one-ounce ingot: one ack, 0.95 on the account,"
-          " no afro", cashed, [(I1, [0], 95, 0)])
+          " no afro", cashed, [(I1, [0], 95, 0)] * 4)
     check("  ..the ingot gone from the bag", [bag_of(CHAR, t) for t in INGOTS], [0, 0, 0])
-    check("  ..one ounce of loot made 0.95 on the account, the fee 0.05 for the ingot: no gold"
-          " out of the air", money(CHAR)[1] - purse0[1], 95)
+    check("  ..4 ounces of loot made 3.80 on the account, the fee 0.05 for the ingot: no gold"
+          " out of the air", money(CHAR)[1] - purse0[1], 380)
     rows = [(r["source"], r["ref"], r["afro"], r["gold"]) for r in ledger(CHAR)]
     check("the ledger: the cashing under quest and its type",
-          sorted(r for r in rows if r[0] == "quest"), [("quest", 301, 0, 95)])
+          sorted(r for r in rows if r[0] == "quest"), [("quest", 301, 0, 95)] * 4)
     check("  ..and the ledger holds what the purse holds",
           (sum(r[2] for r in rows), sum(r[3] for r in rows)), money(CHAR))
     c.send("logout;")

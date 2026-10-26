@@ -225,8 +225,8 @@ RAT, DUG_SAND, NITRE_GATE, WORKS_LINE = 1423, 1422, 1327, 1386
 WEST_GUARD, SOUTH_GUARD, SUPPLY, PRISON_HEALER, TOMAS = 1793, 1796, 880, 2112, 876
 PRISONERS = (1118, 1119, 1120, 1121, 1122)
 MARABU, NGORO, SHERKHAN_OUTPOST, SHERKHAN_BASE, TABAKI = 777, 778, 8620, 1037, 1038
-BOSSES = {MARABU: (PIRATES, 1), NGORO: (PIRATES_CHIEF, 1), SHERKHAN_OUTPOST: (OUTPOST, 1),
-          SHERKHAN_BASE: (BASE, 1), TABAKI: (BASE_CHIEF, 1)}
+BOSSES = {MARABU: (PIRATES, 4), NGORO: (PIRATES_CHIEF, 4), SHERKHAN_OUTPOST: (OUTPOST, 4),
+          SHERKHAN_BASE: (BASE, 4), TABAKI: (BASE_CHIEF, 4)}
 NAMED = (1749, 1750, 1751, 1752, 1760, 2168, 2170)
 # The things.
 TICKET_TO_AH, TICKET_TO_DN = 1567, 1639
@@ -346,9 +346,9 @@ try:
                          if not lo <= mobs.stats(t).level <= hi}))
            for lid, (lo, hi) in BANDS.items()},
           {lid: (True, []) for lid in BANDS})
-    check("the five bosses stand in their places and each carries one one-ounce ingot",
+    check("the five bosses stand in their places and each carries 4 one-ounce ingots",
           {b: (standing(lid)[b], sure_ounces(b)) for b, (lid, _o) in BOSSES.items()},
-          {b: (1, (o, {I1: 1}))
+          {b: (1, (o, {I1: 4}))
            for b, (_lid, o) in BOSSES.items()})
     check("the places of Абу-Хамед the path starts from all stand on map cells",
           [lid for lid in ABUHAMED if world.cell_of(lid) is None], [])
@@ -1201,11 +1201,11 @@ try:
     for boss, (where, _o) in BOSSES.items():
         fell, bag = boss_bag(c, GUN, where, boss)
         bags[boss] = (fell, bag, ounces(bag))
-    check("at six all five bosses fall and each leaves one one-ounce ingot",
-          bags, {boss: (True, {I1: 1}, 1) for boss in BOSSES})
+    check("at six all five bosses fall and each leaves 4 one-ounce ingots",
+          bags, {boss: (True, {I1: 4}, 4) for boss in BOSSES})
     have = held(CID)
-    check("  ..five ounces in five ingots in the bag", {t: have[t] for t in INGOTS},
-          {I1: 5, I5: 0, I10: 0})
+    check("  ..20 ounces in one-ounce ingots in the bag", {t: have[t] for t in INGOTS},
+          {I1: 20, I5: 0, I10: 0})
 
     # --- Мортимер on the pier --------------------------------------------------------------
     lid, arrival = goto(c, PORT)
@@ -1216,20 +1216,20 @@ try:
           (list(INGOTS), [0], ([inventory.RES_REFUSED], 0, 0, 0)))
     close_stall(c)
     purse0, cashed = money(CID), []
-    for t in [I1] * 5:
+    for t in [I1] * 20:
         before = money(CID)
         got, q = take(c, here, MORTIMER, CASH[t])
         done = hand_in(c, here, MORTIMER, q)
         cashed.append((CASH[t], acks(got) + acks(done)[:1], money(CID)[1] - before[1]))
-    check("every ingot cashed at his: «Обналичить 1 унцию» five times, 0.05 less each", cashed,
-          [(301, [0, 0], 95)] * 5)
-    check("  ..five ounces of loot made 4.75 on the account, no afro, the ingots gone",
+    check("every ingot cashed at his: «Обналичить 1 унцию» 20 times, 0.05 less each", cashed,
+          [(301, [0, 0], 95)] * 20)
+    check("  ..20 ounces of loot made 19.00 on the account, no afro, the ingots gone",
           (money(CID)[1] - purse0[1], money(CID)[0] - purse0[0],
-           [held(CID)[t] for t in INGOTS]), (475, 0, [0, 0, 0]))
+           [held(CID)[t] for t in INGOTS]), (1900, 0, [0, 0, 0]))
     rows = [(r["source"], r["ref"], r["gold"]) for r in ledger(CID) if r["source"] == "quest"
             and r["ref"] in CASH.values()]
     check("  ..the ledger: a row for each cashing under its quest",
-          sorted(rows), [("quest", 301, 95)] * 5)
+          sorted(rows), [("quest", 301, 95)] * 20)
 
     # --- the station's stalls: the band 16-20, afro and gold ---------------------------------
     lid, arrival = goto(c, STATION)
@@ -1333,7 +1333,7 @@ try:
     check("  ..«Выход из обучающего центра» (966) at Илья: back to the quarter", (ack, lid),
           ([0, 0], QUARTER))
     check("shop funding plus boss proceeds cover purchases and the lesson",
-          money(CID)[1], shopping_gold + 475 - 5000 - 800 - 350 - 600)
+          money(CID)[1], shopping_gold + 1900 - 5000 - 800 - 350 - 600)
 
     # --- the Dark Mine: down two tiers and up ------------------------------------------------
     # This scene checks passages, not survival of a naked character. The
