@@ -1920,44 +1920,27 @@ def fn_sublocation_global():
     return a
 
 
-def fn_quick_med_hit():
-    """Keep the personal medicine deadline when battleMode clears the exit UI.
-
-    Location.startExitTimer is dispatched only for a hit given or received.
-    Store on that location, not the reusable UI, so a new location inherits
-    no deadline. No extra interval, network request or exit-button change.
-    """
-    a = Asm()
-    a.var("this").member("currentLocation").push("__quickMedUntil")
-    a.op("gettime").push(0).var("_global").member("lol", "core", "GConstatns")
-    a.push("getLeaveCombatLocationPause").op("callmethod").push(1000).op("multiply")
-    a.op("add2").op("setmember")
-    a.push(0).var("this").push("__quickMedHitOrig").op("callmethod").op("pop")
-    return a
-
-
 def fn_quick_med_pick():
-    """Pick battle medicine in room war or the personal hit cooldown.
+    """Prefer ordinary medicine in peace; only battle medicine in room war.
 
-    PersEquip keeps arrays sorted by restoration. Walk backwards, retaining
-    the first (strongest) entry at each priority. Manual inventory use is
-    untouched. HealItem.initialize and Bag.chekExist define the fields here.
+    Compare numeric restoration for the requested resource explicitly:
+    PersEquip.addHealItem sorts stamina entries lexically. Keep existing
+    medicine/bag priorities. Manual inventory use is untouched.
     """
     a = Asm()
     a.push("location").push(0).var("_global").member("lol", "core").push("Master").op("getmember")
     a.push("getInstance").op("callmethod").member("currentLocation").op("definelocal")
     a.push("war").var("location").member("warStatus").op("definelocal")
-    a.var("war").iftrue("state_ready")
-    a.var("location").member("__quickMedUntil").op("not").iftrue("state_ready")
-    a.push("war").op("gettime").var("location").member("__quickMedUntil").op("less2").op("definelocal")
-    a.label("state_ready")
     a.push("best", None).op("definelocal")
     a.push("bestRank", -1).op("definelocal")
+    a.push("bestAmount", 0).op("definelocal")
     a.push("i").var("entries").member("length").push(1).op("subtract").op("definelocal")
     a.label("loop")
     a.var("i").push(0).op("less2").iftrue("out")
     a.push("entry").var("entries").var("i").op("getmember").op("definelocal")
     a.push("item").var("entry").member("item").op("definelocal")
+    a.push("amount").var("resource").push(1).var("item").push("getProp").op("callmethod").push(1).op("multiply").op("definelocal")
+    a.push(0).var("amount").op("less2").op("not").iftrue("next")
     for field in ("bonus_act_time", "str_bonus", "dex_bonus", "sta_bonus", "per_bonus", "int_bonus"):
         a.push(field, 1).var("item").push("getProp").op("callmethod").iftrue("next")
     a.push("_effects", 1).var("item").push("getProp").op("callmethod").member("length").iftrue("next")
@@ -1965,11 +1948,7 @@ def fn_quick_med_pick():
     a.push("cost").push("heal_cost", 1).var("item").push("getProp").op("callmethod").op("definelocal")
     a.push("rank", 0).op("definelocal")
     a.var("war").op("not").iftrue("peace")
-    # Room war blocks even before a hit; its end does not clear the hit timer.
     a.var("cost").op("not").iftrue("next")
-    # The server charges healing AP only in room war, not during a lone
-    # personal cooldown after the room has calmed.
-    a.var("location").member("warStatus").op("not").iftrue("compare")
     a.push(0).var("_global").member("lol", "core").push("Master").op("getmember").push("getInstance").op("callmethod")
     a.member("gamer", "apManager", "maxAP").var("cost").op("less2").iftrue("next")
     a.push(True).iftrue("compare")
@@ -1980,9 +1959,13 @@ def fn_quick_med_pick():
     a.var("item").push(1).var("equip").member("bag").push("chekExist").op("callmethod").op("not").iftrue("compare")
     a.push("rank").var("rank").push(1).op("add2").op("definelocal")
     a.label("compare")
-    a.var("bestRank").var("rank").op("less2").op("not").iftrue("next")
+    a.var("bestRank").var("rank").op("less2").iftrue("select")
+    a.var("rank").var("bestRank").op("less2").iftrue("next")
+    a.var("bestAmount").var("amount").op("less2").op("not").iftrue("next")
+    a.label("select")
     a.push("best").var("entry").op("definelocal")
     a.push("bestRank").var("rank").op("definelocal")
+    a.push("bestAmount").var("amount").op("definelocal")
     a.label("next")
     a.push("i").var("i").push(1).op("subtract").op("definelocal")
     a.push(True).iftrue("loop")
@@ -1995,7 +1978,8 @@ def fn_quick_med_use(array, original):
     """Pass one eligible entry to the original handler, then restore its array."""
     a = Asm()
     a.push("saved").var("this").member(array).op("definelocal")
-    a.push("picked").var("saved").var("this").push(2, "__quickMedPick").op("callfunc").op("definelocal")
+    resource = "max_h_rest" if array == "healArr" else "max_st_rest"
+    a.push("picked").push(resource).var("saved").var("this").push(3, "__quickMedPick").op("callfunc").op("definelocal")
     a.var("picked").op("not").iftrue("out")
     a.var("this").push(array).var("picked").push(1).op("initarray").op("setmember")
     a.push(0).var("this").push(original).op("callmethod").op("pop")
@@ -2061,6 +2045,9 @@ def fn_action_cancel():
     a.push("walker").var("id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
     a.var("walker").op("not").iftrue("out")
     a.var("p").member("pos").push(1).var("walker").push("breakMove").op("callmethod").op("pop")
+    # Location.movePlayer suppresses clicks matching finishPos. The old
+    # destination is no longer pending after this authoritative stop.
+    a.var("walker").push("finishPos").var("walker").member("numPos").op("setmember")
     for field, busy in (("prevNumPos", False), ("numPos", True)):
         a.var("walker").member(field).push(1).var("this").push("getCellFromNumber").op("callmethod")
         a.push("busy", busy).op("setmember")
@@ -2144,6 +2131,26 @@ def fn_action_use_ack():
     return a
 
 
+def fn_medicine_can_use():
+    """Check the medicine's AP, not the primary weapon's unrelated cost."""
+    a = Asm()
+    a.push("item").var("this").member("__usedItem").op("definelocal")
+    a.var("item").op("not").iftrue("original")
+    a.var("item").member("rootID").var("_global").member("lol", "core", "objects", "Item", "HEAL_ITEM").op("equals2").op("not").iftrue("original")
+    for kind in ("USE_IDLE", "USE_TARGET"):
+        a.var("this").member("useType").var("_global").member("lol", "core", "objects", "Item", kind).op("equals2").iftrue("medicine")
+    a.push(True).iftrue("original")
+    a.label("medicine")
+    a.push(0).var("_global").member("lol", "core", "Master").push("getInstance").op("callmethod").member("currentLocation", "warStatus").op("not").iftrue("peace")
+    a.var("this").member("gamer", "apManager", "ap")
+    a.push(0).var("item").push("getAP").op("callmethod").op("less2").op("not").op("return")
+    a.label("peace")
+    a.push(True).op("return")
+    a.label("original")
+    a.push(0).var("this").push("__medicineCanUseOrig").op("callmethod").op("return")
+    return a
+
+
 def fn_action_listener(original, remove=False):
     a = Asm()
     if not remove:
@@ -2162,7 +2169,7 @@ def injected():
             ("__actionCancel", fn_action_cancel, ("obj",)),
             ("__actionStart", fn_action_start, ("obj",)),
             ("__sceneCancelAim", fn_scene_cancel_aim, ("obj",)),
-            ("__quickMedPick", fn_quick_med_pick, ("equip", "entries")),
+            ("__quickMedPick", fn_quick_med_pick, ("equip", "entries", "resource")),
             ("__wideDraw", fn_draw, ("bd", "host", "a", "d", "tx", "ty",
                                      "cx", "cy", "cw", "ch")),
             ("__wideFill", fn_fill, ("mc", "bd", "x0", "y0", "x1", "y1")),
@@ -2191,8 +2198,6 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
-        (("gpui", "LocationInterface"), "startExitTimer", "__quickMedHitOrig",
-         (), fn_quick_med_hit()),
         (("gpui", "WeaponPan"), "healTimeBar", "__confirmedHealOrig",
          ("obj",), fn_confirmed_heal_bar()),
         (("core", "location", "DisplayLocScene"), "init", "__sceneActionInitOrig",
@@ -2201,6 +2206,8 @@ def injected():
          (), fn_scene_action_listener("__sceneActionKillOrig", remove=True)),
         (("core", "objects", "ItemActivator"), "useAck", "__actionAckOrig",
          ("obj",), fn_action_use_ack()),
+        (("core", "objects", "ItemActivator"), "canUse", "__medicineCanUseOrig",
+         (), fn_medicine_can_use()),
         (("services", "HotKeyManager"), "onKeyDown", "__keysDownOrig",
          (), fn_hotkey_reconcile("__keysDownOrig")),
         (("services", "HotKeyManager"), "onKeyUp", "__keysUpOrig",

@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 logging.disable(logging.CRITICAL)
 import accounts  # noqa: E402
 import inventory  # noqa: E402
+import items  # noqa: E402
 import progression  # noqa: E402
 import quests  # noqa: E402
 import server  # noqa: E402
@@ -105,6 +106,33 @@ class QuestTransactions(unittest.TestCase):
         self.assertEqual(self.s.inv.bag_pieces().get(6106), 1)
         self.assertEqual([p["res"] for n, p in self.frames if n == "cmdAck"],
                          [0, server.RES_NO_SUCH])
+
+    def test_halfa_provisions_consumes_purchased_ful_and_rewards_once(self):
+        self.q = quests.QUESTS[148]
+        # The medical range is location-specific; the unscoped stock only
+        # holds the trader's extra quest goods, including the distinct qFul.
+        for loc in (35, 176):
+            self.assertIn(6899, items.stock_for(81, loc))
+        self.s.npc_type = lambda _id: 718
+        for _ in range(5):
+            self.give(333)
+        wrong_ful = self.give(334)
+        self.assertEqual(self.q.bag_progress(self.s.inv.bag_pieces())['obj_num'], [5, 0])
+        ful = self.give(6899)
+        progress = self.q.bag_progress(self.s.inv.bag_pieces())
+        self.assertEqual(progress['obj_num'], [5, 1])
+        qid = self.store.take_quest(self.cid, self.q.type, progress, True)
+        before = self.s.char.afro
+        self.hand_in(qid)
+        self.assertIsNone(self.store.quest(qid))
+        self.assertIsNone(self.store.item(ful['uniq']))
+        self.assertIsNotNone(self.store.item(wrong_ful['uniq']))
+        self.assertNotIn(333, self.s.inv.bag_pieces())
+        self.assertEqual(self.s.char.afro - before, self.q.rew_afro)
+        self.assertEqual(self.history(), 1)
+        self.hand_in(qid)
+        self.assertEqual(self.s.char.afro - before, self.q.rew_afro)
+        self.assertEqual(self.history(), 1)
 
     def test_failed_take_rolls_back_start_item_and_instance(self):
         self.q.start_obj = [(6043, 1)]

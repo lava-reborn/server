@@ -47,6 +47,9 @@ on: no boss of Halfa carries an ingot, no ingot has a gold price, Мортиме
 sells nothing and stands nowhere on the black market.
 
     LAVA_RES=.../lava/res python3 server/test_halfa_ingots.py
+
+Current owner hotfix (2026-10-26) supersedes historical sums above: one
+1 G ingot per existing carrier. Exchanges and existing ingots are unchanged.
 """
 import asyncio
 import math
@@ -93,15 +96,15 @@ ADMIN_GUN, ROUNDS = 1534, 6092
 REFUSED, NO_MONEY = 3, 21               # inventory.RES_REFUSED, RES_NO_MONEY
 
 # The owner's ounces by faction, and the ingots that make them.
-FACTION_OUNCES = {"колонисты": 1, "Люшер": 2, "джанджавиды": 3, "Магриб": 5}
+FACTION_OUNCES = {"колонисты": 1, "Люшер": 1, "джанджавиды": 1, "Магриб": 1}
 BOSSES = {
     # type: (faction, the place he stands in, the ingots of his bag)
     270: ("колонисты", 80, {I1: 1}), 269: ("колонисты", 82, {I1: 1}),
-    283: ("Люшер", 81, {I1: 2}), 284: ("Люшер", 83, {I1: 2}),
-    299: ("джанджавиды", 84, {I1: 3}), 300: ("джанджавиды", 86, {I1: 3}),
-    313: ("Магриб", 85, {I5: 1}), 314: ("Магриб", 87, {I5: 1}),
+    283: ("Люшер", 81, {I1: 1}), 284: ("Люшер", 83, {I1: 1}),
+    299: ("джанджавиды", 84, {I1: 1}), 300: ("джанджавиды", 86, {I1: 1}),
+    313: ("Магриб", 85, {I1: 1}), 314: ("Магриб", 87, {I1: 1}),
 }
-VALLEY_BOSS = 2103                      # Ян Дуглас: his two of one, test_boss_ingot
+VALLEY_BOSS = 2103                      # Ян Дуглас: his one-ounce ingot, test_boss_ingot
 ALL_DAY = (586, 696)                    # Halfa's bosses on the respawn timer
 ASMUND = 269
 
@@ -141,13 +144,13 @@ check("  ..and the treasurer 586 stands in the colonists' camp all day",
 
 # --- what each one's bag holds -------------------------------------------------------
 _one_kill = {t: ingots_of(mobs.roll_table(t, random.Random(t))) for t in BOSSES}
-check("a kill of either of a faction's bosses: the owner's ounces halved, 1, 2, 3 and 5",
+check("a kill of either of a faction's bosses: one ounce per existing gold carrier (temporary hotfix)",
       {f: sorted({ounces(_one_kill[t]) for t, (ff, _w, _b) in BOSSES.items() if ff == f})
        for f in FACTION_OUNCES}, {f: [n] for f, n in FACTION_OUNCES.items()})
 check("each row of theirs is certain (chance 1.0), outside the cap",
       {t: sorted(i for i, c, _v in mobs.loot_table(t) if c >= mobs.SURE) for t in BOSSES},
       {t: sorted(b) for t, (_f, _w, b) in BOSSES.items()})
-check("  ..two and three ounces as one stack of ingots of one, the rest one of each",
+check("  ..one ounce per kill of ingots of one, the rest one of each",
       {t: {i: count_of(t, i) for i in b} for t, (_f, _w, b) in BOSSES.items()},
       {t: b for t, (_f, _w, b) in BOSSES.items()})
 N = 2000
@@ -179,15 +182,15 @@ rollers = sorted(int(t) for t in mobs.TYPES
 ABRI_BOSSES = [327, 328, 360, 361]
 DONGOLA_BOSSES = [374, 375, 407, 408]
 ABUHAMED_BOSSES = [777, 778, 1037, 1038, 8620]
-check("nobody else's table holds an ingot but the valley's boss, his two of one, Абри's and"
+check("nobody else's table holds an ingot but the valley's boss, his one-ounce ingot, Абри's and"
       " Донгола's four bosses each and Абу-Хамед's five",
       (rollers, [(i, c) for i, c, _v in mobs.loot_table(VALLEY_BOSS) if i in INGOTS],
        count_of(VALLEY_BOSS, I1)),
       (sorted(list(BOSSES) + [VALLEY_BOSS] + ABRI_BOSSES + DONGOLA_BOSSES + ABUHAMED_BOSSES),
-       [(I1, 1.0)], 2))
-check("  ..and the ingot of ten drops from Донгола's four bosses and Абу-Хамед's five alone (no creature"
+       [(I1, 1.0)], 1))
+check("  ..the ten-ounce ingot has no remaining creature carrier (historically no creature"
       " dropped it from 2026-10-11 to 2026-10-13)",
-      [t for t in rollers if I10 in {r[0] for r in mobs.loot_table(t)}], DONGOLA_BOSSES + ABUHAMED_BOSSES)
+      [t for t in rollers if I10 in {r[0] for r in mobs.loot_table(t)}], [])
 check("  ..Halfa's all-day bosses carry none, ordinary or for a quest",
       [i for t in ALL_DAY for i, *_r in mobs.loot_table(t) + mobs.quest_table(t) if i in INGOTS],
       [])
@@ -371,7 +374,7 @@ async def _restart():
 
 check("a boss killed in his window stays away through a restart until the next one",
       _run(_restart(), "a restart in the window"),
-      {"stands at six": True, "his bag": [(I5, 1)], "written down": True,
+      {"stands at six": True, "his bag": [(I1, 1)], "written down": True,
        "after a restart in the window": (False, True, None),
        "at ten he comes": (True, True),
        "a restart in a window he was not killed in": True})

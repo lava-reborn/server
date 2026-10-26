@@ -365,8 +365,8 @@ try:
     check("  ..the other retexts over Донгола are the camps' gold and clock and the (P) factory's: no other",
           sorted(set(retexts) - set(TEXTS)), sorted(OTHERS))
     check("  ..the camps say they are fought for gold, the chiefs' places that the chiefs come with it",
-          {c: ("Сражение за золото в 14:00, 18:00 и 22:00" in retexts[c]
-               or "В 14:00, 18:00 и 22:00 часто кто-то приезжает с золотом." in retexts[c])
+          {c: ("Сражение за золото в 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00" in retexts[c]
+               or "В 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00 часто кто-то приезжает с золотом." in retexts[c])
            for c in OTHERS - {(5921, 1982)}}, {c: True for c in OTHERS - {(5921, 1982)}})
     hide_any = {(e["x"], e["y"], e["was"]) for e in LABELS if e.get("hide")}
     want = [(x, y, retexts.get((x, y), t)) for x, y, t in rows_in(raw, BOX) if (x, y, t) not in hide_any]

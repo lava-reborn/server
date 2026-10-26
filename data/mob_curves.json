@@ -405,6 +405,7 @@
    "aggro": 8,
    "dmg_mult": 1.5,
    "hp_mult": 3.0,
+   "hp_hotfix_mult": 1.5,
    "xp_mult": 3.0
   },
   "mob": {

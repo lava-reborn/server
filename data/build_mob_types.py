@@ -435,7 +435,7 @@ WEAPON_CLASSES = {
 
 ROLES = {
     "mob": {"hp_mult": 1.0, "dmg_mult": 1.0, "xp_mult": 1.0, "aggro": 6},
-    "boss": {"hp_mult": 3.0, "dmg_mult": 1.5, "xp_mult": 3.0, "aggro": 8},
+    "boss": {"hp_mult": 3.0, "hp_hotfix_mult": 1.5, "dmg_mult": 1.5, "xp_mult": 3.0, "aggro": 8},
     "animal": {"hp_mult": 0.7, "dmg_mult": 0.8, "xp_mult": 0.7, "aggro": 5},
     "object": {"hp_mult": 1.0, "dmg_mult": 0.0, "xp_mult": 0.5, "aggro": 0},
     # A fixed gun (DESIGNED_KINDS): a man's numbers, and it opens fire as

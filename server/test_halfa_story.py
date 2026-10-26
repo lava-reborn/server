@@ -310,9 +310,10 @@ try:
     check("  ..things with no creature: the bomb (from «Бомба»), the spoons (every man's junk),"
           " the Фуль (Бартоломью's), Генри's certificate-free parts have carriers",
           sorted((t, o) for (t, o), (n, ms) in slots.items() if not ms),
-          [(137, BOMB), (147, 6911), (148, 334)])
+          [(137, BOMB), (147, 6911), (148, 6899)])
     check("  ..the Фуль is on sale, the spoon is junk a man carries",
-          (334 in items.stock_for(81), 6911 in mobs.series(mobs.TRASH_SERIES)), (True, True))
+          ([6899 in items.stock_for(81, loc) for loc in (35, 176)],
+           6911 in mobs.series(mobs.TRASH_SERIES)), ([True, True], True))
     check("«Местные предпочтения» asks for the dogs' meat (216), not the valley's antelope"
           " meat (260)", ([o for o, _n, _m in rows[118].objs],
                           [q.type for q in quests.QUESTS.values()

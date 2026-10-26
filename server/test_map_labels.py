@@ -298,7 +298,7 @@ print("the boss clock (2026-10-11)")
 import bosses  # noqa: E402
 
 check("the labels below were written for these hours: change them together",
-      (bosses.parse_hours(bosses.DEFAULT_HOURS), bosses.DEFAULT_STAY), ([840, 1080, 1320], 60.0))
+      (bosses.parse_hours(bosses.DEFAULT_HOURS), bosses.DEFAULT_STAY), (list(range(0, 1440, 120)), 60.0))
 GOLD_CAMPS = [(5970, 1724), (5978, 1727), (5974, 1739), (5993, 1721),           # 80, 81, 84, 85
               (5880, 1844), (5868, 1854),                                       # Абри: 88, 92
               (5883, 2035), (5921, 2011),                                       # Донгола: 93, 98
@@ -338,18 +338,18 @@ def one_each(cells):
 
 check("the four camps of Вади-Хальфа, Абри's two, Донгола's two, Абу-Хамед's three and the valley's"
       " Лагерь бандитов, whose bosses leave gold, name the gold and the owner's hours",
-      say(GOLD_CAMPS + [VALLEY_CAMP], "Сражение за золото в 14:00, 18:00 и 22:00"),
+      say(GOLD_CAMPS + [VALLEY_CAMP], "Сражение за золото в 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00"),
       one_each(GOLD_CAMPS + [VALLEY_CAMP]))
 check("  ..and their chiefs' places say who comes with it",
-      say(GOLD_CHIEFS, "В 14:00, 18:00 и 22:00 часто кто-то приезжает с золотом."),
+      say(GOLD_CHIEFS, "В 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00 часто кто-то приезжает с золотом."),
       one_each(GOLD_CHIEFS))
 check("no camp of the clock is a far one, whose bosses leave no gold, any more: the Северный Альянс's base"
       " names the gold since the owner's Абу-Хамед, and no name says «Сражение с главарем» now",
       (FAR_CAMPS, FAR_CHIEFS, sorted({(x, y) for x, y, t in rows_of(out, (0, 99999, 0, 99999))
                                       if "Сражение с главарем" in t})), ([], [], []))
 check("the 24 villages' headmen and the МКС base's stock chief come at the owner's hours",
-      (say(VILLAGES, "Староста присутствует в 14:00, 18:00 и 22:00"),
-       say([MKS_BASE], "Начальник склада приходит в 14:00, 18:00 и 22:00")),
+      (say(VILLAGES, "Староста присутствует в 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00"),
+       say([MKS_BASE], "Начальник склада приходит в 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00")),
       (one_each(VILLAGES), one_each([MKS_BASE])))
 STALE = re.compile(r"чертеж|01\.00|05\.00|с 20:00 до 21:00|12:00 и 21:00|21:30")
 check("  ..and none of the 47 names blueprints or an hour no boss keeps",

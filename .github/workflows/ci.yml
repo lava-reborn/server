@@ -415,14 +415,17 @@ jobs:
         env:
           DURATIONS: ${{ needs.assets.outputs.durations }}
 
-      # This shard's record, for the "suites" job: a cache entry of this run
-      # alone (a job's own files do not outlive it on these runners).
-      - name: this shard's durations
+      # Required job output, not a best-effort cache: a lost summary must
+      # fail the shard instead of silently leaving the merge incomplete.
+      - name: this shard's summary
         if: ${{ !cancelled() && (steps.run.outcome == 'success' || steps.run.outcome == 'failure') }}
-        uses: actions/cache/save@v4
+        uses: actions/upload-artifact@v4
         with:
+          name: suite-summary-${{ matrix.shard }}
           path: ~/shards/${{ matrix.shard }}/summary.txt
-          key: suite-shard-${{ github.run_id }}-${{ matrix.shard }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 7
 
       - name: output of every suite
         if: failure()
@@ -471,28 +474,24 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - uses: actions/cache/restore@v4
+      - uses: actions/download-artifact@v4
         with:
-          path: ~/shards/1/summary.txt
-          key: suite-shard-${{ github.run_id }}-1-${{ github.run_attempt }}
-          restore-keys: suite-shard-${{ github.run_id }}-1-
+          name: suite-summary-1
+          path: ~/shards/1
 
-      - uses: actions/cache/restore@v4
+      - uses: actions/download-artifact@v4
         with:
-          path: ~/shards/2/summary.txt
-          key: suite-shard-${{ github.run_id }}-2-${{ github.run_attempt }}
-          restore-keys: suite-shard-${{ github.run_id }}-2-
+          name: suite-summary-2
+          path: ~/shards/2
 
-      - uses: actions/cache/restore@v4
+      - uses: actions/download-artifact@v4
         with:
-          path: ~/shards/3/summary.txt
-          key: suite-shard-${{ github.run_id }}-3-${{ github.run_attempt }}
-          restore-keys: suite-shard-${{ github.run_id }}-3-
+          name: suite-summary-3
+          path: ~/shards/3
 
-      # A shard's record is keyed by run, shard and attempt; the fallback
-      # restore-keys take the newest attempt of that shard, so «Re-run failed
-      # jobs», which reruns this job alone, finds the shards of the attempt
-      # that ran them (keyed by attempt alone, it found nothing and failed).
+      # Named artifacts belong to this workflow run. A rerun of a shard
+      # replaces its summary; a rerun of this job reuses those same records.
+      # A missing artifact fails the download rather than merging a subset.
       # Every suite of the tree ran, and once: a green run without one would
       # deploy what nothing tested.
       - name: every suite ran, and once

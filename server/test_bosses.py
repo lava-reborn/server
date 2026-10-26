@@ -78,12 +78,12 @@ def at(h, m=0, s=0, day=24):
 
 
 # --- the windows ------------------------------------------------------------------
-check("the owner's hours are the default: 14:00, 18:00 and 22:00, for an hour, in Moscow",
+check("the default is every even hour, for one hour, in Moscow",
       (bosses.HOURS, bosses.STAY, bosses.TZ_NAME),
-      ([14 * 60, 18 * 60, 22 * 60], 3600.0, "Europe/Moscow"))
+      (list(range(0, 24 * 60, 120)), 3600.0, "Europe/Moscow"))
 check("  ..as the quests' starts name them, long and short",
       (bosses.say_hours(), bosses.say_hours(short=True)),
-      ("в 14:00, 18:00 и 22:00", "в 14, 18 и 22 часа"))
+      ("в 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00", "в 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20 и 22 часа"))
 _hours = bosses.HOURS
 try:
     bosses.HOURS = [18 * 60, 22 * 60]
@@ -106,11 +106,15 @@ check("at six the six o'clock window opens", bosses.slot(at(18)), at(18))
 check("and holds to the last second of its hour", bosses.slot(at(18, 59, 59)), at(18))
 check("at seven it is shut", bosses.slot(at(19)), None)
 check("half past ten is the ten o'clock one", bosses.slot(at(22, 30)), at(22))
-check("half past eight: no window any more", bosses.slot(at(20, 30)), None)
-check("noon, nine at night: none",
-      (bosses.slot(at(12)), bosses.slot(at(21))), (None, None))
+check("half past eight: the twenty oclock window", bosses.slot(at(20, 30)), at(20))
+check("noon opens a window, nine at night is between windows",
+      (bosses.slot(at(12)), bosses.slot(at(21))), (at(12), None))
 check("six in the evening UTC is nine in Moscow: none",
       bosses.slot(datetime(2026, 9, 24, 18, tzinfo=timezone.utc).timestamp()), None)
+check("all twelve windows open exactly on the even hour and close one hour later",
+      [(bosses.slot(at(h)), bosses.slot(at(h, 59, 59)), bosses.slot(at(h + 1)))
+       for h in range(0, 24, 2)],
+      [(at(h), at(h), None) for h in range(0, 24, 2)])
 check("a boss is a boss, a dog is not",
       (bosses.keeps_hours(BOSS), bosses.keeps_hours(DOG)), (True, False))
 
@@ -139,7 +143,7 @@ check("the warehouse masters' hour is the default too: 20:00, for the bosses' st
 check("a warehouse master keeps hours like every boss", bosses.keeps_hours(WH_SEVER), True)
 check("  ..his own, 20:00 alone, while a camp boss keeps 14, 18 and 22",
       (bosses.hours_of(WH_SEVER), bosses.hours_of(BOSS)),
-      ([20 * 60], [14 * 60, 18 * 60, 22 * 60]))
+      ([20 * 60], list(range(0, 24 * 60, 120))))
 check("  ..all eight masters the one hour",
       sorted({tuple(bosses.hours_of(t)) for t in bosses.WAREHOUSE_MASTERS}), [(20 * 60,)])
 check("at eight in the evening his window opens and holds to the last second of the hour",
@@ -148,10 +152,10 @@ check("at eight in the evening his window opens and holds to the last second of 
       (None, at(20), at(20), None))
 check("  ..at 14:00, 18:00 and 22:00, the bosses' windows, he has none",
       [bosses.slot_of(WH_SEVER, at(h, m)) for h in (14, 18, 22) for m in (0, 30)], [None] * 6)
-check("  ..the camp boss has those, and not his",
+check("  ..the camp boss also has the shared twenty oclock window",
       ([bosses.slot_of(BOSS, at(h, 30)) for h in (14, 18, 22)], bosses.slot_of(BOSS, at(20, 30)),
        bosses.slot(at(18, 30)), bosses.slot(at(20, 30))),
-      ([at(14), at(18), at(22)], None, at(18), None))
+      ([at(14), at(18), at(22)], at(20), at(18), at(20)))
 check("  ..the next day's eight o'clock is a new window",
       bosses.slot_of(WH_SEVER, at(20, 10, day=25)), at(20, day=25))
 
@@ -168,9 +172,9 @@ try:
 finally:
     bosses.WAREHOUSE_HOURS, bosses.HOURS = _wh, _hours
 check("LAVA_WAREHOUSE_HOURS=off: no hours of his own, he keeps the bosses' 14, 18 and 22",
-      _back, ([14 * 60, 18 * 60, 22 * 60], at(18), None))
+      _back, (list(range(0, 24 * 60, 120)), at(18), at(20)))
 check("  ..another hour moves him alone", _moved,
-      (None, at(21, 30), [14 * 60, 18 * 60, 22 * 60]))
+      (None, at(21, 30), list(range(0, 24 * 60, 120))))
 check("  ..LAVA_BOSS_HOURS=off turns the rule off for him too: an ordinary mob", _off,
       (False, None))
 
@@ -235,7 +239,7 @@ def imported(**settings):
 # The settings are read at import, and an import that raises is a server
 # that does not start; a setting that turns the rule off is every boss
 # standing all day. Only "off" may do that.
-OWNERS = "[840, 1080, 1320] 3600.0 [1200]"
+OWNERS = "[0, 120, 240, 360, 480, 600, 720, 840, 960, 1080, 1200, 1320] 3600.0 [1200]"
 check("a stay that is not a number is the default stay, not a server that "
       "will not start", imported(LAVA_BOSS_STAY="час"), OWNERS)
 check("nor is a stay of nothing, which would be bosses that never come",
@@ -254,7 +258,7 @@ check("the warehouse hours the same way: blank, a word or no hour in them are 20
 check("  ..\"off\" is none of his own (he keeps the bosses' hours), good ones are read as"
       " given, and neither touches the bosses'",
       (imported(LAVA_WAREHOUSE_HOURS="off"), imported(LAVA_WAREHOUSE_HOURS="19:30, 21")),
-      ("[840, 1080, 1320] 3600.0 []", "[840, 1080, 1320] 3600.0 [1170, 1260]"))
+      ("[0, 120, 240, 360, 480, 600, 720, 840, 960, 1080, 1200, 1320] 3600.0 []", "[0, 120, 240, 360, 480, 600, 720, 840, 960, 1080, 1200, 1320] 3600.0 [1170, 1260]"))
 
 
 # The client's release (deploy/remote/lava-gate.sh, a docker run with no
@@ -404,13 +408,13 @@ async def _hours():
               [(n, sorted(p)) for n, p in got],
               [("lch", ["dead"]), ("lch", ["lostUser"]), ("ss_loot", ["hex", "s_status"])])
         check("not back after the respawn delay", (eid in room.npcs, boss.away), (False, True))
-        for t in (at(22, 10), at(22, 59, 59), at(23), at(12, day=25)):
+        for t in (at(22, 10), at(22, 59, 59), at(23), at(23, 59, 59)):
             NOW[0] = t
             rc.keep_hours()
         check("nor for the rest of its hour, nor overnight", (seat.take(), eid in room.npcs), ([], False))
-        NOW[0] = at(18, day=25)
+        NOW[0] = at(0, day=25)
         rc.keep_hours()
-        check("it is back at the next hour, whole",
+        check("it is back at midnight, the next scheduled window, whole",
               ([f[0] for f in seat.take()], eid in room.npcs, boss.hp == boss.hp_max),
               (["lch", "npc_info"], True, True))
 
@@ -671,8 +675,8 @@ async def _master():
             NOW[0] = t
             il4.keep_hours()
             seen.append(camp.eid in il4.room.npcs)
-        check("the Il-4's boss, on the same clock: in at 14:00, gone at 15:00, none at 20:00,"
-              " in at 22:00", seen, [True, False, False, True])
+        check("the Il-4's boss, on the same clock: in at 14:00, gone at 15:00, in at 20:00,"
+              " in at 22:00", seen, [True, False, True, True])
         for bag in list(rc.loot.values()) + list(rc2.loot.values()):
             if bag.expiry is not None:
                 bag.expiry.cancel()

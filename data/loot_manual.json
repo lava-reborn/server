@@ -2,101 +2,102 @@
  "_meta": {
   "about": "Loot decided by hand, next to data/loot_wiki.json. That file is generated (data/build_loot_wiki.py) from the wiki, which has no page for these creatures' drops, so their rows live here rather than in it. by_type is rolled by server/mobs.loot_table exactly like a loot_wiki.json row -- one roll per row, valuables first, at most mobs.MAX_DROPS kept -- and names its item by type id, since the linker ties the emerald and the ingot to no type at all; a row at chance mobs.SURE (1.0) is no roll but a certainty, and lies in the bag outside that cap (mobs.roll_table); a row's count says how many of the thing it puts there (mobs.count_of). items are the numbers of those items, laid over the designed frame by server/items.py the way data/heal_manual.json is (same keys, frame shape unchanged; a data/items_wiki.json record, should one appear, wins), and drop_on_death, which server/combat.drops_on_death reads here before the wiki. Keys starting with _ never reach the wire.",
   "decided": "2026-09-25, owner («Песок и изумруды»): the Nubian mine's marauders, [1] Слабый Мародёр 836 and [2] Мародёр 837, drop gold sand and emeralds. They stand in the mine's files and nowhere else (612, 1011, 1217 and the unused copies 767, 1248; no spawn substitute maps to them), so nothing else in the world drops either. Chances DESIGNED: gold sand 0.50 from both (the owner raised it from 0.20/0.30 the same day: «подними шанс песка до 50%»), an ordinary row; the emerald 0.10 from both, a valuable one. 2026-09-26, owner («давай добавим лут шахтерам: бритву и наручные часы и еще сломанные часы, вероятность выпадения 20-30 процентов»): the same marauders also roll, as ordinary rows, Сломанные часы 6919 and Бритва 6926 at 0.30 and Наручные часы 6932 at 0.35 -- under mobs.MAX_DROPS about 0.28, 0.23 and 0.21 a kill. Then («давай еще золотой портсигар и золотой зуб») Золотой зуб 6950 and Золотой портсигар 6953 as valuables at 0.05 each. The sand and the emeralds fall off a dead player like any loot (the owner, 2026-09-25: «любой лут должен падать в том числе из шахты», against the game's hint that the mine's emeralds could not be lost), and the way out of the mine takes neither («Нет, пусть выносят»). 2026-09-25, owner («давай чтобы у босса в нубийке выпадал слиток золото и сделай квест, чтобы его можно было сдать и получить на баланс», then «и слиток в 5 голд»): the Nubian valley's one boss, [5] Лидер Новые колонисты 2103 (Лагерь бандитов, location 34, where it keeps the boss hours of server/bosses.py), carries one ingot of 5 ounces of gold (4796 New_Gold_Ingot_5) on every kill, chance 1.0, and Джеррах in the Западный поселок pays 5 ounces for it (data/quests.json 10). It falls off a dead player like any loot («любой лут должен падать»): it is loot, not gold-bought gear. 2026-09-26, for the Nubian valley's quests (the owner's «давай готовь квесты все»): rows of the tier «Квестовый», the wiki's own word, for what those quests send the player to take off a creature -- the courier's letter (17), the four gun parts and the medicaments off the raiders of «Грабители» (14, 15), the medicaments and the grindstone off the New Colonists (250, 251), the leader's notes (2103) and the rat king (1019). Such a row rolls only while somebody who brought the creature down has a quest open that asks for the thing and does not yet have as many as it asks (server/mobs.py QUEST_TIER, quests.wanted_things), the original's «loot only while the quest is open»: nobody else finds a quest's litter in a bag, and a thing with no price or with the quest flag, which no other row may drop, may drop here. Holders RECOVERED where the original's texts or the quests' lavabook records name them, chances DESIGNED. The same day, for the valley's market, farm and mine quests (the third batch): the old chip Доктор Гофус asks for off the New Colonists (250, 251), and the antelope's meat and fillet the village asks for off the antelopes (12). 2026-10-05, owner approved: matches 6915 are ordinary loot from colonists 250/251 at base chance 0.30, subject to MAX_DROPS. They drop without an active quest and beyond five boxes, matching the wiki trash-loot classification and allowing players to collect ahead of the daily quest. The quest pays 700 afro and a choice of three health or stamina consumables (data/quests.json 51). Other quest rows still require an active quest that needs their item. 2026-10-09, owner («добавь выпадение слитков золота от боссов в хальфе: колонисты 3 голды, люшер 5, джанджавиды 6, магриб 10», «если нет слитков подходящего номинала то сделай несколько предметов, типа 3 по 1г слитку», «добавь в черный рынок мортимера который обменивает слитки (зачисляя на баланс) и продает их еще», «слитки бывают на 1 голду на 5 и на 10»): the eight hour-keeping bosses of Вади-Хальфа's four factions, the camp's and the chief's of each, carry their faction's gold on every kill, chance 1.0, outside the cap: the New Colonists (270 Агнес, 269 Асмунд) three ingots of 1 ounce, one row of count 3; the sect of Люшер (283 Дитрих, 284 Лука) one of 5; the Janjaweed (299 Ашрам, 300 Рашад) one of 5 and one of 1; the Maghreb (313 Ихсан, 314 Кайс) one of 10. Halfa's two all-day bosses, the treasurer 586 and 696, carry none, and the valley's 2103 keeps his one of 5. The 1- and 10-ounce ingots take records (items) like the 5-ounce one, and all three a gold price, their face value, for which Мортимер sells them (data/npcs.json 1188), now also on the black market (data/placements.json 102). Cashing stays his 301-303, less the original's 0.05 an ingot. 2026-10-11, owner: «у всех лагерей сделай голды в 2 раза меньше и округли в меньшую сторону» -- every camp boss's gold halved, rounded down: колонисты 3 -> 1, Люшер 5 -> 2, джанджавиды 6 -> 3, Магриб 10 -> 5, the valley's Лидер 2103 5 -> 2; 2 and 3 ounces as one stack of the 1-ounce ingot (the owner's rule of 2026-10-09, «типа 3 по 1г слитку»), 5 as the one ingot of five. Джеррах's quest 10 follows the valley boss's drop: two ingots of one ounce for 2 ounces (data/quests.json). After it no creature drops the 10-ounce ingot; Мортимер's stall and his join 307 still make it. 2026-10-12, owner («Делаем Абри ... Там голду дают 6 (работорговцы) и 8 (живодеры), принимает также Мортимер в портовом рынке»): the four hour-keeping bosses of Абри's two camps carry their faction's gold on every kill, chance 1.0, outside the cap, as Вади-Хальфа's do: the slave traders (327 Папаша Абу, the camp 88; 328 Надзиратель Лаки, the chief's place 89) 6 ounces, one ingot of 5 and one of 1; the flayers (360 Элфрид, the camp 92; 361 Бетти, the chief's place 90) 8 ounces, one ingot of 5 and one stack of three of 1. The numbers are the owner's of that day, taken as said: the halving of 2026-10-11 was an order about the camps then on the map and is not laid over the later one. Both bosses of a faction carry the faction's sum, as in Вади-Хальфа (its plan's decision 1 names the alternative, the sum a camp's: 3 and 4 a boss). Абри's two treasurers (590, 591) stand all day and carry none. A window of the boss hours now holds 24 + 28 = 52 ounces for the whole server, 156 a day (server/test_abri_ingots.py). Мортимер sells and cashes them in Абри's port market too (data/placements.json 187). 2026-10-13, owner («и потом сделай донголу тоже», Донгола the way Абри was made, then «делай как считаешь нужным»): the four hour-keeping bosses of Донгола's two camps carry their faction's gold on every kill, chance 1.0, outside the cap, as Абри's and Вади-Хальфа's do. The owner named no sums; the decision taken for him is the ladder's next rung -- Вади-Хальфа 1/2/3/5, Абри 6/8, Донгола 10/12: the ДСР (374 Полковник Халил, the camp 93; 375 Джибрил Ибрагим, the chief's place 91) 10 ounces, one ingot of ten; the Peacekeepers (407 Шеф Дженсен, the camp 98; 408 Макс Коул, the chief's place 99) 12 ounces, one ingot of ten and a stack of two of one. Both bosses of a faction carry the faction's sum, as before; the alternatives (10 and 12 a camp, 5 and 6 a boss; or 7/9) are rows of this table. The 10-ounce ingot drops again. Донгола's two treasurers (592, 593) stand all day and carry none, and the copy 1171 of the Peacekeepers' camp is out of the game (data/retired.json), so Дженсен stands in one place. A window of the boss hours now holds 52 + 44 = 96 ounces for the whole server (about 4.8 million afro at 50 000 an ounce), 288 a day -- a ceiling, reached only if every boss falls in every window. No new sink: gold leaves by the things and services sold for gold (Донгола adds the sets and weapons G of its band 12-16 and its gold lottery) and Мортимер's 0.05 an ingot at cashing, 0.40 for a window's eight ingots of Донгола. Мортимер stands in Донгола's new market 197 by the original's file (server/test_dongola_ingots.py). 2026-10-14, owner («сделай потом абу хамед в таком же формате», Абу-Хамед the way Абри and Донгола were made, then «делай как считаешь нужным»): the five hour-keeping bosses of Абу-Хамед's three camps carry gold on every kill, chance 1.0, outside the cap. The owner named no sums; the decision taken for him is the ladder's next rung -- Вади-Хальфа 1/2/3/5, Абри 6/8, Донгола 10/12, Абу-Хамед 14/16 --, and the rule that every hour-keeping boss of the town's bank brings gold. The pirates (777 Коммодор Марабу, the camp 132; 778 Капитан Нгоро, the chief's place 133) 14 ounces, one ingot of ten and a stack of four of one. The Northern Alliance has three hour-keeping bosses in two camps, so the rule of the earlier towns, «both bosses of a faction carry the faction's sum», does not hold for it, and the sum goes by the camp: Генерал Шерхан of the outpost (8620, the camp 168, band 16-18) 14 ounces as the pirates', Генерал Шерхан of the base (1037, the camp 263) and Бригадир Табаки (1038, the chief's place 274), band 19-20, 16 ounces each, one ingot of ten, one of five and one of one. The alternatives (the outpost's Шерхан without gold; 7 and 8 a boss; 15 and 20) are rows of this table. Абу-Хамед's treasurers (764, 1024) and book-keeper (1736) stand all day and carry none; the pirates' «[17] Кавторанг» (771), a boss by his type's word that stood in 133 by its file, is a rank and file fighter since (data/build_mob_types.py DESIGNED_KINDS) and carries none. A window of the boss hours now holds 96 + 74 = 170 ounces for the whole server (about 8.5 million afro at 50 000 an ounce), 510 a day -- a ceiling, reached only if every boss falls in every window. The window's 21 ingots of Абу-Хамед cost 1.05 ounces at Мортимер's cashing. Мортимер stands in Абу-Хамед's port 446 by the original's file (server/test_abuhamed_ingots.py). The same day, for Гатера's fare: the Dark Mine's miners (930, 931) drop «Алмаз» (5545) in the tier «Квестовый» at 0.1 (by_type 930, 931).",
-  "fields": "by_type: mob type id -> rows {type, tier ('Обычный' or 'Ценный', as in loot_wiki.json, or 'Квестовый': rolled only for a quest that asks for the thing, on its own and outside the cap), chance; 1.0 is certain and outside the cap; count, how many of the thing the row puts in the bag when it lies there, 1 without one (mobs.count_of: a stack of that many); or, in place of tier and chance, one_of (a group name) and weight: exactly one row of the group lies in the bag on every kill, picked by weight, outside the cap (mobs.one_of_groups)}. items: type id -> ss_si_simple_obj fields as in server/items.py (cost in afro, g_cost in hundredths of G, weight in grams, max_count the most one stack holds), plus drop_on_death (1 can fall off a corpse, 0 never)."
+  "fields": "by_type: mob type id -> rows {type, tier ('Обычный' or 'Ценный', as in loot_wiki.json, or 'Квестовый': rolled only for a quest that asks for the thing, on its own and outside the cap), chance; 1.0 is certain and outside the cap; count, how many of the thing the row puts in the bag when it lies there, 1 without one (mobs.count_of: a stack of that many); or, in place of tier and chance, one_of (a group name) and weight: exactly one row of the group lies in the bag on every kill, picked by weight, outside the cap (mobs.one_of_groups)}. items: type id -> ss_si_simple_obj fields as in server/items.py (cost in afro, g_cost in hundredths of G, weight in grams, max_count the most one stack holds), plus drop_on_death (1 can fall off a corpse, 0 never).",
+  "boss_hotfix_2026_10_26": "Temporary: each existing gold-dropping boss carries exactly one 1 G ingot; no new carriers. HP x1.5 is separate, in mob_curves boss.hp_hotfix_mult. Exchange recipes and existing ingots unchanged."
  },
  "by_type": {
-    "838": [
-      {
-        "type": 2258,
-        "_name": "Золотой песок",
-        "tier": "Обычный",
-        "chance": 0.75,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
-      },
-      {
-        "type": 3159,
-        "_name": "Небольшие изумруды",
-        "tier": "Ценный",
-        "chance": 0.15,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
-      },
-      {
-        "type": 6946,
-        "_name": "Серебряный портсигар",
-        "tier": "Ценный",
-        "chance": 0.05,
-        "_source": "DESIGNED: owner confirmed 2026-10-23; same chance as Nubian mine marauders, no quest required."
-      }
-    ],
-    "839": [
-      {
-        "type": 2258,
-        "_name": "Золотой песок",
-        "tier": "Обычный",
-        "chance": 0.75,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
-      },
-      {
-        "type": 3159,
-        "_name": "Небольшие изумруды",
-        "tier": "Ценный",
-        "chance": 0.15,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
-      },
-      {
-        "type": 6946,
-        "_name": "Серебряный портсигар",
-        "tier": "Ценный",
-        "chance": 0.05,
-        "_source": "DESIGNED: owner confirmed 2026-10-23; same chance as Nubian mine marauders, no quest required."
-      }
-    ],
-    "840": [
-      {
-        "type": 2258,
-        "_name": "Золотой песок",
-        "tier": "Обычный",
-        "chance": 1.0,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
-      },
-      {
-        "type": 3159,
-        "_name": "Небольшие изумруды",
-        "tier": "Ценный",
-        "chance": 0.25,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
-      },
-      {
-        "type": 6953,
-        "_name": "Золотой портсигар",
-        "tier": "Ценный",
-        "chance": 0.05,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Peacekeeper miners 840/841, independent of quests."
-      }
-    ],
-    "841": [
-      {
-        "type": 2258,
-        "_name": "Золотой песок",
-        "tier": "Обычный",
-        "chance": 1.0,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
-      },
-      {
-        "type": 3159,
-        "_name": "Небольшие изумруды",
-        "tier": "Ценный",
-        "chance": 0.25,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
-      },
-      {
-        "type": 6953,
-        "_name": "Золотой портсигар",
-        "tier": "Ценный",
-        "chance": 0.05,
-        "_source": "DESIGNED: owner confirmed 2026-10-22; Peacekeeper miners 840/841, independent of quests."
-      }
-    ],
+  "838": [
+   {
+    "type": 2258,
+    "_name": "Золотой песок",
+    "tier": "Обычный",
+    "chance": 0.75,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+   },
+   {
+    "type": 3159,
+    "_name": "Небольшие изумруды",
+    "tier": "Ценный",
+    "chance": 0.15,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+   },
+   {
+    "type": 6946,
+    "_name": "Серебряный портсигар",
+    "tier": "Ценный",
+    "chance": 0.05,
+    "_source": "DESIGNED: owner confirmed 2026-10-23; same chance as Nubian mine marauders, no quest required."
+   }
+  ],
+  "839": [
+   {
+    "type": 2258,
+    "_name": "Золотой песок",
+    "tier": "Обычный",
+    "chance": 0.75,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+   },
+   {
+    "type": 3159,
+    "_name": "Небольшие изумруды",
+    "tier": "Ценный",
+    "chance": 0.15,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+   },
+   {
+    "type": 6946,
+    "_name": "Серебряный портсигар",
+    "tier": "Ценный",
+    "chance": 0.05,
+    "_source": "DESIGNED: owner confirmed 2026-10-23; same chance as Nubian mine marauders, no quest required."
+   }
+  ],
+  "840": [
+   {
+    "type": 2258,
+    "_name": "Золотой песок",
+    "tier": "Обычный",
+    "chance": 1.0,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+   },
+   {
+    "type": 3159,
+    "_name": "Небольшие изумруды",
+    "tier": "Ценный",
+    "chance": 0.25,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+   },
+   {
+    "type": 6953,
+    "_name": "Золотой портсигар",
+    "tier": "Ценный",
+    "chance": 0.05,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Peacekeeper miners 840/841, independent of quests."
+   }
+  ],
+  "841": [
+   {
+    "type": 2258,
+    "_name": "Золотой песок",
+    "tier": "Обычный",
+    "chance": 1.0,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+   },
+   {
+    "type": 3159,
+    "_name": "Небольшие изумруды",
+    "tier": "Ценный",
+    "chance": 0.25,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Magrib/Peacekeeper miners, independent of quests."
+   },
+   {
+    "type": 6953,
+    "_name": "Золотой портсигар",
+    "tier": "Ценный",
+    "chance": 0.05,
+    "_source": "DESIGNED: owner confirmed 2026-10-22; Peacekeeper miners 840/841, independent of quests."
+   }
+  ],
   "12": [
    {
     "type": 260,
@@ -413,15 +414,6 @@
   ],
   "2103": [
    {
-    "type": 7620,
-    "_name": "1 унция золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "count": 2,
-    "_source": "DESIGNED, the owner's (2026-09-25): «давай чтобы у босса в нубийке выпадал слиток золото», then «и слиток в 5 голд». 2103 m05_nc_Leader_lvl5, '[5] Лидер Новые колонисты' -- the wiki's 'Лидер Ян Дуглас' of the Лагерь Бандитов at 6272x1840 -- stands in location 34 and in no other file, no spawn substitute maps to it, and it was the only boss of the valley's sixteen settlements (the one other Nubian boss, nubia_boss 1406, Большой Мвамба, came onto the map with his camp 31 at 6274,1833 for Шульц's «Экипировка к пистолету» on 2026-09-26, and does not carry the ingot); which ingot, see items 7620. Halved on 2026-10-11 (the owner's «у всех лагерей сделай голды в 2 раза меньше и округли в меньшую сторону», _meta.decided): 5 ounces -> 2, two ingots of one ounce; until then one ingot of 5 (4796)",
-    "_designed": "all of it: two ingots of one ounce on every kill, one stack (count 2, mobs.count_of), chance 1.0 (mobs.SURE), so outside the two a kill's rolls may keep (mobs.MAX_DROPS) and never pushed out by them; the valuable tier is a label only. The boss comes at 14:00, 18:00 and 22:00 (server/bosses.py), so three kills a day at most for the whole server, 6 ounces a day through Джеррах's quest 10 (2 ounces a hand-in), each hand-in against the daily limit"
-   },
-   {
     "type": 234,
     "_name": "Записи",
     "tier": "Квестовый",
@@ -436,6 +428,15 @@
     "chance": 0.05,
     "_source": "DESIGNED: the owner's order of 2026-09-26 («добавь в лагерь выпадение микросхемы с 5% шансом»)",
     "_designed": "0.05 from everyone who stands in Лагерь бандитов (34): Бандит 20 and 21, Штурмовик 251, the leader 2103. A row is a creature's, not a place's, so 21 drops it also in 42/45/46 near Вади-Хальфа and 251 in 33 Раненый разведчик"
+   },
+   {
+    "type": 7620,
+    "_name": "1 унция золота",
+    "tier": "Ценный",
+    "chance": 1.0,
+    "count": 1,
+    "_source": "DESIGNED, the owner's (2026-09-25): «давай чтобы у босса в нубийке выпадал слиток золото», then «и слиток в 5 голд». 2103 m05_nc_Leader_lvl5, '[5] Лидер Новые колонисты' -- the wiki's 'Лидер Ян Дуглас' of the Лагерь Бандитов at 6272x1840 -- stands in location 34 and in no other file, no spawn substitute maps to it, and it was the only boss of the valley's sixteen settlements (the one other Nubian boss, nubia_boss 1406, Большой Мвамба, came onto the map with his camp 31 at 6274,1833 for Шульц's «Экипировка к пистолету» on 2026-09-26, and does not carry the ingot); which ingot, see items 7620. Halved on 2026-10-11 (the owner's «у всех лагерей сделай голды в 2 раза меньше и округли в меньшую сторону», _meta.decided): 5 ounces -> 2, two ingots of one ounce; until then one ingot of 5 (4796)",
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged."
    }
   ],
   "20": [
@@ -483,7 +484,8 @@
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "DESIGNED, the owner's (2026-10-09): «добавь выпадение слитков золота от боссов в хальфе: колонисты 3 голды, люшер 5, джанджавиды 6, магриб 10», «если нет слитков подходящего номинала то сделай несколько предметов, типа 3 по 1г слитку», «слитки бывают на 1 голду на 5 и на 10». 269 mrare_Asmund_lvl0, «[0] Бугор Асмунд, Новые колонисты», the chief of the colonists' «встреча с главарем» (place 82, 5971,1723). He stands in that file and in no other, no spawn substitute or placement maps to him, and he keeps the boss hours (server/bosses.py); halved to 1 on 2026-10-11 (_meta.decided)",
-    "_designed": "the faction's one ounce (3 halved on 2026-10-11) as one ingot of one ounce on every kill, outside mobs.MAX_DROPS. Each of the faction's two hour-keeping bosses carries the faction's set, the camp's (270) and the chief's (269). The treasurer 586, a boss of the camp 80 who comes back on the respawn timer all day (bosses.ALL_DAY), carries none: a certain drop there would be gold without a limit"
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 1
    }
   ],
   "270": [
@@ -493,7 +495,8 @@
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "as 269 above: 270 mrare_Agnes_lvl2, «[2] Пахан Агнес, Новые колонисты», the boss of the colonists' camp (80, 5970,1724)",
-    "_designed": "as 269 above"
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 1
    }
   ],
   "283": [
@@ -502,9 +505,9 @@
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 2,
+    "count": 1,
     "_source": "as 269 above, «люшер 5», halved to 2 on 2026-10-11: 283 mrare_Ditrich_lvl6, «[6] Магистр Дитрих, Секта Люшер», the boss of the sect's camp (81, 5978,1727)",
-    "_designed": "the faction's 2 ounces as two ingots of one, one stack (count 2, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the sect's hour-keeping bosses carry it"
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged."
    }
   ],
   "284": [
@@ -513,9 +516,9 @@
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 2,
+    "count": 1,
     "_source": "as 283 above: 284 mrare_Luka_lvl4, «[4] Блаженный Лука, Секта Люшер», the chief of the sect's «встреча с главарем» (place 83, 5979,1728)",
-    "_designed": "as 283 above"
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged."
    }
   ],
   "299": [
@@ -524,9 +527,9 @@
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 3,
+    "count": 1,
     "_source": "as 269 above, «джанджавиды 6», halved to 3 on 2026-10-11: 299 mrare_Ashram_lvl10, «[10] Лидер Ашрам, Джанджавиды», the boss of the Janjaweed's camp (84, 5974,1739)",
-    "_designed": "the faction's 3 ounces as three ingots of one, one stack (count 3, mobs.count_of), on every kill, outside mobs.MAX_DROPS: one row, since mobs.loot_table keeps one row per item and mobs.count_of one count per creature and item; both of the faction's hour-keeping bosses carry them"
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged."
    }
   ],
   "300": [
@@ -535,270 +538,174 @@
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 3,
+    "count": 1,
     "_source": "as 299 above: 300 mrare_Rashad_lvl8, «[8] Руководитель Рашад, Джанджавиды», the chief of the Janjaweed's «встреча с главарем» (place 86, 5975,1738)",
-    "_designed": "as 299 above"
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged."
    }
   ],
   "313": [
    {
-    "type": 4796,
-    "_name": "5 унций золота",
+    "type": 7620,
+    "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "as 269 above, «магриб 10», halved to 5 on 2026-10-11: 313 mrare_Ihsan_lvl14, «[14] Мукаддам Ихсан, Союз арабского Магриба», the boss of the Maghreb's camp (85, 5993,1721)",
-    "_designed": "the faction's 5 ounces (10 halved on 2026-10-11) as one ingot of five on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry it"
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 1
    }
   ],
   "314": [
    {
-    "type": 4796,
-    "_name": "5 унций золота",
+    "type": 7620,
+    "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "as 313 above: 314 mrare_Kais_lvl12, «[12] Раид Кайс, Союз арабского Магриба», the chief of the Maghreb's «встреча с главарем» (place 87, 5992,1720)",
-    "_designed": "as 313 above"
+    "_designed": "Temporary owner hotfix, 2026-10-26: one 1 G ingot per kill until the economy rebalance; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 1
    }
   ],
   "327": [
    {
-    "type": 4796,
-    "_name": "5 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-12, «Там голду дают 6 (работорговцы)» (_meta.decided): 327 mrare_Abu_lvl18, «[18] Папаша Абу, Работорговцы» (8905), the boss of the slave traders' camp (88, 5880,1844)",
-    "_designed": "the faction's 6 ounces as one ingot of five and one of one, two rows (one row per item, mobs.loot_table), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them, as the Janjaweed's two did from 2026-10-09 to 2026-10-11"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "the owner's of 2026-10-12, «Там голду дают 6 (работорговцы)» (_meta.decided): 327 mrare_Abu_lvl18, «[18] Папаша Абу, Работорговцы» (8905), the boss of the slave traders' camp (88, 5880,1844)",
-    "_designed": "the faction's 6 ounces as one ingot of five and one of one, two rows (one row per item, mobs.loot_table), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them, as the Janjaweed's two did from 2026-10-09 to 2026-10-11"
+    "_designed": "Owner update, 2026-10-26: 2 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 2
    }
   ],
   "328": [
    {
-    "type": 4796,
-    "_name": "5 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-12, «Там голду дают 6 (работорговцы)» (_meta.decided): 328 mrare_Lucky_lvl16, «[16] Надзиратель Лаки, Работорговцы» (8904), the chief of the slave traders' «встреча с главарем» (place 89, 5881,1843)",
-    "_designed": "the faction's 6 ounces as one ingot of five and one of one, two rows (one row per item, mobs.loot_table), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them, as the Janjaweed's two did from 2026-10-09 to 2026-10-11"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "the owner's of 2026-10-12, «Там голду дают 6 (работорговцы)» (_meta.decided): 328 mrare_Lucky_lvl16, «[16] Надзиратель Лаки, Работорговцы» (8904), the chief of the slave traders' «встреча с главарем» (place 89, 5881,1843)",
-    "_designed": "the faction's 6 ounces as one ingot of five and one of one, two rows (one row per item, mobs.loot_table), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them, as the Janjaweed's two did from 2026-10-09 to 2026-10-11"
+    "_designed": "Owner update, 2026-10-26: 2 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 2
    }
   ],
   "360": [
    {
-    "type": 4796,
-    "_name": "5 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-12, «... и 8 (живодеры)» (_meta.decided): 360 mrare_Elfriede_lvl22, «[22] Элфрид, Живодеры Элфрида» (8922), the boss of the flayers' camp (92, 5868,1854)",
-    "_designed": "the faction's 8 ounces as one ingot of five and a stack of three of one (count 3, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 3,
     "_source": "the owner's of 2026-10-12, «... и 8 (живодеры)» (_meta.decided): 360 mrare_Elfriede_lvl22, «[22] Элфрид, Живодеры Элфрида» (8922), the boss of the flayers' camp (92, 5868,1854)",
-    "_designed": "the faction's 8 ounces as one ingot of five and a stack of three of one (count 3, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them"
+    "_designed": "Owner update, 2026-10-26: 2 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 2
    }
   ],
   "361": [
    {
-    "type": 4796,
-    "_name": "5 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-12, «... и 8 (живодеры)» (_meta.decided): 361 mrare_Betty_lvl20, «[20] Бетти, Живодеры Элфрида» (8921), the chief of the flayers' «встреча с главарем» (place 90, 5869,1855)",
-    "_designed": "the faction's 8 ounces as one ingot of five and a stack of three of one (count 3, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 3,
     "_source": "the owner's of 2026-10-12, «... и 8 (живодеры)» (_meta.decided): 361 mrare_Betty_lvl20, «[20] Бетти, Живодеры Элфрида» (8921), the chief of the flayers' «встреча с главарем» (place 90, 5869,1855)",
-    "_designed": "the faction's 8 ounces as one ingot of five and a stack of three of one (count 3, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them"
+    "_designed": "Owner update, 2026-10-26: 2 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 2
    }
   ],
   "374": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
+    "type": 7620,
+    "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "the owner's of 2026-10-13, «и потом сделай донголу тоже», the sums a decision taken for him (_meta.decided): 374 mrare_komandir_lvl26, «[16] Полковник Халил<Br>ДСР» (8939), the boss of the ДСР's camp (93, 5883,2035)",
-    "_designed": "the faction's 10 ounces as one ingot of ten, on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them, as in Вади-Хальфа and Абри. One ingot rather than two of five: the fewest things, and Мортимер's fee of 0.05 an ingot taken once (decision 2)"
+    "_designed": "Owner update, 2026-10-26: 3 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 3
    }
   ],
   "375": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
+    "type": 7620,
+    "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "the owner's of 2026-10-13, «и потом сделай донголу тоже», the sums a decision taken for him (_meta.decided): 375 mrare_serjeant_lvl24, «[15] Джибрил Ибрагим<Br>ДСР» (8938), the chief of the ДСР's «встреча с главарем» (place 91, 5882,2036)",
-    "_designed": "the faction's 10 ounces as one ingot of ten, on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them, as in Вади-Хальфа and Абри. One ingot rather than two of five: the fewest things, and Мортимер's fee of 0.05 an ingot taken once (decision 2)"
+    "_designed": "Owner update, 2026-10-26: 3 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 3
    }
   ],
   "407": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-13, «и потом сделай донголу тоже», the sums a decision taken for him (_meta.decided): 407 mrare_chief_lvl30, «[18] ШефДженсен<Br>Миротворцы» (8956), the boss of the Peacekeepers' camp (98, 5921,2011)",
-    "_designed": "the faction's 12 ounces as one ingot of ten and a stack of two of one (count 2, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them (decision 2: the fewest things, as Абри's 6 is 5 + 1)"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 2,
     "_source": "the owner's of 2026-10-13, «и потом сделай донголу тоже», the sums a decision taken for him (_meta.decided): 407 mrare_chief_lvl30, «[18] ШефДженсен<Br>Миротворцы» (8956), the boss of the Peacekeepers' camp (98, 5921,2011)",
-    "_designed": "the faction's 12 ounces as one ingot of ten and a stack of two of one (count 2, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them (decision 2: the fewest things, as Абри's 6 is 5 + 1)"
+    "_designed": "Owner update, 2026-10-26: 3 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 3
    }
   ],
   "408": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-13, «и потом сделай донголу тоже», the sums a decision taken for him (_meta.decided): 408 mrare_koul_lvl28, «[17] МаксКоул<Br>Миротворцы» (8955), the chief of the Peacekeepers' «встреча с главарем» (place 99, 5920,2010)",
-    "_designed": "the faction's 12 ounces as one ingot of ten and a stack of two of one (count 2, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them (decision 2: the fewest things, as Абри's 6 is 5 + 1)"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 2,
     "_source": "the owner's of 2026-10-13, «и потом сделай донголу тоже», the sums a decision taken for him (_meta.decided): 408 mrare_koul_lvl28, «[17] МаксКоул<Br>Миротворцы» (8955), the chief of the Peacekeepers' «встреча с главарем» (place 99, 5920,2010)",
-    "_designed": "the faction's 12 ounces as one ingot of ten and a stack of two of one (count 2, mobs.count_of), on every kill, outside mobs.MAX_DROPS; both of the faction's hour-keeping bosses carry them (decision 2: the fewest things, as Абри's 6 is 5 + 1)"
+    "_designed": "Owner update, 2026-10-26: 3 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 3
    }
   ],
   "777": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 777 mrare_marabu_lvl32, «[20] Коммодор Марабу<Br>Пираты Сомали» (8976), the boss of the Somali pirates' camp (132, 6160,1975)",
-    "_designed": "the camp's 14 ounces as one ingot of ten and a stack of four of one (count 4, mobs.count_of), on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan; the alternative 5 + 5 + 4 by one is a row of this table)"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 4,
     "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 777 mrare_marabu_lvl32, «[20] Коммодор Марабу<Br>Пираты Сомали» (8976), the boss of the Somali pirates' camp (132, 6160,1975)",
-    "_designed": "the camp's 14 ounces as one ingot of ten and a stack of four of one (count 4, mobs.count_of), on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan; the alternative 5 + 5 + 4 by one is a row of this table)"
+    "_designed": "Owner update, 2026-10-26: 4 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 4
    }
   ],
   "778": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 778 mrare_ngoro_lvl30, «[19] Капитан Нгоро<Br>Пираты Сомали» (8975), the chief of the pirates' «встреча с главарем» (place 133, 6161,1973)",
-    "_designed": "the camp's 14 ounces as one ingot of ten and a stack of four of one (count 4, mobs.count_of), on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan; the alternative 5 + 5 + 4 by one is a row of this table)"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 4,
     "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 778 mrare_ngoro_lvl30, «[19] Капитан Нгоро<Br>Пираты Сомали» (8975), the chief of the pirates' «встреча с главарем» (place 133, 6161,1973)",
-    "_designed": "the camp's 14 ounces as one ingot of ten and a stack of four of one (count 4, mobs.count_of), on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan; the alternative 5 + 5 + 4 by one is a row of this table)"
+    "_designed": "Owner update, 2026-10-26: 4 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 4
    }
   ],
   "8620": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 8620 mrare_Sherhan_lvl33, «[22] Генерал Шерхан<Br>Северный Альянс» (9010), the boss of the Alliance's outpost (168, 6210,1986), the second type of the name by its file",
-    "_designed": "the camp's 14 ounces as one ingot of ten and a stack of four of one (count 4, mobs.count_of), on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan; the alternative 5 + 5 + 4 by one is a row of this table)"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
-    "count": 4,
     "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 8620 mrare_Sherhan_lvl33, «[22] Генерал Шерхан<Br>Северный Альянс» (9010), the boss of the Alliance's outpost (168, 6210,1986), the second type of the name by its file",
-    "_designed": "the camp's 14 ounces as one ingot of ten and a stack of four of one (count 4, mobs.count_of), on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan; the alternative 5 + 5 + 4 by one is a row of this table)"
+    "_designed": "Owner update, 2026-10-26: 4 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 4
    }
   ],
   "1037": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 1037 mrare_Sherhan_lvl32, «[22] Генерал Шерхан<Br>Северный Альянс» (9010), the boss of the Alliance's base (263, 6273,1953)",
-    "_designed": "the base's 16 ounces as one ingot of ten, one of five and one of one, on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan)"
-   },
-   {
-    "type": 4796,
-    "_name": "5 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 1037 mrare_Sherhan_lvl32, «[22] Генерал Шерхан<Br>Северный Альянс» (9010), the boss of the Alliance's base (263, 6273,1953)",
-    "_designed": "the base's 16 ounces as one ingot of ten, one of five and one of one, on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan)"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 1037 mrare_Sherhan_lvl32, «[22] Генерал Шерхан<Br>Северный Альянс» (9010), the boss of the Alliance's base (263, 6273,1953)",
-    "_designed": "the base's 16 ounces as one ingot of ten, one of five and one of one, on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan)"
+    "_designed": "Owner update, 2026-10-26: 4 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 4
    }
   ],
   "1038": [
    {
-    "type": 4797,
-    "_name": "10 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 1038 mrare_Tabaqui_lvl30, «[21] Бригадир Табаки<Br>Северный Альянс» (9009), the chief of the base's «встреча с главарем» (place 274, 6274,1952)",
-    "_designed": "the base's 16 ounces as one ingot of ten, one of five and one of one, on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan)"
-   },
-   {
-    "type": 4796,
-    "_name": "5 унций золота",
-    "tier": "Ценный",
-    "chance": 1.0,
-    "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 1038 mrare_Tabaqui_lvl30, «[21] Бригадир Табаки<Br>Северный Альянс» (9009), the chief of the base's «встреча с главарем» (place 274, 6274,1952)",
-    "_designed": "the base's 16 ounces as one ingot of ten, one of five and one of one, on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan)"
-   },
-   {
     "type": 7620,
     "_name": "1 унция золота",
     "tier": "Ценный",
     "chance": 1.0,
     "_source": "the owner's of 2026-10-14, «сделай потом абу хамед в таком же формате», the sums a decision taken for him (_meta.decided): 1038 mrare_Tabaqui_lvl30, «[21] Бригадир Табаки<Br>Северный Альянс» (9009), the chief of the base's «встреча с главарем» (place 274, 6274,1952)",
-    "_designed": "the base's 16 ounces as one ingot of ten, one of five and one of one, on every kill, outside mobs.MAX_DROPS: the fewest things (decision 2 of the plan)"
+    "_designed": "Owner update, 2026-10-26: 4 one-ounce ingots per kill for this region; existing gold carriers only. Other loot and boss-hour restrictions unchanged.",
+    "count": 4
    }
   ],
   "930": [

@@ -424,9 +424,11 @@ async def main():
           " 160 + 130", await fight([(alice, 100), (amir, 100), (andy, 100), (bob, 160),
                                      (bill, 130)], bob), ("capture", wolves))
     andy.combat.dead = False
-    check("a clan's harm is the boss's health and stamina at most (%d): ten times that"
-          " ties with 1200, and the killing blow decides" % (boss.hp_max + boss.sp_max),
-          await fight([(alice, 5000), (amir, 5000), (bob, 600), (bill, 600)], bill),
+    pool = boss.hp_max + boss.sp_max
+    check("a clan's harm is capped at the boss's health and stamina (%d): both clans"
+          " reach that cap, and the killing blow decides" % pool,
+          await fight([(alice, 5 * pool), (amir, 5 * pool),
+                       (bob, pool // 2), (bill, pool - pool // 2)], bill),
           ("capture", jackals))
 
     # --- banked harm --------------------------------------------------------------------------
