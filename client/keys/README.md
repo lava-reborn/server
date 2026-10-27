@@ -1,14 +1,13 @@
 # client/keys
 
-The public keys every launcher is built with (launcher/build.ps1):
+Открытые ключи, которые вшиваются в каждый лаунчер (launcher/build.ps1):
 
-- `resource.keys` -- what a release pointer is signed with. The private key
-  lives on the server only (/opt/lava-ci/client/resource.pem, made by
-  deploy/remote/install.sh, which prints the line to put here).
-- `launcher.keys` -- what a launcher statement is signed with. The private key
-  is the owner's, outside the repository and outside OneDrive
-  (client/README.md, «Ключи»).
+- `resource.keys` — ключ, которым подписан указатель релиза. Закрытая часть
+  только на сервере (`/opt/lava-ci/client/resource.pem`, делает
+  `deploy/remote/install.sh`).
+- `launcher.keys` — ключи, которыми подписано заявление о лаунчере: ключ
+  шлюза на сервере и запасной ключ владельца вне репозитория.
 
-One line per key: `<keyid> <e> <n in hex>`. Every listed key is accepted, so a
-key is replaced by listing both for one launcher release, then dropping the
-old one. A launcher cannot be built until both files hold a key.
+По строке на ключ: `<keyid> <e> <n в hex>`. Принимается любой из
+перечисленных, поэтому ключ меняют так: один выпуск лаунчера с обоими, затем
+старый убирают. Пока в обоих файлах нет ключа, лаунчер не собирается.
