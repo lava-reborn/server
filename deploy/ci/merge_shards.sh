@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The shards' records as one run: did every suite run, and exactly once?
 #
-#   bash deploy/ci/merge_shards.sh DIR OUT
+#   bash deploy/ci/merge_shards.sh DIR OUT [PICKED]
 #
 # DIR holds one folder per shard, each with the summary.txt that
 # tools/run_suite.sh --shard I/N left there. OUT becomes the summary.txt of
@@ -11,17 +11,23 @@
 # out or run it twice, and this is where that shows: a missing suite fails the
 # job, since a green run without it would deploy what nothing tested.
 #
-# CI runs three shards on three of its four runners (ci.yml, jobs suite and
-# suites), one folder under DIR each; the check: every suite of the
-# tree ran, and once.
+# CI runs three shards (ci.yml, jobs suite and suites), one folder under DIR
+# each; the check: every suite of the tree ran, and once. A pull request's
+# run tests only what its change touches (tools/suite.py --affected, picked
+# once by the assets job): PICKED, a comma-separated list of suite names,
+# is then the set that must have run, and once.
 set -uo pipefail
 
 DIR=$1
 OUT=$2
 
-# What run_suite.sh runs: test_storage_pg is Postgres's, in its own job.
-expected=$( { ls server/test_*.py | grep -v -e test_storage_pg; ls data/test_*.py tools/test_*.py; } \
-            | xargs -n1 basename | sed 's/[.]py$//' | sort)
+if [ $# -ge 3 ]; then
+  expected=$(printf '%s\n' "$3" | tr ',' '\n' | grep . | sort)
+else
+  # What run_suite.sh runs: test_storage_pg is Postgres's, in its own job.
+  expected=$( { ls server/test_*.py | grep -v -e test_storage_pg; ls data/test_*.py tools/test_*.py; } \
+              | xargs -n1 basename | sed 's/[.]py$//' | sort)
+fi
 
 cat "$DIR"/*/summary.txt 2>/dev/null | grep -v '^DONE$' > "$OUT.all"
 ran=$(awk '{ print $3 }' "$OUT.all" | sort)
