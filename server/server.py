@@ -52,6 +52,7 @@ import names
 import npcs
 import party
 import rooms
+import residence
 import progression
 import production
 import quests
@@ -407,7 +408,7 @@ DAILY_MAX = 10
 DAILY_RESET_TIME = 0
 
 # What a quest puts in the bag -- its reward, a parcel at the take -- goes in
-# past inventory.MAX_WEIGHT too (the owner's decision of 2026-09-26). A
+# past the character's carry limit too (the owner's decision of 2026-09-26). A
 # refusal cannot be worded: the client answers any non-zero q_co with «Вы
 # сдали максимальное количество ежедневных квестов» (QuestInspector.takeAck,
 # ErrorReport 44) and a q_st refused with nothing at all, the server's own
@@ -492,6 +493,7 @@ class Session:
         # characters table: Character.save does not carry these two columns,
         # so nothing overwrites a rental on the way out.
         self.transport = None
+        self.residence_timer = None
         self.loc = world.location(START_LOC)
         self.pos = self.loc.entry_cell()
         self.on_map = False
@@ -700,7 +702,7 @@ class Session:
                   leave_combat_timeout=combat.LEAVE_COMBAT_TIMEOUT,
                   premium_weight_bonus_1=progression.PREMIUM_WEIGHT_BONUS[1],
                   premium_weight_bonus_2=progression.PREMIUM_WEIGHT_BONUS[2],
-                  premium_break_bonus_1=1, premium_break_bonus_2=2,
+                  premium_break_bonus_1=0, premium_break_bonus_2=0,
                   premium_xp_bonus_1=progression.PREMIUM_XP_BONUS[1],
                   premium_xp_bonus_2=progression.PREMIUM_XP_BONUS[2],
                   # The repair window's two gold divisors, from the
@@ -784,6 +786,9 @@ class Session:
             self.linger.cancel()
             self.linger = None
         self.closed = True
+        if getattr(self, "residence_timer", None) is not None:
+            self.residence_timer.cancel()
+            self.residence_timer = None
         # Whatever fails in here, the transport still closes: a socket left
         # open by a bug in one subsystem would otherwise hold up shutdown()
         # and keep a ghost in every room it was in.
@@ -901,8 +906,81 @@ class Session:
         # The rental rides in the same row and is read in the same breath.
         row = STORE.character(char_id)
         self.combat.restore(row)
+        self.schedule_residence()
         kind = row["transport_type"] if row is not None else None
         self.transport = (int(kind), int(row["transport_until"] or 0))             if kind else None
+
+    def schedule_residence(self):
+        timer = getattr(self, "residence_timer", None)
+        if timer is not None:
+            timer.cancel()
+        self.residence_timer = None
+        self.residence_retries = 0
+        ch = self.character()
+        if not ch.premium or ch.premium_until is None or self.closed:
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self.residence_timer = loop.call_later(max(0, ch.premium_until-time.time()), self.expire_residence)
+
+    def expire_residence(self):
+        self.residence_timer = None
+        if self.closed or not self.char_id:
+            return
+        ch = self.character()
+        retries = getattr(self, "residence_retries", 0)
+        if ch.premium_level() and not retries:
+            self.schedule_residence()
+            return
+        if not ch.premium and not retries:
+            return
+        try:
+            changed = None
+            if ch.premium:
+                with storage.atomic(STORE.db):
+                    changed = STORE.db.execute(
+                        "UPDATE characters SET premium=0, premium_until=NULL WHERE id=?"
+                        " AND premium=? AND premium_until=? AND premium_until<=?",
+                        (self.char_id,ch.premium,ch.premium_until,time.time()))
+                if changed.rowcount:
+                    ch.premium, ch.premium_until = 0, None
+                else:
+                    current = STORE.character(self.char_id)
+                    ch.premium, ch.premium_until = current["premium"],current["premium_until"]
+                    if ch.premium_level():
+                        self.schedule_residence()
+            else:
+                # The write may have succeeded before publishing failed.
+                # Re-read the status instead of returning with stale UI.
+                current = STORE.character(self.char_id)
+                ch.premium, ch.premium_until = current["premium"],current["premium_until"]
+                if ch.premium_level():
+                    self.schedule_residence()
+            self._quest_status_snapshot = None
+            self.push_money()
+            self.push_stats(attribs=set(), skills=set(), specs=set())
+            if changed is not None and changed.rowcount:
+                self.answer("Срок статуса закончился. Оформить прописку или ВНЖ можно у Саида.")
+        except Exception:
+            # A one-shot deadline must survive temporary DB/publish failure,
+            # including an uncertain COMMIT. Retry only the conditional
+            # write/read and snapshot, never a paid quest or purse save.
+            timer = self.residence_timer
+            if timer is not None:
+                timer.cancel()
+            self.residence_retries = retries + 1
+            delay = min(60, 5 * 2**min(retries, 4))
+            log.exception("residence expiry deferred for %s; retry in %ss", self.char_id, delay)
+            self._quest_status_snapshot = None
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                return
+            self.residence_timer = loop.call_later(delay, self.expire_residence)
+            return
+        self.residence_retries = 0
 
     # --- where the figure stands -------------------------------------------
     # pos is where the player is going: the cell the last walk ends on, the
@@ -2184,6 +2262,8 @@ class Session:
         self.send("userInfo_Player",
                   id=0, name=Str(pers["name"]), sex=pers["sex"],
                   res=Str(str(pers["res"])), ail=0, ally=1, clan=0, hl=0,
+                  rental_type=type_id or 0,
+                  rental_until=int(self.transport[1]) if type_id is not None else 0,
                   **self.character().player_info(), **riding)
         # The one frame that carries the purse: whatever moved it, a quest
         # whose fee it now covers, or no longer covers, is told (fee_recount).
@@ -2324,7 +2404,7 @@ class Session:
             # of an ounce (upgrader.lists): the recipes a weapons master
             # gives, gun in and gun out (craft.py), and a set's rungs
             # (setcraft.py); empty lists for an upgrader of another service.
-            params.update(upgrader.lists(type_id))
+            params.update(upgrader.lists(type_id, self.room.loc.id))
         elif root == world.LESSOR:
             # Lessor.createTransList builds a TransObject per entry and asks
             # for its ts_si; the list is the whole of the rental window.
@@ -2774,7 +2854,9 @@ class Session:
         does keep_lent taking all of it back away from its stay_in): a
         lesson dropped by mistake is the player's to take again at once.
         """
-        if quest.over_cap(self.skill_level()):
+        if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
+            return False
+        if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()):
             return False
         carried = bool(self.char_id) and (quest.type in state.active if state is not None
                                         else STORE.has_quest(self.char_id, quest.type))
@@ -2939,6 +3021,8 @@ class Session:
         and the bag holds what a craft row asks beyond its things (a
         salvage's broken gun, craft.ready), which is told and refused the
         same way."""
+        if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
+            return False
         if not quest.has_fee:
             return craft.ready(self, quest)
         return quest.affordable(*self.inv.money()) and craft.ready(self, quest)
@@ -3114,7 +3198,7 @@ class Session:
                 self.send = original_send
             else:
                 del self.send
-        if isinstance(failed, storage.CommitError):
+        if isinstance(failed, (storage.CommitError, residence.StaleState)):
             # A lost database reply can mean COMMIT already succeeded. Never
             # save the old purse/stats over it or continue with stale items.
             try:
@@ -3131,6 +3215,8 @@ class Session:
             self.send("cmdAck", res=1)
             self.answer("Операция не выполнена. Предметы и награда не изменены. Повторите попытку.")
             return False
+        if character.premium_until != before.get("premium_until"):
+            self.schedule_residence()
         try:
             for command, params in frames:
                 original_send(command, **params)
@@ -3238,12 +3324,12 @@ class Session:
 
     def over_weight(self, pieces, less=()):
         """Whether (type, pieces) more, and less taken away, would take the
-        load past inventory.MAX_WEIGHT: what QUEST_ITEMS_PAST_WEIGHT=False
+        load past the character's carry limit: what QUEST_ITEMS_PAST_WEIGHT=False
         refuses."""
         weigh = self.inv.pieces_weight
         return bool(pieces) and self.inv.total_weight() \
             - sum(weigh(t, n) for t, n in less) \
-            + sum(weigh(t, n) for t, n in pieces) > inventory.MAX_WEIGHT
+            + sum(weigh(t, n) for t, n in pieces) > self.inv.carry_limit()
 
     def cmd_q_co(self, p):
         self.quest_write(self.hand_in_quest, p)
@@ -3309,7 +3395,18 @@ class Session:
         if not quest or npc_type not in quest.take:
             self.send("cmdAck", res=RES_WRONG_NPC)
             return
-        if quest.over_cap(self.skill_level()) or not events.quest_open(quest.type, True):
+        why = residence.refusal(self.character(), quest.type, p)
+        if why:
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.answer(why)
+            return
+        if quest.type in residence.QUESTS:
+            entry = self.room.npc(int(p.get("mob", 0))) if self.room else None
+            if not entry or not progression.within_reach(self.pos,entry[0],self.loc.width,self.loc.height):
+                self.send("cmdAck", res=progression.ERR_TOO_FAR)
+                return
+        if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()) \
+                or not events.quest_open(quest.type, True):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
             return
         # A warehouse box's row: the hand-in asks the holders' gate again
@@ -3403,6 +3500,8 @@ class Session:
         if quest.rew_xp or quest.rew_spec_xp:
             self.pay_xp(quest.rew_xp, quest.rew_spec_xp)
         # A kill quest paid its fee at the take (quests.Quest.fee_at_take).
+        if quest.type in residence.QUESTS:
+            residence.grant(STORE, self.character(), quest.type)
         paid = 0 if quest.fee_at_take else 1
         afro = quest.rew_afro - paid * quest.cost_afro
         gold = quest.rew_gold - paid * quest.cost_gold
@@ -3414,6 +3513,9 @@ class Session:
             with STORE.booked_as("quest", quest.type):
                 ch.save(STORE)
             self.push_money()
+        if quest.type in residence.QUESTS:
+            self._quest_status_snapshot = None
+            self.push_stats(attribs=set(), skills=set(), specs=set())
         if self.counts_daily(quest):
             self.send("q_sys", daily_available=self.daily_available())
         log.info("  ..    quest #%d (%s) handed in: %+d afro %+d gold, item %s%s%s, xp %s%s",
@@ -3786,10 +3888,17 @@ class Session:
         char = self.character()
         # The residence permit gate. TransRentInterface refuses this one
         # before it sends anything, so reaching it means a modified client.
-        if vehicle["premium"] > char.premium_level():
+        required = max(vehicle["premium"], vehicle.get("required_status",0))
+        if required > char.premium_level():
             log.info("  ..    rent refused: type %d needs premium %d",
                      type_id, vehicle["premium"])
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            return
+        now = time.time()
+        base = transport.until_after(0,now,current=self.transport,type_id=type_id)
+        if vehicle.get("required_status") and days > residence.rent_days(char,now,base):
+            self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            self.answer("Срок аренды превышает оставшийся срок статуса. Если осталось меньше суток, доступна аренда на сутки.")
             return
         afro, gold = transport.price(type_id, days)
         if not char.can_afford(afro, gold):
@@ -3797,15 +3906,43 @@ class Session:
                      " the purse holds", afro, gold)
             self.send("cmdAck", res=RES_NO_MONEY)
             return
-        char.add_money(-afro, -gold)
-        with STORE.booked_as("transport", type_id):
-            char.save(STORE)
-        # A second rental replaces the first outright: the client asks
-        # "поменять транспорт?" and sends this only once the player agrees,
-        # and there is nowhere to keep two.
-        self.transport = (type_id, transport.until_after(days))
-        STORE.save_character_state(self.char_id, transport_type=type_id,
-                                   transport_until=self.transport[1])
+        before = copy.deepcopy(char.__dict__)
+        until = transport.until_after(days,now,current=self.transport,type_id=type_id)
+        try:
+            with storage.atomic(STORE.db):
+                if not STORE.lock_quest_character(self.char_id):
+                    raise ValueError("rental character gone")
+                row = STORE.character(self.char_id)
+                saved_rental = (row["transport_type"],row["transport_until"]) if row["transport_type"] else None
+                if saved_rental != self.transport:
+                    raise residence.StaleState("rental changed externally")
+                if (row["afro"],row["gold"]) != (char.afro,char.gold):
+                    raise residence.StaleState("rental purse changed externally")
+                if required and ((row["premium"],row["premium_until"]) != (char.premium,char.premium_until)
+                                 or char.premium_level() < required
+                                 or days > residence.rent_days(char,base=base)):
+                    raise residence.StaleState("rental status changed")
+                char.add_money(-afro, -gold)
+                with STORE.booked_as("transport", type_id):
+                    char.save(STORE)
+                STORE.save_character_state(self.char_id, transport_type=type_id,
+                                           transport_until=until)
+        except (storage.CommitError,residence.StaleState):
+            try:
+                self.char = progression.Character.load(STORE,self.char_id)
+            except Exception:
+                self.char = None
+                log.exception("recovering uncertain rental commit failed")
+            self.close(force=True)
+            return
+        except Exception:
+            char.__dict__.clear()
+            char.__dict__.update(before)
+            log.exception("rental was rolled back for %s",self.char_id)
+            self.send("cmdAck",res=RES_NOT_AVAILABLE)
+            self.answer("Аренда не оформлена, оплата не списана. Повторите попытку.")
+            return
+        self.transport = (type_id, until)
         log.info("  ..    %s rented type %d for %d day(s), %d afro / %d gold",
                  self.nick, type_id, days, afro, gold)
         # The purse and the vehicle ride the same frame, and it is the only
@@ -4279,6 +4416,8 @@ def refused_gift(type_id):
     if items.retired(type_id):
         return RETIRED_REFUSED % (
             type_id, names.text(items.STRING_ID_OFFSET + type_id).split("$")[0].strip())
+    if items.acquisition_blocked(type_id):
+        return "Выдача оружия и брони выше %d уровня временно недоступна" % items.PLAYER_GEAR_MAX_LEVEL
     return None
 
 

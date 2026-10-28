@@ -95,7 +95,8 @@ def entity_root(type_id, root):
 
 def _read(path):
     """Location files are UTF-8 despite declaring windows-1251."""
-    raw = open(path, "rb").read()
+    with open(path, "rb") as source:
+        raw = source.read()
     try:
         return raw.decode("utf-8")
     except UnicodeDecodeError:

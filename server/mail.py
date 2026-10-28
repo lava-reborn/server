@@ -531,6 +531,10 @@ class Mail:
             self.ack(RES_NO_LETTER)
             return
         snaps = json.loads(row["items_json"])
+        if any(items.acquisition_blocked(s["type_id"]) for s in snaps):
+            self.ack(RES_REFUSED)
+            self.sess.answer("Получение оружия и брони выше 17 уровня временно недоступно. Вложения сохранены.")
+            return
         if not attached(row):
             self.ack(RES_NOTHING_TO_TAKE)
             return

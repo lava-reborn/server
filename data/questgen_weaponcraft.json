@@ -25702,25 +25702,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      258,
-      259,
-      260,
-      261,
-      262,
-      263,
-      264,
-      265,
-      266,
-      267,
-      268,
-      269,
-      270
-     ],
      "num": 1,
-     "obj": 2408,
-     "one_of": "craft_codified"
+     "obj": 2408
     }
    ],
    "repeatable": 1,
@@ -25747,7 +25730,7 @@
     652
    ],
    "type": 10700,
-   "why": "RECOVERED: texts.xml 47998-47999, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 47998-47999, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 600,
@@ -25767,25 +25750,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      258,
-      259,
-      260,
-      261,
-      262,
-      263,
-      264,
-      265,
-      266,
-      267,
-      268,
-      269,
-      270
-     ],
      "num": 1,
-     "obj": 1131,
-     "one_of": "craft_codified"
+     "obj": 1131
     }
    ],
    "repeatable": 1,
@@ -25852,7 +25818,7 @@
     652
    ],
    "type": 10701,
-   "why": "RECOVERED: texts.xml 48000-48001, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48000-48001, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 912,
@@ -25872,27 +25838,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      271,
-      272,
-      273,
-      274,
-      276,
-      277,
-      278,
-      279,
-      280,
-      281,
-      282,
-      283,
-      284,
-      285,
-      336
-     ],
      "num": 1,
-     "obj": 2409,
-     "one_of": "craft_codified"
+     "obj": 2409
     }
    ],
    "repeatable": 1,
@@ -25914,7 +25861,7 @@
     652
    ],
    "type": 10702,
-   "why": "RECOVERED: texts.xml 48002-48003, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48002-48003, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 1200,
@@ -25934,27 +25881,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      271,
-      272,
-      273,
-      274,
-      276,
-      277,
-      278,
-      279,
-      280,
-      281,
-      282,
-      283,
-      284,
-      285,
-      336
-     ],
      "num": 1,
-     "obj": 1132,
-     "one_of": "craft_codified"
+     "obj": 1132
     }
    ],
    "repeatable": 1,
@@ -25991,7 +25919,7 @@
     652
    ],
    "type": 10703,
-   "why": "RECOVERED: texts.xml 48004-48005, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48004-48005, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 1512,
@@ -26011,26 +25939,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      287,
-      288,
-      289,
-      290,
-      291,
-      292,
-      293,
-      294,
-      295,
-      296,
-      297,
-      298,
-      299,
-      300
-     ],
      "num": 1,
-     "obj": 2410,
-     "one_of": "craft_codified"
+     "obj": 2410
     }
    ],
    "repeatable": 1,
@@ -26067,7 +25977,7 @@
     652
    ],
    "type": 10704,
-   "why": "RECOVERED: texts.xml 48006-48007, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48006-48007, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 1800,
@@ -26087,26 +25997,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      287,
-      288,
-      289,
-      290,
-      291,
-      292,
-      293,
-      294,
-      295,
-      296,
-      297,
-      298,
-      299,
-      300
-     ],
      "num": 1,
-     "obj": 1133,
-     "one_of": "craft_codified"
+     "obj": 1133
     }
    ],
    "repeatable": 1,
@@ -26153,7 +26045,7 @@
     652
    ],
    "type": 10705,
-   "why": "RECOVERED: texts.xml 48008-48009, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48008-48009, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 3912,
@@ -26173,25 +26065,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      301,
-      302,
-      303,
-      304,
-      305,
-      306,
-      307,
-      308,
-      309,
-      310,
-      311,
-      313,
-      314
-     ],
      "num": 1,
-     "obj": 2411,
-     "one_of": "craft_codified"
+     "obj": 2411
     }
    ],
    "repeatable": 1,
@@ -26223,7 +26098,7 @@
     652
    ],
    "type": 10706,
-   "why": "RECOVERED: texts.xml 48010-48011, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48010-48011, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 6000,
@@ -26243,25 +26118,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      301,
-      302,
-      303,
-      304,
-      305,
-      306,
-      307,
-      308,
-      309,
-      310,
-      311,
-      313,
-      314
-     ],
      "num": 1,
-     "obj": 1134,
-     "one_of": "craft_codified"
+     "obj": 1134
     }
    ],
    "repeatable": 1,
@@ -26308,7 +26166,7 @@
     652
    ],
    "type": 10707,
-   "why": "RECOVERED: texts.xml 48012-48013, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48012-48013, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 18000,
@@ -26328,27 +26186,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      362,
-      363,
-      364,
-      365,
-      366,
-      367,
-      368,
-      369,
-      370,
-      371,
-      372,
-      373,
-      374,
-      375,
-      1565
-     ],
      "num": 1,
-     "obj": 1136,
-     "one_of": "craft_codified"
+     "obj": 1136
     }
    ],
    "repeatable": 1,
@@ -26400,7 +26239,7 @@
     651
    ],
    "type": 10708,
-   "why": "RECOVERED: texts.xml 48020-48021, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48020-48021, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 24000,
@@ -26420,27 +26259,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      362,
-      363,
-      364,
-      365,
-      366,
-      367,
-      368,
-      369,
-      370,
-      371,
-      372,
-      373,
-      374,
-      375,
-      1565
-     ],
      "num": 1,
-     "obj": 2414,
-     "one_of": "craft_codified"
+     "obj": 2414
     }
    ],
    "repeatable": 1,
@@ -26482,7 +26302,7 @@
     651
    ],
    "type": 10709,
-   "why": "RECOVERED: texts.xml 48022-48023, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48022-48023, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 30000,
@@ -26502,27 +26322,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      362,
-      363,
-      364,
-      365,
-      366,
-      367,
-      368,
-      369,
-      370,
-      371,
-      372,
-      373,
-      374,
-      375,
-      1565
-     ],
      "num": 1,
-     "obj": 1137,
-     "one_of": "craft_codified"
+     "obj": 1137
     }
    ],
    "repeatable": 1,
@@ -26569,7 +26370,7 @@
     651
    ],
    "type": 10710,
-   "why": "RECOVERED: texts.xml 48024-48025, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48024-48025, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 41400,
@@ -26589,26 +26390,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      395,
-      396,
-      397,
-      398,
-      399,
-      400,
-      401,
-      402,
-      403,
-      404,
-      405,
-      406,
-      407,
-      408
-     ],
      "num": 1,
-     "obj": 2415,
-     "one_of": "craft_codified"
+     "obj": 2415
     }
    ],
    "repeatable": 1,
@@ -26645,7 +26428,7 @@
     651
    ],
    "type": 10711,
-   "why": "RECOVERED: texts.xml 48026-48027, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48026-48027, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 48000,
@@ -26665,26 +26448,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      395,
-      396,
-      397,
-      398,
-      399,
-      400,
-      401,
-      402,
-      403,
-      404,
-      405,
-      406,
-      407,
-      408
-     ],
      "num": 1,
-     "obj": 1138,
-     "one_of": "craft_codified"
+     "obj": 1138
     }
    ],
    "repeatable": 1,
@@ -26736,7 +26501,7 @@
     651
    ],
    "type": 10712,
-   "why": "RECOVERED: texts.xml 48028-48029, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48028-48029, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 60000,
@@ -26756,40 +26521,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      765,
-      766,
-      767,
-      768,
-      769,
-      770,
-      771,
-      772,
-      773,
-      774,
-      775,
-      776,
-      777,
-      778,
-      1025,
-      1026,
-      1027,
-      1028,
-      1029,
-      1030,
-      1031,
-      1032,
-      1033,
-      1034,
-      1036,
-      1749,
-      1750,
-      8620
-     ],
      "num": 1,
-     "obj": 2416,
-     "one_of": "craft_codified"
+     "obj": 2416
     }
    ],
    "repeatable": 1,
@@ -26826,7 +26559,7 @@
     796
    ],
    "type": 10713,
-   "why": "RECOVERED: texts.xml 48030-48031, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48030-48031, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 72000,
@@ -26846,40 +26579,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      765,
-      766,
-      767,
-      768,
-      769,
-      770,
-      771,
-      772,
-      773,
-      774,
-      775,
-      776,
-      777,
-      778,
-      1025,
-      1026,
-      1027,
-      1028,
-      1029,
-      1030,
-      1031,
-      1032,
-      1033,
-      1034,
-      1036,
-      1749,
-      1750,
-      8620
-     ],
      "num": 1,
-     "obj": 1270,
-     "one_of": "craft_codified"
+     "obj": 1270
     }
    ],
    "repeatable": 1,
@@ -26926,7 +26627,7 @@
     796
    ],
    "type": 10714,
-   "why": "RECOVERED: texts.xml 48032-48033, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48032-48033, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 84000,
@@ -26946,29 +26647,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      1037,
-      1038,
-      1728,
-      1729,
-      1730,
-      1731,
-      1732,
-      1733,
-      1734,
-      1735,
-      1751,
-      2170,
-      2315,
-      2316,
-      2317,
-      2318,
-      2319
-     ],
      "num": 1,
-     "obj": 2417,
-     "one_of": "craft_codified"
+     "obj": 2417
     }
    ],
    "repeatable": 1,
@@ -27005,7 +26685,7 @@
     796
    ],
    "type": 10715,
-   "why": "RECOVERED: texts.xml 48034-48035, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48034-48035, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 85200,
@@ -27025,29 +26705,8 @@
    "notfinish": "Я слышал, что наиболее влиятельные люди в различных группировках и бандах имеют доступ к таким чертежам.",
    "objs": [
     {
-     "drop": 0.02,
-     "mobs": [
-      1037,
-      1038,
-      1728,
-      1729,
-      1730,
-      1731,
-      1732,
-      1733,
-      1734,
-      1735,
-      1751,
-      2170,
-      2315,
-      2316,
-      2317,
-      2318,
-      2319
-     ],
      "num": 1,
-     "obj": 2418,
-     "one_of": "craft_codified"
+     "obj": 2418
     }
    ],
    "repeatable": 1,
@@ -27084,7 +26743,7 @@
     796
    ],
    "type": 10716,
-   "why": "RECOVERED: texts.xml 48036-48037, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the drop off the camps of the level."
+   "why": "RECOVERED: texts.xml 48036-48037, the notfinish 46151 and finish 46152 (the Техногик's lines). DESIGNED: one blueprint of the level drawn (the ones the city's recipes ask for and the ones the original names), the fee 60% of the prizes' mean price and its line in the start, the encrypted blueprint is supplied by scheduled camp bosses."
   },
   {
    "cost_afro": 9000,

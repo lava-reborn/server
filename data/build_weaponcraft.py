@@ -66,10 +66,7 @@ still selects recipes and drops, independently of player eligibility:
             drawn, for a fee (DECODE_FEE of what the draw is worth, the
             prizes' mean afro price, DESIGNED: a decoded blueprint sold back
             to a stall nets no more than a tenth of its price). The
-            encrypted blueprint drops in the camps of its level, from
-            anybody there, for a player with the row open
-            (DESIGNED chance CODIFIED_DROP, one a corpse at most); nothing
-            else gave it originally. Scheduled camp bosses now also drop their
+            encrypted blueprint comes from scheduled camp bosses at their
             fixed level independently of quests (bosses.BLUEPRINTS); this
             supplies Dongola's additional decoding services for levels 9-11.
 
@@ -120,13 +117,12 @@ FAMILIES = {"upgrade": [(10000, 10399), (10800, 10999)], "knife": [(10400, 10499
             "salvage": [(10500, 10599)], "assembly": [(10600, 10699)],
             "decode": [(10700, 10799)]}
 
-# DESIGNED chances of a slot's drop (quests.py "drop"): a stat blueprint off
-# a camp's chief, an encrypted one off anybody in a camp of its level --
-# each group one thing a corpse at most, rolled once whatever rows the
-# killers hold open (the slot's "one_of", mobs.quest_roll).
+# DESIGNED chance of a stat blueprint off a camp's chief. Each group gives
+# one thing per corpse at most, whatever rows the killers hold open
+# (the slot's "one_of", mobs.quest_roll). Encrypted blueprints use only
+# bosses.BLUEPRINTS; taking a decoding quest adds no mob drop source.
 BLUEPRINT_DROP = 0.1
-CODIFIED_DROP = 0.02
-ONE_OF_BLUEPRINT, ONE_OF_CODIFIED = "craft_blueprint", "craft_codified"
+ONE_OF_BLUEPRINT = "craft_blueprint"
 # DESIGNED: the decoder's fee, a share of what the draw is worth -- the mean
 # afro price of the row's prizes, which are drawn alike: a decoded blueprint
 # sold back (inventory.SMOD 0.7) nets a tenth of its price, so an encrypted
@@ -908,16 +904,12 @@ def decode_rows(city, texts, upgrades):
         if not servable(codified) or not prizes:
             report["decode"].append("%d %s: nothing to draw" % (i, texts[i]))
             continue
-        dropping = camp_mobs(city, level, chiefs_only=False)
-        if not dropping and codified not in bosses.BLUEPRINTS.values():
-            # A recipe must have an acquisition source: its camps or the
-            # explicit scheduled-boss table (including Abri's levels 9-11).
-            report["decode"].append("%d %s: no camp of %s drops it"
+        if codified not in bosses.BLUEPRINTS.values():
+            # Every decoding service needs an explicit boss source.
+            report["decode"].append("%d %s: no scheduled boss source for %s"
                                     % (i, texts[i], city["name"]))
             continue
         slot = {"obj": codified, "num": 1}
-        if dropping:
-            slot.update(mobs=dropping, drop=CODIFIED_DROP, one_of=ONE_OF_CODIFIED)
         # What the draw is worth: the prizes' mean afro price (drawn alike,
         # w 1 each, below). Rounded up, so the sale never nets past a tenth.
         worth = sum(items.params_of(t)["cost"] for t in prizes) / float(len(prizes))
@@ -937,8 +929,8 @@ def decode_rows(city, texts, upgrades):
             why="RECOVERED: texts.xml %d-%d, the notfinish %d and finish %d (the Техногик's "
                 "lines). DESIGNED: one blueprint of the level drawn (the ones the city's "
                 "recipes ask for and the ones the original names), the fee %d%% of the "
-                "prizes' mean price and its line in the start, the drop off the camps of the "
-                "level."
+                "prizes' mean price and its line in the start; the encrypted blueprint "
+                "is supplied by scheduled camp bosses."
                 % (i, i + 1, DECODE_NOTFINISH, DECODE_FINISH, int(DECODE_FEE * 100)))))
         if city["name"] == "dongola" and level in (9, 10, 11):
             out[-1]["why"] = (

@@ -1681,7 +1681,8 @@ class Fighter:
             # wear: Берт's training pistol holds 120 and a level-0 cadet can
             # spend more than that on one lesson's targets, and a gun broken
             # halfway would lock the lesson until the next day (quests.lent).
-            wear = 0 if quests.lent(row["type_id"]) else round_wear(spent)
+            wear = 0 if quests.lent(row["type_id"]) else round_wear(
+                spent, WEAR_PER_ROUND * inventory.wear_multiplier(row, self.character()))
             self.store.update_item(uniq, ammo_count=row["ammo_count"] - spent,
                                    brk=max(0, row["brk"] - wear))
         if rc.room.ws:
@@ -2325,7 +2326,10 @@ class Fighter:
             if row is None or row["uniq"] not in bag.uniqs:
                 self.ack(inventory.RES_NOT_FOUND)
                 return True
-            if inv.total_weight() + inventory.weight_of(row) > inventory.MAX_WEIGHT:
+            if items.acquisition_blocked(row["type_id"]):
+                self.ack(inventory.RES_REFUSED)
+                return True
+            if inv.total_weight() + inventory.weight_of(row) > inv.carry_limit():
                 self.ack(inventory.RES_OVERLOAD)
                 return True
             # The ack first: Loot.transferAck moves the item on res=0, and an
@@ -2360,8 +2364,11 @@ class Fighter:
             rc.add_to_bag(self.loot, [row])
         elif code == 3:
             rows = self.session_items()
+            if any(items.acquisition_blocked(r["type_id"]) for r in rows):
+                self.ack(inventory.RES_REFUSED)
+                return True
             if inv.total_weight() + sum(inventory.weight_of(r) for r in rows) \
-                    > inventory.MAX_WEIGHT:
+                    > inv.carry_limit():
                 # All or nothing: on res=0 the client moves every item itself.
                 self.ack(inventory.RES_OVERLOAD)
                 return True
@@ -3252,7 +3259,7 @@ class RoomCombat:
                               killer_level=getattr(mob, "blueprint_killer_level", None)) \
                 + events.loot(self.room.loc.id, mob.type_id, RNG) \
                 + production.yield_of(mob.type_id):
-            if items.out_of_game(type_id):
+            if items.out_of_game(type_id) or items.acquisition_blocked(type_id):
                 continue            # (P) or retired by name; see items.out_of_game
             if type_id in items.GOLD_INGOTS and not gold_ok:
                 continue            # gold off the hours' bosses only, above

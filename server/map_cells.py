@@ -1548,20 +1548,25 @@ def clear_zones(canvas, plan):
     return laid, report
 
 
-def apply(read, plan=None):
+def apply(read, plan=None, progress=None):
     """({path: new bytes}, report lines): the tiles with the plan's war zones
     taken off, its squares and captions painted over, and its new squares
     painted on. read(path) gives a tile of the original (a path under res/)
     or None when this client has none."""
     plan = load() if plan is None else plan
     canvas = Canvas(read)
+    if progress: progress(5, "zones")
     _laid, report = clear_zones(canvas, plan)
+    if progress: progress(45, "labels")
     _found, _kept, _region, more = erase(canvas, plan)
     report += more
+    if progress: progress(65, "paint")
     report += paint(canvas, plan)
+    if progress: progress(80, "encode")
     out, blocks = canvas.encode()
     for n in sorted(out):
         report.append("%s: %d blocks encoded anew" % (tile_path(n), blocks[n]))
+    if progress: progress(100, "done")
     return {tile_path(n): b for n, b in out.items()}, report
 
 
@@ -1584,11 +1589,12 @@ class Served:
     map takes half a minute with the war zones: a request that comes while
     it is made waits for it."""
 
-    def __init__(self, root, plan=None):
+    def __init__(self, root, plan=None, progress=None, *, prepared_tiles=None):
+        self.progress = progress
         self.root = root
         self._plan = plan
         self._paths = None
-        self._tiles = None
+        self._tiles = prepared_tiles
         self._lock = threading.Lock()
 
     def _plan_paths(self):
@@ -1602,7 +1608,7 @@ class Served:
         if self._tiles is None:
             try:
                 self._plan_paths()
-                self._tiles, report = apply(reader(self.root), self._plan)
+                self._tiles, report = apply(reader(self.root), self._plan, progress=self.progress)
                 print("  map squares: %s" % "; ".join(report), flush=True)
             except (ValueError, OSError) as e:
                 # the player's own picture rather than none

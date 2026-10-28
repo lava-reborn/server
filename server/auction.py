@@ -285,7 +285,11 @@ def sweep(store, directory, now=None):
     now = time.time() if now is None else now
     for lot in store.auction_due(now):
         name = meta(lot["type_id"])[3]
-        if lot["bidder"]:
+        if items.acquisition_blocked(lot["type_id"]):
+            letters = refund(lot, "Предмет временно недоступен.") + give_back(
+                lot, "Аукцион: «%s» снят с продажи" % name,
+                "Оружие и броня выше 17 уровня временно недоступны. Предмет сохранён во вложении.")
+        elif lot["bidder"]:
             letters = settle(lot, lot["bidder"], lot["bid"], lot["bidder_name"])
         else:
             letters = give_back(lot, "Аукцион: «%s» не продан" % name,
@@ -363,7 +367,8 @@ class Auction:
         if cat == MY_LOTS:
             rows = [r for r in rows if r["seller"] == self.sess.char_id]
         else:
-            rows = [r for r in rows if self.matches(r, p, cat)]
+            rows = [r for r in rows if not items.acquisition_blocked(r["type_id"])
+                    and self.matches(r, p, cat)]
         sort = _int(p.get("sort"), 0)
         key = {
             0: lambda r: meta(r["type_id"])[3].lower(),
@@ -529,6 +534,8 @@ class Auction:
         if lot is None:
             return RES_NO_LOT, None
         kind = _int(p.get("type"), -1)
+        if kind != TAKEOFF and items.acquisition_blocked(lot["type_id"]):
+            return RES_REFUSED, None
         if kind == BID:
             return self.bid(lot, _int(p.get("amount"), 0))
         if kind == BUYOUT:

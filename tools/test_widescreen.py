@@ -71,7 +71,9 @@ check("every HUD and frame branch lands inside its own function",
 # would see it skip without LAVA_FLASH_PLAYER. So: every patch body the
 # module defines is used, and every wrap leaves its saved original's name
 # in the injected code, which only a wired wrap puts there.
-WIRED = ("__wideBoundXOrig", "__wideBoundYOrig",       # location camera
+WIRED = ("__requirementsReadOrig", "__questSendOrig", "__questFilterOrig",      # quest reads across transitions
+         "__itemFrameUpdateOrig", "__itemInfoAttachOrig",  # asynchronous item style
+         "__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__repairGoldOrig", "__repairGetPropOrig",    # gold-only repairs
          "__siteForumOrig", "__siteTooltipOrig",       # the old site's links
          "__progressInfoOrig", "__progress_increase_spec_level_func",
@@ -80,6 +82,10 @@ WIRED = ("__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__byeKickOrig", "__byeOrig",                 # no old login screen
          "__corpseDeadOrig", "__corpseFocusOrig",      # a corpse and its bag
          "__corpseLocationOrig", "__corpseRemoveOrig", # corpse cell ownership
+         "__panelFilterOrig", "__panelTeardownOrig",   # panel keys and teardown
+         "__globalKeysKillOrig", "__statsKillOrig", "__equipKillOrig",
+         "__eventPlayOrig", "__gameSliderOrig", "__soundVolumeOrig",
+         "__trackRequestOrig", "__trackLoadedOrig", "__musicVolumeOrig",
          "__subInitOrig", "__subGlobalOrig",           # sublocation exit
          "__mapScrollOrig", "__mapResizeOrig")         # global map scroll box
 _source = open(w.__file__, encoding="utf-8").read()
@@ -187,6 +193,32 @@ check("gold price, repair modifier and genuinely unpriced items are unchanged",
        for p in ("g_cost", "repair_mod", "absent")]
       + [run_repair_getprop(dict(cost=0, g_cost=0), "cost", "repair")],
       [13, 1, None, 0])
+
+
+# Weight controls use the server's grams, including after premium expires.
+for premium, limit in ((0,54000),(1,67500),(2,81000)):
+    pan = dict(bonusWeight_txt=dict(text="old bonus"), premium_mc=dict(gotoAndStop=lambda n: None))
+    pan["__weightLimitOrig"] = lambda: pan.update(maxWeight=limit+13)
+    gamer = dict(premium=premium,attributes=dict(max_weight=limit))
+    env = dict(this=pan,lol=dict(core=dict(Master=dict(getInstance=lambda:dict(gamer=gamer)))))
+    execute(w.fn_weight_limit().assemble(),env,returns=False)
+    check("WeightPan uses authoritative grams, premium=%d" % premium,pan["maxWeight"],limit)
+    if not premium:
+        check("expired premium clears its old bonus label",pan["bonusWeight_txt"]["text"],"")
+    gamer["attributes"]["max_weight"] = limit-2000
+    pan["calcMaxWeight"] = lambda: execute(w.fn_weight_limit().assemble(),env,returns=False)
+    check("transfer reads updated strength without reopening",execute(w.fn_weight_get().assemble(),env),limit-2000)
+
+for opened in ((),("equip",),("trade","bank","barter","mail")):
+    calls=[]
+    panels={name:dict(instance=dict(content=dict(weightPan=dict(calcMaxWeight=lambda name=name:calls.append(name)))))
+            for name in opened}
+    attrs=dict(__weightInfoOrig=lambda obj:calls.append("original"))
+    execute(w.fn_weight_snapshot().assemble(),dict(this=attrs,obj={},
+            lol=dict(core=dict(SceneShifter=dict(_ref=dict(UIPanels=panels))))),returns=False)
+    check("rp_info refreshes existing panels only: %s" % (opened,),calls,["original"]+list(opened))
+check("weight wrappers wired into real injection",
+      all(name.encode() in w.injected() for name in ("__weightInfoOrig","__weightLimitOrig","__weightGetOrig")),True)
 
 
 # --- the global map's picture: MAP_TILES against a release's tiles ----------

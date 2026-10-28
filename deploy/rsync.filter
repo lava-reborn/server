@@ -38,6 +38,15 @@
 - dist/
 - logs/
 - recon/
+# Portable tester kit tooling stays in Git, not in the production deployment.
+- /tools/*tester*.py
+# Local checks are developer tooling, not runtime/build dependencies.
+- /.venv-local-checks/
+- /tools/run_local_checks.ps1
+- /tools/local_checks.py
+- /tools/local_ci_checks.sh
+- /tools/test_local_checks.py
+- /tools/LOCAL_CHECKS.md
 + tools/
 + tools/*.py
 - tools/*

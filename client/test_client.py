@@ -145,6 +145,22 @@ try:
           sorted(p for p in originals if p != "database/texts.xml"))
     check("base: hash and size of a file", base["main.swf"], (sha(originals["main.swf"]), len(originals["main.swf"])))
 
+    # Source lists survive a Windows Git checkout. Signed documents keep
+    # their independent byte-level rules; only repository lists normalize CRLF.
+    crlf_base = os.path.join(W, 'base-crlf.txt')
+    write(crlf_base, read(base_txt).replace(b'\n', b'\r\n'))
+    check('base: CRLF has the same paths, hashes and sizes as LF',
+          build.read_entries(crlf_base, 'lava-base 1'), base)
+    crlf_extra = os.path.join(W, 'extra-crlf.txt')
+    write(crlf_extra, ('lava-extra 1\r\n%s\t%d\tsounds/example.swf\r\n' %
+                      (sha(b'example'), 7)).encode('utf-8'))
+    check('extra: CRLF preserves the entry', build.read_entries(crlf_extra, 'lava-extra 1'),
+          {'sounds/example.swf': (sha(b'example'), 7)})
+    invalid_header = os.path.join(W, 'base-invalid-header.txt')
+    write(invalid_header, b'wrong-header\r\n')
+    check('base: newline normalization still rejects an invalid header',
+          quiet(build.read_entries, invalid_header, 'lava-base 1')[0], 1)
+
     # --- publish: the original into the store ------------------------------------------------
     sroot = os.path.join(W, "served")
     state = os.path.join(W, "state")
@@ -184,6 +200,37 @@ try:
     def release(out_dir):
         b = build.Build(tree, os.path.join(sroot, "store"), res, out_dir)
         return quiet(b.run)
+
+    # Developer checks must never become a signed file installed by players,
+    # whether mistakenly supplied by the base, extra layer or client/files.
+    base_bytes = read(base_txt)
+    extra_path = os.path.join(cdir, "extra.txt")
+    extra_bytes = read(extra_path)
+    for index, (layer, path) in enumerate((
+            ('base', 'tools/run_local_checks.ps1'),
+            ('extra', 'logs/local-checks/report.json'),
+            ('files', 'xmldocs/TESTING.md'))):
+        bad_out = os.path.join(W, 'developer-only-%d' % index)
+        added_file = None
+        try:
+            if layer in ('base', 'extra'):
+                target = base_txt if layer == 'base' else extra_path
+                original_bytes = base_bytes if layer == 'base' else extra_bytes
+                row = '%s\t%d\t%s\n' % (sha(read(big)), len(read(big)), path)
+                write(target, original_bytes + row.encode('utf-8'))
+            else:
+                added_file = os.path.join(cdir, 'files', *path.split('/'))
+                write(added_file, b'developer instructions')
+            rc, output = release(bad_out)
+            check('release: developer file from %s is rejected before manifest' % layer,
+                  (rc != 0, 'developer-only' in output,
+                   os.path.exists(os.path.join(bad_out, 'files.tsv'))),
+                  (True, True, False))
+        finally:
+            write(base_txt, base_bytes)
+            write(extra_path, extra_bytes)
+            if added_file is not None:
+                os.unlink(added_file)
 
     out1 = os.path.join(W, "out1")
     rc, out = release(out1)

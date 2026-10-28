@@ -457,7 +457,8 @@ def droppable(type_id):
     sold would be litter the player cannot even get rid of (the blueprints
     in the table have no price: the upgrader they are for does not exist)."""
     si = items.params_of(type_id)
-    return bool(si) and not items.out_of_game(type_id) and not si.get("quest") \
+    return bool(si) and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id) \
+        and not si.get("quest") \
         and si.get("cost", 0) > 0
 
 
@@ -653,7 +654,8 @@ def one_of_droppable(type_id):
     thing priced in gold alone is welcome: the gold belts are worn, not
     litter, though no trader pays afro for them."""
     si = items.params_of(type_id)
-    return bool(si) and not items.out_of_game(type_id) and not si.get("quest")
+    return bool(si) and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id) \
+        and not si.get("quest")
 
 
 def one_of_groups(type_id):
@@ -681,7 +683,8 @@ def quest_droppable(type_id):
     and not one out of the game (items.out_of_game). Price and the quest
     flag do not count here (QUEST_TIER): the thing belongs to the quest
     that asks for it."""
-    return bool(items.params_of(type_id)) and not items.out_of_game(type_id)
+    return bool(items.params_of(type_id)) and not items.out_of_game(type_id) \
+        and not items.acquisition_blocked(type_id)
 
 
 def quest_table(type_id):
@@ -761,9 +764,14 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
     whatever a list says."""
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    excluded = ("craft_codified",) if blueprint is not None else ()
     out = carried(st, rng) + roll_table(st.type_id, rng) + \
-        quest_roll(st.type_id, wanted, rng, excluded_groups=excluded)
+        quest_roll(st.type_id, wanted, rng)
+    # Encrypted blueprints have exactly one acquisition roll per corpse,
+    # from the explicit scheduled-boss table below. Legacy quest rows or
+    # an ordinary loot entry cannot supply an additional source.
+    catalogue = items.catalogue()
+    out = [(t, n) for t, n in out
+           if not catalogue.get(t, (None, ""))[1].startswith("codified_bp_")]
     if blueprint is not None and killer_level is not None:
         # Compare with the dropped blueprint, not the boss's combat level.
         blueprint_level = int(items.catalogue()[blueprint][1].rsplit("_", 1)[1])

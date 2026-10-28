@@ -241,6 +241,7 @@ def expect(kind, lo, hi):
     out = set()
     if kind in shop_bands.MED_KINDS:
         return out
+    hi = min(hi, 17)  # temporary owner release ceiling, not a city-band change
     if kind == "sets":
         for s in SETS_DOC.values():
             if s["variant"] in ("A", "G") and lo <= s["level"] <= hi:

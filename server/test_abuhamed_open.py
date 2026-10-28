@@ -1251,20 +1251,17 @@ try:
     shopping_gold = 10000
     cheat(c, "/money %d %d" % (200000 + 67400, shopping_gold))
     stall, opened = open_stall(c, here, SIMONA)
-    bought = [buy(c, CID, stall, DARK_HELMET), buy(c, CID, stall, DARK_HELMET_G, gold=True)]
     close_stall(c)
-    check("Симона: Тёмное Эхо's helmet for 200 000 afro, its (G) for 50 of the ingots' gold -- the"
-          " set of 18, sold since Абу-Хамед",
-          (DARK_HELMET in stall, DARK_HELMET_G in stall, opened, bought),
-          (True, True, [0], [([0], 1, 200000, 0), ([0], 1, 0, 5000)]))
+    check("Симона: level-18 Тёмное Эхо A/G is temporarily absent; level-17 Штурм-М G stays",
+          (DARK_HELMET in stall, DARK_HELMET_G in stall, 11309 in stall, opened),
+          (False, False, True, [0]))
     stall, opened = open_stall(c, here, RIFLES_STALL)
     check("«Винтовки и патроны»: a US Army M24 for 67 400 afro",
           (opened, buy(c, CID, stall, M24)), ([0], ([0], 1, 67400, 0)))
     close_stall(c)
     stall, opened = open_stall(c, here, SCAR)
-    check("Шрам: a Кукри (G) for 8 gold; for afro refused",
-          (opened, buy(c, CID, stall, KUKRI_G, gold=True), buy(c, CID, stall, KUKRI_G)),
-          ([0], ([0], 1, 0, 800), ([inventory.RES_REFUSED], 0, 0, 0)))
+    check("Шрам: level-18 Кукри A/G is temporarily absent",
+          (opened, KUKRI in stall, KUKRI_G in stall), ([0], False, False))
     close_stall(c)
     lid, arrival = goto(c, PORT)
     pier = inhabitants(arrival, lid)
@@ -1426,12 +1423,12 @@ except Exception:
 finally:
     LOG_EVENING = SRV.stop()
 
-# --- the second server: noon, the prison's uprising ---------------------------------------
-SRV = Server("warden", "2026-10-14T12:00:05", world.cell_of(STATION))
+# --- the second server: 13:00 Moscow, the prison's uprising -------------------------------
+SRV = Server("warden", "2026-10-14T13:00:05", world.cell_of(STATION))
 try:
     c, CID, lid, arrival = newcomer("Warden", 17)
     here = inhabitants(arrival, lid)
-    check("at noon a character of the seventeenth level wakes at Абу-Хамед's station, Веласкес"
+    check("at 13:00 a character of the seventeenth level wakes at Абу-Хамед's station, Веласкес"
           " there", (lid, VELASQUEZ in here), (STATION, True))
     got, q_sanatorium = take(c, here, VELASQUEZ, SANATORIUM)
     check("«Охранник санатория особого режима» (884) taken at Веласкес", acks(got), [0])

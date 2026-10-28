@@ -160,7 +160,8 @@ def tradable(type_id):
     import combat  # late: combat imports inventory and its session handlers
     si = items.params_of(type_id) or {}
     return bool(si.get("exchang")) and not si.get("quest") \
-        and not items.out_of_game(type_id) and not combat.gold_item(type_id)
+        and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id) \
+        and not combat.gold_item(type_id)
 
 
 class Side:
@@ -766,6 +767,9 @@ def finish(deal, texts, spare=(), applied=False):
 def obstacle(deal):
     """Why the two cannot trade this instant, or None."""
     a, b = deal.proposer.sess, deal.invitee.sess
+    if any(items.acquisition_blocked(row["type_id"])
+           for side in (deal.proposer, deal.invitee) for row in side.items.values()):
+        return "оружие и броня выше 17 уровня временно недоступны для передачи"
     for s in (a, b):
         if s.closed or s.barter.deal is not deal:
             return "%s уже не здесь" % s.nick

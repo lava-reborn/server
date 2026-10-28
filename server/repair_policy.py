@@ -1,10 +1,30 @@
 """Repair-only A/G counterparts; sale prices and restoration are independent."""
 from functools import lru_cache
+import re
 
 LEVEL_MULTIPLIERS = {
     10: 4.75, 11: 4.5, 12: 4.25, 13: 3.75, 14: 3.5, 15: 2.75,
     16: 2, 17: 1.8, 18: 1.6, 19: 1.4, 20: 1.2,
 }
+
+# KS-12 has no A twin. Use the ordinary weapon price at the same public
+# level for repair ONLY. All A shotguns of each listed level share a price.
+# At 14/15 the catalogue has no shop A shotgun: G3/M16A2 supply the same
+# ordinary-weapon price tier. These are valuation references, not exchanges.
+KS12_AFRO_REFERENCES = {
+    4: 25856, 5: 25876, 6: 25899, 7: 25938, 8: 25967,
+    9: 25983, 10: 26009, 11: 26035, 12: 26061,
+    14: 25217, 15: 25249,
+}
+
+
+def ks12_reference(type_id, level):
+    """Repair reference for a known KS-12 level, including named copies."""
+    import items
+    root, name = items.catalogue().get(type_id, (None, ''))
+    if root == items.FIRE_ARM and re.fullmatch(r'lamantin_shotgun_\d+(?:_.*)?', name):
+        return KS12_AFRO_REFERENCES.get(level)
+    return None
 
 
 def multiplier(level):
@@ -65,6 +85,7 @@ def afro_cost(type_id):
 def valuation(type_id, params):
     """Repair valuation from the corresponding A type and the item's level."""
     import items
+    import progression
 
     if not params.get('g_cost') or not params.get('max_break_abs'):
         return None
@@ -72,14 +93,23 @@ def valuation(type_id, params):
     # gold valuation, converted at 10,000 afro/G for repair only.
     if type_id in items.GOLD_POUCHES.values():
         return params['g_cost'] * 10000 / 100
-    base = counterparts().get(type_id)
-    if base is None:
-        return None
     # Skills carry the public item level, unlike several internal set names.
     level = max(params.get('need_skills') or [0])
     if level < 1:
         return None
+    ks12 = ks12_reference(type_id, level)
+    base = ks12 if ks12 is not None else counterparts().get(type_id)
+    if base is None:
+        return None
     cost = afro_cost(base)
     if not cost:
         return None
-    return cost * multiplier(level)
+    value = cost * multiplier(level)
+    if ks12 is not None:
+        # Do not raise the cheaper low-level repair while adding coverage.
+        # This is the existing fallback used by inventory.repair_base_price.
+        current = params.get('cost') or (
+            params['g_cost'] * progression.GOLD_TO_AFRO_RATE
+            / progression.GOLD_OUNCE)
+        return min(value, current)
+    return value

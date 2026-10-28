@@ -116,6 +116,26 @@ def sha256(b):
     return hashlib.sha256(b).hexdigest()
 
 
+def check_developer_path(path):
+    """Release policy, separate from the shared launcher path format rules."""
+    parts = path.lower().split('/')
+    if parts[0] in ('tools', 'logs', 'releases', '.github', '.venv-local-checks') \
+            or 'local-checks' in parts \
+            or parts[-1] in ('run_local_checks.ps1', 'local_checks.py',
+                             'local_ci_checks.sh', 'test_local_checks.py',
+                             'local_checks.md', 'testing.md', 'local-review-env.ps1',
+                             'local-review-http.py', 'local_review.py'):
+        return 'developer-only file must not be shipped to players: ' + path
+    return None
+
+
+def reject_developer_files(paths):
+    for path in paths:
+        why = check_developer_path(path)
+        if why:
+            raise SystemExit(why)
+
+
 # --- the lists in client/ --------------------------------------------------------
 
 ENTRY = re.compile(r"([0-9a-f]{64})\t([0-9]+)\t(.+)")
@@ -127,7 +147,10 @@ def read_entries(path, header):
     out = {}
     if not os.path.exists(path):
         return out
-    with open(path, "r", encoding="utf-8", newline="\n") as fh:
+    # These are repository text lists, not signed protocol documents.
+    # Git may check them out with CRLF on Windows; normalize line endings
+    # without changing the header, path checks or stored content hashes.
+    with open(path, "r", encoding="utf-8", newline=None) as fh:
         lines = fh.read().split("\n")
     if lines and lines[-1] == "":
         lines.pop()
@@ -454,6 +477,7 @@ class Build:
             del self.files[p]
             removed += 1
         self.report.append("base:      %d files, %d removed by remove.txt" % (len(self.base), removed))
+        reject_developer_files(self.files)
 
         # 2. ours, in the store only
         extra = read_entries(os.path.join(self.cdir, "extra.txt"), "lava-extra 1")
@@ -461,6 +485,7 @@ class Build:
             self.files[p] = v
             self.origin[p] = "extra"
         self.report.append("extra:     %d files" % len(extra))
+        reject_developer_files(self.files)
 
         # 3. computed from the original by the repository's own tools
         for p, fn in self.GENERATED:
@@ -519,6 +544,7 @@ class Build:
                 why = check_path(p)
                 if why:
                     raise SystemExit("client/files/%s: %s" % (p, why))
+                reject_developer_files((p,))
                 if self.origin.get(p) == "generated":
                     raise SystemExit("client/files/%s is also generated; keep one of the two" % p)
                 with open(full, "rb") as fh:
@@ -528,6 +554,7 @@ class Build:
 
         # Windows puts two paths differing in case into one file, and a file
         # cannot be a folder of another.
+        reject_developer_files(self.files)
         why = check_tree(self.files)
         if why:
             raise SystemExit(why)

@@ -1086,6 +1086,242 @@ def fn_progress_snapshot():
     return a
 
 
+def fn_weight_snapshot():
+    """Refresh existing weight displays after authoritative rp_info, no polling/listeners."""
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__weightInfoOrig").op("callmethod").op("pop")
+    for panel in ("equip", "trade", "bank", "barter", "mail"):
+        a.push("pan").var("lol").member("core", "SceneShifter", "_ref", "UIPanels",
+                                      panel, "instance", "content", "weightPan").op("definelocal")
+        a.var("pan").op("not").iftrue("skip_" + panel)
+        a.push(0).var("pan").push("calcMaxWeight").op("callmethod").op("pop")
+        a.label("skip_" + panel)
+    return a
+
+
+def fn_weight_limit():
+    """The server supplies the total and fixed residence weight in grams."""
+    a = Asm()
+    a.push(0).var("this").push("__weightLimitOrig").op("callmethod").op("pop")
+    a.push("attrs").push(0).var("lol").member("core", "Master")
+    a.push("getInstance").op("callmethod").member("gamer", "attributes").op("definelocal")
+    a.var("this").push("maxWeight").var("attrs").member("max_weight").op("setmember")
+    a.var("attrs").member("__residenceBonus").push(UNDEF).op("equals2").iftrue("legacy")
+    a.var("this").member("maxWeight_txt").push("text")
+    a.var("attrs").member("max_weight").var("attrs").member("__residenceBonus").op("subtract")
+    a.push(1000).op("divide").push(" кг").op("add2").op("setmember")
+    a.var("attrs").member("__residenceStatus").iftrue("active")
+    a.var("this").member("bonusWeight_txt").push("text", "").op("setmember")
+    a.push(1, 1).var("this").member("premium_mc").push("gotoAndStop").op("callmethod").op("pop")
+    a.push(True).iftrue("hint")
+    a.label("active")
+    a.var("this").member("bonusWeight_txt").push("text", "+")
+    a.var("attrs").member("__residenceBonus").push(1000).op("divide").op("add2").push(" кг").op("add2").op("setmember")
+    a.var("attrs").member("__residenceStatus").push(1).op("add2").push(1)
+    a.var("this").member("premium_mc").push("gotoAndStop").op("callmethod").op("pop")
+    a.label("hint")
+    a.var("this").member("premium_mc").push("__residenceHint").var("attrs").member("__residenceText").op("setmember")
+    over = Asm()
+    over.var("this").member("__residenceHint").push(1).var("lol").member("gpui","HintManager")
+    over.push("showHint").op("callmethod").op("pop")
+    a.var("this").member("premium_mc").push("onRollOver").function((),over).op("setmember")
+    a.push(True).iftrue("done")
+    a.label("legacy")  # unpatched servers still expose their original labels
+    a.push(0).var("lol").member("core","Master").push("getInstance").op("callmethod").member("gamer","premium").iftrue("done")
+    a.var("this").member("bonusWeight_txt").push("text", "").op("setmember")
+    a.push(1,1).var("this").member("premium_mc").push("gotoAndStop").op("callmethod").op("pop")
+    a.label("done")
+    return a
+
+
+def fn_residence_snapshot():
+    a = Asm()
+    a.push("old").var("this").member("__residenceStatus").op("definelocal")
+    a.var("obj").member("param","residence_level").push(UNDEF).op("equals2").iftrue("original")
+    for field,source in (("Status","level"),("Until","until"),("Bonus","bonus"),("Text","text"),("Days","days"),("Now","now")):
+        a.var("this").push("__residence"+field).var("obj").member("param","residence_"+source).op("setmember")
+    a.var("this").push("__residenceAt").op("gettime").op("setmember")
+    a.push(0).var("lol").member("core","Master").push("getInstance").op("callmethod").member("gamer")
+    a.push("premium").var("this").member("__residenceStatus").op("setmember")
+    a.label("original")
+    a.var("obj").push(1).var("this").push("__residenceInfoOrig").op("callmethod").op("pop")
+    a.var("old").push(UNDEF).op("equals2").iftrue("done")
+    a.var("old").var("this").member("__residenceStatus").op("equals2").iftrue("done")
+    a.push(0).push(0).var("lol").member("core","quests","QuestInspector")
+    a.push("getInstance").op("callmethod").push("requestAllNPC").op("callmethod").op("pop")
+    a.label("done")
+    return a
+
+
+def fn_residence_take():
+    """One modal for a destructive P -> VNJ upgrade; cancellation sends nothing."""
+    a = Asm()
+    a.var("questTask").member("typeID").push(2130).op("equals2").op("not").iftrue("send")
+    a.push("attrs").push(0).var("lol").member("core","Master").push("getInstance").op("callmethod").member("gamer","attributes").op("definelocal")
+    a.var("attrs").member("__residenceStatus").push(1).op("equals2").op("not").iftrue("send")
+    a.var("this").member("__residencePending").op("not").iftrue("ask")
+    a.var("lol").member("core","SceneShifter","_ref","UIPanels","query","instance").iftrue("done")
+    a.label("ask")
+    for field,var in (("__residencePending","questTask"),("__residenceIndex","objIdx")):
+        a.var("this").push(field).var(var).op("setmember")
+    a.var("this").push("__residenceNPC").var("this").member("quester","id").op("setmember")
+    a.var("this").push("__residenceFrom").var("attrs").member("__residenceUntil").op("setmember")
+    a.push("dialog").push("query",1).var("lol").member("core","SceneShifter").push("openNewWindow").op("callmethod").member("content").op("definelocal")
+    a.var("dialog").push("label","Заменить прописку на ВНЖ? Оставшиеся дни прописки сгорят. Будет списано 30 G, новый срок — 30 дней. ")
+    a.var("attrs").member("__residenceText").op("add2").op("setmember")
+    a.var("this").push("__residenceAnswer").function(("event",),fn_residence_answer()).op("setmember")
+    a.var("this").member("__residenceAnswer").var("this").push("click",3).var("dialog").push("addEventListener").op("callmethod").op("pop")
+    a.push(True).iftrue("done")
+    a.label("send")
+    a.var("objIdx").var("questTask").push(2).var("this").push("__residenceTakeOrig").op("callmethod").op("pop")
+    a.label("done")
+    return a
+
+
+def fn_residence_answer():
+    a = Asm()
+    a.var("this").member("__residenceAnswer").var("this").push("click",3).var("event").member("target").push("removeEventListener").op("callmethod").op("pop")
+    a.push("query",1).var("lol").member("core","SceneShifter").push("closeWindow").op("callmethod").op("pop")
+    a.push("task").var("this").member("__residencePending").op("definelocal")
+    a.var("this").push("__residencePending",UNDEF).op("setmember")
+    a.var("event").member("success").op("not").iftrue("done")
+    a.var("task").op("not").iftrue("done")
+    a.var("this").member("quester","id").var("this").member("__residenceNPC").op("equals2").op("not").iftrue("done")
+    a.var("this").member("currentQuests").var("task").member("qID").op("getmember").var("task").op("equals2").op("not").iftrue("done")
+    a.var("this").push("__residenceConfirmedQ").var("task").member("qID").op("setmember")
+    a.var("this").member("__residenceIndex").var("task").push(2).var("this").push("__residenceTakeOrig").op("callmethod").op("pop")
+    a.var("this").push("__residenceConfirmedQ",UNDEF).op("setmember")
+    a.label("done")
+    return a
+
+
+def fn_residence_send():
+    a = Asm()
+    a.var("mess").member("name").push("q_co").op("equals2").op("not").iftrue("send")
+    a.push("inspector").var("lol").member("core","quests","QuestInspector","sInstance").op("definelocal")
+    a.var("inspector").op("not").iftrue("send")
+    a.var("inspector").member("__residenceConfirmedQ").push(UNDEF).op("equals2").iftrue("send")
+    a.var("inspector").member("__residenceConfirmedQ").var("mess").member("propList","q_id").op("equals2").op("not").iftrue("send")
+    a.var("inspector").member("__residenceNPC").var("mess").member("propList","mob").op("equals2").op("not").iftrue("send")
+    a.var("inspector").member("__residenceFrom").push("residence_from",2).var("mess").push("addProp").op("callmethod").op("pop")
+    a.var("inspector").push("__residenceConfirmedQ",UNDEF).op("setmember")
+    a.label("send")
+    a.var("mess").push(1).var("this").push("__residenceSendOrig").op("callmethod").op("return")
+    return a
+
+
+def fn_residence_home_label():
+    a = Asm()
+    a.var("id").push(1).var("this").push("__residenceHomeOrig").op("callmethod").op("pop")
+    a.var("id").push(0).op("equals2").op("not").iftrue("done")
+    a.var("this").push("_name","Место возрождения").op("setmember")
+    a.var("this").push("_desc","Выбор места возрождения после смерти. Платная прописка и ВНЖ оформляются отдельными квестами у Саида.").op("setmember")
+    a.label("done")
+    return a
+
+
+def fn_residence_rent_request():
+    """One in-flight rental per client; rejected scene filters do not lock it."""
+    a = Asm()
+    a.var("this").member("__rentalPending").iftrue("done")
+    a.var("this").push("__rentalPending",True).op("setmember")
+    a.push("mess").var("day").var("typeID").var("this").member("lessorID")
+    new(a,("lol","server","mess"),"CSM_TS_on_conv",3).op("definelocal")
+    a.var("mess").push(1).var("this").member("XMC").push("Send").op("callmethod").iftrue("sent")
+    a.var("this").push("__rentalPending",False).op("setmember")
+    a.push(True).iftrue("done")
+    a.label("sent")
+    a.var("this").member("getTransportAck").var("this").push("cmdAck",3)
+    a.var("lol").member("server","XMLCCallStack").push("addCall").op("callmethod").op("pop")
+    a.label("done")
+    return a
+
+
+def fn_residence_rent_ack():
+    a = Asm()
+    a.var("this").push("__rentalPending",False).op("setmember")
+    a.var("obj").push(1).var("this").push("__residenceRentAckOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_residence_player_info():
+    a = Asm()
+    a.var("this").member("attributes").push("__rentalType").var("obj").member("param","rental_type").op("setmember")
+    a.var("this").member("attributes").push("__rentalUntil").var("obj").member("param","rental_until").op("setmember")
+    a.var("obj").push(1).var("this").push("__residencePlayerOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_residence_rent_print():
+    a = Asm()
+    a.var("this").push("maxValue",365).op("setmember")
+    a.push("type").var("this").member("newSlot","item_mc","item","typeID").op("definelocal")
+    a.var("type").push(4).op("equals2").iftrue("limited")
+    a.var("type").push(5).op("equals2").op("not").iftrue("print")
+    a.label("limited")
+    a.push("attrs").push(0).var("lol").member("core","Master").push("getInstance").op("callmethod").member("gamer","attributes").op("definelocal")
+    a.var("attrs").member("__residenceUntil").op("not").iftrue("print")
+    a.push("base").var("attrs").member("__residenceNow")
+    a.op("gettime").var("attrs").member("__residenceAt").op("subtract").push(1000).op("divide").op("add2").op("definelocal")
+    a.var("type").var("attrs").member("__rentalType").op("equals2").op("not").iftrue("count")
+    a.var("base").var("attrs").member("__rentalUntil").op("less2").op("not").iftrue("count")
+    a.push("base").var("attrs").member("__rentalUntil").op("definelocal")
+    a.label("count")
+    a.push("days").var("attrs").member("__residenceUntil").var("base").op("subtract").push(86400).op("divide")
+    a.push(1).var("Math").push("ceil").op("callmethod").op("definelocal")
+    a.var("days").push(0).op("less2").op("not").iftrue("assign")
+    a.push("days",0).op("definelocal")
+    a.label("assign").var("this").push("maxValue").var("days").op("setmember")
+    # The old slider divides by maxValue. A zero quota uses rightNum=0,
+    # but keeps a nonzero slider range so clicking arrows cannot make NaN.
+    a.var("days").iftrue("range_ready")
+    a.var("this").push("maxValue",1).op("setmember")
+    a.label("range_ready")
+    a.var("days").var("this").member("rightNum").op("less2").op("not").iftrue("print")
+    a.var("this").push("rightNum").var("days").op("setmember")
+    a.label("print")
+    a.var("this").push("leftNum").var("this").member("maxValue").var("this").member("rightNum").op("subtract").op("setmember")
+    a.push(0).var("this").push("__residencePrintOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_residence_rent_get():
+    a = Asm()
+    a.push("item").var("this").member("newSlot","item_mc","item").op("definelocal")
+    a.var("item").op("not").iftrue("original")
+    a.push("need","premium").push(1).var("item").push("getProp").op("callmethod").op("definelocal")
+    a.push(0).var("lol").member("core","Master").push("getInstance").op("callmethod").member("gamer","premium")
+    a.var("need").op("less2").op("not").iftrue("original")
+    a.var("need").push(1).op("equals2").iftrue("registration")
+    a.push("Для аренды Хаммера требуется действующий ВНЖ.").push(True).iftrue("alert")
+    a.label("registration").push("Для аренды УАЗа требуется действующая прописка или ВНЖ.")
+    a.label("alert").push(1).var("this").push("newAlert").op("callmethod").op("pop")
+    a.push(True).iftrue("done")
+    a.label("original")
+    a.push(0).var("this").push("printTxt").op("callmethod").op("pop")
+    a.var("item").op("not").iftrue("replace")
+    a.var("this").member("rightNum").push(1).op("less2").op("not").iftrue("has_days")
+    a.push("Продление превысит срок статуса. Дождитесь окончания аренды или оформите новый статус после истечения текущего.",1).var("this").push("newAlert").op("callmethod").op("pop")
+    a.push(True).iftrue("done")
+    a.label("has_days")
+    a.var("this").member("gamer","playerInfo","transport","typeID").var("item").member("typeID").op("equals2").op("not").iftrue("replace")
+    a.var("this").member("rightNum").push(0).op("equals2").iftrue("done")
+    a.var("item").push(1).var("this").push("_getTransport").op("callmethod").op("pop")
+    a.push(True).iftrue("done")
+    a.label("replace")
+    a.push(0).var("this").push("__residenceRentOrig").op("callmethod").op("pop")
+    a.label("done")
+    return a
+
+
+def fn_weight_get():
+    """A transfer always reads the latest limit even before a UI redraw."""
+    a = Asm()
+    a.push(0).var("this").push("calcMaxWeight").op("callmethod").op("pop")
+    a.var("this").member("maxWeight").op("return")
+    return a
+
+
 def fn_progress_event(original):
     """Forward progress only after this PersAttributes has a baseline.
 
@@ -1118,40 +1354,42 @@ def fn_repair_initialize():
 
 
 def fn_armor_skills():
-    """Armour warning uses the highest skill, matching the server level gate."""
+    """No armour-level warning; combat weapon warnings use BASE skills.
+
+    Specialisation/attribute checks stay in their original methods. Other
+    skill warnings retain effective levels; item static data is not changed.
+    """
     a = Asm()
     a.var("this").member("currDDOperation", "fromItem", "rootID")
-    a.push(1).op("equals2").op("not").iftrue("original")
-    a.push("needed", 0).op("definelocal")
+    a.push(1).op("equals2").iftrue("armour")
+    a.var("this").member("currDDOperation", "fromItem", "rootID")
+    a.push(0).op("equals2").iftrue("weapon")
+    a.var("this").member("currDDOperation", "fromItem", "rootID")
+    a.push(5).op("equals2").iftrue("weapon")
+    a.var("titleArr").var("arr").push(2).var("this")
+    a.push("__armorSkillsOrig").op("callmethod").op("return")
+    a.label("armour").push("").op("return")
+    a.label("weapon").push("attributes").push(0).var("lol").member("core", "Master")
+    a.push("getInstance").op("callmethod").member("gamer", "attributes").op("definelocal")
+    a.push("result", "").op("definelocal")
     a.push("i", 0).op("definelocal")
     a.label("loop")
-    a.var("i").var("arr").member("length").op("less2").op("not").iftrue("compare")
-    a.var("arr").var("i").op("getmember").op("not").iftrue("next")
-    a.var("needed").var("arr").var("i").op("getmember").op("less2").op("not").iftrue("next")
+    a.var("i").var("arr").member("length").op("less2").op("not").iftrue("done")
     a.push("needed").var("arr").var("i").op("getmember").op("definelocal")
+    a.var("needed").op("not").iftrue("next")
+    a.push("skill").var("attributes").member("skillArray").var("i").op("getmember").op("definelocal")
+    a.var("i").push(2).op("less2").iftrue("base")
+    a.push("level").var("skill").member("level").op("definelocal")
+    a.push(True).iftrue("compare")
+    a.label("base").push("level").var("skill").member("value").op("definelocal")
+    a.label("compare").var("level").var("needed").op("less2").op("not").iftrue("next")
+    a.push("result").var("result").push("<b>").op("add2")
+    a.var("titleArr").var("i").op("getmember").op("add2")
+    a.push(" не ниже ").op("add2").var("needed").op("add2")
+    a.push("</b>\r").op("add2").op("definelocal")
     a.label("next").push("i").var("i").push(1).op("add2").op("definelocal")
     a.push(True).iftrue("loop")
-    a.label("compare").push("attributes").push(0).var("lol").member("core", "Master")
-    a.push("getInstance").op("callmethod").member("gamer", "attributes")
-    a.op("definelocal")
-    a.push("best", 0).op("definelocal")
-    a.push("i", 0).op("definelocal")
-    a.label("skills")
-    a.var("i").var("attributes").member("skillArray", "length")
-    a.op("less2").op("not").iftrue("level")
-    a.push("base").var("attributes").member("skillArray").var("i")
-    a.op("getmember").member("value").op("definelocal")
-    a.var("base").op("not").iftrue("skill_next")
-    a.var("best").var("base").op("less2").op("not").iftrue("skill_next")
-    a.push("best").var("base").op("definelocal")
-    a.label("skill_next").push("i").var("i").push(1).op("add2").op("definelocal")
-    a.push(True).iftrue("skills")
-    a.label("level").var("best").var("needed").op("less2").op("not").iftrue("allowed")
-    a.push("<b>Уровень персонажа не ниже ").var("needed").op("add2")
-    a.push("</b>\r").op("add2").op("return")
-    a.label("allowed").push("").op("return")
-    a.label("original").var("titleArr").var("arr").push(2).var("this")
-    a.push("__armorSkillsOrig").op("callmethod").op("return")
+    a.label("done").var("result").op("return")
     return a
 
 
@@ -1988,6 +2226,153 @@ def fn_quick_med_use(array, original):
     return a
 
 
+def fn_panel_hotkey_filter():
+    """CharInterface selects persInfo, missing from the original filters."""
+    a = Asm()
+    a.var("str").push("persInfo").op("equals2").op("not").iftrue("original")
+    events = ("FILTER0", "FILTER1", "FILTER2", "FILTER3", "FILTER4",
+              "PERS_INFO", "CANCEL", "CHAT_IN_FOCUS", "COPY_LOG", "CTRL", "SHIFT")
+    for event in reversed(events):
+        a.var("lol").member("services", "HotKeyEvent", event)
+    a.push(len(events)).op("initarray").op("return")
+    a.label("original")
+    a.var("str").push(1).var("this").push("__panelFilterOrig").op("callmethod").op("return")
+    return a
+
+
+def fn_location_ui_teardown():
+    """Close child panels while their content can still release hotkeys.
+
+    SceneShifter removes the location MovieClip before removeAllWindow;
+    at that point EquipInterface.kill cannot remove its equipment filter.
+    """
+    a = Asm()
+    a.push(0).var("lol").member("core", "SceneShifter").push("removeAllWindow").op("callmethod").op("pop")
+    a.push(0).var("this").push("__panelTeardownOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_global_hotkey_cleanup():
+    """The original GlobalMapInterface unregisters location, not global."""
+    a = Asm()
+    a.push(0).var("this").push("__globalKeysKillOrig").op("callmethod").op("pop")
+    a.push("global", 1).var("lol").member("core", "SceneShifter", "hotKeyManager")
+    a.push("removeFilter").op("callmethod").op("pop")
+    return a
+
+
+def fn_panel_kill_pending(original):
+    """Closing an animated panel before its deferred init must cancel init.
+
+    The parent slides out for more frames after content.kill. Otherwise
+    CharInterface/EquipInterface.init can add a filter after kill removed it.
+    """
+    a = Asm()
+    for field in ("methodTable", "__methodTable"):
+        a.var("this").push(field, 0).op("initarray").op("setmember")
+    a.var("this").push("onEnterFrame", UNDEF).op("setmember")
+    a.push(0).var("this").push(original).op("callmethod").op("pop")
+    return a
+
+
+def fn_event_sound_play():
+    """Use the numeric effects volume, including the first cached playback."""
+    a = Asm()
+    a.push(0).var("this").push("__eventPlayOrig").op("callmethod").op("pop")
+    a.var("this").member("_sound").op("not").iftrue("out")
+    a.push("gameSoundVolume", 1).var("lol").member("gpui", "UserSettings")
+    a.push("getSetting").op("callmethod")
+    a.push(1).var("this").member("_sound").push("setVolume").op("callmethod").op("pop")
+    a.var("this").member("__volumeRegistered").iftrue("out")
+    a.var("_global").member("__gameVolumeSounds").push(UNDEF).op("equals2").op("not").iftrue("register")
+    a.var("_global").push("__gameVolumeSounds", 0).op("initarray").op("setmember")
+    a.label("register")
+    a.var("this").push(1).var("_global").member("__gameVolumeSounds").push("push").op("callmethod").op("pop")
+    a.var("this").push("__volumeRegistered", True).op("setmember")
+    a.label("out")
+    return a
+
+
+def fn_track_request():
+    a = Asm()
+    a.var("this").push("__wantedTrack").var("name").op("setmember")
+    a.var("name").push(1).var("this").push("__trackRequestOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_track_loaded():
+    """Delayed music from an older scene must not replace the latest request."""
+    a = Asm()
+    a.var("obj").member("target", "name").var("this").member("__wantedTrack")
+    a.op("equals2").op("not").iftrue("out")
+    a.var("obj").push(1).var("this").push("__trackLoadedOrig").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_music_volume():
+    """Stop a pending fade from undoing the slider, and restore the latest track."""
+    a = Asm()
+    a.push("wanted").var("this").member("__wantedTrack").op("definelocal")
+    a.push(0).var("vol").op("less2").op("not").iftrue("original")
+    a.var("this").member("muteFlag").iftrue("original")
+    a.var("wanted").push(UNDEF).op("equals2").iftrue("original")
+    a.var("wanted").var("this").member("currentTrackName").op("equals2").iftrue("original")
+    # Muted in one location, unmuted after entering another: do not restart
+    # the old currentTrackName, which has not yet been replaced while muted.
+    a.var("this").push("muteFlag", True).op("setmember")
+    a.var("wanted").push(1).var("this").push("playSoundTrack").op("callmethod").op("pop")
+    a.push(True).iftrue("apply")
+    a.label("original")
+    a.var("vol").push(1).var("this").push("__musicVolumeOrig").op("callmethod").op("pop")
+    a.label("apply")
+    a.var("this").member("currentTrackName").push(UNDEF).op("equals2").iftrue("out")
+    a.push("track").var("this").member("currentTrackName").push(1)
+    a.var("this").member("trackLib").push("getSound").op("callmethod").op("definelocal")
+    a.push(0).var("track").member("sfx").push("kill").op("callmethod").op("pop")
+    a.var("vol").push(1).var("track").push("setVolume").op("callmethod").op("pop")
+    a.push(0).var("vol").op("less2").iftrue("out")
+    a.push(0).var("track").push("stop").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_apply_game_volume():
+    """Changing the slider also updates effects already loaded or playing."""
+    a = Asm()
+    a.push("sounds").var("_global").member("__gameVolumeSounds").op("definelocal")
+    a.var("sounds").op("not").iftrue("out")
+    a.push("volume", "gameSoundVolume", 1).var("lol").member("gpui", "UserSettings")
+    a.push("getSetting").op("callmethod").op("definelocal")
+    a.push("i", 0).op("definelocal")
+    a.label("loop")
+    a.var("i").var("sounds").member("length").op("less2").op("not").iftrue("out")
+    a.var("volume").push(1).var("sounds").var("i").op("getmember").member("_sound")
+    a.push("setVolume").op("callmethod").op("pop")
+    a.push("i").var("i").push(1).op("add2").op("definelocal")
+    a.push(True).iftrue("loop")
+    a.label("out")
+    return a
+
+
+def fn_game_volume_slider():
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__gameSliderOrig").op("callmethod").op("pop")
+    a.var("obj").member("target", "data").push("game").op("equals2").op("not").iftrue("out")
+    a.push(0, "__applyGameVolume").op("callfunc").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_sound_volume_setting():
+    a = Asm()
+    a.var("value").var("scroll").push(2).var("this").push("__soundVolumeOrig").op("callmethod").op("pop")
+    a.var("scroll").member("data").push("game").op("equals2").op("not").iftrue("out")
+    a.push(0, "__applyGameVolume").op("callfunc").op("pop")
+    a.label("out")
+    return a
+
+
 def fn_hotkey_reconcile(original, releasing=False):
     """Discard keys whose key-up Windows consumed (layout switch/Alt-Tab).
     Notify listeners too: clearing the stack alone leaves hand-scroll active.
@@ -2030,6 +2415,127 @@ def fn_hotkey_reconcile(original, releasing=False):
     a.push(True).iftrue("notify")
     a.label("original")
     a.push(0).var("this").push(original).op("callmethod").op("pop")
+    return a
+
+
+def fn_quest_send_call():
+    """Do not lose a read request when a scene filter temporarily rejects it."""
+    a = Asm()
+    a.push("cls").var("lol").member("core", "quests", "QuestInspector").op("definelocal")
+    a.var("cls").member("callCount").var("cls").member("packageLength").op("less2").op("not").iftrue("out")
+    a.push("queue").var("cls").member("callStack").op("definelocal")
+    a.var("queue").member("length").op("not").iftrue("out")
+    # Reserve the slot during Send's synchronous onSend dispatch as well.
+    a.var("cls").push("callCount").var("cls").member("callCount").push(1).op("add2").op("setmember")
+    a.var("queue").push(0).op("getmember").push(1).var("this").member("XMC").push("Send").op("callmethod").iftrue("sent")
+    a.var("cls").push("callCount").var("cls").member("callCount").push(1).op("subtract").op("setmember")
+    a.push(True).iftrue("out")
+    a.label("sent")
+    a.push(0).var("queue").push("shift").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_quest_filter_resume():
+    """Resume pending reads after the connection's scene filter is updated."""
+    a = Asm()
+    a.push(0).var("this").push("__questFilterOrig").op("callmethod").op("pop")
+    a.push("inspector").var("lol").member("core", "quests", "QuestInspector", "sInstance").op("definelocal")
+    a.var("inspector").op("not").iftrue("out")
+    a.push(0).var("inspector").push("sendCall").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def item_highlight_snapshot(a):
+    """Keep actual hover/selection state, including hover on the info button."""
+    a.push("highlight").var("this").member("bg_mc", "bg", "_currentframe").push(2).op("equals2").op("definelocal")
+    a.var("this").member("toggled").op("not").iftrue("highlight_saved")
+    a.push("highlight", True).op("definelocal")
+    a.label("highlight_saved")
+
+
+def item_highlight_restore(a):
+    # Use the original setter so both the background and info button follow.
+    a.var("highlight").push(1).var("this").push("__set__toggled_frame").op("callmethod").op("pop")
+
+
+def fn_annotation_requirements_read():
+    """Show declared spec zero in the existing row; leave bonuses untouched."""
+    a = Asm()
+    a.push("result").var("titleArr").var("arr").push(2).var("this").push("__requirementsReadOrig").op("callmethod").op("definelocal")
+    a.var("this").member("item").op("not").iftrue("out")
+    a.var("arr").op("not").iftrue("out")
+    a.var("titleArr").var("this").member("specTitle").op("equals2").op("not").iftrue("out")
+    a.var("arr").push("need_specs", 1).var("this").member("item").push("getProp").op("callmethod").op("equals2").op("not").iftrue("out")
+    a.push("i", 0).op("definelocal")
+    a.label("loop")
+    a.var("i").var("arr").member("length").op("less2").op("not").iftrue("out")
+    a.push("value").var("arr").var("i").op("getmember").op("definelocal")
+    a.var("value").push(UNDEF).op("equals2").iftrue("next")
+    a.var("value").push(0).op("equals2").op("not").iftrue("next")
+    a.var("result").iftrue("append")
+    a.push("result", "").op("definelocal")
+    a.label("append")
+    a.push("result").var("result").var("titleArr").var("i").op("getmember").op("add2").push(" 0\r").op("add2").op("definelocal")
+    a.label("next")
+    a.push("i").var("i").push(1).op("add2").op("definelocal")
+    a.push(True).iftrue("loop")
+    a.label("out")
+    a.var("result").op("return")
+    return a
+
+
+def fn_item_info_refresh():
+    """Rebuild the info button once per style change, retaining its handlers."""
+    a = Asm()
+    item_highlight_snapshot(a)
+    a.var("this").member("__itemInfoBase").push(UNDEF).op("equals2").op("not").iftrue("base_saved")
+    a.push("base", "info_btn").op("definelocal")
+    for link in ("list_info_btn", "list_info_btn_gold", "list_info_btn_premium"):
+        a.var("this").member("btnLinkID").push(link).op("equals2").iftrue("list")
+    a.push(True).iftrue("save_base")
+    a.label("list")
+    a.push("base", "list_info_btn").op("definelocal")
+    a.label("save_base")
+    a.var("this").push("__itemInfoBase").var("base").op("setmember")
+    a.label("base_saved")
+    a.var("this").member("info_btn", "_name").push(UNDEF).op("equals2").iftrue("old_removed")
+    a.push(0).var("this").member("info_btn").push("removeMovieClip").op("callmethod").op("pop")
+    a.label("old_removed")
+    a.var("this").push("btnLinkID").var("this").member("__itemInfoBase").op("setmember")
+    a.push(0).var("this").push("__itemInfoAttachOrig").op("callmethod").op("pop")
+    item_highlight_restore(a)
+    return a
+
+
+def fn_item_frame_refresh():
+    """Refresh asynchronous item backgrounds only when their style changes."""
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__itemFrameUpdateOrig").op("callmethod").op("pop")
+    a.var("this").member("attachBackEnabled").op("not").iftrue("out")
+    a.var("this").member("item").op("not").iftrue("out")
+    a.var("this").member("bg_mc").op("not").iftrue("out")
+    a.push("root").var("this").member("item", "rootID").op("definelocal")
+    a.push("quest", "quest", 1).var("this").member("item").push("getProp").op("callmethod").op("definelocal")
+    a.var("quest").op("not").iftrue("style")
+    a.push("root").var("lol").member("core", "objects", "Item", "QUEST").op("definelocal")
+    a.label("style")
+    a.push("key").var("root").push(":").op("add2")
+    a.push("premium", 1).var("this").member("item").push("getProp").op("callmethod").op("add2")
+    a.push(":").op("add2")
+    a.push("g_cost", 1).var("this").member("item").push("getProp").op("callmethod").op("not").op("not").op("add2").op("definelocal")
+    a.var("key").var("this").member("__itemFrameStyle").op("equals2").iftrue("out")
+    item_highlight_snapshot(a)
+    a.var("root").push(1).var("this").push("attachBack").op("callmethod").op("pop")
+    # Initial attachBtn is deferred by ExtItemContainer's constructor. If
+    # already attached, recolor it now; otherwise let that deferred call run.
+    a.var("this").member("info_btn", "_name").push(UNDEF).op("equals2").iftrue("no_button")
+    a.push(0).var("this").push("attachBtn").op("callmethod").op("pop")
+    a.label("no_button")
+    item_highlight_restore(a)
+    a.var("this").push("__itemFrameStyle").var("key").op("setmember")
+    a.label("out")
     return a
 
 
@@ -2170,6 +2676,7 @@ def injected():
             ("__actionStart", fn_action_start, ("obj",)),
             ("__sceneCancelAim", fn_scene_cancel_aim, ("obj",)),
             ("__quickMedPick", fn_quick_med_pick, ("equip", "entries", "resource")),
+            ("__applyGameVolume", fn_apply_game_volume, ()),
             ("__wideDraw", fn_draw, ("bd", "host", "a", "d", "tx", "ty",
                                      "cx", "cy", "cw", "ch")),
             ("__wideFill", fn_fill, ("mc", "bd", "x0", "y0", "x1", "y1")),
@@ -2198,6 +2705,16 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("core", "quests", "QuestInspector"), "sendCall", "__questSendOrig",
+         (), fn_quest_send_call()),
+        (("server", "filters", "FilterManager"), "changeState", "__questFilterOrig",
+         (), fn_quest_filter_resume()),
+        (("gpui", "Annotation"), "readArray", "__requirementsReadOrig",
+         ("arr", "titleArr"), fn_annotation_requirements_read()),
+        (("gpui", "ExtItemContainer"), "attachBtn", "__itemInfoAttachOrig",
+         (), fn_item_info_refresh()),
+        (("gpui", "ItemContainer"), "itemUpdate", "__itemFrameUpdateOrig",
+         ("obj",), fn_item_frame_refresh()),
         (("gpui", "WeaponPan"), "healTimeBar", "__confirmedHealOrig",
          ("obj",), fn_confirmed_heal_bar()),
         (("core", "location", "DisplayLocScene"), "init", "__sceneActionInitOrig",
@@ -2212,6 +2729,28 @@ def injected():
          (), fn_hotkey_reconcile("__keysDownOrig")),
         (("services", "HotKeyManager"), "onKeyUp", "__keysUpOrig",
          (), fn_hotkey_reconcile("__keysUpOrig", releasing=True)),
+        (("services", "HotKeyFilter"), "getFilter", "__panelFilterOrig",
+         ("str",), fn_panel_hotkey_filter()),
+        (("gpui", "LocationInterface"), "kill", "__panelTeardownOrig",
+         (), fn_location_ui_teardown()),
+        (("gpui", "GlobalMapInterface"), "killHotKey", "__globalKeysKillOrig",
+         (), fn_global_hotkey_cleanup()),
+        (("gpui", "CharInterface"), "kill", "__statsKillOrig",
+         (), fn_panel_kill_pending("__statsKillOrig")),
+        (("gpui", "EquipInterface"), "kill", "__equipKillOrig",
+         (), fn_panel_kill_pending("__equipKillOrig")),
+        (("sound", "SoundTLContainer"), "playSound", "__eventPlayOrig",
+         (), fn_event_sound_play()),
+        (("sound", "SoundManager"), "playSoundTrack", "__trackRequestOrig",
+         ("name",), fn_track_request()),
+        (("sound", "SoundManager"), "trackLoaded", "__trackLoadedOrig",
+         ("obj",), fn_track_loaded()),
+        (("sound", "SoundManager"), "musicVolume", "__musicVolumeOrig",
+         ("vol",), fn_music_volume()),
+        (("gpui", "SettingsInterface"), "dragSlider", "__gameSliderOrig",
+         ("obj",), fn_game_volume_slider()),
+        (("gpui", "SettingsInterface"), "setVolume", "__soundVolumeOrig",
+         ("scroll", "value"), fn_sound_volume_setting()),
         (("core", "location", "Location"), "init", "__actionInitOrig",
          (), fn_action_listener("__actionInitOrig")),
         (("core", "location", "Location"), "kill", "__actionKillOrig",
@@ -2257,6 +2796,30 @@ def injected():
          (), fn_messages()),
         (("core", "player", "PersAttributes"), "rp_info", "__progressInfoOrig",
          ("obj",), fn_progress_snapshot()),
+        (("core", "player", "PersAttributes"), "rp_info", "__weightInfoOrig",
+         ("obj",), fn_weight_snapshot()),
+        (("core", "player", "Attendance"), "init", "__residenceHomeOrig",
+         ("id",), fn_residence_home_label()),
+        (("core", "player", "Rent"), "getTransport", "__residenceRequestOrig",
+         ("typeID","day"), fn_residence_rent_request()),
+        (("core", "player", "Rent"), "getTransportAck", "__residenceRentAckOrig",
+         ("obj",), fn_residence_rent_ack()),
+        (("core", "player", "Gamer"), "userInfo", "__residencePlayerOrig",
+         ("obj",), fn_residence_player_info()),
+        (("core", "player", "PersAttributes"), "rp_info", "__residenceInfoOrig",
+         ("obj",), fn_residence_snapshot()),
+        (("core", "quests", "QuestInspector"), "takeQuest", "__residenceTakeOrig",
+         ("questTask","objIdx"), fn_residence_take()),
+        (("server", "XMLConnection"), "Send", "__residenceSendOrig",
+         ("mess",), fn_residence_send()),
+        (("gpui", "TransRentInterface"), "printTxt", "__residencePrintOrig",
+         (), fn_residence_rent_print()),
+        (("gpui", "TransRentInterface"), "getTransport", "__residenceRentOrig",
+         (), fn_residence_rent_get()),
+        (("gpui", "WeightPan"), "calcMaxWeight", "__weightLimitOrig",
+         (), fn_weight_limit()),
+        (("gpui", "WeightPan"), "getMaxWeight", "__weightGetOrig",
+         (), fn_weight_get()),
         (("core", "player", "NPC"), "userInfo", "__wideOrig",
          ("obj",), fn_services()),
         (("core", "player", "Attendance"), "cmdAck", "__wideOrig",

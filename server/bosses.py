@@ -257,7 +257,7 @@ def keeps_hours(type_id):
 # One encrypted blueprint per successful boss roll, independent of quests.
 # Keys deliberately include the location: copies and the outpost's Sherhan
 # (168, 8620) do not inherit a camp leader's drop.
-BLUEPRINT_OVERLEVEL_DROP = 0.02
+BLUEPRINT_OVERLEVEL_DROP = 0.01
 BLUEPRINTS = {
     (82, 269): 2408, (80, 270): 1131,       # colonists: 1, 2
     (83, 284): 2409, (81, 283): 1132,       # sectarians: 3, 4
@@ -286,18 +286,18 @@ def blueprint_for(loc_id, type_id):
 def blueprint_base_percent(blueprint_level):
     """Base chance by blueprint tier, before the finisher's overlevel penalty."""
     if blueprint_level >= 16:
-        return 2
+        return 1
     if blueprint_level >= 12:
-        return 5
+        return 1.5
     if blueprint_level >= 10:
-        return 10
-    return 21 - max(1, blueprint_level)
+        return 2.5
+    return (21 - max(1, blueprint_level)) / 4.0
 
 
 def blueprint_drop_chance(player_level, blueprint_level):
-    """Tier chance times 100/80/60/40% for excess 0/1/2/3, with a 2% floor.
+    """Tier chance times 100/80/60/40% for excess 0/1/2/3, with a 1% floor.
 
-    A finisher four or more levels above the blueprint always gets 2%.
+    A finisher four or more levels above the blueprint always gets 1%.
     Boss combat level and active quests do not affect this roll.
     """
     excess = max(0, player_level - blueprint_level)

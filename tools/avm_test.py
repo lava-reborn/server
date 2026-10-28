@@ -28,6 +28,16 @@ def get(obj, key):
     return getattr(obj, str(key), None)
 
 
+class Function:
+    def __init__(self, params, body, closure):
+        self.params, self.body, self.closure = params, body, closure.copy()
+
+    def invoke(self, target, args):
+        scope = dict(self.closure, this=target)
+        scope.update(zip(self.params,args))
+        return execute(self.body,scope)
+
+
 def execute(code, env):
     stack, at = [], 0
     instructions = 0
@@ -78,12 +88,13 @@ def execute(code, env):
         elif op == 0x3C:  # DefineLocal
             value, key = stack.pop(), stack.pop()
             env[key] = value
-        elif op in (0x52, 0x3D):  # CallMethod / CallFunction
+        elif op in (0x52, 0x3D, 0x53):  # CallMethod / CallFunction / NewMethod
             name = stack.pop()
-            obj = stack.pop() if op == 0x52 else env
+            obj = stack.pop() if op != 0x3D else env
             count = stack.pop()
             args = [stack.pop() for _ in range(count)]
-            stack.append(get(obj, name)(*args))
+            fn = get(obj,name)
+            stack.append(fn.invoke(obj,args) if isinstance(fn,Function) else fn(*args))
         elif op == 0x42:  # InitArray
             count = stack.pop()
             stack.append(Arr(stack.pop() for _ in range(count)))
@@ -94,6 +105,19 @@ def execute(code, env):
                 value, key = stack.pop(), stack.pop()
                 result[key] = value
             stack.append(result)
+        elif op == 0x9B:  # DefineFunction; body follows the envelope inline
+            end = payload.index(b"\0")
+            name = payload[:end].decode()
+            count, = struct.unpack_from("<H",payload,end+1)
+            pos,params = end+3,[]
+            for _ in range(count):
+                stop = payload.index(b"\0",pos)
+                params.append(payload[pos:stop].decode());pos=stop+1
+            size, = struct.unpack_from("<H",payload,pos)
+            fn = Function(params,code[at:at+size],env)
+            at += size
+            if name: env[name]=fn
+            else: stack.append(fn)
         elif op == 0x49:  # Equals2
             b, a = stack.pop(), stack.pop()
             stack.append(a == b)
@@ -101,12 +125,14 @@ def execute(code, env):
             stack.append(not stack.pop())
         elif op == 0x17:  # Pop
             stack.pop()
-        elif op in (0x0B, 0x0C, 0x47, 0x48):  # Subtract / Multiply / Add2 / Less2
+        elif op in (0x0B, 0x0C, 0x0D, 0x47, 0x48):  # Subtract / Multiply / Add2 / Less2
             b, a = stack.pop(), stack.pop()
             if op == 0x0B:
                 stack.append(a - b)
             elif op == 0x0C:
                 stack.append(a * b)
+            elif op == 0x0D:
+                stack.append(a / b)
             elif op == 0x48:
                 stack.append(a < b)
             else:

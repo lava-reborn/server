@@ -126,7 +126,7 @@ def si_frame(type_id):
     empty desc meaning "no description" (descStrID stays null). `type` is
     what TransportFactory.initializeItem looks the pending object up by, and
     `res` is the icon: ItemContainer builds transport/<res>.swf from it, not
-    from the type, so the two have to agree.
+    from the type. Vehicle IDs are persistent; the art has its own numbering.
     """
     type_id = int(type_id)
     rec = get(type_id)
@@ -140,8 +140,8 @@ def si_frame(type_id):
         aggro_mod=float(rec["aggro_mod"]),
         g_cost=int(rec["g_cost"]),
         cost=int(rec["cost"]),
-        res=type_id,
-        premium=int(rec["premium"]),
+        res=int(rec["res"]),
+        premium=max(int(rec["premium"]), int(rec.get("required_status",0))),
         name=NAME_ID_OFFSET + type_id,
         desc=DESC_ID_OFFSET + type_id if rec.get("desc") else "")
 
@@ -193,6 +193,9 @@ def hours_left(until, now=None):
     return int(left // 3600) + (1 if left % 3600 else 0)
 
 
-def until_after(days, now=None):
-    """The epoch second a rental of this many days ends at."""
-    return int((time.time() if now is None else now) + int(days) * 86400)
+def until_after(days, now=None, *, current=None, type_id=None):
+    """Same vehicle extends the paid deadline; another replaces it from now."""
+    base = time.time() if now is None else now
+    if current and current[0] == type_id and current[1] > base:
+        base = current[1]
+    return int(base + int(days)*86400)

@@ -22,6 +22,79 @@ from avm_test import execute
 
 
 class RepairPolicy(unittest.TestCase):
+    def test_ks12_uses_the_same_level_premium_without_raising_low_levels(self):
+        # Expected A valuations are independently recorded from current prices.
+        rows = [(7072, 2800), (7073, 4300), (7074, 6400), (7075, 9000),
+                (7076, 12200), (7077, 16100), (7078, 20700), (7079, 26200),
+                (7080, 32500), (7070, 47900), (7081, 57100)]
+        for t, afro in rows:
+            with self.subTest(type=t):
+                with patch.dict(repair_policy.KS12_AFRO_REFERENCES, {}, clear=True):
+                    old = items.params_of(t)
+                new = items.params_of(t)
+                level = inventory.item_level(t)
+                previous = inventory.repair_base_price(old)
+                self.assertEqual(new['repair_cost'],
+                                 min(afro * repair_policy.multiplier(level), previous))
+                self.assertLessEqual(new['repair_cost'], previous)
+                self.assertEqual({k: v for k, v in old.items() if k != 'repair_cost'},
+                                 {k: v for k, v in new.items() if k != 'repair_cost'})
+                for ceiling in (new['max_break_abs'], new['max_break_abs'] * 9 // 10):
+                    for brk in (0, ceiling // 2, ceiling - 1):
+                        before = inventory.repair_prices(old, brk, ceiling)
+                        after = inventory.repair_prices(new, brk, ceiling)
+                        self.assertLessEqual(after[0], before[0])
+                        self.assertLessEqual(after[1], before[1])
+                        self.assertEqual(after[2], before[2])  # restore price is separate
+
+    def test_ks12_named_copies_follow_their_public_level_and_other_guns_stay_independent(self):
+        for t in (34565, 35032, 35033, 35037, 36860):
+            p = items.params_of(t)
+            base = repair_policy.ks12_reference(t, inventory.item_level(t))
+            self.assertIsNotNone(base, t)
+            self.assertEqual(p['repair_cost'], min(
+                repair_policy.afro_cost(base) * repair_policy.multiplier(inventory.item_level(t)),
+                p['g_cost'] * inventory.GOLD_REPAIR_MOD / 100))
+        for t in (25997, 26062, 7056, 7057):
+            self.assertIsNone(repair_policy.ks12_reference(t, inventory.item_level(t)))
+
+    def test_ks12_actual_charge_matches_slot_and_repair_all_prices(self):
+        import accounts
+        import progression
+
+        store = accounts.Store(':memory:')
+        self.addCleanup(store.close)
+        account, _ = store.register('ks-repair-unit', 'unit-password')
+        cid, _ = store.create_character(account, 'КСРемонт', 0, 1)
+        store.set_money(cid, 2000000, 10000)
+        char = progression.Character.load(store, cid)
+        frames = []
+        sess = NS(char_id=cid, character=lambda: char,
+                  send=lambda *cmd, **p: frames.append((cmd[0], p)),
+                  send_player_info=lambda: None)
+        inv = inventory.Inventory(sess, store)
+        inv.trade = inventory.TradeSession(1, 1200)
+        for t in (7072, 7073, 7077, 7080, 7070, 7081):
+            for code in (inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD):
+                with self.subTest(type=t, currency=code):
+                    p = items.params_of(t)
+                    row = inv.create(t)
+                    top = p['max_break_abs']
+                    store.update_item(row['uniq'], brk=0, max_break_cur=top)
+                    row = store.item(row['uniq'])
+                    before = (char.afro, char.gold)
+                    frames.clear()
+                    inv.repair(dict(obj=inventory.oid_of(row)), code)
+                    self.assertEqual([p['res'] for n, p in frames if n == 'cmdAck'], [0])
+                    slot, all_ = inventory.repair_window(p, 0, top)
+                    index = 1 if code == inventory.UPD_REPAIR_GOLD else 0
+                    paid = min(slot[index], all_[index])
+                    self.assertEqual((before[0] - char.afro, before[1] - char.gold),
+                                     (0, paid) if index else (paid, 0))
+                    updated = store.item(row['uniq'])
+                    self.assertEqual((updated['brk'], updated['max_break_cur']),
+                                     (top * 9 // 10, top * 9 // 10))
+
     def test_afro_valuation_is_built_once_and_reused(self):
         repair_policy.afro_cost.cache_clear()
         p = items.params_of(26062)

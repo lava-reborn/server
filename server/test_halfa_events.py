@@ -107,26 +107,26 @@ def slots(name, moments):
 try:
     events.check(MT)
     check("the real table holds together (events.check)", True, True)
-    check("the prison's uprising: 12:00, 16:00 and 23:00 for half an hour, on the Moscow clock",
-          [slots("prison_wh", [at(h, m) for m, _ in ((0, 0),)]) for h in (12, 16, 23)]
-          + [slots("prison_wh", [at(11, 59, 59), at(12, 29, 59), at(12, 30), at(15, 59), at(23, 29),
-                                 at(23, 30), at(0, 10, day=29), at(18), at(20)])],
+    check("the prison's uprising: 13:00, 17:00 and 21:00 for half an hour, on the Moscow clock",
+          [slots("prison_wh", [at(h, m) for m, _ in ((0, 0),)]) for h in (13, 17, 21)]
+          + [slots("prison_wh", [at(12, 59, 59), at(13, 29, 59), at(13, 30), at(16, 59), at(21, 29),
+                                 at(21, 30), at(0, 10, day=29), at(18), at(20)])],
           [[True], [True], [True], [False, True, False, False, True, False, False, False, False]])
-    check("  ..the prison keeps its own half-hour window, even where boss hours overlap",
-          (bosses.slot(at(12)), bosses.slot(at(18)),
-           slots("prison_wh", [at(12, 30), at(18), at(23)])),
-          (at(12), at(18), [False, False, True]))
+    check("  ..the prison keeps its own half-hour window, between even-hour world boss starts",
+          (bosses.slot(at(14)), bosses.slot(at(18)),
+           slots("prison_wh", [at(13, 30), at(18), at(21)])),
+          (at(14), at(18), [False, False, True]))
     check("its gates: from a quarter of an hour before to the end ('прибывать за 15 минут')",
-          slots("prison_wh_gates", [at(11, 44, 59), at(11, 45), at(12, 29, 59), at(12, 30),
-                                    at(22, 45), at(15, 50)]),
+          slots("prison_wh_gates", [at(12, 44, 59), at(12, 45), at(13, 29, 59), at(13, 30),
+                                    at(20, 45), at(16, 50)]),
           [False, True, True, False, True, True])
     check("its medics: the last five minutes ('появятся за 5 минут до завершения')",
-          slots("prison_wh_medics", [at(12, 24, 59), at(12, 25), at(12, 29, 59), at(12, 30),
-                                     at(16, 27), at(23, 26)]),
+          slots("prison_wh_medics", [at(13, 24, 59), at(13, 25), at(13, 29, 59), at(13, 30),
+                                     at(17, 27), at(21, 26)]),
           [False, True, True, False, True, True])
     check("the opening is named by when it began, as the bosses' are",
-          (SCHEDULE.window("prison_wh").slot(at(16, 10)),
-           SCHEDULE.window("prison_wh_gates").slot(at(11, 50))), (at(16), at(11, 45)))
+          (SCHEDULE.window("prison_wh").slot(at(17, 10)),
+           SCHEDULE.window("prison_wh_gates").slot(at(12, 50))), (at(17), at(12, 45)))
     SEASONS = [("ny", (12, 20), (1, 15)), ("may9", (5, 9), (8, 2)),
                ("halloween", (10, 30), (12, 1)), ("feb23", (2, 20), (2, 26))]
     for name, (m0, d0), (m1, d1) in SEASONS:
@@ -283,15 +283,15 @@ try:
     _clock = bosses.clock
     try:
         opened = []
-        for moment in (at(11), at(11, 50)):
+        for moment in (at(12), at(12, 50)):
             bosses.clock = lambda: moment
             opened.append([events.quest_open(INVITE, carried) for carried in (False, True)]
                           + [events.quest_open(GATE_W, carried) for carried in (False, True)]
                           + [events.quest_open(TEN, False)])
     finally:
         bosses.clock = _clock
-    check("  ..(events.quest_open: at 11:00 the invitation is taken but not handed in, the gate"
-          " neither; at 11:50 both; a row it does not keep, always)",
+    check("  ..(events.quest_open: at 12:00 the invitation is taken but not handed in, the gate"
+          " neither; at 12:50 both; a row it does not keep, always)",
           opened, [[True, False, False, False, True], [True, True, True, True, True]])
     medic = [(Q[t].kind, Q[t].objs[0][:2], Q[t].rew_afro, Q[t].rew_obj, Q[t].num_rew_obj,
               Q[t].per_day, Q[t].repeatable, Q[t].service)
@@ -446,11 +446,11 @@ async def _rooms():
     real_clock = bosses.clock
     bosses.clock = lambda: NOW[0]
     try:
-        NOW[0] = at(11, 59)
+        NOW[0] = at(12, 59)
         cells, rc, seat = built(NORTH_CELLS, store)
         rc.keep_hours()
-        check("at 11:59 the northern cells are empty", (seat.take(), cells.npcs), ([], {}))
-        NOW[0] = at(12)
+        check("at 12:59 the northern cells are empty", (seat.take(), cells.npcs), ([], {}))
+        NOW[0] = at(13)
         rc.keep_hours()
         got = seat.take()
         spots = sorted((c, t) for c, t in world.location(NORTH_CELLS).spawns)
@@ -466,7 +466,7 @@ async def _rooms():
 
         eid = min(cells.npcs)
         mob = rc.mobs[eid]
-        NOW[0] = at(12, 10)
+        NOW[0] = at(13, 10)
         rc.kill(mob, None)
         await asyncio.sleep(0.12)                 # the corpse fades, the bag drops
         bag = [store.item(u)["type_id"] for b in rc.loot.values() for u in b.uniqs]
@@ -477,7 +477,7 @@ async def _rooms():
 
         other = rc.mobs[sorted(cells.npcs)[1]]
         other.target = object()
-        NOW[0] = at(12, 30)
+        NOW[0] = at(13, 30)
         rc.keep_hours()
         got = seat.take()
         check("at half past the other nine go back to the cells, the one in a fight stays",
@@ -487,18 +487,18 @@ async def _rooms():
         check("  ..and goes when the fight is over", (gone(seat.take()), cells.npcs),
               ([other.eid], {}))
 
-        NOW[0] = at(16)
+        NOW[0] = at(17)
         rc.keep_hours()
         victim = rc.mobs[eid]
-        NOW[0] = at(16, 29, 59)
+        NOW[0] = at(17, 29, 59)
         rc.kill(victim, None)
-        NOW[0] = at(16, 30)
+        NOW[0] = at(17, 30)
         rc.keep_hours()
         await asyncio.sleep(0.4)
         check("one killed as the uprising ends is not made again when its respawn comes",
               (eid in cells.npcs, victim.alive, victim.away), (False, False, True))
         seat.take()
-        NOW[0] = at(23)
+        NOW[0] = at(21)
         rc.keep_hours()
         check("  ..but breaks out with the others at the next one, whole",
               (len(news(seat.take())), eid in cells.npcs, victim.hp == victim.hp_max),
@@ -509,45 +509,45 @@ async def _rooms():
 
         # The centre: Томас always, the godfather once an uprising, the medics
         # for its last five minutes.
-        NOW[0] = at(11, 50)
+        NOW[0] = at(12, 50)
         centre, rc2, seat2 = built(CENTRE, store)
         rc2.keep_hours()
-        check("at 11:50 the centre holds Томас alone", sorted(n.type_id for n in centre.npcs.values()),
+        check("at 12:50 the centre holds Томас alone", sorted(n.type_id for n in centre.npcs.values()),
               [TOMAS])
-        NOW[0] = at(12)
+        NOW[0] = at(13)
         rc2.keep_hours()
         check("at noon the godfather comes", [centre.npcs[i].type_id for i in news(seat2.take())],
               [GODFATHER])
         boss = [m for m in rc2.mobs.values() if m.type_id == GODFATHER][0]
-        NOW[0] = at(12, 5)
+        NOW[0] = at(13, 5)
         rc2.kill(boss, None)
         await asyncio.sleep(0.4)
-        NOW[0] = at(12, 20)
+        NOW[0] = at(13, 20)
         rc2.keep_hours()
         check("killed, he is not back while the uprising lasts (a boss comes once an opening)",
               (boss.eid in centre.npcs, boss.away), (False, True))
         seat2.take()
-        NOW[0] = at(12, 25)
+        NOW[0] = at(13, 25)
         rc2.keep_hours()
         got = seat2.take()
         first_medics = news(got)
-        check("at 12:25 the three medics come, as Commoners, with their details",
+        check("at 13:25 the three medics come, as Commoners, with their details",
               (sorted(centre.npcs[i].type_id for i in news(got)),
                sorted(p["rtype"] for n, p in got if n == "lch")),
               (MEDICS, [world.COMMONER] * 3))
-        NOW[0] = at(12, 30)
+        NOW[0] = at(13, 30)
         rc2.keep_hours()
         check("at half past they go, and Томас stays",
               (len(gone(seat2.take())), sorted(n.type_id for n in centre.npcs.values())), (3, [TOMAS]))
-        NOW[0] = at(16)
+        NOW[0] = at(17)
         rc2.keep_hours()
         check("the godfather is back at four, whole",
               (boss.eid in centre.npcs, boss.hp == boss.hp_max), (True, True))
         seat2.take()
-        NOW[0] = at(16, 25)
+        NOW[0] = at(17, 25)
         rc2.keep_hours()
         again = news(seat2.take())
-        check("  ..and at 16:25 the medics come again under new ids: the client asks their rows"
+        check("  ..and at 17:25 the medics come again under new ids: the client asks their rows"
               " afresh (a day's task done yesterday is on offer again)",
               (sorted(centre.npcs[i].type_id for i in again), set(again) & set(first_medics)),
               (MEDICS, set()))
@@ -563,7 +563,7 @@ async def _rooms():
 
         # A room made in the middle of the uprising -- after a restart, with
         # nothing remembered -- has it at once.
-        NOW[0] = at(23, 10)
+        NOW[0] = at(21, 10)
         fresh, rc4, seat4 = built(EAST_CELLS, store)
         rc4.keep_hours()
         check("a room built in the middle of an uprising has its ten prisoners at once",
@@ -572,29 +572,29 @@ async def _rooms():
         # The marks (events._remark): the client asks q_status of an NPC id
         # once, so whoever gives or takes a row the gates keep is shown
         # under a new id at each of their edges, and nobody else.
-        NOW[0] = at(11, 44)
+        NOW[0] = at(12, 44)
         yard, rc5, seat5 = built(YARD, store)
         rc5.keep_hours()
         seat5.take()
         before = {i: n.type_id for i, n in yard.npcs.items()}
-        NOW[0] = at(11, 45)
+        NOW[0] = at(12, 45)
         rc5.keep_hours()
         got = seat5.take()
         now_ = {i: n.type_id for i, n in yard.npcs.items()}
-        check("at 11:45 the gates open: both guards of the yard go (lostUser) and come back under"
+        check("at 12:45 the gates open: both guards of the yard go (lostUser) and come back under"
               " new ids with their details; the supply man and the healer keep theirs",
               (sorted(before[i] for i in gone(got)), sorted(now_[i] for i in news(got)),
                sorted(now_[p["id"]] for n, p in got if n == "npc_info"),
                sorted(t for i, t in before.items() if i in now_),
                min(news(got)) >= events.FIRST_ID),
               (sorted([WEST_GUARD, SOUTH_GUARD]),) * 3 + (sorted([2111, SUPPLY]), True))
-        NOW[0] = at(12, 10)
+        NOW[0] = at(13, 10)
         rc5.keep_hours()
         check("  ..not again while the gates stay open (the uprising's start is no edge of theirs)",
               seat5.take(), [])
-        NOW[0] = at(12, 30)
+        NOW[0] = at(13, 30)
         rc5.keep_hours()
-        check("  ..and again at 12:30, when they shut",
+        check("  ..and again at 13:30, when they shut",
               sorted(yard.npcs[i].type_id for i in news(seat5.take())),
               sorted([WEST_GUARD, SOUTH_GUARD]))
         NOW[0] = at(13)
@@ -608,19 +608,19 @@ async def _rooms():
               " again (the client asks nothing after a take, and would offer a hand-in the"
               " server refuses); a row of no window, or of both ways, changes nothing",
               (quiet, [yard.npcs[i].type_id for i in news(seat5.take())]), ([], [SOUTH_GUARD]))
-        NOW[0] = at(15, 50)
+        NOW[0] = at(16, 50)
         events.taken(INVITE)                # the gates open: its status stands
         rc5.keep_hours()
         check("  ..taken with the gates open, nothing but their edge (both guards, once)",
               sorted(yard.npcs[i].type_id for i in news(seat5.take())),
               sorted([WEST_GUARD, SOUTH_GUARD]))
-        NOW[0] = at(22, 40)
+        NOW[0] = at(20, 40)
         station, rc6, seat6 = built(STATION, store)
         rc6.keep_hours()
         seat6.take()
-        NOW[0] = at(22, 45)
+        NOW[0] = at(20, 45)
         rc6.keep_hours()
-        check("at the station Хассир, whose ride keeps the gates' hours, is shown again at 22:45,"
+        check("at the station Хассир, whose ride keeps the gates' hours, is shown again at 20:45,"
               " and nobody else", [station.npcs[i].type_id for i in news(seat6.take())], [HASSIR])
         check("  ..the marked are Хассир and the two guards by the gates' window, and the"
               " warehouses' three money boxes by their share-out's (wh_box, server/"
@@ -908,12 +908,12 @@ def complete_of(frames):
     return [p["complete"] for n, p in frames if n.startswith("q_di_")]
 
 
-# The first server: the real table's rows, the uprising at noon for ninety
+# The first server: the real table's rows, the uprising at 13:00 for ninety
 # seconds, its gates half a minute before, its medics the last thirty; and a
 # season holding Савин's stall in the black market, the clock in it.
 with open(os.path.join(DATA, "schedule.json"), encoding="utf-8") as _fh:
     SHORT = json.load(_fh)
-SHORT["windows"]["prison_wh"].update(daily=["12:00"], minutes=1.5)
+SHORT["windows"]["prison_wh"].update(daily=["13:00"], minutes=1.5)
 SHORT["windows"]["prison_wh_gates"].update({"from": -0.5, "to": 1.5})
 SHORT["windows"]["prison_wh_medics"].update({"from": 1.0, "to": 1.5})
 SHORT["windows"].update(VALENTINE["windows"])
@@ -921,7 +921,7 @@ SHORT["spawns"] += VALENTINE["spawns"]
 SHORT_FILE = os.path.join(tempfile.mkdtemp(), "schedule.json")
 with open(SHORT_FILE, "w", encoding="utf-8") as _fh:
     json.dump(SHORT, _fh, ensure_ascii=False)
-NOON = at(12, day=14, month=2, year=2027)
+NOON = at(13, day=14, month=2, year=2027)
 GATES, MEDIC_TIME, END = NOON - 30, NOON + 60, NOON + 90
 
 srv = Server(NOON - 55, SHORT_FILE, "warden")

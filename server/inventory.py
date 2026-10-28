@@ -127,9 +127,8 @@ SET_SLOTS = (HEAD, CAMO, ARMOR, LEGS, BOOTS)
 # ss_get masks (Bag/Slot.maskIndex in the PersEquip constructor)
 MASK_WEAR, MASK_HANDS, MASK_BAG, MASK_SESSION = 1, 2, 8, 16
 
-# Carry limit in grams. rp_info sends the same figure as max_weight; the
-# client only warns from it, the refusal is ours (WeightPan.count sums the
-# bag and all eight slots, so the total here does the same).
+# Historical reference used by older fixtures; runtime checks use
+# Inventory.carry_limit(), the same character-derived grams as rp_info.
 MAX_WEIGHT = 50000
 
 # Trader multipliers, as sent in userInfo_Trader (server.send_npc_info). The
@@ -604,41 +603,24 @@ def card_repeat(rows):
 
 # --- the level: who may wear what --------------------------------------------
 #
-# The owner's rule (2026-09-25, «вещи по уровню только можно носить»): a
-# piece of clothing goes on, and a weapon into a hand, only once the
-# character's level has reached the thing's.
-#
-# The thing's level is the one number the client shows the player about it:
-# the highest of its "Необходимые навыки" (need_skills, Annotation.as), a
-# Стрельба N for guns and for every piece of the owner's set ladder, which
-# writes each set's rung there (data/sets.json, "Requirement Стрельба = the
-# set's level"), a Ближний бой N for blades. The internal names carry a
-# level too (pistols_1_lvl_4, helm_Bs_M_LVL_0) but it is the series' and
-# not the wearer's -- 86 types whose frame names a requirement disagree with
-# their own name, the whole Беженец rung among them -- and a rule the
-# tooltip never shows would be a rule nobody could follow. So a thing that
-# asks for nothing is for everybody. The character's level is its best
-# skill (progression.Character.level), the figure shown on the card.
-# Weapons additionally require every declared skill and specialisation,
-# both when equipped and when used; armour retains the general-level rule.
-# Medicine and ammunition are not wearable gear. Buying remains unrestricted.
+# Item levels remain in static data and tooltips, but no longer block gear.
+# Combat skill differences instead scale weapon wear. Specialisation gates
+# still apply, including an unlearned (-1) spec whose requirement is zero.
 
 def item_level(type_id):
-    """The level a type asks of whoever wears or holds it; 0 for none."""
+    """The displayed item tier, retained for wear, prices and release rules."""
     si = items.params_of(type_id) or {}
     return max(unpacked(si.get("need_skills_m"), si.get("need_skills"), progression.SKILLS))
 
 
 def weapon_requirement_error(row, character):
-    """The same declared skill/spec requirements for equipping and attacking.
+    """Gear requirements shared by equipping and attacking; levels are descriptive.
 
     Use effective skills, as on the character card; an unlearned spec is -1,
     so even a declared requirement of zero requires learning that spec.
     """
-    if row["root"] not in (items.FIRE_ARM, items.COLD_ARM):
+    if row["root"] not in GEAR_ROOTS:
         return None
-    if item_level(row["type_id"]) > character.level:
-        return level_line(row, character.level)
     si = items.params_of(row["type_id"]) or {}
     for field, size, value, titles in (
             ("skills", progression.SKILLS, character.skill_level, progression.SKILL_TITLES),
@@ -646,16 +628,32 @@ def weapon_requirement_error(row, character):
         mask = si.get("need_" + field + "_m", 0) or 0
         levels = unpacked(mask, si.get("need_" + field), size)
         for i, needed in enumerate(levels):
-            if mask >> i & 1 and value(i) < needed:
+            if field == "skills" and i in (progression.MELEE, progression.SHOOTING):
+                continue
+            if not (mask >> i & 1):
+                continue
+            actual = value(i)
+            if actual < needed:
+                if field == "specs" and actual < 0:
+                    return '«%s»: требуется «%s» %d, специализация не изучена' % (
+                        item_title(row["type_id"]), titles[i], needed)
                 return '«%s»: требуется «%s» %d, у вас %d' % (
-                    item_title(row["type_id"]), titles[i], needed, value(i))
+                    item_title(row["type_id"]), titles[i], needed, actual)
     return None
 
 
 def wearable(row, level, character=None):
-    """Body level gate, plus weapon skill/spec gates when a character is known."""
-    return ((row["root"] not in GEAR_ROOTS or item_level(row["type_id"]) <= level)
-            and (character is None or weapon_requirement_error(row, character) is None))
+    """No character-level gate; retain declared spec and noncombat skill gates."""
+    return character is None or weapon_requirement_error(row, character) is None
+
+
+def wear_multiplier(row, character):
+    """Weapon tier versus BASE combat skill; armour keeps its existing wear."""
+    skill = {items.FIRE_ARM: progression.SHOOTING,
+             items.COLD_ARM: progression.MELEE}.get(row["root"])
+    if skill is None:
+        return 1
+    return 1 + max(0, item_level(row["type_id"]) - character.skill[skill][0])
 
 
 def item_title(type_id):
@@ -996,12 +994,22 @@ class Inventory:
                 return row
         return None
 
+    def carry_limit(self):
+        """The advertised maximum in grams, including worn strength/premium.
+
+        Gear bonuses are refreshed by the session after each gear mutation;
+        reading the character here needs no extra query or persisted cache.
+        """
+        return self.sess.character().max_weight()
+
     def total_weight(self):
         """What the character carries: worn, held and the bag -- not the
         bank, or a full storage would stop them buying a single round."""
         return sum(weight_of(r) for r in self.carried())
 
     def create(self, type_id, count=1, slot=BAG, char_id=None):
+        if items.acquisition_blocked(type_id):
+            raise ValueError("Equipment above level %d is not released" % items.PLAYER_GEAR_MAX_LEVEL)
         f = new_fields(type_id, count)
         f["slot"] = slot
         root = f.pop("root")
@@ -1181,7 +1189,10 @@ class Inventory:
             # A quest's loan (the quarry pick, the Tir's guns) goes back as
             # it came: it does not wear (combat's per-round wear says why).
             return row
-        self.store.update_item(row["uniq"], brk=max(0, row["brk"] - int(points)))
+        points = int(points)
+        if row["root"] in (items.FIRE_ARM, items.COLD_ARM):
+            points *= wear_multiplier(row, self.sess.character())
+        self.store.update_item(row["uniq"], brk=max(0, row["brk"] - points))
         row = self.store.item(row["uniq"])
         if row is not None:
             self.push_di(row)
@@ -1257,7 +1268,7 @@ class Inventory:
             self.level_notes += ["Перенесено в рюкзак — %s" % (
                 weapon_requirement_error(r, ch) or level_line(r, level)) for r in moved]
         if moved:
-            log.info("  ..    %d item(s) above level %d put back in the bag: %s",
+            log.info("  ..    %d item(s) failing requirements (character level %d) put back in the bag: %s",
                      len(moved), level, [r["uniq"] for r in moved])
         return [r["uniq"] for r in moved]
 
@@ -1554,10 +1565,10 @@ class Inventory:
         if displaced and not fits(displaced, src):
             self.ack(RES_NO_ITEM)
             return
-        # The level rule, for both halves of the move: the thing going on,
+        # Requirements apply to both halves of the move: the thing going on,
         # and whatever it pushes out, which lands where the first came from
         # -- a hand, when the two hands trade places. The client shows 45's
-        # own words and puts the thing back; the chat says which level.
+        # own words and puts the thing back; the chat names the unmet requirement.
         ch = self.sess.character()
         level = ch.level
         for thing, slot in ((row, dst), (displaced, src)):
@@ -2095,14 +2106,9 @@ class Inventory:
             self.ack(RES_REFUSED)
             return
         price = buy_price(si, root, n, code == UPD_BUY_GOLD)
-        # The weight of all n. The client's "При покупке вы будете
-        # перегружены. Купить?" adds the weight of ONE piece to the bag
-        # (TradeInterface.tryToSendTransferToServer reads _weight, not the
-        # stack's), measured against the card's max_weight, and sends on a
-        # yes: between the card's line and MAX_WEIGHT a purchase goes
-        # through overloaded, past it the answer is 27, "Вы перегружены".
-        # 5000 rounds of 4 g are 20 kg; of the 100-gram kinds, refused.
-        if self.total_weight() + si.get("weight", 0) * n > MAX_WEIGHT:
+        # Check the whole stack against exactly the advertised maximum.
+        # A client confirmation must not bypass the server's carrying limit.
+        if self.total_weight() + si.get("weight", 0) * n > self.carry_limit():
             self.ack(RES_OVERLOAD)
             return
         afro, gold = self.money()

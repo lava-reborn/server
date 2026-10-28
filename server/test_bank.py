@@ -551,6 +551,7 @@ try:
           oids(a.frames()), [rounds, "0"])
 
     # --- carried weight is the bag, not the bank --------------------------------
+    chat(a, "/spec 0 5")  # +5 strength: the following 40 kg crate fits the advertised 50 kg.
     got = chat(a, "/give %d" % HEAVY) + chat(a, "/give %d" % HEAVY)
     crates = [str(p["obj"]) for p in named(got, "ss_obj_status")]
     check("two crates of 40 kg in the bag", len(crates), 2)

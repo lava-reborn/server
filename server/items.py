@@ -81,6 +81,7 @@ ACT_FIRE, ACT_UNLOAD, ACT_USEMODE = 16, 32, 64
 
 # FireArm.as:38-43
 PISTOL, SHOTGUN, ASSAULT, RIFLE, MACHINEGUN, SMG = range(6)
+SMUGGLED_PKM = 7051  # Хан Сэлл, ПКМ 16: explicit spec-level-one requirement.
 
 # Ammunition, by calibre. objects.xml carries two families under root 3: the
 # bare calibre records "_9mmNato", "_762x39", "_12mm", "_762x51" (ids 1, 8, 9,
@@ -330,7 +331,7 @@ def stock_for(trader_type, loc_id=None):
     the owner's choice, and the rule stays a rule.
     """
     chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(_own_list(trader_type)))
-    return [t for t in chosen if not out_of_game(t)]
+    return [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)]
 
 
 def own_stock(trader_type):
@@ -483,6 +484,30 @@ def out_of_game(type_id):
     loot table, a quest row, a craft, a letter, a lot, a barter, a death and
     the admin's gift all ask, so that no way in or across is left open."""
     return retired(type_id) or premium(type_id)
+
+
+# Temporary content ceiling, owner 2026-10-27. This is NOT retirement:
+# existing items, their names, stats and saved ownership must survive.
+PLAYER_GEAR_MAX_LEVEL = 17
+
+
+def acquisition_blocked(type_id):
+    """Weapon/clothing above the released level cannot be newly obtained.
+
+    Medicine, ammunition, blueprints and other non-equipment are unaffected.
+    Keep this separate from out_of_game: it must not trigger confiscation.
+    """
+    if root_of(type_id) not in (FIRE_ARM, COLD_ARM, WEAR):
+        return False
+    si = params_of(type_id) or {}
+    level = max(si.get("need_skills") or [0])
+    entry = catalogue().get(type_id)
+    # Clothing art names do NOT define the owner's set level (e.g. Echo).
+    if entry and root_of(type_id) != WEAR:
+        declared = re.search(r"_lvl_(\d+)(?:_|$)", entry[1], re.I)
+        if declared:
+            level = max(level, int(declared.group(1)))
+    return level > PLAYER_GEAR_MAX_LEVEL
 
 
 def no_combat(type_id):
@@ -1000,6 +1025,22 @@ MINER_WEAR = {first + k: sets.SETS[like]["members"][slot]
 # arguing with the balance. Ours, and openly so; nothing sells it.
 ADMIN_GUN = 1534
 
+# Owner 2026-10-27: the collectible PMM variants of levels 4 and 5.
+# Capacity is type metadata, so existing instances get the same limit.
+PMM_CLIP_SIZES = {7056: 7, 7057: 7}
+
+# Ordinary collectible KS-12, latest owner decision 2026-10-27:
+# Keep x2 of the original AP cost, except level 5 -> 32 and level 9 -> 27.
+# Two shots + one A combat bandage + five steps are a MINIMUM guarantee
+# in a full nearest-lower A set at that weapon level, without AP regen.
+# Only lower a prior cost when that minimum would not fit (levels 4/6/7).
+# Fixed per-type costs, NOT a fee recalculated from each player's gear.
+# Named/clan copies stay separate.
+KS12_FIRE_COSTS = {
+    7072: 31, 7073: 32, 7074: 33, 7075: 36, 7076: 24,
+    7077: 27, 7078: 38, 7079: 38, 7080: 46, 7070: 46, 7081: 46,
+}
+
 ADMIN_OVERRIDES = {
     ADMIN_GUN: dict(
         # One action point a shot, the whole clip in a burst if wanted.
@@ -1148,6 +1189,10 @@ def static_info(type_id):
         # Gift rounds must remain affordable through the ordinary client.
         if type_id == STARTER_ROUNDS:
             info[1].update(cost=AMMO_PACK, g_cost=0)
+        # Owner's provision rebalance: the same grams are sent to the
+        # client and used by inventory carry/purchase checks.
+        if type_id in (333, 334):
+            info[1]["weight"] = {333: 10000, 334: 2000}[type_id]
         # A thing a quest lends (quests.lent) is the quest's, not the
         # player's: the quest flag and no exchange, the two things the
         # stall, the barter, the post and the auction ask (Inventory.sell,
@@ -1159,22 +1204,30 @@ def static_info(type_id):
         import events                   # late: it reads data/schedule.json
         if quests.lent(type_id) or events.kept(type_id):
             info[1].update(quest=1, exchang=0)
-        # Owner rule 2026-10-25: machine guns 16..20 require a learned
-        # machine-gun specialisation at levels 0..4. Derived A/G mods use
-        # the same public item level. Other requirement bits stay intact.
+        # Existing machine-gun ladder: 16..20 require spec 0..4.
+        # Owner, 2026-10-28: ONLY the smuggled PKM 7051 requires spec 1.
+        # Ordinary/gold variants, modifications and other guns keep their
+        # previous requirements, including a learned spec at level zero.
         if root_of(type_id) == FIRE_ARM and info[1].get("weapon_type") == MACHINEGUN:
             level = max(info[1].get("need_skills") or [0])
             if 16 <= level <= 20:
+                required = 1 if type_id == SMUGGLED_PKM else level - 16
                 mask = info[1].get("need_specs_m", 0) or 0
                 bit = 1 << 6  # PersAttributes: Ручные пулеметы.
                 offset = (mask & (bit - 1)).bit_count()
                 values = list(info[1].get("need_specs") or [])
                 values.extend([0] * max(0, mask.bit_count() - len(values)))
                 if mask & bit:
-                    values[offset] = level - 16
+                    values[offset] = required
                 else:
-                    values.insert(offset, level - 16)
+                    values.insert(offset, required)
                 info[1].update(need_specs_m=mask | bit, need_specs=values)
+        if type_id in PMM_CLIP_SIZES:
+            info[1]["clip_size"] = PMM_CLIP_SIZES[type_id]
+        if type_id in KS12_FIRE_COSTS:
+            costs = list(info[1]["fire_costs"])
+            costs[2] = KS12_FIRE_COSTS[type_id]
+            info[1]["fire_costs"] = costs
         # Last, so neither the design nor the wiki can argue with it.
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:

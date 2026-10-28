@@ -49,12 +49,20 @@ def main():
     assert icons, "no res/transport/*.swf found: LAVA_RES wrong?"
     assert set(data["icons"]) == icons, "the icon list has drifted from the disk"
     for type_id, rec in sorted(types.items()):
-        assert type_id in icons, \
-            "type %d has no res/transport/%d.swf" % (type_id, type_id)
+        assert rec["res"] in icons, \
+            "type %d has no res/transport/%d.swf" % (type_id, rec["res"])
         assert rec["type"] == type_id, "type %d disagrees with its key" % type_id
         assert rec["name"].strip(), "type %d has no name" % type_id
         assert rec["in_manifest"], \
             "type %d is not in res/xml/transport.xml" % type_id
+
+    # Pinned from visual inspection of the original SWFs, not the builder's map.
+    expected = {1: ("Ослик Панург",5), 2: ("Верблюд",1), 3: ("Мотоцикл",6),
+                4: ("УАЗ",2), 5: ("Хаммер",3), 6: ("Багги",4), 7: ("Ларва",7)}
+    for t, (name, icon) in expected.items():
+        assert (types[t]["name"], types[t]["res"]) == (name,icon), (t,types[t])
+        assert transport.si_frame(t)["type"] == t  # persistent rental ID unchanged
+    print("basic rental images visually verified: donkey/camel/moto/UAZ/Hummer/buggy/Larva")
 
     # --- numbers inside sane bounds ----------------------------------------
     # Transport exists to be faster than walking, and the client prints
@@ -88,6 +96,17 @@ def main():
     ladder = [types[t]["speed_mod"] for t in data["default_lessor"]]
     assert ladder == sorted(ladder), "the default set is not ordered by speed"
     assert len(data["default_lessor"]) >= 5, "a rental yard with nothing in it"
+
+    assert (types[4]["cost"],types[4]["g_cost"],types[4]["required_status"]) == (0,70,1)
+    assert (types[5]["cost"],types[5]["g_cost"],types[5]["required_status"]) == (0,90,2)
+    # Every lessor, including clan/fallback types, uses the same verified art and labels.
+    lessors_all = [t for t,r in world.mob_types().items() if r[0] == world.LESSOR]
+    for npc in lessors_all:
+        for vehicle in transport.offered_by(npc):
+            assert vehicle in expected, (npc,vehicle)
+            assert transport.si_frame(vehicle)["res"] == expected[vehicle][1], (npc,vehicle)
+            assert transport.get(vehicle)["name"].split("$")[0] == expected[vehicle][0], (npc,vehicle)
+    print("all %d lessor types checked, including fallback/clan lists" % len(lessors_all))
 
     # --- string ids ---------------------------------------------------------
     for type_id in types:
@@ -131,7 +150,7 @@ def main():
         assert set(si) == {"type", "speed_mod", "aggro_mod", "g_cost", "cost",
                            "res", "premium", "name", "desc"}, si
         # ItemContainer builds transport/<res>.swf, not transport/<type>.swf.
-        assert si["res"] == type_id, type_id
+        assert si["res"] == types[type_id]["res"], type_id
         assert si["res"] in icons, type_id
         assert si["name"] == transport.NAME_ID_OFFSET + type_id, type_id
     print("ok")

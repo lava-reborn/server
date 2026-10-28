@@ -201,6 +201,15 @@ class UpgradeOperations(unittest.TestCase):
                     skill[0] = level
                 self.s.char.recalc()
                 self.s.char.save(self.store)
+                if quests.acquisition_blocked(quests.get(recipe["type"])):
+                    # The recipe stays in the historical/generated catalogue,
+                    # but a real player cannot take it while 18-20 are closed.
+                    self.s.npc_type = lambda _id: recipe["give"][0]
+                    self.s.cmd_q_st(dict(mob=1, q_idx=quests.given_by(recipe["give"][0]).index(recipe["type"])))
+                    self.assertEqual(self.acks(), [server.RES_NOT_AVAILABLE])
+                    self.assertEqual(self.store.items_of(self.cid), [])
+                    self.assertEqual(self.store.quests(self.cid), [])
+                    continue
                 top = items.params_of(c["gun"])["max_break_abs"]
                 gun = self.give(c["gun"], brk=top // 3, max_break_cur=top * 3 // 4)
                 old = craft.wear_of(gun)

@@ -6,6 +6,10 @@
   "edit": "Add or change an edit; the next deploy's client release carries it, and a local run picks it up on restart. A hidden name with no place under it must also be decided in data/map_cells.json: its square goes, stays with a why, or the picture has none there (bare, with a why; server/test_map_cells.py)."
  },
  "labels": [
+  {"x": 5985, "y": 1744, "was": "Тюрьма Вади-Хальфы:<br>Усиление режима в 12:00, 16:00 и 23:00<br>Внимание!!! Необходимо прибывать за 15 минут до встречи с охранниками.", "text": "Тюрьма Вади-Хальфы:<br>Усиление режима в 13:00, 17:00 и 21:00<br>Внимание!!! Необходимо прибывать за 15 минут до встречи с охранниками.", "why": "Owner 2026-10-27: prison starts 13:00, 17:00, 21:00 Moscow time."},
+  {"x": 5903, "y": 1996, "was": "Тюрьма Донголы:<br>Усиление режима в 12:00, 16:00 и 23:00<br>Внимание!!! Необходимо прибывать за 15 минут до встречи с охранниками.", "text": "Тюрьма Донголы:<br>Усиление режима в 13:00, 17:00 и 21:00<br>Внимание!!! Необходимо прибывать за 15 минут до встречи с охранниками.", "why": "Owner 2026-10-27: prison starts 13:00, 17:00, 21:00 Moscow time."},
+  {"x": 6193, "y": 1966, "was": "Тюрьма Абу-Хамеда:<br>Усиление режима в 12:00, 16:00 и 23:00<br>Внимание!!! Необходимо прибывать за 15 минут до встречи с охранниками.", "text": "Тюрьма Абу-Хамеда:<br>Усиление режима в 13:00, 17:00 и 21:00<br>Внимание!!! Необходимо прибывать за 15 минут до встречи с охранниками.", "why": "Owner 2026-10-27: prison starts 13:00, 17:00, 21:00 Moscow time."},
+
   {"x": 6265, "y": 1821, "was": "Кимберлитовая трубка<br>Добыча алмазов", "hide": true,
    "why": "Owner 2026-10-05: remove the kimberlite pipe / diamond mining label at 6265,1821 from the map."},
   {"x": 6266, "y": 1822, "was": "Новогодняя Елка", "hide": true,

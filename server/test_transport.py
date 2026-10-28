@@ -260,13 +260,21 @@ try:
                   "premium", "name", "desc"]))
     check("the type it was asked for", si["type"], DONKEY)
     check("the icon number, which is what the container loads",
-          si["res"], DONKEY)
+          si["res"], 5)
     check("the donkey's own numbers, off the wiki",
           (si["speed_mod"], si["aggro_mod"], si["premium"]), (1.7, 0.85, 0))
     check("priced in gold, a hundredth at a time",
           (si["cost"], si["g_cost"]), (0, 10))
     check("the name is a string id in the preloaded table",
           si["name"], transport.NAME_ID_OFFSET + DONKEY)
+
+    # Real wire frames pair each persistent type with its visually verified icon.
+    for vehicle, icon in ((1,5),(2,1),(3,6),(4,2),(5,3),(6,4),(7,7)):
+        c.send("ts_get_si;type=%d;" % vehicle)
+        frame = one(c.until("ts_si"), "ts_si")
+        check("rental type %d has its own icon %d and string id" % (vehicle,icon),
+              (frame["type"],frame["res"],frame["name"]),
+              (vehicle,icon,transport.NAME_ID_OFFSET+vehicle))
 
     # A type no table knows is still answered: TransportFactory only reopens
     # its five-deep request window when a ts_si arrives.

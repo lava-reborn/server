@@ -110,10 +110,21 @@ it stands in -- and the rows stay in
 data/questgen_setcraft.json, numbered and worded as they were, with give and
 take [] and the why saying so (generate) -- so no string id leaves the
 table and a journal that held one names a quest the server still knows.
-The town's was the only slice: nobody in the game upgrades, exchanges or reworks
-a set or sells a clothing cheque now. The pieces and the cheques already
+The town's was the only legacy slice. Those services remain disabled; the
+new oasis service below does not enable them or sell clothing cheques.
+The pieces and the cheques already
 made keep their names and their set (CHAINS, MOD_OF, strings, record do not
 read SLICES). Deleting a line of "off" brings that service back.
+
+OASIS SERVICE, owner update 2026-10-28: existing Joseph (7548) in all four
+62/76/195/196 oases upgrades base G pieces to the next level for 50% of
+the new piece's gold price, rounded up to 0.01 G. All four offer the same
+levels up to 17, independently of the city's shop band. A used base piece
+becomes a fresh base piece of the same slot. Modified inputs are refused
+to avoid erasing mods. Joseph's weapon recipes remain alongside sets.
+Other former set exchangers have no set-upgrade service for now. Window
+routes replacements through Session.quest_write: payment/replacement
+commit together and success frames follow COMMIT.
 """
 import io
 import json
@@ -147,6 +158,8 @@ UPGRADE_SHARE = 0.60      # «со скидкой в 40%» (the wiki's Генр�
 # комплекты»), and the window's purse and prices are gold. Add "A" to
 # upgrade an afro set too, priced in gold at the one rate.
 UPGRADE_VARIANTS = ("G",)
+OASIS_UPGRADE_SHARE = 0.50  # owner, 2026-10-27: half of the NEW PIECE's price
+OASIS_UPGRADERS = {62: 7548, 76: 7548, 195: 7548, 196: 7548}
 EXCHANGE_SHARE = 0.50      # «со скидкой, равной 50%» (24377)
 EXCHANGE_FROM, EXCHANGE_TO = 10, 5     # «обменять mod10 на mod05 следующего уровня»
 
@@ -555,27 +568,59 @@ def _slice_of_upgrader(type_id):
 
 
 _WINDOWS = {}
+_OASIS_WINDOWS = {}
 
 
-def entries(type_id):
+def oasis_entries(type_id, loc_id):
+    """Base G pieces to the next level in every oasis, up to the release cap.
+
+    Modified pieces are not consumed: their preservation policy is separate.
+    Old disabled services and the NPC's weapon recipes remain independent.
+    """
+    if OASIS_UPGRADERS.get(loc_id) != type_id:
+        return []
+    key = (type_id, loc_id)
+    if key not in _OASIS_WINDOWS:
+        out = []
+        gold = [r for r in LADDER if r["variant"] == "G"]
+        for nxt in gold:
+            if nxt["level"] > items.PLAYER_GEAR_MAX_LEVEL:
+                continue
+            below = [r for r in gold if r["level"] < nxt["level"]]
+            if not below:
+                continue
+            previous_level = max(r["level"] for r in below)
+            for prev in below:
+                if prev["level"] != previous_level:
+                    continue
+                for slot in sets.SLOTS:
+                    src, dst = prev["members"][slot], nxt["members"][slot]
+                    if items.acquisition_blocked(src) or items.acquisition_blocked(dst):
+                        continue
+                    out.append((src, dst, _share(gold_price(dst), OASIS_UPGRADE_SHARE)))
+        _OASIS_WINDOWS[key] = out
+    return _OASIS_WINDOWS[key]
+
+
+def entries(type_id, loc_id=None):
     """The window's entries of this upgrader type, [] for one with none."""
     got = _WINDOWS.get(type_id)
     if got is None:
         slice_, services = _slice_of_upgrader(type_id)
         got = _WINDOWS[type_id] = window_entries(slice_, services) if slice_ else []
-    return got
+    return got + oasis_entries(type_id, loc_id)
 
 
-def window(type_id):
+def window(type_id, loc_id=None):
     """in_types, out_types and costs for this upgrader's userInfo_Upgrader."""
-    got = entries(type_id)
+    got = entries(type_id, loc_id)
     return dict(in_types=[i for i, _o, _c in got], out_types=[o for _i, o, _c in got],
                 costs=[c for _i, _o, c in got])
 
 
-def cost_of(type_id, in_type, out_type):
+def cost_of(type_id, in_type, out_type, loc_id=None):
     """What this upgrader asks for turning in_type into out_type, or None."""
-    for i, o, c in entries(type_id):
+    for i, o, c in entries(type_id, loc_id):
         if i == in_type and o == out_type:
             return c
     return None
@@ -600,7 +645,11 @@ def upgrade(sess, npc_type, row, out_type):
     if row["slot"] != inventory.BAG:
         inv.ack(inventory.RES_NOT_FOUND)
         return
-    cost = cost_of(npc_type, row["type_id"], out_type)
+    loc = getattr(getattr(sess, "room", None), "loc", None)
+    cost = cost_of(npc_type, row["type_id"], out_type, getattr(loc, "id", None))
+    if items.acquisition_blocked(out_type):
+        inv.ack(inventory.RES_REFUSED)
+        return
     if cost is None:
         inv.ack(inventory.RES_REFUSED)
         return
