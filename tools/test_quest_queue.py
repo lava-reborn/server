@@ -77,6 +77,35 @@ class QuestQueue(unittest.TestCase):
         inspector.sendCall()
         self.assertEqual((sent, cls.callCount, len(cls.callStack)), (['q_status'], 1, 0))
 
+    def test_repeated_npc_refresh_replaces_timer_without_touching_inflight_reads(self):
+        cls, inspector, _conn, sent, env = self.setup_queue()
+        cls.callCount = 1
+        head = cls.callStack[0]
+        timers, events = {}, []
+
+        def cancel(timer):
+            events.append(("cancel", timer))
+            timers.pop(timer, None)
+
+        def original():
+            timer = len(events)
+            events.append(("start", timer))
+            timers[timer] = "requestNPC"
+            inspector.updateTimerID = timer
+
+        setattr(inspector, '__questRefreshNPCOrig', original)
+        env['clearInterval'] = cancel
+        for _ in range(3):
+            execute(w.fn_quest_refresh_npcs().assemble(), env)
+            self.assertEqual(len(timers), 1)
+            self.assertIn(inspector.updateTimerID, timers)
+            self.assertEqual(cls.callCount, 1)
+            self.assertIs(cls.callStack[0], head)
+            self.assertEqual(len(cls.callStack), 3)
+            self.assertEqual(sent, [])
+        self.assertEqual(events, [("start", 0), ("cancel", 0),
+                                  ("start", 2), ("cancel", 2), ("start", 4)])
+
     def test_filter_change_does_not_construct_a_quest_singleton(self):
         cls, _inspector, _conn, sent, env = self.setup_queue()
         cls.sInstance = None

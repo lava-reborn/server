@@ -2436,6 +2436,17 @@ def fn_quest_send_call():
     return a
 
 
+def fn_quest_refresh_npcs():
+    """Restart NPC reads with one timer; preserve pending reads and action acks."""
+    a = Asm()
+    a.var("this").member("updateTimerID").push(UNDEF).op("equals2").iftrue("refresh")
+    a.var("this").member("updateTimerID").push(1, "clearInterval").op("callfunc").op("pop")
+    a.label("refresh")
+    a.var("this").push("updateTimerID", UNDEF).op("setmember")
+    a.push(0).var("this").push("__questRefreshNPCOrig").op("callmethod").op("pop")
+    return a
+
+
 def fn_quest_filter_resume():
     """Resume pending reads after the connection's scene filter is updated."""
     a = Asm()
@@ -2707,6 +2718,8 @@ def injected():
     wraps = (
         (("core", "quests", "QuestInspector"), "sendCall", "__questSendOrig",
          (), fn_quest_send_call()),
+        (("core", "quests", "QuestInspector"), "requestAllNPC", "__questRefreshNPCOrig",
+         (), fn_quest_refresh_npcs()),
         (("server", "filters", "FilterManager"), "changeState", "__questFilterOrig",
          (), fn_quest_filter_resume()),
         (("gpui", "Annotation"), "readArray", "__requirementsReadOrig",
