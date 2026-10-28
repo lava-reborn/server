@@ -121,8 +121,11 @@ bash tools/run_suite.sh . /tmp/lava_suite 8 --affected           # затрон�
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) гоняет тесты на push
 в `main` и на pull request, а после зелёных тестов на `main` выкладывает
-код на сервер через шлюз из `deploy/ci/`. Нужны self-hosted раннер с меткой
-`lava`, секреты `ASSETS_SSH_KEY` (ключ шлюза, которому можно только
+код на сервер через шлюз из `deploy/ci/`. Тесты идут на раннерах GitHub
+(бесплатно для публичного репозитория, все задачи сразу), выкладка на
+self-hosted раннере с меткой `lava` на боевом сервере; переменная
+репозитория `CI_TEST_RUNNER` (`["self-hosted","lava"]`) возвращает тесты
+на него. Нужны секреты `ASSETS_SSH_KEY` (ключ шлюза, которому можно только
 забрать ресурсы для тестов) и `DEPLOY_KNOWN_HOSTS`, окружение `production`
 с правилом «только `main`» и секретом `DEPLOY_SSH_KEY` (ключ выкладки: его
 получает только задача выкладки на `main`, ни одна ветка и ни один pull

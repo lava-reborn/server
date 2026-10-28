@@ -60,9 +60,10 @@
 #                   deploy/ci/merge_shards.sh checks afterwards that every
 #                   suite ran exactly once.
 #
-# OPTIONS for a run by hand, never in CI: CI and with it every deploy run
-# every suite, so under GitHub Actions (GITHUB_ACTIONS set) the runner
-# refuses these two and exits 2 rather than run part of the set.
+# OPTIONS for a run by hand, and for a pull request's run in CI: under GitHub
+# Actions (GITHUB_ACTIONS set) the runner refuses these two and exits 2
+# unless LAVA_CI_PART=1, which ci.yml sets for pull_request events alone. A
+# push to main, the run that deploys, always runs every suite.
 #
 #   --only A,B      only these suites, by name (test_combat).
 #   --affected      only the suites the change since --base (origin/main)
@@ -109,8 +110,8 @@ SELECT=0
 if [ -n "$ONLY" ] || [ "$AFFECTED" = 1 ]; then
   SELECT=1
 fi
-if [ "$SELECT" = 1 ] && [ -n "${GITHUB_ACTIONS:-}" ]; then
-  echo "run_suite: CI runs every suite; --only and --affected are for a run by hand" >&2
+if [ "$SELECT" = 1 ] && [ -n "${GITHUB_ACTIONS:-}" ] && [ "${LAVA_CI_PART:-}" != 1 ]; then
+  echo "run_suite: CI runs every suite; --only and --affected are for a run by hand or a pull request (LAVA_CI_PART=1)" >&2
   exit 2
 fi
 if [ -n "$SHARD" ]; then
@@ -184,6 +185,12 @@ else
   cp "$OUT/list.static" "$OUT/list.txt"
 fi
 rm -f "$OUT/list.static"
+if [ -n "$PICKED" ]; then
+  # In the order above, only what was picked -- before the shards are cut,
+  # so that the picked suites, not the whole set, are spread over them.
+  printf '%s\n' "$PICKED" | grep -xF -f - "$OUT/list.txt" > "$OUT/list.picked"
+  mv "$OUT/list.picked" "$OUT/list.txt"
+fi
 if [ -n "$SHARD" ]; then
   # Longest first, each to the part with the least so far: the parts end
   # close together. Every shard computes the same cut from the same list and
@@ -203,11 +210,6 @@ if [ -n "$SHARD" ]; then
     : > "$OUT/summary.txt"
     exit 0
   fi
-fi
-if [ -n "$PICKED" ]; then
-  # In the order above, only what was picked.
-  printf '%s\n' "$PICKED" | grep -xF -f - "$OUT/list.txt" > "$OUT/list.picked"
-  mv "$OUT/list.picked" "$OUT/list.txt"
 fi
 
 # --record-map: every Python process of the run loads the hook, which writes

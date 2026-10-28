@@ -20,8 +20,9 @@ and --affected pick (--list) and to write the map of its --record-map
 As in run_suite.sh: longest first by the summary.txt a previous run left in
 --out (a suite it does not know goes first), and each suite on a database
 and a TMPDIR of its own, empty at its start. Under GitHub Actions only the
-whole set runs: --only and --affected are refused there (exit 2), so that no
-push is ever tested, and deployed, on part of it.
+whole set runs: --only and --affected are refused there (exit 2) unless
+LAVA_CI_PART=1, which ci.yml sets for a pull request's run alone, so that no
+push to main is ever tested, and deployed, on part of it.
 
 --affected compares the working tree with --base (origin/main) and runs:
 
@@ -659,8 +660,8 @@ def main(argv=None):
         save_map(a.save_map, [name_of(p) for p in chosen])
         print("map: %s" % MAP)
         return 0
-    if os.environ.get("GITHUB_ACTIONS") and (a.only or a.affected):
-        print("CI runs every suite; --only and --affected are for a run by hand")
+    if os.environ.get("GITHUB_ACTIONS") and (a.only or a.affected) and os.environ.get("LAVA_CI_PART") != "1":
+        print("CI runs every suite; --only and --affected are for a run by hand or a pull request (LAVA_CI_PART=1)")
         return 2
     if not chosen:
         print("nothing to run")

@@ -9,16 +9,22 @@
 #              assets (the server's slice of the client, the extras the
 #              suites read, the original texts.xml), restores them from the
 #              cache under that digest or fetches them, forgets the key, and
-#              checks the string table.
-#   suite      every server/, data/, tools/ and client/ suite on SQLite,
-#              in three shards side by side, each three at once, longest
-#              first by the last run's durations, with the known failures of
+#              checks the string table. On a pull request it also picks the
+#              suites the change touches (tools/suite.py --affected, by the
+#              impact map of the last main run; everything when there is no
+#              map or git cannot tell).
+#   suite      on a push to main every server/, data/, tools/ and client/
+#              suite on SQLite, recording the impact map as it goes; on a
+#              pull request only the picked ones. In three shards side by
+#              side, each three at once, longest first by the last run's
+#              durations, with the known failures of
 #              tools/known_failures.txt and one rerun, three at once, for
 #              anything else that fails (none past ten failures: that many is
 #              a break, not a crowd).
-#   suites     the shards as one: every suite ran, and once
-#              (deploy/ci/merge_shards.sh); their durations are the next
-#              run's cut.
+#   suites     the shards as one: every suite (on a pull request every
+#              picked suite) ran, and once (deploy/ci/merge_shards.sh); a
+#              full run's durations are the next run's cut, and its impact
+#              map the next pull request's.
 #   postgres   the suites that honour LAVA_DB_URL, each on its own fresh
 #              database in a postgres:16-alpine service -- production's
 #              database, which the SQLite run does not exercise. Beside the
@@ -29,14 +35,18 @@
 #              failure (deploy/remote/lava-gate.sh). One at a time, never
 #              cancelled.
 #
-# Where they run (README «CI/CD», «Раннер»): four self-hosted runners,
-# labels self-hosted and lava, on the production host itself -- the user
-# ghrunner, all four together at most 4 of the host's 6 cores and 6 GB,
-# below the game in priority, with one rootless Docker of their own and no
-# way into /opt or the host's private addresses; the gate they reach like any
-# other machine, by the host's public address. Four jobs at a time, of one
-# run or of several: the three shards and Postgres side by side.
-#
+# Where they run. The tests -- preflight, assets, the three shards, their
+# merge and Postgres -- on GitHub's standard runners (ubuntu-24.04, 4 CPU and
+# 16 GB for a public repository, free and without a minute limit), all at
+# once: no queue behind one runner, nothing of a pull request's code on the
+# production host. The repository variable CI_TEST_RUNNER moves them back to
+# the self-hosted runners as one JSON value, ["self-hosted","lava"]. The
+# deploy alone stays on the self-hosted runner on the production host
+# (README «CI/CD», «Раннер»): the user ghrunner, in a cage below the game,
+# with one rootless Docker of its own and no way into /opt or the host's
+# private addresses; the gate it reaches like any other machine, by the
+# host's public address.
+
 # Every job runs in a container of python:3.12-slim, the production image's
 # base (Dockerfile): the host has no Python 3.12. The image has no git, ssh
 # or rsync; the second step of every job installs them -- the same list in
@@ -158,7 +168,7 @@ env:
 jobs:
   preflight:
     name: preflight
-    runs-on: [self-hosted, lava]
+    runs-on: ${{ fromJSON(vars.CI_TEST_RUNNER || '"ubuntu-24.04"') }}
     container:
       image: python:3.12-slim
       options: --init
@@ -217,7 +227,7 @@ jobs:
     name: assets and string table
     needs: preflight
     if: needs.preflight.outputs.gate == 'true'
-    runs-on: [self-hosted, lava]
+    runs-on: ${{ fromJSON(vars.CI_TEST_RUNNER || '"ubuntu-24.04"') }}
     # ~/.ssh on a tmpfs: the key in memory only, gone with the container,
     # never on the runner's disk -- not even when the runner dies before
     # "forget the key" runs. The same in deploy.
@@ -229,6 +239,10 @@ jobs:
       key: ${{ steps.hash.outputs.key }}
       hash: ${{ steps.hash.outputs.hash }}
       durations: ${{ steps.durations.outputs.durations }}
+      # A pull request's run: the suites its change touches, comma-separated
+      # (empty: none). Unset on a push: every suite.
+      picked: ${{ steps.pick.outputs.picked }}
+      part: ${{ steps.pick.outputs.part }}
     steps:
       - name: a clean work folder
         run: |
@@ -254,7 +268,11 @@ jobs:
           apt-get -o Acquire::Retries=3 install -qq -y --no-install-recommends \
             ca-certificates git openssh-client rsync > /dev/null
 
+      # A pull request's run compares its change with origin/main (the
+      # suites it touches, below): that wants the history, not one commit.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
       - name: gate access
         run: bash deploy/ci/ssh_setup.sh
@@ -332,6 +350,48 @@ jobs:
             echo "no durations yet: the shards take the static order"
           fi
 
+      # A pull request is tested on what its change touches; a push to main,
+      # the run that deploys, on everything. The map of which suite runs
+      # which function of server/ is the last main run's (the suites job
+      # keeps it in the cache); tools/suite.py compares the change with
+      # origin/main by it, and runs everything when there is no map yet or
+      # git cannot say what changed. Picked here, once, for every shard,
+      # as the durations above.
+      - name: the impact map of the last main run
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/impact/impact_map.json
+          key: impact-map-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: impact-map-
+
+      - name: the suites this change touches
+        id: pick
+        if: github.event_name == 'pull_request'
+        env:
+          LAVA_CI_PART: "1"
+        run: |
+          if [ -s "$HOME/impact/impact_map.json" ]; then
+            cp "$HOME/impact/impact_map.json" tools/impact_map.json
+          else
+            echo "no impact map yet: every suite"
+          fi
+          python3 tools/suite.py --affected --list --base origin/main > "$RUNNER_TEMP/pick.txt"
+          grep -vE '^(server|data|tools)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" || true
+          picked=$(grep -E '^(server|data|tools)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" \
+                   | xargs -rn1 basename | sed 's/[.]py$//' | grep -vx test_storage_pg | sort | paste -sd, -)
+          echo "picked=$picked" >> "$GITHUB_OUTPUT"
+          echo "part=true" >> "$GITHUB_OUTPUT"
+          n=$(printf '%s' "$picked" | tr ',' '\n' | grep -c . || true)
+          {
+            echo "### Suites for this change: $n"
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/pick.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "$n suites picked"
+
       # export_texts.py exits non-zero if any id the server may put on the
       # wire is missing from the table (PROTOCOL.md 9): a missing row is a
       # player sent back to the login screen, not a blank label. The same
@@ -357,7 +417,7 @@ jobs:
   suite:
     name: suites on SQLite, shard ${{ matrix.shard }}/3
     needs: assets
-    runs-on: [self-hosted, lava]
+    runs-on: ${{ fromJSON(vars.CI_TEST_RUNNER || '"ubuntu-24.04"') }}
     container:
       image: python:3.12-slim
       options: --init
@@ -409,7 +469,10 @@ jobs:
           HASH: ${{ needs.assets.outputs.hash }}
 
       # The runner cuts the set and orders its part by the summary.txt in
-      # its output folder: the same text on every shard.
+      # its output folder: the same text on every shard. A pull request's
+      # set is the suites its change touches (assets, PICKED); a push to
+      # main runs every suite and records which functions of server/ each
+      # one runs (--record-map), the map the next pull request picks by.
       - name: a third of the suites, three at once, longest first
         id: run
         run: |
@@ -419,11 +482,37 @@ jobs:
           if [ -n "$DURATIONS" ]; then
             printf '%s\n' "$DURATIONS" > "$out/summary.txt"
           fi
+          what=()
+          if [ "$PART" = true ]; then
+            if [ -z "$PICKED" ]; then
+              echo "this change touches no suite"
+              : > "$out/summary.txt"
+              exit 0
+            fi
+            export LAVA_CI_PART=1
+            what=(--only "$PICKED")
+          elif [ "$GITHUB_EVENT_NAME" = push ]; then
+            what=(--record-map)
+          fi
           bash tools/run_suite.sh --known tools/known_failures.txt --rerun --rerun-jobs 3 \
-            --shard ${{ matrix.shard }}/3 \
+            --shard ${{ matrix.shard }}/3 "${what[@]}" \
             --summary "$GITHUB_STEP_SUMMARY" . "$out" 3
         env:
           DURATIONS: ${{ needs.assets.outputs.durations }}
+          PART: ${{ needs.assets.outputs.part }}
+          PICKED: ${{ needs.assets.outputs.picked }}
+
+      # Best effort: a map that failed to record costs the next pull request
+      # a full run, not this push its deploy.
+      - name: this shard's impact map
+        if: ${{ !cancelled() && github.event_name == 'push' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: impact-map-${{ matrix.shard }}
+          path: tools/impact_map.json
+          if-no-files-found: warn
+          overwrite: true
+          retention-days: 7
 
       # Required job output, not a best-effort cache: a lost summary must
       # fail the shard instead of silently leaving the merge incomplete.
@@ -452,7 +541,7 @@ jobs:
     name: suites on SQLite
     needs: [assets, suite]
     if: ${{ !cancelled() && needs.assets.result == 'success' }}
-    runs-on: [self-hosted, lava]
+    runs-on: ${{ fromJSON(vars.CI_TEST_RUNNER || '"ubuntu-24.04"') }}
     container:
       image: python:3.12-slim
       options: --init
@@ -504,19 +593,53 @@ jobs:
       # A missing artifact fails the download rather than merging a subset.
       # Every suite of the tree ran, and once: a green run without one would
       # deploy what nothing tested.
+      # A pull request's run: the suites its change touches ran, and once.
       - name: every suite ran, and once
         id: merge
         run: |
           mkdir -p "$HOME/shards" "$HOME/suite"
           trap '[ -s "$HOME/suite/summary.txt" ] && echo "durations=yes" >> "$GITHUB_OUTPUT"' EXIT
-          bash deploy/ci/merge_shards.sh "$HOME/shards" "$HOME/suite/summary.txt"
+          if [ "$PART" = true ]; then
+            bash deploy/ci/merge_shards.sh "$HOME/shards" "$HOME/suite/summary.txt" "$PICKED"
+          else
+            bash deploy/ci/merge_shards.sh "$HOME/shards" "$HOME/suite/summary.txt"
+          fi
+        env:
+          PART: ${{ needs.assets.outputs.part }}
+          PICKED: ${{ needs.assets.outputs.picked }}
 
+      # Only a full run's durations: a pull request's part would leave the
+      # next run's cut without most of them.
       - name: keep the durations for the next run
-        if: ${{ !cancelled() && steps.merge.outputs.durations == 'yes' }}
+        if: ${{ !cancelled() && steps.merge.outputs.durations == 'yes' && needs.assets.outputs.part != 'true' }}
         uses: actions/cache/save@v4
         with:
           path: ~/suite/summary.txt
           key: suite-durations-${{ github.run_id }}-${{ github.run_attempt }}
+
+      # The map of a push to main, for the next pull request (assets,
+      # «the suites this change touches»). Best effort, as its recording.
+      - uses: actions/download-artifact@v4
+        if: ${{ !cancelled() && github.event_name == 'push' }}
+        continue-on-error: true
+        with:
+          pattern: impact-map-*
+          path: ~/impact-parts
+
+      - name: one impact map of the three shards
+        id: map
+        if: ${{ !cancelled() && github.event_name == 'push' }}
+        continue-on-error: true
+        run: |
+          mkdir -p "$HOME/impact"
+          python3 deploy/ci/merge_maps.py "$HOME/impact/impact_map.json" "$HOME"/impact-parts/*/impact_map.json
+
+      - name: keep the impact map for the next pull request
+        if: ${{ !cancelled() && github.event_name == 'push' && steps.map.outcome == 'success' }}
+        uses: actions/cache/save@v4
+        with:
+          path: ~/impact/impact_map.json
+          key: impact-map-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: all three shards green
         run: |
@@ -530,7 +653,7 @@ jobs:
   postgres:
     name: suites on Postgres
     needs: assets
-    runs-on: [self-hosted, lava]
+    runs-on: ${{ fromJSON(vars.CI_TEST_RUNNER || '"ubuntu-24.04"') }}
     container:
       image: python:3.12-slim
       options: --init
