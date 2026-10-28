@@ -122,7 +122,11 @@ bash tools/run_suite.sh . /tmp/lava_suite 8 --affected           # затрон�
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) гоняет тесты на push
 в `main` и на pull request, а после зелёных тестов на `main` выкладывает
 код на сервер через шлюз из `deploy/ci/`. Нужны self-hosted раннер с меткой
-`lava` и секреты `DEPLOY_SSH_KEY` и `DEPLOY_KNOWN_HOSTS`. Push в `main` —
+`lava`, секреты `ASSETS_SSH_KEY` (ключ шлюза, которому можно только
+забрать ресурсы для тестов) и `DEPLOY_KNOWN_HOSTS`, окружение `production`
+с правилом «только `main`» и секретом `DEPLOY_SSH_KEY` (ключ выкладки: его
+получает только задача выкладки на `main`, ни одна ветка и ни один pull
+request). Push в `main` —
 это выкладка, поэтому работа идёт в ветках. Push, который меняет только
 `README.md`, `TASKS.md`, `UNDONE.md`, `ROADMAP.md`, `PROTOCOL.md` или
 `recon/`, прогона не запускает.
