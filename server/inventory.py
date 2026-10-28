@@ -604,7 +604,7 @@ def card_repeat(rows):
 # --- the level: who may wear what --------------------------------------------
 #
 # Item levels remain in static data and tooltips, but no longer block gear.
-# Combat skill differences instead scale weapon wear. Specialisation gates
+# Combat skill differences instead scale equipment wear. Specialisation gates
 # still apply, including an unlearned (-1) spec whose requirement is zero.
 
 def item_level(type_id):
@@ -648,12 +648,17 @@ def wearable(row, level, character=None):
 
 
 def wear_multiplier(row, character):
-    """Weapon tier versus BASE combat skill; armour keeps its existing wear."""
-    skill = {items.FIRE_ARM: progression.SHOOTING,
-             items.COLD_ARM: progression.MELEE}.get(row["root"])
-    if skill is None:
-        return 1
-    return 1 + max(0, item_level(row["type_id"]) - character.skill[skill][0])
+    """Use base combat skills; armour follows the better of shooting and melee."""
+    if row["root"] == items.WEAR:
+        base = max(character.skill[progression.SHOOTING][0],
+                   character.skill[progression.MELEE][0])
+    else:
+        skill = {items.FIRE_ARM: progression.SHOOTING,
+                 items.COLD_ARM: progression.MELEE}.get(row["root"])
+        if skill is None:
+            return 1
+        base = character.skill[skill][0]
+    return 1 + max(0, item_level(row["type_id"]) - base)
 
 
 def item_title(type_id):
@@ -1190,7 +1195,7 @@ class Inventory:
             # it came: it does not wear (combat's per-round wear says why).
             return row
         points = int(points)
-        if row["root"] in (items.FIRE_ARM, items.COLD_ARM):
+        if row["root"] in GEAR_ROOTS:
             points *= wear_multiplier(row, self.sess.character())
         self.store.update_item(row["uniq"], brk=max(0, row["brk"] - points))
         row = self.store.item(row["uniq"])

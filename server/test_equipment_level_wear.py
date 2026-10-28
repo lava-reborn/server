@@ -1,4 +1,4 @@
-"""Level-free equipment, retained specialisations and base-skill weapon wear.
+"""Level-free equipment, retained specialisations and base-skill equipment wear.
 
 Real SQLite inventories and actual fire/strike completion handlers, no sockets
 or production data. Burst trajectory is stubbed; ammunition/AP/wear are real.
@@ -110,14 +110,49 @@ class LevelWear(unittest.TestCase):
         self.ch.spec[6][0] = 0
         self.assertTrue(inventory.wearable(row, 0, self.ch))
 
-    def test_armour_has_no_level_gate_and_keeps_ordinary_wear(self):
+    def test_armour_has_no_level_gate_and_scales_wear(self):
         type_id = next(iter(sets.SETS[11002]['members'].values()))
         row = self.make(type_id, inventory.BAG)
         self.assertEqual(inventory.item_level(type_id), 17)
         self.assertTrue(inventory.wearable(row, self.ch.level, self.ch))
-        self.assertEqual(inventory.wear_multiplier(row, self.ch), 1)
+        self.assertEqual(inventory.wear_multiplier(row, self.ch), 18)
         before = row['brk']
-        self.assertEqual(self.inv.wear(row, 1)['brk'], before-1)
+        self.assertEqual(self.inv.wear(row, 1)['brk'], before-18)
+
+    def test_armour_uses_best_base_combat_skill_not_bonuses_or_noncombat_level(self):
+        type_id = next(iter(sets.SETS[11002]['members'].values()))
+        row = dict(type_id=type_id, root=items.WEAR)
+        self.ch.skill[progression.MEDICINE][0] = 20
+        self.ch.bonus_skills[progression.SHOOTING] = 100
+        self.ch.bonus_skills[progression.MELEE] = 100
+        for shooting in range(21):
+            for melee in range(21):
+                self.ch.skill[progression.SHOOTING][0] = shooting
+                self.ch.skill[progression.MELEE][0] = melee
+                self.assertEqual(inventory.wear_multiplier(row, self.ch),
+                                 1 + max(0, 17 - max(shooting, melee)))
+
+    def test_damage_wears_one_armour_piece_once_and_zero_damage_does_not_wear(self):
+        types = list(sets.SETS[11002]['members'].values())[:2]
+        rows = [self.make(t, inventory.HEAD + items.params_of(t)['slot_type'], brk=100) for t in types]
+        self.ch.skill[progression.SHOOTING][0] = 14
+        self.ch.skill[progression.MELEE][0] = 15
+        with patch.object(inventory.RNG, 'choice', side_effect=lambda worn: worn[0]):
+            self.f.apply_damage(1, 0)
+        saved = [self.store.item(r['uniq'])['brk'] for r in rows]
+        self.assertEqual(sorted(saved), [97, 100])  # tier 17 vs base 15 => x3
+        self.f.apply_damage(0, 0)
+        self.assertEqual([self.store.item(r['uniq'])['brk'] for r in rows], saved)
+
+    def test_armour_wear_clamps_at_zero_refreshes_bonuses_and_preserves_quest_loans(self):
+        type_id = next(iter(sets.SETS[11002]['members'].values()))
+        row = self.make(type_id, inventory.HEAD + items.params_of(type_id)['slot_type'], brk=5)
+        with patch.object(quests, 'lent', return_value=True):
+            self.assertEqual(self.inv.wear(row, 1)['brk'], 5)
+        with patch.object(self.inv, 'refresh_gear') as refresh:
+            self.assertEqual(self.inv.wear(row, 1)['brk'], 0)
+        refresh.assert_called_once_with()
+        self.assertEqual(self.inv.wear_uniq(row['uniq'], 1)['brk'], 0)
 
     def test_noncombat_skill_and_all_specialisation_requirements_still_gate_gear(self):
         row = dict(type_id=7072, root=items.FIRE_ARM)
