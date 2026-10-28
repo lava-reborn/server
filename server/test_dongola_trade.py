@@ -503,10 +503,10 @@ check("the gunsmiths of «Горные тропы» (625): salvage and assembly 
        [], True))
 check("the decoder Техногик (651, the black market): «Чертежи N-го уровня» for 9-16, including"
       " 9-11 supplied by scheduled Abri bosses, a"
-      " fee, a blueprint of the level drawn",
+      " fee, a blueprint of the level drawn and no ordinary quest-mob source",
       ([(r["give"], r["craft"]["level"], r["cost_afro"] > 0,
          all(level_of_bp(o["obj"]) == r["craft"]["level"] for o in r["rew_random"]),
-         (bool(r["objs"][0].get("mobs")) or r["craft"]["level"] in (9, 10, 11))) for r in dec], DECODER in standing(BLACK)),
+         (not r["objs"][0].get("mobs"))) for r in dec], DECODER in standing(BLACK)),
       ([([DECODER], n, True, True, True) for n in range(9, 17)], True))
 
 

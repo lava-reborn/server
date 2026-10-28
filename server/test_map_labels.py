@@ -203,6 +203,8 @@ for x, y, text in rows_of(raw, HALFA_BOX):
         continue
     if (x, y) == OLD_MARKET_CELL and text == OLD_MARKET % "Обмен G комплектов<br>":
         text = OLD_MARKET % ""
+    if (x, y) == (5985, 1744):
+        text = text.replace("12:00", "13:00").replace("16:00", "17:00").replace("23:00", "21:00")
     if (x, y, text) in CLOCK:
         text, clocked = CLOCK[(x, y, text)], clocked + 1
     kept.append((x, y, text))

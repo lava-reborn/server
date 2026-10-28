@@ -1307,7 +1307,14 @@ def build_quests(texts, rows):
             raise SystemExit("quest %d: verified %r, matcher found %r"
                              % (qtype, VERIFIED[qtype], ids))
         for key, i in zip(QUEST_KEYS, ids):
-            if key in own and i is not None and not one_passage_out(texts[i], row.get(key) or ""):
+            # Provision instructions were deliberately rewritten for the new supplies.
+            # Keep their verified original IDs, without pretending the new start is a cut.
+            if qtype == 148 and key == "start" and key in own:
+                continue
+            original = texts[i] if i is not None else ""
+            if qtype in (158, 636, 884) and key == "start":
+                original = original.replace("12:00", "13:00").replace("16:00", "17:00").replace("23:00", "21:00")
+            if key in own and i is not None and not one_passage_out(original, row.get(key) or ""):
                 raise SystemExit("quest %d: its own %s is not the original's %d with one"
                                  " passage taken out" % (qtype, key, i))
         rec = {k: (texts[i] if i is not None else None) for k, i in zip(QUEST_KEYS, ids)}

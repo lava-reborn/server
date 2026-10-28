@@ -597,7 +597,7 @@ async def _rooms():
         check("  ..and again at 13:30, when they shut",
               sorted(yard.npcs[i].type_id for i in news(seat5.take())),
               sorted([WEST_GUARD, SOUTH_GUARD]))
-        NOW[0] = at(13)
+        NOW[0] = at(14)
         events.taken(TEN)                   # a row of no window
         events.taken(RIDE)                  # both ways: carried or not, the window's
         rc5.keep_hours()
@@ -1034,7 +1034,7 @@ finally:
 
 # The second server: the real table, started in the middle of the real
 # uprising -- nothing remembered, all of it computed.
-srv = Server(at(12, 0, 40), None, "prospector")
+srv = Server(at(13, 0, 40), None, "prospector")
 try:
     c, _arrival = srv.login("Prospector")
     cells = infos(goto(c, NORTH_CELLS))

@@ -1148,9 +1148,9 @@ try:
     done = hand_in(c, here, RIFLE_GUNSMITH, q)
     have = held(CID)
     check("«HK PSG-1(A)» (10646) at the rifles' gunsmith of the trails' masters (624): the four"
-          " parts in, the rifle out", (acks(got), acks(done)[:1], have[PSG1],
+          " level-18 result blocked, input parts preserved", (acks(got), acks(done)[:1], have[PSG1],
                                        [have[p] for p in PSG1_PARTS]),
-          ([0], [0], 1, [0, 0, 0, 0]))
+          ([4], [1], 0, [1, 1, 1, 1]))
 
     # --- Абимбола's bandits: the diamond is Гатера's fare ------------------------------------
     lid, arrival = goto(c, PORT)
@@ -1330,7 +1330,7 @@ try:
     check("  ..«Выход из обучающего центра» (966) at Илья: back to the quarter", (ack, lid),
           ([0, 0], QUARTER))
     check("shop funding plus boss proceeds cover purchases and the lesson",
-          money(CID)[1], shopping_gold + 1900 - 5000 - 800 - 350 - 600)
+          money(CID)[1], shopping_gold + 1900 - 350 - 600)
 
     # --- the Dark Mine: down two tiers and up ------------------------------------------------
     # This scene checks passages, not survival of a naked character. The

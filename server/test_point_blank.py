@@ -177,7 +177,11 @@ def gun(sess, type_id, mode, ammo):
         if r["slot"] == inventory.PRIMARY:
             store.update_item(r["uniq"], slot=inventory.BAG)
     si = items.params_of(type_id)
-    row = sess.inv.create(type_id, 1, slot=inventory.PRIMARY, char_id=sess.char_id)
+    # Cover legacy owned guns above the cap without bypassing the live acquisition gate.
+    fields = inventory.new_fields(type_id)
+    root = fields.pop("root")
+    fields["slot"] = inventory.PRIMARY
+    row = store.create_item(sess.char_id, type_id, root, **fields)
     store.update_item(row["uniq"], cur_mode=mode, ammo_count=ammo,
                       ammo_type=si["comp_array"][0])
     return store.item(row["uniq"])

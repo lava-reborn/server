@@ -337,8 +337,8 @@ try:
           " Кирилл (762), who rents the transport, does",
           (724 in standing(446), 724 in pier, 762 in pier), (True, False, True))
     CAMPS = {(6160, 1975), (6161, 1973), (6210, 1986), (6273, 1953), (6274, 1952)}
-    check("  ..the other retexts over Абу-Хамед are the camps' gold and clock and the (P) works': no other",
-          sorted(set(retexts) - set(TEXTS)), sorted(CAMPS | {(6139, 1950)}))
+    check("  ..the other retexts over Абу-Хамед are the camps, works and updated prison hours: no other",
+          sorted(set(retexts) - set(TEXTS)), sorted(CAMPS | {(6139, 1950), (6193, 1966)}))
     check("  ..the camps say they are fought for gold, the chiefs' places that the chiefs come with it",
           {c: ("Сражение за золото в 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00" in retexts[c]
                or "В 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00 часто кто-то приезжает с золотом." in retexts[c]) for c in CAMPS},

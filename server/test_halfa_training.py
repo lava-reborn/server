@@ -84,6 +84,8 @@ ABORTS = list(range(358, 365))
 AMMO_Q, AUTOMATCHIK, SELF_TEACHERS = 365, 366, 367
 ASSEMBLE = list(range(368, 379))
 EXAMS_A, EXAMS_G = list(range(379, 390)), list(range(390, 401))
+# Exam quests keep their own levels; only initial specialisation learning was opened.
+EXAM_LEVELS = [0, 0, 0, 4, 12, 6, 16, 8, 0, 0, 0, 0, 0, 0, 0]
 QUARRY_IN, QUARRY_OUT, BLOCKS_10, BLOCKS_30, ANKH_Q = range(401, 406)
 MINES_IN, MINES_OUT = [406, 407, 408], [409, 410, 411]
 BOAT_OUT, BOAT_BACK = 412, 413
@@ -322,7 +324,7 @@ try:
                q.level, q.need_all, q.service),
               (True, quests.BRING_L_OBJ, 1, (0, 100) if gold else (25000, 0), [spec],
                [80000] if gold else [40000], [] if gold else [40000], True,
-               progression.SPEC_MIN_SKILL[spec], [SELF_TEACHERS], True))
+               EXAM_LEVELS[spec], [SELF_TEACHERS], True))
 
     # The quarry.
     q_in, q_out = quests.get(QUARRY_IN), quests.get(QUARRY_OUT)

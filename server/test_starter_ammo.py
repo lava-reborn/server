@@ -42,6 +42,7 @@ class Shop:
         self.created = []
     def ack(self, code): self.acks.append(code)
     def total_weight(self): return 0
+    def carry_limit(self): return inventory.MAX_WEIGHT
     def money(self): return self.purse
     def set_money(self, afro, gold, *args): self.purse = (afro, gold)
     def create(self, t, n):

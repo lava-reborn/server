@@ -641,6 +641,7 @@ def quest_open(quest_type, carried=False):
 def loot(loc_id, mob_type, rng):
     """[(type, pieces)] a creature killed here carries on top of its own
     table (combat.RoomCombat.drop_loot): a prisoner's red armband."""
+    import items  # Late import: items also reads event tables.
     out = []
     for obj, num, chance in table().loot.get((int(loc_id), int(mob_type)), ()):
         if not items.acquisition_blocked(obj) and (chance >= 1 or rng.random() < chance):

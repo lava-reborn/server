@@ -31,8 +31,8 @@ reading of data/wiki/pages.json, transcribed here independently of
 data/sets.json). Then one server over the socket: a newborn at the arena
 finds Сет trading and mending, his stall's frames are those numbers, he
 buys each thing once at the price the window shows, the purse and the
-bag agree, and at level 0 he may carry the level-2 and level-4 things but
-not put them on (the owner's «вещи по уровню только можно носить»).
+bag agree, and level 0 no longer blocks equipping the level-2 and level-4
+things (the current release rule; specialisation checks remain).
 
     LAVA_RES=.../lava/res python3 server/test_seth_stall.py
 """
@@ -354,16 +354,20 @@ try:
         if len(bought[t]) > 2:
             c.send("ss_move;obj=x%s;to=%d;from=%d;" % (bought[t][2], dst, BAG))
             got = [p.get("res") for p in named(c.frames(0.8), "cmdAck")]
-        check("level 0: %s refused with 45" % label, got, [inventory.RES_LEVEL])
+        check("level 0: %s accepted without a level gate" % label, got, [inventory.RES_OK])
     c.send("ss_upd;obj=x0;s_status=0;")
     leave(c)
 
     st = accounts.Store(DB)
     cid = st.db.execute("SELECT id FROM characters WHERE name = ?", ("arena",)).fetchone()["id"]
-    rows = [r for r in st.items_of(cid) if r["slot"] == BAG]
+    all_rows = st.items_of(cid)
+    rows = [r for r in all_rows if r["slot"] == BAG]
     st.close()
-    check("in the database: every thing bought is in the bag, the rounds %d each" % ROUNDS,
-          ([t for t in STALL if t not in {r["type_id"] for r in rows}],
+    check("the helmet and pistol remain equipped in their exact slots after logout",
+          {r["type_id"]: r["slot"] for r in all_rows if r["type_id"] in (HELM, WALTHER)},
+          {HELM: HEAD, WALTHER: PRIMARY})
+    check("the other purchases remain in the bag, the rounds %d each" % ROUNDS,
+          ([t for t in STALL if t not in (HELM, WALTHER) and t not in {r["type_id"] for r in rows}],
            sorted(r["count"] for r in rows if r["type_id"] in (KS, ST))),
           ([], [ROUNDS, ROUNDS]))
 except Exception:

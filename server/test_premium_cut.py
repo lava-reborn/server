@@ -262,7 +262,8 @@ try:
     START158 = orig_texts.quests()[158]["start"]
     CUT158 = "<Br><Br><b>Если вы хотите быстро добраться до тюрьмы"
     check("  ..and up to it the original's start, word for word, quotes plain",
-          (CUT158 in START158, q158.texts[quests.START] == START158[:START158.index(CUT158)],
+          (CUT158 in START158, q158.texts[quests.START] == START158[:START158.index(CUT158)]
+             .replace("12:00", "13:00").replace("16:00", "17:00").replace("23:00", "21:00"),
            '"Охранять"' in q158.texts[quests.START]),
           (True, True, True))
     check("  ..the row itself written clean, not cleaned at load",
@@ -298,9 +299,9 @@ try:
                CASH_WAS in o, q.texts[quests.START] == o.replace(CASH_WAS, "Будет"),
                q.rew_gold),
               (frozenset({"start"}), True, True, True, ounces))
-    check("no quest's text speaks of a residence permit or citizenship",
+    check("only the two paid residence quests mention permits; legacy premium quests stay cut",
           sorted(t for t, q in quests.QUESTS.items()
-                 if any(s and PERMIT_RE.search(s) for s in q.texts)), [])
+                 if any(s and PERMIT_RE.search(s) for s in q.texts)), [2129, 2130])
     try:
         quests.Quest({"type": 1, "kind": "del_obj", "name": "x", "own_texts": ["title"]})
         bad = None

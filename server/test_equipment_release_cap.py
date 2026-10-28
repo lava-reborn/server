@@ -27,6 +27,13 @@ from testkit import run_cases
 
 
 class ReleaseBoundary(unittest.TestCase):
+    def test_event_loot_keeps_allowed_rewards_and_blocks_unreleased_equipment(self):
+        import events
+        schedule = NS(loot={(1, 2): [(11489, 1, 1), (11309, 1, 1), (334, 2, 1)]}, keep_in=[])
+        with patch.object(events, 'table', return_value=schedule):
+            self.assertEqual(events.loot(1, 2, Mock()), [(11309, 1), (334, 2)])
+            self.assertEqual(events.loot(3, 2, Mock()), [])
+
     def test_inventory_factory_refuses_creation_before_any_database_write(self):
         store = Mock()
         inv = inventory.Inventory(NS(char_id=1), store)

@@ -345,9 +345,9 @@ MEDS = sorted({shop_bands.level_of(x) for s in STALLS.values() for x in s
                if shop_bands.medicine(x)})
 check("  ..the medicine of three tiers by their floors: 12_15, 16_19, 20 (the band's and the"
       " one under it)", MEDS, [12, 16, 20])
-check("Тёмное Эхо[18], A and G, sold by Симона; Марат retains only pouches",
+check("Тёмное Эхо[18], A and G, absent from sale; Марат retains only pouches",
       (sorted(set(DARK_A + DARK_G) - set(STALLS[(STATION, SIMONA)])),
-       sorted(set(DARK_A + DARK_G) & set(STALLS[(STATION, MARAT)]))), ([], []))
+       sorted(set(DARK_A + DARK_G) & set(STALLS[(STATION, MARAT)]))), (sorted(DARK_A + DARK_G), []))
 check("  ..its pieces: the quest series' for afro (200 000, 120 000, 240 000, 160 000, 80 000),"
       " ours for gold at 4000 : 1 (50, 30, 60, 40, 20 G) -- 800 000 afro or 200 G the set",
       ([price(t) for t in DARK_A], [price(t) for t in DARK_G],
@@ -362,8 +362,8 @@ check("  ..named as the ladder names them, the quest pieces without their «(Q)�
        [(own_items.load()[t]["like"], items.own(t)) for t in DARK_G]),
       (["Шлем Тёмного Эха", "Шлем Тёмного Эха (G)"], [11125], [60005], [],
        [(a, True) for a in DARK_A]))
-check("Симона: all 60 set pieces; Марат: ten pouches, each with its G right after it",
-      (STALLS[(STATION, SIMONA)] == shop_bands.goods(("sets",), LO, HI),
+check("Симона: only level-16/17 sets; Марат: ten pouches, each followed by its G",
+      (STALLS[(STATION, SIMONA)] == shop_bands.goods(("sets",), LO, 17),
        STALLS[(STATION, MARAT)][-10:], len(STALLS[(STATION, MARAT)])),
       (True, [3577, 3599, 3580, 3602, 5613, 5614, 3578, 3600, 3579, 3601], 10))
 check("  ..the pouches at their articles' prices: автоматчика 50 000 / 10 G, пулемётчика"
@@ -372,7 +372,7 @@ check("  ..the pouches at their articles' prices: автоматчика 50 000 
       [((50000, 0), (0, 1000)), ((100000, 0), (0, 2000)), ((40000, 0), (0, 800)),
        ((20000, 0), (0, 400)), ((40000, 0), (0, 800))])
 check("Шрам: the town's knives and his whetstone's six blueprints after them",
-      STALLS[(STATION, SCAR)], shop_bands.goods(("knives",), LO, HI) + list(KNIFE_PRINTS))
+      STALLS[(STATION, SCAR)], shop_bands.goods(("knives",), LO, 17) + list(KNIFE_PRINTS))
 check("the oasis's «Торговец патронами» (1232): every СТ and ОТ of his list, nothing cut",
       STALLS[(OASIS, AMMO_OASIS)], OASIS_ROUNDS)
 check("the lottery men at the port: Муамар the tickets [16], [18], [19], the gold lottery"
@@ -519,8 +519,8 @@ check("  ..the gold line's own blueprints (asked only by the (G) guns' rows) for
       ([t for t, ls in asked.items() if ls == {"G"} and not (gold_only(t) and combat.gold_item(t))],
        [t for t, ls in asked.items() if "A" in ls and not price(t)[0]]), ([], []))
 gun_stalls = {x for s in STALLS.values() for x in s if items.root_of(x) == items.FIRE_ARM}
-check("  ..and every gun of a recipe on sale in the town, the ordinary and the (G)",
-      sorted({r["craft"]["gun"] for r in ups} - gun_stalls), [])
+check("  ..every recipe gun up to level 17 remains on sale, ordinary and G",
+      sorted({r["craft"]["gun"] for r in ups if max(items.params_of(r["craft"]["gun"]).get("need_skills") or [0]) <= 17} - gun_stalls), [])
 sal, ass, dec, kni = fam("salvage"), fam("assembly"), fam("decode"), fam("knife")
 check("the gunsmiths of «Горные тропы: Мастера» (624): salvage and assembly at the gunsmith of"
       " the class -- the rifles' 5th class and the machine guns' 2nd-5th, the band's machine"
@@ -536,10 +536,10 @@ check("the gunsmiths of «Горные тропы: Мастера» (624): salva
        sorted(GUNSMITHS.values()) == sorted(t for t in standing(SMITHS) if t in (730, 732, 733))),
       ([(730, "rifle"), (732, "mg")], [(730, "rifle"), (732, "mg")], [25819, 25835], [], True))
 check("the decoder Техногик (796, the living quarter): «Чертежи N-го уровня» for 17-20, a fee, a"
-      " blueprint of the level drawn, the encrypted one off the camps of its level",
+      " blueprint of the level drawn, no ordinary quest-mob source",
       ([(r["give"], r["craft"]["level"], r["cost_afro"] > 0,
          all(level_of_bp(o["obj"]) == r["craft"]["level"] for o in r["rew_random"]),
-         bool(r["objs"][0].get("mobs"))) for r in dec], DECODER in standing(QUARTER)),
+         not r["objs"][0].get("mobs")) for r in dec], DECODER in standing(QUARTER)),
       ([([DECODER], n, True, True, True) for n in range(17, 21)], True))
 
 
@@ -570,7 +570,7 @@ check("  ..its blueprints and knives (G) on Шрам's stall beside it, the blue
       (sorted({r["craft"]["blueprint"] for r in kni} - set(STALLS[(STATION, SCAR)])),
        sorted({r["craft"]["gun"] for r in kni} - set(STALLS[(STATION, SCAR)])),
        [price(t) for t in KNIFE_PRINTS]),
-      ([], [], [(0, 400), (0, 400), (0, 800), (0, 500), (0, 500), (0, 1000)]))
+      ([], [6271, 6276], [(0, 400), (0, 400), (0, 800), (0, 500), (0, 500), (0, 1000)]))
 
 # --- 4. the plant ---------------------------------------------------------------------------
 print()
@@ -631,9 +631,9 @@ check("sorting: Абу-Хамед's ore into its sorted ore, the lines: sorted o
 check("  ..each first sorting run one first line of the centre, as in Вади-Хальфа, Абри and"
       " Донгола", [makes[t][1] for t in (13300, 13304, 13308)]
       == [asks[t][0][1] for t in (13312, 13316, 13320)], True)
-check("  ..the rounds it makes are guns' of the town's band on its stalls",
+check("  ..7.62 rounds serve the released town guns; 8.6x70 guns remain above the cap",
       sorted({t for t in (X54R, X51, X70) if any(t in items.params_of(g)["comp_array"]
-                                                  for g in gun_stalls)}), sorted([X54R, X51, X70]))
+                                                  for g in gun_stalls)}), sorted([X54R, X51]))
 plant_in = {o for t in rows for o, _n in asks[t]}
 for_sale = {x for tr in set(items.stock_table()) | set(npcs.STOCK) for x in items.stock_for(tr)}
 check("no way from afro to more afro: nothing a row asks is on any stall of the game, the sorted"
@@ -793,15 +793,15 @@ async def main():
     close_stall(sess)
 
     stall, opened = open_stall(sess, STATION, SIMONA)
-    check("Симона sells the gold Dark Echo helmet for gold alone",
-          (buy(sess, stall, piece_g, BUY), buy(sess, stall, piece_g, GOLD)),
-          ((REFUSED, [], 0, 0), ([0], [piece_g], 0, 5000)))
-    piece_a = DARK_A[-1]
-    check("Симона: her window the town's sets; the boots of Тёмное Эхо for 80 000 afro, for gold"
-          " refused; sold back for 0.7",
-          (stall == items.stock_for(SIMONA, STATION), opened, buy(sess, stall, piece_a, GOLD),
-           buy(sess, stall, piece_a, BUY), sell(sess, piece_a)),
-          (True, [0], (REFUSED, [], 0, 0), ([0], [piece_a], 80000, 0), ([0], False, 56000, 0)))
+    check("Симона: level-18 Dark Echo A/G stays out of sale; level-17 Storm-M A/G remains",
+          (opened, any(t in stall for t in DARK_A + DARK_G),
+           11289 in stall, 11309 in stall), ([0], False, True, True))
+    piece_g, piece_a = 11309, 11293  # available level-17 Storm-M helmet G and boots A
+    check("Симона: Storm-M G bought only for gold; A boots bought for afro and sold at 70%",
+          (buy(sess, stall, piece_g, BUY), buy(sess, stall, piece_g, GOLD),
+           buy(sess, stall, piece_a, GOLD), buy(sess, stall, piece_a, BUY), sell(sess, piece_a)),
+          ((REFUSED, [], 0, 0), ([0], [piece_g], 0, 4375),
+           (REFUSED, [], 0, 0), ([0], [piece_a], 70000, 0), ([0], False, 49000, 0)))
     close_stall(sess)
 
     stall, opened = open_stall(sess, STATION, SCAR)

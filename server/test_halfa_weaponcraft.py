@@ -756,9 +756,11 @@ try:
     # --- the upgrader's window at Жозеф де Гобино -------------------------------------------
     here = goto(c, OASIS)
     eid, kind, info = here[JOSEPH]
-    check("Жозеф де Гобино (62): an upgrader whose window lists the Маузер's twelve",
-          (kind, info.get("in_types", [])[:1], len(info.get("out_types", [])), set(info.get("costs", []))),
-          ("userInfo_Upgrader", [MAUSER_Q], 12, {0}))
+    check("Жозеф: the Mauser's twelve weapon recipes remain alongside fifty G-set upgrades",
+          (kind, info.get("in_types", [])[:12], info.get("out_types", [])[:12],
+           info.get("costs", [])[:12], len(info.get("out_types", []))),
+          ("userInfo_Upgrader", [MAUSER_Q] * 12,
+           craft.upgrader_lists(JOSEPH)["out_types"], [0] * 12, 62))
     gun = give(c, MAUSER_Q)[0]
     c.send("ss_create;s_type=5;target=%d;" % eid)
     check("  ..the window opens", acks(c.frames()), [0])

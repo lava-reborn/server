@@ -251,7 +251,10 @@ def main():
     by_type = {str(r["type"]): r for r in load("quests.json")["quests"]}
     for t in ("158", "301", "302", "303"):
         assert by_type[t].get("own_texts") == ["start"], (t, by_type[t].get("own_texts"))
-        assert cut(qs[t]["start"], by_type[t]["start"]), t
+        original = qs[t]["start"]
+        if t == "158":
+            original = original.replace("12:00", "13:00").replace("16:00", "17:00").replace("23:00", "21:00")
+        assert cut(original, by_type[t]["start"]), t
         assert "жительств" not in by_type[t]["start"], t
     # The warehouses' money boxes (765-767, server/holdings.py; Донгола's
     # 768-770 since 2026-10-13): name and start both the rows' own, each the
