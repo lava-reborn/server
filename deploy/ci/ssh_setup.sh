@@ -6,6 +6,11 @@
 #       bash deploy/ci/ssh_setup.sh
 #   ssh lava-gate assets-hash
 #
+# DEPLOY_SSH_KEY is whichever key the job holds: the assets-only one
+# (secret ASSETS_SSH_KEY) for the tests, the deploying one (secret of the
+# production environment) for the deploy. GATE_KEY_SECRET names the secret
+# it came from, for the error messages.
+#
 # Whatever a job asks over this key, sshd runs the gate, and the gate answers
 # assets-hash, assets and deploy and refuses everything else. The host key is
 # pinned -- DEPLOY_KNOWN_HOSTS is the line install.sh printed on the server --
@@ -15,8 +20,9 @@
 set -euo pipefail
 
 fail() { echo "::error title=Gate access::$*"; exit 1; }
+SECRET=${GATE_KEY_SECRET:-DEPLOY_SSH_KEY}
 [ -n "${DEPLOY_SSH_KEY:-}" ] \
-  || fail "the DEPLOY_SSH_KEY secret is not set (Settings -> Secrets and variables -> Actions)"
+  || fail "the $SECRET secret is not set (Settings -> Secrets and variables -> Actions, or the environment's own secrets)"
 [ -n "${DEPLOY_KNOWN_HOSTS:-}" ] \
   || fail "the DEPLOY_KNOWN_HOSTS secret is not set: the line install.sh printed"
 [ -n "${DEPLOY_HOST:-}" ] || fail "DEPLOY_HOST is empty"
@@ -27,7 +33,7 @@ umask 077
 printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > "$HOME/.ssh/lava_gate"
 printf '%s\n' "$DEPLOY_KNOWN_HOSTS" | tr -d '\r' > "$HOME/.ssh/lava_gate_known_hosts"
 ssh-keygen -y -f "$HOME/.ssh/lava_gate" > /dev/null 2>&1 \
-  || fail "DEPLOY_SSH_KEY is not a private key without a passphrase"
+  || fail "$SECRET is not a private key without a passphrase"
 
 # ssh reads its config from the home the passwd file gives the account, not
 # from $HOME, and in a container job the two differ: HOME is /github/home

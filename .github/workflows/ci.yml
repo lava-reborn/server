@@ -69,11 +69,19 @@
 # deploy/runner/scrub.sh sweeps the work folder before and after every job
 # (the runner's job hooks) and whenever the runner starts.
 #
-# Secrets (Settings -> Secrets and variables -> Actions):
-#   DEPLOY_SSH_KEY      the private half of the CI key; its public half sits
-#                       in root's authorized_keys tied to the gate
-#   DEPLOY_KNOWN_HOSTS  the server's host-key line, printed by install.sh
-# Optional variable DEPLOY_HOST, if the server ever moves.
+# Secrets (Settings -> Secrets and variables -> Actions), two keys:
+#   ASSETS_SSH_KEY      repository secret: a key the gate lets fetch the test
+#                       assets and nothing else (lava-gate.sh --assets-only).
+#                       Every run that tests reads it, a pull request's too.
+#   DEPLOY_SSH_KEY      secret of the "production" environment only: the key
+#                       that deploys. The environment admits refs/heads/main
+#                       alone (Settings -> Environments -> production ->
+#                       Deployment branches), so a branch that rewrites this
+#                       file to name the environment still never gets it.
+#                       Only the deploy job names it.
+#   DEPLOY_KNOWN_HOSTS  repository secret: the server's host-key line,
+#                       printed by install.sh
+# Variable DEPLOY_HOST: the server's address.
 #
 # Everything this file runs lives in deploy/ci/ and tools/, where it can be run
 # by hand and read with its comments; the steps below only call it.
@@ -199,7 +207,7 @@ jobs:
         id: keys
         run: bash deploy/ci/preflight.sh
         env:
-          HAVE_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' }}
+          HAVE_KEY: ${{ secrets.ASSETS_SSH_KEY != '' }}
           HAVE_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS != '' }}
 
       - name: every script, module and table parses
@@ -251,7 +259,9 @@ jobs:
       - name: gate access
         run: bash deploy/ci/ssh_setup.sh
         env:
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          # The assets-only key: this job runs for pull requests as well.
+          DEPLOY_SSH_KEY: ${{ secrets.ASSETS_SSH_KEY }}
+          GATE_KEY_SECRET: ASSETS_SSH_KEY
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
 
       - name: digest of the assets on the server
@@ -605,6 +615,9 @@ jobs:
     needs: [preflight, assets, suites, postgres]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.preflight.outputs.gate == 'true'
     runs-on: [self-hosted, lava]
+    # The deploying key is a secret of this environment alone, and the
+    # environment admits main alone (the top of this file, «Secrets»).
+    environment: production
     # ~/.ssh on a tmpfs, as in assets: the key never on the runner's disk.
     container:
       image: python:3.12-slim
@@ -657,6 +670,7 @@ jobs:
         run: bash deploy/ci/ssh_setup.sh
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          GATE_KEY_SECRET: DEPLOY_SSH_KEY (environment production)
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
 
       - name: pack the tree as deploy.sh would send it
