@@ -141,11 +141,8 @@ class BossBlueprints(unittest.TestCase):
         for (loc, mob), item in bosses.BLUEPRINTS.items():
             st = mobs.stats(mob)
             blueprint_level = int(items.catalogue()[item][1].rsplit('_', 1)[1])
-            base = (5, 4.75, 4.5, 4.25, 4, 3.75, 3.5, 3.25, 3, 2.5, 2.5,
-                    1.5, 1.5, 1.5, 1.5, 1, 1, 1, 1, 1)[blueprint_level - 1] / 100.0
             for delta in (-2, 0, 1, 2, 3, 4, 5, 10):
-                chance = (0.01 if delta >= 4 else
-                          max(0.01, round(base * (1 - max(0, delta) * 0.2), 8)))
+                chance = 0.10
                 for value in (0.0, chance - 0.000001, chance, 0.999999):
                     with self.subTest(mob=mob, delta=delta, roll=value), \
                             patch.object(mobs, 'carried', return_value=[(4796, 1)]), \
@@ -162,12 +159,12 @@ class BossBlueprints(unittest.TestCase):
                     patch.object(mobs, 'quest_table', return_value=[]):
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0), (), loc_id=loc), [])
 
-    def test_old_encrypted_drop_cannot_duplicate_or_bypass_level_gate(self):
+    def test_old_encrypted_drop_cannot_duplicate_or_bypass_fixed_chance(self):
         # Existing active quests can want both encrypted and ready blueprints.
         encrypted = 2408
         ready = next(t for t, chance in quests.quest_drops(269)
                      if quests.drop_group(t) == 'craft_blueprint')
-        table = [(encrypted, 0.02), (ready, 0.1), (3742, 1.0)]
+        table = [(encrypted, 0.02), (ready, 0.2), (3742, 1.0)]
         st = mobs.stats(269)
         with patch.object(mobs, 'carried', return_value=[]), \
                 patch.object(mobs, 'roll_table', return_value=[]), \
@@ -178,7 +175,7 @@ class BossBlueprints(unittest.TestCase):
             self.assertEqual(result.count((encrypted, 1)), 1)
             self.assertIn((ready, 1), result)
             self.assertIn((3742, 1), result)
-            blocked = mobs.loot_for(st, FixedRandom(0.03), wanted, loc_id=82,
+            blocked = mobs.loot_for(st, FixedRandom(0.10), wanted, loc_id=82,
                                     killer_level=5)  # blueprint level 1, difference +4
             self.assertNotIn((encrypted, 1), blocked)
             self.assertIn((ready, 1), blocked)
@@ -199,7 +196,7 @@ class BossBlueprints(unittest.TestCase):
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.21), wanted,
                     loc_id=82, killer_level=4), [])
                 self.assertEqual(mobs.loot_for(st, FixedRandom(0.03), wanted,
-                    loc_id=82, killer_level=5), [])
+                    loc_id=82, killer_level=5), [(2408, 1)])
 
     def test_boss_combat_level_does_not_affect_blueprint_chance(self):
         # Asmund drops a level-1 blueprint even if his combat stats change.
@@ -222,26 +219,14 @@ class BossBlueprints(unittest.TestCase):
             outcomes = [mobs.loot_for(st, rng, (), loc_id=82,
                                      killer_level=1) for _ in range(4000)]
         self.assertTrue(all(len(x) <= 1 for x in outcomes))
-        self.assertTrue(0.035 < sum(bool(x) for x in outcomes) / len(outcomes) < 0.065)
+        self.assertTrue(0.08 < sum(bool(x) for x in outcomes) / len(outcomes) < 0.12)
 
-    def test_players_below_blueprint_level_keep_maximum_chance(self):
+    def test_fixed_chance_for_all_blueprint_and_player_levels(self):
         for blueprint_level in range(1, 21):
-            for player_level in range(blueprint_level + 1):
-                self.assertEqual(bosses.blueprint_drop_chance(player_level, blueprint_level),
-                    (5, 4.75, 4.5, 4.25, 4, 3.75, 3.5, 3.25, 3, 2.5, 2.5,
-                     1.5, 1.5, 1.5, 1.5, 1, 1, 1, 1, 1)[blueprint_level - 1] / 100.0)
-
-    def test_tier_boundaries_and_overlevel_floor(self):
-        for tier, expected in ((1, (0.05, 0.04, 0.03, 0.02, 0.01)),
-                               (9, (0.03, 0.024, 0.018, 0.012, 0.01)),
-                               (10, (0.025, 0.02, 0.015, 0.01, 0.01)),
-                               (11, (0.025, 0.02, 0.015, 0.01, 0.01)),
-                               (12, (0.015, 0.012, 0.01, 0.01, 0.01)),
-                               (15, (0.015, 0.012, 0.01, 0.01, 0.01)),
-                               (16, (0.01,) * 5), (20, (0.01,) * 5)):
-            with self.subTest(tier=tier):
-                self.assertEqual(tuple(bosses.blueprint_drop_chance(tier + delta, tier)
-                                       for delta in range(5)), expected)
+            for player_level in range(101):
+                with self.subTest(blueprint=blueprint_level, player=player_level):
+                    self.assertEqual(bosses.blueprint_drop_chance(
+                        player_level, blueprint_level), 0.10)
 
     def test_finisher_level_is_snapshotted_before_xp(self):
         import combat
@@ -282,7 +267,7 @@ class BossBlueprints(unittest.TestCase):
                 self.assertEqual([r['type_id'] for r in rows], [4796, 2408])
                 self.assertTrue(all(store.item(r['uniq']) is not None for r in rows))
                 mob.blueprint_killer_level = 5  # level-1 blueprint +4
-                combat.RNG.value = 0.02
+                combat.RNG.value = 0.10
                 self.assertEqual([r['type_id'] for r in combat.RoomCombat.drop_loot(rc, mob)], [4796])
         finally:
             store.close()

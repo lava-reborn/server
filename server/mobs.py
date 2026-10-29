@@ -776,7 +776,7 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
     out = [(t, n) for t, n in out
            if not catalogue.get(t, (None, ""))[1].startswith("codified_bp_")]
     if blueprint is not None and killer_level is not None:
-        # Compare with the dropped blueprint, not the boss's combat level.
+        # Levels are accepted for compatibility; the chance is fixed at 10%.
         blueprint_level = int(items.catalogue()[blueprint][1].rsplit("_", 1)[1])
         chance = bosses.blueprint_drop_chance(killer_level, blueprint_level)
         if rng.random() < chance:
