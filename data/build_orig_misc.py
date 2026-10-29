@@ -1223,6 +1223,18 @@ def match_quest(index, row):
     names = index.ids(_WIKI_PREFIX.sub("", row["name"]).strip()) or index.ids(title)
     start = wiki_start(row.get("start") or "", title)
     starts = index.ids(start)
+    if int(row["type"]) in (159, 632, 880):
+        # The rides share their greeting; only the trailing task names the
+        # destination. Compare the whole text with the reviewed new hours,
+        # rather than falling back to the last city's copy after a mismatch.
+        wanted = fold(_HINT.sub("", start))
+        matching = []
+        for candidate in starts:
+            original_start = (index.texts[candidate].replace("12:00", "13:00")
+                              .replace("16:00", "17:00").replace("23:00", "21:00"))
+            if fold(_HINT.sub("", original_start)) == wanted:
+                matching.append(candidate)
+        starts = matching
     unlabelled = [s for s in starts if not index.numbered(s)]
     if unlabelled:
         # The newest edition, and the name nearest before it, however far
