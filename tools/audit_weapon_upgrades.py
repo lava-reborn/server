@@ -102,7 +102,12 @@ def audit():
     report = dict(locations=len(reachable), npc_types=len(npcs), weapons=len(weapons),
                   base_weapons=len(weapons & covered), recipes=len(recipes),
                   missing=missing, missing_effects=missing_effects)
-    report['missing_blueprint_sources'] = sorted({r['craft']['blueprint'] for r in recipes
+    active_recipes = [r for r in recipes
+                      if not quests.acquisition_blocked(quests.get(r['type']))]
+    active_types = {r['type'] for r in active_recipes}
+    report['closed_recipe_types'] = sorted(r['type'] for r in recipes
+                                           if r['type'] not in active_types)
+    report['missing_blueprint_sources'] = sorted({r['craft']['blueprint'] for r in active_recipes
         if r['craft']['blueprint'] not in sources})
     report['unavailable_pairs'] = sorted({(r['craft']['gun'], r['craft']['mod']) for r in recipes
         if not any(x['craft']['gun'] == r['craft']['gun'] and x['craft']['mod'] == r['craft']['mod']

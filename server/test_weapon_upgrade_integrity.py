@@ -64,6 +64,23 @@ class UpgradeCatalogue(unittest.TestCase):
             params = items.params_of(bp)
             self.assertGreater(params.get("cost", 0) + params.get("g_cost", 0), 0, bp)
 
+    def test_closed_recipes_are_reported_and_source_check_still_detects_missing_items(self):
+        expected = {r['type'] for r in RECIPES
+                    if quests.acquisition_blocked(quests.get(r['type']))}
+        self.assertTrue(expected)
+        self.assertEqual(set(self.audit['closed_recipe_types']), expected)
+        # Reopening recipes without restoring their sources must fail the audit.
+        with patch.object(quests, 'acquisition_blocked', return_value=False):
+            reopened = audit_weapon_upgrades.audit()
+        self.assertEqual(reopened['closed_recipe_types'], [])
+        self.assertEqual(reopened['missing_blueprint_sources'],
+                         [1284, 2468, 2469, 6632, 6633, 6634, 6635, 6636, 6637,
+                          37644, 37645, 37646, 37678, 37679, 37680])
+        # Availability does not skip structural or effect checks on closed recipes.
+        self.assertEqual(reopened['recipes'], self.audit['recipes'])
+        for field in ('recipe_structure_errors', 'effect_errors', 'unavailable_pairs'):
+            self.assertEqual(reopened[field], self.audit[field])
+
     def test_inputs_and_output_match_the_recipe(self):
         self.assertEqual(self.audit["recipe_structure_errors"], [])
         outputs = {r["craft"]["mod"] for r in RECIPES}
