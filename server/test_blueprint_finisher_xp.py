@@ -1,4 +1,4 @@
-"""Finishing attacks keep blueprint chance when their XP raises player level.
+"""Finishing attacks keep the fixed 10% drop when XP raises player level.
 
 Runs real Fighter.fire_now/strike_now -> award_xp/credit_xp -> RoomCombat.kill
 with deterministic hits and fake sessions, without any database or sockets.
@@ -102,17 +102,22 @@ async def exercise():
             for corpse in corpses:
                 check(label + ': every corpse keeps pre-attack level',
                       corpse.blueprint_killer_level, level)
-                chance = bosses.blueprint_drop_chance(level, 1)
-                check(label + ': corpse chance uses level before XP',
-                    bosses.blueprint_drop_chance(corpse.blueprint_killer_level, 1), chance)
-                # A roll between old and new chances proves actual loot differs.
-                roll = (chance + bosses.blueprint_drop_chance(killer.level, 1)) / 2
-                with patch.object(mobs, 'carried', return_value=[]), \
-                        patch.object(mobs, 'roll_table', return_value=[]), \
-                        patch.object(mobs, 'quest_table', return_value=[]):
-                    loot = mobs.loot_for(NS(type_id=269), NS(random=lambda: roll),
-                        loc_id=82, killer_level=corpse.blueprint_killer_level)
-                check(label + ': encrypted blueprint survives XP boundary', loot, [(2408, 1)])
+                check(label + ': corpse chance is fixed at ten percent',
+                    bosses.blueprint_drop_chance(corpse.blueprint_killer_level, 1), 0.10)
+                check(label + ': level-up keeps the same chance',
+                    bosses.blueprint_drop_chance(killer.level, 1), 0.10)
+                for roll, expected in ((0.0, [(2408, 1)]),
+                                       (0.099999, [(2408, 1)]),
+                                       (0.10, []), (0.100001, [])):
+                    for player_level in (corpse.blueprint_killer_level, killer.level):
+                        with patch.object(mobs, 'carried', return_value=[]), \
+                                patch.object(mobs, 'roll_table', return_value=[]), \
+                                patch.object(mobs, 'quest_table', return_value=[]):
+                            loot = mobs.loot_for(NS(type_id=269), NS(random=lambda: roll),
+                                loc_id=82, killer_level=player_level)
+                        check(label + ': roll %s at level %d' % (roll, player_level),
+                              loot, expected)
+
 
 try:
     asyncio.run(exercise())
