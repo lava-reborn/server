@@ -54,3 +54,6 @@ data/map_editor_base.png
 # Locally generated release PDFs and rendering previews.
 /output/pdf/
 /tmp/pdfs/
+
+# Local release reports.
+/releases/
