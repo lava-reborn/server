@@ -60,7 +60,7 @@ for t, level in machineguns:
     character.skill[progression.SHOOTING][0] = level
     for spec in character.spec:
         spec[0] = 5
-    required = 1 if t == 7051 else level - 16
+    required = level - 16
     for trained, allowed in ((required - 1, False), (required, True)):
         character.spec[6][0] = trained
         if inventory.wearable(row(t), character.level, character) != allowed:
@@ -70,7 +70,7 @@ for t, level in machineguns:
     p = items.params_of(t)
     offset = (p['need_specs_m'] & ((1 << 6) - 1)).bit_count()
     check('machine-gun %d sends the same requirement as its gate' % t,
-          p['need_specs'][offset], 1 if t == 7051 else level - 16)
+          p['need_specs'][offset], level - 16)
 
 check('machine-gun coverage includes all five item levels in both A and G',
       {(level, bool(items.params_of(t).get('g_cost'))) for t, level in machineguns},

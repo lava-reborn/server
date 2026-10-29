@@ -316,8 +316,9 @@ def main():
                 designed.append(key)
         if rec["speed_mod"] is None or rec["cost"] is None:
             raise SystemExit("no numbers and no design for %r" % page)
-        required_status = {4: 1, 5: 2}.get(type_id, 0)
-        if required_status:
+        # Existing IDs retain the gold offer, available without a status.
+        required_status = 0
+        if type_id in (4, 5):
             rec.update(cost=0, g_cost={4: 70, 5: 90}[type_id])
         types[type_id] = dict(
             name=page, type=type_id, res=icon_res, required_status=required_status,
@@ -367,6 +368,12 @@ def main():
         "types": {str(k): v for k, v in sorted(types.items())},
         "lessors": {str(k): v for k, v in sorted(by_npc.items())},
         "default_lessor": default,
+        # Same vehicles/art, distinct status-only offers. 1 G = 50,000 afro.
+        "status_rentals": {
+            str(offer): dict(base_type=base, required_status=status,
+                             cost=types[base]["g_cost"] * 50000 // 100)
+            for offer, base, status in ((17, 4, 1), (18, 5, 2))
+        },
     }
     with io.open(OUT, "w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=1, sort_keys=True)

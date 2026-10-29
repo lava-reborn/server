@@ -128,7 +128,7 @@ class ResidenceClient(unittest.TestCase):
         attrs=dict(__residenceUntil=now+2*86400+3*3600,__residenceNow=now,__residenceAt=1000,
                    __rentalType=4,__rentalUntil=now+86400+5*3600)
         env=self.env(attrs)
-        pan=dict(newSlot=dict(item_mc=dict(item=dict(typeID=4))),rightNum=10,__residencePrintOrig=lambda:None)
+        pan=dict(newSlot=dict(item_mc=dict(item=dict(typeID=17))),rightNum=10,__residencePrintOrig=lambda:None)
         env["this"]=pan
         execute(w.fn_residence_rent_print().assemble(),env)
         self.assertEqual((pan["maxValue"],pan["rightNum"]),(1,1))
@@ -146,10 +146,35 @@ class ResidenceClient(unittest.TestCase):
         execute(w.fn_residence_rent_print().assemble(),env)
         self.assertEqual(pan["maxValue"],365)
 
+    def test_both_status_offers_use_the_same_vehicle_as_gold(self):
+        for offer, expected in ((4,4),(5,5),(17,4),(18,5),(7,7),(16,16)):
+            code=w.Asm()
+            w.rental_vehicle_base(code,"type")
+            code.op("return")
+            self.assertEqual(execute(code.assemble(),dict(type=offer)),expected)
+
+    def test_gold_option_ignores_status_quota_and_extends_same_vehicle(self):
+        attrs=dict(__residenceUntil=1900000001,__residenceNow=1900000000,
+                   __residenceAt=1000,__rentalType=17,__rentalUntil=1900100000)
+        env=self.env(attrs)
+        item=dict(typeID=4,getProp=lambda key:0)
+        calls=[]
+        env["gamer"]["premium"]=0
+        env["gamer"]["playerInfo"]=dict(transport=dict(typeID=17))
+        pan=dict(gamer=env["gamer"],newSlot=dict(item_mc=dict(item=item)),rightNum=0,
+                 __residencePrintOrig=lambda:None,newAlert=calls.append,
+                 _getTransport=lambda item:calls.append("extend"),
+                 __residenceRentOrig=lambda:calls.append("replace"))
+        pan["printTxt"]=lambda:execute(w.fn_residence_rent_print().assemble(),dict(env,this=pan))
+        pan["printTxt"]()
+        self.assertEqual((pan["maxValue"],pan["rightNum"]),(365,1))
+        execute(w.fn_residence_rent_get().assemble(),dict(env,this=pan))
+        self.assertEqual(calls,["extend"])
+
     def test_rental_gate_uses_correct_status_names_and_same_transport_extends_directly(self):
         for need,status,accepted in ((1,0,False),(2,1,False),(1,1,True),(2,2,True)):
             env=self.env();env["gamer"]["premium"]=status
-            item=dict(typeID=4 if need==1 else 5,getProp=lambda key:need)
+            item=dict(typeID=17 if need==1 else 18,getProp=lambda key:need)
             env["gamer"]["playerInfo"]=dict(transport=dict(typeID=item["typeID"]))
             calls=[]
             pan=dict(gamer=env["gamer"],newSlot=dict(item_mc=dict(item=item)),rightNum=1,

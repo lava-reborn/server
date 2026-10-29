@@ -83,13 +83,13 @@ class LevelWear(unittest.TestCase):
         self.ch.spec[1][0] = -1
         self.assertEqual(self.inv.over_level_to_bag(), [row['uniq']])
 
-    def test_smuggled_pkm_needs_spec_one_but_not_shooting_sixteen(self):
+    def test_smuggled_pkm_needs_learned_spec_zero_but_not_shooting_sixteen(self):
         self.ch.skill[progression.SHOOTING][0] = 0
         row = self.make(7051, inventory.BAG)
         params = dict(obj=inventory.oid_of(row),
                       **{'from': inventory.BAG, 'to': inventory.PRIMARY})
         for trained, wanted in ((-1, inventory.RES_LEVEL),
-                                (0, inventory.RES_LEVEL), (1, inventory.RES_OK)):
+                                (0, inventory.RES_OK)):
             self.ch.spec[6][0] = trained
             self.frames.clear()
             self.inv.ss_move(params)

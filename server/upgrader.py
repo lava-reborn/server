@@ -88,7 +88,7 @@ class Window:
         except (TypeError, ValueError):
             target = 0
         entry = sess.room.npc(target) if sess.room is not None else None
-        if not entry or entry.root != world.UPGRADER:
+        if not entry or world.entity_root(entry.type_id, entry.root) != world.UPGRADER:
             sess.inv.ack(inventory.RES_NOT_FOUND)
             return
         if not sess.char_id:

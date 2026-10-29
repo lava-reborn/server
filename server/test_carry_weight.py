@@ -91,11 +91,12 @@ class CarryWeight(unittest.TestCase):
 
     def test_pouch_and_strength_stack_refresh_and_removal_preserves_items(self):
         self.ch.attrib[progression.STRENGTH] = 12
-        pouch = self.make(3602,slot=inventory.BELT)  # real +1 strength pouch, 700 g
+        self.ch.spec[6][0] = 0
+        pouch = self.make(3602,slot=inventory.BELT)  # +1 strength and +1 learned spec -> +2 strength, 700 g
         self.inv.refresh_gear()
-        self.assertEqual(self.inv.carry_limit(),56000)
-        self.assertEqual(self.frames[-1][1]["max_weight"],56000)
-        self.fill_to(56000-4)
+        self.assertEqual(self.inv.carry_limit(),58000)
+        self.assertEqual(self.frames[-1][1]["max_weight"],58000)
+        self.fill_to(58000-4)
         self.assertEqual(self.buy(),[0])
         self.store.update_item(pouch["uniq"],slot=inventory.BAG)
         before = self.inv.rows()
@@ -103,15 +104,76 @@ class CarryWeight(unittest.TestCase):
         self.assertEqual(self.inv.carry_limit(),54000)
         self.assertEqual(self.frames[-1][1]["max_weight"],54000)
         self.assertEqual(self.inv.rows(),before)
-        self.assertEqual(self.inv.total_weight(),56000)
+        self.assertEqual(self.inv.total_weight(),58000)
         self.assertEqual(self.buy(),[inventory.RES_OVERLOAD])
         # Re-equipping restores the same limit; an unworn bank pouch adds neither weight nor strength.
         self.store.update_item(pouch["uniq"],slot=inventory.BANK)
         self.inv.refresh_gear()
-        self.assertEqual((self.inv.carry_limit(),self.inv.total_weight()),(54000,55300))
+        self.assertEqual((self.inv.carry_limit(),self.inv.total_weight()),(54000,57300))
         self.store.update_item(pouch["uniq"],slot=inventory.BELT)
         self.inv.refresh_gear()
-        self.assertEqual((self.inv.carry_limit(),self.inv.total_weight()),(56000,56000))
+        self.assertEqual((self.inv.carry_limit(),self.inv.total_weight()),(58000,58000))
+
+    def test_all_pouches_add_linked_attributes_without_changing_base_stats(self):
+        base = list(self.ch.attrib)
+        for spec in self.ch.spec:
+            spec[0] = 2
+        for type_id in sorted(set(items.GOLD_POUCHES) | set(items.GOLD_POUCHES.values())):
+            with self.subTest(type_id=type_id):
+                pouch = self.make(type_id, slot=inventory.BELT)
+                declared = inventory.item_bonus(items.params_of(type_id))
+                expected = list(declared["attribs"])
+                for spec, value in enumerate(declared["specs"]):
+                    attr = progression.SPEC_ATTRIB[spec]
+                    if attr is not None:
+                        expected[attr] += value
+                for _ in range(3):
+                    self.inv.refresh_gear()
+                    self.assertEqual(self.ch.bonus_attribs, expected)
+                    self.assertEqual(self.ch.attrib, base)
+                    self.assertEqual([self.ch.spec_level(i) for i in range(progression.SPECS)],
+                                     [2 + n for n in declared["specs"]])
+                self.ch.save(self.store)
+                restored = progression.Character.load(self.store, self.s.char_id)
+                self.assertEqual(restored.attrib, base)
+                self.assertEqual(restored.bonus_attribs, [0] * progression.ATTRIBS)
+                restored.set_gear(inventory.gear_bonus(self.inv.rows(), restored))
+                self.assertEqual(restored.bonus_attribs, expected)
+                self.store.update_item(pouch["uniq"], slot=inventory.BAG)
+                self.inv.refresh_gear()
+                self.assertEqual(self.ch.bonus_attribs, [0] * progression.ATTRIBS)
+                self.assertEqual(self.ch.bonus_specs, [0] * progression.SPECS)
+                self.assertEqual(self.ch.attrib, base)
+
+    def test_admin_spec_changes_recount_worn_pouch_without_re_equipping(self):
+        self.make(3602, slot=inventory.BELT)
+        self.s.nick = "Weight"
+        self.ch.set_spec(6, 0)
+        self.inv.refresh_gear()
+        self.assertEqual(self.ch.bonus_attribs[progression.STRENGTH], 2)
+        with patch.object(server, "STORE", self.store):
+            server.Session.admin_spec(self.s, 6, -1)
+            self.assertEqual(self.ch.bonus_attribs[progression.STRENGTH], 1)
+            server.Session.admin_spec(self.s, 6, 0)
+            self.assertEqual(self.ch.bonus_attribs[progression.STRENGTH], 2)
+            server.Session.admin_progress(self.s, "stat", dict(spec=6, level=-1))
+            self.assertEqual(self.ch.bonus_attribs[progression.STRENGTH], 1)
+            server.Session.admin_progress(self.s, "stat", dict(spec=6, level=0))
+            self.assertEqual(self.ch.bonus_attribs[progression.STRENGTH], 2)
+
+    def test_unlearned_spec_does_not_grant_a_linked_attribute(self):
+        self.make(3602, slot=inventory.BELT)
+        self.ch.spec[6][0] = -1
+        self.inv.refresh_gear()
+        self.assertEqual(self.ch.bonus_attribs[progression.STRENGTH], 1)
+        self.assertEqual(self.ch.spec_level(6), -1)
+        self.ch.spec[6][0] = 0
+        self.inv.refresh_gear()
+        self.assertEqual(self.ch.bonus_attribs[progression.STRENGTH], 2)
+        self.assertEqual(self.ch.spec_level(6), 1)
+        self.ch.spec[6][0] = -1
+        self.inv.refresh_gear()
+        self.assertEqual(self.ch.bonus_attribs[progression.STRENGTH], 1)
 
     def loot(self, rows, code):
         bag = combat.LootBag(0,[r["uniq"] for r in rows])

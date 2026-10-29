@@ -187,6 +187,7 @@ ALL.update({t: n for t, n in npcs.NAMES.items() if t not in ORIG_PERSON_NAMES})
 ALL.update({
     2241: "Эрих Френкель",
     2242: "Фриденсрайх Шнеерсон",
+    7548: "Жозеф де Гобино<br>Оружейный механик<br>Обмен комплектов",
 })
 
 

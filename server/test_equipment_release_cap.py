@@ -172,6 +172,31 @@ class OasisCatalogue(unittest.TestCase):
         self.assertEqual(names.text(2241), "Эрих Френкель")
         self.assertEqual(names.text(2242), "Фриденсрайх Шнеерсон")
 
+    def test_former_exchangers_are_commoners_without_home_registration(self):
+        for npc in (2241, 2242):
+            self.assertEqual(world.entity_root(npc, world.UPGRADER), world.COMMONER)
+            self.assertFalse(world.offers_home(npc, world.UPGRADER))
+            self.assertEqual(upgrader.lists(npc),
+                             dict(in_types=[], out_types=[], costs=[]))
+        for npc in (93, 5771, 7548):
+            self.assertEqual(world.entity_root(npc, world.UPGRADER), world.UPGRADER)
+
+    def test_former_exchangers_refuse_even_a_stale_upgrade_open_request(self):
+        for npc in (2241, 2242):
+            entry = NS(type_id=npc, root=world.UPGRADER)
+            sess = NS(char_id=1, room=NS(npc=lambda _id: entry), inv=Mock())
+            window = upgrader.Window(sess)
+            window.open(dict(target=1))
+            sess.inv.ack.assert_called_once_with(inventory.RES_NOT_FOUND)
+            self.assertFalse(window.open_)
+
+    def test_joseph_caption_describes_set_exchange(self):
+        self.assertEqual(names.text(7548),
+                         "Жозеф де Гобино<br>Оружейный механик<br>Обмен комплектов")
+        for location in setcraft.OASIS_UPGRADERS:
+            self.assertEqual(world.entity_root(7548, world.UPGRADER), world.UPGRADER)
+            self.assertTrue(setcraft.oasis_entries(7548, location))
+
     def test_modified_inputs_are_not_consumed_by_new_service(self):
         for location, npc in setcraft.OASIS_UPGRADERS.items():
             for src, _dst, _cost in setcraft.oasis_entries(npc, location):

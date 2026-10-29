@@ -245,7 +245,7 @@ try:
     check("and he lets out the seven the wiki lists",
           lessor["give_transport"], transport.offered_by(653))
     check("which is the donkey-to-airship ladder",
-          lessor["give_transport"], [1, 2, 3, 4, 5, 6, 7])
+          lessor["give_transport"], [1, 2, 3, 4, 17, 5, 18, 6, 7])
     commoner = next(p["newUser"] for n, p in got
                     if n == "lch" and p.get("rtype") == world.COMMONER)
 

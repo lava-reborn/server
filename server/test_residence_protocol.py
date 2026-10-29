@@ -122,9 +122,12 @@ try:
     lessor=get(arrival,"userInfo_Lessor")
     cell=next(p["pos"] for cmd,p in arrival if cmd=="lch" and p.get("newUser")==lessor["id"])
     client.send("moveTo;path=|%d|;"%cell);client.named("userMove")
-    check("one-hour status refuses two-day rental",result(client.ack("on_conv;op=2;mob=%d;p1=5;p2=2;"%lessor["id"]))!=0,True)
-    check("one-hour status still allows one full day",result(client.ack("on_conv;op=2;mob=%d;p1=5;p2=1;"%lessor["id"])),0)
-    check("repeated extension cannot escape the total status cap",result(client.ack("on_conv;op=2;mob=%d;p1=5;p2=1;"%lessor["id"]))!=0,True)
+    check("one-hour status refuses two-day rental",result(client.ack("on_conv;op=2;mob=%d;p1=18;p2=2;"%lessor["id"]))!=0,True)
+    frames=client.ack("on_conv;op=2;mob=%d;p1=18;p2=1;"%lessor["id"])
+    check("one-hour status still allows one full day",result(frames),0)
+    info=get(frames,"userInfo_Player")
+    check("VNJ Hummer charges only 45000 afro",(info["afro"],info["gold"],info["tr"]),(955000,5770,18))
+    check("repeated extension cannot escape the total status cap",result(client.ack("on_conv;op=2;mob=%d;p1=18;p2=1;"%lessor["id"]))!=0,True)
     client.logout();client=None
 except Exception:
     import traceback

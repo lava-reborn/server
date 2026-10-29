@@ -548,7 +548,7 @@ def _counted(on):
             if s in SET_SLOTS and r["brk"] > 0]
 
 
-def gear_bonus(rows):
+def gear_bonus(rows, character=None):
     """Everything the things on the body add, as sets.zero(): the character's
     bonus_* (Character.set_gear) for these item rows.
 
@@ -561,13 +561,22 @@ def gear_bonus(rows):
     (sets.bonuses) once per set, however many slots it fills.
 
     Each set once, crit and anti-crit included: what the card's firearm
-    line counts a second time is card_repeat's.
+    line counts a second time is card_repeat's. With a character, a worn
+    pouch's bonus to a learned specialisation also adds its linked attribute.
+    This is temporary gear, never a change to saved base stats. Without a
+    character, return declared item/set bonuses for catalogue calculations.
     """
     on = _on_body(rows)
     total = sets.zero()
     for row in on.values():
         if row["root"] in GEAR_ROOTS:
-            _add(total, item_bonus(items.params_of(row["type_id"]) or {}))
+            bonus = item_bonus(items.params_of(row["type_id"]) or {})
+            if character is not None and row["slot"] == BELT and row["root"] == items.WEAR:
+                for spec, value in enumerate(bonus["specs"]):
+                    attr = progression.SPEC_ATTRIB[spec]
+                    if value and attr is not None and character.spec[spec][0] >= 0:
+                        bonus["attribs"][attr] += value
+            _add(total, bonus)
     _add(total, sets.bonuses(_counted(on)))
     return total
 
@@ -1317,7 +1326,7 @@ class Inventory:
             return
         before = ch.vitals()
         rows = self.rows()
-        changed = ch.set_gear(gear_bonus(rows), card_repeat(rows))
+        changed = ch.set_gear(gear_bonus(rows, ch), card_repeat(rows))
         fighter = self.sess.combat
         held = fighter.ap > fighter.ap_max
         if held:

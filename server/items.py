@@ -81,7 +81,6 @@ ACT_FIRE, ACT_UNLOAD, ACT_USEMODE = 16, 32, 64
 
 # FireArm.as:38-43
 PISTOL, SHOTGUN, ASSAULT, RIFLE, MACHINEGUN, SMG = range(6)
-SMUGGLED_PKM = 7051  # Хан Сэлл, ПКМ 16: explicit spec-level-one requirement.
 
 # Ammunition, by calibre. objects.xml carries two families under root 3: the
 # bare calibre records "_9mmNato", "_762x39", "_12mm", "_762x51" (ids 1, 8, 9,
@@ -1205,13 +1204,13 @@ def static_info(type_id):
         if quests.lent(type_id) or events.kept(type_id):
             info[1].update(quest=1, exchang=0)
         # Existing machine-gun ladder: 16..20 require spec 0..4.
-        # Owner, 2026-10-28: ONLY the smuggled PKM 7051 requires spec 1.
+        # Owner, 2026-10-29: smuggled PKM 7051 again requires learned spec 0.
         # Ordinary/gold variants, modifications and other guns keep their
         # previous requirements, including a learned spec at level zero.
         if root_of(type_id) == FIRE_ARM and info[1].get("weapon_type") == MACHINEGUN:
             level = max(info[1].get("need_skills") or [0])
             if 16 <= level <= 20:
-                required = 1 if type_id == SMUGGLED_PKM else level - 16
+                required = level - 16
                 mask = info[1].get("need_specs_m", 0) or 0
                 bit = 1 << 6  # PersAttributes: Ручные пулеметы.
                 offset = (mask & (bit - 1)).bit_count()

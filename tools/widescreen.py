@@ -1252,18 +1252,35 @@ def fn_residence_player_info():
     return a
 
 
+def rental_vehicle_base(a, name):
+    """Push the physical vehicle ID for the two status-only rental offers."""
+    a.var(name).push(17).op("equals2").iftrue(name + "_base")
+    a.var(name).push(18).op("equals2").iftrue(name + "_base")
+    a.var(name).push(True).iftrue(name + "_ready")
+    a.label(name + "_base").var(name).push(13).op("subtract")
+    a.label(name + "_ready")
+
+
 def fn_residence_rent_print():
     a = Asm()
     a.var("this").push("maxValue",365).op("setmember")
+    # Switching away from an exhausted status quota must restore a valid day.
+    # A limited offer with no remaining quota will clamp it back to zero below.
+    a.var("this").member("rightNum").push(1).op("less2").op("not").iftrue("minimum_ready")
+    a.var("this").push("rightNum",1).op("setmember")
+    a.label("minimum_ready")
     a.push("type").var("this").member("newSlot","item_mc","item","typeID").op("definelocal")
-    a.var("type").push(4).op("equals2").iftrue("limited")
-    a.var("type").push(5).op("equals2").op("not").iftrue("print")
+    a.var("type").push(17).op("equals2").iftrue("limited")
+    a.var("type").push(18).op("equals2").op("not").iftrue("print")
     a.label("limited")
     a.push("attrs").push(0).var("lol").member("core","Master").push("getInstance").op("callmethod").member("gamer","attributes").op("definelocal")
     a.var("attrs").member("__residenceUntil").op("not").iftrue("print")
     a.push("base").var("attrs").member("__residenceNow")
     a.op("gettime").var("attrs").member("__residenceAt").op("subtract").push(1000).op("divide").op("add2").op("definelocal")
-    a.var("type").var("attrs").member("__rentalType").op("equals2").op("not").iftrue("count")
+    a.push("rentedType").var("attrs").member("__rentalType").op("definelocal")
+    rental_vehicle_base(a, "type")
+    rental_vehicle_base(a, "rentedType")
+    a.op("equals2").op("not").iftrue("count")
     a.var("base").var("attrs").member("__rentalUntil").op("less2").op("not").iftrue("count")
     a.push("base").var("attrs").member("__rentalUntil").op("definelocal")
     a.label("count")
@@ -1304,7 +1321,11 @@ def fn_residence_rent_get():
     a.push("Продление превысит срок статуса. Дождитесь окончания аренды или оформите новый статус после истечения текущего.",1).var("this").push("newAlert").op("callmethod").op("pop")
     a.push(True).iftrue("done")
     a.label("has_days")
-    a.var("this").member("gamer","playerInfo","transport","typeID").var("item").member("typeID").op("equals2").op("not").iftrue("replace")
+    a.push("rentedType").var("this").member("gamer","playerInfo","transport","typeID").op("definelocal")
+    a.push("selectedType").var("item").member("typeID").op("definelocal")
+    rental_vehicle_base(a, "rentedType")
+    rental_vehicle_base(a, "selectedType")
+    a.op("equals2").op("not").iftrue("replace")
     a.var("this").member("rightNum").push(0).op("equals2").iftrue("done")
     a.var("item").push(1).var("this").push("_getTransport").op("callmethod").op("pop")
     a.push(True).iftrue("done")
@@ -2418,6 +2439,59 @@ def fn_hotkey_reconcile(original, releasing=False):
     return a
 
 
+def fn_upgrade_description():
+    """Create only the selected recipe's missing preview after a bag update.
+
+    The original NPC builds previews only when opening the service. A newly
+    upgraded piece may unlock another recipe without that output existing yet.
+    Prices come from the NPC recipe, including zero-cost weapon upgrades.
+    """
+    a = Asm()
+    a.push(0).var("this").member("visavisPan").push("fillContent").op("callmethod").op("pop")
+    a.var("item").op("not").iftrue("done")
+    a.push("upgrade").var("this").member("upgrade").op("definelocal")
+    a.var("upgrade").op("not").iftrue("done")
+    a.push("npc").var("upgrade").member("visavisID").push(1).var("upgrade").member("master")
+    a.push("getPlayer").op("callmethod").op("definelocal")
+    a.var("npc").op("not").iftrue("done")
+    a.push("i", 0).op("definelocal")
+    a.label("recipe")
+    a.var("i").var("upgrade").member("neededList", "length").op("less2").op("not").iftrue("done")
+    a.var("upgrade").member("neededList").var("i").op("getmember")
+    a.var("item").member("typeID").op("equals2").op("not").iftrue("next")
+    a.push("cost").var("npc").member("upgradeCosts").var("i").op("getmember").op("definelocal")
+    a.var("cost").push(UNDEF).op("equals2").iftrue("next")
+    a.push("type").var("upgrade").member("upgradedList").var("i").op("getmember").op("definelocal")
+    a.var("type").push(UNDEF).op("equals2").iftrue("next")
+    a.push("created", False).op("definelocal")
+    a.label("search")
+    a.push("previews").var("type").push(1).var("upgrade").member("visavisBag")
+    a.push("getItemsByType").op("callmethod").op("definelocal")
+    a.push("j", 0).op("definelocal")
+    a.label("preview")
+    a.var("j").var("previews").member("length").op("less2").op("not").iftrue("missing")
+    a.push("after").var("previews").var("j").op("getmember").op("definelocal")
+    a.var("after").member("tradeID").var("i").op("equals2").iftrue("show")
+    a.push("j").var("j").push(1).op("add2").op("definelocal")
+    a.push(True).iftrue("preview")
+    a.label("missing")
+    a.var("created").iftrue("next")
+    a.push("created", True).op("definelocal")
+    a.var("type").var("i").push(2).var("npc").push("createUpgradeItem").op("callmethod").op("pop")
+    a.push(True).iftrue("search")
+    a.label("show")
+    # Supply the price before UpgradeItem.init reads _cost, even if the
+    # output's static properties/art are still arriving asynchronously.
+    a.var("after").member("item").push("cost").var("cost").op("setmember")
+    a.var("after").var("item").push(2).var("this").push("createUpgradeItem").op("callmethod").op("pop")
+    a.label("next")
+    a.push("i").var("i").push(1).op("add2").op("definelocal")
+    a.push(True).iftrue("recipe")
+    a.label("done")
+    a.push(0, 0, 2).var("this").member("visavisPan").push("setPosition").op("callmethod").op("pop")
+    return a
+
+
 def fn_quest_send_call():
     """Do not lose a read request when a scene filter temporarily rejects it."""
     a = Asm()
@@ -2716,6 +2790,8 @@ def injected():
             (MARK, fn_frame, ("ui", "w", "h"))):
         a.var("_global").push(name).function(params, fn()).op("setmember")
     wraps = (
+        (("gpui", "UpgradeInterface"), "addDescription", "__upgradeDescriptionOrig",
+         ("item",), fn_upgrade_description()),
         (("core", "quests", "QuestInspector"), "sendCall", "__questSendOrig",
          (), fn_quest_send_call()),
         (("core", "quests", "QuestInspector"), "requestAllNPC", "__questRefreshNPCOrig",

@@ -1799,6 +1799,7 @@ class Session:
         ch = self.character()
         changed = ch.set_spec(int(idx), int(level))
         ch.save(STORE)
+        self.inv.refresh_gear()
         self.push_stats(**changed)
         # Strength or agility moves a bar's maximum, and only usrUp says so.
         if progression.moves_vitals(changed):
@@ -1820,6 +1821,8 @@ class Session:
         except ValueError as exc:
             return str(exc)
         ch.save(STORE)
+        if changed["specs"]:
+            self.inv.refresh_gear()
         self.push_stats(**changed)
         if ch.level != old_level:
             self.send_player_info()
@@ -3918,8 +3921,11 @@ class Session:
                     raise residence.StaleState("rental changed externally")
                 if (row["afro"],row["gold"]) != (char.afro,char.gold):
                     raise residence.StaleState("rental purse changed externally")
-                if required and ((row["premium"],row["premium_until"]) != (char.premium,char.premium_until)
-                                 or char.premium_level() < required
+                # Every payment saves Character, including its status. Even
+                # a gold offer must not overwrite an external status change.
+                if (row["premium"],row["premium_until"]) != (char.premium,char.premium_until):
+                    raise residence.StaleState("rental status changed externally")
+                if required and (char.premium_level() < required
                                  or days > residence.rent_days(char,base=base)):
                     raise residence.StaleState("rental status changed")
                 char.add_money(-afro, -gold)

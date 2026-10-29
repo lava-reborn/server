@@ -97,15 +97,26 @@ def main():
     assert ladder == sorted(ladder), "the default set is not ordered by speed"
     assert len(data["default_lessor"]) >= 5, "a rental yard with nothing in it"
 
-    assert (types[4]["cost"],types[4]["g_cost"],types[4]["required_status"]) == (0,70,1)
-    assert (types[5]["cost"],types[5]["g_cost"],types[5]["required_status"]) == (0,90,2)
+    assert (types[4]["cost"],types[4]["g_cost"],types[4]["required_status"]) == (0,70,0)
+    assert (types[5]["cost"],types[5]["g_cost"],types[5]["required_status"]) == (0,90,0)
+    for offer, base, cost, status in ((17,4,35000,1),(18,5,45000,2)):
+        rec = transport.get(offer)
+        assert (rec["base_type"],rec["cost"],rec["g_cost"],rec["required_status"]) == (base,cost,0,status)
+        assert cost == types[base]["g_cost"] * 50000 // 100
+        assert transport.si_frame(offer)["premium"] == status
+        assert names.known(transport.NAME_ID_OFFSET + offer)
+        assert names.known(transport.DESC_ID_OFFSET + offer)
+        assert (rec["speed_mod"],rec["aggro_mod"],rec["res"]) == tuple(types[base][k] for k in ("speed_mod","aggro_mod","res"))
     # Every lessor, including clan/fallback types, uses the same verified art and labels.
     lessors_all = [t for t,r in world.mob_types().items() if r[0] == world.LESSOR]
     for npc in lessors_all:
         for vehicle in transport.offered_by(npc):
-            assert vehicle in expected, (npc,vehicle)
-            assert transport.si_frame(vehicle)["res"] == expected[vehicle][1], (npc,vehicle)
-            assert transport.get(vehicle)["name"].split("$")[0] == expected[vehicle][0], (npc,vehicle)
+            base = transport.vehicle_type(vehicle)
+            assert base in expected, (npc,vehicle)
+            assert transport.si_frame(vehicle)["res"] == expected[base][1], (npc,vehicle)
+            assert transport.get(vehicle)["name"].split(" (")[0].split("$")[0] == expected[base][0], (npc,vehicle)
+        for base, offer in ((4,17),(5,18)):
+            assert (base in transport.offered_by(npc)) == (offer in transport.offered_by(npc))
     print("all %d lessor types checked, including fallback/clan lists" % len(lessors_all))
 
     # --- string ids ---------------------------------------------------------

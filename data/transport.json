@@ -104,6 +104,18 @@
   ]
  },
  "max_days": 365,
+ "status_rentals": {
+  "17": {
+   "base_type": 4,
+   "cost": 35000,
+   "required_status": 1
+  },
+  "18": {
+   "base_type": 5,
+   "cost": 45000,
+   "required_status": 2
+  }
+ },
  "types": {
   "1": {
    "aggro_mod": 0.85,
@@ -410,7 +422,7 @@
    "max_days": 365,
    "name": "УАЗ",
    "premium": 0,
-   "required_status": 1,
+   "required_status": 0,
    "res": 2,
    "source": "wiki",
    "speed_mod": 3.2,
@@ -437,7 +449,7 @@
    "max_days": 365,
    "name": "Хаммер",
    "premium": 0,
-   "required_status": 2,
+   "required_status": 0,
    "res": 3,
    "source": "wiki",
    "speed_mod": 3.7,
