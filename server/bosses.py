@@ -272,6 +272,16 @@ BLUEPRINTS = {
 }
 
 
+# The camp leaders carrying both gold and encrypted blueprints. Warehouse,
+# prison and valley bosses retain their own health and recovery rules.
+CAMP_BOSS_TYPES = frozenset(t for _loc, t in BLUEPRINTS)
+
+
+def is_camp_boss(loc_id, type_id):
+    """Whether this is one of the reviewed gold-and-blueprint camp spawns."""
+    return (loc_id, type_id) in BLUEPRINTS
+
+
 def blueprint_for(loc_id, type_id):
     """The fixed encrypted blueprint of this scheduled camp boss, or None.
 

@@ -1,4 +1,4 @@
-"""Temporary boss HP x1.5 and regional gold rewards for existing carriers only.
+"""Temporary camp boss HP x1.5 and regional gold rewards for existing carriers only.
 
 Owner decision, 2026-10-26. One deterministic loot check per carrier,
 no sockets, simulations or farm measurements. Existing exchange prices,
@@ -32,14 +32,16 @@ for t, info in mobs.TYPES.items():
     row = mobs.LEVELS[str(max(0, min(mobs.MAX_LEVEL, st.level)))]
     role = mobs.ROLES['boss']
     before = max(1, round(row['hp'] * role['hp_mult']))
-    if st.hp_max != round(before * 1.5):
+    expected = round(before * 1.5) if int(t) in bosses.CAMP_BOSS_TYPES else before
+    if st.hp_max != expected:
         health_errors.append(int(t))
     weapon = mobs.WEAPONS.get(st.weapon_class, mobs.WEAPONS['fist'])
     if (st.sp_max != max(0, round(row['sp'] * role['hp_mult']))
             or st.dmg_min != round(row['dmg_min'] * weapon['dmg_mult'] * role['dmg_mult'])
             or st.xp_mult != role['xp_mult']):
         other_errors.append(int(t))
-check('all boss types have one and a half their previous HP', health_errors, [])
+check('only gold-and-blueprint camp bosses have extra HP; other bosses keep base HP',
+      health_errors, [])
 check('boss SP damage and XP multipliers retain their existing rules', other_errors, [])
 
 ordinary_errors = []
@@ -53,6 +55,11 @@ check('ordinary mobs and miners keep their HP', ordinary_errors, [])
 
 # Warehouse capture is a separate rule: each clan's harm is capped at the
 # actual boss pool. Increased HP must not turn its tie fixture into a loss.
+for kind in sorted(bosses.WAREHOUSE_MASTERS):
+    st = mobs.stats(kind)
+    base = mobs.LEVELS[str(max(0, min(mobs.MAX_LEVEL, st.level)))]["hp"]
+    check('warehouse boss %d retains base HP' % kind,
+          st.hp_max, round(base * mobs.ROLES[st.role]["hp_mult"]))
 master = mobs.stats(7448)
 pool = master.hp_max + master.sp_max
 fighters = [dict(char=char, clan=clan, clan_name=str(clan), here=True,

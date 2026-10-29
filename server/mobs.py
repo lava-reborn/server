@@ -257,8 +257,11 @@ class MobStats:
         role = ROLES.get(self.role, ROLES["mob"])
         weapon = WEAPONS.get(self.weapon_class, WEAPONS["fist"])
         self.hp_max = max(1, int(round(row["hp"] * role["hp_mult"])))
-        # Temporary boss hotfix. Apply to HP only: hp_mult also scales SP.
-        self.hp_max = max(1, int(round(self.hp_max * role.get("hp_hotfix_mult", 1.0))))
+        # Only gold-and-blueprint camp bosses receive the HP hotfix.
+        # Apply to HP only: hp_mult also scales SP.
+        import bosses  # Late: the schedule looks up mob roles when used.
+        if type_id in bosses.CAMP_BOSS_TYPES:
+            self.hp_max = max(1, int(round(self.hp_max * role.get("hp_hotfix_mult", 1.0))))
         self.sp_max = max(0, int(round(row["sp"] * role["hp_mult"])))
         self.dmg_min = int(round(row["dmg_min"] * weapon["dmg_mult"] * role["dmg_mult"]))
         self.dmg_max = max(self.dmg_min,
@@ -831,7 +834,7 @@ class Mob:
         self.alive = True
         self.target = None          # a combat.Fighter, once provoked
         # Let go of a target (RoomCombat.mob_release) and not yet back home:
-        # it heals when it gets there, and not before.
+        # camp bosses retain damage and regenerate; other mobs heal there.
         self.homing = False
         self.busy_until = 0.0       # walking: the client is still animating
         self.next_attack = 0.0
@@ -919,6 +922,9 @@ class Mob:
         self.hp = self.stats.hp_max
         self.sp = self.stats.sp_max
         self.ap = self.stats.ap_max
+        import bosses
+        if self.type_id in bosses.CAMP_BOSS_TYPES:
+            self.regen_at = 0.0
         self.alive = True
         self.target = None
         self.homing = False
@@ -942,7 +948,8 @@ class Mob:
         burst or swing per ATTACK_PAUSE -> and so on, anywhere in the
         location, for as long as the target is here and alive (the owner's
         rule, see SEARCH_LIMIT above). Only the target leaving the room or
-        dying drops it; then the mob walks back and recovers at home.
+        dying drops it; then it returns home. Camp bosses retain damage
+        and regenerate; other mobs recover fully at home.
         """
         if not self.alive or self.aim is not None:
             return
