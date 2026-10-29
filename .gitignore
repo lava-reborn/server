@@ -51,6 +51,8 @@ data/map_editor_base.png
 # on the server it lives in /opt/lava-ci/client/state.
 /client/state/
 
-# Locally generated release PDFs and rendering previews.
-/output/pdf/
-/tmp/pdfs/
+# Local release reports, generated documents, previews and editor settings.
+/releases/
+/output/
+/tmp/
+/.vscode/
