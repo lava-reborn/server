@@ -40,7 +40,7 @@ for t, info in mobs.TYPES.items():
             or st.dmg_min != round(row['dmg_min'] * weapon['dmg_mult'] * role['dmg_mult'])
             or st.xp_mult != role['xp_mult']):
         other_errors.append(int(t))
-check('only gold-and-blueprint camp bosses have extra HP; other bosses keep base HP',
+check('only reviewed camp bosses have extra HP; other bosses keep base HP',
       health_errors, [])
 check('boss SP damage and XP multipliers retain their existing rules', other_errors, [])
 

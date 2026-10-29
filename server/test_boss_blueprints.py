@@ -108,8 +108,8 @@ class BossBlueprints(unittest.TestCase):
                     (86, 300, 5), (84, 299, 6), (87, 314, 7), (85, 313, 8),
                     (89, 328, 9), (88, 327, 10), (90, 361, 11), (92, 360, 12),
                     (91, 375, 13), (93, 374, 14), (99, 408, 15), (98, 407, 16),
-                    (133, 778, 17), (132, 777, 18), (274, 1038, 19), (263, 1037, 20)]
-        self.assertEqual(len(bosses.BLUEPRINTS), 20)
+                    (133, 778, 17)]
+        self.assertEqual(len(bosses.BLUEPRINTS), 17)
         for loc, mob, level in expected:
             item = bosses.BLUEPRINTS[(loc, mob)]
             self.assertEqual(items.catalogue()[item][1], 'codified_bp_%d' % level)
@@ -136,6 +136,23 @@ class BossBlueprints(unittest.TestCase):
                 self.assertTrue(items.catalogue()[reward['obj']][1].endswith(
                     'lvl%d' % r['craft']['level']))
         self.assertFalse(quests.check_items())
+
+    def test_high_level_bosses_cannot_drop_blueprints_from_any_source(self):
+        for loc, mob, blueprint in ((132, 777, 1270), (274, 1038, 2417),
+                                    (263, 1037, 2418)):
+            self.assertIsNone(bosses.blueprint_for(loc, mob))
+            self.assertTrue(bosses.is_camp_boss(loc, mob))
+            st = mobs.stats(mob)
+            self.assertIn(items.catalogue()[blueprint][1],
+                          ('codified_bp_18', 'codified_bp_19', 'codified_bp_20'))
+            for player_level in (1, 17, 18, 19, 20, 100):
+                for wanted in ((), {blueprint}):
+                    with self.subTest(boss=mob, player=player_level, wanted=wanted), \
+                            patch.object(mobs, 'carried', return_value=[(blueprint, 1)]), \
+                            patch.object(mobs, 'roll_table', return_value=[(blueprint, 1), (7620, 4)]), \
+                            patch.object(mobs, 'quest_table', return_value=[(blueprint, 1.0)]):
+                        self.assertEqual(mobs.loot_for(st, FixedRandom(0), wanted,
+                            loc_id=loc, killer_level=player_level), [(7620, 4)])
 
     def test_chance_and_finisher_level_boundaries_without_quests(self):
         for (loc, mob), item in bosses.BLUEPRINTS.items():

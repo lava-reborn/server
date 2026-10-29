@@ -267,19 +267,24 @@ BLUEPRINTS = {
     (90, 361): 2413, (92, 360): 1136,       # flayers: 11, 12
     (91, 375): 2414, (93, 374): 1137,       # DSR: 13, 14
     (99, 408): 2415, (98, 407): 1138,       # Peacekeepers: 15, 16
-    (133, 778): 2416, (132, 777): 1270,     # pirates: 17, 18
-    (274, 1038): 2417, (263, 1037): 2418,   # Alliance base: 19, 20
+    (133, 778): 2416,                       # pirates: 17
 }
 
 
-# The camp leaders carrying both gold and encrypted blueprints. Warehouse,
-# prison and valley bosses retain their own health and recovery rules.
-CAMP_BOSS_TYPES = frozenset(t for _loc, t in BLUEPRINTS)
+# Camp health and recovery are independent of blueprint availability.
+# Levels 18-20 keep camp rules even though they no longer drop blueprints.
+CAMP_BOSSES = frozenset({
+    (82, 269), (80, 270), (83, 284), (81, 283), (86, 300), (84, 299),
+    (87, 314), (85, 313), (89, 328), (88, 327), (90, 361), (92, 360),
+    (91, 375), (93, 374), (99, 408), (98, 407), (133, 778), (132, 777),
+    (274, 1038), (263, 1037),
+})
+CAMP_BOSS_TYPES = frozenset(t for _loc, t in CAMP_BOSSES)
 
 
 def is_camp_boss(loc_id, type_id):
-    """Whether this is one of the reviewed gold-and-blueprint camp spawns."""
-    return (loc_id, type_id) in BLUEPRINTS
+    """Whether this is one of the reviewed camp spawns with camp recovery."""
+    return (loc_id, type_id) in CAMP_BOSSES
 
 
 def blueprint_for(loc_id, type_id):

@@ -23,9 +23,10 @@ class BossRecovery(unittest.TestCase):
         mob.regen_at = 160.0
         return rc, mob, frames
 
-    def test_scope_is_exactly_the_twenty_gold_and_blueprint_camp_bosses(self):
-        self.assertEqual(len(bosses.BLUEPRINTS), 20)
-        for (loc_id, type_id) in bosses.BLUEPRINTS:
+    def test_scope_is_exactly_the_twenty_camp_bosses(self):
+        self.assertEqual(len(bosses.CAMP_BOSSES), 20)
+        self.assertTrue(set(bosses.BLUEPRINTS) < bosses.CAMP_BOSSES)
+        for (loc_id, type_id) in bosses.CAMP_BOSSES:
             with self.subTest(location=loc_id, boss=type_id):
                 self.assertTrue(bosses.is_camp_boss(loc_id, type_id))
                 self.assertTrue(any(t in combat.items.GOLD_INGOTS
@@ -33,6 +34,17 @@ class BossRecovery(unittest.TestCase):
         for loc_id, type_id in ((111, 7448), (646, 2173), (186, 2103),
                                 (168, 8620), (168, 1037), (82, 82)):
             self.assertFalse(bosses.is_camp_boss(loc_id, type_id))
+
+    def test_bosses_without_high_level_blueprints_keep_camp_recovery(self):
+        for loc, kind in ((132, 777), (274, 1038), (263, 1037)):
+            with self.subTest(boss=kind):
+                rc, mob, frames = self.fixture(kind, loc)
+                self.assertIsNone(bosses.blueprint_for(loc, kind))
+                rc.mob_recover(mob)
+                self.assertEqual((mob.hp, mob.sp), (100, 200))
+                gain = 50 + 15 * (mob.level - 1)
+                rc.regen_mob(mob, 160)
+                self.assertEqual((mob.hp, mob.sp), (100 + gain, 200 + gain))
 
     def test_return_home_keeps_camp_boss_damage_and_capture_credit(self):
         rc, mob, frames = self.fixture()
