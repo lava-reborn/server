@@ -38,6 +38,8 @@
 - dist/
 - logs/
 - recon/
+# Release reports stay in Git; the production gate does not accept this directory.
+- /releases/
 # Portable tester kit tooling stays in Git, not in the production deployment.
 - /tools/*tester*.py
 # Local checks are developer tooling, not runtime/build dependencies.
