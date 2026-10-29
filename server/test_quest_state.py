@@ -63,6 +63,17 @@ class QuestStateTests(unittest.TestCase):
         self.assertEqual(state.loans, {19: self.day + 1})
         self.assertIsNone(state.first_done([]))
 
+    def test_first_event_uses_time_before_id_and_scopes_other_characters(self):
+        self.history([(1, 10, self.day + 10), (1, 11, self.day - 20),
+                      (1, 10, self.day - 20), (2, 10, self.day - 100)])
+        state = quest_state.QuestState(self.store.db, 1, self.day, {10, 11})
+        self.assertEqual(state.first_done([10, 11]), 11)
+        self.assertEqual(state.history[10][0], self.day - 20)
+        self.assertEqual(state.last(10), self.day + 10)
+        self.assertEqual(state.today(10), 1)
+        empty = quest_state.QuestState(self.store.db, 1, self.day, set())
+        self.assertEqual(empty.history, {})
+
     def test_one_query_for_status_burst(self):
         seen = []
         original = self.store.db.execute

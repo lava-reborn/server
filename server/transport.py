@@ -75,6 +75,28 @@ def _lay_original():
 
 
 _lay_original()
+
+# Preserve the original vehicle table and text archive; these are alternative
+# rental offers, with the same physical vehicle, speed and verified image.
+STATUS_RENTALS = {int(k): v for k, v in _DATA["status_rentals"].items()}
+for _offer, _option in STATUS_RENTALS.items():
+    _base = TABLE[int(_option["base_type"])]
+    _status = int(_option["required_status"])
+    _label = "по прописке" if _status == 1 else "по ВНЖ"
+    _requirement = "действующая прописка или ВНЖ" if _status == 1 else "действующий ВНЖ"
+    if _offer in TABLE:
+        raise ValueError("status rental offer overwrites a vehicle type")
+    TABLE[_offer] = dict(_base, type=_offer, base_type=int(_option["base_type"]),
+                         name=_base["name"] + " (" + _label + ")",
+                         desc=(_base.get("desc") or "") + "<br>Аренда за афро; требуется "
+                              + _requirement + ". Срок ограничен сроком статуса;"
+                              " допускается выход за него менее чем на сутки.",
+                         premium=0, required_status=_status,
+                         cost=int(_option["cost"]), g_cost=0)
+for _type in (4, 5):
+    TABLE[_type]["desc"] = (TABLE[_type].get("desc") or "") + (
+        "<br>Аренда за голд. Прописка и ВНЖ не требуются.")
+
 LESSORS = {int(k): [int(t) for t in v] for k, v in _DATA["lessors"].items()}
 DEFAULT_SET = [int(t) for t in _DATA["default_lessor"]]
 
@@ -105,7 +127,12 @@ def offered_by(npc_type_id):
     lessor keeps the stock yard, which is the set mobs.xml itself gives each
     clan base: donkey, camel, motorcycle, UAZ, Hummer, buggy, airship.
     """
-    return list(LESSORS.get(int(npc_type_id), DEFAULT_SET))
+    out = []
+    for vehicle in LESSORS.get(int(npc_type_id), DEFAULT_SET):
+        out.append(vehicle)
+        out.extend(offer for offer, option in STATUS_RENTALS.items()
+                   if int(option["base_type"]) == vehicle)
+    return out
 
 
 def strings():
@@ -126,7 +153,7 @@ def si_frame(type_id):
     empty desc meaning "no description" (descStrID stays null). `type` is
     what TransportFactory.initializeItem looks the pending object up by, and
     `res` is the icon: ItemContainer builds transport/<res>.swf from it, not
-    from the type, so the two have to agree.
+    from the type. Vehicle IDs are persistent; the art has its own numbering.
     """
     type_id = int(type_id)
     rec = get(type_id)
@@ -140,8 +167,8 @@ def si_frame(type_id):
         aggro_mod=float(rec["aggro_mod"]),
         g_cost=int(rec["g_cost"]),
         cost=int(rec["cost"]),
-        res=type_id,
-        premium=int(rec["premium"]),
+        res=int(rec["res"]),
+        premium=max(int(rec["premium"]), int(rec.get("required_status",0))),
         name=NAME_ID_OFFSET + type_id,
         desc=DESC_ID_OFFSET + type_id if rec.get("desc") else "")
 
@@ -193,6 +220,15 @@ def hours_left(until, now=None):
     return int(left // 3600) + (1 if left % 3600 else 0)
 
 
-def until_after(days, now=None):
-    """The epoch second a rental of this many days ends at."""
-    return int((time.time() if now is None else now) + int(days) * 86400)
+def vehicle_type(type_id):
+    """Physical vehicle of an offer; payment currency does not replace a ride."""
+    rec = get(type_id) if type_id is not None else None
+    return int(rec.get("base_type", type_id)) if rec else type_id
+
+
+def until_after(days, now=None, *, current=None, type_id=None):
+    """Same vehicle extends the paid deadline; another replaces it from now."""
+    base = time.time() if now is None else now
+    if current and vehicle_type(current[0]) == vehicle_type(type_id) and current[1] > base:
+        base = current[1]
+    return int(base + int(days)*86400)

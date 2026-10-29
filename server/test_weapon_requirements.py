@@ -60,16 +60,23 @@ for t, level in machineguns:
     character.skill[progression.SHOOTING][0] = level
     for spec in character.spec:
         spec[0] = 5
-    for trained, allowed in ((level - 17, False), (level - 16, True)):
+    required = level - 16
+    for trained, allowed in ((required - 1, False), (required, True)):
         character.spec[6][0] = trained
         if inventory.wearable(row(t), character.level, character) != allowed:
             wrong.append((t, level, trained, allowed))
 check('every level-16..20 machine gun and modification enforces the exact spec boundary', wrong, [])
+for t, level in machineguns:
+    p = items.params_of(t)
+    offset = (p['need_specs_m'] & ((1 << 6) - 1)).bit_count()
+    check('machine-gun %d sends the same requirement as its gate' % t,
+          p['need_specs'][offset], level - 16)
+
 check('machine-gun coverage includes all five item levels in both A and G',
       {(level, bool(items.params_of(t).get('g_cost'))) for t, level in machineguns},
       {(level, gold) for level in range(16, 21) for gold in (False, True)})
 
-check("high shooting does not replace melee", inventory.wearable(row(6231), ch.level, ch), False)
+check("low melee no longer blocks a knife without spec requirements", inventory.wearable(row(6231), ch.level, ch), True)
 ch.skill[progression.MELEE][0] = 2
 check("homemade knife works at melee two without a declared spec", inventory.wearable(row(6231), ch.level, ch), True)
 ch.skill[progression.MELEE][0] = 6
@@ -82,7 +89,7 @@ for t in (6240, 6241, 6242, 6243, 6244):
     check("Tesak %d accepts the exact boundary" % t, inventory.wearable(row(t), ch.level, ch), True)
 ch.skill[progression.MELEE][0] = 20
 ch.skill[progression.SHOOTING][0] = 0
-check("high melee does not replace shooting", inventory.wearable(row(25566), ch.level, ch), False)
+check("low shooting no longer blocks an unrestricted firearm", inventory.wearable(row(25566), ch.level, ch), True)
 ch.skill[progression.SHOOTING][0] = 1
 check("firearm accepts exact shooting boundary", inventory.wearable(row(25566), ch.level, ch), True)
 
@@ -106,7 +113,7 @@ def equip():
     inv.ss_move(dict(obj=inventory.oid_of(store.item(r["uniq"])),
                      **{"from": inventory.BAG, "to": inventory.PRIMARY}))
     return [p["res"] for cmd, p in frames if cmd == "cmdAck"]
-check("wire move rejects wrong skill", equip(), [inventory.RES_LEVEL])
+check("wire move still rejects the missing blade specialisation", equip(), [inventory.RES_LEVEL])
 ch.skill[progression.MELEE][0] = 6
 check("wire move rejects missing spec", equip(), [inventory.RES_LEVEL])
 ch.spec[1][0] = 1
@@ -135,7 +142,10 @@ check("subsequent equip is rejected by requirements rather than a stale slot",
 
 # Already queued attacks cannot bypass a reset. Any damage/payment call would
 # fail this small stand-in, which deliberately exposes neither operation.
-for t, callback in ((6241, "strike"), (25566, "fire")):
+guarded_firearm = next(t for t, (root, _) in items.catalogue().items()
+                       if root == items.FIRE_ARM and inventory.item_level(t) <= 17
+                       and items.params_of(t).get("need_specs_m"))
+for t, callback in ((6241, "strike"), (guarded_firearm, "fire")):
     bad = row(t)
     ch = progression.Character()
     events = []

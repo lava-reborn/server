@@ -309,39 +309,35 @@ try:
                 if not any(lo <= level <= hi for lo, hi in camp_of.get(m, ())):
                     stray.append((r["type"], o["obj"], m))
     check("every drop a row declares is off a creature of a camp whose band holds the"
-          " thing's level: stat blueprints off the chiefs, the encrypted off the camp",
+          " thing's level: stat blueprints off the chiefs",
           (stray, sorted({mobs.stats(m).role for r in ups for o in r["objs"]
                           for m in o.get("mobs", [])}),
            sorted({round(o["drop"], 2) for r in ROWS for o in r.get("objs", [])
-                   if o.get("drop")})), ([], ["boss"], [0.02, 0.1]))
+                   if o.get("drop")})), ([], ["boss"], [0.1]))
     level_of_bp = {r["craft"]["blueprint"]: r["craft"].get("blueprint_level", r["craft"]["level"]) for r in ups}
     level_of_bp.update({r["objs"][0]["obj"]: r["craft"]["level"] for r in family("decode")})
     check("  ..a camp of 0-2 drops nothing above the 2nd level, a camp of 7-8 nothing below"
           " the 7th",
           (sorted({level_of_bp[t] for t, _c in quests.quest_drops(270) if t in level_of_bp}),
            sorted({level_of_bp[t] for t, _c in quests.quest_drops(305) if t in level_of_bp})),
-          ([1, 2], [7, 8]))
+          ([1, 2], []))
     # One a corpse: a player may hold every recipe of a chief's level open
     # (services: no journal limit of 25), and the corpse still rolls once.
     rng = random.Random(3)
     rolls = {}
     for m, group, (lo, hi) in ((269, "craft_blueprint", (0.07, 0.13)),
-                               (313, "craft_blueprint", (0.07, 0.13)),
-                               (269, "craft_codified", (0.01, 0.03)),
-                               (305, "craft_codified", (0.01, 0.03))):
+                               (313, "craft_blueprint", (0.07, 0.13))):
         wanted = {o["obj"] for r in ROWS for o in r.get("objs", [])
                   if m in o.get("mobs", ()) and o.get("one_of") == group}
         got = [len([t for t, _n in mobs.quest_roll(m, wanted, rng) if t in wanted])
                for _k in range(4000)]
         rolls[(m, group)] = (len(wanted), max(got), lo < sum(got) / 4000.0 < hi)
     check("  ..every drop slot one of a group, so a corpse gives one of each group at most"
-          " whatever rows are open: a stat blueprint off a chief about one in ten, an"
-          " encrypted one off anybody of the camp one in fifty",
+          " whatever rows are open: a stat blueprint off a chief about one in ten",
           (sorted({o.get("one_of") for r in ROWS for o in r.get("objs", []) if o.get("drop")}),
            rolls),
-          (["craft_blueprint", "craft_codified"],
-           {(269, "craft_blueprint"): (15, 1, True), (313, "craft_blueprint"): (14, 1, True),
-            (269, "craft_codified"): (2, 1, True), (305, "craft_codified"): (2, 1, True)}))
+          (["craft_blueprint"],
+           {(269, "craft_blueprint"): (15, 1, True), (313, "craft_blueprint"): (14, 1, True)}))
 
     # The stalls.
     by_class = {}
@@ -760,9 +756,11 @@ try:
     # --- the upgrader's window at Жозеф де Гобино -------------------------------------------
     here = goto(c, OASIS)
     eid, kind, info = here[JOSEPH]
-    check("Жозеф де Гобино (62): an upgrader whose window lists the Маузер's twelve",
-          (kind, info.get("in_types", [])[:1], len(info.get("out_types", [])), set(info.get("costs", []))),
-          ("userInfo_Upgrader", [MAUSER_Q], 12, {0}))
+    check("Жозеф: the Mauser's twelve weapon recipes remain alongside fifty G-set upgrades",
+          (kind, info.get("in_types", [])[:12], info.get("out_types", [])[:12],
+           info.get("costs", [])[:12], len(info.get("out_types", []))),
+          ("userInfo_Upgrader", [MAUSER_Q] * 12,
+           craft.upgrader_lists(JOSEPH)["out_types"], [0] * 12, 62))
     gun = give(c, MAUSER_Q)[0]
     c.send("ss_create;s_type=5;target=%d;" % eid)
     check("  ..the window opens", acks(c.frames()), [0])

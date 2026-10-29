@@ -48,11 +48,11 @@ SESSION_UPGRADE = 5                 # StuffManager.SESSION_UPGRADE
 UPD_CLOSE, UPD_UPGRADE = 0, 1       # Upgrade.close / Upgrade._upgradeItem
 
 
-def lists(npc_type):
+def lists(npc_type, loc_id=None):
     """userInfo_Upgrader's in_types, out_types and costs for this NPC: its
     weapon recipes (craft.py), then its set rungs (setcraft.py), in step."""
     out = dict(in_types=[], out_types=[], costs=[])
-    for part in (craft.upgrader_lists(npc_type), setcraft.window(npc_type)):
+    for part in (craft.upgrader_lists(npc_type), setcraft.window(npc_type, loc_id)):
         for key in out:
             out[key] += part[key]
     return out
@@ -88,7 +88,7 @@ class Window:
         except (TypeError, ValueError):
             target = 0
         entry = sess.room.npc(target) if sess.room is not None else None
-        if not entry or entry.root != world.UPGRADER:
+        if not entry or world.entity_root(entry.type_id, entry.root) != world.UPGRADER:
             sess.inv.ack(inventory.RES_NOT_FOUND)
             return
         if not sess.char_id:
@@ -144,12 +144,21 @@ class Window:
         if service_of(row) is craft:
             sess.quest_write(self.upgrade_weapon, p)
             return True
+        sess.quest_write(self.upgrade_set, p)
+        return True
+
+    def upgrade_set(self, p):
+        """Validate again under the character lock; publish only after commit."""
+        sess = self.sess
+        row = sess.inv.find(p.get("obj"))
+        if row is None:
+            sess.inv.ack(inventory.RES_NOT_FOUND)
+            return
         try:
             out = int(p.get("param", 0) or 0)
         except (TypeError, ValueError):
             out = 0
-        service_of(row).upgrade(sess, self.master(), row, out)
-        return True
+        setcraft.upgrade(sess, self.master(), row, out)
 
     def upgrade_weapon(self, p):
         """Re-read the item under the character's transaction lock."""

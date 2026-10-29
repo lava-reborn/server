@@ -257,8 +257,11 @@ class MobStats:
         role = ROLES.get(self.role, ROLES["mob"])
         weapon = WEAPONS.get(self.weapon_class, WEAPONS["fist"])
         self.hp_max = max(1, int(round(row["hp"] * role["hp_mult"])))
-        # Temporary boss hotfix. Apply to HP only: hp_mult also scales SP.
-        self.hp_max = max(1, int(round(self.hp_max * role.get("hp_hotfix_mult", 1.0))))
+        # Only gold-and-blueprint camp bosses receive the HP hotfix.
+        # Apply to HP only: hp_mult also scales SP.
+        import bosses  # Late: the schedule looks up mob roles when used.
+        if type_id in bosses.CAMP_BOSS_TYPES:
+            self.hp_max = max(1, int(round(self.hp_max * role.get("hp_hotfix_mult", 1.0))))
         self.sp_max = max(0, int(round(row["sp"] * role["hp_mult"])))
         self.dmg_min = int(round(row["dmg_min"] * weapon["dmg_mult"] * role["dmg_mult"]))
         self.dmg_max = max(self.dmg_min,
@@ -457,7 +460,8 @@ def droppable(type_id):
     sold would be litter the player cannot even get rid of (the blueprints
     in the table have no price: the upgrader they are for does not exist)."""
     si = items.params_of(type_id)
-    return bool(si) and not items.out_of_game(type_id) and not si.get("quest") \
+    return bool(si) and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id) \
+        and not si.get("quest") \
         and si.get("cost", 0) > 0
 
 
@@ -653,7 +657,8 @@ def one_of_droppable(type_id):
     thing priced in gold alone is welcome: the gold belts are worn, not
     litter, though no trader pays afro for them."""
     si = items.params_of(type_id)
-    return bool(si) and not items.out_of_game(type_id) and not si.get("quest")
+    return bool(si) and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id) \
+        and not si.get("quest")
 
 
 def one_of_groups(type_id):
@@ -681,7 +686,8 @@ def quest_droppable(type_id):
     and not one out of the game (items.out_of_game). Price and the quest
     flag do not count here (QUEST_TIER): the thing belongs to the quest
     that asks for it."""
-    return bool(items.params_of(type_id)) and not items.out_of_game(type_id)
+    return bool(items.params_of(type_id)) and not items.out_of_game(type_id) \
+        and not items.acquisition_blocked(type_id)
 
 
 def quest_table(type_id):
@@ -761,11 +767,16 @@ def loot_for(st, rng, wanted=(), *, loc_id=None, killer_level=None):
     whatever a list says."""
     import bosses                  # late: keep module initialization separate
     blueprint = bosses.blueprint_for(loc_id, st.type_id)
-    excluded = ("craft_codified",) if blueprint is not None else ()
     out = carried(st, rng) + roll_table(st.type_id, rng) + \
-        quest_roll(st.type_id, wanted, rng, excluded_groups=excluded)
+        quest_roll(st.type_id, wanted, rng)
+    # Encrypted blueprints have exactly one acquisition roll per corpse,
+    # from the explicit scheduled-boss table below. Legacy quest rows or
+    # an ordinary loot entry cannot supply an additional source.
+    catalogue = items.catalogue()
+    out = [(t, n) for t, n in out
+           if not catalogue.get(t, (None, ""))[1].startswith("codified_bp_")]
     if blueprint is not None and killer_level is not None:
-        # Compare with the dropped blueprint, not the boss's combat level.
+        # Levels are accepted for compatibility; the chance is fixed at 10%.
         blueprint_level = int(items.catalogue()[blueprint][1].rsplit("_", 1)[1])
         chance = bosses.blueprint_drop_chance(killer_level, blueprint_level)
         if rng.random() < chance:
@@ -823,7 +834,7 @@ class Mob:
         self.alive = True
         self.target = None          # a combat.Fighter, once provoked
         # Let go of a target (RoomCombat.mob_release) and not yet back home:
-        # it heals when it gets there, and not before.
+        # camp bosses retain damage and regenerate; other mobs heal there.
         self.homing = False
         self.busy_until = 0.0       # walking: the client is still animating
         self.next_attack = 0.0
@@ -911,6 +922,9 @@ class Mob:
         self.hp = self.stats.hp_max
         self.sp = self.stats.sp_max
         self.ap = self.stats.ap_max
+        import bosses
+        if self.type_id in bosses.CAMP_BOSS_TYPES:
+            self.regen_at = 0.0
         self.alive = True
         self.target = None
         self.homing = False
@@ -934,7 +948,8 @@ class Mob:
         burst or swing per ATTACK_PAUSE -> and so on, anywhere in the
         location, for as long as the target is here and alive (the owner's
         rule, see SEARCH_LIMIT above). Only the target leaving the room or
-        dying drops it; then the mob walks back and recovers at home.
+        dying drops it; then it returns home. Camp bosses retain damage
+        and regenerate; other mobs recover fully at home.
         """
         if not self.alive or self.aim is not None:
             return

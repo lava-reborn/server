@@ -391,7 +391,7 @@ try:
           ([(622, 159), (646, 176), (651, 177)], [(159, 618)], [(159, 619)], [(DN_STATION, 159)],
            [(159, DN_STATION)]))
     w = sched.window("prison_dn")
-    check("  ..the uprising at the label's 12:00, 16:00 and 23:00 for half an hour, the gates"
+    check("  ..the uprising at the label's 13:00, 17:00 and 21:00 for half an hour, the gates"
           " from a quarter before, the medics for the last five minutes",
           (w.why.startswith("RECOVERED"), sorted(raw_w for raw_w in
                                                   json.load(open(events.schedule_path(),
@@ -401,7 +401,7 @@ try:
            ["daily"],
            [(sched.gates[t][0].name, sched.gates[t][1]) for t in (632, 634, 635, 636)]),
           (True, ["prison_dn", "prison_dn_gates", "prison_dn_medics"],
-           ["12:00", "16:00", "23:00"],
+           ["13:00", "17:00", "21:00"],
            [("prison_dn_gates", "both")] * 3 + [("prison_dn_gates", "hand_in")]))
     check("  ..the prisoners and the godfather drop the armband in 620-622, one each, and the"
           " one keep_in row of 2476 holds both prisons' blocks (since 2026-10-14 Абу-Хамед's"

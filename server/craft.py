@@ -420,7 +420,8 @@ def recipes_of(npc_type):
     out = []
     for t, rec in rows().items():
         q = quests.get(t)
-        if rec.get("family") == "upgrade" and q is not None and int(npc_type) in q.give:
+        if rec.get("family") == "upgrade" and q is not None and int(npc_type) in q.give \
+                and not quests.acquisition_blocked(q):
             out.append((q, int(rec["gun"]), int(rec["mod"]), int(rec["blueprint"])))
     return out
 

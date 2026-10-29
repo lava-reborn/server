@@ -30,18 +30,18 @@ from avm_test import execute
 
 class ReleaseSets(unittest.TestCase):
     def test_armour_stocks_fit_client_and_keep_complete_pairs(self):
-        # Two families now share level 18. Keep each A/G pair together and
-        # all six complete pairs available, without overflowing a 64-cell shop.
+        # The temporary release ceiling leaves the level-16 and level-17
+        # complete A/G pairs; higher sets remain in the catalogue only.
         pieces = set(sets.ITEMS)
         marat = items.stock_for(1219, 126)
         self.assertEqual(len(marat), 10)
         self.assertFalse(pieces.intersection(marat))
         expected = {t for t, ware in shop_bands.wares().items()
-                    if ware[0] == 'sets' and 16 <= ware[1] <= 20}
+                    if ware[0] == 'sets' and 16 <= ware[1] <= 17}
         for trader, loc in ((1223, 126), (5161, 467)):
             stock = items.stock_for(trader, loc)
             self.assertEqual(set(stock), expected)
-            self.assertEqual(len(stock), 60)
+            self.assertEqual(len(stock), 20)
             self.assertLessEqual(len(stock), 64)
             for start in range(0, len(stock), 10):
                 a, g = stock[start:start + 5], stock[start + 5:start + 10]
@@ -56,7 +56,7 @@ class ReleaseSets(unittest.TestCase):
         with patch.dict(gold, name='AAA renamed gold set'):
             self.assertEqual(shop_bands.goods(('sets',), 16, 20), before)
 
-    def test_declared_levels_use_highest_base_skill(self):
+    def test_declared_levels_remain_without_equipment_level_gate(self):
         for sid, level in ((11002, 17), (11004, 17), (11125, 18), (60005, 18),
                            (10961, 16), (10965, 16)):
             for t in sets.SETS[sid]['members'].values():
@@ -74,7 +74,7 @@ class ReleaseSets(unittest.TestCase):
                         self.assertLessEqual(value, ch.attr(i), (sid, t, i))
                     ch.skill[best][0] = level - 1
                     ch.bonus_skills[best] = 5
-                    self.assertFalse(inventory.wearable(row, ch.level, ch))
+                    self.assertTrue(inventory.wearable(row, ch.level, ch))
 
     def test_red_echo_has_no_shooting_bonus(self):
         for sid in (10961, 10965):
@@ -87,10 +87,10 @@ class ReleaseSets(unittest.TestCase):
         set_release_rules.apply(doc['sets'])
         self.assertEqual(json.dumps(doc, sort_keys=True), before)
 
-    def test_client_armour_warning_uses_best_skill(self):
+    def test_client_armour_has_no_level_warning(self):
         target = dict(currDDOperation=dict(fromItem=dict(rootID=items.WEAR)),
                       __armorSkillsOrig=lambda a, titles: 'weapon requirements')
-        for level, allowed in ((16, False), (17, True), (18, True)):
+        for level, allowed in ((0, True), (16, True), (17, True), (18, True)):
             env = dict(this=target, arr=[None, 17], titleArr=[],
                        lol=dict(core=dict(Master=dict(getInstance=lambda:
                            dict(gamer=dict(attributes=dict(skillArray=[
@@ -98,9 +98,27 @@ class ReleaseSets(unittest.TestCase):
                                dict(value=16, level=18)])))))))
             result = execute(widescreen.fn_armor_skills().assemble(), env)
             self.assertEqual(result == '', allowed)
-        target['currDDOperation']['fromItem']['rootID'] = items.FIRE_ARM
+        target['currDDOperation']['fromItem']['rootID'] = items.HEAL
         self.assertEqual(execute(widescreen.fn_armor_skills().assemble(), env),
                          'weapon requirements')
+
+    def test_weapon_warning_uses_base_combat_skill_and_preserves_noncombat_warnings(self):
+        skills=[dict(value=0,level=100),dict(value=16,level=100),dict(value=0,level=5)]
+        target=dict(currDDOperation=dict(fromItem=dict(rootID=items.FIRE_ARM)),
+                    __armorSkillsOrig=lambda a,t: 'unchanged')
+        attributes=dict(skillArray=skills)
+        master=dict(getInstance=lambda: dict(gamer=dict(attributes=attributes)))
+        env=dict(this=target,arr=[None,17,3],titleArr=['Melee','Shooting','Medicine'],
+                 lol=dict(core=dict(Master=master)))
+        code=widescreen.fn_armor_skills().assemble()
+        self.assertEqual(execute(code,env),'<b>Shooting не ниже 17</b>\r')
+        skills[1]['value']=17
+        self.assertEqual(execute(code,env),'')
+        target['currDDOperation']['fromItem']['rootID']=items.COLD_ARM
+        env['arr']=[6]
+        self.assertEqual(execute(code,env),'<b>Melee не ниже 6</b>\r')
+        target['currDDOperation']['fromItem']['rootID']=items.WEAR
+        self.assertEqual(execute(code,env),'')
 
     def test_combat_xp_ignores_gear_skill_bonus(self):
         for skill in (progression.MELEE, progression.SHOOTING):

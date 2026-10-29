@@ -176,7 +176,7 @@ check("every per_day quest says «не чаще N раз в сутки» in its 
        not in q.texts[quests.START]], [])
 check("  ..and a one-off or a plain repeatable one does not",
       [q.type for q in quests.QUESTS.values() if not q.per_day
-       and "в сутки" in q.texts[quests.START]], [])
+       and "не чаще " in q.texts[quests.START]], [])
 check("  ..declined: 1 раза, 3 раз, 11 раз, 21 раза",
       [quests.per_day_times(n) for n in (1, 3, 11, 21)],
       ["1 раза", "3 раз", "11 раз", "21 раза"])

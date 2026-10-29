@@ -1,10 +1,10 @@
 {
- "_": "Timed windows and what they open and close, read by server/events.py (its docstring has the format): windows (daily times, windows laid over another's openings, calendar dates), spawns (the creatures of a location's own file that stand only while a window is open), held_out (of a file's own, never), quests (rows on offer only while a window is open), loot (a thing creatures carry in certain places), keep_in (things that exist in certain places only). The clock is the bosses' (server/bosses.py: Moscow time, LAVA_BOSS_CLOCK for a test), and nothing here is remembered: a server restarted in a window is in it. The bosses keep the owner's 14/18/22, the warehouse masters once a day at 20:00 (bosses.py); the rest keeps the times the map labels and the texts give. Every row says whether it is RECOVERED or DESIGNED.",
+ "_": "Timed windows and what they open and close, read by server/events.py (its docstring has the format): windows (daily times, windows laid over another's openings, calendar dates), spawns (the creatures of a location's own file that stand only while a window is open), held_out (of a file's own, never), quests (rows on offer only while a window is open), loot (a thing creatures carry in certain places), keep_in (things that exist in certain places only). The clock is the bosses' (server/bosses.py: Moscow time, LAVA_BOSS_CLOCK for a test), and nothing here is remembered: a server restarted in a window is in it. World bosses spawn every two hours at even Moscow hours, the warehouse masters once a day at 20:00 (bosses.py); the rest keeps the times the map labels and the texts give. Every row says whether it is RECOVERED or DESIGNED.",
  "windows": {
   "prison_wh": {
-   "daily": ["12:00", "16:00", "23:00"],
+   "daily": ["13:00", "17:00", "21:00"],
    "minutes": 30,
-   "why": "RECOVERED. The uprising in Вади-Хальфа's prison (m8, the blocks 644-648 under the yard 176, 5985,1744): the yard's map label «Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml; the wiki's «Тюрьма Вади-Хальфы» the same), and the guard's call 62258: «каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа», its hint «\"Охранять\" заключенных нужно в течение 30 минут» (62272). The prisoners and the godfather stand while it is open. Not the bosses' 14/18/22: the owner's rule is for world bosses and camp chiefs, and the prison keeps the times its label gives."
+   "why": "RECOVERED. The uprising in Вади-Хальфа's prison (m8, the blocks 644-648 under the yard 176, 5985,1744): the yard's map label «Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml; the wiki's «Тюрьма Вади-Хальфы» the same), and the guard's call 62258: «каждый день в 12:00, 16:00 и 23:00 заключенным требуется усиленная охрана, длится это безобразие недолго, всего пол часа», its hint «\"Охранять\" заключенных нужно в течение 30 минут» (62272). The prisoners and the godfather stand while it is open. Not the bosses' 14/18/22: the owner's rule is for world bosses and camp chiefs, and the prison keeps the times its label gives. Owner update 2026-10-27: start at 13:00, 17:00, 21:00 Moscow time to avoid even-hour world boss starts; duration and relative gates/medic offsets unchanged."
   },
   "prison_wh_gates": {
    "of": "prison_wh",
@@ -19,9 +19,9 @@
    "why": "RECOVERED. The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 646), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
   },
   "prison_dn": {
-   "daily": ["12:00", "16:00", "23:00"],
+   "daily": ["13:00", "17:00", "21:00"],
    "minutes": 30,
-   "why": "RECOVERED (the owner's «и потом сделай донголу тоже», 2026-10-13). The uprising in Донгола's prison (m11, the blocks 618-622 under the yard 159, 5903,1996): the yard's map label «Тюрьма Донголы: Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml), the guard's call 62258 («каждый день в 12:00, 16:00 и 23:00 ... всего пол часа») and its hint «\"Охранять\" заключенных нужно в течение 30 минут», as Вади-Хальфа's prison_wh, at the same hours."
+   "why": "RECOVERED (the owner's «и потом сделай донголу тоже», 2026-10-13). The uprising in Донгола's prison (m11, the blocks 618-622 under the yard 159, 5903,1996): the yard's map label «Тюрьма Донголы: Усиление режима в 12:00, 16:00 и 23:00» (res/database/locations.xml), the guard's call 62258 («каждый день в 12:00, 16:00 и 23:00 ... всего пол часа») and its hint «\"Охранять\" заключенных нужно в течение 30 минут», as Вади-Хальфа's prison_wh, at the same hours. Owner update 2026-10-27: start at 13:00, 17:00, 21:00 Moscow time to avoid even-hour world boss starts; duration and relative gates/medic offsets unchanged."
   },
   "prison_dn_gates": {
    "of": "prison_dn",
@@ -36,9 +36,9 @@
    "why": "RECOVERED, as prison_wh_medics (the owner's «и потом сделай донголу тоже», 2026-10-13). The medics who pay for the armbands, Джеф, Аль-Назир and Томпсон (877-879, the centre block 622), come for the last five minutes: «Сдать задание можно медикам, они появятся за 5 минут до завершения турнира» (62272, 62273)."
   },
   "prison_ah": {
-   "daily": ["12:00", "16:00", "23:00"],
+   "daily": ["13:00", "17:00", "21:00"],
    "minutes": 30,
-   "why": "RECOVERED (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The uprising in Абу-Хамед's prison (m19, the blocks 649-653 under the yard 177, 6193,1966): the yard's map label «Тюрьма Абу-Хамеда:<br>Усиление режима в 12:00, 16:00 и 23:00» (L154, res/database/locations.xml), the guard's call 62258 («каждый день в 12:00, 16:00 и 23:00 ... всего пол часа») and its hint «\"Охранять\" заключенных нужно в течение 30 минут», as Вади-Хальфа's prison_wh and Донгола's prison_dn, at the same hours."
+   "why": "RECOVERED (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14). The uprising in Абу-Хамед's prison (m19, the blocks 649-653 under the yard 177, 6193,1966): the yard's map label «Тюрьма Абу-Хамеда:<br>Усиление режима в 12:00, 16:00 и 23:00» (L154, res/database/locations.xml), the guard's call 62258 («каждый день в 12:00, 16:00 и 23:00 ... всего пол часа») and its hint «\"Охранять\" заключенных нужно в течение 30 минут», as Вади-Хальфа's prison_wh and Донгола's prison_dn, at the same hours. Owner update 2026-10-27: start at 13:00, 17:00, 21:00 Moscow time to avoid even-hour world boss starts; duration and relative gates/medic offsets unchanged."
   },
   "prison_ah_gates": {
    "of": "prison_ah",

@@ -150,8 +150,11 @@ ch.hp = None
 
 # --- the teacher's rules (Training.getCost, PersAttributes min_skill_level) --
 ch = Character()
-check("shotguns need shooting 4", ch.learn_spec(3), progression.ERR_SKILL)
-check("machine guns need shooting 16", ch.learn_spec(6), progression.ERR_SKILL)
+for idx in range(8):
+    beginner = Character()
+    check("combat specialisation %d is learnable at zero skill" % idx, beginner.learn_spec(idx), 0)
+    check("learning keeps all base skills at zero: %d" % idx, beginner.level, 0)
+
 check("a hidden production spec cannot be bought", ch.learn_spec(12), progression.ERR_STATE)
 # The window compares minSkill with the skill and its gear bonus
 # (SkillObject.level): what it offers, the server takes.
@@ -285,14 +288,12 @@ check("spec thresholds: 1250 * 8^lvl", [progression.spec_xp_max(i) for i in rang
 ch = Character()
 ch.premium = 1
 check("pr is the premium level", ch.player_info()["pr"], 1)
-check("weight total includes the share", ch.max_weight(), 50000)
+check("registration adds exactly 25 kg", ch.max_weight(), 65000)
 ch.gain_xp(progression.MELEE, 100)
-check("experience total includes the share", ch.skill[0], [1, 25, 200])
+check("registration adds no experience bonus", ch.skill[0], [1, 0, 200])
 ch.premium_until = int(time.time()) - 1
 check("an expired premium counts as none", (ch.premium_level(), ch.max_weight()), (0, 40000))
-# WeightPan's own arithmetic on the figure it is sent: bonus = v*b/(1+b).
-b = progression.PREMIUM_WEIGHT_BONUS[1]
-check("the client recovers +10 kg from 50000", round(50000 * b * 0.001 / (b + 1)), 10)
+check("legacy percent weight constants are disabled",progression.PREMIUM_WEIGHT_BONUS,{0:0,1:0,2:0})
 
 # --- reputation: one faction, capped below the last range's end ------------
 ch = Character()
@@ -527,13 +528,15 @@ try:
     check("training opens beside the teacher", [n for n, _p in got], ["cmdAck"])
     check("with res=0", one(got, "cmdAck")["res"], 0)
 
-    # Shotguns need shooting 4; the client cannot know (spec.xml says 0).
+    # A beginner can learn shotguns through the real teacher protocol.
     c.send("ss_upd;obj=x3;s_status=2;")
-    got = c.until("userMsg")
-    check("the skill gate is the server's", [n for n, _p in got], ["cmdAck", "userMsg"])
-    check("refused with the client's own 'not enough skill' code", one(got, "cmdAck")["res"], progression.ERR_SKILL)
-    check("and told in the window's own words, with the skill held",
-          one(got, "userMsg")["entry"], 'Требует навык "Стрельбы" не ниже 4, у вас 0')
+    got = c.until("userInfo_Player")
+    check("shotguns at shooting zero: acknowledged", one(got, "cmdAck")["res"], 0)
+    check("shotgun spec is learned at its starting level", one(got, "rp_info")["a_specs"], [0])
+    check("first spec still costs nothing", one(got, "userInfo_Player")["afro"], 1000)
+    c.send("ss_upd;obj=x3;s_status=1;")
+    got = c.until("userInfo_Player")
+    check("resetting shotgun spec restores the free first slot", one(got, "rp_info")["a_specs"], [-1])
 
     # Pistols: free, the first slot.
     c.send("ss_upd;obj=x2;s_status=2;")

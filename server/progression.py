@@ -51,15 +51,11 @@ def moves_vitals(changed):
     stamina a level of it)."""
     return bool(changed["attribs"] & VITAL_ATTRIBS)
 
-# The skill level a specialisation needs, PersAttributes.as:111-125. The
-# client stores this table and never checks it: the teacher's window reads
-# minSkill out of spec.xml instead, where the original says 0 for every entry
-# -- the window then offered «Изучить» under «не ниже 0» and the server said
-# no. The release ships spec.xml with this table in it
-# (client/files/xmldocs/spec.xml, test_progression keeps the two equal), so
-# the window shows the real figure in red and hides the button, and the gate
-# here stays for a client without it.
-SPEC_MIN_SKILL = [0, 0, 0, 4, 12, 6, 16, 8, 0, 0, 0, 0, 0, 0, 0]
+# Combat specialisations have no base-skill/character-level learning gate.
+# Noncombat entries retain their existing thresholds and hidden-spec rules.
+# Keep the server and client/files/xmldocs/spec.xml in sync; item spec-level
+# requirements remain independent hard gates on equipping/using weapons.
+SPEC_MIN_SKILL = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 # The skills as the teacher's window names them («Требует навык "Стрельбы"
 # не ниже 8»): PersAttributes.as:72-85.
@@ -136,13 +132,11 @@ SPEC_COST = {0: (0, 0), 1: (1000, 0), 2: (0, 10 * GOLD_OUNCE),
              3: (0, 30 * GOLD_OUNCE), 4: (0, 55 * GOLD_OUNCE)}
 SPEC_COST_MAX = (0, 75 * GOLD_OUNCE)
 
-# Premium ("вид на жительство" 1, "гражданство" 2) bonuses are shares b of the
-# base: the client is handed the total v and splits it back as
-# bonus = round(v*b/(1+b)) (SpecSkillMessages.getRealAndBonus for experience,
-# WeightPan.calcMaxWeight for weight). The shares themselves are not in the
-# client and not on the wiki; a quarter and a half are this server's choice.
-PREMIUM_XP_BONUS = {0: 0.0, 1: 0.25, 2: 0.5}
-PREMIUM_WEIGHT_BONUS = {0: 0.0, 1: 0.25, 2: 0.5}
+# Status 1 = registration, 2 = residence permit. No experience bonus.
+# Weight is fixed (+25/+50 kg), not the legacy premium percentage.
+PREMIUM_XP_BONUS = {0: 0.0, 1: 0.0, 2: 0.0}
+# Legacy percentage constants sent as zero; residence weight is a fixed sum.
+PREMIUM_WEIGHT_BONUS = {0: 0.0, 1: 0.0, 2: 0.0}
 
 # Fighter reputation: ReputationObject.rank_level. The last range ends at
 # 25600, and a value at or past it matches no range at all, after which
@@ -394,10 +388,10 @@ class Character:
         return self.premium or 0
 
     def max_weight(self):
-        """Grams, premium included: WeightPan divides by 1000 and takes the
-        premium share back out of this figure to print "+N кг"."""
+        """Authoritative grams: effective strength plus the fixed status bonus."""
         base = (30 + 2 * self.attr(STRENGTH)) * 1000
-        return int(round(base * (1 + PREMIUM_WEIGHT_BONUS[self.premium_level()])))
+        import residence
+        return int(round(base)) + residence.WEIGHT[self.premium_level()]
 
     def vitals(self):
         """usrUp payload. Entity.userUpdate assigns hmax before hcur, so a
@@ -450,6 +444,8 @@ class Character:
             [s[1] for s in self.spec], specs, SPECS)
         p["xp_max_specs_mask"], p["xp_max_specs"] = packed(
             [s[2] for s in self.spec], specs, SPECS)
+        import residence
+        p.update(residence.frame(self))
         p.update(max_specs=self.max_specs, ap_max=self.ap_max,
                  max_weight=self.max_weight(), armor=int(self.armor),
                  lvl=self.level)

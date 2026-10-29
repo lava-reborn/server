@@ -257,7 +257,9 @@ def keeps_hours(type_id):
 # One encrypted blueprint per successful boss roll, independent of quests.
 # Keys deliberately include the location: copies and the outpost's Sherhan
 # (168, 8620) do not inherit a camp leader's drop.
-BLUEPRINT_OVERLEVEL_DROP = 0.02
+BLUEPRINT_DROP_CHANCE = 0.10
+# Existing items can still be decoded after their boss drops are disabled.
+DISABLED_BLUEPRINT_DROPS = frozenset({1270, 2417, 2418})
 BLUEPRINTS = {
     (82, 269): 2408, (80, 270): 1131,       # colonists: 1, 2
     (83, 284): 2409, (81, 283): 1132,       # sectarians: 3, 4
@@ -267,9 +269,24 @@ BLUEPRINTS = {
     (90, 361): 2413, (92, 360): 1136,       # flayers: 11, 12
     (91, 375): 2414, (93, 374): 1137,       # DSR: 13, 14
     (99, 408): 2415, (98, 407): 1138,       # Peacekeepers: 15, 16
-    (133, 778): 2416, (132, 777): 1270,     # pirates: 17, 18
-    (274, 1038): 2417, (263, 1037): 2418,   # Alliance base: 19, 20
+    (133, 778): 2416,                       # pirates: 17
 }
+
+
+# Camp health and recovery are independent of blueprint availability.
+# Levels 18-20 keep camp rules even though they no longer drop blueprints.
+CAMP_BOSSES = frozenset({
+    (82, 269), (80, 270), (83, 284), (81, 283), (86, 300), (84, 299),
+    (87, 314), (85, 313), (89, 328), (88, 327), (90, 361), (92, 360),
+    (91, 375), (93, 374), (99, 408), (98, 407), (133, 778), (132, 777),
+    (274, 1038), (263, 1037),
+})
+CAMP_BOSS_TYPES = frozenset(t for _loc, t in CAMP_BOSSES)
+
+
+def is_camp_boss(loc_id, type_id):
+    """Whether this is one of the reviewed camp spawns with camp recovery."""
+    return (loc_id, type_id) in CAMP_BOSSES
 
 
 def blueprint_for(loc_id, type_id):
@@ -283,28 +300,9 @@ def blueprint_for(loc_id, type_id):
     return BLUEPRINTS.get((loc_id, type_id))
 
 
-def blueprint_base_percent(blueprint_level):
-    """Base chance by blueprint tier, before the finisher's overlevel penalty."""
-    if blueprint_level >= 16:
-        return 2
-    if blueprint_level >= 12:
-        return 5
-    if blueprint_level >= 10:
-        return 10
-    return 21 - max(1, blueprint_level)
-
-
 def blueprint_drop_chance(player_level, blueprint_level):
-    """Tier chance times 100/80/60/40% for excess 0/1/2/3, with a 2% floor.
-
-    A finisher four or more levels above the blueprint always gets 2%.
-    Boss combat level and active quests do not affect this roll.
-    """
-    excess = max(0, player_level - blueprint_level)
-    if excess >= 4:
-        return BLUEPRINT_OVERLEVEL_DROP
-    return max(BLUEPRINT_OVERLEVEL_DROP,
-               blueprint_base_percent(blueprint_level) * (5 - excess) / 500.0)
+    """Fixed chance, independent of player, boss and blueprint levels."""
+    return BLUEPRINT_DROP_CHANCE
 
 
 def hours_of(type_id):

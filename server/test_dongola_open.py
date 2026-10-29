@@ -1141,12 +1141,12 @@ except Exception:
 finally:
     LOG_EVENING = SRV.stop()
 
-# --- the second server: noon, the prison's uprising ---------------------------------------
-SRV = Server("warden", "2026-10-13T12:00:05", world.cell_of(DN_STATION))
+# --- the second server: 13:00 Moscow, the prison's uprising -------------------------------
+SRV = Server("warden", "2026-10-13T13:00:05", world.cell_of(DN_STATION))
 try:
     c, CID, lid, arrival = newcomer("Warden", 13)
     here = inhabitants(arrival, lid)
-    check("at noon a character of the thirteenth level wakes at Донгола's station, Нур-ад-Дин"
+    check("at 13:00 a character of the thirteenth level wakes at Донгола's station, Нур-ад-Дин"
           " there", (lid, NUR in here), (DN_STATION, True))
     ack, lid, arrival = ride(c, here, NUR, PRISON_RIDE)
     here = inhabitants(arrival, lid)

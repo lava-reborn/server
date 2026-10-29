@@ -87,15 +87,21 @@ TROPHY_REGISTRARS = frozenset({939, 940, 941, 942, 943, 1132,
                                5193, 105, 1179, 156, 740})
 
 
+# Former set exchangers keep their names and quests, without an upgrade tab.
+INACTIVE_SET_EXCHANGERS = frozenset({2241, 2242})
+
+
 def entity_root(type_id, root):
-    """The class an inhabitant is built as on the client (lch rtype): the
-    root of mobs.xml, but a trophy registrar is a Trader."""
+    """The client class, including service overrides for existing NPCs."""
+    if type_id in INACTIVE_SET_EXCHANGERS:
+        return COMMONER
     return TRADER if type_id in TROPHY_REGISTRARS else root
 
 
 def _read(path):
     """Location files are UTF-8 despite declaring windows-1251."""
-    raw = open(path, "rb").read()
+    with open(path, "rb") as source:
+        raw = source.read()
     try:
         return raw.decode("utf-8")
     except UnicodeDecodeError:

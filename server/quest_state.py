@@ -16,21 +16,26 @@ class QuestState:
         scope = "" if self.types is None else " AND type IN (%s)" % ",".join("?" for _ in self.types)
         if self.types == frozenset():
             scope = " AND 1 = 0"
-        args = (char_id, *(self.types or ()), char_id, day_start,
-                char_id, *(self.types or ()))
+        scope_args = tuple(self.types or ())
+        args = (day_start, char_id, *scope_args, char_id, char_id,
+                char_id, *scope_args)
+        # Group once, then use the existing (char_id,type,done_at,id) index
+        # for the first event's tie-break. A window over every history row
+        # is unnecessary; id alone cannot substitute for chronological order.
         rows = db.execute("""
             WITH history AS (
-                SELECT type, id, done_at,
-                       ROW_NUMBER() OVER (PARTITION BY type ORDER BY done_at, id) AS rn
+                SELECT type, MIN(done_at) AS first_at, MAX(done_at) AS last_at,
+                       SUM(CASE WHEN done_at >= ? THEN 1 ELSE 0 END) AS today
                 FROM char_quests_done WHERE char_id = ? {scope}
+                GROUP BY type
             )
             SELECT 0 AS source, type, 0 AS first_at, 0 AS first_id,
                    0 AS last_at, 0 AS today FROM char_quests WHERE char_id = ?
             UNION ALL
-            SELECT 1, type, MIN(done_at),
-                   MIN(CASE WHEN rn = 1 THEN id ELSE NULL END), MAX(done_at),
-                   SUM(CASE WHEN done_at >= ? THEN 1 ELSE 0 END)
-            FROM history GROUP BY type
+            SELECT 1, h.type, h.first_at,
+                   (SELECT MIN(d.id) FROM char_quests_done d
+                    WHERE d.char_id = ? AND d.type = h.type AND d.done_at = h.first_at),
+                   h.last_at, h.today FROM history h
             UNION ALL
             SELECT 2, type, 0, 0, lent_at, 0 FROM char_lent WHERE char_id = ? {scope}
             """.format(scope=scope), args).fetchall()

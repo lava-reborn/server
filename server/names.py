@@ -182,6 +182,14 @@ BASE = dict(ALL)
 # decides everyone the original is silent about.
 ALL.update({t: n for t, n in npcs.NAMES.items() if t not in ORIG_PERSON_NAMES})
 
+# Owner, 2026-10-28: set upgrades moved to Joseph; former exchangers
+# retain only personal names until the service is restored.
+ALL.update({
+    2241: "Эрих Френкель",
+    2242: "Фриденсрайх Шнеерсон",
+    7548: "Жозеф де Гобино<br>Оружейный механик<br>Обмен комплектов",
+})
+
 
 def known(string_id):
     """Whether this id can be sent at all without costing the player a login."""

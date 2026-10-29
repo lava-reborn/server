@@ -5,8 +5,13 @@ logs/
 # a file whose parent directory is excluded.
 tools/*
 !tools/*.py
+# Local tester launcher source; compiled binaries remain excluded.
+!tools/TesterLauncher.cs
 !tools/run_suite.sh
 !tools/run_suite.ps1
+!tools/run_local_checks.ps1
+!tools/local_ci_checks.sh
+!tools/LOCAL_CHECKS.md
 # Also ours: the list of failures CI is told to expect (tools/run_suite.sh --known).
 !tools/known_failures.txt
 # Also ours: the hook --record-map (tools/run_suite.sh, tools/suite.py) puts
@@ -26,6 +31,7 @@ tools/location_editor_ui/node_modules/
 !tools/flash_headless/
 dist/
 .env
+.venv-local-checks/
 data/lava.db
 data/lava.db-shm
 data/lava.db-wal
@@ -44,3 +50,7 @@ data/map_editor_base.png
 # The publisher's own record when it is run out of the repository by hand;
 # on the server it lives in /opt/lava-ci/client/state.
 /client/state/
+
+# Locally generated release PDFs and rendering previews.
+/output/pdf/
+/tmp/pdfs/

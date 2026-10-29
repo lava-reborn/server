@@ -127,6 +127,8 @@ OBJECTS_PAY_XP = False
 AP_TICK = 0.6
 AI_TICK = 0.4
 REGEN_PERIOD = 60.0
+BOSS_REGEN_BASE = 50
+BOSS_REGEN_PER_LEVEL = 15
 # A bare-handed strike costs 5 AP (PersEquip.as:86, wiki).
 FIST_AP = 5
 # ErrorReport codes beyond inventory's, and the resurrection prices
@@ -1681,7 +1683,8 @@ class Fighter:
             # wear: Берт's training pistol holds 120 and a level-0 cadet can
             # spend more than that on one lesson's targets, and a gun broken
             # halfway would lock the lesson until the next day (quests.lent).
-            wear = 0 if quests.lent(row["type_id"]) else round_wear(spent)
+            wear = 0 if quests.lent(row["type_id"]) else round_wear(
+                spent, WEAR_PER_ROUND * inventory.wear_multiplier(row, self.character()))
             self.store.update_item(uniq, ammo_count=row["ammo_count"] - spent,
                                    brk=max(0, row["brk"] - wear))
         if rc.room.ws:
@@ -2325,7 +2328,10 @@ class Fighter:
             if row is None or row["uniq"] not in bag.uniqs:
                 self.ack(inventory.RES_NOT_FOUND)
                 return True
-            if inv.total_weight() + inventory.weight_of(row) > inventory.MAX_WEIGHT:
+            if items.acquisition_blocked(row["type_id"]):
+                self.ack(inventory.RES_REFUSED)
+                return True
+            if inv.total_weight() + inventory.weight_of(row) > inv.carry_limit():
                 self.ack(inventory.RES_OVERLOAD)
                 return True
             # The ack first: Loot.transferAck moves the item on res=0, and an
@@ -2360,8 +2366,11 @@ class Fighter:
             rc.add_to_bag(self.loot, [row])
         elif code == 3:
             rows = self.session_items()
+            if any(items.acquisition_blocked(r["type_id"]) for r in rows):
+                self.ack(inventory.RES_REFUSED)
+                return True
             if inv.total_weight() + sum(inventory.weight_of(r) for r in rows) \
-                    > inventory.MAX_WEIGHT:
+                    > inv.carry_limit():
                 # All or nothing: on res=0 the client moves every item itself.
                 self.ack(inventory.RES_OVERLOAD)
                 return True
@@ -2557,6 +2566,9 @@ class RoomCombat:
         else:
             self.ap_last = t
         for mob in list(self.mobs.values()):
+            # Settle quiet time before a returning player can start a fight.
+            if bosses.is_camp_boss(self.room.loc.id, mob.type_id):
+                self.regen_mob(mob, t)
             mob.think(self, t)
         self.calm(t)
         for f in fighters:
@@ -2564,15 +2576,35 @@ class RoomCombat:
                 f.regen()
                 f.regen_at = t + REGEN_PERIOD
         for mob in self.mobs.values():
-            if mob.alive and mob.target is None and not mob.homing and t >= mob.regen_at:
-                mob.regen_at = t + REGEN_PERIOD
-                if mob.hp < mob.hp_max or mob.sp < mob.sp_max:
-                    mob.hp = min(mob.hp_max, mob.hp + mob.level + 1)
-                    mob.sp = min(mob.sp_max, mob.sp + 1)
-                    if mob.hp >= mob.hp_max and mob.sp >= mob.sp_max:
-                        # Whole again by its own pace: as mob_recover.
-                        mob.capture_harm = {}
-                    self.push_vitals(mob)
+            if not bosses.is_camp_boss(self.room.loc.id, mob.type_id):
+                self.regen_mob(mob, t)
+
+    def regen_mob(self, mob, t):
+        """Camp bosses recover by elapsed quiet minutes, even while a room sleeps."""
+        if not mob.alive or mob.target is not None:
+            return
+        boss = bosses.is_camp_boss(self.room.loc.id, mob.type_id)
+        if mob.homing and not boss:
+            return
+        if boss and mob.regen_at <= 0:
+            mob.regen_at = t + REGEN_PERIOD
+            return
+        if t < mob.regen_at:
+            return
+        if boss:
+            periods = 1 + int((t - mob.regen_at) // REGEN_PERIOD)
+            gain = BOSS_REGEN_BASE + BOSS_REGEN_PER_LEVEL * max(0, mob.level - 1)
+            hp_gain = sp_gain = gain * periods
+            mob.regen_at += periods * REGEN_PERIOD
+        else:
+            hp_gain, sp_gain = mob.level + 1, 1
+            mob.regen_at = t + REGEN_PERIOD
+        if mob.hp < mob.hp_max or mob.sp < mob.sp_max:
+            mob.hp = min(mob.hp_max, mob.hp + hp_gain)
+            mob.sp = min(mob.sp_max, mob.sp + sp_gain)
+            if mob.hp >= mob.hp_max and mob.sp >= mob.sp_max:
+                mob.capture_harm = {}
+            self.push_vitals(mob)
 
     def hostilities(self, t):
         """Whether the room is still at war.
@@ -2734,18 +2766,23 @@ class RoomCombat:
     def mob_release(self, mob):
         """The target has left the room, died or dropped its socket: forget
         it. Not whole again on the spot -- the walk home follows on the next
-        ticks, and it heals when it gets there (mob_recover). Healed where it
+        ticks; camp bosses regenerate, other mobs heal at home. Healed where it
         let go, a creature whose target was still in reach took him again a
         tick later, whole every time."""
         mob.target = None
         mob.homing = True
+        if bosses.is_camp_boss(self.room.loc.id, mob.type_id):
+            # Time spent fighting must not become banked regeneration.
+            mob.regen_at = now() + REGEN_PERIOD
 
     def mob_recover(self, mob):
-        """Home again after a chase: whole, and the bar over its head shows it.
+        """Home after a chase: camp bosses keep damage; other mobs recover.
         Whole, it forgets the harm of the fight it left (Mob.capture_harm):
         a warehouse's boss is taken by the harm done since it was last whole
         (holdings.py), never by harm banked over heal after heal."""
         mob.homing = False
+        if bosses.is_camp_boss(self.room.loc.id, mob.type_id):
+            return
         if mob.hp < mob.hp_max or mob.sp < mob.sp_max:
             mob.hp, mob.sp = mob.hp_max, mob.sp_max
             mob.capture_harm = {}
@@ -3252,7 +3289,7 @@ class RoomCombat:
                               killer_level=getattr(mob, "blueprint_killer_level", None)) \
                 + events.loot(self.room.loc.id, mob.type_id, RNG) \
                 + production.yield_of(mob.type_id):
-            if items.out_of_game(type_id):
+            if items.out_of_game(type_id) or items.acquisition_blocked(type_id):
                 continue            # (P) or retired by name; see items.out_of_game
             if type_id in items.GOLD_INGOTS and not gold_ok:
                 continue            # gold off the hours' bosses only, above

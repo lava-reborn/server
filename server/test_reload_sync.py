@@ -25,6 +25,23 @@ from test_quest_state import session
 from testkit import run_cases
 
 
+class PmmMagazine(unittest.TestCase):
+    def test_only_pmm_levels_four_and_five_change_capacity(self):
+        for t, level in ((7056, 4), (7057, 5)):
+            with self.subTest(type=t):
+                with patch.dict(items.PMM_CLIP_SIZES, {}, clear=True):
+                    before = items.params_of(t)
+                after = items.params_of(t)
+                self.assertEqual(max(after['need_skills']), level)
+                self.assertEqual(before['clip_size'], 3)
+                self.assertEqual(after['clip_size'], 7)
+                self.assertEqual(items.static_info(t)[1]['clip_size'], 7)
+                self.assertEqual({k: v for k, v in after.items() if k != 'clip_size'},
+                                 {k: v for k, v in before.items() if k != 'clip_size'})
+        for t in (7055, 7058):
+            self.assertEqual(items.params_of(t)['clip_size'], 3)
+
+
 class ReloadSync(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.store = accounts.Store(':memory:')
@@ -105,6 +122,26 @@ class ReloadSync(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([p['res'] for n, p in self.frames if n == 'cmdAck'], [0])
         self.invoke(saved)
         self.assertEqual(self.resources(), (clip, 50 - clip, 100 - cost))
+
+    async def test_existing_pmm_instances_reload_to_seven_without_free_rounds(self):
+        for t in (7056, 7057):
+            for loaded in (0, 3, 6):
+                with self.subTest(type=t, loaded=loaded):
+                    self.store.delete_item(self.gun['uniq'])
+                    self.store.delete_item(self.ammo['uniq'])
+                    self.ammo_type = items.params_of(t)['comp_array'][0]
+                    self.gun = self.give(t, slot=inventory.PRIMARY,
+                                         ammo_type=self.ammo_type, ammo_count=loaded)
+                    self.ammo = self.give(self.ammo_type, count=20)
+                    self.f.ap = 100
+                    saved = self.start()
+                    self.invoke(saved)
+                    self.assertEqual(self.resources(),
+                                     (7, 20 - (7 - loaded), 100 - items.params_of(t)['reload_cost']))
+                    self.assertEqual([p['res'] for n, p in self.frames if n == 'cmdAck'], [0])
+                    before = self.resources()
+                    self.invoke(saved)
+                    self.assertEqual(self.resources(), before)
 
     async def test_switch_and_movement_cancel_without_ammo_or_ap_consumption(self):
         for action in ('switch', 'move'):
@@ -217,4 +254,4 @@ class ReloadSync(unittest.IsolatedAsyncioTestCase):
 
 
 if __name__ == '__main__':
-    run_cases(ReloadSync)
+    run_cases(PmmMagazine, ReloadSync)

@@ -858,6 +858,24 @@ def check_items(table=None):
         raise ValueError(found[0])
 
 
+def acquisition_blocked(quest):
+    """Close unreleased equipment rewards and level-18/20 blueprint upgrades.
+
+    Keep rows and journal instances intact so cancelling stays possible.
+    Block the whole mixed reward rather than silently deleting a prize.
+    """
+    import items
+    import craft
+    recipe = craft.rows().get(quest.type, {})
+    if recipe.get("family") in ("upgrade", "knife") and any(
+            items.upgrade_blueprint_blocked(t) for t, _n, _mobs in quest.objs):
+        return True
+    given = list(quest.rew_obj)
+    given += [t for t, _n in quest.start_obj + quest.rew_also]
+    given += [t for t, _n, _w in quest.rew_random]
+    return any(items.acquisition_blocked(t) for t in given)
+
+
 def item_problems(table=None):
     """check_items's findings, every one of them, in words: per quest the
     things the game does not have, the premium ones, the ones retired by
@@ -989,6 +1007,10 @@ def served(q, k, line):
     texts to (every «laid over the table's» check)."""
     if k != START:
         return line
+    # Keep restored prison invitation/ride texts aligned with the owner's
+    # schedule, including lines loaded from the original text archive.
+    line = line.replace("12:00, 16:00 и 23:00", "13:00, 17:00 и 21:00")
+    line = line.replace("12:00, 16:00 или 23:00", "13:00, 17:00 или 21:00")
     line = per_day_start(line, q.per_day)
     if q.complete_skills:
         labels = ("Ближний бой", "Стрельба", "Медицина", "Промышленность")

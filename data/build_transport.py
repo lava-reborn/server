@@ -36,20 +36,13 @@ The one-day cap is the client's: `TransRentInterface.maxValue = 365`.
 
 WHAT IS DESIGNED, AND WHY
 -------------------------
-1. **Which SWF is which vehicle.** Nothing anywhere ties a name to an icon
-   number. The SWFs are art only -- the compressed ones are bare JPEG data,
-   the rest vector shapes, and not one carries a symbol name (checked over
-   all 57). Two independent sources agree on the ORDER of the basic set,
-   though. The wiki's rental lists read Ослик, Верблюд, Мотоцикл, УАЗ,
-   Хаммер, Багги, Ларва; and `mobs.xml` numbers every clan's lessor NPCs
-   `..._Npc_Lessor000001..7` over `1f_Donkey, 1f_Camel, 1f_Moto, 1f_UAZ,
-   1f_Hammer, 1f_Baggi, 1f_Larva` -- the same seven in the same order. That
-   order is laid onto ids 1..7 here, the rest of the named vehicles onto
-   8..16, all inside 1..36: the older manifest `res/xml/transport (2).xml`
-   lists only 1..36 (plus 776-778 and FatBoy), so 39..53 and 60 are later
-   additions and the original set is the low block.
-   If the assignment is wrong the only visible effect is the icon: the
-   client draws `transport/<type>.swf` and takes every number from `ts_si`.
+1. **Persistent vehicle IDs and image IDs differ.** Types 1..7 retain the
+   original reconstructed rental ladder (and existing saved rentals). The
+   art was visually inspected on 2026-10-28 using the original SWFs:
+   donkey=5, camel=1, motorcycle=6, UAZ=2, Hummer=3, buggy=4, Larva=7.
+   ICON_RES stores that verified correspondence separately from ASSIGNMENT.
+   Other, unavailable vehicles retain their previous image assignment;
+   their art is not newly verified by this rental-yard fix.
 2. **Северный олень** has an empty parameter table on the wiki (event
    transport, "Базовая цена 0 G"). Its description is word for word the
    T-34's, so it is given the T-34's numbers and no price.
@@ -81,7 +74,7 @@ OUT = os.path.join(HERE, "transport.json")
 MAX_DAYS = 365
 
 # wiki page -> type id. Order recovered (see the docstring); the numbers
-# themselves are the designed part.
+# themselves are the designed part and remain stable for saved rentals.
 ASSIGNMENT = [
     ("Ослик Панург", 1),
     ("Верблюд", 2),
@@ -100,6 +93,10 @@ ASSIGNMENT = [
     ("Кобыла", 15),
     ("Крылатый Ламантин", 16),
 ]
+
+# Visually verified original transport SWFs, independent of saved vehicle IDs.
+# See releases/2026-10-27/TRANSPORT_ICONS.md. Never renumber ASSIGNMENT to fix art.
+ICON_RES = {1: 5, 2: 1, 3: 6, 4: 2, 5: 3, 6: 4, 7: 7}
 
 # Pages of the category that describe no vehicle.
 SKIP = {"Квесты на перемещение"}
@@ -132,9 +129,10 @@ def load(name):
 def icon_ids():
     """Every `res/transport/<n>.swf`, by its number.
 
-    The number is the type id: SSEmulator.getTransportIcon builds the path
-    straight from it. `46_.swf` and `FatBoy.swf` are not numbers and cannot
-    be addressed by the protocol at all.
+    The number is the image resource id sent in ts_si.res, not the saved
+    vehicle type id. SSEmulator.getTransportIcon builds the path from res.
+    `46_.swf` and `FatBoy.swf` are not numbers and cannot be addressed by
+    the protocol at all.
     """
     folder = os.path.join(world.RES, "transport")
     out = []
@@ -294,8 +292,9 @@ def main():
             continue
         if page not in pages:
             raise SystemExit("wiki has no page %r" % page)
-        if type_id not in known:
-            raise SystemExit("res/transport/%d.swf does not exist" % type_id)
+        icon_res = ICON_RES.get(type_id, type_id)
+        if icon_res not in known:
+            raise SystemExit("res/transport/%d.swf does not exist" % icon_res)
         cols = columns(_rows(pages[page]))
         grade = pick(cols)
         designed = []
@@ -317,8 +316,12 @@ def main():
                 designed.append(key)
         if rec["speed_mod"] is None or rec["cost"] is None:
             raise SystemExit("no numbers and no design for %r" % page)
+        # Existing IDs retain the gold offer, available without a status.
+        required_status = 0
+        if type_id in (4, 5):
+            rec.update(cost=0, g_cost={4: 70, 5: 90}[type_id])
         types[type_id] = dict(
-            name=page, type=type_id,
+            name=page, type=type_id, res=icon_res, required_status=required_status,
             speed_mod=rec["speed_mod"], aggro_mod=rec["aggro_mod"],
             premium=rec["premium"], cost=rec["cost"], g_cost=rec["g_cost"],
             max_days=MAX_DAYS,
@@ -326,7 +329,7 @@ def main():
             source="wiki" if not designed else "wiki+designed",
             designed=sorted(designed),
             id_source="designed",
-            in_manifest=type_id in in_manifest,
+            in_manifest=icon_res in in_manifest,
             wiki_columns=cols)
         if not grade:
             types[type_id]["source"] = "designed"
@@ -354,17 +357,23 @@ def main():
             "icons": "res/transport/*.swf, res/xml/transport.xml",
             "max_days": "TransRentInterface.maxValue",
         },
-        "_note": ("Speed and interception are the client's own annotation read"
-                  " backwards ((speed_mod-1)*100, (1-aggro_mod)*100), so those"
-                  " numbers are exact. Which SWF icon belongs to which vehicle"
-                  " is DESIGNED -- nothing in the client ties a name to a file"
-                  " number -- see data/build_transport.py for the order it"
-                  " follows. Prices are per day; gold in hundredths."),
+        "_note": ("Vehicle IDs stay stable for saved rentals. ts_si.res is a separate"
+                  " image ID; basic rental icons visually verified 2026-10-28"
+                  " (see ICON_RES in data/build_transport.py). Unavailable vehicles"
+                  " retain their previous image assignment. Prices are per day;"
+                  " gold in hundredths. Speed and interception are recovered from"
+                  " the client annotation and wiki."),
         "max_days": MAX_DAYS,
         "icons": icons,
         "types": {str(k): v for k, v in sorted(types.items())},
         "lessors": {str(k): v for k, v in sorted(by_npc.items())},
         "default_lessor": default,
+        # Same vehicles/art, distinct status-only offers. 1 G = 50,000 afro.
+        "status_rentals": {
+            str(offer): dict(base_type=base, required_status=status,
+                             cost=types[base]["g_cost"] * 50000 // 100)
+            for offer, base, status in ((17, 4, 1), (18, 5, 2))
+        },
     }
     with io.open(OUT, "w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=1, sort_keys=True)

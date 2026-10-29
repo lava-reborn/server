@@ -120,7 +120,7 @@ def ladder(lo, hi):
     ladder as data only (sets.json _meta.decided), so it is on no stall."""
     out = []
     for s in sorted(SETS.values(), key=lambda s: (s["level"], s["family"], s["variant"])):
-        if lo <= s["level"] <= hi and s["variant"] in ("A", "G"):
+        if lo <= s["level"] <= min(hi, 17) and s["variant"] in ("A", "G"):
             out += [s["members"][k]["type"] for k in SLOTS]
     return out
 
@@ -165,7 +165,7 @@ check("  ..which is Беженец to Магриб, Налетчик and Пус�
        (5160, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
        (5161, 378): ["Налетчик", "Пустынник", "Чёрный Ловелас"],
        (5161, 469): ["Красное Эхо", "Легионер", "Спецназ", "Чёрный Ловелас"],
-       (5161, 467): ["Апокалипсис", "Дредноут", "Красное Эхо", "Паладин", "Тёмное Эхо", "Штурм-М"]})
+       (5161, 467): ["Красное Эхо", "Штурм-М"]})
 SOLD = sorted({t for tr, place in [(5158, None), (5159, None), (1204, 102), (1205, 102),
                                    (5181, 378)] + list(CITY_MARKETS)
                for t in items.stock_for(tr, place)})

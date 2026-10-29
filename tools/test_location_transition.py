@@ -42,6 +42,7 @@ SRC = RES / "main.swf.orig" if (RES / "main.swf.orig").is_file() else RES / "mai
 # is resized between the first and the second move.
 MOVES = {14: 41, 26: 102, 38: 41}
 RESIZE_AT, SCROLL_AT, LAST = 22, 48, 50
+RUN_TIMEOUT = 120
 
 
 def probe(url):
@@ -123,12 +124,16 @@ def resize(pid, width, height):
                                 height + outer[3] - outer[1] - inner[3], 0x16)
 
 
-def run(patched):
+def run(patched, prepare_store=None):
+    if os.environ.get('LAVA_DB_URL'):
+        raise RuntimeError('Flash probes require SQLite isolation; unset LAVA_DB_URL in the test shell')
     import accounts
     work = Path(tempfile.mkdtemp(prefix="lava_transition_"))
     store = accounts.Store(str(work / "lava.db"))
     aid, _ = store.register("probe", "probe-password")
-    store.create_character(aid, "Probe", 0, 1, home=(102, 5965, 1728))
+    cid, _slot = store.create_character(aid, "Probe", 0, 1, home=(102, 5965, 1728))
+    if prepare_store is not None:
+        prepare_store(store, cid)
     store.close()
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -188,6 +193,17 @@ def run(patched):
     finally:
         w.fn_location_scene = remask
     code = w.Asm()
+    # Keep the user's real localhost client's preferences and key bindings
+    # separate from the deterministic defaults used by this test client.
+    code.var('lol').member('gpui', 'UserSettings').push('SO')
+    code.push('/', 'lava-client-probe-%d' % http.server_port, 2)
+    code.var('SharedObject').push('getLocal').op('callmethod').op('setmember')
+    code.var('lol').member('gpui', 'UserSettings').push('settingsArray', 0).op('initarray').op('setmember')
+    # Hidden integration clients must never add audible music/effects to
+    # the user's real game. Direct silent Sound probes still work.
+    for sound_method in ('playSoundTrack', 'playEventSound'):
+        code.var('lol').member('sound', 'SoundManager', 'prototype')
+        code.push(sound_method).function(('name',), w.Asm()).op('setmember')
     code.var("_root").push("tick", 0).op("setmember")
     code.var("_global").push("__transitionProbe").function((), probe(url + "/report")).op("setmember")
     code.push(1000, "__transitionProbe").var("_global").push(3, "setInterval").op("callfunc").op("pop").op("end")
@@ -208,7 +224,7 @@ def run(patched):
     player = subprocess.Popen([PLAYER, url + "/res/main.swf?logged=1&vversion=1"], startupinfo=startup)
     try:
         resized = [False, False]
-        deadline = time.time() + 120
+        deadline = time.time() + RUN_TIMEOUT
         while time.time() < deadline:
             time.sleep(.2)
             tick = int(reports[-1].get("tick", 0)) if reports else 0
@@ -243,31 +259,36 @@ def settled(reports):
 
 
 # --- moves between locations, without the global map ---------------------
-try:
-    if PLAYER and SRC.is_file() and os.name == "nt":
-        before = settled(run(False))
-        check("without the wrapper a direct move leaves the map unclipped (regression reproduced)",
-              any(int(r["below"]) != 0 for r in before[1:]), True)
-        after = run(True)
-        rows = settled(after)
-        check("the moves arrive in turn", [r.get("loc") for r in rows], ["102", "41", "102", "41"])
-        for i, r in enumerate(rows):
-            check("stop %d (location %s): the map is drawn inside the mask" % (i, r.get("loc")),
-                  int(r["inside"]) & 0xFF000000 != 0, True)
-            check("stop %d (location %s): nothing is drawn below or right of the mask" % (i, r.get("loc")),
-                  (int(r["below"]), int(r["right"])), (0, 0))
-        check("the second size reached the client", rows[-1].get("stage_w"), "1600")
-        scroll = next((r for r in after if "down_scroll" in r), {})
-        check("the camera still scrolls after the moves",
-              len({scroll.get(k) for k in ("before_scroll", "up_scroll", "down_scroll")}) > 1, True)
-    else:
-        print("  --  set LAVA_FLASH_PLAYER and LAVA_RES on Windows for real Flash checks")
-except Exception:
-    import traceback
-    fails.append("Flash transition probe failed:\n" + traceback.format_exc())
+def main():
+    try:
+        if PLAYER and SRC.is_file() and os.name == "nt":
+            before = settled(run(False))
+            check("without the wrapper a direct move leaves the map unclipped (regression reproduced)",
+                  any(int(r["below"]) != 0 for r in before[1:]), True)
+            after = run(True)
+            rows = settled(after)
+            check("the moves arrive in turn", [r.get("loc") for r in rows], ["102", "41", "102", "41"])
+            for i, r in enumerate(rows):
+                check("stop %d (location %s): the map is drawn inside the mask" % (i, r.get("loc")),
+                      int(r["inside"]) & 0xFF000000 != 0, True)
+                check("stop %d (location %s): nothing is drawn below or right of the mask" % (i, r.get("loc")),
+                      (int(r["below"]), int(r["right"])), (0, 0))
+            check("the second size reached the client", rows[-1].get("stage_w"), "1600")
+            scroll = next((r for r in after if "down_scroll" in r), {})
+            check("the camera still scrolls after the moves",
+                  len({scroll.get(k) for k in ("before_scroll", "up_scroll", "down_scroll")}) > 1, True)
+        else:
+            print("  --  set LAVA_FLASH_PLAYER and LAVA_RES on Windows for real Flash checks")
+    except Exception:
+        import traceback
+        fails.append("Flash transition probe failed:\n" + traceback.format_exc())
 
-if fails:
-    for failure in fails:
-        print("FAILED: " + failure)
-    sys.exit(1)
-print("location transition OK")
+    if fails:
+        for failure in fails:
+            print("FAILED: " + failure)
+        sys.exit(1)
+    print("location transition OK")
+
+
+if __name__ == "__main__":
+    main()

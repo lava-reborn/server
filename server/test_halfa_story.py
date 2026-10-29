@@ -223,7 +223,8 @@ try:
           " name the boss hours", [t for t in STORY if t not in pinned], sorted(HOURS))
     check("  ..laid over the table's",
           [t for t in STORY for k, key in enumerate(("name", "start", "notfinish", "finish"))
-           if orig.get(t, {}).get(key) and rows[t].texts[k] != quests.served(rows[t], k, orig[t][key])], [])
+           if key not in rows[t].own_texts and orig.get(t, {}).get(key)
+           and rows[t].texts[k] != quests.served(rows[t], k, orig[t][key])], [])
     texts_xml = {}
     try:
         sys.path.insert(0, os.path.join(os.path.dirname(HERE), "data"))
@@ -308,11 +309,11 @@ try:
           (quests.get(1761).drops, quests.get(1762).drops),
           ([(SPIRIT_BOX, SPIRIT_T, 1.0)], [(SECTARIAN6, TESTS, 0.5), (MASTER6, TESTS, 0.5)]))
     check("  ..things with no creature: the bomb (from «Бомба»), the spoons (every man's junk),"
-          " the Фуль (Бартоломью's), Генри's certificate-free parts have carriers",
+          " the Фуль (Абу-бакр's), Генри's certificate-free parts have carriers",
           sorted((t, o) for (t, o), (n, ms) in slots.items() if not ms),
-          [(137, BOMB), (147, 6911), (148, 6899)])
+          [(137, BOMB), (147, 6911), (148, 334)])
     check("  ..the Фуль is on sale, the spoon is junk a man carries",
-          ([6899 in items.stock_for(81, loc) for loc in (35, 176)],
+          ([334 in items.stock_for(155, loc) for loc in (50, 197)],
            6911 in mobs.series(mobs.TRASH_SERIES)), ([True, True], True))
     check("«Местные предпочтения» asks for the dogs' meat (216), not the valley's antelope"
           " meat (260)", ([o for o, _n, _m in rows[118].objs],

@@ -16,6 +16,83 @@ from testkit import run_cases  # noqa: E402
 
 class ClientActions(unittest.TestCase):
 
+    def test_closed_panel_cannot_run_deferred_init_on_its_slide_out_frame(self):
+        for original in ('__statsKillOrig', '__equipKillOrig'):
+            pending = [NS(func='init')]
+            panel = NS(methodTable=pending, __methodTable=pending[:],
+                       onEnterFrame=lambda: None)
+            calls = []
+            def kill():
+                calls.append((panel.methodTable[:], getattr(panel, '__methodTable')[:], panel.onEnterFrame))
+            setattr(panel, original, kill)
+            execute(w.fn_panel_kill_pending(original).assemble(), dict(this=panel))
+            self.assertEqual(calls, [([], [], None)])
+
+    def test_global_map_releases_its_own_filter(self):
+        filters = ['global']
+        hk = NS(removeFilter=lambda name: filters.remove(name) if name in filters else None)
+        ui = NS()
+        setattr(ui, '__globalKeysKillOrig', lambda: hk.removeFilter('location'))
+        execute(w.fn_global_hotkey_cleanup().assemble(), dict(
+            this=ui, lol=NS(core=NS(SceneShifter=NS(hotKeyManager=hk)))))
+        self.assertEqual(filters, [])
+
+    def test_character_panel_allows_toggle_cancel_and_tabs(self):
+        calls = []
+        events = {name: name for name in (
+            'FILTER0', 'FILTER1', 'FILTER2', 'FILTER3', 'FILTER4',
+            'PERS_INFO', 'CANCEL', 'CHAT_IN_FOCUS', 'COPY_LOG', 'CTRL', 'SHIFT')}
+        filters = NS()
+        setattr(filters, '__panelFilterOrig', lambda name: calls.append(name))
+        env = dict(this=filters, str='persInfo',
+                   lol=NS(services=NS(HotKeyEvent=events)))
+        allowed = execute(w.fn_panel_hotkey_filter().assemble(), env)
+        self.assertEqual(set(allowed), set(events))
+        self.assertEqual(calls, [])
+        self.assertNotIn('HEAL', allowed)
+        self.assertNotIn('RELOAD', allowed)
+        # Fresh arrays: Ctrl/Shift additions in the original implementation
+        # must not accumulate in this formerly missing filter.
+        allowed.push('unexpected')
+        self.assertNotIn('unexpected', execute(w.fn_panel_hotkey_filter().assemble(), env))
+
+    def test_other_panel_and_text_filters_keep_original_rules(self):
+        for name in ('location', 'equipment', 'chat', 'dialogue', 'settings'):
+            calls = []
+            original = ['original', name]
+            filters = NS()
+            setattr(filters, '__panelFilterOrig', lambda value: calls.append(value) or original)
+            actual = execute(w.fn_panel_hotkey_filter().assemble(), dict(this=filters, str=name))
+            self.assertIs(actual, original)
+            self.assertEqual(calls, [name])
+
+    def test_transition_with_inventory_does_not_leave_a_camera_blocking_filter(self):
+        # HotKeyManager.removeFilter removes the first matching entry.
+        # An equipment filter orphaned by destruction of its MovieClip
+        # otherwise survives opening and closing the next inventory.
+        filters = ['location', 'equipment']
+        ui = NS(alive=True)
+        events = []
+
+        def close_windows():
+            events.append('close panels')
+            if ui.alive and 'equipment' in filters:
+                filters.remove('equipment')
+
+        def destroy_ui():
+            events.append('destroy location')
+            filters.remove('location')
+            ui.alive = False
+
+        setattr(ui, '__panelTeardownOrig', destroy_ui)
+        execute(w.fn_location_ui_teardown().assemble(), dict(
+            this=ui, lol=NS(core=NS(SceneShifter=NS(removeAllWindow=close_windows)))))
+        self.assertEqual(events, ['close panels', 'destroy location'])
+        self.assertEqual(filters, [])
+        filters.extend(['location', 'equipment'])
+        filters.remove('equipment')
+        self.assertEqual(filters, ['location'])
+
     def reconcile(self, old, held, releasing=False, current=None, on_release=None):
         calls = []
         events = []

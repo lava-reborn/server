@@ -241,6 +241,7 @@ def expect(kind, lo, hi):
     out = set()
     if kind in shop_bands.MED_KINDS:
         return out
+    hi = min(hi, 17)  # temporary owner release ceiling, not a city-band change
     if kind == "sets":
         for s in SETS_DOC.values():
             if s["variant"] in ("A", "G") and lo <= s["level"] <= hi:
@@ -337,8 +338,8 @@ COUNTS = {
     # Абу-Хамед restoration: the 17th rung's quest set sold as Чёрный Ловелас);
     # the oasis's «Торговец патронами» (1232) his rounds alone, a seller of no
     # kinds, as Донгола's 1230 (server/test_abuhamed_trade.py).
-    "Абу-Хамед": {1216: (9, 9), 1217: (3, 3), 1218: (4, 4), 2274: (3, 3), 1221: (0, 0),
-                  1223: (30, 30), 1219: (0, 0), 5161: (30, 30), 2391: (0, 9), 207: (0, 0),
+    "Абу-Хамед": {1216: (3, 3), 1217: (3, 3), 1218: (1, 1), 2274: (1, 1), 1221: (0, 0),
+                  1223: (10, 10), 1219: (0, 0), 5161: (10, 10), 2391: (0, 3), 207: (0, 0),
                   1222: (0, 0), 880: (0, 0), 1232: (0, 0)},
 }
 got = {}
@@ -469,11 +470,11 @@ check("no stall of a city longer than 64 things (Локсли's 51 was the longe
       " drew before), and its frame under 4 KiB: the longest the prison yards' supply men's"
       " (2026-10-12), 61, their town's battle line and the 49 rounds of their article -- 880"
       " of Абу-Хамед's the first of the three by type; armour-only stalls in Абу-Хамед"
-      " hold 60 pieces. Марат holds ten pouches separately, by the owner's 2026-10-25 rule",
+      " now stop at level 17. Марат holds ten pouches separately, by the owner's 2026-10-25 rule",
       (len(biggest[1]) <= 64, frame < 4096, biggest[0], len(biggest[1]),
        sorted((len(s), (p, t)) for (p, t), s in stalls.items()
               if t not in (880, 2180, 2181))[-2:]),
-      (True, True, (177, 880), 61, [(60, (126, 1223)), (60, (467, 5161))]))
+      (True, True, (177, 880), 61, [(50, (103, 1233)), (52, (76, 1225))]))
 check("  ..and every thing on them a type the client has, so it draws an icon: one of"
       " objects.xml, or one of ours whose row and icon the release adds"
       " (data/own_items.json, client/build.py)",
@@ -483,7 +484,7 @@ check("the place decides: 5161 sells Абри's 8-12, Донгола's 12-16 and
       " a purchase index taken at another place would buy another thing",
       (sorted({level_of(x) for x in stalls[(378, 5161)]}), sorted({level_of(x) for x in stalls[(469, 5161)]}),
        sorted({level_of(x) for x in stalls[(467, 5161)]}), stalls[(378, 5161)][0] != stalls[(469, 5161)][0]),
-      ([8, 10, 12], [12, 13, 14, 16], [16, 17, 18, 19, 20], True))
+      ([8, 10, 12], [12, 13, 14, 16], [16, 17], True))
 check("  ..outside the cities' places, and with no place at all, a stall is its own list",
       (items.stock_for(2391, 287) == items.stock_for(2391), items.stock_for(5161, None),
        items.stock_for(1201)[:2]), (True, [], [25938, 25951]))

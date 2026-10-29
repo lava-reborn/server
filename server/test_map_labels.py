@@ -203,6 +203,8 @@ for x, y, text in rows_of(raw, HALFA_BOX):
         continue
     if (x, y) == OLD_MARKET_CELL and text == OLD_MARKET % "Обмен G комплектов<br>":
         text = OLD_MARKET % ""
+    if (x, y) == (5985, 1744):
+        text = text.replace("12:00", "13:00").replace("16:00", "17:00").replace("23:00", "21:00")
     if (x, y, text) in CLOCK:
         text, clocked = CLOCK[(x, y, text)], clocked + 1
     kept.append((x, y, text))
@@ -402,9 +404,9 @@ check("  ..and Вади-Хальфа's three still share the box from 19:00 to 2
 # across the river hid them (2026-10-13), and the pirates' two names and the
 # abandoned clan base's, until the owner's Абу-Хамед (2026-10-14) gave the
 # pirates their camp, their gold and the clock, and cut the clan base.
-ORIGINAL = {(5985, 1744): "Тюрьма Вади-Хальфы", (5903, 1996): "Тюрьма Донголы",
-            (6193, 1966): "Тюрьма Абу-Хамеда",
-            (6045, 2017): "Третий Склад МКС", (5970, 1730): "Чёрный рынок"}
+PRISONS = {(5985, 1744): "Тюрьма Вади-Хальфы", (5903, 1996): "Тюрьма Донголы",
+           (6193, 1966): "Тюрьма Абу-Хамеда"}
+ORIGINAL = {(6045, 2017): "Третий Склад МКС", (5970, 1730): "Чёрный рынок"}
 MWAMBA = (6274, 1833)                                    # «Лагерь Большого Мвамбы», no hours
 TIMED = re.compile(r"\d\d:\d\d|\b\d\d\.\d\d\b|\d+ час|чертеж")
 EVERYWHERE = (0, 99999, 0, 99999)
@@ -425,15 +427,22 @@ check("every other name on the map that tells an hour or offers blueprints is on
       " original's: the warehouses (above), the prisons, the МКС helicopter and the black market",
       sorted({(x, y) for x, y, t in rows_of(out, EVERYWHERE) if TIMED.search(t)}
              - set(CLOCK_CELLS) - set(WAREHOUSES)),
-      sorted(ORIGINAL))
+      sorted(set(ORIGINAL) | set(PRISONS)))
 check("  ..the warehouses' byte for byte as the file has them",
       [rows_bytes(out, c) for c in WAREHOUSES], [rows_bytes(raw, c) for c in WAREHOUSES])
 check("  ..each byte for byte as the file has it, «Лагерь Большого Мвамбы» too, each under its name",
       [(rows_bytes(out, c), all(t.startswith(ORIGINAL.get(c, "Лагерь Большого Мвамбы"))
                                 for t in texts_at(out, *c))) for c in sorted(ORIGINAL) + [MWAMBA]],
       [(rows_bytes(raw, c), True) for c in sorted(ORIGINAL) + [MWAMBA]])
-check("  ..the prisons' «12:00, 16:00 и 23:00» being their own window (data/schedule.json prison_wh)",
-      WINDOWS["prison_wh"]["daily"], ["12:00", "16:00", "23:00"])
+check("the three prison labels change only the agreed hours, preserving names and other text",
+      [(rows_bytes(out, c), all(t.startswith(PRISONS[c]) for t in texts_at(out, *c)))
+       for c in sorted(PRISONS)],
+      [([row.replace(b'12:00', b'13:00').replace(b'16:00', b'17:00')
+             .replace(b'23:00', b'21:00') for row in rows_bytes(raw, c)], True)
+       for c in sorted(PRISONS)])
+check("all prisons keep 13:00, 17:00 and 21:00 Moscow as their independent window",
+      [WINDOWS['prison_' + town]['daily'] for town in ('wh', 'dn', 'ah')],
+      [["13:00", "17:00", "21:00"]] * 3)
 
 # The names that promised what nothing on the server keeps (the owner's
 # «поправь чтобы на карте тоже были корректные надписи», 2026-10-11): the four

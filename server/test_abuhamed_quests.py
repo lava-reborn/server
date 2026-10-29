@@ -436,14 +436,14 @@ try:
           (sorted(w for w in ways.get(163, ()) if w[0] == 651), sorted(ways.get(882, ())),
            sorted(ways.get(883, ())), sorted(ways.get(880, ())), sorted(ways.get(881, ()))),
           ([(651, YARD)], [(YARD, 649)], [(YARD, 650)], [(STATION, YARD)], [(YARD, STATION)]))
-    check("  ..the uprising at the label's 12:00, 16:00 and 23:00 (L154) for half an hour, the"
+    check("  ..the uprising at the label's 13:00, 17:00 and 21:00 (L154) for half an hour, the"
           " gates from a quarter before, the medics for the last five minutes",
           (sched.window("prison_ah").why.startswith("RECOVERED"),
            sorted(k for k in sraw["windows"] if k.startswith("prison_ah")),
            sraw["windows"]["prison_ah"]["daily"], sraw["windows"]["prison_ah"]["minutes"],
            [(sched.gates[t][0].name, sched.gates[t][1]) for t in (880, 882, 883, 884)]),
           (True, ["prison_ah", "prison_ah_gates", "prison_ah_medics"],
-           ["12:00", "16:00", "23:00"], 30,
+           ["13:00", "17:00", "21:00"], 30,
            [("prison_ah_gates", "both")] * 3 + [("prison_ah_gates", "hand_in")]))
     check("  ..the prisoners and the godfather drop the armband in 651-653, one each, and the"
           " one keep_in row of 2476 holds the three prisons' blocks",

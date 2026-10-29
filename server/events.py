@@ -4,14 +4,14 @@ ways lead anywhere.
 
 The whole-game plan's scheduler (its cross-cutting item 4), written once and
 for every region: a place adds rows, not code. Вади-Хальфа's prison is its
-first user -- the uprising three times a day, «Усиление режима в 12:00,
-16:00 и 23:00» -- and the seasons' calendar its second.
+first user -- the uprising three times a day, «Усиление режима в 13:00,
+17:00 и 21:00» -- and the seasons' calendar its second.
 
 The clock is the bosses' (bosses.clock: Moscow time, LAVA_BOSS_CLOCK for a
 test), and a window is never remembered, only computed: whether it is open,
 and since when, is asked of the clock every time. A server restarted in the
 middle of an uprising has the uprising on; one started out of season has no
-season. The bosses keep their own rule (bosses.py: the owner's 14/18/22,
+season. The bosses keep their own rule (bosses.py: even Moscow hours,
 the warehouse masters' 20:00); a window here is everything else that keeps
 time.
 
@@ -641,9 +641,10 @@ def quest_open(quest_type, carried=False):
 def loot(loc_id, mob_type, rng):
     """[(type, pieces)] a creature killed here carries on top of its own
     table (combat.RoomCombat.drop_loot): a prisoner's red armband."""
+    import items  # Late import: items also reads event tables.
     out = []
     for obj, num, chance in table().loot.get((int(loc_id), int(mob_type)), ()):
-        if chance >= 1 or rng.random() < chance:
+        if not items.acquisition_blocked(obj) and (chance >= 1 or rng.random() < chance):
             out.append((obj, num))
     return out
 
