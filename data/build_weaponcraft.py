@@ -904,8 +904,9 @@ def decode_rows(city, texts, upgrades):
         if not servable(codified) or not prizes:
             report["decode"].append("%d %s: nothing to draw" % (i, texts[i]))
             continue
-        if codified not in bosses.BLUEPRINTS.values():
-            # Every decoding service needs an explicit boss source.
+        if (codified not in bosses.BLUEPRINTS.values()
+                and codified not in bosses.DISABLED_BLUEPRINT_DROPS):
+            # Keep decoding existing retired drops; other levels need a source.
             report["decode"].append("%d %s: no scheduled boss source for %s"
                                     % (i, texts[i], city["name"]))
             continue

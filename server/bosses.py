@@ -258,6 +258,8 @@ def keeps_hours(type_id):
 # Keys deliberately include the location: copies and the outpost's Sherhan
 # (168, 8620) do not inherit a camp leader's drop.
 BLUEPRINT_DROP_CHANCE = 0.10
+# Existing items can still be decoded after their boss drops are disabled.
+DISABLED_BLUEPRINT_DROPS = frozenset({1270, 2417, 2418})
 BLUEPRINTS = {
     (82, 269): 2408, (80, 270): 1131,       # colonists: 1, 2
     (83, 284): 2409, (81, 283): 1132,       # sectarians: 3, 4

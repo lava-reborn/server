@@ -137,6 +137,34 @@ class BossBlueprints(unittest.TestCase):
                     'lvl%d' % r['craft']['level']))
         self.assertFalse(quests.check_items())
 
+    def test_generator_keeps_decoding_disabled_drops_without_opening_other_sources(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'data'))
+        import build_weaponcraft as builder
+
+        doc = json.loads((Path(__file__).resolve().parents[1] /
+                          'data/questgen_weaponcraft.json').read_text(encoding='utf-8'))
+        rows = [r for r in doc['quests'] if r['craft']['family'] == 'decode'
+                and r['craft']['key'].startswith('decode:abu_hamed:')]
+        texts = {i: '' for i in range(47998, 48038)}
+        for row in rows:
+            ident = int(row['craft']['key'].rsplit(':', 1)[1])
+            texts[ident] = row['name']
+            texts[ident + 1] = row['start'].split('<Br><Br><b>Внимание:')[0]
+        texts[builder.DECODE_NOTFINISH] = rows[0]['notfinish']
+        texts[builder.DECODE_FINISH] = rows[0]['finish']
+        city = next(c for c in builder.CITIES if c['name'] == 'abu_hamed')
+        upgrades = [r for r in doc['quests'] if r['craft']['family'] == 'upgrade'
+                    and r['craft']['key'].startswith('upgrade:abu_hamed:')]
+        rebuilt = builder.decode_rows(city, texts, upgrades)
+        self.assertEqual(rebuilt, [{k: v for k, v in row.items() if k != 'type'}
+                                   for row in rows])
+        self.assertEqual({r['craft']['level'] for r in rebuilt}, {17, 18, 19, 20})
+        # Only the three explicitly disabled drops keep a service without a source.
+        with patch.object(bosses, 'BLUEPRINTS', {}):
+            self.assertEqual({r['craft']['level'] for r in
+                              builder.decode_rows(city, texts, upgrades)}, {18, 19, 20})
+        self.assertEqual(bosses.DISABLED_BLUEPRINT_DROPS, {1270, 2417, 2418})
+
     def test_high_level_bosses_cannot_drop_blueprints_from_any_source(self):
         for loc, mob, blueprint in ((132, 777, 1270), (274, 1038, 2417),
                                     (263, 1037, 2418)):
