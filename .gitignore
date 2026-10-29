@@ -50,3 +50,7 @@ data/map_editor_base.png
 # The publisher's own record when it is run out of the repository by hand;
 # on the server it lives in /opt/lava-ci/client/state.
 /client/state/
+
+# Locally generated release PDFs and rendering previews.
+/output/pdf/
+/tmp/pdfs/
