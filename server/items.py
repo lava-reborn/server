@@ -1191,7 +1191,7 @@ def static_info(type_id):
         # Owner's provision rebalance: the same grams are sent to the
         # client and used by inventory carry/purchase checks.
         if type_id in (333, 334):
-            info[1]["weight"] = {333: 10000, 334: 2000}[type_id]
+            info[1]["weight"] = {333: 5000, 334: 2000}[type_id]
         # A thing a quest lends (quests.lent) is the quest's, not the
         # player's: the quest flag and no exchange, the two things the
         # stall, the barter, the post and the auction ask (Inventory.sell,

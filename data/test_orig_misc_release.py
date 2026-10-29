@@ -23,12 +23,14 @@ class ReleaseTexts(unittest.TestCase):
         with patch.object(builder, "VERIFIED", {quest_type: tuple(ids)}):
             return builder.build_quests(texts, [row if row is not None else self.rows[quest_type]])[0][str(quest_type)]
 
-    def test_provision_rewrite_keeps_original_references(self):
+    def test_provision_restores_original_description_and_quantities(self):
         record = self.build(148)
         self.assertEqual(record["ids"], [62719, 62720, 62721, 62722])
         self.assertEqual(record["start"], self.originals["148"]["start"])
-        self.assertIn("один мешок фасоли", self.rows[148]["start"])
-        self.assertIn("квестовую Фуль", self.rows[148]["start"])
+        self.assertEqual(self.rows[148]["start"], record["start"])
+        self.assertNotIn("start", self.rows[148].get("own_texts", []))
+        self.assertEqual([(o["obj"], o["num"]) for o in self.rows[148]["objs"]],
+                         [(333, 5), (334, 1)])
 
     def test_three_prison_guards_accept_new_schedule_only(self):
         for quest_type in (158, 636, 884):
@@ -91,9 +93,16 @@ class ReleaseTexts(unittest.TestCase):
             rows += json.loads(path.read_text(encoding="utf-8"))["quests"]
         self.assertEqual(builder.build_quests(texts, rows)[0], self.originals)
 
-    def test_provision_exception_does_not_allow_renaming_the_quest(self):
+    def test_provision_does_not_allow_renaming_the_quest(self):
         row = copy.deepcopy(self.rows[148])
         row["name"] = "Другая награда"
+        with self.assertRaises(SystemExit):
+            self.build(148, row)
+
+    def test_provision_own_description_cannot_add_unrelated_text(self):
+        row = copy.deepcopy(self.rows[148])
+        row["own_texts"] = ["start"]
+        row["start"] += " Дополнительная награда 10 голд."
         with self.assertRaises(SystemExit):
             self.build(148, row)
 

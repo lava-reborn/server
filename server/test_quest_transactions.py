@@ -114,25 +114,27 @@ class QuestTransactions(unittest.TestCase):
         self.assertIn(334, items.stock_for(155, 50))
         self.assertIn(333, items.stock_for(155, 50))
         self.assertEqual(self.q.drops, [(t, 333, 0.3) for t in range(287, 299)])
-        self.assertEqual(items.params_of(333)['weight'], 10000)
+        self.assertEqual(items.params_of(333)['weight'], 5000)
         self.assertEqual(items.params_of(334)['weight'], 2000)
-        self.assertEqual(inventory.Inventory.pieces_weight(333, 1), 10000)
+        self.assertEqual(inventory.Inventory.pieces_weight(333, 5), 25000)
         self.assertEqual(inventory.Inventory.pieces_weight(334, 1), 2000)
-        self.assertIn('Абу-бакра', self.q.texts[1])
+        self.assertIn('5 мешков фасоли', self.q.texts[1])
+        self.assertIn(334, items.stock_for(81, 35))
         self.s.npc_type = lambda _id: 718
-        self.give(333)
+        for _ in range(6):
+            self.give(333)
         wrong_ful = self.give(6899)
-        self.assertEqual(self.q.bag_progress(self.s.inv.bag_pieces())['obj_num'], [1, 0])
+        self.assertEqual(self.q.bag_progress(self.s.inv.bag_pieces())['obj_num'], [5, 0])
         ful = self.give(334)
         progress = self.q.bag_progress(self.s.inv.bag_pieces())
-        self.assertEqual(progress['obj_num'], [1, 1])
+        self.assertEqual(progress['obj_num'], [5, 1])
         qid = self.store.take_quest(self.cid, self.q.type, progress, True)
         before = self.s.char.afro
         self.hand_in(qid)
         self.assertIsNone(self.store.quest(qid))
         self.assertIsNone(self.store.item(ful['uniq']))
         self.assertIsNotNone(self.store.item(wrong_ful['uniq']))
-        self.assertNotIn(333, self.s.inv.bag_pieces())
+        self.assertEqual(self.s.inv.bag_pieces().get(333), 1)
         self.assertEqual(self.s.char.afro - before, self.q.rew_afro)
         self.assertEqual(self.history(), 1)
         self.hand_in(qid)
@@ -146,10 +148,28 @@ class QuestTransactions(unittest.TestCase):
                  for t, _n in mobs.loot_for(mobs.stats(287), rng, {333})]
         self.assertIn(333, drops)
         self.assertNotIn(334, drops)
-        self.assertEqual(q.bag_progress({333: 1, 334: 1})['obj_num'], [1, 1])
+        self.assertEqual(q.bag_progress({333: 5, 334: 1})['obj_num'], [5, 1])
         plain = [t for _ in range(200)
                  for t, _n in mobs.loot_for(mobs.stats(287), rng)]
         self.assertNotIn(333, plain)
+
+    def test_halfa_provisions_four_sacks_cannot_be_handed_in(self):
+        self.q = quests.QUESTS[148]
+        self.s.npc_type = lambda _id: 718
+        for _ in range(4):
+            self.give(333)
+        self.give(334)
+        before_items = self.s.inv.bag_pieces()
+        progress = self.q.bag_progress(before_items)
+        self.assertEqual(progress["obj_num"], [4, 1])
+        self.assertFalse(self.q.is_complete(progress))
+        qid = self.store.take_quest(self.cid, self.q.type, progress, False)
+        before_money = self.s.char.afro
+        self.hand_in(qid)
+        self.assertIsNotNone(self.store.quest(qid))
+        self.assertEqual(self.s.inv.bag_pieces(), before_items)
+        self.assertEqual(self.s.char.afro, before_money)
+        self.assertEqual(self.history(), 0)
 
     def test_failed_take_rolls_back_start_item_and_instance(self):
         self.q.start_obj = [(6043, 1)]
