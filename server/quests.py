@@ -859,12 +859,17 @@ def check_items(table=None):
 
 
 def acquisition_blocked(quest):
-    """Do not offer/complete a quest handing out unreleased equipment.
+    """Close unreleased equipment rewards and level-18/20 blueprint upgrades.
 
     Keep rows and journal instances intact so cancelling stays possible.
     Block the whole mixed reward rather than silently deleting a prize.
     """
     import items
+    import craft
+    recipe = craft.rows().get(quest.type, {})
+    if recipe.get("family") in ("upgrade", "knife") and any(
+            items.upgrade_blueprint_blocked(t) for t, _n, _mobs in quest.objs):
+        return True
     given = list(quest.rew_obj)
     given += [t for t, _n in quest.start_obj + quest.rew_also]
     given += [t for t, _n, _w in quest.rew_random]

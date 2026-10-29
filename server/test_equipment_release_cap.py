@@ -84,6 +84,57 @@ class ReleaseBoundary(unittest.TestCase):
             self.assertTrue(quests.acquisition_blocked(q))
         self.assertFalse(quests.acquisition_blocked(quests.Quest(dict(ordinary, rew_obj=[11309]))))
 
+    def test_high_level_blueprint_upgrades_are_closed_without_removing_rows(self):
+        blocked = set()
+        for quest_type, recipe in craft.rows().items():
+            q = quests.get(quest_type)
+            if recipe.get('family') not in ('upgrade', 'knife'):
+                continue
+            blueprint = recipe['blueprint']
+            if items.upgrade_blueprint_blocked(blueprint):
+                blocked.add(blueprint)
+                self.assertTrue(quests.acquisition_blocked(q), quest_type)
+                self.assertIsNotNone(items.params_of(blueprint))
+                self.assertFalse(items.out_of_game(blueprint))
+            elif not any(items.acquisition_blocked(t) for t in q.rew_obj):
+                self.assertFalse(quests.acquisition_blocked(q), quest_type)
+        self.assertTrue({1271, 2453, 26581, 6632, 6635, 37678, 37679, 37680} <= blocked)
+        # Existing encrypted blueprints can still be decoded.
+        decoding = [quests.get(t) for t, r in craft.rows().items()
+                    if r.get('family') == 'decode' and r['level'] in (18, 19, 20)]
+        self.assertEqual(len(decoding), 3)
+        self.assertTrue(all(not quests.acquisition_blocked(q) for q in decoding))
+
+    def test_blocked_upgrade_cannot_consume_existing_quest_resources(self):
+        row = dict(type=99999, kind='bring_l_obj', name='closed upgrade',
+                   give=[748], take=[748], objs=[dict(obj=1271, num=1)],
+                   rew_obj=[11309], cost_gold=100)
+        q = quests.Quest(row)
+        with patch.object(craft, 'rows', return_value={q.type: {'family': 'upgrade'}}):
+            self.assertTrue(quests.acquisition_blocked(q))
+            store = Mock()
+            store.quest.return_value = dict(type=q.type, char_id=1)
+            sess = Mock(char_id=1)
+            sess.npc_type.return_value = 748
+            with patch.object(server, 'STORE', store), \
+                    patch.object(quests, 'get', return_value=q), \
+                    patch.object(server.residence, 'refusal', return_value=None):
+                server.Session.hand_in_quest(sess, dict(q_id=7, mob=1))
+            sess.send.assert_called_once_with('cmdAck', res=server.RES_NOT_AVAILABLE)
+            self.assertEqual([call[0] for call in store.method_calls], ['quest'])
+
+    def test_all_shops_hide_high_level_upgrade_blueprints(self):
+        traders = set(shop_bands.SELLERS) | set(items.stock_table())
+        for loc in (None, 62, 76, 195, 196, 126, 467):
+            for trader in traders:
+                self.assertTrue(all(not items.upgrade_blueprint_blocked(t)
+                                    for t in items.stock_for(trader, loc)), (trader, loc))
+        for blueprint in (1271, 2453, 26581, 6632, 6635, 37678, 37679, 37680):
+            with patch.object(items, '_own_list', return_value=[blueprint, 37677]):
+                self.assertEqual(items.stock_for(99999), [37677])
+        for blueprint in (2416, 1270, 2417, 2418, 37677, 334):
+            self.assertFalse(items.upgrade_blueprint_blocked(blueprint))
+
     def test_weapon_windows_never_offer_blocked_outputs(self):
         for npc in (5771, 7548):
             for q, gun, mod, _bp in craft.recipes_of(npc):

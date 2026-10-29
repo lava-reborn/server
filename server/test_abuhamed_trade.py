@@ -371,8 +371,8 @@ check("  ..the pouches at their articles' prices: автоматчика 50 000 
       [(price(t), price(items.GOLD_POUCHES[t])) for t in POUCHES],
       [((50000, 0), (0, 1000)), ((100000, 0), (0, 2000)), ((40000, 0), (0, 800)),
        ((20000, 0), (0, 400)), ((40000, 0), (0, 800))])
-check("Шрам: the town's knives and his whetstone's six blueprints after them",
-      STALLS[(STATION, SCAR)], shop_bands.goods(("knives",), LO, 17) + list(KNIFE_PRINTS))
+check("Шрам: released knives remain, level-18/20 blueprints are hidden",
+      STALLS[(STATION, SCAR)], shop_bands.goods(("knives",), LO, 17))
 check("the oasis's «Торговец патронами» (1232): every СТ and ОТ of his list, nothing cut",
       STALLS[(OASIS, AMMO_OASIS)], OASIS_ROUNDS)
 check("the lottery men at the port: Муамар the tickets [16], [18], [19], the gold lottery"
@@ -565,12 +565,11 @@ check("«Точильный камень Абу-Хамеда» (2282, the statio
        ["Заточка Кукри", "Эргономика Кукри", "Заточка и Эргономика Кукри",
         "Заточка Мачете", "Эргономика Мачете", "Заточка и Эргономика Мачете"], True,
        {WHETSTONE}))
-check("  ..its blueprints and knives (G) on Шрам's stall beside it, the blueprints for gold"
-      " alone: 4 / 4 / 8 G (Кукри), 5 / 5 / 10 G (Мачете)",
+check("  ..level-18/20 knife blueprints and knives stay off Шрам's stall; catalogue prices remain",
       (sorted({r["craft"]["blueprint"] for r in kni} - set(STALLS[(STATION, SCAR)])),
        sorted({r["craft"]["gun"] for r in kni} - set(STALLS[(STATION, SCAR)])),
        [price(t) for t in KNIFE_PRINTS]),
-      ([], [6271, 6276], [(0, 400), (0, 400), (0, 800), (0, 500), (0, 500), (0, 1000)]))
+      (list(KNIFE_PRINTS), [6271, 6276], [(0, 400), (0, 400), (0, 800), (0, 500), (0, 500), (0, 1000)]))
 
 # --- 4. the plant ---------------------------------------------------------------------------
 print()
@@ -805,11 +804,9 @@ async def main():
     close_stall(sess)
 
     stall, opened = open_stall(sess, STATION, SCAR)
-    check("Шрам: «Заточка Кукри (18у)» for its 4 ounces in gold; for afro refused; not bought"
-          " back",
-          (stall == items.stock_for(SCAR, STATION), opened, buy(sess, stall, 6632, GOLD),
-           buy(sess, stall, 6632, BUY), sell(sess, 6632)),
-          (True, [0], ([0], [6632], 0, 400), (REFUSED, [], 0, 0), (REFUSED, True, 0, 0)))
+    check("Шрам: level-18/20 knife blueprints cannot be purchased in either currency",
+          (stall == items.stock_for(SCAR, STATION), opened,
+           sorted(set(stall) & set(KNIFE_PRINTS))), (True, [0], []))
     close_stall(sess)
 
     stall, opened = open_stall(sess, PORT, MORTIMER)
@@ -820,7 +817,7 @@ async def main():
 
     stall, opened = open_stall(sess, QUARTER, 751)
     check("Мастер Заки (751, the living quarter): his window the machine guns' blueprints of"
-          " Абу-Хамед", (stall, opened), (npcs.stock(751), [0]))
+          " Абу-Хамед", (stall, opened), ([t for t in npcs.stock(751) if not items.upgrade_blueprint_blocked(t)], [0]))
     close_stall(sess)
 
     stall, opened = open_stall(sess, OASIS, AMMO_OASIS)

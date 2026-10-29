@@ -330,7 +330,8 @@ def stock_for(trader_type, loc_id=None):
     the owner's choice, and the rule stays a rule.
     """
     chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(_own_list(trader_type)))
-    return [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)]
+    return [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)
+            and not upgrade_blueprint_blocked(t)]
 
 
 def own_stock(trader_type):
@@ -507,6 +508,15 @@ def acquisition_blocked(type_id):
         if declared:
             level = max(level, int(declared.group(1)))
     return level > PLAYER_GEAR_MAX_LEVEL
+
+
+def upgrade_blueprint_blocked(type_id):
+    """Temporarily close level 18-20 upgrade blueprints, keeping owned items."""
+    entry = catalogue().get(type_id)
+    if not entry or not entry[1].startswith(("bpg_", "bpb_")):
+        return False
+    level = re.search(r"_lvl(\d+)(?:_|$)", entry[1])
+    return bool(level and 18 <= int(level.group(1)) <= 20)
 
 
 def no_combat(type_id):
