@@ -12,13 +12,20 @@ def locations():
                 for k, row in json.load(stream)['locations'].items()}
 
 
+# Exact kill targets and carriers at the locations marked by existing quests.
+QUEST_TARGETS = {80: frozenset({258, 261}), 84: frozenset({291}),
+                 85: frozenset({303, 307, 311}), 93: frozenset({362, 365, 366}),
+                 98: frozenset({399}), 168: frozenset({1027})}
+
+
 def applies(loc_id, type_id):
     record = locations().get(loc_id)
-    return record is not None and type_id in record[0]
+    return (record is not None and type_id in record[0]
+            and type_id not in QUEST_TARGETS.get(loc_id, ()))
 
 
 def replacement(loc_id, type_id, index):
     record = locations().get(loc_id)
-    if record is None or type_id not in record[0]:
+    if not applies(loc_id, type_id):
         return type_id
     return record[1][index % len(record[1])]

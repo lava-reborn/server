@@ -93,7 +93,10 @@ class LootRebalance(unittest.TestCase):
                 self.assertTrue(0 < row['chance'] <= 1)
                 self.assertEqual(row['independent'], row['type'] == mortimer.SAND)
 
+    @patch.object(loot_rules, 'QUEST_MATERIALS', frozenset())
     def test_real_patrol_composition_meets_the_income_targets(self):
+        mobs._TABLES.clear()
+        self.addCleanup(mobs._TABLES.clear)
         for profile in self.doc['targets']:
             counts = {int(k): n for k, n in profile['counts'].items()}
             if profile['context'] == 'Окрестности':
@@ -143,7 +146,7 @@ class LootRebalance(unittest.TestCase):
             room = self.manager.get(int(lid))
             ordinary = [n.type_id for n in room.npcs.values()
                         if n.root == world.MOB and mobs.stats(n.type_id).role == 'mob'
-                        and n.type_id not in protected]
+                        and n.type_id not in protected | camp_elites.QUEST_TARGETS.get(int(lid), frozenset())]
             self.assertTrue(ordinary)
             self.assertLessEqual(set(ordinary), set(record['types']))
             self.assertGreaterEqual(len(set(ordinary)), min(3, len(ordinary)))
@@ -163,11 +166,36 @@ class LootRebalance(unittest.TestCase):
         for kind in (930, 931):
             self.assertEqual(mobs.quest_roll(kind, (), random.Random(1)), [])
 
+    def test_camp_quest_targets_and_ordinary_materials_are_preserved(self):
+        for lid, kinds in camp_elites.QUEST_TARGETS.items():
+            actual = {n.type_id for n in self.manager.get(lid).npcs.values()}
+            self.assertLessEqual(kinds, actual)
+        for kind in (250, 251):
+            self.assertIn((6915, .3, False), mobs.loot_table(kind))
+        for kind in (305, 306, 307, 308):
+            self.assertIn(6942, {t for t, _, _ in mobs.loot_table(kind)})
+
     def test_drop_table_is_type_only_even_in_different_locations(self):
         for kind in (20, 264, 838, 930):
             a = mobs.loot_for(mobs.stats(kind), random.Random(19), (), loc_id=34)
             b = mobs.loot_for(mobs.stats(kind), random.Random(19), (), loc_id=132)
             self.assertEqual(a, b)
+
+    def test_existing_quest_marks_keep_their_kill_targets_and_carriers(self):
+        for lid in camp_elites.locations():
+            with patch.object(camp_elites, 'applies', return_value=False):
+                before = {n.type_id for n in rooms.Room(
+                    world.location(lid), rooms.IdAllocator(), world.mob_types()).npcs.values()}
+            after = {n.type_id for n in self.manager.get(lid).npcs.values()}
+            cell = world.cell_of(lid)
+            mark = world.pack(*cell) if cell else None
+            for q in quests.QUESTS.values():
+                if q.loc != mark:
+                    continue
+                self.assertLessEqual(set(q.mobs_kill) & before, after, (lid, q.type))
+                for _obj, _num, carriers in q.objs:
+                    if set(carriers) & before:
+                        self.assertTrue(set(carriers) & after, (lid, q.type))
 
     def test_sand_is_outside_cap_and_normal_random_rows_still_share_two_slots(self):
         for k in (836, 837, 838, 839, 840, 841, 930, 931):

@@ -667,9 +667,9 @@ try:
         wants[label] = ([0], pay, [new])
     check("each press charged what the window computes from the frames, and the thing came"
           " back as the rule says", results, wants)
-    check("  ..in figures: ordinary repairs and restoration unchanged; G uses A valuation",
+    check("  ..in figures: ordinary repairs unchanged; G restoration pays the lost ceiling share",
           [results[label][1] for label, *_r in CASES],
-          [(420, 0), (0, 1), (33, 0), (9000, 0), (0, 18), (0, 300), (0, 300),
+          [(420, 0), (0, 1), (33, 0), (9000, 0), (0, 18), (0, 60), (0, 300),
            (2100, 0), (0, 4)])
 
     # «Отремонтировать все», as the client sends it: every listed thing's
@@ -740,7 +740,7 @@ try:
           book, [("repair", WALTHER, -420, 0), ("repair", WALTHER, 0, -1),
                  ("repair", WALTHER, -33, 0),
                  ("repair", GVEST, -9000, 0), ("repair", GVEST, 0, -18),
-                 ("repair", GVEST, 0, -300), ("repair", GVEST, 0, -300),
+                 ("repair", GVEST, 0, -60), ("repair", GVEST, 0, -300),
                  ("repair", GWALTHER, -2100, 0), ("repair", GWALTHER, 0, -4),
                  ("repair", WALTHER, -33, 0), ("repair", WALTHER, -672, 0),
                  ("repair", GWALTHER, -2100, 0),

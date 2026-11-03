@@ -102,7 +102,7 @@ try:
     arrival=client.until(lambda cmd,p:cmd=="userInfo_Lessor" and p.get("name")==653)
     lessor=get(arrival,"userInfo_Lessor")
     cell=next(p["pos"] for cmd,p in arrival if cmd=="lch" and p.get("newUser")==lessor["id"])
-    client.send("moveTo;path=|%d|;"%cell);client.named("userMove")
+    client.send("moveTo;path=|%d|;"%cell);client.named("actionCancel")
     command="on_conv;op=2;mob=%d;p1=4;p2=1;"%lessor["id"]
     first=client.ack(command);first_info=get(first,"userInfo_Player")
     second=client.ack(command);second_info=get(second,"userInfo_Player")
@@ -121,7 +121,7 @@ try:
     arrival=client.until(lambda cmd,p:cmd=="userInfo_Lessor" and p.get("name")==653)
     lessor=get(arrival,"userInfo_Lessor")
     cell=next(p["pos"] for cmd,p in arrival if cmd=="lch" and p.get("newUser")==lessor["id"])
-    client.send("moveTo;path=|%d|;"%cell);client.named("userMove")
+    client.send("moveTo;path=|%d|;"%cell);client.named("actionCancel")
     check("one-hour status refuses two-day rental",result(client.ack("on_conv;op=2;mob=%d;p1=18;p2=2;"%lessor["id"]))!=0,True)
     frames=client.ack("on_conv;op=2;mob=%d;p1=18;p2=1;"%lessor["id"])
     check("one-hour status still allows one full day",result(frames),0)

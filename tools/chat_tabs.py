@@ -343,6 +343,8 @@ def artwork(tags):
         clean.append((code, payload, long_header))
     linkage = {name: cid for code, payload, _ in clean if code == 56
                for name, cid in exports(payload)}
+    if 'channel_clan_btn' not in linkage:
+        return tags
     source = next(payload for code, payload, _ in clean if code == 39
                   and struct.unpack_from('<H', payload)[0] == linkage['channel_clan_btn'])
     definitions = {2, 6, 7, 10, 11, 14, 20, 21, 22, 32, 33, 34, 35, 36,

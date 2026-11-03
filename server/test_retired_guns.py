@@ -511,7 +511,7 @@ try:
     gone_char = st.create_item(ids["gone"], STEYR, 0)
 
     def lot_of(row, **kw):
-        snap = {"uniq": row["uniq"], "type_id": row["type_id"], "root": row["root"], "count": 1}
+        snap = dict(row)
         return dict(dict(type_id=row["type_id"], root=row["root"], item_json=json.dumps(snap),
                          seller=seller, seller_name="seller", currency=0, start_bid=100,
                          buyout=0, fee=5, hours=24, created_at=1, ends_at=9e9), **kw)

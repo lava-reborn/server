@@ -451,7 +451,8 @@ try:
           " base, the warehouse's clan flag nowhere since Абу-Хамед's took the base 118",
           {t: w[:8] for t, w in elsewhere.items() if w}, ELSEWHERE)
     alone = sorted(t for t in people if not elsewhere[t])
-    givers = {t for t in people if quests.given_by(t) or quests.taken_by(t)}
+    givers = {t for t in people
+              if (set(quests.given_by(t)) | set(quests.taken_by(t))) - {8800, 8801, 8802, 8803}}
     check("of those who give or take a quest every one stands in Абри's ore refinery 766 too, with his quests"
           " 532-538", (sorted(givers), sorted(givers - {t for t in people if 766 in elsewhere[t]})),
           ([2393, 2394, 2395, 2396], []))

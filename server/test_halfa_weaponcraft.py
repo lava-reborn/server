@@ -345,7 +345,7 @@ try:
         if r["craft"]["line"] in "AG":
             by_class.setdefault(craft.weapon_of(r["craft"]["gun"]), set()).add(r["craft"]["blueprint"])
     check("the empty blueprint stalls sell their master's class's blueprints, all of them",
-          {cls: [set(items.stock_for(s)) == set().union(*(by_class[c] for c, peers in STALLS.items() if s in peers)) for s in stalls]
+          {cls: [set(items.stock_for(s)) == set(craft.unique_blueprints(sorted(set().union(*(by_class[c] for c, peers in STALLS.items() if s in peers))))) for s in stalls]
            for cls, stalls in STALLS.items()},
           {cls: [True] * len(stalls) for cls, stalls in STALLS.items()})
     check("  ..the quarter's trader the [Q] Маузер's twelve, Однопальцый (1152) the valley's"
@@ -396,7 +396,8 @@ try:
     sold = {t for s in (576, 578, 7311, Q_STALL, 1152) for t in items.stock_for(s)}
     check("  ..so every recipe's blueprint is on sale in Вади-Хальфа (the pistols' at Мастер"
           " Клара's, 575, as the wiki's list had it)",
-          sorted({r["craft"]["blueprint"] for r in ups} - sold - set(items.stock_for(575))), [])
+          sorted(t for t in {r["craft"]["blueprint"] for r in ups}
+                 if not set(craft.blueprint_variants(t)) & (sold | set(items.stock_for(575)))), [])
     check("  ..every blueprint on sale priced and named, none premium; the «Урон и размер"
           " обоймы» of the afro line at the article's price, afro or gold, the gold line's"
           " at its gold price alone",
@@ -419,7 +420,7 @@ try:
     gold_named = sorted(t for t, (_r, n) in items.catalogue().items()
                         if re.match(r"^bp[gb]_.*_gold_", n))
     on_sale = sorted({t for s in (576, 578, 7311, 7309, 7310)
-                      for t in items.stock_for(s)} & set(gold_named))
+                      for t in items.stock_for(s) for t in craft.blueprint_variants(t)} & set(gold_named))
     check("the gold line's own blueprints (asked only by the (G) guns' rows, all of the"
           " gold line's name) on sale in Вади-Хальфа for gold alone: no afro price, a gold"
           " thing, never falls at a death",
@@ -903,17 +904,20 @@ try:
     c.send("ss_create;s_type=1;target=%d;" % here[SHOTGUN_STALL][0])
     check("the shotgun blueprints' stall (576) opens at the port market",
           acks(c.frames()), [0])
-    index = "x%x" % items.stock_for(SHOTGUN_STALL).index(GOLD_BP_5)
+    offered_bp = next(t for t in items.stock_for(SHOTGUN_STALL)
+                      if t in craft.blueprint_variants(GOLD_BP_5))
+    index = "x%x" % items.stock_for(SHOTGUN_STALL).index(offered_bp)
     money0 = purse()
     c.send("ss_upd;s_status=1;obj=%s;param=1;" % index)
     got = c.frames()
-    check("  ..«Урон и размер обоймы (5у)» of the gold line is not sold for afro: refused,"
-          " nothing moves", (acks(got) != [0], purse(), owned().get(GOLD_BP_5, 0)),
-          (True, money0, 0))
+    check("  ..the deduplicated dual-priced blueprint costs 6000 afro",
+          (acks(got), purse(), owned().get(offered_bp, 0)),
+          ([0], (money0[0] - 6000, money0[1]), 1))
+    money0 = purse()
     c.send("ss_upd;s_status=4;obj=%s;param=1;" % index)
     got = c.frames()
-    check("  ..and is for gold: 1.50 G", (acks(got), purse(), owned().get(GOLD_BP_5, 0)),
-          ([0], (money0[0], money0[1] - 150), 1))
+    check("  ..and is for gold: 1.50 G", (acks(got), purse(), owned().get(offered_bp, 0)),
+          ([0], (money0[0], money0[1] - 150), 2))
     c.send("ss_upd;s_status=0;obj=x0;")
     c.frames(0.3)
 

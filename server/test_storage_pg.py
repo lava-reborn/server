@@ -1049,7 +1049,7 @@ kept = store.create_item(keeper, BERETTA, 3)
 lying = store.create_item(0, MASK_P, 1)
 store.lay_down({lying["uniq"]: 9e9}, (36, None, None), 100)
 selling = store.create_item(keeper, MASK_P, 1)
-psnap = {"uniq": selling["uniq"], "type_id": MASK_P, "root": 1}
+psnap = dict(selling)
 plot = store.auction_list(selling["uniq"], keeper, dict(
     type_id=MASK_P, root=1, item_json=json.dumps(psnap), seller=keeper, seller_name="на причале",
     currency=1, start_bid=100, buyout=0, fee=0, hours=24, created_at=int(time.time()),
@@ -1129,7 +1129,7 @@ r_kept = store.create_item(holder, BERETTA, 0)
 r_lying = store.create_item(0, CHANG, 0)
 store.lay_down({r_lying["uniq"]: 9e9}, (103, None, None), 100)
 r_sale = store.create_item(seller, CHANG, 0)
-gsnap = {"uniq": r_sale["uniq"], "type_id": CHANG, "root": 0, "count": 1}
+gsnap = dict(r_sale)
 glot = store.auction_list(r_sale["uniq"], seller, dict(
     type_id=CHANG, root=0, item_json=json.dumps(gsnap), seller=seller, seller_name="продавец",
     currency=0, start_bid=100, buyout=0, fee=0, hours=24, created_at=int(time.time()),

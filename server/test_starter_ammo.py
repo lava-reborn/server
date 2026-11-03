@@ -34,38 +34,50 @@ compatible = {t for t, (root, _name) in items.catalogue().items()
               if root == items.FIRE_ARM and AMMO in items.params_of(t).get("comp_array", [])}
 check("only Samostrel and its twelve modified variants accept gift rounds", compatible, expected)
 
+import test_mortimer_sales as fixtures
+
+
 class Shop:
     def __init__(self, trader, loc, afro=100):
-        self.trade = SimpleNamespace(trader_type=trader, loc_id=loc)
-        self.purse = (afro, 0)
-        self.acks = []
-        self.created = []
-    def ack(self, code): self.acks.append(code)
-    def total_weight(self): return 0
-    def carry_limit(self): return inventory.MAX_WEIGHT
-    def money(self): return self.purse
-    def set_money(self, afro, gold, *args): self.purse = (afro, gold)
-    def create(self, t, n):
-        self.created.append((t, n))
-        return {}
-    def push_status(self, *args): pass
-    def push_di(self, *args): pass
-    def push_money(self): pass
+        self.case = fixtures.MortimerSales()
+        self.case.setUp()
+        self.inv = self.case.inv
+        self.inv.trade = inventory.TradeSession(1, trader, loc)
+        self.case.store.set_money(self.case.cid, afro, 0)
+        self.case.s.char.afro, self.case.s.char.gold = afro, 0
+
+    @property
+    def acks(self):
+        return [p['res'] for cmd, p in self.case.frames if cmd == 'cmdAck']
+
+    @property
+    def purse(self):
+        row = self.case.store.character(self.case.cid)
+        return row['afro'], row['gold']
+
+    @property
+    def created(self):
+        return [(r['type_id'], r['count']) for r in self.inv.rows()]
+
 
 for trader, loc in ((5218, 181), (5219, 183), (5212, 185)):
     stock = items.stock_for(trader, loc)
     check("trader %d stocks gift rounds" % trader, AMMO in stock, True)
     request = dict(obj=format(stock.index(AMMO), "x"), param=20)
     shop = Shop(trader, loc)
-    inventory.Inventory.buy(shop, request, inventory.UPD_BUY)
+    shop.inv.buy(request, inventory.UPD_BUY)
     check("afro purchase works with zero gold: %d" % trader,
           (shop.acks, shop.purse, shop.created), ([inventory.RES_OK], (80, 0), [(AMMO, 20)]))
+    shop.case.doCleanups()
     shop = Shop(trader, loc, afro=0)
-    inventory.Inventory.buy(shop, request, inventory.UPD_BUY)
+    shop.inv.buy(request, inventory.UPD_BUY)
     check("cannot buy without afro", (shop.acks, shop.created), ([inventory.RES_NO_MONEY], []))
+    shop.case.doCleanups()
     shop = Shop(trader, loc)
-    inventory.Inventory.buy(shop, request, inventory.UPD_BUY_GOLD)
+    shop.inv.buy(request, inventory.UPD_BUY_GOLD)
     check("gold purchase refused", (shop.acks, shop.created), ([inventory.RES_REFUSED], []))
+
+    shop.case.doCleanups()
 
 # Exercise the real reload rejection before any inventory mutations.
 for t in (25566, 25576, 25951):

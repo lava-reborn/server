@@ -672,7 +672,7 @@ try:
            shown.get(MORTIMER, ("", {}))[1].get("type_list"),
            shown.get(MORTIMER, ("", {}))[1].get("give_quests"),
            [t in here for t in (LOTTERY_MAN, 1171, 1174, 1164)]),
-          ([RIDE_BACK, 275, TICKET_BACK, 281], list(INGOTS), list(range(301, 308)),
+          ([RIDE_BACK, 275, TICKET_BACK, 281], list(INGOTS), list(range(301, 308)) + [8800, 8801, 8802, 8803],
            [True] * 4))
     check("  ..arrived beside Луиджи's way back",
           first(arrival, "lenter").get("pos") == travel.door_arrival(world.location(PORT), STATION),

@@ -67,6 +67,7 @@ import combat  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import mobs  # noqa: E402
+import loot_rules  # noqa: E402
 import names  # noqa: E402
 import production  # noqa: E402
 import progression  # noqa: E402
@@ -549,8 +550,8 @@ try:
           (31, 16))
     check("  ..miners keep the corporal's ordinary loot, plus their explicit sand, emerald"
           " and silver case; the [9]'s non-valuable rows match the [8]'s",
-          ([r for r in mobs.loot_table(MINER) if r[0] not in (2258, 3159, 6946)]
-           == mobs.loot_table(CORPORAL),
+          ([r for r in mobs.loot_table(MINER) if not loot_rules.economic(r[0])]
+           == [r for r in mobs.loot_table(CORPORAL) if not loot_rules.economic(r[0])],
            [r for r in mobs.loot_table(MINER_9) if not r[2]]
            == [r for r in mobs.loot_table(MINER) if not r[2]]), (True, True))
     check("«Просьба о помощи» (221) is on, at Фрэнк (the wiki's «Боец сопротивления»)",

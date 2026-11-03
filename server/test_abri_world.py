@@ -168,14 +168,11 @@ try:
           {88: ["st"], 89: ["st"], 90: ["zd"], 92: ["zd"]})
     r88, r89, r90, r92 = room(88), room(89), room(90), room(92)
     check("the slave traders' camp 88: Папаша Абу, ten of the fill, Санденс Кид, two boxes",
-          stood(r88), collections.Counter({327: 1, 315: 1, 316: 1, 317: 1, 318: 1, 319: 1, 320: 1,
-                                           321: 1, 323: 1, 324: 1, 590: 1, 1563: 1, 2163: 2}))
+          stood(r88), collections.Counter({324: 3, 325: 3, 326: 3, 2163: 2, 327: 1, 590: 1, 1563: 1}))
     check("  ..its chief's place 89: Надзиратель Лаки, the four of the file and nine of the fill",
           (stood(r89)[328], sum(stood(r89).values())), (1, 14))
     check("the flayers' camp 92: Элфрид, Агата's son, ten of the fill, Бутч Кэссиди, two boxes",
-          stood(r92), collections.Counter({360: 1, 390: 1, 348: 1, 349: 1, 350: 1, 351: 1, 352: 1,
-                                           353: 1, 355: 1, 356: 1, 357: 1, 591: 1, 1564: 1,
-                                           2164: 2}))
+          stood(r92), collections.Counter({356: 3, 357: 2, 2164: 2, 358: 2, 359: 2, 360: 1, 390: 1, 591: 1, 1564: 1}))
     check("  ..its chief's place 90: Бетти and ten of the fill", (stood(r90)[361], sum(stood(r90).values())),
           (1, 11))
     check("the hippies (191): twelve, four of each kind, at 9-11",

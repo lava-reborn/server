@@ -5,6 +5,9 @@ from pathlib import Path
 
 import items
 
+# Ordinary materials required by the existing provisions and rope quests.
+QUEST_MATERIALS = frozenset({3179, 6915, 6942})
+
 
 @lru_cache(maxsize=1)
 def records():
@@ -16,4 +19,5 @@ def records():
 def economic(type_id):
     info = items.params_of(type_id) or {}
     return (items.root_of(type_id) == items.TRASH and info.get('cost', 0) > 0
-            and not info.get('quest') and type_id not in items.GOLD_INGOTS)
+            and not info.get('quest') and type_id not in items.GOLD_INGOTS
+            and type_id not in QUEST_MATERIALS)

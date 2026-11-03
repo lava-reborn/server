@@ -22,13 +22,41 @@ def exports(tags):
     return out
 
 
+def fixture():
+    """Small native tab/font envelope for CI, which omits main.swf."""
+    from swfgen import rect
+    names = {'channel_clan_btn': 1, 'channel_btn': 2,
+             'channel_main_btn': 3, 'channel_private_btn': 4}
+    codes = list(range(32, 127)) + list(range(0x400, 0x460))
+    count = len(codes)
+    offsets = [2 * (count + 1) + 2 * i for i in range(count + 1)]
+    font = (struct.pack('<H', 5) + bytes((4, 0, 6)) + b'Arial\0'
+            + struct.pack('<H', count) + struct.pack('<%dH' % (count + 1), *offsets)
+            + b'\0\0' * count + struct.pack('<%dH' % count, *codes))
+    tags = [(75, font, True), (2, struct.pack('<H', 6) + rect(0, 20, 0, 20)
+                             + b'\0\0\0', True)]
+    for cid in names.values():
+        caption = bytes((6,)) + struct.pack('<HH', 4, 6) + b'\0'
+        close = bytes((0x26,)) + struct.pack('<HH', 5, 6) + b'\0close_btn\0'
+        children = [(26, caption, True)]
+        if cid == 2:
+            children.append((26, close, True))
+        children += [(1, b'', False), (0, b'', False)]
+        tags.append((39, struct.pack('<HH', cid, 1) + w.join_tags(b'', children), True))
+    tags += [(56, struct.pack('<H', len(names)) + b''.join(
+        struct.pack('<H', cid) + name.encode() + b'\0' for name, cid in names.items()), True),
+        (1, b'', False), (0, b'', False)]
+    return tags
+
+
 class PrivateCaptionArtwork(unittest.TestCase):
     def test_private_caption_replaces_baked_clan_text_without_changing_clan(self):
         source = Path(os.environ.get('LAVA_RES', 'res')) / 'main.swf'
-        if not source.is_file():
-            self.skipTest('LAVA_RES/main.swf is required for artwork check')
-        _, body = w.read_swf(source)
-        original = w.split_tags(body)
+        if source.is_file():
+            _, body = w.read_swf(source)
+            original = w.split_tags(body)
+        else:
+            original = fixture()
         patched = chat_tabs.artwork(original)
         self.assertEqual(chat_tabs.artwork(patched), patched)
         links = exports(patched)

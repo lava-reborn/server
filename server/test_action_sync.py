@@ -78,6 +78,15 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(s.live_cell(), 3)
             self.assertEqual(f.ap, 97)
 
+    async def test_stop_on_passage_arms_exit_without_single_cell_walk_animation(self):
+        f, s, room, events, row = self.movement_session()
+        armed = []
+        s.arm_passage = armed.append
+        s.move_in_location(dict(path=[s.pos]))
+        self.assertEqual(armed, [1])
+        self.assertFalse(any(cmd == 'userMove' for cmd, _ in events))
+        self.assertTrue(any(cmd == 'actionCancel' for cmd, _ in events))
+
     async def test_click_arriving_after_route_finished_does_not_replay_its_prefix(self):
         f, s, room, events, row = self.movement_session()
         with self.clock(100):

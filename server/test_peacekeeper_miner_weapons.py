@@ -71,7 +71,7 @@ check('global level-16/17 AP curves retained',
 for weapon in (25265, 25303):
     check('%d: weapon remains afro-only' % weapon,
           (items.params_of(weapon)['cost'] > 0, items.params_of(weapon)['g_cost']), (True, 0))
-for t, chance in ((840, 0.05), (841, 0.05)):
+for t, chance in ((840, 0.018686), (841, 0.020981)):
     check('%d: individual gold-case drop chance' % t,
           [(c, v) for obj, c, v in mobs.loot_table(t) if obj == 6953], [(chance, True)])
 if fails:

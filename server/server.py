@@ -4057,6 +4057,7 @@ class Session:
                     self.room.broadcast(("actionCancel", dict(id=self.pid, pos=cells[0])),
                                         exclude=self)
                 self.combat.c_ap()
+                self.arm_passage(1)
                 return
             self.send("userMove", id=0, path=cells)
             # The same walk under our real id for everyone else in the room:

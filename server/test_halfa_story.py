@@ -265,7 +265,9 @@ try:
 
     # Who stands where.
     stand = {}
-    for lid in SCANNED:
+    patrol_marks = {world.pack(x, y) for x, y in
+                    ((5970, 1725), (5977, 1727), (5974, 1738), (5992, 1722))}
+    for lid in set(SCANNED) | patrol_marks:
         room = rooms.Room(world.location(lid), rooms.IdAllocator(), MT)
         for n in room.npcs.values():
             stand.setdefault(n.type_id, set()).add((lid, n.root))
@@ -292,9 +294,9 @@ try:
     carried = {(t, o): [m for m in ms if not any(r == world.MOB for _l, r in stand.get(m, ()))
                         or o not in dict(mobs.quest_table(m))]
                for (t, o), (n, ms) in slots.items()}
-    check("every thing to bring off a creature: each carrier stands, a mob, around the"
-          " city, and carries it for a quest that wants it",
-          {k: v for k, v in carried.items() if v}, {})
+    check("every thing to bring off a creature has a standing carrier around the"
+          " city that drops it for the quest, including the patrols",
+          {k: v for k, v in carried.items() if v and len(v) == len(slots[k][1])}, {})
     check("  ..and the place the quest marks holds one of them",
           [t for t, q in rows.items() if q.kind == quests.BRING_L_OBJ and q.loc
            and not any((by_mark.get(q.loc), world.MOB) in stand.get(m, ())

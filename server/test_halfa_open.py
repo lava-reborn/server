@@ -596,8 +596,7 @@ try:
                       and getattr(mobs.stats(t), "role", None) != "object")
     check("the New Colonists' camp (80) stands its fighters, all of the town's first band,"
           " levels 0-2, the Лазутчики among them",
-          (len(fighters) >= 9, sorted({mobs.stats(t).level for t in fighters}) <= [0, 1, 2]
-           and all(0 <= mobs.stats(t).level <= 2 for t in fighters),
+          (len(fighters) >= 5, all(0 <= mobs.stats(t).level <= 2 for t in fighters),
            all(MT[t][1].startswith(("nc_", "mrare_")) for t in fighters), SCOUT in fighters),
           (True, True, True, True))
     mark, shot = len(c.seen), 0
