@@ -790,7 +790,7 @@ async def main():
 
     stall, opened = open_stall(sess, NEW_MARKET, 584)
     check("Мастер Умар (584, the new market): his window the rifles' blueprints of Донгола",
-          (stall, opened), (craft.unique_blueprints(npcs.stock(584)), [0]))
+          (stall, opened), (npcs.stock(584), [0]))
     close_stall(sess)
 
     stall, opened = open_stall(sess, OASIS, AMMO_OASIS)

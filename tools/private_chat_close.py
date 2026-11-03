@@ -3,6 +3,12 @@ from avm_codegen import Compiler
 
 SOURCE = '''
 def __pmFitNickname(mc, peer):
+    # The borrowed close control belongs to a wider native tab. Position it
+    # against this tab's actual frame, accounting for the symbol's own origin.
+    if mc.close_btn and mc.backButton:
+        frame = mc.backButton.getBounds(mc)
+        close = mc.close_btn.getBounds(mc)
+        mc.close_btn._x = mc.close_btn._x + frame.xMax - close.xMax - 5
     field = mc.pmNickname
     field.text = peer
     length = len(peer)

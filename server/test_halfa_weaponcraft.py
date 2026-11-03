@@ -345,7 +345,7 @@ try:
         if r["craft"]["line"] in "AG":
             by_class.setdefault(craft.weapon_of(r["craft"]["gun"]), set()).add(r["craft"]["blueprint"])
     check("the empty blueprint stalls sell their master's class's blueprints, all of them",
-          {cls: [set(items.stock_for(s)) == set(craft.unique_blueprints(sorted(set().union(*(by_class[c] for c, peers in STALLS.items() if s in peers))))) for s in stalls]
+          {cls: [set(items.stock_for(s)) == set().union(*(by_class[c] for c, peers in STALLS.items() if s in peers)) for s in stalls]
            for cls, stalls in STALLS.items()},
           {cls: [True] * len(stalls) for cls, stalls in STALLS.items()})
     check("  ..the quarter's trader the [Q] Маузер's twelve, Однопальцый (1152) the valley's"
@@ -910,14 +910,13 @@ try:
     money0 = purse()
     c.send("ss_upd;s_status=1;obj=%s;param=1;" % index)
     got = c.frames()
-    check("  ..the deduplicated dual-priced blueprint costs 6000 afro",
-          (acks(got), purse(), owned().get(offered_bp, 0)),
-          ([0], (money0[0] - 6000, money0[1]), 1))
-    money0 = purse()
+    check("  ..the G blueprint is refused for afro without consuming money",
+          (acks(got) != [0], purse(), owned().get(offered_bp, 0)),
+          (True, money0, 0))
     c.send("ss_upd;s_status=4;obj=%s;param=1;" % index)
     got = c.frames()
     check("  ..and is for gold: 1.50 G", (acks(got), purse(), owned().get(offered_bp, 0)),
-          ([0], (money0[0], money0[1] - 150), 2))
+          ([0], (money0[0], money0[1] - 150), 1))
     c.send("ss_upd;s_status=0;obj=x0;")
     c.frames(0.3)
 

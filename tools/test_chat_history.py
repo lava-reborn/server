@@ -76,7 +76,7 @@ class History(unittest.TestCase):
     def test_private_public_ttl_original_names_times_and_no_delivery_events(self):
         self.attach()
         rec=self.rec(group=-1,peer='Лейкан')
-        self.add(rec,'too old',self.now-43200001)
+        self.add(rec,'too old',self.now-3600001)
         self.add(rec,'private')
         self.add(self.rec(group=6),'world')
         self.call('__hcSafeClose')
@@ -92,6 +92,13 @@ class History(unittest.TestCase):
             self.assertEqual(c['logArr'][0]['time'],'19:04')
             self.assertIn('Отключение от сервера',c['logArr'][-1]['mess'])
         self.assertCountEqual(second['tabs'],[(-1,'Лейкан'),(6,None)])
+
+    def test_one_hour_boundary_keeps_recent_rows_and_excludes_older_history(self):
+        rows = Arr([dict(mess='expired', name='Sender', __hcStamp=self.now - 3600001),
+                    dict(mess='boundary', name='Sender', __hcStamp=self.now - 3600000),
+                    dict(mess='recent', name='Sender', __hcStamp=self.now - 1000)])
+        kept = self.call('__hcPrune', rows, self.now, 50)
+        self.assertEqual([row['mess'] for row in kept], ['boundary', 'recent'])
 
     def test_character_and_server_isolation(self):
         self.attach();self.add(self.rec(),'secret');self.call('__hcSafeClose')

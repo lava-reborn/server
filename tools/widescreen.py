@@ -1110,19 +1110,99 @@ def fn_weight_item_info(dynamic=False):
     return a
 
 
-def fn_walk_create():
-    """Keep the elapsed part of an unchanged edge when a new route arrives."""
+def fn_walk_refused():
+    """Native refusal consumes its callback once; release the old destination."""
     a = Asm()
+    a.var("obj").push(1).var("this").push("__walkRefuseOrig").op("callmethod").op("pop")
+    a.push("walker").var("obj").member("param", "id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("walker").op("not").iftrue("out")
+    a.var("walker").push("finishPos").var("walker").member("numPos").op("setmember")
+    a.label("out")
+    return a
+
+
+def fn_walk_request():
+    """Reject the already requested destination before native pathfinding.
+
+    movePlayer already has this guard, but only after findPath. Keep its
+    original finishPos semantics and bypass both the search and the send.
+    A server stop clears finishPos separately, so retries after actions work.
+    """
+    a = Asm()
+    a.var("cell").op("not").iftrue("original")
+    a.var("cell").member("num").var("this").member("gamer", "walker", "finishPos").op("equals2").op("not").iftrue("original")
+    a.push(UNDEF).op("return")
+    a.label("original")
+    a.var("spliceNum").var("cell").push(2).var("this").push("__walkRequestOrig").op("callmethod").op("return")
+    return a
+
+
+def fn_walk_path():
+    """Plan a click from the current edge's end, without another path search."""
+    a = Asm()
+    a.push("walker").var("this").member("gamer", "walker").op("definelocal")
+    a.var("walker").member("__walkActive").op("not").iftrue("original")
+    a.var("walker").member("path").op("not").iftrue("original")
+    a.var("walker").member("path", "length").push(1).op("less2").iftrue("original")
+    a.var("cell0").member("num").var("walker").member("numPos").op("equals2").op("not").iftrue("original")
+    a.push("anchor").var("walker").member("path", 0).op("definelocal")
+    a.var("anchor").member("num").var("cell1").member("num").op("equals2").op("not").iftrue("search")
+    a.var("anchor").push(1).op("initarray").op("return")
+    a.label("search")
+    a.push("tail").var("cell1").var("anchor").push(2).var("this").push("__walkPathOrig").op("callmethod").op("definelocal")
+    a.var("tail").op("not").iftrue("failed")
+    a.var("anchor").push(1).var("tail").push("unshift").op("callmethod").op("pop")
+    a.label("failed")
+    a.var("tail").op("return")
+    a.label("original")
+    a.var("cell1").var("cell0").push(2).var("this").push("__walkPathOrig").op("callmethod").op("return")
+    return a
+
+
+def fn_walk_frame():
+    """Apply one authoritative route to the owner or an observing player."""
+    a = Asm()
+    a.push("p").var("obj").member("param").op("definelocal")
+    a.push("walker").var("p").member("id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("walker").op("not").iftrue("original")
+    a.var("walker").push("__walkElapsed").var("p").member("step_ms").op("setmember")
+    a.var("p").member("step_ms").push(UNDEF).op("equals2").iftrue("original")
+    a.var("walker").member("numPos").var("p").member("path", 0).op("equals2").iftrue("original")
+    # A delayed observer may still be on an older edge. Move its collision
+    # marker as well as its picture before starting the accepted route.
+    a.var("p").member("path", 0).push(1).var("walker").push("breakMove").op("callmethod").op("pop")
+    a.label("original")
+    a.var("obj").push(1).var("this").push("__walkFrameOrig").op("callmethod").op("pop")
+    a.var("p").member("id").iftrue("out")
+    a.var("p").member("ap").push(UNDEF).op("equals2").iftrue("out")
+    a.var("this").member("master", "gamer", "apManager").push("ap").var("p").member("ap").op("setmember")
+    a.label("out")
+    return a
+
+
+def fn_walk_create():
+    """Splice an unchanged edge in place, preserving its coordinates and timer."""
+    a = Asm()
+    a.push("phase").var("this").member("__walkElapsed").op("definelocal")
+    a.var("this").push("__walkElapsed", UNDEF).op("setmember")
     a.var("this").push("__walkNextAt", UNDEF).op("setmember")
     a.var("this").member("__walkActive").op("not").iftrue("create")
     a.var("this").member("path").op("not").iftrue("create")
     a.var("this").member("path", "length").push(1).op("less2").iftrue("create")
-    a.var("this").member("path", "length").push(1).op("equals2").iftrue("create")
     a.var("_path").member("length").push(2).op("less2").iftrue("create")
     a.var("_path").member(0, "num").var("this").member("numPos").op("equals2").op("not").iftrue("create")
     a.var("_path").member(1, "num").var("this").member("path", 0, "num").op("equals2").op("not").iftrue("create")
-    a.var("this").push("__walkNextAt").var("this").member("startTime").op("setmember")
+    a.push("first").push(0).var("_path").push("shift").op("callmethod").op("definelocal")
+    a.var("this").push("path").var("_path").op("setmember")
+    a.var("this").push("completedPath").var("first").push(1).op("initarray").op("setmember")
+    a.var("this").push("__walkNextAt").var("this").member("startTime").push(200).op("add2").op("setmember")
+    a.push(UNDEF).op("return")
     a.label("create")
+    a.var("phase").push(UNDEF).op("equals2").iftrue("start")
+    a.var("phase").push(0).op("less2").iftrue("start")
+    a.var("phase").push(200).op("less2").op("not").iftrue("start")
+    a.var("this").push("__walkNextAt").op("gettime").var("phase").op("subtract").op("setmember")
+    a.label("start")
     a.var("_path").push(1).var("this").push("__walkCreateOrig").op("callmethod").op("pop")
     return a
 
@@ -1136,10 +1216,45 @@ def fn_walk_start():
     a.var("began").push(UNDEF).op("equals2").iftrue("first")
     a.var("this").push("startTime").var("began").op("setmember")
     a.label("first")
-    # LocWalker uses a unit hex / speed 1/200, exactly the server HEX_MS.
-    # Its trigonometry can yield 200.00000000003 and add a whole timer tick.
     a.var("this").push("finishTime", 200).op("setmember")
     a.var("this").push("__walkNextAt").var("this").member("startTime").push(200).op("add2").op("setmember")
+    a.var("began").push(UNDEF).op("equals2").iftrue("out")
+    a.push(0).var("this").push("moveDirectionInc").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_run_position():
+    """Running faces the actual edge; aiming retains its original rotation."""
+    a = Asm()
+    a.push("walker").var("obj").member("walker").op("definelocal")
+    a.push("figure").var("walker").member("id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("figure").op("not").iftrue("original")
+    a.var("figure").member("behavior").push("run").op("equals2").op("not").iftrue("face")
+    a.var("figure").member("__direction").var("walker").member("direction").op("equals2").iftrue("original")
+    a.label("face")
+    a.var("figure").member("rotate").push(1).var("figure").push("deleteEnterFrame").op("callmethod").op("pop")
+    a.var("figure").push("__direction").var("walker").member("direction").op("setmember")
+    a.label("original")
+    a.var("obj").push(1).var("this").push("__runPositionOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_walk_increment():
+    """A late frame may reach an edge's end, but never overshoot its cell."""
+    a = Asm()
+    a.push("elapsed").op("gettime").var("this").member("startTime").op("subtract").op("definelocal")
+    a.var("elapsed").push(0).op("less2").op("not").iftrue("ceiling")
+    a.push("elapsed", 0).op("definelocal")
+    a.label("ceiling")
+    a.var("this").member("finishTime").var("elapsed").op("less2").op("not").iftrue("move")
+    a.push("elapsed").var("this").member("finishTime").op("definelocal")
+    a.label("move")
+    a.push("delta").var("elapsed").var("this").member("moveTime").op("subtract").op("definelocal")
+    a.var("this").push("moveTime").var("elapsed").op("setmember")
+    a.var("this").member("y").var("this").member("vy").var("delta").op("multiply").op("add2")
+    a.var("this").member("x").var("this").member("vx").var("delta").op("multiply").op("add2")
+    a.push(2).var("this").push("setPosition").op("callmethod").op("pop")
     return a
 
 
@@ -2935,10 +3050,22 @@ def injected():
          ("obj", "rootID"), fn_weight_item_info()),
         (("core", "objects", "ItemFactory"), "updateItemDI", "__weightDynamicOrig",
          ("obj",), fn_weight_item_info(dynamic=True)),
+        (("core", "location", "Location"), "breakMv", "__walkRefuseOrig",
+         ("obj",), fn_walk_refused()),
+        (("core", "location", "Location"), "movePlayer", "__walkRequestOrig",
+         ("cell", "spliceNum"), fn_walk_request()),
+        (("core", "location", "Location"), "findPath", "__walkPathOrig",
+         ("cell0", "cell1"), fn_walk_path()),
+        (("core", "location", "Location"), "userMove", "__walkFrameOrig",
+         ("obj",), fn_walk_frame()),
+        (("core", "location", "DisplayLocScene"), "position", "__runPositionOrig",
+         ("obj",), fn_run_position()),
         (("core", "location", "LocWalker"), "createMove", "__walkCreateOrig",
          ("_path",), fn_walk_create()),
         (("core", "location", "LocWalker"), "startMove", "__walkStartOrig",
          (), fn_walk_start()),
+        (("core", "location", "LocWalker"), "moveDirectionInc", "__walkIncrementOrig",
+         (), fn_walk_increment()),
         (("core", "location", "LocWalker"), "finishMove", "__walkFinishOrig",
          (), fn_walk_finish()),
         (("core", "location", "Location"), "faAim", "__aimPositionOrig",

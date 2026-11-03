@@ -14,6 +14,9 @@ class Arr(list):
         self.append(value)
         return len(self)
 
+    def shift(self):
+        return self.pop(0) if self else None
+
     def unshift(self, value):
         self.insert(0, value)
         return len(self)

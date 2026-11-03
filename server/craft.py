@@ -416,44 +416,30 @@ def _stat_fields(type_id):
 
 
 # --- the upgrader's window -------------------------------------------------------------
-@lru_cache(maxsize=128)
-def blueprint_variants(type_id):
-    """The two legacy A/G damage-magazine blueprints of the same tier.
+@lru_cache(maxsize=1)
+def upgrade_blueprints():
+    """Required blueprint types, for their static applicability description."""
+    return frozenset(r["blueprint"] for r in rows().values()
+                     if r.get("family") in ("upgrade", "knife"))
 
-    Both have identical player-facing words and are sold side by side.
-    Keep owned copies valid; never alias another level, effect or Q recipe.
-    The exact requested type is preferred when both are in the backpack.
-    """
+
+def blueprint_variants(type_id):
+    """Only the requested blueprint type; A/G copies are not interchangeable."""
+    return (type_id,)
+
+
+def blueprint_line(type_id):
+    """The explicit A/G line of a legacy damage-magazine blueprint."""
     import items
     name = items.catalogue().get(type_id, (None, ""))[1]
-    match = re.fullmatch(r"bpg_damage_25_(afro|gold)_lvl(\d+)", name)
+    match = re.fullmatch(r"bpg_damage_25_(afro|gold)_lvl\d+", name)
     if match is None:
-        return (type_id,)
-    other = "gold" if match.group(1) == "afro" else "afro"
-    alias = _by_name().get("bpg_damage_25_%s_lvl%s" % (other, match.group(2)))
-    return (type_id, alias) if alias is not None else (type_id,)
-
-
-def unique_blueprints(stock):
-    """One indistinguishable double blueprint per stall, retaining its price."""
-    seen, out = set(), []
-    for type_id in stock:
-        variants = blueprint_variants(type_id)
-        if len(variants) == 1:
-            out.append(type_id)
-            continue
-        key = frozenset(variants)
-        if key not in seen:
-            seen.add(key)
-            out.append(type_id)
-    return out
+        return None
+    return "G" if match.group(1) == "gold" else "A"
 
 
 def quest_item_types(quest, type_id):
-    """Aliases apply only to an upgrade recipe's required blueprint slot."""
-    rec = rows().get(quest.type)
-    if rec and rec.get("family") == "upgrade" and rec.get("blueprint") == type_id:
-        return blueprint_variants(type_id)
+    """Required item identity is also the journal's counting rule."""
     return (type_id,)
 
 

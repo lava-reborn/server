@@ -1003,80 +1003,103 @@ class Session:
         self.walk = None
         self._completed_walk = None
 
-    def live_cell(self):
+    def live_cell(self, t=None):
         """The last hex the figure has finished stepping onto: the client's
         own walker.numPos, which it moves only at the end of each step
         (LocWalker.finishPathPart) and which the next moveTo starts from."""
+        if t is None and self.walk is not None:
+            t = asyncio.get_running_loop().time()
         fighter = getattr(self, "combat", None)
         if fighter is not None:
-            combat.Fighter.settle_walk(fighter)
+            combat.Fighter.settle_walk(fighter, t=t)
         walk = self.walk
         if walk is None:
             return self._pos
         cells, began = walk
-        step = int((asyncio.get_running_loop().time() - began) * 1000 // mobs.HEX_MS)
+        step = int((t - began) * 1000 // mobs.HEX_MS)
         if step >= len(cells) - 1:
             self._completed_walk = walk
             self.walk = None
             return self._pos
         return cells[max(0, step)]
 
-    def walk_of(self, cells):
-        """The walk live_cell is to follow for a moveTo of these cells, or
-        None: the player on its last cell at once, as before there was a
-        walk to follow. Asked before pos moves.
+    def stop_walk(self):
+        """Stop for an accepted action; retain only the traversed prefix.
 
-        Only a path the client's own Location.movePlayer could have sent:
-        from the hex its walker stands on (numPos -- the server's live cell,
-        or one it passed on the way, since a re-route is sent from where
-        the client has got to and the echo it walks by reached it later
-        than it left here), one neighbour to the next, no hex twice. Any
-        other path is a modified client's -- [start] * 300 + [beside the
-        dog], a jump -- and followed, it held the figure, for the fight, on
-        a cell the player had left: pos was already at the end for the bags,
-        the saves and the doors, while nothing that stood there could take
-        him for a minute."""
-        if len(cells) < 2 or len(set(cells)) != len(cells):
+        A click already in flight can still name a hex behind the figure.
+        That history permits a safe replan, never the unwalked old tail.
+        Teleports and room transitions continue to clear it through pos.
+        """
+        t = asyncio.get_running_loop().time()
+        walking = self.walk
+        cell = self.live_cell(t)
+        self.pos = cell
+        if walking is not None:
+            cells, began = walking
+            index = min(len(cells) - 1, max(0, int((t - began) * 1000 // mobs.HEX_MS)))
+            self._completed_walk = (cells[:index + 1], began)
+        return cell
+
+    def walk_of(self, cells):
+        """Keep the current edge and replace only the unwalked route.
+
+        A new client plans from the edge's destination. Older or delayed
+        clicks can start behind us: reconnect from the actual edge, never
+        replay the traversed prefix. The existing bounded grid search is
+        used only when the requested route no longer meets that edge.
+        """
+        previous = self.walk or getattr(self, "_completed_walk", None)
+        # A turn back may revisit the initial cell after finishing the
+        # current edge. Its remaining path must still have no repeated cells.
+        if (len(cells) < 2 or len(set(cells[1:])) != len(cells) - 1
+                or (cells[0] in cells[1:] and previous is None)):
             return None
         loc = self.loc
-        if not all(mobs.adjacent(a, b, loc) for a, b in zip(cells, cells[1:])):
+        if (not all(mobs.adjacent(a, b, loc) for a, b in zip(cells, cells[1:]))
+                or any(c in loc.obstacles for c in cells[1:])):
             return None
-        previous = self.walk or getattr(self, "_completed_walk", None)
-        here = self.live_cell()
-        passed = ()
-        if previous is not None:
-            # A click can arrive just after live_cell has finished the old
-            # route too; retain that route until another position is set.
-            # Never accept a start beyond the reached part of an active walk.
-            walking = previous[0]
-            passed = walking[:walking.index(here) + 1] if here in walking else ()
-        if not (cells[0] in passed or cells[0] == self._pos
-                or progression.within_reach(cells[0], here, loc.width, loc.height)):
-            return None
-        began = asyncio.get_running_loop().time()
-        if previous is not None:
-            walking, old_began = previous
-            index = walking.index(here)
-            if here in cells:
-                # A delayed click may still start several completed hexes
-                # behind us. Never echo that stale prefix as a new walk.
-                cells = cells[cells.index(here):]
-            elif cells[0] in passed:
-                # Turning back: walk back along the traversed segment,
-                # rather than teleporting to the click's old starting cell.
-                back = list(reversed(walking[:index + 1]))
-                requested = {cell: i for i, cell in enumerate(cells)}
-                join = next(i for i, cell in enumerate(back) if cell in requested)
-                cells = back[:join] + cells[requested[back[join]]:]
-            elif mobs.adjacent(here, cells[0], loc):
-                cells = [here] + cells
-            else:
+        now = asyncio.get_running_loop().time()
+        here = self.live_cell(now)
+        if previous is None:
+            if not (cells[0] == self._pos or mobs.adjacent(cells[0], here, loc)):
                 return None
-            if cells[:2] == walking[index:index + 2]:
-                # A click continuing the current edge must not restart its
-                # 200 ms or charge the already completed prefix twice.
-                began = old_began + index * mobs.HEX_MS / 1000.0
-        return (cells, began)
+            return (cells, now)
+
+        walking, old_began = previous
+        # A retained edge followed by a turn can contain the same hex twice.
+        # Derive its index from time, rather than the first matching cell.
+        index = min(len(walking) - 1, max(0, int(
+            (now - old_began) * 1000 // mobs.HEX_MS)))
+        passed = walking[:index + 1]
+        if not (cells[0] in passed or mobs.adjacent(cells[0], here, loc)):
+            return None
+        if cells[-1] == here:
+            return ([here], now)
+
+        active = self.walk is not None and index + 1 < len(walking)
+        prefix = [here, walking[index + 1]] if active else [here]
+        began = old_began + index * mobs.HEX_MS / 1000.0 if active else now
+        anchor = prefix[-1]
+        if anchor in cells:
+            join = max(i for i, cell in enumerate(cells) if cell == anchor)
+            tail = cells[join:]
+        else:
+            inhabitants = getattr(self.room, "npcs", {}).values()
+            fight = getattr(self.room, "combat", None)
+            if fight is None:
+                blocked = {n.cell for n in inhabitants}
+            else:
+                blocked = {n.cell for n in inhabitants if n.root != world.MOB}
+                blocked.update(m.cell for m in fight.mobs.values() if m.alive)
+            for player in getattr(self.room, "players", ()):
+                if player is not self:
+                    blocked.add(player.live_cell(now))
+                    blocked.add(player.pos)
+            blocked.discard(anchor)
+            tail = mobs.find_path(loc, anchor, lambda cell: cell == cells[-1], blocked)
+            if tail is None:
+                return None
+        return (prefix + tail[1:], began)
 
     def character(self):
         """The loaded character, or a newborn's numbers for a socket that
@@ -4002,15 +4025,13 @@ class Session:
         the player who asked.
         """
         path = p.get("path")
-        # A new order replaces the old one, the walk onto a walk-in included:
-        # the player has turned round before reaching it.
-        self.cancel_passage()
         # Location.movePlayer registers a cmdAck handler for every single step
         # it asks for. Leaving those unanswered does not stall movement, since
         # that handler is empty, but the queue is strictly ordered: each later
         # reply is then handed to a stale mover instead of the command that
         # earned it, and things like opening a shop quietly stop working.
         if self.room is None and "path" in p:
+            self.cancel_passage()
             self.refuse_walk_between_rooms()
             return
         # A refusal is not an acknowledgement with a non-zero res, it is a
@@ -4023,12 +4044,15 @@ class Session:
         # countdown ends. Refuse exactly like an invalid walk so the client
         # consumes its movement callback without an extra cmdAck.
         if self.combat.preparing() or not self.valid_path(path):
+            self.cancel_passage()
             self.send("breakMv", id=0, pos=self.pos)
             return
         cells = [int(c) for c in path]
         was_walking = self.walk is not None
         walk = self.walk_of(cells)
-        if was_walking and walk is None and len(cells) > 1:
+        if (walk is None and len(cells) > 1
+                and (was_walking or getattr(self, "_completed_walk", None) is not None)):
+            self.cancel_passage()
             cell = self.live_cell()
             self.pos = cell
             self.send("breakMv", id=0, pos=cell)
@@ -4037,6 +4061,17 @@ class Session:
                                     exclude=self)
             self.combat.c_ap()
             return
+        if walk is not None and self.walk is not None:
+            old_cells, old_began = self.walk
+            offset = round((walk[1] - old_began) * 1000 / mobs.HEX_MS)
+            if 0 <= offset < len(old_cells) and walk[0] == old_cells[offset:]:
+                # An old client or an in-flight duplicate can still resend
+                # the accepted tail. Consume exactly its movement callback;
+                # keep the original clock, AP tracking and passage timer.
+                self.send("cmdAck", res=0)
+                return
+        # A genuinely new route replaces the pending walk-in as before.
+        self.cancel_passage()
         self.send("cmdAck", res=0)
         if walk is not None:
             cells = walk[0]
@@ -4059,12 +4094,15 @@ class Session:
                 self.combat.c_ap()
                 self.arm_passage(1)
                 return
-            self.send("userMove", id=0, path=cells)
+            step_ms = (min(mobs.HEX_MS - 1, max(0, int(
+                (asyncio.get_running_loop().time() - walk[1]) * 1000)))
+                if walk is not None else 0)
+            self.send("userMove", id=0, path=cells, step_ms=step_ms, ap=int(self.combat.ap))
             # The same walk under our real id for everyone else in the room:
             # Location.userMove looks the walker up by id and 0 is always the
             # viewer's own figure (Location.getWalker).
             if self.room is not None:
-                self.room.broadcast(("userMove", dict(id=self.pid, path=cells)),
+                self.room.broadcast(("userMove", dict(id=self.pid, path=cells, step_ms=step_ms)),
                                     exclude=self)
         finally:
             # A barter needs the two side by side; a step away ends it --

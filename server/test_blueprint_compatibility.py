@@ -19,6 +19,7 @@ import craft
 import inventory
 import items
 import mail
+import names
 import progression
 import quests
 import server
@@ -36,7 +37,7 @@ class BlueprintCompatibility(unittest.TestCase):
                     if r.get('family') == 'upgrade' and r.get('gun') == gun
                     and r.get('effect') == 'damage_clipsize')
 
-    def test_every_available_upgrade_accepts_its_blueprint_and_only_same_tier_alias(self):
+    def test_every_available_upgrade_requires_its_exact_blueprint(self):
         count = doubles = 0
         for t, rec in craft.rows().items():
             if rec.get('family') != 'upgrade':
@@ -58,7 +59,7 @@ class BlueprintCompatibility(unittest.TestCase):
                                             for f in families.values()), t)
                     else:
                         self.assertEqual(parsed, (rec['gun'], rec['effect']))
-            if len(craft.blueprint_variants(rec['blueprint'])) > 1:
+            if rec.get('effect') == 'damage_clipsize':
                 doubles += 1
                 wrong = 37637 if rec['level'] != 11 else 37638
                 self.assertFalse(q.is_complete(q.bag_progress({rec['gun']: 1, wrong: 1})))
@@ -70,7 +71,7 @@ class BlueprintCompatibility(unittest.TestCase):
             q = self.recipe(gun)
             rec = craft.rows()[q.type]
             self.assertTrue(q.give)
-            self.assertEqual(len(craft.blueprint_variants(rec['blueprint'])), 2)
+            self.assertEqual(craft.blueprint_variants(rec['blueprint']), (rec['blueprint'],))
             base = items.params_of(gun)
             mod = items.params_of(rec['mod'])
             self.assertGreater(mod['clip_size'], base['clip_size'])
@@ -112,16 +113,42 @@ class BlueprintCompatibility(unittest.TestCase):
         self.assertFalse(q.is_complete(q.bag_progress({26075: 1, 1216: 1})))
         self.assertIsNone(craft.quest_inputs(q, {26075: 1}))
 
-    def test_stalls_remove_only_interchangeable_double_blueprint_duplicates(self):
-        self.assertEqual(craft.unique_blueprints([37638, 37672, 37640, 37674, 717, 717]), [37638, 37640, 717, 717])
-        for npc in (5770, 580, 583, 584, 585, 748, 751, 752):
-            seen = set()
-            for t in items.stock_for(npc):
-                variants = craft.blueprint_variants(t)
-                if len(variants) > 1:
-                    key = frozenset(variants)
-                    self.assertNotIn(key, seen)
-                    seen.add(key)
+    def test_stalls_show_both_currency_specific_blueprints(self):
+        stock = items.stock_for(576)
+        self.assertIn(37631, stock)
+        self.assertIn(37665, stock)
+        self.assertGreater(items.params_of(37631)['cost'], 0)
+        self.assertEqual(items.params_of(37665)['cost'], 0)
+        self.assertEqual(items.params_of(37665)['g_cost'], 150)
+
+    def test_pair_names_keep_the_icon_suffix_and_describe_required_weapon_line(self):
+        for t, line in ((37638, 'A'), (37672, 'G'), (37640, 'A'), (37674, 'G')):
+            self.assertEqual(craft.blueprint_line(t), line)
+            self.assertTrue(names.text(items.STRING_ID_OFFSET + t).endswith('(' + line + ')$BP'))
+            desc = names.text(items.DESC_ID_OFFSET + t)
+            self.assertIn('Урон +10%', desc)
+            self.assertIn('Только для (' + line + ') оружия.', desc)
+
+    def test_shared_blueprint_keeps_both_recipes_and_short_description(self):
+        for gun in (26074, 26075):
+            q = next(quests.get(t) for t, r in craft.rows().items()
+                     if r.get('gun') == gun and r.get('effect') == 'damage')
+            self.assertTrue(q.is_complete(q.bag_progress({gun: 1, 822: 1})))
+        self.assertIn('Только для (A) и (G) оружия.',
+                      names.text(items.DESC_ID_OFFSET + 822))
+        self.assertEqual(items.params_of(822)['desc'], items.DESC_ID_OFFSET + 822)
+
+    def test_all_paired_gold_blueprints_keep_gold_only_purchase(self):
+        checked = 0
+        for t, (_root, name) in items.catalogue().items():
+            if craft.blueprint_line(t) != 'G':
+                continue
+            p = items.params_of(t)
+            self.assertEqual(p['cost'], 0, t)
+            self.assertGreater(p['g_cost'], 0, t)
+            self.assertEqual(craft.blueprint_variants(t), (t,))
+            checked += 1
+        self.assertEqual(checked, 17)
 
     def test_non_upgrade_quests_do_not_accept_aliases(self):
         q = quests.Quest(dict(type=987654321, kind='bring_l_obj', name='Exact input',
@@ -171,7 +198,7 @@ class TransactionalHandIn(unittest.TestCase):
         self.s.cmd_q_co(dict(q_id=qid, mob=1, obj_idx=0))
         return [p['res'] for cmd, p in self.frames if cmd == 'cmdAck']
 
-    def test_both_bp_variants_hand_in_for_each_model_once(self):
+    def test_exact_blueprint_hands_in_for_each_model_once(self):
         for gun in TARGETS:
             q = self.recipe(gun)
             rec = craft.rows()[q.type]
@@ -194,11 +221,11 @@ class TransactionalHandIn(unittest.TestCase):
         self.assertEqual(self.s.inv.rows(), before)
         self.assertIsNotNone(self.store.quest(qid))
 
-    def test_upgrader_window_accepts_the_other_blueprint_type(self):
+    def test_upgrader_window_accepts_the_exact_blueprint_type(self):
         for gun in TARGETS:
             q = self.recipe(gun)
             rec = craft.rows()[q.type]
-            bp = craft.blueprint_variants(rec['blueprint'])[1]
+            bp = rec['blueprint']
             self.prepare(gun, bp)
             self.s.room = NS(npcs={1: NS(type_id=q.give[0])})
             self.s.npc_session = upgrader.SESSION_UPGRADE
@@ -209,8 +236,27 @@ class TransactionalHandIn(unittest.TestCase):
             self.assertEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [0])
             self.assertEqual(self.s.inv.bag_pieces(), {rec['mod']: 1})
 
+    def test_both_weapon_lines_refuse_opposite_double_blueprint_without_consumption(self):
+        for gun, afro_bp in ((26062, 37638), (26075, 37638), (26177, 37640),
+                             (26061, 37672), (26074, 37672), (25540, 37674)):
+            q, qid = self.prepare(gun, afro_bp)
+            before = copy.deepcopy(self.s.inv.rows())
+            self.assertFalse(q.is_complete(q.bag_progress(self.s.inv.bag_pieces())))
+            self.assertNotEqual(self.finish(qid), [0])
+            self.assertEqual(self.s.inv.rows(), before)
+            self.assertIsNotNone(self.store.quest(qid))
+            self.frames.clear()
+            self.s.room = NS(npcs={1: NS(type_id=q.give[0])})
+            self.s.npc_session = upgrader.SESSION_UPGRADE
+            window = upgrader.Window(self.s)
+            window.open_, window.npc_type, window.room = True, q.give[0], self.s.room
+            row = next(r for r in self.s.inv.rows() if r['type_id'] == gun)
+            window.ss_upd(dict(s_status=1, obj=inventory.oid_of(row), param=craft.rows()[q.type]['mod']))
+            self.assertNotEqual([p['res'] for cmd, p in self.frames if cmd == 'cmdAck'], [0])
+            self.assertEqual(self.s.inv.rows(), before)
+
     def test_reward_failure_rolls_back_inputs_and_history(self):
-        q, qid = self.prepare(26075, 37638)
+        q, qid = self.prepare(26075, 37672)
         before = copy.deepcopy(self.s.inv.rows())
         with patch.object(self.s.inv, 'give_pieces', side_effect=RuntimeError('test reward failure')):
             self.assertNotEqual(self.finish(qid), [0])

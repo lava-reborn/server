@@ -330,9 +330,8 @@ def stock_for(trader_type, loc_id=None):
     the owner's choice, and the rule stays a rule.
     """
     chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(_own_list(trader_type)))
-    return craft.unique_blueprints(
-        [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)
-         and not upgrade_blueprint_blocked(t)])
+    return [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)
+            and not upgrade_blueprint_blocked(t)]
 
 
 def own_stock(trader_type):
@@ -1122,6 +1121,8 @@ def static_info(type_id):
         # table of its own takes its base's and its blueprint's effect, a
         # blueprint with no price its level's.
         craft.lay_frame(type_id, info[1], rec)
+        if craft.blueprint_line(type_id) or type_id in craft.upgrade_blueprints():
+            info[1]["desc"] = DESC_ID_OFFSET + type_id
         fix = coldarm_manual().get(type_id)
         if fix:
             _overlay(type_id, info[1], _holes(rec, fix))

@@ -1212,8 +1212,12 @@ class Fighter:
         Fighter.cancel_pending(self, notify=True, replacing=True)
         sess = self.sess
         if getattr(sess, "walk", None) is not None:
-            cell = sess.live_cell()
-            sess.pos = cell
+            stop = getattr(sess, "stop_walk", None)
+            if stop is not None:
+                cell = stop()
+            else:
+                cell = sess.live_cell()
+                sess.pos = cell
             sess.cancel_passage()
             sess.send("actionCancel", pos=cell)
             if sess.room is not None:

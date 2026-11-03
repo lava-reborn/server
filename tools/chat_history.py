@@ -1,4 +1,4 @@
-"""Bounded, per-server/per-character Flash SharedObject chat history.
+"""One-hour bounded, per-server/per-character Flash SharedObject chat history.
 
 The source is compiled to AVM1 at build time, never run by Python. Storage
 failures are isolated from native delivery. No database or HTTP requests.
@@ -42,7 +42,7 @@ def __hcPrune(rows, now, limit):
             continue
         if len(r.mess) > 2048 or len(r.name) > 128:
             continue
-        if kind(r.__hcStamp) != "number" or r.__hcStamp < now - 43200000 or r.__hcStamp > now + 60000:
+        if kind(r.__hcStamp) != "number" or r.__hcStamp < now - 3600000 or r.__hcStamp > now + 60000:
             continue
         out.push(r)
     return out

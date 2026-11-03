@@ -17,6 +17,7 @@ import hashlib
 import json
 import os
 
+import craft
 import items
 import npcs
 import orig_texts
@@ -169,6 +170,28 @@ ALL.update(ORIG_PERSON_NAMES)
 # "Хранилище<br>личных вещей" there, which says more than the generic one.
 for _t in SAFES - set(ORIG_PERSON_NAMES):
     ALL[_t] = STORAGE_NAME
+
+# Preserve the original bonuses and $BP artwork suffix. Only the explicit
+# A/G double-blueprint pairs are restricted; shared recipes keep both lines.
+_blueprint_lines = {}
+for _recipe in craft.rows().values():
+    if _recipe.get("family") == "upgrade" and _recipe.get("line") in ("A", "G"):
+        _blueprint_lines.setdefault(_recipe["blueprint"], set()).add(_recipe["line"])
+    elif _recipe.get("family") == "knife":
+        _blueprint_lines.setdefault(_recipe["blueprint"], set()).add("G")
+for _type in items.catalogue():
+    _line = craft.blueprint_line(_type)
+    _lines = {_line} if _line else _blueprint_lines.get(_type)
+    if not _lines:
+        continue
+    _sid = items.STRING_ID_OFFSET + _type
+    if _line:
+        _label, _sep, _suffix = ALL[_sid].partition("$")
+        ALL[_sid] = _label + " (" + _line + ")" + _sep + _suffix
+    _did = items.DESC_ID_OFFSET + _type
+    _note = ("Только для (A) и (G) оружия." if _lines == {"A", "G"}
+             else "Только для (" + next(iter(_lines)) + ") оружия.")
+    ALL[_did] = (ALL[_did] + "<br>" if ALL.get(_did) else "") + _note
 
 # The table as the game's own sources leave it, before anybody had a say.
 # tools/npc_editor.py compares against this to tell a name that was chosen

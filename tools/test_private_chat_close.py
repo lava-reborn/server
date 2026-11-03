@@ -52,6 +52,18 @@ class PrivateClose(unittest.TestCase):
         self.methods['closeChannel'].invoke(dict(__pmCloseTabOrig=lambda obj:called.append(obj)),[obj])
         self.assertEqual(called,[obj])
 
+    def test_cross_fits_actual_frame_and_repeated_layout_does_not_drift(self):
+        for width in (100, 140):
+            close = SimpleNamespace(_x=120)
+            close.getBounds = lambda parent: dict(xMax=close._x + 5)
+            frame = dict(getBounds=lambda parent: dict(xMax=width))
+            field = SimpleNamespace(text='', _width=60, textWidth=20)
+            mc = dict(close_btn=close, backButton=frame, pmNickname=field)
+            for _ in range(2):
+                self.env['_global']['__pmFitNickname'].invoke(self.env['_global'], [mc, 'Peer'])
+                self.assertEqual(close.getBounds(mc)['xMax'], width - 5)
+            self.assertEqual(field.text, 'Peer')
+
     def test_text_fits_available_space_before_cross_and_full_peer_is_unchanged(self):
         class Field:
             text=''
