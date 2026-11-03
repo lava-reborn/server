@@ -155,13 +155,10 @@ def tradable(type_id):
     client would not make it. Quest things stay with the quest, as they do
     in the post and at the auction, and what is out of the game -- premium
     things and those the owner took out by name -- does not change hands
-    (items.out_of_game). Gold items also stay with their owner, even when the
-    original exchange flag permits them."""
-    import combat  # late: combat imports inventory and its session handlers
-    si = items.params_of(type_id) or {}
-    return bool(si.get("exchang")) and not si.get("quest") \
-        and not items.out_of_game(type_id) and not items.acquisition_blocked(type_id) \
-        and not combat.gold_item(type_id)
+    (items.out_of_game). Purchased G versions may be traded unless an
+    individual quest, personal or administrative restriction applies."""
+    import gold_trade
+    return gold_trade.transferable(type_id)
 
 
 class Side:

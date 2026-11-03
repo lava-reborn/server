@@ -268,7 +268,11 @@ class UpgradeOperations(unittest.TestCase):
                     and r["craft"].get("effect") == "damage_clipsize")
         g, a = gold["craft"], afro["craft"]
         self.assertNotEqual(g["blueprint"], a["blueprint"])
-        for gun, bp in ((a["gun"], g["blueprint"]), (g["gun"], a["blueprint"])):
+        # A/G double blueprints of the same tier are now interchangeable;
+        # a different weapon or a blueprint of another tier still is not.
+        wrong_tier = next(t for t, (_root, name) in items.catalogue().items()
+                          if name == "bpg_damage_25_afro_lvl17")
+        for gun, bp in ((a["gun"], g["blueprint"]), (g["gun"], wrong_tier)):
             for table in ("items", "char_quests"):
                 self.store.db.execute("DELETE FROM " + table + " WHERE char_id=?", (self.cid,))
             self.store.db.commit()

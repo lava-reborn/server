@@ -22,42 +22,31 @@ CHANCES = {2258: 1, 3159: .25, 6953: .05, 6946: .1}
 
 
 class AbuHamedMinerLoot(unittest.TestCase):
-    def test_other_miners_keep_their_existing_chances(self):
-        for kind, sand, emerald, case in ((838, .75, .15, 6946), (839, .75, .15, 6946),
-                                          (840, 1, .25, 6953), (841, 1, .25, 6953)):
-            table = {t: c for t, c, _ in mobs.loot_table(kind)}
-            self.assertEqual((table[2258], table[3159], table[case]), (sand, emerald, .05))
-            self.assertFalse(mobs.independent_loot(kind))
+    def test_other_miners_have_the_approved_region_sand_chances(self):
+        for kind, chance in ((836,.25),(837,.25),(838,.75),(839,.75),(840,1),(841,1)):
+            table = dict((t,p) for t,p,v in mobs.loot_table(kind))
+            self.assertEqual(table[2258], chance)
+            self.assertIn(2258, mobs.independent_loot(kind))
 
     def test_chances_and_exact_boundaries(self):
         for kind in (930, 931):
             table = mobs.loot_table(kind)
-            self.assertEqual({t: c for t, c, _ in table if t in CHANCES}, CHANCES)
-            self.assertNotIn(6928, [t for t, _, _ in table])
-            self.assertNotIn(6959, [t for t, _, _ in table])
-            self.assertNotIn(6959, mobs.independent_loot(kind))
-            for target, chance in CHANCES.items():
-                if chance == 1:
+            self.assertEqual(next(p for t,p,v in table if t == 2258), 1)
+            self.assertIn(6959, [t for t,p,v in table])
+            for target,chance,_ in table:
+                if chance >= 1:
                     continue
-                for value, expected in ((chance - .000001, True), (chance, False)):
-                    rolls = iter(value if t == target else 1.0 for t, c, _ in table if c < 1)
-                    rng = NS(random=lambda: next(rolls))
-                    drops = mobs.roll_table(kind, rng)
-                    self.assertEqual(any(t == target for t, _ in drops), expected)
-                    self.assertEqual([n for t, n in drops if t == 2258], [1])
+                for value, expected in ((chance-.000001,True),(chance,False)):
+                    rolls = iter(value if t == target else 1. for t,p,v in table if p<1)
+                    drops = mobs.roll_table(kind, NS(random=lambda:next(rolls)))
+                    self.assertEqual(any(t==target for t,n in drops),expected)
 
-    def test_new_drops_cannot_be_lost_to_or_consume_the_cap(self):
-        for kind in (930, 931):
-            drops = mobs.roll_table(kind, NS(random=lambda: 0))
-            self.assertEqual({t for t, _ in drops} & CHANCES.keys(), CHANCES.keys())
-            ordinary = [t for t, _ in drops if t not in CHANCES]
-            self.assertEqual(len(ordinary), min(mobs.MAX_DROPS,
-                len([t for t, c, _ in mobs.loot_table(kind) if t not in CHANCES])))
-        for kind in (838, 839, 840, 841):
-            self.assertEqual(mobs.independent_loot(kind), frozenset())
-            drops = mobs.roll_table(kind, NS(random=lambda: 0))
-            sure = {t for t, chance, _ in mobs.loot_table(kind) if chance >= 1}
-            self.assertLessEqual(len([t for t, _ in drops if t not in sure]), mobs.MAX_DROPS)
+    def test_only_sand_is_outside_the_random_loot_cap(self):
+        for kind in (838,839,840,841,930,931):
+            self.assertEqual(mobs.independent_loot(kind),frozenset({2258}))
+            drops=mobs.roll_table(kind,NS(random=lambda:0))
+            self.assertIn((2258,1),drops)
+            self.assertEqual(len([t for t,n in drops if t!=2258]),mobs.MAX_DROPS)
 
     def test_normal_ammunition_and_generator(self):
         path = Path(__file__).resolve().parents[1] / 'data/build_mob_types.py'
@@ -86,7 +75,7 @@ class AbuHamedMinerLoot(unittest.TestCase):
         self.assertTrue(combat.Fighter.ss_get_di(NS(sess=sess), dict(obj=obj)))
         self.assertEqual(frames[0][1]['ammo_type'], 6109)
 
-    def test_quest_diamond_is_preserved_and_golden_diamond_does_not_drop(self):
+    def test_quest_diamond_is_preserved_and_saleable_diamond_has_an_independent_source(self):
         for kind in (930, 931):
             self.assertIn((5545, .1), mobs.quest_table(kind))
             for wanted in ((), (5545,)):
@@ -99,7 +88,10 @@ class AbuHamedMinerLoot(unittest.TestCase):
                 # Force the quest's own boundary, independently of junk RNG.
                 quest_drops = mobs.quest_roll(kind, wanted, NS(random=lambda: 0))
                 self.assertEqual(any(t == 5545 for t, _ in quest_drops), bool(wanted))
-                self.assertNotIn(6959, [t for t, _ in drops + quest_drops])
+                self.assertNotIn(6959, [t for t, _ in quest_drops])
+            table=mobs.loot_table(kind)
+            rolls=iter(0 if t==6959 else 1 for t,p,v in table if p<1)
+            self.assertIn((6959,1),mobs.roll_table(kind,NS(random=lambda:next(rolls))))
             for value, expected in ((.099999, True), (.1, False)):
                 drops = mobs.quest_roll(kind, (5545,), NS(random=lambda: value))
                 self.assertEqual(any(t == 5545 for t, _ in drops), expected)

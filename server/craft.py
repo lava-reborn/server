@@ -399,7 +399,10 @@ def _stat_fields(type_id):
     """Build deterministic corrections once; callers receive independent lists."""
     correction = _STAT_CORRECTIONS[type_id]
     import items
-    base, effect = mod_of(type_id)
+    mod = mod_of(type_id)
+    if mod is None:
+        return copy.deepcopy(correction.get("values", {}))
+    base, effect = mod
     original = items.params_of(base)
     changed = copy.deepcopy(original)
     _apply(changed, effect)
@@ -413,6 +416,64 @@ def _stat_fields(type_id):
 
 
 # --- the upgrader's window -------------------------------------------------------------
+@lru_cache(maxsize=128)
+def blueprint_variants(type_id):
+    """The two legacy A/G damage-magazine blueprints of the same tier.
+
+    Both have identical player-facing words and are sold side by side.
+    Keep owned copies valid; never alias another level, effect or Q recipe.
+    The exact requested type is preferred when both are in the backpack.
+    """
+    import items
+    name = items.catalogue().get(type_id, (None, ""))[1]
+    match = re.fullmatch(r"bpg_damage_25_(afro|gold)_lvl(\d+)", name)
+    if match is None:
+        return (type_id,)
+    other = "gold" if match.group(1) == "afro" else "afro"
+    alias = _by_name().get("bpg_damage_25_%s_lvl%s" % (other, match.group(2)))
+    return (type_id, alias) if alias is not None else (type_id,)
+
+
+def unique_blueprints(stock):
+    """One indistinguishable double blueprint per stall, retaining its price."""
+    seen, out = set(), []
+    for type_id in stock:
+        variants = blueprint_variants(type_id)
+        if len(variants) == 1:
+            out.append(type_id)
+            continue
+        key = frozenset(variants)
+        if key not in seen:
+            seen.add(key)
+            out.append(type_id)
+    return out
+
+
+def quest_item_types(quest, type_id):
+    """Aliases apply only to an upgrade recipe's required blueprint slot."""
+    rec = rows().get(quest.type)
+    if rec and rec.get("family") == "upgrade" and rec.get("blueprint") == type_id:
+        return blueprint_variants(type_id)
+    return (type_id,)
+
+
+def quest_inputs(quest, have):
+    """Resolve the exact bag types to take, or None; never count a copy twice."""
+    remaining, selected = dict(have), []
+    for type_id, number in quest.wants():
+        for candidate in quest_item_types(quest, type_id):
+            used = min(number, remaining.get(candidate, 0))
+            if used:
+                selected.append((candidate, used))
+                remaining[candidate] -= used
+                number -= used
+            if not number:
+                break
+        if number:
+            return None
+    return selected
+
+
 def recipes_of(npc_type):
     """[(quest, gun, mod, blueprint)] of the upgrade rows this NPC gives, in
     table order: what its window offers."""
@@ -467,8 +528,9 @@ def upgrade(sess, master, row, out):
         return
     quest, bp = recipe
     level = sess.skill_level()
-    if quest.over_cap(level) or quest.level > level \
-            or inv.bag_pieces().get(bp, 0) < 1:
+    have = inv.bag_pieces()
+    blueprint = next((t for t in blueprint_variants(bp) if have.get(t, 0) >= 1), None)
+    if quest.over_cap(level) or quest.level > level or blueprint is None:
         inv.ack(inventory.RES_REFUSED)
         return
     inv.ack(inventory.RES_OK)
@@ -478,11 +540,11 @@ def upgrade(sess, master, row, out):
     old = wear_of(row)
     inv.store.delete_item(row["uniq"])
     inv.push_status(row, 0)
-    inv.take_pieces(bp, 1)
+    inv.take_pieces(blueprint, 1)
     for new in inv.give_pieces(out, 1):
         setcraft.pass_wear(old, new, inv)
     log.info("  ..    upgraded %d into %d at %s with blueprint %d, wear %d/%d",
-             row["type_id"], out, master, bp, row["brk"], row["max_break_cur"])
+             row["type_id"], out, master, blueprint, row["brk"], row["max_break_cur"])
 
 
 # --- the wear an upgrade keeps -----------------------------------------------------------

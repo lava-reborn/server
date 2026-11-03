@@ -541,7 +541,11 @@ class Character:
         self.xp_carry[skill_idx] = max(0.0, xp - whole)
         return whole
 
-    def gain_xp(self, skill_idx, base, spec_idx=None, spec_on_top=False):
+    def carry_spec_xp(self, spec_idx, xp):
+        """Keep fractional combat XP separate for each specialisation."""
+        return self.carry_xp(("spec", spec_idx), xp)
+
+    def gain_xp(self, skill_idx, base, spec_idx=None, spec_on_top=False, skill_cap=None):
         """Award experience for an action. Returns the indexes changed, as
         {"skills": set, "specs": set, "attribs": set}, ready for a push.
 
@@ -554,7 +558,9 @@ class Character:
         spec_on_top: the skill takes the whole total and a learned
         specialisation the same again. Mob kills use it, so that opening a
         specialisation does not halve the pace mob_xp is built around;
-        healing keeps the wiki's halves.
+        healing keeps the wiki's halves. An optional skill_cap limits only
+        the skill's award, discarding overflow when it reaches that level;
+        the specialisation keeps its award. Other sources pass no cap.
         """
         total = int(base * (1 + PREMIUM_XP_BONUS[self.premium_level()]))
         changed = {"skills": set(), "specs": set(), "attribs": set()}
@@ -567,7 +573,12 @@ class Character:
             to_spec = total // 2 if spec_on else 0
             to_skill = total - to_spec
         old_level = self.level
-        self._skill_up(skill_idx, to_skill, changed)
+        if skill_cap is not None:
+            s = self.skill[skill_idx]
+            remaining = sum(skill_xp_max(level) for level in range(s[0], skill_cap)) - s[1]
+            to_skill = min(to_skill, max(0, remaining))
+        if to_skill:
+            self._skill_up(skill_idx, to_skill, changed)
         if to_spec:
             self._spec_up(spec_idx, to_spec, changed)
         if self.level != old_level:
@@ -852,6 +863,7 @@ def level_gap(a, b):
 # to twenty is some 33 000 kills of mobs above, 88 000 at one's own level.
 # A growth of 2 instead would have made every mob worth the same 20 and the
 # last level cost millions; 1.5 was chosen with the owner for that reason.
+COMBAT_SKILL_CAP = 17
 KILLS_START = 5
 KILLS_GROWTH = 1.5
 GAP_SHARE = {0: 0.5, -1: 0.25}
@@ -890,16 +902,32 @@ def mob_xp(mob_level, player_level, share=1.0, xp_mult=1):
 
 
 def combat_mob_xp(mob_level, skill_level, share=1.0, xp_mult=1):
-    """Combat only: a trained skill at 17+ receives at most one XP per mob.
+    """Combat reward: interpolate from equal-level XP to the old +1 ceiling.
 
-    Cap the whole kill after the mob multiplier, then apportion it between
-    hits and death settlement. Capping each hit would pay once per hit.
-    Keep zero-XP targets at zero and retain the lower-skill formula exactly.
-    Mining and other experience sources continue using their existing rules.
+    Gaps +1/+2/+3 pay 25/50/75 percent of that difference; +4 and above
+    pay the old ceiling. Equal and lower targets keep their old rewards.
+    At trained skill 17+, only the specialisation receives this reward,
+    using the level-16 reward curve for the same relative mob gap.
+    Its +4 maximum also caps the award after the mob multiplier.
+    Price the whole kill before apportioning across hits and settlement.
+    Fractional XP is carried
+    by Character.carry_xp, not rounded separately for every hit.
+    Mining and other experience sources keep mob_xp's existing rules.
     """
-    if skill_level < 17:
-        return mob_xp(mob_level, skill_level, share, xp_mult)
-    return min(1.0, mob_xp(mob_level, skill_level, 1.0, xp_mult)) * share
+    reference_level = min(skill_level, COMBAT_SKILL_CAP)
+    reward_level = min(reference_level, COMBAT_SKILL_CAP - 1)
+    spec_limit = mob_price(COMBAT_SKILL_CAP)
+    gap = mob_level - reference_level
+    if gap > 0:
+        same = mob_xp(reward_level, reward_level)
+        ceiling = mob_xp(reward_level + 1, reward_level)
+        base = same + (ceiling - same) * min(gap, 4) / 4
+        whole = base * xp_mult
+    else:
+        whole = mob_xp(reward_level + gap, reward_level, xp_mult=xp_mult)
+    if skill_level >= COMBAT_SKILL_CAP:
+        whole = min(spec_limit, whole)
+    return whole * share
 
 
 # --- the fighter's skill from a kill of a player: DESIGNED ---------------------

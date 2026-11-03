@@ -1001,6 +1001,7 @@ class Session:
             combat.Fighter.settle_walk(fighter, stop=True)
         self._pos = cell
         self.walk = None
+        self._completed_walk = None
 
     def live_cell(self):
         """The last hex the figure has finished stepping onto: the client's
@@ -1015,6 +1016,7 @@ class Session:
         cells, began = walk
         step = int((asyncio.get_running_loop().time() - began) * 1000 // mobs.HEX_MS)
         if step >= len(cells) - 1:
+            self._completed_walk = walk
             self.walk = None
             return self._pos
         return cells[max(0, step)]
@@ -1039,17 +1041,42 @@ class Session:
         loc = self.loc
         if not all(mobs.adjacent(a, b, loc) for a, b in zip(cells, cells[1:])):
             return None
+        previous = self.walk or getattr(self, "_completed_walk", None)
         here = self.live_cell()
         passed = ()
-        if self.walk is not None:
-            # Up to the hex the figure is on, not beyond: a turn from a hex
-            # still ahead would put it there before it got there.
-            walking = self.walk[0]
+        if previous is not None:
+            # A click can arrive just after live_cell has finished the old
+            # route too; retain that route until another position is set.
+            # Never accept a start beyond the reached part of an active walk.
+            walking = previous[0]
             passed = walking[:walking.index(here) + 1] if here in walking else ()
         if not (cells[0] in passed or cells[0] == self._pos
                 or progression.within_reach(cells[0], here, loc.width, loc.height)):
             return None
-        return (cells, asyncio.get_running_loop().time())
+        began = asyncio.get_running_loop().time()
+        if previous is not None:
+            walking, old_began = previous
+            index = walking.index(here)
+            if here in cells:
+                # A delayed click may still start several completed hexes
+                # behind us. Never echo that stale prefix as a new walk.
+                cells = cells[cells.index(here):]
+            elif cells[0] in passed:
+                # Turning back: walk back along the traversed segment,
+                # rather than teleporting to the click's old starting cell.
+                back = list(reversed(walking[:index + 1]))
+                requested = {cell: i for i, cell in enumerate(cells)}
+                join = next(i for i, cell in enumerate(back) if cell in requested)
+                cells = back[:join] + cells[requested[back[join]]:]
+            elif mobs.adjacent(here, cells[0], loc):
+                cells = [here] + cells
+            else:
+                return None
+            if cells[:2] == walking[index:index + 2]:
+                # A click continuing the current edge must not restart its
+                # 200 ms or charge the already completed prefix twice.
+                began = old_began + index * mobs.HEX_MS / 1000.0
+        return (cells, began)
 
     def character(self):
         """The loaded character, or a newborn's numbers for a socket that
@@ -2570,6 +2597,8 @@ class Session:
             log.warning("  ??    no such item type %d", type_id)
             return
         command, params = info
+        import gold_trade
+        params = dict(params, **gold_trade.client_fields(type_id))
         self.send(command, **params)
 
     def windows_gone(self):
@@ -3411,6 +3440,8 @@ class Session:
         if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()) \
                 or not events.quest_open(quest.type, True):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
+            if quest.type in quests.TEMPORARILY_DISABLED_QUESTS:
+                self.answer("Задания на получение компонентов и сборку Паладина временно отключены.")
             return
         # A warehouse box's row: the hand-in asks the holders' gate again
         # (holdings.box_refusal) -- a member who took it at half past seven
@@ -3475,7 +3506,11 @@ class Session:
             return
         drawn = quest.draw()
         reward = ([chosen] if chosen else []) + quest.rew_also + ([drawn] if drawn else [])
-        if not QUEST_ITEMS_PAST_WEIGHT and self.over_weight(reward, quest.wants()):
+        taken = craft.quest_inputs(quest, self.inv.bag_pieces())
+        if taken is None:
+            self.send("cmdAck", res=RES_NOT_READY)
+            return
+        if not QUEST_ITEMS_PAST_WEIGHT and self.over_weight(reward, taken):
             self.send("cmdAck", res=RES_OVERLOAD)
             return
         # A craftsman's step changes the mod, not the wear (setcraft.py), and
@@ -3483,8 +3518,9 @@ class Session:
         # given back first (craft.py).
         worn = setcraft.wear(quest, self.inv)
         worn_gun = craft.before_take(quest, self.inv)
-        for obj, num in quest.wants():
-            self.inv.take_pieces(obj, num)
+        for obj, num in taken:
+            if self.inv.take_pieces(obj, num) != num:
+                raise ValueError("quest input changed during hand-in")
         for obj, num in quest.returns():
             self.inv.reclaim_pieces(obj, num)
         craft.hand_in(self, quest)
@@ -3989,9 +4025,21 @@ class Session:
         if self.combat.preparing() or not self.valid_path(path):
             self.send("breakMv", id=0, pos=self.pos)
             return
-        self.send("cmdAck", res=0)
         cells = [int(c) for c in path]
+        was_walking = self.walk is not None
         walk = self.walk_of(cells)
+        if was_walking and walk is None and len(cells) > 1:
+            cell = self.live_cell()
+            self.pos = cell
+            self.send("breakMv", id=0, pos=cell)
+            if self.room is not None:
+                self.room.broadcast(("actionCancel", dict(id=self.pid, pos=cell)),
+                                    exclude=self)
+            self.combat.c_ap()
+            return
+        self.send("cmdAck", res=0)
+        if walk is not None:
+            cells = walk[0]
         self.pos = cells[-1]
         # The figure starts from cells[0] on the echo below and is not at
         # pos for another HEX_MS a step (live_cell).
@@ -4000,6 +4048,16 @@ class Session:
             # Walking drops the aim (the client cancels its own bar on this
             # userMove) and costs a point a hex while the room is at war.
             self.combat.moved(cells)
+            if len(cells) == 1:
+                self.pos = cells[0]
+                # LocWalker.startMove needs two cells. A stop has no new
+                # movement callback to consume: never use breakMv here.
+                self.send("actionCancel", pos=cells[0])
+                if self.room is not None:
+                    self.room.broadcast(("actionCancel", dict(id=self.pid, pos=cells[0])),
+                                        exclude=self)
+                self.combat.c_ap()
+                return
             self.send("userMove", id=0, path=cells)
             # The same walk under our real id for everyone else in the room:
             # Location.userMove looks the walker up by id and 0 is always the
@@ -4063,8 +4121,11 @@ class Session:
         figure gets there (travel.walk_seconds)."""
         if self.room is None or travel.walk_in_at(self.loc, self.pos) is None:
             return
+        delay = travel.walk_seconds(path_len)
+        if self.walk is not None:
+            delay = max(0, self.walk[1] + delay - asyncio.get_running_loop().time())
         self.passage = asyncio.get_running_loop().call_later(
-            travel.walk_seconds(path_len), self.take_passage,
+            delay, self.take_passage,
             self.room, self.pos)
 
     def cancel_passage(self):

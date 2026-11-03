@@ -1,0 +1,4328 @@
+{
+ "note": "One economic drop table per existing mob type; replaces priced nonquest trash rows only. Elite types retain carried junk/ammunition and quest drops.",
+ "by_type": {
+  "20": [
+   {
+    "type": 6941,
+    "chance": 0.068382,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.047867,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.020514,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.034045,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "21": [
+   {
+    "type": 6941,
+    "chance": 0.062479,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.043735,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.018744,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.03538,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "258": [
+   {
+    "type": 6941,
+    "chance": 0.103018,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.072112,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.030906,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.037247,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "259": [
+   {
+    "type": 6941,
+    "chance": 0.102918,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.072043,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.030876,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.038806,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "260": [
+   {
+    "type": 6941,
+    "chance": 0.098389,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.068872,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.029517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.038748,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "261": [
+   {
+    "type": 6941,
+    "chance": 0.098389,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.068872,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.029517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.038748,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "262": [
+   {
+    "type": 6941,
+    "chance": 0.098389,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.068872,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.029517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.038748,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "263": [
+   {
+    "type": 6941,
+    "chance": 0.098389,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.068872,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.029517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.038748,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "266": [
+   {
+    "type": 6941,
+    "chance": 0.098289,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.068802,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.029487,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.040304,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "267": [
+   {
+    "type": 6941,
+    "chance": 0.098289,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.068802,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.029487,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.040304,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "271": [
+   {
+    "type": 6941,
+    "chance": 0.118791,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.083154,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.035637,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.057968,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "272": [
+   {
+    "type": 6941,
+    "chance": 0.118791,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.083154,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.035637,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.057968,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "273": [
+   {
+    "type": 6941,
+    "chance": 0.114193,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.079935,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.034258,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.057848,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "274": [
+   {
+    "type": 6941,
+    "chance": 0.114193,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.079935,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.034258,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.057848,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "276": [
+   {
+    "type": 6941,
+    "chance": 0.114708,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.080296,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.034412,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060246,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "277": [
+   {
+    "type": 6941,
+    "chance": 0.110115,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.077081,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.033034,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060124,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "278": [
+   {
+    "type": 6941,
+    "chance": 0.110115,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.077081,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.033034,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060124,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "280": [
+   {
+    "type": 6941,
+    "chance": 0.106041,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.074229,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.031812,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.043675,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.014202,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "281": [
+   {
+    "type": 6941,
+    "chance": 0.11063,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.077441,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.033189,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.043762,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.014235,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "285": [
+   {
+    "type": 6941,
+    "chance": 0.114708,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.080296,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.034412,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060246,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "287": [
+   {
+    "type": 6941,
+    "chance": 0.046195,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.092391,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.073912,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.066253,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.021563,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "288": [
+   {
+    "type": 6941,
+    "chance": 0.04794,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.09588,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.076704,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.066323,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.021595,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "289": [
+   {
+    "type": 6941,
+    "chance": 0.046195,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.092391,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.073912,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.066253,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.021563,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "290": [
+   {
+    "type": 6941,
+    "chance": 0.046195,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.092391,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.073912,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.066253,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.021563,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "291": [
+   {
+    "type": 6941,
+    "chance": 0.045014,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.090029,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.072023,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.068909,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.022432,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "292": [
+   {
+    "type": 6941,
+    "chance": 0.045014,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.090029,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.072023,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.068909,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.022432,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "293": [
+   {
+    "type": 6941,
+    "chance": 0.045014,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.090029,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.072023,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.068909,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.022432,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "294": [
+   {
+    "type": 6941,
+    "chance": 0.046758,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.093518,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.074814,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.06898,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.022465,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "301": [
+   {
+    "type": 6941,
+    "chance": 0.049988,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.099975,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.079979,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.097772,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032055,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "302": [
+   {
+    "type": 6941,
+    "chance": 0.049988,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.099975,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.079979,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.097772,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032055,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "304": [
+   {
+    "type": 6941,
+    "chance": 0.049988,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.099975,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.079979,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.097772,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032055,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "306": [
+   {
+    "type": 6941,
+    "chance": 0.049256,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.098512,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.078809,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.1017,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.033361,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "308": [
+   {
+    "type": 6941,
+    "chance": 0.049256,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.098512,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.078809,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.1017,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.033361,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "303": [
+   {
+    "type": 6941,
+    "chance": 0.049988,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.099975,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.079979,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.097772,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032055,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "307": [
+   {
+    "type": 6941,
+    "chance": 0.049256,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.098512,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.078809,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.1017,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.033361,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "311": [
+   {
+    "type": 6941,
+    "chance": 0.048614,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.097228,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.077782,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060361,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.040085,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.028904,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "315": [
+   {
+    "type": 6944,
+    "chance": 0.055412,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.083117,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.092352,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060377,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.040108,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.028927,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "316": [
+   {
+    "type": 6944,
+    "chance": 0.055412,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.083117,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.092352,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060377,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.040108,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.028927,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "317": [
+   {
+    "type": 6944,
+    "chance": 0.055412,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.083117,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.092352,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060377,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.040108,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.028927,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "318": [
+   {
+    "type": 6944,
+    "chance": 0.057088,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.08563,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.095145,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.060438,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.040162,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.028972,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "319": [
+   {
+    "type": 6944,
+    "chance": 0.055338,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.083006,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.09223,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.062853,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.041774,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.030142,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "320": [
+   {
+    "type": 6944,
+    "chance": 0.055338,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.083006,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.09223,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.062853,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.041774,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.030142,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "321": [
+   {
+    "type": 6944,
+    "chance": 0.055338,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.083006,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.09223,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.062853,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.041774,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.030142,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "322": [
+   {
+    "type": 6944,
+    "chance": 0.057014,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.08552,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.095023,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.062916,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.04183,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.030189,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "323": [
+   {
+    "type": 6944,
+    "chance": 0.055265,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.082896,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.092107,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.065329,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.043441,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.031359,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "348": [
+   {
+    "type": 6944,
+    "chance": 0.061938,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.092906,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.103229,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.064798,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.043141,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.031166,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "349": [
+   {
+    "type": 6944,
+    "chance": 0.06026,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.09039,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.100433,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.064728,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.043079,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.031114,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "350": [
+   {
+    "type": 6944,
+    "chance": 0.061938,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.092906,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.103229,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.064798,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.043141,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.031166,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "351": [
+   {
+    "type": 6944,
+    "chance": 0.061938,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.092906,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.103229,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.064798,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.043141,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.031166,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "352": [
+   {
+    "type": 6944,
+    "chance": 0.06225,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.093375,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.103749,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.067457,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.044941,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.032485,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "353": [
+   {
+    "type": 6944,
+    "chance": 0.060572,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.090858,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.100953,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.067383,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.044876,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.03243,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "354": [
+   {
+    "type": 6944,
+    "chance": 0.06225,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.093375,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.103749,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.067457,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.044941,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.032485,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "355": [
+   {
+    "type": 6944,
+    "chance": 0.06225,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.093375,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.103749,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.067457,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.044941,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.032485,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "362": [
+   {
+    "type": 6946,
+    "chance": 0.05878,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.083971,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.05878,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.042108,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.03182,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.038436,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.02585,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "363": [
+   {
+    "type": 6946,
+    "chance": 0.05878,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.083971,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.05878,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.042108,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.03182,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.038436,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.02585,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "364": [
+   {
+    "type": 6946,
+    "chance": 0.05878,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.083971,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.05878,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.042108,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.03182,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.038436,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.02585,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "365": [
+   {
+    "type": 6946,
+    "chance": 0.05878,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.083971,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.05878,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.042108,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.03182,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.038436,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.02585,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "366": [
+   {
+    "type": 6946,
+    "chance": 0.059425,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.084893,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.059425,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.043857,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.033154,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.040063,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.026957,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "367": [
+   {
+    "type": 6946,
+    "chance": 0.059425,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.084893,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.059425,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.043857,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.033154,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.040063,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.026957,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "370": [
+   {
+    "type": 6946,
+    "chance": 0.060071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.085815,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.060071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.045607,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.03449,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041694,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.028069,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "371": [
+   {
+    "type": 6946,
+    "chance": 0.060071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.085815,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.060071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.045607,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.03449,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041694,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.028069,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "395": [
+   {
+    "type": 6946,
+    "chance": 0.05822,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.083171,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.05822,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.043657,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032997,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039868,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.026822,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "396": [
+   {
+    "type": 6946,
+    "chance": 0.05822,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.083171,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.05822,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.043657,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032997,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039868,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.026822,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "397": [
+   {
+    "type": 6946,
+    "chance": 0.05822,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.083171,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.05822,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.043657,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032997,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039868,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.026822,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "398": [
+   {
+    "type": 6946,
+    "chance": 0.05822,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.083171,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.05822,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.043657,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032997,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039868,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.026822,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "399": [
+   {
+    "type": 6946,
+    "chance": 0.059145,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.084493,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.059145,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.045476,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.034387,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041564,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.027979,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "401": [
+   {
+    "type": 6946,
+    "chance": 0.059145,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.084493,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.059145,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.045476,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.034387,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041564,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.027979,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "403": [
+   {
+    "type": 6946,
+    "chance": 0.060158,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.08594,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.060158,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.028378,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.028526,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.035862,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.050605,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.004879,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "405": [
+   {
+    "type": 6946,
+    "chance": 0.060158,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.08594,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.060158,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.028378,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.028526,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.035862,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.050605,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.004879,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "765": [
+   {
+    "type": 6947,
+    "chance": 0.048824,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.081374,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.031535,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.031657,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039757,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.056039,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.073236,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005491,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "766": [
+   {
+    "type": 6947,
+    "chance": 0.047658,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.079431,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.031529,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.031649,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039742,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.056013,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.071487,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005485,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "767": [
+   {
+    "type": 6947,
+    "chance": 0.047658,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.079431,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.031529,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.031649,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039742,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.056013,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.071487,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005485,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "768": [
+   {
+    "type": 6947,
+    "chance": 0.048824,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.081374,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.031535,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.031657,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039757,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.056039,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.073236,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005491,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "769": [
+   {
+    "type": 6947,
+    "chance": 0.050094,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.08349,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.032842,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032978,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041429,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.058424,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.075141,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005735,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "771": [
+   {
+    "type": 6947,
+    "chance": 0.048926,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.081545,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.032836,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032969,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041414,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.058396,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.07339,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005728,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "772": [
+   {
+    "type": 6947,
+    "chance": 0.050094,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.08349,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.032842,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.032978,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041429,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.058424,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.075141,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005735,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "773": [
+   {
+    "type": 6947,
+    "chance": 0.051307,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.085513,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.03415,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.0343,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.043104,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.060816,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.076961,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.00598,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "775": [
+   {
+    "type": 6947,
+    "chance": 0.050138,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.083564,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.034143,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.03429,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.043088,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.060786,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.075207,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005973,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1025": [
+   {
+    "type": 6947,
+    "chance": 0.048123,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.080204,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.031694,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.031816,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039955,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.056317,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.072185,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005517,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1026": [
+   {
+    "type": 6947,
+    "chance": 0.048123,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.080204,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.031694,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.031816,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039955,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.056317,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.072185,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005517,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1027": [
+   {
+    "type": 6947,
+    "chance": 0.048123,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.080204,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.031694,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.031816,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039955,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.056317,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.072185,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005517,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1028": [
+   {
+    "type": 6947,
+    "chance": 0.048123,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.080204,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.031694,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.031816,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.039955,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.056317,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.072185,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005517,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1029": [
+   {
+    "type": 6947,
+    "chance": 0.049392,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.08232,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.033001,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.033137,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041627,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.058702,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.074088,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.00576,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1030": [
+   {
+    "type": 6947,
+    "chance": 0.049392,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.08232,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.033001,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.033137,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041627,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.058702,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.074088,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.00576,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1031": [
+   {
+    "type": 6947,
+    "chance": 0.049392,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.08232,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.033001,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.033137,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.041627,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.058702,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.074088,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.00576,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1034": [
+   {
+    "type": 6947,
+    "chance": 0.050605,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.084341,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.034308,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.034458,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.043302,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.061093,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.075907,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.006005,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1728": [
+   {
+    "type": 6947,
+    "chance": 0.057102,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.09517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.034071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.034237,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.043043,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.06076,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.085652,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005997,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1729": [
+   {
+    "type": 6947,
+    "chance": 0.057102,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.09517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.034071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.034237,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.043043,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.06076,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.085652,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005997,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1730": [
+   {
+    "type": 6947,
+    "chance": 0.057102,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.09517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.034071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.034237,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.043043,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.06076,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.085652,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005997,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "1734": [
+   {
+    "type": 6947,
+    "chance": 0.058891,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.098151,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.035462,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.035647,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.044834,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.063327,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.088336,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.006265,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "2315": [
+   {
+    "type": 6947,
+    "chance": 0.058891,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.098151,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.035462,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.035647,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.044834,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.063327,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.088336,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.006265,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "2317": [
+   {
+    "type": 6947,
+    "chance": 0.057102,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.09517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.034071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.034237,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.043043,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.06076,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.085652,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005997,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "2318": [
+   {
+    "type": 6947,
+    "chance": 0.057102,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.09517,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.034071,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.034237,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.043043,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.06076,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.085652,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.005997,
+    "valuable": true,
+    "independent": false
+   }
+  ],
+  "837": [
+   {
+    "type": 3159,
+    "chance": 0.134471,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6941,
+    "chance": 0.268943,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.09413,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.051057,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 2258,
+    "chance": 0.25,
+    "valuable": false,
+    "independent": true
+   }
+  ],
+  "836": [
+   {
+    "type": 3159,
+    "chance": 0.133461,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6941,
+    "chance": 0.266923,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6944,
+    "chance": 0.093423,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.047944,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 2258,
+    "chance": 0.25,
+    "valuable": false,
+    "independent": true
+   }
+  ],
+  "838": [
+   {
+    "type": 6944,
+    "chance": 0.12342,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.111078,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.086394,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.02494,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.016476,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.011823,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 2258,
+    "chance": 0.75,
+    "valuable": false,
+    "independent": true
+   }
+  ],
+  "839": [
+   {
+    "type": 6944,
+    "chance": 0.12286,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6945,
+    "chance": 0.110574,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6946,
+    "chance": 0.086002,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.027529,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.018198,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.013065,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 2258,
+    "chance": 0.75,
+    "valuable": false,
+    "independent": true
+   }
+  ],
+  "840": [
+   {
+    "type": 6946,
+    "chance": 0.085034,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.121477,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.121477,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.010577,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.010607,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.013297,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.018686,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.001789,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 2258,
+    "chance": 1.0,
+    "valuable": false,
+    "independent": true
+   }
+  ],
+  "841": [
+   {
+    "type": 6946,
+    "chance": 0.089223,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6947,
+    "chance": 0.127461,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.127461,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.011856,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.011896,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.014921,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.020981,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.002011,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 2258,
+    "chance": 1.0,
+    "valuable": false,
+    "independent": true
+   }
+  ],
+  "930": [
+   {
+    "type": 6947,
+    "chance": 0.067543,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.135086,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.018714,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.018779,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.023562,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.033151,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.135086,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.00329,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 2258,
+    "chance": 1.0,
+    "valuable": false,
+    "independent": true
+   }
+  ],
+  "931": [
+   {
+    "type": 6947,
+    "chance": 0.068904,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6949,
+    "chance": 0.137809,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6950,
+    "chance": 0.020192,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6951,
+    "chance": 0.020269,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6952,
+    "chance": 0.025441,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6953,
+    "chance": 0.035814,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6954,
+    "chance": 0.137809,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 6959,
+    "chance": 0.003564,
+    "valuable": true,
+    "independent": false
+   },
+   {
+    "type": 2258,
+    "chance": 1.0,
+    "valuable": false,
+    "independent": true
+   }
+  ],
+  "770": [],
+  "774": [],
+  "264": [],
+  "265": [],
+  "776": [],
+  "1032": [],
+  "268": [],
+  "1033": [],
+  "1036": [],
+  "2316": [],
+  "400": [],
+  "2319": [],
+  "402": [],
+  "404": [],
+  "406": [],
+  "279": [],
+  "282": [],
+  "295": [],
+  "296": [],
+  "297": [],
+  "298": [],
+  "305": [],
+  "309": [],
+  "310": [],
+  "1731": [],
+  "324": [],
+  "325": [],
+  "326": [],
+  "1732": [],
+  "1733": [],
+  "1735": [],
+  "851": [],
+  "854": [],
+  "356": [],
+  "357": [],
+  "358": [],
+  "359": [],
+  "368": [],
+  "369": [],
+  "372": [],
+  "373": [],
+  "250": [],
+  "251": []
+ },
+ "elite_types": [
+  250,
+  251,
+  264,
+  265,
+  268,
+  279,
+  282,
+  295,
+  296,
+  297,
+  298,
+  305,
+  309,
+  310,
+  324,
+  325,
+  326,
+  356,
+  357,
+  358,
+  359,
+  368,
+  369,
+  372,
+  373,
+  400,
+  402,
+  404,
+  406,
+  770,
+  774,
+  776,
+  851,
+  854,
+  1032,
+  1033,
+  1036,
+  1731,
+  1732,
+  1733,
+  1735,
+  2316,
+  2319
+ ],
+ "targets": [
+  {
+   "id": "camp-34",
+   "name": "Лагерь бандитов",
+   "counts": {
+    "20": 16,
+    "21": 16
+   },
+   "afro": 24000,
+   "gold": 0.18,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-80",
+   "name": "Лагерь Новых Колонистов",
+   "counts": {
+    "258": 12,
+    "259": 12,
+    "260": 12,
+    "261": 12,
+    "262": 12,
+    "263": 12,
+    "266": 12,
+    "267": 12
+   },
+   "afro": 30000,
+   "gold": 0.2,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-81",
+   "name": "Лагерь Сектантов Люшеров",
+   "counts": {
+    "271": 10,
+    "272": 10,
+    "273": 11,
+    "274": 11,
+    "276": 10,
+    "277": 10,
+    "278": 9,
+    "280": 8,
+    "281": 8,
+    "285": 9
+   },
+   "afro": 36000,
+   "gold": 0.3,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-84",
+   "name": "Лагерь Джанджавидов",
+   "counts": {
+    "287": 12,
+    "288": 12,
+    "289": 12,
+    "290": 12,
+    "291": 12,
+    "292": 12,
+    "293": 12,
+    "294": 12
+   },
+   "afro": 42000,
+   "gold": 0.5,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-85",
+   "name": "Лагерь Магриба",
+   "counts": {
+    "301": 20,
+    "302": 19,
+    "304": 18,
+    "306": 18,
+    "308": 18,
+    "303": 1,
+    "307": 1,
+    "311": 1
+   },
+   "afro": 49333.333333333336,
+   "gold": 0.7333333333333334,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-88",
+   "name": "Лагерь Работорговцев",
+   "counts": {
+    "315": 11,
+    "316": 11,
+    "317": 11,
+    "318": 11,
+    "319": 11,
+    "320": 11,
+    "321": 10,
+    "322": 10,
+    "323": 10
+   },
+   "afro": 60000,
+   "gold": 0.8,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-92",
+   "name": "Лагерь Живодеров",
+   "counts": {
+    "348": 12,
+    "349": 12,
+    "350": 12,
+    "351": 12,
+    "352": 12,
+    "353": 12,
+    "354": 12,
+    "355": 12
+   },
+   "afro": 68000,
+   "gold": 0.85,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-93",
+   "name": "Лагерь ДСР",
+   "counts": {
+    "362": 12,
+    "363": 12,
+    "364": 12,
+    "365": 12,
+    "366": 12,
+    "367": 12,
+    "370": 12,
+    "371": 12
+   },
+   "afro": 72000,
+   "gold": 0.9,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-98",
+   "name": "Лагерь Миротворцев",
+   "counts": {
+    "395": 12,
+    "396": 12,
+    "397": 12,
+    "398": 12,
+    "399": 12,
+    "401": 12,
+    "403": 12,
+    "405": 12
+   },
+   "afro": 76666.66666666667,
+   "gold": 0.9333333333333332,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-132",
+   "name": "Лагерь Пиратов Сомали",
+   "counts": {
+    "765": 10,
+    "766": 10,
+    "767": 10,
+    "768": 10,
+    "769": 10,
+    "771": 10,
+    "772": 10,
+    "773": 9,
+    "775": 9
+   },
+   "afro": 90000,
+   "gold": 1.1333333333333333,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-168",
+   "name": "Аванпост Северного Альянса",
+   "counts": {
+    "1025": 8,
+    "1026": 8,
+    "1027": 8,
+    "1028": 8,
+    "1029": 8,
+    "1030": 8,
+    "1031": 8,
+    "1034": 8
+   },
+   "afro": 90000,
+   "gold": 1.1333333333333333,
+   "context": "Окрестности"
+  },
+  {
+   "id": "camp-263",
+   "name": "База Северного Альянса",
+   "counts": {
+    "1728": 14,
+    "1729": 14,
+    "1730": 14,
+    "1734": 14,
+    "2315": 14,
+    "2317": 13,
+    "2318": 13
+   },
+   "afro": 105000,
+   "gold": 1.2,
+   "context": "Окрестности"
+  },
+  {
+   "id": "mine-612",
+   "name": "Шахта — Нубия",
+   "counts": {
+    "837": 56,
+    "836": 2
+   },
+   "afro": 52500,
+   "gold": 0.5,
+   "context": "Нересурсная шахта"
+  },
+  {
+   "id": "mine-613",
+   "name": "Шахта — Вади-Хальфа",
+   "counts": {
+    "838": 31,
+    "839": 16
+   },
+   "afro": 74000,
+   "gold": 1.1,
+   "context": "Нересурсная шахта"
+  },
+  {
+   "id": "mine-614",
+   "name": "Шахта — Донгола",
+   "counts": {
+    "840": 32,
+    "841": 15
+   },
+   "afro": 115000,
+   "gold": 1.4,
+   "context": "Нересурсная шахта"
+  },
+  {
+   "id": "mine-615",
+   "name": "Шахта — Абу-Хамед",
+   "counts": {
+    "930": 12,
+    "931": 19
+   },
+   "afro": 135000,
+   "gold": 1.7,
+   "context": "Нересурсная шахта"
+  }
+ ]
+}

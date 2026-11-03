@@ -14,6 +14,15 @@ class Arr(list):
         self.append(value)
         return len(self)
 
+    def unshift(self, value):
+        self.insert(0, value)
+        return len(self)
+
+    def splice(self, start, count):
+        removed = self[start:start + count]
+        del self[start:start + count]
+        return Arr(removed)
+
 
 def get(obj, key):
     if obj is None:
@@ -25,6 +34,16 @@ def get(obj, key):
             return len(obj)
         if isinstance(key, int) or str(key).isdigit():
             return obj[int(key)] if 0 <= int(key) < len(obj) else None
+    if isinstance(obj, str) and key == 'length':
+        return len(obj)
+    if isinstance(obj, str) and key == 'charCodeAt':
+        return lambda index: ord(obj[index])
+    if isinstance(obj, str) and key == 'substring':
+        return lambda start, end=None: obj[start:end]
+    if isinstance(obj, str) and key == 'indexOf':
+        return obj.find
+    if isinstance(obj, str) and key == 'toLowerCase':
+        return obj.lower
     return getattr(obj, str(key), None)
 
 
@@ -88,9 +107,9 @@ def execute(code, env):
         elif op == 0x3C:  # DefineLocal
             value, key = stack.pop(), stack.pop()
             env[key] = value
-        elif op in (0x52, 0x3D, 0x53):  # CallMethod / CallFunction / NewMethod
+        elif op in (0x52, 0x3D, 0x53, 0x40):  # CallMethod / CallFunction / NewMethod
             name = stack.pop()
-            obj = stack.pop() if op != 0x3D else env
+            obj = stack.pop() if op in (0x52, 0x53) else env
             count = stack.pop()
             args = [stack.pop() for _ in range(count)]
             fn = get(obj,name)
@@ -118,6 +137,28 @@ def execute(code, env):
             at += size
             if name: env[name]=fn
             else: stack.append(fn)
+        elif op == 0x4C:
+            stack.append(stack[-1])
+        elif op == 0x44:
+            v = stack.pop()
+            stack.append('undefined' if v is None else 'boolean' if isinstance(v, bool)
+                         else 'number' if isinstance(v, (int, float)) else 'string'
+                         if isinstance(v, str) else 'object')
+        elif op == 0x8F:
+            flags = payload[0]
+            size, catch_size, finally_size = struct.unpack_from('<HHH', payload, 1)
+            start = payload.index(b'\0', 7) + 1
+            assert start == len(payload), 'ActionTry header excludes its code blocks'
+            blocks = code[at:at + size + catch_size + finally_size]
+            at += len(blocks)
+            try:
+                execute(blocks[:size], env)
+            except Exception:
+                if not flags & 1:
+                    raise
+                execute(blocks[size:size + catch_size], env)
+            if flags & 2:
+                execute(blocks[size + catch_size:], env)
         elif op == 0x49:  # Equals2
             b, a = stack.pop(), stack.pop()
             stack.append(a == b)
@@ -125,7 +166,7 @@ def execute(code, env):
             stack.append(not stack.pop())
         elif op == 0x17:  # Pop
             stack.pop()
-        elif op in (0x0B, 0x0C, 0x0D, 0x47, 0x48):  # Subtract / Multiply / Add2 / Less2
+        elif op in (0x0B, 0x0C, 0x0D, 0x3F, 0x47, 0x48):  # Subtract / Multiply / Add2 / Less2
             b, a = stack.pop(), stack.pop()
             if op == 0x0B:
                 stack.append(a - b)
@@ -133,6 +174,8 @@ def execute(code, env):
                 stack.append(a * b)
             elif op == 0x0D:
                 stack.append(a / b)
+            elif op == 0x3F:
+                stack.append(a % b)
             elif op == 0x48:
                 stack.append(a < b)
             else:

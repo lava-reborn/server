@@ -56,6 +56,90 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
         s.walk = (cells, 100.0)
         combat.Fighter.moved(f, cells)
 
+    def movement_session(self):
+        f, s, room, events, row = self.fixture()
+        s.barter = NS(moved=lambda: None)
+        s.passage = None
+        s.arm_passage = lambda length: None
+        f.moved = lambda cells: combat.Fighter.moved(f, cells)
+        return f, s, room, events, row
+
+    async def test_delayed_reroute_echoes_only_unwalked_tail_and_keeps_step_phase(self):
+        f, s, room, events, row = self.movement_session()
+        with self.clock(100):
+            self.start_walk(f, s, list(range(11)))
+        with self.clock(100.45):
+            s.move_in_location(dict(path=list(range(9))))
+            self.assertEqual(s.walk[0], list(range(2, 9)))
+            self.assertAlmostEqual(s.walk[1], 100.4)
+            self.assertEqual(f.ap, 98)
+            self.assertIn(('userMove', dict(id=0, path=list(range(2, 9)))), events)
+        with self.clock(100.65):
+            self.assertEqual(s.live_cell(), 3)
+            self.assertEqual(f.ap, 97)
+
+    async def test_click_arriving_after_route_finished_does_not_replay_its_prefix(self):
+        f, s, room, events, row = self.movement_session()
+        with self.clock(100):
+            self.start_walk(f, s, [0, 1, 2])
+        with self.clock(100.45):
+            self.assertEqual(s.live_cell(), 2)
+            self.assertIsNone(s.walk)
+            s.move_in_location(dict(path=[0, 1, 2, 3, 4]))
+            self.assertEqual(s.walk[0], [2, 3, 4])
+            self.assertEqual(f.ap, 98)
+        s.pos = 8  # a teleport must not reuse the old location's route
+        self.assertIsNone(s._completed_walk)
+
+    async def test_turn_back_starts_here_not_at_clicks_stale_cell(self):
+        f, s, room, events, row = self.movement_session()
+        with self.clock(100):
+            self.start_walk(f, s, list(range(11)))
+        with self.clock(100.65):
+            s.move_in_location(dict(path=[1, 2, 22]))
+            self.assertEqual(s.walk[0], [3, 2, 22])
+            self.assertEqual(f.ap, 97)
+            self.assertNotIn(('userMove', dict(id=0, path=[1, 2, 22])), events)
+
+    async def test_reroute_ending_here_is_stop_without_one_cell_usermove_or_fifo_skip(self):
+        f, s, room, events, row = self.movement_session()
+        with self.clock(100):
+            self.start_walk(f, s, list(range(11)))
+        with self.clock(100.45):
+            s.move_in_location(dict(path=[0, 1, 2]))
+        self.assertEqual((s.pos, f.ap), (2, 98))
+        self.assertIsNone(s.walk)
+        self.assertIn(('actionCancel', dict(pos=2)), events)
+        own = [(cmd, p) for cmd, p in events if cmd == 'cmdAck']
+        self.assertEqual(own, [('cmdAck', dict(res=0))])
+        self.assertFalse(any(cmd in ('userMove', 'breakMv') for cmd, p in events))
+
+    async def test_impossible_reroute_refuses_at_live_cell_not_old_destination(self):
+        f, s, room, events, row = self.movement_session()
+        with self.clock(100):
+            self.start_walk(f, s, list(range(11)))
+        with self.clock(100.45):
+            s.move_in_location(dict(path=[8, 9]))
+        self.assertEqual((s.pos, f.ap), (2, 98))
+        self.assertIn(('breakMv', dict(id=0, pos=2)), events)
+        self.assertFalse(any(cmd == 'cmdAck' for cmd, p in events))
+
+    async def test_fire_acceptance_always_carries_stop_position_even_after_server_arrival(self):
+        f, s, room, events, row = self.fixture()
+        with self.clock(100):
+            self.start_walk(f, s, [0, 1, 2])
+        with self.clock(100.45):
+            self.assertEqual(s.live_cell(), 2)
+            self.assertIsNone(s.walk)
+            # The older action fixture is an NS, not Fighter.cell's property.
+            f.cell = 2
+            combat.Fighter.use_fire(f, dict(obj='weapon', target='000000001'))
+        aiming = [p for cmd, p in events if cmd == 'faAim']
+        self.assertEqual(len(aiming), 1)
+        self.assertEqual(aiming[0]['pos'], 2)
+        self.assertIsNotNone(f.aim)
+        self.assertEqual((row['ammo_count'], row['brk']), (10, 100))
+
     async def test_stopping_at_second_step_charges_two_not_whole_route(self):
         f, s, room, events, row = self.fixture()
         with self.clock(100.0):

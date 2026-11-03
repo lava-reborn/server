@@ -521,16 +521,16 @@ try:
           names_of(got), ["ah_sresult"])
 
     # --- listing ----------------------------------------------------------------
-    gold_belt = give(a, 4363)       # belt_critical_g_Jons: gold by its name, exchang=1
-    got = create(a, gold_belt, hours=168, a_bid=100, a_buyout=500, g_bid=None)
-    check("gold gear with exchang=1 cannot be listed and stays in the bag",
-          ([p["res"] for n, p in got if n == "cmdAck"], gold_belt in bag(a)),
+    bound_knife = give(a, 3941)     # Bagira personal reward
+    got = create(a, bound_knife, hours=168, a_bid=100, a_buyout=500, g_bid=None)
+    check("personal quest reward cannot be listed and stays in the bag",
+          ([p["res"] for n, p in got if n == "cmdAck"], bound_knife in bag(a)),
           ([auction.RES_REFUSED], True))
-    a.send("sndml;item=x%s;body=@@;type=0;subj=@x@;to=@Bob@;" % gold_belt)
+    a.send("sndml;item=x%s;body=@@;type=0;subj=@x@;to=@Bob@;" % bound_knife)
     got = a.frames()
-    check("the same gold gear cannot bypass binding in a letter",
+    check("the same personal reward cannot bypass binding in a letter",
           ([p["res"] for n, p in got if n == "cmdAck"],
-           named(got, "ctml"), gold_belt in bag(a), inbox_ids(b)),
+           named(got, "ctml"), bound_knife in bag(a), inbox_ids(b)),
           ([mail.RES_REFUSED], [], True, []))
     gun = give(a, BERETTA)
     afro0, _ = purse(a)

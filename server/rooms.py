@@ -21,6 +21,8 @@ import asyncio
 import logging
 from collections import namedtuple
 
+import camp_elites
+
 import names
 import travel
 import world
@@ -102,6 +104,7 @@ class Room:
         self.ws = False
         self.combat = None
         skipped = stood_in = filled = 0
+        elite_index = 0
         # An empty slot (type 0) names nobody: the dead server chose who
         # stood there. In the few battle files world.camp_fill lists --
         # Вади-Хальфа's camps and quest places, a designed table -- it says
@@ -137,6 +140,10 @@ class Room:
             if not world.belongs_here(type_id, name, root, loc.war, loc.id):
                 skipped += 1
                 continue
+            replacement = camp_elites.replacement(loc.id, type_id, elite_index)
+            if camp_elites.applies(loc.id, type_id):
+                elite_index += 1
+            type_id = replacement
             self.npcs[ids.npc()] = NPC(cell, type_id, world.entity_root(type_id, root))
         # Then whoever data/placements.json puts down here, under ids of the
         # same counter: to the client an inhabitant is an inhabitant. They
@@ -157,6 +164,10 @@ class Room:
             x, y = rec["cell"]
             root = mob_types[type_id][0]
             eid = ids.npc()
+            replacement = camp_elites.replacement(loc.id, type_id, elite_index)
+            if camp_elites.applies(loc.id, type_id):
+                elite_index += 1
+            type_id = replacement
             self.npcs[eid] = NPC(int(y) * loc.width + int(x), type_id,
                                  world.entity_root(type_id, root))
             if rec.get("escort"):

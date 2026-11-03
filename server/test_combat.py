@@ -1244,7 +1244,7 @@ try:
     got = c.frames(0.3)
     check("ack, then the room goes to war, then the aim",
           got, [("cmdAck", {"res": 0}), ("lch", {"ws": 1}),
-                ("faAim", dict(id=0, ang=mobs.direction(pos, DOG_HOME, loc.width), num_shots=1))])
+                ("faAim", dict(id=0, pos=pos, ap=50 + 5 * LEVEL, ang=mobs.direction(pos, DOG_HOME, loc.width), num_shots=1))])
     tracker.feed(got)
     # The magazine report closes the burst; the experience and the dog's
     # reaction follow it in the same breath, so the window is held open a
@@ -1646,7 +1646,7 @@ try:
     # What the server must have paid, worked out from what the blows did:
     # each the part of the dog's health and stamina it took, of the price of
     # a mob at the blade's level (10, times the dog's 0.7), and the kill
-    # whatever those parts left of a whole (progression.mob_xp,
+    # whatever those parts left of a whole (progression.combat_mob_xp,
     # Fighter.award_xp, RoomCombat.settle_xp).
     mirror = progression.Character()
     mirror.skill[progression.MELEE] = [1, 0, progression.skill_xp_max(1)]
@@ -1654,7 +1654,7 @@ try:
 
     def pay(share):
         paid[0] += share
-        mirror.gain_xp(progression.MELEE, mirror.carry_xp(progression.MELEE, progression.mob_xp(
+        mirror.gain_xp(progression.MELEE, mirror.carry_xp(progression.MELEE, progression.combat_mob_xp(
             dog_stats.level, mirror.skill_level(progression.MELEE), share, dog_stats.xp_mult)),
             spec_on_top=True)
 

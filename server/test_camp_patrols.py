@@ -85,7 +85,7 @@ with open(os.path.join(ROOT, "data", "camp_fill.json"), encoding="utf-8") as _fh
 CAMPS = {80: (82, 8), 81: (83, 8), 84: (86, 8), 85: (87, 8), 34: (None, 4),
          88: (89, 8), 92: (90, 8), 93: (91, 8), 98: (99, 8),
          132: (133, 8), 168: (None, 8), 263: (274, 8)}
-VALLEY_CAMP, VALLEY_KINDS = 34, {20, 21, 251}
+VALLEY_CAMP, VALLEY_KINDS = 34, {20, 21}
 SLOTS8 = [(20, 34), (35, 44), (20, 54), (29, 70), (50, 74), (15, 84), (39, 95), (25, 104)]
 SLOTS4 = [(20, 34), (29, 70), (50, 74), (25, 104)]
 LOOSER, TREASURERS, OFFICERS = 336, (586, 590, 591, 592, 593, 764, 1024, 1736), {303, 307, 311}
@@ -207,7 +207,7 @@ try:
               {tuple(sorted(build_camp_patrols.patrol_slots(
                   world.location(world.pack(x, y)), SLOTS8 if n == 8 else SLOTS4)))
                for x, y in cells})
-    check("the valley's ring: its bandits 20, 21 and 251, four to a cell",
+    check("the valley's ring: its nonelite bandits 20 and 21, four to a cell",
           sorted({t for c in RINGS[VALLEY_CAMP] for t in STOOD[c]}), sorted(VALLEY_KINDS))
     check("the whole range of each camp's patrol kinds stands somewhere on its ring",
           {camp: sorted({t for c in RINGS[camp] for t in STOOD[c]}) for camp in CAMPS},

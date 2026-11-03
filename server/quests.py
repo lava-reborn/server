@@ -671,7 +671,9 @@ class Quest:
         bag (inventory.Inventory.bag_pieces): per slot, the pieces of its
         type, never more than the slot asks for -- the journal counts
         towards the goal, the way kill_num stops at num_kill."""
-        return [min(int(have.get(obj, 0)), num) for obj, num, _mobs in self.objs]
+        import craft
+        return [min(sum(int(have.get(t, 0)) for t in craft.quest_item_types(self, obj)), num)
+                for obj, num, _mobs in self.objs]
 
     def bag_progress(self, have):
         """The part of the progress the bag answers (counts_bag): obj_num
@@ -858,12 +860,20 @@ def check_items(table=None):
         raise ValueError(found[0])
 
 
+# Temporary release gate: keep definitions, NPC indices and journal instances
+# intact. Both taking and handing in call acquisition_blocked before writes.
+# 943-947 award Paladin components; 960-964 assemble the five armour pieces.
+TEMPORARILY_DISABLED_QUESTS = frozenset(range(943, 948)) | frozenset(range(960, 965))
+
+
 def acquisition_blocked(quest):
-    """Close unreleased equipment rewards and level-18/20 blueprint upgrades.
+    """Close temporary quests, unreleased rewards and level-18/20 upgrades.
 
     Keep rows and journal instances intact so cancelling stays possible.
     Block the whole mixed reward rather than silently deleting a prize.
     """
+    if quest.type in TEMPORARILY_DISABLED_QUESTS:
+        return True
     import items
     import craft
     recipe = craft.rows().get(quest.type, {})

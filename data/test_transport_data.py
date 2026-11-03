@@ -99,10 +99,11 @@ def main():
 
     assert (types[4]["cost"],types[4]["g_cost"],types[4]["required_status"]) == (0,70,0)
     assert (types[5]["cost"],types[5]["g_cost"],types[5]["required_status"]) == (0,90,0)
-    for offer, base, cost, status in ((17,4,35000,1),(18,5,45000,2)):
+    for offer, base, cost, status in ((17,4,22500,1),(18,5,35000,2)):
         rec = transport.get(offer)
         assert (rec["base_type"],rec["cost"],rec["g_cost"],rec["required_status"]) == (base,cost,0,status)
-        assert cost == types[base]["g_cost"] * 50000 // 100
+        # Status rentals have their own discounted afro price, not a conversion.
+        assert transport.price(offer, 3) == (3 * cost, 0)
         assert transport.si_frame(offer)["premium"] == status
         assert names.known(transport.NAME_ID_OFFSET + offer)
         assert names.known(transport.DESC_ID_OFFSET + offer)

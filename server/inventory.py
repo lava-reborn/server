@@ -67,16 +67,25 @@ and are not in the backpack the corpse drops from.
 """
 import asyncio
 import contextlib
+from functools import lru_cache
 import json
 import logging
 import math
 import os
 import random
+import re
+import secrets
+import time
+from statistics import median
 
+import craft
+import gold_trade
 import holdings
+import mortimer
 import items
 import pace
 import progression
+import restore_policy
 import quests
 import sets
 import setcraft
@@ -148,7 +157,8 @@ PMOD = 1
 # behind its back: ItemContainer.showCost multiplies by smod itself before it
 # draws the price, so a server that sent one number and charged another would
 # be showing the player a lie.
-SMOD = 0.7
+SMOD = float(gold_trade.NPC_SALE_SHARE)
+GOLD_SALE_QUOTE_SECONDS = 60
 # Whether a stall buys a thing priced in gold alone (cost 0, g_cost > 0) for
 # afro: its gold price at the one rate (progression.GOLD_TO_AFRO_RATE), then
 # SMOD and the quality as any sale. Off (2026-09-28, with the rate at
@@ -159,6 +169,8 @@ SMOD = 0.7
 # for nothing (a quest's reward, a drop) would sell for ten to twelve times
 # its afro twin, a tap of afro only a patched client reaches. True turns
 # the sale back on.
+# Retained only for the legacy unconfirmed path. G commerce uses
+# gold_trade.sale_unit and a server-bound confirmation instead.
 SELL_GOLD_ONLY = False
 # The repair multiplier, likewise sent and likewise obeyed:
 # RepairInterface.repairCostCount draws floor(rmod * (1-q) * cost * repair_mod).
@@ -221,14 +233,9 @@ REPAIR_KEEPS = 0.9
 # formerly displayed and charged as 0.01 G. The owner's rule (2026-10-05)
 # makes it 0.02 G in both the slot and repair-all, on client and server.
 GOLD_REPAIR_MOD = progression.GOLD_TO_AFRO_RATE
-# The restore button's price, sent as gold_repair_price_mod (GConstatns
-# keeps it as gold_restore_price_mod): the window shows
-# Math.round(g_cost * mod) / 100 ounces for anything with a g_cost, whatever
-# its wear, and offers no restore for anything without
-# (RepairInterface.repairCostCount). At 1 a restore costs the thing's gold
-# price -- a new one, but this one kept, its modification with it -- and
-# makes it as new (Inventory.repair). The server sent 1 before; no source
-# gives the original's figure.
+# Sent to the repair window. G restoration pays this share of the item
+# price times (factory ceiling - current ceiling) / factory ceiling.
+# Current damage does not change that price; no lost ceiling means no restore.
 GOLD_RESTORE_PRICE_MOD = 1
 
 # cmdAck codes the client words (ErrorReport.as:58-81)
@@ -656,18 +663,102 @@ def wearable(row, level, character=None):
     return character is None or weapon_requirement_error(row, character) is None
 
 
+@lru_cache(maxsize=4096)
+def armour_durability_ratio(type_id, base):
+    """Compare unmodified pieces of the same slot and A/G variant.
+
+    A missing rung uses the nearest lower set; below the first rung use the
+    first set. Rework keeps its extra life: it is not a level difference.
+    No counterpart (belts and legacy clothing) means no durability correction.
+    Catalogue data is immutable during a server run; no inventory/DB reads.
+    """
+    type_id = setcraft.base_of(type_id)
+    current = sets.SETS.get(sets.set_of(type_id))
+    if current is None:
+        return 1.0
+    slot = sets.slot_of(type_id)
+    candidates = [s for s in sets.SETS.values()
+                  if s["variant"] == current["variant"] and slot in s["members"]]
+    lower = [s for s in candidates if s["level"] <= base]
+    reference = (max(lower, key=lambda s: s["level"]) if lower
+                 else min(candidates, key=lambda s: s["level"]))
+    durability = sets.item(type_id).get("max_break_abs", 0)
+    reference_durability = sets.item(reference["members"][slot]).get("max_break_abs", 0)
+    return durability / reference_durability if durability > 0 and reference_durability > 0 else 1.0
+
+
+def _weapon_wear_key(type_id, params):
+    root = items.root_of(type_id)
+    group = params.get("weapon_type", 0) if root == items.FIRE_ARM else 0
+    return root, group, bool(params.get("g_cost", 0))
+
+
+@lru_cache(maxsize=1)
+def weapon_wear_references():
+    """Median durability by class, A/G payment and tier, from known stats.
+
+    No generated fallback weapons, modifications, loans or retired/P types
+    in the baseline. Build once, not on each shot, and never consult the DB.
+    """
+    groups = {}
+    standard = re.compile(
+        r"(?:(?:pistols?|shotgun|assault_rifle|rifle|machine_gun|sub_machine_guns)_\d+_lvl_\d+(?:_gold)?"
+        r"|lamantin_(?:pistols|shotgun|assault_rifle|rifle|machine_gun|sub_machine_guns)_\d+"
+        r"|knife_lvl\d+_[AG])")
+    for type_id in sorted(set(items.wiki()) | set(items.coldarm_manual())):
+        if items.root_of(type_id) not in (items.FIRE_ARM, items.COLD_ARM):
+            continue
+        if not standard.fullmatch(items.catalogue()[type_id][1]):
+            continue
+        if items.out_of_game(type_id) or quests.lent(type_id) or craft.mod_of(type_id):
+            continue
+        params = items.params_of(type_id) or {}
+        durability = params.get("max_break_abs", 0)
+        if durability <= 0 or not (params.get("cost", 0) or params.get("g_cost", 0)):
+            continue
+        key = _weapon_wear_key(type_id, params)
+        groups.setdefault(key, {}).setdefault(item_level(type_id), []).append(durability)
+    return {key: {level: median(values) for level, values in levels.items()}
+            for key, levels in groups.items()}
+
+
+@lru_cache(maxsize=4096)
+def weapon_durability_ratio(type_id, base):
+    mod = craft.mod_of(type_id)
+    type_id = mod[0] if mod else type_id
+    params = items.params_of(type_id) or {}
+    levels = weapon_wear_references().get(_weapon_wear_key(type_id, params), {})
+    if not levels:
+        return 1.0
+    lower = [level for level in levels if level <= base]
+    reference = levels[max(lower) if lower else min(levels)]
+    durability = params.get("max_break_abs", 0)
+    return durability / reference if durability > 0 else 1.0
+
+
+def level_wear_penalty(difference):
+    """Extra tiers add 0.15, not compound interest on the previous tier."""
+    return 1.5 + .15 * (difference - 1) if difference > 0 else 1.0
+
+
 def wear_multiplier(row, character):
-    """Use base combat skills; armour follows the better of shooting and melee."""
+    """Equalise durability, then x1.50 + 0.15 per extra tier; base skills only."""
     if row["root"] == items.WEAR:
         base = max(character.skill[progression.SHOOTING][0],
                    character.skill[progression.MELEE][0])
-    else:
-        skill = {items.FIRE_ARM: progression.SHOOTING,
-                 items.COLD_ARM: progression.MELEE}.get(row["root"])
-        if skill is None:
-            return 1
-        base = character.skill[skill][0]
-    return 1 + max(0, item_level(row["type_id"]) - base)
+        difference = item_level(row["type_id"]) - base
+        if difference <= 0:
+            return 1.0
+        return armour_durability_ratio(row["type_id"], base) * level_wear_penalty(difference)
+    skill = {items.FIRE_ARM: progression.SHOOTING,
+             items.COLD_ARM: progression.MELEE}.get(row["root"])
+    if skill is None:
+        return 1
+    base = character.skill[skill][0]
+    difference = item_level(row["type_id"]) - base
+    if difference <= 0:
+        return 1.0
+    return weapon_durability_ratio(row["type_id"], base) * level_wear_penalty(difference)
 
 
 def item_title(type_id):
@@ -814,8 +905,8 @@ def repair_window(si, brk, max_break_cur, rmod=RMOD):
       afro    = floor((q ? rmod * (1 - q) : rmod) * cost * repair_mod),
                 and 1 where that comes to 0
       gold    = repair_gold(afro) -- of the afro figure shown, its 1 included
-      restore = Math.round(g_cost * gold_repair_price_mod) / 100, only
-                when g_cost is set
+      restore = round(g_cost * gold_repair_price_mod * lost_ceiling / factory),
+                minimum one hundredth for a positive loss; only G items are eligible
 
     The two sums, countAllRepairAfroCost and countAllRepairGoldCost, go
     over the same broken things and add floor(cost * (rmod * repair_mod) *
@@ -831,7 +922,8 @@ def repair_window(si, brk, max_break_cur, rmod=RMOD):
     q = brk / float(max_break_cur) if max_break_cur > 0 else float("nan")
     m = rmod if (not q or q != q) else rmod * (1 - q)
     afro = int(math.floor(m * float(cost) * repair_mod)) or 1
-    restore = int(js_round(g_cost * as_sent(GOLD_RESTORE_PRICE_MOD))) if g_cost else None
+    restore = restore_policy.price(
+        dict(si, g_cost=g_cost), max_break_cur, as_sent(GOLD_RESTORE_PRICE_MOD)) if g_cost else None
     share = (0, 0)
     if cost:
         # A ceiling of 0 makes q NaN, and the sum NaN with it; such a thing
@@ -900,6 +992,7 @@ class TradeSession:
         self.npc_id = npc_id
         self.trader_type = trader_type
         self.loc_id = loc_id
+        self.sale_quote = None
 
 
 class Inventory:
@@ -1205,7 +1298,13 @@ class Inventory:
             return row
         points = int(points)
         if row["root"] in GEAR_ROOTS:
-            points *= wear_multiplier(row, self.sess.character())
+            exact = points * wear_multiplier(row, self.sess.character())
+            points = math.floor(exact)
+            # Same expected wear as the fractional formula; item fields stay
+            # integers. No remainder that a relog could erase or reset.
+            fraction = exact - points
+            if fraction > 0 and RNG.random() < fraction:
+                points += 1
         self.store.update_item(row["uniq"], brk=max(0, row["brk"] - points))
         row = self.store.item(row["uniq"])
         if row is not None:
@@ -1934,7 +2033,10 @@ class Inventory:
         elif code in (UPD_BUY, UPD_BUY_GOLD, UPD_BGPOINTS_BUY):
             self.buy(p, code)
         elif code == UPD_SELL:
-            self.sell(p)
+            if p.get("sale_stage") == "quote":
+                self.quote_gold_sale(p)
+            else:
+                self.sell(p)
         elif code in (UPD_REPAIR, UPD_REPAIR_GOLD, UPD_RESTORE):
             self.repair(p, code)
         elif code == UPD_REG_TROPHY and getattr(self.sess, "trophies", None):
@@ -1969,15 +2071,10 @@ class Inventory:
                 from a purse that holds its price, and in «Отремонтировать
                 все» the client's «Некоторые предметы не удалось
                 отремонтировать» says the truth.
-          7     a restore, for gold, of anything with a gold price: as new,
-                durability and ceiling both at the factory's, for
-                Math.round(g_cost * gold_repair_price_mod) hundredths, the
-                price the window shows whatever the wear. The client
-                animates the bar to full and takes the thing out of the
-                slot on a 0 (RepairInterface.repAck, breakBar), so a restore
-                that left the durability worn -- as it used to, lifting the
-                ceiling alone at a price of its own -- showed one thing and
-                did another.
+          7     a G-only restore: price times the share of factory ceiling
+                lost through repairs, rounded to hundredths (minimum 0.01 G
+                for positive loss). Durability and ceiling both become factory
+                fresh. With no lost ceiling, ordinary damage is not restored.
 
         The window lists what is worn and held (getBreakedItems); a thing in
         the bag is mended by the same rule if a frame names it. Only a
@@ -2011,6 +2108,9 @@ class Inventory:
             # alone (holdings.py); everybody else was told can_repair=0.
             self.ack(RES_REFUSED)
             return
+        if code == UPD_RESTORE:
+            self.restore(p)
+            return
         si = items.params_of(row["type_id"]) or {}
         abs_top = si.get("max_break_abs", 0) or row["max_break_cur"]
         top = row["max_break_cur"] or abs_top
@@ -2021,28 +2121,19 @@ class Inventory:
             si, row["brk"], row["max_break_cur"])
         afro, gold = self.money()
 
-        if code == UPD_RESTORE:
-            if price_restore is None:
-                # No gold price, no "Восстановить": the window keeps the
-                # button off (repairCostCount), so only a forged frame gets
-                # here.
-                self.ack(RES_REFUSED)
-                return
-            new_brk = new_top = abs_top
-            paid = (0, price_restore)
-        else:
-            # Nine tenths of the ceiling, and never under the durability
-            # the thing has (REPAIR_KEEPS).
-            new_top = max(int(math.floor(top * REPAIR_KEEPS)), min(row["brk"], top))
-            if new_top < 1:
-                self.ack(RES_BROKEN)
-                self.sess.say("Предмет больше не ремонтируется: максимальная"
-                              " прочность исчерпана%s" % (
-                                  ". Вернуть её можно восстановлением за золото"
-                                  if price_restore is not None else ""))
-                return
-            new_brk = new_top
-            paid = (0, price_gold) if code == UPD_REPAIR_GOLD else (price_afro, 0)
+        # Nine tenths of the ceiling, and never under the durability
+        # the thing has (REPAIR_KEEPS).
+        new_top = max(int(math.floor(top * REPAIR_KEEPS)), min(row["brk"], top))
+        if new_top < 1:
+            self.ack(RES_BROKEN)
+            self.sess.say("Предмет больше не ремонтируется: максимальная"
+                          " прочность исчерпана%s" % (
+                              ". Вернуть её можно восстановлением за золото"
+                              if price_restore is not None
+                              and restore_policy.base_price(row["type_id"], si) else ""))
+            return
+        new_brk = new_top
+        paid = (0, price_gold) if code == UPD_REPAIR_GOLD else (price_afro, 0)
         idle = (new_brk, new_top) == (row["brk"], row["max_break_cur"])
         if idle:
             paid = (0, 0)
@@ -2054,13 +2145,58 @@ class Inventory:
                 self.set_money(afro - paid[0], gold - paid[1], "repair", row["type_id"])
             self.store.update_item(row["uniq"], brk=new_brk, max_break_cur=new_top)
         log.info("  ..    %s %d: %d/%d -> %d/%d for %d afro, %d/100 G",
-                 "nothing to do for" if idle else
-                 "restored" if code == UPD_RESTORE else "repaired", row["type_id"],
+                 "nothing to do for" if idle else "repaired", row["type_id"],
                  row["brk"], top, new_brk, new_top, paid[0], paid[1])
         self.ack(RES_OK)
         row = self.store.item(row["uniq"])
         if row is not None:
             self.push_di(row)
+        self.push_money()
+
+    def restore(self, p):
+        """Called after repair's NPC checks; item and G payment commit together."""
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                row = self.find(p.get("obj"))
+                if not row or row["root"] not in items.BREAKABLE_ROOTS:
+                    self.ack(RES_NOT_FOUND)
+                    return
+                si = items.params_of(row["type_id"]) or {}
+                if not restore_policy.base_price(row["type_id"], si):
+                    self.ack(RES_REFUSED)
+                    return
+                factory = si.get("max_break_abs", 0)
+                price = repair_prices(si, row["brk"], row["max_break_cur"])[2]
+                if (price is None or not 0 <= row["brk"] <= row["max_break_cur"]
+                        or (not price and row["brk"] != factory)):
+                    self.ack(RES_REFUSED)
+                    return
+                owner = self.store.character(self.char_id)
+                afro, gold = owner["afro"], owner["gold"]
+                if gold < price:
+                    ch = self.sess.character()
+                    ch.afro, ch.gold = afro, gold
+                    self.ack(RES_NO_MONEY)
+                    return
+                if price:
+                    gold -= price
+                    with self.booked("repair", row["type_id"]):
+                        self.store.set_money(self.char_id, afro, gold)
+                    self.store.update_item(row["uniq"], brk=factory, max_break_cur=factory)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Gold restoration failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        ch = self.sess.character()
+        ch.afro, ch.gold = afro, gold
+        self.ack(RES_OK)
+        self.push_di(self.store.item(row["uniq"]))
         self.push_money()
 
     def buy(self, p, code):
@@ -2073,7 +2209,7 @@ class Inventory:
         come as ONE new stack of that size, priced by buy_price. The client
         adds nothing on res=0: the new instance arrives by
         ss_obj_status;status=1 and the balance by a full userInfo_Player,
-        the purse being the in-memory Character's (money/set_money).
+        payment and item creation committing together from the persisted purse.
         """
         stock = items.stock_for(self.trade.trader_type, self.trade.loc_id)
         try:
@@ -2120,24 +2256,38 @@ class Inventory:
             self.ack(RES_REFUSED)
             return
         price = buy_price(si, root, n, code == UPD_BUY_GOLD)
-        # Check the whole stack against exactly the advertised maximum.
-        # A client confirmation must not bypass the server's carrying limit.
-        if self.total_weight() + si.get("weight", 0) * n > self.carry_limit():
-            self.ack(RES_OVERLOAD)
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                # Validate the current bag under the same lock as payment.
+                if self.total_weight() + si.get("weight", 0) * n > self.carry_limit():
+                    self.ack(RES_OVERLOAD)
+                    return
+                owner = self.store.character(self.char_id)
+                afro, gold = owner["afro"], owner["gold"]
+                if (gold if code == UPD_BUY_GOLD else afro) < price:
+                    ch = self.sess.character()
+                    ch.afro, ch.gold = afro, gold
+                    self.ack(RES_NO_MONEY)
+                    return
+                if code == UPD_BUY_GOLD:
+                    gold -= price
+                else:
+                    afro -= price
+                with self.booked("shop_buy", type_id):
+                    self.store.set_money(self.char_id, afro, gold)
+                row = self.create(type_id, n)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
             return
-        afro, gold = self.money()
-        if code == UPD_BUY_GOLD:
-            if gold < price:
-                self.ack(RES_NO_MONEY)
-                return
-            gold -= price
-        else:
-            if afro < price:
-                self.ack(RES_NO_MONEY)
-                return
-            afro -= price
-        self.set_money(afro, gold, "shop_buy", type_id)
-        row = self.create(type_id, n)
+        except Exception:
+            log.exception("Shop purchase failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        ch = self.sess.character()
+        ch.afro, ch.gold = afro, gold
         self.ack(RES_OK)
         self.push_status(row, 1)
         self.push_di(row)
@@ -2148,23 +2298,34 @@ class Inventory:
         then the money.
 
         Price as ItemContainer.showCost draws it: cost x smod x sell_mod x
-        current quality, per piece for a stack, scaled by use_count for a
+        remaining factory durability, per piece for a stack, scaled by use_count for a
         heal item, floored. On res=0 the client removes nothing
         (Trade.applyTransfer only raises an event), so a partial sale is
         reported with ss_di_heap and a whole one with ss_obj_status 0.
         """
+        if getattr(self.trade, "trader_type", None) in mortimer.NPC_TYPES:
+            self.sell_gold_valuable(p)
+            return
         row = self.find(p.get("obj"))
         if not row:
             self.ack(RES_NOT_FOUND)
             return
+        if row["type_id"] in mortimer.VALUABLES:
+            self.ack(RES_REFUSED)
+            return
         si = items.params_of(row["type_id"]) or {}
+        import gold_trade
+        if gold_trade.gold_priced(row["type_id"], si):
+            self.sell_gold_item(p)
+            return
         # A trophy is never sold: "Вы не можете продать трофеи", the stall
         # says by itself (TradeInterface.checkSellItem), and the cost the
         # wiki gives it is its registration fee (trophies.fee_of). A thing
         # priced in gold alone sells at its gold price in afro
         # (SELL_GOLD_ONLY).
         gold_only = SELL_GOLD_ONLY and si.get("cost", 0) <= 0 and si.get("g_cost", 0) > 0
-        if (si.get("cost", 0) <= 0 and not gold_only) or si.get("quest")                 or row["root"] == items.TROPHY:
+        if ((si.get("cost", 0) <= 0 and not gold_only) or si.get("quest")
+                or row["root"] == items.TROPHY):
             self.ack(RES_REFUSED)
             return
         heapable = row["root"] in items.HEAPABLE_ROOTS
@@ -2182,30 +2343,212 @@ class Inventory:
         if row["root"] in items.BREAKABLE_ROOTS and row["brk"] <= 0:
             self.ack(RES_REFUSED)
             return
-        cost = si["g_cost"] * progression.GOLD_TO_AFRO_RATE / float(progression.GOLD_OUNCE)             if gold_only else si["cost"]
+        cost = (si["g_cost"] * progression.GOLD_TO_AFRO_RATE / progression.GOLD_OUNCE
+                if gold_only else si["cost"])
         unit = cost / float(si.get("sell_num", 1))
-        quality = 1.0
-        if row["root"] in items.BREAKABLE_ROOTS and row["max_break_cur"]:
-            quality = row["brk"] / float(row["max_break_cur"])
-        elif row["root"] == items.HEAL and si.get("use_count"):
-            # Never above whole: a medicine made when its type held more uses
-            # than it does now (6043 had five, 6071 twenty) would otherwise
-            # sell for several of itself -- 60 afro x 0.7 x 20/1 = 840.
-            quality = min(1.0, row["use_count"] / float(si["use_count"]))
+        quality = gold_trade.sale_quality(row, si)
+        if quality <= 0:
+            self.ack(RES_REFUSED)
+            return
         # Never nothing: the client draws "if(!cost) cost = 1", and a trader
         # who takes a thing away for free is not what the player was shown.
-        price = max(1, int(math.floor(unit * n * SMOD * si.get("sell_mod", 1) * quality)))
-        afro, gold = self.money()
-        self.set_money(afro + price, gold, "shop_sell", row["type_id"])
+        sale_unit = gold_trade.afro_sale_unit(row["type_id"], si)
+        if sale_unit:
+            price = max(1, int(math.floor(sale_unit * n * quality)))
+        else:
+            price = max(1, int(math.floor(unit * n * SMOD * si.get("sell_mod", 1) * quality)))
+        cap = gold_trade.afro_sale_cap(row["type_id"], si)
+        if cap:
+            price = min(price, max(1, int(math.floor(cap * n * quality))))
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                if self.find(p.get("obj")) != row:
+                    self.ack(RES_REFUSED)
+                    return
+                owner = self.store.character(self.char_id)
+                afro, gold = owner["afro"] + price, owner["gold"]
+                if heapable and n < row["count"]:
+                    self.store.update_item(row["uniq"], count=row["count"] - n)
+                else:
+                    self.store.delete_item(row["uniq"])
+                with self.booked("shop_sell", row["type_id"]):
+                    self.store.set_money(self.char_id, afro, gold)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Shop sale failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        character = self.sess.character()
+        character.afro, character.gold = afro, gold
+        self.ack(RES_OK)
         if heapable and n < row["count"]:
-            row["count"] -= n
-            self.store.update_item(row["uniq"], count=row["count"])
-            self.ack(RES_OK)
-            self.push_di(row)
+            self.push_di(self.store.item(row["uniq"]))
         else:
             self.forget_reload(row["uniq"])
-            self.store.delete_item(row["uniq"])
-            self.ack(RES_OK)
+            self.push_status(row, 0)
+        self.push_money()
+
+    def gold_sale_terms(self, p):
+        """Validate a bag item and quote the existing shop condition rules."""
+        import gold_trade
+        trade = self.trade
+        room = getattr(self.sess, "room", None)
+        entry = room.npc(trade.npc_id) if trade and room else None
+        if (not entry or entry[1] != trade.trader_type or entry[2] != world.TRADER
+                or trade.loc_id != getattr(getattr(self.sess, "loc", None), "id", None)
+                or trade.trader_type in mortimer.NPC_TYPES):
+            return None
+        row = self.find(p.get("obj"))
+        if row is None or row["slot"] != BAG or row["root"] == items.TROPHY:
+            return None
+        si = items.params_of(row["type_id"]) or {}
+        unit = gold_trade.sale_unit(row["type_id"], si)
+        if not unit:
+            return None
+        try:
+            n = int(p.get("param", 1) or 1)
+        except (ValueError, TypeError, OverflowError):
+            return None
+        if not 1 <= n <= row["count"] or (row["root"] not in items.HEAPABLE_ROOTS and n != 1):
+            return None
+        quality = gold_trade.sale_quality(row, si)
+        if quality <= 0:
+            return None
+        price = max(1, int(math.floor(unit * n * quality)))
+        return dict(row=row, n=n, price=price)
+
+    def quote_gold_sale(self, p):
+        """One short-lived quote per stall; this stage never changes the DB."""
+        trade = self.trade
+        if trade is not None:
+            trade.sale_quote = None
+        terms = self.gold_sale_terms(p)
+        if terms is None:
+            self.send("cmdAck", res=RES_REFUSED)
+            return
+        token = secrets.token_hex(16)
+        trade.sale_quote = dict(terms, token=token, expires=time.monotonic() + GOLD_SALE_QUOTE_SECONDS)
+        self.send("cmdAck", res=RES_OK, token=token, price=terms["price"], count=terms["n"])
+
+    def close_after_uncertain_commit(self):
+        """Do not let logout overwrite a possibly committed purse."""
+        try:
+            self.sess.char = progression.Character.load(self.store, self.char_id)
+        except Exception:
+            self.sess.char = None
+            log.exception("Recovering character after uncertain commit failed")
+        self.sess.close(force=True)
+
+    def sell_gold_item(self, p):
+        """Consume a confirmed quote and pay under the character transaction."""
+        trade = self.trade
+        quote = getattr(trade, "sale_quote", None)
+        if trade is not None:
+            trade.sale_quote = None
+        if (not quote or p.get("confirmation") != "ПРОДАТЬ"
+                or p.get("sale_token") != quote["token"]
+                or time.monotonic() > quote["expires"]):
+            self.ack(RES_REFUSED)
+            return
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                terms = self.gold_sale_terms(p)
+                if terms is None or terms != {k: quote[k] for k in ("row", "n", "price")}:
+                    self.ack(RES_REFUSED)
+                    return
+                row, n, price = terms["row"], terms["n"], terms["price"]
+                owner = self.store.character(self.char_id)
+                afro, gold = owner["afro"] + price, owner["gold"]
+                if n < row["count"]:
+                    self.store.update_item(row["uniq"], count=row["count"] - n)
+                else:
+                    self.store.delete_item(row["uniq"])
+                with self.booked("shop_sell", row["type_id"]):
+                    self.store.set_money(self.char_id, afro, gold)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Gold item sale failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        character = self.sess.character()
+        character.afro, character.gold = afro, gold
+        self.ack(RES_OK)
+        if n < row["count"]:
+            self.push_di(self.store.item(row["uniq"]))
+        else:
+            self.forget_reload(row["uniq"])
+            self.push_status(row, 0)
+        self.push_money()
+
+    def sell_gold_valuable(self, p):
+        """Atomically exchange allowed valuables for gold at Mortimer only.
+
+        Lock the owner, re-read the stack and persisted purse, then commit
+        both changes before updating the live Character or publishing frames.
+        Existing ingot quests and other traders' afro sales are independent.
+        """
+        trade = self.trade
+        room = getattr(self.sess, "room", None)
+        entry = room.npc(trade.npc_id) if room is not None else None
+        if (not entry or entry[1] != trade.trader_type
+                or entry[2] != world.TRADER or trade.trader_type not in mortimer.NPC_TYPES):
+            self.ack(RES_REFUSED)
+            return
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                row = self.find(p.get("obj"))
+                if row is None or row["slot"] != BAG:
+                    self.ack(RES_NOT_FOUND)
+                    return
+                unit = mortimer.unit_gold(row["type_id"])
+                if not unit:
+                    self.ack(RES_REFUSED)
+                    return
+                try:
+                    n = int(p.get("param", 0) or 0)
+                except (ValueError, TypeError, OverflowError):
+                    self.ack(RES_REFUSED)
+                    return
+                if n == 0:
+                    n = row["count"]
+                if not 1 <= n <= row["count"]:
+                    self.ack(RES_REFUSED)
+                    return
+                owner = self.store.character(self.char_id)
+                afro, gold = owner["afro"], owner["gold"] + unit * n
+                if n < row["count"]:
+                    self.store.update_item(row["uniq"], count=row["count"] - n)
+                else:
+                    self.store.delete_item(row["uniq"])
+                with self.booked("shop_sell", row["type_id"]):
+                    self.store.set_money(self.char_id, afro, gold)
+        except storage.CommitError:
+            # The database reply may have been lost after a successful commit.
+            self.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Mortimer sale failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        character = self.sess.character()
+        character.afro, character.gold = afro, gold
+        self.ack(RES_OK)
+        if n < row["count"]:
+            self.push_di(self.store.item(row["uniq"]))
+        else:
             self.push_status(row, 0)
         self.push_money()
 

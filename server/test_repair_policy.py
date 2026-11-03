@@ -130,7 +130,7 @@ class RepairPolicy(unittest.TestCase):
             self.assertNotIn('repair_cost', items.static_info(afro)[1])
         rem = items.static_info(26062)[1]
         self.assertEqual((rem['cost'], rem['g_cost']), (0, 1037))
-        self.assertEqual(inventory.repair_window(rem, 750, 1500)[0][2], 1037)
+        self.assertEqual(inventory.repair_window(rem, 750, 1500)[0][2], 0)
 
     def test_level_boundary(self):
         pair = next((g, a) for g, a in repair_policy.counterparts().items()

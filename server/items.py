@@ -330,8 +330,9 @@ def stock_for(trader_type, loc_id=None):
     the owner's choice, and the rule stays a rule.
     """
     chosen = shop_bands.apply(trader_type, loc_id, with_gold_pouches(_own_list(trader_type)))
-    return [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)
-            and not upgrade_blueprint_blocked(t)]
+    return craft.unique_blueprints(
+        [t for t in chosen if not out_of_game(t) and not acquisition_blocked(t)
+         and not upgrade_blueprint_blocked(t)])
 
 
 def own_stock(trader_type):
@@ -992,6 +993,8 @@ OWN_ARTICLE_PRICE.update((t, 100) for t in CRAT_TOOLS)
 # loaf, two loaves a character, and a fresh character's errands made about
 # 6700 afro (the owner's Абри, 2026-10-12; RECOVERED: the article's own
 # rule). It keeps its use: strength and dexterity +1 for an hour, two bites.
+# Bagira's usable Bone Knife, not the separate ritual quest object 3944.
+PERSONAL_QUEST_REWARDS = frozenset({3941})
 QUEST_GIFTS_UNSOLD = frozenset({3914})
 
 # Things a quest asks for that fall only for it (mobs.QUEST_TIER) and that the
@@ -1183,6 +1186,8 @@ def static_info(type_id):
             info[1]["cost"] = 0
         if type_id in OWN_ARTICLE_PRICE:
             info[1]["cost"] = OWN_ARTICLE_PRICE[type_id]
+        if type_id in PERSONAL_QUEST_REWARDS:
+            info[1]["exchang"] = 0
         if type_id in QUEST_GIFTS_UNSOLD or type_id in QUEST_FARES_UNSOLD:
             info[1]["cost"] = 0
         # A gold ingot is worth its ounces: in gold, and in afro at the one

@@ -132,22 +132,22 @@ LEFT_OUT = {
 # The cells the lavabook puts a camp's quest on: the kinds the quest names.
 ANCHORS = {
     (5970, 1725): (
-        (258, 259, 260, 261, 262, 264, 266, 267),
+        (258, 259, 260, 261, 262, 263, 266, 267),
         "The lavabook puts «Учет» and «Раббин аль-Гуд» here («Квест: 5970x1725x0») with "
         "these kinds: the four whose «Учетные записи» «Учет» wants (261, 262, 266, 267) "
         "and the colonists the money bags of «Раббин аль-Гуд» come off (258-266)."),
     (5977, 1727): (
-        (271, 272, 273, 274, 276, 277, 278, 279),
+        (271, 272, 273, 274, 276, 277, 278, 285),
         "The lavabook puts «Заказ» here («Выполнение квеста: Окрестности Лагеря Люшер "
         "5977x1727», «Тут в округе куча фанатиков Люшера бегает») with these kinds: the "
         "sect's fighters, «все кроме Неудачников»."),
     (5974, 1738): (
-        (287, 289, 291, 293, 295, 296, 297, 298),
+        (287, 288, 289, 290, 291, 292, 293, 294),
         "The lavabook puts «Как слышно?» here («Квест: 5974x1738x0», the ja_ of 287-298) "
         "with these kinds, among them the «Диверсант 5го уровня» (291) «Бандитская "
         "активность» finds «рядом с основным лагерем»."),
     (5992, 1722): (
-        (303, 307, 311, 301, 302, 304, 305, 306),
+        (303, 307, 311, 301, 302, 304, 306, 308),
         "The lavabook puts «Порядок (часть 2)» here («Квест: 5992x1722x0») with these "
         "kinds: the officers mg_Officer_lvl6/7/8 (303, 307, 311), who carry «Планы "
         "Магриба», and their soldiers."),
@@ -189,7 +189,9 @@ def fighters(camp, types=None, fill=None):
 
 def kinds(camp, types=None, fill=None):
     """The camp's patrol kinds, in type order."""
-    return sorted(fighters(camp, types, fill) - set(LEFT_OUT))
+    with io.open(os.path.join(HERE, "loot_rebalance.json"), encoding="utf-8") as fh:
+        elites = set(json.load(fh)["elite_types"])
+    return sorted(fighters(camp, types, fill) - set(LEFT_OUT) - elites)
 
 
 def region(camp):

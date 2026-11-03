@@ -180,7 +180,8 @@ class WeaponcraftCompletion(unittest.TestCase):
         inventory = SimpleNamespace(RES_NOT_FOUND=12, RES_REFUSED=11, RES_OK=0)
         items = SimpleNamespace(FIRE_ARM=0)
         setcraft = SimpleNamespace(pass_wear=Mock())
-        scope = {'log': Mock(), 'wear_of': lambda row: (3, 10, 10)}
+        scope = {'log': Mock(), 'wear_of': lambda row: (3, 10, 10),
+                 'blueprint_variants': lambda type_id: (type_id,)}
         upgrade = function(ROOT / 'server/craft.py', 'upgrade', scope)
         with patch.dict(sys.modules, {'inventory': inventory, 'items': items, 'setcraft': setcraft}):
             for recipe in self.added:

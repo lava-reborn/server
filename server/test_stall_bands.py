@@ -624,13 +624,13 @@ check("items.with_gold_pouches: a (G) already on a list moves after its ordinary
 import barter  # noqa: E402
 import combat  # noqa: E402
 import mail  # noqa: E402
-check("a (G) pouch is no way to afro or gold: priced in gold alone, a gold thing that never"
-      " falls off a body, cannot change hands (barter, post, auction: barter.tradable),"
-      " and no stall buys it back (cost 0, inventory.SELL_GOLD_ONLY off)",
-      (sorted({(items.params_of(g)["cost"], items.params_of(g)["g_cost"] > 0, combat.gold_item(g),
-                combat.drops_on_death(g), barter.tradable(g), mail.postable(g))
-               for g in GOLD_POUCH}), inventory.SELL_GOLD_ONLY),
-      ([(0, True, True, False, False, False)], False))
+import gold_trade  # noqa: E402
+check("a G pouch remains protected on death, but is tradable and can be sold with confirmation",
+      sorted({(items.params_of(g)["cost"], items.params_of(g)["g_cost"] > 0, combat.gold_item(g),
+               combat.drops_on_death(g), barter.tradable(g), mail.postable(g),
+               gold_trade.sale_unit(g, items.params_of(g)) > 0)
+              for g in GOLD_POUCH}),
+      [(0, True, True, False, True, True, True)])
 check("  ..an ordinary one sells back for at most 0.7 of what it cost (inventory.SMOD), and"
       " is an afro thing that may change hands",
       sorted({(items.params_of(a)["cost"] > 0, items.params_of(a)["g_cost"], inventory.SMOD

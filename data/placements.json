@@ -268,7 +268,7 @@
     "why": "As the first row of 48907962 (5970,1722)."
    },
    {
-    "type": 264,
+    "type": 266,
     "cell": [
      39,
      95
@@ -277,7 +277,7 @@
     "why": "As the first row of 48907962 (5970,1722)."
    },
    {
-    "type": 265,
+    "type": 267,
     "cell": [
      25,
      104
@@ -288,7 +288,7 @@
   ],
   "48916154": [
    {
-    "type": 266,
+    "type": 258,
     "cell": [
      20,
      34
@@ -297,7 +297,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5971,1722 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 267,
+    "type": 259,
     "cell": [
      35,
      44
@@ -306,7 +306,7 @@
     "why": "As the first row of 48916154 (5971,1722)."
    },
    {
-    "type": 268,
+    "type": 260,
     "cell": [
      20,
      54
@@ -315,7 +315,7 @@
     "why": "As the first row of 48916154 (5971,1722)."
    },
    {
-    "type": 258,
+    "type": 261,
     "cell": [
      29,
      70
@@ -324,7 +324,7 @@
     "why": "As the first row of 48916154 (5971,1722)."
    },
    {
-    "type": 259,
+    "type": 262,
     "cell": [
      50,
      74
@@ -333,7 +333,7 @@
     "why": "As the first row of 48916154 (5971,1722)."
    },
    {
-    "type": 260,
+    "type": 263,
     "cell": [
      15,
      84
@@ -342,7 +342,7 @@
     "why": "As the first row of 48916154 (5971,1722)."
    },
    {
-    "type": 261,
+    "type": 266,
     "cell": [
      39,
      95
@@ -351,7 +351,7 @@
     "why": "As the first row of 48916154 (5971,1722)."
    },
    {
-    "type": 262,
+    "type": 267,
     "cell": [
      25,
      104
@@ -362,7 +362,7 @@
   ],
   "48924346": [
    {
-    "type": 263,
+    "type": 258,
     "cell": [
      20,
      34
@@ -371,7 +371,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5972,1722 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 264,
+    "type": 259,
     "cell": [
      35,
      44
@@ -380,7 +380,7 @@
     "why": "As the first row of 48924346 (5972,1722)."
    },
    {
-    "type": 265,
+    "type": 260,
     "cell": [
      20,
      54
@@ -389,7 +389,7 @@
     "why": "As the first row of 48924346 (5972,1722)."
    },
    {
-    "type": 266,
+    "type": 261,
     "cell": [
      29,
      70
@@ -398,7 +398,7 @@
     "why": "As the first row of 48924346 (5972,1722)."
    },
    {
-    "type": 267,
+    "type": 262,
     "cell": [
      50,
      74
@@ -407,7 +407,7 @@
     "why": "As the first row of 48924346 (5972,1722)."
    },
    {
-    "type": 268,
+    "type": 263,
     "cell": [
      15,
      84
@@ -416,7 +416,7 @@
     "why": "As the first row of 48924346 (5972,1722)."
    },
    {
-    "type": 258,
+    "type": 266,
     "cell": [
      39,
      95
@@ -425,7 +425,7 @@
     "why": "As the first row of 48924346 (5972,1722)."
    },
    {
-    "type": 259,
+    "type": 267,
     "cell": [
      25,
      104
@@ -436,7 +436,7 @@
   ],
   "48899771": [
    {
-    "type": 260,
+    "type": 258,
     "cell": [
      20,
      34
@@ -445,7 +445,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5969,1723 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 261,
+    "type": 259,
     "cell": [
      35,
      44
@@ -454,7 +454,7 @@
     "why": "As the first row of 48899771 (5969,1723)."
    },
    {
-    "type": 262,
+    "type": 260,
     "cell": [
      20,
      54
@@ -463,7 +463,7 @@
     "why": "As the first row of 48899771 (5969,1723)."
    },
    {
-    "type": 263,
+    "type": 261,
     "cell": [
      29,
      70
@@ -472,7 +472,7 @@
     "why": "As the first row of 48899771 (5969,1723)."
    },
    {
-    "type": 264,
+    "type": 262,
     "cell": [
      50,
      74
@@ -481,7 +481,7 @@
     "why": "As the first row of 48899771 (5969,1723)."
    },
    {
-    "type": 265,
+    "type": 263,
     "cell": [
      15,
      84
@@ -510,7 +510,7 @@
   ],
   "48907963": [
    {
-    "type": 268,
+    "type": 258,
     "cell": [
      20,
      34
@@ -519,7 +519,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5970,1723 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 258,
+    "type": 259,
     "cell": [
      35,
      44
@@ -528,7 +528,7 @@
     "why": "As the first row of 48907963 (5970,1723)."
    },
    {
-    "type": 259,
+    "type": 260,
     "cell": [
      20,
      54
@@ -537,7 +537,7 @@
     "why": "As the first row of 48907963 (5970,1723)."
    },
    {
-    "type": 260,
+    "type": 261,
     "cell": [
      29,
      70
@@ -546,7 +546,7 @@
     "why": "As the first row of 48907963 (5970,1723)."
    },
    {
-    "type": 261,
+    "type": 262,
     "cell": [
      50,
      74
@@ -555,7 +555,7 @@
     "why": "As the first row of 48907963 (5970,1723)."
    },
    {
-    "type": 262,
+    "type": 263,
     "cell": [
      15,
      84
@@ -564,7 +564,7 @@
     "why": "As the first row of 48907963 (5970,1723)."
    },
    {
-    "type": 263,
+    "type": 266,
     "cell": [
      39,
      95
@@ -573,7 +573,7 @@
     "why": "As the first row of 48907963 (5970,1723)."
    },
    {
-    "type": 264,
+    "type": 267,
     "cell": [
      25,
      104
@@ -584,7 +584,7 @@
   ],
   "48924347": [
    {
-    "type": 265,
+    "type": 258,
     "cell": [
      20,
      34
@@ -593,7 +593,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5972,1723 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 266,
+    "type": 259,
     "cell": [
      35,
      44
@@ -602,7 +602,7 @@
     "why": "As the first row of 48924347 (5972,1723)."
    },
    {
-    "type": 267,
+    "type": 260,
     "cell": [
      20,
      54
@@ -611,7 +611,7 @@
     "why": "As the first row of 48924347 (5972,1723)."
    },
    {
-    "type": 268,
+    "type": 261,
     "cell": [
      29,
      70
@@ -620,7 +620,7 @@
     "why": "As the first row of 48924347 (5972,1723)."
    },
    {
-    "type": 258,
+    "type": 262,
     "cell": [
      50,
      74
@@ -629,7 +629,7 @@
     "why": "As the first row of 48924347 (5972,1723)."
    },
    {
-    "type": 259,
+    "type": 263,
     "cell": [
      15,
      84
@@ -638,7 +638,7 @@
     "why": "As the first row of 48924347 (5972,1723)."
    },
    {
-    "type": 260,
+    "type": 266,
     "cell": [
      39,
      93
@@ -647,7 +647,7 @@
     "why": "As the first row of 48924347 (5972,1723)."
    },
    {
-    "type": 261,
+    "type": 267,
     "cell": [
      25,
      104
@@ -658,7 +658,7 @@
   ],
   "48899772": [
    {
-    "type": 262,
+    "type": 258,
     "cell": [
      20,
      34
@@ -667,7 +667,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5969,1724 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 263,
+    "type": 259,
     "cell": [
      35,
      44
@@ -676,7 +676,7 @@
     "why": "As the first row of 48899772 (5969,1724)."
    },
    {
-    "type": 264,
+    "type": 260,
     "cell": [
      20,
      54
@@ -685,7 +685,7 @@
     "why": "As the first row of 48899772 (5969,1724)."
    },
    {
-    "type": 265,
+    "type": 261,
     "cell": [
      29,
      70
@@ -694,7 +694,7 @@
     "why": "As the first row of 48899772 (5969,1724)."
    },
    {
-    "type": 266,
+    "type": 262,
     "cell": [
      50,
      74
@@ -703,7 +703,7 @@
     "why": "As the first row of 48899772 (5969,1724)."
    },
    {
-    "type": 267,
+    "type": 263,
     "cell": [
      15,
      84
@@ -712,7 +712,7 @@
     "why": "As the first row of 48899772 (5969,1724)."
    },
    {
-    "type": 268,
+    "type": 266,
     "cell": [
      39,
      95
@@ -721,7 +721,7 @@
     "why": "As the first row of 48899772 (5969,1724)."
    },
    {
-    "type": 258,
+    "type": 267,
     "cell": [
      25,
      104
@@ -732,7 +732,7 @@
   ],
   "48916156": [
    {
-    "type": 259,
+    "type": 258,
     "cell": [
      20,
      34
@@ -741,7 +741,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5971,1724 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 260,
+    "type": 259,
     "cell": [
      35,
      44
@@ -750,7 +750,7 @@
     "why": "As the first row of 48916156 (5971,1724)."
    },
    {
-    "type": 261,
+    "type": 260,
     "cell": [
      20,
      54
@@ -759,7 +759,7 @@
     "why": "As the first row of 48916156 (5971,1724)."
    },
    {
-    "type": 262,
+    "type": 261,
     "cell": [
      29,
      70
@@ -768,7 +768,7 @@
     "why": "As the first row of 48916156 (5971,1724)."
    },
    {
-    "type": 263,
+    "type": 262,
     "cell": [
      50,
      74
@@ -777,7 +777,7 @@
     "why": "As the first row of 48916156 (5971,1724)."
    },
    {
-    "type": 264,
+    "type": 263,
     "cell": [
      15,
      84
@@ -786,7 +786,7 @@
     "why": "As the first row of 48916156 (5971,1724)."
    },
    {
-    "type": 265,
+    "type": 266,
     "cell": [
      39,
      93
@@ -795,7 +795,7 @@
     "why": "As the first row of 48916156 (5971,1724)."
    },
    {
-    "type": 266,
+    "type": 267,
     "cell": [
      25,
      104
@@ -806,7 +806,7 @@
   ],
   "48924348": [
    {
-    "type": 267,
+    "type": 258,
     "cell": [
      20,
      34
@@ -815,7 +815,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5972,1724 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 268,
+    "type": 259,
     "cell": [
      35,
      44
@@ -824,7 +824,7 @@
     "why": "As the first row of 48924348 (5972,1724)."
    },
    {
-    "type": 258,
+    "type": 260,
     "cell": [
      20,
      54
@@ -833,7 +833,7 @@
     "why": "As the first row of 48924348 (5972,1724)."
    },
    {
-    "type": 259,
+    "type": 261,
     "cell": [
      29,
      70
@@ -842,7 +842,7 @@
     "why": "As the first row of 48924348 (5972,1724)."
    },
    {
-    "type": 260,
+    "type": 262,
     "cell": [
      50,
      74
@@ -851,7 +851,7 @@
     "why": "As the first row of 48924348 (5972,1724)."
    },
    {
-    "type": 261,
+    "type": 263,
     "cell": [
      15,
      84
@@ -860,7 +860,7 @@
     "why": "As the first row of 48924348 (5972,1724)."
    },
    {
-    "type": 262,
+    "type": 266,
     "cell": [
      39,
      95
@@ -869,7 +869,7 @@
     "why": "As the first row of 48924348 (5972,1724)."
    },
    {
-    "type": 263,
+    "type": 267,
     "cell": [
      25,
      104
@@ -880,7 +880,7 @@
   ],
   "48899773": [
    {
-    "type": 264,
+    "type": 258,
     "cell": [
      20,
      34
@@ -889,7 +889,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Новых Колонистов» (80 on 5970,1724, and its chief's place 82 on 5971,1723) on the neighbour cell 5969,1725 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 265,
+    "type": 259,
     "cell": [
      35,
      44
@@ -898,7 +898,7 @@
     "why": "As the first row of 48899773 (5969,1725)."
    },
    {
-    "type": 266,
+    "type": 260,
     "cell": [
      20,
      54
@@ -907,7 +907,7 @@
     "why": "As the first row of 48899773 (5969,1725)."
    },
    {
-    "type": 267,
+    "type": 261,
     "cell": [
      29,
      70
@@ -916,7 +916,7 @@
     "why": "As the first row of 48899773 (5969,1725)."
    },
    {
-    "type": 268,
+    "type": 262,
     "cell": [
      50,
      74
@@ -925,7 +925,7 @@
     "why": "As the first row of 48899773 (5969,1725)."
    },
    {
-    "type": 258,
+    "type": 263,
     "cell": [
      15,
      84
@@ -934,7 +934,7 @@
     "why": "As the first row of 48899773 (5969,1725)."
    },
    {
-    "type": 259,
+    "type": 266,
     "cell": [
      39,
      95
@@ -943,7 +943,7 @@
     "why": "As the first row of 48899773 (5969,1725)."
    },
    {
-    "type": 260,
+    "type": 267,
     "cell": [
      25,
      104
@@ -999,7 +999,7 @@
     "why": "As the first row of 48907965 (5970,1725)."
    },
    {
-    "type": 264,
+    "type": 263,
     "cell": [
      15,
      84
@@ -1082,7 +1082,7 @@
     "why": "As the first row of 48916157 (5971,1725)."
    },
    {
-    "type": 264,
+    "type": 266,
     "cell": [
      39,
      95
@@ -1091,7 +1091,7 @@
     "why": "As the first row of 48916157 (5971,1725)."
    },
    {
-    "type": 265,
+    "type": 267,
     "cell": [
      25,
      104
@@ -1165,7 +1165,7 @@
     "why": "As the first row of 48965310 (5977,1726)."
    },
    {
-    "type": 279,
+    "type": 280,
     "cell": [
      25,
      104
@@ -1176,7 +1176,7 @@
   ],
   "48973502": [
    {
-    "type": 280,
+    "type": 281,
     "cell": [
      20,
      34
@@ -1185,7 +1185,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5978,1726 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 281,
+    "type": 285,
     "cell": [
      35,
      44
@@ -1194,7 +1194,7 @@
     "why": "As the first row of 48973502 (5978,1726)."
    },
    {
-    "type": 282,
+    "type": 271,
     "cell": [
      20,
      54
@@ -1203,7 +1203,7 @@
     "why": "As the first row of 48973502 (5978,1726)."
    },
    {
-    "type": 285,
+    "type": 272,
     "cell": [
      29,
      70
@@ -1212,7 +1212,7 @@
     "why": "As the first row of 48973502 (5978,1726)."
    },
    {
-    "type": 271,
+    "type": 273,
     "cell": [
      50,
      74
@@ -1221,7 +1221,7 @@
     "why": "As the first row of 48973502 (5978,1726)."
    },
    {
-    "type": 272,
+    "type": 274,
     "cell": [
      15,
      84
@@ -1230,7 +1230,7 @@
     "why": "As the first row of 48973502 (5978,1726)."
    },
    {
-    "type": 273,
+    "type": 276,
     "cell": [
      39,
      95
@@ -1239,7 +1239,7 @@
     "why": "As the first row of 48973502 (5978,1726)."
    },
    {
-    "type": 274,
+    "type": 277,
     "cell": [
      25,
      104
@@ -1250,7 +1250,7 @@
   ],
   "48981694": [
    {
-    "type": 276,
+    "type": 278,
     "cell": [
      20,
      34
@@ -1259,7 +1259,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5979,1726 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 277,
+    "type": 280,
     "cell": [
      35,
      44
@@ -1268,7 +1268,7 @@
     "why": "As the first row of 48981694 (5979,1726)."
    },
    {
-    "type": 278,
+    "type": 281,
     "cell": [
      20,
      54
@@ -1277,7 +1277,7 @@
     "why": "As the first row of 48981694 (5979,1726)."
    },
    {
-    "type": 279,
+    "type": 285,
     "cell": [
      29,
      70
@@ -1286,7 +1286,7 @@
     "why": "As the first row of 48981694 (5979,1726)."
    },
    {
-    "type": 280,
+    "type": 271,
     "cell": [
      50,
      74
@@ -1295,7 +1295,7 @@
     "why": "As the first row of 48981694 (5979,1726)."
    },
    {
-    "type": 281,
+    "type": 272,
     "cell": [
      15,
      84
@@ -1304,7 +1304,7 @@
     "why": "As the first row of 48981694 (5979,1726)."
    },
    {
-    "type": 282,
+    "type": 273,
     "cell": [
      39,
      95
@@ -1313,7 +1313,7 @@
     "why": "As the first row of 48981694 (5979,1726)."
    },
    {
-    "type": 285,
+    "type": 274,
     "cell": [
      25,
      104
@@ -1387,7 +1387,7 @@
     "why": "As the first row of 48965311 (5977,1727)."
    },
    {
-    "type": 279,
+    "type": 285,
     "cell": [
      25,
      104
@@ -1398,7 +1398,7 @@
   ],
   "48981695": [
    {
-    "type": 280,
+    "type": 273,
     "cell": [
      20,
      34
@@ -1407,7 +1407,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5979,1727 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 281,
+    "type": 274,
     "cell": [
      35,
      44
@@ -1416,7 +1416,7 @@
     "why": "As the first row of 48981695 (5979,1727)."
    },
    {
-    "type": 282,
+    "type": 276,
     "cell": [
      20,
      54
@@ -1425,7 +1425,7 @@
     "why": "As the first row of 48981695 (5979,1727)."
    },
    {
-    "type": 285,
+    "type": 277,
     "cell": [
      29,
      70
@@ -1434,7 +1434,7 @@
     "why": "As the first row of 48981695 (5979,1727)."
    },
    {
-    "type": 271,
+    "type": 278,
     "cell": [
      50,
      74
@@ -1443,7 +1443,7 @@
     "why": "As the first row of 48981695 (5979,1727)."
    },
    {
-    "type": 272,
+    "type": 280,
     "cell": [
      15,
      84
@@ -1452,7 +1452,7 @@
     "why": "As the first row of 48981695 (5979,1727)."
    },
    {
-    "type": 273,
+    "type": 281,
     "cell": [
      39,
      95
@@ -1461,7 +1461,7 @@
     "why": "As the first row of 48981695 (5979,1727)."
    },
    {
-    "type": 274,
+    "type": 285,
     "cell": [
      25,
      104
@@ -1472,7 +1472,7 @@
   ],
   "48989887": [
    {
-    "type": 276,
+    "type": 271,
     "cell": [
      20,
      34
@@ -1481,7 +1481,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5980,1727 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 277,
+    "type": 272,
     "cell": [
      35,
      44
@@ -1490,7 +1490,7 @@
     "why": "As the first row of 48989887 (5980,1727)."
    },
    {
-    "type": 278,
+    "type": 273,
     "cell": [
      20,
      54
@@ -1499,7 +1499,7 @@
     "why": "As the first row of 48989887 (5980,1727)."
    },
    {
-    "type": 279,
+    "type": 274,
     "cell": [
      29,
      70
@@ -1508,7 +1508,7 @@
     "why": "As the first row of 48989887 (5980,1727)."
    },
    {
-    "type": 280,
+    "type": 276,
     "cell": [
      50,
      74
@@ -1517,7 +1517,7 @@
     "why": "As the first row of 48989887 (5980,1727)."
    },
    {
-    "type": 281,
+    "type": 277,
     "cell": [
      15,
      84
@@ -1526,7 +1526,7 @@
     "why": "As the first row of 48989887 (5980,1727)."
    },
    {
-    "type": 282,
+    "type": 278,
     "cell": [
      39,
      93
@@ -1535,7 +1535,7 @@
     "why": "As the first row of 48989887 (5980,1727)."
    },
    {
-    "type": 285,
+    "type": 280,
     "cell": [
      25,
      104
@@ -1546,7 +1546,7 @@
   ],
   "48965312": [
    {
-    "type": 271,
+    "type": 281,
     "cell": [
      20,
      34
@@ -1555,7 +1555,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5977,1728 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 272,
+    "type": 285,
     "cell": [
      35,
      44
@@ -1564,7 +1564,7 @@
     "why": "As the first row of 48965312 (5977,1728)."
    },
    {
-    "type": 273,
+    "type": 271,
     "cell": [
      20,
      54
@@ -1573,7 +1573,7 @@
     "why": "As the first row of 48965312 (5977,1728)."
    },
    {
-    "type": 274,
+    "type": 272,
     "cell": [
      29,
      70
@@ -1582,7 +1582,7 @@
     "why": "As the first row of 48965312 (5977,1728)."
    },
    {
-    "type": 276,
+    "type": 273,
     "cell": [
      50,
      74
@@ -1591,7 +1591,7 @@
     "why": "As the first row of 48965312 (5977,1728)."
    },
    {
-    "type": 277,
+    "type": 274,
     "cell": [
      15,
      84
@@ -1600,7 +1600,7 @@
     "why": "As the first row of 48965312 (5977,1728)."
    },
    {
-    "type": 278,
+    "type": 276,
     "cell": [
      39,
      95
@@ -1609,7 +1609,7 @@
     "why": "As the first row of 48965312 (5977,1728)."
    },
    {
-    "type": 279,
+    "type": 277,
     "cell": [
      25,
      104
@@ -1620,7 +1620,7 @@
   ],
   "48973504": [
    {
-    "type": 280,
+    "type": 278,
     "cell": [
      20,
      34
@@ -1629,7 +1629,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5978,1728 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 281,
+    "type": 280,
     "cell": [
      35,
      44
@@ -1638,7 +1638,7 @@
     "why": "As the first row of 48973504 (5978,1728)."
    },
    {
-    "type": 282,
+    "type": 281,
     "cell": [
      20,
      54
@@ -1721,7 +1721,7 @@
     "why": "As the first row of 48989888 (5980,1728)."
    },
    {
-    "type": 279,
+    "type": 280,
     "cell": [
      29,
      70
@@ -1730,7 +1730,7 @@
     "why": "As the first row of 48989888 (5980,1728)."
    },
    {
-    "type": 280,
+    "type": 281,
     "cell": [
      50,
      74
@@ -1739,7 +1739,7 @@
     "why": "As the first row of 48989888 (5980,1728)."
    },
    {
-    "type": 281,
+    "type": 285,
     "cell": [
      15,
      84
@@ -1748,7 +1748,7 @@
     "why": "As the first row of 48989888 (5980,1728)."
    },
    {
-    "type": 282,
+    "type": 271,
     "cell": [
      39,
      95
@@ -1757,7 +1757,7 @@
     "why": "As the first row of 48989888 (5980,1728)."
    },
    {
-    "type": 285,
+    "type": 272,
     "cell": [
      25,
      104
@@ -1768,7 +1768,7 @@
   ],
   "48973505": [
    {
-    "type": 271,
+    "type": 273,
     "cell": [
      20,
      34
@@ -1777,7 +1777,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5978,1729 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 272,
+    "type": 274,
     "cell": [
      35,
      44
@@ -1786,7 +1786,7 @@
     "why": "As the first row of 48973505 (5978,1729)."
    },
    {
-    "type": 273,
+    "type": 276,
     "cell": [
      20,
      54
@@ -1795,7 +1795,7 @@
     "why": "As the first row of 48973505 (5978,1729)."
    },
    {
-    "type": 274,
+    "type": 277,
     "cell": [
      29,
      70
@@ -1804,7 +1804,7 @@
     "why": "As the first row of 48973505 (5978,1729)."
    },
    {
-    "type": 276,
+    "type": 278,
     "cell": [
      50,
      74
@@ -1813,7 +1813,7 @@
     "why": "As the first row of 48973505 (5978,1729)."
    },
    {
-    "type": 277,
+    "type": 280,
     "cell": [
      15,
      84
@@ -1822,7 +1822,7 @@
     "why": "As the first row of 48973505 (5978,1729)."
    },
    {
-    "type": 278,
+    "type": 281,
     "cell": [
      39,
      93
@@ -1831,7 +1831,7 @@
     "why": "As the first row of 48973505 (5978,1729)."
    },
    {
-    "type": 279,
+    "type": 285,
     "cell": [
      25,
      104
@@ -1842,7 +1842,7 @@
   ],
   "48981697": [
    {
-    "type": 280,
+    "type": 271,
     "cell": [
      20,
      34
@@ -1851,7 +1851,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5979,1729 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 281,
+    "type": 272,
     "cell": [
      35,
      44
@@ -1860,7 +1860,7 @@
     "why": "As the first row of 48981697 (5979,1729)."
    },
    {
-    "type": 282,
+    "type": 273,
     "cell": [
      20,
      54
@@ -1869,7 +1869,7 @@
     "why": "As the first row of 48981697 (5979,1729)."
    },
    {
-    "type": 285,
+    "type": 274,
     "cell": [
      29,
      70
@@ -1878,7 +1878,7 @@
     "why": "As the first row of 48981697 (5979,1729)."
    },
    {
-    "type": 271,
+    "type": 276,
     "cell": [
      50,
      74
@@ -1887,7 +1887,7 @@
     "why": "As the first row of 48981697 (5979,1729)."
    },
    {
-    "type": 272,
+    "type": 277,
     "cell": [
      15,
      84
@@ -1896,7 +1896,7 @@
     "why": "As the first row of 48981697 (5979,1729)."
    },
    {
-    "type": 273,
+    "type": 278,
     "cell": [
      39,
      95
@@ -1905,7 +1905,7 @@
     "why": "As the first row of 48981697 (5979,1729)."
    },
    {
-    "type": 274,
+    "type": 280,
     "cell": [
      25,
      104
@@ -1916,7 +1916,7 @@
   ],
   "48989889": [
    {
-    "type": 276,
+    "type": 281,
     "cell": [
      20,
      34
@@ -1925,7 +1925,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Сектантов Люшеров» (81 on 5978,1727, and its chief's place 83 on 5979,1728) on the neighbour cell 5980,1729 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 277,
+    "type": 285,
     "cell": [
      35,
      44
@@ -1934,7 +1934,7 @@
     "why": "As the first row of 48989889 (5980,1729)."
    },
    {
-    "type": 278,
+    "type": 271,
     "cell": [
      20,
      54
@@ -1943,7 +1943,7 @@
     "why": "As the first row of 48989889 (5980,1729)."
    },
    {
-    "type": 279,
+    "type": 272,
     "cell": [
      29,
      70
@@ -1952,7 +1952,7 @@
     "why": "As the first row of 48989889 (5980,1729)."
    },
    {
-    "type": 280,
+    "type": 273,
     "cell": [
      50,
      74
@@ -1961,7 +1961,7 @@
     "why": "As the first row of 48989889 (5980,1729)."
    },
    {
-    "type": 281,
+    "type": 274,
     "cell": [
      15,
      84
@@ -1970,7 +1970,7 @@
     "why": "As the first row of 48989889 (5980,1729)."
    },
    {
-    "type": 282,
+    "type": 276,
     "cell": [
      39,
      95
@@ -1979,7 +1979,7 @@
     "why": "As the first row of 48989889 (5980,1729)."
    },
    {
-    "type": 285,
+    "type": 277,
     "cell": [
      25,
      104
@@ -2064,7 +2064,7 @@
   ],
   "48948937": [
    {
-    "type": 295,
+    "type": 287,
     "cell": [
      20,
      34
@@ -2073,7 +2073,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5975,1737 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 296,
+    "type": 288,
     "cell": [
      35,
      44
@@ -2082,7 +2082,7 @@
     "why": "As the first row of 48948937 (5975,1737)."
    },
    {
-    "type": 297,
+    "type": 289,
     "cell": [
      20,
      54
@@ -2091,7 +2091,7 @@
     "why": "As the first row of 48948937 (5975,1737)."
    },
    {
-    "type": 298,
+    "type": 290,
     "cell": [
      29,
      70
@@ -2100,7 +2100,7 @@
     "why": "As the first row of 48948937 (5975,1737)."
    },
    {
-    "type": 287,
+    "type": 291,
     "cell": [
      50,
      74
@@ -2109,7 +2109,7 @@
     "why": "As the first row of 48948937 (5975,1737)."
    },
    {
-    "type": 288,
+    "type": 292,
     "cell": [
      15,
      84
@@ -2118,7 +2118,7 @@
     "why": "As the first row of 48948937 (5975,1737)."
    },
    {
-    "type": 289,
+    "type": 293,
     "cell": [
      39,
      95
@@ -2127,7 +2127,7 @@
     "why": "As the first row of 48948937 (5975,1737)."
    },
    {
-    "type": 290,
+    "type": 294,
     "cell": [
      25,
      104
@@ -2138,7 +2138,7 @@
   ],
   "48957129": [
    {
-    "type": 291,
+    "type": 287,
     "cell": [
      20,
      34
@@ -2147,7 +2147,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5976,1737 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 292,
+    "type": 288,
     "cell": [
      35,
      44
@@ -2156,7 +2156,7 @@
     "why": "As the first row of 48957129 (5976,1737)."
    },
    {
-    "type": 293,
+    "type": 289,
     "cell": [
      20,
      54
@@ -2165,7 +2165,7 @@
     "why": "As the first row of 48957129 (5976,1737)."
    },
    {
-    "type": 294,
+    "type": 290,
     "cell": [
      29,
      70
@@ -2174,7 +2174,7 @@
     "why": "As the first row of 48957129 (5976,1737)."
    },
    {
-    "type": 295,
+    "type": 291,
     "cell": [
      50,
      74
@@ -2183,7 +2183,7 @@
     "why": "As the first row of 48957129 (5976,1737)."
    },
    {
-    "type": 296,
+    "type": 292,
     "cell": [
      15,
      84
@@ -2192,7 +2192,7 @@
     "why": "As the first row of 48957129 (5976,1737)."
    },
    {
-    "type": 297,
+    "type": 293,
     "cell": [
      39,
      95
@@ -2201,7 +2201,7 @@
     "why": "As the first row of 48957129 (5976,1737)."
    },
    {
-    "type": 298,
+    "type": 294,
     "cell": [
      25,
      104
@@ -2295,7 +2295,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5974,1738 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py. The lavabook puts «Как слышно?» here («Квест: 5974x1738x0», the ja_ of 287-298) with these kinds, among them the «Диверсант 5го уровня» (291) «Бандитская активность» finds «рядом с основным лагерем»."
    },
    {
-    "type": 289,
+    "type": 288,
     "cell": [
      35,
      44
@@ -2304,7 +2304,7 @@
     "why": "As the first row of 48940746 (5974,1738)."
    },
    {
-    "type": 291,
+    "type": 289,
     "cell": [
      20,
      54
@@ -2313,7 +2313,7 @@
     "why": "As the first row of 48940746 (5974,1738)."
    },
    {
-    "type": 293,
+    "type": 290,
     "cell": [
      29,
      70
@@ -2322,7 +2322,7 @@
     "why": "As the first row of 48940746 (5974,1738)."
    },
    {
-    "type": 295,
+    "type": 291,
     "cell": [
      50,
      74
@@ -2331,7 +2331,7 @@
     "why": "As the first row of 48940746 (5974,1738)."
    },
    {
-    "type": 296,
+    "type": 292,
     "cell": [
      15,
      84
@@ -2340,7 +2340,7 @@
     "why": "As the first row of 48940746 (5974,1738)."
    },
    {
-    "type": 297,
+    "type": 293,
     "cell": [
      39,
      95
@@ -2349,7 +2349,7 @@
     "why": "As the first row of 48940746 (5974,1738)."
    },
    {
-    "type": 298,
+    "type": 294,
     "cell": [
      25,
      104
@@ -2360,7 +2360,7 @@
   ],
   "48957130": [
    {
-    "type": 291,
+    "type": 287,
     "cell": [
      20,
      34
@@ -2369,7 +2369,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5976,1738 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 292,
+    "type": 288,
     "cell": [
      35,
      44
@@ -2378,7 +2378,7 @@
     "why": "As the first row of 48957130 (5976,1738)."
    },
    {
-    "type": 293,
+    "type": 289,
     "cell": [
      20,
      54
@@ -2387,7 +2387,7 @@
     "why": "As the first row of 48957130 (5976,1738)."
    },
    {
-    "type": 294,
+    "type": 290,
     "cell": [
      29,
      70
@@ -2396,7 +2396,7 @@
     "why": "As the first row of 48957130 (5976,1738)."
    },
    {
-    "type": 295,
+    "type": 291,
     "cell": [
      50,
      74
@@ -2405,7 +2405,7 @@
     "why": "As the first row of 48957130 (5976,1738)."
    },
    {
-    "type": 296,
+    "type": 292,
     "cell": [
      15,
      84
@@ -2414,7 +2414,7 @@
     "why": "As the first row of 48957130 (5976,1738)."
    },
    {
-    "type": 297,
+    "type": 293,
     "cell": [
      39,
      95
@@ -2423,7 +2423,7 @@
     "why": "As the first row of 48957130 (5976,1738)."
    },
    {
-    "type": 298,
+    "type": 294,
     "cell": [
      25,
      104
@@ -2508,7 +2508,7 @@
   ],
   "48948939": [
    {
-    "type": 295,
+    "type": 287,
     "cell": [
      20,
      34
@@ -2517,7 +2517,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5975,1739 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 296,
+    "type": 288,
     "cell": [
      35,
      44
@@ -2526,7 +2526,7 @@
     "why": "As the first row of 48948939 (5975,1739)."
    },
    {
-    "type": 297,
+    "type": 289,
     "cell": [
      20,
      54
@@ -2535,7 +2535,7 @@
     "why": "As the first row of 48948939 (5975,1739)."
    },
    {
-    "type": 298,
+    "type": 290,
     "cell": [
      29,
      70
@@ -2544,7 +2544,7 @@
     "why": "As the first row of 48948939 (5975,1739)."
    },
    {
-    "type": 287,
+    "type": 291,
     "cell": [
      50,
      74
@@ -2553,7 +2553,7 @@
     "why": "As the first row of 48948939 (5975,1739)."
    },
    {
-    "type": 288,
+    "type": 292,
     "cell": [
      15,
      84
@@ -2562,7 +2562,7 @@
     "why": "As the first row of 48948939 (5975,1739)."
    },
    {
-    "type": 289,
+    "type": 293,
     "cell": [
      39,
      95
@@ -2571,7 +2571,7 @@
     "why": "As the first row of 48948939 (5975,1739)."
    },
    {
-    "type": 290,
+    "type": 294,
     "cell": [
      25,
      104
@@ -2582,7 +2582,7 @@
   ],
   "48957131": [
    {
-    "type": 291,
+    "type": 287,
     "cell": [
      20,
      34
@@ -2591,7 +2591,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5976,1739 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 292,
+    "type": 288,
     "cell": [
      35,
      44
@@ -2600,7 +2600,7 @@
     "why": "As the first row of 48957131 (5976,1739)."
    },
    {
-    "type": 293,
+    "type": 289,
     "cell": [
      20,
      54
@@ -2609,7 +2609,7 @@
     "why": "As the first row of 48957131 (5976,1739)."
    },
    {
-    "type": 294,
+    "type": 290,
     "cell": [
      29,
      70
@@ -2618,7 +2618,7 @@
     "why": "As the first row of 48957131 (5976,1739)."
    },
    {
-    "type": 295,
+    "type": 291,
     "cell": [
      50,
      74
@@ -2627,7 +2627,7 @@
     "why": "As the first row of 48957131 (5976,1739)."
    },
    {
-    "type": 296,
+    "type": 292,
     "cell": [
      15,
      84
@@ -2636,7 +2636,7 @@
     "why": "As the first row of 48957131 (5976,1739)."
    },
    {
-    "type": 297,
+    "type": 293,
     "cell": [
      39,
      93
@@ -2645,7 +2645,7 @@
     "why": "As the first row of 48957131 (5976,1739)."
    },
    {
-    "type": 298,
+    "type": 294,
     "cell": [
      25,
      104
@@ -2730,7 +2730,7 @@
   ],
   "48940748": [
    {
-    "type": 295,
+    "type": 287,
     "cell": [
      20,
      34
@@ -2739,7 +2739,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5974,1740 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 296,
+    "type": 288,
     "cell": [
      35,
      44
@@ -2748,7 +2748,7 @@
     "why": "As the first row of 48940748 (5974,1740)."
    },
    {
-    "type": 297,
+    "type": 289,
     "cell": [
      20,
      54
@@ -2757,7 +2757,7 @@
     "why": "As the first row of 48940748 (5974,1740)."
    },
    {
-    "type": 298,
+    "type": 290,
     "cell": [
      29,
      70
@@ -2766,7 +2766,7 @@
     "why": "As the first row of 48940748 (5974,1740)."
    },
    {
-    "type": 287,
+    "type": 291,
     "cell": [
      50,
      74
@@ -2775,7 +2775,7 @@
     "why": "As the first row of 48940748 (5974,1740)."
    },
    {
-    "type": 288,
+    "type": 292,
     "cell": [
      15,
      84
@@ -2784,7 +2784,7 @@
     "why": "As the first row of 48940748 (5974,1740)."
    },
    {
-    "type": 289,
+    "type": 293,
     "cell": [
      39,
      95
@@ -2793,7 +2793,7 @@
     "why": "As the first row of 48940748 (5974,1740)."
    },
    {
-    "type": 290,
+    "type": 294,
     "cell": [
      25,
      104
@@ -2804,7 +2804,7 @@
   ],
   "48948940": [
    {
-    "type": 291,
+    "type": 287,
     "cell": [
      20,
      34
@@ -2813,7 +2813,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Джанджавидов» (84 on 5974,1739, and its chief's place 86 on 5975,1738) on the neighbour cell 5975,1740 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 292,
+    "type": 288,
     "cell": [
      35,
      44
@@ -2822,7 +2822,7 @@
     "why": "As the first row of 48948940 (5975,1740)."
    },
    {
-    "type": 293,
+    "type": 289,
     "cell": [
      20,
      54
@@ -2831,7 +2831,7 @@
     "why": "As the first row of 48948940 (5975,1740)."
    },
    {
-    "type": 294,
+    "type": 290,
     "cell": [
      29,
      70
@@ -2840,7 +2840,7 @@
     "why": "As the first row of 48948940 (5975,1740)."
    },
    {
-    "type": 295,
+    "type": 291,
     "cell": [
      50,
      74
@@ -2849,7 +2849,7 @@
     "why": "As the first row of 48948940 (5975,1740)."
    },
    {
-    "type": 296,
+    "type": 292,
     "cell": [
      15,
      84
@@ -2858,7 +2858,7 @@
     "why": "As the first row of 48948940 (5975,1740)."
    },
    {
-    "type": 297,
+    "type": 293,
     "cell": [
      39,
      93
@@ -2867,7 +2867,7 @@
     "why": "As the first row of 48948940 (5975,1740)."
    },
    {
-    "type": 298,
+    "type": 294,
     "cell": [
      25,
      104
@@ -2905,7 +2905,7 @@
     "why": "As the first row of 49079991 (5991,1719)."
    },
    {
-    "type": 305,
+    "type": 306,
     "cell": [
      29,
      70
@@ -2914,7 +2914,7 @@
     "why": "As the first row of 49079991 (5991,1719)."
    },
    {
-    "type": 306,
+    "type": 308,
     "cell": [
      50,
      74
@@ -2923,7 +2923,7 @@
     "why": "As the first row of 49079991 (5991,1719)."
    },
    {
-    "type": 308,
+    "type": 301,
     "cell": [
      15,
      84
@@ -2932,7 +2932,7 @@
     "why": "As the first row of 49079991 (5991,1719)."
    },
    {
-    "type": 309,
+    "type": 302,
     "cell": [
      39,
      95
@@ -2941,7 +2941,7 @@
     "why": "As the first row of 49079991 (5991,1719)."
    },
    {
-    "type": 310,
+    "type": 304,
     "cell": [
      25,
      104
@@ -2952,7 +2952,7 @@
   ],
   "49088183": [
    {
-    "type": 301,
+    "type": 306,
     "cell": [
      20,
      34
@@ -2961,7 +2961,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5992,1719 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 302,
+    "type": 308,
     "cell": [
      35,
      44
@@ -2970,7 +2970,7 @@
     "why": "As the first row of 49088183 (5992,1719)."
    },
    {
-    "type": 304,
+    "type": 301,
     "cell": [
      20,
      54
@@ -2979,7 +2979,7 @@
     "why": "As the first row of 49088183 (5992,1719)."
    },
    {
-    "type": 305,
+    "type": 302,
     "cell": [
      29,
      70
@@ -2988,7 +2988,7 @@
     "why": "As the first row of 49088183 (5992,1719)."
    },
    {
-    "type": 306,
+    "type": 304,
     "cell": [
      50,
      74
@@ -2997,7 +2997,7 @@
     "why": "As the first row of 49088183 (5992,1719)."
    },
    {
-    "type": 308,
+    "type": 306,
     "cell": [
      15,
      84
@@ -3006,7 +3006,7 @@
     "why": "As the first row of 49088183 (5992,1719)."
    },
    {
-    "type": 309,
+    "type": 308,
     "cell": [
      39,
      93
@@ -3015,7 +3015,7 @@
     "why": "As the first row of 49088183 (5992,1719)."
    },
    {
-    "type": 310,
+    "type": 301,
     "cell": [
      25,
      104
@@ -3026,7 +3026,7 @@
   ],
   "49096375": [
    {
-    "type": 301,
+    "type": 302,
     "cell": [
      20,
      34
@@ -3035,7 +3035,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5993,1719 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 302,
+    "type": 304,
     "cell": [
      35,
      44
@@ -3044,7 +3044,7 @@
     "why": "As the first row of 49096375 (5993,1719)."
    },
    {
-    "type": 304,
+    "type": 306,
     "cell": [
      20,
      54
@@ -3053,7 +3053,7 @@
     "why": "As the first row of 49096375 (5993,1719)."
    },
    {
-    "type": 305,
+    "type": 308,
     "cell": [
      29,
      70
@@ -3062,7 +3062,7 @@
     "why": "As the first row of 49096375 (5993,1719)."
    },
    {
-    "type": 306,
+    "type": 301,
     "cell": [
      50,
      74
@@ -3071,7 +3071,7 @@
     "why": "As the first row of 49096375 (5993,1719)."
    },
    {
-    "type": 308,
+    "type": 302,
     "cell": [
      15,
      84
@@ -3080,7 +3080,7 @@
     "why": "As the first row of 49096375 (5993,1719)."
    },
    {
-    "type": 309,
+    "type": 304,
     "cell": [
      39,
      95
@@ -3089,7 +3089,7 @@
     "why": "As the first row of 49096375 (5993,1719)."
    },
    {
-    "type": 310,
+    "type": 306,
     "cell": [
      25,
      104
@@ -3100,7 +3100,7 @@
   ],
   "49079992": [
    {
-    "type": 301,
+    "type": 308,
     "cell": [
      20,
      34
@@ -3109,7 +3109,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5991,1720 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 302,
+    "type": 301,
     "cell": [
      35,
      44
@@ -3118,7 +3118,7 @@
     "why": "As the first row of 49079992 (5991,1720)."
    },
    {
-    "type": 304,
+    "type": 302,
     "cell": [
      20,
      54
@@ -3127,7 +3127,7 @@
     "why": "As the first row of 49079992 (5991,1720)."
    },
    {
-    "type": 305,
+    "type": 304,
     "cell": [
      29,
      70
@@ -3154,7 +3154,7 @@
     "why": "As the first row of 49079992 (5991,1720)."
    },
    {
-    "type": 309,
+    "type": 301,
     "cell": [
      39,
      93
@@ -3163,7 +3163,7 @@
     "why": "As the first row of 49079992 (5991,1720)."
    },
    {
-    "type": 310,
+    "type": 302,
     "cell": [
      25,
      104
@@ -3174,7 +3174,7 @@
   ],
   "49096376": [
    {
-    "type": 301,
+    "type": 304,
     "cell": [
      20,
      34
@@ -3183,7 +3183,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5993,1720 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 302,
+    "type": 306,
     "cell": [
      35,
      44
@@ -3192,7 +3192,7 @@
     "why": "As the first row of 49096376 (5993,1720)."
    },
    {
-    "type": 304,
+    "type": 308,
     "cell": [
      20,
      54
@@ -3201,7 +3201,7 @@
     "why": "As the first row of 49096376 (5993,1720)."
    },
    {
-    "type": 305,
+    "type": 301,
     "cell": [
      29,
      70
@@ -3210,7 +3210,7 @@
     "why": "As the first row of 49096376 (5993,1720)."
    },
    {
-    "type": 306,
+    "type": 302,
     "cell": [
      50,
      74
@@ -3219,7 +3219,7 @@
     "why": "As the first row of 49096376 (5993,1720)."
    },
    {
-    "type": 308,
+    "type": 304,
     "cell": [
      15,
      84
@@ -3228,7 +3228,7 @@
     "why": "As the first row of 49096376 (5993,1720)."
    },
    {
-    "type": 309,
+    "type": 306,
     "cell": [
      39,
      95
@@ -3237,7 +3237,7 @@
     "why": "As the first row of 49096376 (5993,1720)."
    },
    {
-    "type": 310,
+    "type": 308,
     "cell": [
      25,
      104
@@ -3275,7 +3275,7 @@
     "why": "As the first row of 49104568 (5994,1720)."
    },
    {
-    "type": 305,
+    "type": 306,
     "cell": [
      29,
      70
@@ -3284,7 +3284,7 @@
     "why": "As the first row of 49104568 (5994,1720)."
    },
    {
-    "type": 306,
+    "type": 308,
     "cell": [
      50,
      74
@@ -3293,7 +3293,7 @@
     "why": "As the first row of 49104568 (5994,1720)."
    },
    {
-    "type": 308,
+    "type": 301,
     "cell": [
      15,
      84
@@ -3302,7 +3302,7 @@
     "why": "As the first row of 49104568 (5994,1720)."
    },
    {
-    "type": 309,
+    "type": 302,
     "cell": [
      39,
      95
@@ -3311,7 +3311,7 @@
     "why": "As the first row of 49104568 (5994,1720)."
    },
    {
-    "type": 310,
+    "type": 304,
     "cell": [
      25,
      104
@@ -3322,7 +3322,7 @@
   ],
   "49079993": [
    {
-    "type": 301,
+    "type": 306,
     "cell": [
      20,
      34
@@ -3331,7 +3331,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5991,1721 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 302,
+    "type": 308,
     "cell": [
      35,
      44
@@ -3340,7 +3340,7 @@
     "why": "As the first row of 49079993 (5991,1721)."
    },
    {
-    "type": 304,
+    "type": 301,
     "cell": [
      20,
      54
@@ -3349,7 +3349,7 @@
     "why": "As the first row of 49079993 (5991,1721)."
    },
    {
-    "type": 305,
+    "type": 302,
     "cell": [
      29,
      70
@@ -3358,7 +3358,7 @@
     "why": "As the first row of 49079993 (5991,1721)."
    },
    {
-    "type": 306,
+    "type": 304,
     "cell": [
      50,
      74
@@ -3367,7 +3367,7 @@
     "why": "As the first row of 49079993 (5991,1721)."
    },
    {
-    "type": 308,
+    "type": 306,
     "cell": [
      15,
      84
@@ -3376,7 +3376,7 @@
     "why": "As the first row of 49079993 (5991,1721)."
    },
    {
-    "type": 309,
+    "type": 308,
     "cell": [
      39,
      95
@@ -3385,7 +3385,7 @@
     "why": "As the first row of 49079993 (5991,1721)."
    },
    {
-    "type": 310,
+    "type": 301,
     "cell": [
      25,
      104
@@ -3396,7 +3396,7 @@
   ],
   "49088185": [
    {
-    "type": 301,
+    "type": 302,
     "cell": [
      20,
      34
@@ -3405,7 +3405,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5992,1721 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 302,
+    "type": 304,
     "cell": [
      35,
      44
@@ -3414,7 +3414,7 @@
     "why": "As the first row of 49088185 (5992,1721)."
    },
    {
-    "type": 304,
+    "type": 306,
     "cell": [
      20,
      54
@@ -3423,7 +3423,7 @@
     "why": "As the first row of 49088185 (5992,1721)."
    },
    {
-    "type": 305,
+    "type": 308,
     "cell": [
      29,
      70
@@ -3432,7 +3432,7 @@
     "why": "As the first row of 49088185 (5992,1721)."
    },
    {
-    "type": 306,
+    "type": 301,
     "cell": [
      50,
      74
@@ -3441,7 +3441,7 @@
     "why": "As the first row of 49088185 (5992,1721)."
    },
    {
-    "type": 308,
+    "type": 302,
     "cell": [
      15,
      84
@@ -3450,7 +3450,7 @@
     "why": "As the first row of 49088185 (5992,1721)."
    },
    {
-    "type": 309,
+    "type": 304,
     "cell": [
      39,
      95
@@ -3459,7 +3459,7 @@
     "why": "As the first row of 49088185 (5992,1721)."
    },
    {
-    "type": 310,
+    "type": 306,
     "cell": [
      25,
      104
@@ -3470,7 +3470,7 @@
   ],
   "49104569": [
    {
-    "type": 301,
+    "type": 308,
     "cell": [
      20,
      34
@@ -3479,7 +3479,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5994,1721 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 302,
+    "type": 301,
     "cell": [
      35,
      44
@@ -3488,7 +3488,7 @@
     "why": "As the first row of 49104569 (5994,1721)."
    },
    {
-    "type": 304,
+    "type": 302,
     "cell": [
      20,
      54
@@ -3497,7 +3497,7 @@
     "why": "As the first row of 49104569 (5994,1721)."
    },
    {
-    "type": 305,
+    "type": 304,
     "cell": [
      29,
      70
@@ -3524,7 +3524,7 @@
     "why": "As the first row of 49104569 (5994,1721)."
    },
    {
-    "type": 309,
+    "type": 301,
     "cell": [
      39,
      93
@@ -3533,7 +3533,7 @@
     "why": "As the first row of 49104569 (5994,1721)."
    },
    {
-    "type": 310,
+    "type": 302,
     "cell": [
      25,
      104
@@ -3598,7 +3598,7 @@
     "why": "As the first row of 49088186 (5992,1722)."
    },
    {
-    "type": 305,
+    "type": 306,
     "cell": [
      39,
      95
@@ -3607,7 +3607,7 @@
     "why": "As the first row of 49088186 (5992,1722)."
    },
    {
-    "type": 306,
+    "type": 308,
     "cell": [
      25,
      104
@@ -3645,7 +3645,7 @@
     "why": "As the first row of 49096378 (5993,1722)."
    },
    {
-    "type": 305,
+    "type": 306,
     "cell": [
      29,
      70
@@ -3654,7 +3654,7 @@
     "why": "As the first row of 49096378 (5993,1722)."
    },
    {
-    "type": 306,
+    "type": 308,
     "cell": [
      50,
      74
@@ -3663,7 +3663,7 @@
     "why": "As the first row of 49096378 (5993,1722)."
    },
    {
-    "type": 308,
+    "type": 301,
     "cell": [
      15,
      84
@@ -3672,7 +3672,7 @@
     "why": "As the first row of 49096378 (5993,1722)."
    },
    {
-    "type": 309,
+    "type": 302,
     "cell": [
      39,
      93
@@ -3681,7 +3681,7 @@
     "why": "As the first row of 49096378 (5993,1722)."
    },
    {
-    "type": 310,
+    "type": 304,
     "cell": [
      25,
      104
@@ -3692,7 +3692,7 @@
   ],
   "49104570": [
    {
-    "type": 301,
+    "type": 306,
     "cell": [
      20,
      34
@@ -3701,7 +3701,7 @@
     "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of «Лагерь Магриба» (85 on 5993,1721, and its chief's place 87 on 5992,1720) on the neighbour cell 5994,1722 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 302,
+    "type": 308,
     "cell": [
      35,
      44
@@ -3710,7 +3710,7 @@
     "why": "As the first row of 49104570 (5994,1722)."
    },
    {
-    "type": 304,
+    "type": 301,
     "cell": [
      20,
      54
@@ -3719,7 +3719,7 @@
     "why": "As the first row of 49104570 (5994,1722)."
    },
    {
-    "type": 305,
+    "type": 302,
     "cell": [
      29,
      70
@@ -3728,7 +3728,7 @@
     "why": "As the first row of 49104570 (5994,1722)."
    },
    {
-    "type": 306,
+    "type": 304,
     "cell": [
      50,
      74
@@ -3737,7 +3737,7 @@
     "why": "As the first row of 49104570 (5994,1722)."
    },
    {
-    "type": 308,
+    "type": 306,
     "cell": [
      15,
      84
@@ -3746,7 +3746,7 @@
     "why": "As the first row of 49104570 (5994,1722)."
    },
    {
-    "type": 309,
+    "type": 308,
     "cell": [
      39,
      95
@@ -3755,7 +3755,7 @@
     "why": "As the first row of 49104570 (5994,1722)."
    },
    {
-    "type": 310,
+    "type": 301,
     "cell": [
      25,
      104
@@ -3772,7 +3772,7 @@
      34
     ],
     "patrol": 34,
-    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1839 (open desert inside the valley's wall, desert/0003.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1839 (open desert inside the valley's wall, desert/0003.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
     "type": 21,
@@ -3784,7 +3784,7 @@
     "why": "As the first row of 51373871 (6271,1839)."
    },
    {
-    "type": 251,
+    "type": 20,
     "cell": [
      50,
      74
@@ -3793,7 +3793,7 @@
     "why": "As the first row of 51373871 (6271,1839)."
    },
    {
-    "type": 20,
+    "type": 21,
     "cell": [
      25,
      104
@@ -3804,16 +3804,16 @@
   ],
   "51382063": [
    {
-    "type": 21,
+    "type": 20,
     "cell": [
      20,
      34
     ],
     "patrol": 34,
-    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6272,1839 (open desert inside the valley's wall, desert/0004.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6272,1839 (open desert inside the valley's wall, desert/0004.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 251,
+    "type": 21,
     "cell": [
      29,
      70
@@ -3842,16 +3842,16 @@
   ],
   "51390255": [
    {
-    "type": 251,
+    "type": 20,
     "cell": [
      20,
      34
     ],
     "patrol": 34,
-    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1839 (open desert inside the valley's wall, desert/0001.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1839 (open desert inside the valley's wall, desert/0001.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 20,
+    "type": 21,
     "cell": [
      29,
      70
@@ -3860,7 +3860,7 @@
     "why": "As the first row of 51390255 (6273,1839)."
    },
    {
-    "type": 21,
+    "type": 20,
     "cell": [
      50,
      74
@@ -3869,7 +3869,7 @@
     "why": "As the first row of 51390255 (6273,1839)."
    },
    {
-    "type": 251,
+    "type": 21,
     "cell": [
      25,
      104
@@ -3886,7 +3886,7 @@
      34
     ],
     "patrol": 34,
-    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1840 (open desert inside the valley's wall, desert/0004.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1840 (open desert inside the valley's wall, desert/0004.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
     "type": 21,
@@ -3898,7 +3898,7 @@
     "why": "As the first row of 51373872 (6271,1840)."
    },
    {
-    "type": 251,
+    "type": 20,
     "cell": [
      50,
      74
@@ -3907,7 +3907,7 @@
     "why": "As the first row of 51373872 (6271,1840)."
    },
    {
-    "type": 20,
+    "type": 21,
     "cell": [
      25,
      104
@@ -3918,16 +3918,16 @@
   ],
   "51390256": [
    {
-    "type": 21,
+    "type": 20,
     "cell": [
      20,
      34
     ],
     "patrol": 34,
-    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1840 (open desert inside the valley's wall, desert/0002.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1840 (open desert inside the valley's wall, desert/0002.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 251,
+    "type": 21,
     "cell": [
      29,
      70
@@ -3956,16 +3956,16 @@
   ],
   "51373873": [
    {
-    "type": 251,
+    "type": 20,
     "cell": [
      20,
      34
     ],
     "patrol": 34,
-    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1841 (open desert inside the valley's wall, desert/0001.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6271,1841 (open desert inside the valley's wall, desert/0001.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 20,
+    "type": 21,
     "cell": [
      29,
      70
@@ -3974,7 +3974,7 @@
     "why": "As the first row of 51373873 (6271,1841)."
    },
    {
-    "type": 21,
+    "type": 20,
     "cell": [
      50,
      74
@@ -3983,7 +3983,7 @@
     "why": "As the first row of 51373873 (6271,1841)."
    },
    {
-    "type": 251,
+    "type": 21,
     "cell": [
      25,
      104
@@ -4000,7 +4000,7 @@
      34
     ],
     "patrol": 34,
-    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6272,1841 (open desert inside the valley's wall, desert/0002.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6272,1841 (open desert inside the valley's wall, desert/0002.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
     "type": 21,
@@ -4012,7 +4012,7 @@
     "why": "As the first row of 51382065 (6272,1841)."
    },
    {
-    "type": 251,
+    "type": 20,
     "cell": [
      50,
      74
@@ -4021,7 +4021,7 @@
     "why": "As the first row of 51382065 (6272,1841)."
    },
    {
-    "type": 20,
+    "type": 21,
     "cell": [
      25,
      104
@@ -4032,16 +4032,16 @@
   ],
   "51390257": [
    {
-    "type": 21,
+    "type": 20,
     "cell": [
      20,
      34
     ],
     "patrol": 34,
-    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1841 (open desert inside the valley's wall, desert/0003.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, 251, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
+    "why": "DESIGNED, the owner's (2026-10-11): «во всех соседних локациях тоже добавь мобов они там должны быть». The patrol of the Nubian valley's «Лагерь бандитов» (34 on 6272,1840) on the neighbour cell 6273,1841 (open desert inside the valley's wall, desert/0003.xml); no ambush is met in the valley (encounters.band_at). Four of the camp's bandits (20, 21, the fighters its own file Bandit_Camp stands) on four of the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 251,
+    "type": 21,
     "cell": [
      29,
      70
@@ -4153,7 +4153,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5881,1842 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 324,
+    "type": 315,
     "cell": [
      35,
      44
@@ -4162,7 +4162,7 @@
     "why": "As the first row of 48178994 (5881,1842)."
    },
    {
-    "type": 325,
+    "type": 316,
     "cell": [
      20,
      54
@@ -4171,7 +4171,7 @@
     "why": "As the first row of 48178994 (5881,1842)."
    },
    {
-    "type": 326,
+    "type": 317,
     "cell": [
      29,
      70
@@ -4180,7 +4180,7 @@
     "why": "As the first row of 48178994 (5881,1842)."
    },
    {
-    "type": 315,
+    "type": 318,
     "cell": [
      50,
      74
@@ -4189,7 +4189,7 @@
     "why": "As the first row of 48178994 (5881,1842)."
    },
    {
-    "type": 316,
+    "type": 319,
     "cell": [
      15,
      84
@@ -4198,7 +4198,7 @@
     "why": "As the first row of 48178994 (5881,1842)."
    },
    {
-    "type": 317,
+    "type": 320,
     "cell": [
      39,
      93
@@ -4207,7 +4207,7 @@
     "why": "As the first row of 48178994 (5881,1842)."
    },
    {
-    "type": 318,
+    "type": 321,
     "cell": [
      25,
      104
@@ -4218,7 +4218,7 @@
   ],
   "48187186": [
    {
-    "type": 319,
+    "type": 322,
     "cell": [
      20,
      34
@@ -4227,7 +4227,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5882,1842 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 320,
+    "type": 323,
     "cell": [
      35,
      44
@@ -4236,7 +4236,7 @@
     "why": "As the first row of 48187186 (5882,1842)."
    },
    {
-    "type": 321,
+    "type": 315,
     "cell": [
      20,
      54
@@ -4245,7 +4245,7 @@
     "why": "As the first row of 48187186 (5882,1842)."
    },
    {
-    "type": 322,
+    "type": 316,
     "cell": [
      29,
      70
@@ -4254,7 +4254,7 @@
     "why": "As the first row of 48187186 (5882,1842)."
    },
    {
-    "type": 323,
+    "type": 317,
     "cell": [
      50,
      74
@@ -4263,7 +4263,7 @@
     "why": "As the first row of 48187186 (5882,1842)."
    },
    {
-    "type": 324,
+    "type": 318,
     "cell": [
      15,
      84
@@ -4272,7 +4272,7 @@
     "why": "As the first row of 48187186 (5882,1842)."
    },
    {
-    "type": 325,
+    "type": 319,
     "cell": [
      39,
      95
@@ -4281,7 +4281,7 @@
     "why": "As the first row of 48187186 (5882,1842)."
    },
    {
-    "type": 326,
+    "type": 320,
     "cell": [
      25,
      104
@@ -4292,7 +4292,7 @@
   ],
   "48162611": [
    {
-    "type": 315,
+    "type": 321,
     "cell": [
      20,
      34
@@ -4301,7 +4301,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5879,1843 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 316,
+    "type": 322,
     "cell": [
      35,
      44
@@ -4310,7 +4310,7 @@
     "why": "As the first row of 48162611 (5879,1843)."
    },
    {
-    "type": 317,
+    "type": 323,
     "cell": [
      20,
      54
@@ -4319,7 +4319,7 @@
     "why": "As the first row of 48162611 (5879,1843)."
    },
    {
-    "type": 318,
+    "type": 315,
     "cell": [
      29,
      70
@@ -4328,7 +4328,7 @@
     "why": "As the first row of 48162611 (5879,1843)."
    },
    {
-    "type": 319,
+    "type": 316,
     "cell": [
      50,
      74
@@ -4337,7 +4337,7 @@
     "why": "As the first row of 48162611 (5879,1843)."
    },
    {
-    "type": 320,
+    "type": 317,
     "cell": [
      15,
      84
@@ -4346,7 +4346,7 @@
     "why": "As the first row of 48162611 (5879,1843)."
    },
    {
-    "type": 321,
+    "type": 318,
     "cell": [
      39,
      95
@@ -4355,7 +4355,7 @@
     "why": "As the first row of 48162611 (5879,1843)."
    },
    {
-    "type": 322,
+    "type": 319,
     "cell": [
      25,
      104
@@ -4366,7 +4366,7 @@
   ],
   "48170803": [
    {
-    "type": 323,
+    "type": 320,
     "cell": [
      20,
      34
@@ -4375,7 +4375,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5880,1843 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 324,
+    "type": 321,
     "cell": [
      35,
      44
@@ -4384,7 +4384,7 @@
     "why": "As the first row of 48170803 (5880,1843)."
    },
    {
-    "type": 325,
+    "type": 322,
     "cell": [
      20,
      54
@@ -4393,7 +4393,7 @@
     "why": "As the first row of 48170803 (5880,1843)."
    },
    {
-    "type": 326,
+    "type": 323,
     "cell": [
      29,
      70
@@ -4485,7 +4485,7 @@
     "why": "As the first row of 48187187 (5882,1843)."
    },
    {
-    "type": 324,
+    "type": 315,
     "cell": [
      15,
      84
@@ -4494,7 +4494,7 @@
     "why": "As the first row of 48187187 (5882,1843)."
    },
    {
-    "type": 325,
+    "type": 316,
     "cell": [
      39,
      95
@@ -4503,7 +4503,7 @@
     "why": "As the first row of 48187187 (5882,1843)."
    },
    {
-    "type": 326,
+    "type": 317,
     "cell": [
      25,
      104
@@ -4514,7 +4514,7 @@
   ],
   "48162612": [
    {
-    "type": 315,
+    "type": 318,
     "cell": [
      20,
      34
@@ -4523,7 +4523,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5879,1844 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 316,
+    "type": 319,
     "cell": [
      35,
      44
@@ -4532,7 +4532,7 @@
     "why": "As the first row of 48162612 (5879,1844)."
    },
    {
-    "type": 317,
+    "type": 320,
     "cell": [
      20,
      54
@@ -4541,7 +4541,7 @@
     "why": "As the first row of 48162612 (5879,1844)."
    },
    {
-    "type": 318,
+    "type": 321,
     "cell": [
      29,
      70
@@ -4550,7 +4550,7 @@
     "why": "As the first row of 48162612 (5879,1844)."
    },
    {
-    "type": 319,
+    "type": 322,
     "cell": [
      50,
      74
@@ -4559,7 +4559,7 @@
     "why": "As the first row of 48162612 (5879,1844)."
    },
    {
-    "type": 320,
+    "type": 323,
     "cell": [
      15,
      84
@@ -4568,7 +4568,7 @@
     "why": "As the first row of 48162612 (5879,1844)."
    },
    {
-    "type": 321,
+    "type": 315,
     "cell": [
      39,
      93
@@ -4577,7 +4577,7 @@
     "why": "As the first row of 48162612 (5879,1844)."
    },
    {
-    "type": 322,
+    "type": 316,
     "cell": [
      25,
      104
@@ -4588,7 +4588,7 @@
   ],
   "48178996": [
    {
-    "type": 323,
+    "type": 317,
     "cell": [
      20,
      34
@@ -4597,7 +4597,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5881,1844 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 324,
+    "type": 318,
     "cell": [
      35,
      44
@@ -4606,7 +4606,7 @@
     "why": "As the first row of 48178996 (5881,1844)."
    },
    {
-    "type": 325,
+    "type": 319,
     "cell": [
      20,
      54
@@ -4615,7 +4615,7 @@
     "why": "As the first row of 48178996 (5881,1844)."
    },
    {
-    "type": 326,
+    "type": 320,
     "cell": [
      29,
      70
@@ -4624,7 +4624,7 @@
     "why": "As the first row of 48178996 (5881,1844)."
    },
    {
-    "type": 315,
+    "type": 321,
     "cell": [
      50,
      74
@@ -4633,7 +4633,7 @@
     "why": "As the first row of 48178996 (5881,1844)."
    },
    {
-    "type": 316,
+    "type": 322,
     "cell": [
      15,
      84
@@ -4642,7 +4642,7 @@
     "why": "As the first row of 48178996 (5881,1844)."
    },
    {
-    "type": 317,
+    "type": 323,
     "cell": [
      39,
      95
@@ -4651,7 +4651,7 @@
     "why": "As the first row of 48178996 (5881,1844)."
    },
    {
-    "type": 318,
+    "type": 315,
     "cell": [
      25,
      104
@@ -4662,7 +4662,7 @@
   ],
   "48187188": [
    {
-    "type": 319,
+    "type": 316,
     "cell": [
      20,
      34
@@ -4671,7 +4671,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5882,1844 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 320,
+    "type": 317,
     "cell": [
      35,
      44
@@ -4680,7 +4680,7 @@
     "why": "As the first row of 48187188 (5882,1844)."
    },
    {
-    "type": 321,
+    "type": 318,
     "cell": [
      20,
      54
@@ -4689,7 +4689,7 @@
     "why": "As the first row of 48187188 (5882,1844)."
    },
    {
-    "type": 322,
+    "type": 319,
     "cell": [
      29,
      70
@@ -4698,7 +4698,7 @@
     "why": "As the first row of 48187188 (5882,1844)."
    },
    {
-    "type": 323,
+    "type": 320,
     "cell": [
      50,
      74
@@ -4707,7 +4707,7 @@
     "why": "As the first row of 48187188 (5882,1844)."
    },
    {
-    "type": 324,
+    "type": 321,
     "cell": [
      15,
      84
@@ -4716,7 +4716,7 @@
     "why": "As the first row of 48187188 (5882,1844)."
    },
    {
-    "type": 325,
+    "type": 322,
     "cell": [
      39,
      95
@@ -4725,7 +4725,7 @@
     "why": "As the first row of 48187188 (5882,1844)."
    },
    {
-    "type": 326,
+    "type": 323,
     "cell": [
      25,
      104
@@ -4819,7 +4819,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5880,1845 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 324,
+    "type": 315,
     "cell": [
      35,
      44
@@ -4828,7 +4828,7 @@
     "why": "As the first row of 48170805 (5880,1845)."
    },
    {
-    "type": 325,
+    "type": 316,
     "cell": [
      20,
      54
@@ -4837,7 +4837,7 @@
     "why": "As the first row of 48170805 (5880,1845)."
    },
    {
-    "type": 326,
+    "type": 317,
     "cell": [
      29,
      70
@@ -4846,7 +4846,7 @@
     "why": "As the first row of 48170805 (5880,1845)."
    },
    {
-    "type": 315,
+    "type": 318,
     "cell": [
      50,
      74
@@ -4855,7 +4855,7 @@
     "why": "As the first row of 48170805 (5880,1845)."
    },
    {
-    "type": 316,
+    "type": 319,
     "cell": [
      15,
      84
@@ -4864,7 +4864,7 @@
     "why": "As the first row of 48170805 (5880,1845)."
    },
    {
-    "type": 317,
+    "type": 320,
     "cell": [
      39,
      95
@@ -4873,7 +4873,7 @@
     "why": "As the first row of 48170805 (5880,1845)."
    },
    {
-    "type": 318,
+    "type": 321,
     "cell": [
      25,
      104
@@ -4884,7 +4884,7 @@
   ],
   "48178997": [
    {
-    "type": 319,
+    "type": 322,
     "cell": [
      20,
      34
@@ -4893,7 +4893,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Работорговцев» (88 on 5880,1844, and its chief's place 89 on 5881,1843) on the neighbour cell 5881,1845 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 320,
+    "type": 323,
     "cell": [
      35,
      44
@@ -4902,7 +4902,7 @@
     "why": "As the first row of 48178997 (5881,1845)."
    },
    {
-    "type": 321,
+    "type": 315,
     "cell": [
      20,
      54
@@ -4911,7 +4911,7 @@
     "why": "As the first row of 48178997 (5881,1845)."
    },
    {
-    "type": 322,
+    "type": 316,
     "cell": [
      29,
      70
@@ -4920,7 +4920,7 @@
     "why": "As the first row of 48178997 (5881,1845)."
    },
    {
-    "type": 323,
+    "type": 317,
     "cell": [
      50,
      74
@@ -4929,7 +4929,7 @@
     "why": "As the first row of 48178997 (5881,1845)."
    },
    {
-    "type": 324,
+    "type": 318,
     "cell": [
      15,
      84
@@ -4938,7 +4938,7 @@
     "why": "As the first row of 48178997 (5881,1845)."
    },
    {
-    "type": 325,
+    "type": 319,
     "cell": [
      39,
      95
@@ -4947,7 +4947,7 @@
     "why": "As the first row of 48178997 (5881,1845)."
    },
    {
-    "type": 326,
+    "type": 320,
     "cell": [
      25,
      104
@@ -5032,7 +5032,7 @@
   ],
   "48072509": [
    {
-    "type": 356,
+    "type": 348,
     "cell": [
      20,
      34
@@ -5041,7 +5041,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Живодеров» (92 on 5868,1854, and its chief's place 90 on 5869,1855) on the neighbour cell 5868,1853 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 357,
+    "type": 349,
     "cell": [
      35,
      44
@@ -5050,7 +5050,7 @@
     "why": "As the first row of 48072509 (5868,1853)."
    },
    {
-    "type": 358,
+    "type": 350,
     "cell": [
      20,
      54
@@ -5059,7 +5059,7 @@
     "why": "As the first row of 48072509 (5868,1853)."
    },
    {
-    "type": 359,
+    "type": 351,
     "cell": [
      29,
      70
@@ -5068,7 +5068,7 @@
     "why": "As the first row of 48072509 (5868,1853)."
    },
    {
-    "type": 348,
+    "type": 352,
     "cell": [
      50,
      74
@@ -5077,7 +5077,7 @@
     "why": "As the first row of 48072509 (5868,1853)."
    },
    {
-    "type": 349,
+    "type": 353,
     "cell": [
      15,
      84
@@ -5086,7 +5086,7 @@
     "why": "As the first row of 48072509 (5868,1853)."
    },
    {
-    "type": 350,
+    "type": 354,
     "cell": [
      39,
      95
@@ -5095,7 +5095,7 @@
     "why": "As the first row of 48072509 (5868,1853)."
    },
    {
-    "type": 351,
+    "type": 355,
     "cell": [
      25,
      104
@@ -5106,7 +5106,7 @@
   ],
   "48080701": [
    {
-    "type": 352,
+    "type": 348,
     "cell": [
      20,
      34
@@ -5115,7 +5115,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Живодеров» (92 on 5868,1854, and its chief's place 90 on 5869,1855) on the neighbour cell 5869,1853 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 353,
+    "type": 349,
     "cell": [
      35,
      44
@@ -5124,7 +5124,7 @@
     "why": "As the first row of 48080701 (5869,1853)."
    },
    {
-    "type": 354,
+    "type": 350,
     "cell": [
      20,
      54
@@ -5133,7 +5133,7 @@
     "why": "As the first row of 48080701 (5869,1853)."
    },
    {
-    "type": 355,
+    "type": 351,
     "cell": [
      29,
      70
@@ -5142,7 +5142,7 @@
     "why": "As the first row of 48080701 (5869,1853)."
    },
    {
-    "type": 356,
+    "type": 352,
     "cell": [
      50,
      74
@@ -5151,7 +5151,7 @@
     "why": "As the first row of 48080701 (5869,1853)."
    },
    {
-    "type": 357,
+    "type": 353,
     "cell": [
      15,
      84
@@ -5160,7 +5160,7 @@
     "why": "As the first row of 48080701 (5869,1853)."
    },
    {
-    "type": 358,
+    "type": 354,
     "cell": [
      39,
      95
@@ -5169,7 +5169,7 @@
     "why": "As the first row of 48080701 (5869,1853)."
    },
    {
-    "type": 359,
+    "type": 355,
     "cell": [
      25,
      104
@@ -5254,7 +5254,7 @@
   ],
   "48080702": [
    {
-    "type": 356,
+    "type": 348,
     "cell": [
      20,
      34
@@ -5263,7 +5263,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Живодеров» (92 on 5868,1854, and its chief's place 90 on 5869,1855) on the neighbour cell 5869,1854 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 357,
+    "type": 349,
     "cell": [
      35,
      44
@@ -5272,7 +5272,7 @@
     "why": "As the first row of 48080702 (5869,1854)."
    },
    {
-    "type": 358,
+    "type": 350,
     "cell": [
      20,
      54
@@ -5281,7 +5281,7 @@
     "why": "As the first row of 48080702 (5869,1854)."
    },
    {
-    "type": 359,
+    "type": 351,
     "cell": [
      29,
      70
@@ -5290,7 +5290,7 @@
     "why": "As the first row of 48080702 (5869,1854)."
    },
    {
-    "type": 348,
+    "type": 352,
     "cell": [
      50,
      74
@@ -5299,7 +5299,7 @@
     "why": "As the first row of 48080702 (5869,1854)."
    },
    {
-    "type": 349,
+    "type": 353,
     "cell": [
      15,
      84
@@ -5308,7 +5308,7 @@
     "why": "As the first row of 48080702 (5869,1854)."
    },
    {
-    "type": 350,
+    "type": 354,
     "cell": [
      39,
      93
@@ -5317,7 +5317,7 @@
     "why": "As the first row of 48080702 (5869,1854)."
    },
    {
-    "type": 351,
+    "type": 355,
     "cell": [
      25,
      104
@@ -5328,7 +5328,7 @@
   ],
   "48088894": [
    {
-    "type": 352,
+    "type": 348,
     "cell": [
      20,
      34
@@ -5337,7 +5337,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Живодеров» (92 on 5868,1854, and its chief's place 90 on 5869,1855) on the neighbour cell 5870,1854 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 353,
+    "type": 349,
     "cell": [
      35,
      44
@@ -5346,7 +5346,7 @@
     "why": "As the first row of 48088894 (5870,1854)."
    },
    {
-    "type": 354,
+    "type": 350,
     "cell": [
      20,
      54
@@ -5355,7 +5355,7 @@
     "why": "As the first row of 48088894 (5870,1854)."
    },
    {
-    "type": 355,
+    "type": 351,
     "cell": [
      29,
      70
@@ -5364,7 +5364,7 @@
     "why": "As the first row of 48088894 (5870,1854)."
    },
    {
-    "type": 356,
+    "type": 352,
     "cell": [
      50,
      74
@@ -5373,7 +5373,7 @@
     "why": "As the first row of 48088894 (5870,1854)."
    },
    {
-    "type": 357,
+    "type": 353,
     "cell": [
      15,
      84
@@ -5382,7 +5382,7 @@
     "why": "As the first row of 48088894 (5870,1854)."
    },
    {
-    "type": 358,
+    "type": 354,
     "cell": [
      39,
      95
@@ -5391,7 +5391,7 @@
     "why": "As the first row of 48088894 (5870,1854)."
    },
    {
-    "type": 359,
+    "type": 355,
     "cell": [
      25,
      104
@@ -5476,7 +5476,7 @@
   ],
   "48072511": [
    {
-    "type": 356,
+    "type": 348,
     "cell": [
      20,
      34
@@ -5485,7 +5485,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Живодеров» (92 on 5868,1854, and its chief's place 90 on 5869,1855) on the neighbour cell 5868,1855 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 357,
+    "type": 349,
     "cell": [
      35,
      44
@@ -5494,7 +5494,7 @@
     "why": "As the first row of 48072511 (5868,1855)."
    },
    {
-    "type": 358,
+    "type": 350,
     "cell": [
      20,
      54
@@ -5503,7 +5503,7 @@
     "why": "As the first row of 48072511 (5868,1855)."
    },
    {
-    "type": 359,
+    "type": 351,
     "cell": [
      29,
      70
@@ -5512,7 +5512,7 @@
     "why": "As the first row of 48072511 (5868,1855)."
    },
    {
-    "type": 348,
+    "type": 352,
     "cell": [
      50,
      74
@@ -5521,7 +5521,7 @@
     "why": "As the first row of 48072511 (5868,1855)."
    },
    {
-    "type": 349,
+    "type": 353,
     "cell": [
      15,
      84
@@ -5530,7 +5530,7 @@
     "why": "As the first row of 48072511 (5868,1855)."
    },
    {
-    "type": 350,
+    "type": 354,
     "cell": [
      39,
      93
@@ -5539,7 +5539,7 @@
     "why": "As the first row of 48072511 (5868,1855)."
    },
    {
-    "type": 351,
+    "type": 355,
     "cell": [
      25,
      104
@@ -5550,7 +5550,7 @@
   ],
   "48088895": [
    {
-    "type": 352,
+    "type": 348,
     "cell": [
      20,
      34
@@ -5559,7 +5559,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Живодеров» (92 on 5868,1854, and its chief's place 90 on 5869,1855) on the neighbour cell 5870,1855 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 353,
+    "type": 349,
     "cell": [
      35,
      44
@@ -5568,7 +5568,7 @@
     "why": "As the first row of 48088895 (5870,1855)."
    },
    {
-    "type": 354,
+    "type": 350,
     "cell": [
      20,
      54
@@ -5577,7 +5577,7 @@
     "why": "As the first row of 48088895 (5870,1855)."
    },
    {
-    "type": 355,
+    "type": 351,
     "cell": [
      29,
      70
@@ -5586,7 +5586,7 @@
     "why": "As the first row of 48088895 (5870,1855)."
    },
    {
-    "type": 356,
+    "type": 352,
     "cell": [
      50,
      74
@@ -5595,7 +5595,7 @@
     "why": "As the first row of 48088895 (5870,1855)."
    },
    {
-    "type": 357,
+    "type": 353,
     "cell": [
      15,
      84
@@ -5604,7 +5604,7 @@
     "why": "As the first row of 48088895 (5870,1855)."
    },
    {
-    "type": 358,
+    "type": 354,
     "cell": [
      39,
      95
@@ -5613,7 +5613,7 @@
     "why": "As the first row of 48088895 (5870,1855)."
    },
    {
-    "type": 359,
+    "type": 355,
     "cell": [
      25,
      104
@@ -5698,7 +5698,7 @@
   ],
   "48080704": [
    {
-    "type": 356,
+    "type": 348,
     "cell": [
      20,
      34
@@ -5707,7 +5707,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Живодеров» (92 on 5868,1854, and its chief's place 90 on 5869,1855) on the neighbour cell 5869,1856 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 357,
+    "type": 349,
     "cell": [
      35,
      44
@@ -5716,7 +5716,7 @@
     "why": "As the first row of 48080704 (5869,1856)."
    },
    {
-    "type": 358,
+    "type": 350,
     "cell": [
      20,
      54
@@ -5725,7 +5725,7 @@
     "why": "As the first row of 48080704 (5869,1856)."
    },
    {
-    "type": 359,
+    "type": 351,
     "cell": [
      29,
      70
@@ -5734,7 +5734,7 @@
     "why": "As the first row of 48080704 (5869,1856)."
    },
    {
-    "type": 348,
+    "type": 352,
     "cell": [
      50,
      74
@@ -5743,7 +5743,7 @@
     "why": "As the first row of 48080704 (5869,1856)."
    },
    {
-    "type": 349,
+    "type": 353,
     "cell": [
      15,
      84
@@ -5752,7 +5752,7 @@
     "why": "As the first row of 48080704 (5869,1856)."
    },
    {
-    "type": 350,
+    "type": 354,
     "cell": [
      39,
      95
@@ -5761,7 +5761,7 @@
     "why": "As the first row of 48080704 (5869,1856)."
    },
    {
-    "type": 351,
+    "type": 355,
     "cell": [
      25,
      104
@@ -5772,7 +5772,7 @@
   ],
   "48088896": [
    {
-    "type": 352,
+    "type": 348,
     "cell": [
      20,
      34
@@ -5781,7 +5781,7 @@
     "why": "DESIGNED, the owner's (2026-10-12, «Делаем Абри»): «В Абри добавь мобов в лагеря и в окрестности». The patrol of «Лагерь Живодеров» (92 on 5868,1854, and its chief's place 90 on 5869,1855) on the neighbour cell 5870,1856 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 353,
+    "type": 349,
     "cell": [
      35,
      44
@@ -5790,7 +5790,7 @@
     "why": "As the first row of 48088896 (5870,1856)."
    },
    {
-    "type": 354,
+    "type": 350,
     "cell": [
      20,
      54
@@ -5799,7 +5799,7 @@
     "why": "As the first row of 48088896 (5870,1856)."
    },
    {
-    "type": 355,
+    "type": 351,
     "cell": [
      29,
      70
@@ -5808,7 +5808,7 @@
     "why": "As the first row of 48088896 (5870,1856)."
    },
    {
-    "type": 356,
+    "type": 352,
     "cell": [
      50,
      74
@@ -5817,7 +5817,7 @@
     "why": "As the first row of 48088896 (5870,1856)."
    },
    {
-    "type": 357,
+    "type": 353,
     "cell": [
      15,
      84
@@ -5826,7 +5826,7 @@
     "why": "As the first row of 48088896 (5870,1856)."
    },
    {
-    "type": 358,
+    "type": 354,
     "cell": [
      39,
      95
@@ -5835,7 +5835,7 @@
     "why": "As the first row of 48088896 (5870,1856)."
    },
    {
-    "type": 359,
+    "type": 355,
     "cell": [
      25,
      104
@@ -5900,7 +5900,7 @@
     "why": "As the first row of 48187378 (5882,2034)."
    },
    {
-    "type": 368,
+    "type": 370,
     "cell": [
      39,
      95
@@ -5909,7 +5909,7 @@
     "why": "As the first row of 48187378 (5882,2034)."
    },
    {
-    "type": 369,
+    "type": 371,
     "cell": [
      25,
      104
@@ -5920,7 +5920,7 @@
   ],
   "48195570": [
    {
-    "type": 370,
+    "type": 362,
     "cell": [
      20,
      34
@@ -5929,7 +5929,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь ДСР» (93 on 5883,2035, and its chief's place 91 on 5882,2036) on the neighbour cell 5883,2034 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 371,
+    "type": 363,
     "cell": [
      35,
      44
@@ -5938,7 +5938,7 @@
     "why": "As the first row of 48195570 (5883,2034)."
    },
    {
-    "type": 372,
+    "type": 364,
     "cell": [
      20,
      54
@@ -5947,7 +5947,7 @@
     "why": "As the first row of 48195570 (5883,2034)."
    },
    {
-    "type": 373,
+    "type": 365,
     "cell": [
      29,
      70
@@ -5956,7 +5956,7 @@
     "why": "As the first row of 48195570 (5883,2034)."
    },
    {
-    "type": 362,
+    "type": 366,
     "cell": [
      50,
      74
@@ -5965,7 +5965,7 @@
     "why": "As the first row of 48195570 (5883,2034)."
    },
    {
-    "type": 363,
+    "type": 367,
     "cell": [
      15,
      84
@@ -5974,7 +5974,7 @@
     "why": "As the first row of 48195570 (5883,2034)."
    },
    {
-    "type": 364,
+    "type": 370,
     "cell": [
      39,
      95
@@ -5983,7 +5983,7 @@
     "why": "As the first row of 48195570 (5883,2034)."
    },
    {
-    "type": 365,
+    "type": 371,
     "cell": [
      25,
      104
@@ -5994,7 +5994,7 @@
   ],
   "48203762": [
    {
-    "type": 366,
+    "type": 362,
     "cell": [
      20,
      34
@@ -6003,7 +6003,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь ДСР» (93 on 5883,2035, and its chief's place 91 on 5882,2036) on the neighbour cell 5884,2034 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 367,
+    "type": 363,
     "cell": [
      35,
      44
@@ -6012,7 +6012,7 @@
     "why": "As the first row of 48203762 (5884,2034)."
    },
    {
-    "type": 368,
+    "type": 364,
     "cell": [
      20,
      54
@@ -6021,7 +6021,7 @@
     "why": "As the first row of 48203762 (5884,2034)."
    },
    {
-    "type": 369,
+    "type": 365,
     "cell": [
      29,
      70
@@ -6030,7 +6030,7 @@
     "why": "As the first row of 48203762 (5884,2034)."
    },
    {
-    "type": 370,
+    "type": 366,
     "cell": [
      50,
      74
@@ -6039,7 +6039,7 @@
     "why": "As the first row of 48203762 (5884,2034)."
    },
    {
-    "type": 371,
+    "type": 367,
     "cell": [
      15,
      84
@@ -6048,7 +6048,7 @@
     "why": "As the first row of 48203762 (5884,2034)."
    },
    {
-    "type": 372,
+    "type": 370,
     "cell": [
      39,
      95
@@ -6057,7 +6057,7 @@
     "why": "As the first row of 48203762 (5884,2034)."
    },
    {
-    "type": 373,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6122,7 +6122,7 @@
     "why": "As the first row of 48179187 (5881,2035)."
    },
    {
-    "type": 368,
+    "type": 370,
     "cell": [
      39,
      95
@@ -6131,7 +6131,7 @@
     "why": "As the first row of 48179187 (5881,2035)."
    },
    {
-    "type": 369,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6142,7 +6142,7 @@
   ],
   "48187379": [
    {
-    "type": 370,
+    "type": 362,
     "cell": [
      20,
      34
@@ -6151,7 +6151,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь ДСР» (93 on 5883,2035, and its chief's place 91 on 5882,2036) on the neighbour cell 5882,2035 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 371,
+    "type": 363,
     "cell": [
      35,
      44
@@ -6160,7 +6160,7 @@
     "why": "As the first row of 48187379 (5882,2035)."
    },
    {
-    "type": 372,
+    "type": 364,
     "cell": [
      20,
      54
@@ -6169,7 +6169,7 @@
     "why": "As the first row of 48187379 (5882,2035)."
    },
    {
-    "type": 373,
+    "type": 365,
     "cell": [
      29,
      70
@@ -6178,7 +6178,7 @@
     "why": "As the first row of 48187379 (5882,2035)."
    },
    {
-    "type": 362,
+    "type": 366,
     "cell": [
      50,
      74
@@ -6187,7 +6187,7 @@
     "why": "As the first row of 48187379 (5882,2035)."
    },
    {
-    "type": 363,
+    "type": 367,
     "cell": [
      15,
      84
@@ -6196,7 +6196,7 @@
     "why": "As the first row of 48187379 (5882,2035)."
    },
    {
-    "type": 364,
+    "type": 370,
     "cell": [
      39,
      95
@@ -6205,7 +6205,7 @@
     "why": "As the first row of 48187379 (5882,2035)."
    },
    {
-    "type": 365,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6216,7 +6216,7 @@
   ],
   "48203763": [
    {
-    "type": 366,
+    "type": 362,
     "cell": [
      20,
      34
@@ -6225,7 +6225,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь ДСР» (93 on 5883,2035, and its chief's place 91 on 5882,2036) on the neighbour cell 5884,2035 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 367,
+    "type": 363,
     "cell": [
      35,
      44
@@ -6234,7 +6234,7 @@
     "why": "As the first row of 48203763 (5884,2035)."
    },
    {
-    "type": 368,
+    "type": 364,
     "cell": [
      20,
      54
@@ -6243,7 +6243,7 @@
     "why": "As the first row of 48203763 (5884,2035)."
    },
    {
-    "type": 369,
+    "type": 365,
     "cell": [
      29,
      70
@@ -6252,7 +6252,7 @@
     "why": "As the first row of 48203763 (5884,2035)."
    },
    {
-    "type": 370,
+    "type": 366,
     "cell": [
      50,
      74
@@ -6261,7 +6261,7 @@
     "why": "As the first row of 48203763 (5884,2035)."
    },
    {
-    "type": 371,
+    "type": 367,
     "cell": [
      15,
      84
@@ -6270,7 +6270,7 @@
     "why": "As the first row of 48203763 (5884,2035)."
    },
    {
-    "type": 372,
+    "type": 370,
     "cell": [
      39,
      93
@@ -6279,7 +6279,7 @@
     "why": "As the first row of 48203763 (5884,2035)."
    },
    {
-    "type": 373,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6344,7 +6344,7 @@
     "why": "As the first row of 48179188 (5881,2036)."
    },
    {
-    "type": 368,
+    "type": 370,
     "cell": [
      39,
      95
@@ -6353,7 +6353,7 @@
     "why": "As the first row of 48179188 (5881,2036)."
    },
    {
-    "type": 369,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6364,7 +6364,7 @@
   ],
   "48195572": [
    {
-    "type": 370,
+    "type": 362,
     "cell": [
      20,
      34
@@ -6373,7 +6373,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь ДСР» (93 on 5883,2035, and its chief's place 91 on 5882,2036) on the neighbour cell 5883,2036 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 371,
+    "type": 363,
     "cell": [
      35,
      44
@@ -6382,7 +6382,7 @@
     "why": "As the first row of 48195572 (5883,2036)."
    },
    {
-    "type": 372,
+    "type": 364,
     "cell": [
      20,
      54
@@ -6391,7 +6391,7 @@
     "why": "As the first row of 48195572 (5883,2036)."
    },
    {
-    "type": 373,
+    "type": 365,
     "cell": [
      29,
      70
@@ -6400,7 +6400,7 @@
     "why": "As the first row of 48195572 (5883,2036)."
    },
    {
-    "type": 362,
+    "type": 366,
     "cell": [
      50,
      74
@@ -6409,7 +6409,7 @@
     "why": "As the first row of 48195572 (5883,2036)."
    },
    {
-    "type": 363,
+    "type": 367,
     "cell": [
      15,
      84
@@ -6418,7 +6418,7 @@
     "why": "As the first row of 48195572 (5883,2036)."
    },
    {
-    "type": 364,
+    "type": 370,
     "cell": [
      39,
      93
@@ -6427,7 +6427,7 @@
     "why": "As the first row of 48195572 (5883,2036)."
    },
    {
-    "type": 365,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6438,7 +6438,7 @@
   ],
   "48203764": [
    {
-    "type": 366,
+    "type": 362,
     "cell": [
      20,
      34
@@ -6447,7 +6447,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь ДСР» (93 on 5883,2035, and its chief's place 91 on 5882,2036) on the neighbour cell 5884,2036 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 367,
+    "type": 363,
     "cell": [
      35,
      44
@@ -6456,7 +6456,7 @@
     "why": "As the first row of 48203764 (5884,2036)."
    },
    {
-    "type": 368,
+    "type": 364,
     "cell": [
      20,
      54
@@ -6465,7 +6465,7 @@
     "why": "As the first row of 48203764 (5884,2036)."
    },
    {
-    "type": 369,
+    "type": 365,
     "cell": [
      29,
      70
@@ -6474,7 +6474,7 @@
     "why": "As the first row of 48203764 (5884,2036)."
    },
    {
-    "type": 370,
+    "type": 366,
     "cell": [
      50,
      74
@@ -6483,7 +6483,7 @@
     "why": "As the first row of 48203764 (5884,2036)."
    },
    {
-    "type": 371,
+    "type": 367,
     "cell": [
      15,
      84
@@ -6492,7 +6492,7 @@
     "why": "As the first row of 48203764 (5884,2036)."
    },
    {
-    "type": 372,
+    "type": 370,
     "cell": [
      39,
      95
@@ -6501,7 +6501,7 @@
     "why": "As the first row of 48203764 (5884,2036)."
    },
    {
-    "type": 373,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6566,7 +6566,7 @@
     "why": "As the first row of 48179189 (5881,2037)."
    },
    {
-    "type": 368,
+    "type": 370,
     "cell": [
      39,
      95
@@ -6575,7 +6575,7 @@
     "why": "As the first row of 48179189 (5881,2037)."
    },
    {
-    "type": 369,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6586,7 +6586,7 @@
   ],
   "48187381": [
    {
-    "type": 370,
+    "type": 362,
     "cell": [
      20,
      34
@@ -6595,7 +6595,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь ДСР» (93 on 5883,2035, and its chief's place 91 on 5882,2036) on the neighbour cell 5882,2037 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 371,
+    "type": 363,
     "cell": [
      35,
      44
@@ -6604,7 +6604,7 @@
     "why": "As the first row of 48187381 (5882,2037)."
    },
    {
-    "type": 372,
+    "type": 364,
     "cell": [
      20,
      54
@@ -6613,7 +6613,7 @@
     "why": "As the first row of 48187381 (5882,2037)."
    },
    {
-    "type": 373,
+    "type": 365,
     "cell": [
      29,
      70
@@ -6622,7 +6622,7 @@
     "why": "As the first row of 48187381 (5882,2037)."
    },
    {
-    "type": 362,
+    "type": 366,
     "cell": [
      50,
      74
@@ -6631,7 +6631,7 @@
     "why": "As the first row of 48187381 (5882,2037)."
    },
    {
-    "type": 363,
+    "type": 367,
     "cell": [
      15,
      84
@@ -6640,7 +6640,7 @@
     "why": "As the first row of 48187381 (5882,2037)."
    },
    {
-    "type": 364,
+    "type": 370,
     "cell": [
      39,
      93
@@ -6649,7 +6649,7 @@
     "why": "As the first row of 48187381 (5882,2037)."
    },
    {
-    "type": 365,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6660,7 +6660,7 @@
   ],
   "48195573": [
    {
-    "type": 366,
+    "type": 362,
     "cell": [
      20,
      34
@@ -6669,7 +6669,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь ДСР» (93 on 5883,2035, and its chief's place 91 on 5882,2036) on the neighbour cell 5883,2037 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 367,
+    "type": 363,
     "cell": [
      35,
      44
@@ -6678,7 +6678,7 @@
     "why": "As the first row of 48195573 (5883,2037)."
    },
    {
-    "type": 368,
+    "type": 364,
     "cell": [
      20,
      54
@@ -6687,7 +6687,7 @@
     "why": "As the first row of 48195573 (5883,2037)."
    },
    {
-    "type": 369,
+    "type": 365,
     "cell": [
      29,
      70
@@ -6696,7 +6696,7 @@
     "why": "As the first row of 48195573 (5883,2037)."
    },
    {
-    "type": 370,
+    "type": 366,
     "cell": [
      50,
      74
@@ -6705,7 +6705,7 @@
     "why": "As the first row of 48195573 (5883,2037)."
    },
    {
-    "type": 371,
+    "type": 367,
     "cell": [
      15,
      84
@@ -6714,7 +6714,7 @@
     "why": "As the first row of 48195573 (5883,2037)."
    },
    {
-    "type": 372,
+    "type": 370,
     "cell": [
      39,
      95
@@ -6723,7 +6723,7 @@
     "why": "As the first row of 48195573 (5883,2037)."
    },
    {
-    "type": 373,
+    "type": 371,
     "cell": [
      25,
      104
@@ -6779,7 +6779,7 @@
     "why": "As the first row of 48490457 (5919,2009)."
    },
    {
-    "type": 400,
+    "type": 401,
     "cell": [
      15,
      84
@@ -6788,7 +6788,7 @@
     "why": "As the first row of 48490457 (5919,2009)."
    },
    {
-    "type": 401,
+    "type": 403,
     "cell": [
      39,
      95
@@ -6797,7 +6797,7 @@
     "why": "As the first row of 48490457 (5919,2009)."
    },
    {
-    "type": 402,
+    "type": 405,
     "cell": [
      25,
      104
@@ -6808,7 +6808,7 @@
   ],
   "48498649": [
    {
-    "type": 403,
+    "type": 395,
     "cell": [
      20,
      34
@@ -6817,7 +6817,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Миротворцев» (98 on 5921,2011, and its chief's place 99 on 5920,2010) on the neighbour cell 5920,2009 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 404,
+    "type": 396,
     "cell": [
      35,
      44
@@ -6826,7 +6826,7 @@
     "why": "As the first row of 48498649 (5920,2009)."
    },
    {
-    "type": 405,
+    "type": 397,
     "cell": [
      20,
      54
@@ -6835,7 +6835,7 @@
     "why": "As the first row of 48498649 (5920,2009)."
    },
    {
-    "type": 406,
+    "type": 398,
     "cell": [
      29,
      70
@@ -6844,7 +6844,7 @@
     "why": "As the first row of 48498649 (5920,2009)."
    },
    {
-    "type": 395,
+    "type": 399,
     "cell": [
      50,
      74
@@ -6853,7 +6853,7 @@
     "why": "As the first row of 48498649 (5920,2009)."
    },
    {
-    "type": 396,
+    "type": 401,
     "cell": [
      15,
      84
@@ -6862,7 +6862,7 @@
     "why": "As the first row of 48498649 (5920,2009)."
    },
    {
-    "type": 397,
+    "type": 403,
     "cell": [
      39,
      95
@@ -6871,7 +6871,7 @@
     "why": "As the first row of 48498649 (5920,2009)."
    },
    {
-    "type": 398,
+    "type": 405,
     "cell": [
      25,
      104
@@ -6882,7 +6882,7 @@
   ],
   "48506841": [
    {
-    "type": 399,
+    "type": 395,
     "cell": [
      20,
      34
@@ -6891,7 +6891,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Миротворцев» (98 on 5921,2011, and its chief's place 99 on 5920,2010) on the neighbour cell 5921,2009 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 400,
+    "type": 396,
     "cell": [
      35,
      44
@@ -6900,7 +6900,7 @@
     "why": "As the first row of 48506841 (5921,2009)."
    },
    {
-    "type": 401,
+    "type": 397,
     "cell": [
      20,
      54
@@ -6909,7 +6909,7 @@
     "why": "As the first row of 48506841 (5921,2009)."
    },
    {
-    "type": 402,
+    "type": 398,
     "cell": [
      29,
      70
@@ -6918,7 +6918,7 @@
     "why": "As the first row of 48506841 (5921,2009)."
    },
    {
-    "type": 403,
+    "type": 399,
     "cell": [
      50,
      74
@@ -6927,7 +6927,7 @@
     "why": "As the first row of 48506841 (5921,2009)."
    },
    {
-    "type": 404,
+    "type": 401,
     "cell": [
      15,
      84
@@ -6936,7 +6936,7 @@
     "why": "As the first row of 48506841 (5921,2009)."
    },
    {
-    "type": 405,
+    "type": 403,
     "cell": [
      39,
      95
@@ -6945,7 +6945,7 @@
     "why": "As the first row of 48506841 (5921,2009)."
    },
    {
-    "type": 406,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7001,7 +7001,7 @@
     "why": "As the first row of 48490458 (5919,2010)."
    },
    {
-    "type": 400,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7010,7 +7010,7 @@
     "why": "As the first row of 48490458 (5919,2010)."
    },
    {
-    "type": 401,
+    "type": 403,
     "cell": [
      39,
      95
@@ -7019,7 +7019,7 @@
     "why": "As the first row of 48490458 (5919,2010)."
    },
    {
-    "type": 402,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7030,7 +7030,7 @@
   ],
   "48506842": [
    {
-    "type": 403,
+    "type": 395,
     "cell": [
      20,
      34
@@ -7039,7 +7039,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Миротворцев» (98 on 5921,2011, and its chief's place 99 on 5920,2010) on the neighbour cell 5921,2010 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 404,
+    "type": 396,
     "cell": [
      35,
      44
@@ -7048,7 +7048,7 @@
     "why": "As the first row of 48506842 (5921,2010)."
    },
    {
-    "type": 405,
+    "type": 397,
     "cell": [
      20,
      54
@@ -7057,7 +7057,7 @@
     "why": "As the first row of 48506842 (5921,2010)."
    },
    {
-    "type": 406,
+    "type": 398,
     "cell": [
      29,
      70
@@ -7066,7 +7066,7 @@
     "why": "As the first row of 48506842 (5921,2010)."
    },
    {
-    "type": 395,
+    "type": 399,
     "cell": [
      50,
      74
@@ -7075,7 +7075,7 @@
     "why": "As the first row of 48506842 (5921,2010)."
    },
    {
-    "type": 396,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7084,7 +7084,7 @@
     "why": "As the first row of 48506842 (5921,2010)."
    },
    {
-    "type": 397,
+    "type": 403,
     "cell": [
      39,
      93
@@ -7093,7 +7093,7 @@
     "why": "As the first row of 48506842 (5921,2010)."
    },
    {
-    "type": 398,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7104,7 +7104,7 @@
   ],
   "48515034": [
    {
-    "type": 399,
+    "type": 395,
     "cell": [
      20,
      34
@@ -7113,7 +7113,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Миротворцев» (98 on 5921,2011, and its chief's place 99 on 5920,2010) on the neighbour cell 5922,2010 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 400,
+    "type": 396,
     "cell": [
      35,
      44
@@ -7122,7 +7122,7 @@
     "why": "As the first row of 48515034 (5922,2010)."
    },
    {
-    "type": 401,
+    "type": 397,
     "cell": [
      20,
      54
@@ -7131,7 +7131,7 @@
     "why": "As the first row of 48515034 (5922,2010)."
    },
    {
-    "type": 402,
+    "type": 398,
     "cell": [
      29,
      70
@@ -7140,7 +7140,7 @@
     "why": "As the first row of 48515034 (5922,2010)."
    },
    {
-    "type": 403,
+    "type": 399,
     "cell": [
      50,
      74
@@ -7149,7 +7149,7 @@
     "why": "As the first row of 48515034 (5922,2010)."
    },
    {
-    "type": 404,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7158,7 +7158,7 @@
     "why": "As the first row of 48515034 (5922,2010)."
    },
    {
-    "type": 405,
+    "type": 403,
     "cell": [
      39,
      95
@@ -7167,7 +7167,7 @@
     "why": "As the first row of 48515034 (5922,2010)."
    },
    {
-    "type": 406,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7223,7 +7223,7 @@
     "why": "As the first row of 48490459 (5919,2011)."
    },
    {
-    "type": 400,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7232,7 +7232,7 @@
     "why": "As the first row of 48490459 (5919,2011)."
    },
    {
-    "type": 401,
+    "type": 403,
     "cell": [
      39,
      95
@@ -7241,7 +7241,7 @@
     "why": "As the first row of 48490459 (5919,2011)."
    },
    {
-    "type": 402,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7252,7 +7252,7 @@
   ],
   "48498651": [
    {
-    "type": 403,
+    "type": 395,
     "cell": [
      20,
      34
@@ -7261,7 +7261,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Миротворцев» (98 on 5921,2011, and its chief's place 99 on 5920,2010) on the neighbour cell 5920,2011 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 404,
+    "type": 396,
     "cell": [
      35,
      44
@@ -7270,7 +7270,7 @@
     "why": "As the first row of 48498651 (5920,2011)."
    },
    {
-    "type": 405,
+    "type": 397,
     "cell": [
      20,
      54
@@ -7279,7 +7279,7 @@
     "why": "As the first row of 48498651 (5920,2011)."
    },
    {
-    "type": 406,
+    "type": 398,
     "cell": [
      29,
      70
@@ -7288,7 +7288,7 @@
     "why": "As the first row of 48498651 (5920,2011)."
    },
    {
-    "type": 395,
+    "type": 399,
     "cell": [
      50,
      74
@@ -7297,7 +7297,7 @@
     "why": "As the first row of 48498651 (5920,2011)."
    },
    {
-    "type": 396,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7306,7 +7306,7 @@
     "why": "As the first row of 48498651 (5920,2011)."
    },
    {
-    "type": 397,
+    "type": 403,
     "cell": [
      39,
      93
@@ -7315,7 +7315,7 @@
     "why": "As the first row of 48498651 (5920,2011)."
    },
    {
-    "type": 398,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7326,7 +7326,7 @@
   ],
   "48515035": [
    {
-    "type": 399,
+    "type": 395,
     "cell": [
      20,
      34
@@ -7335,7 +7335,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Миротворцев» (98 on 5921,2011, and its chief's place 99 on 5920,2010) on the neighbour cell 5922,2011 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 400,
+    "type": 396,
     "cell": [
      35,
      44
@@ -7344,7 +7344,7 @@
     "why": "As the first row of 48515035 (5922,2011)."
    },
    {
-    "type": 401,
+    "type": 397,
     "cell": [
      20,
      54
@@ -7353,7 +7353,7 @@
     "why": "As the first row of 48515035 (5922,2011)."
    },
    {
-    "type": 402,
+    "type": 398,
     "cell": [
      29,
      70
@@ -7362,7 +7362,7 @@
     "why": "As the first row of 48515035 (5922,2011)."
    },
    {
-    "type": 403,
+    "type": 399,
     "cell": [
      50,
      74
@@ -7371,7 +7371,7 @@
     "why": "As the first row of 48515035 (5922,2011)."
    },
    {
-    "type": 404,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7380,7 +7380,7 @@
     "why": "As the first row of 48515035 (5922,2011)."
    },
    {
-    "type": 405,
+    "type": 403,
     "cell": [
      39,
      95
@@ -7389,7 +7389,7 @@
     "why": "As the first row of 48515035 (5922,2011)."
    },
    {
-    "type": 406,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7445,7 +7445,7 @@
     "why": "As the first row of 48498652 (5920,2012)."
    },
    {
-    "type": 400,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7454,7 +7454,7 @@
     "why": "As the first row of 48498652 (5920,2012)."
    },
    {
-    "type": 401,
+    "type": 403,
     "cell": [
      39,
      95
@@ -7463,7 +7463,7 @@
     "why": "As the first row of 48498652 (5920,2012)."
    },
    {
-    "type": 402,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7474,7 +7474,7 @@
   ],
   "48506844": [
    {
-    "type": 403,
+    "type": 395,
     "cell": [
      20,
      34
@@ -7483,7 +7483,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Миротворцев» (98 on 5921,2011, and its chief's place 99 on 5920,2010) on the neighbour cell 5921,2012 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 404,
+    "type": 396,
     "cell": [
      35,
      44
@@ -7492,7 +7492,7 @@
     "why": "As the first row of 48506844 (5921,2012)."
    },
    {
-    "type": 405,
+    "type": 397,
     "cell": [
      20,
      54
@@ -7501,7 +7501,7 @@
     "why": "As the first row of 48506844 (5921,2012)."
    },
    {
-    "type": 406,
+    "type": 398,
     "cell": [
      29,
      70
@@ -7510,7 +7510,7 @@
     "why": "As the first row of 48506844 (5921,2012)."
    },
    {
-    "type": 395,
+    "type": 399,
     "cell": [
      50,
      74
@@ -7519,7 +7519,7 @@
     "why": "As the first row of 48506844 (5921,2012)."
    },
    {
-    "type": 396,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7528,7 +7528,7 @@
     "why": "As the first row of 48506844 (5921,2012)."
    },
    {
-    "type": 397,
+    "type": 403,
     "cell": [
      39,
      95
@@ -7537,7 +7537,7 @@
     "why": "As the first row of 48506844 (5921,2012)."
    },
    {
-    "type": 398,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7548,7 +7548,7 @@
   ],
   "48515036": [
    {
-    "type": 399,
+    "type": 395,
     "cell": [
      20,
      34
@@ -7557,7 +7557,7 @@
     "why": "DESIGNED, the owner's (2026-10-13): «и потом сделай донголу тоже», the camps and their surroundings as Абри's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Миротворцев» (98 on 5921,2011, and its chief's place 99 on 5920,2010) on the neighbour cell 5922,2012 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 400,
+    "type": 396,
     "cell": [
      35,
      44
@@ -7566,7 +7566,7 @@
     "why": "As the first row of 48515036 (5922,2012)."
    },
    {
-    "type": 401,
+    "type": 397,
     "cell": [
      20,
      54
@@ -7575,7 +7575,7 @@
     "why": "As the first row of 48515036 (5922,2012)."
    },
    {
-    "type": 402,
+    "type": 398,
     "cell": [
      29,
      70
@@ -7584,7 +7584,7 @@
     "why": "As the first row of 48515036 (5922,2012)."
    },
    {
-    "type": 403,
+    "type": 399,
     "cell": [
      50,
      74
@@ -7593,7 +7593,7 @@
     "why": "As the first row of 48515036 (5922,2012)."
    },
    {
-    "type": 404,
+    "type": 401,
     "cell": [
      15,
      84
@@ -7602,7 +7602,7 @@
     "why": "As the first row of 48515036 (5922,2012)."
    },
    {
-    "type": 405,
+    "type": 403,
     "cell": [
      39,
      95
@@ -7611,7 +7611,7 @@
     "why": "As the first row of 48515036 (5922,2012)."
    },
    {
-    "type": 406,
+    "type": 405,
     "cell": [
      25,
      104
@@ -7667,7 +7667,7 @@
     "why": "As the first row of 50464692 (6160,1972)."
    },
    {
-    "type": 770,
+    "type": 771,
     "cell": [
      15,
      84
@@ -7676,7 +7676,7 @@
     "why": "As the first row of 50464692 (6160,1972)."
    },
    {
-    "type": 771,
+    "type": 772,
     "cell": [
      39,
      95
@@ -7685,7 +7685,7 @@
     "why": "As the first row of 50464692 (6160,1972)."
    },
    {
-    "type": 772,
+    "type": 773,
     "cell": [
      25,
      104
@@ -7696,7 +7696,7 @@
   ],
   "50472884": [
    {
-    "type": 773,
+    "type": 775,
     "cell": [
      20,
      34
@@ -7705,7 +7705,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6161,1972 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 774,
+    "type": 765,
     "cell": [
      35,
      44
@@ -7714,7 +7714,7 @@
     "why": "As the first row of 50472884 (6161,1972)."
    },
    {
-    "type": 775,
+    "type": 766,
     "cell": [
      20,
      54
@@ -7723,7 +7723,7 @@
     "why": "As the first row of 50472884 (6161,1972)."
    },
    {
-    "type": 776,
+    "type": 767,
     "cell": [
      29,
      70
@@ -7732,7 +7732,7 @@
     "why": "As the first row of 50472884 (6161,1972)."
    },
    {
-    "type": 765,
+    "type": 768,
     "cell": [
      50,
      74
@@ -7741,7 +7741,7 @@
     "why": "As the first row of 50472884 (6161,1972)."
    },
    {
-    "type": 766,
+    "type": 769,
     "cell": [
      15,
      84
@@ -7750,7 +7750,7 @@
     "why": "As the first row of 50472884 (6161,1972)."
    },
    {
-    "type": 767,
+    "type": 771,
     "cell": [
      39,
      95
@@ -7759,7 +7759,7 @@
     "why": "As the first row of 50472884 (6161,1972)."
    },
    {
-    "type": 768,
+    "type": 772,
     "cell": [
      25,
      104
@@ -7770,7 +7770,7 @@
   ],
   "50481076": [
    {
-    "type": 769,
+    "type": 773,
     "cell": [
      20,
      34
@@ -7779,7 +7779,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6162,1972 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 770,
+    "type": 775,
     "cell": [
      35,
      44
@@ -7788,7 +7788,7 @@
     "why": "As the first row of 50481076 (6162,1972)."
    },
    {
-    "type": 771,
+    "type": 765,
     "cell": [
      20,
      54
@@ -7797,7 +7797,7 @@
     "why": "As the first row of 50481076 (6162,1972)."
    },
    {
-    "type": 772,
+    "type": 766,
     "cell": [
      29,
      70
@@ -7806,7 +7806,7 @@
     "why": "As the first row of 50481076 (6162,1972)."
    },
    {
-    "type": 773,
+    "type": 767,
     "cell": [
      50,
      74
@@ -7815,7 +7815,7 @@
     "why": "As the first row of 50481076 (6162,1972)."
    },
    {
-    "type": 774,
+    "type": 768,
     "cell": [
      15,
      84
@@ -7824,7 +7824,7 @@
     "why": "As the first row of 50481076 (6162,1972)."
    },
    {
-    "type": 775,
+    "type": 769,
     "cell": [
      39,
      95
@@ -7833,7 +7833,7 @@
     "why": "As the first row of 50481076 (6162,1972)."
    },
    {
-    "type": 776,
+    "type": 771,
     "cell": [
      25,
      104
@@ -7844,7 +7844,7 @@
   ],
   "50464693": [
    {
-    "type": 765,
+    "type": 772,
     "cell": [
      20,
      34
@@ -7853,7 +7853,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6160,1973 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 766,
+    "type": 773,
     "cell": [
      35,
      44
@@ -7862,7 +7862,7 @@
     "why": "As the first row of 50464693 (6160,1973)."
    },
    {
-    "type": 767,
+    "type": 775,
     "cell": [
      20,
      54
@@ -7871,7 +7871,7 @@
     "why": "As the first row of 50464693 (6160,1973)."
    },
    {
-    "type": 768,
+    "type": 765,
     "cell": [
      29,
      70
@@ -7880,7 +7880,7 @@
     "why": "As the first row of 50464693 (6160,1973)."
    },
    {
-    "type": 769,
+    "type": 766,
     "cell": [
      50,
      74
@@ -7889,7 +7889,7 @@
     "why": "As the first row of 50464693 (6160,1973)."
    },
    {
-    "type": 770,
+    "type": 767,
     "cell": [
      15,
      84
@@ -7898,7 +7898,7 @@
     "why": "As the first row of 50464693 (6160,1973)."
    },
    {
-    "type": 771,
+    "type": 768,
     "cell": [
      39,
      95
@@ -7907,7 +7907,7 @@
     "why": "As the first row of 50464693 (6160,1973)."
    },
    {
-    "type": 772,
+    "type": 769,
     "cell": [
      25,
      104
@@ -7918,7 +7918,7 @@
   ],
   "50481077": [
    {
-    "type": 773,
+    "type": 771,
     "cell": [
      20,
      34
@@ -7927,7 +7927,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6162,1973 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 774,
+    "type": 772,
     "cell": [
      35,
      44
@@ -7936,7 +7936,7 @@
     "why": "As the first row of 50481077 (6162,1973)."
    },
    {
-    "type": 775,
+    "type": 773,
     "cell": [
      20,
      54
@@ -7945,7 +7945,7 @@
     "why": "As the first row of 50481077 (6162,1973)."
    },
    {
-    "type": 776,
+    "type": 775,
     "cell": [
      29,
      70
@@ -8001,7 +8001,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6159,1974 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 770,
+    "type": 771,
     "cell": [
      35,
      44
@@ -8010,7 +8010,7 @@
     "why": "As the first row of 50456502 (6159,1974)."
    },
    {
-    "type": 771,
+    "type": 772,
     "cell": [
      20,
      54
@@ -8019,7 +8019,7 @@
     "why": "As the first row of 50456502 (6159,1974)."
    },
    {
-    "type": 772,
+    "type": 773,
     "cell": [
      29,
      70
@@ -8028,7 +8028,7 @@
     "why": "As the first row of 50456502 (6159,1974)."
    },
    {
-    "type": 773,
+    "type": 775,
     "cell": [
      50,
      74
@@ -8037,7 +8037,7 @@
     "why": "As the first row of 50456502 (6159,1974)."
    },
    {
-    "type": 774,
+    "type": 765,
     "cell": [
      15,
      84
@@ -8046,7 +8046,7 @@
     "why": "As the first row of 50456502 (6159,1974)."
    },
    {
-    "type": 775,
+    "type": 766,
     "cell": [
      39,
      95
@@ -8055,7 +8055,7 @@
     "why": "As the first row of 50456502 (6159,1974)."
    },
    {
-    "type": 776,
+    "type": 767,
     "cell": [
      25,
      104
@@ -8066,7 +8066,7 @@
   ],
   "50464694": [
    {
-    "type": 765,
+    "type": 768,
     "cell": [
      20,
      34
@@ -8075,7 +8075,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6160,1974 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 766,
+    "type": 769,
     "cell": [
      35,
      44
@@ -8084,7 +8084,7 @@
     "why": "As the first row of 50464694 (6160,1974)."
    },
    {
-    "type": 767,
+    "type": 771,
     "cell": [
      20,
      54
@@ -8093,7 +8093,7 @@
     "why": "As the first row of 50464694 (6160,1974)."
    },
    {
-    "type": 768,
+    "type": 772,
     "cell": [
      29,
      70
@@ -8102,7 +8102,7 @@
     "why": "As the first row of 50464694 (6160,1974)."
    },
    {
-    "type": 769,
+    "type": 773,
     "cell": [
      50,
      74
@@ -8111,7 +8111,7 @@
     "why": "As the first row of 50464694 (6160,1974)."
    },
    {
-    "type": 770,
+    "type": 775,
     "cell": [
      15,
      84
@@ -8120,7 +8120,7 @@
     "why": "As the first row of 50464694 (6160,1974)."
    },
    {
-    "type": 771,
+    "type": 765,
     "cell": [
      39,
      95
@@ -8129,7 +8129,7 @@
     "why": "As the first row of 50464694 (6160,1974)."
    },
    {
-    "type": 772,
+    "type": 766,
     "cell": [
      25,
      104
@@ -8140,7 +8140,7 @@
   ],
   "50472886": [
    {
-    "type": 773,
+    "type": 767,
     "cell": [
      20,
      34
@@ -8149,7 +8149,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6161,1974 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 774,
+    "type": 768,
     "cell": [
      35,
      44
@@ -8158,7 +8158,7 @@
     "why": "As the first row of 50472886 (6161,1974)."
    },
    {
-    "type": 775,
+    "type": 769,
     "cell": [
      20,
      54
@@ -8167,7 +8167,7 @@
     "why": "As the first row of 50472886 (6161,1974)."
    },
    {
-    "type": 776,
+    "type": 771,
     "cell": [
      29,
      70
@@ -8176,7 +8176,7 @@
     "why": "As the first row of 50472886 (6161,1974)."
    },
    {
-    "type": 765,
+    "type": 772,
     "cell": [
      50,
      74
@@ -8185,7 +8185,7 @@
     "why": "As the first row of 50472886 (6161,1974)."
    },
    {
-    "type": 766,
+    "type": 773,
     "cell": [
      15,
      84
@@ -8194,7 +8194,7 @@
     "why": "As the first row of 50472886 (6161,1974)."
    },
    {
-    "type": 767,
+    "type": 775,
     "cell": [
      39,
      93
@@ -8203,7 +8203,7 @@
     "why": "As the first row of 50472886 (6161,1974)."
    },
    {
-    "type": 768,
+    "type": 765,
     "cell": [
      25,
      104
@@ -8214,7 +8214,7 @@
   ],
   "50481078": [
    {
-    "type": 769,
+    "type": 766,
     "cell": [
      20,
      34
@@ -8223,7 +8223,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6162,1974 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 770,
+    "type": 767,
     "cell": [
      35,
      44
@@ -8232,7 +8232,7 @@
     "why": "As the first row of 50481078 (6162,1974)."
    },
    {
-    "type": 771,
+    "type": 768,
     "cell": [
      20,
      54
@@ -8241,7 +8241,7 @@
     "why": "As the first row of 50481078 (6162,1974)."
    },
    {
-    "type": 772,
+    "type": 769,
     "cell": [
      29,
      70
@@ -8250,7 +8250,7 @@
     "why": "As the first row of 50481078 (6162,1974)."
    },
    {
-    "type": 773,
+    "type": 771,
     "cell": [
      50,
      74
@@ -8259,7 +8259,7 @@
     "why": "As the first row of 50481078 (6162,1974)."
    },
    {
-    "type": 774,
+    "type": 772,
     "cell": [
      15,
      84
@@ -8268,7 +8268,7 @@
     "why": "As the first row of 50481078 (6162,1974)."
    },
    {
-    "type": 775,
+    "type": 773,
     "cell": [
      39,
      95
@@ -8277,7 +8277,7 @@
     "why": "As the first row of 50481078 (6162,1974)."
    },
    {
-    "type": 776,
+    "type": 775,
     "cell": [
      25,
      104
@@ -8333,7 +8333,7 @@
     "why": "As the first row of 50456503 (6159,1975)."
    },
    {
-    "type": 770,
+    "type": 771,
     "cell": [
      15,
      84
@@ -8342,7 +8342,7 @@
     "why": "As the first row of 50456503 (6159,1975)."
    },
    {
-    "type": 771,
+    "type": 772,
     "cell": [
      39,
      95
@@ -8351,7 +8351,7 @@
     "why": "As the first row of 50456503 (6159,1975)."
    },
    {
-    "type": 772,
+    "type": 773,
     "cell": [
      25,
      104
@@ -8362,7 +8362,7 @@
   ],
   "50472887": [
    {
-    "type": 773,
+    "type": 775,
     "cell": [
      20,
      34
@@ -8371,7 +8371,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Лагерь Пиратов Сомали» (132 on 6160,1975, and its chief's place 133 on 6161,1973) on the neighbour cell 6161,1975 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 774,
+    "type": 765,
     "cell": [
      35,
      44
@@ -8380,7 +8380,7 @@
     "why": "As the first row of 50472887 (6161,1975)."
    },
    {
-    "type": 775,
+    "type": 766,
     "cell": [
      20,
      54
@@ -8389,7 +8389,7 @@
     "why": "As the first row of 50472887 (6161,1975)."
    },
    {
-    "type": 776,
+    "type": 767,
     "cell": [
      29,
      70
@@ -8398,7 +8398,7 @@
     "why": "As the first row of 50472887 (6161,1975)."
    },
    {
-    "type": 765,
+    "type": 768,
     "cell": [
      50,
      74
@@ -8407,7 +8407,7 @@
     "why": "As the first row of 50472887 (6161,1975)."
    },
    {
-    "type": 766,
+    "type": 769,
     "cell": [
      15,
      84
@@ -8416,7 +8416,7 @@
     "why": "As the first row of 50472887 (6161,1975)."
    },
    {
-    "type": 767,
+    "type": 771,
     "cell": [
      39,
      95
@@ -8425,7 +8425,7 @@
     "why": "As the first row of 50472887 (6161,1975)."
    },
    {
-    "type": 768,
+    "type": 772,
     "cell": [
      25,
      104
@@ -8499,7 +8499,7 @@
     "why": "As the first row of 50866113 (6209,1985)."
    },
    {
-    "type": 1032,
+    "type": 1034,
     "cell": [
      25,
      104
@@ -8510,7 +8510,7 @@
   ],
   "50874305": [
    {
-    "type": 1033,
+    "type": 1025,
     "cell": [
      20,
      34
@@ -8519,7 +8519,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Аванпост Северного Альянса» (168 on 6210,1986, whose chief stands in the camp itself) on the neighbour cell 6210,1985 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1034,
+    "type": 1026,
     "cell": [
      35,
      44
@@ -8528,7 +8528,7 @@
     "why": "As the first row of 50874305 (6210,1985)."
    },
    {
-    "type": 1036,
+    "type": 1027,
     "cell": [
      20,
      54
@@ -8537,7 +8537,7 @@
     "why": "As the first row of 50874305 (6210,1985)."
    },
    {
-    "type": 1025,
+    "type": 1028,
     "cell": [
      29,
      70
@@ -8546,7 +8546,7 @@
     "why": "As the first row of 50874305 (6210,1985)."
    },
    {
-    "type": 1026,
+    "type": 1029,
     "cell": [
      50,
      74
@@ -8555,7 +8555,7 @@
     "why": "As the first row of 50874305 (6210,1985)."
    },
    {
-    "type": 1027,
+    "type": 1030,
     "cell": [
      15,
      84
@@ -8564,7 +8564,7 @@
     "why": "As the first row of 50874305 (6210,1985)."
    },
    {
-    "type": 1028,
+    "type": 1031,
     "cell": [
      39,
      93
@@ -8573,7 +8573,7 @@
     "why": "As the first row of 50874305 (6210,1985)."
    },
    {
-    "type": 1029,
+    "type": 1034,
     "cell": [
      25,
      104
@@ -8584,7 +8584,7 @@
   ],
   "50882497": [
    {
-    "type": 1030,
+    "type": 1025,
     "cell": [
      20,
      34
@@ -8593,7 +8593,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Аванпост Северного Альянса» (168 on 6210,1986, whose chief stands in the camp itself) on the neighbour cell 6211,1985 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1031,
+    "type": 1026,
     "cell": [
      35,
      44
@@ -8602,7 +8602,7 @@
     "why": "As the first row of 50882497 (6211,1985)."
    },
    {
-    "type": 1032,
+    "type": 1027,
     "cell": [
      20,
      54
@@ -8611,7 +8611,7 @@
     "why": "As the first row of 50882497 (6211,1985)."
    },
    {
-    "type": 1033,
+    "type": 1028,
     "cell": [
      29,
      70
@@ -8620,7 +8620,7 @@
     "why": "As the first row of 50882497 (6211,1985)."
    },
    {
-    "type": 1034,
+    "type": 1029,
     "cell": [
      50,
      74
@@ -8629,7 +8629,7 @@
     "why": "As the first row of 50882497 (6211,1985)."
    },
    {
-    "type": 1036,
+    "type": 1030,
     "cell": [
      15,
      84
@@ -8638,7 +8638,7 @@
     "why": "As the first row of 50882497 (6211,1985)."
    },
    {
-    "type": 1025,
+    "type": 1031,
     "cell": [
      39,
      95
@@ -8647,7 +8647,7 @@
     "why": "As the first row of 50882497 (6211,1985)."
    },
    {
-    "type": 1026,
+    "type": 1034,
     "cell": [
      25,
      104
@@ -8658,7 +8658,7 @@
   ],
   "50866114": [
    {
-    "type": 1027,
+    "type": 1025,
     "cell": [
      20,
      34
@@ -8667,7 +8667,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Аванпост Северного Альянса» (168 on 6210,1986, whose chief stands in the camp itself) on the neighbour cell 6209,1986 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1028,
+    "type": 1026,
     "cell": [
      35,
      44
@@ -8676,7 +8676,7 @@
     "why": "As the first row of 50866114 (6209,1986)."
    },
    {
-    "type": 1029,
+    "type": 1027,
     "cell": [
      20,
      54
@@ -8685,7 +8685,7 @@
     "why": "As the first row of 50866114 (6209,1986)."
    },
    {
-    "type": 1030,
+    "type": 1028,
     "cell": [
      29,
      70
@@ -8694,7 +8694,7 @@
     "why": "As the first row of 50866114 (6209,1986)."
    },
    {
-    "type": 1031,
+    "type": 1029,
     "cell": [
      50,
      74
@@ -8703,7 +8703,7 @@
     "why": "As the first row of 50866114 (6209,1986)."
    },
    {
-    "type": 1032,
+    "type": 1030,
     "cell": [
      15,
      84
@@ -8712,7 +8712,7 @@
     "why": "As the first row of 50866114 (6209,1986)."
    },
    {
-    "type": 1033,
+    "type": 1031,
     "cell": [
      39,
      93
@@ -8732,7 +8732,7 @@
   ],
   "50882498": [
    {
-    "type": 1036,
+    "type": 1025,
     "cell": [
      20,
      34
@@ -8741,7 +8741,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Аванпост Северного Альянса» (168 on 6210,1986, whose chief stands in the camp itself) on the neighbour cell 6211,1986 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1025,
+    "type": 1026,
     "cell": [
      35,
      44
@@ -8750,7 +8750,7 @@
     "why": "As the first row of 50882498 (6211,1986)."
    },
    {
-    "type": 1026,
+    "type": 1027,
     "cell": [
      20,
      54
@@ -8759,7 +8759,7 @@
     "why": "As the first row of 50882498 (6211,1986)."
    },
    {
-    "type": 1027,
+    "type": 1028,
     "cell": [
      29,
      70
@@ -8768,7 +8768,7 @@
     "why": "As the first row of 50882498 (6211,1986)."
    },
    {
-    "type": 1028,
+    "type": 1029,
     "cell": [
      50,
      74
@@ -8777,7 +8777,7 @@
     "why": "As the first row of 50882498 (6211,1986)."
    },
    {
-    "type": 1029,
+    "type": 1030,
     "cell": [
      15,
      84
@@ -8786,7 +8786,7 @@
     "why": "As the first row of 50882498 (6211,1986)."
    },
    {
-    "type": 1030,
+    "type": 1031,
     "cell": [
      39,
      95
@@ -8795,7 +8795,7 @@
     "why": "As the first row of 50882498 (6211,1986)."
    },
    {
-    "type": 1031,
+    "type": 1034,
     "cell": [
      25,
      104
@@ -8806,7 +8806,7 @@
   ],
   "50866115": [
    {
-    "type": 1032,
+    "type": 1025,
     "cell": [
      20,
      34
@@ -8815,7 +8815,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Аванпост Северного Альянса» (168 on 6210,1986, whose chief stands in the camp itself) on the neighbour cell 6209,1987 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1033,
+    "type": 1026,
     "cell": [
      35,
      44
@@ -8824,7 +8824,7 @@
     "why": "As the first row of 50866115 (6209,1987)."
    },
    {
-    "type": 1034,
+    "type": 1027,
     "cell": [
      20,
      54
@@ -8833,7 +8833,7 @@
     "why": "As the first row of 50866115 (6209,1987)."
    },
    {
-    "type": 1036,
+    "type": 1028,
     "cell": [
      29,
      70
@@ -8842,7 +8842,7 @@
     "why": "As the first row of 50866115 (6209,1987)."
    },
    {
-    "type": 1025,
+    "type": 1029,
     "cell": [
      50,
      74
@@ -8851,7 +8851,7 @@
     "why": "As the first row of 50866115 (6209,1987)."
    },
    {
-    "type": 1026,
+    "type": 1030,
     "cell": [
      15,
      84
@@ -8860,7 +8860,7 @@
     "why": "As the first row of 50866115 (6209,1987)."
    },
    {
-    "type": 1027,
+    "type": 1031,
     "cell": [
      39,
      95
@@ -8869,7 +8869,7 @@
     "why": "As the first row of 50866115 (6209,1987)."
    },
    {
-    "type": 1028,
+    "type": 1034,
     "cell": [
      25,
      104
@@ -8880,7 +8880,7 @@
   ],
   "50874307": [
    {
-    "type": 1029,
+    "type": 1025,
     "cell": [
      20,
      34
@@ -8889,7 +8889,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Аванпост Северного Альянса» (168 on 6210,1986, whose chief stands in the camp itself) on the neighbour cell 6210,1987 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1030,
+    "type": 1026,
     "cell": [
      35,
      44
@@ -8898,7 +8898,7 @@
     "why": "As the first row of 50874307 (6210,1987)."
    },
    {
-    "type": 1031,
+    "type": 1027,
     "cell": [
      20,
      54
@@ -8907,7 +8907,7 @@
     "why": "As the first row of 50874307 (6210,1987)."
    },
    {
-    "type": 1032,
+    "type": 1028,
     "cell": [
      29,
      70
@@ -8916,7 +8916,7 @@
     "why": "As the first row of 50874307 (6210,1987)."
    },
    {
-    "type": 1033,
+    "type": 1029,
     "cell": [
      50,
      74
@@ -8925,7 +8925,7 @@
     "why": "As the first row of 50874307 (6210,1987)."
    },
    {
-    "type": 1034,
+    "type": 1030,
     "cell": [
      15,
      84
@@ -8934,7 +8934,7 @@
     "why": "As the first row of 50874307 (6210,1987)."
    },
    {
-    "type": 1036,
+    "type": 1031,
     "cell": [
      39,
      95
@@ -8943,7 +8943,7 @@
     "why": "As the first row of 50874307 (6210,1987)."
    },
    {
-    "type": 1025,
+    "type": 1034,
     "cell": [
      25,
      104
@@ -8954,7 +8954,7 @@
   ],
   "50882499": [
    {
-    "type": 1026,
+    "type": 1025,
     "cell": [
      20,
      34
@@ -8963,7 +8963,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «Аванпост Северного Альянса» (168 on 6210,1986, whose chief stands in the camp itself) on the neighbour cell 6211,1987 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1027,
+    "type": 1026,
     "cell": [
      35,
      44
@@ -8972,7 +8972,7 @@
     "why": "As the first row of 50882499 (6211,1987)."
    },
    {
-    "type": 1028,
+    "type": 1027,
     "cell": [
      20,
      54
@@ -8981,7 +8981,7 @@
     "why": "As the first row of 50882499 (6211,1987)."
    },
    {
-    "type": 1029,
+    "type": 1028,
     "cell": [
      29,
      70
@@ -8990,7 +8990,7 @@
     "why": "As the first row of 50882499 (6211,1987)."
    },
    {
-    "type": 1030,
+    "type": 1029,
     "cell": [
      50,
      74
@@ -8999,7 +8999,7 @@
     "why": "As the first row of 50882499 (6211,1987)."
    },
    {
-    "type": 1031,
+    "type": 1030,
     "cell": [
      15,
      84
@@ -9008,7 +9008,7 @@
     "why": "As the first row of 50882499 (6211,1987)."
    },
    {
-    "type": 1032,
+    "type": 1031,
     "cell": [
      39,
      95
@@ -9017,7 +9017,7 @@
     "why": "As the first row of 50882499 (6211,1987)."
    },
    {
-    "type": 1033,
+    "type": 1034,
     "cell": [
      25,
      104
@@ -9055,7 +9055,7 @@
     "why": "As the first row of 51390367 (6273,1951)."
    },
    {
-    "type": 1731,
+    "type": 1734,
     "cell": [
      29,
      70
@@ -9064,7 +9064,7 @@
     "why": "As the first row of 51390367 (6273,1951)."
    },
    {
-    "type": 1732,
+    "type": 2315,
     "cell": [
      50,
      74
@@ -9073,7 +9073,7 @@
     "why": "As the first row of 51390367 (6273,1951)."
    },
    {
-    "type": 1733,
+    "type": 2317,
     "cell": [
      15,
      84
@@ -9082,7 +9082,7 @@
     "why": "As the first row of 51390367 (6273,1951)."
    },
    {
-    "type": 1734,
+    "type": 2318,
     "cell": [
      39,
      95
@@ -9091,7 +9091,7 @@
     "why": "As the first row of 51390367 (6273,1951)."
    },
    {
-    "type": 1735,
+    "type": 1728,
     "cell": [
      25,
      104
@@ -9102,7 +9102,7 @@
   ],
   "51398559": [
    {
-    "type": 2315,
+    "type": 1729,
     "cell": [
      20,
      34
@@ -9111,7 +9111,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6274,1951 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 2316,
+    "type": 1730,
     "cell": [
      35,
      44
@@ -9120,7 +9120,7 @@
     "why": "As the first row of 51398559 (6274,1951)."
    },
    {
-    "type": 2317,
+    "type": 1734,
     "cell": [
      20,
      54
@@ -9129,7 +9129,7 @@
     "why": "As the first row of 51398559 (6274,1951)."
    },
    {
-    "type": 2318,
+    "type": 2315,
     "cell": [
      29,
      70
@@ -9138,7 +9138,7 @@
     "why": "As the first row of 51398559 (6274,1951)."
    },
    {
-    "type": 2319,
+    "type": 2317,
     "cell": [
      50,
      74
@@ -9147,7 +9147,7 @@
     "why": "As the first row of 51398559 (6274,1951)."
    },
    {
-    "type": 1728,
+    "type": 2318,
     "cell": [
      15,
      84
@@ -9156,7 +9156,7 @@
     "why": "As the first row of 51398559 (6274,1951)."
    },
    {
-    "type": 1729,
+    "type": 1728,
     "cell": [
      39,
      95
@@ -9165,7 +9165,7 @@
     "why": "As the first row of 51398559 (6274,1951)."
    },
    {
-    "type": 1730,
+    "type": 1729,
     "cell": [
      25,
      104
@@ -9176,7 +9176,7 @@
   ],
   "51406751": [
    {
-    "type": 1731,
+    "type": 1730,
     "cell": [
      20,
      34
@@ -9185,7 +9185,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6275,1951 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1732,
+    "type": 1734,
     "cell": [
      35,
      44
@@ -9194,7 +9194,7 @@
     "why": "As the first row of 51406751 (6275,1951)."
    },
    {
-    "type": 1733,
+    "type": 2315,
     "cell": [
      20,
      54
@@ -9203,7 +9203,7 @@
     "why": "As the first row of 51406751 (6275,1951)."
    },
    {
-    "type": 1734,
+    "type": 2317,
     "cell": [
      29,
      70
@@ -9212,7 +9212,7 @@
     "why": "As the first row of 51406751 (6275,1951)."
    },
    {
-    "type": 1735,
+    "type": 2318,
     "cell": [
      50,
      74
@@ -9221,7 +9221,7 @@
     "why": "As the first row of 51406751 (6275,1951)."
    },
    {
-    "type": 2315,
+    "type": 1728,
     "cell": [
      15,
      84
@@ -9230,7 +9230,7 @@
     "why": "As the first row of 51406751 (6275,1951)."
    },
    {
-    "type": 2316,
+    "type": 1729,
     "cell": [
      39,
      95
@@ -9239,7 +9239,7 @@
     "why": "As the first row of 51406751 (6275,1951)."
    },
    {
-    "type": 2317,
+    "type": 1730,
     "cell": [
      25,
      104
@@ -9250,7 +9250,7 @@
   ],
   "51382176": [
    {
-    "type": 2318,
+    "type": 1734,
     "cell": [
      20,
      34
@@ -9259,7 +9259,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6272,1952 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 2319,
+    "type": 2315,
     "cell": [
      35,
      44
@@ -9268,7 +9268,7 @@
     "why": "As the first row of 51382176 (6272,1952)."
    },
    {
-    "type": 1728,
+    "type": 2317,
     "cell": [
      20,
      54
@@ -9277,7 +9277,7 @@
     "why": "As the first row of 51382176 (6272,1952)."
    },
    {
-    "type": 1729,
+    "type": 2318,
     "cell": [
      29,
      70
@@ -9286,7 +9286,7 @@
     "why": "As the first row of 51382176 (6272,1952)."
    },
    {
-    "type": 1730,
+    "type": 1728,
     "cell": [
      50,
      74
@@ -9295,7 +9295,7 @@
     "why": "As the first row of 51382176 (6272,1952)."
    },
    {
-    "type": 1731,
+    "type": 1729,
     "cell": [
      15,
      84
@@ -9304,7 +9304,7 @@
     "why": "As the first row of 51382176 (6272,1952)."
    },
    {
-    "type": 1732,
+    "type": 1730,
     "cell": [
      39,
      95
@@ -9313,7 +9313,7 @@
     "why": "As the first row of 51382176 (6272,1952)."
    },
    {
-    "type": 1733,
+    "type": 1734,
     "cell": [
      25,
      104
@@ -9324,7 +9324,7 @@
   ],
   "51390368": [
    {
-    "type": 1734,
+    "type": 2315,
     "cell": [
      20,
      34
@@ -9333,7 +9333,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6273,1952 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1735,
+    "type": 2317,
     "cell": [
      35,
      44
@@ -9342,7 +9342,7 @@
     "why": "As the first row of 51390368 (6273,1952)."
    },
    {
-    "type": 2315,
+    "type": 2318,
     "cell": [
      20,
      54
@@ -9351,7 +9351,7 @@
     "why": "As the first row of 51390368 (6273,1952)."
    },
    {
-    "type": 2316,
+    "type": 1728,
     "cell": [
      29,
      70
@@ -9360,7 +9360,7 @@
     "why": "As the first row of 51390368 (6273,1952)."
    },
    {
-    "type": 2317,
+    "type": 1729,
     "cell": [
      50,
      74
@@ -9369,7 +9369,7 @@
     "why": "As the first row of 51390368 (6273,1952)."
    },
    {
-    "type": 2318,
+    "type": 1730,
     "cell": [
      15,
      84
@@ -9378,7 +9378,7 @@
     "why": "As the first row of 51390368 (6273,1952)."
    },
    {
-    "type": 2319,
+    "type": 1734,
     "cell": [
      39,
      95
@@ -9387,7 +9387,7 @@
     "why": "As the first row of 51390368 (6273,1952)."
    },
    {
-    "type": 1728,
+    "type": 2315,
     "cell": [
      25,
      104
@@ -9398,7 +9398,7 @@
   ],
   "51406752": [
    {
-    "type": 1729,
+    "type": 2317,
     "cell": [
      20,
      34
@@ -9407,7 +9407,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6275,1952 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1730,
+    "type": 2318,
     "cell": [
      35,
      44
@@ -9416,7 +9416,7 @@
     "why": "As the first row of 51406752 (6275,1952)."
    },
    {
-    "type": 1731,
+    "type": 1728,
     "cell": [
      20,
      54
@@ -9425,7 +9425,7 @@
     "why": "As the first row of 51406752 (6275,1952)."
    },
    {
-    "type": 1732,
+    "type": 1729,
     "cell": [
      29,
      70
@@ -9434,7 +9434,7 @@
     "why": "As the first row of 51406752 (6275,1952)."
    },
    {
-    "type": 1733,
+    "type": 1730,
     "cell": [
      50,
      74
@@ -9452,7 +9452,7 @@
     "why": "As the first row of 51406752 (6275,1952)."
    },
    {
-    "type": 1735,
+    "type": 2315,
     "cell": [
      39,
      93
@@ -9461,7 +9461,7 @@
     "why": "As the first row of 51406752 (6275,1952)."
    },
    {
-    "type": 2315,
+    "type": 2317,
     "cell": [
      25,
      104
@@ -9472,7 +9472,7 @@
   ],
   "51382177": [
    {
-    "type": 2316,
+    "type": 2318,
     "cell": [
      20,
      34
@@ -9481,7 +9481,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6272,1953 (open desert, desert/0002.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 2317,
+    "type": 1728,
     "cell": [
      35,
      44
@@ -9490,7 +9490,7 @@
     "why": "As the first row of 51382177 (6272,1953)."
    },
    {
-    "type": 2318,
+    "type": 1729,
     "cell": [
      20,
      54
@@ -9499,7 +9499,7 @@
     "why": "As the first row of 51382177 (6272,1953)."
    },
    {
-    "type": 2319,
+    "type": 1730,
     "cell": [
      29,
      70
@@ -9508,7 +9508,7 @@
     "why": "As the first row of 51382177 (6272,1953)."
    },
    {
-    "type": 1728,
+    "type": 1734,
     "cell": [
      50,
      74
@@ -9517,7 +9517,7 @@
     "why": "As the first row of 51382177 (6272,1953)."
    },
    {
-    "type": 1729,
+    "type": 2315,
     "cell": [
      15,
      84
@@ -9526,7 +9526,7 @@
     "why": "As the first row of 51382177 (6272,1953)."
    },
    {
-    "type": 1730,
+    "type": 2317,
     "cell": [
      39,
      95
@@ -9535,7 +9535,7 @@
     "why": "As the first row of 51382177 (6272,1953)."
    },
    {
-    "type": 1731,
+    "type": 2318,
     "cell": [
      25,
      104
@@ -9546,7 +9546,7 @@
   ],
   "51398561": [
    {
-    "type": 1732,
+    "type": 1728,
     "cell": [
      20,
      34
@@ -9555,7 +9555,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6274,1953 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1733,
+    "type": 1729,
     "cell": [
      35,
      44
@@ -9564,7 +9564,7 @@
     "why": "As the first row of 51398561 (6274,1953)."
    },
    {
-    "type": 1734,
+    "type": 1730,
     "cell": [
      20,
      54
@@ -9573,7 +9573,7 @@
     "why": "As the first row of 51398561 (6274,1953)."
    },
    {
-    "type": 1735,
+    "type": 1734,
     "cell": [
      29,
      70
@@ -9591,7 +9591,7 @@
     "why": "As the first row of 51398561 (6274,1953)."
    },
    {
-    "type": 2316,
+    "type": 2317,
     "cell": [
      15,
      84
@@ -9600,7 +9600,7 @@
     "why": "As the first row of 51398561 (6274,1953)."
    },
    {
-    "type": 2317,
+    "type": 2318,
     "cell": [
      39,
      93
@@ -9609,7 +9609,7 @@
     "why": "As the first row of 51398561 (6274,1953)."
    },
    {
-    "type": 2318,
+    "type": 1728,
     "cell": [
      25,
      104
@@ -9620,7 +9620,7 @@
   ],
   "51406753": [
    {
-    "type": 2319,
+    "type": 1729,
     "cell": [
      20,
      34
@@ -9629,7 +9629,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6275,1953 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1728,
+    "type": 1730,
     "cell": [
      35,
      44
@@ -9638,7 +9638,7 @@
     "why": "As the first row of 51406753 (6275,1953)."
    },
    {
-    "type": 1729,
+    "type": 1734,
     "cell": [
      20,
      54
@@ -9647,7 +9647,7 @@
     "why": "As the first row of 51406753 (6275,1953)."
    },
    {
-    "type": 1730,
+    "type": 2315,
     "cell": [
      29,
      70
@@ -9656,7 +9656,7 @@
     "why": "As the first row of 51406753 (6275,1953)."
    },
    {
-    "type": 1731,
+    "type": 2317,
     "cell": [
      50,
      74
@@ -9665,7 +9665,7 @@
     "why": "As the first row of 51406753 (6275,1953)."
    },
    {
-    "type": 1732,
+    "type": 2318,
     "cell": [
      15,
      84
@@ -9674,7 +9674,7 @@
     "why": "As the first row of 51406753 (6275,1953)."
    },
    {
-    "type": 1733,
+    "type": 1728,
     "cell": [
      39,
      95
@@ -9683,7 +9683,7 @@
     "why": "As the first row of 51406753 (6275,1953)."
    },
    {
-    "type": 1734,
+    "type": 1729,
     "cell": [
      25,
      104
@@ -9694,7 +9694,7 @@
   ],
   "51382178": [
    {
-    "type": 1735,
+    "type": 1730,
     "cell": [
      20,
      34
@@ -9703,7 +9703,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6272,1954 (open desert, desert/0003.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 2315,
+    "type": 1734,
     "cell": [
      35,
      44
@@ -9712,7 +9712,7 @@
     "why": "As the first row of 51382178 (6272,1954)."
    },
    {
-    "type": 2316,
+    "type": 2315,
     "cell": [
      20,
      54
@@ -9739,7 +9739,7 @@
     "why": "As the first row of 51382178 (6272,1954)."
    },
    {
-    "type": 2319,
+    "type": 1728,
     "cell": [
      15,
      84
@@ -9748,7 +9748,7 @@
     "why": "As the first row of 51382178 (6272,1954)."
    },
    {
-    "type": 1728,
+    "type": 1729,
     "cell": [
      39,
      95
@@ -9757,7 +9757,7 @@
     "why": "As the first row of 51382178 (6272,1954)."
    },
    {
-    "type": 1729,
+    "type": 1730,
     "cell": [
      25,
      104
@@ -9768,7 +9768,7 @@
   ],
   "51390370": [
    {
-    "type": 1730,
+    "type": 1734,
     "cell": [
      20,
      34
@@ -9777,7 +9777,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6273,1954 (open desert, desert/0004.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 1731,
+    "type": 2315,
     "cell": [
      35,
      44
@@ -9786,7 +9786,7 @@
     "why": "As the first row of 51390370 (6273,1954)."
    },
    {
-    "type": 1732,
+    "type": 2317,
     "cell": [
      20,
      54
@@ -9795,7 +9795,7 @@
     "why": "As the first row of 51390370 (6273,1954)."
    },
    {
-    "type": 1733,
+    "type": 2318,
     "cell": [
      29,
      70
@@ -9804,7 +9804,7 @@
     "why": "As the first row of 51390370 (6273,1954)."
    },
    {
-    "type": 1734,
+    "type": 1728,
     "cell": [
      50,
      74
@@ -9813,7 +9813,7 @@
     "why": "As the first row of 51390370 (6273,1954)."
    },
    {
-    "type": 1735,
+    "type": 1729,
     "cell": [
      15,
      84
@@ -9822,7 +9822,7 @@
     "why": "As the first row of 51390370 (6273,1954)."
    },
    {
-    "type": 2315,
+    "type": 1730,
     "cell": [
      39,
      93
@@ -9831,7 +9831,7 @@
     "why": "As the first row of 51390370 (6273,1954)."
    },
    {
-    "type": 2316,
+    "type": 1734,
     "cell": [
      25,
      104
@@ -9842,7 +9842,7 @@
   ],
   "51398562": [
    {
-    "type": 2317,
+    "type": 2315,
     "cell": [
      20,
      34
@@ -9851,7 +9851,7 @@
     "why": "DESIGNED, the owner's (2026-10-14): «сделай потом абу хамед в таком же формате», the camps and their surroundings as Абри's and Донгола's («В Абри добавь мобов в лагеря и в окрестности»). The patrol of «База Северного Альянса» (263 on 6273,1953, and its chief's place 274 on 6274,1952) on the neighbour cell 6274,1954 (open desert, desert/0001.xml): the camp's map label promises «патрули вокруг позволяют окупить затраты» (res/database/locations.xml), and encounters.near_town keeps every ambush off this cell. Eight of the camp's own fighters (data/camp_fill.json) on the slot cells of the original's wasteland tile MW_023 (static 1319); they come back on the respawn timer like the camp's. Built by data/build_camp_patrols.py."
    },
    {
-    "type": 2318,
+    "type": 2317,
     "cell": [
      35,
      44
@@ -9860,7 +9860,7 @@
     "why": "As the first row of 51398562 (6274,1954)."
    },
    {
-    "type": 2319,
+    "type": 2318,
     "cell": [
      20,
      54
@@ -9896,7 +9896,7 @@
     "why": "As the first row of 51398562 (6274,1954)."
    },
    {
-    "type": 1731,
+    "type": 1734,
     "cell": [
      39,
      95
@@ -9905,7 +9905,7 @@
     "why": "As the first row of 51398562 (6274,1954)."
    },
    {
-    "type": 1732,
+    "type": 2315,
     "cell": [
      25,
      104
