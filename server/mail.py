@@ -40,8 +40,10 @@ import unicodedata
 
 import accounts
 import inventory
+import gold_trade
 import items
 import rooms
+import storage
 from protocol import BigUInt, Str, every
 
 log = logging.getLogger("lava")
@@ -403,6 +405,9 @@ class Mail:
                 log.info("  ..    letter attachment %s refused", text)
                 self.ack(RES_REFUSED)
                 return
+            if any(previous["uniq"] == row["uniq"] for previous in rows):
+                self.ack(RES_REFUSED)
+                return
             rows.append(row)
         fee_afro, fee_gold = tariff(kind, sum(inventory.weight_of(r) for r in rows))
         # An offer names its price; nothing but the tariff leaves the purse.
@@ -414,16 +419,40 @@ class Mail:
             self.ack(RES_REFUSED)
             self.sess.say("Не хватает денег на отправку письма")
             return
-        ch.add_money(-(fee_afro + put_afro), -(fee_gold + put_gold))
-        ch.save(self.store)
-        snaps = [snapshot(r) for r in rows]
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                current = [self.sess.inv.find(text) for text in oids]
+                if current != rows or any(not postable(r["type_id"]) for r in current):
+                    self.ack(RES_REFUSED)
+                    return
+                owner = self.store.character(self.char_id)
+                new_afro = owner["afro"] - fee_afro - put_afro
+                new_gold = owner["gold"] - fee_gold - put_gold
+                if new_afro < 0 or new_gold < 0:
+                    self.ack(RES_REFUSED)
+                    return
+                snaps = [snapshot(r) for r in rows]
+                for r in rows:
+                    self.store.delete_item(r["uniq"])
+                letter = self.store.mail_send(
+                    target["id"], self.char_id, kind,
+                    str(p.get("subj") or "")[:SUBJECT_MAX], str(p.get("body") or ""),
+                    afro, gold, json.dumps(snaps))
+                with self.store.booked_as("mail_send", letter["id"]):
+                    self.store.set_money(self.char_id, new_afro, new_gold)
+        except storage.CommitError:
+            self.sess.inv.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Letter send failed for character %s", self.char_id)
+            self.ack(RES_REFUSED)
+            return
+        ch.afro, ch.gold = new_afro, new_gold
         for r in rows:
             self.sess.inv.forget_reload(r["uniq"])
-            self.store.delete_item(r["uniq"])
-        letter = self.store.mail_send(
-            target["id"], self.char_id, kind,
-            str(p.get("subj") or "")[:SUBJECT_MAX], str(p.get("body") or ""),
-            afro, gold, json.dumps(snaps))
         log.info("  ..    letter #%d to %s: %d item(s), %d afro, %d gold,"
                  " fee %d/%d", letter["id"], target["name"], len(rows),
                  afro, gold, fee_afro, fee_gold)
@@ -526,47 +555,75 @@ class Mail:
         so nothing is pushed for the items; the purse is re-sent because
         the client's own arithmetic is not the record.
         """
-        row = self.store.mail_letter(letter_id(p.get("id")))
-        if self.side_of(row) != "in":
-            self.ack(RES_NO_LETTER)
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(self.char_id):
+                    self.ack(RES_REFUSED)
+                    return
+                lock = " FOR UPDATE" if storage.using_postgres() else ""
+                self.store.db.execute("SELECT id FROM mail WHERE id = ?" + lock,
+                                      (letter_id(p.get("id")),)).fetchone()
+                row = self.store.mail_letter(letter_id(p.get("id")))
+                if self.side_of(row) != "in":
+                    self.ack(RES_NO_LETTER)
+                    return
+                snaps = json.loads(row["items_json"])
+                if any(items.acquisition_blocked(s["type_id"]) for s in snaps):
+                    self.ack(RES_REFUSED)
+                    self.sess.answer("Получение оружия и брони выше 17 уровня временно недоступно. Вложения сохранены.")
+                    return
+                if not attached(row):
+                    self.ack(RES_NOTHING_TO_TAKE)
+                    return
+                ch = self.sess.character()
+                owner = self.store.character(self.char_id)
+                # A returned offer is the seller's own goods coming back: a parcel,
+                # not a sale (rmvml has zeroed the asking price by then).
+                offer = row["type"] in (TRADE, TRADE_EXPRESS) and not row["returned"]
+                if offer and any(gold_trade.afro_blueprint(s["type_id"]) for s in snaps):
+                    self.ack(RES_REFUSED)
+                    self.sess.answer("Обычные чертежи доступны у торговцев. Верните письмо отправителю.")
+                    return
+                afro, gold = row["afro"], row["gold"]
+                if offer and (owner["afro"] < afro or owner["gold"] < gold):
+                    self.ack(RES_OK)
+                    self.send("ctml", id=BigUInt(str(row["id"])),
+                              item=[BigUInt("0")] * MAX_ATTACHMENTS
+                              + [BigUInt("%x" % afro), BigUInt("%x" % gold)],
+                              code=[CODE_NONE] * MAX_ATTACHMENTS
+                              + [CODE_NO_MONEY if afro > owner["afro"] else CODE_NONE,
+                                 CODE_NO_MONEY if gold > owner["gold"] else CODE_NONE])
+                    return
+                created = []
+                for s in snaps:
+                    fields = {f: s[f] for f in accounts.ITEM_FIELDS}
+                    fields["slot"] = inventory.BAG
+                    created.append(self.store.create_item(
+                        self.char_id, s["type_id"], s["root"], **{k: v for k, v in fields.items() if k not in ('char_id', 'uniq')}))
+                    if s["root"] == items.TROPHY:
+                        # Unpacked under a new serial: its words follow it.
+                        self.store.rekey_trophy(s["uniq"], created[-1]["uniq"])
+                direction = -1 if offer else 1
+                new_afro = owner["afro"] + direction * afro
+                new_gold = owner["gold"] + direction * gold
+                with self.store.booked_as("mail_take", row["id"]):
+                    self.store.set_money(self.char_id, new_afro, new_gold)
+                self.store.mail_update(row["id"], items_json="[]", afro=0, gold=0)
+                payment = None
+                if offer and (afro or gold):
+                    payment = self.store.mail_send(
+                        row["from_char"], self.char_id, LETTER,
+                        ("Оплата: " + row["subject"])[:SUBJECT_MAX],
+                        "%s забрал предложенные предметы." % self.sess.nick,
+                        afro, gold, "[]")
+        except storage.CommitError:
+            self.sess.inv.close_after_uncertain_commit()
             return
-        snaps = json.loads(row["items_json"])
-        if any(items.acquisition_blocked(s["type_id"]) for s in snaps):
+        except Exception:
+            log.exception("Letter unpack failed for character %s", self.char_id)
             self.ack(RES_REFUSED)
-            self.sess.answer("Получение оружия и брони выше 17 уровня временно недоступно. Вложения сохранены.")
             return
-        if not attached(row):
-            self.ack(RES_NOTHING_TO_TAKE)
-            return
-        ch = self.sess.character()
-        # A returned offer is the seller's own goods coming back: a parcel,
-        # not a sale (rmvml has zeroed the asking price by then).
-        offer = row["type"] in (TRADE, TRADE_EXPRESS) and not row["returned"]
-        afro, gold = row["afro"], row["gold"]
-        if offer and not ch.can_afford(afro, gold):
-            self.ack(RES_OK)
-            self.send("ctml", id=BigUInt(str(row["id"])),
-                      item=[BigUInt("0")] * MAX_ATTACHMENTS
-                      + [BigUInt("%x" % afro), BigUInt("%x" % gold)],
-                      code=[CODE_NONE] * MAX_ATTACHMENTS
-                      + [CODE_NO_MONEY if afro > ch.afro else CODE_NONE,
-                         CODE_NO_MONEY if gold > ch.gold else CODE_NONE])
-            return
-        created = []
-        for s in snaps:
-            fields = {f: s[f] for f in accounts.ITEM_FIELDS}
-            fields["slot"] = inventory.BAG
-            created.append(self.store.create_item(
-                self.char_id, s["type_id"], s["root"], **{k: v for k, v in fields.items() if k not in ('char_id', 'uniq')}))
-            if s["root"] == items.TROPHY:
-                # Unpacked under a new serial: its words follow it.
-                self.store.rekey_trophy(s["uniq"], created[-1]["uniq"])
-        if offer:
-            ch.add_money(-afro, -gold)
-        else:
-            ch.add_money(afro, gold)
-        ch.save(self.store)
-        self.store.mail_update(row["id"], items_json="[]", afro=0, gold=0)
+        ch.afro, ch.gold = new_afro, new_gold
         log.info("  ..    letter #%d unpacked: %d item(s), %d afro, %d gold%s",
                  row["id"], len(created), afro, gold, " paid" if offer else "")
         self.ack(RES_OK)
@@ -581,14 +638,7 @@ class Mail:
                      money_code if gold else CODE_NONE])
         if afro or gold:
             self.sess.push_money()
-        if offer and (afro or gold):
-            # The seller is paid by mail: money attached, no tariff, the
-            # buyer named as the sender so the outbox reads right.
-            payment = self.store.mail_send(
-                row["from_char"], self.char_id, LETTER,
-                ("Оплата: " + row["subject"])[:SUBJECT_MAX],
-                "%s забрал предложенные предметы." % self.sess.nick,
-                afro, gold, "[]")
+        if payment is not None:
             self.deliver(payment)
 
     # --- deleting ----------------------------------------------------------------

@@ -132,7 +132,7 @@ class ReleaseSets(unittest.TestCase):
                 target = NS(level=17, stats=NS(role='mob', xp_mult=1))
                 combat.Fighter.credit_xp(f, skill, None, 1.0, target)
                 values.append(ch.gain_xp.call_args.args[1])
-            self.assertEqual(values, [progression.mob_xp(17, 16)] * 3)
+            self.assertEqual(values, [int(progression.combat_mob_xp(17, 16))] * 3)
 
 
 if __name__ == '__main__':

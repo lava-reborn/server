@@ -260,13 +260,13 @@ class Residence(unittest.TestCase):
             result = self.rent(vehicle)
             self.assertEqual(result==[0],accepted,(status,vehicle,result))
             self.assertEqual(self.ch.gold,before)
-            self.assertEqual(self.ch.afro,afro-({17:35000,18:45000}[vehicle] if accepted else 0))
+            self.assertEqual(self.ch.afro,afro-({17:22500,18:35000}[vehicle] if accepted else 0))
             if accepted:
                 self.assertEqual(self.s.transport[0],vehicle)
                 self.assertGreater(self.s.transport[1],self.ch.premium_until)
                 self.assertNotEqual(self.rent(vehicle,2),[0])
         self.assertEqual(self.ch.gold,10000)
-        self.assertEqual(self.ch.afro,885000)
+        self.assertEqual(self.ch.afro,1000000 - 2 * 22500 - 35000)
         self.s.transport = None
         self.store.save_character_state(self.cid,transport_type=None,transport_until=None)
         self.status(2,86400*2+100)
@@ -344,7 +344,7 @@ class Residence(unittest.TestCase):
 
     def test_afro_rental_cannot_spend_gold_instead(self):
         self.status(2)
-        for vehicle, cost in ((17, 35000), (18, 45000)):
+        for vehicle, cost in ((17, 22500), (18, 35000)):
             self.ch.afro = cost - 1
             self.ch.save(self.store)
             gold = self.ch.gold
@@ -386,7 +386,7 @@ class Residence(unittest.TestCase):
             self.assertNotEqual(self.rent(17, 1), [0])
             self.assertEqual((self.ch.afro, self.ch.gold, self.s.transport), before)
             self.assertEqual(self.ch.gold, 10000 - 3 * 70)
-            self.assertEqual(self.ch.afro, 1000000 - 35000)
+            self.assertEqual(self.ch.afro, 1000000 - 22500)
 
     def test_rental_failed_commit_reloads_rolled_back_state(self):
         self.commit_fault(False)

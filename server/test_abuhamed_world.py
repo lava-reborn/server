@@ -193,26 +193,21 @@ try:
     check("the pirates' camp 132: Коммодор Марабу, eleven of the fill with the treasurer, Йохан Демперс,"
           " two boxes",
           stood(r132),
-          collections.Counter({777: 1, 765: 1, 766: 1, 767: 1, 768: 1, 769: 1, 770: 1, 772: 1, 773: 1,
-                               774: 1, 776: 1, 764: 1, 1750: 1, 2169: 2}))
+          collections.Counter({770: 4, 774: 3, 776: 3, 2169: 2, 777: 1, 764: 1, 1750: 1}))
     check("  ..their chief's place 133: Капитан Нгоро, the file's Мичман and Кавторанг, nine of the fill",
           stood(r133),
-          collections.Counter({778: 1, 769: 1, 771: 1, 765: 1, 766: 1, 767: 1, 768: 1, 770: 1, 772: 1,
-                               774: 1, 775: 1, 776: 1}))
+          collections.Counter({770: 4, 774: 4, 776: 3, 778: 1}))
     check("the Альянс's outpost 168: Генерал Шерхан, eleven of the fill, Гейнц Тейлор and the treasurer"
           " by hand, two boxes",
           stood(r168),
-          collections.Counter({8620: 1, 1025: 1, 1026: 1, 1027: 1, 1028: 1, 1029: 1, 1030: 1, 1031: 1,
-                               1032: 1, 1033: 1, 1034: 1, 1036: 1, 1749: 1, 1024: 1, 2171: 2}))
+          collections.Counter({1032: 4, 1033: 3, 1036: 3, 1027: 1, 2171: 2, 8620: 1, 1749: 1, 1024: 1}))
     check("the Альянс's base 263: Генерал Шерхан, ten of the fill with the bookkeeper, Рудольф Треурнихт"
           " and Джеймс Бейкер, three boxes",
           stood(r263),
-          collections.Counter({1037: 1, 1728: 1, 1729: 1, 1730: 1, 1731: 1, 1732: 1, 1733: 1, 1734: 1,
-                               1735: 1, 2315: 1, 1736: 1, 1751: 1, 2170: 1, 2171: 3}))
+          collections.Counter({2171: 3, 1731: 2, 1732: 2, 1733: 2, 1735: 1, 2316: 1, 2319: 1, 1037: 1, 1736: 1, 1751: 1, 2170: 1}))
     check("  ..its chief's place 274: Бригадир Табаки and eight of the fill",
           stood(r274),
-          collections.Counter({1038: 1, 2316: 1, 2317: 1, 2318: 1, 2319: 1, 1731: 1, 1735: 1, 2315: 1,
-                               1733: 1}))
+          collections.Counter({1731: 2, 1732: 2, 1733: 1, 1735: 1, 1038: 1, 2316: 1, 2319: 1}))
     LEVELS = {764: 18, 1024: 18, 1736: 19, 2169: 17, 2171: 18, 1749: 19, 1750: 17, 1751: 19, 2170: 20,
               1752: 19, 2315: 20, 981: 18}
     check("the levels set by hand (data/build_mob_types.py DESIGNED_LEVELS and DESIGNED_KINDS), Кленз's by"
@@ -406,7 +401,7 @@ try:
           (True, True, True, world.TRADER, 1))
     check("Мортимер stands in the port by the original's file and gives the exchanges",
           (port[1188], 1188 in {t for _c, t in world.location(PORT).spawns}, quests.given_by(1188)),
-          (1, True, list(range(301, 308))))
+          (1, True, list(range(301, 308)) + [8800, 8801, 8802, 8803]))
 except Exception:
     import traceback
     fails.append("the objects and the people broke:\n" + traceback.format_exc())

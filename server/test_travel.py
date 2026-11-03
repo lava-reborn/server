@@ -116,7 +116,7 @@ def stand_on(c, cell):
     """Walk onto a cell: the server only checks the path's shape, and the
     exit window opens when the walker stops on a zone cell."""
     c.send("moveTo;path=|%d|;" % cell)
-    check("stood on %d" % cell, c.names(), ["cmdAck", "userMove"])
+    check("stood on %d" % cell, c.names(), ["cmdAck", "actionCancel", "c_ap"])
 
 
 def goto(c, what):

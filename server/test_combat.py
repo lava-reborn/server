@@ -734,8 +734,8 @@ _dog = mobs.Mob(1, 82, 10)
 # measured against (Fighter.award_xp).
 _whole = dog_stats.hp_max + dog_stats.sp_max
 _blade.award_xp(progression.MELEE, combat.SPEC_BLADE, _whole, _dog)
-check("a knife at Ближний бой 0 against the level-1 dog: a mob one level up, 20, times its 0.7",
-      _shooter.skill[progression.MELEE][:2], [0, round(20 * dog_stats.xp_mult)])
+check("a knife at Ближний бой 0 against the level-1 dog: +1 pays 12 before its 0.7",
+      _shooter.skill[progression.MELEE][:2], [0, 8])
 _blade.award_xp(progression.SHOOTING, 2, _whole, mobs.Mob(2, 82, 10))
 check("the same dog is worth nothing to Стрельба 6",
       _shooter.skill[progression.SHOOTING][:2], [6, 0])
@@ -743,7 +743,7 @@ check("the same dog is worth nothing to Стрельба 6",
 # A bullet takes little stamina: the blows of a gun pay short of the price,
 # and the kill settles the rest (RoomCombat.settle_xp). Health alone is half
 # of the dog's health and stamina, so the pistol is paid half as it shoots
-# and half at the death -- the same 14 the knife gets.
+# and half at the death -- the same 8 the knife gets.
 _gunner = progression.Character()
 _gun = combat.Fighter(_XpSession(_gunner))
 _gdog = mobs.Mob(3, 82, 10)
@@ -753,12 +753,12 @@ _grc = combat.RoomCombat.__new__(combat.RoomCombat)
 _grc.room = type("R", (), {})()
 _grc.room.players = {_gun.sess: None}
 _grc.settle_xp(_gdog)
-check("a gun's shots pay half the dog, its death the other half: 14, as for a knife",
-      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (7, [0, 14]))
+check("a gun's shots pay half the dog, its death the other half: 8, as for a knife",
+      (_by_blows, _gunner.skill[progression.SHOOTING][:2]), (4, [0, 8]))
 check("and the ledger is closed with the kill", _gdog.xp_ledger, {})
-# Paid in two frames, and the client prints a «+7» for each; a burst that
+# Paid in two frames, and the client prints a «+4» for each; a burst that
 # kills holds its rp_info (Fighter.hold_stats) so the harm and the settlement
-# arrive as one «+14».
+# arrive as one «+8».
 check("  ..the two payments went out as two rp_info", len(_gun.sess.pushed), 2)
 _one = progression.Character()
 _onegun = combat.Fighter(_XpSession(_one))
@@ -769,9 +769,9 @@ _grc.room.players = {_onegun.sess: None}
 _grc.settle_xp(_odog)
 check("  ..held through the kill: nothing yet", _onegun.sess.pushed, [])
 _onegun.release_stats()
-check("  ..released: one rp_info for the shooting skill, the whole 14 in it",
+check("  ..released: one rp_info for the shooting skill, the whole 8 in it",
       (_onegun.sess.pushed, _one.skill[progression.SHOOTING][:2]),
-      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 14]))
+      ([{"skills": {progression.SHOOTING}, "specs": set(), "attribs": set()}], [0, 8]))
 check("  ..and a release with nothing held pushes nothing", (_onegun.release_stats(), _onegun.sess.pushed[1:]), (None, []))
 
 
@@ -1244,7 +1244,7 @@ try:
     got = c.frames(0.3)
     check("ack, then the room goes to war, then the aim",
           got, [("cmdAck", {"res": 0}), ("lch", {"ws": 1}),
-                ("faAim", dict(id=0, ang=mobs.direction(pos, DOG_HOME, loc.width), num_shots=1))])
+                ("faAim", dict(id=0, pos=pos, ap=50 + 5 * LEVEL, ang=mobs.direction(pos, DOG_HOME, loc.width), num_shots=1))])
     tracker.feed(got)
     # The magazine report closes the burst; the experience and the dog's
     # reaction follow it in the same breath, so the window is held open a
@@ -1333,9 +1333,15 @@ try:
     got = c.frames(1.5)
     tracker.feed(got)
     dog_cell = last_cell(got, dog, dog_cell)
-    check("the walk is acknowledged and echoed",
-          [(n, p) for n, p in got if n in ("cmdAck", "userMove") and p.get("id", 0) == 0][:2],
-          [("cmdAck", {"res": 0}), ("userMove", {"id": 0, "path": [old_pos, pos]})])
+    echoed = [(n, p) for n, p in got
+              if n in ("cmdAck", "userMove") and p.get("id", 0) == 0][:2]
+    phase = echoed[1][1].get("step_ms") if len(echoed) == 2 else None
+    check("the movement phase remains within its current step",
+          isinstance(phase, int) and 0 <= phase < mobs.HEX_MS, True)
+    check("the walk is acknowledged and echoed with authoritative AP",
+          echoed, [("cmdAck", {"res": 0}),
+                   ("userMove", {"id": 0, "path": [old_pos, pos],
+                                 "step_ms": phase, "ap": 50 + 5 * LEVEL})])
     check("no bullet leaves after the walk",
           [p for n, p in got if n == "faShot" and p.get("id", 0) == 0], [])
     check("and nothing is charged or reported",
@@ -1646,7 +1652,7 @@ try:
     # What the server must have paid, worked out from what the blows did:
     # each the part of the dog's health and stamina it took, of the price of
     # a mob at the blade's level (10, times the dog's 0.7), and the kill
-    # whatever those parts left of a whole (progression.mob_xp,
+    # whatever those parts left of a whole (progression.combat_mob_xp,
     # Fighter.award_xp, RoomCombat.settle_xp).
     mirror = progression.Character()
     mirror.skill[progression.MELEE] = [1, 0, progression.skill_xp_max(1)]
@@ -1654,7 +1660,7 @@ try:
 
     def pay(share):
         paid[0] += share
-        mirror.gain_xp(progression.MELEE, mirror.carry_xp(progression.MELEE, progression.mob_xp(
+        mirror.gain_xp(progression.MELEE, mirror.carry_xp(progression.MELEE, progression.combat_mob_xp(
             dog_stats.level, mirror.skill_level(progression.MELEE), share, dog_stats.xp_mult)),
             spec_on_top=True)
 

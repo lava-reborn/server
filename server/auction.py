@@ -67,10 +67,12 @@ import time
 
 import inventory
 import items
+import gold_trade
 import mail
 import names
 import progression
 import rooms
+import storage
 import world
 from protocol import BigUInt, Str
 
@@ -285,7 +287,13 @@ def sweep(store, directory, now=None):
     now = time.time() if now is None else now
     for lot in store.auction_due(now):
         name = meta(lot["type_id"])[3]
-        if items.acquisition_blocked(lot["type_id"]):
+        if gold_trade.afro_blueprint(lot["type_id"]):
+            letters = refund(lot, "Афро-чертежи больше не продаются на аукционе.") + give_back(
+                lot, "Аукцион: «%s» снят с продажи" % name,
+                "Афро-чертежи доступны у торговцев. Предмет и комиссия возвращены во вложении.")
+            # A newly forbidden lot cannot fulfil the service its owner paid for.
+            letters[-1]["afro"] += lot["fee"]
+        elif items.acquisition_blocked(lot["type_id"]):
             letters = refund(lot, "Предмет временно недоступен.") + give_back(
                 lot, "Аукцион: «%s» снят с продажи" % name,
                 "Оружие и броня выше 17 уровня временно недоступны. Предмет сохранён во вложении.")
@@ -368,7 +376,7 @@ class Auction:
             rows = [r for r in rows if r["seller"] == self.sess.char_id]
         else:
             rows = [r for r in rows if not items.acquisition_blocked(r["type_id"])
-                    and self.matches(r, p, cat)]
+                    and not gold_trade.afro_blueprint(r["type_id"]) and self.matches(r, p, cat)]
         sort = _int(p.get("sort"), 0)
         key = {
             0: lambda r: meta(r["type_id"])[3].lower(),
@@ -459,11 +467,11 @@ class Auction:
         if row is None or row["slot"] != inventory.BAG:
             return self.refuse("Выставить можно только предмет из рюкзака")
         si = items.params_of(row["type_id"]) or {}
-        # The same ownership rules as barter and mail, including gold gear.
+        # The same transfer restrictions as barter and outgoing player mail.
         from barter import tradable
         if not tradable(row["type_id"]):
             return self.refuse("Этот предмет непередаваемый")
-        cost = si.get("cost", 0)
+        cost = inventory.as_sent(gold_trade.auction_base(row["type_id"]))
         if not cost:
             return self.refuse("У предмета нет цены в афро")
         if row["root"] in items.BREAKABLE_ROOTS and row["max_break_cur"] > 0 \
@@ -487,29 +495,38 @@ class Auction:
             return self.refuse("Начальная ставка должна быть больше нуля")
         if buyout and buyout < start:
             return self.refuse("Цена выкупа не может быть ниже начальной ставки")
-        if self.store.auction_count(sess.char_id, time.time()) >= MAX_LOTS:
-            return self.refuse("Больше %d лотов сразу выставить нельзя" % MAX_LOTS)
         size = row["count"] if row["root"] in items.HEAPABLE_ROOTS else 1
         fee = afro_fee(cost, size, hours) if currency == AFRO else 0
-        ch = sess.character()
-        if not ch.can_afford(fee, 0):
-            return RES_LOW, None
         now = time.time()
-        # A reload still counting down would push the gun's DI into a bag
-        # that no longer holds it. The rounds already in the magazine stay
-        # in the snapshot and are sold with the gun.
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(sess.char_id):
+                    return RES_REFUSED, None
+                if self.store.auction_count(sess.char_id, now) >= MAX_LOTS:
+                    return self.refuse("Больше %d лотов сразу выставить нельзя" % MAX_LOTS)
+                owner = self.store.character(sess.char_id)
+                if owner["afro"] < fee:
+                    ch = sess.character()
+                    ch.afro, ch.gold = owner["afro"], owner["gold"]
+                    return RES_LOW, None
+                afro, gold = owner["afro"] - fee, owner["gold"]
+                lot = self.store.auction_list(
+                    row["uniq"], sess.char_id,
+                    dict(type_id=row["type_id"], root=row["root"],
+                         item_json=json.dumps(mail.snapshot(row)),
+                         seller=sess.char_id, seller_name=sess.nick,
+                         currency=currency, start_bid=start, buyout=buyout,
+                         fee=fee, hours=hours, created_at=int(now),
+                         ends_at=now + hours * HOUR),
+                    purse=(sess.char_id, afro, gold))
+        except storage.CommitError:
+            sess.inv.close_after_uncertain_commit()
+            return RES_REFUSED, None
+        # Only publish committed state. The storage layer already saved the
+        # purse; saving the whole live Character here could overwrite it.
+        ch = sess.character()
+        ch.afro, ch.gold = afro, gold
         sess.inv.forget_reload(row["uniq"])
-        lot = self.store.auction_list(
-            row["uniq"], sess.char_id,
-            dict(type_id=row["type_id"], root=row["root"],
-                 item_json=json.dumps(mail.snapshot(row)),
-                 seller=sess.char_id, seller_name=sess.nick,
-                 currency=currency, start_bid=start, buyout=buyout,
-                 fee=fee, hours=hours, created_at=int(now),
-                 ends_at=now + hours * HOUR),
-            purse=(sess.char_id, ch.afro - fee, ch.gold))
-        ch.afro -= fee
-        ch.save(self.store)
         log.info("  ..    lot %d: %s x%d, %s, %dh, fee %d", lot["id"],
                  meta(row["type_id"])[3], size,
                  money_text(start, currency), hours, fee)
@@ -534,7 +551,8 @@ class Auction:
         if lot is None:
             return RES_NO_LOT, None
         kind = _int(p.get("type"), -1)
-        if kind != TAKEOFF and items.acquisition_blocked(lot["type_id"]):
+        if kind != TAKEOFF and (items.acquisition_blocked(lot["type_id"])
+                                or gold_trade.afro_blueprint(lot["type_id"])):
             return RES_REFUSED, None
         if kind == BID:
             return self.bid(lot, _int(p.get("amount"), 0))
@@ -558,17 +576,44 @@ class Auction:
         return lot
 
     def charge(self, amount, currency):
-        """The purse after paying, or None when it cannot."""
+        """Persisted purse after paying; caller holds the character lock."""
+        owner = self.store.character(self.sess.char_id)
         ch = self.sess.character()
+        ch.afro, ch.gold = owner["afro"], owner["gold"]
         afro, gold = (amount, 0) if currency == AFRO else (0, amount)
-        if not ch.can_afford(afro, gold):
+        if owner["afro"] < afro or owner["gold"] < gold:
             return None
-        return (self.sess.char_id, ch.afro - afro, ch.gold - gold)
+        return (self.sess.char_id, owner["afro"] - afro, owner["gold"] - gold)
+
+    def pay_lot(self, lot, amount, buyout=False):
+        """Lock the payer and commit payment with the guarded lot write."""
+        me = self.sess.char_id
+        try:
+            with storage.atomic(self.store.db):
+                if not self.store.lock_quest_character(me):
+                    return RES_REFUSED, None
+                purse = self.charge(amount, lot["currency"])
+                if purse is None:
+                    return RES_NO_MONEY, None
+                if buyout:
+                    letters = (settle(lot, me, amount, self.sess.nick)
+                               + refund(lot, "Лот выкуплен:"))
+                    sent = self.store.auction_close(
+                        lot["id"], letters, purse, was=standing(lot))
+                else:
+                    sent = self.store.auction_rebid(
+                        lot["id"], amount, me, self.sess.nick,
+                        refund(lot, "Вашу ставку перебили на"), purse, was=standing(lot))
+                if sent is None:
+                    return RES_NO_LOT, None
+        except storage.CommitError:
+            self.sess.inv.close_after_uncertain_commit()
+            return RES_REFUSED, None
+        return RES_OK, self.paid(purse, sent)
 
     def paid(self, purse, letters):
         ch = self.sess.character()
         ch.afro, ch.gold = purse[1], purse[2]
-        ch.save(self.store)
 
         def then():
             self.sess.push_money()
@@ -587,15 +632,7 @@ class Auction:
             # The window then says "Ваша ставка принята", which is true
             # enough: the lot is won at its buyout, not at the higher bid.
             return self.buyout(lot)
-        purse = self.charge(amount, lot["currency"])
-        if purse is None:
-            return RES_NO_MONEY, None
-        sent = self.store.auction_rebid(
-            lot["id"], amount, me, self.sess.nick,
-            refund(lot, "Вашу ставку перебили на"), purse, was=standing(lot))
-        if sent is None:
-            return RES_NO_LOT, None
-        return RES_OK, self.paid(purse, sent)
+        return self.pay_lot(lot, amount)
 
     def buyout(self, lot):
         me = self.sess.char_id
@@ -603,15 +640,7 @@ class Auction:
             return self.refuse("Нельзя выкупить свой лот")
         if not lot["buyout"]:
             return RES_REFUSED, None
-        purse = self.charge(lot["buyout"], lot["currency"])
-        if purse is None:
-            return RES_NO_MONEY, None
-        letters = (settle(lot, me, lot["buyout"], self.sess.nick)
-                   + refund(lot, "Лот выкуплен:"))
-        sent = self.store.auction_close(lot["id"], letters, purse, was=standing(lot))
-        if sent is None:
-            return RES_NO_LOT, None
-        return RES_OK, self.paid(purse, sent)
+        return self.pay_lot(lot, lot["buyout"], buyout=True)
 
     def takeoff(self, lot):
         """The seller's "Отменить": the item back by mail, the commission
@@ -623,6 +652,9 @@ class Auction:
         letters = (give_back(lot, "Аукцион: «%s» снят с торгов" % name,
                              "Лот снят, предмет возвращается. Комиссия не возвращается.")
                    + refund(lot, "Продавец снял с торгов"))
+        if gold_trade.afro_blueprint(lot["type_id"]):
+            letters[0]["afro"] += lot["fee"]
+            letters[0]["body"] = "Торговля афро-чертежами отключена. Предмет и комиссия возвращаются."
         sent = self.store.auction_close(lot["id"], letters, was=standing(lot))
         if sent is None:
             return RES_NO_LOT, None

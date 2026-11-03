@@ -423,7 +423,8 @@ def drops_on_death(type_id):
     if rec is not None and "drop_on_death" in rec and not rec["drop_on_death"]:
         return False
     si = items.params_of(type_id)
-    if si is None or si.get("quest") or type_id == items.ADMIN_GUN:
+    if si is None or si.get("quest") or type_id == items.ADMIN_GUN \
+            or type_id in items.PERSONAL_QUEST_REWARDS:
         return False
     if quests.kept_on_death(type_id):
         return False
@@ -1211,8 +1212,12 @@ class Fighter:
         Fighter.cancel_pending(self, notify=True, replacing=True)
         sess = self.sess
         if getattr(sess, "walk", None) is not None:
-            cell = sess.live_cell()
-            sess.pos = cell
+            stop = getattr(sess, "stop_walk", None)
+            if stop is not None:
+                cell = stop()
+            else:
+                cell = sess.live_cell()
+                sess.pos = cell
             sess.cancel_passage()
             sess.send("actionCancel", pos=cell)
             if sess.room is not None:
@@ -1618,7 +1623,7 @@ class Fighter:
                         skill=progression.SHOOTING, spec=spec,
                         through=wt in THROUGH_TYPES,
                         at_players=not quests.lent(row["type_id"]))
-        rc.room.broadcast(("faAim", dict(id=self.eid,
+        rc.room.broadcast(("faAim", dict(id=self.eid, pos=self.cell, ap=self.ap,
                                          ang=mobs.direction(self.cell, aim_cell, width),
                                          num_shots=weapon.num_shots)))
         # The aim bar on the client runs fire_times[cur_mode] from faAim to
@@ -1979,9 +1984,9 @@ class Fighter:
     # --- experience ---------------------------------------------------------
     def award_xp(self, skill, spec, dealt, target):
         """Experience for a blow or a burst that harmed a mob, by the owner's
-        rule (progression.mob_xp): a price by the mob's level, halved at the
-        trained skill's own level, quartered one below, nothing two below,
-        times the mob's xp_mult.
+        rule (progression.combat_mob_xp): equal/lower rewards stay unchanged,
+        +1 through +4 rise linearly to the old ceiling, times xp_mult;
+        the trained skill's 17+ cap applies before splitting the reward.
 
         A kill is worth the price and no more, and a blow pays the part of
         it that its harm is of the mob's health and stamina together -- a
@@ -2024,20 +2029,36 @@ class Fighter:
         rp_info, pushed for the indexes that moved; a level-up (constitution)
         and a level of a strength or agility specialisation move a bar's
         maximum, which travels by usrUp (progression.moves_vitals). An
-        object pays nothing (OBJECTS_PAY_XP). From trained skill 17 the
-        whole kill price is capped at one before dividing it across hits;
-        the same rule applies to the death settlement."""
+        object pays nothing (OBJECTS_PAY_XP). A trained combat skill stops
+        at 17; its learned specialisation keeps a capped reward and its own
+        fractional carry. The same rules apply to the death settlement."""
         if share <= 0:
             return
         ch = self.character()
         st = target.stats
         if not OBJECTS_PAY_XP and getattr(st, "role", None) == "object":
             return
-        xp = ch.carry_xp(skill, progression.combat_mob_xp(
-            target.level, ch.skill[skill][0], share, getattr(st, "xp_mult", 1)))
+        skill_level = ch.skill[skill][0]
+        spec_only = (skill in (progression.SHOOTING, progression.MELEE)
+                     and skill_level >= progression.COMBAT_SKILL_CAP)
+        if spec_only and (spec is None or not 0 <= spec < progression.SPECS
+                          or ch.spec[spec][0] < 0):
+            return
+        reward = progression.combat_mob_xp(
+            target.level, skill_level, share, getattr(st, "xp_mult", 1))
+        if spec_only:
+            # Preserve the already earned fraction when a skill reaches 17.
+            reward += ch.xp_carry.pop(skill, 0.0)
+            xp = ch.carry_spec_xp(spec, reward)
+        else:
+            xp = ch.carry_xp(skill, reward)
         if xp <= 0:
             return
-        changed = ch.gain_xp(skill, xp, spec, spec_on_top=True)
+        if spec_only:
+            changed = ch.gain_spec_xp(spec, xp)
+        else:
+            changed = ch.gain_xp(skill, xp, spec, spec_on_top=True,
+                                 skill_cap=progression.COMBAT_SKILL_CAP)
         if any(changed.values()):
             self.stats_changed(changed)
         if progression.moves_vitals(changed):
@@ -2567,7 +2588,7 @@ class RoomCombat:
             self.ap_last = t
         for mob in list(self.mobs.values()):
             # Settle quiet time before a returning player can start a fight.
-            if bosses.is_camp_boss(self.room.loc.id, mob.type_id):
+            if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
                 self.regen_mob(mob, t)
             mob.think(self, t)
         self.calm(t)
@@ -2576,14 +2597,14 @@ class RoomCombat:
                 f.regen()
                 f.regen_at = t + REGEN_PERIOD
         for mob in self.mobs.values():
-            if not bosses.is_camp_boss(self.room.loc.id, mob.type_id):
+            if not bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
                 self.regen_mob(mob, t)
 
     def regen_mob(self, mob, t):
         """Camp bosses recover by elapsed quiet minutes, even while a room sleeps."""
         if not mob.alive or mob.target is not None:
             return
-        boss = bosses.is_camp_boss(self.room.loc.id, mob.type_id)
+        boss = bosses.uses_camp_recovery(self.room.loc.id, mob.type_id)
         if mob.homing and not boss:
             return
         if boss and mob.regen_at <= 0:
@@ -2771,7 +2792,7 @@ class RoomCombat:
         tick later, whole every time."""
         mob.target = None
         mob.homing = True
-        if bosses.is_camp_boss(self.room.loc.id, mob.type_id):
+        if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
             # Time spent fighting must not become banked regeneration.
             mob.regen_at = now() + REGEN_PERIOD
 
@@ -2781,7 +2802,7 @@ class RoomCombat:
         a warehouse's boss is taken by the harm done since it was last whole
         (holdings.py), never by harm banked over heal after heal."""
         mob.homing = False
-        if bosses.is_camp_boss(self.room.loc.id, mob.type_id):
+        if bosses.uses_camp_recovery(self.room.loc.id, mob.type_id):
             return
         if mob.hp < mob.hp_max or mob.sp < mob.sp_max:
             mob.hp, mob.sp = mob.hp_max, mob.sp_max

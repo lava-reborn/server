@@ -108,7 +108,7 @@ def audit():
     report['closed_recipe_types'] = sorted(r['type'] for r in recipes
                                            if r['type'] not in active_types)
     report['missing_blueprint_sources'] = sorted({r['craft']['blueprint'] for r in active_recipes
-        if r['craft']['blueprint'] not in sources})
+        if not any(t in sources for t in craft.blueprint_variants(r['craft']['blueprint']))})
     report['unavailable_pairs'] = sorted({(r['craft']['gun'], r['craft']['mod']) for r in recipes
         if not any(x['craft']['gun'] == r['craft']['gun'] and x['craft']['mod'] == r['craft']['mod']
                    and set(x['give']) & npcs.keys() and set(x['take']) & npcs.keys()
@@ -173,7 +173,12 @@ def audit():
     report['uncovered_base_weapons'] = [x for x in missing if x['type'] not in outputs]
     report.pop('missing')
     report['weapon_types'] = sorted(weapons)
-    report['obtainable_blueprints'] = sorted({r['craft']['blueprint'] for r in recipes} & sources.keys())
+    required_blueprints = {r['craft']['blueprint'] for r in recipes}
+    report['obtainable_blueprints'] = sorted(bp for bp in required_blueprints
+        if any(t in sources for t in craft.blueprint_variants(bp)))
+    report['accepted_blueprint_sources'] = {str(bp): sorted({source
+        for t in craft.blueprint_variants(bp) for source in sources.get(t, ())})
+        for bp in sorted(required_blueprints)}
     report['sources'] = {str(t): sorted(sources[t]) for t in sorted(weapons | {r['craft']['blueprint'] for r in recipes})}
     return report
 

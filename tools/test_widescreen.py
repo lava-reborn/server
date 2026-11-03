@@ -17,6 +17,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "server"))
 import widescreen as w  # noqa: E402
+import chat_tabs  # noqa: E402
 import world  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
@@ -49,6 +50,15 @@ def validate(code):
             body_size, = struct.unpack_from("<H", code, end - 2)
             errors.extend(validate(code[end:end + body_size]))
             end += body_size
+        elif op == 0x8F:
+            flags = code[at]
+            sizes = struct.unpack_from("<HHH", code, at + 1)
+            name_end = at + 8 if flags & 4 else code.index(b"\0", at + 7) + 1
+            if name_end != end:
+                errors.append("malformed ActionTry header")
+            for size in sizes:
+                errors.extend(validate(code[end:end + size]))
+                end += size
         elif op != 0x96:
             errors.append("unexpected long action %02x" % op)
         at = end
@@ -678,7 +688,7 @@ def check_container(label, version, body):
         keep = lambda tags: [t for t in w.without_online_art(tags)
                              if not (t[0] == 12 and w.MARK.encode() in t[1])]
         check(label + ": the patch preserves all artwork and unrelated scripts",
-              keep(actual) == keep(original), True)
+              keep(actual) == keep(chat_tabs.artwork(w.without_online_art(original))), True)
 
 
 def fixture():

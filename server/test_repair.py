@@ -110,8 +110,12 @@ def window(si, brk, top, rmod, K):
     else:
         afro = math.floor(loc7 * float(si["cost"]))
     afro = afro if afro != 0 else 1
-    restore = (js_round(si["g_cost"] * K["gold_repair_price_mod"]) / 100.0
-               if si.get("g_cost") else None)
+    factory = si.get("max_break_abs", 0)
+    restore = None
+    if si.get("g_cost") and factory > 0 and 0 <= top <= factory:
+        restore = (max(1, js_round(si["g_cost"] * K["gold_repair_price_mod"]
+                                  * (factory - top) / factory)) / 100.0
+                   if top < factory else 0)
     share = None
     if si["cost"]:
         mod = rmod
@@ -170,9 +174,9 @@ check("  ..below it only for a thing with no afro price, a repair under one afro
 g_vest = items.params_of(GVEST)
 check("level-8 G vest: A's 12000 times five times 0.3 is 18000 afro or 0.36 G",
       (inventory.repair_window(g_vest, 0, 1250), inventory.repair_prices(g_vest, 0, 1250)),
-      (((18000, 36, 300), (18000, 36)), (18000, 36, 300)))
-check("half-worn level-2 gold Walther: A's 2800 times five times 0.15; restore unchanged",
-      inventory.repair_prices(items.params_of(GWALTHER), 250, 500), (2100, 4, 13))
+      (((18000, 36, 0), (18000, 36)), (18000, 36, 0)))
+check("half-worn level-2 gold Walther: A's 2800 times five times 0.15; no lost ceiling means restore disabled",
+      inventory.repair_prices(items.params_of(GWALTHER), 250, 500), (2100, 4, 0))
 check("repair valuation does not enable afro purchases or sales of gold weapons",
       (items.params_of(GWALTHER)["cost"], items.params_of(GWALTHER)["g_cost"]), (0, 13))
 check("  ..a repair under one afro: no afro (the slot's 1, the sum's 0), the 0.01 G both print",
@@ -263,10 +267,19 @@ def short(row, code, afro=None, gold=None):
         mender.char.afro = afro
     if gold is not None:
         mender.char.gold = gold
+    # Restoration reads the authoritative purse under the character lock.
+    # Test setup must therefore change that purse too, without booking a payment.
+    if code == inventory.UPD_RESTORE:
+        rstore.db.execute("UPDATE characters SET afro=?, gold=? WHERE id=?",
+                          (mender.char.afro, mender.char.gold, rcid))
+        rstore.db.commit()
     try:
         return press(row, code)
     finally:
         mender.char.afro, mender.char.gold = kept
+        if code == inventory.UPD_RESTORE:
+            rstore.db.execute("UPDATE characters SET afro=?, gold=? WHERE id=?", (*kept, rcid))
+            rstore.db.commit()
 
 
 REP, GOLD, RESTORE = inventory.UPD_REPAIR, inventory.UPD_REPAIR_GOLD, inventory.UPD_RESTORE
@@ -323,13 +336,13 @@ check("the G vest half worn, for afro: 9000,"
                                              (1125, 1125), (9000, 0)))
 rstore.update_item(vest["uniq"], brk=100)
 check("  ..for gold: 0.33 G, to 1012", press(vest, GOLD)[2:], ((1012, 1012), (0, 33)))
-check("  ..restored for its gold price, 3.00 G, as new: break and ceiling the factory's",
-      press(vest, RESTORE), ([OK], ["ss_di_wear", "userInfo_Player"], (G_ABS, G_ABS), (0, 300)))
+check("  ..restore pays for 238/1250 lost ceiling: 0.57 G, as new",
+      press(vest, RESTORE), ([OK], ["ss_di_wear", "userInfo_Player"], (G_ABS, G_ABS), (0, 57)))
 check("  ..as new, a restore has nothing to do: 0, nothing paid",
       press(vest, RESTORE), ([OK], ["ss_di_wear", "userInfo_Player"], (G_ABS, G_ABS), (0, 0)))
 rstore.update_item(vest["uniq"], brk=416)
-check("  ..a worn one with its ceiling whole is restored too, as the window offers",
-      press(vest, RESTORE)[2:], ((G_ABS, G_ABS), (0, 300)))
+check("  ..ordinary damage with no lost ceiling cannot be restored for free",
+      press(vest, RESTORE), ([inventory.RES_REFUSED], [], (416, G_ABS), (0, 0)))
 worn_out = thing(GVEST, 0, 1)
 check("the G vest worn to 0 of 1: past mending, in gold as in afro",
       [press(worn_out, code)[0] for code in (REP, GOLD)], [[BROKEN], [BROKEN]])
@@ -352,9 +365,9 @@ check("the ledger: every repair and restore paid for, under «repair» and the t
       (book[:3], len(book), sorted(set(b[0] for b in book)), [b for b in book if b[1] == GVEST]),
       ([("repair", WALTHER, -420, 0), ("repair", WALTHER, 0, -want_gold),
         ("repair", WALTHER, -51, 0)],
-       3 + len(tops) + 1 + 5, ["repair"],
+       3 + len(tops) + 1 + 4, ["repair"],
        [("repair", GVEST, -9000, 0), ("repair", GVEST, 0, -33)]
-       + [("repair", GVEST, 0, -300)] * 3))
+       + [("repair", GVEST, 0, -57), ("repair", GVEST, 0, -300)]))
 rstore.close()
 
 # --- in process: the admin panel's offline gifts ------------------------------------------------
@@ -654,9 +667,9 @@ try:
         wants[label] = ([0], pay, [new])
     check("each press charged what the window computes from the frames, and the thing came"
           " back as the rule says", results, wants)
-    check("  ..in figures: ordinary repairs and restoration unchanged; G uses A valuation",
+    check("  ..in figures: ordinary repairs unchanged; G restoration pays the lost ceiling share",
           [results[label][1] for label, *_r in CASES],
-          [(420, 0), (0, 1), (33, 0), (9000, 0), (0, 18), (0, 300), (0, 300),
+          [(420, 0), (0, 1), (33, 0), (9000, 0), (0, 18), (0, 60), (0, 300),
            (2100, 0), (0, 4)])
 
     # «Отремонтировать все», as the client sends it: every listed thing's
@@ -727,7 +740,7 @@ try:
           book, [("repair", WALTHER, -420, 0), ("repair", WALTHER, 0, -1),
                  ("repair", WALTHER, -33, 0),
                  ("repair", GVEST, -9000, 0), ("repair", GVEST, 0, -18),
-                 ("repair", GVEST, 0, -300), ("repair", GVEST, 0, -300),
+                 ("repair", GVEST, 0, -60), ("repair", GVEST, 0, -300),
                  ("repair", GWALTHER, -2100, 0), ("repair", GWALTHER, 0, -4),
                  ("repair", WALTHER, -33, 0), ("repair", WALTHER, -672, 0),
                  ("repair", GWALTHER, -2100, 0),

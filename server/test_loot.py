@@ -114,7 +114,7 @@ check("at most as many table drops a kill as the file's design says",
 col = loot_table(COLONIST)
 col_types = [t for t, _c, _v in col]
 check("the colonist's table resolves the wiki's rows: Консервная банка at the Обычный rate",
-      [(t, c) for t, c, _v in col if t == TRASH[0]], [(TRASH[0], DESIGN["tiers"]["Обычный"]["chance"])])
+      [(t, c) for t, c, _v in col if t == TRASH[0]], [])
 check("and leaves out the premium medicine the wiki lists for it",
       [t for t in col_types if t in MINI], [])
 neg = loot_table(NEGODYAI)
@@ -131,7 +131,7 @@ check("a dog rolls for nothing its body does not already carry", loot_table(DOG)
 check("a colonist's own valuable, listed among the camp's ordinary rows, is "
       "one of them",
       [(c, v) for t, c, v in loot_table(COLONIST_2) if t == VALUABLE[2]],
-      [(DESIGN["tiers"]["Обычный"]["chance"], False)])
+      [])
 
 tiers = {v["chance"] for v in DESIGN["tiers"].values()}
 # The owner's own rows (data/loot_manual.json: the Nubian mine's marauders)
@@ -142,6 +142,8 @@ wrong = []
 for tid in mobs.TYPES:
     own = {(int(r["type"]), r["chance"]) for r in MANUAL.get(str(tid), [])
            if not r.get(mobs.ONE_OF)}
+    import loot_rules
+    own |= {(r['type'],r['chance']) for r in loot_rules.records().get(int(tid),())}
     for t, chance, _v in loot_table(int(tid)):
         si = items.params_of(t) or {}
         if (items.premium(t) or si.get("quest") or si.get("cost", 0) <= 0
@@ -261,7 +263,8 @@ async def _bags():
 
 kinds, kills = asyncio.run(_bags())
 check("a colonist's bags hold junk beyond what he carried",
-      sum(n for t, n in kinds.items() if t in col_types) > kills, True)
+      (sum(n for t,n in kinds.items() if t in TRASH) >= kills
+       and sum(n for t,n in kinds.items() if t in col_types) > 0), True)
 check("and not one premium thing in %d bags" % kills,
       sorted(t for t in kinds if items.premium(t)), [])
 

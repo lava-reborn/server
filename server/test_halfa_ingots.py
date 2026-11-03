@@ -421,7 +421,7 @@ check("  ..a trader by a name the client has, at peace there",
       (MT[MORTIMER][0], names.known(MORTIMER), world.location(BLACK_MARKET).war),
       (world.TRADER, True, 0))
 check("his service quests are his wherever he stands: cashing and change",
-      quests.given_by(MORTIMER), [301, 302, 303, 304, 305, 306, 307])
+      quests.given_by(MORTIMER), [301, 302, 303, 304, 305, 306, 307, 8800, 8801, 8802, 8803])
 
 # --- buying and cashing never makes gold --------------------------------------------------
 price = {t: inventory.buy_price(items.params_of(t), items.root_of(t), 1, True) for t in INGOTS}
@@ -608,7 +608,7 @@ try:
     mort = npc(arrival, MORTIMER)
     check("Мортимер is there: a stall of the three ingots, his cashing and change on offer",
           (mort.get("can_trade"), mort.get("type_list"), mort.get("give_quests")),
-          (1, [I1, I5, I10], [301, 302, 303, 304, 305, 306, 307]))
+          (1, [I1, I5, I10], [301, 302, 303, 304, 305, 306, 307, 8800, 8801, 8802, 8803]))
     check("  ..every inhabitant by a name the client has (an unknown one is the login screen)",
           [p["name"] for n, p in arrival if n.startswith("userInfo_") and n != "userInfo_Player"
            and not names.known(p["name"])], [])

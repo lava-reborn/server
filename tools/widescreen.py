@@ -396,7 +396,7 @@ OPS = {
     "getvar": 0x1C, "gettime": 0x34, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
     "add2": 0x47, "less2": 0x48, "equals2": 0x49, "getmember": 0x4E,
     "setmember": 0x4F, "callmethod": 0x52, "newmethod": 0x53,
-    "initarray": 0x42, "initobject": 0x43, "newobject": 0x40,
+    "modulo": 0x3F, "duplicate": 0x4C, "typeof": 0x44, "try": 0x8F, "initarray": 0x42, "initobject": 0x43, "newobject": 0x40,
 }
 
 
@@ -1086,6 +1086,212 @@ def fn_progress_snapshot():
     return a
 
 
+def refresh_weight_panels(a):
+    """Recount open controls only, after item data is actually available."""
+    for panel in ("equip", "trade", "bank", "barter", "mail"):
+        a.push("pan").var("lol").member("core", "SceneShifter", "_ref", "UIPanels",
+                                      panel, "instance", "content", "weightPan").op("definelocal")
+        a.var("pan").op("not").iftrue("skip_" + panel)
+        a.push(0).var("pan").push("count").op("callmethod").op("pop")
+        a.label("skip_" + panel)
+
+
+def fn_weight_item_info(dynamic=False):
+    """Size/static weight arrive after addItem; no new requests or listeners."""
+    a = Asm()
+    if dynamic:
+        a.var("obj").push(1).var("this").push("__weightDynamicOrig").op("callmethod").op("pop")
+        a.var("obj").member("param", "size").push(UNDEF).op("equals2").iftrue("out")
+    else:
+        a.var("rootID").var("obj").push(2).var("this").push("__weightStaticOrig").op("callmethod").op("pop")
+        a.var("obj").member("param", "weight").push(UNDEF).op("equals2").iftrue("out")
+    refresh_weight_panels(a)
+    a.label("out")
+    return a
+
+
+def fn_walk_refused():
+    """Native refusal consumes its callback once; release the old destination."""
+    a = Asm()
+    a.var("obj").push(1).var("this").push("__walkRefuseOrig").op("callmethod").op("pop")
+    a.push("walker").var("obj").member("param", "id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("walker").op("not").iftrue("out")
+    a.var("walker").push("finishPos").var("walker").member("numPos").op("setmember")
+    a.label("out")
+    return a
+
+
+def fn_walk_request():
+    """Reject the already requested destination before native pathfinding.
+
+    movePlayer already has this guard, but only after findPath. Keep its
+    original finishPos semantics and bypass both the search and the send.
+    A server stop clears finishPos separately, so retries after actions work.
+    """
+    a = Asm()
+    a.var("cell").op("not").iftrue("original")
+    a.var("cell").member("num").var("this").member("gamer", "walker", "finishPos").op("equals2").op("not").iftrue("original")
+    a.push(UNDEF).op("return")
+    a.label("original")
+    a.var("spliceNum").var("cell").push(2).var("this").push("__walkRequestOrig").op("callmethod").op("return")
+    return a
+
+
+def fn_walk_path():
+    """Plan a click from the current edge's end, without another path search."""
+    a = Asm()
+    a.push("walker").var("this").member("gamer", "walker").op("definelocal")
+    a.var("walker").member("__walkActive").op("not").iftrue("original")
+    a.var("walker").member("path").op("not").iftrue("original")
+    a.var("walker").member("path", "length").push(1).op("less2").iftrue("original")
+    a.var("cell0").member("num").var("walker").member("numPos").op("equals2").op("not").iftrue("original")
+    a.push("anchor").var("walker").member("path", 0).op("definelocal")
+    a.var("anchor").member("num").var("cell1").member("num").op("equals2").op("not").iftrue("search")
+    a.var("anchor").push(1).op("initarray").op("return")
+    a.label("search")
+    a.push("tail").var("cell1").var("anchor").push(2).var("this").push("__walkPathOrig").op("callmethod").op("definelocal")
+    a.var("tail").op("not").iftrue("failed")
+    a.var("anchor").push(1).var("tail").push("unshift").op("callmethod").op("pop")
+    a.label("failed")
+    a.var("tail").op("return")
+    a.label("original")
+    a.var("cell1").var("cell0").push(2).var("this").push("__walkPathOrig").op("callmethod").op("return")
+    return a
+
+
+def fn_walk_frame():
+    """Apply one authoritative route to the owner or an observing player."""
+    a = Asm()
+    a.push("p").var("obj").member("param").op("definelocal")
+    a.push("walker").var("p").member("id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("walker").op("not").iftrue("original")
+    a.var("walker").push("__walkElapsed").var("p").member("step_ms").op("setmember")
+    a.var("p").member("step_ms").push(UNDEF).op("equals2").iftrue("original")
+    a.var("walker").member("numPos").var("p").member("path", 0).op("equals2").iftrue("original")
+    # A delayed observer may still be on an older edge. Move its collision
+    # marker as well as its picture before starting the accepted route.
+    a.var("p").member("path", 0).push(1).var("walker").push("breakMove").op("callmethod").op("pop")
+    a.label("original")
+    a.var("obj").push(1).var("this").push("__walkFrameOrig").op("callmethod").op("pop")
+    a.var("p").member("id").iftrue("out")
+    a.var("p").member("ap").push(UNDEF).op("equals2").iftrue("out")
+    a.var("this").member("master", "gamer", "apManager").push("ap").var("p").member("ap").op("setmember")
+    a.label("out")
+    return a
+
+
+def fn_walk_create():
+    """Splice an unchanged edge in place, preserving its coordinates and timer."""
+    a = Asm()
+    a.push("phase").var("this").member("__walkElapsed").op("definelocal")
+    a.var("this").push("__walkElapsed", UNDEF).op("setmember")
+    a.var("this").push("__walkNextAt", UNDEF).op("setmember")
+    a.var("this").member("__walkActive").op("not").iftrue("create")
+    a.var("this").member("path").op("not").iftrue("create")
+    a.var("this").member("path", "length").push(1).op("less2").iftrue("create")
+    a.var("_path").member("length").push(2).op("less2").iftrue("create")
+    a.var("_path").member(0, "num").var("this").member("numPos").op("equals2").op("not").iftrue("create")
+    a.var("_path").member(1, "num").var("this").member("path", 0, "num").op("equals2").op("not").iftrue("create")
+    a.push("first").push(0).var("_path").push("shift").op("callmethod").op("definelocal")
+    a.var("this").push("path").var("_path").op("setmember")
+    a.var("this").push("completedPath").var("first").push(1).op("initarray").op("setmember")
+    a.var("this").push("__walkNextAt").var("this").member("startTime").push(200).op("add2").op("setmember")
+    a.push(UNDEF).op("return")
+    a.label("create")
+    a.var("phase").push(UNDEF).op("equals2").iftrue("start")
+    a.var("phase").push(0).op("less2").iftrue("start")
+    a.var("phase").push(200).op("less2").op("not").iftrue("start")
+    a.var("this").push("__walkNextAt").op("gettime").var("phase").op("subtract").op("setmember")
+    a.label("start")
+    a.var("_path").push(1).var("this").push("__walkCreateOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_walk_start():
+    """Anchor steps to one route clock; interval overshoot must not accumulate."""
+    a = Asm()
+    a.push("began").var("this").member("__walkNextAt").op("definelocal")
+    a.var("this").push("__walkActive", True).op("setmember")
+    a.push(0).var("this").push("__walkStartOrig").op("callmethod").op("pop")
+    a.var("began").push(UNDEF).op("equals2").iftrue("first")
+    a.var("this").push("startTime").var("began").op("setmember")
+    a.label("first")
+    a.var("this").push("finishTime", 200).op("setmember")
+    a.var("this").push("__walkNextAt").var("this").member("startTime").push(200).op("add2").op("setmember")
+    a.var("began").push(UNDEF).op("equals2").iftrue("out")
+    a.push(0).var("this").push("moveDirectionInc").op("callmethod").op("pop")
+    a.label("out")
+    return a
+
+
+def fn_run_position():
+    """Running faces the actual edge; aiming retains its original rotation."""
+    a = Asm()
+    a.push("walker").var("obj").member("walker").op("definelocal")
+    a.push("figure").var("walker").member("id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("figure").op("not").iftrue("original")
+    a.var("figure").member("behavior").push("run").op("equals2").op("not").iftrue("face")
+    a.var("figure").member("__direction").var("walker").member("direction").op("equals2").iftrue("original")
+    a.label("face")
+    a.var("figure").member("rotate").push(1).var("figure").push("deleteEnterFrame").op("callmethod").op("pop")
+    a.var("figure").push("__direction").var("walker").member("direction").op("setmember")
+    a.label("original")
+    a.var("obj").push(1).var("this").push("__runPositionOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_walk_increment():
+    """A late frame may reach an edge's end, but never overshoot its cell."""
+    a = Asm()
+    a.push("elapsed").op("gettime").var("this").member("startTime").op("subtract").op("definelocal")
+    a.var("elapsed").push(0).op("less2").op("not").iftrue("ceiling")
+    a.push("elapsed", 0).op("definelocal")
+    a.label("ceiling")
+    a.var("this").member("finishTime").var("elapsed").op("less2").op("not").iftrue("move")
+    a.push("elapsed").var("this").member("finishTime").op("definelocal")
+    a.label("move")
+    a.push("delta").var("elapsed").var("this").member("moveTime").op("subtract").op("definelocal")
+    a.var("this").push("moveTime").var("elapsed").op("setmember")
+    a.var("this").member("y").var("this").member("vy").var("delta").op("multiply").op("add2")
+    a.var("this").member("x").var("this").member("vx").var("delta").op("multiply").op("add2")
+    a.push(2).var("this").push("setPosition").op("callmethod").op("pop")
+    return a
+
+
+def fn_walk_finish():
+    """A stopped route must not donate its stale clock to a later walk."""
+    a = Asm()
+    a.var("this").push("__walkActive", False).op("setmember")
+    a.var("this").push("__walkNextAt", UNDEF).op("setmember")
+    a.push(0).var("this").push("__walkFinishOrig").op("callmethod").op("pop")
+    return a
+
+
+def fn_aim_position():
+    """Stop animation before faAim dispatches the pose and WeaponPan's bar."""
+    a = Asm()
+    a.var("obj").member("param", "pos").push(UNDEF).op("equals2").iftrue("aim")
+    a.push("walker").var("obj").member("param", "id").push(1).var("this").push("getWalker").op("callmethod").op("definelocal")
+    a.var("walker").op("not").iftrue("aim")
+    a.var("walker").member("numPos").var("obj").member("param", "pos").op("equals2").op("not").iftrue("stop")
+    a.var("walker").member("path").op("not").iftrue("aim")
+    a.push(1).var("walker").member("path", "length").op("less2").op("not").iftrue("aim")
+    a.label("stop")
+    a.var("obj").member("param", "pos").push(1).var("walker").push("breakMove").op("callmethod").op("pop")
+    a.var("walker").push("finishPos").var("walker").member("numPos").op("setmember")
+    for field, busy in (("prevNumPos", False), ("numPos", True)):
+        a.var("walker").member(field).push(1).var("this").push("getCellFromNumber").op("callmethod")
+        a.push("busy", busy).op("setmember")
+    # breakMove emits finishPart and adjusts predicted AP. Restore the
+    # accepted server value before the aim bar; observers keep their own AP.
+    a.var("obj").member("param", "id").iftrue("aim")
+    a.var("obj").member("param", "ap").push(UNDEF).op("equals2").iftrue("aim")
+    a.var("this").member("master", "gamer", "apManager").push("ap").var("obj").member("param", "ap").op("setmember")
+    a.label("aim")
+    a.var("obj").push(1).var("this").push("__aimPositionOrig").op("callmethod").op("pop")
+    return a
+
+
 def fn_weight_snapshot():
     """Refresh existing weight displays after authoritative rp_info, no polling/listeners."""
     a = Asm()
@@ -1419,8 +1625,8 @@ def fn_repair_cost():
 
     All RepairInterface slot, drag, double-click and bulk calculations,
     plus ItemContainer's bag prices, read cost through this method.
-    StaffInterface.kill clears ssType; shops keep the original zero cost
-    and therefore cannot buy or sell gold-only items for afro.
+    StaffInterface.kill clears ssType; shops keep the original purchase
+    prices. Confirmed G sales use gold_commerce_client's separate payout.
     """
     a = Asm()
     a.push("value").var("prop").push(1).var("this")
@@ -2840,6 +3046,30 @@ def injected():
          ("obj",), fn_game_volume_slider()),
         (("gpui", "SettingsInterface"), "setVolume", "__soundVolumeOrig",
          ("scroll", "value"), fn_sound_volume_setting()),
+        (("core", "objects", "ItemFactory"), "initializeItem", "__weightStaticOrig",
+         ("obj", "rootID"), fn_weight_item_info()),
+        (("core", "objects", "ItemFactory"), "updateItemDI", "__weightDynamicOrig",
+         ("obj",), fn_weight_item_info(dynamic=True)),
+        (("core", "location", "Location"), "breakMv", "__walkRefuseOrig",
+         ("obj",), fn_walk_refused()),
+        (("core", "location", "Location"), "movePlayer", "__walkRequestOrig",
+         ("cell", "spliceNum"), fn_walk_request()),
+        (("core", "location", "Location"), "findPath", "__walkPathOrig",
+         ("cell0", "cell1"), fn_walk_path()),
+        (("core", "location", "Location"), "userMove", "__walkFrameOrig",
+         ("obj",), fn_walk_frame()),
+        (("core", "location", "DisplayLocScene"), "position", "__runPositionOrig",
+         ("obj",), fn_run_position()),
+        (("core", "location", "LocWalker"), "createMove", "__walkCreateOrig",
+         ("_path",), fn_walk_create()),
+        (("core", "location", "LocWalker"), "startMove", "__walkStartOrig",
+         (), fn_walk_start()),
+        (("core", "location", "LocWalker"), "moveDirectionInc", "__walkIncrementOrig",
+         (), fn_walk_increment()),
+        (("core", "location", "LocWalker"), "finishMove", "__walkFinishOrig",
+         (), fn_walk_finish()),
+        (("core", "location", "Location"), "faAim", "__aimPositionOrig",
+         ("obj",), fn_aim_position()),
         (("core", "location", "Location"), "init", "__actionInitOrig",
          (), fn_action_listener("__actionInitOrig")),
         (("core", "location", "Location"), "kill", "__actionKillOrig",
@@ -2934,6 +3164,41 @@ def injected():
         (("gpui", "LocationInterface"), "toGlobal", "__subGlobalOrig",
          (), fn_sublocation_global()),
     )
+    from chat_tabs import patches
+    private_tabs = patches(Asm, UNDEF)
+    for name, params, body in private_tabs["globals"]:
+        a.var("_global").push(name).function(params, body).op("setmember")
+    wraps += private_tabs["wraps"]
+    from chat_history import patches as history_patches
+    history = history_patches(Asm, UNDEF)
+    for name, params, body in history["globals"]:
+        a.var("_global").push(name).function(params, body).op("setmember")
+    wraps += history["wraps"]
+    from private_chat_tooltips import patches as tooltip_patches
+    nickname_hints = tooltip_patches(Asm, UNDEF)
+    for name, params, body in nickname_hints["globals"]:
+        a.var("_global").push(name).function(params, body).op("setmember")
+    wraps += nickname_hints["wraps"]
+    from private_chat_close import patches as close_patches
+    closable_chats = close_patches(Asm, UNDEF)
+    for name, params, body in closable_chats["globals"]:
+        a.var("_global").push(name).function(params, body).op("setmember")
+    wraps += closable_chats["wraps"]
+    from mortimer_trade_client import patches as mortimer_patches
+    gold_buyback = mortimer_patches(Asm, UNDEF)
+    for name, params, body in gold_buyback["globals"]:
+        a.var("_global").push(name).function(params, body).op("setmember")
+    wraps += gold_buyback["wraps"]
+    from gold_commerce_client import patches as commerce_patches
+    commerce = commerce_patches(Asm, UNDEF)
+    for name, params, body in commerce["globals"]:
+        a.var("_global").push(name).function(params, body).op("setmember")
+    wraps += commerce["wraps"]
+    from restore_price_client import patches as restore_patches
+    restoration = restore_patches(Asm, UNDEF)
+    for name, params, body in restoration["globals"]:
+        a.var("_global").push(name).function(params, body).op("setmember")
+    wraps += restoration["wraps"]
     for method in ("increase_skill_func", "increase_level_func",
                    "increase_spec_func", "increase_spec_level_func"):
         keep = "__progress_" + method
@@ -3083,6 +3348,8 @@ def inject(tags):
     """Put the DoAction before the first ShowFrame, replacing an earlier one."""
     tags = [t for t in tags if not (t[0] == 12 and MARK.encode() in t[1])]
     tags = without_online_art(tags)
+    from chat_tabs import artwork as private_tab_artwork
+    tags = private_tab_artwork(tags)
     at = next(k for k, t in enumerate(tags) if t[0] == 1)
     tags[at:at] = online_art(tags) + [(12, injected(), True)]
     return tags

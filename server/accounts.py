@@ -2578,10 +2578,20 @@ class Store:
 
     def auction_list(self, uniq, seller, lot, purse=None):
         """The item leaves the seller's bag and becomes a lot."""
+        snapshot = json.loads(lot["item_json"])
+        if (int(snapshot["uniq"]) != int(uniq)
+                or int(snapshot["type_id"]) != int(lot["type_id"])
+                or int(snapshot["root"]) != int(lot["root"])
+                or int(lot["seller"]) != int(seller)):
+            raise ValueError("auction item does not match its snapshot")
+        # Reuse barter's complete item guard: a changed stack, magazine or
+        # durability must not become a lot made from the previous snapshot.
+        args = [int(uniq), int(seller)] + [int(snapshot[c]) for c in self.BARTER_GUARD]
         with self.db:
             gone = self.db.execute(
-                "DELETE FROM items WHERE uniq = ? AND char_id = ?",
-                (uniq, seller)).rowcount
+                "DELETE FROM items WHERE uniq = ? AND char_id = ?"
+                + "".join(" AND %s = ?" % c for c in self.BARTER_GUARD),
+                args).rowcount
             if gone != 1:
                 # Raised inside the transaction, so it is rolled back:
                 # nothing was deleted anyway, and no lot is made of an item

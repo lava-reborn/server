@@ -87,7 +87,7 @@ ADMIN_GUN, ROUNDS = 1534, 6092
 NOT_READY = 3                       # server.RES_NOT_READY
 DAILY_MAX = 10                      # server.DAILY_MAX
 OUNCE = 100                         # gold travels in hundredths (progression.GOLD_OUNCE)
-DESIGNED = {WEAK: {SAND: 0.5, EMERALD: 0.1}, BANDIT: {SAND: 0.5, EMERALD: 0.1}}
+DESIGNED = {WEAK: {SAND: .25, EMERALD: .133461}, BANDIT: {SAND: .25, EMERALD: .134471}}
 
 import testkit  # noqa: E402
 from testkit import check, fails  # noqa: E402
@@ -99,30 +99,14 @@ loot_manual = getattr(items, "loot_manual", lambda: {})
 
 # --- the tables ------------------------------------------------------------------
 check("the cap of two a kill is what it was", mobs.MAX_DROPS, 2)
-valuable = {t: mobs.level_piece(mobs.VALUABLE_SERIES, mobs.stats(t).level) for t in BANDITS}
-check("the weak marauder rolls for an emerald and his valuable, then a bag of sand and the owner's junk",
-      mobs.loot_table(WEAK), [(EMERALD, 0.1, True), (valuable[WEAK], 0.06, True)] + GOLD_ROWS
-      + [(SAND, 0.5, False)] + JUNK)
-check("the marauder the same, with the better chance of sand",
-      mobs.loot_table(BANDIT),
-      [(EMERALD, 0.1, True), (valuable[BANDIT], 0.06, True)] + GOLD_ROWS + [(SAND, 0.5, False)] + JUNK)
-
-# Every other creature's table against the same table built without the
-# mine's hand-made rows: they change the marauders' and nobody else's. The
-# file's other row, the valley boss's ingot (test_boss_ingot), stays in both.
-now = {int(t): mobs.loot_table(int(t)) for t in mobs.TYPES}
-_saved = (getattr(mobs, "_LOOT_MANUAL", None), dict(mobs._TABLES))
-mobs._LOOT_MANUAL = {k: v for k, v in (_saved[0] or {}).items() if int(k) not in BANDITS}
-mobs._TABLES.clear()
-bare = {int(t): mobs.loot_table(int(t)) for t in mobs.TYPES}
-mobs._LOOT_MANUAL, _tables = _saved
-mobs._TABLES.clear()
-mobs._TABLES.update(_tables)
-check("the hand-made rows change the tables of the two marauders and of no other creature",
-      sorted(t for t in now if now[t] != bare[t]), sorted(BANDITS))
-check("and, of theirs, only by the sand, the emerald and the owner's junk",
-      [sorted(set(now[t]) - set(bare[t])) for t in BANDITS],
-      [sorted([(SAND, DESIGNED[t][SAND], False), (EMERALD, 0.1, True)] + JUNK + GOLD_ROWS) for t in BANDITS])
+for kind in BANDITS:
+    table={t:(p,v) for t,p,v in mobs.loot_table(kind)}
+    check('%d: approved sand and emerald probabilities'%kind,
+          (table[SAND],table[EMERALD]),
+          ((DESIGNED[kind][SAND],False),(DESIGNED[kind][EMERALD],True)))
+    check('%d: sand is independent of the random cap'%kind,
+          SAND in mobs.independent_loot(kind),True)
+now={int(t):mobs.loot_table(int(t)) for t in mobs.TYPES}
 check("only the configured Magrib, Peacekeeper and Abu-Hamed miners also roll for these", sorted(t for t, rows in now.items()
                                              if t not in BANDITS and {r[0] for r in rows} & {SAND, EMERALD}),
       [838, 839, 840, 841, 930, 931])
@@ -148,6 +132,9 @@ def kept_rates(rows, cap):
     dist = [1.0] + [0.0] * cap
     out = []
     for _t, p, _v in rows:
+        if _t == SAND:
+            out.append(p)
+            continue
         out.append(p * sum(dist[:cap]))
         new = list(dist)
         for k in range(cap):

@@ -212,8 +212,13 @@
   },
   "25922": {
    "from_effect": [
-    "clip_size"
-   ]
+    "clip_size",
+    "h_damage_min",
+    "h_damage_max",
+    "st_damage_min",
+    "st_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
   },
   "25986": {
    "from_effect": [
@@ -248,6 +253,261 @@
    "from_effect": [
     "clip_size"
    ]
+  },
+  "25803": {
+   "values": {
+    "h_damage_min": [
+     95,
+     0,
+     102
+    ],
+    "h_damage_max": [
+     255,
+     0,
+     348
+    ]
+   },
+   "why": "Owner 2026-11-02: repair only US Army M24 A. Its G counterpart stays 114-306 / 122-418. Restore the approximately +20% G damage ratio of ordinary A/G rifles (M24 A = G / 1.2, nearest integer). No other weapon parameters or G weapons changed."
+  },
+  "41955": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "41943": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "25812": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "41952": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "25809": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "25815": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "41958": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "25806": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "41961": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "41946": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "41940": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "41949": {
+   "from_base": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: use corrected M24 A damage, preserving the existing modification effect and all other fields."
+  },
+  "25895": {
+   "from_effect": [
+    "h_damage_min",
+    "st_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25947": {
+   "from_effect": [
+    "h_damage_min",
+    "st_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25896": {
+   "from_effect": [
+    "h_damage_max",
+    "st_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25909": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max",
+    "st_damage_min",
+    "st_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25948": {
+   "from_effect": [
+    "h_damage_min",
+    "st_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25961": {
+   "from_effect": [
+    "h_damage_max",
+    "st_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25977": {
+   "from_effect": [
+    "h_damage_min",
+    "st_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25768": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25781": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25816": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25434": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25482": {
+   "from_effect": [
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25498": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25524": {
+   "from_effect": [
+    "h_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "26186": {
+   "from_effect": [
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "26045": {
+   "from_effect": [
+    "h_damage_min",
+    "st_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "26071": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max",
+    "st_damage_min",
+    "st_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25993": {
+   "from_effect": [
+    "h_damage_min",
+    "h_damage_max",
+    "st_damage_min",
+    "st_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "26032": {
+   "from_effect": [
+    "h_damage_min",
+    "st_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "26058": {
+   "from_effect": [
+    "h_damage_min",
+    "st_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "26006": {
+   "from_effect": [
+    "h_damage_min",
+    "st_damage_min"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
+  },
+  "25418": {
+   "from_effect": [
+    "h_damage_max"
+   ],
+   "why": " Owner 2026-11-02: honour the declared +10% double-blueprint damage with standard craft rounding. Preserve the existing magazine and all other fields."
   }
  }
 }

@@ -47,6 +47,7 @@ os.environ["LAVA_BOSS_CLOCK"] = "2026-09-28T12:00:00"
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import bosses        # noqa: E402
+import camp_elites   # noqa: E402
 import combat        # noqa: E402
 import mobs          # noqa: E402
 import names         # noqa: E402
@@ -124,7 +125,8 @@ for loc_id, (fac, lo, hi) in sorted(BANDS.items()):
     r = room(loc_id)
     loc = r.loc
     fighters = [n.type_id for n in r.npcs.values()
-                if n.root == world.MOB and prefix(n.type_id) == fac
+                if n.root == world.MOB and (prefix(n.type_id) == fac
+                    or n.type_id in camp_elites.locations()[loc_id][1])
                 and world.creature_role(n.type_id) in ("mob", "boss")]
     check("camp %d stands %d fighters of %s_, every one of levels %d-%d (the tooltip's band)"
           % (loc_id, len(fighters), fac, lo, hi),
@@ -149,7 +151,8 @@ for loc_id, (chief, fac) in sorted(CHIEFS.items()):
     empty = sum(1 for _c, t in r.loc.spawns if t == 0)
     check("%d stands its chief %d and %d of his %s_ in its %d empty slots"
           % (loc_id, chief, empty, fac, empty),
-          (got[chief], sum(n for t, n in got.items() if prefix(t) == fac)), (1, empty))
+          (got[chief], sum(n for t, n in got.items() if prefix(t) == fac
+                          or t in camp_elites.locations()[loc_id][1])), (1, empty))
 
 r122 = room(122)
 check("«Механик ДСР» (122): the mechanic and eight ДСР stand-ins of levels 7-8, two officers"
@@ -166,8 +169,8 @@ check("every type the table fills a slot with is one the client can draw and nam
               if t not in MT or not names.known(t)}), [])
 
 # Where the table says nothing, nothing changed.
-check("the valley's camp 34 stands what its file says, as before",
-      stood(room(34)), collections.Counter({251: 4, 2103: 1, 20: 1, 21: 2}))
+check("the valley's camp 34 keeps its chief and the existing elite fighters",
+      stood(room(34)), collections.Counter({250: 3, 251: 2, 851: 2, 2103: 1}))
 check("the slave traders' camp 88 is Абри's to fill, since the owner's Абри of 2026-10-12"
       " (server/test_abri_world.py): its chief stands, and the table fills its slots",
       (stood(room(88))[327], len(world.camp_fill(88))), (1, 10))

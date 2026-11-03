@@ -984,14 +984,14 @@ check("  ..with 50 000 afro: mended for 18 000, to nine"
 rstore.update_item(row["uniq"], brk=0)
 check("  ..broken again, for gold: 0.36 G, a tenth off the ceiling it had",
       mend(inventory.UPD_REPAIR_GOLD), ([0], twice, twice, 32000, 964))
-check("  ..restored for its gold price, as new",
-      mend(inventory.UPD_RESTORE), ([0], top, top, 32000, 964 - vsi["g_cost"]))
+check("  ..restored for 19% lost ceiling (0.57 G), as new",
+      mend(inventory.UPD_RESTORE), ([0], top, top, 32000, 907))
 # The window offers "Восстановить" for anything with a g_cost, so this is a
 # press a player can make: a 3 would put up "Сервер не отвечает"
 # (ErrorReport); a press with nothing to do is answered 0 and charged
 # nothing (Inventory.repair).
 check("  ..and as new, a restore has nothing to buy back: 0, nothing paid",
-      mend(inventory.UPD_RESTORE), ([0], top, top, 32000, 964 - vsi["g_cost"]))
+      mend(inventory.UPD_RESTORE), ([0], top, top, 32000, 907))
 rstore.close()
 
 # --- a table that is wrong stops the server ------------------------------------

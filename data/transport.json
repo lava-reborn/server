@@ -107,12 +107,12 @@
  "status_rentals": {
   "17": {
    "base_type": 4,
-   "cost": 35000,
+   "cost": 22500,
    "required_status": 1
   },
   "18": {
    "base_type": 5,
-   "cost": 45000,
+   "cost": 35000,
    "required_status": 2
   }
  },

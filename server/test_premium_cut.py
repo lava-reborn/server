@@ -401,7 +401,7 @@ try:
     on_sale = st.create_item(keeper, MASK_P, 1)
 
     def lot_of(row, **kw):
-        snap = {"uniq": row["uniq"], "type_id": row["type_id"], "root": row["root"]}
+        snap = dict(row)
         return dict(dict(type_id=row["type_id"], root=row["root"], item_json=json.dumps(snap),
                          seller=keeper, seller_name="pier", currency=0, start_bid=100,
                          buyout=0, fee=5, hours=24, created_at=1, ends_at=9e9), **kw)

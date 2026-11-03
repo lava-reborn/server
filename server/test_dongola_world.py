@@ -172,14 +172,12 @@ try:
     r93, r91, r98, r99 = room(93), room(91), room(98), room(99)
     check("the ДСР's camp 93: Полковник Халил, ten of the fill with the treasurer, Вильям Блейд, two"
           " boxes", stood(r93),
-          collections.Counter({374: 1, 362: 1, 363: 1, 365: 1, 366: 1, 368: 1, 369: 1, 370: 1, 372: 1,
-                               373: 1, 592: 1, 1565: 1, 2165: 2}))
+          collections.Counter({368: 2, 369: 2, 372: 1, 373: 1, 362: 1, 365: 1, 366: 1, 2165: 2, 374: 1, 592: 1, 1565: 1}))
     check("  ..its chief's place 91: Джибрил Ибрагим and eleven of the fill",
           (stood(r91)[375], sum(stood(r91).values())), (1, 12))
     check("the Peacekeepers' camp 98: Шеф Дженсен, ten of the fill with the treasurer, two boxes",
           stood(r98),
-          collections.Counter({407: 1, 395: 1, 396: 1, 397: 1, 398: 1, 399: 1, 400: 1, 401: 1, 402: 1,
-                               403: 1, 593: 1, 2167: 2}))
+          collections.Counter({400: 2, 402: 2, 399: 1, 2167: 2, 404: 2, 406: 2, 407: 1, 593: 1}))
     check("  ..its chief's place 99: Макс Коул and eleven of the fill",
           (stood(r99)[408], sum(stood(r99).values())), (1, 12))
     check("the boxes are things, standing by the table (world.STANDING_OBJECTS), as are Вельс's boxes in"
@@ -208,7 +206,7 @@ try:
           ([1565], False, []))
     check("Мортимер stands in the new market 197 by the original's file and gives the exchanges",
           (stood(room(197))[1188], 1188 in {t for _c, t in world.location(197).spawns},
-           quests.given_by(1188)), (1, True, list(range(301, 308))))
+           quests.given_by(1188)), (1, True, list(range(301, 308)) + [8800, 8801, 8802, 8803]))
     check("the lottery sellers stand all year in the old and the new market and the black market"
           " (world.SEASON_KEPT)",
           (stood(room(50))[663], stood(room(197))[663], stood(room(103))[712]), (1, 1, 1))

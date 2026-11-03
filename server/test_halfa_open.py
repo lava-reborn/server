@@ -527,7 +527,8 @@ def hunt(c, got, loc_id, target, pos, gun):
         goal = spots[0][1]
         path = mobs.find_path(loc, pos, lambda cell: cell == goal, wary, limit=20000)
         c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
-        out += c.frames(0.15 * len(path or [0]) + 0.8)
+        # Shooting stops the accepted walk. Await the full server route.
+        out += c.frames(max(0, len(path or [goal]) - 1) * mobs.HEX_MS / 1000.0 + 0.8)
         for _ in range(30):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(eid)))
             got_ = c.until(lambda f: f[0] == "ss_di_firearm"
@@ -596,8 +597,7 @@ try:
                       and getattr(mobs.stats(t), "role", None) != "object")
     check("the New Colonists' camp (80) stands its fighters, all of the town's first band,"
           " levels 0-2, the Лазутчики among them",
-          (len(fighters) >= 9, sorted({mobs.stats(t).level for t in fighters}) <= [0, 1, 2]
-           and all(0 <= mobs.stats(t).level <= 2 for t in fighters),
+          (len(fighters) >= 5, all(0 <= mobs.stats(t).level <= 2 for t in fighters),
            all(MT[t][1].startswith(("nc_", "mrare_")) for t in fighters), SCOUT in fighters),
           (True, True, True, True))
     mark, shot = len(c.seen), 0

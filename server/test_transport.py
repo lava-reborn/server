@@ -142,7 +142,7 @@ def walk(c, cell):
     hop is enough to be where the client would have walked to."""
     c.send("moveTo;path=|%d|;" % cell)
     check("stood on %d" % cell,
-          [n for n, _p in c.until("userMove", settle=0)], ["cmdAck", "userMove"])
+          [n for n, _p in c.until("c_ap", settle=0)], ["cmdAck", "actionCancel", "c_ap"])
 
 
 def to_map(c):

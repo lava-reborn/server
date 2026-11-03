@@ -284,8 +284,18 @@ CAMP_BOSSES = frozenset({
 CAMP_BOSS_TYPES = frozenset(t for _loc, t in CAMP_BOSSES)
 
 
+# Recovery covers all existing gold-dropping camp bosses. Keep HP membership
+# separate: adding the Nubian leader/outpost must not apply the HP hotfix.
+CAMP_RECOVERY_BOSSES = CAMP_BOSSES | frozenset({(34, 2103), (168, 8620)})
+CAMP_RECOVERY_TYPES = frozenset(t for _loc, t in CAMP_RECOVERY_BOSSES)
+
+
+def uses_camp_recovery(loc_id, type_id):
+    return (loc_id, type_id) in CAMP_RECOVERY_BOSSES
+
+
 def is_camp_boss(loc_id, type_id):
-    """Whether this is one of the reviewed camp spawns with camp recovery."""
+    """Whether this spawn belongs to the original camp HP-hotfix group."""
     return (loc_id, type_id) in CAMP_BOSSES
 
 

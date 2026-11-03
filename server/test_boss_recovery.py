@@ -23,17 +23,64 @@ class BossRecovery(unittest.TestCase):
         mob.regen_at = 160.0
         return rc, mob, frames
 
-    def test_scope_is_exactly_the_twenty_camp_bosses(self):
+    def test_recovery_covers_twenty_two_carriers_without_expanding_hp_hotfix(self):
         self.assertEqual(len(bosses.CAMP_BOSSES), 20)
+        self.assertEqual(bosses.CAMP_RECOVERY_BOSSES,
+                         bosses.CAMP_BOSSES | {(34, 2103), (168, 8620)})
+        self.assertEqual(len(bosses.CAMP_RECOVERY_BOSSES), 22)
         self.assertTrue(set(bosses.BLUEPRINTS) < bosses.CAMP_BOSSES)
-        for (loc_id, type_id) in bosses.CAMP_BOSSES:
+        for (loc_id, type_id) in bosses.CAMP_RECOVERY_BOSSES:
             with self.subTest(location=loc_id, boss=type_id):
-                self.assertTrue(bosses.is_camp_boss(loc_id, type_id))
+                self.assertTrue(bosses.uses_camp_recovery(loc_id, type_id))
                 self.assertTrue(any(t in combat.items.GOLD_INGOTS
                                     for t, chance, valuable in mobs.loot_table(type_id)))
         for loc_id, type_id in ((111, 7448), (646, 2173), (186, 2103),
-                                (168, 8620), (168, 1037), (82, 82)):
-            self.assertFalse(bosses.is_camp_boss(loc_id, type_id))
+                                (168, 1037), (82, 82)):
+            self.assertFalse(bosses.uses_camp_recovery(loc_id, type_id))
+
+    def test_outpost_and_nubian_leader_keep_damage_and_regenerate_by_minutes(self):
+        for loc, kind in ((34, 2103), (168, 8620)):
+            with self.subTest(location=loc, boss=kind):
+                original = mobs.stats(kind)
+                base = mobs.LEVELS[str(original.level)]
+                self.assertNotIn(kind, bosses.CAMP_BOSS_TYPES)
+                self.assertEqual(original.hp_max, round(base['hp'] * mobs.ROLES['boss']['hp_mult']))
+                rc, mob, frames = self.fixture(kind, loc)
+                with patch.object(combat, 'now', return_value=100):
+                    rc.mob_release(mob)
+                self.assertEqual(mob.regen_at, 160)
+                rc.mob_recover(mob)
+                self.assertEqual((mob.hp, mob.sp, frames), (100, 200, []))
+                gain = 50 + 15 * (mob.level - 1)
+                rc.regen_mob(mob, 159.999)
+                self.assertEqual((mob.hp, mob.sp), (100, 200))
+                rc.regen_mob(mob, 160)
+                self.assertEqual((mob.hp, mob.sp), (100 + gain, 200 + gain))
+                rc.regen_mob(mob, 160)
+                self.assertEqual(len(frames), 1)
+                mob.reset()
+                self.assertEqual(mob.regen_at, 0)
+
+    def test_outpost_and_leader_settle_empty_location_time_before_attacking(self):
+        for loc, kind in ((34, 2103), (168, 8620)):
+            with self.subTest(location=loc, boss=kind):
+                rc, mob, frames = self.fixture(kind, loc)
+                rc.mobs = {mob.eid: mob}
+                rc.keep_hours = lambda: None
+                rc.fighters = lambda: []
+                rc.calm = lambda t: None
+                observed = []
+                def think(room, t):
+                    observed.append((mob.hp, mob.sp))
+                    mob.target = object()
+                mob.think = think
+                gain = 50 + 15 * (mob.level - 1)
+                with patch.object(combat, 'now', return_value=280):
+                    rc._step()
+                    rc._step()
+                self.assertEqual(observed, [(100 + gain*3, 200 + gain*3)] * 2)
+                self.assertEqual(len(frames), 1)
+                self.assertEqual(mob.regen_at, 340)
 
     def test_bosses_without_high_level_blueprints_keep_camp_recovery(self):
         for loc, kind in ((132, 777), (274, 1038), (263, 1037)):
@@ -158,5 +205,6 @@ class BossRecovery(unittest.TestCase):
                 self.assertEqual(len(frames), 1)
 
 
-if __name__ == '__main__':
-    unittest.main()
+if __name__ == "__main__":
+    from testkit import run_cases
+    run_cases(BossRecovery)

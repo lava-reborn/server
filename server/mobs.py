@@ -26,6 +26,7 @@ from collections import deque
 
 import inventory
 import items
+import loot_rules
 import progression
 import quests
 import world
@@ -567,6 +568,13 @@ def loot_table(type_id):
                 exact_chance=rec.get("exact_chance") is True)
     if st.role in HUMAN_ROLES:
         add(level_piece(VALUABLE_SERIES, st.level), VALUABLE_CHANCE, True)
+    override = loot_rules.records().get(type_id)
+    if override is not None:
+        got = {t: value for t, value in got.items() if not loot_rules.economic(t)}
+        for row in override:
+            t = row['type']
+            if droppable(t):
+                got[t] = (row['chance'], row['valuable'])
     # What the body has anyway is not rolled for a second time: the dog's
     # page lists its fang and skin, which carried() already tosses for.
     for t in animal_parts(st):
@@ -587,6 +595,11 @@ def independent_loot(type_id):
             int(r['type']) for r in _loot_manual().get(str(type_id), [])
             if r.get('independent') is True and r.get('type')
             and r.get('tier') in LOOT_TIERS and not r.get(ONE_OF))
+        override = loot_rules.records().get(type_id)
+        if override is not None:
+            _INDEPENDENT[type_id] = frozenset(
+                t for t in _INDEPENDENT[type_id] if not loot_rules.economic(t)) | frozenset(
+                    row['type'] for row in override if row['independent'])
     return _INDEPENDENT[type_id]
 
 
@@ -610,6 +623,10 @@ def count_of(type_id, t):
             n = rec.get("count", 1)
             if isinstance(n, int) and not isinstance(n, bool) and n > 1:
                 counts[int(rec["type"])] = n
+        override = loot_rules.records().get(type_id)
+        if override is not None:
+            for row in override:
+                counts[row['type']] = 1
         _COUNTS[type_id] = counts
     return counts.get(t, 1)
 
@@ -923,7 +940,7 @@ class Mob:
         self.sp = self.stats.sp_max
         self.ap = self.stats.ap_max
         import bosses
-        if self.type_id in bosses.CAMP_BOSS_TYPES:
+        if self.type_id in bosses.CAMP_RECOVERY_TYPES:
             self.regen_at = 0.0
         self.alive = True
         self.target = None

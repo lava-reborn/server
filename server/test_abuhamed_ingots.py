@@ -353,7 +353,7 @@ check("  ..and the room stands him, one Мортимер, by the rules of every 
       ([n.type_id for n in room.npcs.values()].count(MORTIMER), rooms.placement_problems(MT)), (1, []))
 check("  ..his stall, the three ingots, and his cashing and change wherever he stands",
       (items.stock_for(MORTIMER), quests.given_by(MORTIMER)),
-      ([I1, I5, I10], [301, 302, 303, 304, 305, 306, 307]))
+      ([I1, I5, I10], [301, 302, 303, 304, 305, 306, 307, 8800, 8801, 8802, 8803]))
 check("  ..cashing pays the ounces less 0.05: 0.95 and 9.95",
       [quests.get(CASH[t]).rew_gold for t in (I1, I10)], [95, 995])
 
@@ -521,7 +521,7 @@ try:
     mort = npc(arrival, MORTIMER)
     check("Мортимер is there: a stall of the three ingots, his cashing and change on offer",
           (mort.get("can_trade"), mort.get("type_list"), mort.get("give_quests")),
-          (1, [I1, I5, I10], [301, 302, 303, 304, 305, 306, 307]))
+          (1, [I1, I5, I10], [301, 302, 303, 304, 305, 306, 307, 8800, 8801, 8802, 8803]))
     check("  ..every inhabitant by a name the client has",
           [p["name"] for n, p in arrival if n.startswith("userInfo_") and n != "userInfo_Player"
            and not names.known(p["name"])], [])

@@ -334,7 +334,7 @@ try:
     port = standing(PORT)
     check("Мортимер stands on the pier (446) by the place's own file, his cashing and change on"
           " offer (301-307)", (port[MORTIMER], quests.given_by(MORTIMER)),
-          (1, [301, 302, 303, 304, 305, 306, 307]))
+          (1, [301, 302, 303, 304, 305, 306, 307, 8800, 8801, 8802, 8803]))
     with open(os.path.join(ROOT, "data", "camp_fill.json"), encoding=ENC) as _fh:
         FILL = json.load(_fh)["fill"]
     BANDS = {PIRATES: (16, 18), PIRATES_CHIEF: (16, 18), OUTPOST: (16, 18), BASE: (19, 20),
