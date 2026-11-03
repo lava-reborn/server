@@ -188,12 +188,18 @@ async def main():
                 mover.writer.frames.clear()
                 viewer.writer.frames.clear()
                 path = [mover.pos, mover.pos + 1]
+                ap = mover.combat.ap
                 mover.cmd_moveTo({"path": path})
+                own = frames(mover, "userMove")
+                phase = own[0].get("step_ms") if own else None
+                check("after preparation the accepted step phase is bounded",
+                      isinstance(phase, int) and 0 <= phase < mobs.HEX_MS, True)
                 check("at the deadline %s can walk and the opponent sees it" % mover.nick,
                       (mover.pos, frames(mover, "cmdAck"), frames(mover, "breakMv"),
                        frames(mover, "userMove"), frames(viewer, "userMove")),
-                      (path[-1], [{"res": 0}], [], [{"id": 0, "path": path}],
-                       [{"id": mover.pid, "path": path}]))
+                      (path[-1], [{"res": 0}], [],
+                       [{"id": 0, "path": path, "step_ms": phase, "ap": ap}],
+                       [{"id": mover.pid, "path": path, "step_ms": phase}]))
 
             # A slow loader does not restart the deadline or receive an
             # enemy id before its room snapshot has introduced that player.

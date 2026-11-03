@@ -391,17 +391,43 @@ check("a type tied to two pages keeps its internal name", 65 in wn, False)
 # one and the wiki's otherwise -- never anything else.
 import orig_texts                                     # noqa: E402
 _on = orig_texts.item_names()
-check("each item id serves the original's name, else the wiki's",
-      all(names.text(items.STRING_ID_OFFSET + t) == _on.get(t, n) for t, n in wn.items()),
-      True)
+def expected_item_name(t, original):
+    line = craft.blueprint_line(t)
+    if line is None:
+        return original
+    label, separator, suffix = original.partition("$")
+    return label + " (" + line + ")" + separator + suffix
+
+
+check("each item keeps its source name and only explicit blueprint pairs add A/G",
+      all(names.text(items.STRING_ID_OFFSET + t) == expected_item_name(t, _on.get(t, n))
+          for t, n in wn.items()), True)
 check("and the original really is used where it has a name",
       names.text(items.STRING_ID_OFFSET + 25562) == _on.get(25562), True)
 wd = items.wiki_descs()
 check("over a thousand descriptions", len(wd) >= 1000, True)
 _od = orig_texts.item_descs()
-check("each description id serves the original's text, else the wiki's",
-      all(names.text(items.DESC_ID_OFFSET + t) == _od.get(t, d) for t, d in wd.items()),
-      True)
+def expected_item_description(t, original):
+    line = craft.blueprint_line(t)
+    used = {line} if line else set()
+    if not line:
+        for row in craft.rows().values():
+            if row.get("blueprint") != t:
+                continue
+            if row.get("family") == "upgrade" and row.get("line") in ("A", "G"):
+                used.add(row["line"])
+            elif row.get("family") == "knife":
+                used.add("G")
+    if not used:
+        return original
+    note = ("Только для (A) и (G) оружия." if used == {"A", "G"}
+            else "Только для (" + next(iter(used)) + ") оружия.")
+    return (original + "<br>" if original else "") + note
+
+
+check("each description keeps its source bonus text and exact applicability suffix",
+      all(names.text(items.DESC_ID_OFFSET + t) == expected_item_description(t, _od.get(t, d))
+          for t, d in wd.items()), True)
 check("line breaks become <br>, markup goes",
       items.clean_text("'''Нельзя в бою.'''<br />\nКусок [[Мясо|мяса]].\n\nСухой."),
       "Нельзя в бою.<br>Кусок мяса.<br>Сухой.")

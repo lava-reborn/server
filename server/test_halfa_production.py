@@ -854,7 +854,8 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
         if path is None and goal != pos:
             continue
         c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
-        out += c.frames(0.15 * len(path or [0]) + 0.8)
+        # Shooting stops the accepted walk. Await the full server route.
+        out += c.frames(max(0, len(path or [goal]) - 1) * mobs.HEX_MS / 1000.0 + 0.8)
         pos = goal
         for _ in range(20):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(eid)))
