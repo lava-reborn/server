@@ -259,13 +259,15 @@ check("  ..named by the original's tickets' run (6927-6932), the [8] ticket's wo
       [orig(t) for t in KEYS + GOLD_KEYS],
       [(6927, 6919), (6928, 6919), (6929, 6919), (6930, 6919), (6931, 6919), (6932, 6919)])
 EVERY = (TICKET_FROM_DONGOLA, TICKET_TO_DONGOLA) + KEYS + GOLD_KEYS + GIFTS + KNIFE_PRINTS
-check("every one of them named and described (names.ALL), not by objects.xml's words -- but the"
-      " two-effect knife blueprints, which no text describes, as every town's; no premium, none a"
-      " quest lends",
+check("every one of them named and described (names.ALL), including knife applicability;"
+      " no premium, none a quest lends",
       ([t for t in EVERY if shown(t) in (None, cat[t][1]) or (
           items.params_of(t)["desc"] != "" and not names.known(items.params_of(t)["desc"]))
         or items.premium(t) or quests.lent(t)],
-       [t for t in EVERY if items.params_of(t)["desc"] == ""]), ([], [6634, 6637]))
+       [t for t in EVERY if items.params_of(t)["desc"] == ""]), ([], []))
+check("the two knife blueprints describe their G-only applicability",
+      all(names.text(items.params_of(t)["desc"]).endswith("Только для (G) оружия.")
+          for t in (6634, 6637)), True)
 GOLD_THINGS = (TICKET_FROM_DONGOLA, TICKET_TO_DONGOLA) + GOLD_KEYS + KNIFE_PRINTS + DARK_G
 check("the gold ones are gold things: never off a body, and no stall buys them back",
       sorted({(combat.gold_item(t), combat.drops_on_death(t), sold_for(t)) for t in GOLD_THINGS}),

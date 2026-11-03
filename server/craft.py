@@ -418,9 +418,10 @@ def _stat_fields(type_id):
 # --- the upgrader's window -------------------------------------------------------------
 @lru_cache(maxsize=1)
 def upgrade_blueprints():
-    """Required blueprint types, for their static applicability description."""
+    """Types with generated A/G applicability text; Q-only recipes keep theirs."""
     return frozenset(r["blueprint"] for r in rows().values()
-                     if r.get("family") in ("upgrade", "knife"))
+                     if r.get("family") == "knife" or (
+                         r.get("family") == "upgrade" and r.get("line") in ("A", "G")))
 
 
 def blueprint_variants(type_id):

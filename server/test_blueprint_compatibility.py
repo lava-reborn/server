@@ -129,6 +129,21 @@ class BlueprintCompatibility(unittest.TestCase):
             self.assertIn('Урон +10%', desc)
             self.assertIn('Только для (' + line + ') оружия.', desc)
 
+    def test_all_advertised_blueprint_descriptions_are_preloaded(self):
+        blueprints = {r['blueprint'] for r in craft.rows().values()
+                      if r.get('family') in ('upgrade', 'knife')}
+        for bp in blueprints:
+            with self.subTest(blueprint=bp):
+                desc = items.params_of(bp).get('desc')
+                if desc:
+                    self.assertTrue(names.known(desc), (bp, desc))
+        # The new applicability note is not generated for Q-only blueprints.
+        q_only = {r['blueprint'] for r in craft.rows().values()
+                  if r.get('family') == 'upgrade' and r.get('line') == 'Q'}
+        shared = {r['blueprint'] for r in craft.rows().values()
+                  if r.get('family') == 'upgrade' and r.get('line') in ('A', 'G')}
+        self.assertFalse((q_only - shared) & craft.upgrade_blueprints())
+
     def test_shared_blueprint_keeps_both_recipes_and_short_description(self):
         for gun in (26074, 26075):
             q = next(quests.get(t) for t, r in craft.rows().items()

@@ -163,6 +163,11 @@ try:
     ids |= {items.DESC_ID_OFFSET + t for t in items.wiki_descs()}
     import orig_texts                                  # noqa: E402
     ids |= {items.DESC_ID_OFFSET + t for t in orig_texts.item_descs()}
+    # Blueprint applicability descriptions are generated even where the
+    # original client had no bonus description for that type.
+    import craft
+    ids |= {items.DESC_ID_OFFSET + t for t in items.catalogue()
+            if craft.blueprint_line(t) or t in craft.upgrade_blueprints()}
     # quest names and texts, plus the shared empty string they fall back to
     ids |= set(quests.strings())
     # vehicle names and descriptions, the ids ts_si puts in name and desc
@@ -209,7 +214,9 @@ try:
     if os.path.isfile(os.path.join(world.RES, "main.swf")):
         swf = get("/res/main.swf")
         check("main.swf served", swf[:3], b"CWS")
-        check("main.swf size", len(swf), 1749720)
+        with open(os.path.join(world.RES, "main.swf"), "rb") as fh:
+            original_swf = fh.read()
+        check("main.swf is served whole and unchanged", swf, original_swf)
     else:
         print("  --  no main.swf in %s; its two checks are skipped" % world.RES)
     check("crossdomain", b"allow-access-from" in get("/res/crossdomain.xml"), True)

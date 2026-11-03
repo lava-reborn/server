@@ -120,6 +120,25 @@ def param(frame, key):
     return None
 
 
+def movement_frames(frames, owner_ap=None):
+    """Check synchronization/privacy fields before comparing native frame shapes."""
+    from protocol import decode, frame
+    out = []
+    for raw in frames:
+        cmd, p = decode(raw)
+        if cmd == "userMove":
+            expected = {"id", "path", "step_ms"}
+            if owner_ap is not None:
+                expected.add("ap")
+            phase = p.get("step_ms")
+            check("movement has a bounded step phase and only its receiver's AP",
+                  (set(p), isinstance(phase, int) and 0 <= phase < mobs.HEX_MS,
+                   p.get("ap")), (expected, True, owner_ap))
+            raw = frame(cmd, id=p["id"], path=p["path"]).decode(ENC).rstrip("\0")
+        out.append(raw)
+    return out
+
+
 def enter(c, cred, nick):
     """Log in, create the character, and stand in the starting location."""
     c.send("hello;minor=2;major=0;")
@@ -203,10 +222,10 @@ try:
     a.send("moveTo;path=%s;" % path)
     got = a.frames()
     check("walker acknowledged and moved as id 0",
-          got, ["cmdAck;res=0;", "userMove;id=0;path=%s;" % path])
+          movement_frames(got, owner_ap=50), ["cmdAck;res=0;", "userMove;id=0;path=%s;" % path])
     got = b.frames()
     check("the other sees the same walk under her id",
-          got, ["userMove;id=%d;path=%s;" % (pid_a, path)])
+          movement_frames(got), ["userMove;id=%d;path=%s;" % (pid_a, path)])
 
     # --- chat ---------------------------------------------------------------
     a.send("userMsg;entry=@привет@;group=0;")
@@ -536,7 +555,7 @@ try:
           ["lch;newUser=%d;pos=%d;rtype=-1;" % (pid_a, alice_pos)])
     b.send("moveTo;path=|490|491|;")
     check("and can still walk",
-          b.frames(), ["cmdAck;res=0;", "userMove;id=0;path=|490|491|;"])
+          movement_frames(b.frames(), owner_ap=50), ["cmdAck;res=0;", "userMove;id=0;path=|490|491|;"])
     b.send("logout;")
 
     # The rim is one file standing on hundreds of cells, so a room keyed by

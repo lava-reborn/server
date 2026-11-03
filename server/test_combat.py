@@ -1333,9 +1333,15 @@ try:
     got = c.frames(1.5)
     tracker.feed(got)
     dog_cell = last_cell(got, dog, dog_cell)
-    check("the walk is acknowledged and echoed",
-          [(n, p) for n, p in got if n in ("cmdAck", "userMove") and p.get("id", 0) == 0][:2],
-          [("cmdAck", {"res": 0}), ("userMove", {"id": 0, "path": [old_pos, pos]})])
+    echoed = [(n, p) for n, p in got
+              if n in ("cmdAck", "userMove") and p.get("id", 0) == 0][:2]
+    phase = echoed[1][1].get("step_ms") if len(echoed) == 2 else None
+    check("the movement phase remains within its current step",
+          isinstance(phase, int) and 0 <= phase < mobs.HEX_MS, True)
+    check("the walk is acknowledged and echoed with authoritative AP",
+          echoed, [("cmdAck", {"res": 0}),
+                   ("userMove", {"id": 0, "path": [old_pos, pos],
+                                 "step_ms": phase, "ap": 50 + 5 * LEVEL})])
     check("no bullet leaves after the walk",
           [p for n, p in got if n == "faShot" and p.get("id", 0) == 0], [])
     check("and nothing is charged or reported",

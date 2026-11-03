@@ -192,7 +192,14 @@ try:
     c.send("moveTo;path=|490|491|492|;")
     got = c.frames()
     check("movement acknowledged", got[0], "cmdAck;res=0;")
-    check("movement echoed", got[1], "userMove;id=0;path=|490|491|492|;")
+    from protocol import decode
+    cmd, move = decode(got[1])
+    phase = move.get("step_ms")
+    import mobs
+    check("movement includes a bounded authoritative step phase",
+          isinstance(phase, int) and 0 <= phase < mobs.HEX_MS, True)
+    check("movement echoed with only the owner's AP",
+          (cmd, move), ("userMove", dict(id=0, path=[490, 491, 492], step_ms=phase, ap=50)))
 
     # A path the server will not take is refused with breakMv INSTEAD of an
     # acknowledgement: Location.breakMv itself skipCalls the handler the
