@@ -1668,9 +1668,9 @@ ONLINE_BITMAP = "__lavaOnlineIcon"
 ONLINE_OLD_BITMAPS = ("__lavaOnlinePlate",)    # what earlier patches exported
 ONLINE_ASSET = Path(__file__).resolve().parent.parent / "data/client/online-panel.png"
 ONLINE_ICON = (12, 5, 18, 18)   # the people icon inside the plate: x, y, w, h
-ONLINE_RIGHT = 180             # 40 pixels before the exit at w - 140
-ONLINE_INLINE_MIN = 1200        # gold controls end around w / 2 + 313; a 90-pixel
-                                # plate ending at w - 180 clears them from 1176
+ONLINE_RIGHT = 300             # Leave room for ReFlash and Exit.
+ONLINE_INLINE_MIN = 1440        # Keep the inline plate clear of gold controls
+                                # and the ReFlash / Exit pair.
 ONLINE_TEXT_RGB = 0xCFC6AE      # muted beige, the icon's own tone
 # The plate is the popup's frame cut inside its shadow (the plate runs
 # x 8..488, y 5..462 of the art), in five rows: the top edge, some plain
@@ -3032,6 +3032,8 @@ def injected():
          (), fn_global_hotkey_cleanup()),
         (("gpui", "CharInterface"), "kill", "__statsKillOrig",
          (), fn_panel_kill_pending("__statsKillOrig")),
+        (("gpui", "TrainingInterface"), "kill", "__trainingKillOrig",
+         (), fn_panel_kill_pending("__trainingKillOrig")),
         (("gpui", "EquipInterface"), "kill", "__equipKillOrig",
          (), fn_panel_kill_pending("__equipKillOrig")),
         (("sound", "SoundTLContainer"), "playSound", "__eventPlayOrig",
@@ -3169,6 +3171,16 @@ def injected():
     for name, params, body in private_tabs["globals"]:
         a.var("_global").push(name).function(params, body).op("setmember")
     wraps += private_tabs["wraps"]
+    from reflash_client import patches as reflash_patches
+    reflash = reflash_patches(Asm, UNDEF)
+    for name, params, body in reflash['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += reflash['wraps']
+    from combat_client import patches as battle_patches
+    battle = battle_patches(Asm, UNDEF)
+    for name, params, body in battle['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += battle['wraps']
     from chat_history import patches as history_patches
     history = history_patches(Asm, UNDEF)
     for name, params, body in history["globals"]:
@@ -3348,8 +3360,12 @@ def inject(tags):
     """Put the DoAction before the first ShowFrame, replacing an earlier one."""
     tags = [t for t in tags if not (t[0] == 12 and MARK.encode() in t[1])]
     tags = without_online_art(tags)
+    from reflash_art import without_artwork as without_reflash_artwork
+    tags = without_reflash_artwork(tags)
     from chat_tabs import artwork as private_tab_artwork
     tags = private_tab_artwork(tags)
+    from reflash_art import artwork as reflash_artwork
+    tags = reflash_artwork(tags)
     at = next(k for k, t in enumerate(tags) if t[0] == 1)
     tags[at:at] = online_art(tags) + [(12, injected(), True)]
     return tags

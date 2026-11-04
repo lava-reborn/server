@@ -1575,6 +1575,7 @@ class Store:
         # to its end before the next one starts.
         self.money_source = None
         self.quest_revisions = {}
+        self._combat_clans = {}
 
     def quests_changed(self, char_id):
         """Invalidate online availability snapshots after a quest write."""
@@ -2966,6 +2967,22 @@ class Store:
         return {int(r["char_id"]): (int(r["clan_id"]), int(r["perm"]))
                 for r in self.db.execute("SELECT char_id, clan_id, perm FROM clan_members")}
 
+    def same_clan(self, first, second):
+        if not first or not second:
+            return False
+        now = time.monotonic()
+        found = []
+        for char_id in (int(first), int(second)):
+            cached = self._combat_clans.get(char_id)
+            if cached is None or cached[0] <= now:
+                member = self.clan_member(char_id)
+                cached = (now + 1.0, member['clan_id'] if member else 0)
+                if len(self._combat_clans) > 4096:
+                    self._combat_clans.clear()
+                self._combat_clans[char_id] = cached
+            found.append(cached[1])
+        return bool(found[0] and found[0] == found[1])
+
     def clan_member(self, char_id):
         """A character's membership with its clan's name and head, or None.
         A row whose clan is gone is no membership (the JOIN leaves it out)."""
@@ -2997,6 +3014,7 @@ class Store:
         goes too (clans.py: leaving never has to put it back). Returns the
         new id, or None when the name's key is taken (a race: the caller
         looked first) or the founder turned out to be a member already."""
+        self._combat_clans.clear()
         when = int(when or time.time())
         try:
             with self.db:
@@ -3026,6 +3044,7 @@ class Store:
         """A character joins: True when written; False when the clan is gone
         (disbanded while the invitation waited). Already in a clan is an
         IntegrityError for the caller, as the one row a character may have."""
+        self._combat_clans.clear()
         with self.db:
             self.db.execute("DELETE FROM clan_members WHERE char_id = ? AND clan_id"
                             " NOT IN (SELECT id FROM clans)", (int(char_id),))
@@ -3061,6 +3080,7 @@ class Store:
     def clan_member_remove(self, char_id, clan_id):
         """Out of that clan (a kick); False when he was not in it any more.
         Not for the head: he leaves by clan_leave, which hands the clan on."""
+        self._combat_clans.clear()
         with self.db:
             hit = self.db.execute("DELETE FROM clan_members WHERE char_id = ? AND clan_id = ?"
                                   " AND char_id <> (SELECT head FROM clans WHERE id = ?)",
@@ -3075,6 +3095,7 @@ class Store:
         save at logout does not write the payout away), None to take the
         row's. Returns {"new_head": id or None, "disbanded": bool, "paid":
         afro}, or None when he was not in that clan any more."""
+        self._combat_clans.clear()
         when = int(when or time.time())
         with self.db:
             row = self.db.execute("SELECT k.head FROM clan_members m JOIN clans k"
@@ -3121,6 +3142,7 @@ class Store:
         relations both ways and the row go, the treasury into payout_char's
         purse as clan_leave pays it. Returns the afro paid, or None when the
         clan was gone already."""
+        self._combat_clans.clear()
         with self.db:
             return self._clan_pay_out(clan_id, payout_char, purse,
                                       int(when or time.time()))

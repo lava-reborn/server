@@ -32,9 +32,11 @@ the gold ingots of 1, 5 and 10 ounces.
 """
 import json
 import logging
+import math
 import re
 import os
 
+import blueprint_prices
 import craft
 import npcs
 import orig_texts
@@ -517,6 +519,16 @@ def upgrade_blueprint_blocked(type_id):
         return False
     level = re.search(r"_lvl(\d+)(?:_|$)", entry[1])
     return bool(level and 18 <= int(level.group(1)) <= 20)
+
+
+BATTLE_HEAL_AP_MULTIPLIER = 2.5
+BATTLE_HEAL_AFRO_AP_MULTIPLIER = 1.5
+
+
+def battle_medicine(type_id):
+    """All battle health/stamina medicines, including G dose packs."""
+    root, name = catalogue().get(type_id, (None, ""))
+    return root == HEAL and name.startswith("Med_Battle_")
 
 
 def no_combat(type_id):
@@ -1181,6 +1193,7 @@ def static_info(type_id):
         made = production.item_numbers(type_id)
         if made:
             info[1].update(made)
+        blueprint_prices.apply(catalogue()[type_id][1], info[1])
         if type_id in ARTICLE_GOLD_PRICE:
             info[1]["g_cost"] = ARTICLE_GOLD_PRICE[type_id]
         if type_id in GOLD_PRICE_ONLY:
@@ -1247,6 +1260,13 @@ def static_info(type_id):
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
             info[1].update(admin)
+        if root_of(type_id) == HEAL and catalogue()[type_id][1].startswith("Med_Battle_"):
+            name = catalogue()[type_id][1]
+            multiplier = BATTLE_HEAL_AFRO_AP_MULTIPLIER if name.endswith('_A') else BATTLE_HEAL_AP_MULTIPLIER
+            cost = info[1].get("heal_cost", 0) * multiplier
+            # Match the existing AS2 Math.round convention; P variants retain
+            # their already agreed values, including fractional points.
+            info[1]["heal_cost"] = math.floor(cost + 0.5) if name.endswith('_A') or '_G' in name else cost
         import repair_policy
         repair_cost = repair_policy.valuation(type_id, info[1])
         if repair_cost is not None:

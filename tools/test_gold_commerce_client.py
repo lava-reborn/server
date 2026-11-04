@@ -66,6 +66,20 @@ class GoldCommerceClient(unittest.TestCase):
         self.methods['checkComission'].invoke(ui, [])
         self.assertEqual(ui['info_txt']['htmlText'], '\rКомиссия: 19338 А')
 
+    def test_blueprint_without_durability_can_sell_and_tooltip_says_yes(self):
+        for gold in (False,True):
+            item=self.item(bp_sell=1,g_sale_unit=180000 if gold else 0,__break=0,cost=0 if gold else 4000)
+            item['rootID']=3
+            item['itemName']='Чертёж'
+            ui=dict(__gcCheckSellOrig=lambda item:'native refusal')
+            self.assertIsNone(self.methods['checkSellItem'].invoke(ui,[item]))
+            lines=Arr()
+            annotation=dict(item=item,__gcAddSellOrig=lambda arr:arr.push(['Допустимость продажи','Нет']))
+            self.methods['addSell'].invoke(annotation,[lines])
+            self.assertEqual(lines,[['Допустимость продажи','Да']])
+        broken=self.item(__break=0)
+        self.assertIsNotNone(self.methods['checkSellItem'].invoke(ui,[broken]))
+
     def test_sale_asks_for_quote_and_does_not_send_sale_confirmation_immediately(self):
         trade = self.trade()
         self.methods['sell'].invoke(trade, [self.item(), 1])

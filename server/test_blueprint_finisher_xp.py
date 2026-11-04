@@ -80,7 +80,7 @@ async def exercise():
             rc.kill = lambda mob, player, **kw: combat.RoomCombat.kill(rc, mob, player, **kw)
             killer.rc = rc
 
-            def burst(shooter, mob, cell, weapon, live, others):
+            def burst(shooter, mob, cell, weapon, live, others, **timing):
                 check('ranged finishing shot has ammunition', live, 1)
                 if attack == 'ranged collateral':
                     others.append((other, 100, 0, True, 100))

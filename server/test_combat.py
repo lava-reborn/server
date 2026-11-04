@@ -218,6 +218,12 @@ class _PullFighter(combat.Fighter):
 
 
 def _pull(type_id, mode, ammo, drop=0):
+    async def run():
+        return _pull_in_loop(type_id, mode, ammo, drop)
+    return asyncio.run(run())
+
+
+def _pull_in_loop(type_id, mode, ammo, drop=0):
     """One pull of the real gun through Fighter.fire_now: (pellets the client
     is told of, pellets that fly, rounds left, durability lost). drop is
     what the magazine loses during the aim."""
@@ -227,7 +233,7 @@ def _pull(type_id, mode, ammo, drop=0):
     flew = []
     rc = type("RC", (), {"room": type("R", (), {"ws": False})(),
                          "within_fire": lambda *a: False,
-                         "burst": lambda _rc, _sh, _t, _c, _w, live, *_a:
+                         "burst": lambda _rc, _sh, _t, _c, _w, live, *_a, **_timing:
                          flew.append(live) or (0, 0, 0, False)})()
     char = progression.Character()
     for skill in char.skill:

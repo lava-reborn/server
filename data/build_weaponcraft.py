@@ -497,6 +497,8 @@ def service(city, row):
         if city["name"] == "abri":
             lo = 6
         hi = 20
+        if city['name'] == 'abu_hamed' and row['craft']['family'] == 'decode' and row['craft'].get('level') == 17:
+            lo = 16
     row.update(repeatable=1, service=True, level=lo, max_level=hi)
     return row
 

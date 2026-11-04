@@ -51,6 +51,13 @@ class Compiler:
             a.op('equals2' if isinstance(op,(ast.Eq,ast.NotEq,ast.Is,ast.IsNot)) else 'less2')
             if isinstance(op,(ast.NotEq,ast.IsNot,ast.LtE,ast.GtE)):a.op('not')
         elif isinstance(n, ast.Call):
+            if isinstance(n.func, ast.Name) and n.func.id == 'getTimer':
+                if n.args or n.keywords:
+                    raise ValueError('getTimer takes no arguments')
+                # AS2 getTimer is the AVM1 GetTime instruction. There is no
+                # callable global getTimer in the standalone Flash player.
+                a.op('gettime')
+                return
             if isinstance(n.func,ast.Name) and n.func.id=='len':
                 self.expression(a,n.args[0]);a.member('length');return
             if isinstance(n.func,ast.Name) and n.func.id=='kind':

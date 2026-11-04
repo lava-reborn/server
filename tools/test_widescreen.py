@@ -685,10 +685,12 @@ def check_container(label, version, body):
         # Both ceilings are normalized to the same value; everything else
         # except our marked DoAction and new bitmap must remain identical.
         w.patch_ceiling(original, 3840, 2160)
-        keep = lambda tags: [t for t in w.without_online_art(tags)
+        from reflash_art import without_artwork as without_reflash_artwork
+        keep = lambda tags: [t for t in without_reflash_artwork(w.without_online_art(tags))
                              if not (t[0] == 12 and w.MARK.encode() in t[1])]
         check(label + ": the patch preserves all artwork and unrelated scripts",
-              keep(actual) == keep(chat_tabs.artwork(w.without_online_art(original))), True)
+              keep(actual) == keep(chat_tabs.artwork(without_reflash_artwork(
+                  w.without_online_art(original)))), True)
 
 
 def fixture():
@@ -726,9 +728,10 @@ def fixture():
 try:
     head, tags = fixture()
     patched = w.inject(list(tags))
+    hud_ids = [struct.unpack_from("<H", payload)[0]
+               for code, payload, _ in patched if code == 21]
     check("the HUD bitmap avoids both sprite and nested bitmap IDs",
-          [struct.unpack_from("<H", payload)[0]
-           for code, payload, _ in patched if code == 21], [3])
+          len(hud_ids) == 1 and not ({1, 2, 581, 596} & set(hud_ids)), True)
     check_container("fixture", 8, w.join_tags(head, tags))
 except Exception:
     import traceback

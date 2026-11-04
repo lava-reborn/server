@@ -40,12 +40,15 @@ import re
 import time
 from collections import namedtuple
 
+import action_animation
+import battle_medicine
 import bosses
 import events
 import holdings
 import inventory
 import items
 import mobs
+import movement
 import names
 import orig_texts
 import pace
@@ -201,6 +204,8 @@ BAG_DROP_CHANCE = int(os.environ.get("LAVA_BAG_DROP", "30"))
 #
 # Everything else is an action, and the client's own filter
 # (FilterManager.createDSFilter) never sends one while dead.
+RECOVERY_COMMANDS = frozenset(('moveTo', 'ss_use', 'ss_move', 'chWorld', 'ss_create'))
+
 DEAD_PASSES = frozenset((
     "hello", "login", "logout", "selPers", "newPers", "actPlayer", "lenter",
     "resurrect",
@@ -896,6 +901,8 @@ class Fighter:
         self.reload_plan = None
         self.healing_peace = True
         self.action_revision = 0
+        self.hostile_action = False
+        self.recovery_until = 0.0  # Committed attack; cannot be cancelled by a new command.
         self.walk_ap = None     # (cells, start time, already charged steps)
         self.damage_revision = 0  # Damage since the start of peaceful healing.
         self.hit_revision = 0     # Hits given/taken since healing started.
@@ -1054,6 +1061,7 @@ class Fighter:
         empty effect list it would otherwise never hear about."""
         rc = self.rc
         if rc is None:
+            Fighter.send_medicine_cooldown(self)
             return
         self.ap = self.ap_max
         self.regen_at = now() + REGEN_PERIOD
@@ -1070,13 +1078,14 @@ class Fighter:
 
     def resend_room(self, resumed=False):
         """Restore a client's view without resetting the ongoing fight."""
+        Fighter.send_medicine_cooldown(self)
         rc = self.rc
         if rc is None:
             return
         self.sess.send("e_list", mobi_id=0, effects=[])
         if resumed:
             self.sess.send("lch", ws=int(rc.room.ws))
-            self.sess.send("c_ap", ap=int(self.ap))
+            self.sess.send("c_ap", ap=self.ap)
             for foe in self.foes:
                 if rc.actor(foe) is not None:
                     self.sess.send("lch", enemy=foe)
@@ -1122,6 +1131,7 @@ class Fighter:
             self.interception.cancel()
         self.cancel_timers()
         self.loot = None
+        self.recovery_until = 0.0
         self.last_hit = -1e9
         self.end_duels()
 
@@ -1143,19 +1153,35 @@ class Fighter:
         if rc is not None and rc.room.ws:
             self.ap = max(0, self.ap - max(0, len(cells) - 1))
 
-    def settle_walk(self, t=None, stop=False):
+    def settle_walk(self, t=None, stop=False, completed_steps=None):
         """Charge completed steps, never the unwalked end of a route."""
         pending = getattr(self, "walk_ap", None)
         if pending is None:
             return
         cells, began, paid = pending
         t = now() if t is None else t
-        steps = min(len(cells) - 1, max(0, int((t - began) * 1000 // mobs.HEX_MS)))
+        steps = (movement.elapsed_ms(t, began) // mobs.HEX_MS
+                 if completed_steps is None else completed_steps)
+        steps = min(len(cells) - 1, max(0, steps))
         cost = max(0, steps - paid)
         rc = self.rc
         if cost and rc is not None and rc.room.ws:
             self.ap = max(0, self.ap - cost)
         self.walk_ap = None if stop or steps == len(cells) - 1 else (cells, began, steps)
+
+    def stop_movement(self):
+        """Stop at a completed step, once, without changing unrelated actions."""
+        sess = self.sess
+        if getattr(sess, 'walk', None) is None:
+            return False
+        cell = sess.stop_walk()
+        sess.cancel_passage()
+        if sess.room is not None:
+            sess.room.broadcast(('actionCancel', dict(id=self.eid, pos=cell)))
+        else:
+            sess.send('actionCancel', pos=cell)
+        self.c_ap()
+        return True
 
     def primary_changed(self):
         """An accepted active-slot change abandons aim and reloading.
@@ -1163,6 +1189,7 @@ class Fighter:
         Invalidate the callback even if the player switches back before its
         deadline. Melee swings and healing keep their existing behaviour.
         """
+        Fighter.stop_movement(self)
         had_reload = getattr(self, "reloading", None) is not None
         if getattr(self, "aim", None) is not None or had_reload:
             Fighter.cancel_pending(self, notify=True)
@@ -1188,6 +1215,7 @@ class Fighter:
         if had_reload:
             self.sess.inv.cancel_reloads()
         self.action_revision = getattr(self, "action_revision", 0) + 1
+        self.hostile_action = False
         if had and notify:
             Fighter.action_cancelled(self, release=not replacing, stop_aim=had_aim, moving=moving)
             if had_heal or had_reload:
@@ -1205,6 +1233,31 @@ class Fighter:
         if stop_aim and room is not None:
             room.broadcast(("actionCancel", dict(id=self.eid, stop_aim=1)),
                            exclude=self.sess)
+
+    def recovering(self):
+        until = getattr(self, 'recovery_until', 0.0)
+        if not until or self.dead:
+            return False
+        if now() + movement.TIME_EPSILON < until:
+            return True
+        self.recovery_until = 0.0
+        return False
+
+    def refuse_recovery(self, moving=False):
+        if not Fighter.recovering(self):
+            return False
+        if moving:
+            remaining = max(1, math.ceil((self.recovery_until - now()) * 1000))
+            self.sess.send('breakMv', id=0, pos=self.cell, recovery_ms=remaining)
+        else:
+            self.ack(inventory.RES_NOT_READY)
+        self.c_ap()
+        return True
+
+    def commit_animation(self, params=None, shots=1):
+        duration = action_animation.duration_ms(self.sess, params, shots)
+        self.recovery_until = now() + duration / 1000.0
+        return duration
 
     def begin_action(self):
         """Called only after the replacement has passed its start checks."""
@@ -1277,6 +1330,9 @@ class Fighter:
         owed, and an empty page for a search that waits on its own queue,
         so every queue stays in step. What still goes through, and why, is
         DEAD_PASSES."""
+        if not self.dead and cmd in RECOVERY_COMMANDS:
+            if Fighter.refuse_recovery(self, moving=cmd == 'moveTo'):
+                return True
         if not self.dead or cmd in DEAD_PASSES:
             return False
         if wants_ack:
@@ -1372,7 +1428,7 @@ class Fighter:
 
     def c_ap(self):
         Fighter.settle_walk(self)
-        self.sess.send("c_ap", ap=int(self.ap))
+        self.sess.send("c_ap", ap=self.ap)
 
     def newbie_ground(self):
         """Standing on the Nubian valley's ground (travel.newbie_ground):
@@ -1387,12 +1443,21 @@ class Fighter:
         valley's ground whatever the file says."""
         return bool(self.sess.loc.pvp) and not self.newbie_ground()
 
+    def same_clan(self, other):
+        same_clan = getattr(self.store, 'same_clan', None)
+        return bool(other.is_player and same_clan
+                    and same_clan(self.sess.char_id, other.sess.char_id))
+
     def allied(self, other):
-        """In one party with another player: a round of his passes him by
-        (RoomCombat.bodies)."""
+        """Only members of the shooter's party are immune to friendly fire."""
         party = getattr(self.sess, "party", None)
         mine = party() if party is not None else None
-        return mine is not None and other.is_player             and other.sess.char_id in mine.members
+        return bool(other.is_player and mine is not None
+                    and other.sess.char_id in mine.members)
+
+    def starts_war(self, target):
+        return not (target is not None and target.is_player
+                    and Fighter.same_clan(self, target))
 
     def refuse_pvp(self):
         """A shot or a blow at another player where that is not allowed.
@@ -1503,6 +1568,8 @@ class Fighter:
     def use_fire(self, p):
         """type=16: a shot with the primary firearm, or a strike with a blade
         or the bare fist (obj=x0, ItemActivator.strike)."""
+        if Fighter.refuse_recovery(self):
+            return
         sess = self.sess
         rc = self.rc
         if rc is None or sess.on_map or self.dead:
@@ -1538,6 +1605,10 @@ class Fighter:
                 return
             if target.is_player and target.preparing():
                 self.ack(inventory.RES_NOT_READY)
+                return
+            if target.is_player and target is not self and Fighter.allied(self, target):
+                self.ack(RES_NO_PVP)
+                self.sess.say("Участников своего отряда атаковать нельзя")
                 return
             if target is self:
                 # The client never aims at its own figure (ItemActivator:
@@ -1598,10 +1669,10 @@ class Fighter:
             return
         revision = Fighter.begin_action(self)
         self.ack(inventory.RES_OK)
-        # Raising the gun is already hostile: the room goes to war here, and
-        # self.aim, set below before any tick can run, keeps it there while
-        # the aim bar runs (RoomCombat.hostilities).
-        rc.set_ws(True)
+        # Same-clan target practice does not start or sustain a room war.
+        self.hostile_action = Fighter.starts_war(self, target)
+        if self.hostile_action:
+            rc.set_ws(True)
         ch = self.character()
         wt = si.get("weapon_type", items.PISTOL)
         spec = SPEC_OF_WEAPON.get(wt)
@@ -1642,6 +1713,10 @@ class Fighter:
         rc = self.rc
         if rc is None or self.dead:
             return
+        if target is not None and target.is_player and Fighter.allied(self, target):
+            Fighter.action_cancelled(self, stop_aim=True)
+            self.c_ap()
+            return
         if rc.room.ws and self.ap < cost:
             Fighter.action_cancelled(self, stop_aim=True)
             self.c_ap()
@@ -1679,7 +1754,9 @@ class Fighter:
                           " provokes nobody", self.eid)
             reached = False
         others = []
-        h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others)
+        recovery_ms = Fighter.commit_animation(self, items.params_of(row['type_id']), weapon.num_shots)
+        h, s, hits, killed = rc.burst(self, target, hexcell, weapon, live, others,
+                                     recovery_ms=recovery_ms)
         if row is not None:
             # WEAR_PER_ROUND of durability per round that left the barrel. The
             # starter pistol holds 120 points, a median firearm 1000 -- and
@@ -1764,7 +1841,9 @@ class Fighter:
             return
         revision = Fighter.begin_action(self)
         self.ack(inventory.RES_OK)
-        rc.set_ws(True)
+        self.hostile_action = Fighter.starts_war(self, target)
+        if self.hostile_action:
+            rc.set_ws(True)
         # The blade is carried into strike_now so the swing can wear it:
         # a fist has no uniq and wears nothing.
         args = (target, hexcell, (max(1, dmin), max(1, dmax)), spec, cost,
@@ -1782,6 +1861,10 @@ class Fighter:
         rc = self.rc
         if rc is None or self.dead:
             return
+        if target is not None and target.is_player and Fighter.allied(self, target):
+            Fighter.action_cancelled(self, stop_aim=True)
+            self.c_ap()
+            return
         if rc.room.ws and self.ap < cost:
             self.sess.send("actionCancel", release=1)
             self.c_ap()
@@ -1796,6 +1879,8 @@ class Fighter:
                     or inventory.weapon_requirement_error(row, ch)):
                 rc.room.broadcast(("caMiss", dict(id=self.eid, hex=hexcell if target is None else target.cell)))
                 return
+        params = items.params_of(row['type_id']) if uniq is not None else None
+        recovery_ms = Fighter.commit_animation(self, params)
         aim_cell = target.cell if target is not None else hexcell
         killed = False
         reach = (target is not None and target.present(rc)
@@ -1806,15 +1891,18 @@ class Fighter:
             dmg = RNG.randint(dmg_range[0], dmg_range[1])
             h, s = melee_split(dmg, crit, target.sp_now())
             pool = target.hp if not target.is_player else 0
-            rc.room.broadcast(("caHit", dict(id=self.eid, target=target.eid,
-                                             dmg=h, sdmg=s, crit=int(crit))))
+            fields = dict(id=self.eid, target=target.eid, dmg=h, sdmg=s,
+                          crit=int(crit), recovery_ms=recovery_ms)
+            if target.is_player and Fighter.same_clan(self, target):
+                fields['no_war'] = 1
+            rc.room.broadcast(("caHit", fields))
             rc.hit_landed(self, target)
             killed = target.apply_damage(h, s)
             rc.push_vitals(target)
         else:
             # Not adjacent, or the roll failed: the wiki makes no roll for a
             # non-neighbour, and either way the client wants a caMiss on a hex.
-            rc.room.broadcast(("caMiss", dict(id=self.eid, hex=aim_cell)))
+            rc.room.broadcast(("caMiss", dict(id=self.eid, hex=aim_cell, recovery_ms=recovery_ms)))
         if rc.room.ws:
             self.ap = max(0, self.ap - cost)
         self.c_ap()
@@ -1850,11 +1938,23 @@ class Fighter:
         finally:
             self.release_stats()
 
+    def send_medicine_cooldown(self, remaining=None):
+        if remaining is None:
+            remaining = battle_medicine.remaining_ms(self.store, self.sess.char_id, now())
+        self.sess.send("medCooldown", time_ms=remaining, description=battle_medicine.DESCRIPTION)
+
+    def medicine_cooldown_blocked(self, type_id):
+        if not items.battle_medicine(type_id):
+            return False
+        return battle_medicine.remaining_ms(self.store, self.sess.char_id, now())
+
     # --- healing: ss_use 2 (self) and 4 (another) -----------------------------
     def use_heal(self, p, kind):
         """A heal item on oneself or a neighbour. cmdAck at once (the client
         charges heal_cost on it), the effect after heal_time as an absolute
         heal;hp;sp, then the item's use_count or its removal."""
+        if Fighter.refuse_recovery(self):
+            return
         sess = self.sess
         rc = self.rc
         row = sess.inv.find(p.get("obj"))
@@ -1889,6 +1989,11 @@ class Fighter:
         if Fighter.medicine_blocked(self, peace):
             self.ack(inventory.RES_NOT_READY)
             sess.answer("Обычное лечение недоступно во время боя.")
+            return
+        remaining = Fighter.medicine_cooldown_blocked(self, row["type_id"])
+        if remaining:
+            self.ack(inventory.RES_NOT_READY)
+            Fighter.send_medicine_cooldown(self, remaining)
             return
         Fighter.settle_walk(self)
         if rc is not None and rc.room.ws and self.ap < cost:
@@ -1934,6 +2039,11 @@ class Fighter:
             self.sess.send("actionCancel", release=1)
             self.sess.answer("Лечение прервано полученным уроном. Предмет не израсходован.")
             return
+        remaining = Fighter.medicine_cooldown_blocked(self, row["type_id"])
+        if remaining:
+            self.sess.send("actionCancel", release=1)
+            Fighter.send_medicine_cooldown(self, remaining)
+            return
         ch = self.character()
         patient = target.character()
         v = patient.vitals()
@@ -1971,6 +2081,10 @@ class Fighter:
         else:
             self.store.update_item(uniq, use_count=left)
             self.sess.inv.push_di(self.store.item(uniq))
+        in_combat = ap_cost > 0 or (self.rc is not None and self.rc.room.ws)
+        if items.battle_medicine(row["type_id"]) and in_combat:
+            remaining = battle_medicine.start(self.store, self.sess.char_id, now())
+            Fighter.send_medicine_cooldown(self, remaining)
         if healed > 0 and hi:
             # Wiki: experience = healed * min(2, patient's max HP / the
             # item's ceiling), half to the skill, half to the specialisation.
@@ -2130,7 +2244,18 @@ class Fighter:
         barter = getattr(self.sess, "barter", None)
         if barter is not None:
             barter.died()
+        if getattr(self.sess, "walk", None) is not None:
+            cell = self.sess.stop_walk()
+            self.sess._completed_walk = None
+            self.sess.cancel_passage()
+            self.sess.stop_chase()
+        if self.sess.room is not None:
+            # A viewer may still animate the final step after the server has
+            # completed it. Freeze even a completed route before the corpse.
+            self.sess.room.broadcast(("actionCancel", dict(
+                id=self.eid, pos=self.cell, stop_aim=1, release=1)))
         self.dead = True
+        self.recovery_until = 0.0
         self.end_duels()
         self.cancel_timers()
         self.loot = None
@@ -2203,9 +2328,8 @@ class Fighter:
                 off_body = off_body or row["slot"] in inventory.WEAR_SLOTS
             else:
                 inv.push_di(dict(row, count=row["count"] - part))
-        # On the cell the walk was going to: the client does not stop a
-        # figure that dies on its way (DisplayLocScene.dead only plays the
-        # fall), so the corpse lies where the path ends.
+        # die() froze the walk before announcing the corpse. Loot and the
+        # PvP trophy use that authoritative death hex.
         rc.add_to_bag(self.sess.pos, ground)
         if off_body:
             inv.refresh_gear()
@@ -2299,13 +2423,14 @@ class Fighter:
         rc = self.rc
         cell = int(p.get("target", 0) or 0)
         bag = rc.loot.get(cell) if rc is not None else None
-        if bag is None and (rc is None or cell != self.sess.pos):
+        if bag is None and (rc is None or cell != self.cell):
             self.ack(inventory.RES_NOT_FOUND)
             return
         loc = self.sess.loc
-        if not progression.within_reach(self.sess.pos, cell, loc.width, loc.height):
+        if not progression.within_reach(self.cell, cell, loc.width, loc.height):
             self.ack(RES_TOO_FAR)
             return
+        Fighter.stop_movement(self)
         self.loot = cell
         self.ran_out = []           # a new window, listed afresh (ss_get)
         self.ack(inventory.RES_OK)
@@ -2313,6 +2438,10 @@ class Fighter:
     def session_items(self):
         """Rows behind the 0 divider of ss_get;slot=24 while a bag is open."""
         rc = self.rc
+        loc = self.sess.loc
+        if self.loot is not None and not progression.within_reach(self.cell, self.loot, loc.width, loc.height):
+            self.loot = None
+            return []
         bag = rc.loot.get(self.loot) if rc is not None and self.loot is not None else None
         if bag is None:
             return []
@@ -2332,11 +2461,17 @@ class Fighter:
             self.loot = None
             return True
         rc = self.rc
+        loc = self.sess.loc
+        if not progression.within_reach(self.cell, self.loot, loc.width, loc.height):
+            self.loot = None
+            self.ack(RES_TOO_FAR)
+            return True
+        Fighter.stop_movement(self)
         bag = rc.loot.get(self.loot) if rc is not None else None
         # A session on the player's own cell outlives its bag (close_bag):
         # the window or the equipment's drop is still open on the client,
         # and the next thing put down there puts a new bag down.
-        underfoot = rc is not None and self.loot == self.sess.pos
+        underfoot = rc is not None and self.loot == self.cell
         if bag is None and not (underfoot and code == 2):
             if not underfoot:
                 self.loot = None
@@ -2582,7 +2717,7 @@ class RoomCombat:
                 for f in fighters:
                     f.ap = min(f.ap_max, f.ap + ticks * progression.AP_REGEN)
                 for mob in self.mobs.values():
-                    mob.ap = min(mob.ap_max, mob.ap + ticks * progression.AP_REGEN)
+                    mob.ap = min(mob.ap_max, mob.ap + ticks * progression.MOB_AP_REGEN)
                 self.ap_last += ticks * AP_TICK
         else:
             self.ap_last = t
@@ -2652,7 +2787,7 @@ class RoomCombat:
         fighters = self.fighters()
         living = {f for f in fighters if not f.dead}
         for f in living:
-            if f.aim is not None or f.strike is not None:
+            if (f.aim is not None or f.strike is not None) and getattr(f, 'hostile_action', True):
                 return True
             for other in list(f.duels):
                 if other in living:
@@ -2717,6 +2852,9 @@ class RoomCombat:
             if attacker.is_player:
                 # Keep both participants at war until death or departure;
                 # the hit timer independently opens the edge exits.
+                if Fighter.same_clan(attacker, target) or Fighter.allied(attacker, target):
+                    return
+                self.set_ws(True)
                 attacker.engage_player(target, t)
                 self.mark_foe(target, attacker)
         elif (target.alive and attacker.is_player and target.stats.can_attack
@@ -2758,11 +2896,10 @@ class RoomCombat:
     # --- what mobs do -------------------------------------------------------------------
     def mob_walk(self, mob, goal, t):
         """One leg of a walk towards the nearest cell satisfying goal, as
-        userMove;id;path to everyone. The mob's cell is its destination at
-        once, which is where the client will have it when the animation
-        ends; busy_until keeps it from acting before that."""
+        userMove;id;path to everyone. The shared motion clock exposes its
+        current hex; busy_until prevents acting before the leg ends."""
         loc = self.room.loc
-        blocked = {m.cell for m in self.mobs.values() if m.alive and m is not mob}
+        blocked = movement.get(self.room).occupied(mob)
         # A player's hex now and the one his walk ends on: neither is free
         # to step onto while he is on the way.
         blocked |= {s.pos for s in self.room.players}
@@ -2777,8 +2914,12 @@ class RoomCombat:
             mob.busy_until = t + mobs.STUCK_WAIT
             return
         leg = path[:mobs.LEG + 1]
-        self.room.broadcast(("userMove", dict(id=mob.eid, path=leg)))
+        self.room.broadcast(("userMove", dict(id=mob.eid, path=leg, step_ms=0)))
+        mob.walk = (leg, t)
         mob.cell = leg[-1]
+        clock = movement.get(self.room)
+        mob._motion = clock
+        clock.accept(mob, leg, t)
         npc = self.room.npcs.get(mob.eid)
         if npc is not None:
             self.room.npcs[mob.eid] = npc._replace(cell=leg[-1])
@@ -2890,7 +3031,7 @@ class RoomCombat:
             out.setdefault(f.cell, f)
         return out
 
-    def burst(self, shooter, target, hexcell, weapon, live, others=None):
+    def burst(self, shooter, target, hexcell, weapon, live, others=None, *, recovery_ms=0):
         """num_shots pairs of faShot around what each bullet did, then usrUp
         of everyone hit. live is how many chambers held a round; the rest
         click (a miss). Returns (hp damage, sp damage, hits, killed) of the
@@ -2935,17 +3076,21 @@ class RoomCombat:
         shown = target if target in struck else max(
             struck, key=lambda b: struck[b][0] + struck[b][1], default=None)
         pairs.sort(key=lambda pair: any(f[0] is shown for f in pair[1]))
-        for end, fates in pairs:
+        for pair_index, (end, fates) in enumerate(pairs):
             self.room.broadcast(("faShot", dict(id=shooter.eid, status=1)))
             if end is not None:
                 self.room.broadcast(end)
             for body, h, s, crit in sorted(fates, key=lambda f: f[0] is shown):
                 mine = body is shown
-                self.room.broadcast(("faHit", dict(target=body.eid,
-                                                   dmg=h if mine else 0,
-                                                   sdmg=s if mine else 0,
-                                                   crit=int(crit))))
-            self.room.broadcast(("faShot", dict(id=shooter.eid, status=0)))
+                fields = dict(target=body.eid, dmg=h if mine else 0,
+                              sdmg=s if mine else 0, crit=int(crit))
+                if shooter.is_player and body.is_player and Fighter.same_clan(shooter, body):
+                    fields['no_war'] = 1
+                self.room.broadcast(("faHit", fields))
+            fields = dict(id=shooter.eid, status=0)
+            if recovery_ms and pair_index == len(pairs) - 1:
+                fields['recovery_ms'] = recovery_ms
+            self.room.broadcast(("faShot", fields))
         # The pairs are out. What follows is the server's own account, and
         # its caller settles the shot by it: pays the rounds and the action
         # points, turns or kills whoever was hit. So each body's outcome is
@@ -3052,6 +3197,11 @@ class RoomCombat:
         """A faHit or a caHit has just gone out: the exit timer restarts for
         each player at either end of it, as the client's countdown does
         (Location.faHit/caHit -> startExitTimer)."""
+        if attacker is not None and target is not None and attacker.is_player and target.is_player:
+            if Fighter.same_clan(attacker, target) or Fighter.allied(attacker, target):
+                return
+            # A stray round from clan target practice can still start real PvP.
+            self.set_ws(True)
         t = now()
         for side in (attacker, target):
             if side is not None and side.is_player:
@@ -3074,6 +3224,14 @@ class RoomCombat:
         mob.blueprint_killer_level = (
             (killer.level if blueprint_killer_level is None else blueprint_killer_level)
             if killer is not None and killer.is_player else None)
+        if getattr(self.room, 'motion', None) is not None:
+            self.room.motion.advance()
+        cell = (mob.walk_cell(now()) if getattr(mob, 'walk', None) is not None
+                and getattr(self.room, 'motion', None) is None else mob.cell)
+        mob.cell, mob.walk = cell, None
+        self.room.broadcast(("actionCancel", dict(id=mob.eid, pos=cell, stop_aim=1)))
+        if getattr(self.room, 'motion', None) is not None:
+            self.room.motion.forget(mob)
         mob.alive = False
         mob.target = None
         if mob.aim is not None:
@@ -3385,10 +3543,10 @@ class RoomCombat:
         if mob.alive or mob.away:
             return
         mob.reset()
-        mob.cell = mob.home
-        self.room.npcs[mob.eid] = rooms.NPC(mob.home, mob.type_id, world.MOB)
+        mob.cell = movement.get(self.room).free_cell(mob.home, exclude=mob)
+        self.room.npcs[mob.eid] = rooms.NPC(mob.cell, mob.type_id, world.MOB)
         for sess in list(self.room.players):
-            sess.send("lch", newUser=mob.eid, pos=mob.home, rtype=world.MOB)
+            sess.send("lch", newUser=mob.eid, pos=mob.cell, rtype=world.MOB)
             sess.send_npc_info(mob.eid)
 
     # --- bosses and their hours ----------------------------------------------------------

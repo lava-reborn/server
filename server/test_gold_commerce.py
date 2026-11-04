@@ -177,15 +177,15 @@ class GoldCommerce(unittest.TestCase):
 
     def test_dual_priced_a_blueprint_keeps_afro_basis_and_no_sale_confirmation(self):
         params = items.params_of(37645)
-        self.assertEqual((params['cost'], params['g_cost']), (180000, 4500))
+        self.assertEqual((params['cost'], params['g_cost']), (120000, 3000))
         self.assertEqual(gold_trade.sale_unit(37645, params), 0)
         row = self.give(37645)
         self.assertEqual(self.sell(row, 1), 0)
-        self.assertLessEqual(self.s.char.afro - 12345, 126000)
-        self.assertEqual(self.s.char.afro - 12345, 77000)
-        self.assertEqual(gold_trade.auction_base(37645), 180000)
-        self.assertFalse(barter.tradable(37645))
-        self.assertFalse(mail.postable(37645))
+        self.assertLessEqual(self.s.char.afro - 12345, 84000)
+        self.assertEqual(self.s.char.afro - 12345, 51333)
+        self.assertEqual(gold_trade.auction_base(37645), 120000)
+        self.assertTrue(barter.tradable(37645))
+        self.assertTrue(mail.postable(37645))
 
     def test_blueprint_prices_discount_cap_and_18_20_equal_17(self):
         import craft
@@ -212,7 +212,7 @@ class GoldCommerce(unittest.TestCase):
     def test_commission_uses_repair_reference_and_a_blueprint_twin(self):
         for t, base, fees in ((26075, 138125, (6907, 9669, 12432)),
                               (25804, 134800, (6740, 9436, 12132)),
-                              (37679, 252000, (12600, 17640, 22680))):
+                              (37679, 168000, (8400, 11761, 15120))):
             value = inventory.as_sent(gold_trade.auction_base(t))
             self.assertEqual(value, base)
             self.assertEqual(tuple(auction.afro_fee(value, 1, h) for h in (24, 72, 168)), fees)
@@ -305,16 +305,25 @@ class GoldCommerce(unittest.TestCase):
         self.assertEqual(len(returned), 1)
         self.assertEqual((returned[0]['ammo_count'], returned[0]['brk'], returned[0]['max_break_cur']), (3, 100, 200))
 
-    def test_afro_blueprint_cannot_be_listed_or_posted_without_losing_item(self):
+    def test_a_blueprint_can_be_listed_once_and_transferred(self):
         row = self.give(37638)
         house = auction.Auction(self.s, self.store, NS(by_pid=lambda pid: None))
         house.at_auctioneer = lambda p: True
-        res, _ = house._create(dict(obj=inventory.oid_of(row), time=24, a_bid=1000))
+        request = dict(obj=inventory.oid_of(row), time=24, a_bid=1000)
+        res, _ = house._create(request)
+        self.assertEqual(res, 0)
+        self.assertIsNone(self.store.item(row['uniq']))
+        self.assertEqual(len(self.store.auction_active(0)), 1)
+        balance = self.store.money(self.cid)
+        self.assertLess(balance[0], 12345)
+        res, _ = house._create(request)
         self.assertNotEqual(res, 0)
-        self.assertIsNotNone(self.store.item(row['uniq']))
-        self.assertEqual(self.s.char.afro, 12345)
+        self.assertEqual(self.store.money(self.cid), balance)
+        self.assertEqual(len(self.store.auction_active(0)), 1)
+        self.assertTrue(barter.tradable(37638))
+        self.assertTrue(mail.postable(37638))
 
-    def test_existing_afro_blueprint_lot_cannot_trade_and_returns_with_bid_refund(self):
+    def test_existing_a_blueprint_lot_settles_once_without_refunding_bid(self):
         import time
         row = self.give(37638)
         aid, _ = self.store.register('bidder', 'test-only')
@@ -330,14 +339,18 @@ class GoldCommerce(unittest.TestCase):
         house = auction.Auction(self.s, self.store, NS(by_pid=lambda pid: None))
         house.at_auctioneer = lambda p: True
         res, _ = house._op(dict(obj=inventory.oid_of(row), type=auction.SELL))
-        self.assertNotEqual(res, 0)
-        rows, _, _ = house.find(dict(cat=auction.ANY))
-        self.assertEqual(rows, [])
-        auction.sweep(self.store, house.directory, now=time.time() + 7200)
+        self.assertEqual(res, 0)
         self.assertIsNone(self.store.auction_lot(lot['id']))
-        self.assertEqual(sum(r['afro'] for r in self.store.mail_inbox(bidder)), 100)
-        self.assertEqual(len(self.store.mail_inbox(self.cid)), 1)
-        self.assertEqual(self.store.mail_inbox(self.cid)[0]['afro'], 100)
+        letters = self.store.mail_inbox(bidder)
+        self.assertEqual(sum(r['afro'] for r in letters), 0)
+        self.assertEqual(sum(len(json.loads(r['items_json'])) for r in letters), 1)
+        self.assertEqual(json.loads(letters[0]['items_json'])[0]['type_id'], 37638)
+        self.assertEqual(sum(r['afro'] for r in self.store.mail_inbox(self.cid)), 100)
+        res, _ = house._op(dict(obj=inventory.oid_of(row), type=auction.SELL))
+        self.assertNotEqual(res, 0)
+        auction.sweep(self.store, house.directory, now=time.time() + 7200)
+        self.assertEqual(len(self.store.mail_inbox(bidder)), 1)
+        self.assertEqual(sum(r['afro'] for r in self.store.mail_inbox(self.cid)), 100)
 
     def test_cod_payment_and_attachment_claim_are_atomic(self):
         aid, _ = self.store.register('seller', 'test-only')
@@ -360,16 +373,20 @@ class GoldCommerce(unittest.TestCase):
         self.assertEqual(self.s.char.afro, 11345)
         self.assertEqual(sum(r['afro'] for r in self.store.mail_inbox(seller)), 1000)
 
-    def test_legacy_afro_blueprint_cod_cannot_charge_the_recipient(self):
+    def test_a_blueprint_cod_charges_once_and_delivers_once(self):
+        aid, _ = self.store.register('a-seller', 'test-only')
+        seller, _ = self.store.create_character(aid, 'ASeller', 0, '1')
         row = self.give(37638)
         snap = mail.snapshot(row)
         self.store.delete_item(row['uniq'])
-        letter = self.store.mail_send(self.cid, 123, mail.TRADE, 'test', 'test', 1000, 0, json.dumps([snap]))
-        self.mailbox().uldml(dict(id=str(letter['id'])))
-        self.assertEqual(self.s.char.afro, 12345)
-        self.assertFalse(any(r['type_id'] == 37638 for r in self.inv.rows()))
-        self.assertNotEqual(self.store.mail_letter(letter['id'])['items_json'], '[]')
-
+        letter = self.store.mail_send(self.cid, seller, mail.TRADE, 'test', 'test', 1000, 0, json.dumps([snap]))
+        box = self.mailbox()
+        for _ in range(2):
+            box.uldml(dict(id=str(letter['id'])))
+        self.assertEqual(self.s.char.afro, 11345)
+        self.assertEqual(sum(r['type_id'] == 37638 for r in self.inv.rows()), 1)
+        self.assertEqual(self.store.mail_letter(letter['id'])['items_json'], '[]')
+        self.assertEqual(sum(r['afro'] for r in self.store.mail_inbox(seller)), 1000)
 
     def auction_offer(self, row):
         return dict(type_id=row['type_id'], root=row['root'],

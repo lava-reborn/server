@@ -43,6 +43,72 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
         timer.cancel()
         return args
 
+    async def test_battle_medicine_costs_scale_once_and_peace_costs_stay_unchanged(self):
+        battle_count=0
+        for type_id,(root,name) in items.catalogue().items():
+            if root != items.HEAL:
+                continue
+            with patch.object(items,'BATTLE_HEAL_AP_MULTIPLIER',1), \
+                    patch.object(items,'BATTLE_HEAL_AFRO_AP_MULTIPLIER',1):
+                original=items.static_info(type_id)[1]['heal_cost']
+            expected=original
+            if name.startswith('Med_Battle_'):
+                factor=1.5 if name.endswith('_A') else 2.5
+                expected=original * factor
+                if name.endswith('_A') or '_G' in name:
+                    expected=int(expected+0.5)
+            self.assertEqual(items.static_info(type_id)[1]['heal_cost'],expected,type_id)
+            self.assertEqual(items.static_info(type_id)[1]['heal_cost'],expected,type_id)
+            battle_count+=name.startswith('Med_Battle_')
+        self.assertGreaterEqual(battle_count,30)
+
+    async def test_rounded_battle_medicine_cost_checks_and_spends_exactly_once(self):
+        f,ch,room,used=self.fixture(7100)
+        room.ws=True
+        self.assertEqual(items.params_of(7100)['heal_cost'],13)
+        acks=[]
+        f.ack=acks.append
+        f.refuse_no_ap=lambda: combat.Fighter.refuse_no_ap(f)
+        f.ap=12.99
+        combat.Fighter.use_heal(f,dict(obj='1'),inventory.USE_IDLE)
+        self.assertIsNone(f.healing)
+        self.assertEqual((f.ap,used),(12.99,[]))
+        f.ap=13
+        args=self.start(f)
+        f.heal_now(*args)
+        self.assertEqual((f.ap,used),(0,[1]))
+        f.heal_now(*args)
+        self.assertEqual((f.ap,used),(0,[1]))
+
+    async def test_players_and_mobs_regenerate_fractional_ap_on_the_same_tick(self):
+        f,ch,room,used=self.fixture()
+        room.ws=True
+        room.loc=NS(id=100)
+        f.ap,f.ap_max,f.regen_at=0,100,1e9
+        mob=NS(type_id=1,ap=0,ap_max=100,think=lambda rc,t:None)
+        rc=combat.RoomCombat.__new__(combat.RoomCombat)
+        rc.room,rc.mobs,rc.ap_last=room,{1:mob},100
+        rc.fighters=lambda:[f]
+        rc.keep_hours=lambda:None
+        rc.calm=lambda t:None
+        rc.regen_mob=lambda m,t:None
+        with patch.object(progression,'AP_REGEN',2.5), \
+                patch.object(progression,'MOB_AP_REGEN',1.5), \
+                patch.object(combat.bosses,'uses_camp_recovery',return_value=False):
+            with patch.object(combat,'now',return_value=100.601):
+                rc._step()
+            self.assertEqual((f.ap,mob.ap),(2.5,1.5))
+            with patch.object(combat,'now',return_value=101.201):
+                rc._step()
+            self.assertEqual((f.ap,mob.ap),(5,3))
+            f.ap=mob.ap=99
+            with patch.object(combat,'now',return_value=101.801):
+                rc._step()
+            self.assertEqual((f.ap,mob.ap),(100,100))
+        f.ap=17.5
+        combat.Fighter.c_ap(f)
+        self.assertIn(('c_ap',dict(ap=17.5)),f.frames)
+
     async def test_failed_completion_releases_client_item_without_spending(self):
         for reason in ('ap', 'dead', 'zero_hp', 'missing'):
             with self.subTest(reason=reason):

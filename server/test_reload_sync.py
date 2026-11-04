@@ -72,7 +72,7 @@ class ReloadSync(unittest.IsolatedAsyncioTestCase):
         room = NS(ws=True, broadcast=lambda frame, **kw: self.frames.append(frame))
         target = NS(is_player=False, cell=1)
         rc = NS(room=room, actor=lambda _: target, set_ws=lambda _: None)
-        self.f = NS(sess=self.s, rc=rc, ap=100, dead=False, cell=0, eid=0,
+        self.f = NS(sess=self.s, store=self.store, rc=rc, ap=100, dead=False, cell=0, eid=0,
                     aim=None, strike=None, healing=None, reloading=None,
                     action_revision=0, walk_ap=None, preparing=lambda: False,
                     character=lambda: self.s.char,

@@ -26,6 +26,8 @@ import camp_elites
 import names
 import travel
 import world
+import mobs
+import movement
 from protocol import Str
 
 log = logging.getLogger("lava")
@@ -222,11 +224,31 @@ class Room:
         and the answers go back to whoever asked.
         """
         for npc_id, npc in self.npcs.items():
-            sess.send("lch", newUser=npc_id, pos=npc.cell, rtype=npc.root)
+            mob = self.combat.mobs.get(npc_id) if self.combat is not None else None
+            cell = mob.cell if mob is not None and mob.alive else npc.cell
+            sess.send("lch", newUser=npc_id, pos=cell, rtype=npc.root)
             sess.send_npc_info(npc_id)
+            if mob is not None and mob.alive:
+                self.send_walk_snapshot(sess, npc_id, mob)
         for other in self.players:
             if other is not sess:
-                sess.send("lch", newUser=other.pid, pos=other.pos, rtype=-1)
+                cell = other.live_cell()
+                sess.send("lch", newUser=other.pid, pos=cell, rtype=-1)
+                sess.send("usrUp", **player_health(other))
+                self.send_walk_snapshot(sess, other.pid, other)
+
+    def send_walk_snapshot(self, viewer, eid, actor):
+        """Resume an existing edge with the same index as its placement."""
+        if actor.walk is None:
+            return
+        cells, began = actor.walk
+        elapsed = movement.elapsed_ms(asyncio.get_running_loop().time(), began)
+        clock = getattr(self, 'motion', None)
+        state = clock.walks.get(id(actor)) if clock is not None else None
+        index = state.index if state is not None else min(len(cells) - 1, elapsed // mobs.HEX_MS)
+        if index + 1 < len(cells):
+            viewer.send("userMove", id=eid, path=cells[index:],
+                        step_ms=min(mobs.HEX_MS - 1, max(0, elapsed - index * mobs.HEX_MS)))
 
     def enter(self, sess):
         """Arrival, after the client's lenter: snapshot to the newcomer,
@@ -252,6 +274,8 @@ class Room:
         """
         if self.players.pop(sess, None) is None:
             return
+        if getattr(self, 'motion', None) is not None:
+            self.motion.forget(sess)
         self.broadcast(("lch", dict(lostUser=sess.pid)))
         log.info("  ..    %s leaves %s (%d left)",
                  sess.nick, self.loc.title, len(self.players))
