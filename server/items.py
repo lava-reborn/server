@@ -45,6 +45,7 @@ import quests
 import sets
 import shop_bands
 import world
+import training_items
 
 log = logging.getLogger("lava")
 
@@ -529,6 +530,8 @@ def no_combat(type_id):
     look at the war state (PersEquip.useHealItem), 1035-1380 health for
     0 AP among them."""
     entry = catalogue().get(type_id)
+    if training_items.is_copy(type_id):
+        return no_combat(training_items.source_type(type_id))
     return bool(entry and entry[0] == HEAL and entry[1].startswith("Med_Pacific_"))
 
 
@@ -805,7 +808,7 @@ def stock_table():
 
 def root_of(type_id):
     """Root class of a type, or None when the client has no such type."""
-    entry = catalogue().get(type_id)
+    entry = catalogue().get(training_items.source_type(type_id))
     return entry[0] if entry else None
 
 
@@ -1095,6 +1098,8 @@ def static_info(type_id):
     takes the numbers of data/sets.json last: the owner's file for the whole
     ladder of a set, which a wiki table of the old system has no say in.
     """
+    if training_items.is_copy(type_id):
+        return training_items.static_info(type_id)
     info = designed_info(type_id)
     if info:
         rec = wiki().get(type_id)

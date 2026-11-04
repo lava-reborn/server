@@ -1564,17 +1564,29 @@ def connect():
 
 
 class Store:
-    def __init__(self, path=None):
+    def __init__(self, path=None, *, db=None):
         global DB_PATH
         if path:
             DB_PATH = path
-        self.db = connect()
+        self.db = db if db is not None else connect()
         # (source, ref) a purse written now is booked under (money_ledger),
         # set around a command by its handler (booked_as); None books it
         # under LEDGER_OTHER. The game server is one thread: a command runs
         # to its end before the next one starts.
         self.money_source = None
         self.quest_revisions = {}
+
+    @classmethod
+    def temporary(cls):
+        """An isolated SQLite store, even when the real server uses Postgres."""
+        db = storage.SqliteDB(':memory:')
+        try:
+            db.create_schema(SCHEMA)
+            migrate(db)
+            return cls(db=db)
+        except Exception:
+            db.close()
+            raise
 
     def quests_changed(self, char_id):
         """Invalidate online availability snapshots after a quest write."""
@@ -2387,7 +2399,7 @@ class Store:
 
     def lock_quest_character(self, char_id):
         """Serialize this character's quest writes inside storage.atomic."""
-        lock = " FOR UPDATE" if storage.using_postgres() else ""
+        lock = " FOR UPDATE" if isinstance(self.db, storage.PostgresDB) else ""
         return self.db.execute("SELECT id FROM characters WHERE id = ?" + lock,
                                (char_id,)).fetchone() is not None
 
