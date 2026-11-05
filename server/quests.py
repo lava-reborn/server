@@ -1021,6 +1021,8 @@ def served(q, k, line):
     # schedule, including lines loaded from the original text archive.
     line = line.replace("12:00, 16:00 и 23:00", "13:00, 17:00 и 21:00")
     line = line.replace("12:00, 16:00 или 23:00", "13:00, 17:00 или 21:00")
+    if 358 <= q.type <= 364:
+        line = line.replace("Учти, что второго шанса не будет", "При желании ты сможешь вернуться к обучению")
     line = per_day_start(line, q.per_day)
     if q.complete_skills:
         labels = ("Ближний бой", "Стрельба", "Медицина", "Промышленность")

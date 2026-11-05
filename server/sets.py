@@ -69,6 +69,7 @@ import os
 
 import orig_texts
 import progression
+import training_items
 import quests
 
 NAME_ID_OFFSET = 7_000_000
@@ -267,26 +268,26 @@ SETS, SET_OF, ITEMS = _load()
 
 def set_of(type_id):
     """The set a type belongs to, or 0 -- which is what ss_si_wear says for none."""
-    return SET_OF.get(type_id, 0)
+    return SET_OF.get(training_items.source_type(type_id), 0)
 
 
 def variant_of(type_id):
     """The variant of the set a piece is in (VARIANTS), "" for none."""
-    s = SETS.get(SET_OF.get(type_id))
+    s = SETS.get(SET_OF.get(training_items.source_type(type_id)))
     return s["variant"] if s else ""
 
 
 def slot_of(type_id):
     """The slot a piece fills in its set (SLOTS), or None."""
-    s = SETS.get(SET_OF.get(type_id))
+    s = SETS.get(SET_OF.get(training_items.source_type(type_id)))
     if not s:
         return None
-    return next(slot for slot, t in s["members"].items() if t == type_id)
+    return next(slot for slot, t in s["members"].items() if t == training_items.source_type(type_id))
 
 
 def item(type_id):
     """What the file lays over this piece's ss_si_wear, or None."""
-    return ITEMS.get(type_id)
+    return ITEMS.get(training_items.source_type(type_id))
 
 
 def strings():
@@ -318,8 +319,8 @@ def item_descs():
 def described(type_id):
     """Whether the file gives this piece a description of its own -- and so
     whether ss_si_wear may carry its id even where the original has none."""
-    s = SETS.get(SET_OF.get(type_id))
-    return bool(s and type_id in s["descs"])
+    s = SETS.get(SET_OF.get(training_items.source_type(type_id)))
+    return bool(s and training_items.source_type(type_id) in s["descs"])
 
 
 def fallback(type_value):
@@ -365,7 +366,7 @@ def pieces(worn):
     """
     out = {}
     for type_id in worn:
-        s = SET_OF.get(type_id)
+        s = SET_OF.get(training_items.source_type(type_id))
         if s:
             out[s] = out.get(s, 0) + 1
     return out
@@ -406,7 +407,7 @@ def look(worn):
     worn = list(worn)
     if len(worn) != len(SLOTS) or any(t is None for t in worn):
         return 0
-    kinds = {SET_OF.get(t, 0) for t in worn}
+    kinds = {SET_OF.get(training_items.source_type(t), 0) for t in worn}
     if len(kinds) != 1:
         return 0
     set_type = kinds.pop()
