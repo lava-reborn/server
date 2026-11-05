@@ -1042,19 +1042,35 @@ try:
         fight, killed, pos, _fell, wary = hunt(c, alive_frames(got), ADITS_LOC, [BLACK_RAT], pos)
         got += fight
         kills += len(killed)
-        if not killed:
+        if killed:
+            # Loot is rolled when the corpse disappears, not at lch;dead.
+            # Observe that kill's bag before deciding to shoot another rat.
+            fell = _fell[BLACK_RAT]
+            got += c.until(lambda f: f[0] == "ss_loot" and f[1].get("s_status") == 1
+                           and fell in f[1].get("hex", []), combat.CORPSE_DELAY + 2)
+            got += c.frames(0.1)
+        else:
             got += c.frames(2.0)     # the adits shot empty: a rat comes back
     cells = ground_cells(KING)
     check("black rats shot in the adits with the quest open until a king falls:"
           " within twenty-five kills (one in five), the king in one bag on the ground",
           (1 <= kills <= 25, len(cells)), (True, 1))
+    # Deaths on the same hex share a ground bag. A rat returning to that
+    # hex can leave a second tail beside the king; verify all existing tail
+    # stacks instead of assuming this bag belongs to exactly one kill.
+    st = store()
+    tail_stacks = st.db.execute(
+        "SELECT COUNT(*) AS n FROM ground g JOIN items i ON i.uniq = g.uniq"
+        " WHERE g.loc = ? AND g.cell = ? AND i.type_id = ?",
+        (ADITS_LOC, cells[0] if cells else pos, TAIL)).fetchone()["n"]
+    st.close()
     held, took = loot(c, got, ADITS_LOC, pos, cells[0] if cells else pos, wary)
     check("  ..the king's bag: the carcass beside the rat's tail; taken, «Крысиный король»"
           " counts it, complete",
-          ((held or []).count(KING), (held or []).count(TAIL),
+          ((held or []).count(KING), ((held or []).count(TAIL), tail_stacks > 0),
            [p["obj_num"] for p in named(took, "q_di_bring_l_obj") if p["q_id"] == q],
            counts(took, quests.BRING_L_OBJ)),
-          (1, 1, [[1]], [([1], 1)]))
+          (1, (tail_stacks, True), [[1]], [([1], 1)]))
     here = inhabitants(goto(c, BARN))
     got = hand_in(c, here, KING_Q, q)
     AFRO += 700

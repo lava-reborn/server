@@ -249,6 +249,7 @@ def free_port():
         return probe.getsockname()[1]
 
 
+EXIT_HOLD = 2  # Keep the real post-combat exit timer, bounded for this fixture.
 PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "gold.db")
 accounts.DB_PATH = DB
@@ -259,7 +260,8 @@ CRED = accounts.credential("prospector", "secret")
 
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
            LAVA_CHEATS="1", LAVA_GX=str(MOUTH_CELL[0]), LAVA_GY=str(MOUTH_CELL[1]),
-           LAVA_AP_REGEN="25", LAVA_RESPAWN="600", LAVA_SEED="7")
+           LAVA_AP_REGEN="25", LAVA_RESPAWN="600", LAVA_SEED="7",
+           LAVA_LEAVE_COMBAT=str(EXIT_HOLD))
 LOG = os.path.join(os.path.dirname(DB), "server.log")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=open(LOG, "w"), stderr=subprocess.STDOUT, text=True)
@@ -343,7 +345,7 @@ def way(c, npc_id):
     took = c.until(lambda f: f[0] == "q_di_del_obj", 3)
     di = named(took, "q_di_del_obj")
     c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (npc_id, di[0]["q_id"] if di else 0))
-    return took, c.until(lambda f: f[0] == "lcall", 3) + c.frames(0.4)
+    return took, c.until(lambda f: f[0] == "lcall", EXIT_HOLD + 3) + c.frames(0.4)
 
 
 def counts(frames):

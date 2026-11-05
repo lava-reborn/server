@@ -601,6 +601,7 @@ class Client:
     def __init__(self, sock):
         self.s = sock
         self.buf = b""
+        self.seen = []
 
     def send(self, text):
         self.s.sendall(text.encode(ENC) + b"\x00")
@@ -619,7 +620,9 @@ class Client:
     def _drain(self):
         parts = self.buf.split(b"\x00")
         self.buf = parts.pop()
-        return [decode(f.decode(ENC)) for f in parts if f]
+        frames = [decode(f.decode(ENC)) for f in parts if f]
+        self.seen += frames
+        return frames
 
     def frames(self, wait=0.5):
         deadline = time.time() + wait
@@ -798,6 +801,7 @@ def arm(c):
     c.frames()
     c.send("ss_use;target=x%s;obj=x%s;type=1;" % (rounds, gun))
     c.until(lambda f: f[0] == "ss_di_firearm")
+    c.fixture_gun = gun
     return gun
 
 
@@ -806,10 +810,26 @@ def through(c, loc_id, side):
     loc = world.location(loc_id)
     cells = sorted(cc for cc, s in travel.exit_sides(loc).items() if s == side
                    and cc not in loc.obstacles)
-    blocked = set(c.scene_cells.values())
-    path = mobs.find_path(loc, c.scene_pos, lambda cell: cell in cells, blocked, limit=20000)
-    assert path and path[-1] in cells, (loc_id, side, 'no exit route')
-    testkit.walk_frames(c, path[-1], exact=True)
+    if getattr(c, 'clear_guards', False):
+        # After the quest kills and ring are checked, clear corridor guards
+        # during the passage tour; do not try to walk through a live miner.
+        enemies = {p['id'] for n, p in c.seen if n == 'userInfo'
+                   and p['id'] in c.scene_cells and MT.get(p['name'], (None,))[0] == world.MOB
+                   and mobs.stats(p['name']).can_attack}
+        def fire(eid):
+            for _ in range(10):
+                c.send('ss_use;type=16;obj=x%s;target=%s;' % (c.fixture_gun, entity(eid)))
+                got = c.until(lambda f: f[0] == 'lch' and f[1].get('dead') == eid, 1)
+                if any(p.get('dead') == eid for p in named(got, 'lch')):
+                    return got
+            return None
+        testkit.clear_approach(c, cells, fire, enemies,
+                               max(items.params_of(ADMIN_GUN)['max_range']))
+    else:
+        blocked = set(c.scene_cells.values())
+        path = mobs.find_path(loc, c.scene_pos, lambda cell: cell in cells, blocked, limit=20000)
+        assert path and path[-1] in cells, (loc_id, side, 'no exit route')
+        testkit.walk_frames(c, path[-1], exact=True)
     for _ in range(6):
         c.send("chWorld;to=1;")
         got = c.frames(0.8)
@@ -1105,6 +1125,7 @@ try:
     raid = [json.loads(r["progress_json"]) for r in st.quests(RAIDER) if r["type"] == RAID]
     st.close()
     check("  ..the raid counts them", raid[0]["kill_num"], [5])
+    c.clear_guards = True
     if tier == 1024:
         res, call, arrival = through(c, 1024, "W")
         check("back west from 1024 into the gallery's west end", (res, call.get("id")),
