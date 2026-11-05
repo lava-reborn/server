@@ -19,6 +19,7 @@ import combat  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import rooms  # noqa: E402
+import movement  # noqa: E402
 from protocol import decode, frame  # noqa: E402
 import server  # noqa: E402
 import test_action_order as fixtures  # noqa: E402
@@ -62,7 +63,12 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
         f, s, room, events, row = self.fixture()
         s.loc.obstacles = set()
         room.npcs = {}
-        room.players = []
+        room.players = {s: None}
+        room.loc = s.loc
+        room.combat = f.rc
+        f.rc.mobs = {}
+        room.motion = movement.Motion(room)
+        room.motion.schedule = lambda: None  # This fixture advances a fake clock explicitly.
         s.barter = NS(moved=lambda: None)
         s.passage = None
         s.arm_passage = lambda length: None

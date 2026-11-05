@@ -75,6 +75,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -185,7 +186,7 @@ try:
     check("Alice stands where she was put", param(seen[0], "pos"), str(pos_a))
     # ... and the one already there is told about the newcomer.
     got = a.frames()
-    check("Alice is told of Bob", [f.split(";")[0] for f in got], ["lch"])
+    check("Alice is told of Bob and his current health", [f.split(";")[0] for f in got], ["lch", "usrUp"])
     check("as a player on his cell",
           "pos=%d;rtype=-1;" % pos_b in got[0], True)
     pid_b = int(param(got[0], "newUser"))
@@ -309,6 +310,9 @@ try:
           ["ss_loot;s_status=1;hex=|%d|;" % here])
     # Bob, beside it, takes it: the bag is empty and goes -- while Alice's
     # equipment window, and so her session, is still open.
+    testkit.walk_to(b, here)
+    b.frames(0.3)
+    a.frames(0.3)
     b.send("ss_create;s_type=0;target=%d;" % here)
     check("Bob opens the bag", b.frames(), ["cmdAck;res=0;"])
     b.send("ss_upd;s_status=1;obj=%s;param=1;" % guns[0])
@@ -479,7 +483,9 @@ try:
     edge = next(cell for cell in travel.exit_sides(caught_loc)
                 if cell not in caught_loc.obstacles)
     for who in (a, b):
-        who.send("moveTo;path=|%d|;" % edge)
+        edge = next(cell for cell in travel.exit_sides(caught_loc)
+                    if cell not in caught_loc.obstacles and cell not in who.scene_cells.values())
+        testkit.walk_to(who, edge)
         moved = who.frames(0.3)
         check("after the countdown a participant can move to the exit",
               [param(f, "res") for f in moved if f.startswith("cmdAck;")], ["0"])
@@ -553,9 +559,10 @@ try:
     check("Alice's disconnected body is still visible under the same player id",
           [f for f in got if "rtype=-1;" in f],
           ["lch;newUser=%d;pos=%d;rtype=-1;" % (pid_a, alice_pos)])
-    b.send("moveTo;path=|490|491|;")
+    testkit.walk_to(b, b.scene_pos - 1)
+    expected = '|%s|' % '|'.join(map(str, b.fixture_path))
     check("and can still walk",
-          movement_frames(b.frames(), owner_ap=50), ["cmdAck;res=0;", "userMove;id=0;path=|490|491|;"])
+          movement_frames(b.frames(), owner_ap=50), ["cmdAck;res=0;", "userMove;id=0;path=%s;" % expected])
     b.send("logout;")
 
     # The rim is one file standing on hundreds of cells, so a room keyed by

@@ -30,6 +30,8 @@ class Arr(list):
 def get(obj, key):
     if obj is None:
         return None
+    if key == 'apply' and (isinstance(obj, Function) or callable(obj)):
+        return lambda target, args: obj.invoke(target, args) if isinstance(obj, Function) else obj(*args)
     if isinstance(obj, dict):
         return obj.get(key)
     if isinstance(obj, list):

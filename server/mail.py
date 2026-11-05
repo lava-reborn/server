@@ -580,10 +580,6 @@ class Mail:
                 # A returned offer is the seller's own goods coming back: a parcel,
                 # not a sale (rmvml has zeroed the asking price by then).
                 offer = row["type"] in (TRADE, TRADE_EXPRESS) and not row["returned"]
-                if offer and any(gold_trade.afro_blueprint(s["type_id"]) for s in snaps):
-                    self.ack(RES_REFUSED)
-                    self.sess.answer("Обычные чертежи доступны у торговцев. Верните письмо отправителю.")
-                    return
                 afro, gold = row["afro"], row["gold"]
                 if offer and (owner["afro"] < afro or owner["gold"] < gold):
                     self.ack(RES_OK)

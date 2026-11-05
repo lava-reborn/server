@@ -536,7 +536,7 @@ try:
     got = a.frames()
     check("the leader hears him return, then sees him arrive",
           [(n, p.get("op"), p.get("mob_id", p.get("newUser"))) for n, p in got],
-          [("p_op", party.RECV_ONLINE, pid_b), ("lch", None, pid_b)])
+          [("p_op", party.RECV_ONLINE, pid_b), ("lch", None, pid_b), ("usrUp", None, None)])
     b.send("userMsg;entry=@вернулся@;group=1;")
     b.frames()
     check("and the channel still works", a.frames(),

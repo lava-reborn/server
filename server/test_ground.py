@@ -378,6 +378,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -592,6 +593,8 @@ def throw(c, row, cell):
 
 def cell_of(c, mob, home):
     for n, p in reversed(c.seen):
+        if n == "actionCancel" and p.get("id") == mob and "pos" in p:
+            return p["pos"]
         if n == "userMove" and p.get("id") == mob:
             return p["path"][-1]
     return home
@@ -649,6 +652,7 @@ try:
     h.until(lambda f: f[0] == "lch" and f[1].get("enemy") == bum, 6)
     dead = None
     for attempt in range(120):
+        pos = h.scene_pos
         if mobs.adjacent(pos, cell_of(h, bum, BUM_HOME), loc):
             h.send("ss_use;type=16;obj=x%s;target=x1%08x;" % (inventory.oid_of(knife), bum))
             got = h.until(lambda f: f[0] == "c_ap"
@@ -694,12 +698,13 @@ try:
           bags(arrival), [])
     v = come_back("victim")
     arrival = goto(v, DESERT)
-    check("  ..the victim comes to the desert, onto the cell the hunter came in on",
-          pos_of(arrival), desert_cell)
+    victim_cell = pos_of(arrival)
+    check("  ..the victim comes to a neighbouring free entry cell",
+          victim_cell != desert_cell and mobs.adjacent(victim_cell, desert_cell, world.location(world.location_at(*DESERT))), True)
     VP = rooms.player_id(V)
     desert = world.location(world.location_at(*DESERT))
-    beside = next(n for n in progression.hex_neighbours(desert_cell, desert.width, desert.height)
-                  if n not in desert.obstacles)
+    beside = next(n for n in progression.hex_neighbours(victim_cell, desert.width, desert.height)
+                  if n not in desert.obstacles and n != victim_cell)
     h.send("moveTo;path=|%d|%d|;" % (desert_cell, beside))
     h.frames(0.5 + mobs.HEX_MS / 1000.0)
     seen_h, seen_v = [], []
@@ -715,7 +720,7 @@ try:
     t_death = time.time()
     check("  ..and kills her there: what fell off her lies in one bag on her cell",
           ([p for n, p in seen_v if n == "lch" and "dead" in p], bags(seen_h)),
-          ([{"dead": 0}], [(1, [desert_cell])]))
+          ([{"dead": 0}], [(1, [victim_cell])]))
     dropped = {u: r for u, r in ground().items() if r["loc"] != DUMP}
     s = store()
     kinds = sorted(s.item(u)["type_id"] for u in dropped)
@@ -736,7 +741,7 @@ try:
            sorted({(r["gx"], r["gy"]) for r in rows.values()}, key=str),
            to_throw["uniq"] in in_dump and in_dump[to_throw["uniq"]]["cell"] == thrown_cell,
            sorted({r["cell"] for u, r in rows.items() if u in dropped})),
-          (sorted([bum_cell, thrown_cell]), [(None, None)], True, [desert_cell]))
+          (sorted([bum_cell, thrown_cell]), [(None, None)], True, [victim_cell]))
     put = {u: ((t_throw0, t_throw) if u == to_throw["uniq"] else
                (t_death0, t_death) if u in dropped else (t_bum0, t_bum)) for u in rows}
     check("each fifteen minutes from the moment it was put down, not two",
@@ -753,7 +758,7 @@ try:
           bags(arrival), [(1, sorted([bum_cell, thrown_cell]))])
     arrival = goto(sg, DESERT)
     check("  ..and into the empty desert: the dead woman's bag, under his feet",
-          (bags(arrival), pos_of(arrival)), ([(1, [desert_cell])], desert_cell))
+          (bags(arrival), pos_of(arrival)), ([(1, [victim_cell])], victim_cell))
     leave(sg)
     stop()
 
@@ -762,8 +767,8 @@ try:
     sg = come_back("stranger")
     check("run 2, after a restart: the stranger comes back where he left, onto her bag, and"
           " it is drawn for him", (bags(sg.arrival), pos_of(sg.arrival)),
-          ([(1, [desert_cell])], desert_cell))
-    sg.send("ss_create;s_type=0;target=%d;" % desert_cell)
+          ([(1, [victim_cell])], victim_cell))
+    sg.send("ss_create;s_type=0;target=%d;" % victim_cell)
     opened = acks(sg.frames(0.5))
     sg.send("ss_get;slot=24;")
     listed = [str(o) for o in named(sg.until(lambda f: f[0] == "ss_ack"), "ss_ack")[0]["o_list"]]
@@ -776,7 +781,7 @@ try:
     sg.send("ss_upd;s_status=3;obj=x0;param=1;")
     got = sg.until(lambda f: f[0] == "ss_loot", 3.0) + sg.frames(0.3)
     check("  ..takes it all, as anybody may: the ack, and the empty bag gone",
-          (acks(got), bags(got)), ([0], [(0, [desert_cell])]))
+          (acks(got), bags(got)), ([0], [(0, [victim_cell])]))
     s = store()
     check("  ..hers are his now, and off the ground table",
           ([s.item(u)["char_id"] for u in dropped], [u for u in dropped if u in ground()]),

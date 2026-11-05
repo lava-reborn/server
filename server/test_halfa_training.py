@@ -524,6 +524,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -826,7 +827,7 @@ def shoot(c, arrival, loc_id, want, gun, cid, mode=0):
             if goal != pos:
                 path = mobs.find_path(loc, pos, lambda x: x == goal, set(where.values()),
                                       limit=20000)
-                c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
+                testkit.walk_to(c, (path or [goal])[-1])
                 out += c.frames(0.3 + 0.25 * len(path or [goal]))
                 pos = goal
             tries = waited = 0
@@ -838,6 +839,7 @@ def shoot(c, arrival, loc_id, want, gun, cid, mode=0):
                 # of the server (Fighter.fire_now); one that came later would
                 # still be seen, in the frames of the next shot.
                 got += c.sync()
+                got += testkit.wait_recovery(c)
                 out += got
                 # Out of AP, a player waits for the bar. The AP come back on
                 # the creatures' beat (RoomCombat._step), and the server's
@@ -1051,7 +1053,7 @@ try:
         loc = world.location(loc_id)
         cells = sorted(cc for cc, s in travel.exit_sides(loc).items() if s == side
                        and cc not in loc.obstacles)
-        c.send("moveTo;path=|%d|;" % cells[len(cells) // 2])
+        testkit.walk_to(c, cells[len(cells) // 2])
         c.frames(0.5)
         c.send("chWorld;to=1;")
         got = c.frames(0.8)
@@ -1142,7 +1144,7 @@ try:
             if path is not None and (best is None or len(path) < len(best[2])):
                 best = (eid, nb, path)
     stone, spot, path = best
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [spot])))
+    testkit.walk_to(c, (path or [spot])[-1])
     c.frames(0.6 + 0.3 * len(path or [spot]))
     amax = first(arrival, "lenter").get("amax")
     blows = []
@@ -1175,7 +1177,7 @@ try:
             if nb not in loc.obstacles and nb not in set(where_.values())]
     path = mobs.find_path(loc, r_pos, lambda x: x in near, set(where_.values()) | {w_pos},
                           limit=20000)
-    r.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or near[:1])))
+    testkit.walk_to(r, (path or near[:1])[-1])
     r.frames(0.6 + 0.3 * len(path or near[:1]))
     fell = []
     for _ in range(40):

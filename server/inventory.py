@@ -1657,6 +1657,9 @@ class Inventory:
         came from (PersEquip.applyTransfer) -- so the swap here mirrors that
         exactly, or the two sides disagree on where things are.
         """
+        import combat  # late: combat imports inventory
+        if combat.Fighter.refuse_recovery(self.sess.combat):
+            return
         row = self.find(p.get("obj"))
         if not row:
             self.ack(RES_NOT_FOUND)
@@ -1746,6 +1749,9 @@ class Inventory:
         Ammo and AP are charged only after reload_time. Accepted replacement
         actions cancel the pending operation without moving either resource.
         """
+        import combat  # late: combat imports inventory
+        if combat.Fighter.refuse_recovery(self.sess.combat):
+            return
         gun = self.find(p.get("obj"))
         stack = self.find(p.get("target"))
         if not gun or gun["root"] != items.FIRE_ARM:
@@ -1765,7 +1771,6 @@ class Inventory:
         if gun["ammo_count"] >= clip and gun["ammo_type"] == stack["type_id"]:
             self.ack(RES_LOADED)
             return
-        import combat                   # late: combat imports inventory
         fighter = self.sess.combat
         combat.Fighter.settle_walk(fighter)
         cost = si.get("reload_cost", 0) if fighter.rc is not None and fighter.rc.room.ws else 0

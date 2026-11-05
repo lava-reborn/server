@@ -476,6 +476,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -655,7 +656,7 @@ try:
                        and all(mobs.hex_distance(cell, o, place.width) > wary for o in others))
         check("there is a place to shoot him from", bool(spots), True)
         pos = spots[0][1] if spots else pos
-        c.send("moveTo;path=|%d|;" % pos)
+        testkit.walk_to(c, pos)
         c.frames(0.5)
         for attempt in range(40):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(boss)))
@@ -683,7 +684,7 @@ try:
                               or progression.within_reach(cell, where[0], place.width,
                                                           place.height), wary_cells)
         check("the bag is a walk away", path is not None, True)
-        c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path or [pos]))
+        testkit.walk_to(c, (path or [pos])[-1])
         c.frames(0.2 * len(path or [pos]) + 1.0)
         c.send("ss_create;s_type=0;target=%d;" % where[0])
         check("the bag opens", acks(c.frames()), [0])

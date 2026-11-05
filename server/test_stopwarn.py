@@ -415,7 +415,10 @@ try:
     time.sleep(max(0.0, t_start + 7 - time.time()))
     check("no frame after the calling off", alice.stops(i), [15])
     j = alice.mark()
-    alice.send("moveTo;path=|490|491|492|;")
+    arrival = next(f for f in reversed(alice.since()) if f.startswith('lenter;'))
+    start = int(re.search(r'pos=(\d+)', arrival).group(1))
+    end = start + 1
+    alice.send("moveTo;path=|%d|%d|;" % (start, end))
     alice.wait(lambda: "userMove" in [f.split(";")[0] for f in alice.since(j)], 3)
     check("the game plays on: alice walks", [f.split(";")[0] for f in alice.since(j)][:2],
           ["cmdAck", "userMove"])
@@ -469,7 +472,7 @@ try:
     bob.wait(lambda: len(bob.stops(b0)) >= 2, 3)
     check("to bob as well", bob.stops(b0), [30, 10])
     j = alice.mark()
-    alice.send("moveTo;path=|492|493|;")
+    alice.send("moveTo;path=|%d|%d|;" % (end, end + 1))
     alice.wait(lambda: "userMove" in [f.split(";")[0] for f in alice.since(j)], 3)
     # The time runs out; the game does not stop itself -- the deploy does.
     rc, line = cli("status")
@@ -483,7 +486,10 @@ try:
     check("the socket at the login screen was told nothing", probe.stops(), [])
 
     # --- the deploy restarts: SIGTERM, and the stop as it always was ---------------------
-    srv.send_signal(signal.SIGTERM)
+    if os.name == 'nt':
+        check("Windows uses the launcher's graceful halt", cli("halt", "--by", "test")[0], 0)
+    else:
+        srv.send_signal(signal.SIGTERM)
     alice.wait(lambda: alice.eof and bob.eof, 10)
     check("alice: the last frame is 0, then the socket closes", (alice.stops(i), alice.eof),
           ([35, 30, 10, 0], True))
@@ -493,7 +499,7 @@ try:
     out = "".join(_log)
     check("the game exits cleanly", srv.returncode, 0)
     loc = db_one("SELECT loc, pos FROM characters WHERE name = ?", ("alice",))
-    check("alice's place saved where she walked during the countdown", loc["pos"], 493)
+    check("alice's place saved where she walked during the countdown", loc["pos"], end + 1)
     check("the stop's row cleared on the way out",
           db_one("SELECT stop_at FROM stop_plan WHERE id = 1"), {"stop_at": None})
     check("cancelled: a countdown gone with its process is none called off, game or no game",

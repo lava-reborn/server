@@ -166,7 +166,7 @@ async def main():
                 check("the countdown freezes %s with one movement refusal" % mover.nick,
                       (mover.pos, mover.walk, mover.combat.ap, mover.writer.frames,
                        frames(viewer, "userMove")),
-                      (start, walk, ap, [("breakMv", {"id": 0, "pos": start})], []))
+                      (start, walk, ap, [("breakMv", {"id": 0, "pos": start}), ("c_ap", {"ap": ap})], []))
                 # Keep later checks independent when testing the unfixed server.
                 mover.pos, mover.walk, mover.combat.ap = start, walk, ap
             clock[0] = 115
@@ -187,7 +187,7 @@ async def main():
             for mover, viewer in ((a, b), (b, a)):
                 mover.writer.frames.clear()
                 viewer.writer.frames.clear()
-                path = [mover.pos, mover.pos + 1]
+                path = [mover.pos, mover.pos + a.loc.width]
                 ap = mover.combat.ap
                 mover.cmd_moveTo({"path": path})
                 own = frames(mover, "userMove")

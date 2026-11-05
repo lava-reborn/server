@@ -81,6 +81,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -140,9 +141,10 @@ def ack(c):
 def walk(c, cell):
     """Stand on a cell. The server checks only the path's shape, so one
     hop is enough to be where the client would have walked to."""
-    c.send("moveTo;path=|%d|;" % cell)
-    check("stood on %d" % cell,
-          [n for n, _p in c.until("c_ap", settle=0)], ["cmdAck", "actionCancel", "c_ap"])
+    testkit.walk_to(c, cell)
+    got = c.frames(0.3)
+    check("walk toward %d is accepted" % cell,
+          [p["res"] for n, p in got if n == "cmdAck"], [0])
 
 
 def to_map(c):
@@ -283,7 +285,8 @@ try:
           one(c.until("ts_si"), "ts_si")["type"], 60)
 
     # --- refusals -----------------------------------------------------------
-    walk(c, FAR_CELL)
+    check("entry is out of reach of the rental desk",
+          progression.within_reach(c.scene_pos, LESSOR_CELL, world.location(102).width, world.location(102).height), False)
     c.send("on_conv;op=2;mob=%d;p1=%d;p2=1;" % (lessor["id"], DONKEY))
     check("a desk across the room is out of reach",
           ack(c), [("cmdAck", {"res": progression.ERR_TOO_FAR})])

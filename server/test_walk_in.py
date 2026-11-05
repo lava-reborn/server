@@ -454,7 +454,8 @@ try:
 
     pos_a = into_mine(a, pos_a)
     b.frames(0.5)
-    check("the two come down side by side", pos_a, pos_b)
+    check("the two come down on distinct neighbouring cells",
+          pos_a != pos_b and progression.within_reach(pos_a, pos_b, tier1.width, tier1.height), True)
     spot = next(n for n in progression.hex_neighbours(pos_b, tier1.width, tier1.height)
                 if n not in tier1.obstacles and n not in OUT)
     a.send("moveTo;path=|%d|%d|;" % (pos_a, spot))

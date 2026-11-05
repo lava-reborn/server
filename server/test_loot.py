@@ -307,6 +307,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -384,6 +385,8 @@ def login(c, first=False):
 
 def cell_of(c, mob, home):
     for n, p in reversed(c.seen):
+        if n == "actionCancel" and p.get("id") == mob and "pos" in p:
+            return p["pos"]
         if n == "userMove" and p.get("id") == mob:
             return p["path"][-1]
     return home
@@ -442,6 +445,7 @@ try:
 
     dead = None
     for attempt in range(120):
+        pos = c.scene_pos
         if mobs.adjacent(pos, cell_of(c, bum, BUM_HOME), loc):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (knife, entity(bum)))
             got = c.until(lambda f: f[0] == "c_ap"

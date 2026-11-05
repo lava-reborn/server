@@ -249,6 +249,7 @@ def free_port():
         return probe.getsockname()[1]
 
 
+EXIT_HOLD = 2  # Keep the real post-combat exit timer, bounded for this fixture.
 PORT = free_port()
 DB = os.path.join(tempfile.mkdtemp(), "gold.db")
 accounts.DB_PATH = DB
@@ -259,7 +260,8 @@ CRED = accounts.credential("prospector", "secret")
 
 env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
            LAVA_CHEATS="1", LAVA_GX=str(MOUTH_CELL[0]), LAVA_GY=str(MOUTH_CELL[1]),
-           LAVA_AP_REGEN="25", LAVA_RESPAWN="600", LAVA_SEED="7")
+           LAVA_AP_REGEN="25", LAVA_RESPAWN="600", LAVA_SEED="7",
+           LAVA_LEAVE_COMBAT=str(EXIT_HOLD))
 LOG = os.path.join(os.path.dirname(DB), "server.log")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
                        stdout=open(LOG, "w"), stderr=subprocess.STDOUT, text=True)
@@ -269,6 +271,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -342,7 +345,7 @@ def way(c, npc_id):
     took = c.until(lambda f: f[0] == "q_di_del_obj", 3)
     di = named(took, "q_di_del_obj")
     c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (npc_id, di[0]["q_id"] if di else 0))
-    return took, c.until(lambda f: f[0] == "lcall", 3) + c.frames(0.4)
+    return took, c.until(lambda f: f[0] == "lcall", EXIT_HOLD + 3) + c.frames(0.4)
 
 
 def counts(frames):
@@ -483,7 +486,7 @@ try:
             and all(mobs.hex_distance(cell, b, tier1.width) > aggro + 0.5
                     for i, b in bandits.items() if i != target)]
     pos = min(near, key=lambda cell: mobs.hex_distance(cell, pos, tier1.width))
-    c.send("moveTo;path=|%d|;" % pos)
+    testkit.walk_to(c, pos)
     c.until(lambda f: f[0] == "lch" and f[1].get("enemy") == target, 4)
     # It comes for him with a knife (mobs.stats: range 1): wait for it at his
     # side, so that it falls there and its bag lies a step away, never within
@@ -520,13 +523,8 @@ try:
         wary = {cell for cell in range(tier1.width * tier1.height)
                 if any(mobs.hex_distance(cell, b, tier1.width) <= aggro + 0.5
                        for i, b in bandits.items() if i != target)}
-        path = mobs.find_path(tier1, pos, lambda cell: cell == where[0]
-                              or progression.within_reach(cell, where[0], tier1.width,
-                                                          tier1.height), wary)
-        check("the bag is a walk away", path is not None, True)
-        c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path or [pos]))
-        c.frames(0.2 * len(path or [pos]) + 1.0)
-        pos = (path or [pos])[-1]
+        testkit.walk_frames(c, where[0])
+        pos = c.scene_pos
         c.send("ss_create;s_type=0;target=%d;" % where[0])
         check("the bag opens", [p["res"] for p in named(c.frames(), "cmdAck")], [0])
         c.send("ss_get;slot=24;")

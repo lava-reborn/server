@@ -148,11 +148,14 @@ RANKS = [(0, 100, "Странник"), (100, 200, "Следопыт"), (200, 400
          (6400, 12800, "Мститель"), (12800, 25600, "Ассасин")]
 REP_CAP = RANKS[-1][1] - 1
 
-# Action points regained per 600 ms tick (APManager.dt) while in combat. The
-# original's value did not survive; one point a tick is a placeholder. Sent
-# as lenter;aspd and applied by combat.py on the same clock; LAVA_AP_REGEN
-# lets a test fight without waiting for the bar.
-AP_REGEN = int(os.environ.get("LAVA_AP_REGEN", "1"))
+# Action points regained per 600 ms tick (APManager.dt), separately per actor.
+# Explicit legacy LAVA_AP_REGEN overrides keep accelerating both in test suites;
+# LAVA_MOB_AP_REGEN can override mobs independently.
+# lenter;aspd uses the same rate. Preserve fractional points and explicit
+# LAVA_AP_REGEN overrides used by local scenarios.
+AP_REGEN = float(os.environ.get("LAVA_AP_REGEN", "2.5"))
+MOB_AP_REGEN = float(os.environ.get("LAVA_MOB_AP_REGEN", os.environ.get("LAVA_AP_REGEN", "1.5")))
+
 
 # FireArm.as weapon types, the key the card's crit formula switches on.
 PISTOL, SHOTGUN, ASSAULT, RIFLE, MACHINEGUN, SMG = range(6)
