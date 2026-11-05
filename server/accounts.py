@@ -50,6 +50,10 @@ CREATE TABLE IF NOT EXISTS characters (
     on_map     INTEGER NOT NULL DEFAULT 0,
     UNIQUE (account_id, slot)
 );
+CREATE TABLE IF NOT EXISTS char_training_profiles (
+    char_id INTEGER PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
+    data TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS char_stats (
     char_id INTEGER NOT NULL REFERENCES characters(id),
     kind    TEXT    NOT NULL,      -- 'attrib' | 'skill' | 'spec'
@@ -1588,6 +1592,24 @@ class Store:
         except Exception:
             db.close()
             raise
+
+    def training_profile(self, char_id):
+        row = self.db.execute("SELECT data FROM char_training_profiles WHERE char_id = ?", (char_id,)).fetchone()
+        if row is None:
+            return None
+        try:
+            return json.loads(row['data'])
+        except (ValueError, TypeError):
+            log.warning('Invalid saved training profile for character %s', char_id)
+            return None
+
+    def save_training_profile(self, char_id, profile):
+        data = json.dumps(profile, ensure_ascii=False, separators=(',', ':'))
+        if len(data) > 16384:
+            raise ValueError('Training profile is too large')
+        with self.db:
+            self.db.execute("INSERT INTO char_training_profiles(char_id, data) VALUES (?, ?)"
+                            " ON CONFLICT(char_id) DO UPDATE SET data = excluded.data", (char_id, data))
 
     def quests_changed(self, char_id):
         """Invalidate online availability snapshots after a quest write."""

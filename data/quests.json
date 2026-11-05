@@ -14714,6 +14714,34 @@
       "loc": 48891583,
       "finish_loc": 48891583,
       "why": "Optional private training instance. No rewards or fees. The hand-in commits first, then enters an isolated clone; normal server keeps the quest unavailable unless LAVA_TRAINING_GROUND=1."
+    },
+    {
+      "type": 9302,
+      "kind": "del_obj",
+      "name": "Вернуться с полигона",
+      "obj": 0,
+      "start": "Тренировка завершена? Сохрани нужные настройки и подтверди возвращение. Учебное снаряжение останется на полигоне.<Br><Br><b>Задача:</b> Подтвердить возвращение у компьютера.",
+      "notfinish": "Подойди к компьютеру после завершения боя.",
+      "finish": "Тренировка завершена. Возвращаемся к Берту.",
+      "give": [
+        1263
+      ],
+      "take": [
+        1263
+      ],
+      "rew_obj": [],
+      "num_rew_obj": [],
+      "rew_afro": 0,
+      "rew_gold": 0,
+      "rew_loc": 0,
+      "repeatable": 1,
+      "service": true,
+      "level": 0,
+      "q_type": 0,
+      "need_quest": 0,
+      "loc": 0,
+      "finish_loc": 0,
+      "why": "Clone-only return service. No real quest, reward or inventory writes; hidden from ordinary characters."
     }
   ]
 }

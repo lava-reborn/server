@@ -70,6 +70,276 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
     def unchanged(self):
         self.assertEqual(list(self.store.db._db.iterdump()), self.before)
 
+    async def test_applied_clone_settings_survive_sessions_without_real_progress_changes(self):
+        def real_dump():
+            return [line for line in self.store.db._db.iterdump()
+                    if not line.startswith('INSERT INTO "char_training_profiles"')]
+        before = real_dump()
+        g = self.enter()
+        original = [list(row) for row in self.s.char.skill]
+        g.request(dict(op='apply', token=g.token, who='player',
+                       skills='0,16,4,0,0', specs=','.join(['4'] * 15), gear=''))
+        g.last_request = 0
+        g.request(dict(op='apply', token=g.token, who='enemy',
+                       skills='0,14,2,0,0', specs=','.join(['3'] * 15), gear=''))
+        self.assertEqual(real_dump(), before)
+        self.assertEqual([list(row) for row in self.s.char.skill], original)
+        self.assertIsNot(g.clone.char, self.s.char)
+        g.exit(notify=False)
+        restored = tg.Ground(self.s)
+        try:
+            self.assertEqual(restored.profile['skills'], [0,16,4,0,0])
+            self.assertEqual(restored.opponent['skills'], [0,14,2,0,0])
+            self.assertEqual(real_dump(), before)
+            restored.clone.char.gain_xp(100000)
+            self.assertEqual(real_dump(), before)
+        finally:
+            restored.exit(notify=False)
+
+    async def test_private_map_choice_is_persistent_and_does_not_change_public_map(self):
+        g = self.enter()
+        self.assertEqual(g.location, 78)
+        public = world.location(78)
+        self.assertIsNot(g.clone.loc, public)
+        self.assertFalse(g.clone.loc.spawns)
+        g.request(dict(op='location', token=g.token, location=59))
+        self.assertEqual(g.location, 59)
+        self.assertEqual(g.clone.pos, tg.control_cell(59))
+        self.assertEqual(g.room.npcs[g.terminal_id].type_id, tg.TERMINAL)
+        self.assertEqual(self.store.training_profile(self.s.char_id)['location'], 59)
+        g.last_request = 0
+        g.clone.cmd_lenter({})
+        with self.assertRaises(ValueError):
+            g.request(dict(op='location', token=g.token, location=35))
+        self.assertEqual(g.location, 59)
+        self.assertIs(world.location(78), public)
+
+    async def test_invalid_profile_keeps_last_saved_clone_and_real_items(self):
+        g = self.enter()
+        g.save_settings()
+        before = self.store.training_profile(self.s.char_id)
+        g.last_request = 0
+        with self.assertRaises(ValueError):
+            g.request(dict(op='apply', token=g.token, who='player', skills='999', specs='', gear=''))
+        self.assertEqual(self.store.training_profile(self.s.char_id), before)
+        self.assertIsNotNone(self.store.item(self.real_item['uniq']))
+
+    async def test_start_uses_fresh_clone_weapon_and_rejects_real_weapon_id(self):
+        g = self.enter()
+        profile = tg.preset(12)
+        profile['specs'][3] = 3
+        ammo = items.params_of(26075)['comp_array'][0]
+        profile['gear'] = {26075: 1, ammo: 40}
+        g.profile = tg.validate_profile(profile)
+        g.distance = 1
+        g.start('mob')
+        g.clone.cmd_lenter({})
+        gun = g.clone.inv.in_slot(inventory.PRIMARY)
+        copy_ammo = tg.training_items.copy_type(ammo)
+        g.store.update_item(gun['uniq'], ammo_count=3, ammo_type=copy_ammo)
+        target = '1%08x' % g.mob_eid
+        self.s.writer.frames.clear()
+        g.clone.handle_training('ss_use', dict(type=16, obj=inventory.oid_of(self.real_item), target=target))
+        self.assertTrue(any(n == 'cmdAck' and p.get('res') == inventory.RES_NOT_FOUND
+                            for n, p in [decode(f[:-1]) for f in self.s.writer.frames]))
+        self.s.writer.frames.clear()
+        g.clone.handle_training('ss_use', dict(type=16, obj=inventory.oid_of(gun), target=target))
+        frames = [decode(f[:-1]) for f in self.s.writer.frames]
+        self.assertTrue(any(n == 'cmdAck' and p.get('res') == 0 for n, p in frames), frames)
+        self.assertNotEqual(inventory.oid_of(gun), inventory.oid_of(self.real_item))
+        self.unchanged()
+
+    async def test_return_quest_uses_clone_store_and_requires_terminal(self):
+        import quests
+        g = self.enter()
+        q = quests.get(tg.EXIT_QUEST)
+        self.assertFalse(self.s.quest_available(q))
+        g.clone.cmd_q_st(dict(mob=g.terminal_id, q_idx=quests.given_by(tg.TERMINAL).index(tg.EXIT_QUEST)))
+        row = g.store.quests(g.clone.char_id)[0]
+        self.assertEqual(row['type'], tg.EXIT_QUEST)
+        self.unchanged()
+        g.clone.pos = max(tg.geometry(g.location)[1])
+        with self.assertRaises(ValueError):
+            g.clone.cmd_q_co(dict(mob=g.terminal_id, q_id=row['q_id']))
+        self.assertIsNotNone(g.store.quest(row['q_id']))
+        g.clone.pos = tg.control_cell(g.location)
+        with patch.object(self.s, 'enter_location') as returned:
+            g.clone.cmd_q_co(dict(mob=g.terminal_id, q_id=row['q_id']))
+            returned.assert_called_once_with()
+        self.assertTrue(g.closed)
+        self.assertIsNone(self.s.training_ground)
+        self.unchanged()
+
+    async def test_all_training_maps_have_free_central_control_cells(self):
+        for location, (terminal, _label, entry) in tg.LOCATIONS.items():
+            loc = world.location(location)
+            self.assertNotIn(terminal, loc.obstacles)
+            self.assertNotIn(entry, loc.obstacles)
+            self.assertNotEqual(terminal, entry)
+            self.assertTrue(progression.within_reach(entry, terminal, loc.width, loc.height))
+            self.assertIn(entry, tg.geometry(location)[0])
+            self.assertNotIn(entry, loc.entries)
+
+    async def test_catalogue_filters_class_level_line_and_modification(self):
+        g = self.enter()
+        g.catalogue(dict(category='weapon', level=12, wclass=1, line='G', upgrade='base'))
+        _, data = decode(self.s.writer.frames[-1][:-1])
+        self.assertGreater(data['total'], 0)
+        for t in data['ids']:
+            self.assertEqual(items.params_of(t)['weapon_type'], 1)
+            self.assertEqual(inventory.item_level(t), 12)
+            self.assertTrue(combat.gold_item(t))
+            self.assertIsNone(tg.craft.mod_of(t))
+        with self.assertRaises(ValueError):
+            g.catalogue(dict(category='weapon', upgrade='forged'))
+
+    async def test_clone_refuses_saving_to_real_store_or_applying_to_real_character(self):
+        g = self.enter()
+        real_character = self.s.char
+        with self.assertRaises(ValueError):
+            g.clone.char.save(self.store)
+        with self.assertRaises(ValueError):
+            g.apply(self.s, tg.preset(12))
+        self.assertIs(self.s.char, real_character)
+        self.unchanged()
+        g.clone.char.save(g.store)
+        self.unchanged()
+
+    async def test_two_characters_have_independent_clones_items_and_saved_settings(self):
+        first = self.enter()
+        aid, _ = self.store.register('second-training-test', 'test-only')
+        cid, _ = self.store.create_character(aid, 'OtherRangeTester', 0, '1')
+        owner = server.Session(Writer(), 'test')
+        owner.char_id = cid
+        owner.active = dict(self.store.character(cid))
+        owner.char = progression.Character.load(self.store, cid)
+        before = [line for line in self.store.db._db.iterdump()
+                  if not line.startswith('INSERT INTO "char_training_profiles"')]
+        second = tg.Ground(owner)
+        try:
+            self.assertIsNot(first.store, second.store)
+            self.assertIsNot(first.clone.char, second.clone.char)
+            self.assertIsNot(first.room, second.room)
+            self.assertNotEqual(first.room.key, second.room.key)
+            type_id = tg.training_items.copy_type(26075)
+            a = first.clone.inv.create(type_id)
+            b = second.clone.inv.create(type_id)
+            self.assertNotEqual(a['uniq'], b['uniq'])
+            self.assertIsNone(first.clone.inv.find(inventory.oid_of(b)))
+            self.assertIsNone(second.clone.inv.find(inventory.oid_of(a)))
+            with self.assertRaises(ValueError):
+                second.apply(first.clone, tg.preset(7))
+            with self.assertRaises(ValueError):
+                first.clone.char.save(second.store)
+            first.save_settings()
+            saved = self.store.training_profile(self.s.char_id)
+            self.assertIsNone(self.store.training_profile(cid))
+            second.profile = tg.preset(7)
+            second.save_settings()
+            self.assertEqual(self.store.training_profile(self.s.char_id), saved)
+            self.assertEqual(self.store.training_profile(cid)['player']['skills'], [7,7,7,0,0])
+            after = [line for line in self.store.db._db.iterdump()
+                     if not line.startswith('INSERT INTO "char_training_profiles"')]
+            self.assertEqual(after, before)
+        finally:
+            second.exit(notify=False)
+
+    async def test_normal_inventory_and_reload_controls_work_before_starting_fight(self):
+        g = self.enter()
+        profile = tg.preset(12)
+        profile['specs'][3] = 3
+        ammo = items.params_of(26075)['comp_array'][0]
+        profile['gear'] = {26075:1, 26074:1, ammo:40}
+        g.apply(g.clone, tg.validate_profile(profile))
+        primary = g.clone.inv.in_slot(inventory.PRIMARY)
+        secondary = g.clone.inv.in_slot(inventory.SECONDARY)
+        self.assertEqual(primary['type_id'], tg.training_items.copy_type(26075))
+        self.assertEqual(secondary['type_id'], tg.training_items.copy_type(26074))
+        self.s.writer.frames.clear()
+        g.clone.handle_training('ss_move', dict(obj=inventory.oid_of(secondary),
+                                              **{'from':inventory.SECONDARY,'to':inventory.PRIMARY}))
+        self.assertEqual(g.clone.inv.in_slot(inventory.PRIMARY)['uniq'], secondary['uniq'])
+        stack = next(row for row in g.clone.inv.rows() if row['root'] == items.AMMO)
+        g.clone.handle_training('ss_use', dict(type=1, obj=inventory.oid_of(secondary), target=inventory.oid_of(stack)))
+        self.assertIsNotNone(g.clone.combat.reload_plan)
+        g.clone.combat.cancel_timers()
+        g.clone.handle_training('ss_heap_c', dict(obj=inventory.oid_of(stack), num=5))
+        frames = [decode(f[:-1]) for f in self.s.writer.frames]
+        acks = [p['res'] for n,p in frames if n == 'cmdAck']
+        self.assertEqual(acks, [0,0,0])
+        self.assertEqual(g.phase, 'ready')
+        self.unchanged()
+
+    async def test_ready_movement_uses_the_whole_closed_map_and_invalid_route_gets_break(self):
+        g = self.enter()
+        target = min(tg.geometry()[1], key=lambda cell: tg.mobs.hex_distance(g.clone.pos, cell, g.clone.loc.width))
+        path = tg.mobs.find_path(g.clone.loc, g.clone.pos, lambda cell: cell == target)
+        self.assertTrue(path)
+        self.s.writer.frames.clear()
+        g.clone.handle_training('moveTo', dict(path=path))
+        frames = [decode(f[:-1]) for f in self.s.writer.frames]
+        self.assertTrue(any(n == 'userMove' for n,p in frames), frames)
+        g.clone.stop_walk()
+        self.s.writer.frames.clear()
+        g.clone.handle_training('moveTo', dict(path=[-1]))
+        frames = [decode(f[:-1]) for f in self.s.writer.frames]
+        self.assertEqual([n for n,p in frames], ['breakMv'])
+        self.unchanged()
+
+    async def test_configured_fighter_can_approach_target_using_normal_walk(self):
+        g = self.enter()
+        g.start('fighter')
+        g.clone.cmd_lenter({})
+        g.enemy_turn()
+        self.assertIsNotNone(g.enemy.walk)
+        self.unchanged()
+
+    async def test_healing_works_before_starting_fight(self):
+        g = self.enter()
+        heal = next(t for t in tg.item_catalogue() if items.root_of(t) == items.HEAL
+                    and (items.params_of(t) or {}).get('max_h_rest', 0) > 0
+                    and not items.no_combat(t) and not items.stimulant_unavailable(t))
+        profile = tg.preset(12)
+        profile['gear'] = {heal:1}
+        g.apply(g.clone, tg.validate_profile(profile))
+        row = next(r for r in g.clone.inv.rows() if r['root'] == items.HEAL)
+        g.clone.char.hp = 1
+        self.s.writer.frames.clear()
+        g.clone.handle_training('ss_use', dict(type=inventory.USE_IDLE, obj=inventory.oid_of(row)))
+        frames = [decode(f[:-1]) for f in self.s.writer.frames]
+        self.assertTrue(any(n == 'cmdAck' and p.get('res') == 0 for n,p in frames), frames)
+        g.clone.combat.cancel_timers()
+        self.unchanged()
+
+    async def test_movement_during_arena_loading_receives_break_instead_of_silent_drop(self):
+        g = self.enter()
+        g.start('mob')
+        self.s.writer.frames.clear()
+        g.clone.handle_training('moveTo', dict(path=[g.clone.pos]))
+        frames = [decode(f[:-1]) for f in self.s.writer.frames]
+        self.assertEqual([n for n,p in frames], ['breakMv'])
+        self.assertEqual(g.phase, 'loading')
+        self.unchanged()
+
+    async def test_every_training_item_has_shop_or_quest_source(self):
+        eligible, rewards = tg.obtainable_sources()
+        self.assertLessEqual(set(tg.item_catalogue()), eligible)
+        self.assertIn(26075, eligible)
+        self.assertIn(7051, eligible)
+        self.assertTrue(rewards)
+        for t in tg.item_catalogue():
+            self.assertFalse(items.acquisition_blocked(t))
+            self.assertFalse(items.out_of_game(t))
+
+    async def test_completed_bert_course_keeps_certificate_one_off(self):
+        import quests
+        for quest_type in [1682] + list(range(351, 358)):
+            self.store.finish_quest(0, self.s.char_id, quest_type)
+        self.assertTrue(self.s.quest_available(quests.get(1682)))
+        self.assertTrue(self.s.quest_available(quests.get(351)))
+        self.assertFalse(self.s.quest_available(quests.get(357)))
+        self.assertFalse(quests.get(357).repeatable)
+
     async def test_enter_exit_never_mutate_real_items_or_character(self):
         g = self.enter()
         self.assertIsNot(g.store, self.store)
@@ -144,20 +414,20 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):
             g.request(dict(op='open', token=g.token))
         self.assertIs(self.s.training_ground, g)
-        g.clone.pos = world.location(tg.RANGE).entry_cell()
+        g.clone.pos = tg.control_cell()
         g.start('mob')
         g.last_request = 0
         with self.assertRaises(ValueError):
             g.request(dict(op='start', token=g.token))
         self.assertEqual(len(g.room.combat.mobs), 1)
 
-    async def test_terminal_reachable_and_arena_separated_by_real_obstacles(self):
+    async def test_terminal_reachable_and_arena_has_separate_movement_zone(self):
         safe, arena, start = tg.geometry()
-        self.assertIn(world.location(tg.RANGE).entry_cell(), safe)
+        self.assertIn(tg.control_cell(), safe)
         self.assertNotIn(start, safe)
         self.assertTrue(safe.isdisjoint(arena))
-        self.assertTrue(progression.within_reach(world.location(tg.RANGE).entry_cell(),
-                                                tg.TERMINAL_CELL, 32, 64))
+        self.assertTrue(progression.within_reach(tg.control_cell(),
+                                                tg.TERMINAL_CELL, world.location(tg.RANGE).width, world.location(tg.RANGE).height))
 
     async def test_temporary_store_does_not_follow_postgres_url_or_change_db_path(self):
         path = accounts.DB_PATH

@@ -4,6 +4,7 @@ import copy
 from functools import lru_cache
 import logging
 import itertools
+import json
 import os
 import secrets
 import time
@@ -18,22 +19,27 @@ import sets
 import inventory
 import items
 import mobs
+import movement
 import names
 import quests
 import mail
 import progression
 import rooms
 import storage
+import shop_bands
 import world
 from protocol import Str
 
 log = logging.getLogger('lava')
 BERT = 2088
 ENTRY_QUEST = 9301
+EXIT_QUEST = 9302
 MARKET = 35
-RANGE = 732
+RANGE = 78
+LOCATIONS = {78: (4128, 'Арена №2 Вади-Хальфы', 4129),
+             59: (4128, 'Арена №1 Вади-Хальфы', 4129)}
 TERMINAL = 1263
-TERMINAL_CELL = 936
+TERMINAL_CELL = LOCATIONS[RANGE][0]
 MAX_SESSIONS = 16
 MAX_ITEMS = 32
 PAGE_SIZE = 10
@@ -44,7 +50,7 @@ SERIALS = itertools.count(SERIAL_BASE, 1 << 20)
 ENABLED = os.environ.get('LAVA_TRAINING_GROUND', '0') == '1'
 READ_COMMANDS = frozenset(('getInfo', 'rp_get_info', 'ss_get_si', 'ss_get_di',
                            'ss_get', 'ss_get_s_si', 'e_get_si', 'e_get_di', 'q_si', 'q_di', 'q_status', 'ah_search'))
-PLAY_COMMANDS = frozenset(('moveTo', 'ss_move', 'ss_use'))
+PLAY_COMMANDS = frozenset(('moveTo', 'ss_move', 'ss_use', 'ss_heap_c'))
 
 
 def integer(value, low, high):
@@ -65,15 +71,39 @@ def contraband():
 
 
 @lru_cache(maxsize=1)
-def item_catalogue():
-    eligible = set(sets.ITEMS) | set(items.PERSONAL_QUEST_REWARDS)
+def obtainable_sources():
     craft._read()
+    eligible, rewards = set(), set()
     for trader in set(items.stock_table()) | set(npcs.STOCK) | set(craft._STOCK):
         eligible.update(items.stock_for(trader))
+    # The real stall depends on its city: stock_for(type) alone misses
+    # weapons and armour supplied by city bands rather than legacy lists.
+    known = set(items.stock_table()) | set(npcs.STOCK) | set(craft._STOCK) | set(shop_bands.SELLERS)
+    seen = set()
+    for location in shop_bands.CITY_OF:
+        for _cell, trader in world.location(location).spawns:
+            key = trader, shop_bands.city(location)
+            if trader in known and key not in seen:
+                seen.add(key)
+                eligible.update(items.stock_for(trader, location))
+    for quest in quests.QUESTS.values():
+        if quest.give and not quests.acquisition_blocked(quest):
+            rewards.update(quest.rew_obj)
+            rewards.update(t for t, _n in quest.rew_also)
+            rewards.update(t for t, _n, _weight in quest.rew_random)
+    eligible.update(rewards)
+    for type_id in tuple(eligible):
+        if type_id in sets.SETS:
+            eligible.update(sets.SETS[type_id]['members'].values())
+    return frozenset(eligible), frozenset(rewards)
+
+
+@lru_cache(maxsize=1)
+def item_catalogue():
+    eligible, rewards = obtainable_sources()
     mod_labels = {}
     for rec in craft.rows().values():
         if rec.get('family') == 'upgrade' and rec.get('line') in ('A', 'G'):
-            eligible.update((int(rec['gun']), int(rec['mod'])))
             mod_labels[int(rec['mod'])] = names.text(items.STRING_ID_OFFSET + int(rec['blueprint'])).partition('$')[0]
     out = {}
     for type_id in eligible:
@@ -88,7 +118,7 @@ def item_catalogue():
                 or items.acquisition_blocked(type_id) or type_id in items.ADMIN_OVERRIDES):
             continue
         p = items.params_of(type_id) or {}
-        if not p or p.get('quest') or (not (p.get('cost') or p.get('g_cost')) and type_id not in items.PERSONAL_QUEST_REWARDS):
+        if not p or (not (p.get('cost') or p.get('g_cost')) and type_id not in rewards):
             continue
         level = inventory.item_level(type_id) if root in items.BREAKABLE_ROOTS else 0
         if level > 17:
@@ -117,9 +147,14 @@ def mob_catalogue():
             and 0 <= int(v.get('level', 0)) <= 17 and not world.retired_creature(int(k))}
 
 
-@lru_cache(maxsize=1)
-def geometry():
-    loc = world.location(RANGE)
+def control_cell(location=RANGE):
+    return LOCATIONS[location][2]
+
+
+@lru_cache(maxsize=len(LOCATIONS))
+def geometry(location=RANGE):
+    loc = world.location(location)
+    terminal = LOCATIONS[location][0]
     free = set(range(loc.width * loc.height)) - loc.obstacles
     parts = []
     while free:
@@ -132,15 +167,31 @@ def geometry():
                     part.add(c)
                     queue.append(c)
         parts.append(part)
-    safe = next(p for p in parts if TERMINAL_CELL in p)
-    arena = max((p for p in parts if p is not safe), key=len)
-    start = min(arena, key=lambda c: mobs.hex_distance(c, TERMINAL_CELL, loc.width))
+    safe = next(p for p in parts if terminal in p)
+    # The control zone is enforced by the private session, not public doors.
+    arena = {c for c in safe if mobs.hex_distance(c, terminal, loc.width) > 4}
+    safe = safe - arena
+    start = min(arena, key=lambda c: (mobs.hex_distance(c, terminal, loc.width), c))
     return frozenset(safe), frozenset(arena), start
 
 
 def preset(level=12):
     return dict(skills=[level, level, level, 0, 0], specs=[-1] * progression.SPECS,
                 gear={})
+
+
+def profile_slots(profile):
+    hand = iter(inventory.HAND_SLOTS)
+    slots = {}
+    for type_id in profile['gear']:
+        root = items.root_of(type_id)
+        if root in (items.FIRE_ARM, items.COLD_ARM):
+            slots[type_id] = next(hand, inventory.BAG)
+        elif root == items.WEAR:
+            slots[type_id] = inventory.HEAD + items.params_of(type_id)['slot_type']
+        else:
+            slots[type_id] = inventory.BAG
+    return slots
 
 
 def validate_profile(raw):
@@ -159,9 +210,7 @@ def validate_profile(raw):
         root = items.root_of(t)
         n = integer(count, 1, 5000 if root == items.AMMO else 50 if root == items.HEAL else 1)
         slot = inventory.BAG
-        if root in (items.FIRE_ARM, items.COLD_ARM):
-            slot = inventory.PRIMARY
-        elif root == items.WEAR:
+        if root == items.WEAR:
             slot = inventory.HEAD + items.params_of(t)['slot_type']
         if slot != inventory.BAG:
             if slot in worn:
@@ -174,12 +223,12 @@ def validate_profile(raw):
     result = dict(skills=skills, specs=specs, gear=gear)
     ch = character(result)
     fields = []
+    slots = profile_slots(result)
     for source, n in gear.items():
         t = training_items.copy_type(source)
         f = inventory.new_fields(t, n)
         f['type_id'] = t
-        f['slot'] = inventory.PRIMARY if f['root'] in (items.FIRE_ARM, items.COLD_ARM) else (
-            inventory.HEAD + items.params_of(t)['slot_type'] if f['root'] == items.WEAR else inventory.BAG)
+        f['slot'] = slots[source]
         fields.append(f)
     ch.set_gear(inventory.gear_bonus(fields, ch), inventory.card_repeat(fields))
     if sum((items.params_of(r['type_id']) or {}).get('weight', 0) * r.get('count', 1) for r in fields) > ch.max_weight():
@@ -193,6 +242,11 @@ def validate_profile(raw):
 
 
 class TrainingCharacter(progression.Character):
+    def save(self, store):
+        if store is not getattr(self, '_training_store', None):
+            raise ValueError('Тренировочный персонаж сохраняется только внутри своей сессии')
+        return super().save(store)
+
     @property
     def armor(self):
         return super().armor * training_rules.current().armour
@@ -307,14 +361,57 @@ def clone_class(base):
         def skill_gate(self, params):
             return params
 
+        def terminal_quest(self, p):
+            ground = self.ground
+            if int(p.get('mob', 0)) != ground.terminal_id:
+                raise ValueError('Подойдите к компьютеру')
+            ground.require_terminal()
+            return quests.get(EXIT_QUEST)
+
+        def cmd_q_st(self, p):
+            quest = self.terminal_quest(p)
+            offered = quests.given_by(TERMINAL)
+            index = int(p.get('q_idx', -1))
+            if not 0 <= index < len(offered) or offered[index] != EXIT_QUEST:
+                raise ValueError('Задание недоступно')
+            if self.inv.store.has_quest(self.char_id, EXIT_QUEST):
+                raise ValueError('Задание уже взято')
+            q_id = self.inv.store.take_quest(self.char_id, EXIT_QUEST, {'obj': 1}, True)
+            self.send('cmdAck', res=0)
+            cmd, fields = quest.di_frame(q_id, {'obj': 1}, True)
+            self.send(cmd, **fields)
+
+        def cmd_q_co(self, p):
+            quest = self.terminal_quest(p)
+            row = self.inv.store.quest(int(p.get('q_id', 0)))
+            if not row or row['char_id'] != self.char_id or row['type'] != EXIT_QUEST:
+                raise ValueError('Задание недоступно')
+            self.inv.store.finish_quest(row['q_id'], self.char_id, EXIT_QUEST, require_active=True)
+            self.send('cmdAck', res=0)
+            self.ground.exit()
+
+        def cmd_q_ca(self, p):
+            q_id = int(p.get('q_id', 0))
+            row = self.inv.store.quest(q_id)
+            if not row or row['char_id'] != self.char_id or row['type'] != EXIT_QUEST:
+                raise ValueError('Задание недоступно')
+            self.inv.store.drop_quest(q_id, self.char_id)
+            self.send('cmdAck', res=0)
+
         def cmd_q_di(self, p):
-            command, fields = quests.stub_di(int(p.get('q_id', 0)))
+            q_id = int(p.get('q_id', 0))
+            row = self.inv.store.quest(q_id)
+            if row and row['char_id'] == self.char_id and row['type'] == EXIT_QUEST:
+                command, fields = quests.get(EXIT_QUEST).di_frame(q_id, {'obj': 1}, True)
+            else:
+                command, fields = quests.stub_di(q_id)
             self.send(command, **fields)
 
         def cmd_q_status(self, p):
             t = int(p.get('q_type', 0))
             q = quests.get(t)
-            self.send('q_status', type=t, status=0,
+            available = t == EXIT_QUEST and self.ground.phase == 'ready' and not self.inv.store.has_quest(self.char_id, t)
+            self.send('q_status', type=t, status=int(available),
                       name=q.string_id(quests.NAME) if q else 0, q_type=q.q_type if q else 0)
 
         def cmd_ah_search(self, p):
@@ -336,7 +433,7 @@ def clone_class(base):
             self.send('rp_info', **self.character().rp_info(**groups))
 
         def enter_location(self):
-            self.send('lcall', id=RANGE, ws=int(self.ground.phase in ('fight', 'loading')), ie=0,
+            self.send('lcall', id=self.ground.location, ws=int(self.ground.phase in ('fight', 'loading')), ie=0,
                       g_id=1 << 26)
 
         def cmd_lenter(self, p):
@@ -358,6 +455,9 @@ def clone_class(base):
             self.push_stats()
             self.push_vitals()
             self.ground.state()
+            if getattr(ground, 'open_after_load', False):
+                ground.open_after_load = False
+                self.send('tg', op='open', mob=ground.mob_type)
 
         def cmd_getInfo(self, p):
             target = int(p.get('id', 0))
@@ -381,7 +481,7 @@ def clone_class(base):
                 return super().send_npc_info(eid)
             self.send(world.USERINFO[world.COMMONER], id=eid, name=TERMINAL, sex=0, res=TERMINAL,
                       ail=0, ally=1, lvl=1, rep=[0], bg_rep=0, bg_pen=0,
-                      give_quests=[], take_quests=[], m_hello=[], can_set_home=0,
+                      give_quests=[EXIT_QUEST], take_quests=[EXIT_QUEST], m_hello=[], can_set_home=0,
                       can_banking=0, can_trophy=0, can_repair=0, can_trade=0,
                       tg_terminal=1)
 
@@ -407,7 +507,7 @@ def clone_class(base):
             if cmd == 'userMsg':
                 if str(p.get('entry', '')).lstrip().startswith('/') and not ('group' not in p and p.get('to')):
                     self.send('cmdAck', res=0)
-                    self.answer('Игровые команды недоступны в тренировке. Используйте терминал или кнопку выхода.')
+                    self.answer('Игровые команды недоступны в тренировке. Используйте компьютер полигона.')
                 else:
                     owner = self.ground.owner
                     owner.training_chat = True
@@ -424,32 +524,37 @@ def clone_class(base):
                     self.send('lsml', id=[], date=[], name=[], flag=[], subj=[])
                 return
             if cmd == 'q_list':
-                self.send('q_list', q_id=[], q_types=[])
+                rows = self.inv.store.quests(self.char_id)
+                self.send('q_list', q_id=[r['q_id'] for r in rows], q_types=[r['type'] for r in rows])
+                return
+            if cmd in ('q_st', 'q_co', 'q_ca'):
+                getattr(self, 'cmd_' + cmd)(p)
                 return
             if cmd == 'ss_move' and (int(p.get('to', inventory.BAG)) not in inventory.WEAR_SLOTS + inventory.HAND_SLOTS + (inventory.BAG,) or int(p.get('from', inventory.BAG)) not in inventory.WEAR_SLOTS + inventory.HAND_SLOTS + (inventory.BAG,)):
                 self.send('cmdAck', res=inventory.RES_REFUSED)
                 return
-            if cmd in READ_COMMANDS or (cmd in PLAY_COMMANDS and self.ground.phase == 'fight'):
+            if cmd in READ_COMMANDS or (cmd in PLAY_COMMANDS and self.ground.phase in ('ready', 'fight')):
                 if cmd == 'getInfo' and int(p.get('id', 0)) not in (0, self.ground.terminal_id) \
                         and not (self.ground.enemy and int(p.get('id', 0)) == self.ground.enemy.pid) \
                         and int(p.get('id', 0)) not in self.room.combat.mobs:
                     return
                 if cmd == 'moveTo':
                     path = p.get('path', [])
-                    if not isinstance(path, list) or len(path) > self.loc.width * self.loc.height \
-                            or any(c not in geometry()[1] for c in path):
-                        self.send('cmdAck', res=inventory.RES_REFUSED)
+                    limit = self.loc.width * self.loc.height
+                    if not isinstance(path, list) or len(path) > limit or any(
+                            not isinstance(c, int) or c < 0 or c >= limit or c in self.loc.obstacles for c in path):
+                        cell = self.live_cell()
+                        self.pos = cell
+                        self.send('breakMv', id=0, pos=cell)
                         return
                 fn = getattr(self, 'cmd_' + cmd)
                 fn(p)
                 if cmd in ('ss_move', 'ss_use'):
                     self.inv.refresh_gear()
                 return
-            if cmd == 'moveTo' and self.ground.phase == 'ready':
-                path = p.get('path', [])
-                if isinstance(path, list) and len(path) <= 2048 and all(c in geometry()[0] for c in path):
-                    self.cmd_moveTo(p)
-                    return
+            if cmd == 'moveTo':
+                self.send('breakMv', id=0, pos=self.live_cell())
+                return
             module = __import__(base.__module__)
             if module.expects_ack(cmd, p):
                 self.send('cmdAck', res=inventory.RES_REFUSED)
@@ -468,9 +573,11 @@ class Ground:
         if not max(self.profile['skills']):
             self.profile['skills'][progression.SHOOTING] = 1
         self.profile['specs'] = [max(-1, min(progression.SPEC_MAX, r[0])) for r in source.spec]
-        for row in owner.inv.rows():
+        for row in sorted(owner.inv.rows(), key=lambda row: row['slot'] != inventory.PRIMARY):
             t = row['type_id']
-            if t not in item_catalogue() or row['slot'] == inventory.SECONDARY:
+            if t not in item_catalogue():
+                continue
+            if row['root'] in (items.FIRE_ARM, items.COLD_ARM) and t in self.profile['gear']:
                 continue
             if row['slot'] in inventory.BODY_SLOTS or row['root'] in (items.AMMO, items.HEAL):
                 n = row['count'] if row['root'] == items.AMMO else 1
@@ -487,6 +594,31 @@ class Ground:
         self.enemy_cache = None
         self.stationary = False
         self.distance = 12
+        self.location = RANGE
+        self.mode = 'mob'
+        saved = owner.inv.store.training_profile(owner.char_id)
+        if saved is not None:
+            try:
+                if saved.get('version') != 1:
+                    raise ValueError('Unsupported training profile')
+                player = validate_profile(saved['player'])
+                opponent = validate_profile(saved['opponent'])
+                location = integer(saved.get('location', RANGE), 1, 65535)
+                if location not in LOCATIONS:
+                    raise ValueError('Unsupported training location')
+                mob_type = integer(saved.get('mob', self.mob_type), 1, 100000)
+                if mob_type not in mob_catalogue():
+                    raise ValueError('Unsupported training opponent')
+                distance = integer(saved.get('distance', 12), 1, 30)
+                stationary = integer(saved.get('stationary', 0), 0, 1)
+                mode = saved.get('mode', 'mob')
+                if mode not in ('mob', 'fighter'):
+                    raise ValueError('Unsupported training mode')
+                self.profile, self.opponent = player, opponent
+                self.location, self.mob_type = location, mob_type
+                self.distance, self.stationary, self.mode = distance, bool(stationary), mode
+            except (ValueError, TypeError, KeyError, AttributeError):
+                log.warning('Saved training profile unavailable for character %s', owner.char_id)
         self.closed = False
         self.pending = None
         self.last_request = 0.0
@@ -495,6 +627,7 @@ class Ground:
         self.store = accounts.Store.temporary()
         self.serial_base = next(SERIALS)
         self.store.db.execute("INSERT INTO sqlite_sequence(name,seq) VALUES('items',?)", (self.serial_base,))
+        self.store.db.execute("INSERT INTO sqlite_sequence(name,seq) VALUES('char_quests',?)", (self.serial_base,))
         self.store.db.commit()
         self.shots = self.hits = self.damage = 0
         self.started = 0.0
@@ -502,24 +635,57 @@ class Ground:
         try:
             self.Clone = clone_class(owner.__class__)
             self.clone = self.make_clone('Тренировка', owner.active)
-            loc = copy.copy(world.location(RANGE))
+            loc = copy.copy(world.location(self.location))
             loc.spawns = []
             loc.pvp = 1
-            self.room = TrainingRoom(loc, rooms.IdAllocator(), {}, key=(RANGE, self.token))
+            self.room = TrainingRoom(loc, rooms.IdAllocator(), {}, key=(self.location, self.token))
             self.room.npcs.clear()
             self.room.ground = self
             module = __import__(owner.__class__.__module__)
             self.terminal_id = module.ROOMS.ids.npc()
             self.mob_eid = None
-            self.room.npcs[self.terminal_id] = rooms.NPC(TERMINAL_CELL, TERMINAL, world.COMMONER)
+            self.room.npcs[self.terminal_id] = rooms.NPC(LOCATIONS[self.location][0], TERMINAL, world.COMMONER)
             self.room.combat = TrainingCombat(self.room, self.store)
             self.clone.room = self.room
             self.clone.loc = loc
-            self.clone.pos = world.location(RANGE).entry_cell()
+            self.clone.pos = control_cell(self.location)
             self.apply(self.clone, self.profile)
         except Exception:
             self.store.close()
             raise
+
+    def save_settings(self):
+        self.owner.inv.store.save_training_profile(self.owner.char_id, dict(
+            version=1, player=self.profile, opponent=self.opponent, location=self.location,
+            mob=self.mob_type, distance=self.distance, stationary=int(self.stationary), mode=self.mode))
+
+    def change_location(self, location):
+        if self.phase != 'ready':
+            raise ValueError('Сначала завершите бой')
+        if location not in LOCATIONS:
+            raise ValueError('Неизвестная тренировочная локация')
+        geometry(location)
+        self.clone.combat.cancel_timers()
+        if self.room.combat.timer:
+            self.room.combat.timer.cancel()
+        motion = getattr(self.room, 'motion', None)
+        if motion:
+            for actor in tuple(self.room.players):
+                motion.forget(actor)
+        self.room.players.clear()
+        self.location = location
+        loc = copy.copy(world.location(location))
+        loc.spawns = []
+        loc.pvp = 1
+        self.room = TrainingRoom(loc, rooms.IdAllocator(), {}, key=(location, self.token))
+        self.room.npcs.clear()
+        self.room.ground = self
+        self.room.npcs[self.terminal_id] = rooms.NPC(LOCATIONS[location][0], TERMINAL, world.COMMONER)
+        self.room.combat = TrainingCombat(self.room, self.store)
+        self.clone.room, self.clone.loc, self.clone.pos = self.room, loc, control_cell(location)
+        self.mob_eid = None
+        self.save_settings()
+        self.clone.enter_location()
 
     def make_clone(self, label, source=None):
         # No account registration/password hashing, and no persistent login slot.
@@ -541,18 +707,23 @@ class Ground:
         return clone
 
     def apply(self, clone, profile):
+        if getattr(clone, 'ground', None) is not self or clone.inv.store is not self.store:
+            raise ValueError('Пресет можно применять только к клону своей тренировки')
+        clone.combat.cancel_timers()
+        clone.stop_walk()
         ch = character(profile)
+        ch._training_store = self.store
         ch.char_id, ch.name = clone.char_id, clone.active['name']
         clone.char = ch
         if self.store.db.execute("SELECT seq FROM sqlite_sequence WHERE name='items'").fetchone()['seq'] > self.serial_base + (1 << 20) - 2048:
             raise ValueError('Лимит тренировки исчерпан; войдите в центр заново')
         for row in clone.inv.rows():
             self.store.delete_item(row['uniq'])
-        for t, n in profile['gear'].items():
-            t = training_items.copy_type(t)
+        slots = profile_slots(profile)
+        for source, n in profile['gear'].items():
+            t = training_items.copy_type(source)
             root = items.root_of(t)
-            slot = inventory.PRIMARY if root in (items.FIRE_ARM, items.COLD_ARM) else (
-                inventory.HEAD + items.params_of(t)['slot_type'] if root == items.WEAR else inventory.BAG)
+            slot = slots[source]
             if root == items.HEAL:
                 for _ in range(n):
                     clone.inv.create(t)
@@ -579,11 +750,10 @@ class Ground:
     @staticmethod
     def equipment_meta(profile, prefix):
         ids = list(profile['gear'])
+        slots = profile_slots(profile)
         return {prefix + 'ids': ids,
                 prefix + 'labels': [item_catalogue()[t][2] + ' (тестовая версия)' for t in ids],
-                prefix + 'slots': [inventory.PRIMARY if items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM)
-                                    else inventory.HEAD + items.params_of(t)['slot_type']
-                                    if items.root_of(t) == items.WEAR else 0 for t in ids]}
+                prefix + 'slots': [slots[t] if slots[t] != inventory.BAG else 0 for t in ids]}
 
     def state(self, message=''):
         c = self.clone
@@ -599,6 +769,8 @@ class Ground:
         c.send('tg', op='state', token=Str(self.token), active=1, phase=Str(self.phase),
                live_oids=live, virtual_uid=virtual_uid, message=Str(message), level=c.char.level, hp=c.char.hp_max,
                sp=c.char.sp_max, ap=c.char.ap_ceiling,
+               location=self.location, locations=list(LOCATIONS), location_labels=[Str(v[1]) for v in LOCATIONS.values()],
+               distance=self.distance, stationary=int(self.stationary), selected_mob=self.mob_type, selected_mode=Str(self.mode),
                rules=Str(training_rules.current().description()), regen=progression.AP_REGEN, owner=Str(self.owner.nick), loaded=int(c in self.room.players), spec_max=progression.SPEC_MAX,
                **self.equipment_meta(self.profile, 'gear_'),
                **self.equipment_meta(self.opponent, 'enemy_'),
@@ -607,13 +779,17 @@ class Ground:
                enemy_skills=self.opponent['skills'], enemy_specs=self.opponent['specs'],
                enemy_gear=Str(','.join('%d:%d' % pair for pair in self.opponent['gear'].items())))
 
+    def require_terminal(self):
+        if self.phase != 'ready' or not progression.within_reach(
+                self.clone.live_cell(), LOCATIONS[self.location][0], self.clone.loc.width, self.clone.loc.height):
+            raise ValueError('Подойдите к компьютеру после завершения боя')
+
     def request(self, p):
         op = str(p.get('op', ''))
         if p.get('token') != self.token:
             raise ValueError('Окно тренировки устарело')
         if op == 'exit':
-            self.exit()
-            return
+            raise ValueError('Для выхода возьмите и завершите задание у компьютера')
         now = time.monotonic()
         if now - self.last_request < 0.08:
             return
@@ -622,17 +798,25 @@ class Ground:
         if op == 'abort':
             self.finish('Бой прерван')
             return
+        if op == 'open' and self.phase == 'fight' and progression.within_reach(
+                self.clone.live_cell(), LOCATIONS[self.location][0], self.clone.loc.width, self.clone.loc.height):
+            self.open_after_load = True
+            self.finish('Бой остановлен у компьютера')
+            return
         if self.phase != 'ready':
             raise ValueError('Сначала завершите бой')
         if op not in ('open',) and not progression.within_reach(
-                self.clone.live_cell(), TERMINAL_CELL, self.clone.loc.width, self.clone.loc.height):
+                self.clone.live_cell(), LOCATIONS[self.location][0], self.clone.loc.width, self.clone.loc.height):
             raise ValueError('Подойдите к компьютеру')
         if op == 'open':
-            if not progression.within_reach(self.clone.live_cell(), TERMINAL_CELL,
+            if not progression.within_reach(self.clone.live_cell(), LOCATIONS[self.location][0],
                                             self.clone.loc.width, self.clone.loc.height):
                 raise ValueError('Подойдите к компьютеру')
             self.state()
             self.clone.send('tg', op='open', mob=self.mob_type)
+        elif op == 'location':
+            self.change_location(integer(p.get('location'), 1, 65535))
+            self.state('Тренировочная локация изменена')
         elif op == 'catalogue':
             self.catalogue(p)
         elif op == 'apply':
@@ -662,7 +846,8 @@ class Ground:
                 self.clone.combat.c_ap()
             else:
                 self.opponent = profile
-            self.state('Пресет применён')
+            self.save_settings()
+            self.state('Пресет применён и сохранён')
         elif op == 'start':
             self.distance = integer(p.get('distance', 12), 1, 30)
             self.stationary = integer(p.get('stationary', 0), 0, 1) == 1
@@ -674,6 +859,7 @@ class Ground:
                 raise ValueError('Моб недоступен')
             self.mob_type = mob
             self.start(mode)
+            self.save_settings()
 
     def catalogue(self, p):
         cat = str(p.get('category', 'weapon'))
@@ -681,6 +867,9 @@ class Ground:
         level = integer(p.get('level', 0), 0, 17)
         query = str(p.get('query', '')).strip().casefold()[:48]
         wclass = integer(p.get('wclass', -1), -1, 6)
+        upgrade = str(p.get('upgrade', 'all'))
+        if upgrade not in ('all', 'base', 'modified'):
+            raise ValueError('Неизвестный вариант улучшения')
         line = str(p.get('line', 'all'))
         if line not in ('all', 'A', 'G', 'C'):
             raise ValueError('Неизвестная версия предмета')
@@ -698,6 +887,7 @@ class Ground:
                     if entry[0] == cat and (not level or entry[1] == level)
                     and query in entry[2].casefold()
                     and (line == 'all' or ('C' if t in contraband() else 'G' if combat.gold_item(t) else 'A') == line)
+                    and (cat != 'weapon' or upgrade == 'all' or bool(craft.mod_of(t)) == (upgrade == 'modified'))
                     and (cat != 'weapon' or wclass < 0 or
                          (6 if items.root_of(t) == items.COLD_ARM else items.params_of(t).get('weapon_type')) == wclass)]
         rows.sort(key=lambda r: (r[1], r[0]))
@@ -714,8 +904,8 @@ class Ground:
                                if items.root_of(t) == items.WEAR and cat != 'mob' else 0 for t, _ in rows])
 
     def start(self, mode):
-        start = geometry()[2]
-        candidates = [c for c in geometry()[1]
+        start = geometry(self.location)[2]
+        candidates = [c for c in geometry(self.location)[1]
                       if mobs.hex_distance(c, start, self.clone.loc.width) == self.distance
                       and combat.shot_wall(self.clone.loc, start, c) is None]
         if not candidates:
@@ -746,6 +936,7 @@ class Ground:
                 mob.stats.can_attack = False
                 mob.stats.moves = False
             self.room.combat.mobs[eid] = mob
+        self.mode = mode
         self.phase = 'loading'
         self.room.ws = False
         self.room.players.pop(self.clone, None)
@@ -785,7 +976,12 @@ class Ground:
         else:
             reach = 1
         if distance > reach or combat.shot_wall(self.clone.loc, enemy.pos, target.cell) is not None:
-            path = mobs.find_path(self.clone.loc, enemy.pos, target.cell)
+            loc = self.clone.loc
+            target_cell = target.cell
+            def goal(cell):
+                return 0 < mobs.hex_distance(cell, target_cell, loc.width) <= reach and combat.shot_wall(loc, cell, target_cell) is None
+            blocked = movement.get(self.room).occupied(exclude=enemy)
+            path = mobs.find_path(loc, enemy.pos, goal, blocked, toward=target_cell)
             if path and len(path) > 1:
                 # The same server/client walk clock as a player.
                 enemy.move_in_location(dict(path=path[:2]))
@@ -812,7 +1008,7 @@ class Ground:
             if mob.aim:
                 mob.aim.cancel()
         self.room.combat.mobs.clear()
-        self.room.npcs = {self.terminal_id: rooms.NPC(TERMINAL_CELL, TERMINAL, world.COMMONER)}
+        self.room.npcs = {self.terminal_id: rooms.NPC(LOCATIONS[self.location][0], TERMINAL, world.COMMONER)}
         if self.enemy:
             self.enemy.combat.cancel_timers()
             self.room.players.pop(self.enemy, None)
@@ -823,7 +1019,7 @@ class Ground:
         self.room.ws = False
         self.clone.combat.dead = False
         self.apply(self.clone, self.profile)
-        self.clone.pos = world.location(RANGE).entry_cell()
+        self.clone.pos = control_cell(self.location)
         self.clone.enter_location()
         self.clone.send('tg', op='result', message=Str(summary))
 
@@ -845,6 +1041,10 @@ class Ground:
             for mob in rc.mobs.values():
                 if mob.aim:
                     mob.aim.cancel()
+            motion = getattr(self.room, 'motion', None)
+            if motion:
+                for actor in tuple(self.room.players):
+                    motion.forget(actor)
             self.room.players.clear()
             self.room.npcs.clear()
             rc.mobs.clear()
@@ -901,7 +1101,8 @@ def preload():
     training_rules.current()
     training_items.prepare(item_catalogue())
     mob_catalogue()
-    geometry()
+    for location in LOCATIONS:
+        geometry(location)
 
 
 def handle(owner, cmd, p):

@@ -2950,6 +2950,8 @@ class Session:
         does keep_lent taking all of it back away from its stay_in): a
         lesson dropped by mistake is the player's to take again at once.
         """
+        if quest.type == training_ground.EXIT_QUEST:
+            return False
         if quest.type == training_ground.ENTRY_QUEST and not training_ground.ENABLED:
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
@@ -3119,6 +3121,8 @@ class Session:
         and the bag holds what a craft row asks beyond its things (a
         salvage's broken gun, craft.ready), which is told and refused the
         same way."""
+        if quest.type == training_ground.EXIT_QUEST:
+            return False
         if quest.type == training_ground.ENTRY_QUEST and not training_ground.ENABLED:
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):

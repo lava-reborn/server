@@ -971,9 +971,9 @@ try:
     check("the course over: the certificate in the bag, no training gun, the journal empty of"
           " lessons", (have[CERT], [g for g in GUNS if have[g]],
                        [t for t in journal(CADET) if t in LESSONS]), (1, [], []))
-    check("  ..and nothing of the course offered again; Тиль's trainings are",
+    check("  ..the entrance and first lesson can repeat, later lessons remain locked; Тиль's trainings are",
           [status(c, t) for t in [COURSE] + LESSONS + TRAININGS],
-          [0] * 8 + [1] * 6)
+          [1, 1] + [0] * 6 + [1] * 6)
     here = inhabitants(goto(c, BLACK_MARKET))
     got, q = take(c, here, TIL, 1829)
     check("«Охотник» at Мастер Тиль: the certificate in the bag, complete",
