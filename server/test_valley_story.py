@@ -543,6 +543,8 @@ def positions(frames):
             where[p["newUser"]] = p["pos"]
         elif n == "userMove" and p.get("id") in where and p.get("path"):
             where[p["id"]] = p["path"][-1]
+        elif n in ("actionCancel", "breakMv") and "pos" in p:
+            where[p.get("id", 0)] = p["pos"]
     return where
 
 
@@ -577,15 +579,26 @@ def hunt(c, got, loc_id, targets, pos):
                            and cell not in where.values()
                            and mobs.hex_distance(cell, home, loc.width) <= 40
                            and mobs.line_of_fire(loc, cell, home) is None)
-            if not spots:
-                continue
-            goal = spots[0][1]
-            path = mobs.find_path(loc, pos, lambda cell: cell == goal, wary, limit=20000)
-            testkit.walk_to(c, (path or [goal])[-1])
-            # An accepted shot stops movement at the reached cell. Wait
-            # for the server's full route, not the former 150 ms per hex.
-            out += c.frames(max(0, len(path or [goal]) - 1) * mobs.HEX_MS / 1000.0 + 0.8)
-            pos = goal
+            goals = {cell for _distance, cell in spots}
+            path = mobs.find_path(loc, c.scene_pos, lambda cell: cell in goals,
+                                  wary, limit=20000, toward=home) if goals else None
+            if path and path[-1] in goals:
+                out += testkit.walk_frames(c, path[-1], blocked=wary)
+            else:
+                # An aggro radius is not a wall. In a narrow cave there may be
+                # no entirely safe route: approach the nearest clear firing cell,
+                # preserving real occupancy and the target's current position.
+                shot_range = max(items.params_of(ADMIN_GUN)['max_range'])
+                def in_sight(cell):
+                    target = c.scene_cells.get(eid, home)
+                    return (mobs.hex_distance(cell, target, loc.width) <= shot_range
+                            and mobs.line_of_fire(loc, cell, target) is None)
+                path = mobs.find_path(loc, c.scene_pos, in_sight,
+                                      set(c.scene_cells.values()), limit=20000)
+                if not path:
+                    continue
+                out += testkit.clear_approach(c, in_sight, None, (), shot_range)
+            pos = c.scene_pos
             for _ in range(30):
                 c.send("ss_use;type=16;obj=x%s;target=%s;" % (GUN, entity(eid)))
                 got_ = c.until(lambda f: f[0] == "ss_di_firearm"
@@ -618,10 +631,7 @@ def loot(c, fight, loc_id, pos, near, wary=frozenset()):
     if not bags:
         return None, []
     bag = min(bags, key=lambda cell: mobs.hex_distance(cell, near, loc.width))
-    path = mobs.find_path(loc, pos, lambda cell: cell == bag or progression.within_reach(
-        cell, bag, loc.width, loc.height), set(wary), limit=20000)
-    testkit.walk_to(c, (path or [pos])[-1])
-    c.frames(0.2 * len(path or [pos]) + 1.0)
+    testkit.walk_frames(c, bag)
     c.send("ss_create;s_type=0;target=%d;" % bag)
     if acks(c.frames()) != [0]:
         return None, []

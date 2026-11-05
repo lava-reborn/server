@@ -243,7 +243,7 @@ def scene_client(cls):
     return cls
 
 
-def walk_to(client, target):
+def walk_to(client, target, blocked=()):
     """Send a real path during fixture setup, then allow it to complete.
 
     Older socket fixtures used one-cell teleports, or jumps across the room.
@@ -256,10 +256,11 @@ def walk_to(client, target):
     import world
     loc = world.location(client.scene_id)
     start = client.scene_pos
-    blocked = set(getattr(client, 'scene_cells', {}).values())
+    occupied = set(getattr(client, 'scene_cells', {}).values())
+    blocked = set(blocked) | occupied
     blocked.discard(start)
     goal = (lambda c: progression.within_reach(c, target, loc.width, loc.height)
-            if target in blocked else c == target)
+            if target in occupied else c == target)
     path = mobs.find_path(loc, start, goal, blocked, limit=loc.width * loc.height, toward=target)
     assert path and goal(path[-1]), (loc.id, start, target, 'no fixture route')
     client.fixture_path = path
@@ -280,3 +281,92 @@ def wait_recovery(client):
         if left <= 0:
             return out
         out += client.frames(min(left + 0.01, 0.2))
+
+
+def walk_frames(client, target, blocked=(), attempts=4, exact=False):
+    """Fixture navigation with authoritative stop feedback, never teleport.
+
+    A mob can enter a route after it was accepted. Read that stop before
+    finding the next leg, and keep every reply for the caller's assertions.
+    """
+    import progression
+    import world
+    frames = []
+    for _ in range(attempts):
+        frames += wait_recovery(client)
+        walk_to(client, target, blocked)
+        frames += client.frames(0.25)
+        if client.scene_pos == target:
+            return frames
+        occupied = set(getattr(client, 'scene_cells', {}).values())
+        loc = world.location(client.scene_id)
+        if not exact and target in occupied and progression.within_reach(
+                client.scene_pos, target, loc.width, loc.height):
+            return frames
+    raise AssertionError((client.scene_id, client.scene_pos, target, 'fixture walk stopped'))
+
+
+def scene_positions(frames):
+    """Observed current cells, including the final stop before death."""
+    cells = {}
+    for cmd, params in frames:
+        if cmd == 'lch' and 'newUser' in params:
+            cells[params['newUser']] = params['pos']
+        elif cmd == 'userMove' and params.get('path'):
+            cells[params['id']] = params['path'][-1]
+        elif cmd in ('actionCancel', 'breakMv') and 'pos' in params:
+            cells[params.get('id', 0)] = params['pos']
+    return cells
+
+
+def clear_approach(client, goals, fire, enemies, reach):
+    """Walk a fixture through guards using real shots, never through occupied cells.
+
+    Old story fixtures could teleport past a guard in a one-cell corridor.
+    Keep the new occupancy rules intact: clear visible hostiles before each
+    step, and bound the approach so a bad fixture fails with its actual cell.
+    ``fire`` returns the received death frames, or None on failure.
+    """
+    import mobs
+    import world
+    loc = world.location(client.scene_id)
+    goal = goals if callable(goals) else set(goals).__contains__
+    enemies = set(enemies)
+    frames = []
+    for _ in range(min(256, loc.width * loc.height)):
+        cells = client.scene_cells
+        visible = sorted((mobs.hex_distance(client.scene_pos, cell, loc.width), eid)
+                         for eid, cell in cells.items() if eid in enemies
+                         and mobs.hex_distance(client.scene_pos, cell, loc.width) <= reach
+                         and mobs.line_of_fire(loc, client.scene_pos, cell) is None)
+        if visible:
+            _distance, eid = visible[0]
+            got = fire(eid)
+            assert got is not None, (loc.id, client.scene_pos, eid, 'guard did not fall')
+            frames += got
+            enemies.discard(eid)
+            continue
+        if goal(client.scene_pos):
+            return frames
+        blocked = set(cells.values())
+        path = mobs.find_path(loc, client.scene_pos, goal,
+                              blocked, limit=loc.width * loc.height)
+        if not path:
+            # Plan up to a guard, then shoot it when the corridor opens sight.
+            blocked = {cell for eid, cell in cells.items() if eid not in enemies}
+            path = mobs.find_path(loc, client.scene_pos, goal,
+                                  blocked, limit=loc.width * loc.height)
+        assert path and len(path) > 1 and path[1] not in cells.values(), (
+            loc.id, client.scene_pos, 'no clear fixture approach')
+        # Send one leg to the next firing lane, not one request per hex.
+        # This keeps socket scenarios quick while still clearing a corridor
+        # before crossing the guard occupying it.
+        leg = path[-1]
+        for cell in path[1:]:
+            if any(mobs.hex_distance(cell, other, loc.width) <= reach
+                   and mobs.line_of_fire(loc, cell, other) is None
+                   for eid, other in cells.items() if eid in enemies):
+                leg = cell
+                break
+        frames += walk_frames(client, leg, exact=True)
+    raise AssertionError((loc.id, client.scene_pos, 'fixture approach exhausted'))

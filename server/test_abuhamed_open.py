@@ -759,18 +759,15 @@ def shoot(c, gun, target, tries=40):
 def walk_to(c, loc, pos, goal, avoid=()):
     """A real path inside a location to a goal cell (or the nearest cell of a
     set), sent as the client sends it: the cell the walk ends on."""
-    goals = goal if isinstance(goal, (set, frozenset, list, tuple)) else {goal}
-    path = mobs.find_path(loc, pos, lambda cell: cell in goals, set(avoid), limit=20000)
-    if not path:
-        # No way round whoever stands between: the goal cell alone, which the
-        # server takes (it checks a path against the grid only), as
-        # test_abri_open's does -- a stand-in for the walk round a camp.
-        path = [min(goals, key=lambda cell: mobs.hex_distance(cell, pos, loc.width))]
-    testkit.walk_to(c, (path)[-1])
-    got = c.frames(0.3 + mobs.HEX_MS / 1000.0 * max(0, len(path) - 1))
-    if any(p.get("dead") == 0 for p in named(got, "lch")):
-        raise AssertionError("Test character died while walking in %s" % loc.id)
-    return path[-1]
+    goals = set(goal) if isinstance(goal, (set, frozenset, list, tuple)) else {goal}
+    blocked = set(avoid) | set(c.scene_cells.values())
+    blocked.discard(c.scene_pos)
+    path = mobs.find_path(loc, c.scene_pos, lambda cell: cell in goals,
+                          blocked, limit=20000)
+    assert path and path[-1] in goals, (loc.id, c.scene_pos, goals, 'no safe fixture route')
+    frames = testkit.walk_frames(c, path[-1], blocked=avoid)
+    assert not any(p.get('dead') == 0 for p in named(frames, 'lch')), 'fixture character died'
+    return c.scene_pos
 
 
 def through(c, loc_id, side, pos, foes=(), gun=None):
@@ -858,7 +855,7 @@ def boss_bag(c, gun, where, boss):
         return sorted((mobs.hex_distance(cell, home, W), cell)
                       for cell in range(W * place.height)
                       if cell not in place.obstacles and cell not in placed.values()
-                      and reach + 0.5 < mobs.hex_distance(cell, home, W) <= 14
+                      and reach + 0.5 < mobs.hex_distance(cell, home, W) <= max(items.params_of(ADMIN_GUN)['max_range'])
                       and mobs.line_of_fire(place, cell, home) is None
                       and all(mobs.hex_distance(cell, o, W) > wary for o in fighters.values()))
 
@@ -891,7 +888,21 @@ def boss_bag(c, gun, where, boss):
             if n == "userMove" and p.get("id") in fighters:
                 fighters[p["id"]] = p["path"][-1]
         spots = safe_spots()
-    pos = walk_to(c, place, pos, spots[0][1], watched())
+    goals = {cell for _d, cell in spots}
+    danger = watched()
+    path = mobs.find_path(place, c.scene_pos, lambda cell: cell in goals,
+                          danger, limit=20000)
+    if path:
+        pos = walk_to(c, place, pos, goals, danger)
+    else:
+        shot_range = max(items.params_of(ADMIN_GUN)['max_range'])
+        def in_sight(cell):
+            target = c.scene_cells.get(me, home)
+            return (mobs.hex_distance(cell, target, W) <= shot_range
+                    and mobs.line_of_fire(place, cell, target) is None)
+        testkit.clear_approach(c, in_sight, lambda eid: shoot(c, gun, eid, 10),
+                               fighters, shot_range)
+        pos = c.scene_pos
     dead = shoot(c, gun, me)
     if dead is None:
         return False, {}
@@ -905,18 +916,17 @@ def boss_bag(c, gun, where, boss):
     for n, p in c.seen[mark:]:
         if n == "userMove" and p.get("id") in now:
             now[p["id"]] = p["path"][-1]
-    near = [i for i, cell in now.items() if mobs.hex_distance(cell, bag_at[0], W) <= wary + 1]
+        elif n == "actionCancel" and p.get("id") in now and "pos" in p:
+            now[p["id"]] = p["pos"]
+    near = [i for i, cell in now.items() if i in c.scene_cells and mobs.hex_distance(cell, bag_at[0], W) <= wary + 1]
     downed = [i for i in near if shoot(c, gun, i, 10) is not None]
     now = {i: cell for i, cell in now.items() if i not in downed}
     for n, p in c.seen[mark:]:
         if n == "userMove" and p.get("id") in now:
             now[p["id"]] = p["path"][-1]
-    wary_cells = {cell for cell in range(W * place.height)
-                  if any(mobs.hex_distance(cell, o, W) <= wary for o in now.values())}
-    path = mobs.find_path(place, pos, lambda cell: cell == bag_at[0] or progression.within_reach(
-        cell, bag_at[0], W, place.height), wary_cells) or [bag_at[0]]
-    testkit.walk_to(c, (path)[-1])
-    c.frames(0.25 * len(path) + 1.0)
+        elif n == "actionCancel" and p.get("id") in now and "pos" in p:
+            now[p["id"]] = p["pos"]
+    testkit.walk_frames(c, bag_at[0])
     c.send("ss_create;s_type=0;target=%d;" % bag_at[0])
     if acks(c.frames()) != [0]:
         return True, {}

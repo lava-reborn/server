@@ -521,13 +521,8 @@ try:
         wary = {cell for cell in range(tier1.width * tier1.height)
                 if any(mobs.hex_distance(cell, b, tier1.width) <= aggro + 0.5
                        for i, b in bandits.items() if i != target)}
-        path = mobs.find_path(tier1, pos, lambda cell: cell == where[0]
-                              or progression.within_reach(cell, where[0], tier1.width,
-                                                          tier1.height), wary)
-        check("the bag is a walk away", path is not None, True)
-        testkit.walk_to(c, (path or [pos])[-1])
-        c.frames(0.2 * len(path or [pos]) + 1.0)
-        pos = (path or [pos])[-1]
+        testkit.walk_frames(c, where[0])
+        pos = c.scene_pos
         c.send("ss_create;s_type=0;target=%d;" % where[0])
         check("the bag opens", [p["res"] for p in named(c.frames(), "cmdAck")], [0])
         c.send("ss_get;slot=24;")

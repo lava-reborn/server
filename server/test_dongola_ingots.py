@@ -544,13 +544,18 @@ try:
         spots = sorted((mobs.hex_distance(cell, home, place.width), cell)
                        for cell in range(place.width * place.height)
                        if cell not in place.obstacles and cell not in placed.values()
-                       and reach + 0.5 < mobs.hex_distance(cell, home, place.width) <= 12
+                       and reach + 0.5 < mobs.hex_distance(cell, home, place.width) <= max(items.params_of(ADMIN_GUN)['max_range'])
                        and mobs.line_of_fire(place, cell, home) is None
                        and all(mobs.hex_distance(cell, o, place.width) > wary for o in others))
         check("there is a place to shoot him from", bool(spots), True)
-        pos = spots[0][1] if spots else pos
-        testkit.walk_to(c, pos)
-        c.frames(0.5)
+        goals = {cell for _distance, cell in spots}
+        danger = {cell for cell in range(place.width * place.height)
+                  if any(mobs.hex_distance(cell, other, place.width) <= wary for other in others)}
+        path = mobs.find_path(place, c.scene_pos, lambda cell: cell in goals,
+                              danger, limit=20000, toward=home)
+        assert path and path[-1] in goals
+        testkit.walk_frames(c, path[-1], blocked=danger)
+        pos = c.scene_pos
         dead = shoot(c, gun, boss)
     check("Полковник Халил falls", dead is not None, True)
     got = list(dead or [])

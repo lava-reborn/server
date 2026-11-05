@@ -527,6 +527,10 @@ try:
           [p["name"] for n, p in arrival if n.startswith("userInfo_") and n != "userInfo_Player"
            and not names.known(p["name"])], [])
 
+    # The gold-exchange scenario uses a character of this region's level;
+    # it is not a level-zero survival test while walking past moving guards.
+    chat(c, "/skill 1 17")
+
     # --- the admin gun, loaded --------------------------------------------------------------
     gun = str(named(chat(c, "/give %d" % ADMIN_GUN), "ss_obj_status")[0]["obj"])
     rounds = str(named(chat(c, "/give %d 50" % ROUNDS), "ss_obj_status")[0]["obj"])
@@ -559,13 +563,20 @@ try:
         spots = sorted((mobs.hex_distance(cell, home, place.width), cell)
                        for cell in range(place.width * place.height)
                        if cell not in place.obstacles and cell not in placed.values()
-                       and reach + 0.5 < mobs.hex_distance(cell, home, place.width) <= 12
+                       and reach + 0.5 < mobs.hex_distance(cell, home, place.width) <= max(items.params_of(ADMIN_GUN)["max_range"])
                        and mobs.line_of_fire(place, cell, home) is None
                        and all(mobs.hex_distance(cell, o, place.width) > wary for o in others))
         check("there is a place to shoot him from", bool(spots), True)
-        pos = spots[0][1] if spots else pos
-        testkit.walk_to(c, pos)
-        c.frames(0.5)
+        assert spots, 'no firing cell for Marabu'
+        shot_range = max(items.params_of(ADMIN_GUN)["max_range"])
+        def in_sight(cell):
+            target = c.scene_cells.get(boss, home)
+            return (mobs.hex_distance(cell, target, place.width) <= shot_range
+                    and mobs.line_of_fire(place, cell, target) is None)
+        enemies = {i for i in placed if i != boss and mobs.stats(infos[i]).aggro}
+        testkit.clear_approach(c, in_sight, lambda eid: shoot(c, gun, eid), enemies,
+                               max(items.params_of(ADMIN_GUN)["max_range"]))
+        pos = c.scene_pos
         dead = shoot(c, gun, boss)
     check("Коммодор Марабу falls", dead is not None, True)
     got = list(dead or [])
@@ -581,7 +592,7 @@ try:
         # The camp's men stand closer to their boss than the chief's place's
         # to theirs: whoever would see the player at the bag is shot first,
         # from where he stands, and lies there until the respawn (600 s).
-        near = [i for i, cell in placed_now.items() if i != boss_ids[0]
+        near = [i for i, cell in placed_now.items() if i != boss_ids[0] and i in c.scene_cells
                 and mobs.stats(infos[i]).aggro
                 and mobs.hex_distance(cell, bag_at[0], place.width) <= wary + 1]
         downed = [i for i in near if shoot(c, gun, i, 10) is not None]
@@ -590,16 +601,7 @@ try:
         for n, p in c.seen:
             if n == "userMove" and p.get("id") in placed_now:
                 placed_now[p["id"]] = p["path"][-1]
-        wary_cells = {cell for cell in range(place.width * place.height)
-                      if any(mobs.hex_distance(cell, o, place.width) <= wary
-                             for i, o in placed_now.items() if i != boss_ids[0]
-                             and mobs.stats(infos[i]).aggro)}
-        path = mobs.find_path(place, pos, lambda cell: cell == bag_at[0]
-                              or progression.within_reach(cell, bag_at[0], place.width,
-                                                          place.height), wary_cells)
-        check("the bag is a walk away", path is not None, True)
-        testkit.walk_to(c, (path or [pos])[-1])
-        c.frames(0.2 * len(path or [pos]) + 1.0)
+        testkit.walk_frames(c, bag_at[0])
         c.send("ss_create;s_type=0;target=%d;" % bag_at[0])
         check("the bag opens", acks(c.frames()), [0])
         c.send("ss_get;slot=24;")

@@ -291,6 +291,8 @@ def positions(frames):
             where[p["newUser"]] = p["pos"]
         elif n == "userMove" and p.get("id") in where and p.get("path"):
             where[p["id"]] = p["path"][-1]
+        elif n in ("actionCancel", "breakMv") and "pos" in p:
+            where[p.get("id", 0)] = p["pos"]
     return where
 
 

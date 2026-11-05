@@ -768,7 +768,7 @@ try:
     check("run 2, after a restart: the stranger comes back where he left, onto her bag, and"
           " it is drawn for him", (bags(sg.arrival), pos_of(sg.arrival)),
           ([(1, [victim_cell])], victim_cell))
-    sg.send("ss_create;s_type=0;target=%d;" % desert_cell)
+    sg.send("ss_create;s_type=0;target=%d;" % victim_cell)
     opened = acks(sg.frames(0.5))
     sg.send("ss_get;slot=24;")
     listed = [str(o) for o in named(sg.until(lambda f: f[0] == "ss_ack"), "ss_ack")[0]["o_list"]]
@@ -848,7 +848,7 @@ try:
     arrival = goto(h, DESERT)
     here = pos_of(arrival)
     check("run 3, lifetime %d s: the hunter back in the desert, where nothing lies now"
-          % LIFE, (bags(arrival), here), ([], victim_cell))
+          % LIFE, (bags(arrival), here), ([], desert_cell))
     thrown = given(h, H, SAND)
     t0 = time.time()
     res, drawn = throw(h, thrown, here)

@@ -255,6 +255,7 @@ class Client:
     def __init__(self, sock):
         self.s = sock
         self.buf = b""
+        self.seen = []
 
     def send(self, text):
         self.s.sendall(text.encode(ENC) + b"\x00")
@@ -275,7 +276,9 @@ class Client:
     def _drain(self):
         parts = self.buf.split(b"\x00")
         self.buf = parts.pop()
-        return [decode(f.decode(ENC)) for f in parts if f]
+        frames = [decode(f.decode(ENC)) for f in parts if f]
+        self.seen += frames
+        return frames
 
     def frames(self, wait=0.5):
         deadline = time.time() + wait
@@ -331,8 +334,18 @@ def walk(c, loc, start, goal, avoid=()):
 
 
 def stand_on(c, cell):
-    testkit.walk_to(c, cell)
-    return c.frames(0.3)
+    if not getattr(c, 'fixture_gun', None):
+        return testkit.walk_frames(c, cell, attempts=6, exact=True)
+    enemies = {p['id'] for n, p in c.seen if n == 'userInfo'
+               and p['id'] in c.scene_cells and mobs.stats(p['name']).can_attack}
+    def fire(eid):
+        for _ in range(10):
+            c.send('ss_use;type=16;obj=x%s;target=x1%08x;' % (c.fixture_gun, eid))
+            got = c.until(lambda f: f[0] == 'lch' and f[1].get('dead') == eid, 1)
+            if any(p.get('dead') == eid for p in named(got, 'lch')):
+                return got
+        return None
+    return testkit.clear_approach(c, {cell}, fire, enemies, 64)
 
 
 def through_door(c, cell, label):
@@ -781,6 +794,16 @@ try:
           [p["daily_available"] for p in named(arrival, "q_sys")], [0])
 
     # --- the tiers below, by their own signs ------------------------------------------
+    # Navigation is checked with actual occupied cells. Clear corridor guards
+    # with the admin gun, rather than walking through them as old fixtures did.
+    c.send('userMsg;entry=@/give 1534@;group=0;')
+    c.fixture_gun = str(named(c.until(lambda f: f[0] == 'ss_obj_status'), 'ss_obj_status')[0]['obj'])
+    c.send('userMsg;entry=@/give 6092 200@;group=0;')
+    ammo = str(named(c.until(lambda f: f[0] == 'ss_obj_status'), 'ss_obj_status')[0]['obj'])
+    c.send('ss_move;obj=x%s;to=512;from=2048;' % c.fixture_gun)
+    c.frames()
+    c.send('ss_use;type=1;obj=x%s;target=x%s;' % (c.fixture_gun, ammo))
+    c.until(lambda f: f[0] == 'ss_di_firearm')
     tier2, tier3 = world.location(TIER2), world.location(TIER3)
     check("the first tier's door marked 'down' leads to the second",
           through_door(c, door_cell(tier1, "b"), "612 b acknowledged, then called"), TIER2)
