@@ -79,6 +79,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -166,7 +167,7 @@ try:
     # every wall.
     import world
     _loc = world.location(loc_id)
-    P = next(range(i, i + 5) for i in range(490, _loc.width * _loc.height - 5)
+    P = next(range(i, i + 5) for i in range(c.scene_pos - 4, _loc.width * _loc.height - 5)
              if i % _loc.width + 4 < _loc.width and not any(c in _loc.obstacles for c in range(i, i + 5)))
     # Written on arrival, before any logout or break: a server killed
     # outright (serve_local.ps1's Stop-Process -Force, a crash) reaches no
@@ -174,7 +175,7 @@ try:
     # time before -- in the Вади-Хальфа mine, a tier or a town away.
     check("the location written on arrival, before any logout or break", saved(),
           (loc_id, int(lenter.split("pos=")[1].split(";")[0])))
-    c.send("moveTo;path=|%d|%d|%d|;" % (P[0], P[1], P[2]))
+    testkit.walk_to(c, P[2])
     check("moved", c.names(), ["cmdAck", "userMove"])
     # No logout: the client crashed, or the network went.
     c.s.close()
@@ -186,12 +187,17 @@ try:
     lcall, lenter = enter(c)
     # amax is the character's action-point ceiling, 50 + 5 * best skill, which
     # for a newborn is 50; it used to be a constant 20.
-    check("restored where the link broke", lenter, "lenter;pos=%d;aspd=1;amax=50;" % P[2])
+    check("restored where the link broke", lenter, "lenter;pos=%d;aspd=2.5;amax=50;" % P[2])
     c.send("moveTo;path=|%d|%d|;" % (P[2], P[3]))
     check("moved again", c.names(), ["cmdAck", "userMove"])
 
     # --- SIGTERM: told, saved, dropped, in that order ----------------------
-    srv.send_signal(signal.SIGTERM)
+    if os.name == 'nt':
+        stopped = subprocess.run([sys.executable, "stopwarn.py", "halt", "--by", "test"],
+                                 cwd=HERE, env=env, capture_output=True, timeout=30)
+        check("Windows stops through the launcher's graceful halt", stopped.returncode, 0)
+    else:
+        srv.send_signal(signal.SIGTERM)
     got = c.until_closed()
     check("the client is told before the socket closes",
           got, ["shutdown;seconds=0;"])
@@ -216,7 +222,7 @@ try:
     _drain.start()
     c = Client(connect())
     lcall, lenter = enter(c)
-    check("back where the stop left him", lenter, "lenter;pos=%d;aspd=1;amax=50;" % P[3])
+    check("back where the stop left him", lenter, "lenter;pos=%d;aspd=2.5;amax=50;" % P[3])
     c.send("moveTo;path=|%d|%d|;" % (P[3], P[4]))
     check("moved once more", c.names(), ["cmdAck", "userMove"])
     halt = subprocess.run([sys.executable, "stopwarn.py", "halt", "--by", "test"], cwd=HERE,

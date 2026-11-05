@@ -46,7 +46,8 @@ class Motion:
             return state.cells[state.index]
         if hasattr(actor, 'cell'):
             return actor.cell
-        return actor.pos if hasattr(actor, 'pos') else actor.live_cell()
+        live = getattr(actor, 'live_cell', None)
+        return live() if live is not None else actor.pos
 
     def occupied(self, exclude=None):
         self.advance()

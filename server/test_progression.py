@@ -411,6 +411,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -521,7 +522,7 @@ try:
     # Walk up to the teacher. The server echoes any path today; a real one
     # would come from the client's own pathfinder.
     beside = progression.hex_neighbours(teacher["pos"], loc.width, loc.height)[0]
-    c.send("moveTo;path=|%d|%d|;" % (my_pos, beside))
+    testkit.walk_to(c, beside)
     c.until("userMove")
     c.send("ss_create;s_type=4;target=%d;" % teacher["newUser"])
     got = c.until("cmdAck")

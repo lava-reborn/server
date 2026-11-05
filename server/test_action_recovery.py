@@ -112,17 +112,49 @@ class ActionRecovery(unittest.IsolatedAsyncioTestCase):
             self.assertIsNotNone(self.a.combat.aim)
         self.assertEqual(self.case.store.item(self.gun['uniq'])['ammo_count'],7)
 
-    async def test_melee_completion_has_one_committed_visual_stage(self):
+    async def test_melee_completion_does_not_add_firearm_recovery(self):
         self.b.pos=1
         with self.case.at(100):
             self.a.combat.use_fire(dict(obj='0',target='1%08x'%self.b.pid))
-            self.assertTrue(combat.Fighter.recovering(self.a.combat))
+            self.assertFalse(combat.Fighter.recovering(self.a.combat))
             self.a.move_in_location(dict(path=[0,20]))
-        self.assertIsNone(self.a.walk)
+        self.assertIsNotNone(self.a.walk)
         result=[p for n,p in self.a.writer.frames if n in ('caHit','caMiss')]
         self.assertEqual(len(result),1)
-        self.assertGreater(result[0]['recovery_ms'],0)
+        self.assertEqual(result[0]['recovery_ms'],0)
         self.assertEqual(self.a.combat.ap,195)
+
+    async def test_blade_spam_finishes_once_and_next_strike_starts_immediately(self):
+        self.case.store.update_item(self.gun['uniq'], slot=inventory.BAG)
+        self.a.char.set_skill(combat.progression.MELEE, 17)
+        self.a.char.set_spec(1, 3)
+        blade = self.a.inv.create(6241, slot=inventory.PRIMARY)
+        self.b.pos = 1
+        request = dict(obj=inventory.oid_of(blade), target='1%08x' % self.b.pid)
+        clock = 100.0
+        for _ in range(2):
+            with self.case.at(clock):
+                self.a.combat.use_fire(request)
+                timer = self.a.combat.strike
+                self.assertIsNotNone(timer)
+                callback, args, deadline = timer._callback, timer._args, timer.when()
+                before = self.a.combat.ap
+                worn = self.case.store.item(blade['uniq'])['brk']
+                for _press in range(50):
+                    self.a.combat.use_fire(request)
+                    self.assertIs(self.a.combat.strike, timer)
+                    self.assertEqual(timer.when(), deadline)
+            timer.cancel()
+            with self.case.at(deadline), patch.object(combat, 'roll', return_value=True):
+                callback(*args)
+                callback(*args)  # a duplicate callback must not double-charge
+                self.assertIsNone(self.a.combat.strike)
+                self.assertFalse(combat.Fighter.recovering(self.a.combat))
+            self.assertEqual(self.a.combat.ap, before - 8)
+            self.assertEqual(self.case.store.item(blade['uniq'])['brk'], worn - 1)
+            clock = deadline
+        impacts = [p for n, p in self.a.writer.frames if n == 'caHit' and p['id'] == 0]
+        self.assertEqual(len(impacts), 2)
 
     async def test_recovery_is_piggybacked_on_final_shot_only_for_both_viewers(self):
         self.complete_shot()

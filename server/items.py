@@ -1260,13 +1260,14 @@ def static_info(type_id):
         admin = ADMIN_OVERRIDES.get(type_id)
         if admin:
             info[1].update(admin)
-        if root_of(type_id) == HEAL and catalogue()[type_id][1].startswith("Med_Battle_"):
+        if root_of(type_id) == HEAL:
             name = catalogue()[type_id][1]
-            multiplier = BATTLE_HEAL_AFRO_AP_MULTIPLIER if name.endswith('_A') else BATTLE_HEAL_AP_MULTIPLIER
-            cost = info[1].get("heal_cost", 0) * multiplier
-            # Match the existing AS2 Math.round convention; P variants retain
-            # their already agreed values, including fractional points.
-            info[1]["heal_cost"] = math.floor(cost + 0.5) if name.endswith('_A') or '_G' in name else cost
+            if name.startswith("Med_Battle_") and (name.endswith('_A') or '_G' in name):
+                multiplier = (BATTLE_HEAL_AFRO_AP_MULTIPLIER if name.endswith('_A')
+                              else BATTLE_HEAL_AP_MULTIPLIER)
+                cost = info[1].get("heal_cost", 0) * multiplier
+                # AS2 Math.round; retired P medicine keeps its original cost.
+                info[1]["heal_cost"] = math.floor(cost + 0.5)
         import repair_policy
         repair_cost = repair_policy.valuation(type_id, info[1])
         if repair_cost is not None:

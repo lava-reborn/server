@@ -173,10 +173,13 @@ def _run(rc, mob, t0, seconds, each=None):
     t = t0
     for _ in range(int(seconds / combat.AI_TICK)):
         t += combat.AI_TICK
-        mob.think(rc, t)
-        rc.calm(t)
-        if each is not None:
-            each(t)
+        with patch.object(asyncio.get_running_loop(), "time", return_value=t):
+            mob.think(rc, t)
+            if getattr(rc.room, "motion", None) is not None:
+                rc.room.motion.advance(t)
+            rc.calm(t)
+            if each is not None:
+                each(t)
     return t
 
 

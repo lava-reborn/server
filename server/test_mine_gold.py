@@ -269,6 +269,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -483,7 +484,7 @@ try:
             and all(mobs.hex_distance(cell, b, tier1.width) > aggro + 0.5
                     for i, b in bandits.items() if i != target)]
     pos = min(near, key=lambda cell: mobs.hex_distance(cell, pos, tier1.width))
-    c.send("moveTo;path=|%d|;" % pos)
+    testkit.walk_to(c, pos)
     c.until(lambda f: f[0] == "lch" and f[1].get("enemy") == target, 4)
     # It comes for him with a knife (mobs.stats: range 1): wait for it at his
     # side, so that it falls there and its bag lies a step away, never within
@@ -524,7 +525,7 @@ try:
                               or progression.within_reach(cell, where[0], tier1.width,
                                                           tier1.height), wary)
         check("the bag is a walk away", path is not None, True)
-        c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path or [pos]))
+        testkit.walk_to(c, (path or [pos])[-1])
         c.frames(0.2 * len(path or [pos]) + 1.0)
         pos = (path or [pos])[-1]
         c.send("ss_create;s_type=0;target=%d;" % where[0])

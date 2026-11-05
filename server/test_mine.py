@@ -250,6 +250,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -325,12 +326,12 @@ def walk(c, loc, start, goal, avoid=()):
     path = mobs.find_path(loc, start, goal, set(avoid))
     if path is None:
         raise RuntimeError("no path from %d in %d" % (start, loc.id))
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path))
+    testkit.walk_to(c, (path)[-1])
     return path
 
 
 def stand_on(c, cell):
-    c.send("moveTo;path=|%d|;" % cell)
+    testkit.walk_to(c, cell)
     return c.frames(0.3)
 
 
@@ -572,7 +573,7 @@ try:
                     for i, b in bandits.items() if i != target)]
     check("somewhere only the nearest bandit will notice", bool(near), True)
     pos = min(near, key=lambda cell: mobs.hex_distance(cell, pos, tier1.width))
-    c.send("moveTo;path=|%d|;" % pos)
+    testkit.walk_to(c, pos)
     got = c.until(lambda f: f[0] == "lch" and f[1].get("enemy") == target, 4)
     check("the bandit takes the player for its target",
           [p["enemy"] for p in named(got, "lch") if "enemy" in p][:1], [target])
@@ -678,7 +679,7 @@ try:
     step = mobs.find_path(mouth, pos, lambda cell: cell not in POCKET
                           and mobs.hex_distance(cell, pos, mouth.width) >= 3)
     c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (rudo["id"], Q))
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in step))
+    testkit.walk_to(c, (step)[-1])
     got = c.until(lambda f: f[0] == "lcall", 2) + c.frames(0.6)
     check("handed in, it takes the player down again; the step behind it is refused,"
           " and acknowledged",

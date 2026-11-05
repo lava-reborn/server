@@ -191,3 +191,92 @@ def connect(port, proc=None, log=None, timeout=None, host="127.0.0.1"):
                 raise SystemExit("server did not start in %ds:\n%s"
                                  % (window, _tail(log)))
             time.sleep(0.1)
+
+
+def scene_client(cls):
+    """Record real placement frames for explicit socket-fixture navigation.
+
+    No commands are rewritten: tests still send and assert the actual wire.
+    """
+    from functools import wraps
+    from protocol import decode
+    def observe(client, frames):
+        for raw in frames:
+            cmd, params = decode(raw) if isinstance(raw, str) else raw
+            if not params.get('id') and params.get('recovery_ms', 0) > 0:
+                client.scene_recovery_until = time.monotonic() + params['recovery_ms'] / 1000
+            if cmd == 'lcall':
+                client.scene_id = params['id']
+                client.scene_cells = {}
+            elif cmd == 'lenter':
+                client.scene_pos = params['pos']
+            elif cmd == 'lch':
+                cells = getattr(client, 'scene_cells', {})
+                if 'newUser' in params:
+                    cells[params['newUser']] = params['pos']
+                for key in ('lostUser', 'dead'):
+                    cells.pop(params.get(key), None)
+                client.scene_cells = cells
+            elif cmd in ('userMove', 'actionCancel', 'breakMv'):
+                cell = params.get('pos')
+                if cmd == 'userMove':
+                    if 'path' not in params:  # Global-map velocity packet, not a room route.
+                        continue
+                    cell = params['path'][-1]
+                if cell is not None:
+                    if not params.get('id'):
+                        client.scene_pos = cell
+                    else:
+                        getattr(client, 'scene_cells', {})[params['id']] = cell
+    for name in ('frames', 'until'):
+        original = getattr(cls, name, None)
+        if original is None:
+            continue
+        def wrap(original):
+            @wraps(original)
+            def receive(self, *args, **kwargs):
+                frames = original(self, *args, **kwargs)
+                observe(self, frames)
+                return frames
+            return receive
+        setattr(cls, name, wrap(original))
+    return cls
+
+
+def walk_to(client, target):
+    """Send a real path during fixture setup, then allow it to complete.
+
+    Older socket fixtures used one-cell teleports, or jumps across the room.
+    A stationary one-cell request is now only a stop. Approach occupied NPC
+    cells instead, just as the real client's contact pathfinder does. Leave
+    the reply on the socket so the calling test can check it normally.
+    """
+    import mobs
+    import progression
+    import world
+    loc = world.location(client.scene_id)
+    start = client.scene_pos
+    blocked = set(getattr(client, 'scene_cells', {}).values())
+    blocked.discard(start)
+    goal = (lambda c: progression.within_reach(c, target, loc.width, loc.height)
+            if target in blocked else c == target)
+    path = mobs.find_path(loc, start, goal, blocked, limit=loc.width * loc.height, toward=target)
+    assert path and goal(path[-1]), (loc.id, start, target, 'no fixture route')
+    client.fixture_path = path
+    client.send('moveTo;path=|%s|;' % '|'.join(map(str, path)))
+    time.sleep((len(path) - 1) * mobs.HEX_MS / 1000 + 0.05)
+    return path[-1]
+
+
+def wait_recovery(client):
+    """A protocol fixture waits for the same committed release as Flash.
+
+    Keep incoming frames in the caller's transcript; never resend or alter
+    a command, and do not consume this delay for deliberately refused actions.
+    """
+    out = []
+    while True:
+        left = getattr(client, 'scene_recovery_until', 0) - time.monotonic()
+        if left <= 0:
+            return out
+        out += client.frames(min(left + 0.01, 0.2))

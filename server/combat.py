@@ -1879,8 +1879,8 @@ class Fighter:
                     or inventory.weapon_requirement_error(row, ch)):
                 rc.room.broadcast(("caMiss", dict(id=self.eid, hex=hexcell if target is None else target.cell)))
                 return
-        params = items.params_of(row['type_id']) if uniq is not None else None
-        recovery_ms = Fighter.commit_animation(self, params)
+        # Melee keeps its strike timing; only firearm release locks actions.
+        recovery_ms = 0
         aim_cell = target.cell if target is not None else hexcell
         killed = False
         reach = (target is not None and target.present(rc)

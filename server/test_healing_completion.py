@@ -52,7 +52,7 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
                     patch.object(items,'BATTLE_HEAL_AFRO_AP_MULTIPLIER',1):
                 original=items.static_info(type_id)[1]['heal_cost']
             expected=original
-            if name.startswith('Med_Battle_'):
+            if name.startswith('Med_Battle_') and (name.endswith('_A') or '_G' in name):
                 factor=1.5 if name.endswith('_A') else 2.5
                 expected=original * factor
                 if name.endswith('_A') or '_G' in name:

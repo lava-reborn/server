@@ -343,6 +343,7 @@ class Server:
         return lines
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -633,7 +634,7 @@ def walk_to(c, loc, pos, goal, avoid=()):
         # server takes (it checks a path against the grid only), as
         # test_abri_open's does -- a stand-in for the walk round a camp.
         path = [min(goals, key=lambda cell: mobs.hex_distance(cell, pos, loc.width))]
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path))
+    testkit.walk_to(c, (path)[-1])
     c.frames(0.3 + 0.25 * len(path))
     return path[-1]
 
@@ -753,7 +754,7 @@ def boss_bag(c, gun, where, boss):
                   if any(mobs.hex_distance(cell, o, W) <= wary for o in now.values())}
     path = mobs.find_path(place, pos, lambda cell: cell == bag_at[0] or progression.within_reach(
         cell, bag_at[0], W, place.height), wary_cells) or [bag_at[0]]
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path))
+    testkit.walk_to(c, (path)[-1])
     c.frames(0.25 * len(path) + 1.0)
     c.send("ss_create;s_type=0;target=%d;" % bag_at[0])
     if acks(c.frames()) != [0]:

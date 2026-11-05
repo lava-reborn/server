@@ -12,6 +12,7 @@ import accounts
 import progression
 import world
 from protocol import decode
+import testkit
 from testkit import check,fails,connect
 
 root=Path(__file__).resolve().parent
@@ -35,6 +36,7 @@ logs=[]
 thread=threading.Thread(target=lambda:logs.extend(process.stdout),daemon=True);thread.start()
 
 
+@testkit.scene_client
 class Client:
     def __init__(self):
         self.socket=connect(port,process,logs)
@@ -99,10 +101,10 @@ try:
         check("active VNJ blocks status quest %d"%t,get(client.named("q_status"),"q_status")["status"],0)
     client.send("userMsg;entry=@/goto 102@;group=0;");client.named("lcall")
     client.send("lenter;accept=1;")
-    arrival=client.until(lambda cmd,p:cmd=="userInfo_Lessor" and p.get("name")==653)
+    arrival=client.until(lambda cmd,p:cmd=="e_list")
     lessor=get(arrival,"userInfo_Lessor")
     cell=next(p["pos"] for cmd,p in arrival if cmd=="lch" and p.get("newUser")==lessor["id"])
-    client.send("moveTo;path=|%d|;"%cell);client.named("actionCancel")
+    testkit.walk_to(client,cell);client.named("cmdAck")
     command="on_conv;op=2;mob=%d;p1=4;p2=1;"%lessor["id"]
     first=client.ack(command);first_info=get(first,"userInfo_Player")
     second=client.ack(command);second_info=get(second,"userInfo_Player")
@@ -118,10 +120,10 @@ try:
     client=Client();client.login()
     client.send("userMsg;entry=@/goto 102@;group=0;");client.named("lcall")
     client.send("lenter;accept=1;")
-    arrival=client.until(lambda cmd,p:cmd=="userInfo_Lessor" and p.get("name")==653)
+    arrival=client.until(lambda cmd,p:cmd=="e_list")
     lessor=get(arrival,"userInfo_Lessor")
     cell=next(p["pos"] for cmd,p in arrival if cmd=="lch" and p.get("newUser")==lessor["id"])
-    client.send("moveTo;path=|%d|;"%cell);client.named("actionCancel")
+    testkit.walk_to(client,cell);client.named("cmdAck")
     check("one-hour status refuses two-day rental",result(client.ack("on_conv;op=2;mob=%d;p1=18;p2=2;"%lessor["id"]))!=0,True)
     frames=client.ack("on_conv;op=2;mob=%d;p1=18;p2=1;"%lessor["id"])
     check("one-hour status still allows one full day",result(frames),0)

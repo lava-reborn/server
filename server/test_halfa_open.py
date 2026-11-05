@@ -186,6 +186,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -474,14 +475,15 @@ def shoot_targets(c, arrival, loc_id, want, gun, cid, mode=0):
             if goal != pos:
                 path = mobs.find_path(loc, pos, lambda x: x == goal, set(where.values()),
                                       limit=20000)
-                c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
+                testkit.walk_to(c, (path or [goal])[-1])
                 out += c.frames(0.3 + 0.25 * len(path or [goal]))
                 pos = goal
             for _ in range(80):
                 c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(eid)))
                 got = c.until(lambda f: f[0] == "ss_di_firearm" or (f[0] == "lch" and f[1].get(
                     "dead") == eid) or (f[0] == "cmdAck" and f[1]["res"]), 3)
-                got += c.frames(0.05)
+                got += c.frames(0.15)
+                got += testkit.wait_recovery(c)
                 out += got
                 if inventory.RES_NO_AMMO in acks(got):
                     rounds = oid(cid, ROUNDS)
@@ -526,7 +528,7 @@ def hunt(c, got, loc_id, target, pos, gun):
             continue
         goal = spots[0][1]
         path = mobs.find_path(loc, pos, lambda cell: cell == goal, wary, limit=20000)
-        c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
+        testkit.walk_to(c, (path or [goal])[-1])
         # Shooting stops the accepted walk. Await the full server route.
         out += c.frames(max(0, len(path or [goal]) - 1) * mobs.HEX_MS / 1000.0 + 0.8)
         for _ in range(30):

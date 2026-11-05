@@ -206,6 +206,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -376,9 +377,15 @@ try:
     c = Client(connect())
     login(c, CAROL, True, "Carol")
     _got, pos_c = enter(c)
+    # All three must be mutually adjacent for the crossing-invitation cases.
+    common = set(progression.hex_neighbours(pos, loc.width, loc.height)) & set(
+        progression.hex_neighbours(pos_b, loc.width, loc.height))
+    pos_c = next(cell for cell in sorted(common)
+                 if cell not in loc.obstacles and cell not in c.scene_cells.values())
+    testkit.walk_to(c, pos_c)
     drain(a, b, c)
     check("all three at the settlement's entrance, side by side",
-          (pos_b, pos_c), (pos, pos))
+          (len({pos, pos_b, pos_c}), mobs.adjacent(pos, pos_b, loc), mobs.adjacent(pos, pos_c, loc)), (3, True, True))
     # Characters get ids in the order they were made, and a player's entity
     # id follows from it (rooms.player_id).
     A_ID, B_ID, C_ID = 1, 2, 3
@@ -418,16 +425,20 @@ try:
           view(a.frames()), REFUSED)
     propose(a, pid_a)
     check("to oneself: the same", view(a.frames()), REFUSED)
-    far = next(x for x in range(pos + 3, pos + 40)
-               if mobs.hex_distance(pos, x, loc.width) >= 3)
-    c.send("moveTo;path=|%d|%d|;" % (pos, far))
+    blocked = set(c.scene_cells.values()) - {c.scene_pos}
+    far_path = mobs.find_path(loc, c.scene_pos,
+                             lambda x: mobs.hex_distance(pos, x, loc.width) >= 3,
+                             blocked)
+    assert far_path and mobs.hex_distance(pos, far_path[-1], loc.width) >= 3
+    far = far_path[-1]
+    testkit.walk_to(c, far)
     drain(a, b, c)
     propose(a, pid_c)
     got = a.frames()
     check("to somebody three hexes off: refused", view(got), REFUSED)
     check("and the chat says why", ["далеко" in t for t in said(got)], [True])
     check("Carol hears nothing of it", view(c.frames()), [])
-    c.send("moveTo;path=|%d|%d|;" % (far, pos))
+    testkit.walk_to(c, pos_c)
     drain(a, b, c)
     c.send("ss_create;target=%d;s_type=1;" % traders[0])
     check("Carol opens a stall", view(c.frames()), [("cmdAck", 0)])
@@ -684,13 +695,13 @@ try:
     open_barter(b, a, pid_a, pid_b)
     upd(a, barter.UPD_TO_BUFFER, rounds_a)
     drain(a, b)
-    b.send("moveTo;path=|%d|%d|;" % (pos, far))
+    testkit.walk_to(b, far)
     got_b, got_a = b.frames(), a.frames()
     check("Bob walks off: his step, then his window closed, and why",
           [v for v in view(got_b)], [("cmdAck", 0), ("ss_upd", 0, "0"), ("say",)])
     check("Alice's closes too, her rounds back in her bag",
           view(got_a), [("ss_upd", 0, "0"), ("ss_obj_status", 1, rounds_a), ("say",)])
-    b.send("moveTo;path=|%d|%d|;" % (far, pos))
+    testkit.walk_to(b, pos_b)
     drain(a, b, c)
 
     # --- out to the map while invited -----------------------------------------------------
@@ -971,7 +982,7 @@ try:
     spot = max((n for n in progression.hex_neighbours(dump_pos, dump.width, dump.height)
                 if n not in dump.obstacles),
                key=lambda n: mobs.hex_distance(n, 4551, dump.width))
-    b.send("moveTo;path=|%d|%d|;" % (dump_pos, spot))
+    testkit.walk_to(b, spot)
     check("Bob steps beside Alice: still side by side, the barter stands",
           [v for v in view(b.frames(0.5 + mobs.HEX_MS / 1000.0)) if v[0] == "ss_upd"], [])
     got_a, got_b = [], []

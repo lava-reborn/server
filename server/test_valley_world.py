@@ -354,6 +354,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -436,7 +437,7 @@ def through(c, cell):
     """Stand on an exit cell and take it: chWorld;to=1 (the exit window's
     «other location»). The lcall it answers with, or {}, and the arrival's
     frames."""
-    c.send("moveTo;path=|%d|;" % cell)
+    testkit.walk_to(c, cell)
     c.frames(0.4)
     c.send("chWorld;to=1;")
     call = first(c.until(lambda f: f[0] == "lcall", 2), "lcall")
@@ -494,7 +495,7 @@ def hunt(c, gun):
     if not spots:
         return None
     pos = spots[0][1]
-    c.send("moveTo;path=|%d|;" % pos)
+    testkit.walk_to(c, pos)
     c.frames(0.5)
     dead = None
     for _ in range(40):
@@ -512,7 +513,7 @@ def hunt(c, gun):
     where = [p["hex"][0] for p in named(dead, "ss_loot") if p.get("s_status") == 1]
     if not where:
         return None
-    c.send("moveTo;path=|%d|;" % where[0])
+    testkit.walk_to(c, where[0])
     c.frames(0.4)
     c.send("ss_create;s_type=0;target=%d;" % where[0])
     if acks(c.frames()) != [0]:

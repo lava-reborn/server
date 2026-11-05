@@ -84,7 +84,7 @@ for t in (25566, 25576, 25951):
     gun = dict(root=items.FIRE_ARM, type_id=t)
     stack = dict(root=items.AMMO, type_id=AMMO)
     acks = []
-    fake = SimpleNamespace(find=lambda value: gun if value == "gun" else stack, ack=acks.append)
+    fake = SimpleNamespace(sess=SimpleNamespace(combat=SimpleNamespace(recovery_until=0)), find=lambda value: gun if value == "gun" else stack, ack=acks.append)
     inventory.Inventory.use_load(fake, dict(obj="gun", target="ammo"))
     check("reload rejects gift rounds in firearm %d" % t, acks, [inventory.RES_WRONG_AMMO])
 if fails:

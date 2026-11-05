@@ -302,6 +302,7 @@ class _Seat(object):
 
     def __init__(self):
         self.sent = []
+        self.pos, self.walk = 0, None
         self.combat = type("F", (), {"aim": None, "strike": None, "duels": {},
                                      "dead": False})()
 
@@ -406,7 +407,7 @@ async def _hours():
         got = seat.take()
         check("killed: it falls, fades and leaves its bag -- and nothing more",
               [(n, sorted(p)) for n, p in got],
-              [("lch", ["dead"]), ("lch", ["lostUser"]), ("ss_loot", ["hex", "s_status"])])
+              [("actionCancel", ["id", "pos", "stop_aim"]), ("lch", ["dead"]), ("lch", ["lostUser"]), ("ss_loot", ["hex", "s_status"])])
         check("not back after the respawn delay", (eid in room.npcs, boss.away), (False, True))
         for t in (at(22, 10), at(22, 59, 59), at(23), at(23, 59, 59)):
             NOW[0] = t

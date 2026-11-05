@@ -596,6 +596,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -803,7 +804,7 @@ def through(c, loc_id, side):
     loc = world.location(loc_id)
     cells = sorted(cc for cc, s in travel.exit_sides(loc).items() if s == side
                    and cc not in loc.obstacles)
-    c.send("moveTo;path=|%d|;" % cells[len(cells) // 2])
+    testkit.walk_to(c, cells[len(cells) // 2])
     c.frames(0.5)
     for _ in range(6):
         c.send("chWorld;to=1;")
@@ -853,7 +854,7 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
         path = mobs.find_path(loc, pos, lambda cell: cell == goal, wary, limit=20000)
         if path is None and goal != pos:
             continue
-        c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
+        testkit.walk_to(c, (path or [goal])[-1])
         # Shooting stops the accepted walk. Await the full server route.
         out += c.frames(max(0, len(path or [goal]) - 1) * mobs.HEX_MS / 1000.0 + 0.8)
         pos = goal
@@ -881,7 +882,7 @@ def loot(c, fight, loc_id, pos, near, wary=frozenset()):
     bag = min(bags, key=lambda cell: mobs.hex_distance(cell, near, loc.width))
     path = mobs.find_path(loc, pos, lambda cell: cell == bag or progression.within_reach(
         cell, bag, loc.width, loc.height), set(wary), limit=20000)
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path or [pos]))
+    testkit.walk_to(c, (path or [pos])[-1])
     c.frames(0.2 * len(path or [pos]) + 1.0)
     c.send("ss_create;s_type=0;target=%d;" % bag)
     if acks(c.frames()) != [0]:
