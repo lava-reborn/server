@@ -74,6 +74,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -115,8 +116,11 @@ def enter(c):
 def stand_on(c, cell):
     """Walk onto a cell: the server only checks the path's shape, and the
     exit window opens when the walker stops on a zone cell."""
-    c.send("moveTo;path=|%d|;" % cell)
-    check("stood on %d" % cell, c.names(), ["cmdAck", "actionCancel", "c_ap"])
+    testkit.walk_to(c, cell)
+    expected = (["cmdAck", "userMove"] if len(c.fixture_path) > 1
+                else ["cmdAck", "actionCancel", "c_ap"])
+    check("stood on %d" % cell, c.names(), expected)
+    check("the requested exit cell is reached", c.scene_pos, cell)
 
 
 def goto(c, what):

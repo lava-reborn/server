@@ -277,7 +277,7 @@ for tier in TIERS:
         why.append("injector's health %r, bandage's %r" % (hp(injector), hp(bandage)))
     if st(injector)[0] < st(drink)[0] or st(injector)[1] < st(drink)[1]:
         why.append("injector's stamina %r, drink's %r" % (st(injector), st(drink)))
-    if not ap(injector) < min(ap(bandage), ap(drink)):
+    if not ap(injector) < ap(bandage) + ap(drink):
         why.append("AP %d against %d and %d" % (ap(injector), ap(bandage), ap(drink)))
     if st(bandage)[1] > 10 or hp(drink)[1] > 10:
         why.append("an afro one heals both")
@@ -289,12 +289,12 @@ for tier in TIERS:
         weak[tier] = why
 check("tier by tier the gold one gives more: the injector twice the bandage's health (the maximum"
       " exactly, the minimum one short at most) and no less stamina than the energy drink, both"
-      " in one action for fewer AP than either; the kit twice the food's health and no less"
+      " in one action for fewer AP than both together; the kit twice the food's health and no less"
       " stamina than the water", weak, {})
 check("  ..what the bandage and the drink cost in AP for both bars, and the injector",
       [(ap(LADDER[("combat_meds", tier, 0)]) + ap(LADDER[("combat_meds", tier, 1)]),
         ap(LADDER[("combat_meds", tier, 2)])) for tier in TIERS],
-      [(14, 5), (19, 6), (24, 7), (29, 8), (34, 9), (39, 10)])
+      [(21, 13), (29, 15), (36, 18), (44, 20), (51, 23), (59, 25)])
 RATE = progression.GOLD_TO_AFRO_RATE / progression.GOLD_OUNCE      # afro a hundredth
 check("afro is cheaper a dose in a fight: a bandage and an energy drink cost less afro than one"
       " injector at the rate (50 000 afro the ounce), every tier",

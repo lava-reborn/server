@@ -288,6 +288,7 @@ class BossBlueprints(unittest.TestCase):
                 corpse_gone=lambda *a: None, calm=lambda: None)
             with patch.object(combat.production, 'mined_by'), \
                     patch.object(combat.holdings, 'snapshot', return_value=None):
+                mob.cell = 0
                 combat.RoomCombat.kill(rc, mob, killer)
             self.assertEqual(mob.blueprint_killer_level, 4)
             self.assertEqual(killer.level, 5)

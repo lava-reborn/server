@@ -16,6 +16,7 @@ sending an id at all.
 import hashlib
 import json
 import os
+import re
 
 import craft
 import items
@@ -192,6 +193,18 @@ for _type in items.catalogue():
     _note = ("Только для (A) и (G) оружия." if _lines == {"A", "G"}
              else "Только для (" + next(iter(_lines)) + ") оружия.")
     ALL[_did] = (ALL[_did] + "<br>" if ALL.get(_did) else "") + _note
+
+# Battle medicine states its AP cost inside the original HTML description.
+# Use the same final value as ss_si_heal / actual use, without rewriting the
+# text, price or restoration numbers. Built once for both text preloads.
+_BATTLE_AP_ROW = re.compile(r"(Расход ОД:\s*</b>\s*)\d+(?:[.,]\d+)?")
+for _type, (_root, _internal_name) in items.catalogue().items():
+    if _root == items.HEAL and _internal_name.startswith("Med_Battle_"):
+        _cost = items.params_of(_type).get("heal_cost", 0)
+        _did = items.DESC_ID_OFFSET + _type
+        if _did in ALL:
+            ALL[_did] = _BATTLE_AP_ROW.sub(
+                lambda match: match.group(1) + format(_cost, "g"), ALL[_did], count=1)
 
 # The table as the game's own sources leave it, before anybody had a say.
 # tools/npc_editor.py compares against this to tell a name that was chosen

@@ -80,6 +80,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -189,7 +190,7 @@ try:
     # registers a handler on the client's acknowledgement queue. That queue is
     # strictly ordered, so an unanswered move hands each later reply to a stale
     # mover and quietly breaks whatever asked for it.
-    c.send("moveTo;path=|490|491|492|;")
+    walk_end = testkit.walk_to(c, c.scene_pos - 1)
     got = c.frames()
     check("movement acknowledged", got[0], "cmdAck;res=0;")
     from protocol import decode
@@ -199,7 +200,7 @@ try:
     check("movement includes a bounded authoritative step phase",
           isinstance(phase, int) and 0 <= phase < mobs.HEX_MS, True)
     check("movement echoed with only the owner's AP",
-          (cmd, move), ("userMove", dict(id=0, path=[490, 491, 492], step_ms=phase, ap=50)))
+          (cmd, move), ("userMove", dict(id=0, path=c.fixture_path, step_ms=phase, ap=50)))
 
     # A path the server will not take is refused with breakMv INSTEAD of an
     # acknowledgement: Location.breakMv itself skipCalls the handler the
@@ -208,9 +209,9 @@ try:
     c.send("moveTo;path=|492|99999|;")
     got = c.frames()
     check("a bad path is refused with breakMv alone",
-          got, ["breakMv;id=0;pos=492;"])
+          got, ["breakMv;id=0;pos=%d;" % walk_end, "c_ap;ap=50;"])
     c.send("moveTo;path=|;")
-    check("an empty path too", c.frames(), ["breakMv;id=0;pos=492;"])
+    check("an empty path too", c.frames(), ["breakMv;id=0;pos=%d;" % walk_end, "c_ap;ap=50;"])
 
     # Mail is asked for the moment a location opens, and it expects an
     # acknowledgement of its own.

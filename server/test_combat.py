@@ -218,6 +218,12 @@ class _PullFighter(combat.Fighter):
 
 
 def _pull(type_id, mode, ammo, drop=0):
+    async def run():
+        return _pull_in_loop(type_id, mode, ammo, drop)
+    return asyncio.run(run())
+
+
+def _pull_in_loop(type_id, mode, ammo, drop=0):
     """One pull of the real gun through Fighter.fire_now: (pellets the client
     is told of, pellets that fly, rounds left, durability lost). drop is
     what the magazine loses during the aim."""
@@ -227,7 +233,7 @@ def _pull(type_id, mode, ammo, drop=0):
     flew = []
     rc = type("RC", (), {"room": type("R", (), {"ws": False})(),
                          "within_fire": lambda *a: False,
-                         "burst": lambda _rc, _sh, _t, _c, _w, live, *_a:
+                         "burst": lambda _rc, _sh, _t, _c, _w, live, *_a, **_timing:
                          flew.append(live) or (0, 0, 0, False)})()
     char = progression.Character()
     for skill in char.skill:
@@ -798,6 +804,7 @@ _rc.mobs[1].target = _second
 check("a creature after one player holds the whole room", _rc.hostilities(_T), True)
 _rc.mobs[1].target = None
 _first.aim = object()
+_first.hostile_action = True
 check("so does a burst still being aimed", _rc.hostilities(_T), True)
 _first.aim = None
 _first.engage_player(_second, _T - combat.LEAVE_COMBAT_TIMEOUT + 1)
@@ -1257,7 +1264,9 @@ try:
     check("one pair around the bullet's fate",
           (burst[0], burst[1] in ("faHit", "faMiss", "faWall"), burst[2]), ("faShot", True, "faShot"))
     check("the pair is the player's, open then closed",
-          [p for n, p in got if n == "faShot"], [{"id": 0, "status": 1}, {"id": 0, "status": 0}])
+          [{k: v for k, v in p.items() if k != "recovery_ms"} for n, p in got if n == "faShot"], [{"id": 0, "status": 1}, {"id": 0, "status": 0}])
+    check("the committed shot carries a positive release duration",
+          next(p["recovery_ms"] for n, p in got if n == "faShot" and p["status"] == 0) > 0, True)
     hit = named(got, "faHit")
     tail = names_[first + 3:]
     if hit:

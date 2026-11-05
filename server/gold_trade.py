@@ -26,6 +26,11 @@ BLUEPRINT_SALE_CAPS = {
 }
 
 
+def decoded_blueprint(type_id):
+    root, name = items.catalogue().get(type_id, (None, ""))
+    return root == items.TRASH and name.startswith(("bpg_", "bpb_"))
+
+
 def blueprint_level(type_id):
     root, name = items.catalogue().get(type_id, (None, ''))
     if root == items.TRASH and name.startswith(('bpg_', 'bpb_')):
@@ -60,12 +65,12 @@ def gold_priced(type_id, params):
 def transferable(type_id):
     params = items.params_of(type_id) or {}
     return bool(params and not protected(type_id, params)
-                and not items.acquisition_blocked(type_id) and not afro_blueprint(type_id, params)
+                and not items.acquisition_blocked(type_id)
                 and (params.get('exchang') or gold_priced(type_id, params)))
 
 
 def afro_blueprint(type_id, params=None):
-    """NPC-priced A blueprints are not resold between players as G copies."""
+    """Identify NPC-priced A blueprints for their afro resale basis."""
     params = params if params is not None else (items.params_of(type_id) or {})
     return bool(blueprint_level(type_id) is not None and params.get('cost', 0) > 0
                 and not gold_priced(type_id, params))
@@ -168,9 +173,13 @@ def auction_base(type_id):
 @lru_cache(maxsize=None)
 def client_fields(type_id):
     params = items.params_of(type_id) or {}
+    gold_sale = sale_unit(type_id, params)
+    blueprint_sellable = (decoded_blueprint(type_id)
+                          and not protected(type_id, params)
+                          and (params.get('cost', 0) > 0 or gold_sale > 0))
     return dict(a_sale_unit=afro_sale_unit(type_id, params),
                 g_restore_base=restore_policy.base_price(type_id, params),
-                g_sale_unit=sale_unit(type_id, params),
+                g_sale_unit=gold_sale, bp_sell=int(blueprint_sellable),
                 a_sale_cap=afro_sale_cap(type_id, params),
                 g_transfer=int(transferable(type_id)),
                 g_auction_base=auction_base(type_id))

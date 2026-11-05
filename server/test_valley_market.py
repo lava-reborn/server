@@ -385,6 +385,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -649,6 +650,8 @@ def positions(frames):
             where[p["newUser"]] = p["pos"]
         elif n == "userMove" and p.get("id") in where and p.get("path"):
             where[p["id"]] = p["path"][-1]
+        elif n in ("actionCancel", "breakMv") and "pos" in p:
+            where[p.get("id", 0)] = p["pos"]
     return where
 
 
@@ -683,13 +686,26 @@ def hunt(c, got, loc_id, targets, pos):
                            and cell not in where.values()
                            and mobs.hex_distance(cell, home, loc.width) <= 40
                            and mobs.line_of_fire(loc, cell, home) is None)
-            if not spots:
-                continue
-            goal = spots[0][1]
-            path = mobs.find_path(loc, pos, lambda cell: cell == goal, wary, limit=20000)
-            c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
-            out += c.frames(mobs.HEX_MS / 1000.0 * len(path or [0]) + 0.8)
-            pos = goal
+            goals = {cell for _distance, cell in spots}
+            path = mobs.find_path(loc, c.scene_pos, lambda cell: cell in goals,
+                                  wary, limit=20000, toward=home) if goals else None
+            if path and path[-1] in goals:
+                out += testkit.walk_frames(c, path[-1], blocked=wary)
+            else:
+                # An aggro radius is not a wall. In a narrow cave there may be
+                # no entirely safe route: approach the nearest clear firing cell,
+                # preserving real occupancy and the target's current position.
+                shot_range = max(items.params_of(ADMIN_GUN)['max_range'])
+                def in_sight(cell):
+                    target = c.scene_cells.get(eid, home)
+                    return (mobs.hex_distance(cell, target, loc.width) <= shot_range
+                            and mobs.line_of_fire(loc, cell, target) is None)
+                path = mobs.find_path(loc, c.scene_pos, in_sight,
+                                      set(c.scene_cells.values()), limit=20000)
+                if not path:
+                    continue
+                out += testkit.clear_approach(c, in_sight, None, (), shot_range)
+            pos = c.scene_pos
             for _ in range(30):
                 c.send("ss_use;type=16;obj=x%s;target=%s;" % (GUN, entity(eid)))
                 got_ = c.until(lambda f: f[0] == "ss_di_firearm"
@@ -722,10 +738,7 @@ def loot(c, fight, loc_id, pos, near, wary=frozenset()):
     if not bags:
         return None, []
     bag = min(bags, key=lambda cell: mobs.hex_distance(cell, near, loc.width))
-    path = mobs.find_path(loc, pos, lambda cell: cell == bag or progression.within_reach(
-        cell, bag, loc.width, loc.height), set(wary), limit=20000)
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path or [pos]))
-    c.frames(0.2 * len(path or [pos]) + 1.0)
+    testkit.walk_frames(c, bag)
     c.send("ss_create;s_type=0;target=%d;" % bag)
     if acks(c.frames()) != [0]:
         return None, []
@@ -1029,19 +1042,35 @@ try:
         fight, killed, pos, _fell, wary = hunt(c, alive_frames(got), ADITS_LOC, [BLACK_RAT], pos)
         got += fight
         kills += len(killed)
-        if not killed:
+        if killed:
+            # Loot is rolled when the corpse disappears, not at lch;dead.
+            # Observe that kill's bag before deciding to shoot another rat.
+            fell = _fell[BLACK_RAT]
+            got += c.until(lambda f: f[0] == "ss_loot" and f[1].get("s_status") == 1
+                           and fell in f[1].get("hex", []), combat.CORPSE_DELAY + 2)
+            got += c.frames(0.1)
+        else:
             got += c.frames(2.0)     # the adits shot empty: a rat comes back
     cells = ground_cells(KING)
     check("black rats shot in the adits with the quest open until a king falls:"
           " within twenty-five kills (one in five), the king in one bag on the ground",
           (1 <= kills <= 25, len(cells)), (True, 1))
+    # Deaths on the same hex share a ground bag. A rat returning to that
+    # hex can leave a second tail beside the king; verify all existing tail
+    # stacks instead of assuming this bag belongs to exactly one kill.
+    st = store()
+    tail_stacks = st.db.execute(
+        "SELECT COUNT(*) AS n FROM ground g JOIN items i ON i.uniq = g.uniq"
+        " WHERE g.loc = ? AND g.cell = ? AND i.type_id = ?",
+        (ADITS_LOC, cells[0] if cells else pos, TAIL)).fetchone()["n"]
+    st.close()
     held, took = loot(c, got, ADITS_LOC, pos, cells[0] if cells else pos, wary)
     check("  ..the king's bag: the carcass beside the rat's tail; taken, «Крысиный король»"
           " counts it, complete",
-          ((held or []).count(KING), (held or []).count(TAIL),
+          ((held or []).count(KING), ((held or []).count(TAIL), tail_stacks > 0),
            [p["obj_num"] for p in named(took, "q_di_bring_l_obj") if p["q_id"] == q],
            counts(took, quests.BRING_L_OBJ)),
-          (1, 1, [[1]], [([1], 1)]))
+          (1, (tail_stacks, True), [[1]], [([1], 1)]))
     here = inhabitants(goto(c, BARN))
     got = hand_in(c, here, KING_Q, q)
     AFRO += 700

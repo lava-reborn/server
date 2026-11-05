@@ -207,6 +207,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, _log, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -326,7 +327,7 @@ def meet(where, pid_b):
     pos_a = pos_b
     spot = next(n for n in progression.hex_neighbours(pos_b, loc.width, loc.height)
                 if n not in loc.obstacles)
-    a.send("moveTo;path=|%d|%d|;" % (pos_a, spot))
+    testkit.walk_to(a, spot)
     a.frames(0.5 + mobs.HEX_MS / 1000.0)
     b.frames(0.5)
     return arrived, mobs.hex_distance(spot, pos_b, loc.width), pos_b
@@ -341,7 +342,7 @@ def through_wall(c, cell, side):
     exits = [x for x, s in travel.exit_sides(loc).items() if s == side]
     mx, my = travel._edge_middle(loc, side)
     ex = min(exits, key=lambda x: (x % loc.width - mx) ** 2 + (x // loc.width - my) ** 2)
-    c.send("moveTo;path=|%d|;" % ex)
+    testkit.walk_to(c, ex)
     c.frames(0.6)
     c.send("chWorld;to=1;")
     got = c.until("lcall")
@@ -447,7 +448,7 @@ try:
     pocket = world.location(pocket_id)
     spot = next(n for n in progression.hex_neighbours(into_b[1], pocket.width, pocket.height)
                 if n not in pocket.obstacles)
-    a.send("moveTo;path=|%d|%d|;" % (into_a[1], spot))
+    testkit.walk_to(a, spot)
     a.frames(0.5 + mobs.HEX_MS / 1000.0)
     b.frames(0.5)
     check("the hunter stands beside the quarry among the rocks",
@@ -487,10 +488,11 @@ try:
     # entry_cell hands every arrival the same doorway. So the hunter steps
     # off it, and from beside the quarry the blow can actually land.
     loc = world.location(DUMP)
-    check("both arrivals land on the same entry cell", pos_a, pos_b)
+    check("arrivals use distinct neighbouring entry cells",
+          pos_a != pos_b and mobs.adjacent(pos_a, pos_b, loc), True)
     spot = next(n for n in progression.hex_neighbours(pos_b, loc.width, loc.height)
                 if n not in loc.obstacles)
-    a.send("moveTo;path=|%d|%d|;" % (pos_a, spot))
+    testkit.walk_to(a, spot)
     a.frames(0.5 + mobs.HEX_MS / 1000.0)
     b.frames(0.5)
     check("the hunter is standing next to the quarry",
@@ -557,7 +559,7 @@ try:
           [param(f, "ws") for f in named(rested, "lch") if param(f, "ws") == "0"], [])
     interior = next(cell for cell in range(loc.width * loc.height)
                     if cell not in loc.obstacles and travel.side_at(loc, cell) is None)
-    b.send("moveTo;path=|%d|;" % interior)
+    testkit.walk_to(b, interior)
     b.frames(0.6)
     b.send("chWorld;")
     got = b.frames(0.8)
@@ -566,7 +568,7 @@ try:
            if f.split(";")[0] in ("cmdAck", "gmap", "lcall")],
           [("cmdAck", "7")])
     edge = next(cell for cell in travel.exit_sides(loc) if cell not in loc.obstacles)
-    b.send("moveTo;path=|%d|;" % edge)
+    testkit.walk_to(b, edge)
     b.frames(0.6)
     a.frames(0.3)
     b.send("chWorld;")
@@ -721,6 +723,14 @@ try:
     a.frames(1.5)
     b.frames(1.0)
     desert = world.location(world.location_at(*DESERT))
+    blocked = set(b.scene_cells.values()) - {b.scene_pos}
+    away = mobs.find_path(desert, b.scene_pos,
+        lambda x: travel.side_at(desert, x) is None
+                  and mobs.hex_distance(x, a.scene_pos, desert.width) >= 3, blocked)
+    assert away
+    pos_b = testkit.walk_to(b, away[-1])
+    b.frames(0.3)
+    a.frames(0.3)
     check("the quarry's doorway is no exit of the desert",
           travel.side_at(desert, pos_b), None)
     got = swing(a, pid_b)

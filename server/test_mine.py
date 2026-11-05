@@ -250,10 +250,12 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
         self.buf = b""
+        self.seen = []
 
     def send(self, text):
         self.s.sendall(text.encode(ENC) + b"\x00")
@@ -274,7 +276,9 @@ class Client:
     def _drain(self):
         parts = self.buf.split(b"\x00")
         self.buf = parts.pop()
-        return [decode(f.decode(ENC)) for f in parts if f]
+        frames = [decode(f.decode(ENC)) for f in parts if f]
+        self.seen += frames
+        return frames
 
     def frames(self, wait=0.5):
         deadline = time.time() + wait
@@ -325,13 +329,23 @@ def walk(c, loc, start, goal, avoid=()):
     path = mobs.find_path(loc, start, goal, set(avoid))
     if path is None:
         raise RuntimeError("no path from %d in %d" % (start, loc.id))
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path))
+    testkit.walk_to(c, (path)[-1])
     return path
 
 
 def stand_on(c, cell):
-    c.send("moveTo;path=|%d|;" % cell)
-    return c.frames(0.3)
+    if not getattr(c, 'fixture_gun', None):
+        return testkit.walk_frames(c, cell, attempts=6, exact=True)
+    enemies = {p['id'] for n, p in c.seen if n == 'userInfo'
+               and p['id'] in c.scene_cells and mobs.stats(p['name']).can_attack}
+    def fire(eid):
+        for _ in range(10):
+            c.send('ss_use;type=16;obj=x%s;target=x1%08x;' % (c.fixture_gun, eid))
+            got = c.until(lambda f: f[0] == 'lch' and f[1].get('dead') == eid, 1)
+            if any(p.get('dead') == eid for p in named(got, 'lch')):
+                return got
+        return None
+    return testkit.clear_approach(c, {cell}, fire, enemies, 64)
 
 
 def through_door(c, cell, label):
@@ -572,7 +586,7 @@ try:
                     for i, b in bandits.items() if i != target)]
     check("somewhere only the nearest bandit will notice", bool(near), True)
     pos = min(near, key=lambda cell: mobs.hex_distance(cell, pos, tier1.width))
-    c.send("moveTo;path=|%d|;" % pos)
+    testkit.walk_to(c, pos)
     got = c.until(lambda f: f[0] == "lch" and f[1].get("enemy") == target, 4)
     check("the bandit takes the player for its target",
           [p["enemy"] for p in named(got, "lch") if "enemy" in p][:1], [target])
@@ -678,7 +692,7 @@ try:
     step = mobs.find_path(mouth, pos, lambda cell: cell not in POCKET
                           and mobs.hex_distance(cell, pos, mouth.width) >= 3)
     c.send("q_co;obj_idx=0;mob=%d;q_id=%d;" % (rudo["id"], Q))
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in step))
+    testkit.walk_to(c, (step)[-1])
     got = c.until(lambda f: f[0] == "lcall", 2) + c.frames(0.6)
     check("handed in, it takes the player down again; the step behind it is refused,"
           " and acknowledged",
@@ -780,6 +794,16 @@ try:
           [p["daily_available"] for p in named(arrival, "q_sys")], [0])
 
     # --- the tiers below, by their own signs ------------------------------------------
+    # Navigation is checked with actual occupied cells. Clear corridor guards
+    # with the admin gun, rather than walking through them as old fixtures did.
+    c.send('userMsg;entry=@/give 1534@;group=0;')
+    c.fixture_gun = str(named(c.until(lambda f: f[0] == 'ss_obj_status'), 'ss_obj_status')[0]['obj'])
+    c.send('userMsg;entry=@/give 6092 200@;group=0;')
+    ammo = str(named(c.until(lambda f: f[0] == 'ss_obj_status'), 'ss_obj_status')[0]['obj'])
+    c.send('ss_move;obj=x%s;to=512;from=2048;' % c.fixture_gun)
+    c.frames()
+    c.send('ss_use;type=1;obj=x%s;target=x%s;' % (c.fixture_gun, ammo))
+    c.until(lambda f: f[0] == 'ss_di_firearm')
     tier2, tier3 = world.location(TIER2), world.location(TIER3)
     check("the first tier's door marked 'down' leads to the second",
           through_door(c, door_cell(tier1, "b"), "612 b acknowledged, then called"), TIER2)

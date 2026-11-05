@@ -20,6 +20,7 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+import blueprint_prices
 import craft
 import events
 import items
@@ -83,6 +84,9 @@ with open(os.path.join(HERE, "..", "data", "weaponcraft_corrections.json"), enco
 # effect itself is checked by test_weapon_upgrade_integrity; other wiki
 # fields must still survive the deliberate overlay unchanged.
 sample = sorted(set(rnd.sample(linked, 20)) | ((corrected | set(craft.DURABILITY_CORRECTIONS)) & set(linked)))
+# Always include both paired blueprint lines, not only whichever a random
+# sample happens to select. Their purchase prices have an explicit overlay.
+sample = sorted(set(sample) | {t for t in linked if cat[t][1].startswith('bpg_damage_25_')})
 for t in sample:
     rec = wiki[t]
     cmd, p = items.static_info(t)
@@ -107,6 +111,24 @@ for t in sample:
     # (items.heal_over_article; every one of them held below).
     ours = dict(ours, **{k: v for k, v in items.heal_over_article().get(t, {}).items()
                          if not k.startswith("_")})
+    if t == 3914:
+        ours['cost'] = 0  # quest-only bread, never an afro resale source
+    if t == 6188:
+        ours.update(cost=20, g_cost=0)  # gift rounds are afro-only
+    # These exact overlays are checked independently for every affected
+    # type in test_healing_completion and test_ks12_balance. All other
+    # source fields remain compared below, including retired P medicine.
+    internal = cat[t][1]
+    if root == items.HEAL and internal.startswith('Med_Battle_') and (internal.endswith('_A') or '_G' in internal):
+        ours['heal_cost'] = p['heal_cost']
+    if t in items.KS12_FIRE_COSTS:
+        ours['fire_costs'] = p['fire_costs']
+    if re.fullmatch(r'bpg_damage_25_afro_lvl\d+', internal):
+        price = dict(cost=ours.get('cost', rec.get('cost', 0)), g_cost=rec.get('g_cost', 0))
+        blueprint_prices.apply(internal, price)
+        check("  ..the A blueprint has exactly one purchase discount",
+              {key: p[key] for key in price}, price)
+        ours.update(price)
     craft.lay_stat_corrections(t, ours)
     if t in craft.DURABILITY_CORRECTIONS:
         ours["max_break_abs"] = craft.DURABILITY_CORRECTIONS[t]
@@ -197,6 +219,8 @@ def deliberate(t):
                  // progression.GOLD_OUNCE, g_cost=items.GOLD_INGOTS[t])
     if quests.lent(t) or events.kept(t):
         p.update(quest=1, exchang=0)
+    if root == items.HEAL and cat[t][1].startswith('Med_Battle_') and '_G' in cat[t][1]:
+        p['heal_cost'] = int(p['heal_cost'] * 2.5 + 0.5)
     return cmd, p
 
 
@@ -408,6 +432,9 @@ wd = items.wiki_descs()
 check("over a thousand descriptions", len(wd) >= 1000, True)
 _od = orig_texts.item_descs()
 def expected_item_description(t, original):
+    if cat[t][0] == items.HEAL and cat[t][1].startswith('Med_Battle_'):
+        original = re.sub(r'(Расход ОД:\s*</b>\s*)\d+(?:[.,]\d+)?',
+                          lambda m: m.group(1) + format(items.params_of(t)['heal_cost'], 'g'), original)
     line = craft.blueprint_line(t)
     used = {line} if line else set()
     if not line:
@@ -426,8 +453,8 @@ def expected_item_description(t, original):
 
 
 check("each description keeps its source bonus text and exact applicability suffix",
-      all(names.text(items.DESC_ID_OFFSET + t) == expected_item_description(t, _od.get(t, d))
-          for t, d in wd.items()), True)
+      {t: (names.text(items.DESC_ID_OFFSET + t), expected_item_description(t, _od.get(t, d)))
+       for t, d in wd.items() if names.text(items.DESC_ID_OFFSET + t) != expected_item_description(t, _od.get(t, d))}, {})
 check("line breaks become <br>, markup goes",
       items.clean_text("'''Нельзя в бою.'''<br />\nКусок [[Мясо|мяса]].\n\nСухой."),
       "Нельзя в бою.<br>Кусок мяса.<br>Сухой.")

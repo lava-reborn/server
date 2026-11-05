@@ -437,7 +437,7 @@ check("Абу-Хамед's rows: repeatable services of the band 17-20 (the owne
       (sorted({(r["repeatable"], r["service"], r["level"], r["max_level"]) for r in AH_ROWS}),
        sorted({r["craft"]["family"] for r in AH_ROWS}),
        [r["type"] for r in AH_ROWS if quests.get(r["type"]) is None]),
-      ([(1, True, 17, 20)], ["assembly", "decode", "knife", "salvage", "upgrade"], []))
+      ([(1, True, 16, 20), (1, True, 17, 20)], ["assembly", "decode", "knife", "salvage", "upgrade"], []))
 check("the masters stand where the labels put them: (A) in the masters' camp 131, (G) in the"
       " living quarter 127",
       ({t: t in standing(MASTERS_CAMP) for t in (755, 758, 759, 4583, 4584)},

@@ -6,6 +6,7 @@ or production data. Burst trajectory is stubbed; ammunition/AP/wear are real.
 import os
 import logging
 import unittest
+import asyncio
 from types import SimpleNamespace as NS
 from unittest.mock import patch
 os.environ.pop('LAVA_DB_URL', None)
@@ -25,6 +26,10 @@ from testkit import run_cases
 
 class Fighter(combat.Fighter):
     rc = None
+
+
+async def resolved(callback, *args):
+    return callback(*args)
 
 
 class LevelWear(unittest.TestCase):
@@ -47,7 +52,7 @@ class LevelWear(unittest.TestCase):
         self.live = []
         self.f.rc = NS(room=NS(ws=True, broadcast=self.frames.append),
                        within_fire=lambda *a: False,
-                       burst=lambda *a: self.live.append(a[4]) or (0, 0, 0, False))
+                       burst=lambda *a, **timing: self.live.append(a[4]) or (0, 0, 0, False))
 
     def make(self, type_id, slot=inventory.PRIMARY, **extra):
         fields = inventory.new_fields(type_id)
@@ -248,17 +253,17 @@ class LevelWear(unittest.TestCase):
         self.ch.skill[progression.MELEE][0] = 1
         self.assertAlmostEqual(inventory.wear_multiplier(row, self.ch), 2.8)
         with patch.object(inventory.RNG, 'random', return_value=0):
-            self.f.strike_now(None, 0, (1, 1), 1, 8, row['uniq'])
+            asyncio.run(resolved(self.f.strike_now, None, 0, (1, 1), 1, 8, row['uniq']))
             self.assertEqual((self.store.item(row['uniq'])['brk'], self.f.ap), (2, 92))
-            self.f.strike_now(None, 0, (1, 1), 1, 8, row['uniq'])
+            asyncio.run(resolved(self.f.strike_now, None, 0, (1, 1), 1, 8, row['uniq']))
             self.assertEqual((self.store.item(row['uniq'])['brk'], self.f.ap), (0, 84))
-            self.f.strike_now(None, 0, (1, 1), 1, 8, row['uniq'])
+            asyncio.run(resolved(self.f.strike_now, None, 0, (1, 1), 1, 8, row['uniq']))
             self.assertEqual((self.store.item(row['uniq'])['brk'], self.f.ap), (0, 84))
 
     def fire(self,row,rounds=1):
         weapon = combat.Weapon(num_shots=12,dmin=1,dmax=1,opt_lo=0,opt_hi=0,max_range=1,
                                piercing=1,cone=0,crit=0,skill=progression.SHOOTING,spec=3)
-        self.f.fire_now(row['uniq'],None,0,weapon,31,rounds)
+        asyncio.run(resolved(self.f.fire_now, row['uniq'],None,0,weapon,31,rounds))
 
     def test_shotgun_pellets_do_not_multiply_round_wear(self):
         row = self.make(7072, brk=100, ammo_count=6)

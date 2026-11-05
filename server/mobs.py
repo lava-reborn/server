@@ -853,6 +853,7 @@ class Mob:
         # Let go of a target (RoomCombat.mob_release) and not yet back home:
         # camp bosses retain damage and regenerate; other mobs heal there.
         self.homing = False
+        self.walk = None           # (path, start time), for the actual death hex
         self.busy_until = 0.0       # walking: the client is still animating
         self.next_attack = 0.0
         self.aim = None             # TimerHandle of a burst or swing in flight
@@ -934,6 +935,28 @@ class Mob:
     def weapon_oid(self):
         return self.stats.weapon_oid(self.eid)
 
+    @property
+    def cell(self):
+        clock = getattr(self, '_motion', None)
+        if clock is not None:
+            clock.advance()
+            state = clock.walks.get(id(self))
+            if state is not None:
+                return state.cells[state.index]
+        return self._cell
+
+    @cell.setter
+    def cell(self, value):
+        self._cell = value
+
+    def walk_cell(self, t):
+        """Last completed step, matching the player's live_cell clock."""
+        if self.walk is None:
+            return self.cell
+        path, began = self.walk
+        step = min(len(path) - 1, max(0, int((t - began) * 1000 // HEX_MS)))
+        return path[step]
+
     def reset(self):
         """Back to the spawn point, whole, and with no grudge."""
         self.hp = self.stats.hp_max
@@ -950,6 +973,7 @@ class Mob:
         self.capture = None
         self.quest_wants = frozenset()
         self.busy_until = 0.0
+        self.walk = None
         self.next_attack = 0.0
         self.leaving = False
 

@@ -7,6 +7,7 @@ def __gcInitialize(obj):
     this.g_restore_base = obj.g_restore_base
     this.a_sale_unit = obj.a_sale_unit
     this.g_sale_unit = obj.g_sale_unit
+    this.bp_sell = obj.bp_sell
     this.a_sale_cap = obj.a_sale_cap
     this.g_transfer = obj.g_transfer
     this.g_auction_base = obj.g_auction_base
@@ -60,9 +61,17 @@ def __gcShowCost(item, align):
         value = "a" + String(value)
     this.price_mc.fontContainer.showValue(value)
 
+def __gcAddSell(annotationArr):
+    if this.item.getProp("bp_sell") or this.item.getProp("g_sale_unit") > 0:
+        annotationArr.push(["Допустимость продажи", "Да"])
+        return
+    this.__gcAddSellOrig(annotationArr)
+
 def __gcCheckSell(item):
+    if not _global.__moActive() and item.getProp("bp_sell"):
+        return
     if not _global.__moActive() and item.getProp("g_sale_unit") > 0:
-        if item.getProp("__break") == 0:
+        if (item.rootID == 0 or item.rootID == 1 or item.rootID == 5) and item.getProp("__break") == 0:
             return "Вы не можете продать полностью сломанный предмет"
         if item.rootID == 6:
             return "Вы не можете продать трофеи"
@@ -229,6 +238,7 @@ def patches(Asm, undef):
     for path, method, keep, helper in (
         (('core', 'objects', 'Item'), 'initialize', '__gcInitializeOrig', '__gcInitialize'),
         (('core', 'objects', 'Item'), 'getProp', '__gcGetPropOrig', '__gcGetProp'),
+        (('gpui', 'Annotation'), 'addSell', '__gcAddSellOrig', '__gcAddSell'),
         (('gpui', 'ItemContainer'), 'showCost', '__gcShowCostOrig', '__gcShowCost'),
         (('gpui', 'TradeInterface'), 'checkSellItem', '__gcCheckSellOrig', '__gcCheckSell'),
         (('gpui', 'TradeInterface'), 'createExchangePan', '__gcExchangeOrig', '__gcExchange'),

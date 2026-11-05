@@ -54,6 +54,8 @@ class BlueprintLevels(unittest.TestCase):
             if city in ("halfa", "abri", "dongola", "abu_hamed") and family in ("upgrade", "knife", "decode"):
                 lo, hi = (6 if city == "abri" else lo), 20
                 covered.add((city, family))
+            if city == "abu_hamed" and family == "decode" and row["craft"]["level"] == 17:
+                lo = 16
             with self.subTest(quest=row["type"]):
                 generated = service({"name": city, "band": bands[city]},
                                     {"craft": row["craft"]})

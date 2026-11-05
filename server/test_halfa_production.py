@@ -585,7 +585,7 @@ env = dict(os.environ, LAVA_PORT=str(PORT), LAVA_HOST="127.0.0.1", LAVA_DB=DB,
            # Production scenes edit gold and skill levels in the database
            # between logins, so their logout must finish saving the character.
            LAVA_COMBAT_LINGER="0",
-           LAVA_CHEATS="1", LAVA_START="181", LAVA_AP_REGEN="50", LAVA_RESPAWN="20",
+           LAVA_CHEATS="1", LAVA_START="181", LAVA_AP_REGEN="50", LAVA_RESPAWN="600",
            LAVA_SEED="23", LAVA_LEAVE_COMBAT="2")
 LOG = os.path.join(os.path.dirname(DB), "server.log")
 srv = subprocess.Popen([sys.executable, "server.py"], cwd=HERE, env=env,
@@ -596,10 +596,12 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
         self.buf = b""
+        self.seen = []
 
     def send(self, text):
         self.s.sendall(text.encode(ENC) + b"\x00")
@@ -618,7 +620,9 @@ class Client:
     def _drain(self):
         parts = self.buf.split(b"\x00")
         self.buf = parts.pop()
-        return [decode(f.decode(ENC)) for f in parts if f]
+        frames = [decode(f.decode(ENC)) for f in parts if f]
+        self.seen += frames
+        return frames
 
     def frames(self, wait=0.5):
         deadline = time.time() + wait
@@ -671,6 +675,8 @@ def positions(frames):
             where[p["newUser"]] = p["pos"]
         elif n == "userMove" and p.get("id") in where and p.get("path"):
             where[p["id"]] = p["path"][-1]
+        elif n in ("actionCancel", "breakMv") and "pos" in p:
+            where[p.get("id", 0)] = p["pos"]
     return where
 
 
@@ -795,6 +801,7 @@ def arm(c):
     c.frames()
     c.send("ss_use;target=x%s;obj=x%s;type=1;" % (rounds, gun))
     c.until(lambda f: f[0] == "ss_di_firearm")
+    c.fixture_gun = gun
     return gun
 
 
@@ -803,8 +810,26 @@ def through(c, loc_id, side):
     loc = world.location(loc_id)
     cells = sorted(cc for cc, s in travel.exit_sides(loc).items() if s == side
                    and cc not in loc.obstacles)
-    c.send("moveTo;path=|%d|;" % cells[len(cells) // 2])
-    c.frames(0.5)
+    if getattr(c, 'clear_guards', False):
+        # After the quest kills and ring are checked, clear corridor guards
+        # during the passage tour; do not try to walk through a live miner.
+        enemies = {p['id'] for n, p in c.seen if n == 'userInfo'
+                   and p['id'] in c.scene_cells and MT.get(p['name'], (None,))[0] == world.MOB
+                   and mobs.stats(p['name']).can_attack}
+        def fire(eid):
+            for _ in range(10):
+                c.send('ss_use;type=16;obj=x%s;target=%s;' % (c.fixture_gun, entity(eid)))
+                got = c.until(lambda f: f[0] == 'lch' and f[1].get('dead') == eid, 1)
+                if any(p.get('dead') == eid for p in named(got, 'lch')):
+                    return got
+            return None
+        testkit.clear_approach(c, cells, fire, enemies,
+                               max(items.params_of(ADMIN_GUN)['max_range']))
+    else:
+        blocked = set(c.scene_cells.values())
+        path = mobs.find_path(loc, c.scene_pos, lambda cell: cell in cells, blocked, limit=20000)
+        assert path and path[-1] in cells, (loc_id, side, 'no exit route')
+        testkit.walk_frames(c, path[-1], exact=True)
     for _ in range(6):
         c.send("chWorld;to=1;")
         got = c.frames(0.8)
@@ -847,23 +872,33 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
                             or mobs.hex_distance(cell, home, loc.width) > reach)
                        and mobs.hex_distance(cell, home, loc.width) <= 30
                        and mobs.line_of_fire(loc, cell, home) is None)
-        if not spots:
-            continue
-        goal = spots[0][1]
-        path = mobs.find_path(loc, pos, lambda cell: cell == goal, wary, limit=20000)
-        if path is None and goal != pos:
-            continue
-        c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in (path or [goal])))
-        # Shooting stops the accepted walk. Await the full server route.
-        out += c.frames(max(0, len(path or [goal]) - 1) * mobs.HEX_MS / 1000.0 + 0.8)
-        pos = goal
+        goals = {cell for _distance, cell in spots}
+        path = mobs.find_path(loc, c.scene_pos, lambda cell: cell in goals,
+                              wary, limit=20000, toward=home) if goals else None
+        if path and path[-1] in goals:
+            out += testkit.walk_frames(c, path[-1], blocked=wary)
+        else:
+            # An aggro radius is not a wall. In a narrow cave there may be
+            # no entirely safe route: approach the nearest clear firing cell,
+            # preserving real occupancy and the target's current position.
+            shot_range = max(items.params_of(ADMIN_GUN)['max_range'])
+            def in_sight(cell):
+                target = c.scene_cells.get(eid, home)
+                return (mobs.hex_distance(cell, target, loc.width) <= shot_range
+                        and mobs.line_of_fire(loc, cell, target) is None)
+            path = mobs.find_path(loc, c.scene_pos, in_sight,
+                                  set(c.scene_cells.values()), limit=20000)
+            if not path:
+                continue
+            out += testkit.clear_approach(c, in_sight, None, (), shot_range)
+        pos = c.scene_pos
         for _ in range(20):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(eid)))
             got_ = c.until(lambda f: f[0] == "ss_di_firearm"
                            or (f[0] == "cmdAck" and f[1].get("res")), 3) + c.frames(0.4)
             out += got_
             if [p for p in named(got_, "lch") if p.get("dead") == eid]:
-                return out, eid, pos, home, wary
+                return out, eid, pos, positions(got + out).get(eid, home), wary
             time.sleep(0.3)
         break
     return out, None, pos, None, frozenset()
@@ -879,10 +914,7 @@ def loot(c, fight, loc_id, pos, near, wary=frozenset()):
     if not bags:
         return None
     bag = min(bags, key=lambda cell: mobs.hex_distance(cell, near, loc.width))
-    path = mobs.find_path(loc, pos, lambda cell: cell == bag or progression.within_reach(
-        cell, bag, loc.width, loc.height), set(wary), limit=20000)
-    c.send("moveTo;path=|%s|;" % "|".join(str(x) for x in path or [pos]))
-    c.frames(0.2 * len(path or [pos]) + 1.0)
+    testkit.walk_frames(c, bag)
     c.send("ss_create;s_type=0;target=%d;" % bag)
     if acks(c.frames()) != [0]:
         return None
@@ -893,7 +925,7 @@ def loot(c, fight, loc_id, pos, near, wary=frozenset()):
     c.frames(0.8)
     c.send("ss_upd;s_status=0;obj=x0;param=1;")
     c.frames(0.3)
-    return types, (path[-1] if path else pos)
+    return types, c.scene_pos
 
 
 def rewind(cid, qtype, seconds):
@@ -1073,8 +1105,7 @@ try:
                 tier = 1024
                 pos = first(arrival, "lenter").get("pos")
             else:
-                # The mine now shares the world's creature respawn delay.
-                time.sleep(float(env["LAVA_RESPAWN"]) + 1)
+                raise AssertionError(('no remaining reachable miner', tier, kills, ring))
             done = set()
             continue
         kills += 1
@@ -1094,6 +1125,7 @@ try:
     raid = [json.loads(r["progress_json"]) for r in st.quests(RAIDER) if r["type"] == RAID]
     st.close()
     check("  ..the raid counts them", raid[0]["kill_num"], [5])
+    c.clear_guards = True
     if tier == 1024:
         res, call, arrival = through(c, 1024, "W")
         check("back west from 1024 into the gallery's west end", (res, call.get("id")),

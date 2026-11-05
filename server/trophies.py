@@ -310,12 +310,14 @@ def drop(killer, victim, owner, slot):
     killer stood at the victim's level or below, into the bag the death
     left on the victim's cell -- the same bag, as combat.RoomCombat.
     add_to_bag adds to one already lying there. That cell is the victim's
-    pos, as Fighter.drop_on_death has it: the end of a walk the blow cut
-    short, where the client lets the corpse finish it -- not Fighter.cell,
-    the hex the figure was crossing. Returns the items row, or None when
+    pos, frozen by Fighter.die at the actual death hex before the corpse
+    and its loot are announced. Returns the items row, or None when
     nothing fell."""
     kc, vc = killer.sess.char_id, victim.sess.char_id
     rc = victim.rc
+    same_clan = getattr(killer.store, 'same_clan', None)
+    if same_clan and same_clan(kc, vc):
+        return None
     if not kc or not vc or rc is None:
         return None
     k_lvl, v_lvl = killer.level, victim.level

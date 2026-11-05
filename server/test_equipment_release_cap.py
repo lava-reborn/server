@@ -115,6 +115,7 @@ class ReleaseBoundary(unittest.TestCase):
             store = Mock()
             store.quest.return_value = dict(type=q.type, char_id=1)
             sess = Mock(char_id=1)
+            sess.combat.recovery_until = 0
             sess.npc_type.return_value = 748
             with patch.object(server, 'STORE', store), \
                     patch.object(quests, 'get', return_value=q), \

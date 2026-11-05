@@ -287,13 +287,7 @@ def sweep(store, directory, now=None):
     now = time.time() if now is None else now
     for lot in store.auction_due(now):
         name = meta(lot["type_id"])[3]
-        if gold_trade.afro_blueprint(lot["type_id"]):
-            letters = refund(lot, "Афро-чертежи больше не продаются на аукционе.") + give_back(
-                lot, "Аукцион: «%s» снят с продажи" % name,
-                "Афро-чертежи доступны у торговцев. Предмет и комиссия возвращены во вложении.")
-            # A newly forbidden lot cannot fulfil the service its owner paid for.
-            letters[-1]["afro"] += lot["fee"]
-        elif items.acquisition_blocked(lot["type_id"]):
+        if items.acquisition_blocked(lot["type_id"]):
             letters = refund(lot, "Предмет временно недоступен.") + give_back(
                 lot, "Аукцион: «%s» снят с продажи" % name,
                 "Оружие и броня выше 17 уровня временно недоступны. Предмет сохранён во вложении.")
@@ -376,7 +370,7 @@ class Auction:
             rows = [r for r in rows if r["seller"] == self.sess.char_id]
         else:
             rows = [r for r in rows if not items.acquisition_blocked(r["type_id"])
-                    and not gold_trade.afro_blueprint(r["type_id"]) and self.matches(r, p, cat)]
+                    and self.matches(r, p, cat)]
         sort = _int(p.get("sort"), 0)
         key = {
             0: lambda r: meta(r["type_id"])[3].lower(),
@@ -551,8 +545,7 @@ class Auction:
         if lot is None:
             return RES_NO_LOT, None
         kind = _int(p.get("type"), -1)
-        if kind != TAKEOFF and (items.acquisition_blocked(lot["type_id"])
-                                or gold_trade.afro_blueprint(lot["type_id"])):
+        if kind != TAKEOFF and items.acquisition_blocked(lot["type_id"]):
             return RES_REFUSED, None
         if kind == BID:
             return self.bid(lot, _int(p.get("amount"), 0))
@@ -652,9 +645,6 @@ class Auction:
         letters = (give_back(lot, "Аукцион: «%s» снят с торгов" % name,
                              "Лот снят, предмет возвращается. Комиссия не возвращается.")
                    + refund(lot, "Продавец снял с торгов"))
-        if gold_trade.afro_blueprint(lot["type_id"]):
-            letters[0]["afro"] += lot["fee"]
-            letters[0]["body"] = "Торговля афро-чертежами отключена. Предмет и комиссия возвращаются."
         sent = self.store.auction_close(lot["id"], letters, was=standing(lot))
         if sent is None:
             return RES_NO_LOT, None

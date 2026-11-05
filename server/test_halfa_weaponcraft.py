@@ -139,7 +139,7 @@ try:
                   for r in ROWS}),
           [(1, True, 0, 4, True, True), (1, True, 0, 8, True, True), (1, True, 0, 20, True, True),
            (1, True, 6, 20, True, True), (1, True, 9, 16, True, True), (1, True, 9, 20, True, True),
-           (1, True, 17, 20, True, True)])
+           (1, True, 16, 20, True, True), (1, True, 17, 20, True, True)])
     check("  ..Abri keeps its existing whetstone recipes, now for player levels 6-20",
           sorted({(r["craft"]["family"], tuple(r["give"])) for r in ROWS
                   if city_of(r) == "abri"}),
@@ -406,7 +406,7 @@ try:
            [t for t in sold if items.premium(t)],
            (items.params_of(37631)["cost"], items.params_of(37631)["g_cost"],
             items.params_of(37665)["cost"], items.params_of(37665)["g_cost"])),
-          ([], [], [], (6000, 150, 0, 150)))
+          ([], [], [], (4000, 100, 0, 150)))
     # The owner's gold line is paid in gold (2026-09-28): a blueprint that only
     # the (G) guns' rows ask -- bpg_damage_25_gold_lvl*, «Урон и размер обоймы»
     # -- is sold for gold alone (items.GOLD_PRICE_ONLY), so it is a gold thing

@@ -177,6 +177,8 @@ class CarryWeight(unittest.TestCase):
 
     def loot(self, rows, code):
         bag = combat.LootBag(0,[r["uniq"] for r in rows])
+        self.s.loc = NS(width=20, height=20)
+        self.s.pos = 0
         self.f.loot = 0
         self.f.rc = NS(loot={0:bag}, close_bag=lambda _: None)
         self.frames.clear()

@@ -48,6 +48,7 @@ import items
 import keepsakes
 import mail
 import mobs
+import movement
 import names
 import npcs
 import party
@@ -1010,6 +1011,9 @@ class Session:
         fighter = getattr(self, "combat", None)
         if fighter is not None:
             combat.Fighter.settle_walk(fighter, stop=True)
+        clock = getattr(getattr(self, "room", None), "motion", None)
+        if clock is not None:
+            clock.forget(self)
         self._pos = cell
         self.walk = None
         self._completed_walk = None
@@ -1018,16 +1022,22 @@ class Session:
         """The last hex the figure has finished stepping onto: the client's
         own walker.numPos, which it moves only at the end of each step
         (LocWalker.finishPathPart) and which the next moveTo starts from."""
+        clock = getattr(getattr(self, "room", None), "motion", None)
+        if clock is not None:
+            clock.advance(t)
         if t is None and self.walk is not None:
             t = asyncio.get_running_loop().time()
         fighter = getattr(self, "combat", None)
         if fighter is not None:
             combat.Fighter.settle_walk(fighter, t=t)
         walk = self.walk
+        if clock is not None and id(self) in clock.walks:
+            state = clock.walks[id(self)]
+            return state.cells[state.index]
         if walk is None:
             return self._pos
         cells, began = walk
-        step = int((t - began) * 1000 // mobs.HEX_MS)
+        step = movement.elapsed_ms(t, began) // mobs.HEX_MS
         if step >= len(cells) - 1:
             self._completed_walk = walk
             self.walk = None
@@ -1047,7 +1057,7 @@ class Session:
         self.pos = cell
         if walking is not None:
             cells, began = walking
-            index = min(len(cells) - 1, max(0, int((t - began) * 1000 // mobs.HEX_MS)))
+            index = min(len(cells) - 1, max(0, movement.elapsed_ms(t, began) // mobs.HEX_MS))
             self._completed_walk = (cells[:index + 1], began)
         return cell
 
@@ -1072,15 +1082,14 @@ class Session:
         now = asyncio.get_running_loop().time()
         here = self.live_cell(now)
         if previous is None:
-            if not (cells[0] == self._pos or mobs.adjacent(cells[0], here, loc)):
+            if cells[0] != self._pos:
                 return None
             return (cells, now)
 
         walking, old_began = previous
         # A retained edge followed by a turn can contain the same hex twice.
         # Derive its index from time, rather than the first matching cell.
-        index = min(len(walking) - 1, max(0, int(
-            (now - old_began) * 1000 // mobs.HEX_MS)))
+        index = min(len(walking) - 1, max(0, movement.elapsed_ms(now, old_began) // mobs.HEX_MS))
         passed = walking[:index + 1]
         if not (cells[0] in passed or mobs.adjacent(cells[0], here, loc)):
             return None
@@ -1415,6 +1424,10 @@ class Session:
         # rp_info's ap_max goes without it for the card to add. The fight
         # keeps this figure until the next lenter, as the bar does
         # (combat.Fighter.ap_max); entered() below fills the pool to it.
+        if not self.resume_loading:
+            destination = ROOMS.get(self.room_key())
+            combat.room_combat(destination, STORE).keep_hours()
+            self.pos = movement.get(destination).free_cell(self.pos, exclude=self)
         amax = (self.combat.ap_max if self.resume_loading
                 else self.character().ap_ceiling)
         self.combat.amax_sent = amax
@@ -1462,6 +1475,10 @@ class Session:
         self.combat.rc.keep_hours()
         self.room.enter(self)
         self.combat.entered()
+        # PlayerRegister keeps existing player entities between visits and
+        # only reloads their gear. Refresh cached bars after the placements,
+        # including a PvP opponent who has just returned from resurrection.
+        self.room.broadcast(("usrUp", rooms.player_health(self)), exclude=self)
 
     def cmd_chWorld(self, p):
         """One command, both directions: the button is a toggle.
@@ -4063,6 +4080,8 @@ class Session:
         The walk animation starts solely from a server userMove, including for
         the player who asked.
         """
+        if combat.Fighter.refuse_recovery(self.combat, moving=True):
+            return
         path = p.get("path")
         # Location.movePlayer registers a cmdAck handler for every single step
         # it asks for. Leaving those unanswered does not stall movement, since
@@ -4084,13 +4103,17 @@ class Session:
         # consumes its movement callback without an extra cmdAck.
         if self.combat.preparing() or not self.valid_path(path):
             self.cancel_passage()
-            self.send("breakMv", id=0, pos=self.pos)
+            cell = self.live_cell()
+            self.pos = cell
+            self.send("breakMv", id=0, pos=cell)
+            if self.room is not None:
+                self.room.broadcast(("actionCancel", dict(id=self.pid, pos=cell)), exclude=self)
+            self.combat.c_ap()
             return
         cells = [int(c) for c in path]
         was_walking = self.walk is not None
         walk = self.walk_of(cells)
-        if (walk is None and len(cells) > 1
-                and (was_walking or getattr(self, "_completed_walk", None) is not None)):
+        if walk is None and len(cells) > 1:
             self.cancel_passage()
             cell = self.live_cell()
             self.pos = cell
@@ -4109,6 +4132,25 @@ class Session:
                 # keep the original clock, AP tracking and passage timer.
                 self.send("cmdAck", res=0)
                 return
+        clock = movement.get(self.room)
+        here = self.live_cell()
+        if len(cells) == 1:
+            cells, walk = [here], None
+        elif walk is not None:
+            blocked = clock.occupied(self)
+            route, began = walk
+            if any(c in blocked for c in route[1:]):
+                # One bounded search, only when someone occupies the requested
+                # route. Clicking an occupied destination stops beside it.
+                anchor = route[1] if was_walking and len(route) > 1 else here
+                prefix = route[:2] if was_walking and anchor not in blocked else [here]
+                goal = cells[-1]
+                found = mobs.find_path(self.loc, prefix[-1],
+                    lambda c: c == goal if goal not in blocked else progression.within_reach(c, goal, self.loc.width, self.loc.height),
+                    blocked, toward=goal)
+                route = prefix + found[1:] if found else prefix
+                walk = (route, began) if len(route) > 1 else None
+                cells = route
         # A genuinely new route replaces the pending walk-in as before.
         self.cancel_passage()
         self.send("cmdAck", res=0)
@@ -4118,6 +4160,8 @@ class Session:
         # The figure starts from cells[0] on the echo below and is not at
         # pos for another HEX_MS a step (live_cell).
         self.walk = walk
+        if walk is not None:
+            clock.accept(self, cells, walk[1])
         try:
             # Walking drops the aim (the client cancels its own bar on this
             # userMove) and costs a point a hex while the room is at war.
@@ -4133,10 +4177,10 @@ class Session:
                 self.combat.c_ap()
                 self.arm_passage(1)
                 return
-            step_ms = (min(mobs.HEX_MS - 1, max(0, int(
-                (asyncio.get_running_loop().time() - walk[1]) * 1000)))
-                if walk is not None else 0)
-            self.send("userMove", id=0, path=cells, step_ms=step_ms, ap=int(self.combat.ap))
+            step_ms = (min(mobs.HEX_MS - 1,
+                           movement.elapsed_ms(asyncio.get_running_loop().time(), walk[1]))
+                       if walk is not None else 0)
+            self.send("userMove", id=0, path=cells, step_ms=step_ms, ap=self.combat.ap)
             # The same walk under our real id for everyone else in the room:
             # Location.userMove looks the walker up by id and 0 is always the
             # viewer's own figure (Location.getWalker).
@@ -4320,10 +4364,10 @@ class Session:
         walls the editor drew. The first cell is where the walker stands,
         wherever that is.
         """
-        if not isinstance(path, list) or not path:
+        if not isinstance(path, list) or not path or len(path) > self.loc.width * self.loc.height + 1:
             return False
         cells = self.loc.width * self.loc.height
-        if not all(isinstance(c, int) and 0 <= c < cells for c in path):
+        if not all(type(c) is int and 0 <= c < cells for c in path):
             return False
         if getattr(self.loc, "ours", False):
             walls = self.loc.obstacles

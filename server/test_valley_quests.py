@@ -204,6 +204,7 @@ def connect(timeout=None):
     return testkit.connect(PORT, srv, LOG, timeout)
 
 
+@testkit.scene_client
 class Client:
     def __init__(self, sock):
         self.s = sock
@@ -307,7 +308,7 @@ def exit_cell(loc, side):
 
 def through(c, loc_id, side):
     """Walk out of a location by one side's exit: the next one's arrival."""
-    c.send("moveTo;path=|%d|;" % exit_cell(world.location(loc_id), side))
+    testkit.walk_to(c, exit_cell(world.location(loc_id), side))
     c.frames(0.4)
     c.send("chWorld;to=1;")
     call = first(c.until(lambda f: f[0] == "lcall", 2), "lcall")
@@ -450,7 +451,7 @@ def hunt(c, got, mob_type, gun, n):
                        and mobs.line_of_fire(here, cell, home) is None)
         if not spots:
             continue
-        c.send("moveTo;path=|%d|;" % spots[0][1])
+        testkit.walk_to(c, spots[0][1])
         out += c.frames(0.6)
         for _ in range(30):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(eid)))
