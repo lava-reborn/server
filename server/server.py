@@ -62,6 +62,7 @@ import sets
 import setcraft
 import site_orders
 import storage
+import spec_access_service
 import stopwarn
 import transport
 import travel
@@ -2567,7 +2568,11 @@ class Session:
         its handler is empty: the window redraws from the rp_info that has
         to follow, and the purse from the userInfo_Player after it.
         """
-        status = int(p.get("s_status", 0))
+        try:
+            status = int(p.get("s_status", 0))
+        except (TypeError, ValueError, OverflowError):
+            self.send("cmdAck", res=progression.ERR_STATE)
+            return
         if status == progression.UPD_CLOSE:
             self.training = None
             return
@@ -2577,10 +2582,19 @@ class Session:
         except ValueError:
             idx = -1
         char = self.character()
+        bars = (char.hp_max, char.sp_max)
+        try:
+            res, (afro, gold) = spec_access_service.apply(STORE, char, status, idx)
+        except storage.CommitError:
+            self.inv.close_after_uncertain_commit()
+            return
+        except Exception:
+            log.exception("Specialization operation failed for %s", self.char_id)
+            self.send("cmdAck", res=progression.ERR_STATE)
+            self.answer("Обучение не выполнено. Повторите попытку.")
+            return
         why = None
         if status == progression.UPD_LEARN:
-            afro, gold = char.spec_cost()
-            res = char.learn_spec(idx)
             if res == progression.ERR_SKILL:
                 skill = progression.SPEC_SKILL[idx]
                 why = 'Требует навык "%s" не ниже %d, у вас %d' % (
@@ -2592,11 +2606,6 @@ class Session:
                 why = "Специализация стоит %s, у вас %s" % (
                     auction.money_text(afro or gold, cur),
                     auction.money_text(char.afro if afro else char.gold, cur))
-        elif status == progression.UPD_FORGET:
-            bars = (char.hp_max, char.sp_max)
-            res = char.forget_spec(idx)
-        else:
-            res = progression.ERR_STATE
         self.send("cmdAck", res=res)
         if res != 0:
             # The window shows nothing on a refusal (trainingAck is empty),
@@ -2608,8 +2617,6 @@ class Session:
             if why:
                 self.answer(why)
             return
-        with STORE.booked_as("spec", idx):
-            char.save(STORE)
         if status == progression.UPD_FORGET:
             # Removing gear can remove a bonus supporting another weapon.
             while self.inv.over_level_to_bag(notify=True):

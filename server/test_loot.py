@@ -458,7 +458,9 @@ try:
             break
     check("the bum dies to the knife", dead is not None, True)
     where = cell_of(c, bum, BUM_HOME)
-    got = c.until(lambda f: f[0] == "ss_loot", 5)
+    got = list(dead or [])
+    if not any(n == "ss_loot" for n, _ in got):
+        got += c.until(lambda f: f[0] == "ss_loot", 5)
     check("his bag lies where he fell",
           named(got, "ss_loot"), [{"s_status": 1, "hex": [where]}])
 

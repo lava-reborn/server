@@ -21,6 +21,8 @@ import craft  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import progression  # noqa: E402
+import spec_access_service  # noqa: E402
+import storage  # noqa: E402
 import quests  # noqa: E402
 from testkit import check, fails  # noqa: E402
 
@@ -122,7 +124,8 @@ check("wire move accepts both requirements", equip(), [inventory.RES_OK])
 tree = ast.parse(Path(__file__).with_name("server.py").read_text(encoding="utf-8"))
 handler = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
                and n.name == "training_upd")
-ns = dict(STORE=store, progression=progression)
+ch.save(store)
+ns = dict(STORE=store, progression=progression, spec_access_service=spec_access_service, storage=storage)
 exec(compile(ast.Module(body=[handler], type_ignores=[]), "server.py", "exec"), ns)
 sess.push_stats = lambda **_: None
 sess.push_vitals = lambda: None

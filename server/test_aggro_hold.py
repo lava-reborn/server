@@ -303,7 +303,8 @@ async def _timer():
     other.combat.end_duels()
     me.end_duels()
     room.sent = []
-    rc.kill(dog, None)
+    with patch.object(combat.RoomCombat, "materialize_loot"):
+        rc.kill(dog, None)
     check("the dog down and nothing else after anybody: peace, and the timer with it",
           (_ws(room), me.in_combat(), me.last_hit), ([0], False, -1e9))
     bum = _mob(rc, 2, 411, BUM_HOME)

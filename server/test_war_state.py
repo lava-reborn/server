@@ -26,6 +26,7 @@ and the door stays shut -- and then the bum, the last one: peace in the same
 breath, and the way out.
 """
 import asyncio
+from unittest.mock import patch
 import os
 import socket
 import subprocess
@@ -109,6 +110,7 @@ def _ws(room):
     return [p["ws"] for n, p in room.sent if n == "lch" and "ws" in p]
 
 
+@patch.object(combat.RoomCombat, "materialize_loot", new=lambda self, mob: None)
 async def _rule():
     # The last creature after anybody dies: lch;ws=0 in the same breath as
     # its lch;dead, not a tick later.
