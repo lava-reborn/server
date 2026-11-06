@@ -231,17 +231,17 @@ check("  ..and carries no ingot, ordinary or for a quest",
 # --- the ingots ---------------------------------------------------------------------
 si = items.params_of(INGOT) or {}
 # The G in gold since 2026-10-09: Мортимер sells them at face value.
-check("the boss's ingot of one: its 1 G in afro and in gold, the article's 1 g, fifty to"
+check("the boss's ingot of one: its 1 G in afro and in gold, the article's 1 g, a hundred to"
       " a stack", (si.get("cost"), si.get("g_cost"), si.get("weight"), si.get("max_count")),
-      (PRICE, OUNCE, 1, 50))
+      (PRICE, OUNCE, 1, 100))
 check("  ..by the original's name and description, not the internal one",
       (names.ALL.get(si.get("name")), names.ALL.get(si.get("desc"))),
       ("1 унция золота", "Слиток номиналом в одну золотую унцию."))
 # The ingot of five, the boss's until 2026-10-11, the Maghreb's since.
 si5 = items.params_of(INGOT_5) or {}
-check("the ingot of five: its 5 G in afro and in gold, the article's 5 g, fifty to a stack",
+check("the ingot of five: its 5 G in afro and in gold, the article's 5 g, a hundred to a stack",
       (si5.get("cost"), si5.get("g_cost"), si5.get("weight"), si5.get("max_count")),
-      (PRICE_5, G_5, 5, 50))
+      (PRICE_5, G_5, 5, 100))
 check("they change hands: exchangeable, no quest's own, not premium",
       [((items.params_of(t) or {}).get("exchang"), (items.params_of(t) or {}).get("quest"),
         items.premium(t), barter.tradable(t)) for t in (INGOT, INGOT_5)],

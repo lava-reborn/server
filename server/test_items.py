@@ -132,6 +132,8 @@ for t in sample:
     craft.lay_stat_corrections(t, ours)
     if t in craft.DURABILITY_CORRECTIONS:
         ours["max_break_abs"] = craft.DURABILITY_CORRECTIONS[t]
+    if rec.get('max_count') == 50:
+        ours['max_count'] = 100
     for key in SCALARS:
         if key in rec and key in p and key not in ours:
             want = rec[key]
@@ -221,6 +223,8 @@ def deliberate(t):
         p.update(quest=1, exchang=0)
     if root == items.HEAL and cat[t][1].startswith('Med_Battle_') and '_G' in cat[t][1]:
         p['heal_cost'] = int(p['heal_cost'] * 2.5 + 0.5)
+    if p.get("max_count") == 50:
+        p["max_count"] = 100
     return cmd, p
 
 

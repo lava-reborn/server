@@ -665,7 +665,9 @@ try:
             break
     check("run 1: the hunter kills the dump's bum", dead is not None, True)
     bum_cell = cell_of(h, bum, BUM_HOME)
-    got = h.until(lambda f: f[0] == "ss_loot", 5)
+    got = list(dead or [])
+    if not any(n == "ss_loot" for n, _ in got):
+        got += h.until(lambda f: f[0] == "ss_loot", 5)
     t_bum = time.time()
     check("  ..his bag lies where he fell", bags(got), [(1, [bum_cell])])
     t_throw0 = time.time()

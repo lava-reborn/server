@@ -84,6 +84,7 @@ os.environ["LAVA_QUESTS"] = _ON
 
 sys.path.insert(0, HERE)
 import accounts  # noqa: E402
+import storage
 import combat  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
@@ -447,6 +448,7 @@ class _Store(object):
     """What a corpse's bag is made through, and the log its killer keeps."""
 
     def __init__(self, open_types):
+        self.db = storage.SqliteDB(":memory:")
         self.open = list(open_types)
         self.made = []
 

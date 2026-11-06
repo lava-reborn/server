@@ -79,6 +79,7 @@ for _knob in ("LAVA_QUESTS", "LAVA_PLACEMENTS", "LAVA_PASSAGES", "LAVA_START",
 sys.path.insert(0, HERE)
 import accounts      # noqa: E402
 import bosses        # noqa: E402
+import storage
 import combat        # noqa: E402
 import encounters    # noqa: E402
 import inventory     # noqa: E402
@@ -509,6 +510,9 @@ try:
         """The calls of the store a corpse makes: its bag's rows, and where
         they lie (combat.RoomCombat.add_to_bag)."""
         serial = 0
+
+        def __init__(self):
+            self.db = storage.SqliteDB(":memory:")
 
         def create_item(self, owner, type_id, root, **fields):
             Loot.serial += 1

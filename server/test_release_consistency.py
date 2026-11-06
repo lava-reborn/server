@@ -75,9 +75,12 @@ class ReleaseConsistency(unittest.TestCase):
     def test_warehouse_keeps_its_daily_window(self):
         self.assertEqual(tuple(bosses.warehouse_hours_from(bosses.DEFAULT_WAREHOUSE_HOURS)), (1200,))
         self.assertEqual(bosses.DEFAULT_STAY, 60)
-        # Original warehouse labels are deliberately outside the camp clock edits.
-        self.assertFalse(any(text and 'Хозяин присутствует' in text
-                             for _, _, _, text in map_labels.load()))
+        # Only Abu's level requirement changed; its daily hours stay exact.
+        rows = [(x, y, text) for x, y, _, text in map_labels.load()
+                if text and 'Хозяин присутствует' in text]
+        self.assertEqual([(x, y) for x, y, _ in rows], [(6183, 1976)])
+        self.assertIn('17 уровня', rows[0][2])
+        self.assertEqual(times(rows[0][2]), (1200, 1260, 1140, 1155))
 
     def test_leader_hint_matches_one_ingot_without_changing_two_ingot_exchange(self):
         text = quests.QUESTS[10].texts[quests.START]
