@@ -172,6 +172,8 @@ check("the release's spec.xml says the server's minSkill",
       [int(m) for m in re.findall(r"<s id='\d+' minSkill='(\d+)'", spec_xml)],
       progression.SPEC_MIN_SKILL)
 check("in id order", re.findall(r"<s id='(\d+)'", spec_xml), [str(i) for i in range(progression.SPECS)])
+# Price ladder starts on a fresh character; the earlier reset keeps its slot.
+ch = Character()
 check("pistols are free at skill 0", ch.learn_spec(2), 0)
 check("and now count as learned", (ch.spec[2], ch.specs_learned()), ([0, 0, 1250], 1))
 check("buying it twice is refused", ch.learn_spec(2), progression.ERR_STATE)
@@ -422,18 +424,24 @@ class Client:
         self.s.sendall(text.encode(ENC) + b"\x00")
 
     def frames(self, wait=0.5):
-        """Whatever arrives within the window, decoded."""
-        deadline = time.time() + wait
-        while time.time() < deadline:
-            try:
-                chunk = self.s.recv(65536)
-            except socket.timeout:
-                break
-            if not chunk:
-                break
-            self.buf += chunk
-        out, self.buf = self.buf.split(b"\x00"), b""
-        return [decode(f.decode(ENC)) for f in out if f]
+        """Honor the requested read window and retain incomplete TCP frames."""
+        deadline = time.monotonic() + wait
+        timeout = self.s.gettimeout()
+        try:
+            while time.monotonic() < deadline:
+                self.s.settimeout(max(0.001, deadline - time.monotonic()))
+                try:
+                    chunk = self.s.recv(65536)
+                except socket.timeout:
+                    break
+                if not chunk:
+                    break
+                self.buf += chunk
+        finally:
+            self.s.settimeout(timeout)
+        complete = self.buf.split(b"\x00")
+        self.buf = complete.pop()
+        return [decode(f.decode(ENC)) for f in complete if f]
 
     def until(self, name, timeout=15, settle=0.5):
         """Frames up to and including the first one called name, plus
@@ -537,9 +545,9 @@ try:
     check("first spec still costs nothing", one(got, "userInfo_Player")["afro"], 1000)
     c.send("ss_upd;obj=x3;s_status=1;")
     got = c.until("userInfo_Player")
-    check("resetting shotgun spec restores the free first slot", one(got, "rp_info")["a_specs"], [-1])
+    check("resetting shotguns switches it off but preserves its slot", one(got, "rp_info")["a_specs"], [-1])
 
-    # Pistols: free, the first slot.
+    # Any specialization can fill the first vacant slot for free.
     c.send("ss_upd;obj=x2;s_status=2;")
     got = c.until("userInfo_Player")
     check("a purchase is acked, then pushed, then the purse",
@@ -550,15 +558,15 @@ try:
     check("with its xp and threshold", (rp["xp_specs"], rp["xp_max_specs"]), ([0], [1250]))
     check("and its attribute", (rp["a_attribs_mask"], rp["a_attribs"]), (1 << progression.PERCEPTION, [5]))
     check("skills are left alone", (rp["a_skills_mask"], rp["a_skills"]), (0, []))
-    check("the first one cost nothing", one(got, "userInfo_Player")["afro"], 1000)
+    check("pistols reuse the vacant first slot for free", one(got, "userInfo_Player")["afro"], 1000)
 
-    # Hand-to-hand: the second, 1000 afro.
+    # Filling a second simultaneous slot costs 1000 afro.
     c.send("ss_upd;obj=x0;s_status=2;")
     got = c.until("userInfo_Player")
-    check("the second is paid for", one(got, "userInfo_Player")["afro"], 0)
+    check("the second slot costs 1000 afro", one(got, "userInfo_Player")["afro"], 0)
     check("and reported learned", one(got, "rp_info")["a_specs"], [0])
 
-    # Blades: the third, 10 gold, and there is none.
+    # Expanding to three simultaneous specializations still costs 10 G.
     c.send("ss_upd;obj=x1;s_status=2;")
     got = c.until("userMsg")
     check("no gold, no third", [n for n, _p in got], ["cmdAck", "userMsg"])
@@ -566,12 +574,19 @@ try:
     check("and the player is told why, in ounces as the window prices it",
           one(got, "userMsg")["entry"], "Специализация стоит 10.00 G, у вас 0.00 G")
 
-    # Reset hand-to-hand.
+    # A reset keeps its capacity, and any choice can fill that vacancy.
     c.send("ss_upd;obj=x0;s_status=1;")
     got = c.until("userInfo_Player")
     check("a reset is acked and pushed", [n for n, _p in got], ["cmdAck", "rp_info", "userInfo_Player"])
     check("the spec is off again", one(got, "rp_info")["a_specs"], [-1])
     check("nothing is refunded", one(got, "userInfo_Player")["afro"], 0)
+    c.send("ss_upd;obj=x1;s_status=2;")
+    got = c.until("userInfo_Player")
+    check("a different spec fills the paid slot for free with empty purses",
+          (one(got, "cmdAck")["res"], one(got, "userInfo_Player")["afro"],
+           one(got, "userInfo_Player")["gold"]), (0, 0, 0))
+    c.send("ss_upd;obj=x1;s_status=1;")
+    c.until("userInfo_Player")
 
     # Closing the window registers no handler: an answer here would be
     # consumed by whatever the client asks next.

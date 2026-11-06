@@ -26,6 +26,20 @@ def __bfLootOpen(pos):
         this.loot = new(lol.core.player.Loot)
         this.loot.createSession(pos)
 
+def __bfLootReachable(loc, here, cell):
+    width = 30
+    height = 40
+    if lol.gpui.UserSettings.getSetting(lol.gpui.UserSettings.PATH_FINDING):
+        width = loc.locInfo.width
+        height = loc.locInfo.height
+    x = Math.max(0, Math.floor((cell.gx + here.gx - width) / 2))
+    y = Math.max(0, Math.floor((cell.gy + here.gy - height) / 2))
+    if Math.abs(cell.gx - here.gx) > width or Math.abs(cell.gy - here.gy) > height:
+        return False
+    path = loc.locationGrid.searchWay(here.gx - x, here.gy - y, cell.gx - x, cell.gy - y, x, y, width, height)
+    size = len(path)
+    return size > 0 and path[size - 1][0] == cell.gx and path[size - 1][1] == cell.gy
+
 def __bfLootGo(pos):
     if _global.__bfDefer(this, "gotoLoot", [pos]):
         return
@@ -37,19 +51,25 @@ def __bfLootGo(pos):
     if loc.locationGrid.getHexDistance(here, bag) <= Number("1.01"):
         this.createLoot(pos)
         return
-    choices = loc.locationGrid.getSiblings(bag)
+    choices = loc.locationGrid.getSiblings(bag).concat([])
     best = None
-    distance = 1000000
-    i = 0
-    while i < len(choices):
-        cell = choices[i]
-        if not cell.busy and not cell.alwaysBusy and not cell.unreachable:
-            d = loc.locationGrid.getHexDistance(here, cell)
+    while len(choices) > 0 and not best:
+        distance = 1000000
+        index = 0
+        i = 0
+        while i < len(choices):
+            d = loc.locationGrid.getHexDistance(here, choices[i])
             if d < distance:
-                best = cell
+                index = i
                 distance = d
-        i = i + 1
+            i = i + 1
+        cell = choices[index]
+        choices.splice(index, 1)
+        if not cell.busy and not cell.alwaysBusy and not cell.unreachable:
+            if _global.__bfLootReachable(loc, here, cell):
+                best = cell
     if best:
+        this.walker.removeEventListener("finishMove", this)
         this.stuff_param = pos
         this.stuff_func = this.createLoot
         this.walker.addEventListener("finishMove", this)

@@ -78,6 +78,7 @@ ENC = "utf-8"
 
 sys.path.insert(0, HERE)
 import accounts
+import storage
 import inventory
 import items
 import names
@@ -150,6 +151,10 @@ class FakeRoom:
 class FakeStore:
     def __init__(self, rows, broken=()):
         self.rows, self.broken = rows, set(broken)
+        self.db = storage.SqliteDB(':memory:')
+
+    def lock_quest_character(self, char_id):
+        return True
 
     def item(self, uniq):
         return self.rows.get(uniq)
@@ -201,7 +206,9 @@ inv.open_bank({"target": "40", "s_type": "3"})
 check("open: a failure before the answer is answered with one refusal",
       (sess.sent, inv.bank), ([("cmdAck", {"res": inventory.RES_REFUSED})], None))
 inv, sess, _rows = fake(FakeRoom(BANKER), broken=("character",))
-inv.open_bank({"target": "40", "s_type": "3"})
+from unittest.mock import patch
+with patch.object(inventory.bank_storage, 'consolidate'):
+    inv.open_bank({"target": "40", "s_type": "3"})
 check("open: a failure after the answer adds no second one", acks(sess), [0])
 inv, sess, rows = fake(FakeRoom(BANKER), broken=("update",))
 inv.bank = 40
@@ -594,11 +601,8 @@ try:
     a.send("ss_create;target=%d;s_type=3;" % safe_id)
     a.frames()
     a.send("ss_upd;obj=x%s;s_status=2;" % crates[0])
-    check("taking the crate back is not refused for weight: the window has"
-          " already asked the player (BankInterface)",
-          shape(a.frames()),
-          [("cmdAck", 0, None), ("ss_obj_status", 1, crates[0]),
-           ("ss_upd", inventory.BANK_CUR, "0")])
+    check("taking the crate back refuses overload on the server, leaving it stored",
+          shape(a.frames()), [("cmdAck", inventory.RES_OVERLOAD, None)])
     a.send("ss_upd;obj=x%s;s_status=1;" % rounds)
     check("and the rounds go back in for the road",
           [n for n, _ in a.frames()], ["cmdAck", "ss_obj_status", "ss_upd"])
@@ -632,10 +636,10 @@ try:
     walk(a, pos, beside(102, aaron_cell))
     a.send("ss_create;target=%d;s_type=3;" % aaron_id)
     check("2424 opens beside it: the same storage, capacity and load as"
-          " the Nubian safe left them", shape(a.frames()), open_frames(BIG, rounds_g))
+          " the Nubian safe left them", shape(a.frames()), open_frames(BIG, rounds_g + 40000))
     a.send("ss_get;slot=24;")
     check("one storage for every bank: the rounds put in at 5228 are here",
-          storage(a.frames()), [rounds])
+          storage(a.frames()), [rounds, crates[0]])
     a.send("q_co;obj_idx=0;mob=%d;q_id=%s;" % (aaron_id, delivery))
     got = a.frames()
     check("the delivery is handed in with the bank open",
@@ -650,7 +654,7 @@ try:
     check("then the bank tab still works: the rounds come out here",
           shape(a.frames()),
           [("cmdAck", 0, None), ("ss_obj_status", 1, rounds),
-           ("ss_upd", inventory.BANK_CUR, "0")])
+           ("ss_upd", inventory.BANK_CUR, "9c40")])
     a.send("ss_upd;obj=x0;s_status=0;")
     check("closed in silence", a.frames(), [])
 
@@ -662,7 +666,7 @@ try:
           (abri["can_banking"], abri["can_set_home"]), (1, 0))
     walk(a, pos, beside(188, abri_cell))
     a.send("ss_create;target=%d;s_type=3;" % abri_id)
-    check("and opens the same storage", shape(a.frames()), open_frames(BIG, 0))
+    check("and opens the same storage", shape(a.frames()), open_frames(BIG, 40000))
     a.send("ss_upd;obj=x%s;s_status=1;" % rounds)
     check("the rounds stored in Abri",
           [n for n, _ in a.frames()], ["cmdAck", "ss_obj_status", "ss_upd"])
@@ -685,9 +689,9 @@ try:
     walk(a, pos, beside(35, david_cell))
     a.send("ss_create;target=%d;s_type=3;" % david_id)
     check("after relogin: the bought capacity and the load are remembered",
-          shape(a.frames()), open_frames(BIG, rounds_g))
+          shape(a.frames()), open_frames(BIG, rounds_g + 40000))
     a.send("ss_get;slot=24;")
-    check("and the rounds are still in storage", storage(a.frames()), [rounds])
+    check("and the rounds are still in storage", storage(a.frames()), [rounds, crates[0]])
     st = accounts.Store(DB)
     alice_id = st.db.execute("SELECT id FROM characters WHERE name = 'Alice'").fetchone()["id"]
     check("one expansion written down", st.character(alice_id)["bank_steps"], 1)

@@ -87,7 +87,8 @@ async def exercise():
                 return 100, 0, 1, True
 
             rc.burst = burst
-            with patch.object(combat.production, 'mined_by'), \
+            with patch.object(combat.RoomCombat, 'materialize_loot'), \
+                    patch.object(combat.production, 'mined_by'), \
                     patch.object(combat.holdings, 'snapshot', return_value=None), \
                     patch.object(combat.mobs, 'adjacent', return_value=True), \
                     patch.object(combat, 'roll', return_value=True):

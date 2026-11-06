@@ -3181,6 +3181,26 @@ def injected():
     for name, params, body in battle['globals']:
         a.var('_global').push(name).function(params, body).op('setmember')
     wraps += battle['wraps']
+    from spec_access_client import patches as spec_access_patches
+    spec_access = spec_access_patches(Asm, UNDEF)
+    for name, params, body in spec_access['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += spec_access['wraps']
+    from bank_client import patches as bank_patches
+    bank = bank_patches(Asm, UNDEF)
+    for name, params, body in bank['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += bank['wraps']
+    from loot_controls_client import patches as loot_patches
+    loot = loot_patches(Asm, UNDEF)
+    for name, params, body in loot['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += loot['wraps']
+    from client_lifecycle import patches as lifecycle_patches
+    lifecycle = lifecycle_patches(Asm, UNDEF)
+    for name, params, body in lifecycle['globals']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    wraps += lifecycle['wraps']
     from chat_history import patches as history_patches
     history = history_patches(Asm, UNDEF)
     for name, params, body in history["globals"]:

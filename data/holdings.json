@@ -26,7 +26,7 @@
                    "title": "Восточный склад Донголы"},
   "wh_dn_ug": {"loc": 112, "boss": 7453, "flag": 1011, "box": 6829, "quest": 770, "min_level": 16,
                "title": "Южный склад Донголы"},
-  "wh_ah_center": {"loc": 128, "boss": 7454, "flag": 1011, "box": 6830, "quest": 771, "min_level": 19,
+  "wh_ah_center": {"loc": 128, "boss": 7454, "flag": 1011, "box": 6830, "quest": 771, "min_level": 17,
                    "title": "Центр Абу-Хамеда"}
  }
 }

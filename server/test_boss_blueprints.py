@@ -286,7 +286,8 @@ class BossBlueprints(unittest.TestCase):
                 quest_wants=lambda m, k: frozenset(),
                 settle_xp=lambda m: setattr(killer, 'level', 5),
                 corpse_gone=lambda *a: None, calm=lambda: None)
-            with patch.object(combat.production, 'mined_by'), \
+            with patch.object(combat.RoomCombat, 'materialize_loot'), \
+                    patch.object(combat.production, 'mined_by'), \
                     patch.object(combat.holdings, 'snapshot', return_value=None):
                 mob.cell = 0
                 combat.RoomCombat.kill(rc, mob, killer)

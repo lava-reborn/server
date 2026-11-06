@@ -1272,6 +1272,8 @@ def static_info(type_id):
         repair_cost = repair_policy.valuation(type_id, info[1])
         if repair_cost is not None:
             info[1]['repair_cost'] = repair_cost
+    if info and info[1].get('max_count') == 50:
+        info[1]['max_count'] = 100
     return info
 
 

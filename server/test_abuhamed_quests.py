@@ -494,11 +494,11 @@ try:
         sites = json.load(fh)["sites"]
     s = sites.get("wh_ah_center", {})
     check("the Центр: a site of data/holdings.json (128, its master 7454, the box 6830), the"
-          " box's row 771 the holders', at level 19 (L327), once a day, 48000 afro",
+          " box's row 771 the holders', at level 17 (release requirement), once a day, 48000 afro",
           ((s.get("loc"), s.get("boss"), s.get("box"), s.get("quest"), s.get("min_level")),
            real[BOX_ROW].holders, real[BOX_ROW].give, real[BOX_ROW].level,
            real[BOX_ROW].per_day, real[BOX_ROW].rew_afro, holdings.problems()),
-          ((128, 7454, 6830, BOX_ROW, 19), "wh_ah_center", [6830], 19, 1, 48000, []))
+          ((128, 7454, 6830, BOX_ROW, 17), "wh_ah_center", [6830], 17, 1, 48000, []))
     check("  ..in its own window of the label's «Дележ добычи с 19:00 до 19:15»: wh_box_ah",
           (sraw["windows"].get("wh_box_ah", {}).get("daily"),
            sraw["windows"].get("wh_box_ah", {}).get("minutes"),

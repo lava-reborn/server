@@ -12732,7 +12732,7 @@
       "per_day": 1,
       "service": true,
       "holders": "wh_ah_center",
-      "level": 19,
+      "level": 17,
       "q_type": 0,
       "why": "RECOVERED texts and pay, DESIGNED workings, as Вади-Хальфа's 765-767 and Донгола's 768-770 (the owner's «сделай потом абу хамед в таком же формате», 2026-10-14; the plan's decision 12): the money box of the Центр (6830, «Ящик с деньгами<Br>Главный склад Абу-Хамеда», location 128 stok_AH_vostok), «Патроны и афро владельцам склада (Бж.)» №0000771 (texts.xml 26363 name, 26370 start: «патроны и 48000 афро»), the series' seventh -- the levels of its bosses [8, 8, 12, 12, 16, 16, 17, 22] give 765-767 to Вади-Хальфа, 768-770 to Донгола and 771 to Абу-Хамед's Центр, whose master «[17] Хозяин склада» (7454, 9616) keeps it; 772 is the Ангары' 288 across the river, out of the game. Level 19, the map's L327 «Захват возможен игроками 19 уровня» (the master's [17] is weaker than the label). Less the tier and the hint of residence and citizenship (own_texts). 50 rounds of «7.62х54R $КС» (6099), DESIGNED, the cheapest round of the band's machine guns (the Печенег and the ПК the town sells). Only between 19:00 and 19:15 (data/schedule.json wh_box_ah, the label's «Дележ добычи с 19:00 до 19:15»), at the site's level, to a member of the clan holding wh_ah_center for a day at least, one character of an account a day (holders; holdings.box_refusal). A service outside the daily limit, once a day (per_day 1, the original's)."
     },

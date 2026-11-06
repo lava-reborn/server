@@ -388,7 +388,8 @@ check("the seven warehouses' names say the master's one window, the default's",
 check("  ..as the original's own words, each the file's one row over its cell, unedited",
       ({c: texts_at(out, *c) for c in WAREHOUSES},
        sorted((e["x"], e["y"]) for e in LABELS if (e["x"], e["y"]) in WAREHOUSES)),
-      ({c: texts_at(raw, *c) for c in WAREHOUSES}, []))
+      ({c: [t.replace('19 уровня', '17 уровня') if c == (6183,1976) else t
+             for t in texts_at(raw,*c)] for c in WAREHOUSES}, [(6183,1976)]))
 check("  ..and none of them names the bosses' hours any more",
       [(c, t) for c in WAREHOUSES for t in texts_at(out, *c) if "14:00" in t or "22:00" in t], [])
 check("  ..and Вади-Хальфа's three still share the box from 19:00 to 20:00, the window wh_box of"
@@ -429,7 +430,9 @@ check("every other name on the map that tells an hour or offers blueprints is on
              - set(CLOCK_CELLS) - set(WAREHOUSES)),
       sorted(set(ORIGINAL) | set(PRISONS)))
 check("  ..the warehouses' byte for byte as the file has them",
-      [rows_bytes(out, c) for c in WAREHOUSES], [rows_bytes(raw, c) for c in WAREHOUSES])
+      [rows_bytes(out,c) for c in WAREHOUSES],
+      [[r.replace('19 уровня'.encode(), '17 уровня'.encode()) for r in rows_bytes(raw,c)]
+       if c == (6183,1976) else rows_bytes(raw,c) for c in WAREHOUSES])
 check("  ..each byte for byte as the file has it, «Лагерь Большого Мвамбы» too, each under its name",
       [(rows_bytes(out, c), all(t.startswith(ORIGINAL.get(c, "Лагерь Большого Мвамбы"))
                                 for t in texts_at(out, *c))) for c in sorted(ORIGINAL) + [MWAMBA]],

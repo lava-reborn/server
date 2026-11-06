@@ -40,7 +40,7 @@ import storage  # noqa: E402
 
 checks = 0
 TABLES = ("mail", "map_marks", "items", "char_quests_done", "char_quests",
-          "char_stats", "online", "heartbeat", "admin_actions", "auction_lots",
+          "char_spec_access", "char_stats", "online", "heartbeat", "admin_actions", "auction_lots",
           "migrations", "trophies", "clan_ledger", "clan_relations", "clan_members",
           "clans", "characters", "accounts", "money_ledger", "char_lent", "ground",
           "boss_kills", "clan_holdings", "clan_holding_log", "site_orders")
