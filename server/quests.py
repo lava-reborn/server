@@ -864,6 +864,10 @@ def check_items(table=None):
 # intact. Both taking and handing in call acquisition_blocked before writes.
 # 943-947 award Paladin components; 960-964 assemble the five armour pieces.
 TEMPORARILY_DISABLED_QUESTS = frozenset(range(943, 948)) | frozenset(range(960, 965))
+# Preserve lesson definitions and journal ids, but close all paid academy XP.
+# Quest 967 (knives for the unarmed teacher) and entry/exit 965/966 stay open.
+DISABLED_ACADEMY_LESSONS = frozenset(range(12000, 12075))
+
 
 
 def acquisition_blocked(quest):
@@ -872,7 +876,7 @@ def acquisition_blocked(quest):
     Keep rows and journal instances intact so cancelling stays possible.
     Block the whole mixed reward rather than silently deleting a prize.
     """
-    if quest.type in TEMPORARILY_DISABLED_QUESTS:
+    if quest.type in TEMPORARILY_DISABLED_QUESTS or quest.type in DISABLED_ACADEMY_LESSONS:
         return True
     import items
     import craft
