@@ -3487,7 +3487,9 @@ class Session:
         if quests.acquisition_blocked(quest) or quest.over_cap(self.skill_level()) \
                 or not events.quest_open(quest.type, True):
             self.send("cmdAck", res=RES_NOT_AVAILABLE)
-            if quest.type in quests.TEMPORARILY_DISABLED_QUESTS:
+            if quest.type in quests.DISABLED_ACADEMY_LESSONS:
+                self.answer("Учебные занятия на получение опыта отключены. Задание можно отменить в журнале.")
+            elif quest.type in quests.TEMPORARILY_DISABLED_QUESTS:
                 self.answer("Задания на получение компонентов и сборку Паладина временно отключены.")
             return
         # A warehouse box's row: the hand-in asks the holders' gate again

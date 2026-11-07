@@ -506,7 +506,11 @@ try:
            sched.gates.get(BOX_ROW, (None, None))[1]),
           (["19:00"], 15, "wh_box_ah", "both"))
 
-    # The Академия.
+    # Definitions remain for old journal entries; every paid lesson is closed.
+    check("all 75 academy XP lessons are unavailable for acquisition and hand-in",
+          ({t for t in lessons if quests.acquisition_blocked(real[t])},
+           quests.DISABLED_ACADEMY_LESSONS), (set(lessons), frozenset(lessons)))
+    # Archived lesson definitions and amounts must still parse without changing.
     groups = {}
     for t in lessons:
         q = real[t]
