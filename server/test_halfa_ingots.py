@@ -382,11 +382,11 @@ check("a boss killed in his window stays away through a restart until the next o
 
 # --- the ingots --------------------------------------------------------------------------
 check("each ingot: its ounces in gold and at the one rate in afro, the article's weight,"
-      " fifty to a stack, changing hands",
+      " a hundred to a stack, changing hands",
       [tuple((items.params_of(t) or {}).get(k) for k in ("cost", "g_cost", "weight", "max_count",
                                                           "exchang", "quest"))
        for t in INGOTS],
-      [(n * RATE, n * OUNCE, n, 50, 1, 0) for n in (1, 5, 10)])
+      [(n * RATE, n * OUNCE, n, 100, 1, 0) for n in (1, 5, 10)])
 check("  ..by the original's names, every id in the launcher's table",
       [(names.ALL.get(items.STRING_ID_OFFSET + t), names.known(items.params_of(t)["name"]),
         names.known(items.params_of(t)["desc"])) for t in INGOTS],

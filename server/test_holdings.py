@@ -815,18 +815,18 @@ async def main():
     admit(falcons, dick)
     for s in (dora, dick):
         joined(s, 72)
-        level(s, 19)
+        level(s, 17)
         into(s, CENTER)
     ah_room = server.ROOMS.get(CENTER)
     ah_rc = combat.room_combat(ah_room, STORE)
     ah_boss = next(m for m in ah_rc.mobs.values() if m.type_id == AH_BOSS)
     ah_flag = next(e for e, n in ah_room.npcs.items() if n.type_id == FLAG)
     site = holdings.site_at(CENTER)
-    check("the Центр Абу-Хамеда (128) is a site of level 19, its master the boss whose kill"
+    check("the Центр Абу-Хамеда (128) is a site of level 17, its master the boss whose kill"
           " takes it, there at 20:00 alone; its box's row 771, the holders'",
           (site.key, site.min_level, holdings.site_for(CENTER, AH_BOSS).key,
            bosses.hours_of(AH_BOSS), site.box, AH_ROW.holders, AH_ROW.level),
-          ("wh_ah_center", 19, "wh_ah_center", [20 * 60], AH_BOX, "wh_ah_center", 19))
+          ("wh_ah_center", 17, "wh_ah_center", [20 * 60], AH_BOX, "wh_ah_center", 17))
     NOW[0] = at(20, 5, day=50)
     ah_rc.keep_hours()
     check("  ..20:05: the master is there", ah_boss.alive and ah_boss.eid in ah_room.npcs, True)

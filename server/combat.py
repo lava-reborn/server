@@ -57,6 +57,7 @@ import progression
 import quests
 import rooms
 import sets
+import storage
 import travel
 import trophies
 import world
@@ -3248,6 +3249,7 @@ class RoomCombat:
         # Before the ledger is settled and emptied: who brought it down is
         # who its quest rows of loot are rolled for (quest_wants).
         mob.quest_wants = self.quest_wants(mob, killer)
+        RoomCombat.materialize_loot(self, mob)
         # A warehouse's boss (holdings.py): who brought it down and for which
         # clan, as they stand now; the holding is settled when the corpse
         # fades (corpse_gone). A database that cannot be read costs the
@@ -3318,16 +3320,28 @@ class RoomCombat:
                                             sess.inv.bag_pieces())
         return frozenset(out)
 
+    def materialize_loot(self, mob):
+        """One loot creation per life, committed before its visible marker."""
+        if getattr(mob, '_loot_materialized', False):
+            return
+        with storage.atomic(self.store.db):
+            loot = self.drop_loot(mob)
+            until = {r['uniq']: time.time() + LOOT_LIFETIME for r in loot}
+            if loot:
+                self.store.lay_down(until, self.place, mob.cell)
+        mob._loot_materialized = True
+        self.add_to_bag(mob.cell, loot, until)
+
     def corpse_gone(self, mob, witnesses):
         """The figure fades (only for those who saw it: a lostUser about an
         id the client never met logs an event with no name), the bag drops
         where it fell, and the respawn clock starts -- for a boss, the clock
         on the wall: it is back at its next hour and not before
         (keep_hours)."""
+        RoomCombat.materialize_loot(self, mob)
         for sess in witnesses:
             if sess in self.room.players:
                 sess.send("lch", lostUser=mob.eid)
-        self.add_to_bag(mob.cell, self.drop_loot(mob))
         # A warehouse's boss settles its holding (holdings.settle) before the
         # hours below take it away -- and with LAVA_BOSS_HOURS=off, when it is
         # an ordinary mob, too. A database that will not take it costs the
@@ -3543,6 +3557,7 @@ class RoomCombat:
         if mob.alive or mob.away:
             return
         mob.reset()
+        mob._loot_materialized = False
         mob.cell = movement.get(self.room).free_cell(mob.home, exclude=mob)
         self.room.npcs[mob.eid] = rooms.NPC(mob.cell, mob.type_id, world.MOB)
         for sess in list(self.room.players):

@@ -1458,14 +1458,18 @@ try:
     _names = [n for n, _ in tail]
     check("the over-level shooter's kill awards no extra XP",
           [p for n, p in tail if n == "rp_info" and p.get("xp_skills_mask", 0) & 2], [])
-    got = c.until(lambda f: f[0] == "ss_loot", 4)
-    check("the corpse fades and a bag appears where it fell",
-          only(got, "lch", "ss_loot"),
-          [("lch", {"lostUser": dog}), ("ss_loot", {"s_status": 1, "hex": [dog_cell]})])
+    after_death = []
+    if not any(n == "lch" and p.get("lostUser") == dog for n, p in tail):
+        after_death = c.until(lambda f: f[0] == "lch" and f[1].get("lostUser") == dog, 4)
+    got = list(tail) + after_death
+    check("one bag appears where the dog fell before its corpse disappears",
+          [(n, p) for n, p in got if n == "ss_loot"
+           or (n == "lch" and p.get("lostUser") == dog)],
+          [("ss_loot", {"s_status": 1, "hex": [dog_cell]}), ("lch", {"lostUser": dog})])
     # From here the room's own life goes on around the checks: the dog
     # respawns whenever that falls, and the peace has to hold meanwhile;
     # both are gathered and judged at the end.
-    after = list(got)
+    after = list(after_death)
 
     # --- the bag -------------------------------------------------------------------------------
     if not progression.within_reach(pos, dog_cell, loc.width, loc.height):

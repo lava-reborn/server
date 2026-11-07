@@ -19,6 +19,8 @@ teacher, and that is the one part of this that has a command today.
 import os
 import time
 
+import storage
+
 ATTRIBS = 5    # сила, ловкость, телосложение, восприятие, интеллект
 SKILLS = 5     # ближний бой, стрельба, медицина, промышленность, производство
 SPECS = 15
@@ -247,6 +249,8 @@ class Character:
         self.bg_rep = 0
         self.bg_pen = 0
         self.max_specs = 1        # free specialisations; wiki: the first is free
+        self.spec_slots = 0     # bought capacity, independent of chosen specs
+        self._spec_slots_dirty = False
         # skill -> the fraction of a point hits on mobs left over
         # (carry_xp); a session's worth at most, never saved
         self.xp_carry = {}
@@ -287,6 +291,7 @@ class Character:
         ch.set_rep(row["rep"])
         ch.bg_rep, ch.bg_pen = row["bg_rep"], row["bg_pen"]
         ch.max_specs = row["max_specs"]
+        ch.spec_slots = store.spec_slots(char_id)
         ch.recalc()
         return ch
 
@@ -299,6 +304,15 @@ class Character:
     def save(self, store):
         if self.char_id is None:
             return
+        if self._spec_slots_dirty:
+            with storage.atomic(store.db):
+                self._save_state(store)
+                store.save_spec_slots(self.char_id, self.spec_slots)
+            self._spec_slots_dirty = False
+        else:
+            self._save_state(store)
+
+    def _save_state(self, store):
         store.save_stats(self.char_id, self.rows())
         store.save_character_state(
             self.char_id, hp=self.hp, sp=self.sp, afro=self.afro,
@@ -449,6 +463,9 @@ class Character:
             [s[2] for s in self.spec], specs, SPECS)
         import residence
         p.update(residence.frame(self))
+        next_afro, next_gold = self.spec_cost()
+        p.update(spec_slots=self.spec_capacity(),
+                 spec_next_afro=next_afro, spec_next_gold=next_gold)
         p.update(max_specs=self.max_specs, ap_max=self.ap_max,
                  max_weight=self.max_weight(), armor=int(self.armor),
                  lvl=self.level)
@@ -488,12 +505,16 @@ class Character:
     def specs_learned(self):
         return sum(1 for s in self.spec if s[0] >= 0)
 
+    def spec_capacity(self):
+        """Paid simultaneous slots survive every reset; the first is free."""
+        return min(len(LEARNABLE), max(self.max_specs, self.spec_slots))
+
     def spec_cost(self):
-        """(afro, gold) for the next specialisation: Training.getCost."""
-        n = self.specs_learned()
-        if n < self.max_specs:
+        """Any vacant slot is free. Only expanding capacity costs money."""
+        active = self.specs_learned()
+        if active < self.spec_capacity():
             return (0, 0)
-        return SPEC_COST.get(n, SPEC_COST_MAX)
+        return SPEC_COST.get(active, SPEC_COST_MAX)
 
     def learn_spec(self, idx):
         """Buy a specialisation. Returns 0, or a cmdAck refusal code.
@@ -515,6 +536,9 @@ class Character:
         if not self.can_afford(afro, gold):
             return ERR_MONEY
         self.add_money(-afro, -gold)
+        if self.specs_learned() >= self.spec_capacity():
+            self.spec_slots = self.specs_learned() + 1
+            self._spec_slots_dirty = True
         self.spec[idx] = [0, 0, SPEC_XP_START]
         return 0
 
@@ -522,7 +546,7 @@ class Character:
         """Reset a specialisation (wiki "Механизм сброса специализации"):
         its attribute drops by its level, it goes back to -1 with the first
         threshold, and nothing is refunded."""
-        if idx >= SPECS or self.spec[idx][0] < 0:
+        if not 0 <= idx < SPECS or self.spec[idx][0] < 0:
             return ERR_STATE
         lvl = self.spec[idx][0]
         a = SPEC_ATTRIB[idx]

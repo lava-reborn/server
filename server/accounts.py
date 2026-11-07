@@ -63,6 +63,11 @@ CREATE TABLE IF NOT EXISTS char_stats (
     xp_max  INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (char_id, kind, idx)
 );
+CREATE TABLE IF NOT EXISTS char_spec_access (
+    char_id INTEGER PRIMARY KEY REFERENCES characters(id),
+    unlocked_mask INTEGER NOT NULL DEFAULT 0,
+    opened_count INTEGER NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS items (
     -- The serial part of the item's wire id. AUTOINCREMENT on purpose: the
     -- client keeps every oid it has ever seen in ItemFactory.itemStore for
@@ -750,6 +755,7 @@ def migrate(db):
     run_once(db, "heal-relink-2026-09-23", relink_heals)
     run_once(db, "retire-black-market-placeholders-2026-09-28", retire_placeholders)
     run_once(db, "money-ledger-opening-2026-09-28", open_ledger)
+    run_once(db, "spec-access-history-2026-11-06", restore_spec_access)
     run_once(db, RETIRED_PLACES_FIX, relocate_retired_places)
     run_once(db, HALFA_CUT_FIX, relocate_halfa_cut)
     run_once(db, HALFA_FSC_FIX, relocate_halfa_fsc)
@@ -781,6 +787,32 @@ def migrate(db):
                         " a retired thing by", RETIRED_ITEMS_FIX)
         else:
             run_once(db, RETIRED_ITEMS_FIX, lambda d: retire_items(d, *test))
+
+
+def restore_spec_access(db):
+    """Recover simultaneous capacity, never the union of previously tried specs.
+
+    A payment's ordinal proves a minimum capacity even after a reset.
+    Distinct historical choices must not be counted as extra paid slots.
+    """
+    access = {int(r['id']): 0 for r in db.execute('SELECT id FROM characters')}
+    for row in db.execute("SELECT char_id, idx FROM char_stats WHERE kind = 'spec' AND value >= 0"):
+        if row['char_id'] in access and row['idx'] in progression.LEARNABLE:
+            access[row['char_id']] += 1
+    for row in db.execute("SELECT DISTINCT char_id, ref, afro, gold FROM money_ledger"
+                          " WHERE source = 'spec' AND (afro < 0 OR gold < 0)"):
+        if row['char_id'] not in access or row['ref'] not in progression.LEARNABLE:
+            continue
+        capacity = access[row['char_id']]
+        for ordinal, (afro, gold) in progression.SPEC_COST.items():
+            if (afro and -row['afro'] >= afro) or (gold and -row['gold'] >= gold):
+                capacity = max(capacity, ordinal + 1)
+        if -row['gold'] >= progression.SPEC_COST_MAX[1]:
+            capacity = max(capacity, max(progression.SPEC_COST) + 2)
+        access[row['char_id']] = capacity
+    db.executemany('INSERT INTO char_spec_access (char_id, unlocked_mask, opened_count)'
+                   ' VALUES (?, 0, ?) ON CONFLICT (char_id) DO NOTHING',
+                   list(access.items()))
 
 
 def ran(db, name):
@@ -1549,6 +1581,8 @@ def seed_stats(db, char_id):
                ("char_id", "kind", "idx", "value", "xp", "xp_max"),
                [(char_id,) + r for r in progression.starting_rows()],
                conflict=("char_id", "kind", "idx"))
+    db.replace('char_spec_access', ('char_id', 'unlocked_mask', 'opened_count'),
+               [(char_id, 0, 0)], conflict=('char_id',))
     db.execute("UPDATE characters SET afro = ?, gold = 0, max_specs = 1,"
                " level = 0, hp = NULL, sp = NULL WHERE id = ?",
                (progression.START_AFRO, char_id))
@@ -1968,6 +2002,24 @@ class Store:
                                (char_id,)).fetchone()
 
     # --- progression -----------------------------------------------------
+    def spec_slots(self, char_id):
+        # Retain the draft column names for existing local tester databases.
+        # opened_count now stores capacity; the old identity mask is unused.
+        row = self.db.execute('SELECT opened_count FROM char_spec_access'
+                              ' WHERE char_id = ?', (char_id,)).fetchone()
+        return int(row['opened_count']) if row else 0
+
+    def save_spec_slots(self, char_id, capacity):
+        """Capacity can only grow, inside the same transaction as its fee."""
+        if not 0 <= capacity <= len(progression.LEARNABLE):
+            raise ValueError('invalid specialization capacity')
+        self.db.execute('INSERT INTO char_spec_access (char_id, unlocked_mask, opened_count)'
+                        ' VALUES (?, 0, ?) ON CONFLICT (char_id) DO UPDATE SET'
+                        ' opened_count = CASE WHEN char_spec_access.opened_count > excluded.opened_count'
+                        ' THEN char_spec_access.opened_count ELSE excluded.opened_count END',
+                        (char_id, capacity))
+        self.db.commit()
+
     def load_stats(self, char_id):
         return self.db.execute(
             "SELECT kind, idx, value, xp, xp_max FROM char_stats"

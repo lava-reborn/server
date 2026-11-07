@@ -522,7 +522,7 @@ try:
                             ("object", combat.OBJECT_RESPAWN_DELAY)):
             scheduled = []
             mob = SimpleNamespace(eid=1, cell=10, type_id=MINER,
-                                  stats=SimpleNamespace(role=role))
+                                  stats=SimpleNamespace(role=role), _loot_materialized=True)
             rc = SimpleNamespace(room=SimpleNamespace(loc=SimpleNamespace(id=lid)),
                                  escorts=[], bosses=[], respawn=lambda m: None,
                                  drop_loot=lambda m: [], add_to_bag=lambda *args: None)
@@ -857,7 +857,7 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
                and mobs.stats(t).can_attack}
     reach = max([mobs.stats(types[e]).aggro for e in hostile] or [0]) + 0.5
     out = []
-    where = positions(got)
+    where = dict(c.scene_cells)
     for eid in [e for e, t in types.items() if t == want and e not in done]:
         home = where.get(eid)
         if home is None:

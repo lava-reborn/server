@@ -48,6 +48,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import bosses        # noqa: E402
 import camp_elites   # noqa: E402
+import storage
 import combat        # noqa: E402
 import mobs          # noqa: E402
 import names         # noqa: E402
@@ -259,6 +260,7 @@ class _Store(object):
     """What a corpse's bag is made through: rows with serials, remembered."""
 
     def __init__(self):
+        self.db = storage.SqliteDB(":memory:")
         self.made = []
 
     def create_item(self, owner, type_id, root, **fields):

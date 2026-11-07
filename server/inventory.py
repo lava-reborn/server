@@ -78,6 +78,7 @@ import secrets
 import time
 from statistics import median
 
+import bank_storage
 import craft
 import gold_trade
 import holdings
@@ -2651,6 +2652,7 @@ class Inventory:
                      " (a click on the way past, or a forged frame)",
                      target, self.sess.pos, entry[0])
         self.trade = None
+        bank_storage.consolidate(self.store, self.char_id, BANK)
         self.bank = target
         self.ack(RES_OK)
         self.push_bank_max()
@@ -2694,45 +2696,97 @@ class Inventory:
             self.ack(RES_REFUSED)
 
     def bank_put(self, p):
-        """s_status=1: a thing from the bag into storage.
-
-        Only the bag: the bank window shows no clothes and no hands, so a
-        worn or held id is a stale or forged one. A part of a stack arrives
-        as two commands -- ss_heap_c splits it (BankInterface.separateAck)
-        and the part that stayed under the old id is what is put -- so a
-        put always moves a whole row. Quest items may go in: the wiki
-        advises keeping them there.
-        """
-        row = self.find(p.get("obj"))
-        if not row or row["slot"] != BAG:
-            self.ack(RES_NOT_FOUND)
-            return
-        cur, top = self.bank_weight(), self.bank_max()
-        if cur + weight_of(row) > top:
-            self.ack(RES_BANK_FULL)
-            self.sess.say("Хранилище заполнено: занято %g кг из %g кг"
-                          % (cur / 1000.0, top / 1000.0))
-            return
-        self.forget_reload(row["uniq"])
-        self.store.update_item(row["uniq"], slot=BANK)
-        self.ack(RES_OK)
-        self.push_status(row, 0)
-        self.push_bank_cur()
+        self.bank_transfer(p, True)
 
     def bank_get(self, p):
-        """s_status=2: a stored thing back into the bag.
+        self.bank_transfer(p, False)
 
-        Never refused for weight: BankInterface asks "При взятии вещи вы
-        будете перегружены. Взять?" itself and sends the request only once
-        the player agrees, so a refusal here would overrule the answer.
+    def bank_transfer(self, p, putting):
+        """The modern bank sends an expected size and one session request token.
+
+        No optimistic mutation: one committed operation, then changed rows only.
+        A legacy bank cannot interpret merged stacks, so asks for an update.
         """
-        row = self.find_banked(p.get("obj"))
-        if not row:
-            self.ack(RES_NOT_FOUND)
+        if 'bank_request' not in p:
+            self.bank_legacy_transfer(p, putting)
             return
-        self.store.update_item(row["uniq"], slot=BAG)
+        try:
+            count, expected = int(p.get('bank_count', 0)), int(p.get('bank_expected', 0))
+            token = int(p.get('bank_request', 0))
+            if not (0 < token <= 2**53 - 1 and 0 < count <= expected <= bank_storage.MAX_COUNT):
+                raise bank_storage.Refused('Обновите клиент или выберите количество заново')
+            signature = (str(p.get('obj')), count, expected, putting)
+            recent = getattr(self, '_bank_requests', {})
+            if token in recent:
+                self.ack(RES_OK if recent[token] == signature else RES_REFUSED)
+                return
+            if token <= getattr(self, '_bank_last_request', 0):
+                self.ack(RES_REFUSED)
+                return
+            result = bank_storage.transfer(self, p.get('obj'), count, expected, putting)
+        except bank_storage.Refused as exc:
+            self.sess.say(str(exc))
+            self.ack(RES_REFUSED)
+            return
+        except (TypeError, ValueError, OverflowError):
+            self.ack(RES_REFUSED)
+            return
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return
+        recent[token] = signature
+        if len(recent) > 64:
+            del recent[next(iter(recent))]
+        self._bank_requests = recent
+        self._bank_last_request = token
         self.ack(RES_OK)
-        self.push_status(row, 1)
+        bank = []
+        for old, new in result.changes:
+            if old and old['slot'] == BAG and (new is None or new['slot'] != BAG):
+                self.forget_reload(old['uniq'])
+                self.push_status(old, 0)
+            if new and new['slot'] == BAG:
+                if old is None or old['slot'] != BAG:
+                    self.push_status(new, 1)
+                # A new id requests DI through ItemFactory itself. Existing
+                # ids need an update because their count may have changed.
+                if old is not None:
+                    self.push_di(new)
+            if old and old['slot'] == BANK and (new is None or new['slot'] != BANK):
+                bank.append(oid_of(old) + ':0')
+            if new and new['slot'] == BANK:
+                bank.append(oid_of(new) + ':' + str(new['count']))
+        self.send('ss_upd', s_status=7, obj=EMPTY, bank_delta=Str(','.join(bank)))
+        # The delta carries heap sizes; a newly seen bank id requests its
+        # other properties once through the normal ItemFactory queue.
+        self.send("ss_upd", s_status=BANK_CUR, obj=BigUInt("%x" % result.bank_weight))
+
+    def bank_legacy_transfer(self, p, putting):
+        """Old whole-row protocol: preserve its id and never predict a merge."""
+        with storage.atomic(self.store.db):
+            if not self.store.lock_quest_character(self.char_id):
+                self.ack(RES_REFUSED)
+                return
+            row = self.find(p.get('obj')) if putting else self.find_banked(p.get('obj'))
+            if row is None or (putting and row['slot'] != BAG):
+                self.ack(RES_NOT_FOUND)
+                return
+            if putting and self.bank_weight() + weight_of(row) > self.bank_max():
+                self.ack(RES_BANK_FULL)
+                self.sess.say('Хранилище заполнено')
+                return
+            if not putting:
+                if self.total_weight() + weight_of(row) > self.carry_limit():
+                    self.ack(RES_OVERLOAD)
+                    return
+                if row['root'] in items.HEAPABLE_ROOTS and row['count'] > items.params_of(row['type_id'])['max_count']:
+                    self.sess.say('Обновите клиент, чтобы взять часть стопки')
+                    self.ack(RES_REFUSED)
+                    return
+            self.store.update_item(row['uniq'], slot=BANK if putting else BAG)
+        self.forget_reload(row['uniq'])
+        self.ack(RES_OK)
+        self.push_status(row, 0 if putting else 1)
         self.push_bank_cur()
 
     def bank_increase(self):
