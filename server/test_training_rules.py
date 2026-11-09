@@ -34,3 +34,8 @@ class TrainingRules(unittest.TestCase):
                     {'ammo_modifiers': 1}, {'broken_armour': 'yes'}, {'attributes': [1] * 4}):
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 Rules.parse(raw)
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(TrainingRules)

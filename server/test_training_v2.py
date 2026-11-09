@@ -244,3 +244,8 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(mob.stats.attack_ap,items.params_of(mob.stats.weapon_type_id)['fire_costs'][0])
         self.assertEqual(tg.mobs.stats(source).__dict__,original)
         self.unchanged()
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(TrainingV2)

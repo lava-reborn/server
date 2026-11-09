@@ -21,6 +21,7 @@ import training_mobs
 import training_sets
 import training_legacy
 import training_ammo
+import training_labels
 import training_party
 import combat
 import craft
@@ -191,7 +192,7 @@ def item_catalogue():
                     items.WEAR: 'armour', items.HEAL: 'medicine', items.AMMO: 'ammo'}[root]
         if root == items.WEAR and (p.get('slot_type', -1) + inventory.HEAD) == inventory.BELT:
             category = 'pouch'
-        label = names.text(items.STRING_ID_OFFSET + type_id).partition('$')[0]
+        label = training_labels.title(type_id)
         if root in (items.FIRE_ARM, items.COLD_ARM) and type_id in training_ammo.SPECIAL_WEAPONS:
             category = 'experimental_weapon'
         elif root in (items.FIRE_ARM, items.COLD_ARM) and (
@@ -602,6 +603,7 @@ def clone_class(base):
             if self.inv.store.has_quest(self.char_id, EXIT_QUEST):
                 raise ValueError('Задание уже взято')
             q_id = self.inv.store.take_quest(self.char_id, EXIT_QUEST, {'obj': 1}, True)
+            self.ground.save_settings()
             self.send('cmdAck', res=0)
             cmd, fields = quest.di_frame(q_id, {'obj': 1}, True)
             self.send(cmd, **fields)
@@ -621,6 +623,7 @@ def clone_class(base):
             if not row or row['char_id'] != self.char_id or row['type'] != EXIT_QUEST:
                 raise ValueError('Задание недоступно')
             self.inv.store.drop_quest(q_id, self.char_id)
+            self.ground.save_settings()
             self.send('cmdAck', res=0)
 
         def cmd_q_di(self, p):
@@ -898,6 +901,7 @@ class Ground:
         self.applied_profile = None
         self.outfit_revision = 0
         self.closed = False
+        self.inside = False
         self.pending = None
         self.last_request = 0.0
         self.last_catalogue_request = 0.0
@@ -932,6 +936,8 @@ class Ground:
             self.clone.loc = loc
             self.clone.pos = control_cell(self.location)
             self.apply(self.clone, self.profile)
+            if isinstance(saved, dict) and saved.get('inside') is True and saved.get('exit_quest') is True:
+                self.store.take_quest(self.clone.char_id, EXIT_QUEST, {'obj': 1}, True)
         except Exception:
             self.store.close()
             raise
@@ -1034,7 +1040,9 @@ class Ground:
 
     def save_settings(self):
         self.owner.inv.store.save_training_profile(self.owner.char_id, dict(
-            version=1, player=self.profile, opponent=self.opponent, location=self.location, rules=self.rules.as_dict(),
+            version=1, inside=self.inside, room=self.room.key[1],
+            exit_quest=self.inside and self.store.has_quest(self.clone.char_id, EXIT_QUEST),
+            player=self.profile, opponent=self.opponent, location=self.location, rules=self.rules.as_dict(),
             mob=self.mob_type, spawn_point=self.spawn_point, stationary=int(self.stationary), mode=self.mode,
             mob_health=self.mob_health, mob_damage=self.mob_damage))
 
@@ -1555,16 +1563,21 @@ class Ground:
                 self.store.delete_item(row['uniq'])
             self.enemy = None
 
-    def exit(self, notify=True):
+    def exit(self, notify=True, suspend=False):
         if self.closed:
             return
+        was_inside = self.inside
+        try:
+            self.remember_outfit()
+            self.inside = bool(suspend)
+            self.save_settings()
+        except Exception:
+            self.inside = was_inside
+            if not suspend:
+                raise  # Do not report an explicit exit before presence commits.
+            log.exception('Could not checkpoint training for character %s', self.owner.char_id)
         self.closed = True
         try:
-            try:
-                self.remember_outfit()
-                self.save_settings()
-            except Exception:
-                log.exception('Could not save training preset for character %s', self.owner.char_id)
             self.hide_corpse()
             if self.timer:
                 self.timer.cancel()
@@ -1629,32 +1642,79 @@ def enter(owner, p):
                 training_party.join(ground, prepared[0].room)
             prepared.append(ground)
         for ground in prepared:
-            participant = ground.owner
-            participant.windows_gone()
-            participant.cancel_passage()
-            participant.cancel_way()
-            participant.cancel_travel()
-            participant.pos = participant.live_cell()
-            participant.leave_room()
-            participant.training_return_ap = participant.combat.ap
-            participant.training_ground = ground
-            ACTIVE.add(ground)
             activated.add(ground)
-            ground.touch()
-            participant.send('tg', op='types', copies=list(training_items.SOURCES), sources=list(training_items.SOURCES.values()),
-                             lines=[item_line(source) for source in training_items.SOURCES.values()],
-                             costs=[training_items.REFERENCE_PRICES[source][0] for source in training_items.SOURCES.values()],
-                             gold_costs=[training_items.REFERENCE_PRICES[source][1] for source in training_items.SOURCES.values()],
-                             price_packs=[training_items.REFERENCE_PRICES[source][2] for source in training_items.SOURCES.values()],
-                             labels=[item_catalogue()[source][2] for source in training_items.SOURCES.values()])
-            ground.state()
-            ground.clone.enter_location()
+            activate(ground)
         training_party.refresh(prepared[0])
     except Exception:
         for ground in reversed(prepared):
-            ground.exit(notify=ground in activated)
+            try:
+                ground.exit(notify=ground in activated)
+            except Exception:
+                ground.exit(notify=False, suspend=True)
         raise
 
+
+
+def activate(ground):
+    participant = ground.owner
+    # Commit membership before removing the real avatar or sending clone data.
+    ground.inside = True
+    ground.save_settings()
+    participant.windows_gone()
+    participant.cancel_passage()
+    participant.cancel_way()
+    participant.cancel_travel()
+    participant.pos = participant.live_cell()
+    participant.leave_room()
+    participant.training_return_ap = participant.combat.ap
+    participant.training_ground = ground
+    ACTIVE.add(ground)
+    ground.touch()
+    participant.send('tg', op='types', copies=list(training_items.SOURCES), sources=list(training_items.SOURCES.values()),
+                     lines=[item_line(source) for source in training_items.SOURCES.values()],
+                     costs=[training_items.REFERENCE_PRICES[source][0] for source in training_items.SOURCES.values()],
+                     gold_costs=[training_items.REFERENCE_PRICES[source][1] for source in training_items.SOURCES.values()],
+                     price_packs=[training_items.REFERENCE_PRICES[source][2] for source in training_items.SOURCES.values()],
+                     labels=[item_catalogue()[source][2] for source in training_items.SOURCES.values()])
+    ground.state()
+    ground.clone.enter_location()
+
+
+def resume(owner):
+    """Restore membership, never a real character or a caller-selected room."""
+    current = getattr(owner, 'training_ground', None)
+    if current is not None:
+        current.clone.enter_location()
+        return True
+    saved = owner.inv.store.training_profile(owner.char_id)
+    if not isinstance(saved, dict) or saved.get('inside') is not True:
+        return False
+    if not ENABLED or len(ACTIVE) >= MAX_SESSIONS:
+        owner.say('Полигон временно недоступен. Его настройки сохранены; повторите вход в игру позже.')
+        return False
+    ground = None
+    try:
+        ground = Ground(owner)
+        visit = saved.get('room')
+        if isinstance(visit, str) and re.fullmatch('[0-9a-f]{32}', visit):
+            shared = next((peer.room for peer in ACTIVE
+                           if not peer.closed and peer.room.key[1] == visit), None)
+            if shared is not None:
+                training_party.join(ground, shared)
+                ground.clone.pos = training_party.free_spawn(
+                    shared, control_cell(ground.location), excluded=ground.clone)
+            else:
+                ground.room.key = (ground.location, visit)
+        activate(ground)
+        training_party.refresh(ground)
+        return True
+    except Exception:
+        log.exception('Could not resume training for character %s', owner.char_id)
+        if ground is not None:
+            ground.exit(notify=False, suspend=True)
+        owner.send('tg', op='exit', active=0)
+        owner.say('Не удалось загрузить полигон. Основной персонаж сохранён; повторите вход позже.')
+        return False
 
 def preload():
     training_rules.current()
@@ -1679,7 +1739,6 @@ def handle(owner, cmd, p):
             else:
                 raise ValueError('Нет активной тренировки')
         elif cmd == 'logout':
-            ground.exit(notify=False)
             owner.close(force=True)
         else:
             ground.touch()

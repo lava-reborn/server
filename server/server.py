@@ -766,7 +766,7 @@ class Session:
         """
         ground = getattr(self, 'training_ground', None)
         if ground is not None:
-            ground.exit(notify=False)
+            ground.exit(notify=False, suspend=True)
         if self.closed and (not force or self.linger is None):
             return
         if not force and not self.closed and self.should_linger():
@@ -1343,6 +1343,11 @@ class Session:
         # The same for a clan: the client's own fellow, a member's standings,
         # "online" to the roster holders. Also once a session.
         CLANS.online(self)
+        # Check the linked range once per selected character, not per move/map.
+        if getattr(self, 'training_resume_char', None) != self.char_id:
+            self.training_resume_char = self.char_id
+            if training_ground.resume(self):
+                return
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork. ws is the
         # room's actual war state, not the file's war flag: the flag only

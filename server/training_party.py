@@ -106,7 +106,7 @@ def relocate(ground, location):
     training.geometry(location)
     loc = copy.copy(training.arena_location(location))
     loc.spawns, loc.pvp = [], 1
-    room = training.TrainingRoom(loc, rooms.IdAllocator(), {}, key=(location, ground.token))
+    room = training.TrainingRoom(loc, rooms.IdAllocator(), {}, key=(location, old.key[1]))
     room.npcs.clear()
     room.ground, room.grounds, room.owner_ids = ground, {}, dict(old.owner_ids)
     if old.combat.timer:

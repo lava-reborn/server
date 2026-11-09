@@ -87,3 +87,8 @@ class LegacyTraining(unittest.TestCase):
             self.assertEqual(training.LOCATIONS[location][0],computer.cell(training.ARENA_WIDTH))
             self.assertTrue(training.progression.within_reach(training.control_cell(location),
                 computer.cell(training.ARENA_WIDTH),training.ARENA_WIDTH,training.ARENA_HEIGHT))
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(LegacyTraining)

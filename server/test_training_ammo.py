@@ -115,3 +115,8 @@ class TrainingAmmunition(unittest.IsolatedAsyncioTestCase):
                 self.assertGreater(result.max_range,0)
                 self.assertGreaterEqual(result.dmax,result.dmin)
                 self.assertGreaterEqual(result.sdmax,result.sdmin)
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(TrainingAmmunition)

@@ -55,6 +55,10 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         self.before = list(self.store.db._db.iterdump())
 
     async def asyncTearDown(self):
+        # Close every shared visitor before closing their common real store.
+        for ground in tuple(tg.ACTIVE):
+            if ground.owner.inv.store is self.store:
+                ground.exit(notify=False)
         if self.s.training_ground:
             self.s.training_ground.exit(notify=False)
         self.flag.stop()
