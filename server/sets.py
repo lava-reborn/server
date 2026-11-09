@@ -266,20 +266,32 @@ def _load():
 SETS, SET_OF, ITEMS = _load()
 
 
+def record_of(set_type):
+    if set_type is not None and set_type >= 80000:
+        import training_sets
+        return training_sets.records().get(set_type)
+    return SETS.get(set_type)
+
+
 def set_of(type_id):
     """The set a type belongs to, or 0 -- which is what ss_si_wear says for none."""
-    return SET_OF.get(training_items.source_type(type_id), 0)
+    if training_items.is_copy(type_id):
+        import training_sets
+        record = training_sets.for_source(training_items.source_type(type_id))
+        if record:
+            return record[0]
+    return SET_OF.get(type_id, 0)
 
 
 def variant_of(type_id):
     """The variant of the set a piece is in (VARIANTS), "" for none."""
-    s = SETS.get(SET_OF.get(training_items.source_type(type_id)))
+    s = record_of(set_of(type_id))
     return s["variant"] if s else ""
 
 
 def slot_of(type_id):
     """The slot a piece fills in its set (SLOTS), or None."""
-    s = SETS.get(SET_OF.get(training_items.source_type(type_id)))
+    s = record_of(set_of(type_id))
     if not s:
         return None
     return next(slot for slot, t in s["members"].items() if t == training_items.source_type(type_id))
@@ -319,7 +331,7 @@ def item_descs():
 def described(type_id):
     """Whether the file gives this piece a description of its own -- and so
     whether ss_si_wear may carry its id even where the original has none."""
-    s = SETS.get(SET_OF.get(training_items.source_type(type_id)))
+    s = record_of(set_of(type_id))
     return bool(s and training_items.source_type(type_id) in s["descs"])
 
 
@@ -337,7 +349,7 @@ def fallback(type_value):
 
 def frame(set_type):
     """The ss_si_set parameters for one set, the keys SetObject.initSet reads."""
-    s = SETS.get(set_type)
+    s = record_of(set_type)
     if s is None:
         return fallback(set_type)
     p = dict(type=set_type, res=s["res"], name=NAME_ID_OFFSET + set_type,
@@ -366,7 +378,7 @@ def pieces(worn):
     """
     out = {}
     for type_id in worn:
-        s = SET_OF.get(training_items.source_type(type_id))
+        s = set_of(type_id)
         if s:
             out[s] = out.get(s, 0) + 1
     return out
@@ -382,7 +394,7 @@ def bonuses(worn):
     """
     total = zero()
     for set_type, n in pieces(worn).items():
-        for k, b in SETS[set_type]["bonus"].items():
+        for k, b in record_of(set_type)["bonus"].items():
             if k <= n:
                 for key in SCALARS:
                     total[key] += b[key]
@@ -407,8 +419,8 @@ def look(worn):
     worn = list(worn)
     if len(worn) != len(SLOTS) or any(t is None for t in worn):
         return 0
-    kinds = {SET_OF.get(training_items.source_type(t), 0) for t in worn}
+    kinds = {set_of(t) for t in worn}
     if len(kinds) != 1:
         return 0
     set_type = kinds.pop()
-    return SETS[set_type]["res"] if set_type else 0
+    return record_of(set_type)["res"] if set_type else 0

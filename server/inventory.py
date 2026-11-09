@@ -675,7 +675,7 @@ def armour_durability_ratio(type_id, base):
     Catalogue data is immutable during a server run; no inventory/DB reads.
     """
     type_id = setcraft.base_of(type_id)
-    current = sets.SETS.get(sets.set_of(type_id))
+    current = sets.record_of(sets.set_of(type_id))
     if current is None:
         return 1.0
     slot = sets.slot_of(type_id)
@@ -726,6 +726,7 @@ def weapon_wear_references():
 
 @lru_cache(maxsize=4096)
 def weapon_durability_ratio(type_id, base):
+    type_id = training_items.source_type(type_id)
     mod = craft.mod_of(type_id)
     type_id = mod[0] if mod else type_id
     params = items.params_of(type_id) or {}
@@ -1120,7 +1121,8 @@ class Inventory:
         ground = getattr(self.sess, "ground", None)
         if training_items.is_copy(type_id) and (ground is None or self.store is not ground.store):
             raise ValueError("Training equipment is restricted to the private range")
-        if items.acquisition_blocked(type_id):
+        if items.acquisition_blocked(type_id) and not (
+                training_items.is_copy(type_id) and ground is not None and self.store is ground.store):
             raise ValueError("Equipment above level %d is not released" % items.PLAYER_GEAR_MAX_LEVEL)
         f = new_fields(type_id, count)
         f["slot"] = slot

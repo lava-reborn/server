@@ -9,6 +9,7 @@ LAST = 65535
 SOURCES = {}
 COPIES = {}
 FRAMES = {}
+REFERENCE_PRICES = {}
 PATH = Path(__file__).resolve().parents[1] / 'data' / 'training_items.json'
 # Only combat/handling data may differ; identity, transfers and currencies cannot.
 FIELDS = frozenset(('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max',
@@ -64,6 +65,24 @@ def candidate(base, changes):
     return result
 
 
+def validate_ammunition(frames, roots):
+    """Check both directions once at preparation; never during shots/loading."""
+    import items
+    if set(frames) != set(roots):
+        raise ValueError('Training frame/root mismatch')
+    ammunition = {t for t, root in roots.items() if root == items.AMMO}
+    used = set()
+    for weapon, root in roots.items():
+        if root != items.FIRE_ARM:
+            continue
+        compatible = frames[weapon][1].get('comp_array', ())
+        if not compatible or any(rounds not in ammunition for rounds in compatible):
+            raise ValueError('Training weapon has unavailable ammunition: %s' % weapon)
+        used.update(compatible)
+    if ammunition - used:
+        raise ValueError('Training ammunition has no weapon: %s' % sorted(ammunition - used))
+
+
 def prepare(sources):
     if COPIES:
         return
@@ -77,20 +96,34 @@ def prepare(sources):
         raise ValueError('Unknown training override source')
     copies = {t: FIRST + i for i, t in enumerate(originals)}
     frames = {}
+    prices = {}
     for source, target in copies.items():
         command, base = items.static_info(source)
-        params = candidate(base, overrides.get(str(source), {}))
-        import training_rules
-        rules = training_rules.current()
-        if 'armor_class' in params:
-            params['armor_class'] *= rules.armour
-        if 'target_size' in params:
-            params['target_size'] = [v * rules.spread for v in params['target_size']]
-        params.update(type=target, exchang=0)
+        import training_legacy
+        import training_ammo
+        base = training_ammo.parameters(source, training_legacy.apply(source, copy.deepcopy(base)))
+        prices[source] = (base.get('cost', 0) or 0, base.get('g_cost', 0) or 0,
+                          (base.get('sell_num', 1) or 1) if items.root_of(source) == items.AMMO else 1)
+        import training_balance
+        params = training_balance.apply(source, candidate(base, overrides.get(str(source), {})))
+        if source in training_legacy.CLASSIC:
+            params = training_legacy.apply(source, params)
+        params = training_ammo.parameters(source, params)
+        import training_effects
+        effect = training_effects.definition(source)
+        if effect is not None:
+            params.update(bonus_act_time=effect['duration'], bonus_prob=100,
+                          effects=[training_effects.FIRST + source], effects_prob=[100])
+            for key, field in zip(('str_bonus', 'dex_bonus', 'sta_bonus', 'per_bonus', 'int_bonus'), effect['bonuses']['attribs']):
+                params[key] = field
+        params.update(type=target, cost=0, g_cost=0, sell_mod=0, premium=0, exchang=0)
+        params.pop('bg_p_cost', None)
         if 'comp_array' in params:
             params['comp_array'] = [copies[a] for a in params['comp_array'] if a in copies]
         frames[target] = command, params
+    validate_ammunition(frames, {target: table[source][0] for source, target in copies.items()})
     # Publish only a completely validated set. Sources are never changed.
     COPIES.update(copies)
     SOURCES.update({t: s for s, t in copies.items()})
     FRAMES.update(frames)
+    REFERENCE_PRICES.update(prices)

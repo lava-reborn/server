@@ -1454,7 +1454,7 @@ class Fighter:
         party = getattr(self.sess, "party", None)
         mine = party() if party is not None else None
         return bool(other.is_player and mine is not None
-                    and other.sess.char_id in mine.members)
+                    and getattr(other.sess, 'party_member_id', other.sess.char_id) in mine.members)
 
     def starts_war(self, target):
         return not (target is not None and target.is_player
@@ -1695,6 +1695,9 @@ class Fighter:
                         skill=progression.SHOOTING, spec=spec,
                         through=wt in THROUGH_TYPES,
                         at_players=not quests.lent(row["type_id"]))
+        prepare_weapon = getattr(self, "prepare_weapon", None) or getattr(rc, "prepare_weapon", None)
+        if prepare_weapon is not None:
+            weapon = prepare_weapon(weapon, ammo_si)
         rc.room.broadcast(("faAim", dict(id=self.eid, pos=self.cell, ap=self.ap,
                                          ang=mobs.direction(self.cell, aim_cell, width),
                                          num_shots=weapon.num_shots)))
@@ -2059,7 +2062,8 @@ class Fighter:
         # first aid above) scales both by 1 + 0.2 per level.
         lo, hi = si.get("min_h_rest", 0), si.get("max_h_rest", 0)
         lo = lo + ch.skill_level(progression.MEDICINE) * (hi - lo) / 20.0
-        spec = SPEC_SURGERY if v["hcur"] < 0.3 * v["hmax"] else SPEC_FIRST_AID
+        select_spec = getattr(self, 'healing_spec', None)
+        spec = select_spec(v) if select_spec else (SPEC_SURGERY if v["hcur"] < 0.3 * v["hmax"] else SPEC_FIRST_AID)
         mult = 1 + 0.2 * spec_or_zero(ch, spec)
         healed = min(v["hmax"] - v["hcur"], int(RNG.uniform(lo, hi) * mult))
         slo, shi = si.get("min_st_rest", 0), si.get("max_st_rest", 0)
@@ -2603,6 +2607,10 @@ class Fighter:
 
 class RoomCombat:
     """War state, the AP clock, the mobs and their bags, for one Room."""
+
+    def prepare_weapon(self, weapon, ammo):
+        """Ordinary rooms keep their existing combat rules unchanged."""
+        return weapon
 
     def __init__(self, room, store):
         self.room = room

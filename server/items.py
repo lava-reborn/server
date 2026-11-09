@@ -528,7 +528,7 @@ BATTLE_HEAL_AFRO_AP_MULTIPLIER = 1.5
 
 def battle_medicine(type_id):
     """All battle health/stamina medicines, including G dose packs."""
-    root, name = catalogue().get(type_id, (None, ""))
+    root, name = catalogue().get(training_items.source_type(type_id), (None, ""))
     return root == HEAL and name.startswith("Med_Battle_")
 
 
@@ -558,6 +558,10 @@ STIMULANT_UNAVAILABLE = (
 
 def stimulant_unavailable(type_id):
     """Block only HEAL items promising an unimplemented temporary effect."""
+    if training_items.is_copy(type_id):
+        import training_effects
+        if training_effects.definition(type_id):
+            return False
     if STIMULANT_EFFECTS_ENABLED or root_of(type_id) != HEAL:
         return False
     p = params_of(type_id) or {}

@@ -20,14 +20,12 @@ def __tgServiceActivate():
     m = _global.__tgSend(this.__op)
     m.addProp("npc", this.mob_id)
     _global.__tgTransmit(m)
-    panel = lol.core.SceneShifter._ref.UIPanels.default
-    if panel and panel.instance:
-        lol.core.SceneShifter.closeWindow()
+    lol.core.SceneShifter.closeWindow("support")
 
 def __tgNPCWrapper(obj):
     this.__tgNPCOrig(obj)
     if obj.param.tg_terminal:
-        label = "Настроить тренировку"
+        label = "Открыть: " + obj.param.tg_title
         desc = "Персонаж, противник и условия боя."
         op = "open"
         service = new(lol.core.player.Attendance, 100, this.id)
@@ -72,9 +70,30 @@ def __tgTile(p, name, bitmap, x, y, w, h):
     c.endFill()
     return c
 
-def __tgButton(p, name, label, x, y, w, op, value):
+def __tgPlate(p, name, x, y, w, h):
     art = _global.__onlineArt(p)
-    b = _global.__tgTile(p, name, art.b, x, y, w, 25)
+    b = p.createEmptyMovieClip(name, p.getNextHighestDepth())
+    b._x = x
+    b._y = y
+    b.lineStyle(1, 2960680, 100)
+    b.beginBitmapFill(art["in"], new(flash.geom.Matrix), True, False)
+    b.moveTo(4, 0)
+    b.lineTo(w - 4, 0)
+    b.curveTo(w, 0, w, 4)
+    b.lineTo(w, h - 4)
+    b.curveTo(w, h, w - 4, h)
+    b.lineTo(4, h)
+    b.curveTo(0, h, 0, h - 4)
+    b.lineTo(0, 4)
+    b.curveTo(0, 0, 4, 0)
+    b.endFill()
+    b.lineStyle(1, 11053224, 60)
+    b.moveTo(5, 1)
+    b.lineTo(w - 5, 1)
+    return b
+
+def __tgButton(p, name, label, x, y, w, op, value):
+    b = _global.__tgPlate(p, name, x, y, w, 25)
     _global.__tgText(b, "caption", label, 5, 3, w - 10, 20, False)
     b.__op = op
     b.__value = value
@@ -85,7 +104,7 @@ def __tgButton(p, name, label, x, y, w, op, value):
     return b
 
 def __tgHUDResize():
-    this._x = Math.max(8, Stage.width - 350)
+    this._x = Math.max(8, Stage.width - 190)
     this._y = 8
 
 def __tgHUD(phase):
@@ -95,13 +114,7 @@ def __tgHUD(phase):
         old.removeMovieClip()
     hud = _root.createEmptyMovieClip("__tgHUDPanel", _root.getNextHighestDepth())
     _global.__tgHUDPanel = hud
-    op = "terminal"
-    label = "Компьютер"
-    if phase == "fight" or phase == "loading":
-        op = "abort"
-        label = "Прервать бой"
-    _global.__tgButton(hud, "main", label, 0, 0, 155, op, "")
-    _global.__tgButton(hud, "exit", "Выйти из центра", 165, 0, 176, "exit", "")
+    _global.__tgButton(hud, "main", "К компьютеру", 0, 0, 175, "return", "")
     hud.onResize = _global.__tgHUDResize
     Stage.addListener(hud)
     hud.onResize()
@@ -118,6 +131,7 @@ def __tgClose():
     if p:
         p.stopDrag()
         Stage.removeListener(p)
+        _global.__tgReleaseRows(p)
         p.removeMovieClip()
         _global.__tgPanel = None
         lol.core.SceneShifter.hotKeyManager.removeFilter("tg")
@@ -161,7 +175,7 @@ def __tgPut(draft, id, n):
                 result.push(String(id) + ":" + String(n))
                 found = True
             else:
-                if _global.__tgSlots[id] == 512 or _global.__tgSlots[id] == 513 or not _global.__tgSlots[id] or _global.__tgSlots[id] != _global.__tgSlots[fields[0]]:
+                if not _global.__tgSlots[id] or _global.__tgSlots[id] != _global.__tgSlots[fields[0]]:
                     result.push(pairs[i])
         i = i + 1
     if not found:
@@ -170,6 +184,15 @@ def __tgPut(draft, id, n):
 
 
 def __tgDraft(who):
+    if who == "result":
+        p = _global.__tgPanel
+        if p and p.mobHealth:
+            _global.__tgMobHealth = Number(p.mobHealth.text)
+            _global.__tgMobDamage = Number(p.mobDamage.text)
+        return
+    if who == "rules":
+        _global.__tgRuleDraft()
+        return
     p = _global.__tgPanel
     if not p:
         return
@@ -186,7 +209,10 @@ def __tgDraft(who):
         values = []
         i = 0
         while i < 15:
-            values.push(Number(p["spec" + String(i)].text))
+            if p["spec" + String(i)]:
+                values.push(Number(p["spec" + String(i)].text))
+            else:
+                values.push(0 - 1)
             i = i + 1
         out.specs = values.join(",")
 
@@ -201,6 +227,9 @@ def __tgRequestList():
     if _global.__tgTab == "mob":
         cat = "mob"
     m.addProp("category", "@" + cat + "@")
+    m.addProp("group", "@" + _global.__tgMobGroup + "@")
+    _global.__tgCatalogueRequest = _global.__tgCatalogueRequest + 1
+    m.addProp("request_id", _global.__tgCatalogueRequest)
     m.addProp("wclass", _global.__tgClass)
     line = _global.__tgLine
     if cat == "ammo" or cat == "medicine" or cat == "mob":
@@ -241,7 +270,7 @@ def __tgDragStop():
 
 def __tgResize():
     this.stopDrag()
-    if this.__w != Math.min(Stage.width - 24, 1040) or this.__h != Math.min(Stage.height - 70, 640):
+    if this.__w != Math.min(Stage.width - 24, 980) or this.__h != Math.min(Stage.height - 70, 640):
         _global.__tgDraft(_global.__tgTab)
         _global.__tgBuild()
     else:
@@ -261,12 +290,13 @@ def __tgBuild():
         oldY = old._y
         old.stopDrag()
         Stage.removeListener(old)
+        _global.__tgReleaseRows(old)
         old.removeMovieClip()
     else:
         lol.core.SceneShifter.hotKeyManager.addFilter("tg")
     p = _root.createEmptyMovieClip("__tgPanel", _root.getNextHighestDepth())
     _global.__tgPanel = p
-    W = Math.min(Stage.width - 24, 1040)
+    W = Math.min(Stage.width - 24, 980)
     H = Math.min(Stage.height - 70, 640)
     p.__w = W
     p.__h = H
@@ -287,180 +317,277 @@ def __tgBuild():
     _global.__tgTile(p, "bl", art.bl, 0, H - 22, 22, 22)
     _global.__tgTile(p, "br", art.br, W - 22, H - 22, 22, 22)
     drag = _global.__tgTile(p, "drag", art["in"], 22, 16, W - 80, 28)
-    _global.__tgText(drag, "title", "Учебный центр · испытательный полигон", 2, 2, W - 90, 24, False)
+    _global.__tgText(drag, "title", _global.__tgPostTitle, 2, 2, W - 90, 24, False)
     drag.onPress = _global.__tgDragStart
     drag.onRelease = _global.__tgDragStop
     drag.onReleaseOutside = _global.__tgDragStop
     _global.__tgButton(p, "cross", "×", W - 51, 15, 27, "close", "")
-    tabs = ["player", "gear", "mob", "enemy", "enemygear", "result", "rules"]
-    labels = ["Персонаж", "Предметы", "Противник", "Боец", "Вещи бойца", "Условия / итог", "Правила"]
+    tabs = ["mob", "enemy", "enemygear", "result", "rules"]
+    labels = ["Мобы и боссы", "Навыки бойца", "Снаряжение бойца", "Условия", "Правила"]
+    if _global.__tgContext != "computer":
+        tabs = ["gear"]
+        labels = [_global.__tgPostTitle]
+        if _global.__tgContext == "player":
+            tabs = ["player"]
+            labels = ["Навыки и специализации"]
     i = 0
-    tabw = (W - 48) / 7
-    while i < 7:
-        button = _global.__tgButton(p, "tab" + String(i), labels[i], 24 + i * tabw, 50, tabw - 5, "tab", tabs[i])
+    tabw = (W - 48) / len(tabs)
+    while i < len(tabs):
+        button = _global.__tgButton(p, "tab" + String(i), labels[i], 24 + i * tabw, 53, tabw - 5, "tab", tabs[i])
         if _global.__tgTab == tabs[i]:
             button.caption.textColor = 16777215
-            _global.__tgTile(p, "activeTab", art.t, 24 + i * tabw, 75, tabw - 5, 3)
         i = i + 1
-    _global.__tgTile(p, "sectionHead", art.b, 24, 80, W - 48, 3)
+    _global.__tgTile(p, "sectionHead", art.t, 24, 84, W - 48, 3)
     _global.__tgTile(p, "sectionFoot", art.t, 24, H - 115, W - 48, 3)
-    _global.__tgText(p, "status", _global.__tgStatus, 24, H - 100, W - 48, 36, False)
-    _global.__tgButton(p, "apply", "Применить пресет", 24, H - 57, 170, "apply", "")
-    _global.__tgButton(p, "start", "Начать бой", 203, H - 57, 130, "start", "")
-    _global.__tgButton(p, "abort", "Прервать бой", 342, H - 57, 140, "abort", "")
-    _global.__tgText(p, "returnHint", "Выход — задание у компьютера", W - 300, H - 55, 276, 28, False)
-    p.apply._visible = _global.__tgTab != "mob" and _global.__tgTab != "result" and _global.__tgTab != "rules"
+    _global.__tgText(p, "status", _global.__tgStatus, 24, H - 105, W - 48, 40, False)
+    if _global.__tgContext == "computer":
+        _global.__tgButton(p, "start", "Вызвать противника", 24, H - 54, 205, "start", "")
+        _global.__tgButton(p, "exit", "Покинуть полигон", W - 225, H - 54, 200, "exit", "")
+        if _global.__tgTab == "enemy" or _global.__tgTab == "enemygear":
+            _global.__tgButton(p, "applyEnemy", "Применить бойца", 250, H - 54, 190, "apply", "")
+        modeLabel = "Будет вызван: моб / босс"
+        if _global.__tgMode == "fighter":
+            modeLabel = "Будет вызван: настроенный боец"
+        _global.__tgText(p, "modeLabel", modeLabel, 24, H - 78, 420, 20, False)
+    else:
+        _global.__tgButton(p, "apply", "Выдать выбранное снаряжение", 24, H - 54, 245, "apply", "")
+        _global.__tgButton(p, "close", "Закрыть", W - 150, H - 54, 125, "close", "")
+        if _global.__tgContext == "player":
+            p.apply.caption.text = "Применить навыки"
+            _global.__tgButton(p, "recover", "Восстановить HP / ОД", 280, H - 54, 210, "recover", "")
+    if _global.__tgTab == "rules":
+        _global.__tgRulesControls(p, W, H)
+        return
+    if _global.__tgContext == "player" or _global.__tgTab == "enemy":
+        _global.__tgSkillsControls(p, W, H)
+        return
     if _global.__tgTab == "result":
-        _global.__tgButton(p, "location", "Локация: выбрать ▼", 28, 100, 320, "locations", "")
-        _global.__tgText(p, "info", "Бой проходит без потерь и наград. Обычные вещи и навыки не меняются.\\nНастройте персонажа, затем выберите моба или бойца.\\nДистанция в гексах (1–30):", 28, 135, W - 56, 100, False)
-        _global.__tgText(p, "distance", String(_global.__tgDistance), 28, 205, 80, 24, True)
-        behaviour = "Активный противник"
+        _global.__tgButton(p, "location", "Площадка: выбрать ▼", 28, 103, 340, "locations", "")
+        _global.__tgText(p, "info", "Участников: " + String(_global.__tgParticipants) + ". Площадка общая; её смена переносит всех. Вещи и опыт в основную игру не переносятся.", 28, 140, W - 56, 42, False)
+        _global.__tgText(p, "spawnTitle", "Точка противника", 28, 190, 200, 24, False)
+        _global.__tgButton(p, "spawn", _global.__tgSpawnLabels[_global.__tgSpawnPoint] + " ▼", 28, 220, 350, "spawns", "")
+        _global.__tgText(p, "distanceInfo", "Расстояние: около " + String(_global.__tgDistance) + " гексов", 28, 257, 350, 24, False)
+        _global.__tgButton(p, "mode", "Цель: " + _global.__tgMode + " · изменить", 395, 103, 330, "mode", "")
+        p.mode.caption.text = "Цель: моб / босс · изменить"
+        if _global.__tgMode == "fighter":
+            p.mode.caption.text = "Цель: настроенный боец · изменить"
+        behaviour = "Активный противник · агро 100+"
         if _global.__tgStationary:
             behaviour = "Неподвижная мишень"
-        _global.__tgButton(p, "stationary", behaviour, 125, 205, 200, "stationary", "")
-        _global.__tgText(p, "report", _global.__tgReport, 28, 250, W - 56, H - 370, False)
+        _global.__tgButton(p, "stationary", behaviour, 395, 220, 330, "stationary", "")
+        _global.__tgText(p, "hpLabel", "HP / выносливость противника, %", 28, 300, 290, 24, False)
+        _global.__tgText(p, "mobHealth", String(_global.__tgMobHealth), 325, 300, 70, 24, True)
+        _global.__tgText(p, "damageLabel", "Урон противника, %", 430, 300, 210, 24, False)
+        _global.__tgText(p, "mobDamage", String(_global.__tgMobDamage), 650, 300, 70, 24, True)
+        _global.__tgText(p, "scaleHint", "От 25 до 300%. 100% — исходный моб. Только эта тренировка.", 28, 337, W - 56, 30, False)
+        _global.__tgText(p, "report", _global.__tgReport, 28, 380, W - 56, Math.max(35, H - 510), False)
         return
-    if _global.__tgTab == "rules":
-        _global.__tgText(p, "rules", _global.__tgRules, 28, 100, W - 56, H - 230, False)
-        return
-    if _global.__tgTab != "mob" and _global.__tgCategory == "skills":
-        _global.__tgButton(p, "gearcat", "Выбрать снаряжение", 24, 95, 160, "category", "weapon")
-        draft = _global.__tgPlayer
-        if _global.__tgTab == "enemy" or _global.__tgTab == "enemygear":
-            draft = _global.__tgEnemy
-        values = draft.skills.split(",").concat(draft.specs.split(","))
-        titles = ["Ближний бой", "Стрельба", "Медицина", "Промышленность", "Производство", "Рукопашный бой", "Режущее оружие", "Пистолеты", "Дробовики", "Автоматы", "Винтовки", "Ручные пулемёты", "Пистолет-пулемёты", "Хирургия", "Первая помощь", "Добыча", "Переработка", "Мастер свинца", "Мастер селитры", "Мастер меди"]
+    _global.__tgCatalogueControls(p, W, H)
+
+def __tgRulesControls(p, W, H):
+    _global.__tgButton(p, "baseline", "Текущая игра", 28, 100, 165, "rulespreset", "1,1,1,1,1,1,1,1,1,0,0,1,0")
+    _global.__tgButton(p, "candidate", "Исправленная модель боя", 203, 100, 245, "rulespreset", "1,1,1,1,1,1,1,1,1,0,1,0,1")
+    _global.__tgText(p, "ruleHint", "Только ваша сессия: персонаж и настраиваемый боец. ×1 — без изменения.", 28, 135, W - 56, 35, False)
+    values = _global.__tgRuleDraftValues.split(",")
+    labels = ["Сила ×", "Ловкость ×", "Телосложение ×", "Восприятие ×", "Интеллект ×", "Максимум HP ×", "Максимум выносливости ×", "Вся броня ×", "Разброс ×", "Добавка брони от эффекта"]
+    i = 0
+    cw = (W - 65) / 2
+    rulePitch = Math.min(29, Math.max(18, (H - 380) / 5))
+    ruleButtonsY = 160 + 5 * rulePitch + 10
+    while i < 10:
+        x = 28 + Math.floor(i / 5) * cw
+        y = 160 + (i % 5) * rulePitch
+        _global.__tgText(p, "ruleLabel" + String(i), labels[i], x, y, cw - 105, 24, False)
+        field = _global.__tgText(p, "rule" + String(i), values[i], x + cw - 95, y, 75, 24, True)
+        field.maxChars = 12
+        field.multiline = False
+        i = i + 1
+    ammo = "Множители патронов: выкл."
+    if values[10] == "1":
+        ammo = "Множители патронов: вкл."
+    broken = "Броня сломанных частей: не учитывать"
+    if values[11] == "1":
+        broken = "Броня сломанных частей: учитывать"
+    _global.__tgButton(p, "ammoRules", ammo, 28, ruleButtonsY, 300, "ruletoggle", 10)
+    _global.__tgButton(p, "brokenRules", broken, 340, ruleButtonsY, 320, "ruletoggle", 11)
+    _global.__tgButton(p, "applyRules", "Применить правила", 28, ruleButtonsY + 35, 190, "rulesapply", "")
+    _global.__tgText(p, "rules", "Действует: " + _global.__tgRules + "\\nБроня персонажа в расчёте: " + String(_global.__tgArmour) + ". Добавка эффекта — имитация, без выдачи настоящего бафа. Исправления боя действуют только на полигоне.", 28, ruleButtonsY + 75, W - 56, Math.max(20, H - ruleButtonsY - 195), False)
+    return
+
+def __tgSkillsControls(p, W, H):
+    draft = _global.__tgPlayer
+    if _global.__tgTab == "enemy" or _global.__tgTab == "enemygear":
+        draft = _global.__tgEnemy
+    values = draft.skills.split(",").concat(draft.specs.split(","))
+    titles = ["Ближний бой", "Стрельба", "Медицина", "Промышленность", "Производство", "Рукопашный бой", "Режущее оружие", "Пистолеты", "Дробовики", "Автоматы", "Винтовки", "Ручные пулемёты", "Пистолет-пулемёты", "Хирургия", "Первая помощь", "Добыча", "Переработка", "Мастер свинца", "Мастер селитры", "Мастер меди"]
+    i = 0
+    cw = (W - 65) / 2
+    pitch = Math.min(29, (H - 290) / 10)
+    while i < 17:
+        col = Math.floor(i / 10)
+        row = i % 10
+        x = 24 + col * cw
+        y = 140 + row * pitch
+        key = "spec" + String(i - 5)
+        low = 0 - 1
+        high = _global.__tgSpecMax
+        if i < 5:
+            key = "skill" + String(i)
+            low = 0
+            high = 20
+        _global.__tgText(p, key + "label", titles[i], x, y, cw - 125, 23, False)
+        _global.__tgText(p, key, values[i], x + cw - 120, y, 40, 23, True)
+        _global.__tgButton(p, key + "minus", "−", x + cw - 75, y, 28, "adjust", {"field":key, "step":0 - 1, "low":low, "high":high})
+        _global.__tgButton(p, key + "plus", "+", x + cw - 42, y, 28, "adjust", {"field":key, "step":1, "low":low, "high":high})
+        i = i + 1
+    if _global.__tgTab == "enemy":
+        _global.__tgButton(p, "copy", "Скопировать моего персонажа", 24, 95, 280, "copy", "")
+    _global.__tgText(p, "levelHint", "Базовый уровень:", 24, H - 141, 125, 23, False)
+    levels = draft.skills.split(",")
+    currentLevel = Math.max(Number(levels[0]), Number(levels[1]), Number(levels[2]), Number(levels[3]), Number(levels[4]))
+    _global.__tgText(p, "presetLevel", String(currentLevel), 155, H - 141, 42, 23, True)
+    _global.__tgButton(p, "setlevel", "Задать", 203, H - 141, 78, "setlevel", "")
+    _global.__tgText(p, "levelExplanation", "Уровень персонажа определяется старшим навыком.", 292, H - 141, W - 320, 28, False)
+    return
+def __tgCatalogueControls(p, W, H):
+    left = 24
+    area = W - 340
+    if _global.__tgTab == "mob":
+        left = 205
+        area = W - 230
+        groups = ["all", "camps", "mines", "bosses", "dogs", "crocodiles", "vagrants", "animals", "other"]
+        labels = ["Все противники", "Лагеря", "Шахты", "Боссы", "Собаки", "Крокодилы", "Бродяги", "Другие животные", "Другие"]
         i = 0
-        cw = (W - 65) / 2
-        pitch = Math.min(29, (H - 290) / 10)
-        while i < 20:
-            col = Math.floor(i / 10)
-            row = i % 10
-            x = 24 + col * cw
-            y = 140 + row * pitch
-            key = "spec" + String(i - 5)
-            low = 0 - 1
-            high = _global.__tgSpecMax
-            if i < 5:
-                key = "skill" + String(i)
-                low = 0
-                high = 17
-            _global.__tgText(p, key + "label", titles[i], x, y, cw - 125, 23, False)
-            _global.__tgText(p, key, values[i], x + cw - 120, y, 40, 23, True)
-            _global.__tgButton(p, key + "minus", "−", x + cw - 75, y, 28, "adjust", {"field":key, "step":0 - 1, "low":low, "high":high})
-            _global.__tgButton(p, key + "plus", "+", x + cw - 42, y, 28, "adjust", {"field":key, "step":1, "low":low, "high":high})
+        while i < len(groups):
+            button = _global.__tgButton(p, "group" + String(i), labels[i], 24, 105 + i * 33, 165, "mobgroup", groups[i])
+            if _global.__tgMobGroup == groups[i]:
+                button.caption.textColor = 16777215
             i = i + 1
-        _global.__tgButton(p, "copy", "Персонаж → противник", 200, 95, 260, "copy", "")
-        _global.__tgButton(p, "save", "Сохранить", W - 300, 95, 138, "save", "")
-        _global.__tgButton(p, "load", "Загрузить", W - 150, 95, 126, "load", "")
-        _global.__tgText(p, "levelHint", "Базовый уровень:", 24, H - 141, 125, 23, False)
-        levels = draft.skills.split(",")
-        currentLevel = Math.max(Number(levels[0]), Number(levels[1]), Number(levels[2]), Number(levels[3]), Number(levels[4]))
-        _global.__tgText(p, "presetLevel", String(currentLevel), 155, H - 141, 42, 23, True)
-        _global.__tgButton(p, "setlevel", "Задать", 203, H - 141, 78, "setlevel", "")
-        _global.__tgText(p, "levelExplanation", "Уровень персонажа определяется старшим навыком.", 292, H - 141, W - 320, 28, False)
-        return
-    _global.__tgText(p, "catalogueTitle", "КАТАЛОГ СНАРЯЖЕНИЯ", 24, 90, 135, 45, False)
-    _global.__tgText(p, "query", _global.__tgFilterQuery, 157, 190, 135, 24, True)
-    _global.__tgButton(p, "search", "Найти", 300, 190, 57, "search", "")
-    levelLabel = "Ур. " + String(_global.__tgFilterLevel)
-    if _global.__tgFilterLevel == 0:
-        levelLabel = "Все уровни"
-    _global.__tgButton(p, "levelfilter", levelLabel + " ▼", 157, 126, 96, "filtermenu", "level")
+        _global.__tgText(p, "picked", "Выбрано: " + _global.__tgMobName, left, H - 180, area, 34, False)
+    else:
+        _global.__tgText(p, "kitTitle", "ПОДГОТОВЛЕННЫЙ НАБОР", W - 292, 100, 265, 24, False)
+        _global.__tgText(p, "qlabel", "Количество", W - 292, 145, 150, 22, False)
+        _global.__tgText(p, "amount", "1", W - 292, 173, 70, 25, True)
+        _global.__tgButton(p, "minus", "−", W - 210, 173, 32, "count", 0 - 1)
+        _global.__tgButton(p, "plus", "+", W - 170, 173, 32, "count", 1)
+        _global.__tgText(p, "gearhelp", "Комплект собирает готового бойца. Выбор оружия заменяет его оружие; нажмите «Применить бойца».", W - 292, 212, 265, 55, False)
+        _global.__tgText(p, "selected", _global.__tgSelected(_global.__tgPlayer), W - 292, 280, 230, H - 445, False)
+        _global.__tgButton(p, "selectedUp", "▲", W - 57, 280, 28, "selectedscroll", 0 - 1)
+        _global.__tgButton(p, "selectedDown", "▼", W - 57, 314, 28, "selectedscroll", 1)
+        _global.__tgButton(p, "removeLast", "Убрать последний", W - 292, H - 155, 200, "removeLast", "")
+    if _global.__tgTab == "enemygear":
+        _global.__tgButton(p, "category", "Категория ▼", 24, 96, 130, "filtermenu", "category")
+        _global.__tgButton(p, "class", "Тип оружия ▼", 24, 129, 130, "filtermenu", "class")
+        _global.__tgText(p, "catalogueHint", "Готовые комплекты, оружие и расходники бойца. Патроны к выбранному оружию добавятся при применении.", 24, H - 200, area, 50, False)
+        left = 165
+        area = W - 485
+    p.__listX = left
+    p.__listY = 175
+    p.__listWidth = area
+    levelLabel = "Любой уровень"
+    if _global.__tgFilterLevel:
+        levelLabel = "Ур. " + String(_global.__tgFilterLevel)
+    _global.__tgButton(p, "levelfilter", levelLabel + " ▼", left, 103, 100, "filtermenu", "level")
     lineLabel = _global.__tgLine
     if lineLabel == "all":
-        lineLabel = "A/G/К"
-    _global.__tgButton(p, "linefilter", lineLabel + " ▼", 260, 126, 97, "filtermenu", "line")
-    upgradeLabel = "Без чертежа"
+        lineLabel = "Все версии"
+    _global.__tgButton(p, "linefilter", lineLabel + " ▼", left + 106, 103, 85, "filtermenu", "line")
+    upgradeLabel = "Все улучшения"
+    if _global.__tgUpgrade == "base":
+        upgradeLabel = "Без чертежа"
     if _global.__tgUpgrade == "modified":
         upgradeLabel = "С улучшением"
-    if _global.__tgUpgrade == "all":
-        upgradeLabel = "Все улучшения"
-    _global.__tgButton(p, "upgradefilter", upgradeLabel + " ▼", 157, 158, 200, "filtermenu", "upgrade")
-    p.upgradefilter._visible = _global.__tgTab != "mob" and _global.__tgCategory == "weapon"
-    p.levelfilter._visible = _global.__tgCategory != "ammo" and _global.__tgCategory != "medicine"
-    p.linefilter._visible = _global.__tgTab != "mob" and _global.__tgCategory != "ammo" and _global.__tgCategory != "medicine"
-    if _global.__tgTab != "mob":
-        cats = ["weapon", "armour", "pouch", "ammo", "medicine", "set"]
-        labels = ["Оружие", "Броня", "Подсумки", "Патроны", "Медицина", "Комплекты"]
-        i = 0
-        while i < 6:
-            _global.__tgButton(p, "cat" + String(i), labels[i], 24, 155 + i * 32, 120, "category", cats[i])
-            i = i + 1
-        classNames = ["Пистолеты", "Дробовики", "Автоматы", "Винтовки", "Пулемёты", "Пистолет-пулемёты", "Ближний бой"]
-        classLabel = "Тип оружия"
-        if _global.__tgClass >= 0:
-            classLabel = classNames[_global.__tgClass]
-        _global.__tgButton(p, "classfilter", classLabel + " ▼", 157, 95, 200, "filtermenu", "class")
-        p.classfilter._visible = _global.__tgCategory == "weapon"
-        p.upgradefilter._visible = _global.__tgCategory == "weapon"
-        draft = _global.__tgPlayer
-        if _global.__tgTab == "enemy" or _global.__tgTab == "enemygear":
-            draft = _global.__tgEnemy
-        _global.__tgButton(p, "skillsbtn", "Уровни и навыки", 370, 95, 190, "category", "skills")
-        _global.__tgText(p, "gearhelp", "Первое оружие — основное, второе — запасное, остальные — в рюкзаке. Броня заменяется по слоту. Количество задаётся до выбора.", 370, 138, W - 550, 95, False)
-        _global.__tgText(p, "qlabel", "Количество выбранного предмета:", 370, 250, W - 395, 22, False)
-        _global.__tgText(p, "amount", "1", 370, 278, 65, 25, True)
-        _global.__tgButton(p, "minus", "−", 445, 278, 30, "count", 0 - 1)
-        _global.__tgButton(p, "plus", "+", 481, 278, 30, "count", 1)
-        _global.__tgButton(p, "clear", "Очистить снаряжение", 370, 319, 220, "clear", "")
-        _global.__tgButton(p, "removeLast", "Убрать последний", 600, 319, W - 625, "removeLast", "")
-        _global.__tgButton(p, "selectedUp", "▲", W - 57, 358, 28, "selectedscroll", 0 - 1)
-        _global.__tgButton(p, "selectedDown", "▼", W - 57, 390, 28, "selectedscroll", 1)
-        _global.__tgText(p, "selected", _global.__tgSelected(draft), 370, 358, W - 435, H - 465, False)
-    else:
-        _global.__tgText(p, "picked", "Моб: " + _global.__tgMobName, 370, 150, W - 395, 65, False)
-        modeName = "Моб из игры"
-        if _global.__tgMode == "fighter":
-            modeName = "Настраиваемый боец"
-        _global.__tgButton(p, "mode", modeName, 370, 225, 240, "mode", "")
-    _global.__tgButton(p, "prev", "←", 157, H - 140, 40, "page", 0 - 1)
-    _global.__tgButton(p, "next", "→", 205, H - 140, 40, "page", 1)
-    _global.__tgText(p, "page", "", 255, H - 140, 100, 24, False)
+    _global.__tgButton(p, "upgradefilter", upgradeLabel + " ▼", left + 197, 103, 140, "filtermenu", "upgrade")
+    p.upgradefilter._visible = _global.__tgCategory == "weapon"
+    p.linefilter._visible = _global.__tgCategory != "mob" and _global.__tgCategory != "medicine" and _global.__tgCategory != "ammo"
+    p.levelfilter._visible = _global.__tgCategory != "medicine" and _global.__tgCategory != "ammo"
+    _global.__tgText(p, "query", _global.__tgFilterQuery, left, 138, area - 88, 25, True)
+    _global.__tgButton(p, "search", "Найти", left + area - 80, 138, 80, "search", "")
+    _global.__tgButton(p, "prev", "←", left, H - 140, 40, "page", 0 - 1)
+    _global.__tgButton(p, "next", "→", left + 48, H - 140, 40, "page", 1)
+    _global.__tgText(p, "page", "", left + 100, H - 140, 150, 24, False)
     _global.__tgRequestList()
 
-def __tgDropdown():
-    p = _global.__tgPanel
-    if p.filtermenu:
-        p.filtermenu.removeMovieClip()
-    if p.choices:
-        visible = p.choices._visible
-        p.choices.removeMovieClip()
-        if visible:
-            return
-    if not p.__rows:
-        return
-    box = p.createEmptyMovieClip("choices", p.getNextHighestDepth())
-    rows = p.__rows
-    i = 0
-    pitch = Math.min(25, (p.__h - 395) / 10)
-    while i < len(rows.ids):
-        b = _global.__tgButton(box, "row" + String(i), rows.labels[i], 157, 254 + i * pitch, 200, "pick", rows.ids[i])
-        b.__icon = rows.icons[i]
-        b.__group = rows.groups[i]
-        b.__groupSlots = rows.group_slots[i]
-        b.__label = rows.labels[i]
-        i = i + 1
+def __tgThumbReady(event):
+    icon = event.target
+    width = icon.display_mc._width
+    height = icon.display_mc._height
+    if width > 0 and height > 0:
+        maximum = 38
+        if icon.__tgMaxHeight:
+            maximum = icon.__tgMaxHeight
+        scale = Math.min(48 / width, maximum / height) * 100
+        icon._xscale = scale
+        icon._yscale = scale
+    icon.removeEventListener("completed", icon, _global.__tgThumbReady)
+
+def __tgReleaseRows(p):
+    if p.cards:
+        i = 0
+        while i < 10:
+            icon = p.cards["row" + String(i)].icon
+            if icon:
+                icon.removeEventListener("completed", icon, _global.__tgThumbReady)
+                if icon.src:
+                    icon.src.removeEventListener("onLoadSource", icon)
+                if icon.mcl_list:
+                    icon.mcl_list.onLoadInit = None
+            i = i + 1
+        p.cards.removeMovieClip()
+    if p.preview:
+        if p.preview.src:
+            p.preview.src.removeEventListener("onLoadSource", p.preview)
+        if p.preview.mcl_list:
+            p.preview.mcl_list.onLoadInit = None
+        p.preview.removeMovieClip()
 
 def __tgList(rows):
     p = _global.__tgPanel
     if not p or not p.page:
         return
+    if rows.context and rows.context != _global.__tgContext:
+        return
+    if rows.request_id and rows.request_id != _global.__tgCatalogueRequest:
+        return
+    _global.__tgReleaseRows(p)
     p.page.text = String(Number(rows.page) + 1) + " / " + String(Math.max(1, Math.ceil(Number(rows.total) / 10)))
-    p.__rows = rows
-    if p.choices:
-        p.choices.removeMovieClip()
+    p.cards = p.createEmptyMovieClip("cards", p.getNextHighestDepth())
+    width = (p.__listWidth - 10) / 2
+    pitch = Math.min(57, (p.__h - 370) / 5)
     i = 0
     while i < len(rows.ids):
-        if _global.__tgTab != "mob" and _global.__tgCategory != "set":
+        if _global.__tgCategory != "mob" and _global.__tgCategory != "set":
             _global.__tgNames[rows.ids[i]] = rows.labels[i]
             _global.__tgSlots[rows.ids[i]] = rows.slots[i]
+        x = p.__listX + (i % 2) * (width + 10)
+        y = p.__listY + Math.floor(i / 2) * pitch
+        b = _global.__tgPlate(p.cards, "row" + String(i), x, y, width, pitch - 5)
+        b.__op = "pick"
+        b.__value = rows.ids[i]
+        b.__icon = rows.icons[i]
+        b.__group = rows.groups[i]
+        b.__groupSlots = rows.group_slots[i]
+        b.__label = rows.labels[i]
+        b.onRelease = _global.__tgClick
+        b.onRollOver = _global.__tgHover
+        b.onRollOut = _global.__tgUnhover
+        b.hintTitle_str = rows.labels[i]
+        _global.__tgText(b, "caption", rows.labels[i], 58, 4, width - 64, pitch - 12, False)
+        if _global.__tgCategory == "mob":
+            _global.__tgText(b, "badge", "[" + String(rows.levels[i]) + "]", 6, 9, 46, 24, False)
+        else:
+            icon = lol.display.DisplaySprite.create(b, "icon", b.getNextHighestDepth())
+            icon._x = 5
+            icon._y = 5
+            icon.__tgMaxHeight = Math.min(38, Math.max(12, pitch - 15))
+            icon._xscale = 40
+            icon._yscale = 40
+            icon.addEventListener("completed", icon, _global.__tgThumbReady)
+            icon.display(String(rows.icons[i]) + "_icon", lol.services.SSEmulator.getIcon(rows.icons[i]))
         i = i + 1
-    _global.__tgButton(p, "choose", "Выбрать из списка ▼", 157, 226, 200, "dropdown", "")
-    hint = ""
     if rows.total == 0:
-        hint = "По этим фильтрам ничего не найдено."
-    _global.__tgText(p, "choice", hint, 157, 255, 200, 65, False)
+        _global.__tgText(p.cards, "empty", "По этим фильтрам ничего не найдено.", p.__listX, p.__listY + 35, p.__listWidth, 50, False)
+
 
 def __tgFilterMenu(key):
     p = _global.__tgPanel
@@ -469,8 +596,11 @@ def __tgFilterMenu(key):
         return
     if p.choices:
         p.choices.removeMovieClip()
-    labels = ["Все", "A", "G", "Контрабанда"]
-    values = ["all", "A", "G", "C"]
+    labels = ["Все", "A", "P", "G", "Контрабанда"]
+    values = ["all", "A", "P", "G", "C"]
+    if key == "category":
+        labels = ["Готовые комплекты", "Оружие", "Части брони", "Подсумки", "Патроны", "Медицина"]
+        values = ["set", "weapon", "armour", "pouch", "ammo", "medicine"]
     if key == "class":
         labels = ["Пистолеты", "Дробовики", "Автоматы", "Винтовки", "Пулемёты", "Пистолет-пулемёты", "Ближний бой", "Все типы"]
         values = [0, 1, 2, 3, 4, 5, 6, 0 - 1]
@@ -481,7 +611,10 @@ def __tgFilterMenu(key):
         labels = ["Все"]
         values = [0]
         i = 1
-        while i <= 17:
+        maximum = 20
+        if _global.__tgCategory == "mob":
+            maximum = 20
+        while i <= maximum:
             labels.push(String(i) + " уровень")
             values.push(i)
             i = i + 1
@@ -493,7 +626,7 @@ def __tgFilterMenu(key):
         width = 200
         if key == "level":
             width = 100
-        _global.__tgButton(box, "choice" + String(i), labels[i], 157 + col * 105, 154 + row * 26, width, "filter", {"key":key, "value":values[i]})
+        _global.__tgButton(box, "choice" + String(i), labels[i], p.__listX + col * 105, 133 + row * 26, width, "filter", {"key":key, "value":values[i]})
         i = i + 1
 
 def __tgClick():
@@ -505,7 +638,11 @@ def __tgClick():
         return
     if op == "filter":
         _global.__tgFilterQuery = p.query.text
+        if value.key == "category":
+            _global.__tgCategory = value.value
+            _global.__tgClass = 0 - 1
         if value.key == "class":
+            _global.__tgCategory = "weapon"
             _global.__tgClass = value.value
         if value.key == "line":
             _global.__tgLine = value.value
@@ -516,8 +653,43 @@ def __tgClick():
         _global.__tgPage = 0
         _global.__tgBuild()
         return
-    if op == "dropdown":
-        _global.__tgDropdown()
+    if op == "rulespreset":
+        _global.__tgRuleDraftValues = value
+        _global.__tgBuild()
+        return
+    if op == "ruletoggle":
+        _global.__tgRuleDraft()
+        values = _global.__tgRuleDraftValues.split(",")
+        values[Number(value)] = String(1 - Number(values[Number(value)]))
+        _global.__tgRuleDraftValues = values.join(",")
+        _global.__tgBuild()
+        return
+    if op == "rulesapply":
+        _global.__tgRuleDraft()
+        m = _global.__tgSend("rules")
+        m.addProp("values", "@" + _global.__tgRuleDraftValues + "@")
+        _global.__tgRulesApplying = True
+        _global.__tgTransmit(m)
+        return
+    if op == "localslot":
+        _global.__tgDraft(_global.__tgTab)
+        _global.__tgLocalSlot = 1 + (_global.__tgLocalSlot % 3)
+        _global.__tgBuild()
+        return
+    if op == "spawns":
+        if p.spawns:
+            p.spawns.removeMovieClip()
+            return
+        box = p.createEmptyMovieClip("spawns", p.getNextHighestDepth())
+        i = 0
+        while i < len(_global.__tgSpawnLabels):
+            _global.__tgButton(box, "point" + String(i), _global.__tgSpawnLabels[i], 28, 253 + i * 28, 350, "spawn", i)
+            i = i + 1
+        return
+    if op == "spawn":
+        m = _global.__tgSend("spawn")
+        m.addProp("spawn_point", Number(value))
+        _global.__tgTransmit(m)
         return
     if op == "locations":
         if p.locations:
@@ -549,6 +721,19 @@ def __tgClick():
         _global.__tgStatus = "Пресет скопирован противнику. Откройте вкладку Боец и примените."
         p.status.text = _global.__tgStatus
         return
+    if op == "mobgroup":
+        _global.__tgMobGroup = value
+        _global.__tgFilterLevel = 0
+        _global.__tgPage = 0
+        _global.__tgBuild()
+        return
+    if op == "recover":
+        _global.__tgTransmit(_global.__tgSend("recover"))
+        return
+    if op == "return":
+        _global.__tgTransmit(_global.__tgSend("return"))
+        _global.__tgClose()
+        return
     if op == "close":
         _global.__tgClose()
         return
@@ -561,18 +746,22 @@ def __tgClick():
         return
     if op == "tab":
         _global.__tgDraft(_global.__tgTab)
-        if p.distance:
-            _global.__tgDistance = Number(p.distance.text)
         _global.__tgTab = value
         if value == "player" or value == "enemy":
             _global.__tgCategory = "skills"
         if value == "gear" or value == "enemygear":
-            _global.__tgCategory = "weapon"
+            _global.__tgCategory = "set"
+            _global.__tgClass = 0 - 1
+        if value == "mob":
+            _global.__tgCategory = "mob"
+            _global.__tgMode = "mob"
+        if value == "enemy" or value == "enemygear":
+            _global.__tgMode = "fighter"
         _global.__tgPage = 0
         _global.__tgBuild()
         return
     if op == "setlevel":
-        n = Math.max(1, Math.min(17, Number(p.presetLevel.text)))
+        n = Math.max(1, Math.min(20, Number(p.presetLevel.text)))
         i = 0
         while i < 5:
             f = p["skill" + String(i)]
@@ -612,7 +801,7 @@ def __tgClick():
         _global.__tgRequestList()
         return
     if op == "stationary":
-        _global.__tgDistance = Number(p.distance.text)
+        _global.__tgDraft(_global.__tgTab)
         _global.__tgStationary = 1 - _global.__tgStationary
         _global.__tgBuild()
         return
@@ -640,15 +829,14 @@ def __tgClick():
         p.selected.text = ""
         return
     if op == "pick":
-        if _global.__tgTab != "mob":
-            if not p.preview:
-                preview = lol.display.DisplaySprite.create(p, "preview", p.getNextHighestDepth())
-                preview._x = p.__w - 150
-                preview._y = 144
-                preview._xscale = 75
-                preview._yscale = 75
-            p.preview.display(String(this.__icon) + "_icon", lol.services.SSEmulator.getIcon(this.__icon))
-        p.choice.text = this.__label
+        if this.__group and _global.__tgTab == "enemygear":
+            _global.__tgApplying = "enemy"
+            m = _global.__tgSend("fighterpreset")
+            m.addProp("set", value)
+            _global.__tgTransmit(m)
+            return
+        if p.choice:
+            p.choice.text = this.__label
         if p.choices:
             p.choices._visible = False
         if _global.__tgTab == "mob":
@@ -668,7 +856,7 @@ def __tgClick():
                     name = lol.utils.StringCollector.getInstance().getString(2000000 + t)
                     _global.__tgNames[t] = "Часть комплекта " + String(j + 1)
                     if name and name.string:
-                        _global.__tgNames[t] = name.string + " (тестовая версия)"
+                        _global.__tgNames[t] = name.string + ""
                     setSlots = this.__groupSlots.split(",")
                     _global.__tgSlots[t] = Number(setSlots[j])
                     _global.__tgPut(draft, t, 1)
@@ -691,17 +879,28 @@ def __tgClick():
         _global.__tgTransmit(m)
     if op == "start":
         _global.__tgDraft(_global.__tgTab)
+        if _global.__tgRuleDraftValues != _global.__tgRuleValues:
+            p.status.text = "Сначала примените правила во вкладке Правила."
+            return
         if _global.__tgProfileKey(_global.__tgPlayer) != _global.__tgPlayerKey or (_global.__tgMode == "fighter" and _global.__tgProfileKey(_global.__tgEnemy) != _global.__tgEnemyKey):
             p.status.text = "Сначала примените изменённые пресеты персонажа и противника."
             return
-        if p.distance:
-            _global.__tgDistance = Number(p.distance.text)
         m = _global.__tgSend("start")
         m.addProp("mob", _global.__tgMob)
         m.addProp("mode", "@" + _global.__tgMode + "@")
         m.addProp("stationary", _global.__tgStationary)
-        m.addProp("distance", _global.__tgDistance)
+        m.addProp("spawn_point", _global.__tgSpawnPoint)
+        m.addProp("mob_health", _global.__tgMobHealth)
+        m.addProp("mob_damage", _global.__tgMobDamage)
         _global.__tgTransmit(m)
+
+def __tgSpawnState(panel):
+    if not panel.spawn:
+        return
+    panel.spawn.caption.text = _global.__tgSpawnLabels[_global.__tgSpawnPoint] + " ▼"
+    panel.distanceInfo.text = "Расстояние: около " + String(_global.__tgDistance) + " гексов"
+    if panel.spawns:
+        panel.spawns.removeMovieClip()
 
 def __tgNotifyWrapper(cmd):
     if cmd.messID != "tg":
@@ -713,18 +912,47 @@ def __tgNotifyWrapper(cmd):
         i = 0
         while i < len(v.copies):
             _global.__tgCopies[v.copies[i]] = v.sources[i]
+            _global.__tgLines[v.copies[i]] = v.lines[i]
+            _global.__tgLabels[v.copies[i]] = v.labels[i]
+            _global.__tgPrices[v.copies[i]] = {"cost":v.costs[i], "gold":v.gold_costs[i], "pack":v.price_packs[i]}
             i = i + 1
+    if v.op == "combat_stats":
+        _global.__tgCombatStats = v
+    if v.op == "inventory":
+        _global.__tgLive = {}
+        i = 0
+        while i < len(v.live_oids):
+            _global.__tgLive[v.live_oids[i]] = True
+            i = i + 1
+        _global.__tgEquipmentKey = v.live_oids.join(",")
+        _global.__tgPlayer.gear = v.gear
+        _global.__tgPlayerKey = _global.__tgProfileKey({"skills":v.skills.join(","), "specs":v.specs.join(","), "gear":v.gear})
+        _global.__tgOutfitRevision = v.outfit_rev
     if v.op == "state":
+        _global.__tgArenaWidth = v.arena_width
+        _global.__tgArenaHeight = v.arena_height
+        _global.__tgParticipants = v.participants
         _global.__tgLocations = v.locations
         _global.__tgLocationLabels = v.location_labels
         _global.__tgLocation = v.location
         _global.__tgDistance = v.distance
+        _global.__tgSpawnPoint = v.spawn_point
+        _global.__tgSpawnLabels = v.spawn_labels
         _global.__tgStationary = v.stationary
+        _global.__tgMobHealth = v.mob_health
+        _global.__tgMobDamage = v.mob_damage
         _global.__tgMob = v.selected_mob
-        _global.__tgMode = v.selected_mode
+        if not _global.__tgPanel:
+            _global.__tgMode = v.selected_mode
         if _global.__tgFilterLevel == None:
             _global.__tgFilterLevel = v.level
         _global.__tgRules = v.rules
+        _global.__tgArmour = v.armour
+        _global.__tgRuleValues = v.rule_values
+        if not _global.__tgRuleDraftValues or _global.__tgRulesApplying:
+            _global.__tgRuleDraftValues = v.rule_values
+        rulesApplied = _global.__tgRulesApplying
+        _global.__tgRulesApplying = False
         _global.__tgVirtualUID = v.virtual_uid
         _global.__tgLive = {}
         i = 0
@@ -732,7 +960,8 @@ def __tgNotifyWrapper(cmd):
             _global.__tgLive[v.live_oids[i]] = True
             i = i + 1
         refresh = _global.__tgApplying == "player"
-        _global.__tgHUDClose()
+        if v.loaded:
+            _global.__tgHUD(v.phase)
         _global.__tgToken = v.token
         _global.__tgActive = True
         _global.__tgStatus = "Уровень " + v.level + " · HP " + v.hp + " · Выносливость " + v.sp + " · ОД " + v.ap + " " + v.message
@@ -740,8 +969,9 @@ def __tgNotifyWrapper(cmd):
         enemy = {"skills":v.enemy_skills.join(","), "specs":v.enemy_specs.join(","), "gear":v.enemy_gear}
         _global.__tgPlayerKey = _global.__tgProfileKey(player)
         _global.__tgEnemyKey = _global.__tgProfileKey(enemy)
-        if not _global.__tgPlayer or _global.__tgApplying == "player":
+        if not _global.__tgPlayer or _global.__tgApplying == "player" or _global.__tgOutfitRevision != v.outfit_rev:
             _global.__tgPlayer = player
+        _global.__tgOutfitRevision = v.outfit_rev
         if not _global.__tgEnemy or _global.__tgApplying == "enemy":
             _global.__tgEnemy = enemy
         _global.__tgApplying = ""
@@ -771,6 +1001,9 @@ def __tgNotifyWrapper(cmd):
         _global.__tgRefreshEquipment(v, refresh)
         if _global.__tgPanel:
             _global.__tgPanel.status.text = _global.__tgStatus
+            _global.__tgSpawnState(_global.__tgPanel)
+            if rulesApplied and _global.__tgTab == "rules":
+                _global.__tgBuild()
             if _global.__tgPanel.selected:
                 draft = _global.__tgPlayer
                 if _global.__tgTab == "enemy" or _global.__tgTab == "enemygear":
@@ -778,10 +1011,24 @@ def __tgNotifyWrapper(cmd):
                 _global.__tgPanel.selected.text = _global.__tgSelected(draft)
     if v.op == "open":
         _global.__tgMob = v.mob
+        _global.__tgContext = v.context
+        _global.__tgPostTitle = v.title
+        _global.__tgCategory = v.category
+        _global.__tgClass = v.wclass
+        _global.__tgFilterLevel = 0
+        _global.__tgPage = 0
+        _global.__tgFilterQuery = ""
+        _global.__tgTab = "gear"
+        if v.context == "computer":
+            _global.__tgTab = "mob"
+            _global.__tgMode = "mob"
+        if v.context == "player":
+            _global.__tgTab = "player"
         _global.__tgBuild()
     if v.op == "catalogue":
         _global.__tgList(v)
     if v.op == "error":
+        _global.__tgRulesApplying = False
         _global.__tgApplying = ""
         _global.__tgStatus = v.message
         if _global.__tgPanel:
@@ -823,6 +1070,13 @@ def __tgParse(doc):
     if _global.__tgActive:
         info.zones = []
         info.pvpEnabled = True
+        info.width = _global.__tgArenaWidth
+        info.height = _global.__tgArenaHeight
+        info.sprites = []
+        info.bgDecorations = []
+        info.obstacles = []
+        info.libraryID = "Desert"
+        info.back = {"id":"bg_desert1.jpg", "resType":"lib"}
     return info
 
 def __tgEnterWrapper(obj):
@@ -838,6 +1092,230 @@ def __tgMoveWrapper(cell, spliceNum):
     if not _global.__tgPanel:
         return this.__tgMoveOrig(cell, spliceNum)
 
+
+def __tgTradeBuy(item, count):
+    if not _global.__tgActive or not _global.__tgIsCopy(item):
+        return this.__tgTradeBuyOrig(item, count)
+    if item.rootID == lol.core.objects.Item.FIRE_ARM or item.rootID == lol.core.objects.Item.COLD_ARM or item.rootID == lol.core.objects.Item.WEAR:
+        _global.__tgBuyFree(this, item, 1)
+        return
+    if item.rootID != lol.core.objects.Item.AMMO and count == None:
+        this.__tgPurchaseItem = item
+        box = lol.core.SceneShifter.openNewWindow("exchange").content
+        this.__tgPurchaseBox = box
+        box.label = "Сколько получить бесплатно?"
+        box.maxValue = 50
+        box.cost_num = 0
+        box.cost_mod = 1
+        box.__tgFreeQuantity = True
+        box.addEventListener("exchange", this, _global.__tgTradeQuantity)
+        box.addEventListener("close", this, _global.__tgTradeCancel)
+        return
+    _global.__tgBuyFree(this, item, count)
+
+def __tgBuyFree(trade, item, count):
+    count = Math.max(1, Number(count))
+    msg = new(lol.server.mess.CSM_SSUpdate, 1, new(lol.data.BigUINT, new(lol.data.BigUINTCluster, item.tradeID.toString(16))), count)
+    if trade.XMC.Send(msg):
+        lol.server.XMLCCallStack.addCall("cmdAck", trade, trade.transferAck)
+    else:
+        trade.applyTransfer(False)
+
+def __tgQuantityCreate(item, title, mode, showGold, sell):
+    box = this.__tgQuantityCreateOrig(item, title, mode, showGold, sell)
+    if _global.__tgActive and _global.__tgIsCopy(item):
+        box.__tgFreeQuantity = True
+        box.__tgQuantityOwner = this
+    return box
+
+def __tgQuantityCancel(event):
+    if not _global.__tgActive or not event.target.__tgFreeQuantity:
+        return this.__tgQuantityCancelOrig(event)
+    if event.target.__tgQuantityOwner != this:
+        return
+    event.target.__tgQuantityOwner = None
+    event.target.removeEventListener("exchange", this, this.exchangeAck)
+    event.target.removeEventListener("close", this, this.exchangeCancel)
+    lol.core.SceneShifter.closeWindow("exchange")
+    if this.currDDOperation:
+        this.currDDOperation.failedOperation()
+    this.currDDOperation = None
+    this.separateItem = None
+    this.dropEnabled = True
+
+def __tgQuantityApply():
+    if not _global.__tgActive or not this.__tgFreeQuantity:
+        return this.__tgQuantityApplyOrig()
+    count = Number(this.rightNum)
+    if count > 0 and count <= this.maxValue:
+        this.dispatchEvent({"type":"exchange", "left":Number(this.leftNum), "right":count})
+    else:
+        this.cancel()
+
+def __tgTradeQuantity(event):
+    if not this.__tgPurchaseBox or event.target != this.__tgPurchaseBox:
+        return
+    event.target.removeEventListener("exchange", this, _global.__tgTradeQuantity)
+    event.target.removeEventListener("close", this, _global.__tgTradeCancel)
+    item = this.__tgPurchaseItem
+    this.__tgPurchaseItem = None
+    this.__tgPurchaseBox = None
+    lol.core.SceneShifter.closeWindow("exchange")
+    if not item:
+        return
+    if item and _global.__tgActive:
+        _global.__tgBuyFree(this, item, event.right)
+    else:
+        this.applyTransfer(False)
+
+def __tgTradeCancel(event):
+    if not this.__tgPurchaseBox or event.target != this.__tgPurchaseBox:
+        return
+    event.target.removeEventListener("exchange", this, _global.__tgTradeQuantity)
+    event.target.removeEventListener("close", this, _global.__tgTradeCancel)
+    item = this.__tgPurchaseItem
+    this.__tgPurchaseItem = None
+    this.__tgPurchaseBox = None
+    lol.core.SceneShifter.closeWindow("exchange")
+    if item:
+        this.__tgCancelledFree = True
+        this.applyTransfer(False)
+        this.__tgCancelledFree = False
+
+def __tgTradeError():
+    if this.trade.__tgCancelledFree:
+        operation = this.ddOperation_arr.shift()
+        if operation:
+            operation.failedOperation()
+        return
+    this.__tgTradeErrorOrig()
+
+def __tgTradeKill():
+    box = this.__tgPurchaseBox
+    if box:
+        box.removeEventListener("exchange", this, _global.__tgTradeQuantity)
+        box.removeEventListener("close", this, _global.__tgTradeCancel)
+        lol.core.SceneShifter.closeWindow("exchange")
+    this.__tgPurchaseItem = None
+    this.__tgPurchaseBox = None
+    this.__tgTradeKillOrig()
+
+def __tgCheckSell(item):
+    if _global.__tgActive and _global.__tgIsCopy(item):
+        return None
+    return this.__tgCheckSellOrig(item)
+
+def __tgReferencePrice(item):
+    price = _global.__tgPrices[item.typeID]
+    value = 0
+    gold = False
+    if price:
+        pack = 1
+        if price.pack and price.pack > 0:
+            pack = Number(price.pack)
+        value = Math.floor(Number(price.cost) * 1000 / pack + 1 / 2) / 1000
+        if price.gold > 0:
+            value = Math.floor(Number(price.gold) / pack + 1 / 2) / 100
+            gold = True
+    return {"value":value, "gold":gold}
+
+def __tgShowCost(item, align):
+    this.__tgShowCostOrig(item, align)
+    if _global.__tgActive and _global.__tgCopies[item.typeID]:
+        price = _global.__tgReferencePrice(item)
+        value = price.value
+        if this.showHeapCount and item.getProp("size"):
+            value = value * Number(item.getProp("size"))
+        this.mainCost = 0
+        this.costType = "Афро · справочно"
+        prefix = "a"
+        frame = 1
+        if price.gold:
+            this.costType = "Золото · справочно"
+            prefix = "g"
+            frame = 2
+        this.price_mc.gotoAndStop(frame)
+        label = String(value)
+        if not this.attachIconEnabled:
+            label = prefix + label
+        this.price_mc.fontContainer.showValue(label)
+
+def __tgAnnotationPrice(rows):
+    if not _global.__tgActive or not _global.__tgCopies[this.item.typeID]:
+        return this.__tgAnnotationPriceOrig(rows)
+    price = _global.__tgReferencePrice(this.item)
+    unit = " Афро"
+    if price.gold:
+        unit = " G"
+    if price.value > 0:
+        rows.push(["Базовая цена за 1 шт.: ", String(price.value) + unit])
+    else:
+        rows.push(["Базовая цена: ", "не задана"])
+    rows.push(["На полигоне: ", "получение и сдача бесплатно"])
+
+def __tgBack(root):
+    line = _global.__tgLines[this.item.typeID]
+    if not _global.__tgActive or not line:
+        return this.__tgBackOrig(root)
+    link = "fireArmBG"
+    if root == lol.core.objects.Item.HEAL_ITEM:
+        link = "medikKitBG"
+    if root == lol.core.objects.Item.AMMO:
+        link = "ammoBG"
+    if root == lol.core.objects.Item.QUEST:
+        link = "questBG"
+    if root == lol.core.objects.Item.WEAR or root == "small":
+        link = "wearBG"
+    if line == "G":
+        link = link + "_gold"
+    if line == "P":
+        link = link + "_premium"
+    this.bg_mc.attachMovie(link, "bg", 0)
+    if this.groupItem:
+        second = this.bg_mc.attachMovie(link, "group2", 0 - 5)
+        third = this.bg_mc.attachMovie(link, "group3", 0 - 10)
+        second._x = 5
+        second._y = 5
+        third._x = 10
+        third._y = 10
+
+def __tgArmorCard():
+    this.__tgArmorCardOrig()
+    if _global.__tgActive and _global.__tgCombatStats:
+        this.ArmorClassValue.value.text = String(_global.__tgCombatStats.armour)
+
+def __tgCritCard():
+    this.__tgCritCardOrig()
+    if _global.__tgActive and _global.__tgCombatStats:
+        this.crit_txt.text = String(_global.__tgCombatStats.critical) + " %"
+        this.critDodge_txt.text = String(_global.__tgCombatStats.anticritical) + " %"
+
+def __tgDodgeCard():
+    this.__tgDodgeCardOrig()
+    if _global.__tgActive and _global.__tgCombatStats:
+        this.meleeEvade_value.value.text = String(_global.__tgCombatStats.dodge) + " %"
+
+def __tgInfoButton():
+    line = _global.__tgLines[this.item.typeID]
+    if not _global.__tgActive or not line:
+        return this.__tgInfoButtonOrig()
+    link = "info_btn"
+    if this.__itemInfoBase == "list_info_btn" or this.btnLinkID == "list_info_btn" or this.btnLinkID == "list_info_btn_gold" or this.btnLinkID == "list_info_btn_premium":
+        link = "list_info_btn"
+    if line == "G":
+        link = link + "_gold"
+    if line == "P":
+        link = link + "_premium"
+    if this.info_btn:
+        this.info_btn.removeMovieClip()
+    this.info_btn = this.attachMovie(link, "info_btn", this.getNextHighestDepth())
+    this.info_btn._x = this.bg_mc._width
+    this.info_btn.onRollOver = mx.utils.Delegate.create(this, this.rollOverBtn)
+    this.info_btn.onRollOut = mx.utils.Delegate.create(this, this.rollOutBtn)
+    this.info_btn.onRelease = mx.utils.Delegate.create(this, this.onPressBtn)
+    this.info_btn.onReleaseOutside = mx.utils.Delegate.create(this, this.rollOutBtn)
+    this.toggled_frame = this.toggled
+
 def __tgIsCopy(item):
     if not item:
         return False
@@ -850,7 +1328,9 @@ def __tgItemName(item):
         proto = lol.core.objects.ItemFactory.getProtoItem(item.typeID)
         if proto.name:
             parts = proto.name.split("$")
-            label = parts[0] + " (тестовая версия)"
+            label = _global.__tgLabels[item.typeID]
+            if not label:
+                label = parts[0]
             i = 1
             while i < len(parts):
                 label = label + "$" + parts[i]
@@ -966,6 +1446,9 @@ def __tgCleanup():
     if _global.__tgOriginalLoc:
         _global.__tgOriginalLoc.pvpEnabled = _global.__tgOriginalPvp
         _global.__tgOriginalLoc = None
+    _global.__tgRuleDraftValues = None
+    _global.__tgRuleValues = None
+    _global.__tgRulesApplying = False
     _global.__tgPlayer = None
     _global.__tgEnemy = None
     _global.__tgActive = False
@@ -978,12 +1461,30 @@ def __tgConnectionCloseWrapper():
     _global.__tgCleanup()
     this.__tgConnectionCloseOrig()
 
+def __tgRuleDraft():
+    p = _global.__tgPanel
+    if not p or not p.rule0:
+        return
+    values = _global.__tgRuleDraftValues.split(",")
+    i = 0
+    while i < 10:
+        values[i] = p["rule" + String(i)].text.split(",").join(".")
+        i = i + 1
+    _global.__tgRuleDraftValues = values.join(",")
+
+def __tgPresetStore():
+    suffix = ""
+    if _global.__tgLocalSlot > 1:
+        suffix = "_" + String(_global.__tgLocalSlot)
+    return SharedObject.getLocal("lavaTrainingPresets_v1_" + _global.__hcEncode(_global.__hcEndpoint + "|" + _global.__tgOwner) + suffix)
+
 def __tgSave():
-    store = SharedObject.getLocal("lavaTrainingPresets_v1_" + _global.__hcEncode(_global.__hcEndpoint + "|" + _global.__tgOwner))
+    store = _global.__tgPresetStore()
     p = _global.__tgPlayer
     e = _global.__tgEnemy
     store.data.player = {"skills":p.skills, "specs":p.specs, "gear":p.gear}
     store.data.enemy = {"skills":e.skills, "specs":e.specs, "gear":e.gear}
+    store.data.rules = _global.__tgRuleDraftValues
     result = store.flush()
     _global.__tgPanel.status.text = "Пресеты сохранены локально."
     if result == False:
@@ -992,7 +1493,7 @@ def __tgSave():
         _global.__tgPanel.status.text = "Для сохранения требуется разрешение локального хранилища Flash."
 
 def __tgLoad():
-    store = SharedObject.getLocal("lavaTrainingPresets_v1_" + _global.__hcEncode(_global.__hcEndpoint + "|" + _global.__tgOwner))
+    store = _global.__tgPresetStore()
     if not store.data.player or not store.data.enemy:
         _global.__tgPanel.status.text = "Сохранённого пресета нет."
         return
@@ -1004,6 +1505,12 @@ def __tgLoad():
     if len(p.skills) > 128 or len(p.specs) > 128 or len(p.gear) > 4096 or len(e.skills) > 128 or len(e.specs) > 128 or len(e.gear) > 4096:
         _global.__tgPanel.status.text = "Сохранённый пресет слишком большой."
         return
+    if store.data.rules != None:
+        if kind(store.data.rules) != "string" or len(store.data.rules) > 256 or len(store.data.rules.split(",")) != 12:
+            _global.__tgPanel.status.text = "Сохранённые правила повреждены."
+            return
+    if store.data.rules != None:
+        _global.__tgRuleDraftValues = store.data.rules
     _global.__tgPlayer = {"skills":p.skills, "specs":p.specs, "gear":p.gear}
     _global.__tgEnemy = {"skills":e.skills, "specs":e.specs, "gear":e.gear}
     _global.__tgStatus = "Пресеты загружены. Примените их перед боем."
@@ -1017,6 +1524,7 @@ def __tgIcon(typeID):
 
 def __tgInstall():
     _global.__tgEpoch = 0
+    _global.__tgCombatStats = None
     parser = lol.core.location.LDParser
     if not parser.__tgParseOrig:
         parser.__tgParseOrig = parser.parseLD
@@ -1031,7 +1539,11 @@ def __tgInstall():
     if not art.__tgIconOrig:
         art.__tgIconOrig = art.getIcon
         art.getIcon = _global.__tgIcon
+    _global.__tgOutfitRevision = 0 - 1
     _global.__tgCopies = {}
+    _global.__tgLines = {}
+    _global.__tgLabels = {}
+    _global.__tgPrices = {}
     _global.__tgObjects = []
     _global.__tgLive = {}
     _global.__tgNames = {}
@@ -1044,13 +1556,28 @@ def __tgInstall():
     _global.__tgLine = "all"
     _global.__tgCategory = "skills"
     _global.__tgPage = 0
-    _global.__tgDistance = 12
+    _global.__tgArenaWidth = 72
+    _global.__tgArenaHeight = 144
+    _global.__tgParticipants = 1
+    _global.__tgDistance = 0
+    _global.__tgSpawnPoint = 2
+    _global.__tgSpawnLabels = ["Ближняя", "Средняя", "Дальняя — справа сверху"]
+    _global.__tgContext = "computer"
+    _global.__tgPostTitle = "Компьютер полигона"
+    _global.__tgMobGroup = "all"
+    _global.__tgCatalogueRequest = 0
+    _global.__tgMobHealth = 100
+    _global.__tgMobDamage = 100
     _global.__tgStationary = 0
     _global.__tgMode = "mob"
     _global.__tgMob = 0
     _global.__tgMobName = "не выбран"
     _global.__tgReport = "Результаты появятся после боя."
     _global.__tgStatus = ""
+    _global.__tgLocalSlot = 1
+    _global.__tgRuleDraftValues = None
+    _global.__tgRuleValues = None
+    _global.__tgRulesApplying = False
 '''
 
 
@@ -1060,6 +1587,20 @@ def patches(Asm, undef):
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
+        (('gpui', 'Annotation'), 'addCost', '__tgAnnotationPriceOrig', '__tgAnnotationPrice'),
+        (('gpui', 'ExchangePan'), 'sendObj', '__tgQuantityApplyOrig', '__tgQuantityApply'),
+        (('gpui', 'TradeInterface'), 'createExchangePan', '__tgQuantityCreateOrig', '__tgQuantityCreate'),
+        (('gpui', 'TradeInterface'), 'exchangeCancel', '__tgQuantityCancelOrig', '__tgQuantityCancel'),
+        (('gpui', 'CharInterface'), 'showArmorLevel', '__tgArmorCardOrig', '__tgArmorCard'),
+        (('gpui', 'CharInterface'), 'showKrit', '__tgCritCardOrig', '__tgCritCard'),
+        (('gpui', 'CharInterface'), 'showMeleeEvade', '__tgDodgeCardOrig', '__tgDodgeCard'),
+        (('gpui', 'ItemContainer'), 'attachBack', '__tgBackOrig', '__tgBack'),
+        (('gpui', 'ExtItemContainer'), 'attachBtn', '__tgInfoButtonOrig', '__tgInfoButton'),
+        (('core', 'player', 'Trade'), 'buy', '__tgTradeBuyOrig', '__tgTradeBuy'),
+        (('core', 'player', 'Trade'), 'kill', '__tgTradeKillOrig', '__tgTradeKill'),
+        (('gpui', 'TradeInterface'), 'checkSellItem', '__tgCheckSellOrig', '__tgCheckSell'),
+        (('gpui', 'TradeInterface'), 'moveItemError', '__tgTradeErrorOrig', '__tgTradeError'),
+        (('gpui', 'ItemContainer'), 'showCost', '__tgShowCostOrig', '__tgShowCost'),
         (('core', 'player', 'PersEquip'), 'itemUpdate', '__tgBagUpdateOrig', '__tgBagItemUpdate'),
         (('core', 'player', 'StuffManager'), 'getStuff', '__tgGetStuffOrig', '__tgGetStuff'),
         (('core', 'Master'), 'lenter', '__tgEnterOrig', '__tgEnterWrapper'),

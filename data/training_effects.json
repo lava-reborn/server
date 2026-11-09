@@ -1,0 +1,2904 @@
+{
+  "version": 1,
+  "source": "Saved game wiki data/wiki/pages.json; only explicit numeric combat effects",
+  "definitions": {
+    "3115": {
+      "duration": 600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 10,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "critical_probability",
+      "source_page": "Альфа-Реагент I",
+      "source_revision": 22176
+    },
+    "3116": {
+      "duration": 900,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 15,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "critical_probability",
+      "source_page": "Альфа-Реагент II",
+      "source_revision": 21978
+    },
+    "3117": {
+      "duration": 1200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 20,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "critical_probability",
+      "source_page": "Альфа-Реагент II",
+      "source_revision": 21978
+    },
+    "3118": {
+      "duration": 1500,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 25,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "critical_probability",
+      "source_page": "Альфа-Реагент III",
+      "source_revision": 21979
+    },
+    "3119": {
+      "duration": 1800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 30,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "critical_probability",
+      "source_page": "Альфа-Реагент III",
+      "source_revision": 21979
+    },
+    "3208": {
+      "duration": 300,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 10,
+        "armor": 0
+      },
+      "family": "critical_evade",
+      "source_page": "Омега-Реагент I",
+      "source_revision": 22010
+    },
+    "3209": {
+      "duration": 600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 20,
+        "armor": 0
+      },
+      "family": "critical_evade",
+      "source_page": "Омега-Реагент I",
+      "source_revision": 22010
+    },
+    "3210": {
+      "duration": 900,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 20,
+        "armor": 0
+      },
+      "family": "critical_evade",
+      "source_page": "Омега-Реагент II",
+      "source_revision": 22012
+    },
+    "3211": {
+      "duration": 1200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 30,
+        "armor": 0
+      },
+      "family": "critical_evade",
+      "source_page": "Омега-Реагент II",
+      "source_revision": 22012
+    },
+    "3212": {
+      "duration": 1500,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 30,
+        "armor": 0
+      },
+      "family": "critical_evade",
+      "source_page": "Омега-Реагент III",
+      "source_revision": 22013
+    },
+    "3213": {
+      "duration": 2400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 40,
+        "armor": 0
+      },
+      "family": "critical_evade",
+      "source_page": "Омега-Реагент III",
+      "source_revision": 22013
+    },
+    "3468": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "Ментостимулятор",
+      "source_page": "Ментостимулятор I",
+      "source_revision": 22005
+    },
+    "3469": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          3
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "Ментостимулятор",
+      "source_page": "Ментостимулятор II",
+      "source_revision": 22006
+    },
+    "3470": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          5
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "Ментостимулятор",
+      "source_page": "Ментостимулятор III",
+      "source_revision": 22007
+    },
+    "3471": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "Дофрамин",
+      "source_page": "Дофрамин I",
+      "source_revision": 22052
+    },
+    "3472": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          3,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "Дофрамин",
+      "source_page": "Дофрамин II",
+      "source_revision": 22053
+    },
+    "3473": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          5,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "Дофрамин",
+      "source_page": "Дофрамин III",
+      "source_revision": 22054
+    },
+    "3914": {
+      "duration": 3600,
+      "interval": 600,
+      "bonuses": {
+        "attribs": [
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "Кукурузный хлеб",
+      "source_page": "Кукурузный хлеб",
+      "source_revision": 22001
+    },
+    "4181": {
+      "duration": 300,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 5,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "critical_probability",
+      "source_page": "Альфа-Реагент I",
+      "source_revision": 22176
+    },
+    "4182": {
+      "duration": 3000,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 30,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "critical_probability",
+      "source_page": "Альфа-Реагент IV",
+      "source_revision": 21976
+    },
+    "4183": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 60,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "critical_probability",
+      "source_page": "Альфа-Реагент IV",
+      "source_revision": 21976
+    },
+    "4184": {
+      "duration": 2400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 40,
+        "armor": 0
+      },
+      "family": "critical_evade",
+      "source_page": "Омега-Реагент IV",
+      "source_revision": 22014
+    },
+    "4185": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 75,
+        "armor": 0
+      },
+      "family": "critical_evade",
+      "source_page": "Омега-Реагент IV",
+      "source_revision": 22014
+    },
+    "4917": {
+      "duration": 300,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 35,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс",
+      "source_revision": 22027
+    },
+    "4918": {
+      "duration": 600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 50,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК I",
+      "source_revision": 22029
+    },
+    "4919": {
+      "duration": 1200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 75,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК I",
+      "source_revision": 22029
+    },
+    "4920": {
+      "duration": 1200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 75,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК II",
+      "source_revision": 22030
+    },
+    "4921": {
+      "duration": 1800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 100,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК II",
+      "source_revision": 22030
+    },
+    "4922": {
+      "duration": 1800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 100,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК III",
+      "source_revision": 22031
+    },
+    "4923": {
+      "duration": 2400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 125,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК III",
+      "source_revision": 22031
+    },
+    "4924": {
+      "duration": 2400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 125,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК IV",
+      "source_revision": 22032
+    },
+    "4925": {
+      "duration": 3000,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 150,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК IV",
+      "source_revision": 22032
+    },
+    "4926": {
+      "duration": 3000,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 150,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК V",
+      "source_revision": 22034
+    },
+    "4927": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 175,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК V",
+      "source_revision": 22034
+    },
+    "4928": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 175,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК VI",
+      "source_revision": 22035
+    },
+    "4929": {
+      "duration": 4200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 200,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК VI",
+      "source_revision": 22035
+    },
+    "4930": {
+      "duration": 4200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 200,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК VII",
+      "source_revision": 22036
+    },
+    "4931": {
+      "duration": 4800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 225,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК VII",
+      "source_revision": 22036
+    },
+    "4932": {
+      "duration": 4200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 200,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК VIII",
+      "source_revision": 22037
+    },
+    "4933": {
+      "duration": 5400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 250,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК VIII",
+      "source_revision": 22037
+    },
+    "4934": {
+      "duration": 5400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 250,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК IX",
+      "source_revision": 22033
+    },
+    "4935": {
+      "duration": 6000,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 275,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс МК IX",
+      "source_revision": 22033
+    },
+    "4936": {
+      "duration": 1800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 300,
+        "sp": 0,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_health",
+      "source_page": "Салюс +",
+      "source_revision": 22028
+    },
+    "4937": {
+      "duration": 300,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 65,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик",
+      "source_revision": 21980
+    },
+    "4938": {
+      "duration": 600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 100,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК I",
+      "source_revision": 21982
+    },
+    "4939": {
+      "duration": 1200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 150,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК I",
+      "source_revision": 21982
+    },
+    "4940": {
+      "duration": 1200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 150,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК II",
+      "source_revision": 21981
+    },
+    "4941": {
+      "duration": 1800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 200,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК II",
+      "source_revision": 21981
+    },
+    "4942": {
+      "duration": 1800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 200,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК III",
+      "source_revision": 21985
+    },
+    "4943": {
+      "duration": 2400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 250,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК III",
+      "source_revision": 21985
+    },
+    "4944": {
+      "duration": 2400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 250,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК IV",
+      "source_revision": 21983
+    },
+    "4945": {
+      "duration": 3000,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 300,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК IV",
+      "source_revision": 21983
+    },
+    "4946": {
+      "duration": 3000,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 300,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК V",
+      "source_revision": 21986
+    },
+    "4947": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 350,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК V",
+      "source_revision": 21986
+    },
+    "4948": {
+      "duration": 3600,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 350,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК VI",
+      "source_revision": 21987
+    },
+    "4949": {
+      "duration": 4200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 400,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК VI",
+      "source_revision": 21987
+    },
+    "4950": {
+      "duration": 4200,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 400,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК VII",
+      "source_revision": 21988
+    },
+    "4951": {
+      "duration": 4800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 450,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК VII",
+      "source_revision": 21988
+    },
+    "4952": {
+      "duration": 4800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 450,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК VIII",
+      "source_revision": 21989
+    },
+    "4953": {
+      "duration": 5400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 500,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК VIII",
+      "source_revision": 21989
+    },
+    "4954": {
+      "duration": 5400,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 500,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК IX",
+      "source_revision": 21984
+    },
+    "4955": {
+      "duration": 6000,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 550,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик МК IX",
+      "source_revision": 21984
+    },
+    "4956": {
+      "duration": 1800,
+      "interval": 0,
+      "bonuses": {
+        "attribs": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "skills": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "specs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "hp": 0,
+        "sp": 600,
+        "od": 0,
+        "cp": 0,
+        "ce": 0,
+        "armor": 0
+      },
+      "family": "max_stamina",
+      "source_page": "Анестетик +",
+      "source_revision": 21920
+    }
+  }
+}

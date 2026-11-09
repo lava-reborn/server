@@ -579,9 +579,11 @@ class Session:
         if self.closed:
             return
         if getattr(self, 'training_ground', None) is not None and _cmd[0] not in (
-                'userMsg', 'online', 'tg', 'shutdown', 'kickban') and not (
-                    _cmd[0] == 'cmdAck' and getattr(self, 'training_chat', False)):
+                'userMsg', 'online', 'tg', 'shutdown', 'kickban', 'p_op', 'p_m') and not (
+                    _cmd[0] == 'cmdAck' and (getattr(self, 'training_chat', False) or getattr(self, 'training_party_control', False))):
             return  # Real background updates must not overwrite the training avatar.
+        if getattr(self, 'training_ground', None) is not None and _cmd[0] in ('p_op', 'p_m'):
+            params = training_ground.training_party.frame(self.training_ground, _cmd[0], params)
         if _cmd[0].startswith("q_di_"):
             params = self.fee_gate(params)
             params = self.skill_gate(params)
@@ -2959,7 +2961,7 @@ class Session:
         """
         if quest.type == training_ground.EXIT_QUEST:
             return False
-        if quest.type == training_ground.ENTRY_QUEST and not training_ground.ENABLED:
+        if quest.type == training_ground.ENTRY_QUEST and not training_ground.training_party.entry_available(self):
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False
@@ -3130,7 +3132,7 @@ class Session:
         same way."""
         if quest.type == training_ground.EXIT_QUEST:
             return False
-        if quest.type == training_ground.ENTRY_QUEST and not training_ground.ENABLED:
+        if quest.type == training_ground.ENTRY_QUEST and not training_ground.training_party.entry_available(self):
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False

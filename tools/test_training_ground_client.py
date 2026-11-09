@@ -8,6 +8,90 @@ import widescreen
 
 
 class TrainingClient(unittest.TestCase):
+    def test_free_quantity_apply_dispatches_even_when_displayed_price_is_zero(self):
+        calls=[]
+        env=dict(_global=dict(__tgActive=True), Number=float)
+        funcs=self.helpers(env)
+        box=dict(__tgFreeQuantity=True,rightNum='4',leftNum=46,maxValue=50,
+                 money_mc=dict(info_txt=dict(text='0')),dispatchEvent=calls.append,
+                 cancel=lambda:calls.append('cancel'),__tgQuantityApplyOrig=lambda:calls.append('native'))
+        funcs['__tgQuantityApply'].invoke(box,[])
+        self.assertEqual(calls,[dict(type='exchange',left=46,right=4)])
+        box['rightNum']=0
+        funcs['__tgQuantityApply'].invoke(box,[])
+        self.assertEqual(calls[-1],'cancel')
+        box['__tgFreeQuantity']=False
+        funcs['__tgQuantityApply'].invoke(box,[])
+        self.assertEqual(calls[-1],'native')
+
+    def test_cancel_closes_free_quantity_and_restores_drag_once_without_request(self):
+        calls=[]
+        env=dict(_global={},lol=dict(core=dict(SceneShifter=dict(closeWindow=lambda name:calls.append(('closed',name))))))
+        funcs=self.helpers(env)
+        box=dict(removeEventListener=lambda *args:None)
+        trade=dict(__tgPurchaseItem=dict(typeID=54000),__tgPurchaseBox=box,
+                   applyTransfer=lambda success:calls.append(('transfer',success)))
+        funcs['__tgTradeCancel'].invoke(trade,[dict(target=box)])
+        funcs['__tgTradeCancel'].invoke(trade,[dict(target=box)])
+        self.assertEqual(calls,[('closed','exchange'),('transfer',False)])
+        self.assertIsNone(trade['__tgPurchaseBox'])
+
+    def test_late_quantity_callback_does_not_close_new_dialog_or_buy_new_item(self):
+        calls=[]
+        env=dict(_global=dict(__tgActive=True),lol=dict(core=dict(SceneShifter=dict(closeWindow=calls.append))))
+        funcs=self.helpers(env)
+        old=dict(removeEventListener=lambda *args:None)
+        current=dict(removeEventListener=lambda *args:None,new=True)
+        item=dict(typeID=54001)
+        trade=dict(__tgPurchaseItem=item,__tgPurchaseBox=current)
+        funcs['__tgTradeQuantity'].invoke(trade,[dict(target=old,right=8)])
+        self.assertEqual(calls,[])
+        self.assertIs(trade['__tgPurchaseItem'],item)
+        self.assertIs(trade['__tgPurchaseBox'],current)
+
+    def test_ammo_quantity_cancel_restores_current_operation_without_money_alert(self):
+        calls=[]
+        env=dict(_global=dict(__tgActive=True),lol=dict(core=dict(SceneShifter=dict(closeWindow=lambda name:calls.append(name)))))
+        funcs=self.helpers(env)
+        panel=dict(currDDOperation=dict(failedOperation=lambda:calls.append('restore')),dropEnabled=False)
+        box=dict(__tgFreeQuantity=True,__tgQuantityOwner=panel,removeEventListener=lambda *args:None)
+        funcs['__tgQuantityCancel'].invoke(panel,[dict(target=box)])
+        funcs['__tgQuantityCancel'].invoke(panel,[dict(target=box)])
+        self.assertEqual(calls,['exchange','restore'])
+        self.assertTrue(panel['dropEnabled'])
+        self.assertIsNone(panel['currDDOperation'])
+
+    def test_copy_weapon_drag_buys_one_without_opening_quantity_window(self):
+        calls=[]
+        env=dict(_global=dict(__tgActive=True),
+                 lol=dict(core=dict(objects=dict(Item=dict(FIRE_ARM=2,COLD_ARM=3,WEAR=1,AMMO=4)))))
+        funcs=self.helpers(env)
+        env['_global']['__tgIsCopy']=lambda item: True
+        env['_global']['__tgBuyFree']=lambda *args: calls.append(args)
+        for root in (1,2,3):
+            item=dict(typeID=54000,rootID=root)
+            trade={}
+            funcs['__tgTradeBuy'].invoke(trade,[item,20])
+            self.assertEqual(calls[-1],(trade,item,1))
+        self.assertEqual(len(calls),3)
+
+    def test_copy_rarity_art_uses_native_gold_and_premium_links_at_zero_price(self):
+        calls=[]
+        env=dict(_global=dict(__tgActive=True,__tgLines={54000:'G',54001:'P'}),
+                 lol=dict(core=dict(objects=dict(Item=dict(HEAL_ITEM=5,AMMO=4,QUEST=6,WEAR=1)))))
+        funcs=self.helpers(env)
+        view=dict(item=dict(typeID=54000),bg_mc=dict(attachMovie=lambda *args: calls.append(args)),groupItem=False)
+        funcs['__tgBack'].invoke(view,[2])
+        self.assertEqual(calls[-1][0],'fireArmBG_gold')
+        view['item']['typeID']=54001
+        funcs['__tgBack'].invoke(view,[1])
+        self.assertEqual(calls[-1][0],'wearBG_premium')
+
+    def test_no_manual_save_or_unavailable_specialization_controls(self):
+        self.assertNotRegex(client.SOURCE,r'__tgButton\([^\n]+"(?:save|load|saveRules|loadRules|slot)"')
+        self.assertIn('while i < 17:',client.SOURCE)
+        self.assertIn('lol.core.SceneShifter.closeWindow("support")',client.SOURCE)
+
     def test_all_prototype_hooks_match_existing_game_methods(self):
         package = client.patches(widescreen.Asm, widescreen.UNDEF)
         root = Path(__file__).resolve().parents[1] / 'recon/as-src/lol'
@@ -19,6 +103,98 @@ class TrainingClient(unittest.TestCase):
                 native = [part for part in match[1].split(',') if part.strip()]
                 self.assertEqual(len(params), len(native))
                 self.assertTrue(body.assemble())
+
+    def test_spawn_selection_sends_only_index_and_rebuilds_from_server_state(self):
+        messages = []
+        class Message:
+            def __init__(self, op):
+                self.data = dict(op=op)
+            def addProp(self, name, value):
+                self.data[name] = value
+        env = dict(_global=dict(__tgPanel={},
+                               __tgSend=Message,
+                               __tgTransmit=lambda m: messages.append(m.data)),
+                   Number=int)
+        funcs = self.helpers(env)
+        env['_global']['__tgSend'] = Message
+        env['_global']['__tgTransmit'] = lambda m: messages.append(m.data)
+        funcs['__tgClick'].invoke(dict(__op='spawn', __value=1), [])
+        self.assertEqual(messages, [dict(op='spawn', spawn_point=1)])
+        self.assertNotIn('p.distance.text', client.SOURCE)
+        self.assertIn('m.addProp("spawn_point", _global.__tgSpawnPoint)', client.SOURCE)
+
+    def test_confirmed_spawn_updates_caption_distance_and_closes_dropdown(self):
+        events = []
+        env = dict(_global=dict(__tgSpawnLabels=['Ближняя', 'Средняя', 'Дальняя'],
+                               __tgSpawnPoint=1, __tgDistance=14), String=str)
+        funcs = self.helpers(env)
+        panel = dict(spawn=dict(caption=dict(text='old')), distanceInfo=dict(text='old'),
+                     spawns=dict(removeMovieClip=lambda: events.append('closed')))
+        funcs['__tgSpawnState'].invoke(None, [panel])
+        self.assertEqual(panel['spawn']['caption']['text'], 'Средняя ▼')
+        self.assertEqual(panel['distanceInfo']['text'], 'Расстояние: около 14 гексов')
+        self.assertEqual(events, ['closed'])
+        funcs['__tgSpawnState'].invoke(None, [{}])
+
+    def test_local_presets_are_scoped_by_endpoint_character_and_slot(self):
+        keys = []
+        env = dict(_global=dict(__tgLocalSlot=1, __hcEndpoint='local', __tgOwner='Tester12',
+                               __hcEncode=lambda value: value), String=str,
+                   SharedObject=dict(getLocal=lambda key: keys.append(key)))
+        funcs = self.helpers(env)
+        funcs['__tgPresetStore'].invoke(None, [])
+        env['_global']['__tgLocalSlot'] = 2
+        funcs['__tgPresetStore'].invoke(None, [])
+        env['_global']['__tgOwner'] = 'Tester13'
+        funcs['__tgPresetStore'].invoke(None, [])
+        env['_global']['__hcEndpoint'] = 'other-server'
+        funcs['__tgPresetStore'].invoke(None, [])
+        self.assertEqual(len(set(keys)), 4)
+        self.assertTrue(all(key.startswith('lavaTrainingPresets_v1_') for key in keys))
+
+    def test_local_load_is_draft_only_and_corrupt_rules_leave_current_preset(self):
+        sent, built = [], []
+        player = dict(skills='0,12,0,0,0', specs=','.join(['-1'] * 15), gear='')
+        values = '1,1,1,1,1,2,1,1,1,25,1,0'
+        data = dict(player=player, enemy=dict(player), rules=values)
+        env = dict(_global=dict(__tgPlayer=dict(player), __tgEnemy=dict(player),
+                               __tgPanel=dict(status=dict(text='')), __tgRuleDraftValues='old'),
+                   SharedObject={}, String=str)
+        funcs = self.helpers(env)
+        env['_global']['__tgPresetStore'] = lambda: dict(data=data)
+        env['_global']['__tgBuild'] = lambda: built.append(True)
+        env['_global']['__tgTransmit'] = lambda m: sent.append(m)
+        funcs['__tgLoad'].invoke(None, [])
+        self.assertEqual(env['_global']['__tgRuleDraftValues'], values)
+        self.assertEqual(built, [True])
+        self.assertEqual(sent, [])
+        data['rules'] = 'x' * 257
+        funcs['__tgLoad'].invoke(None, [])
+        self.assertEqual(env['_global']['__tgRuleDraftValues'], values)
+        self.assertEqual(built, [True])
+
+    def test_manual_save_flushes_player_enemy_and_rule_draft_together(self):
+        writes = []
+        values = '1,1,1,1,1,1.5,1,1,1,0,1,0'
+        player = dict(skills='0,12,0,0,0', specs=','.join(['-1'] * 15), gear='')
+        data = {}
+        env = dict(_global=dict(__tgPlayer=dict(player), __tgEnemy=dict(player),
+                               __tgRuleDraftValues=values, __tgPanel=dict(status=dict(text=''))))
+        funcs = self.helpers(env)
+        env['_global']['__tgPresetStore'] = lambda: dict(data=data, flush=lambda: writes.append(True))
+        funcs['__tgSave'].invoke(None, [])
+        self.assertEqual(data['rules'], values)
+        self.assertEqual(data['player'], player)
+        self.assertEqual(data['enemy'], player)
+        self.assertEqual(writes, [True])
+
+    def test_start_requires_applying_loaded_rules_first(self):
+        env = dict(_global=dict(__tgPanel=dict(status=dict(text='')), __tgTab='rules',
+                               __tgRuleDraftValues='pending', __tgRuleValues='current'))
+        funcs = self.helpers(env)
+        env['_global']['__tgDraft'] = lambda tab: None
+        funcs['__tgClick'].invoke(dict(__op='start', __value=''), [])
+        self.assertIn('Сначала примените правила', env['_global']['__tgPanel']['status']['text'])
 
     def test_profile_and_button_objects_use_literal_field_names(self):
         import ast
@@ -39,6 +215,143 @@ class TrainingClient(unittest.TestCase):
             fn = Function(args, body.assemble(), env)
             env['_global'][name] = functions[name] = fn
         return functions
+
+    def test_catalogue_ignores_late_reply_from_another_post_or_page(self):
+        env = dict(_global=dict(__tgPanel=dict(page={}), __tgContext='shotguns',
+                               __tgCatalogueRequest=8))
+        funcs = self.helpers(env)
+        funcs['__tgList'].invoke(None, [dict(context='pistols', request_id=8)])
+        funcs['__tgList'].invoke(None, [dict(context='shotguns', request_id=7)])
+        self.assertEqual(env['_global']['__tgPanel'], dict(page={}))
+
+    def test_thumbnail_is_fitted_once_and_listener_detached(self):
+        calls = []
+        env = dict(_global={}, Math=dict(min=min))
+        funcs = self.helpers(env)
+        icon = dict(display_mc=dict(_width=200, _height=100),
+                    removeEventListener=lambda *args: calls.append(args))
+        funcs['__tgThumbReady'].invoke(None, [dict(target=icon)])
+        self.assertEqual((icon['_xscale'], icon['_yscale']), (24, 24))
+        self.assertEqual(len(calls), 1)
+
+    def test_page_cleanup_detaches_pending_icon_callbacks(self):
+        calls = []
+        icon = dict(src=dict(removeEventListener=lambda *args: calls.append('source')),
+                    mcl_list=dict(onLoadInit='pending'),
+                    removeEventListener=lambda *args: calls.append('completed'))
+        cards = dict(row0=dict(icon=icon), removeMovieClip=lambda: calls.append('removed'))
+        env = dict(_global={}, String=str)
+        funcs = self.helpers(env)
+        funcs['__tgReleaseRows'].invoke(None, [dict(cards=cards)])
+        self.assertEqual(calls, ['completed', 'source', 'removed'])
+        self.assertIsNone(icon['mcl_list']['onLoadInit'])
+
+    def test_normal_trade_keeps_native_buy_and_sell_checks(self):
+        calls = []
+        item = dict(id='ordinary', typeID=26075)
+        env = dict(Boolean=bool, _global=dict(__tgActive=False, __tgCopies={54000: 26075}))
+        funcs = self.helpers(env)
+        owner = dict(__tgTradeBuyOrig=lambda *args: calls.append(('buy', args)),
+                     __tgCheckSellOrig=lambda arg: 'native refusal')
+        funcs['__tgTradeBuy'].invoke(owner, [item, 3])
+        self.assertEqual(calls, [('buy', (item, 3))])
+        self.assertEqual(funcs['__tgCheckSell'].invoke(owner, [item]), 'native refusal')
+        env['_global']['__tgActive'] = True
+        self.assertIsNone(funcs['__tgCheckSell'].invoke(owner, [dict(id='copy', typeID=54000)]))
+
+    def test_training_price_override_is_zero_without_changing_normal_prices(self):
+        shown = []
+        env = dict(String=str,_global=dict(__tgActive=True, __tgCopies={54000: 26075}))
+        funcs = self.helpers(env)
+        view = dict(mainCost=42, attachIconEnabled=True, __tgShowCostOrig=lambda *args: None,
+                    price_mc=dict(gotoAndStop=lambda frame: shown.append(frame),
+                                  fontContainer=dict(showValue=shown.append)))
+        funcs['__tgShowCost'].invoke(view, [dict(typeID=26075), 'right'])
+        self.assertEqual((view['mainCost'], shown), (42, []))
+        funcs['__tgShowCost'].invoke(view, [dict(typeID=54000), 'right'])
+        self.assertEqual(view['mainCost'], 0)
+        self.assertEqual(shown, [1, '0'])
+
+    def test_reference_gold_price_is_visible_without_changing_payable_cost(self):
+        shown=[]
+        env=dict(String=str,Number=float,Math=dict(floor=__import__("math").floor),_global=dict(__tgActive=True,__tgCopies={54000:26075},
+                 __tgPrices={54000:dict(cost=50000,gold=1250)}))
+        funcs=self.helpers(env)
+        view=dict(mainCost=99,attachIconEnabled=True,showHeapCount=False,__tgShowCostOrig=lambda *args:None,
+                  price_mc=dict(gotoAndStop=lambda frame:shown.append(frame),fontContainer=dict(showValue=shown.append)))
+        funcs['__tgShowCost'].invoke(view,[dict(typeID=54000),'right'])
+        self.assertEqual(shown,[2,'12.5'])
+        self.assertEqual(view['mainCost'],0)
+        self.assertEqual(env['_global']['__tgPrices'][54000],dict(cost=50000,gold=1250))
+
+    def test_battery_pack_price_is_displayed_as_ten_thousand_per_piece(self):
+        env=dict(String=str,Number=float,Math=dict(floor=__import__('math').floor),
+                 _global=dict(__tgPrices={54000:dict(cost=200000,gold=0,pack=20)}))
+        funcs=self.helpers(env)
+        price=funcs['__tgReferencePrice'].invoke(None,[dict(typeID=54000)])
+        self.assertEqual(price,dict(value=10000,gold=False))
+
+    def test_reference_afro_stack_price_and_tooltip_both_state_free_trade(self):
+        from avm_test import Arr
+        shown=[]
+        env=dict(String=str,Number=float,Math=dict(floor=__import__("math").floor),_global=dict(__tgActive=True,__tgCopies={54000:123},
+                 __tgPrices={54000:dict(cost=2,gold=0)}))
+        funcs=self.helpers(env)
+        item=dict(typeID=54000,getProp=lambda key:50 if key=='size' else None)
+        view=dict(mainCost=9,attachIconEnabled=False,showHeapCount=True,__tgShowCostOrig=lambda *args:None,
+                  price_mc=dict(gotoAndStop=lambda frame:None,fontContainer=dict(showValue=shown.append)))
+        funcs['__tgShowCost'].invoke(view,[item,'right'])
+        self.assertEqual(float(shown[-1][1:]),100)
+        self.assertEqual(shown[-1][0],'a')
+        self.assertEqual(view['mainCost'],0)
+        rows=Arr()
+        funcs['__tgAnnotationPrice'].invoke(dict(item=item),[rows])
+        self.assertEqual(len(rows),2)
+        self.assertIn('за 1 шт.',rows[0][0])
+        self.assertEqual(rows[1][1],'получение и сдача бесплатно')
+
+    def test_closing_trade_detaches_quantity_callbacks_and_late_cancel_is_ignored(self):
+        calls = []
+        env = dict(_global={},lol=dict(core=dict(SceneShifter=dict(closeWindow=lambda name:calls.append('window closed')))))
+        funcs = self.helpers(env)
+        box = dict(removeEventListener=lambda *args: calls.append(args[0]))
+        trade = dict(__tgPurchaseItem='copy', __tgPurchaseBox=box,
+                     __tgTradeKillOrig=lambda: calls.append('native kill'),
+                     applyTransfer=lambda success: calls.append(success))
+        funcs['__tgTradeKill'].invoke(trade, [])
+        self.assertEqual(calls, ['exchange', 'close', 'window closed', 'native kill'])
+        self.assertIsNone(trade['__tgPurchaseItem'])
+        funcs['__tgTradeCancel'].invoke(trade, [dict(target=box)])
+        self.assertNotIn(False, calls)
+
+    def test_free_quantity_confirmation_sends_one_request_and_detaches_callbacks(self):
+        calls = []
+        env = dict(_global=dict(__tgActive=True),
+                   lol=dict(core=dict(SceneShifter=dict(closeWindow=lambda name: calls.append(name)))))
+        funcs = self.helpers(env)
+        env['_global']['__tgBuyFree'] = lambda *args: calls.append(args)
+        box = dict(removeEventListener=lambda *args: None)
+        item = dict(typeID=54000, tradeID=0)
+        trade = dict(__tgPurchaseItem=item, __tgPurchaseBox=box,
+                     applyTransfer=lambda success: calls.append(success))
+        funcs['__tgTradeQuantity'].invoke(trade, [dict(target=box, right=4)])
+        self.assertEqual(calls, ['exchange', (trade, item, 4)])
+        funcs['__tgTradeQuantity'].invoke(trade, [dict(target=box, right=4)])
+        self.assertEqual(len([call for call in calls if isinstance(call, tuple)]), 1)
+
+    def test_free_quantity_cancel_restores_drag_without_money_error(self):
+        from avm_test import Arr
+        calls = []
+        env = dict(_global={})
+        funcs = self.helpers(env)
+        panel = dict(trade=dict(__tgCancelledFree=True),
+                     ddOperation_arr=Arr([dict(failedOperation=lambda: calls.append('restore'))]),
+                     __tgTradeErrorOrig=lambda: calls.append('money error'))
+        funcs['__tgTradeError'].invoke(panel, [])
+        self.assertEqual(calls, ['restore'])
+        panel['trade']['__tgCancelledFree'] = False
+        funcs['__tgTradeError'].invoke(panel, [])
+        self.assertEqual(calls, ['restore', 'money error'])
 
     def test_center_and_clamp_use_original_movie_origin(self):
         env = dict(_global={}, Stage=dict(width=1920, height=1080),
@@ -223,7 +536,7 @@ class TrainingClient(unittest.TestCase):
         payload = widescreen.injected()
         self.assertIn(b'__tgInstall', payload)
         self.assertIn(b'__tgForgetItems', payload)
-        self.assertIn('Учебный центр'.encode('utf-8'), payload)
+        self.assertTrue('Компьютер полигона'.encode('utf-8') in payload, 'Sandbox title missing from injection')
         # A native DoAction is used; no browser or command-line UI dependency.
         self.assertNotIn(b'ExternalInterface', client.SOURCE.encode('utf-8'))
 
