@@ -690,9 +690,11 @@ def skill_xp(cid, skill):
 def open_stall(c, here, trader):
     """The trader's window (getInfo) and the stall opened on it: (its list,
     the ack)."""
-    npc = here.get(trader, [0])[0]
+    assert trader in here, (trader, c.scene_id, "fixture trader absent")
+    npc = here[trader][0]
     c.send("getInfo;lvl=0;id=%d;type=0;" % npc)
     window = first(c.until(lambda f: f[0] == "userInfo_Trader"), "userInfo_Trader")
+    assert window.get("id") == npc, (trader, window, "fixture trader did not answer")
     stall = window.get("type_list")
     stall = list(stall) if isinstance(stall, list) else ([] if stall in (None, "") else [stall])
     c.send("ss_create;s_type=1;target=%d;" % npc)
@@ -745,10 +747,28 @@ def shoot(c, gun, target, tries=40):
         c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(target)))
         got = c.until(lambda f: f[0] == "ss_di_firearm"
                       or (f[0] == "cmdAck" and f[1].get("res")), 3) + c.frames(0.3)
+        assert not any(p.get("dead") == 0 for p in named(got, "lch")), (
+            c.scene_id, target, "fixture character died during combat")
         if [p for p in named(got, "lch") if p.get("dead") == target]:
             return got
         time.sleep(0.5)
     return None
+
+
+def heal_for_combat(c, label):
+    """Prepare a story encounter through the real healer, preserving the purse."""
+    lid, clinic = goto(c, STATION)
+    healer_type = next(t for _cell, t in world.location(STATION).spawns
+                       if t and MT[t][0] == world.HEALER)
+    healer = inhabitants(clinic, lid)[healer_type][0]
+    purse = money(CID)
+    cheat(c, "/money %d 0" % npcs.healer_price(healer_type, 10))
+    c.send("on_conv;mob=%d;op=1;" % healer)
+    healed = c.frames()
+    vitals = [p for p in named(healed, "usrUp") if p.get("id") == 0]
+    check(label + ": healer restores full HP and stamina before entry",
+          (acks(healed), [(p["hcur"] == p["hmax"], p["scur"] == p["smax"]) for p in vitals],
+           money(CID)), ([0], [(True, True)], purse))
 
 
 def walk_to(c, loc, pos, goal, avoid=()):
@@ -935,7 +955,10 @@ def boss_bag(c, gun, where, boss):
             stacks[t] += st.item(u)["count"]
     st.close()
     c.send("ss_upd;s_status=3;obj=x0;param=1;")
-    c.frames(0.8)
+    taken = c.frames(0.8)
+    assert acks(taken) == [0], (where, boss, acks(taken), "fixture loot refused")
+    assert not any(p.get("dead") == 0 for p in named(taken, "lch")), (
+        where, boss, "fixture character died while looting")
     c.send("ss_upd;s_status=0;obj=x0;param=1;")
     c.frames(0.3)
     return True, dict(stacks)
@@ -1201,10 +1224,18 @@ try:
                    len([t for t in prizes if after[t] > before[t]])), ([0], [0], 0, 1))
 
     # --- the gold: the five bosses at six -------------------------------------------------
+    # This story checks boss loot, not five consecutive fights by a naked
+    # character. Use the same legal level-17 armour as in the mine below;
+    # retain real damage, movement, death and loot rules.
+    for slot, piece in zip(inventory.SET_SLOTS, sets.SLOTS):
+        armour = give(c, sets.SETS[11004]["members"][piece])
+        c.send("ss_move;obj=x%s;to=%d;from=2048;" % (armour, slot))
+        check("boss route: level-17 armour G %s equipped" % piece, acks(c.frames()), [0])
     GUN = give(c, ADMIN_GUN)
     wield(c, GUN)
     bags = {}
     for boss, (where, _o) in BOSSES.items():
+        heal_for_combat(c, "boss %d" % boss)
         fell, bag = boss_bag(c, GUN, where, boss)
         bags[boss] = (fell, bag, ounces(bag))
     check("at six all five bosses fall and each leaves 4 one-ounce ingots",
@@ -1328,26 +1359,8 @@ try:
           money(CID)[1], shopping_gold + 1900 - 350)
 
     # --- the Dark Mine: down two tiers and up ------------------------------------------------
-    # This scene checks passages, not survival of a naked character. The
-    # miners now shoot F2000s: equip legal level-17 armour before entering.
-    # Keep their real damage/AI, the player's level, and the exit refusals.
-    for slot, piece in zip(inventory.SET_SLOTS, sets.SLOTS):
-        armour = give(c, sets.SETS[11004]["members"][piece])
-        c.send("ss_move;obj=x%s;to=%d;from=2048;" % (armour, slot))
-        check("mine route: level-17 armour G %s equipped" % piece, acks(c.frames()), [0])
-    # Restore through the actual healer after equipping: earlier fights
-    # can leave partial HP. Keep real damage, AI, level and exit refusals.
-    lid, clinic = goto(c, STATION)
-    healer_type = next(t for _cell, t in world.location(STATION).spawns
-                       if t and MT[t][0] == world.HEALER)
-    healer = inhabitants(clinic, lid)[healer_type][0]
-    cheat(c, "/money %d 0" % npcs.healer_price(healer_type, 10))
-    c.send("on_conv;mob=%d;op=1;" % healer)
-    healed = c.frames()
-    vitals = [p for p in named(healed, "usrUp") if p.get("id") == 0]
-    check("mine route: healer restores full HP and stamina before entry",
-          (acks(healed), [(p["hcur"] == p["hmax"], p["scur"] == p["smax"]) for p in vitals]),
-          ([0], [(True, True)]))
+    # Keep the armour from the boss section and heal before the mine route.
+    heal_for_combat(c, "mine route")
     reload(c, GUN)
     lid, arrival = goto(c, DARK_MOUTH)
     here = inhabitants(arrival, lid)
