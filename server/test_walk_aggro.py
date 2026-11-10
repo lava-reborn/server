@@ -37,6 +37,7 @@ import sys
 import tempfile
 import threading
 import time
+from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENC = "utf-8"
@@ -128,8 +129,8 @@ def _scene(pos, live):
     return room, rc, seat, dog
 
 
-async def _in_process():
-    t = 1000.0
+async def _in_process(clock):
+    t = clock.return_value
     inside = next(c for c in range(W * LOC.height)
                   if _open(c) and 2 <= mobs.hex_distance(c, DOG_HOME, W) <= AGGRO - 1)
     outside = next(c for c in range(W * LOC.height)
@@ -143,7 +144,8 @@ async def _in_process():
                              mobs.hex_distance(outside, DOG_HOME, W)),
           (dog.target, room.sent), (None, []))
     seat.live = inside
-    dog.think(rc, t + combat.AI_TICK)
+    clock.return_value = t + combat.AI_TICK
+    dog.think(rc, clock.return_value)
     check("the figure in, the dog takes him", dog.target is seat.combat, True)
 
     # The dog after him, beside the end of his walk, his figure four hexes off.
@@ -154,17 +156,28 @@ async def _in_process():
     room, rc, seat, dog = _scene(pos=end, live=away)
     rc.aggro(dog, seat.combat, t)
     room.sent = []
-    dog.think(rc, t + 1.0)
+    clock.return_value = t + 1.0
+    dog.think(rc, clock.return_value)
     check("beside where his walk ends, but not beside him: the dog does not bite",
           ([n for n, p in room.sent if n in ("caHit", "caMiss")], dog.aim), ([], None))
     legs = [p["path"] for n, p in room.sent if n == "userMove" and p.get("id") == 1]
     check("it goes after the figure instead", legs != [] and away not in legs[0], True)
+    check("  ..the figure stays at the start until a step completes", dog.cell, DOG_HOME)
+    # The motion clock and the AI must use the same time. A route command
+    # starts movement; it does not instantly move the figure to its end.
+    if legs:
+        clock.return_value += STEP * (len(legs[0]) - 1)
     check("  ..and closes on it",
           mobs.hex_distance(dog.cell, away, W) < mobs.hex_distance(DOG_HOME, away, W), True)
 
 
+async def _run_in_process():
+    with patch.object(asyncio.get_running_loop(), "time", return_value=1000.0) as clock:
+        await _in_process(clock)
+
+
 try:
-    asyncio.run(_in_process())
+    asyncio.run(_run_in_process())
 except Exception:
     import traceback
     fails.append("the in-process part broke:\n" + traceback.format_exc())
