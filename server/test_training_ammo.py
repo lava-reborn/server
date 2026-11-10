@@ -77,10 +77,9 @@ class TrainingAmmunition(unittest.IsolatedAsyncioTestCase):
 
     async def test_support_weapons_are_at_special_vendor_separate_from_contraband(self):
         self.enter()
-        special=layout.BY_KEY['experimental']
-        offered=set(shop.stock(special));other=set(shop.stock(layout.BY_KEY['special']))
+        special=layout.BY_KEY['specialist']
+        offered=set(shop.stock(special))
         self.assertTrue({copies.copy_type(source) for source in support.SPECIAL_WEAPONS}<=offered)
-        self.assertTrue(offered.isdisjoint(other))
         for post in layout.POSTS:
             if post.category=='weapon':self.assertTrue(offered.isdisjoint(shop.stock(post)))
 

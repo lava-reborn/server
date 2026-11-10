@@ -17,42 +17,22 @@ class Post:
         return self.y * width + self.x
 
 
-# The category artwork is reused; the A/P/G columns have distinct captions.
-CATEGORIES = (
-    ('pistols', 'Пистолеты', 1200, 'weapon', 0),
-    ('shotguns', 'Дробовики', 76, 'weapon', 1),
-    ('smg', 'Пистолет-пулемёты', 1163, 'weapon', 5),
-    ('assault', 'Автоматы', 950, 'weapon', 2),
-    ('rifles', 'Винтовки', 380, 'weapon', 3),
-    ('machineguns', 'Пулемёты', 2514, 'weapon', 4),
-    ('melee', 'Холодное оружие', 2279, 'weapon', 6),
-    ('armour', 'Броня', 1006, 'armour', -1),
-    ('pouches', 'Подсумки', 1006, 'pouch', -1),
-    ('ammo', 'Боеприпасы', 1006, 'ammo', -1),
-    ('medicine', 'Медицина', 1006, 'medicine', -1),
-    ('buffs', 'Баффы', 1006, 'buff', -1),
-    ('special', 'Коллекционное', 1006, 'special_weapon', -1),
-    ('event', 'Ивентовое лечение', 1006, 'event_medicine', -1),
-)
+# Six catalogue services: variants and upgrades are selected in the window.
 POSTS = (
     Post('computer', 'Компьютер полигона', 1263, 36, 114, 'mob'),
     Post('player', 'Инструктор · навыки и восстановление', 1997, 28, 114, 'skills'),
-) + tuple(
-    Post(key + '_' + line, title + ' (' + line + ')', resource,
-         6 + index * 4,
-         134 - column * 6, category, weapon_class, line)
-    for index, (key, title, resource, category, weapon_class) in enumerate(CATEGORIES)
-    if key != 'special'
-    for column, line in enumerate(('A', 'P', 'G'))
-) + (Post('special', 'Контрабанда и коллекционное', 2391, 54, 128, 'special_weapon', line='all'),
-     Post('experimental', 'Специальное оружие', 5707, 54, 122, 'experimental_weapon', line='all'))
+    Post('weapons', 'Оружейник', 2514, 17, 128, 'weapon', line='all'),
+    Post('armoury', 'Броня', 1006, 23, 128, 'armour', line='all'),
+    Post('supplies', 'Боеприпасы и подсумки', 1006, 29, 128, 'ammo', line='all'),
+    Post('medical', 'Медицина', 1006, 35, 128, 'medicine', line='all'),
+    Post('boosts', 'Баффы', 1006, 41, 128, 'buff', line='all'),
+    Post('specialist', 'Особое оружие', 2391, 47, 128, 'special_weapon', line='all'),
+)
 BY_KEY = {post.key: post for post in POSTS}
 NAME_BASE = 8_100_000
 NAMES = {NAME_BASE + index: post.title + '<br>Испытательный полигон'
          for index, post in enumerate(POSTS)}
 NAME_IDS = {post.key: NAME_BASE + index for index, post in enumerate(POSTS)}
-NAMES[NAME_IDS['special']] = 'Контрабанда<br>Коллекционное оружие'
-NAMES[NAME_IDS['experimental']] = 'Спецоружие<br>Учебное и необычное'
 MOB_GROUPS = {
     'all': 'Все противники', 'camps': 'Лагеря', 'mines': 'Шахты',
     'bosses': 'Боссы', 'dogs': 'Собаки', 'crocodiles': 'Крокодилы',

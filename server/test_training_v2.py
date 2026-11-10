@@ -25,6 +25,7 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
     enter = fixtures.TrainingGround.enter
     unchanged = fixtures.TrainingGround.unchanged
     approach_shop = fixtures.TrainingGround.approach_shop
+    supply = fixtures.TrainingGround.supply
 
     async def test_reference_price_packet_matches_sources_but_copies_stay_free(self):
         from protocol import decode
@@ -37,7 +38,10 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any(packet['costs']))
         for copied,source,afro,gold in zip(packet['copies'],packet['sources'],packet['costs'],packet['gold_costs']):
             import training_legacy, training_ammo
-            base=training_ammo.parameters(source,training_legacy.apply(source,copy.deepcopy(items.params_of(source))))
+            if source in training_items.PROTOTYPES:
+                base = training_items.PROTOTYPES[source]['data']
+            else:
+                base=training_ammo.parameters(source,training_legacy.apply(source,copy.deepcopy(items.params_of(source))))
             self.assertEqual(afro,base.get('cost',0) or 0)
             self.assertEqual(gold,base.get('g_cost',0) or 0)
             self.assertEqual((items.params_of(copied)['cost'],items.params_of(copied)['g_cost']),(0,0))
@@ -49,7 +53,7 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
             matching = [post for post in layout.POSTS if post.line and
                         training_items.copy_type(source) in tg.training_shop.stock(post)]
             self.assertEqual(len(matching), 1, (source, label))
-            self.assertEqual(matching[0].category, category)
+            self.assertIn(category, tg.training_supply.STATIONS[matching[0].key])
         self.assertEqual(tg.item_catalogue()[1572][0], 'event_medicine')
         self.assertEqual(tg.item_catalogue()[5844][0], 'special_weapon')
         self.assertNotIn('set', {p.category for p in layout.POSTS})
@@ -61,27 +65,22 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         vendors=[p for p in layout.POSTS if p.category=='special_weapon']
         self.assertEqual(len(vendors),1)
         post=vendors[0]
-        self.assertEqual((post.key,post.line,post.resource),('special','all',2391))
+        self.assertEqual((post.key,post.line,post.resource),('specialist','all',2391))
         rare=set(tg.training_shop.stock(post))
-        expected={training_items.copy_type(source) for source,row in tg.item_catalogue().items() if row[0]=='special_weapon'}
+        expected={training_items.copy_type(source) for source,row in tg.item_catalogue().items() if row[0] in ('special_weapon','experimental_weapon')}
         self.assertEqual(rare,expected)
         self.assertTrue(all(training_items.copy_type(source) in rare for source in tg.contraband() if source in tg.item_catalogue()))
-        self.assertLessEqual(len(rare),tg.training_shop.MAX_STOCK)
         for ordinary in layout.POSTS:
             if ordinary.category=='weapon':
                 self.assertTrue(rare.isdisjoint(tg.training_shop.stock(ordinary)))
         self.unchanged()
 
     async def test_dedicated_vendor_can_issue_contraband_PKM_for_free(self):
-        g=self.enter()
-        post=layout.BY_KEY['special']
-        eid=self.approach_shop(g,'special')
-        g.clone.handle_training('ss_create',dict(s_type=1,target=eid))
-        self.assertIsNotNone(g.clone.inv.trade)
-        copied=training_items.copy_type(7051)
-        index=tg.training_shop.stock(post).index(copied)
-        g.clone.handle_training('ss_upd',dict(s_status=1,obj=format(index,'x'),param=1))
-        self.assertTrue(any(row['type_id']==copied for row in g.clone.inv.rows()))
+        g = self.enter()
+        self.approach_shop(g, 'specialist')
+        self.supply(g, 7051)
+        copied = training_items.copy_type(7051)
+        self.assertTrue(any(row['type_id'] == copied for row in g.clone.inv.rows()))
         self.unchanged()
 
     async def test_p_g_damage_normalized_without_changing_other_source_fields(self):

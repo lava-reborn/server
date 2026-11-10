@@ -19,11 +19,12 @@ class Rules:
     ammo_modifiers: bool = False
     broken_armour: bool = False
     combat_v2: bool = True
+    simulator_formulas: bool = False
 
     @classmethod
     def parse(cls, raw):
         if set(raw) - {'revision', 'attributes', 'health', 'stamina', 'armour', 'spread',
-                       'effect_armour', 'ammo_modifiers', 'broken_armour', 'combat_v2'}:
+                       'effect_armour', 'ammo_modifiers', 'broken_armour', 'combat_v2', 'simulator_formulas'}:
             raise ValueError('Unknown training rule')
         attrs = tuple(raw.get('attributes', (1, 1, 1, 1, 1)))
         if len(attrs) != 5:
@@ -43,32 +44,45 @@ class Rules:
         model = raw.get('combat_v2', True)
         if not isinstance(model, bool):
             raise ValueError('Training model flag must be boolean')
-        return cls(revision, attrs, *values[5:], effect, ammo, broken, model)
+        simulator = raw.get('simulator_formulas', False)
+        if not isinstance(simulator, bool) or simulator and not model:
+            raise ValueError('Simulator formulas require the corrected model')
+        return cls(revision, attrs, *values[5:], effect, ammo, broken, model, simulator)
 
     def as_dict(self):
         return asdict(self)
 
     def values(self):
-        return ','.join(format(v, '.15g') for v in self.attributes +
-                        (self.health, self.stamina, self.armour, self.spread,
-                         self.effect_armour, int(self.ammo_modifiers), int(self.broken_armour), int(self.combat_v2)))
+        values = self.attributes + (self.health, self.stamina, self.armour, self.spread,
+                  self.effect_armour, int(self.ammo_modifiers), int(self.broken_armour), int(self.combat_v2))
+        if self.simulator_formulas:
+            values += (1,)
+        return ','.join(format(value, '.15g') for value in values)
 
     @classmethod
     def from_values(cls, text):
         if not isinstance(text, str) or len(text) > 256:
             raise ValueError('Invalid training rules payload')
         values = text.split(',')
-        if len(values) not in (12, 13) or any(v not in ('0', '1') for v in values[10:]):
-            raise ValueError('Twelve training values required')
+        if len(values) not in (12, 13, 14) or any(v not in ('0', '1') for v in values[10:]):
+            raise ValueError('Twelve to fourteen training values required')
         numbers = [float(v) for v in values[:10]]
         return cls.parse(dict(revision='session-v1', attributes=numbers[:5],
                               **dict(zip(('health', 'stamina', 'armour', 'spread', 'effect_armour'), numbers[5:])),
                               ammo_modifiers=values[10] == '1', broken_armour=values[11] == '1',
-                              combat_v2=len(values) == 13 and values[12] == '1'))
+                              combat_v2=len(values) >= 13 and values[12] == '1',
+                              simulator_formulas=len(values) == 14 and values[13] == '1'))
 
     def weapon(self, weapon, ammo):
         if not self.ammo_modifiers and self.spread == 1:
             return weapon
+        damage, stamina, reach = self.ammunition(ammo)
+        return weapon._replace(dmin=round(weapon.dmin * damage), dmax=round(weapon.dmax * damage),
+                               sdmin=round(weapon.sdmin * stamina), sdmax=round(weapon.sdmax * stamina),
+                               opt_lo=weapon.opt_lo * reach, opt_hi=weapon.opt_hi * reach,
+                               max_range=weapon.max_range * reach, cone=weapon.cone * self.spread / reach)
+
+    def ammunition(self, ammo):
         damage = ammo.get('dam_mod', 1) if self.ammo_modifiers else 1
         stamina = ammo.get('st_mod', 1) if self.ammo_modifiers else 1
         reach = ammo.get('range_mod', 1) if self.ammo_modifiers else 1
@@ -76,13 +90,11 @@ class Rules:
         if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or not 0 < v <= 10
                for v in (damage, stamina, reach)):
             raise ValueError('Invalid experimental ammunition modifiers')
-        return weapon._replace(dmin=round(weapon.dmin * damage), dmax=round(weapon.dmax * damage),
-                               sdmin=round(weapon.sdmin * stamina), sdmax=round(weapon.sdmax * stamina),
-                               opt_lo=weapon.opt_lo * reach, opt_hi=weapon.opt_hi * reach,
-                               max_range=weapon.max_range * reach, cone=weapon.cone * self.spread / reach)
+        return damage, stamina, reach
 
     def description(self):
-        return ('Версия правил: %s. Множители: характеристики %s; HP %g; выносливость %g; '
+        profile = ('Симулятор: новые формулы, исходный урон A/G, отдельные коэффициенты оружия и параметры мобов. Фиксированного соотношения урона A/G нет. ' if self.simulator_formulas else '')
+        return profile + ('Версия правил: %s. Множители: характеристики %s; HP %g; выносливость %g; '
                 'броня %g; разброс %g; добавка брони эффекта %g. '
                 'Множители патронов: %s; броня поломанных частей: %s. '
                 'Исправленная модель: %s. Изменения действуют только на полигоне. '

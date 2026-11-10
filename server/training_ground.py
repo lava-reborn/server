@@ -15,13 +15,17 @@ import training_items
 import training_rules
 import training_layout
 import training_shop
+import training_supply
 import training_effects
+import training_formulas
 import training_balance
 import training_mobs
 import training_sets
 import training_legacy
 import training_ammo
 import training_labels
+import training_display
+import training_bot
 import training_party
 import combat
 import craft
@@ -61,6 +65,7 @@ TERMINAL = 1263
 TERMINAL_CELL = LOCATIONS[RANGE][0]
 MAX_SESSIONS = 16
 MAX_ITEMS = 32
+CARRY_LIMIT_GRAMS = 150_000
 MAX_LEVEL = 20
 PAGE_SIZE = 10
 IDLE_SECONDS = 1800
@@ -148,6 +153,7 @@ def item_catalogue():
     extra.update(training_effects.definitions())
     extra.update(training_legacy.CLASSIC)
     extra.update(training_ammo.EXTRA_SOURCES)
+    extra.update(training_formulas.data().get('extra_sources', ()))
     extra.update(t for t, info in items.wiki().items() if items.root_of(t) == items.HEAL
                  and any(word in items.catalogue()[t][1].casefold() for word in
                          ('newyear', 'valentine', 'oct31', 'march', 'may9', 'june', 'ny20', 'febr')))
@@ -227,7 +233,13 @@ def item_catalogue():
             reference = training_balance.afro_of(type_id)
             if reference in mod_labels:
                 label += ' · ' + mod_labels[reference]
+        if root == items.FIRE_ARM:
+            upgrade = training_display.upgrade(type_id)
+            if upgrade and upgrade not in label:
+                label += ' · ' + upgrade
         out[type_id] = (category, level, label)
+    for source, record in training_items.prototype_rows().items():
+        out[source] = ('experimental_weapon', record['level'], record['name'] + ' · Экспериментальный образец')
     return out
 
 
@@ -332,6 +344,10 @@ def validate_profile(raw, rules=None):
 
 
 class TrainingCharacter(progression.Character):
+    def max_weight(self):
+        """Fixed range capacity, shared by UI, movement and inventory checks."""
+        return CARRY_LIMIT_GRAMS
+
     def __init__(self, rules=None):
         super().__init__()
         self.training_rules = rules if rules is not None else training_rules.current()
@@ -376,8 +392,12 @@ def character(profile, rules=None):
 
 
 class TrainingFighter(combat.Fighter):
-    def prepare_weapon(self, weapon, ammo):
+    def prepare_weapon(self, weapon, ammo, row=None, mode=None):
         rules = self.sess.ground.rules
+        if rules.simulator_formulas:
+            if row is None:
+                row = self.sess.inv.in_slot(inventory.PRIMARY)
+            return training_formulas.weapon(weapon, self.character(), row, ammo, rules, mode)
         result = rules.weapon(weapon, ammo)
         if rules.combat_v2:
             multiplier = training_balance.intellect_multiplier(self.character())
@@ -386,6 +406,18 @@ class TrainingFighter(combat.Fighter):
                                      sdmin=training_balance.rounded(result.sdmin * multiplier),
                                      sdmax=training_balance.rounded(result.sdmax * multiplier))
         return result
+
+    def prepare_melee(self, bounds, row):
+        if self.sess.ground.rules.simulator_formulas:
+            return training_formulas.melee(bounds, self.character(), row)
+        return bounds
+
+    def healing_multiplier(self, character):
+        return training_formulas.healing_multiplier(character) if self.sess.ground.rules.simulator_formulas else 1
+
+    def medicine_cooldown_seconds(self):
+        return (training_formulas.cooldown_seconds(self.character()) if self.sess.ground.rules.simulator_formulas
+                else combat.battle_medicine.COOLDOWN_SECONDS)
 
     def healing_spec(self, vitals):
         if self.sess.ground.rules.combat_v2:
@@ -409,7 +441,13 @@ class TrainingFighter(combat.Fighter):
         row = self.store.item(uniq)
         if row is not None and training_effects.definition(row['type_id']):
             return training_effects.activate(self, uniq, target, ap_cost, peace_damage)
-        return super().heal_now(uniq, target, peace_damage, ap_cost)
+        result = super().heal_now(uniq, target, peace_damage, ap_cost)
+        ground = self.sess.ground
+        if self.sess is ground.enemy and row is not None:
+            after = self.store.item(uniq)
+            if after is None or after['use_count'] != row['use_count']:
+                ground.enemy_heals_left = max(0, ground.enemy_heals_left - 1)
+        return result
 
     def e_get_si(self, params):
         if not self.sess.training_effects.static(int(params.get('type', 0))):
@@ -485,12 +523,39 @@ class TrainingFighter(combat.Fighter):
 
 
 class TrainingCombat(combat.RoomCombat):
+    def ranged_critical(self, shooter, target, weapon, optimal):
+        if training_formulas.enabled(shooter):
+            return training_formulas.ranged_critical(shooter, target, weapon, optimal)
+        return optimal and combat.roll(weapon.crit - target.crit_evade_ranged())
+
+    def melee_critical(self, shooter, target, chance):
+        if training_formulas.enabled(shooter):
+            return training_formulas.critical(shooter, target, chance)
+        return combat.roll(chance)
+
+    def bullet_damage(self, shooter, target, weapon, damage, stamina_damage, critical, stamina_left):
+        if training_formulas.enabled(shooter):
+            return training_formulas.split(shooter, target, damage, weapon.piercing,
+                                           critical, stamina_left, stamina_damage)
+        return combat.split_damage(damage, target.armor(), weapon.piercing, critical, stamina_left, stamina_damage)
+
+    def melee_damage(self, shooter, target, damage, critical, stamina_left):
+        if training_formulas.enabled(shooter):
+            return training_formulas.split(shooter, target, damage, 1, critical, stamina_left, melee=True)
+        return combat.melee_split(damage, critical, stamina_left)
+
     def prepare_weapon(self, weapon, ammo):
         return self.room.ground.rules.weapon(weapon, ammo)
 
     def mob_attack(self, mob, target, t):
         weapon = getattr(mob, 'training_weapon', None)
-        if weapon is None:
+        if mob.stats.ranged and hasattr(mob, 'training_modes'):
+            distance = mobs.hex_distance(mob.cell, target.cell, self.room.loc.width)
+            selected = training_formulas.mob_mode(mob, distance)
+            if selected is None or selected[1] > mob.ap:
+                return
+            weapon, mob.stats.attack_ap, mob.stats.attack_time = selected
+        if weapon is None or not mob.stats.ranged:
             return super().mob_attack(mob, target, t)
         mob.next_attack = t + mob.stats.attack_time + mobs.ATTACK_PAUSE
         self.room.broadcast(('faAim', dict(id=mob.eid,
@@ -613,9 +678,11 @@ def clone_class(base):
             row = self.inv.store.quest(int(p.get('q_id', 0)))
             if not row or row['char_id'] != self.char_id or row['type'] != EXIT_QUEST:
                 raise ValueError('Задание недоступно')
-            self.inv.store.finish_quest(row['q_id'], self.char_id, EXIT_QUEST, require_active=True)
-            self.send('cmdAck', res=0)
-            self.ground.exit()
+            if not row['complete']:
+                raise ValueError('Задание ещё не выполнено')
+            # Success disposes this entire private journal. Keep the row until
+            # the durable presence checkpoint succeeds, so a failed exit retries.
+            self.ground.exit(quest_ack=True)
 
         def cmd_q_ca(self, p):
             q_id = int(p.get('q_id', 0))
@@ -715,16 +782,14 @@ def clone_class(base):
             post = self.ground.posts.get(eid)
             if post is None:
                 return super().send_npc_info(eid)
-            params = dict(type_list=list(training_shop.stock(post)), bg_objects=[], bg_obj_rep_req=[],
-                          pmod=1, smod=0, rmod=0) if post.line else {}
-            self.send(world.USERINFO[world.TRADER if post.line else world.COMMONER], id=eid,
+            self.send(world.USERINFO[world.COMMONER], id=eid,
                       name=training_layout.NAME_IDS[post.key], sex=0, res=post.resource,
                       ail=0, ally=1, lvl=1, rep=[0], bg_rep=0, bg_pen=0,
                       give_quests=[EXIT_QUEST] if post.key == 'computer' else [],
                       take_quests=[EXIT_QUEST] if post.key == 'computer' else [], m_hello=[], can_set_home=0,
-                      can_banking=0, can_trophy=0, can_repair=0, can_trade=int(bool(post.line)),
-                      tg_terminal=int(not post.line), tg_shop=int(bool(post.line)),
-                      tg_station=Str(post.key), tg_title=Str(post.title), **params)
+                      can_banking=0, can_trophy=0, can_repair=0, can_trade=0,
+                      tg_terminal=1, tg_supply=int(bool(post.line)),
+                      tg_station=Str(post.key), tg_title=Str(post.title))
 
         def cmd_ss_get_di(self, p):
             parsed = inventory.parse_oid(p.get('obj'))
@@ -861,6 +926,8 @@ class Ground:
         self.enemy_cache = None
         self.stationary = False
         self.mob_health = self.mob_damage = 100
+        self.enemy_healing, self.heal_below, self.heal_count = False, 50, 5
+        self.enemy_heals_left = 0
         self.rules = training_rules.current()
         self.spawn_point = DEFAULT_SPAWN
         self.location = RANGE
@@ -885,9 +952,13 @@ class Ground:
                 stationary = integer(saved.get('stationary', 0), 0, 1)
                 mob_health = integer(saved.get('mob_health', 100), 25, 300)
                 mob_damage = integer(saved.get('mob_damage', 100), 25, 300)
+                enemy_healing = integer(saved.get('enemy_healing', 0), 0, 1)
+                heal_below = integer(saved.get('heal_below', 50), 10, 90)
+                heal_count = integer(saved.get('heal_count', 5), 0, 30)
                 mode = saved.get('mode', 'mob')
                 if mode not in ('mob', 'fighter'):
                     raise ValueError('Unsupported training mode')
+                self.enemy_healing, self.heal_below, self.heal_count = bool(enemy_healing), heal_below, heal_count
                 self.profile, self.opponent = player, opponent
                 self.rules = rules
                 self.mob_health, self.mob_damage = mob_health, mob_damage
@@ -905,6 +976,7 @@ class Ground:
         self.pending = None
         self.last_request = 0.0
         self.last_catalogue_request = 0.0
+        self.supply_sequence = 0
         self.last_activity = time.monotonic()
         self.timer = None
         self.store = accounts.Store.temporary()
@@ -954,7 +1026,7 @@ class Ground:
             cell = post.cell(self.room.loc.width)
             if cell in self.room.loc.obstacles:
                 raise ValueError('Training post is blocked: ' + post.key)
-            root = world.TRADER if post.line else world.COMMONER
+            root = world.COMMONER
             self.room.npcs[eid] = rooms.NPC(cell, post.resource, root)
 
     def require_post(self):
@@ -970,18 +1042,16 @@ class Ground:
             raise ValueError('Подойдите к стойке или компьютеру')
         if self.phase != 'ready':
             raise ValueError('Сначала завершите тренировку: кнопка «К компьютеру»')
-        if post.line:
-            raise ValueError('Снаряжение выдаётся через окно торговли')
         self.context = post.key
         self.state()
         self.clone.send('tg', op='open', mob=self.mob_type, context=Str(post.key),
-                        title=Str(post.title), category=Str(post.category), wclass=post.weapon_class)
+                        title=Str(post.title), category=Str(post.category), wclass=post.weapon_class, supply=int(bool(post.line)))
 
     def remember_outfit(self):
         """Save an equipped preset, not every spare/free item in the bag."""
         gear = {}
         for row in sorted(self.clone.inv.rows(), key=lambda row: row['slot'] not in inventory.BODY_SLOTS):
-            source = training_items.source_type(row['type_id'])
+            source = training_items.profile_source(row['type_id'])
             if source not in item_catalogue():
                 continue
             root = row['root']
@@ -1044,7 +1114,8 @@ class Ground:
             exit_quest=self.inside and self.store.has_quest(self.clone.char_id, EXIT_QUEST),
             player=self.profile, opponent=self.opponent, location=self.location, rules=self.rules.as_dict(),
             mob=self.mob_type, spawn_point=self.spawn_point, stationary=int(self.stationary), mode=self.mode,
-            mob_health=self.mob_health, mob_damage=self.mob_damage))
+            mob_health=self.mob_health, mob_damage=self.mob_damage,
+            enemy_healing=int(self.enemy_healing), heal_below=self.heal_below, heal_count=self.heal_count))
 
     def change_location(self, location):
         training_party.relocate(self, location)
@@ -1163,7 +1234,7 @@ class Ground:
                sp=c.char.sp_max, ap=c.char.ap_ceiling,
                location=self.location, locations=list(LOCATIONS), location_labels=[Str(v[1]) for v in LOCATIONS.values()],
                spawn_point=self.spawn_point, spawn_labels=[Str(label) for label in SPAWN_LABELS],
-               distance=self.distance, stationary=int(self.stationary), mob_health=self.mob_health, mob_damage=self.mob_damage, selected_mob=self.mob_type, selected_mode=Str(self.mode),
+               distance=self.distance, stationary=int(self.stationary), mob_health=self.mob_health, mob_damage=self.mob_damage, enemy_healing=int(self.enemy_healing), heal_below=self.heal_below, heal_count=self.heal_count, selected_mob=self.mob_type, selected_mode=Str(self.mode),
                rules=Str(self.rules.description()), rule_values=Str(self.rules.values()), armour=c.combat.armor(), regen=progression.AP_REGEN, owner=Str(self.owner.nick), arena_width=ARENA_WIDTH, arena_height=ARENA_HEIGHT, loaded=int(c in self.room.players), spec_max=progression.SPEC_MAX,
                **self.equipment_meta(self.profile, 'gear_'),
                **self.equipment_meta(self.opponent, 'enemy_'),
@@ -1186,7 +1257,7 @@ class Ground:
             self.exit()
             return
         now = time.monotonic()
-        if op == 'catalogue':
+        if op in ('catalogue', 'supply_list', 'supply_variants', 'supply_bag'):
             if now - self.last_catalogue_request < 0.03:
                 raise ValueError('Дождитесь загрузки списка и повторите')
             self.last_catalogue_request = now
@@ -1207,6 +1278,9 @@ class Ground:
         if self.phase != 'ready':
             raise ValueError('Сначала завершите тренировку')
         self.require_post()
+        if op.startswith('supply_'):
+            training_supply.handle(self, op, p)
+            return
         if op == 'recover':
             if self.context != 'player':
                 raise ValueError('Восстановление доступно у инструктора')
@@ -1307,6 +1381,9 @@ class Ground:
             mob = integer(p.get('mob', self.mob_type), 1, 100000)
             if mode == 'mob' and mob not in mob_catalogue():
                 raise ValueError('Моб недоступен')
+            self.enemy_healing = integer(p.get('enemy_healing', int(self.enemy_healing)), 0, 1) == 1
+            self.heal_below = integer(p.get('heal_below', self.heal_below), 10, 90)
+            self.heal_count = integer(p.get('heal_count', self.heal_count), 0, 30)
             self.mob_type = mob
             self.spawn_point = spawn_point
             self.mob_health, self.mob_damage = mob_health, mob_damage
@@ -1344,9 +1421,9 @@ class Ground:
                     and (not level or entry[1] == level)
                     and query in entry[2].casefold()
                     and (line == 'all' or (t in contraband() if line == 'C' else item_line(t) == line))
-                    and (cat != 'weapon' or upgrade == 'all' or bool(craft.mod_of(t)) == (upgrade == 'modified'))
+                    and (cat != 'weapon' or upgrade == 'all' or bool(training_display.upgrade(t)) == (upgrade == 'modified'))
                     and (cat != 'weapon' or wclass < 0 or
-                         (6 if items.root_of(t) == items.COLD_ARM else items.params_of(t).get('weapon_type')) == wclass)]
+                         (6 if items.root_of(t) == items.COLD_ARM else training_display.weapon_class(t)) == wclass)]
         rows.sort(key=lambda row: (mobs.stats(row[0]).level, row[1], row[0]) if cat == 'mob' else (row[1], row[0]))
         total = len(rows)
         rows = rows[page * PAGE_SIZE:(page + 1) * PAGE_SIZE]
@@ -1378,6 +1455,18 @@ class Ground:
             self.enemy.send = lambda *args, **kwargs: None
             self.enemy.loc, self.enemy.room, self.enemy.pos = self.clone.loc, self.room, enemy_cell
             self.apply(self.enemy, self.opponent)
+            self.enemy_heals_left = self.heal_count
+            if self.enemy_healing and self.heal_count and not any(
+                    row['root'] == items.HEAL and items.battle_medicine(row['type_id'])
+                    for row in self.enemy.inv.rows()):
+                # Basic ordinary combat kit, subject to the same normal use checks.
+                medicine = min((source for source in item_catalogue()
+                    if items.root_of(source) == items.HEAL and items.battle_medicine(source)
+                    and item_line(source) == 'A' and items.params_of(source).get('max_h_rest', 0) > 0),
+                    key=lambda source: (items.params_of(source).get('heal_cost', 0), source))
+                count = min(self.heal_count, max(0, training_shop.MAX_ROWS - len(self.enemy.inv.rows())))
+                for _ in range(count):
+                    self.enemy.inv.create(training_items.copy_type(medicine))
             self.room.enter(self.enemy)
             self.enemy.combat.entered()
         else:
@@ -1388,7 +1477,10 @@ class Ground:
             mob = mobs.Mob(eid, self.mob_type, enemy_cell)
             mob.training_ground = self
             mob.stats = copy.copy(mob.stats)
-            training_mobs.configure(mob, self)
+            if self.rules.simulator_formulas:
+                training_formulas.configure_mob(mob, self)
+            else:
+                training_mobs.configure(mob, self)
             mob.ap = mob.stats.ap_max
             mob.stats.aggro = max(100, mob.stats.aggro)
             mob.stats.hp_max = max(1, round(mob.stats.hp_max*self.mob_health/100))
@@ -1414,55 +1506,7 @@ class Ground:
         self.state('Противник вызван')
 
     def enemy_turn(self):
-        enemy = self.enemy
-        if enemy.combat.acting() or enemy.combat.dead or enemy.live_cell() != enemy.pos:
-            return
-        vitals = enemy.character().vitals()
-        if vitals['hcur'] < vitals['hmax'] / 2 or vitals['scur'] < vitals['smax'] / 2:
-            for row in enemy.inv.rows():
-                if row['root'] != items.HEAL or items.no_combat(row['type_id']) or items.stimulant_unavailable(row['type_id']):
-                    continue
-                si = items.params_of(row['type_id']) or {}
-                useful = ((vitals['hcur'] < vitals['hmax'] / 2 and si.get('max_h_rest', 0) > 0)
-                          or (vitals['scur'] < vitals['smax'] / 2 and si.get('max_st_rest', 0) > 0))
-                if useful and enemy.combat.ap >= si.get('heal_cost', 0):
-                    enemy.combat.use_heal(dict(obj=inventory.oid_of(row)), inventory.USE_IDLE)
-                    return
-        gun = enemy.inv.in_slot(inventory.PRIMARY)
-        if gun and gun['root'] == items.FIRE_ARM and gun['ammo_count'] == 0:
-            # Reuse ordinary reload/ammunition checks, never grant real rounds.
-            stack = next((r for r in enemy.inv.rows() if r['root'] == items.AMMO
-                          and r['type_id'] in items.params_of(gun['type_id']).get('comp_array', [])), None)
-            if stack:
-                enemy.inv.use_load(dict(obj=inventory.oid_of(gun), target=inventory.oid_of(stack)))
-            return
-        target = self.clone.combat
-        distance = mobs.hex_distance(enemy.pos, target.cell, self.clone.loc.width)
-        if gun and gun['root'] == items.FIRE_ARM:
-            params = items.params_of(gun['type_id'])
-            reach = params['max_range'][gun['cur_mode']]
-            if self.rules.ammo_modifiers:
-                reach *= (items.params_of(gun['ammo_type']) or {}).get('range_mod', 1)
-        else:
-            reach = 1
-        in_reach = (distance <= reach if gun and gun['root'] == items.FIRE_ARM
-                    else mobs.adjacent(enemy.pos, target.cell, self.clone.loc))
-        if not in_reach or combat.shot_wall(self.clone.loc, enemy.pos, target.cell) is not None:
-            loc = self.clone.loc
-            target_cell = target.cell
-            def goal(cell):
-                reachable = (0 < mobs.hex_distance(cell, target_cell, loc.width) <= reach
-                             if gun and gun['root'] == items.FIRE_ARM
-                             else mobs.adjacent(cell, target_cell, loc))
-                return reachable and combat.shot_wall(loc, cell, target_cell) is None
-            blocked = movement.get(self.room).occupied(exclude=enemy)
-            path = mobs.find_path(loc, enemy.pos, goal, blocked, toward=target_cell)
-            if path and len(path) > 1:
-                # The same server/client walk clock as a player.
-                enemy.move_in_location(dict(path=path[:2]))
-            return
-        enemy.combat.use_fire(dict(obj=inventory.oid_of(gun) if gun else '0',
-                                   target='1%08x' % target.eid))
+        training_bot.turn(self)
 
     def hide_corpse(self):
         if self.corpse_timer is not None:
@@ -1563,7 +1607,7 @@ class Ground:
                 self.store.delete_item(row['uniq'])
             self.enemy = None
 
-    def exit(self, notify=True, suspend=False):
+    def exit(self, notify=True, suspend=False, quest_ack=False):
         if self.closed:
             return
         was_inside = self.inside
@@ -1577,6 +1621,9 @@ class Ground:
                 raise  # Do not report an explicit exit before presence commits.
             log.exception('Could not checkpoint training for character %s', self.owner.char_id)
         self.closed = True
+        if quest_ack:
+            self.clone.send('tg', op='exit_pending')
+            self.clone.send('cmdAck', res=0)
         try:
             self.hide_corpse()
             if self.timer:
@@ -1670,12 +1717,13 @@ def activate(ground):
     participant.training_ground = ground
     ACTIVE.add(ground)
     ground.touch()
-    participant.send('tg', op='types', copies=list(training_items.SOURCES), sources=list(training_items.SOURCES.values()),
+    participant.send('tg', op='types', copies=list(training_items.SOURCES), sources=[training_items.profile_source(t) for t in training_items.SOURCES],
                      lines=[item_line(source) for source in training_items.SOURCES.values()],
-                     costs=[training_items.REFERENCE_PRICES[source][0] for source in training_items.SOURCES.values()],
-                     gold_costs=[training_items.REFERENCE_PRICES[source][1] for source in training_items.SOURCES.values()],
-                     price_packs=[training_items.REFERENCE_PRICES[source][2] for source in training_items.SOURCES.values()],
-                     labels=[item_catalogue()[source][2] for source in training_items.SOURCES.values()])
+                     icons=[training_display.icon_source(training_items.profile_source(t)) for t in training_items.SOURCES],
+                     costs=[training_items.REFERENCE_PRICES[training_items.profile_source(t)][0] for t in training_items.SOURCES],
+                     gold_costs=[training_items.REFERENCE_PRICES[training_items.profile_source(t)][1] for t in training_items.SOURCES],
+                     price_packs=[training_items.REFERENCE_PRICES[training_items.profile_source(t)][2] for t in training_items.SOURCES],
+                     labels=[item_catalogue()[training_items.profile_source(t)][2] for t in training_items.SOURCES])
     ground.state()
     ground.clone.enter_location()
 
@@ -1718,8 +1766,11 @@ def resume(owner):
 
 def preload():
     training_rules.current()
+    training_formulas.coefficients()
     training_effects.definitions()
     training_items.prepare(item_catalogue())
+    for source in item_catalogue():
+        training_display.icon_source(source)
     mob_catalogue()
     for location in LOCATIONS:
         geometry(location)

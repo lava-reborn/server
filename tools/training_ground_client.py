@@ -27,6 +27,9 @@ def __tgNPCWrapper(obj):
     if obj.param.tg_terminal:
         label = "Открыть: " + obj.param.tg_title
         desc = "Персонаж, противник и условия боя."
+        if obj.param.tg_supply:
+            label = "Получить снаряжение: " + obj.param.tg_title
+            desc = "Категории, варианты и бесплатная выдача тестовых предметов."
         op = "open"
         service = new(lol.core.player.Attendance, 100, this.id)
         service._name = label
@@ -132,6 +135,7 @@ def __tgClose():
         p.stopDrag()
         Stage.removeListener(p)
         _global.__tgReleaseRows(p)
+        _global.__tgSupplyClear(p)
         p.removeMovieClip()
         _global.__tgPanel = None
         lol.core.SceneShifter.hotKeyManager.removeFilter("tg")
@@ -189,6 +193,8 @@ def __tgDraft(who):
         if p and p.mobHealth:
             _global.__tgMobHealth = Number(p.mobHealth.text)
             _global.__tgMobDamage = Number(p.mobDamage.text)
+            _global.__tgHealBelow = Number(p.healBelow.text)
+            _global.__tgHealCount = Number(p.healCount.text)
         return
     if who == "rules":
         _global.__tgRuleDraft()
@@ -291,6 +297,7 @@ def __tgBuild():
         old.stopDrag()
         Stage.removeListener(old)
         _global.__tgReleaseRows(old)
+        _global.__tgSupplyClear(old)
         old.removeMovieClip()
     else:
         lol.core.SceneShifter.hotKeyManager.addFilter("tg")
@@ -322,6 +329,9 @@ def __tgBuild():
     drag.onRelease = _global.__tgDragStop
     drag.onReleaseOutside = _global.__tgDragStop
     _global.__tgButton(p, "cross", "×", W - 51, 15, 27, "close", "")
+    if _global.__tgSupply:
+        _global.__tgSupplyBuild(p, W, H)
+        return
     tabs = ["mob", "enemy", "enemygear", "result", "rules"]
     labels = ["Мобы и боссы", "Навыки бойца", "Снаряжение бойца", "Условия", "Правила"]
     if _global.__tgContext != "computer":
@@ -375,6 +385,14 @@ def __tgBuild():
         if _global.__tgStationary:
             behaviour = "Неподвижная мишень"
         _global.__tgButton(p, "stationary", behaviour, 395, 220, 330, "stationary", "")
+        healing = "Боец: без лечения"
+        if _global.__tgEnemyHealing:
+            healing = "Боец: боевая медицина включена"
+        _global.__tgButton(p, "healing", healing, 28, 260, 285, "enemyhealing", "")
+        _global.__tgText(p, "belowLabel", "Порог HP / Ст, %", 325, 260, 145, 24, False)
+        _global.__tgText(p, "healBelow", String(_global.__tgHealBelow), 475, 260, 45, 24, True)
+        _global.__tgText(p, "countLabel", "Лечений за бой", 540, 260, 125, 24, False)
+        _global.__tgText(p, "healCount", String(_global.__tgHealCount), 670, 260, 45, 24, True)
         _global.__tgText(p, "hpLabel", "HP / выносливость противника, %", 28, 300, 290, 24, False)
         _global.__tgText(p, "mobHealth", String(_global.__tgMobHealth), 325, 300, 70, 24, True)
         _global.__tgText(p, "damageLabel", "Урон противника, %", 430, 300, 210, 24, False)
@@ -387,6 +405,7 @@ def __tgBuild():
 def __tgRulesControls(p, W, H):
     _global.__tgButton(p, "baseline", "Текущая игра", 28, 100, 165, "rulespreset", "1,1,1,1,1,1,1,1,1,0,0,1,0")
     _global.__tgButton(p, "candidate", "Исправленная модель боя", 203, 100, 245, "rulespreset", "1,1,1,1,1,1,1,1,1,0,1,0,1")
+    _global.__tgButton(p, "simulator", "Симулятор: после правок", 458, 100, W - 486, "rulespreset", "1,1,1,1,1,1,1,1,1,0,1,0,1,1")
     _global.__tgText(p, "ruleHint", "Только ваша сессия: персонаж и настраиваемый боец. ×1 — без изменения.", 28, 135, W - 56, 35, False)
     values = _global.__tgRuleDraftValues.split(",")
     labels = ["Сила ×", "Ловкость ×", "Телосложение ×", "Восприятие ×", "Интеллект ×", "Максимум HP ×", "Максимум выносливости ×", "Вся броня ×", "Разброс ×", "Добавка брони от эффекта"]
@@ -805,6 +824,11 @@ def __tgClick():
         _global.__tgStationary = 1 - _global.__tgStationary
         _global.__tgBuild()
         return
+    if op == "enemyhealing":
+        _global.__tgDraft(_global.__tgTab)
+        _global.__tgEnemyHealing = 1 - _global.__tgEnemyHealing
+        _global.__tgBuild()
+        return
     if op == "mode":
         if _global.__tgMode == "mob":
             _global.__tgMode = "fighter"
@@ -892,6 +916,9 @@ def __tgClick():
         m.addProp("spawn_point", _global.__tgSpawnPoint)
         m.addProp("mob_health", _global.__tgMobHealth)
         m.addProp("mob_damage", _global.__tgMobDamage)
+        m.addProp("enemy_healing", _global.__tgEnemyHealing)
+        m.addProp("heal_below", _global.__tgHealBelow)
+        m.addProp("heal_count", _global.__tgHealCount)
         _global.__tgTransmit(m)
 
 def __tgSpawnState(panel):
@@ -907,11 +934,19 @@ def __tgNotifyWrapper(cmd):
         this.__tgNotifyOrig(cmd)
         return
     v = cmd.params
+    if v.op == "supply_list" or v.op == "supply_variants" or v.op == "supply_bag" or v.op == "supply_done":
+        _global.__tgSupplyReceive(v)
+        return
     if v.op == "types":
         _global.__tgEpoch = _global.__tgEpoch + 1
         i = 0
         while i < len(v.copies):
             _global.__tgCopies[v.copies[i]] = v.sources[i]
+            icon = v.sources[i]
+            if v.icons and v.icons[i]:
+                icon = v.icons[i]
+            _global.__tgIcons[v.copies[i]] = icon
+            _global.__tgIcons[v.sources[i]] = icon
             _global.__tgLines[v.copies[i]] = v.lines[i]
             _global.__tgLabels[v.copies[i]] = v.labels[i]
             _global.__tgPrices[v.copies[i]] = {"cost":v.costs[i], "gold":v.gold_costs[i], "pack":v.price_packs[i]}
@@ -941,6 +976,9 @@ def __tgNotifyWrapper(cmd):
         _global.__tgStationary = v.stationary
         _global.__tgMobHealth = v.mob_health
         _global.__tgMobDamage = v.mob_damage
+        _global.__tgEnemyHealing = v.enemy_healing
+        _global.__tgHealBelow = v.heal_below
+        _global.__tgHealCount = v.heal_count
         _global.__tgMob = v.selected_mob
         if not _global.__tgPanel:
             _global.__tgMode = v.selected_mode
@@ -1010,6 +1048,7 @@ def __tgNotifyWrapper(cmd):
                     draft = _global.__tgEnemy
                 _global.__tgPanel.selected.text = _global.__tgSelected(draft)
     if v.op == "open":
+        _global.__tgSupply = Boolean(v.supply)
         _global.__tgMob = v.mob
         _global.__tgContext = v.context
         _global.__tgPostTitle = v.title
@@ -1028,6 +1067,7 @@ def __tgNotifyWrapper(cmd):
     if v.op == "catalogue":
         _global.__tgList(v)
     if v.op == "error":
+        _global.__tgSupplyPending = 0
         _global.__tgRulesApplying = False
         _global.__tgApplying = ""
         _global.__tgStatus = v.message
@@ -1038,7 +1078,14 @@ def __tgNotifyWrapper(cmd):
             alert.label = v.message
     if v.op == "result":
         _global.__tgReport = v.message
+    if v.op == "exit_pending":
+        _global.__tgExitPending()
     if v.op == "exit":
+        _global.__tgExitPending()
+        inspector = lol.core.quests.QuestInspector.getInstance()
+        inspector.clear()
+        inspector.quester = None
+        inspector.lockUpdate = False
         _global.__tgEpoch = _global.__tgEpoch + 1
         _global.__tgReturnEquipment = True
         _global.__tgEquipmentKey = None
@@ -1050,9 +1097,25 @@ def __tgNotifyWrapper(cmd):
             _global.__tgOriginalLoc.pvpEnabled = _global.__tgOriginalPvp
             _global.__tgOriginalLoc = None
         _global.__tgActive = False
+        _global.__tgSupply = False
+        _global.__tgSupplyPending = 0
         _global.__tgPlayer = None
         _global.__tgEnemy = None
         _global.__tgClose()
+
+def __tgExitPending():
+    # Detach the native quest UI before its completion callback redraws it.
+    inspector = lol.core.quests.QuestInspector.getInstance()
+    panel = lol.core.SceneShifter._ref.UIPanels.quests.instance.content
+    if panel:
+        inspector.removeEventListener("update", panel, panel.takeAck)
+    lol.core.SceneShifter.closeWindow("quests")
+    lol.core.SceneShifter.closeWindow("questInfo")
+    lol.core.SceneShifter.closeWindow("annotation", "all")
+    clearInterval(inspector.updateTimerID)
+    inspector.updateNPCList = []
+    inspector.lockUpdate = True
+    _global.__tgClose()
 
 def __tgRefreshEquipment(v, force):
     if not v.loaded:
@@ -1337,6 +1400,10 @@ def __tgItemName(item):
                 i = i + 1
             item._name = label
 
+def __tgTradeParams():
+    _global.__tgItemName(this.item)
+    this.__tgTradeParamsOrig()
+
 def __tgItemWrapper(param):
     _global.__tgItemName(this)
     this.__tgItemOrig(param)
@@ -1352,12 +1419,15 @@ def __tgCreate(oid, notRequestDI, target):
 
 def __tgForgetItems(force):
     factory = lol.core.objects.ItemFactory
-    if len(_global.__tgObjects) == 0 or (not force and (factory.callCount > 0 or len(factory.callStack) > 0)):
+    if _global.__tgForgetting or len(_global.__tgObjects) == 0 or (not force and (factory.callCount > 0 or len(factory.callStack) > 0)):
         return
+    _global.__tgForgetting = True
+    batch = _global.__tgObjects
+    _global.__tgObjects = []
     keep = []
     i = 0
-    while i < len(_global.__tgObjects):
-        item = _global.__tgObjects[i]
+    while i < len(batch):
+        item = batch[i]
         if _global.__tgLive[item.id]:
             keep.push(item)
         else:
@@ -1367,7 +1437,12 @@ def __tgForgetItems(force):
             lol.utils.StringCollector.getInstance().removeEventListener("update", item, item.stringUpdate)
             _global.__tgDeleteItem(item.id)
         i = i + 1
+    i = 0
+    while i < len(_global.__tgObjects):
+        keep.push(_global.__tgObjects[i])
+        i = i + 1
     _global.__tgObjects = keep
+    _global.__tgForgetting = False
 
 def __tgUpdateCall():
     this.__tgUpdateOrig()
@@ -1452,6 +1527,8 @@ def __tgCleanup():
     _global.__tgPlayer = None
     _global.__tgEnemy = None
     _global.__tgActive = False
+    _global.__tgSupply = False
+    _global.__tgSupplyPending = 0
 
 def __tgSocketWrapper():
     _global.__tgCleanup()
@@ -1518,12 +1595,19 @@ def __tgLoad():
 
 def __tgIcon(typeID):
     source = _global.__tgCopies[typeID]
-    if source:
-        typeID = source
+    if _global.__tgActive or source:
+        icon = _global.__tgIcons[typeID]
+        if icon:
+            typeID = icon
+        elif source:
+            typeID = source
     return this.__tgIconOrig(typeID)
 
 def __tgInstall():
     _global.__tgEpoch = 0
+    _global.__tgSupply = False
+    _global.__tgSupplySequence = 0
+    _global.__tgSupplyPending = 0
     _global.__tgCombatStats = None
     parser = lol.core.location.LDParser
     if not parser.__tgParseOrig:
@@ -1541,6 +1625,8 @@ def __tgInstall():
         art.getIcon = _global.__tgIcon
     _global.__tgOutfitRevision = 0 - 1
     _global.__tgCopies = {}
+    _global.__tgIcons = {}
+    _global.__tgForgetting = False
     _global.__tgLines = {}
     _global.__tgLabels = {}
     _global.__tgPrices = {}
@@ -1568,6 +1654,9 @@ def __tgInstall():
     _global.__tgCatalogueRequest = 0
     _global.__tgMobHealth = 100
     _global.__tgMobDamage = 100
+    _global.__tgEnemyHealing = 0
+    _global.__tgHealBelow = 50
+    _global.__tgHealCount = 5
     _global.__tgStationary = 0
     _global.__tgMode = "mob"
     _global.__tgMob = 0
@@ -1580,6 +1669,9 @@ def __tgInstall():
     _global.__tgRulesApplying = False
 '''
 
+
+from training_supply_client import SOURCE as SUPPLY_SOURCE
+SOURCE += SUPPLY_SOURCE
 
 def patches(Asm, undef):
     compiler = Compiler(Asm, undef)
@@ -1612,6 +1704,7 @@ def patches(Asm, undef):
         (('server', 'XMLConnection'), 'onClose', '__tgSocketOrig', '__tgSocketWrapper'),
         (('core', 'player', 'PersEquip'), 'ss_ack', '__tgEquipOrig', '__tgEquipWrapper'),
         (('core', 'objects', 'Item'), 'itemUpdate', '__tgItemOrig', '__tgItemWrapper'),
+        (('core', 'objects', 'TradeItem'), 'initParams', '__tgTradeParamsOrig', '__tgTradeParams'),
     ):
         params, body = bodies[helper]
         wraps.append((path, method, keep, params, body))

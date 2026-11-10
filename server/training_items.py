@@ -10,6 +10,9 @@ SOURCES = {}
 COPIES = {}
 FRAMES = {}
 REFERENCE_PRICES = {}
+PROTOTYPES = {}
+PROTOTYPE_FIRST = 61000
+SIMULATOR_GUN_BASE = 900000
 PATH = Path(__file__).resolve().parents[1] / 'data' / 'training_items.json'
 # Only combat/handling data may differ; identity, transfers and currencies cannot.
 FIELDS = frozenset(('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max',
@@ -25,6 +28,16 @@ def is_copy(type_id):
 
 def source_type(type_id):
     return SOURCES.get(type_id, type_id)
+
+
+def profile_source(type_id):
+    return type_id if type_id in PROTOTYPES else source_type(type_id)
+
+
+def prototype_rows():
+    import training_formulas
+    return {PROTOTYPE_FIRST + int(source) - SIMULATOR_GUN_BASE: dict(record, simulator_id=int(source))
+            for source, record in training_formulas.data()['experimental_guns'].items()}
 
 
 def copy_type(type_id):
@@ -88,7 +101,11 @@ def prepare(sources):
         return
     import items
     table = items.catalogue()
-    originals = sorted(sources)
+    prototypes = prototype_rows()
+    originals = sorted(set(sources) - set(prototypes))
+    if (any(t in table or t in range(FIRST, FIRST + len(originals)) for t in prototypes)
+            or max(prototypes, default=PROTOTYPE_FIRST) > LAST):
+        raise ValueError('Training prototype type range collision')
     if FIRST + len(originals) - 1 > LAST or any(t in table for t in range(FIRST, FIRST + len(originals))):
         raise ValueError('Training type range collision')
     overrides = json.loads(PATH.read_text(encoding='utf-8-sig')).get('items', {})
@@ -109,6 +126,9 @@ def prepare(sources):
         if source in training_legacy.CLASSIC:
             params = training_legacy.apply(source, params)
         params = training_ammo.parameters(source, params)
+        if items.root_of(source) == items.FIRE_ARM:
+            import training_display
+            params['weapon_type'] = training_display.weapon_class(source)
         import training_effects
         effect = training_effects.definition(source)
         if effect is not None:
@@ -121,9 +141,27 @@ def prepare(sources):
         if 'comp_array' in params:
             params['comp_array'] = [copies[a] for a in params['comp_array'] if a in copies]
         frames[target] = command, params
-    validate_ammunition(frames, {target: table[source][0] for source, target in copies.items()})
+    roots = {target: table[source][0] for source, target in copies.items()}
+    prototype_sources = {}
+    for target, record in prototypes.items():
+        command, base = items.static_info(record['base'])
+        params = copy.deepcopy(base)
+        definition = record['data']
+        for field in FIELDS | {'need_skills_m', 'need_skills', 'need_specs_m', 'need_specs', 'comp_array', 'cost', 'g_cost'}:
+            if field in definition:
+                params[field] = copy.deepcopy(definition[field])
+        params.update(type=target, cost=0, g_cost=0, sell_mod=0, premium=0, exchang=0)
+        params['comp_array'] = [copies[a] for a in definition['comp_array'] if a in copies]
+        frames[target] = command, params
+        roots[target] = items.FIRE_ARM
+        copies[target] = target
+        prototype_sources[target] = record['base']
+        prices[target] = definition['cost'], definition['g_cost'], 1
+    validate_ammunition(frames, roots)
     # Publish only a completely validated set. Sources are never changed.
     COPIES.update(copies)
     SOURCES.update({t: s for s, t in copies.items()})
+    SOURCES.update(prototype_sources)
+    PROTOTYPES.update(prototypes)
     FRAMES.update(frames)
     REFERENCE_PRICES.update(prices)

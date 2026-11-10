@@ -62,14 +62,12 @@ class LegacyTraining(unittest.TestCase):
         self.assertEqual((afro/pack,gold),(10000,0))
         self.assertEqual(self.params(legacy.BATTERY)['cost'],0)
 
-    def test_three_rows_share_category_columns_and_keep_free_approaches(self):
-        rows={line:[post for post in layout.POSTS if post.line==line] for line in ('A','P','G')}
-        for line,posts in rows.items():
-            self.assertEqual(len({post.y for post in posts}),1)
-            self.assertEqual([post.x for post in posts],sorted(post.x for post in posts))
-        for column in zip(*rows.values()):
-            self.assertEqual(len({p.x for p in column}),1)
-            self.assertEqual(len({p.y for p in column}),3)
+    def test_six_supply_services_keep_free_approaches(self):
+        posts = [post for post in layout.POSTS if post.line]
+        self.assertEqual(len(posts), 6)
+        self.assertTrue(all(post.line == 'all' for post in posts))
+        self.assertEqual(len({post.y for post in posts}), 1)
+        self.assertEqual([post.x for post in posts], sorted(post.x for post in posts))
         cells={post.cell(training.ARENA_WIDTH) for post in layout.POSTS}
         self.assertEqual(len(cells),len(layout.POSTS))
         for cell in cells:

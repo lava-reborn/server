@@ -59,6 +59,19 @@ def apply(source, params):
     base = afro_of(source)
     factor = RATIOS[line(source)]
     reference = items.params_of(base) if base is not None else None
+    if (reference is not None and items.root_of(source) == items.FIRE_ARM
+            and items.premium(source) and '_mod_' in items.catalogue()[source][1]
+            and source not in items.wiki()):
+        # Unpublished P modification rows are generic pistol placeholders.
+        # Inherit the exact A modification before applying the range P ratio.
+        for field in ('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max',
+                'fire_times', 'fire_costs', 'fire_mods', 'max_range', 'opt_range',
+                'end_opt_range', 'target_size', 'clip_size', 'reload_time', 'reload_cost',
+                'weapon_type', 'comp_array', 'max_break_abs', 'weight',
+                'need_attribs_m', 'need_attribs', 'need_skills_m', 'need_skills',
+                'need_specs_m', 'need_specs', 'bonus_attribs_m', 'bonus_attribs'):
+            if field in reference:
+                params[field] = copy.deepcopy(reference[field])
     if reference is not None:
         if items.premium(source) and not params.get('need_skills_m') and reference.get('need_skills_m'):
             params['need_skills_m'], params['need_skills'] = reference['need_skills_m'], copy.deepcopy(reference['need_skills'])

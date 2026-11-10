@@ -404,7 +404,7 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         eligible, rewards = tg.obtainable_sources()
         extra = set(tg.item_catalogue()) - eligible
         self.assertTrue(extra)
-        self.assertTrue(all(t in items.catalogue() for t in extra))
+        self.assertTrue(all(t in items.catalogue() or t in tg.training_items.PROTOTYPES for t in extra))
         self.assertTrue(any(inventory.item_level(t) == 20 for t in extra))
         self.assertIn(26075, eligible)
         self.assertIn(7051, eligible)
@@ -533,7 +533,7 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         expected = [p for p in layout.POSTS if not p.line or tg.training_shop.stock(p)]
         self.assertEqual(len(g.posts), len(expected))
         self.assertTrue(all(p.resource == 1006 for p in expected if p.category in ('ammo','pouch','armour','medicine','buff','event_medicine')))
-        self.assertGreater(len({p.resource for p in expected}), 5)
+        self.assertEqual(len(expected), 8)
         self.assertEqual(len({p.cell(g.clone.loc.width) for p in expected}), len(expected))
         for location in tg.LOCATIONS:
             loc=tg.arena_location(location)
@@ -544,12 +544,14 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         for eid,post in g.posts.items():
             g.clone.send_npc_info(eid)
             cmd,data=decode(self.s.writer.frames[-1][:-1])
-            self.assertEqual(cmd, 'userInfo_Trader' if post.line else 'userInfo_Commoner')
+            self.assertEqual(cmd, 'userInfo_Commoner')
             self.assertEqual(data['tg_station'],post.key)
-            self.assertEqual(data['can_trade'], int(bool(post.line)))
+            self.assertEqual(data['can_trade'], 0)
+            self.assertNotIn('type_list', data)
+            self.assertEqual(data['tg_terminal'], 1)
         self.unchanged()
 
-    def approach_shop(self, ground, key='shotguns_A'):
+    def approach_shop(self, ground, key='weapons'):
         eid = ground.post_ids[key]
         npc = ground.room.npc(eid)
         occupied = {entry.cell for entry in ground.room.npcs.values()}
@@ -557,21 +559,25 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
             npc.cell, ground.clone.loc.width, ground.clone.loc.height)
             if cell not in ground.clone.loc.obstacles and cell not in occupied)
         ground.clone.pos = cell
+        ground.open_post(eid)
         return eid
+
+    def supply(self, ground, source, count=1, returning=False):
+        ground.last_request = 0
+        ground.request(dict(op='supply_return' if returning else 'supply_get', token=ground.token,
+                            source=source, count=count, sequence=ground.supply_sequence + 1))
 
     async def test_shops_require_proximity_and_only_offer_their_line_and_class(self):
         g = self.enter()
-        g.clone.handle_training('ss_create', dict(s_type=1, target=g.post_ids['shotguns_A']))
-        self.assertIsNone(g.clone.inv.trade)
-        eid = self.approach_shop(g)
-        g.clone.handle_training('ss_create', dict(s_type=1, target=eid))
-        self.assertIsNotNone(g.clone.inv.trade)
-        sources = [tg.training_items.source_type(t) for t in g.clone.inv.trade.training_stock]
-        self.assertTrue(sources)
-        self.assertTrue(all(items.params_of(t)['weapon_type'] == items.SHOTGUN
-                            and tg.item_line(t) == 'A' for t in sources))
         with self.assertRaises(ValueError):
-            g.open_post(eid)
+            g.open_post(g.post_ids['weapons'])
+        eid = self.approach_shop(g)
+        self.assertEqual(g.context, 'weapons')
+        rows = tg.training_supply.filtered('weapons', dict(wclass=1, line='A'))
+        self.assertTrue(rows)
+        self.assertTrue(all(row.weapon_class == 1 and row.line == 'A' for row in rows))
+        g.clone.handle_training('ss_create', dict(s_type=1, target=eid))
+        self.assertIsNone(g.clone.inv.trade)
         self.unchanged()
 
     async def test_computer_can_list_fighter_sets_and_weapon_categories(self):
@@ -585,30 +591,23 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
 
     async def test_free_shop_purchase_sale_partial_sale_and_close_never_change_money(self):
         g = self.enter()
-        eid = self.approach_shop(g, 'ammo_G')
-        g.clone.handle_training('ss_create', dict(s_type=1, target=eid))
+        self.approach_shop(g, 'supplies')
+        source = next(t for t in tg.training_supply.sources('supplies') if items.root_of(t) == items.AMMO)
         purse = (g.clone.char.afro, g.clone.char.gold)
-        original = dict(self.store.character(self.s.char_id))
-        g.clone.handle_training('ss_upd', dict(s_status=1, obj='0', param=17))
+        self.supply(g, source, 17)
         row = next(row for row in g.clone.inv.rows() if row['root'] == items.AMMO)
         self.assertEqual(row['count'], 17)
-        si = items.params_of(row['type_id'])
-        self.assertEqual((si['cost'], si['g_cost'], si['exchang']), (0, 0, 0))
-        g.clone.handle_training('ss_upd', dict(s_status=2, obj=inventory.oid_of(row), param=7))
+        self.supply(g, inventory.oid_of(row), 7, returning=True)
         self.assertEqual(g.store.item(row['uniq'])['count'], 10)
-        g.clone.handle_training('ss_upd', dict(s_status=2, obj=inventory.oid_of(row), param=10))
+        self.supply(g, inventory.oid_of(row), 10, returning=True)
         self.assertIsNone(g.store.item(row['uniq']))
         self.assertEqual((g.clone.char.afro, g.clone.char.gold), purse)
-        self.assertEqual(dict(self.store.character(self.s.char_id)), original)
-        self.s.writer.frames.clear()
-        g.clone.handle_training('ss_upd', dict(s_status=0))
-        self.assertFalse(self.s.writer.frames)  # No unexpected cmdAck on close.
         self.unchanged()
 
     async def test_free_shop_multiple_items_are_atomic_and_private(self):
         g = self.enter()
-        eid = self.approach_shop(g, 'medicine_A')
-        g.clone.handle_training('ss_create', dict(s_type=1, target=eid))
+        self.approach_shop(g, 'medical')
+        source = next(t for t in tg.training_supply.sources('medical') if items.root_of(t) == items.HEAL)
         before = [dict(row) for row in g.clone.inv.rows()]
         create = g.clone.inv.create
         calls = 0
@@ -620,9 +619,10 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
             return create(*args, **kwargs)
         with patch.object(g.clone.inv, 'create', side_effect=fail_second):
             with self.assertRaises(ValueError):
-                g.clone.handle_training('ss_upd', dict(s_status=1, obj='0', param=3))
+                self.supply(g, source, 3)
         self.assertEqual([dict(row) for row in g.clone.inv.rows()], before)
-        g.clone.handle_training('ss_upd', dict(s_status=1, obj='0', param=3))
+        self.assertEqual(g.supply_sequence, 0)
+        self.supply(g, source, 3)
         fresh = [row for row in g.clone.inv.rows() if row['uniq'] not in {r['uniq'] for r in before}]
         self.assertEqual(len(fresh), 3)
         self.assertTrue(all(tg.training_items.is_copy(row['type_id']) for row in fresh))
@@ -630,49 +630,44 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
 
     async def test_shop_rejects_forged_currency_quantity_source_and_distant_requests(self):
         g = self.enter()
-        eid = self.approach_shop(g)
-        g.clone.handle_training('ss_create', dict(s_type=1, target=eid))
+        self.approach_shop(g)
+        source = next(iter(tg.training_supply.sources('weapons')))
         before = [dict(row) for row in g.clone.inv.rows()]
-        for request in (dict(s_status=4, obj='0', param=1),
-                        dict(s_status=1, obj='-1', param=1),
-                        dict(s_status=1, obj='ffff', param=1),
-                        dict(s_status=1, obj='0', param=0),
-                        dict(s_status=1, obj='0', param=51),
-                        dict(s_status=1, obj='0', param='nan'),
-                        dict(s_status=2, obj=inventory.oid_of(self.real_item), param=1)):
-            self.s.writer.frames.clear()
-            g.clone.handle_training('ss_upd', request)
-            acks = [decode(frame[:-1]) for frame in self.s.writer.frames]
-            self.assertTrue(any(cmd == 'cmdAck' and fields['res'] != 0 for cmd, fields in acks))
+        for bad_source, count in ((source, 0), (source, 2), (source, 'nan'), (-1, 1), (65535, 1)):
+            with self.assertRaises((ValueError, TypeError)):
+                self.supply(g, bad_source, count)
             self.assertEqual([dict(row) for row in g.clone.inv.rows()], before)
+        with self.assertRaises(ValueError):
+            self.supply(g, inventory.oid_of(self.real_item), returning=True)
         g.clone.pos = tg.control_cell()
-        g.clone.handle_training('ss_upd', dict(s_status=1, obj='0', param=1))
+        with self.assertRaises(ValueError):
+            self.supply(g, source)
         self.assertEqual([dict(row) for row in g.clone.inv.rows()], before)
         self.unchanged()
 
     async def test_shop_respects_weight_and_separate_object_limit(self):
         g = self.enter()
-        eid = self.approach_shop(g)
-        g.clone.handle_training('ss_create', dict(s_type=1, target=eid))
+        self.approach_shop(g)
+        source = next(iter(tg.training_supply.sources('weapons')))
         before = [dict(row) for row in g.clone.inv.rows()]
         with patch.object(g.clone.inv, 'carry_limit', return_value=0):
-            g.clone.handle_training('ss_upd', dict(s_status=1, obj='0', param=1))
-        self.assertEqual([dict(row) for row in g.clone.inv.rows()], before)
+            with self.assertRaises(ValueError):
+                self.supply(g, source)
         with patch.object(g.clone.inv, 'rows', return_value=[{}] * tg.training_shop.MAX_ROWS):
-            g.clone.handle_training('ss_upd', dict(s_status=1, obj='0', param=1))
+            with self.assertRaises(ValueError):
+                self.supply(g, source)
         self.assertEqual([dict(row) for row in g.clone.inv.rows()], before)
         self.unchanged()
 
-    async def test_all_catalogue_items_are_copies_in_one_bounded_shop(self):
+    async def test_all_catalogue_items_are_copies_in_exactly_one_supply_service(self):
         g = self.enter()
         seen = []
         for post in g.posts.values():
             if not post.line:
                 continue
             stock = tg.training_shop.stock(post)
-            self.assertLessEqual(len(stock), tg.training_shop.MAX_STOCK)
             self.assertTrue(stock)
-            seen.extend(tg.training_items.source_type(t) for t in stock)
+            seen.extend(tg.training_items.profile_source(t) for t in stock)
         self.assertEqual(len(seen), len(set(seen)))
         self.assertEqual(set(seen), set(tg.item_catalogue()))
         for type_id in (26061, 26062, 26063, 26070, 26071, 7051):
@@ -681,9 +676,9 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
 
     async def test_skill_changes_keep_shop_items_and_next_fight_does_not_replace_them(self):
         g = self.enter()
-        eid = self.approach_shop(g, 'medicine_A')
-        g.clone.handle_training('ss_create', dict(s_type=1, target=eid))
-        g.clone.handle_training('ss_upd', dict(s_status=1, obj='0', param=2))
+        self.approach_shop(g, 'medical')
+        source = next(iter(tg.training_supply.sources('medical')))
+        self.supply(g, source, 2)
         before = [dict(row) for row in g.clone.inv.rows()]
         profile = dict(skills=[12, 12, 4, 0, 0], specs=[-1] * progression.SPECS, gear={})
         g.configure_player(profile)
@@ -1169,9 +1164,9 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         for ground in (first, second, third):
             ground.clone.cmd_lenter({})
         for ground, count in ((first, 2), (second, 3)):
-            eid = self.approach_shop(ground, 'medicine_A')
-            ground.clone.handle_training('ss_create', dict(s_type=1, target=eid))
-            ground.clone.handle_training('ss_upd', dict(s_status=1, obj='0', param=count))
+            self.approach_shop(ground, 'medical')
+            source = next(iter(tg.training_supply.sources('medical')))
+            self.supply(ground, source, count)
         a = [row for row in first.clone.inv.rows() if row['root'] == items.HEAL]
         b = [row for row in second.clone.inv.rows() if row['root'] == items.HEAL]
         self.assertEqual((len(a), len(b)), (2, 3))

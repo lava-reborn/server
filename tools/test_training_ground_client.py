@@ -8,6 +8,37 @@ import widescreen
 
 
 class TrainingClient(unittest.TestCase):
+    def test_simulator_preset_is_explicit_draft_and_keeps_profile_flag_on_numeric_edit(self):
+        class Parts(dict):
+            def __init__(self, parts):
+                super().__init__(enumerate(parts))
+                self['join'] = lambda sep: Text(sep.join(self[index] for index in range(len(self) - 1)))
+        class Text(str):
+            def split(self, sep):
+                return Parts(Text(part) for part in super().split(sep))
+        built = []
+        sent = []
+        values = '1,1,1,1,1,1,1,1,1,0,1,0,1,1'
+        env = dict(_global=dict(__tgPanel=dict(status=dict(text='')), __tgRuleDraftValues='old'), String=str)
+        funcs = self.helpers(env)
+        env['_global']['__tgBuild'] = lambda: built.append(True)
+        env['_global']['__tgTransmit'] = lambda m: sent.append(m)
+        funcs['__tgClick'].invoke(dict(__op='rulespreset', __value=values), [])
+        self.assertEqual(env['_global']['__tgRuleDraftValues'], values)
+        self.assertEqual(built, [True])
+        self.assertEqual(sent, [])
+        panel = env['_global']['__tgPanel']
+        env['_global']['__tgRuleDraftValues'] = Text(values)
+        for index, value in enumerate(values.split(',')[:10]):
+            panel['rule' + str(index)] = dict(text=Text(value))
+        panel['rule7']['text'] = Text('1,5')
+        funcs['__tgRuleDraft'].invoke(None, [])
+        updated = str(env['_global']['__tgRuleDraftValues']).split(',')
+        self.assertEqual(updated[7], '1.5')
+        self.assertEqual(updated[10:], ['1', '0', '1', '1'])
+        self.assertIn('"Симулятор: после правок"', client.SOURCE)
+        self.assertIn('"rulespreset", "' + values + '"', client.SOURCE)
+
     def test_free_quantity_apply_dispatches_even_when_displayed_price_is_zero(self):
         calls=[]
         env=dict(_global=dict(__tgActive=True), Number=float)
@@ -550,6 +581,70 @@ class TrainingClient(unittest.TestCase):
                                ({'id': '10000000000d2f000', 'typeID': 54000}, True)):
             env = dict(item=item, Boolean=bool, _global={'__tgCopies': {54000: 26075}})
             self.assertEqual(execute(body.assemble(), env), expected)
+
+
+    def test_trade_card_is_named_before_native_quantity_and_display_initialization(self):
+        item=dict(id='model7',typeID=54000)
+        proto=dict(name='machine_gun_2_lvl_18_mod_precision_pm$service')
+        env=dict(_global=dict(__tgCopies={54000:40175},__tgLabels={54000:'M60 (P) · Точность'}),
+                 Boolean=bool,lol=dict(core=dict(objects=dict(ItemFactory=dict(getProtoItem=lambda t:proto)))))
+        funcs=self.helpers(env)
+        seen=[]
+        owner=dict(item=item,__tgTradeParamsOrig=lambda:seen.append(item.get('_name')))
+        funcs['__tgTradeParams'].invoke(owner,[])
+        self.assertEqual(seen,['M60 (P) · Точность$service'])
+
+    def test_icon_alias_uses_exact_model_for_copy_but_does_not_change_real_icon(self):
+        called=[]
+        env=dict(_global=dict(__tgActive=False,__tgCopies={54000:40175},
+                             __tgIcons={54000:25057,40175:25057}))
+        funcs=self.helpers(env)
+        owner=dict(__tgIconOrig=lambda t:called.append(t) or t)
+        self.assertEqual(funcs['__tgIcon'].invoke(owner,[54000]),25057)
+        self.assertEqual(funcs['__tgIcon'].invoke(owner,[40175]),40175)
+        env['_global']['__tgActive']=True
+        self.assertEqual(funcs['__tgIcon'].invoke(owner,[40175]),25057)
+        self.assertEqual(called,[25057,40175,25057])
+
+    def test_exit_pending_closes_native_quest_UI_and_stops_its_polling_before_ack(self):
+        from avm_test import Arr
+        events=[]
+        inspector=dict(updateTimerID=77,updateNPCList=Arr([1]),lockUpdate=False,currentQuests={'old':'still needed by takeAck'})
+        panel=dict(takeAck='pending success redraw')
+        inspector['removeEventListener']=lambda *args:events.append(('detach',)+args)
+        env=dict(_global={},clearInterval=lambda t:events.append(('timer',t)),
+                 lol=dict(core=dict(SceneShifter=dict(closeWindow=lambda *args:events.append(args),
+                     _ref=dict(UIPanels=dict(quests=dict(instance=dict(content=panel))))),
+                     quests=dict(QuestInspector=dict(getInstance=lambda:inspector)))))
+        funcs=self.helpers(env)
+        env['_global']['__tgClose']=lambda:events.append(('panel',))
+        funcs['__tgExitPending'].invoke(None,[])
+        self.assertEqual(events[0],('detach','update',panel,'pending success redraw'))
+        self.assertEqual(events[1:4],[('quests',),('questInfo',),('annotation','all')])
+        self.assertTrue(inspector['lockUpdate'])
+        self.assertEqual(inspector['updateNPCList'],[])
+        self.assertEqual(inspector['currentQuests'],{'old':'still needed by takeAck'})
+
+    def test_cleanup_is_bounded_when_a_callback_adds_or_reenters_item_cleanup(self):
+        from avm_test import Arr
+        deleted=[]
+        new=dict(id='new',typeID=54001)
+        env=dict(_global=dict(__tgObjects=Arr(),__tgLive={}),
+                 lol=dict(core=dict(Master=dict(getInstance=lambda:dict(gamer=dict(equipment={}))),
+                    objects=dict(ItemFactory=dict(callCount=0,callStack=Arr(),
+                        getProtoItem=lambda t:dict(removeEventListener=lambda *args:None)))),
+                    utils=dict(StringCollector=dict(getInstance=lambda:dict(removeEventListener=lambda *args:None)))))
+        funcs=self.helpers(env)
+        env['_global']['__tgDeleteItem']=deleted.append
+        def callback(*args):
+            env['_global']['__tgObjects'].append(new)
+            funcs['__tgForgetItems'].invoke(None,[True])
+        old=dict(id='old',typeID=54000,removeEventListener=callback)
+        env['_global']['__tgObjects'].append(old)
+        funcs['__tgForgetItems'].invoke(None,[True])
+        self.assertEqual(deleted,['old'])
+        self.assertEqual(env['_global']['__tgObjects'],[new])
+        self.assertFalse(env['_global']['__tgForgetting'])
 
 
 if __name__ == '__main__':
