@@ -134,6 +134,90 @@ class TrainingSupply(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(g.clone.inv.find(oid)['slot'] == inventory.BAG for oid in frame['ids']))
         self.unchanged()
 
+    async def test_first_entry_is_empty_level_one_and_saved_range_progress_is_retained(self):
+        g = self.enter()
+        self.assertEqual(g.clone.char.level, 1)
+        self.assertEqual(g.profile['specs'], [-1] * len(g.profile['specs']))
+        self.assertFalse(g.profile['gear'])
+        self.assertFalse(g.clone.inv.rows())
+        profile = tg.preset(8)
+        g.configure_player(profile)
+        g.save_settings()
+        g.exit(notify=False)
+        restored = tg.Ground(self.s)
+        try:
+            self.assertEqual(restored.clone.char.level, 8)
+            self.assertFalse(restored.clone.inv.rows())
+        finally:
+            restored.exit(notify=False)
+        self.unchanged()
+
+    async def test_complete_set_preview_issue_and_replay(self):
+        g = self.enter()
+        self.approach_shop(g, 'armoury')
+        listing = self.request(g, 'supply_list', category='set', line='G', request_id=1)
+        self.assertEqual(listing['bundle'], 1)
+        key = listing['ids'][0]
+        preview = self.request(g, 'supply_variants', source=key, bundle=1, request_id=2)
+        record = supply.selected_set(g, key)
+        self.assertEqual(len(preview['types']), len(record['members']))
+        self.assertEqual(set(preview['ids']), {key})
+        self.request(g, 'supply_get', source=key, bundle=1, sequence=1)
+        rows = [dict(row) for row in g.clone.inv.rows()]
+        self.assertEqual({copies.profile_source(row['type_id']) for row in rows}, set(record['members'].values()))
+        self.assertTrue(all(row['slot'] == inventory.BAG for row in rows))
+        self.request(g, 'supply_get', source=key, bundle=1, sequence=1)
+        self.assertEqual([dict(row) for row in g.clone.inv.rows()], rows)
+        self.unchanged()
+
+    async def test_set_failure_rolls_back_all_parts_and_sequence(self):
+        g = self.enter()
+        self.approach_shop(g, 'armoury')
+        key = next(iter(supply.set_catalogue()))
+        before = [dict(row) for row in g.clone.inv.rows()]
+        real = g.clone.inv.create
+        count = 0
+        def fail_second(*args, **kwargs):
+            nonlocal count
+            count += 1
+            if count == 2:
+                raise RuntimeError('injected failure')
+            return real(*args, **kwargs)
+        frames = len(self.s.writer.frames)
+        with patch.object(g.clone.inv, 'create', side_effect=fail_second):
+            with self.assertRaises(RuntimeError):
+                self.request(g, 'supply_get', source=key, bundle=1, sequence=1)
+        self.assertEqual([dict(row) for row in g.clone.inv.rows()], before)
+        self.assertEqual(g.supply_sequence, 0)
+        self.assertEqual(len(self.s.writer.frames), frames)
+        with patch.object(g.clone.inv, 'carry_limit', return_value=1):
+            with self.assertRaises(ValueError):
+                self.request(g, 'supply_get', source=key, bundle=1, sequence=1)
+        self.assertEqual([dict(row) for row in g.clone.inv.rows()], before)
+        self.approach_shop(g, 'medical')
+        with self.assertRaises(ValueError):
+            self.request(g, 'supply_get', source=key, bundle=1, sequence=1)
+        self.unchanged()
+
+    async def test_ammo_compatibility_filter_and_catalogue_classification(self):
+        g = self.enter()
+        self.approach_shop(g, 'supplies')
+        self.assertFalse(supply.filtered('supplies', dict(detail='held'), g))
+        gun = g.clone.inv.create(copies.copy_type(26075), slot=inventory.PRIMARY)
+        expected = {copies.profile_source(t) for t in items.params_of(gun['type_id'])['comp_array']}
+        rows = supply.filtered('supplies', dict(detail='held'), g)
+        self.assertEqual({row.source for row in rows}, expected & supply.sources('supplies'))
+        self.assertTrue(all(row.category == 'ammo' for row in rows))
+        self.assertTrue(supply.filtered('supplies', dict(detail='w1'), g))
+        self.assertEqual(supply.search_key('9 мм. НАТO'), supply.search_key('9мм НАТO'))
+        self.assertEqual(supply.index()[1535].category, 'accessory')
+        self.assertNotIn(1535, supply.sources('medical'))
+        self.assertEqual(supply.index()[4329].category, 'accessory')
+        self.assertNotIn(4329, supply.sources('weapons'))
+        self.assertTrue(all(row.category in ('medicine', 'event_medicine')
+                            for row in supply.filtered('medical', dict(detail='battle'), g)))
+        self.unchanged()
+
 
 if __name__ == '__main__':
     from testkit import run_cases

@@ -419,10 +419,10 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         import quests
         for quest_type in [1682] + list(range(351, 358)):
             self.store.finish_quest(0, self.s.char_id, quest_type)
-        self.assertTrue(self.s.quest_available(quests.get(1682)))
-        self.assertTrue(self.s.quest_available(quests.get(351)))
-        self.assertFalse(self.s.quest_available(quests.get(357)))
-        self.assertFalse(quests.get(357).repeatable)
+        for quest_type in [1682] + list(range(351, 358)):
+            self.assertFalse(self.s.quest_available(quests.get(quest_type)))
+            self.assertFalse(quests.get(quest_type).repeatable)
+        self.assertTrue(self.s.quest_available(quests.get(tg.ENTRY_QUEST)))
 
     async def test_enter_exit_never_mutate_real_items_or_character(self):
         g = self.enter()
@@ -1355,9 +1355,11 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         frames = [decode(f[:-1]) for f in self.s.writer.frames]
         self.assertTrue(any(tg.ENTRY_QUEST in p.get('give_quests', []) for n, p in frames if n.startswith('userInfo_')))
         self.store.finish_quest(0, self.s.char_id, 1682)
-        self.assertTrue(self.s.quest_available(quests.get(1682)))
-        self.assertTrue(all(quests.get(t).repeatable for t in list(range(351, 357)) + list(range(358, 365))))
-        self.assertFalse(quests.get(357).repeatable)
+        self.assertFalse(self.s.quest_available(quests.get(1682)))
+        self.assertTrue(self.s.quest_available(quests.get(tg.ENTRY_QUEST)))
+        self.assertFalse(any(quests.get(t).repeatable for t in range(351, 365)))
+        for quest_type in range(358, 365):
+            self.assertIn('второго шанса не будет', quests.get(quest_type).texts[1])
         self.assertIn(7051, tg.item_catalogue())
         g = self.enter()
         g.catalogue(dict(category='weapon', level=16, line='C'))

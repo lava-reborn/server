@@ -277,7 +277,8 @@ def set_of(type_id):
     """The set a type belongs to, or 0 -- which is what ss_si_wear says for none."""
     if training_items.is_copy(type_id):
         import training_sets
-        record = training_sets.for_source(training_items.source_type(type_id))
+        record = training_sets.for_source(training_items.source_type(type_id),
+                                          simulator=type_id in training_items.PROFILE_SOURCES)
         if record:
             return record[0]
     return SET_OF.get(type_id, 0)

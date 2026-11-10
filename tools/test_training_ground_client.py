@@ -322,7 +322,7 @@ class TrainingClient(unittest.TestCase):
         price=funcs['__tgReferencePrice'].invoke(None,[dict(typeID=54000)])
         self.assertEqual(price,dict(value=10000,gold=False))
 
-    def test_reference_afro_stack_price_and_tooltip_both_state_free_trade(self):
+    def test_reference_afro_stack_price_and_tooltip_state_range_only(self):
         from avm_test import Arr
         shown=[]
         env=dict(String=str,Number=float,Math=dict(floor=__import__("math").floor),_global=dict(__tgActive=True,__tgCopies={54000:123},
@@ -339,7 +339,7 @@ class TrainingClient(unittest.TestCase):
         funcs['__tgAnnotationPrice'].invoke(dict(item=item),[rows])
         self.assertEqual(len(rows),2)
         self.assertIn('за 1 шт.',rows[0][0])
-        self.assertEqual(rows[1][1],'получение и сдача бесплатно')
+        self.assertEqual(rows[1][1],'только на полигоне')
 
     def test_closing_trade_detaches_quantity_callbacks_and_late_cancel_is_ignored(self):
         calls = []

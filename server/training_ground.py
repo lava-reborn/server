@@ -43,7 +43,7 @@ import rooms
 import storage
 import shop_bands
 import world
-from protocol import Str
+from protocol import BigUInt, Str
 
 log = logging.getLogger('lava')
 BERT = 2088
@@ -216,6 +216,14 @@ def item_catalogue():
             elif items.stimulant_unavailable(type_id):
                 continue
 
+        # These are legacy wearable souvenirs, not combat equipment. Some are
+        # stored under COLD_ARM or have generated HEAL fallback parameters.
+        if (root == items.COLD_ARM and not level and type_id not in training_legacy.CLASSIC
+                and not name.startswith('ufo_gun')) or name == 'old_flea_bag':
+            category = 'accessory'
+        if root == items.HEAL and training_effects.definition(type_id):
+            category = 'buff'
+
         aliases = {1569: 'Излучатель', 1571: 'Излучатель · вариант II',
                    1572: 'Лечебный излучатель', 1547: 'Излучатель · холодное оружие',
                    3485: 'Излучатель · дальность', 6024: 'Излучатель · автомат',
@@ -309,6 +317,8 @@ def validate_profile(raw, rules=None):
         t = integer(raw_id, 1, 65535)
         if t not in item_catalogue():
             raise ValueError('Предмет недоступен на полигоне')
+        if not training_items.available(t, bool(rules and rules.simulator_formulas)):
+            raise ValueError('Этот предмет исключён из нового профиля симулятора. Сдайте его или выберите старые правила.')
         root = items.root_of(t)
         n = integer(count, 1, 5000 if root == items.AMMO else 50 if root == items.HEAL else 1)
         slot = inventory.BAG
@@ -327,7 +337,7 @@ def validate_profile(raw, rules=None):
     fields = []
     slots = profile_slots(result)
     for source, n in gear.items():
-        t = training_items.copy_type(source)
+        t = training_items.copy_type(source, simulator=ch.training_rules.simulator_formulas)
         f = inventory.new_fields(t, n)
         f['type_id'] = t
         f['slot'] = slots[source]
@@ -370,7 +380,9 @@ class TrainingCharacter(progression.Character):
         return max(1, round(super().sp_max * self.training_rules.stamina))
 
     def set_gear(self, bonus, repeat=(0, 0)):
-        changed = super().set_gear(bonus, (0, 0) if self.training_rules.combat_v2 else repeat)
+        # The simulator intentionally retains the source card's set repeat.
+        changed = super().set_gear(bonus, (0, 0) if self.training_rules.combat_v2
+                                   and not self.training_rules.simulator_formulas else repeat)
         effects = getattr(self, 'training_effects', None)
         if effects:
             for key in ('hp', 'st', 'od', 'cp', 'ce'):
@@ -536,7 +548,10 @@ class TrainingCombat(combat.RoomCombat):
     def bullet_damage(self, shooter, target, weapon, damage, stamina_damage, critical, stamina_left):
         if training_formulas.enabled(shooter):
             return training_formulas.split(shooter, target, damage, weapon.piercing,
-                                           critical, stamina_left, stamina_damage)
+                                           critical, stamina_left, stamina_damage,
+                                           rifle=(weapon.spec == combat.SPEC_OF_WEAPON[items.RIFLE]
+                                                  if shooter.is_player else
+                                                  getattr(shooter, 'training_weapon_class', '') == 'rifle'))
         return combat.split_damage(damage, target.armor(), weapon.piercing, critical, stamina_left, stamina_damage)
 
     def melee_damage(self, shooter, target, damage, critical, stamina_left):
@@ -899,27 +914,9 @@ class Ground:
         training_items.prepare(item_catalogue())
         self.token = secrets.token_hex(16)
         self.phase = 'ready'
-        self.profile = preset(max(1, min(MAX_LEVEL, owner.character().level)))
-        source = owner.character()
-        self.profile['skills'] = [max(0, min(MAX_LEVEL, r[0])) for r in source.skill]
-        if not max(self.profile['skills']):
-            self.profile['skills'][progression.SHOOTING] = 1
-        self.profile['specs'] = [max(-1, min(progression.SPEC_MAX, r[0])) for r in source.spec]
-        for row in sorted(owner.inv.rows(), key=lambda row: row['slot'] != inventory.PRIMARY):
-            t = row['type_id']
-            if t not in item_catalogue():
-                continue
-            if row['root'] in (items.FIRE_ARM, items.COLD_ARM) and t in self.profile['gear']:
-                continue
-            if row['slot'] in inventory.BODY_SLOTS or row['root'] in (items.AMMO, items.HEAL):
-                n = row['count'] if row['root'] == items.AMMO else 1
-                self.profile['gear'][t] = min(5000 if row['root'] == items.AMMO else 50,
-                                             self.profile['gear'].get(t, 0) + n)
-        try:
-            self.profile = validate_profile(self.profile)
-        except ValueError:
-            self.profile['gear'] = {}
-            self.profile = validate_profile(self.profile)
+        # A new sandbox is independent of the owner's inventory and progress.
+        # Saved sandbox profiles below remain persistent across visits.
+        self.profile = validate_profile(preset(1))
         self.opponent = preset(max(self.profile['skills']))
         self.mob_type = 11 if 11 in mob_catalogue() else next(iter(mob_catalogue()))
         self.enemy = None
@@ -929,6 +926,7 @@ class Ground:
         self.enemy_healing, self.heal_below, self.heal_count = False, 50, 5
         self.enemy_heals_left = 0
         self.rules = training_rules.current()
+        self.restore_notice = ''
         self.spawn_point = DEFAULT_SPAWN
         self.location = RANGE
         self.mode = 'mob'
@@ -938,6 +936,12 @@ class Ground:
                 if saved.get('version') != 1:
                     raise ValueError('Unsupported training profile')
                 rules = training_rules.Rules.parse(saved.get('rules', self.rules.as_dict()))
+                if rules.simulator_formulas and any(
+                        not training_items.available(int(source), True)
+                        for who in ('player', 'opponent') for source in saved[who]['gear']):
+                    rules = training_rules.Rules.parse(dict(rules.as_dict(), simulator_formulas=False))
+                    self.restore_notice = ('Пресеты сохранены. В них есть предметы, исключённые из нового симулятора; '
+                                           'восстановлен прежний профиль полигона. Замените эти вещи для новых правил.')
                 player = validate_profile(saved['player'], rules)
                 opponent = validate_profile(saved['opponent'], rules)
                 location = integer(saved.get('location', RANGE), 1, 65535)
@@ -1091,6 +1095,7 @@ class Ground:
         profile['gear'] = {t: 1 for t in selected['members'].values()}
         guns = [t for t, (category, item_level, _label) in item_catalogue().items()
                 if category == 'weapon' and item_level <= level
+                and training_items.available(t, self.rules.simulator_formulas)
                 and items.root_of(t) == items.FIRE_ARM and item_line(t) == selected['variant']
                 and not craft.mod_of(t) and t not in contraband()
                 and any(a in item_catalogue() for a in items.params_of(t).get('comp_array', ()))]
@@ -1098,7 +1103,9 @@ class Ground:
             gun = min(guns, key=lambda t: (-item_catalogue()[t][1],
                                          items.params_of(t).get('weapon_type', 0), t))
             profile['gear'][gun] = 1
-            ammo = next(a for a in items.params_of(gun)['comp_array'] if a in item_catalogue())
+            rounds = [a for a in items.params_of(gun)['comp_array'] if a in item_catalogue()]
+            ammo = (next((a for a in rounds if items.catalogue()[a][1].endswith('_ST')), rounds[0])
+                    if self.rules.simulator_formulas else rounds[0])
             profile['gear'][ammo] = 20
             params = items.params_of(gun)
             required = inventory.unpacked(params.get('need_specs_m'), params.get('need_specs'), progression.SPECS)
@@ -1157,7 +1164,7 @@ class Ground:
             self.store.delete_item(row['uniq'])
         slots = profile_slots(profile)
         for source, n in profile['gear'].items():
-            t = training_items.copy_type(source)
+            t = training_items.copy_type(source, simulator=self.rules.simulator_formulas)
             root = items.root_of(t)
             slot = slots[source]
             if root == items.HEAL:
@@ -1217,6 +1224,8 @@ class Ground:
                        anticritical=values[2], dodge=values[3])
 
     def state(self, message=''):
+        message = message or self.restore_notice
+        self.restore_notice = ''
         c = self.clone
         live = []
         for ground in self.room.grounds.values():
@@ -1301,14 +1310,28 @@ class Ground:
             validate_profile(self.profile, rules)
             validate_profile(self.opponent, rules)
             self.require_terminal()
+            equipment_changed = self.clone.inv.switch_profile(rules.simulator_formulas)
             self.rules = rules
             self.configure_player(self.profile)
+            if equipment_changed:
+                # Other clients also cache instance ids; update their live list
+                # before publishing the replacement clothes and weapons.
+                for ground in self.room.grounds.values():
+                    if ground is not self:
+                        ground.inventory_state()
+                self.clone.inv.push_look()
+                for slot in (inventory.PRIMARY, inventory.SECONDARY):
+                    row = self.clone.inv.in_slot(slot)
+                    oid = BigUInt(inventory.oid_of(row)) if row is not None else inventory.EMPTY
+                    self.room.broadcast(('ss_obj_move', dict(id=self.clone.pid, obj=oid,
+                                                           to=slot, **{'from': slot})))
             self.clone.send_player_info()
             self.clone.push_stats()
             self.clone.push_vitals()
             self.clone.combat.ap = self.clone.character().ap_ceiling
             self.clone.combat.c_ap()
             self.save_settings()
+            self.room.combat.push_vitals(self.clone.combat)
             self.state('Правила сессии применены и сохранены')
         elif op == 'spawn':
             self.spawn_point = integer(p.get('spawn_point'), 0, len(SPAWN_LABELS) - 1)
@@ -1407,24 +1430,31 @@ class Ground:
                     for t, v in sets.SETS.items() if v['variant'] in ('A', 'G')
                     and (line == 'all' or line == v['variant'])
                     and (not level or v['level'] == level) and query in v['name'].casefold()
-                    and all(member in item_catalogue() for member in v['members'].values())]
+                    and all(member in item_catalogue() and training_items.available(member, self.rules.simulator_formulas)
+                            for member in v['members'].values())]
         elif cat == 'mob':
             group = str(p.get('group', 'all'))
             if group not in training_layout.MOB_GROUPS:
                 raise ValueError('Неизвестная категория противников')
-            rows = [(t, name) for t, name in mob_catalogue().items()
+            def mob_level(t):
+                if self.rules.simulator_formulas:
+                    data = training_formulas.data()
+                    return data['mob_records'][data['mobs'][str(t)]]['level']
+                return mobs.stats(t).level
+            rows = [(t, name.rsplit(' · ', 1)[0] + ' · %d ур.' % mob_level(t)) for t, name in mob_catalogue().items()
                     if (group == 'all' or training_layout.mob_group(mobs.TYPES[str(t)]) == group)
-                    and (not level or mobs.stats(t).level == level) and query in name.casefold()]
+                    and (not level or mob_level(t) == level) and query in name.casefold()]
         else:
             rows = [(t, entry[2]) for t, entry in item_catalogue().items()
                     if (entry[0] == cat or cat == 'weapon' and entry[0] in ('special_weapon','experimental_weapon'))
+                    and training_items.available(t, self.rules.simulator_formulas)
                     and (not level or entry[1] == level)
                     and query in entry[2].casefold()
                     and (line == 'all' or (t in contraband() if line == 'C' else item_line(t) == line))
                     and (cat != 'weapon' or upgrade == 'all' or bool(training_display.upgrade(t)) == (upgrade == 'modified'))
                     and (cat != 'weapon' or wclass < 0 or
                          (6 if items.root_of(t) == items.COLD_ARM else training_display.weapon_class(t)) == wclass)]
-        rows.sort(key=lambda row: (mobs.stats(row[0]).level, row[1], row[0]) if cat == 'mob' else (row[1], row[0]))
+        rows.sort(key=lambda row: (mob_level(row[0]), row[1], row[0]) if cat == 'mob' else (row[1], row[0]))
         total = len(rows)
         rows = rows[page * PAGE_SIZE:(page + 1) * PAGE_SIZE]
         groups = [','.join(str(member) for member in sets.SETS[t]['members'].values())
@@ -1466,7 +1496,7 @@ class Ground:
                     key=lambda source: (items.params_of(source).get('heal_cost', 0), source))
                 count = min(self.heal_count, max(0, training_shop.MAX_ROWS - len(self.enemy.inv.rows())))
                 for _ in range(count):
-                    self.enemy.inv.create(training_items.copy_type(medicine))
+                    self.enemy.inv.create(training_items.copy_type(medicine, simulator=self.rules.simulator_formulas))
             self.room.enter(self.enemy)
             self.enemy.combat.entered()
         else:

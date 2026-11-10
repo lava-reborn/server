@@ -1,4 +1,4 @@
-"""Opt-in range equations from simulator 74493c7, rulesets/lava_fixed.py.
+"""Opt-in range equations from simulator c4f3018, rulesets/lava_fixed.py.
 
 The simulator profile uses each weapon's own source coefficient and A/G
 damage bases. Old sandbox P/G normalization and minute regen stay separate.
@@ -26,7 +26,7 @@ HEAL_PER_INTELLECT = .04
 COOLDOWN_PER_INTELLECT = .1
 MIN_COOLDOWN = 2.0
 MAX_ARMOUR_SHARE = .9
-OFF_BAND_CRIT = .5
+ARMOUR_LEVEL_GAP = 1
 MOB_CRIT_FLOOR = 5.0
 LEVEL_SPREAD = .6
 LEVEL_DAMAGE = .12
@@ -60,6 +60,11 @@ def coefficients():
             or not valid(gap) or not 0 < gap <= 1):
         raise ValueError('Invalid simulator equation coefficients')
     return MappingProxyType(armour), MappingProxyType(bonus), gap
+
+
+@lru_cache(maxsize=1)
+def disabled_sources():
+    return frozenset(data().get('disabled_sources', ()))
 
 
 def enabled(actor):
@@ -115,8 +120,9 @@ def configure_mob(mob, ground):
         setattr(mob.stats, field, record[field])
     mob.stats.armor = (mob.stats.armor + ground.rules.effect_armour) * ground.rules.armour
     gun = record['gun']
+    mob.training_weapon_class = record['weapon_class']
     if gun in training_items.COPIES:
-        mob.stats.weapon_type_id = training_items.copy_type(gun)
+        mob.stats.weapon_type_id = training_items.copy_type(gun, simulator=True)
     modes = []
     for row in record['modes']:
         weapon = combat.Weapon(row['shots'], row['dmin'], row['dmax'], row.get('opt_lo', 1),
@@ -153,7 +159,7 @@ def weapon(weapon, character, row, ammo, rules, mode=None):
     return weapon._replace(dmin=max(1, round(weapon.dmin * multiplier * damage)),
         dmax=max(1, round(weapon.dmax * multiplier * damage)),
         sdmin=round(weapon.sdmin * multiplier * stamina), sdmax=round(weapon.sdmax * multiplier * stamina),
-        max_range=weapon.max_range * reach, cone=weapon.cone * spread * rules.spread)
+        max_range=math.floor(weapon.max_range * reach + 1e-9), cone=weapon.cone * spread * rules.spread)
 
 
 def melee(bounds, character, row):
@@ -175,7 +181,7 @@ def reference_armour(target_level):
     return coefficients()[0][max(1, min(20, target_level))]
 
 
-def split(shooter, target, damage, piercing, critical, stamina_left, stamina_damage=0, melee=False):
+def split(shooter, target, damage, piercing, critical, stamina_left, stamina_damage=0, melee=False, rifle=False):
     if shooter.is_player and not target.is_player:
         player_level = level(shooter)
         gap = level(target) - player_level
@@ -186,16 +192,19 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
     if critical:
         return damage, 0 if melee else min(damage, left)
     armour = max(0, target.armor()) / max(.5, piercing)
-    share = min(MAX_ARMOUR_SHARE, armour / (armour + reference_armour(level(target))))
+    if rifle and not melee:
+        share = min(MAX_ARMOUR_SHARE, armour / (armour + reference_armour(level(target))))
+    else:
+        share = min(1, armour / max(1, reference_armour(level(shooter) - ARMOUR_LEVEL_GAP)))
     moved = int(damage * share)
     stamina = stamina_damage + moved
     return damage - moved + max(0, stamina - left), min(stamina, left)
 
 
 def critical(shooter, target, chance, optimal=True):
+    if shooter.is_player and not optimal:
+        return False
     chance = max(0, min(100, chance))
-    if not optimal:
-        chance *= OFF_BAND_CRIT
     if not shooter.is_player and target.is_player:
         chance = max(MOB_CRIT_FLOOR, chance)
     return combat.roll(chance)

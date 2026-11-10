@@ -8,6 +8,9 @@ FIRST = 54000
 LAST = 65535
 SOURCES = {}
 COPIES = {}
+SIMULATOR_COPIES = {}
+PROFILE_SOURCES = {}
+SIMULATOR_FIRST = 57000
 FRAMES = {}
 REFERENCE_PRICES = {}
 PROTOTYPES = {}
@@ -31,7 +34,7 @@ def source_type(type_id):
 
 
 def profile_source(type_id):
-    return type_id if type_id in PROTOTYPES else source_type(type_id)
+    return PROFILE_SOURCES.get(type_id, type_id if type_id in PROTOTYPES else source_type(type_id))
 
 
 def prototype_rows():
@@ -40,8 +43,15 @@ def prototype_rows():
             for source, record in training_formulas.data()['experimental_guns'].items()}
 
 
-def copy_type(type_id):
-    return COPIES[type_id]
+def copy_type(type_id, simulator=False):
+    return (SIMULATOR_COPIES if simulator else COPIES)[type_id]
+
+
+def available(source, simulator=False):
+    if not simulator:
+        return True
+    import training_formulas
+    return source not in training_formulas.disabled_sources()
 
 
 def static_info(type_id):
@@ -158,10 +168,44 @@ def prepare(sources):
         prototype_sources[target] = record['base']
         prices[target] = definition['cost'], definition['g_cost'], 1
     validate_ammunition(frames, roots)
+    import training_formulas
+    import training_sets
+    simulator_copies = dict(copies)
+    profile_sources = {}
+    for source, old_type in copies.items():
+        if source in prototypes or not available(source, True):
+            continue
+        command, old = frames[old_type]
+        fields = training_formulas.data().get('equipment', {}).get(str(source))
+        if fields is None:
+            continue
+        params = copy.deepcopy(old)
+        # The source's absent bonus means zero, not the old normalized bonus.
+        for field in tuple(params):
+            if field.startswith('bonus_'):
+                params.pop(field)
+        params.update(copy.deepcopy(fields))
+        selected = training_sets.for_source(source, simulator=True)
+        if selected is not None:
+            params['set_type'] = selected[0]
+        if params == old:
+            continue
+        target = SIMULATOR_FIRST + len(profile_sources)
+        if target >= PROTOTYPE_FIRST or target in table or target in frames:
+            raise ValueError('Simulator type range collision')
+        params['type'] = target
+        frames[target] = command, params
+        roots[target] = table[source][0]
+        simulator_copies[source] = target
+        profile_sources[target] = source
+    validate_ammunition(frames, roots)
     # Publish only a completely validated set. Sources are never changed.
     COPIES.update(copies)
+    SIMULATOR_COPIES.update(simulator_copies)
+    PROFILE_SOURCES.update(profile_sources)
     SOURCES.update({t: s for s, t in copies.items()})
     SOURCES.update(prototype_sources)
+    SOURCES.update(profile_sources)
     PROTOTYPES.update(prototypes)
     FRAMES.update(frames)
     REFERENCE_PRICES.update(prices)

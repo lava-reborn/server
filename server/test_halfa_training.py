@@ -30,11 +30,11 @@ On a socket:
     and rounds taken back at the hand-in, the way on; the map button
     refused in the range; the free rounds of «Получить боеприпасы»; the
     last lesson pays the certificate and brings him back to the market,
-    and the course can be entered again; Мастер Тиль then takes the
+    and the course is not offered again; Мастер Тиль then takes the
     certificate for «Охотник»: a part of the self-teacher chosen and the
     coin beside it;
   * another breaks the course off in TIR_01, the map button refused first:
-    back at the market, able to restart, the pistol and the rounds taken
+    back at the market, no second chance, the pistol and the rounds taken
     back on the way out (stay_in), the lesson still his until dropped;
   * a worker (level 6): the ore mine's gate lets him in, the doors of the
     tiers by their signs, the way up; the quarry: Равшан's contract into
@@ -202,30 +202,30 @@ try:
           (pinned[COURSE], "0- 5 Уровня" in quests.get(COURSE).texts[1],
            "письма" in "".join(quests.get(COURSE).texts), quests.get(COURSE).texts[2]),
           ([41446, 59767, None, 59768], True, False, ""))
-    check("  ..the lessons' starts the newest edition's (59769-59778), the abort allows "
-          "restarting, the rounds free",
-          ([pinned[t][1] for t in LESSONS], "сможешь вернуться к обучению" in quests.get(ABORTS[0]).texts[1],
+    check("  ..the lessons' starts the newest edition's (59769-59778), the abort's «второго "
+          "шанса не будет», the rounds free",
+          ([pinned[t][1] for t in LESSONS], "второго шанса не будет" in quests.get(ABORTS[0]).texts[1],
            "сегодня" in quests.get(ABORTS[0]).texts[1], pinned[AMMO_Q]),
           ([59769, 59770, 59771, 59773, 59774, 59776, 59778], True, False,
            [59782, 59783, None, 59784]))
 
     # The course.
     course = quests.get(COURSE)
-    check("«Тир Берта Гаммера»: Берт at the market, a repeatable way into TIR_00, no level asked,"
+    check("«Тир Берта Гаммера»: Берт at the market, a way into TIR_00, one-off, no level asked,"
           " nothing paid",
           (course.give, course.take, course.kind, course.obj, course.repeatable, course.level,
            course.max_level, course.rew_obj, course.rew_afro, course.rew_loc, course.need_all),
-          ([BERT], [BERT], quests.DEL_OBJ, 0, 1, 0, None, [], 0, 1, []))
+          ([BERT], [BERT], quests.DEL_OBJ, 0, 0, 0, None, [], 0, 1, []))
     check("  ..its way from the market to TIR_00",
           (travel.quest_way(world.location(MARKET), COURSE) or {}).get("target_loc_id"), RANGE[0])
     for k, (t, loc_id) in enumerate(zip(LESSONS, RANGE)):
         q = quests.get(t)
         nxt = RANGE[k + 1] if k + 1 < len(RANGE) else MARKET
-        check("lesson %d (%d): Берт's copy in TIR_0%d gives and takes it, after the %s,"
+        check("lesson %d (%d): Берт's copy in TIR_0%d gives and takes it, one-off, after the %s,"
               " a way on to %d" % (k + 1, t, k, "course" if not k else "lesson before", nxt),
               (q.give, q.take, q.repeatable, q.need_all, q.rew_loc,
                (travel.quest_way(world.location(loc_id), t) or {}).get("target_loc_id")),
-              ([BERT_TI[k]], [BERT_TI[k]], int(k < len(LESSONS) - 1), [COURSE if not k else t - 1], 1, nxt))
+              ([BERT_TI[k]], [BERT_TI[k]], 0, [COURSE if not k else t - 1], 1, nxt))
         if not k:
             check("  ..the theory: a talk, complete once taken", (q.kind, q.obj,
                                                                   q.is_complete(q.fresh_progress())),
@@ -252,10 +252,10 @@ try:
           ([CERT], [1], MARKET))
     for k, (t, loc_id) in enumerate(zip(ABORTS, RANGE)):
         q = quests.get(t)
-        check("«Прервать обучение» in TIR_0%d (%d): repeatable, a way back to the market" % (k, t),
+        check("«Прервать обучение» in TIR_0%d (%d): one-off, a way back to the market" % (k, t),
               (q.give, q.take, q.kind, q.repeatable, q.per_day, q.rew_loc,
                (travel.quest_way(world.location(loc_id), t) or {}).get("target_loc_id")),
-              ([BERT_TI[k]], [BERT_TI[k]], quests.DEL_OBJ, 1, 0, 1, MARKET))
+              ([BERT_TI[k]], [BERT_TI[k]], quests.DEL_OBJ, 0, 0, 1, MARKET))
     ammo = quests.get(AMMO_Q)
     check("«Получить боеприпасы»: Берт's copies with the targets hand out a hundred rounds, free,"
           " a service", (ammo.give, ammo.rew_also, ammo.cost_afro, ammo.service, ammo.repeatable,
@@ -891,7 +891,7 @@ try:
     call, arrival = moved(c, got)
     check("  ..handed back: the ack, then into his bunker, TIR_00, told as a sublocation (no map)",
           (acks(got), call.get("id"), call.get("g_id", 0) >> 26), ([0], RANGE[0], 1))
-    check("  ..the course can be entered again", status(c, COURSE), 1)
+    check("  ..and the course is a one-off: not offered again", status(c, COURSE), 0)
     booth0 = first(arrival, "lenter").get("pos")
     check("  ..arriving in the booth, on an entry beside Берт",
           (booth0 in world.location(RANGE[0]).entries,
@@ -971,9 +971,9 @@ try:
     check("the course over: the certificate in the bag, no training gun, the journal empty of"
           " lessons", (have[CERT], [g for g in GUNS if have[g]],
                        [t for t in journal(CADET) if t in LESSONS]), (1, [], []))
-    check("  ..the entrance and first lesson can repeat, later lessons remain locked; Тиль's trainings are",
+    check("  ..and nothing of the course offered again; Тиль's trainings are",
           [status(c, t) for t in [COURSE] + LESSONS + TRAININGS],
-          [1, 1] + [0] * 6 + [1] * 6)
+          [0] * 8 + [1] * 6)
     here = inhabitants(goto(c, BLACK_MARKET))
     got, q = take(c, here, TIL, 1829)
     check("«Охотник» at Мастер Тиль: the certificate in the bag, complete",
@@ -1020,8 +1020,9 @@ try:
     got = hand_in(c, here, BERT_TI[1], q)
     call, before_call, arrival = way(c, got)
     check("  ..handed back: to the market", (acks(got)[:1], call.get("id")), ([0], MARKET))
-    check("  ..after abort: the course and exit can be repeated; later lessons stay locked",
-          [status(c, t) for t in [COURSE, ABORTS[1]] + LESSONS[2:]], [1, 1] + [0] * 5)
+    check("  ..no second chance: Берт's course is not offered again, nor this abort, nor the"
+          " lessons after the one carried",
+          [status(c, t) for t in [COURSE, ABORTS[1]] + LESSONS[2:]], [0] * 7)
     check("  ..the pistol and the rounds stay in their range (stay_in): taken back on the way"
           " out, before the lcall; the lesson carried is still his (the journal keeps it offered)",
           (held(QUITTER)[GUNS[0]], held(QUITTER)[ROUNDS],
@@ -1030,7 +1031,7 @@ try:
           (0, 0, [0, 0], True, 1))
     c.send("q_ca;q_id=%d;" % q_lesson)
     check("  ..dropped: nothing more to give back (the lesson itself stays his to take, in a"
-          " range the course can lead back to)",
+          " range nothing leads to any more)",
           (acks(c.sync()), held(QUITTER)[GUNS[0]], held(QUITTER)[ROUNDS],
            status(c, LESSONS[1])), ([0], 0, 0, 1))
     logout(c)

@@ -14,7 +14,7 @@ from protocol import Str
 PAGE_SIZE = 10
 STATIONS = {
     'weapons': ('weapon',),
-    'armoury': ('armour',),
+    'armoury': ('armour', 'accessory'),
     'supplies': ('ammo', 'pouch'),
     'medical': ('medicine', 'event_medicine'),
     'boosts': ('buff',),
@@ -32,6 +32,11 @@ class Entry:
     model: str
     upgrade: str
     weapon_class: int
+    search: str
+
+
+def search_key(text):
+    return re.sub(r'[^\w]+', '', text.casefold().replace('ё', 'е'))
 
 
 @lru_cache(maxsize=1)
@@ -58,7 +63,7 @@ def index():
             category = 'experimental_weapon'
         out[source] = Entry(source, category, level, ground.item_line(source), name,
                             model, display.upgrade(source) if weapon else '',
-                            (6 if root == items.COLD_ARM else display.weapon_class(source)) if weapon else -1)
+                            (6 if root == items.COLD_ARM else display.weapon_class(source)) if weapon else -1, search_key(name))
     return out
 
 
@@ -68,7 +73,7 @@ def sources(station):
     return frozenset(t for t, entry in index().items() if entry.category in allowed)
 
 
-def filtered(station, params):
+def filtered(station, params, ground=None):
     from training_ground import integer
     level = integer(params.get('level', 0), 0, 20)
     wclass = integer(params.get('wclass', -1), -1, 6)
@@ -78,14 +83,106 @@ def filtered(station, params):
         raise ValueError('Неизвестная версия')
     if category != 'all' and category not in STATIONS[station]:
         raise ValueError('Неизвестная категория')
-    query = str(params.get('query', '')).strip().casefold()[:48]
-    import training_ground as ground
-    return [entry for source in sources(station) if (entry := index()[source])
+    query = search_key(str(params.get('query', ''))[:48])
+    detail = str(params.get('detail', 'all'))
+    allowed = detail_sources(station, detail, ground)
+    import training_ground as training
+    entries = index()
+    return [entry for source in sources(station) if (entry := entries[source])
             and (not level or entry.level == level)
             and (wclass < 0 or entry.weapon_class == wclass)
             and (category == 'all' or category == entry.category)
-            and (line == 'all' or (source in ground.contraband() if line == 'C' else entry.line == line))
-            and query in entry.name.casefold()]
+            and (line == 'all' or (source in training.contraband() if line == 'C' else entry.line == line))
+            and (allowed is None or source in allowed)
+            and query in entry.search]
+
+
+@lru_cache(maxsize=1)
+def ammunition_classes():
+    groups = {i: set() for i in range(6)}
+    for source, entry in index().items():
+        if items.root_of(copies.copy_type(source)) == items.FIRE_ARM:
+            params = items.params_of(copies.copy_type(source))
+            groups[entry.weapon_class].update(copies.profile_source(t) for t in params.get('comp_array', ()))
+    return {key: frozenset(value) for key, value in groups.items()}
+
+
+def detail_sources(station, detail, ground):
+    if detail == 'all':
+        return None
+    if station == 'supplies' and detail == 'held':
+        if ground is None:
+            return frozenset()
+        row = ground.clone.inv.in_slot(inventory.PRIMARY)
+        if row is None or row['root'] != items.FIRE_ARM:
+            return frozenset()
+        return frozenset(copies.profile_source(t) for t in items.params_of(row['type_id']).get('comp_array', ()))
+    return static_detail(station, detail)
+
+
+@lru_cache(maxsize=48)
+def static_detail(station, detail):
+    valid = {'weapons': ('base', 'modified'), 'specialist': ('base', 'modified'),
+             'armoury': ('head', 'camo', 'body', 'legs', 'feet'),
+             'medical': ('battle', 'peace', 'health', 'stamina'),
+             'supplies': tuple('w' + str(i) for i in range(6))}
+    if detail not in valid.get(station, ()):
+        raise ValueError('Неизвестный фильтр')
+    if station == 'supplies':
+        return ammunition_classes()[int(detail[1:])]
+    slots = dict(zip(('head', 'camo', 'body', 'legs', 'feet'), inventory.SET_SLOTS))
+    result = set()
+    for source in sources(station):
+        entry = index()[source]
+        params = items.params_of(copies.copy_type(source))
+        if station in ('weapons', 'specialist'):
+            selected = bool(entry.upgrade) == (detail == 'modified')
+        elif station == 'armoury':
+            selected = entry.category == 'armour' and params.get('slot_type', -1) + inventory.HEAD == slots[detail]
+        else:
+            if detail in ('battle', 'peace'):
+                selected = items.battle_medicine(source) == (detail == 'battle')
+            else:
+                hp, sp = params.get('max_h_rest', 0), params.get('max_st_rest', 0)
+                selected = hp >= sp if detail == 'health' else sp >= hp
+        if selected:
+            result.add(source)
+    return frozenset(result)
+
+
+@lru_cache(maxsize=1)
+def set_catalogue():
+    import training_sets
+    return {key: row for key, row in training_sets.records().items()
+            if not row.get('simulator') and all(t in sources('armoury') for t in row['members'].values())}
+
+
+def selected_set(ground, source):
+    record = set_catalogue().get(source)
+    if ground.context != 'armoury' or record is None or not all(
+            copies.available(t, ground.rules.simulator_formulas) for t in record['members'].values()):
+        raise ValueError('Комплект недоступен у этой стойки')
+    return record
+
+
+def set_list(ground, params):
+    from training_ground import integer
+    level = integer(params.get('level', 0), 0, 20)
+    line = str(params.get('line', 'all'))
+    if line not in ('all', 'A', 'P', 'G', 'C'):
+        raise ValueError('Неизвестная версия')
+    query = search_key(str(params.get('query', ''))[:48])
+    rows = [(key, row) for key, row in set_catalogue().items()
+            if (not level or row['level'] == level) and (line == 'all' or row['variant'] == line)
+            and query in search_key(row['name']) and all(copies.available(t, ground.rules.simulator_formulas)
+                                                       for t in row['members'].values())]
+    rows.sort(key=lambda r: (r[1]['level'], r[1]['name'], r[0]))
+    page = min(integer(params.get('page', 0), 0, 10000), max(0, (len(rows)-1)//PAGE_SIZE))
+    selected = rows[page*PAGE_SIZE:(page+1)*PAGE_SIZE]
+    ground.clone.send('tg', op='supply_list', context=Str(ground.context), bundle=1,
+                      request_id=integer(params.get('request_id', 0), 1, 2**31-1),
+                      page=page, total=len(rows), ids=[key for key, _ in selected],
+                      labels=[Str('%s · %d ур. [%s]' % (row['name'], row['level'], row['variant'])) for _, row in selected])
 
 
 def model_key(entry):
@@ -94,7 +191,12 @@ def model_key(entry):
 
 def catalogue(ground, params):
     from training_ground import integer
-    rows = sorted(filtered(ground.context, params), key=lambda e: (e.level, e.name, e.source))
+    if params.get('category') == 'set':
+        if ground.context != 'armoury':
+            raise ValueError('Комплекты доступны у стойки брони')
+        return set_list(ground, params)
+    rows = (e for e in filtered(ground.context, params, ground)
+            if copies.available(e.source, ground.rules.simulator_formulas))
     groups = {}
     for entry in rows:
         key = model_key(entry)
@@ -112,16 +214,30 @@ def catalogue(ground, params):
 
 def variants(ground, params):
     from training_ground import integer
+    if integer(params.get('bundle', 0), 0, 1):
+        source = integer(params.get('source'), 1, 100000)
+        record = selected_set(ground, source)
+        members = list(record['members'].values())
+        ground.clone.send('tg', op='supply_variants', context=Str(ground.context), bundle=1,
+                          request_id=integer(params.get('request_id', 0), 1, 2**31-1),
+                          ids=[source] * len(members),
+                          types=[copies.copy_type(t, simulator=ground.rules.simulator_formulas) for t in members],
+                          labels=[Str(record['name'] + ' · ' + index()[t].name) for t in members],
+                          variants=[Str('Часть комплекта %d / %d' % (i + 1, len(members))) for i in range(len(members))],
+                          maximum=[1] * len(members))
+        return
     source = integer(params.get('source'), 1, 65535)
-    if source not in sources(ground.context):
+    if source not in sources(ground.context) or not copies.available(source, ground.rules.simulator_formulas):
         raise ValueError('Предмет недоступен у этой стойки')
     entry = index()[source]
     rows = sorted((index()[t] for t in sources(ground.context)
-                   if model_key(index()[t]) == model_key(entry)),
+                   if model_key(index()[t]) == model_key(entry)
+                   and copies.available(t, ground.rules.simulator_formulas)),
                   key=lambda e: (bool(e.upgrade), e.upgrade, e.source))
     ground.clone.send('tg', op='supply_variants', context=Str(ground.context),
                       request_id=integer(params.get('request_id', 0), 1, 2**31-1),
-                      ids=[e.source for e in rows], types=[copies.copy_type(e.source) for e in rows],
+                      ids=[e.source for e in rows],
+                      types=[copies.copy_type(e.source, simulator=ground.rules.simulator_formulas) for e in rows],
                       labels=[Str(e.name) for e in rows],
                       variants=[Str(e.upgrade or 'Без улучшения') for e in rows],
                       maximum=[maximum(e.source) for e in rows])
@@ -173,10 +289,22 @@ def change(ground, params, returning=False):
         else:
             inv.push_status(row, 0)
     else:
-        source = integer(params.get('source'), 1, 65535)
-        if source not in sources(ground.context) or count > maximum(source):
-            raise ValueError('Предмет или количество недоступны')
-        created = inv.issue(copies.copy_type(source), count)
+        bundle = integer(params.get('bundle', 0), 0, 1)
+        if bundle:
+            source = integer(params.get('source'), 1, 100000)
+            record = selected_set(ground, source)
+            if count != 1:
+                raise ValueError('Выберите один комплект')
+            # Nested issue operations commit together; never publish a partial set.
+            created = []
+            with storage.atomic(ground.store.db):
+                for member in record['members'].values():
+                    created.extend(inv.issue(copies.copy_type(member, simulator=ground.rules.simulator_formulas), 1))
+        else:
+            source = integer(params.get('source'), 1, 65535)
+            if source not in sources(ground.context) or count > maximum(source):
+                raise ValueError('Предмет или количество недоступны')
+            created = inv.issue(copies.copy_type(source, simulator=ground.rules.simulator_formulas), count)
         ground.supply_sequence = seq
         for row in created:
             inv.push_status(row, 1)
@@ -184,7 +312,7 @@ def change(ground, params, returning=False):
     ground.remember_outfit()
     ground.inventory_state()
     ground.clone.send('tg', op='supply_done', sequence=seq,
-                      message=Str('Предмет сдан' if returning else 'Предмет получен бесплатно'))
+                      message=Str('Предмет сдан' if returning else 'Снаряжение получено'))
 
 
 def handle(ground, op, params):

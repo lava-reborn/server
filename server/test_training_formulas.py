@@ -1,5 +1,6 @@
 """Deterministic simulator equations, real range actions and ordinary defaults."""
 from types import SimpleNamespace as NS
+import math
 import unittest
 from unittest.mock import patch
 
@@ -43,15 +44,23 @@ class SimulatorEquations(unittest.TestCase):
 
     def test_armour_ratio_piercing_cap_and_overflow(self):
         shooter, target = self.actor(), self.actor()
-        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 200), (50, 50))
-        self.assertEqual(formulas.split(shooter, target, 100, 2, False, 200), (67, 33))
-        self.assertEqual(formulas.split(shooter, target, 100, 0, False, 200), (34, 66))
+        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 200, rifle=True), (50, 50))
+        self.assertEqual(formulas.split(shooter, target, 100, 2, False, 200, rifle=True), (67, 33))
+        self.assertEqual(formulas.split(shooter, target, 100, 0, False, 200, rifle=True), (34, 66))
         target.armor = lambda: 1_000_000
-        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 200), (10, 90))
+        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 200, rifle=True), (10, 90))
         target.armor = lambda: 148
-        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 20, 10), (90, 20))
-        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 0), (100, 0))
-        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 200, melee=True), (50, 50))
+        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 20, 10, rifle=True), (90, 20))
+        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 0, rifle=True), (100, 0))
+        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 200, melee=True), (0, 100))
+
+    def test_non_rifle_armour_uses_shooter_level_and_weak_armour_leaks(self):
+        shooter = self.actor()
+        target = self.actor(armour=formulas.reference_armour(11))
+        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 200), (0, 100))
+        target.armor = lambda: formulas.reference_armour(11) / 2
+        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 200), (50, 50))
+        self.assertEqual(formulas.split(shooter, target, 100, 1, False, 20), (80, 20))
 
     def test_crit_bypasses_armour_but_uses_remaining_stamina_for_bullets(self):
         shooter, target = self.actor(), self.actor()
@@ -60,20 +69,20 @@ class SimulatorEquations(unittest.TestCase):
 
     def test_gap_rule_uses_exact_level_table_and_only_player_against_mob(self):
         shooter = self.actor()
-        for gap, expected in ((0, 100), (1, 119), (2, 139), (3, 159), (4, 179), (5, 15)):
+        for gap, expected in ((0, 100), (1, 122), (2, 144), (3, 166), (4, 189), (5, 20)):
             target = self.actor(level=12 + gap, armour=0, player=False)
             self.assertEqual(formulas.split(shooter, target, 100, 1, True, 0)[0], expected)
         self.assertEqual(formulas.split(shooter, self.actor(level=20), 100, 1, True, 0)[0], 100)
         self.assertEqual(formulas.split(self.actor(player=False), self.actor(level=20), 100, 1, True, 0)[0], 100)
 
-    def test_crit_is_clamped_before_off_band_and_floor_is_only_mob_against_player(self):
+    def test_crit_requires_player_optimal_band_and_mob_floor_is_separate(self):
         player, mob = self.actor(), self.actor(player=False)
         with patch.object(combat, 'roll', side_effect=lambda chance: chance):
-            self.assertEqual(formulas.critical(player, mob, 160, False), 50)
+            self.assertEqual(formulas.critical(player, mob, 160, False), 0)
             self.assertEqual(formulas.critical(player, mob, -5), 0)
             self.assertEqual(formulas.critical(mob, player, -5, False), 5)
             self.assertEqual(formulas.critical(player, player, -5), 0)
-            self.assertEqual(formulas.critical(mob, player, 30, False), 15)
+            self.assertEqual(formulas.critical(mob, player, 30, False), 30)
 
     def test_intellect_and_overlevel_weapon_scale_once_with_ammunition(self):
         char = NS(level=12, attr=lambda _: 15)
@@ -102,21 +111,21 @@ class SimulatorEquations(unittest.TestCase):
         gun = combat.Weapon(1, 100, 100, 1, 10, 20, 1, .1, 0, 1, 4)
         self.assertEqual(rc.bullet_damage(current, simulator, gun, 100, 0, False, 200),
                          combat.split_damage(100, 148, 1, False, 200))
-        self.assertEqual(rc.bullet_damage(simulator, current, gun, 100, 0, False, 200), (50, 50))
+        self.assertEqual(rc.bullet_damage(simulator, current, gun, 100, 0, False, 200), (0, 100))
         self.assertEqual(rc.melee_damage(current, simulator, 100, False, 200), combat.melee_split(100, False, 200))
-        self.assertEqual(rc.melee_damage(simulator, current, 100, False, 200), (50, 50))
+        self.assertEqual(rc.melee_damage(simulator, current, 100, False, 200), (0, 100))
         self.assertFalse(formulas.enabled(NS(is_player=True)))
         self.assertFalse(formulas.enabled(NS(is_player=False)))
 
     def test_A_and_G_use_distinct_source_coefficients(self):
-        self.assertEqual(formulas.weapon_reference(25055), (.804, 'machinegun'))
-        self.assertEqual(formulas.weapon_reference(25056), (.52, 'machinegun'))
-        self.assertEqual(formulas.weapon_reference(26075)[0], .709)
+        self.assertEqual(formulas.weapon_reference(25055), (1, 'machinegun'))
+        self.assertEqual(formulas.weapon_reference(25056), (.676, 'machinegun'))
+        self.assertEqual(formulas.weapon_reference(26075)[0], .719)
 
     def test_source_A_G_damage_undoes_old_normalization_and_uses_candidate_mode(self):
-        # Frozen directly from LavaFixed 74493c7 at shooting 20, Intellect 5.
-        fixtures = ((25055, 0, 14, 50), (25055, 1, 11, 47), (25055, 2, 11, 52),
-                    (25056, 0, 10, 38), (25056, 1, 9, 37), (25056, 2, 9, 40))
+        # Frozen directly from LavaFixed c4f3018 at shooting 20, Intellect 5.
+        fixtures = ((25055, 0, 16, 59), (25055, 1, 13, 56), (25055, 2, 13, 62),
+                    (25056, 0, 13, 48), (25056, 1, 11, 46), (25056, 2, 11, 50))
         character = NS(level=20, attr=lambda _: 5)
         gun = combat.Weapon(3, 999, 999, 1, 20, 40, 1, .1, 0, 1, 6)
         rules = Rules(simulator_formulas=True, ammo_modifiers=True)
@@ -131,8 +140,8 @@ class SimulatorEquations(unittest.TestCase):
 
     def test_source_gold_blade_uses_own_base_and_strength_before_scaling(self):
         character = NS(level=20, attr=lambda _: 5)
-        self.assertEqual(formulas.melee((999, 999), character, dict(type_id=6231)), (6, 8))
-        self.assertEqual(formulas.melee((999, 999), character, dict(type_id=6241)), (49, 67))
+        self.assertEqual(formulas.melee((999, 999), character, dict(type_id=6231)), (38, 46))
+        self.assertEqual(formulas.melee((999, 999), character, dict(type_id=6241)), (72, 98))
 
 
 class SimulatorSession(unittest.IsolatedAsyncioTestCase):
@@ -268,7 +277,7 @@ class SimulatorSession(unittest.IsolatedAsyncioTestCase):
         source = training_items.profile_source(gun['type_id'])
         base = formulas.data()['weapon_bases'][str(source)]
         self.assertEqual(weapon.dmin, max(1, round(base['h_damage_min'][mode] * multiplier * items.params_of(ammo)['dam_mod'])))
-        self.assertEqual(weapon.max_range, si['max_range'][mode] * items.params_of(ammo)['range_mod'])
+        self.assertEqual(weapon.max_range, math.floor(si['max_range'][mode] * items.params_of(ammo)['range_mod'] + 1e-9))
         self.assertEqual(weapon.opt_lo, si['opt_range'][mode])
         self.assertGreater(spread, 0)
         self.unchanged()

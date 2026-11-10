@@ -8,7 +8,7 @@ def __tgSupplyButton(p, name, label, x, y, w, op, value):
 def __tgSupplyBuild(p, W, H):
     p.__supply = True
     p.__right = W - 270
-    _global.__tgText(p, "status", "Выдача бесплатная. Предметы остаются на полигоне.", 24, H - 65, W - 48, 42, False)
+    _global.__tgText(p, "status", "Предметы остаются на полигоне.", 24, H - 65, W - 48, 42, False)
     _global.__tgSupplyButton(p, "shelf", "Получить", 24, 57, 130, "shelf", 0)
     _global.__tgSupplyButton(p, "returnBag", "Сдать из рюкзака", 160, 57, 170, "shelf", 1)
     _global.__tgText(p, "query", "", 185, 96, W - 470, 24, True)
@@ -16,12 +16,17 @@ def __tgSupplyBuild(p, W, H):
     _global.__tgSupplyButton(p, "line", "Версия: все", 24, 96, 150, "line", 0)
     _global.__tgSupplyButton(p, "level", "Уровень: все", 24, 128, 150, "level", 0)
     _global.__tgText(p, "levelHint", "Выберите категорию и вариант предмета.", 24, 160, 150, 48, False)
+    _global.__tgSupplyButton(p, "detail", "Фильтр: все", 24, 164, 150, "detail", 0)
+    p.levelHint._visible = False
     _global.__tgSupplyButton(p, "all", "Все категории", 24, 212, 150, "category", "all")
     labels = []
     values = []
     if _global.__tgContext == "weapons":
         labels = ["Пистолеты", "Дробовики", "Автоматы", "Винтовки", "Пулемёты", "Пистолет-пулемёты", "Холодное оружие"]
         values = [0, 1, 2, 3, 4, 5, 6]
+    if _global.__tgContext == "armoury":
+        labels = ["Полные комплекты", "Части брони", "Прочее снаряжение"]
+        values = ["set", "armour", "accessory"]
     if _global.__tgContext == "supplies":
         labels = ["Боеприпасы", "Подсумки"]
         values = ["ammo", "pouch"]
@@ -50,7 +55,7 @@ def __tgSupplyBuild(p, W, H):
     _global.__tgText(p, "amount", "1", p.__right + 106, H - 117, 60, 24, True)
     p.amount.restrict = "0-9"
     p.amount.maxChars = 4
-    _global.__tgSupplyButton(p, "give", "Получить бесплатно", p.__right, H - 88, 241, "give", 0)
+    _global.__tgSupplyButton(p, "give", "Получить", p.__right, H - 88, 241, "give", 0)
     _global.__tgSupplyButton(p, "prev", "←", 185, H - 88, 40, "page", 0 - 1)
     _global.__tgSupplyButton(p, "next", "→", 230, H - 88, 40, "page", 1)
     _global.__tgText(p, "page", "", 280, H - 88, 120, 25, False)
@@ -59,6 +64,7 @@ def __tgSupplyBuild(p, W, H):
     _global.__tgSupplyLevel = 0
     _global.__tgSupplyClass = 0 - 1
     _global.__tgSupplyCategory = "all"
+    _global.__tgSupplyDetail = "all"
     _global.__tgSupplyBag = False
     _global.__tgSupplyRequest()
 
@@ -112,6 +118,7 @@ def __tgSupplyRequest():
     m.addProp("line", "@" + lines[_global.__tgSupplyLine] + "@")
     m.addProp("wclass", _global.__tgSupplyClass)
     m.addProp("category", "@" + _global.__tgSupplyCategory + "@")
+    m.addProp("detail", "@" + _global.__tgSupplyDetail + "@")
     m.addProp("query", "@" + p.query.text.split("@").join("") + "@")
     _global.__tgTransmit(m)
 
@@ -148,6 +155,13 @@ def __tgSupplyShow(index):
     p.__maximum = rows.maximum[i]
     p.previewTitle.text = rows.labels[i]
     p.variantTitle.text = rows.variants[i] + " · " + String(i + 1) + " / " + String(len(rows.ids))
+    if rows.bundle:
+        p.variantTitle.text = rows.variants[i]
+    p.give.caption.text = "Получить"
+    if _global.__tgSupplyBag:
+        p.give.caption.text = "Сдать"
+    elif rows.bundle:
+        p.give.caption.text = "Получить комплект"
     p.amount.text = "1"
     p.amount._visible = p.__maximum > 1
     p.amountLabel._visible = p.__maximum > 1
@@ -157,7 +171,12 @@ def __tgSupplyShow(index):
     currency = " афро"
     if price.gold:
         currency = " G"
-    p.price.text = "Базовая цена за шт.: " + String(price.value) + currency + "\nНа полигоне: бесплатно"
+    priceTitle = "Базовая цена за шт.: "
+    p.variantNext.caption.text = "Улучшение: выбрать ▼"
+    if rows.bundle:
+        priceTitle = "Базовая цена части: "
+        p.variantNext.caption.text = "Часть комплекта ▼"
+    p.price.text = priceTitle + String(price.value) + currency
     proto = lol.core.objects.ItemFactory.createPrototype(rows.types[i])
     p.__supplyProto = proto
     if proto.inited:
@@ -199,6 +218,23 @@ def __tgSupplyMenu(kind):
     y = 125
     width = 150
     columns = 1
+    if kind == "detail":
+        labels = ["Все предметы"]
+        values = ["all"]
+        y = 193
+        width = 210
+        if _global.__tgContext == "supplies":
+            labels = ["Все припасы", "Под оружие в руках", "Патроны: пистолеты", "Патроны: дробовики", "Патроны: автоматы", "Патроны: винтовки", "Патроны: пулемёты", "Патроны: ПП"]
+            values = ["all", "held", "w0", "w1", "w2", "w3", "w4", "w5"]
+        if _global.__tgContext == "armoury":
+            labels = ["Все части", "Шлемы", "Одежда", "Бронежилеты", "Ноги", "Обувь"]
+            values = ["all", "head", "camo", "body", "legs", "feet"]
+        if _global.__tgContext == "medical":
+            labels = ["Все средства", "Боевая медицина", "Вне боя", "Здоровье", "Выносливость"]
+            values = ["all", "battle", "peace", "health", "stamina"]
+        if _global.__tgContext == "weapons" or _global.__tgContext == "specialist":
+            labels = ["Все улучшения", "Без улучшения", "С улучшением"]
+            values = ["all", "base", "modified"]
     if kind == "level":
         labels = ["Все уровни"]
         values = [0]
@@ -226,7 +262,8 @@ def __tgSupplyMenu(kind):
     box = _global.__tgPlate(p, "supplyOptions", x, y, columns * width + 8, Math.ceil(len(labels) / columns) * 29 + 8)
     i = 0
     while i < len(labels):
-        _global.__tgSupplyButton(box, "option" + String(i), labels[i], 4 + (i % columns) * width, 4 + Math.floor(i / columns) * 29, width - 4, kind + "set", values[i])
+        b = _global.__tgSupplyButton(box, "option" + String(i), labels[i], 4 + (i % columns) * width, 4 + Math.floor(i / columns) * 29, width - 4, kind + "set", values[i])
+        b.__label = labels[i]
         i = i + 1
 
 def __tgSupplyReceive(v):
@@ -251,7 +288,7 @@ def __tgSupplyClick():
         return
     op = this.__op
     value = this.__value
-    if op == "line" or op == "level" or op == "variantmenu":
+    if op == "line" or op == "level" or op == "variantmenu" or op == "detail":
         kind = op
         if op == "variantmenu":
             kind = "variant"
@@ -273,6 +310,7 @@ def __tgSupplyClick():
             _global.__tgCatalogueRequest = _global.__tgCatalogueRequest + 1
             m = _global.__tgSend("supply_variants")
             m.addProp("source", value)
+            m.addProp("bundle", Number(Boolean(p.__supplyRows.bundle)))
             m.addProp("request_id", _global.__tgCatalogueRequest)
             _global.__tgTransmit(m)
         return
@@ -294,18 +332,20 @@ def __tgSupplyClick():
         m.addProp("sequence", _global.__tgSupplySequence)
         m.addProp("source", "@" + String(p.__supplySource) + "@")
         m.addProp("count", count)
+        m.addProp("bundle", Number(Boolean(p.__variants.bundle)))
         p.status.text = "Обработка запроса…"
         _global.__tgTransmit(m)
         return
     if op == "shelf":
         _global.__tgSupplyBag = Boolean(value)
-        p.give.caption.text = "Получить бесплатно"
+        p.give.caption.text = "Получить"
         if _global.__tgSupplyBag:
-            p.give.caption.text = "Сдать бесплатно"
+            p.give.caption.text = "Сдать"
         visible = not _global.__tgSupplyBag
         p.line._visible = visible
         p.level._visible = visible
-        p.levelHint._visible = visible
+        p.levelHint._visible = False
+        p.detail._visible = visible
         p.query._visible = visible
         p.search._visible = visible
         p.all._visible = visible
@@ -322,7 +362,14 @@ def __tgSupplyClick():
         p.level.caption.text = "Уровень: " + String(_global.__tgSupplyLevel)
         if _global.__tgSupplyLevel == 0:
             p.level.caption.text = "Уровень: все"
+    if op == "detailset":
+        _global.__tgSupplyDetail = value
+        p.detail.caption.text = this.__label
+        if _global.__tgContext == "armoury" and value != "all":
+            _global.__tgSupplyCategory = "armour"
     if op == "category":
+        _global.__tgSupplyDetail = "all"
+        p.detail.caption.text = "Фильтр: все"
         _global.__tgSupplyClass = 0 - 1
         _global.__tgSupplyCategory = "all"
         if _global.__tgContext == "weapons" and value != "all":

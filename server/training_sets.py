@@ -4,6 +4,7 @@ from functools import lru_cache
 import re
 
 FIRST = 80000
+SIMULATOR_OFFSET = 1000
 
 
 @lru_cache(maxsize=1)
@@ -42,18 +43,36 @@ def records():
                 for key, value in bonus.items():
                     bonus[key] = balance.scaled(value, balance.RATIOS[line])
             result[FIRST + len(result)] = record
+    # Separate ids prevent another participant/profile from changing a cached
+    # set tooltip. P retains the sandbox model: the source has no usable P sets.
+    import training_formulas
+    source_bonuses = training_formulas.data().get('sets', {})
+    for key, original in tuple(result.items()):
+        source = next((s for s, r in sets.SETS.items()
+                       if r['family'] == original['family'] and r['level'] == original['level']
+                       and r['variant'] == original['variant']), None)
+        if str(source) not in source_bonuses:
+            continue
+        record = copy.deepcopy(original)
+        record['bonus'] = {int(k): copy.deepcopy(v) for k, v in source_bonuses[str(source)].items()}
+        record['simulator'] = True
+        result[key + SIMULATOR_OFFSET] = record
     return result
 
 
 @lru_cache(maxsize=1)
 def by_source():
-    return {source: (set_id, record) for set_id, record in records().items()
+    return {source: (set_id, record) for set_id, record in records().items() if not record.get('simulator')
             for source in record['members'].values()}
 
 
-def for_source(source):
+def for_source(source, simulator=False):
     import setcraft
-    return by_source().get(source) or by_source().get(setcraft.base_of(source))
+    result = by_source().get(source) or by_source().get(setcraft.base_of(source))
+    if simulator and result and result[0] + SIMULATOR_OFFSET in records():
+        key = result[0] + SIMULATOR_OFFSET
+        return key, records()[key]
+    return result
 
 
 def strings():

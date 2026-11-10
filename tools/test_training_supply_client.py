@@ -56,6 +56,32 @@ class SupplyClient(unittest.TestCase):
         f['__tgSupplyReady'].invoke(current,[dict(target=old['__supplyProto'])])
         self.assertNotIn('supplyCard',current)
 
+    def test_native_window_coordinates_center_and_clamp_without_hiding_description_layer(self):
+        panel = dict(__nativeLayer=True, __w=980, __h=640, _x=0, _y=0)
+        env = dict(Math=dict(round=round,max=max,min=min), Stage=dict(width=1280,height=800),
+                   lol=dict(core=dict(SceneShifter=dict(_ref=dict(minW=1280,minH=800)))), _global={})
+        f = self.helpers(env)
+        f['__tgLayout'].invoke(None,[panel,True])
+        self.assertEqual((panel['_x'],panel['_y']),(-490,-320))
+        panel['_x'],panel['_y'] = 10000,10000
+        f['__tgLayout'].invoke(None,[panel,False])
+        self.assertEqual((panel['_x'],panel['_y']),(-348,-248))
+        import training_ground_client
+        self.assertIn('layer = lol.core.SceneShifter.linkWindow', training_ground_client.SOURCE)
+
+    def test_pick_complete_set_sends_bundle_marker_and_exact_set_id(self):
+        sent = {}
+        panel = dict(__supply=True,__supplyRows=dict(bundle=1))
+        env = dict(Number=float,Boolean=bool,_global=dict(__tgPanel=panel,__tgCatalogueRequest=1))
+        f = self.helpers(env)
+        env['_global']['__tgSupplyClear'] = lambda p:None
+        env['_global']['__tgSend'] = lambda op:dict(addProp=lambda k,v:sent.update({k:v}))
+        env['_global']['__tgTransmit'] = lambda p:None
+        f['__tgSupplyClick'].invoke(dict(__op='pick',__value=80001),[])
+        self.assertEqual(sent['source'],80001)
+        self.assertEqual(sent['bundle'],1)
+        self.assertEqual(sent['request_id'],2)
+
 
 if __name__ == '__main__':
     unittest.main()

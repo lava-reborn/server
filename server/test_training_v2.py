@@ -102,6 +102,8 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         self.enter()
         grouped = {}
         for key, record in training_sets.records().items():
+            if record.get('simulator'):
+                continue  # Exact source bonuses are covered by the profile tests.
             grouped.setdefault((record['family'],record['level']),{})[record['variant']] = record
             for source in record['members'].values():
                 self.assertEqual(sets.set_of(training_items.copy_type(source)),key)
@@ -174,9 +176,9 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         g=self.enter()
         source=next(t for t,d in effects.definitions().items() if d['bonuses']['hp'])
         row=g.clone.inv.create(training_items.copy_type(source))
-        g.clone.combat.ap=100
+        g.clone.combat.ap=30
         effects.activate(g.clone.combat,row['uniq'],g.clone.combat,3)
-        self.assertEqual(g.clone.combat.ap,97)
+        self.assertEqual(g.clone.combat.ap,27)
         self.assertTrue(g.clone.training_effects.active)
         left=g.store.item(row['uniq'])
         self.assertTrue(left is None or left['use_count']==row['use_count']-1)

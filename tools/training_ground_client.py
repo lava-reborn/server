@@ -29,7 +29,7 @@ def __tgNPCWrapper(obj):
         desc = "Персонаж, противник и условия боя."
         if obj.param.tg_supply:
             label = "Получить снаряжение: " + obj.param.tg_title
-            desc = "Категории, варианты и бесплатная выдача тестовых предметов."
+            desc = "Категории и варианты снаряжения для полигона."
         op = "open"
         service = new(lol.core.player.Attendance, 100, this.id)
         service._name = label
@@ -253,21 +253,31 @@ def __tgRequestList():
 
 def __tgLayout(p, center):
     frame = lol.core.SceneShifter._ref
-    left = Math.round((frame.minW - Stage.width) / 2) + 8
-    top = Math.round((frame.minH - Stage.height) / 2) + 8
+    dx = 0
+    dy = 0
+    if p.__nativeLayer:
+        dx = Math.round(frame.minW / 2)
+        dy = Math.round(frame.minH / 2)
+    left = Math.round((frame.minW - Stage.width) / 2) + 8 - dx
+    top = Math.round((frame.minH - Stage.height) / 2) + 8 - dy
     right = left + Math.max(0, Stage.width - p.__w - 16)
     bottom = top + Math.max(0, Stage.height - p.__h - 16)
     if center:
-        p._x = Math.round((frame.minW - p.__w) / 2)
-        p._y = Math.round((frame.minH - p.__h) / 2)
+        p._x = Math.round((frame.minW - p.__w) / 2) - dx
+        p._y = Math.round((frame.minH - p.__h) / 2) - dy
     p._x = Math.max(left, Math.min(right, p._x))
     p._y = Math.max(top, Math.min(bottom, p._y))
 
 def __tgDragStart():
     p = this._parent
     frame = lol.core.SceneShifter._ref
-    left = Math.round((frame.minW - Stage.width) / 2) + 8
-    top = Math.round((frame.minH - Stage.height) / 2) + 8
+    dx = 0
+    dy = 0
+    if p.__nativeLayer:
+        dx = Math.round(frame.minW / 2)
+        dy = Math.round(frame.minH / 2)
+    left = Math.round((frame.minW - Stage.width) / 2) + 8 - dx
+    top = Math.round((frame.minH - Stage.height) / 2) + 8 - dy
     p.startDrag(False, left, top, left + Math.max(0, Stage.width - p.__w - 16), top + Math.max(0, Stage.height - p.__h - 16))
 
 def __tgDragStop():
@@ -301,7 +311,9 @@ def __tgBuild():
         old.removeMovieClip()
     else:
         lol.core.SceneShifter.hotKeyManager.addFilter("tg")
-    p = _root.createEmptyMovieClip("__tgPanel", _root.getNextHighestDepth())
+    layer = lol.core.SceneShifter.linkWindow
+    p = layer.createEmptyMovieClip("__tgPanel", layer.getNextHighestDepth())
+    p.__nativeLayer = True
     _global.__tgPanel = p
     W = Math.min(Stage.width - 24, 980)
     H = Math.min(Stage.height - 70, 640)
@@ -1166,7 +1178,7 @@ def __tgTradeBuy(item, count):
         this.__tgPurchaseItem = item
         box = lol.core.SceneShifter.openNewWindow("exchange").content
         this.__tgPurchaseBox = box
-        box.label = "Сколько получить бесплатно?"
+        box.label = "Сколько получить?"
         box.maxValue = 50
         box.cost_num = 0
         box.cost_mod = 1
@@ -1314,7 +1326,7 @@ def __tgAnnotationPrice(rows):
         rows.push(["Базовая цена за 1 шт.: ", String(price.value) + unit])
     else:
         rows.push(["Базовая цена: ", "не задана"])
-    rows.push(["На полигоне: ", "получение и сдача бесплатно"])
+    rows.push(["Использование: ", "только на полигоне"])
 
 def __tgBack(root):
     line = _global.__tgLines[this.item.typeID]

@@ -23,6 +23,39 @@ def stock(post):
 
 
 class Inventory(inventory.Inventory):
+    def switch_profile(self, simulator):
+        """Change only private copy identities; preserve every instance field.
+
+        Different static ids keep both profiles' client caches independent.
+        A single transaction commits all rows before publishing any update.
+        """
+        if self.store is not self.sess.ground.store:
+            raise ValueError('Профиль меняется только внутри полигона')
+        changed = []
+        for row in self.rows():
+            source = training_items.profile_source(row['type_id'])
+            if not training_items.is_copy(row['type_id']) or not training_items.available(source, simulator):
+                raise ValueError('Сдайте предметы, исключённые из нового профиля симулятора, перед сменой правил.')
+            target = training_items.copy_type(source, simulator=simulator)
+            if (row['root'] == items.FIRE_ARM
+                    and row['ammo_count'] > items.params_of(target)['clip_size']):
+                raise ValueError('Разрядите оружие перед сменой профиля: в новом магазине меньше места.')
+            if target != row['type_id']:
+                changed.append((dict(row), target))
+        with storage.atomic(self.store.db):
+            for row, target in changed:
+                result = self.store.db.execute(
+                    'UPDATE items SET type_id=? WHERE uniq=? AND char_id=? AND type_id=?',
+                    (target, row['uniq'], self.char_id, row['type_id']))
+                if result.rowcount != 1:
+                    raise ValueError('Снаряжение изменилось; повторите смену профиля')
+        for row, target in changed:
+            self.push_status(row, 0)
+            current = self.store.item(row['uniq'])
+            self.push_status(current, 1)
+            self.push_di(current)
+        return bool(changed)
+
     def check_post(self, eid):
         ground = self.sess.ground
         post = ground.posts.get(eid)
@@ -60,6 +93,10 @@ class Inventory(inventory.Inventory):
         ground = self.sess.ground
         if self.store is not ground.store or not training_items.is_copy(type_id):
             raise ValueError('Выдача доступна только клону')
+        source = training_items.profile_source(type_id)
+        if (not training_items.available(source, ground.rules.simulator_formulas)
+                or type_id != training_items.copy_type(source, simulator=ground.rules.simulator_formulas)):
+            raise ValueError('Предмет не соответствует выбранному профилю')
         if self.store.db.execute("SELECT seq FROM sqlite_sequence WHERE name='items'").fetchone()['seq'] > ground.serial_base + (1 << 20) - MAX_ROWS:
             raise ValueError('Недопустимое количество или предел предметов')
         # No live store and no purse participate. Publish item frames only
