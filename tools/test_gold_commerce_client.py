@@ -18,6 +18,8 @@ class GoldCommerceClient(unittest.TestCase):
         self.pan = {}
         self.windows = dict(trade=dict(instance=dict(content=self.pan)), query=dict(instance=None))
         self.env = dict(_global=dict(__moActive=lambda: False), String=str,
+                        TextFormat=lambda font, size: dict(font=font, size=size),
+                        Selection=dict(setFocus=lambda field: None),
                         Math=dict(floor=math.floor, ceil=math.ceil, min=min, max=max),
                         lol=dict(gpui=dict(StaffInterface=dict(ssType='trade')),
                                  core=dict(SceneShifter=dict(_ref=dict(UIPanels=self.windows),
@@ -37,7 +39,7 @@ class GoldCommerceClient(unittest.TestCase):
         return data
 
     def item(self, **overrides):
-        props = dict(g_sale_unit=362950, max_break_cur=200, max_break_abs=200, __break=100,
+        props = dict(name='Remington 11-87 (G)', g_sale_unit=362950, max_break_cur=200, max_break_abs=200, __break=100,
                      size=1, g_transfer=1, g_auction_base=138125, max_use_count=0)
         props.update(overrides)
         return dict(id='165db00', rootID=0, itemName='Remington 11-87 (G)', getProp=lambda name: props.get(name))
@@ -80,6 +82,38 @@ class GoldCommerceClient(unittest.TestCase):
         broken=self.item(__break=0)
         self.assertIsNotNone(self.methods['checkSellItem'].invoke(ui,[broken]))
 
+    def test_single_gold_sale_skips_old_prompt_but_still_requests_quote(self):
+        trade = self.trade()
+        item = self.item(g_cost=1037)
+        bag, counter = object(), object()
+        ui = dict(bag_mc=bag, visavisBag_mc=counter,
+                  currDDOperation=dict(fromSlot=bag, toSlot=counter, fromItem=item),
+                  __gcAskSaleOrig=lambda: self.fail('duplicate native confirmation'),
+                  tryToSendTransferToServer=lambda: self.methods['sell'].invoke(trade, [item, 1]))
+        self.methods['askTradeItem'].invoke(ui, [])
+        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(self.sent[0]['sale_stage'], '@quote@')
+        self.assertNotIn('confirmation', self.sent[0])
+
+    def test_group_sales_keep_legacy_confirmation_only_when_still_needed(self):
+        bag, counter = object(), object()
+        calls = []
+        ui = dict(bag_mc=bag, visavisBag_mc=counter,
+                  __gcAskSaleOrig=lambda: calls.append('native'),
+                  tryToSendTransferToServer=lambda: calls.append('quote'))
+        for group, expected in (
+            ([self.item(g_cost=1037)], 'quote'),
+            ([self.item(g_cost=1037), self.item(g_cost=0, g_sale_unit=0)], 'quote'),
+            ([self.item(g_cost=1037), self.item(g_cost=100, g_sale_unit=0)], 'native'),
+            ([self.item(g_cost=0, g_sale_unit=0)], 'native')):
+            ui['currDDOperation'] = dict(fromSlot=bag, toSlot=counter,
+                                        fromItemMc_arr=[dict(item=item) for item in group])
+            self.methods['askTradeItem'].invoke(ui, [])
+            self.assertEqual(calls[-1], expected)
+        self.env['_global']['__moActive'] = lambda: True
+        self.methods['askTradeItem'].invoke(ui, [])
+        self.assertEqual(calls[-1], 'native')
+
     def test_sale_asks_for_quote_and_does_not_send_sale_confirmation_immediately(self):
         trade = self.trade()
         self.methods['sell'].invoke(trade, [self.item(), 1])
@@ -94,7 +128,10 @@ class GoldCommerceClient(unittest.TestCase):
         trade = self.trade()
         trade.update(__gcPending=dict(item=self.item(), n=1), __gcAnswer=lambda event: None)
         fields = []
-        dialog = dict(alert_txt=dict(_y=10, _height=100, _x=20, _width=250),
+        dialog = dict(alert_txt=dict(_y=10, _height=100, textHeight=96, _x=20, _width=250),
+                      resize=lambda: None,
+                      apply_btn=dict(_y=200), cancel_btn=dict(_y=200),
+                      back_mc=dict(bottom_mc=dict(_y=190), middle_mc=dict(_y=15, _height=20)),
                       getNextHighestDepth=lambda: 42,
                       addEventListener=lambda *args: self.calls.append(args))
         def create_field(name, depth, x, y, width, height):
