@@ -1,4 +1,4 @@
-"""G commerce quotes/confirmation; purchase and repair prices stay native."""
+"""G commerce confirmation; purchase and repair prices stay native."""
 from avm_codegen import Compiler
 
 SOURCE = '''
@@ -123,6 +123,31 @@ def __gcCommission():
     this.info_txt.htmlText = "\\rКомиссия: " + String(fee) + " А"
     this.info_txt.setTextFormat(this.tf)
 
+def __gcAskSale():
+    operation = this.currDDOperation
+    if not operation or _global.__moActive() or operation.fromSlot != this.bag_mc or operation.toSlot != this.visavisBag_mc:
+        return this.__gcAskSaleOrig()
+    group = operation.fromItemMc_arr
+    if not group or len(group) == 0:
+        group = [{"item":operation.fromItem}]
+    quoted = False
+    i = 0
+    while i < len(group):
+        item = group[i].item
+        if not item:
+            return this.__gcAskSaleOrig()
+        if item.getProp("g_sale_unit"):
+            quoted = True
+        elif item.getProp("g_cost") > 0:
+            # Retain the native protection for sales outside the quote flow.
+            return this.__gcAskSaleOrig()
+        i = i + 1
+    if quoted:
+        # Validation and the transfer queue still run; each G sale asks once
+        # after its authoritative price quote arrives from the server.
+        return this.tryToSendTransferToServer()
+    return this.__gcAskSaleOrig()
+
 def __gcSell(item, quantity):
     if not item.getProp("g_sale_unit") or _global.__moActive():
         return this.__gcSellOrig(item, quantity)
@@ -159,22 +184,8 @@ def __gcQuote(obj):
         return
     dialog = lol.core.SceneShifter.openNewWindow("query").content
     this.__gcDialog = dialog
-    dialog.label = "Продать «" + pending.item.itemName + "» за " + String(obj.param.price) + " афро? Количество: " + String(obj.param.count) + ". Введите ПРОДАТЬ для подтверждения.\\r\\r\\r"
-    y = dialog.alert_txt._y + dialog.alert_txt._height - 34
-    dialog.createTextField("__gcInput", dialog.getNextHighestDepth(), dialog.alert_txt._x, y, dialog.alert_txt._width, 22)
-    field = dialog.__gcInput
-    field.type = "input"
-    field.border = True
-    field.borderColor = 7368298
-    field.background = True
-    field.backgroundColor = 2236962
-    field.textColor = 13616814
-    field.maxChars = 7
-    field.embedFonts = False
-    format = new(TextFormat, "Tahoma", 12)
-    field.setNewTextFormat(format)
-    field.text = ""
-    Selection.setFocus(field)
+    dialog.label = "Продать «" + pending.item.getProp("name") + "» за " + String(obj.param.price) + " афро? Количество: " + String(obj.param.count) + ". Введите ПРОДАТЬ для подтверждения."
+    _global.__gcConfirmInput(dialog, 7)
     dialog.addEventListener("click", this, this.__gcAnswer)
 
 def __gcAnswer(event):
@@ -201,6 +212,106 @@ def __gcAnswer(event):
     else:
         this.applyTransfer(False)
 
+
+def __gcConfirmInput(dialog, length):
+    # HTML whitespace is not reliable padding. Reserve real layout space
+    # below the rendered text, then let the native frame tile itself again.
+    contentHeight = Math.max(dialog.alert_txt._height, Math.ceil(dialog.alert_txt.textHeight) + 4)
+    dialog.alert_txt.autoSize = False
+    dialog.alert_txt._height = contentHeight + 44
+    dialog.resize()
+    y = dialog.alert_txt._y + contentHeight + 8
+    dialog.createTextField("__gcInput", dialog.getNextHighestDepth(), dialog.alert_txt._x, y, dialog.alert_txt._width, 22)
+    field = dialog.__gcInput
+    field.type = "input"
+    field.border = True
+    field.borderColor = 7368298
+    field.background = True
+    field.backgroundColor = 2236962
+    field.textColor = 13616814
+    field.maxChars = length
+    field.embedFonts = False
+    format = new(TextFormat, "Tahoma", 12)
+    field.setNewTextFormat(format)
+    field.text = ""
+    # Native query frames reserve a large empty footer. Keep the original
+    # bottom artwork, but bring its buttons to 12px below the input.
+    buttonsY = y + 22 + 12
+    back = dialog.back_mc
+    bottomY = back.bottom_mc._y + buttonsY - dialog.apply_btn._y
+    bottomY = Math.max(bottomY, back.middle_mc._y + back.middle_mc._height)
+    shift = bottomY - back.bottom_mc._y
+    back.bottom_mc._y = bottomY
+    dialog.apply_btn._y = dialog.apply_btn._y + shift
+    dialog.cancel_btn._y = dialog.apply_btn._y
+    i = 0
+    while back["m" + String(i)]:
+        tile = back["m" + String(i)]
+        if tile._y >= bottomY:
+            tile.removeMovieClip()
+        elif tile._y + tile._height > bottomY:
+            tile._height = bottomY - tile._y
+        i = i + 1
+    Selection.setFocus(field)
+
+def __gcBuy(item, count):
+    price = item.getProp("g_cost")
+    points = item.getProp("bg_p_cost")
+    if not price or price <= 0 or isNaN(price) or (points != None and not isNaN(points)):
+        return this.__gcBuyOrig(item, count)
+    if this.__gcBuyDialog or this.__gcBuyPending:
+        return
+    pan = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
+    if this.__gcDead or not pan or pan.trade != this or lol.core.SceneShifter._ref.UIPanels.query.instance:
+        this.applyTransfer(False)
+        return
+    if pan.trader.type_list[item.tradeID] != item.typeID or not item.getProp("name"):
+        this.applyTransfer(False)
+        return
+    n = 1
+    if item.rootID == 3:
+        n = count
+        if n == None:
+            n = item.getProp("size")
+    if not n or n <= 0 or isNaN(n) or n != Math.floor(n):
+        this.applyTransfer(False)
+        return
+    total = Math.ceil(price * n * pan.trader.pmod)
+    if not total or total <= 0 or isNaN(total):
+        this.applyTransfer(False)
+        return
+    # Ammo.g_cost is already rounded to the native price of one cartridge.
+    # Freeze the exact item, quantity and shown price, not the selection.
+    this.__gcBuyPending = {"item":item, "type":item.typeID, "index":item.tradeID, "price":price, "npc":this.visavisID, "n":n, "pmod":pan.trader.pmod}
+    dialog = lol.core.SceneShifter.openNewWindow("query").content
+    this.__gcBuyDialog = dialog
+    dialog.label = "Купить «" + item.getProp("name") + "» за " + String(total / 100) + " G? Количество: " + String(n) + ". Введите КУПИТЬ для подтверждения."
+    _global.__gcConfirmInput(dialog, 6)
+    dialog.addEventListener("click", this, this.__gcBuyAnswer)
+
+def __gcBuyAnswer(event):
+    dialog = this.__gcBuyDialog
+    if not dialog or event.target != dialog:
+        return
+    pending = this.__gcBuyPending
+    dialog.removeEventListener("click", this, this.__gcBuyAnswer)
+    text = dialog.__gcInput.text
+    this.__gcBuyDialog = None
+    this.__gcBuyPending = None
+    lol.core.SceneShifter.closeWindow("query")
+    if not pending or this.__gcDead:
+        return
+    pan = lol.core.SceneShifter._ref.UIPanels.trade.instance.content
+    if not event.success or text != "КУПИТЬ" or not pan or pan.trade != this or this.visavisID != pending.npc or pan.trader.pmod != pending.pmod:
+        this.applyTransfer(False)
+        return
+    item = pending.item
+    if item.typeID != pending.type or item.tradeID != pending.index or item.getProp("g_cost") != pending.price or pan.trader.type_list[pending.index] != pending.type:
+        this.applyTransfer(False)
+        return
+    # Native purchase preserves money, weight and stock rules and the ACK queue.
+    return this.__gcBuyOrig(item, pending.n)
+
 def __gcRequestTransfer(transfer):
     if this.__gcBusy:
         return
@@ -215,6 +326,11 @@ def __gcApplyTransfer(success):
 
 def __gcKill():
     this.__gcDead = True
+    if this.__gcBuyDialog:
+        this.__gcBuyDialog.removeEventListener("click", this, this.__gcBuyAnswer)
+        lol.core.SceneShifter.closeWindow("query")
+    this.__gcBuyDialog = None
+    this.__gcBuyPending = None
     if this.__gcDialog:
         this.__gcDialog.removeEventListener("click", this, this.__gcAnswer)
         lol.core.SceneShifter.closeWindow("query")
@@ -240,10 +356,12 @@ def patches(Asm, undef):
         (('core', 'objects', 'Item'), 'getProp', '__gcGetPropOrig', '__gcGetProp'),
         (('gpui', 'Annotation'), 'addSell', '__gcAddSellOrig', '__gcAddSell'),
         (('gpui', 'ItemContainer'), 'showCost', '__gcShowCostOrig', '__gcShowCost'),
+        (('gpui', 'TradeInterface'), 'askTradeItem', '__gcAskSaleOrig', '__gcAskSale'),
         (('gpui', 'TradeInterface'), 'checkSellItem', '__gcCheckSellOrig', '__gcCheckSell'),
         (('gpui', 'TradeInterface'), 'createExchangePan', '__gcExchangeOrig', '__gcExchange'),
         (('gpui', 'AuctionMyLotsInterface'), 'checkDragItem', '__gcAuctionCheckOrig', '__gcAuctionCheck'),
         (('gpui', 'AuctionMyLotsInterface'), 'checkComission', '__gcCommissionOrig', '__gcCommission'),
+        (('core', 'player', 'Trade'), 'buy', '__gcBuyOrig', '__gcBuy'),
         (('core', 'player', 'Trade'), 'sell', '__gcSellOrig', '__gcSell'),
         (('core', 'player', 'Trade'), 'requestTranfer', '__gcRequestOrig', '__gcRequestTransfer'),
         (('core', 'player', 'Trade'), 'applyTransfer', '__gcApplyOrig', '__gcApplyTransfer'),
@@ -254,8 +372,8 @@ def patches(Asm, undef):
         wraps.append((path, method, keep, params, body))
     # Quote and dialog callbacks are new prototype methods, installed via
     # the normal wrapper mechanism (their original methods are unused).
-    for name in ('__gcQuote', '__gcAnswer'):
+    for name in ('__gcQuote', '__gcAnswer', '__gcBuyAnswer'):
         params, body = bodies[name]
         wraps.append((('core', 'player', 'Trade'), name, name + 'Orig', params, body))
     return dict(globals=[(name, params, body) for name, params, body in functions
-                         if name in ('__gcQuality', '__gcSaleQuality')], wraps=tuple(wraps))
+                         if name in ('__gcQuality', '__gcSaleQuality', '__gcConfirmInput')], wraps=tuple(wraps))
