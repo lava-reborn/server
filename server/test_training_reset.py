@@ -192,3 +192,8 @@ class TrainingReset(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(profile, self.store.training_profile(self.s.char_id))
         self.assertEqual(len(self.s.writer.frames), frames)
         self.unchanged()
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(TrainingReset)

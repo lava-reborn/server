@@ -128,3 +128,8 @@ class Opponents(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(packet['res'], 1949)
         self.assertEqual(names.text(1949), 'kv_Camel_lvl8')
         self.unchanged()
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(Catalogue, Opponents)

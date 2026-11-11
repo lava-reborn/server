@@ -152,3 +152,8 @@ class ProfileEquipment(unittest.IsolatedAsyncioTestCase):
             self.unchanged()
         finally:
             restored.exit(notify=False)
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(ProfileEquipment)

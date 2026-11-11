@@ -61,3 +61,8 @@ class PersonalProfiles(unittest.IsolatedAsyncioTestCase):
         with patch.object(g,'phase','fight'):
             with self.assertRaises(ValueError):profiles.manage(g,'profile_delete',dict(key=record.key))
         self.unchanged()
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(PersonalProfiles)

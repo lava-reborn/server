@@ -11,6 +11,12 @@ from training import items as training_items
 
 
 class TrainingLabels(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Prototype -> artwork mappings are published only after validation.
+        # CI runs this file alone, without other suites preparing the registry.
+        training_items.prepare(range_catalog.item_catalogue())
+
     def test_no_offered_label_is_a_raw_catalogue_filename(self):
         for source, (_category, _level, label) in range_catalog.item_catalogue().items():
             with self.subTest(source=source):

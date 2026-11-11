@@ -1,6 +1,10 @@
 """Exercise the legacy Flash frame scanner, then the emitted range UI bytecode."""
 import math
 import unittest
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "server"))
 from protocol import encode, unescape, Str
 from training import session as training_ground
 from training import profiles as training_profiles
@@ -152,3 +156,8 @@ class ProfileWire(unittest.TestCase):
                     caption=g['__tgPanel'][field]['caption']['text']
                     self.assertIsInstance(caption,str)
                     self.assertFalse(any(bad in caption for bad in ('undefined','None','NaN')),(family,caption))
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(ProfileWire)

@@ -196,3 +196,8 @@ class TrainingPresets(unittest.IsolatedAsyncioTestCase):
                 self.request(g, 'kit_prepare', **dict(dict(level=12, line='A', wclass=1), **params))
         self.assertFalse(g.clone.inv.rows())
         self.unchanged()
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(TrainingPresets)

@@ -55,3 +55,8 @@ class Profiles(unittest.TestCase):
         p=items.params_of(training_items.copy_type(1569,True))
         self.assertEqual(p['h_damage_min'][0],200)
         self.assertEqual(p['clip_size'],10)
+
+
+if __name__ == '__main__':
+    from testkit import run_cases
+    run_cases(Profiles)
