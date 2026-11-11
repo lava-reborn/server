@@ -50,6 +50,10 @@ CREATE TABLE IF NOT EXISTS characters (
     on_map     INTEGER NOT NULL DEFAULT 0,
     UNIQUE (account_id, slot)
 );
+CREATE TABLE IF NOT EXISTS char_training_profiles (
+    char_id INTEGER PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
+    data TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS char_stats (
     char_id INTEGER NOT NULL REFERENCES characters(id),
     kind    TEXT    NOT NULL,      -- 'attrib' | 'skill' | 'spec'
@@ -1598,11 +1602,11 @@ def connect():
 
 
 class Store:
-    def __init__(self, path=None):
+    def __init__(self, path=None, *, db=None):
         global DB_PATH
         if path:
             DB_PATH = path
-        self.db = connect()
+        self.db = db if db is not None else connect()
         # (source, ref) a purse written now is booked under (money_ledger),
         # set around a command by its handler (booked_as); None books it
         # under LEDGER_OTHER. The game server is one thread: a command runs
@@ -1610,6 +1614,36 @@ class Store:
         self.money_source = None
         self.quest_revisions = {}
         self._combat_clans = {}
+
+    @classmethod
+    def temporary(cls):
+        """An isolated SQLite store, even when the real server uses Postgres."""
+        db = storage.SqliteDB(':memory:')
+        try:
+            db.create_schema(SCHEMA)
+            migrate(db)
+            return cls(db=db)
+        except Exception:
+            db.close()
+            raise
+
+    def training_profile(self, char_id):
+        row = self.db.execute("SELECT data FROM char_training_profiles WHERE char_id = ?", (char_id,)).fetchone()
+        if row is None:
+            return None
+        try:
+            return json.loads(row['data'])
+        except (ValueError, TypeError):
+            log.warning('Invalid saved training profile for character %s', char_id)
+            return None
+
+    def save_training_profile(self, char_id, profile):
+        data = json.dumps(profile, ensure_ascii=False, separators=(',', ':'))
+        if len(data) > 16384:
+            raise ValueError('Training profile is too large')
+        with self.db:
+            self.db.execute("INSERT INTO char_training_profiles(char_id, data) VALUES (?, ?)"
+                            " ON CONFLICT(char_id) DO UPDATE SET data = excluded.data", (char_id, data))
 
     def quests_changed(self, char_id):
         """Invalidate online availability snapshots after a quest write."""
@@ -2440,7 +2474,7 @@ class Store:
 
     def lock_quest_character(self, char_id):
         """Serialize this character's quest writes inside storage.atomic."""
-        lock = " FOR UPDATE" if storage.using_postgres() else ""
+        lock = " FOR UPDATE" if isinstance(self.db, storage.PostgresDB) else ""
         return self.db.execute("SELECT id FROM characters WHERE id = ?" + lock,
                                (char_id,)).fetchone() is not None
 

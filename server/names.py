@@ -26,6 +26,8 @@ import quests
 import sets
 import setcraft
 import transport
+from training import layout as training_layout
+from training import opponents as training_opponents
 import world
 
 # Creatures and items are numbered in separate spaces that overlap, while the
@@ -122,9 +124,13 @@ ALL.update(SET_ITEM_NAMES)
 ALL.update(SET_ITEM_DESCS)
 ALL.update(SETCRAFT_STRINGS)
 ALL.update(REAL_NAMES)
+ALL.update(training_opponents.NAMES)
 ALL.update(QUEST_STRINGS)
 ALL.update(TRANSPORT_STRINGS)
 ALL.update(SET_STRINGS)
+ALL.update(training_layout.NAMES)
+from training import sets as training_sets
+ALL.update(training_sets.strings())
 
 
 # The developers' own weapon (items.ADMIN_GUN) has an internal name and no

@@ -181,6 +181,15 @@ try:
     # and the reworked pieces' and the clothing cheques' words (setcraft.py)
     import setcraft                                    # noqa: E402
     ids |= set(setcraft.strings())
+    # Private terminals, readable opponent names and virtual sets are also
+    # preloaded. Check their namespaces rather than relaxing the total check.
+    from training import layout as range_layout, opponents as range_opponents, sets as range_sets
+    for family, strings in (('terminals', range_layout.NAMES),
+                            ('opponents', range_opponents.NAMES),
+                            ('sets', range_sets.strings())):
+        check('range ' + family + ' string ids do not collide with prior namespaces',
+              ids & set(strings), set())
+        ids.update(strings)
     have = {int(i) for i in re.findall(rb"id='(\d+)'", everything)}
     check('every name the server sends is preloaded', ids - have, set())
     check('creature, item, description, quest, transport and set ids do not collide',

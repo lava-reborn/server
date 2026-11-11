@@ -1454,7 +1454,7 @@ class Fighter:
         party = getattr(self.sess, "party", None)
         mine = party() if party is not None else None
         return bool(other.is_player and mine is not None
-                    and other.sess.char_id in mine.members)
+                    and getattr(other.sess, 'party_member_id', other.sess.char_id) in mine.members)
 
     def starts_war(self, target):
         return not (target is not None and target.is_player
@@ -1695,6 +1695,13 @@ class Fighter:
                         skill=progression.SHOOTING, spec=spec,
                         through=wt in THROUGH_TYPES,
                         at_players=not quests.lent(row["type_id"]))
+        prepare_weapon = getattr(self, "prepare_weapon", None)
+        if prepare_weapon is not None:
+            weapon = prepare_weapon(weapon, ammo_si, row)
+        else:
+            prepare_weapon = getattr(rc, "prepare_weapon", None)
+            if prepare_weapon is not None:
+                weapon = prepare_weapon(weapon, ammo_si)
         rc.room.broadcast(("faAim", dict(id=self.eid, pos=self.cell, ap=self.ap,
                                          ang=mobs.direction(self.cell, aim_cell, width),
                                          num_shots=weapon.num_shots)))
@@ -1888,9 +1895,15 @@ class Fighter:
                  and mobs.adjacent(self.cell, target.cell, loc))
         hit = reach and roll(melee_hit_chance(ch, spec) - target.dodge_melee())
         if hit:
-            crit = roll(melee_crit(ch, spec) - target.crit_evade_melee())
+            critical = getattr(rc, 'melee_critical', None)
+            chance = melee_crit(ch, spec) - target.crit_evade_melee()
+            crit = critical(self, target, chance) if critical else roll(chance)
+            prepare_melee = getattr(self, 'prepare_melee', None)
+            if prepare_melee is not None:
+                dmg_range = prepare_melee(dmg_range, row if uniq is not None else None)
             dmg = RNG.randint(dmg_range[0], dmg_range[1])
-            h, s = melee_split(dmg, crit, target.sp_now())
+            damage = getattr(rc, 'melee_damage', None)
+            h, s = damage(self, target, dmg, crit, target.sp_now()) if damage else melee_split(dmg, crit, target.sp_now())
             pool = target.hp if not target.is_player else 0
             fields = dict(id=self.eid, target=target.eid, dmg=h, sdmg=s,
                           crit=int(crit), recovery_ms=recovery_ms)
@@ -2059,8 +2072,12 @@ class Fighter:
         # first aid above) scales both by 1 + 0.2 per level.
         lo, hi = si.get("min_h_rest", 0), si.get("max_h_rest", 0)
         lo = lo + ch.skill_level(progression.MEDICINE) * (hi - lo) / 20.0
-        spec = SPEC_SURGERY if v["hcur"] < 0.3 * v["hmax"] else SPEC_FIRST_AID
+        select_spec = getattr(self, 'healing_spec', None)
+        spec = select_spec(v) if select_spec else (SPEC_SURGERY if v["hcur"] < 0.3 * v["hmax"] else SPEC_FIRST_AID)
         mult = 1 + 0.2 * spec_or_zero(ch, spec)
+        healing_multiplier = getattr(self, 'healing_multiplier', None)
+        if healing_multiplier is not None:
+            mult *= healing_multiplier(ch)
         healed = min(v["hmax"] - v["hcur"], int(RNG.uniform(lo, hi) * mult))
         slo, shi = si.get("min_st_rest", 0), si.get("max_st_rest", 0)
         rested = min(v["smax"] - v["scur"], int(RNG.uniform(slo, shi) * mult))
@@ -2084,7 +2101,9 @@ class Fighter:
             self.sess.inv.push_di(self.store.item(uniq))
         in_combat = ap_cost > 0 or (self.rc is not None and self.rc.room.ws)
         if items.battle_medicine(row["type_id"]) and in_combat:
-            remaining = battle_medicine.start(self.store, self.sess.char_id, now())
+            cooldown = getattr(self, 'medicine_cooldown_seconds', None)
+            duration = cooldown() if cooldown is not None else battle_medicine.COOLDOWN_SECONDS
+            remaining = battle_medicine.start(self.store, self.sess.char_id, now(), duration)
             Fighter.send_medicine_cooldown(self, remaining)
         if healed > 0 and hi:
             # Wiki: experience = healed * min(2, patient's max HP / the
@@ -2604,6 +2623,10 @@ class Fighter:
 class RoomCombat:
     """War state, the AP clock, the mobs and their bags, for one Room."""
 
+    def prepare_weapon(self, weapon, ammo):
+        """Ordinary rooms keep their existing combat rules unchanged."""
+        return weapon
+
     def __init__(self, room, store):
         self.room = room
         self.store = store
@@ -2996,9 +3019,12 @@ class RoomCombat:
         killed = False
         if target.present(self) and mobs.adjacent(mob.cell, target.cell, self.room.loc) \
                 and roll(st.hit - target.dodge_melee()):
-            crit = roll(st.crit - target.crit_evade_melee())
+            critical = getattr(self, 'melee_critical', None)
+            chance = st.crit - target.crit_evade_melee()
+            crit = critical(mob, target, chance) if critical else roll(chance)
             dmg = RNG.randint(st.dmg_min, st.dmg_max)
-            h, s = melee_split(dmg, crit, target.sp_now())
+            damage = getattr(self, 'melee_damage', None)
+            h, s = damage(mob, target, dmg, crit, target.sp_now()) if damage else melee_split(dmg, crit, target.sp_now())
             self.room.broadcast(("caHit", dict(id=mob.eid, target=target.eid,
                                                dmg=h, sdmg=s, crit=int(crit))))
             self.hit_landed(mob, target)
@@ -3139,6 +3165,8 @@ class RoomCombat:
         depth = 2 if weapon.through else 1
         struck = {}                 # body -> [hp, sp, hits, sp left]
         pairs = []
+        critical = getattr(self, 'ranged_critical', None)
+        damage = getattr(self, 'bullet_damage', None)
         for k in range(weapon.num_shots):
             offset = bullet_offset(weapon.cone, dist)
             if k >= live:
@@ -3174,7 +3202,7 @@ class RoomCombat:
                 rec = struck.setdefault(body, [0, 0, 0, body.sp_now()])
                 d = mobs.hex_distance(shooter.cell, body.cell, width)
                 optimal = weapon.opt_lo <= d <= weapon.opt_hi
-                crit = optimal and roll(weapon.crit - body.crit_evade_ranged())
+                crit = critical(shooter, body, weapon, optimal) if critical else optimal and roll(weapon.crit - body.crit_evade_ranged())
                 lo, hi = weapon.dmin, weapon.dmax
                 slo, shi = weapon.sdmin, weapon.sdmax
                 if optimal:
@@ -3185,7 +3213,8 @@ class RoomCombat:
                 if n:
                     dmg = max(1, int(dmg * THROUGH_SHARE)) if dmg > 0 else 0
                     st_dmg = max(1, int(st_dmg * THROUGH_SHARE)) if st_dmg > 0 else 0
-                h, s = split_damage(dmg, body.armor(), weapon.piercing, crit, rec[3], st_dmg)
+                h, s = (damage(shooter, body, weapon, dmg, st_dmg, crit, rec[3]) if damage
+                        else split_damage(dmg, body.armor(), weapon.piercing, crit, rec[3], st_dmg))
                 rec[0] += h
                 rec[1] += s
                 rec[2] += 1
