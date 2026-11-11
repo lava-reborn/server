@@ -134,6 +134,18 @@ Client patches applied without altering the original artwork:
    lowers the flag. «Форум» on the bottom bar (goToForum) and in the help
    menu, should it ever open (HelpDropList.forum), open FORUM_URL.
 
+   The rest of the buttons that opened the same profile page
+   (SceneShifter.getProfileUrl) are hidden after their panel's init, and
+   their handlers do nothing should anything still call them: «Изменить
+   внешность» in the inventory (EquipInterface.changeSkin_btn,
+   showSkinPage), the top-up buttons of the bank, the trade window and the
+   gold exchange (addGold_btn: addGold, goToUserPage, addGold) and the
+   resurrection window's (addMoney_btn with its addMoney_txt, which uiUpd
+   shows again whenever the gold changes, so uiUpd hides them too). The
+   location's «Пополнение счета» message near a trader
+   (LocationInterface.showGoldMessage), whose click went to the same page,
+   is not shown.
+
    The right-click menu: the first frame hides Flash's own items and puts
    one of its own there, «www.lava-online.ru», which opens the old site.
    The injected code runs after it in the same frame and empties
@@ -780,6 +792,23 @@ def fn_bye_close():
     new(a, ("lol", "utils"), "Timeout", 3).op("pop")
     a.label("out")
     return a
+
+
+def fn_site_hide(original, params, members):
+    """The original, then this.<member>._visible = false for each member:
+    the buttons that opened the old site's profile page."""
+    a = Asm()
+    for name in reversed(params):
+        a.var(name)
+    a.push(len(params)).var("this").push(original).op("callmethod").op("pop")
+    for member in members:
+        a.var("this").member(member).push("_visible", False).op("setmember")
+    return a
+
+
+def fn_site_nothing():
+    """A handler that opened the old site: now it does nothing."""
+    return Asm()
 
 
 def fn_no_gold_tooltip():
@@ -3106,6 +3135,30 @@ def injected():
          (), fn_no_gold_tooltip()),
         (("gpui", "GlobalMapInterface"), "showTooltip", "__siteTooltipOrig",
          (), fn_no_gold_tooltip()),
+        (("gpui", "EquipInterface"), "init", "__siteSkinInitOrig",
+         (), fn_site_hide("__siteSkinInitOrig", (), ("changeSkin_btn",))),
+        (("gpui", "EquipInterface"), "showSkinPage", "__siteSkinOrig",
+         (), fn_site_nothing()),
+        (("gpui", "BankInterface"), "init", "__siteBankInitOrig",
+         (), fn_site_hide("__siteBankInitOrig", (), ("addGold_btn",))),
+        (("gpui", "BankInterface"), "addGold", "__siteBankGoldOrig",
+         (), fn_site_nothing()),
+        (("gpui", "TradeInterface"), "init", "__siteTradeInitOrig",
+         (), fn_site_hide("__siteTradeInitOrig", (), ("addGold_btn",))),
+        (("gpui", "TradeInterface"), "goToUserPage", "__siteTradeGoldOrig",
+         (), fn_site_nothing()),
+        (("gpui", "GoldToAfroInterface"), "init", "__siteExchangeInitOrig",
+         (), fn_site_hide("__siteExchangeInitOrig", (), ("addGold_btn",))),
+        (("gpui", "GoldToAfroInterface"), "addGold", "__siteExchangeGoldOrig",
+         (), fn_site_nothing()),
+        (("gpui", "RegenerationInterface"), "init", "__siteRegenInitOrig",
+         (), fn_site_hide("__siteRegenInitOrig", (), ("addMoney_btn", "addMoney_txt"))),
+        (("gpui", "RegenerationInterface"), "uiUpd", "__siteRegenUpdOrig",
+         (), fn_site_hide("__siteRegenUpdOrig", (), ("addMoney_btn", "addMoney_txt"))),
+        (("gpui", "RegenerationInterface"), "addMoney", "__siteRegenMoneyOrig",
+         (), fn_site_nothing()),
+        (("gpui", "LocationInterface"), "showGoldMessage", "__siteGoldMessageOrig",
+         ("str",), fn_site_nothing()),
         (("gpui", "GlobalMapInterface"), "resizeStage", "__wideOrig",
          ("obj",), fn_wrapper(MARK)),
         # wraps the wrapper above: frame first, then the map drawn for it
