@@ -86,6 +86,11 @@ WIRED = ("__requirementsReadOrig", "__questSendOrig", "__questFilterOrig",      
          "__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__repairGoldOrig", "__repairGetPropOrig",    # gold-only repairs
          "__siteForumOrig", "__siteTooltipOrig",       # the old site's links
+         "__siteSkinInitOrig", "__siteSkinOrig", "__siteBankInitOrig",
+         "__siteBankGoldOrig", "__siteTradeInitOrig", "__siteTradeGoldOrig",
+         "__siteExchangeInitOrig", "__siteExchangeGoldOrig",
+         "__siteRegenInitOrig", "__siteRegenUpdOrig", "__siteRegenMoneyOrig",
+         "__siteGoldMessageOrig",
          "__progressInfoOrig", "__progress_increase_spec_level_func",
          "__onlineSendOrig", "__onlineNotifyOrig",     # online players
          "__wideCreateOrig", "__wideSceneOrig",        # library, location mask
