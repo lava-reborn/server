@@ -10,12 +10,18 @@ import inventory
 import items
 import progression
 import sets
-import training_balance as balance
-import training_effects as effects
-import training_ground as tg
-import training_items
-import training_layout as layout
-import training_sets
+from training import balance as balance
+from training import effects as effects
+from training import catalog as range_catalog
+from training import character as range_character
+from training import rules as range_rules
+from training import shop as range_shop
+from training import supply as range_supply
+import mobs
+from training import session as tg
+from training import items as training_items
+from training import layout as layout
+from training import sets as training_sets
 import test_training_ground as fixtures
 
 
@@ -37,7 +43,8 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any(packet['gold_costs']))
         self.assertTrue(any(packet['costs']))
         for copied,source,afro,gold in zip(packet['copies'],packet['sources'],packet['costs'],packet['gold_costs']):
-            import training_legacy, training_ammo
+            from training import legacy as training_legacy
+            from training import ammo as training_ammo
             if source in training_items.PROTOTYPES:
                 base = training_items.PROTOTYPES[source]['data']
             else:
@@ -49,15 +56,15 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
 
     async def test_special_and_event_sources_have_exactly_one_shop(self):
         self.enter()
-        for source, (category, _level, label) in tg.item_catalogue().items():
+        for source, (category, _level, label) in range_catalog.item_catalogue().items():
             matching = [post for post in layout.POSTS if post.line and
-                        training_items.copy_type(source) in tg.training_shop.stock(post)]
+                        training_items.copy_type(source) in range_shop.stock(post)]
             self.assertEqual(len(matching), 1, (source, label))
-            self.assertIn(tg.training_supply.index()[source].category, tg.training_supply.STATIONS[matching[0].key])
-        self.assertEqual(tg.item_catalogue()[1572][0], 'event_medicine')
-        self.assertEqual(tg.item_catalogue()[5844][0], 'special_weapon')
+            self.assertIn(range_supply.index()[source].category, range_supply.STATIONS[matching[0].key])
+        self.assertEqual(range_catalog.item_catalogue()[1572][0], 'event_medicine')
+        self.assertEqual(range_catalog.item_catalogue()[5844][0], 'special_weapon')
         self.assertNotIn('set', {p.category for p in layout.POSTS})
-        self.assertTrue(all('тестовая версия' not in row[2].casefold() for row in tg.item_catalogue().values()))
+        self.assertTrue(all('тестовая версия' not in row[2].casefold() for row in range_catalog.item_catalogue().values()))
         self.unchanged()
 
     async def test_contraband_and_collectors_share_one_dedicated_vendor_without_normal_duplicates(self):
@@ -66,14 +73,14 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(vendors),1)
         post=vendors[0]
         self.assertEqual((post.key,post.line,post.resource),('specialist','all',2391))
-        rare=set(tg.training_shop.stock(post))
-        expected={training_items.copy_type(source) for source,row in tg.item_catalogue().items() if row[0] in ('special_weapon','experimental_weapon')}
+        rare=set(range_shop.stock(post))
+        expected={training_items.copy_type(source) for source,row in range_catalog.item_catalogue().items() if row[0] in ('special_weapon','experimental_weapon')}
         expected.update(training_items.copy_type(source) for source in (6542,31097,6228,3552))
         self.assertEqual(rare,expected)
-        self.assertTrue(all(training_items.copy_type(source) in rare for source in tg.contraband() if source in tg.item_catalogue()))
+        self.assertTrue(all(training_items.copy_type(source) in rare for source in range_catalog.contraband() if source in range_catalog.item_catalogue()))
         for ordinary in layout.POSTS:
             if ordinary.category=='weapon':
-                self.assertTrue(rare.isdisjoint(tg.training_shop.stock(ordinary)))
+                self.assertTrue(rare.isdisjoint(range_shop.stock(ordinary)))
         self.unchanged()
 
     async def test_dedicated_vendor_can_issue_contraband_PKM_for_free(self):
@@ -117,13 +124,13 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
 
     async def test_twenty_levels_only_in_clone_profiles_and_copy_acquisition(self):
         g=self.enter()
-        profile=tg.preset(20)
+        profile=range_character.preset(20)
         profile['specs']=[5]*15
-        checked=tg.validate_profile(profile)
+        checked=range_character.validate_profile(profile)
         self.assertEqual(checked['specs'][12:],[-1]*3)
         g.configure_player(checked)
         self.assertEqual(g.clone.char.level,20)
-        source=next(t for t, row in tg.item_catalogue().items() if row[0]=='weapon' and row[1]==20 and items.acquisition_blocked(t))
+        source=next(t for t, row in range_catalog.item_catalogue().items() if row[0]=='weapon' and row[1]==20 and items.acquisition_blocked(t))
         self.assertIsNotNone(g.clone.inv.create(training_items.copy_type(source)))
         self.assertTrue(items.acquisition_blocked(source))
         self.unchanged()
@@ -191,7 +198,7 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
 
     async def test_medical_specializations_intellect_and_stamina_model(self):
         g=self.enter()
-        g.rules=tg.training_rules.Rules()  # Explicit internal v2 model, no longer the default menu profile.
+        g.rules=range_rules.Rules()  # Explicit internal v2 model, no longer the default menu profile.
         fighter=g.clone.combat
         self.assertEqual(fighter.healing_spec(dict(hcur=20,hmax=100)),8)
         self.assertEqual(fighter.healing_spec(dict(hcur=80,hmax=100)),9)
@@ -234,10 +241,10 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
 
     async def test_humanoid_uses_A_weapon_of_own_level_and_animals_keep_natural_attack(self):
         g=self.enter()
-        g.rules=tg.training_rules.Rules()
-        source=next(int(t) for t,info in tg.mobs.TYPES.items() if 12<=info.get('level',0)<=17 and info.get('role')=='mob' and info.get('weapon_class') in ('rifle','assault_rifle','pistol') and int(t) in tg.mob_catalogue())
+        g.rules=range_rules.Rules()
+        source=next(int(t) for t,info in mobs.TYPES.items() if 12<=info.get('level',0)<=17 and info.get('role')=='mob' and info.get('weapon_class') in ('rifle','assault_rifle','pistol') and int(t) in range_catalog.mob_catalogue())
         g.mob_type=source
-        original=copy.deepcopy(tg.mobs.stats(source).__dict__)
+        original=copy.deepcopy(mobs.stats(source).__dict__)
         g.start('mob')
         mob=g.room.combat.mobs[g.mob_eid]
         self.assertTrue(hasattr(mob,'training_weapon'))
@@ -246,7 +253,7 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         self.assertLessEqual(inventory.item_level(gun_source),mob.level)
         self.assertGreater(inventory.item_level(gun_source),1)
         self.assertEqual(mob.stats.attack_ap,items.params_of(mob.stats.weapon_type_id)['fire_costs'][0])
-        self.assertEqual(tg.mobs.stats(source).__dict__,original)
+        self.assertEqual(mobs.stats(source).__dict__,original)
         self.unchanged()
 
 

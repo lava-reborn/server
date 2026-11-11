@@ -4,15 +4,19 @@ import names
 import mobs
 import bosses
 import sets
-import training_ground as tg
-import training_opponents as catalogue
+from training import catalog as range_catalog
+from training import character as range_character
+from training import formulas as range_formulas
+from training import settings as range_settings
+from training import session as tg
+from training import opponents as catalogue
 from protocol import decode
 import test_training_ground as fixtures
 
 
 class Catalogue(unittest.TestCase):
     def test_reviewed_catalogue_has_names_groups_and_all_camp_bosses(self):
-        choices = tg.mob_catalogue()
+        choices = range_catalog.mob_catalogue()
         self.assertLess(len(choices), 300)
         self.assertTrue(bosses.CAMP_RECOVERY_TYPES <= choices.keys())
         self.assertEqual(set(row['group'] for row in catalogue.RECORDS.values()), set(catalogue.GROUPS)-{'all'})
@@ -35,11 +39,11 @@ class Opponents(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(g.spawn_point, 0)
         self.assertLess(g.distance, 20)
         for group in set(catalogue.GROUPS)-{'all'}:
-            g.mob_type = next(t for t in tg.mob_catalogue() if catalogue.RECORDS[t]['group'] == group)
+            g.mob_type = next(t for t in range_catalog.mob_catalogue() if catalogue.RECORDS[t]['group'] == group)
             original = vars(mobs.stats(g.mob_type)).copy()
             g.start('mob')
             mob = g.room.combat.mobs[g.mob_eid]
-            self.assertGreater(mob.cell % g.clone.loc.width, tg.COMPUTER_CELL % g.clone.loc.width)
+            self.assertGreater(mob.cell % g.clone.loc.width, range_settings.COMPUTER_CELL % g.clone.loc.width)
             g.target_defeated(mob)
             self.assertEqual(g.phase, 'ready')
             self.assertIsNone(g.mob_eid)
@@ -50,7 +54,7 @@ class Opponents(unittest.IsolatedAsyncioTestCase):
     async def test_category_level_choices_match_profile_before_search_and_paging(self):
         from dataclasses import replace
         g = self.enter()
-        data = tg.training_formulas.data()
+        data = range_formulas.data()
         for simulator in (False, True):
             g.rules = replace(g.rules, simulator_formulas=simulator)
             for group in catalogue.GROUPS:
@@ -58,7 +62,7 @@ class Opponents(unittest.IsolatedAsyncioTestCase):
                     if simulator and str(t) in data['mobs']:
                         return data['mob_records'][data['mobs'][str(t)]]['level']
                     return mobs.stats(t).level
-                expected = sorted({level(t) for t in tg.mob_catalogue()
+                expected = sorted({level(t) for t in range_catalog.mob_catalogue()
                                    if (group == 'all' or catalogue.RECORDS[t]['group'] == group)
                                    and level(t) > 0})
                 for request in (dict(),dict(query='несуществующая цель',page=5),dict(level=40,page=5)):
@@ -93,7 +97,7 @@ class Opponents(unittest.IsolatedAsyncioTestCase):
     async def test_selected_fighter_summary_reflects_set_and_custom_changes(self):
         g = self.enter()
         set_id = next(t for t,r in sets.SETS.items() if r['level'] == 12 and r['variant'] == 'A'
-                      and all(m in tg.item_catalogue() for m in r['members'].values()))
+                      and all(m in range_catalog.item_catalogue() for m in r['members'].values()))
         g.opponent = g.fighter_preset(set_id)
         self.assertIn(sets.SETS[set_id]['name'],g.opponent_summary())
         g.opponent['gear'] = {}
@@ -102,13 +106,13 @@ class Opponents(unittest.IsolatedAsyncioTestCase):
 
     async def test_hidden_old_target_does_not_discard_saved_character(self):
         g = self.enter()
-        g.profile = tg.validate_profile(tg.preset(12))
+        g.profile = range_character.validate_profile(range_character.preset(12))
         g.mob_type = 1081
         g.save_settings()
         restored = tg.Ground(self.s)
         try:
             self.assertEqual(max(restored.profile['skills']),12)
-            self.assertIn(restored.mob_type,tg.mob_catalogue())
+            self.assertIn(restored.mob_type,range_catalog.mob_catalogue())
             self.assertIn('цель удалена',restored.restore_notice)
         finally:
             restored.exit(notify=False)

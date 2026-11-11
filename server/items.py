@@ -47,7 +47,7 @@ import quests
 import sets
 import shop_bands
 import world
-import training_items
+from training import items as training_items
 
 log = logging.getLogger("lava")
 
@@ -559,7 +559,7 @@ STIMULANT_UNAVAILABLE = (
 def stimulant_unavailable(type_id):
     """Block only HEAL items promising an unimplemented temporary effect."""
     if training_items.is_copy(type_id):
-        import training_effects
+        from training import effects as training_effects
         if training_effects.definition(type_id):
             return False
     if STIMULANT_EFFECTS_ENABLED or root_of(type_id) != HEAL:

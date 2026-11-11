@@ -4,12 +4,15 @@ from pathlib import Path
 import unittest
 import items
 import own_items
-import training_balance
-import training_display as display
-import training_ground as training
-import training_items as copies
-import training_layout as layout
-import training_shop as shop
+from training import balance as training_balance
+from training import display as display
+from training import catalog as range_catalog
+from training import settings as range_settings
+from training import supply as range_supply
+from training import session as training
+from training import items as copies
+from training import layout as layout
+from training import shop as shop
 import world
 import test_training_ground as fixtures
 
@@ -32,25 +35,25 @@ class TrainingDisplay(unittest.IsolatedAsyncioTestCase):
                 if source != icon:
                     self.assertEqual(display.model(source), display.model(icon))
                 seen.add(source)
-        self.assertEqual(seen, set(training.item_catalogue()))
+        self.assertEqual(seen, set(range_catalog.item_catalogue()))
         self.unchanged()
 
     async def test_M60_and_its_modifications_have_M60_icons_and_machinegun_stall(self):
         self.enter()
         for line in ('A', 'P', 'G'):
-            stock = [copies.copy_type(e.source) for e in training.training_supply.filtered('weapons', dict(wclass=4,line=line))]
+            stock = [copies.copy_type(e.source) for e in range_supply.filtered('weapons', dict(wclass=4,line=line))]
             sources = {copies.source_type(t) for t in stock}
             found = [source for source in sources if display.model(source) == 'machine_gun_2_lvl_18']
             self.assertTrue(found, line)
             for source in found:
-                self.assertIn('M60', training.item_catalogue()[source][2])
+                self.assertIn('M60', range_catalog.item_catalogue()[source][2])
                 self.assertEqual(items.params_of(copies.copy_type(source))['weapon_type'], items.MACHINEGUN)
                 self.assertEqual(display.model(display.icon_source(source)), 'machine_gun_2_lvl_18')
-        self.assertNotIn(copies.copy_type(40175), [copies.copy_type(e.source) for e in training.training_supply.filtered('weapons',dict(wclass=0,line='P'))])
+        self.assertNotIn(copies.copy_type(40175), [copies.copy_type(e.source) for e in range_supply.filtered('weapons',dict(wclass=0,line='P'))])
 
     async def test_premium_modified_frames_use_exact_afro_variant_and_real_ammunition(self):
         self.enter()
-        for source in training.item_catalogue():
+        for source in range_catalog.item_catalogue():
             if items.root_of(source) != items.FIRE_ARM or not items.premium(source):
                 continue
             if '_mod_' not in items.catalogue()[source][1] or source in items.wiki():
@@ -69,14 +72,14 @@ class TrainingDisplay(unittest.IsolatedAsyncioTestCase):
 
     async def test_upgrade_names_disambiguate_every_known_modified_weapon(self):
         self.enter()
-        for source, (category, _level, label) in training.item_catalogue().items():
+        for source, (category, _level, label) in range_catalog.item_catalogue().items():
             if items.root_of(source) != items.FIRE_ARM:
                 continue
             upgrade = display.upgrade(source)
             if upgrade:
                 self.assertIn(upgrade, label, source)
         for line in ('A', 'P', 'G'):
-            self.assertTrue(training.training_supply.filtered('weapons', dict(wclass=4,line=line)))
+            self.assertTrue(range_supply.filtered('weapons', dict(wclass=4,line=line)))
 
     async def test_exit_quest_quiesces_UI_before_ack_and_public_location_load(self):
         import quests
@@ -84,7 +87,7 @@ class TrainingDisplay(unittest.IsolatedAsyncioTestCase):
         from unittest.mock import patch
         ground = self.enter()
         # Compatibility with a legacy in-flight quest; new issuance is disabled.
-        ground.store.take_quest(ground.clone.char_id, training.EXIT_QUEST, {'obj': 1}, True)
+        ground.store.take_quest(ground.clone.char_id, range_settings.EXIT_QUEST, {'obj': 1}, True)
         row = ground.store.quests(ground.clone.char_id)[0]
         self.s.writer.frames.clear()
         with patch.object(self.s, 'enter_location'):
@@ -104,7 +107,7 @@ class TrainingDisplay(unittest.IsolatedAsyncioTestCase):
         from unittest.mock import patch
         ground = self.enter()
         # Compatibility with a legacy in-flight quest; new issuance is disabled.
-        ground.store.take_quest(ground.clone.char_id, training.EXIT_QUEST, {'obj': 1}, True)
+        ground.store.take_quest(ground.clone.char_id, range_settings.EXIT_QUEST, {'obj': 1}, True)
         row = ground.store.quests(ground.clone.char_id)[0]
         self.s.writer.frames.clear()
         with patch.object(self.store, 'save_training_profile', side_effect=OSError('disk unavailable')):

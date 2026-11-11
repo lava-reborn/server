@@ -4,21 +4,22 @@ import unittest
 
 import items
 import names
-import training_ground as training
-import training_labels as labels
-import training_items
+from training import catalog as range_catalog
+from training import session as training
+from training import labels as labels
+from training import items as training_items
 
 
 class TrainingLabels(unittest.TestCase):
     def test_no_offered_label_is_a_raw_catalogue_filename(self):
-        for source, (_category, _level, label) in training.item_catalogue().items():
+        for source, (_category, _level, label) in range_catalog.item_catalogue().items():
             with self.subTest(source=source):
                 self.assertNotIn(items.catalogue()[training_items.source_type(source)][1].casefold(), label.casefold())
                 self.assertIsNone(re.search(r'\b[A-Za-z0-9]+_[A-Za-z0-9_]+', label))
 
     def test_dreadnought_pieces_reuse_piece_name_and_keep_premium_marker(self):
         for source in range(11479, 11484):
-            label = training.item_catalogue()[source][2]
+            label = range_catalog.item_catalogue()[source][2]
             self.assertIn('Дредноут', label)
             self.assertIn('(P)', label)
             self.assertIn('18 ур.', label)

@@ -24,9 +24,10 @@ def main():
     from rulesets.lava_fixed import LavaFixed, GUN_NAMES, GUN_OF_MOB
     from rulesets.lava import LavaRules
     import items
-    import training_legacy
-    import training_ammo
-    import training_ground as training
+    from training import legacy as training_legacy
+    from training import ammo as training_ammo
+    from training import catalog as range_catalog
+    from training import session as training
     reference, original = LavaFixed(), LavaRules()
     path = repo / 'data/training_simulator_formulas.json'
     data = json.loads(path.read_text(encoding='utf-8'))
@@ -39,7 +40,7 @@ def main():
     data.pop('near_bonus', None)
     data.pop('gap_damage', None)
     records, shared, by_type = [], {}, {}
-    for type_id in sorted(training.mob_catalogue()):
+    for type_id in sorted(range_catalog.mob_catalogue()):
         fighter = reference.build(dict(kind='mob', id=type_id))
         mob = fighter.x['mob']
         cls = GUN_OF_MOB.get(mob['weapon_class'], mob['weapon_class'])
@@ -72,10 +73,10 @@ def main():
         if found:
             extra.update(reference.sets[found]['members'].values())
     # Keep source catalogue ids stable across exports, including earlier extras.
-    data['extra_sources'] = sorted(set(data.get('extra_sources', ())) | (extra - set(training.item_catalogue())))
+    data['extra_sources'] = sorted(set(data.get('extra_sources', ())) | (extra - set(range_catalog.item_catalogue())))
     data['experimental_guns'] = {str(k): dict(base=v, name=reference.weapons[k]['name'],
         level=reference.need(reference.weapons[k]), data=reference.weapons[k]) for k, v in reference.new_guns.items()}
-    available = set(training.item_catalogue()) | set(data['extra_sources'])
+    available = set(range_catalog.item_catalogue()) | set(data['extra_sources'])
     data['preserved_sources'] = sorted(training_legacy.CLASSIC | {training_ammo.ROCKET, training_ammo.CROSSBOW})
     available -= set(data['preserved_sources'])
     damage = ('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max')

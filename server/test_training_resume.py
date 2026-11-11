@@ -8,8 +8,13 @@ import progression
 import quests
 import rooms
 import server
-import training_ground as training
-import training_party
+from training import commands as range_commands
+from training import geometry as range_geometry
+from training import rules as range_rules
+from training import runtime as range_runtime
+from training import settings as range_settings
+from training import session as training
+from training import party as training_party
 import test_training_ground as fixtures
 
 
@@ -21,7 +26,7 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         # Shared visitors must close before their common real store does.
-        for ground in tuple(training.ACTIVE):
+        for ground in tuple(range_runtime.ACTIVE):
             if ground.owner.inv.store is self.store:
                 ground.exit(notify=False)
         await fixtures.TrainingGround.asyncTearDown(self)
@@ -37,21 +42,21 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         return session
 
     def take_exit(self, ground):
-        ground.store.take_quest(ground.clone.char_id, training.EXIT_QUEST, {'obj': 1}, True)
+        ground.store.take_quest(ground.clone.char_id, range_settings.EXIT_QUEST, {'obj': 1}, True)
         return next(row for row in ground.store.quests(ground.clone.char_id)
-                    if row['type'] == training.EXIT_QUEST)
+                    if row['type'] == range_settings.EXIT_QUEST)
 
     def suspend(self, ground):
         ground.exit(notify=False, suspend=True)
         self.assertTrue(self.store.training_profile(self.s.char_id)['inside'])
-        self.assertNotIn(ground, training.ACTIVE)
+        self.assertNotIn(ground, range_runtime.ACTIVE)
         self.assertIsNone(self.s.training_ground)
 
     async def test_retired_profile_is_restored_as_baseline_without_losing_tuning(self):
         ground=self.enter()
         self.suspend(ground)
         saved=self.store.training_profile(self.s.char_id)
-        saved['rules']=dict(training.training_rules.Rules(health=2).as_dict(),revision='candidate-v2')
+        saved['rules']=dict(range_rules.Rules(health=2).as_dict(),revision='candidate-v2')
         saved['exit_quest']=True  # Obsolete saved flag must not recreate the quest.
         self.store.save_training_profile(self.s.char_id,saved)
         self.assertTrue(training.resume(self.next_session()))
@@ -85,7 +90,7 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(restored.token, old_token)
         self.assertIsNot(restored.store, self.store)
         self.assertEqual(restored.phase, 'ready')
-        self.assertEqual(restored.clone.pos, training.control_cell(restored.location))
+        self.assertEqual(restored.clone.pos, range_geometry.control_cell(restored.location))
         restored.clone.cmd_lenter({})
         self.assertFalse(restored.store.quests(restored.clone.char_id))
         self.assertFalse(self.store.quests(session.char_id))
@@ -102,7 +107,7 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.suspend(ground)
         self.assertTrue(training.resume(self.next_session()))
         restored = self.s.training_ground
-        restored.clone.cmd_q_status(dict(q_type=training.EXIT_QUEST))
+        restored.clone.cmd_q_status(dict(q_type=range_settings.EXIT_QUEST))
         command, params = decode(self.s.writer.frames[-1][:-1])
         self.assertEqual((command, params['status']), ('q_status', 0))
         with self.assertRaises(ValueError):
@@ -112,15 +117,15 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
     async def test_logout_and_repeated_transport_close_suspend_instead_of_exit(self):
         ground = self.enter()
         with patch.object(self.s, 'should_linger', return_value=False):
-            self.assertTrue(training.handle(self.s, 'logout', {}))
+            self.assertTrue(range_commands.handle(self.s, 'logout', {}))
             self.s.close(force=True)
         self.assertTrue(ground.closed)
         self.assertTrue(self.store.training_profile(self.s.char_id)['inside'])
         self.assertTrue(self.s.closed)
         self.assertTrue(training.resume(self.next_session()))
-        self.assertEqual(len([g for g in training.ACTIVE if g.owner is self.s]), 1)
+        self.assertEqual(len([g for g in range_runtime.ACTIVE if g.owner is self.s]), 1)
         # Ordinary close writes the real position/stats, never the range clone.
-        self.assertEqual(self.store.character(self.s.char_id)['loc'], training.MARKET)
+        self.assertEqual(self.store.character(self.s.char_id)['loc'], range_settings.MARKET)
         self.assertEqual(self.store.item(self.real_item['uniq'])['type_id'], self.real_item['type_id'])
 
     async def test_disconnect_during_fight_stops_only_own_target_and_restores_ready(self):
@@ -175,13 +180,13 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.unchanged()
 
     async def test_failed_entry_checkpoint_disposes_unpublished_clone(self):
-        before = set(training.ACTIVE)
+        before = set(range_runtime.ACTIVE)
         room = self.s.room
         with patch.object(self.store, 'save_training_profile', side_effect=OSError('disk unavailable')):
             with self.assertRaises(OSError):
                 training.enter(self.s, dict(npc=self.npc))
         self.assertIsNone(self.s.training_ground)
-        self.assertEqual(training.ACTIVE, before)
+        self.assertEqual(range_runtime.ACTIVE, before)
         self.assertIs(self.s.room, room)
         self.unchanged()
 
@@ -195,7 +200,7 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         ground = self.enter()
         self.suspend(ground)
         session = self.next_session()
-        with patch.object(training, 'MAX_SESSIONS', 0):
+        with patch.object(training.settings, 'MAX_SESSIONS', 0):
             self.assertFalse(training.resume(session))
         self.assertTrue(self.store.training_profile(session.char_id)['inside'])
         self.assertIsNone(session.training_ground)
@@ -218,8 +223,8 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(old.closed)
         self.assertTrue(ground.closed)
         self.assertIsNotNone(session.training_ground)
-        self.assertEqual(session.loc.id, training.MARKET)
-        self.assertEqual(len([g for g in training.ACTIVE if g.owner.char_id == session.char_id]), 1)
+        self.assertEqual(session.loc.id, range_settings.MARKET)
+        self.assertEqual(len([g for g in range_runtime.ACTIVE if g.owner.char_id == session.char_id]), 1)
 
     async def test_old_profiles_do_not_teleport_and_ordinary_login_checks_only_once(self):
         profile = copy.deepcopy(self.store.training_profile(self.s.char_id))
@@ -245,7 +250,7 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(session.training_ground)
         calls = [params for command, params in (decode(f[:-1]) for f in session.writer.frames)
                  if command == 'lcall']
-        self.assertEqual([call['id'] for call in calls], [training.RANGE])
+        self.assertEqual([call['id'] for call in calls], [range_settings.RANGE])
         keep.assert_not_called()
         session.handle('lenter', {})
         self.assertIn(session.training_ground.clone, session.training_ground.room.players)

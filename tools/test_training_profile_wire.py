@@ -2,8 +2,8 @@
 import math
 import unittest
 from protocol import encode, unescape, Str
-import training_ground  # Same initialization order as the running server.
-import training_profiles
+from training import session as training_ground
+from training import profiles as training_profiles
 from test_training_ui_client import environment, ASArray, ASString, Clip
 
 

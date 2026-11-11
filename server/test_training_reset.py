@@ -7,9 +7,11 @@ from unittest.mock import patch
 import battle_medicine
 import inventory
 from protocol import decode
-import training_ground as training
-import training_items
-import training_rules
+from training import character as range_character
+from training import geometry as range_geometry
+from training import session as training
+from training import items as training_items
+from training import rules as training_rules
 import test_training_ground as fixtures
 
 
@@ -21,10 +23,10 @@ class TrainingReset(unittest.IsolatedAsyncioTestCase):
     party_members = fixtures.TrainingGround.party_members
 
     def equip(self, g):
-        profile = training.preset(12)
+        profile = range_character.preset(12)
         profile['specs'][:8] = [3] * 8
         profile['gear'] = {26075: 1}
-        g.profile = training.validate_profile(profile, g.rules)
+        g.profile = range_character.validate_profile(profile, g.rules)
         g.apply(g.clone, g.profile)
         g.clone.inv.create(training_items.copy_type(26075))
         g.remember_outfit()
@@ -62,7 +64,7 @@ class TrainingReset(unittest.IsolatedAsyncioTestCase):
         rules, opponent, room = g.rules, copy.deepcopy(g.opponent), g.room
         nonce = self.prepare(g)
         self.request(g, 'reset_player', confirmation=nonce)
-        self.assertEqual(g.profile, training.validate_profile(training.preset(1), rules))
+        self.assertEqual(g.profile, range_character.validate_profile(range_character.preset(1), rules))
         self.assertEqual(g.clone.char.level, 1)
         self.assertEqual(g.clone.inv.rows(), [])
         self.assertFalse(g.clone.training_effects.active)
@@ -153,7 +155,7 @@ class TrainingReset(unittest.IsolatedAsyncioTestCase):
         for g in (first, second):
             g.clone.cmd_lenter({})
             self.equip(g)
-        first.clone.pos = training.control_cell(first.location)
+        first.clone.pos = range_geometry.control_cell(first.location)
         peer_rows = [dict(r) for r in second.clone.inv.rows()]
         peer_profile = copy.deepcopy(second.profile)
         members[1].writer.frames.clear()

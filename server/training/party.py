@@ -8,8 +8,8 @@ import storage
 
 
 def entry_available(owner):
-    import training_ground
-    if not training_ground.ENABLED:
+    from training import settings
+    if not settings.ENABLED:
         return False
     party = owner.party()
     return party is None or party.leader == owner.char_id
@@ -97,19 +97,19 @@ def refresh(ground):
 def relocate(ground, location):
     """One shared map, changed only while all participants are ready."""
     import copy
-    import training_ground as training
+    from training import arena, geometry, settings, layout, shop
     import world
-    if location not in training.LOCATIONS:
+    if location not in settings.LOCATIONS:
         raise ValueError('Неизвестная тренировочная локация')
     old = ground.room
     members = tuple(old.grounds.values())
     if any(member.phase != 'ready' or member.clone.combat.duels
            or member.clone.combat.dead for member in members):
         raise ValueError('Перед сменой общей площадки завершите тренировки всех участников')
-    training.geometry(location)
-    loc = copy.copy(training.arena_location(location))
+    geometry.geometry(location)
+    loc = copy.copy(geometry.arena_location(location))
     loc.spawns, loc.pvp = [], 1
-    room = training.TrainingRoom(loc, rooms.IdAllocator(), {}, key=(location, old.key[1]))
+    room = arena.TrainingRoom(loc, rooms.IdAllocator(), {}, key=(location, old.key[1]))
     room.npcs.clear()
     room.ground, room.grounds, room.owner_ids = ground, {}, dict(old.owner_ids)
     # Prepare geometry and all durable destinations before moving anyone.
@@ -117,8 +117,8 @@ def relocate(ground, location):
     store = ground.owner.inv.store
     if any(member.owner.inv.store is not store for member in members):
         raise ValueError('Участники используют разные хранилища')
-    posts = {ground.post_ids[p.key]: p for p in training.training_layout.posts_for(location)
-             if not p.line or training.training_shop.stock(p)}
+    posts = {ground.post_ids[p.key]: p for p in layout.posts_for(location)
+             if not p.line or shop.stock(p)}
     for eid, post in posts.items():
         cell = post.cell(loc.width)
         if cell in loc.obstacles:
@@ -126,8 +126,8 @@ def relocate(ground, location):
         room.npcs[eid] = rooms.NPC(cell, post.resource, world.COMMONER)
     positions = []
     for member in members:
-        positions.append(free_spawn(room, training.control_cell(location), reserved=positions))
-    room.combat = training.TrainingCombat(room, ground.store)
+        positions.append(free_spawn(room, geometry.control_cell(location), reserved=positions))
+    room.combat = arena.TrainingCombat(room, ground.store)
     try:
         with storage.atomic(store.db):
             for member in members:

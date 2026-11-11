@@ -26,8 +26,8 @@ import quests
 import sets
 import setcraft
 import transport
-import training_layout
-import training_opponents
+from training import layout as training_layout
+from training import opponents as training_opponents
 import world
 
 # Creatures and items are numbered in separate spaces that overlap, while the
@@ -129,7 +129,7 @@ ALL.update(QUEST_STRINGS)
 ALL.update(TRANSPORT_STRINGS)
 ALL.update(SET_STRINGS)
 ALL.update(training_layout.NAMES)
-import training_sets
+from training import sets as training_sets
 ALL.update(training_sets.strings())
 
 

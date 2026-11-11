@@ -16,10 +16,10 @@ import combat
 import inventory
 import progression
 import items
-import training_display
-import training_items
+from training import display as training_display
+from training import items as training_items
 
-PATH = Path(__file__).resolve().parents[1] / 'data/training_simulator_formulas.json'
+PATH = Path(__file__).resolve().parents[2] / 'data/training_simulator_formulas.json'
 INTELLECT_BASE = 5
 DAMAGE_PER_INTELLECT = .03
 HEAL_PER_INTELLECT = .04

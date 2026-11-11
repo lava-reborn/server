@@ -8,8 +8,8 @@ import items
 import mobs
 import progression
 import sets
-import training_balance
-import training_items
+from training import balance as training_balance
+from training import items as training_items
 
 CLASSES = {'pistol': items.PISTOL, 'shotgun': items.SHOTGUN,
            'smg': items.SMG, 'assault_rifle': items.ASSAULT,
@@ -18,12 +18,12 @@ CLASSES = {'pistol': items.PISTOL, 'shotgun': items.SHOTGUN,
 
 @lru_cache(maxsize=128)
 def equipment(level, weapon_class):
-    import training_ground as training
-    catalogue = training.item_catalogue()
+    from training import catalog, character as training
+    catalogue = catalog.item_catalogue()
     kind = CLASSES.get(weapon_class)
     candidates = [source for source, (category, item_level, _label) in catalogue.items()
                   if category == 'weapon' and 0 < item_level <= level
-                  and training.item_line(source) == 'A' and source not in training.contraband()
+                  and catalog.item_line(source) == 'A' and source not in catalog.contraband()
                   and not craft.mod_of(source) and items.root_of(source) == items.FIRE_ARM
                   and items.params_of(source).get('weapon_type') == kind]
     gun = min(candidates, key=lambda source: (-catalogue[source][1], source)) if candidates else None
@@ -38,7 +38,7 @@ def configure(mob, ground):
     """Called once at spawn. Animals retain their natural attack and curves."""
     if not ground.rules.combat_v2 or mob.stats.role not in ('mob', 'boss'):
         return
-    import training_ground as training
+    from training import catalog, character as training
     st = mob.stats
     gun, worn = equipment(st.level, st.weapon_class)
     profile = training.preset(st.level)

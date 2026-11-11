@@ -6,7 +6,7 @@ import inventory
 import items
 import progression
 import storage
-import training_items
+from training import items as training_items
 
 
 log = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ MAX_PURCHASE = 50
 def stock(post):
     if not post.line:
         return ()
-    import training_supply
+    from training import supply as training_supply
     return tuple(training_items.copy_type(source) for source in sorted(training_supply.sources(post.key)))
 
 

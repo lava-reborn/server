@@ -7,8 +7,8 @@ import inventory
 import items
 import names
 import storage
-import training_display as display
-import training_items as copies
+from training import display as display
+from training import items as copies
 from protocol import Str
 
 PAGE_SIZE = 10
@@ -45,7 +45,7 @@ def search_key(text):
 
 @lru_cache(maxsize=2)
 def index(simulator=False):
-    import training_ground as ground
+    from training import catalog as ground
     copies.prepare(ground.item_catalogue())
     out = {}
     for source, (category, level, name) in ground.item_catalogue().items():
@@ -87,7 +87,7 @@ def sources(station):
 
 
 def filtered(station, params, ground=None):
-    from training_ground import integer
+    from training.validation import integer
     level = integer(params.get('level', 0), 0, 20)
     wclass = integer(params.get('wclass', -1), -1, 6)
     line = str(params.get('line', 'all'))
@@ -99,7 +99,7 @@ def filtered(station, params, ground=None):
     query = search_key(str(params.get('query', ''))[:48])
     detail = str(params.get('detail', 'all'))
     allowed = detail_sources(station, detail, ground)
-    import training_ground as training
+    from training import catalog as training
     entries = index(bool(ground and ground.rules.simulator_formulas))
     return [entry for source in sources(station) if (entry := entries[source])
             and (not level or entry.level == level)
@@ -165,7 +165,7 @@ def static_detail(station, detail):
 
 @lru_cache(maxsize=1)
 def set_catalogue():
-    import training_sets
+    from training import sets as training_sets
     return {key: row for key, row in training_sets.records().items()
             if not row.get('simulator') and all(t in sources('armoury') for t in row['members'].values())}
 
@@ -179,7 +179,7 @@ def selected_set(ground, source):
 
 
 def set_list(ground, params):
-    from training_ground import integer
+    from training.validation import integer
     level = integer(params.get('level', 0), 0, 20)
     line = str(params.get('line', 'all'))
     if line not in ('all', 'A', 'P', 'G', 'C'):
@@ -208,7 +208,7 @@ def model_key(entry):
 
 
 def catalogue(ground, params):
-    from training_ground import integer
+    from training.validation import integer
     if params.get('category') == 'set':
         if ground.context != 'armoury':
             raise ValueError('Комплекты доступны у стойки брони')
@@ -237,7 +237,7 @@ def catalogue(ground, params):
 
 
 def variants(ground, params):
-    from training_ground import integer
+    from training.validation import integer
     if integer(params.get('bundle', 0), 0, 1):
         source = integer(params.get('source'), 1, 100000)
         record = selected_set(ground, source)
@@ -275,7 +275,7 @@ def maximum(source):
 
 
 def bag(ground, params):
-    from training_ground import integer
+    from training.validation import integer
     rows = [row for row in ground.clone.inv.rows() if row['slot'] == inventory.BAG and copies.is_copy(row['type_id'])]
     page = min(integer(params.get('page', 0), 0, 10000), max(0, (len(rows)-1)//PAGE_SIZE))
     selected = rows[page*PAGE_SIZE:(page+1)*PAGE_SIZE]
@@ -288,7 +288,7 @@ def bag(ground, params):
 
 
 def change(ground, params, returning=False):
-    from training_ground import integer
+    from training.validation import integer
     inv = ground.clone.inv
     seq = integer(params.get('sequence'), 1, 2**31-1)
     if seq <= ground.supply_sequence:

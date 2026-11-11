@@ -6,9 +6,10 @@ import combat
 import inventory
 import items
 import mobs
-import training_bot as bot
-import training_ground as training
-import training_items as copies
+from training import bot as bot
+from training import character as range_character
+from training import session as training
+from training import items as copies
 import test_training_ground as fixtures
 
 
@@ -24,7 +25,7 @@ class TrainingBot(unittest.IsolatedAsyncioTestCase):
         ammo = items.params_of(source)['comp_array'][0]
         profile = dict(skills=[0, 20, 20, 0, 0], specs=[5] * 12 + [-1] * 3,
                        gear={source: 1, ammo: 200})
-        ground.opponent = training.validate_profile(profile)
+        ground.opponent = range_character.validate_profile(profile)
         ground.enemy_healing = healing
         ground.heal_count = count
         if spawn is not None:

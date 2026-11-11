@@ -358,7 +358,7 @@ def affected(base, impact):
         names = {base_name, stem}
         names.update(base_name[:i + 1] for i, ch in enumerate(base_name) if ch == "_" and i >= 3)
         bound, at_import = {}, set()
-        for p in sorted(glob.glob(os.path.join(ROOT, "server", "*.py"))):
+        for p in sorted(glob.glob(os.path.join(ROOT, "server", "**", "*.py"), recursive=True)):
             mod = rel(p)
             if os.path.basename(mod).startswith("test_"):
                 continue
@@ -366,7 +366,9 @@ def affected(base, impact):
                 if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                     continue
                 nodes = list(ast.walk(stmt))
-                if not any(isinstance(n, ast.Constant) and n.value == base_name for n in nodes):
+                if not any(isinstance(n, ast.Constant) and isinstance(n.value, str)
+                           and n.value.replace("\\", "/").rsplit("/", 1)[-1] == base_name
+                           for n in nodes):
                     continue
                 bound.setdefault(mod, set()).update(
                     n.id for n in nodes if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store))

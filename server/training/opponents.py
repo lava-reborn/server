@@ -8,7 +8,7 @@ GROUPS = {'all': 'Все противники', 'camps': 'Бойцы лагер�
           'bosses': 'Боссы лагерей', 'crocodiles': 'Крокодилы', 'animals': 'Животные',
           'patrols': 'Патрули Магриба', 'caravans': 'Караваны'}
 NAME_BASE = 8_200_000
-_raw = json.loads((Path(__file__).resolve().parents[1] / 'data/training_opponents.json').read_text(encoding='utf-8'))
+_raw = json.loads((Path(__file__).resolve().parents[2] / 'data/training_opponents.json').read_text(encoding='utf-8'))
 _rows = _raw['opponents']
 if (_raw['version'] != 1 or len({row['id'] for row in _rows}) != len(_rows)
         or any(not isinstance(row['id'], int) or not 0 < row['id'] < 100000

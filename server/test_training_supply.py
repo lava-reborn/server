@@ -5,9 +5,11 @@ from unittest.mock import patch
 import inventory
 import items
 from protocol import decode
-import training_ground as tg
-import training_items as copies
-import training_supply as supply
+from training import catalog as range_catalog
+from training import character as range_character
+from training import session as tg
+from training import items as copies
+from training import supply as supply
 import test_training_ground as fixtures
 
 
@@ -28,7 +30,7 @@ class TrainingSupply(unittest.IsolatedAsyncioTestCase):
         g = self.enter()
         self.assertEqual(len(supply.ARCHIVE_SOURCES), 28)
         for source in supply.ARCHIVE_SOURCES:
-            self.assertIn(source, tg.item_catalogue())
+            self.assertIn(source, range_catalog.item_catalogue())
             self.assertTrue(copies.is_copy(copies.copy_type(source)))
             self.assertIn(source, supply.sources('archive'))
         for source in (6542, 31097, 6228, 3552):
@@ -89,7 +91,7 @@ class TrainingSupply(unittest.IsolatedAsyncioTestCase):
     async def test_every_item_has_one_station_and_all_premium_variants_have_correct_class(self):
         self.enter()
         all_sources = [t for station in supply.STATIONS for t in supply.sources(station)]
-        self.assertEqual(set(all_sources), set(tg.item_catalogue()))
+        self.assertEqual(set(all_sources), set(range_catalog.item_catalogue()))
         self.assertEqual(len(all_sources), len(set(all_sources)))
         for source, entry in supply.index().items():
             if items.root_of(copies.copy_type(source)) == items.FIRE_ARM:
@@ -159,7 +161,7 @@ class TrainingSupply(unittest.IsolatedAsyncioTestCase):
         normal_limit = self.s.char.max_weight()
         g = self.enter()
         for level in (1, 12, 20):
-            profile = tg.preset(level)
+            profile = range_character.preset(level)
             g.configure_player(profile)
             self.assertEqual(g.clone.inv.carry_limit(), 150_000)
             self.assertEqual(g.clone.char.rp_info()['max_weight'], 150_000)
@@ -202,7 +204,7 @@ class TrainingSupply(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(g.profile['specs'], [-1] * len(g.profile['specs']))
         self.assertFalse(g.profile['gear'])
         self.assertFalse(g.clone.inv.rows())
-        profile = tg.preset(8)
+        profile = range_character.preset(8)
         g.configure_player(profile)
         g.save_settings()
         g.exit(notify=False)

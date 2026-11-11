@@ -1,7 +1,7 @@
 """Fast arithmetic and isolation checks for experimental range rules."""
 import unittest
 import combat
-from training_rules import Rules
+from training.rules import Rules
 
 
 class TrainingRules(unittest.TestCase):

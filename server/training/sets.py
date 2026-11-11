@@ -11,7 +11,7 @@ SIMULATOR_OFFSET = 1000
 def records():
     import items
     import sets
-    import training_balance as balance
+    from training import balance as balance
     names = {name: type_id for type_id, (_root, name) in items.catalogue().items()}
     result = {}
     for original_id, base in sorted(sets.SETS.items()):
@@ -45,7 +45,7 @@ def records():
             result[FIRST + len(result)] = record
     # Separate ids prevent another participant/profile from changing a cached
     # set tooltip. P retains the sandbox model: the source has no usable P sets.
-    import training_formulas
+    from training import formulas as training_formulas
     source_bonuses = training_formulas.data().get('sets', {})
     for key, original in tuple(result.items()):
         source = next((s for s, r in sets.SETS.items()

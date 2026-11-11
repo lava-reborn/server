@@ -69,7 +69,7 @@ import travel
 import trophies
 import upgrader
 import world
-import training_ground
+from training import api as training_ground
 from protocol import BigUInt, FrameReader, RawList, decode, frame, Str
 
 HOST = os.environ.get("LAVA_HOST", "0.0.0.0")
@@ -578,13 +578,9 @@ class Session:
         talk incomplete until its base skill goals have been reached."""
         if self.closed:
             return
-        if getattr(self, 'training_ground', None) is not None and _cmd[0] not in (
-                'userMsg', 'online', 'tg', 'shutdown', 'kickban', 'p_op', 'p_m') and not (
-                    _cmd[0] == 'cmdAck' and (getattr(self, 'training_chat', False) or getattr(self, 'training_party_control', False))) and not (
-                    _cmd[0] in ('gg_list', 'cmdAck') and getattr(self, 'training_clan_read', False)):
-            return  # Real background updates must not overwrite the training avatar.
-        if getattr(self, 'training_ground', None) is not None and _cmd[0] in ('p_op', 'p_m'):
-            params = training_ground.training_party.frame(self.training_ground, _cmd[0], params)
+        params = training_ground.outgoing(self, _cmd[0], params)
+        if params is None:
+            return
         if _cmd[0].startswith("q_di_"):
             params = self.fee_gate(params)
             params = self.skill_gate(params)
@@ -765,9 +761,7 @@ class Session:
         row. A repeated transport close is a no-op; force finalizes a
         lingering body on timeout, death, kick or server shutdown.
         """
-        ground = getattr(self, 'training_ground', None)
-        if ground is not None:
-            ground.exit(notify=False, suspend=True)
+        training_ground.suspend(self)
         if self.closed and (not force or self.linger is None):
             return
         if not force and not self.closed and self.should_linger():
@@ -2967,7 +2961,7 @@ class Session:
         """
         if quest.type == training_ground.EXIT_QUEST:
             return False
-        if quest.type == training_ground.ENTRY_QUEST and not training_ground.training_party.entry_available(self):
+        if quest.type == training_ground.ENTRY_QUEST and not training_ground.entry_available(self):
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False
@@ -3138,7 +3132,7 @@ class Session:
         same way."""
         if quest.type == training_ground.EXIT_QUEST:
             return False
-        if quest.type == training_ground.ENTRY_QUEST and not training_ground.training_party.entry_available(self):
+        if quest.type == training_ground.ENTRY_QUEST and not training_ground.entry_available(self):
             return False
         if quest.type in residence.QUESTS and not residence.allowed(self.character(), residence.QUESTS[quest.type]):
             return False
@@ -4494,7 +4488,7 @@ async def main():
     # handler: a lazy load of the wiki tables once stalled the loop for two
     # seconds on whichever request touched an item first.
     items.preload()
-    if training_ground.ENABLED:
+    if training_ground.enabled():
         training_ground.preload()
     # A quest row naming a thing the game does not have, or handing over one
     # worth something, stops the server here, as a broken chain stops it at

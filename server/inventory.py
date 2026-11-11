@@ -84,7 +84,7 @@ import gold_trade
 import holdings
 import mortimer
 import items
-import training_items
+from training import items as training_items
 import pace
 import progression
 import restore_policy

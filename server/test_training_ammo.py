@@ -6,11 +6,11 @@ from unittest.mock import patch
 import combat
 import inventory
 import items
-import training_ammo as support
-import training_ground as training
-import training_items as copies
-import training_layout as layout
-import training_shop as shop
+from training import ammo as support
+from training import session as training
+from training import items as copies
+from training import layout as layout
+from training import shop as shop
 import test_training_ground as fixtures
 from protocol import decode
 

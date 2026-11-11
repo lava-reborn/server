@@ -5,7 +5,7 @@ import json
 import math
 from pathlib import Path
 
-PATH = Path(__file__).resolve().parents[1] / 'data' / 'training_rules.json'
+PATH = Path(__file__).resolve().parents[2] / 'data' / 'training_rules.json'
 
 @dataclass(frozen=True)
 class Rules:
@@ -93,7 +93,7 @@ class Rules:
         return damage, stamina, reach
 
     def description(self):
-        import training_formulas
+        from training import formulas as training_formulas
         profile = ('Симулятор ' + training_formulas.data()['source_commit'][:7] + ': параметры A/G-оружия, броня и бонусы комплектов, коэффициенты урона и мобов. '
                    'Крит огнестрела игрока — только на оптимальной дистанции. Броня для винтовок и остального оружия считается по-разному. '
                    'P-варианты без аналога в симуляторе сохраняют параметры полигона. ' if self.simulator_formulas else '')
@@ -115,7 +115,7 @@ def current():
 
 @lru_cache(maxsize=1)
 def simulator_notes():
-    import training_formulas
+    from training import formulas as training_formulas
     snapshot = training_formulas.data()
     pages = ['Симулятор: после правок · ' + snapshot['source_commit'][:7] +
         '\nНовая таблица оружия, комплектов и мобов из main симулятора. Далее: сравнение с исходной моделью по справочнику симулятора.',

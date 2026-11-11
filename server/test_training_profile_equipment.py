@@ -7,9 +7,11 @@ from protocol import decode
 import inventory
 import items
 import sets
-import training_ground as training
-import training_items as copies
-from training_rules import Rules
+from training import catalog as range_catalog
+from training import character as range_character
+from training import session as training
+from training import items as copies
+from training.rules import Rules
 import test_training_ground as fixtures
 
 
@@ -21,11 +23,11 @@ class ProfileEquipment(unittest.IsolatedAsyncioTestCase):
     party_members = fixtures.TrainingGround.party_members
 
     def equip(self, ground):
-        profile = training.preset(12)
+        profile = range_character.preset(12)
         profile['specs'] = [3] * 8 + [-1] * 7
         profile['gear'] = {t: 1 for t in sets.SETS[60000]['members'].values()}
         profile['gear'][26075] = 1
-        ground.profile = training.validate_profile(profile, ground.rules)
+        ground.profile = range_character.validate_profile(profile, ground.rules)
         ground.apply(ground.clone, ground.profile)
         ground.remember_outfit()
 
@@ -110,7 +112,7 @@ class ProfileEquipment(unittest.IsolatedAsyncioTestCase):
 
     async def test_disabled_item_blocks_switch_and_wrong_profile_issuance(self):
         ground = self.enter()
-        source = next(t for t in training.item_catalogue() if not copies.available(t, True))
+        source = next(t for t in range_catalog.item_catalogue() if not copies.available(t, True))
         ground.clone.inv.issue(copies.copy_type(source), 1)
         before = [dict(r) for r in ground.clone.inv.rows()]
         with self.assertRaises(ValueError):
@@ -123,7 +125,7 @@ class ProfileEquipment(unittest.IsolatedAsyncioTestCase):
 
     async def test_gold_rifle_cost_fix_has_own_static_id(self):
         self.enter()
-        source = next(t for t in training.item_catalogue()
+        source = next(t for t in range_catalog.item_catalogue()
                       if t in items.catalogue() and items.catalogue()[t][1].startswith('rifle_1_lvl_19')
                       and items.params_of(t).get('fire_costs', [0])[0] == 324)
         before = copies.copy_type(source)
@@ -135,7 +137,7 @@ class ProfileEquipment(unittest.IsolatedAsyncioTestCase):
 
     async def test_saved_withdrawn_equipment_restores_old_profile_without_reset(self):
         ground = self.enter()
-        source = next(t for t in training.item_catalogue()
+        source = next(t for t in range_catalog.item_catalogue()
                       if not copies.available(t, True) and items.root_of(t) == items.WEAR)
         saved = self.store.training_profile(self.s.char_id)
         ground.exit(notify=False)

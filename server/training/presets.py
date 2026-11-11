@@ -7,8 +7,8 @@ import time
 import inventory
 import items
 import progression
-import training_items
-import training_supply
+from training import items as training_items
+from training import supply as training_supply
 from protocol import Str
 
 CLASSES = ('Пистолеты', 'Дробовики', 'Автоматы', 'Винтовки',
@@ -37,8 +37,8 @@ def add_pouch(profile, level, line, simulator):
 @lru_cache(maxsize=560)
 def recipe(level, line, wclass, simulator):
     """Bounded catalogue lookup; no database queries or per-frame calculations."""
-    import training_ground as ground
-    import training_rules
+    from training import catalog, character as ground
+    from training import rules as training_rules
     if level not in range(1, 21) or line not in ('A', 'G') or wclass not in range(7):
         raise ValueError('Неизвестный готовый набор')
     entries = training_supply.index(simulator)
@@ -49,7 +49,7 @@ def recipe(level, line, wclass, simulator):
                and all(available(t) for t in r['members'].values())]
     guns = [e for e in entries.values() if e.category == 'weapon'
             and e.line == line and e.weapon_class == wclass and 0 < e.level <= level
-            and not e.upgrade and e.source not in ground.contraband() and available(e.source)]
+            and not e.upgrade and e.source not in catalog.contraband() and available(e.source)]
     if not armours or not guns:
         return None
     armour = min(armours, key=lambda r: (-r['level'], r['name']))
@@ -107,7 +107,7 @@ def recipe(level, line, wclass, simulator):
 
 
 def selected(ground, params):
-    from training_ground import integer
+    from training.validation import integer
     key = (integer(params.get('level', 1), 1, 20), str(params.get('line', 'A')),
            integer(params.get('wclass', 0), 0, 6), bool(ground.rules.simulator_formulas))
     result = recipe(*key)
@@ -128,7 +128,8 @@ def require(ground):
 
 
 def handle(ground, op, params):
-    from training_ground import integer, validate_profile
+    from training.validation import integer
+    from training.character import validate_profile
     require(ground)
     if op == 'kit_preview':
         line = str(params.get('line', 'A'))

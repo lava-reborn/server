@@ -33,7 +33,7 @@ def afro_index():
 
 def afro_of(source):
     import items
-    import training_sets
+    from training import sets as training_sets
     selected = training_sets.for_source(source)
     if selected is not None:
         record = selected[1]
@@ -55,7 +55,7 @@ def scaled(value, factor):
 
 def apply(source, params):
     import items
-    import training_sets
+    from training import sets as training_sets
     base = afro_of(source)
     factor = RATIOS[line(source)]
     reference = items.params_of(base) if base is not None else None

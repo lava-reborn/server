@@ -16,7 +16,7 @@ REFERENCE_PRICES = {}
 PROTOTYPES = {}
 PROTOTYPE_FIRST = 61000
 SIMULATOR_GUN_BASE = 900000
-PATH = Path(__file__).resolve().parents[1] / 'data' / 'training_items.json'
+PATH = Path(__file__).resolve().parents[2] / 'data' / 'training_items.json'
 # Only combat/handling data may differ; identity, transfers and currencies cannot.
 FIELDS = frozenset(('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max',
     'fire_times', 'fire_costs', 'fire_mods', 'max_range', 'opt_range', 'end_opt_range',
@@ -38,7 +38,7 @@ def profile_source(type_id):
 
 
 def prototype_rows():
-    import training_formulas
+    from training import formulas as training_formulas
     return {PROTOTYPE_FIRST + int(source) - SIMULATOR_GUN_BASE: dict(record, simulator_id=int(source))
             for source, record in training_formulas.data()['experimental_guns'].items()}
 
@@ -50,7 +50,7 @@ def copy_type(type_id, simulator=False):
 def available(source, simulator=False):
     if not simulator:
         return True
-    import training_formulas
+    from training import formulas as training_formulas
     return source not in training_formulas.disabled_sources()
 
 
@@ -126,20 +126,20 @@ def prepare(sources):
     prices = {}
     for source, target in copies.items():
         command, base = items.static_info(source)
-        import training_legacy
-        import training_ammo
+        from training import legacy as training_legacy
+        from training import ammo as training_ammo
         base = training_ammo.parameters(source, training_legacy.apply(source, copy.deepcopy(base)))
         prices[source] = (base.get('cost', 0) or 0, base.get('g_cost', 0) or 0,
                           (base.get('sell_num', 1) or 1) if items.root_of(source) == items.AMMO else 1)
-        import training_balance
+        from training import balance as training_balance
         params = training_balance.apply(source, candidate(base, overrides.get(str(source), {})))
         if source in training_legacy.CLASSIC:
             params = training_legacy.apply(source, params)
         params = training_ammo.parameters(source, params)
         if items.root_of(source) == items.FIRE_ARM:
-            import training_display
+            from training import display as training_display
             params['weapon_type'] = training_display.weapon_class(source)
-        import training_effects
+        from training import effects as training_effects
         effect = training_effects.definition(source)
         if effect is not None:
             params.update(bonus_act_time=effect['duration'], bonus_prob=100,
@@ -168,8 +168,8 @@ def prepare(sources):
         prototype_sources[target] = record['base']
         prices[target] = definition['cost'], definition['g_cost'], 1
     validate_ammunition(frames, roots)
-    import training_formulas
-    import training_sets
+    from training import formulas as training_formulas
+    from training import sets as training_sets
     simulator_copies = dict(copies)
     profile_sources = {}
     for source, old_type in copies.items():

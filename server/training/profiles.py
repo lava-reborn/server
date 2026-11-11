@@ -9,7 +9,7 @@ from functools import lru_cache
 import re
 import secrets
 from protocol import Str, RawList, escape
-from training_rules import Rules, simulator_notes
+from training.rules import Rules, simulator_notes
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,7 @@ class Profile:
 
 @lru_cache(maxsize=1)
 def catalogue():
-    import training_formulas
+    from training import formulas as training_formulas
     commit = training_formulas.data()['source_commit']
     result = (
         Profile('baseline-v1', 'Исходный профиль', Rules(combat_v2=False, broken_armour=True), (

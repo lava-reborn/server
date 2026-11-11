@@ -20,7 +20,7 @@ def index():
 def model(source):
     import items
     import own_items
-    import training_items
+    from training import items as training_items
     if source in training_items.PROTOTYPES:
         source = training_items.PROTOTYPES[source]['base']
     own = own_items.load().get(source)
@@ -32,7 +32,7 @@ def model(source):
 
 def upgrade(source):
     import items
-    import training_items
+    from training import items as training_items
     if source in training_items.PROTOTYPES:
         return ''
     raw = items.catalogue()[source][1]
@@ -42,7 +42,7 @@ def upgrade(source):
 
 def weapon_class(source):
     import items
-    import training_items
+    from training import items as training_items
     if source in training_items.PROTOTYPES:
         source = training_items.PROTOTYPES[source]['base']
     raw = items.catalogue()[source][1]
@@ -58,9 +58,9 @@ def weapon_class(source):
 def icon_source(source):
     import items
     import own_items
-    import training_balance
+    from training import balance as training_balance
     import world
-    import training_items
+    from training import items as training_items
     if source in training_items.PROTOTYPES:
         return icon_source(training_items.PROTOTYPES[source]['base'])
     root, raw = items.catalogue()[source]

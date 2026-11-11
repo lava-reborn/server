@@ -10,11 +10,11 @@ import inventory
 import items
 import progression
 import storage
-import training_items
+from training import items as training_items
 
 FIRST = 90000
 MAX_EFFECTS = 32
-PATH = Path(__file__).resolve().parents[1] / 'data/training_effects.json'
+PATH = Path(__file__).resolve().parents[2] / 'data/training_effects.json'
 ARRAYS = {'attribs': 5, 'skills': 5, 'specs': 15}
 SCALARS = ('hp', 'sp', 'od', 'cp', 'ce', 'armor')
 

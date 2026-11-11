@@ -26,7 +26,7 @@ def raw_index():
 @lru_cache(maxsize=None)
 def title(source):
     import items
-    import training_balance
+    from training import balance as training_balance
     text = named(source)
     if text:
         return text

@@ -35,7 +35,7 @@ NAMES = {NAME_BASE + index: post.title + '<br>Испытательный пол�
          for index, post in enumerate(POSTS)}
 NAME_IDS = {post.key: NAME_BASE + index for index, post in enumerate(POSTS)}
 # Categories belong to the isolated range, not the ordinary spawn tables.
-from training_opponents import GROUPS as MOB_GROUPS
+from training.opponents import GROUPS as MOB_GROUPS
 
 # The city arena is a private copy; its original NPCs/geometry are never edited.
 HALFA_POSTS = tuple(replace(post, x=post.x - 4,

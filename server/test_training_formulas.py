@@ -10,11 +10,15 @@ import inventory
 import items
 import mobs
 import progression
-import training_balance
-import training_formulas as formulas
-import training_ground as training
-import training_items
-from training_rules import Rules
+from training import balance as training_balance
+from training import formulas as formulas
+from training import arena as range_arena
+from training import character as range_character
+from training import layout as range_layout
+from training import shop as range_shop
+from training import session as training
+from training import items as training_items
+from training.rules import Rules
 import test_training_ground as fixtures
 
 
@@ -107,7 +111,7 @@ class SimulatorEquations(unittest.TestCase):
 
     def test_shared_room_uses_attacker_profile_and_never_enables_normal_actors(self):
         current, simulator = self.actor(enabled=False), self.actor()
-        rc = object.__new__(training.TrainingCombat)
+        rc = object.__new__(range_arena.TrainingCombat)
         gun = combat.Weapon(1, 100, 100, 1, 10, 20, 1, .1, 0, 1, 4)
         self.assertEqual(rc.bullet_damage(current, simulator, gun, 100, 0, False, 200),
                          combat.split_damage(100, 148, 1, False, 200))
@@ -257,10 +261,10 @@ class SimulatorSession(unittest.IsolatedAsyncioTestCase):
     async def test_real_shot_factory_uses_profile_once_and_actual_ammo(self):
         ground = self.enter()
         self.enable(ground)
-        profile = training.preset(12)
+        profile = range_character.preset(12)
         profile['specs'][3] = 3
         profile['gear'] = {26075: 1}
-        ground.profile = training.validate_profile(profile)
+        ground.profile = range_character.validate_profile(profile)
         ground.spawn_point = 0
         ground.start('mob')
         ground.clone.cmd_lenter({})
@@ -311,7 +315,7 @@ class SimulatorSession(unittest.IsolatedAsyncioTestCase):
         self.enable(ground)
         source = next(iter(training_items.PROTOTYPES))
         fixtures.TrainingGround.approach_shop(self, ground, 'specialist')
-        stock = training.training_shop.stock(training.training_layout.BY_KEY['specialist'])
+        stock = range_shop.stock(range_layout.BY_KEY['specialist'])
         self.assertIn(source, stock)
         before = len(ground.clone.inv.rows())
         fixtures.TrainingGround.supply(self, ground, source)

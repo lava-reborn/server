@@ -8,10 +8,14 @@ import inventory
 import items
 import progression
 from protocol import decode
-import training_ground as tg
-import training_items as copies
-import training_presets as kits
-import training_rules
+from training import catalog as range_catalog
+from training import character as range_character
+from training import supply as range_supply
+import sets
+from training import session as tg
+from training import items as copies
+from training import presets as kits
+from training import rules as training_rules
 import test_training_ground as fixtures
 
 
@@ -43,12 +47,12 @@ class TrainingPresets(unittest.IsolatedAsyncioTestCase):
                         if not entry:
                             continue
                         found += 1
-                        profile = tg.validate_profile(entry['profile'], rules)
+                        profile = range_character.validate_profile(entry['profile'], rules)
                         self.assertEqual(max(profile['skills']), level)
                         self.assertTrue(all(n <= progression.SPEC_MAX for n in profile['specs']))
                         worn = [t for t in profile['gear'] if items.root_of(t) in inventory.GEAR_ROOTS]
                         self.assertGreaterEqual(len(worn), 6)
-                        self.assertTrue(all(tg.item_line(t) == line for t in worn))
+                        self.assertTrue(all(range_catalog.item_line(t) == line for t in worn))
                         guns = [t for t in worn if items.root_of(t) == items.FIRE_ARM]
                         for gun in guns:
                             compatible = items.params_of(copies.copy_type(gun, simulator))['comp_array']
@@ -75,20 +79,20 @@ class TrainingPresets(unittest.IsolatedAsyncioTestCase):
         for simulator in (False,True):
             g.rules=training_rules.Rules(simulator_formulas=simulator)
             checked=0
-            for record in tg.training_supply.set_catalogue().values():
+            for record in range_supply.set_catalogue().values():
                 if record['variant'] not in ('A','G') or not 1<=record['level']<=20:
                     continue
                 if not all(copies.available(t,simulator) for t in record['members'].values()):
                     continue
-                key=next(k for k,v in tg.sets.SETS.items() if v['members']==record['members'])
+                key=next(k for k,v in sets.SETS.items() if v['members']==record['members'])
                 profile=g.fighter_preset(key)
-                slots=tg.profile_slots(profile)
+                slots=range_character.profile_slots(profile)
                 self.assertIn(inventory.BELT,slots.values())
                 guns=[t for t in profile['gear'] if items.root_of(t)==items.FIRE_ARM]
                 self.assertEqual(len(guns),1)
                 compatible=items.params_of(copies.copy_type(guns[0],simulator))['comp_array']
                 self.assertTrue(any(copies.copy_type(t,simulator) in compatible for t in profile['gear'] if items.root_of(t)==items.AMMO))
-                tg.validate_profile(profile,g.rules)
+                range_character.validate_profile(profile,g.rules)
                 checked+=1
             self.assertGreater(checked,10)
         self.unchanged()
@@ -112,7 +116,7 @@ class TrainingPresets(unittest.IsolatedAsyncioTestCase):
             source = copies.profile_source(row['type_id'])
             actual[source] = actual.get(source, 0) + (row['count'] if row['root'] in items.HEAPABLE_ROOTS else 1)
         self.assertEqual(actual, expected['gear'])
-        self.assertEqual(tg.validate_profile(self.store.training_profile(self.s.char_id)['player'], g.rules), expected)
+        self.assertEqual(range_character.validate_profile(self.store.training_profile(self.s.char_id)['player'], g.rules), expected)
         self.assertEqual(g.clone.char.hp, g.clone.char.hp_max)
         self.assertEqual(g.clone.combat.ap, g.clone.char.ap_ceiling)
         with self.assertRaises(ValueError):

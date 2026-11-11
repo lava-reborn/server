@@ -2,8 +2,8 @@
 import unittest
 from dataclasses import replace
 from unittest.mock import patch
-import training_profiles as profiles
-import training_ground as tg
+from training import profiles as profiles
+from training import session as tg
 import test_training_ground as fixtures
 import test_training_resume as resume
 

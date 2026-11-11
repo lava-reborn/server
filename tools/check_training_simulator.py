@@ -12,10 +12,16 @@ sys.path[:0]=[str(repo/'server'),str(source)]
 logging.disable(logging.CRITICAL)
 from rulesets.lava_fixed import LavaFixed
 from rulesets.lava import LavaRules,SPEC_OF_CLASS
-import combat,items,inventory,training_ground,training_items,training_formulas as f
-from training_rules import Rules
+import combat
+import items
+import inventory
+from training import catalog as range_catalog
+from training import session as training_ground
+from training import items as training_items
+from training import formulas as f
+from training.rules import Rules
 ref=LavaFixed()
-training_items.prepare(training_ground.item_catalogue())
+training_items.prepare(range_catalog.item_catalogue())
 raw=f.data(); counts=dict(equipment=0,mobs=0,weapons=0,splits=0)
 assert raw['source_commit']=='6b7b28dc7b40fb57078453d536837b0edcc0059f'
 for tid,fields in raw['equipment'].items():

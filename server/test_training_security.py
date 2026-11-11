@@ -7,9 +7,10 @@ from unittest.mock import patch
 import combat
 import inventory
 import storage
-import training_items
-import training_shop
-import training_ground as tg
+from training import items as training_items
+from training import shop as training_shop
+from training import character as range_character
+from training import session as tg
 import test_training_ground as fixtures
 from protocol import decode
 
@@ -144,7 +145,7 @@ class TrainingSecurity(unittest.IsolatedAsyncioTestCase):
         g.save_settings()
         before = (g.clone.char, g.rules, copy.deepcopy(g.profile), self.rows(g),
                   self.store.training_profile(self.s.char_id), g.outfit_revision)
-        new_profile = tg.preset(12)
+        new_profile = range_character.preset(12)
         for rules in (None, replace(g.rules, simulator_formulas=True)):
             self.s.writer.frames.clear()
             with patch.object(self.store, 'save_training_profile', side_effect=RuntimeError('injected')):

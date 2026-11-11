@@ -69,7 +69,7 @@ import os
 
 import orig_texts
 import progression
-import training_items
+from training import items as training_items
 import quests
 
 NAME_ID_OFFSET = 7_000_000
@@ -268,7 +268,7 @@ SETS, SET_OF, ITEMS = _load()
 
 def record_of(set_type):
     if set_type is not None and set_type >= 80000:
-        import training_sets
+        from training import sets as training_sets
         return training_sets.records().get(set_type)
     return SETS.get(set_type)
 
@@ -276,7 +276,7 @@ def record_of(set_type):
 def set_of(type_id):
     """The set a type belongs to, or 0 -- which is what ss_si_wear says for none."""
     if training_items.is_copy(type_id):
-        import training_sets
+        from training import sets as training_sets
         record = training_sets.for_source(training_items.source_type(type_id),
                                           simulator=type_id in training_items.PROFILE_SOURCES)
         if record:
