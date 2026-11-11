@@ -40,7 +40,7 @@ class SimulatorEquations(unittest.TestCase):
 
     def test_reference_is_exact_by_level_including_non_monotone_sets(self):
         self.assertEqual([formulas.reference_armour(level) for level in (0, 4, 5, 6, 7, 12, 17, 20, 35)],
-                         [10, 58, 58, 46, 46, 148, 624, 1527, 1527])
+                         [13, 44, 44, 55, 55, 148, 624, 1650, 1650])
 
     def test_armour_ratio_piercing_cap_and_overflow(self):
         shooter, target = self.actor(), self.actor()
@@ -69,7 +69,7 @@ class SimulatorEquations(unittest.TestCase):
 
     def test_gap_rule_uses_exact_level_table_and_only_player_against_mob(self):
         shooter = self.actor()
-        for gap, expected in ((0, 100), (1, 122), (2, 144), (3, 166), (4, 189), (5, 20)):
+        for gap, expected in ((0, 100), (1, 83), (2, 20), (3, 5), (4, 5), (5, 5)):
             target = self.actor(level=12 + gap, armour=0, player=False)
             self.assertEqual(formulas.split(shooter, target, 100, 1, True, 0)[0], expected)
         self.assertEqual(formulas.split(shooter, self.actor(level=20), 100, 1, True, 0)[0], 100)
@@ -119,13 +119,13 @@ class SimulatorEquations(unittest.TestCase):
 
     def test_A_and_G_use_distinct_source_coefficients(self):
         self.assertEqual(formulas.weapon_reference(25055), (1, 'machinegun'))
-        self.assertEqual(formulas.weapon_reference(25056), (.676, 'machinegun'))
-        self.assertEqual(formulas.weapon_reference(26075)[0], .719)
+        self.assertEqual(formulas.weapon_reference(25056), (1, 'machinegun'))
+        self.assertEqual(formulas.weapon_reference(26075)[0], 1)
 
     def test_source_A_G_damage_undoes_old_normalization_and_uses_candidate_mode(self):
-        # Frozen directly from LavaFixed c4f3018 at shooting 20, Intellect 5.
-        fixtures = ((25055, 0, 16, 59), (25055, 1, 13, 56), (25055, 2, 13, 62),
-                    (25056, 0, 13, 48), (25056, 1, 11, 46), (25056, 2, 11, 50))
+        # Frozen directly from LavaFixed 6b7b28d at shooting 20, Intellect 5.
+        fixtures = ((25055, 0, 24, 89), (25055, 1, 20, 85), (25055, 2, 20, 94),
+                    (25056, 0, 29, 107), (25056, 1, 24, 102), (25056, 2, 24, 112))
         character = NS(level=20, attr=lambda _: 5)
         gun = combat.Weapon(3, 999, 999, 1, 20, 40, 1, .1, 0, 1, 6)
         rules = Rules(simulator_formulas=True, ammo_modifiers=True)
@@ -140,8 +140,8 @@ class SimulatorEquations(unittest.TestCase):
 
     def test_source_gold_blade_uses_own_base_and_strength_before_scaling(self):
         character = NS(level=20, attr=lambda _: 5)
-        self.assertEqual(formulas.melee((999, 999), character, dict(type_id=6231)), (38, 46))
-        self.assertEqual(formulas.melee((999, 999), character, dict(type_id=6241)), (72, 98))
+        self.assertEqual(formulas.melee((999, 999), character, dict(type_id=6231)), (36, 44))
+        self.assertEqual(formulas.melee((999, 999), character, dict(type_id=6241)), (49, 67))
 
 
 class SimulatorSession(unittest.IsolatedAsyncioTestCase):
@@ -282,10 +282,10 @@ class SimulatorSession(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(spread, 0)
         self.unchanged()
 
-    async def test_all_nine_prototypes_have_own_identity_ammo_and_only_private_items(self):
+    async def test_all_thirteen_prototypes_have_own_identity_ammo_and_only_private_items(self):
         ground = self.enter()
         self.enable(ground)
-        self.assertEqual(len(training_items.PROTOTYPES), 9)
+        self.assertEqual(len(training_items.PROTOTYPES), 13)
         for source, record in training_items.PROTOTYPES.items():
             self.assertEqual(training_items.copy_type(source), source)
             self.assertEqual(training_items.profile_source(source), source)

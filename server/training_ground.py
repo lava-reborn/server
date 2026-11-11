@@ -13,9 +13,12 @@ import time
 import accounts
 import training_items
 import training_rules
+import training_profiles
+import training_opponents
 import training_layout
 import training_shop
 import training_supply
+import training_presets
 import training_effects
 import training_formulas
 import training_balance
@@ -55,12 +58,13 @@ ARENA_WIDTH, ARENA_HEIGHT = 72, 144
 COMPUTER_CELL = training_layout.BY_KEY['computer'].cell(ARENA_WIDTH)
 CONTROL_CELL = COMPUTER_CELL + 1
 LOCATIONS = {108: (COMPUTER_CELL, 'Пустынный полигон', CONTROL_CELL),
-             106: (COMPUTER_CELL, 'Пустынный полигон — вторая площадка', CONTROL_CELL)}
-LEGACY_LOCATIONS = frozenset((78, 59))
+             59: (96 * 64 + 32, 'Арена №1 Вади-Хальфы', 96 * 64 + 33)}
+LEGACY_LOCATIONS = frozenset((78,))
 FIGHT_START = 78 * ARENA_WIDTH + 36
-ENEMY_SPAWNS = {location: (55 * ARENA_WIDTH + 36, 35 * ARENA_WIDTH + 36, 8 * ARENA_WIDTH + 65) for location in LOCATIONS}
-SPAWN_LABELS = ('Ближняя', 'Средняя', 'Дальняя — справа сверху')
-DEFAULT_SPAWN = 2
+ENEMY_SPAWNS = {location: (98 * ARENA_WIDTH + 44, 65 * ARENA_WIDTH + 44, 8 * ARENA_WIDTH + 65) for location in LOCATIONS}
+ENEMY_SPAWNS[59] = (68 * 64 + 40, 52 * 64 + 44, 35 * 64 + 46)
+SPAWN_LABELS = ('Ближняя — выше справа от компьютера', 'Средняя', 'Дальняя — справа сверху')
+DEFAULT_SPAWN = 0
 TERMINAL = 1263
 TERMINAL_CELL = LOCATIONS[RANGE][0]
 MAX_SESSIONS = 16
@@ -254,10 +258,11 @@ def item_catalogue():
 @lru_cache(maxsize=1)
 def mob_catalogue():
     known = world.mob_types()
-    return {int(k): '%s · %d ур.' % (names.text(int(k)).replace('<br>', ' · '), int(v.get('level', 0))) for k, v in mobs.TYPES.items()
-            if int(k) in known and known[int(k)][0] == world.MOB
-            and v.get('role') in ('mob', 'animal', 'boss')
-            and 1 <= int(v.get('level', 0)) <= 20 and not world.retired_creature(int(k))}
+    return {t: '%s · %d ур.' % (row['name'], mobs.stats(t).level)
+            for t, row in training_opponents.RECORDS.items()
+            if t in known and known[t][0] == world.MOB and str(t) in mobs.TYPES
+            and mobs.TYPES[str(t)].get('role') in ('mob', 'animal', 'boss')
+            and not world.retired_creature(t)}
 
 
 def control_cell(location=RANGE):
@@ -267,8 +272,11 @@ def control_cell(location=RANGE):
 @lru_cache(maxsize=len(LOCATIONS))
 def arena_location(location=RANGE):
     loc = copy.copy(world.location(location))
-    loc.width, loc.height = ARENA_WIDTH, ARENA_HEIGHT
-    loc.obstacles, loc.shoot_over = set(), frozenset()
+    if location != 59:
+        loc.width, loc.height = ARENA_WIDTH, ARENA_HEIGHT
+        loc.obstacles, loc.shoot_over = set(), frozenset()
+    else:
+        loc.obstacles = set(loc.obstacles)
     loc.entries, loc.spawns = [], []
     loc.war, loc.pvp, loc.newbies = 1, 1, False
     return loc
@@ -277,10 +285,11 @@ def arena_location(location=RANGE):
 @lru_cache(maxsize=len(LOCATIONS))
 def geometry(location=RANGE):
     loc = arena_location(location)
-    free = set(range(loc.width * loc.height))
-    arena = {cell for cell in free if cell // loc.width < 100
+    free = set(range(loc.width * loc.height)) - loc.obstacles
+    boundary = 82 if location == 59 else 100
+    arena = {cell for cell in free if cell // loc.width < boundary
              and mobs.hex_distance(cell, LOCATIONS[location][0], loc.width) > 4}
-    return frozenset(free - arena), frozenset(arena), FIGHT_START
+    return frozenset(free - arena), frozenset(arena), 78 * 64 + 32 if location == 59 else FIGHT_START
 
 
 def preset(level=12):
@@ -343,7 +352,7 @@ def validate_profile(raw, rules=None):
         f['slot'] = slots[source]
         fields.append(f)
     ch.set_gear(inventory.gear_bonus(fields, ch), inventory.card_repeat(fields))
-    if sum((items.params_of(r['type_id']) or {}).get('weight', 0) * r.get('count', 1) for r in fields) > ch.max_weight():
+    if sum(items.params_of(training_items.copy_type(t, simulator=ch.training_rules.simulator_formulas)).get('weight', 0) * n for t, n in gear.items()) > ch.max_weight():
         raise ValueError('Пресет превышает допустимый вес персонажа')
     for row in fields:
         if row['slot'] != inventory.BAG:
@@ -648,9 +657,24 @@ def clone_class(base):
             return peer.char_id if peer is not None else None
 
         def send(self, *cmd, **p):
+            if cmd and cmd[0] == 'userInfo' and self.room is not None:
+                npc = self.room.npcs.get(p.get('id'))
+                if npc is not None and npc.type_id in training_opponents.RECORDS:
+                    p['name'] = training_opponents.NAME_BASE + npc.type_id
             if cmd and cmd[0] == 'cmdAck':
                 self.training_acks = getattr(self, 'training_acks', 0) + 1
             return super().send(*cmd, **p)
+
+        def close(self, force=False):
+            # A private actor must never reach Session.close: its local
+            # char_id may coincide with an unrelated live database character.
+            ground = self.ground
+            if ground.closed:
+                return
+            if ground.owner.training_ground is ground:
+                ground.owner.close(force=True)
+            else:
+                ground.exit(notify=False)
 
         def save_place(self):
             pass
@@ -675,18 +699,7 @@ def clone_class(base):
             return quests.get(EXIT_QUEST)
 
         def cmd_q_st(self, p):
-            quest = self.terminal_quest(p)
-            offered = quests.given_by(TERMINAL)
-            index = int(p.get('q_idx', -1))
-            if not 0 <= index < len(offered) or offered[index] != EXIT_QUEST:
-                raise ValueError('Задание недоступно')
-            if self.inv.store.has_quest(self.char_id, EXIT_QUEST):
-                raise ValueError('Задание уже взято')
-            q_id = self.inv.store.take_quest(self.char_id, EXIT_QUEST, {'obj': 1}, True)
-            self.ground.save_settings()
-            self.send('cmdAck', res=0)
-            cmd, fields = quest.di_frame(q_id, {'obj': 1}, True)
-            self.send(cmd, **fields)
+            raise ValueError('Для выхода используйте кнопку «Покинуть полигон» у компьютера')
 
         def cmd_q_co(self, p):
             quest = self.terminal_quest(p)
@@ -720,7 +733,7 @@ def clone_class(base):
         def cmd_q_status(self, p):
             t = int(p.get('q_type', 0))
             q = quests.get(t)
-            available = t == EXIT_QUEST and self.ground.phase == 'ready' and not self.inv.store.has_quest(self.char_id, t)
+            available = False
             self.send('q_status', type=t, status=int(available),
                       name=q.string_id(quests.NAME) if q else 0, q_type=q.q_type if q else 0)
 
@@ -748,6 +761,10 @@ def clone_class(base):
             self.send('rp_info', **self.character().rp_info(**groups))
 
         def enter_location(self):
+            # Deliver geometry before lcall: cached XML can finish loading immediately.
+            self.send('tg', op='map', location=self.ground.location,
+                      arena_width=self.loc.width, arena_height=self.loc.height,
+                      native_map=int(self.ground.location == 59))
             self.send('lcall', id=self.ground.location, ws=int(self.room.ws), ie=0,
                       g_id=1 << 26)
 
@@ -800,8 +817,8 @@ def clone_class(base):
             self.send(world.USERINFO[world.COMMONER], id=eid,
                       name=training_layout.NAME_IDS[post.key], sex=0, res=post.resource,
                       ail=0, ally=1, lvl=1, rep=[0], bg_rep=0, bg_pen=0,
-                      give_quests=[EXIT_QUEST] if post.key == 'computer' else [],
-                      take_quests=[EXIT_QUEST] if post.key == 'computer' else [], m_hello=[], can_set_home=0,
+                      give_quests=[],
+                      take_quests=[], m_hello=[], can_set_home=0,
                       can_banking=0, can_trophy=0, can_repair=0, can_trade=0,
                       tg_terminal=1, tg_supply=int(bool(post.line)),
                       tg_station=Str(post.key), tg_title=Str(post.title))
@@ -831,6 +848,17 @@ def clone_class(base):
                 self.inv.ss_get(p)
 
         def handle_training(self, cmd, p):
+            # Clan identity belongs to the owner, never to the sandbox clone.
+            # Only public/member lists and creation prices are read here;
+            # treasury, membership changes and rights still hit the refusal.
+            if cmd == 'gg_info' and p.get('det') in (1, 5, 6):
+                owner = self.ground.owner
+                owner.training_clan_read = True
+                try:
+                    owner.cmd_gg_info(p)
+                finally:
+                    owner.training_clan_read = False
+                return
             if cmd == 'p_op':
                 training_party.command(self.ground, p)
                 return
@@ -925,12 +953,13 @@ class Ground:
         self.mob_health = self.mob_damage = 100
         self.enemy_healing, self.heal_below, self.heal_count = False, 50, 5
         self.enemy_heals_left = 0
-        self.rules = training_rules.current()
+        self.rules = training_profiles.restore(training_rules.current())
         self.restore_notice = ''
         self.spawn_point = DEFAULT_SPAWN
         self.location = RANGE
         self.mode = 'mob'
         saved = owner.inv.store.training_profile(owner.char_id)
+        self.personal_profiles = training_profiles.load_personal((saved or {}).get('personal_rules', []))
         if saved is not None:
             try:
                 if saved.get('version') != 1:
@@ -942,16 +971,24 @@ class Ground:
                     rules = training_rules.Rules.parse(dict(rules.as_dict(), simulator_formulas=False))
                     self.restore_notice = ('Пресеты сохранены. В них есть предметы, исключённые из нового симулятора; '
                                            'восстановлен прежний профиль полигона. Замените эти вещи для новых правил.')
+                restored_rules = training_profiles.restore(rules)
+                if restored_rules != rules:
+                    self.restore_notice = self.restore_notice + (' Промежуточный профиль удалён. Включён исходный профиль; '
+                                           'настройки персонажа и снаряжение сохранены.')
+                rules = restored_rules
                 player = validate_profile(saved['player'], rules)
                 opponent = validate_profile(saved['opponent'], rules)
                 location = integer(saved.get('location', RANGE), 1, 65535)
+                if location == 106:
+                    location = 59
                 if location in LEGACY_LOCATIONS:
                     location = RANGE
                 if location not in LOCATIONS:
                     raise ValueError('Unsupported training location')
                 mob_type = integer(saved.get('mob', self.mob_type), 1, 100000)
                 if mob_type not in mob_catalogue():
-                    raise ValueError('Unsupported training opponent')
+                    mob_type = self.mob_type
+                    self.restore_notice = 'Прежняя цель удалена из каталога. Выберите нового противника.'
                 spawn_point = integer(saved.get('spawn_point', DEFAULT_SPAWN), 0, len(SPAWN_LABELS) - 1)
                 stationary = integer(saved.get('stationary', 0), 0, 1)
                 mob_health = integer(saved.get('mob_health', 100), 25, 300)
@@ -981,6 +1018,7 @@ class Ground:
         self.last_request = 0.0
         self.last_catalogue_request = 0.0
         self.supply_sequence = 0
+        self.reset_confirmation = None
         self.last_activity = time.monotonic()
         self.timer = None
         self.store = accounts.Store.temporary()
@@ -1012,8 +1050,6 @@ class Ground:
             self.clone.loc = loc
             self.clone.pos = control_cell(self.location)
             self.apply(self.clone, self.profile)
-            if isinstance(saved, dict) and saved.get('inside') is True and saved.get('exit_quest') is True:
-                self.store.take_quest(self.clone.char_id, EXIT_QUEST, {'obj': 1}, True)
         except Exception:
             self.store.close()
             raise
@@ -1024,7 +1060,7 @@ class Ground:
                                        self.clone.loc.width))
 
     def populate_posts(self):
-        self.posts = {self.post_ids[p.key]: p for p in training_layout.POSTS
+        self.posts = {self.post_ids[p.key]: p for p in training_layout.posts_for(self.location)
                       if not p.line or training_shop.stock(p)}
         for eid, post in self.posts.items():
             cell = post.cell(self.room.loc.width)
@@ -1049,7 +1085,8 @@ class Ground:
         self.context = post.key
         self.state()
         self.clone.send('tg', op='open', mob=self.mob_type, context=Str(post.key),
-                        title=Str(post.title), category=Str(post.category), wclass=post.weapon_class, supply=int(bool(post.line)))
+                        title=Str(post.title), category=Str(post.category), wclass=post.weapon_class, supply=int(bool(post.line)),
+                        **(training_profiles.payload(self.rules, self.personal_profiles) if post.key == 'computer' else {}))
 
     def remember_outfit(self):
         """Save an equipped preset, not every spare/free item in the bag."""
@@ -1069,60 +1106,187 @@ class Ground:
         self.profile['gear'] = gear
         self.applied_profile = copy.deepcopy(self.profile)
 
-    def configure_player(self, profile):
-        """Changing training skills never deletes items bought at the posts."""
+    def configure_player(self, profile, rules=None):
+        """Stage skills and optional copy-profile changes before publishing."""
         clone = self.clone
+        previous = (clone.char, self.rules, copy.deepcopy(self.profile),
+                    copy.deepcopy(self.applied_profile), self.outfit_revision)
+        old_saved = self.owner.inv.store.training_profile(self.owner.char_id)
+        original_send = clone.send
+        had_send = 'send' in clone.__dict__
+        frames = []
+        clone.send = lambda command, **fields: frames.append((command, fields))
+        saved = False
+        changed = False
+        try:
+            with storage.atomic(self.store.db):
+                if rules is not None:
+                    changed = clone.inv.switch_profile(rules.simulator_formulas)
+                    self.rules = rules
+                ch = character(profile, self.rules)
+                ch._training_store = self.store
+                ch.char_id, ch.name = clone.char_id, clone.active['name']
+                ch.training_effects = clone.training_effects
+                rows = clone.inv.rows()
+                ch.set_gear(inventory.gear_bonus(rows, ch), inventory.card_repeat(rows))
+                ch.hp, ch.sp = ch.hp_max, ch.sp_max
+                ch.save(self.store)
+                clone.char = ch
+                self.profile['skills'], self.profile['specs'] = profile['skills'], profile['specs']
+                self.remember_outfit()
+                self.save_settings()
+                saved = True
+        except Exception as exc:
+            clone.char, self.rules, self.profile, self.applied_profile, self.outfit_revision = previous
+            if saved:
+                self.owner.inv.store.save_training_profile(self.owner.char_id, old_saved)
+            if isinstance(exc, storage.CommitError):
+                clone.close(force=True)
+            raise ValueError('Не удалось сохранить настройки; повторите попытку.') from exc
+        finally:
+            if had_send:
+                clone.send = original_send
+            else:
+                del clone.send
         clone.combat.cancel_timers()
         clone.stop_walk()
-        ch = character(profile, self.rules)
-        ch._training_store = self.store
-        ch.char_id, ch.name = clone.char_id, clone.active['name']
-        ch.training_effects = clone.training_effects
-        clone.char = ch
-        clone.inv.refresh_gear(push=False)
-        ch.hp, ch.sp = ch.hp_max, ch.sp_max
-        ch.save(self.store)
-        self.profile['skills'], self.profile['specs'] = profile['skills'], profile['specs']
-        self.remember_outfit()
+        for command, fields in frames:
+            original_send(command, **fields)
+        return changed
 
     def fighter_preset(self, set_type):
         selected = sets.SETS.get(set_type)
-        if selected is None or not all(t in item_catalogue() for t in selected['members'].values()):
-            raise ValueError('Комплект недоступен')
+        simulator = self.rules.simulator_formulas
+        if selected is None or not all(t in item_catalogue() and training_items.available(t, simulator)
+                                       for t in selected['members'].values()):
+            raise ValueError('Комплект недоступен в выбранном профиле')
         level = selected['level']
-        profile = preset(level)
-        profile['specs'][:8] = [min(5, max(3, (level + 3) // 4))] * 8
-        profile['gear'] = {t: 1 for t in selected['members'].values()}
-        guns = [t for t, (category, item_level, _label) in item_catalogue().items()
-                if category == 'weapon' and item_level <= level
-                and training_items.available(t, self.rules.simulator_formulas)
-                and items.root_of(t) == items.FIRE_ARM and item_line(t) == selected['variant']
-                and not craft.mod_of(t) and t not in contraband()
-                and any(a in item_catalogue() for a in items.params_of(t).get('comp_array', ()))]
-        if guns:
-            gun = min(guns, key=lambda t: (-item_catalogue()[t][1],
-                                         items.params_of(t).get('weapon_type', 0), t))
-            profile['gear'][gun] = 1
-            rounds = [a for a in items.params_of(gun)['comp_array'] if a in item_catalogue()]
-            ammo = (next((a for a in rounds if items.catalogue()[a][1].endswith('_ST')), rounds[0])
-                    if self.rules.simulator_formulas else rounds[0])
-            profile['gear'][ammo] = 20
-            params = items.params_of(gun)
-            required = inventory.unpacked(params.get('need_specs_m'), params.get('need_specs'), progression.SPECS)
-            mask = params.get('need_specs_m', 0) or 0
-            for index in range(progression.SPECS):
-                if mask >> index & 1:
-                    profile['specs'][index] = max(3, required[index])
-        return validate_profile(profile, self.rules)
+        entries = training_supply.index(simulator)
+        params = lambda t: items.params_of(training_items.copy_type(t, simulator))
+        guns = [e for e in entries.values() if e.category == 'weapon' and 0 < e.level <= level
+                and e.line == selected['variant'] and not e.upgrade and e.source not in contraband()
+                and training_items.available(e.source, simulator) and items.root_of(e.source) == items.FIRE_ARM]
+        for gun in sorted(guns, key=lambda e: (-e.level, e.weapon_class, e.source)):
+            rounds = [training_items.profile_source(t) for t in params(gun.source).get('comp_array', ())]
+            rounds = [t for t in rounds if t in entries and training_items.available(t, simulator)]
+            if not rounds:
+                continue
+            profile = preset(level)
+            profile['specs'][:8] = [min(5, max(3, (level + 3) // 4))] * 8
+            profile['gear'] = {t: 1 for t in selected['members'].values()}
+            profile['gear'][gun.source] = 1
+            ammo = min(rounds, key=lambda t: (entries[t].line != selected['variant'],
+                                             not items.catalogue()[t][1].endswith('_ST'), t))
+            profile['gear'][ammo] = 80
+            training_presets.add_pouch(profile, level, selected['variant'], simulator)
+            for source in profile['gear']:
+                p = params(source)
+                required = inventory.unpacked(p.get('need_specs_m'), p.get('need_specs'), progression.SPECS)
+                for index in range(progression.SPECS):
+                    if (p.get('need_specs_m', 0) or 0) >> index & 1:
+                        profile['specs'][index] = max(profile['specs'][index], required[index])
+            try:
+                return validate_profile(profile, self.rules)
+            except ValueError:
+                continue
+        raise ValueError('Для этого комплекта нет доступного оружия по текущим правилам')
 
-    def save_settings(self):
+    def save_settings(self, *, player=None, location=None):
         self.owner.inv.store.save_training_profile(self.owner.char_id, dict(
             version=1, inside=self.inside, room=self.room.key[1],
-            exit_quest=self.inside and self.store.has_quest(self.clone.char_id, EXIT_QUEST),
-            player=self.profile, opponent=self.opponent, location=self.location, rules=self.rules.as_dict(),
+            personal_rules=training_profiles.dump_personal(self.personal_profiles),
+            player=self.profile if player is None else player, opponent=self.opponent, location=self.location if location is None else location, rules=self.rules.as_dict(),
             mob=self.mob_type, spawn_point=self.spawn_point, stationary=int(self.stationary), mode=self.mode,
             mob_health=self.mob_health, mob_damage=self.mob_damage,
             enemy_healing=int(self.enemy_healing), heal_below=self.heal_below, heal_count=self.heal_count))
+
+    def require_player_reset(self):
+        self.require_terminal()
+        fighter = self.clone.combat
+        if (self.context != 'computer' or self.clone.inv.store is not self.store
+                or self.clone.ground is not self or fighter.dead or fighter.duels
+                or any(getattr(fighter, name, None) is not None
+                       for name in ('aim', 'strike', 'healing', 'reloading'))):
+            raise ValueError('Сброс доступен у компьютера после завершения действий и боя')
+
+    def reset_player(self, confirmation):
+        self.require_player_reset()
+        pending, self.reset_confirmation = self.reset_confirmation, None
+        if pending is None or pending[0] != confirmation or time.monotonic() > pending[1]:
+            raise ValueError('Подтвердите очистку заново')
+        profile = validate_profile(preset(1), self.rules)
+        self.replace_player(profile, 'Персонаж очищен: 1-й уровень, без специализаций, вещей и эффектов')
+
+    def replace_player(self, profile, message):
+        """Commit a complete private avatar before publishing any new identities."""
+        clone = self.clone
+        if clone.ground is not self or clone.inv.store is not self.store:
+            raise ValueError('Можно заменить только тренировочного клона')
+        seq = self.store.db.execute("SELECT seq FROM sqlite_sequence WHERE name='items'").fetchone()['seq']
+        if seq > self.serial_base + (1 << 20) - 2048:
+            raise ValueError('Лимит тренировки исчерпан; войдите в центр заново')
+        fresh = character(profile, self.rules)
+        fresh._training_store = self.store
+        fresh.char_id, fresh.name = clone.char_id, clone.active['name']
+        fresh.training_effects = training_effects.Effects(clone)
+        fresh.hp, fresh.sp = fresh.hp_max, fresh.sp_max
+        rows = [dict(row) for row in clone.inv.rows()]
+        saved = False
+        try:
+            # Publish neither inventory nor character changes until the private
+            # transaction and persistent preset save both succeed.
+            with storage.atomic(self.store.db):
+                self.store.db.execute('DELETE FROM items WHERE char_id=?', (clone.char_id,))
+                slots = profile_slots(profile)
+                for source, count in profile['gear'].items():
+                    type_id = training_items.copy_type(source, simulator=self.rules.simulator_formulas)
+                    if items.root_of(type_id) == items.HEAL:
+                        for _ in range(count):
+                            clone.inv.create(type_id)
+                    else:
+                        clone.inv.create(type_id, count, slot=slots[source])
+                new_rows = [dict(row) for row in clone.inv.rows()]
+                fresh.set_gear(inventory.gear_bonus(new_rows, fresh), inventory.card_repeat(new_rows))
+                fresh.hp, fresh.sp = fresh.hp_max, fresh.sp_max
+                fresh.save(self.store)
+                self.save_settings(player=profile)
+                saved = True
+        except Exception as exc:
+            if saved:
+                self.save_settings()  # Restore the previous preset on private COMMIT failure.
+            raise ValueError('Не удалось сохранить настройки. Персонаж и вещи не изменены; повторите попытку.') from exc
+        clone.combat.cancel_timers()
+        clone.stop_walk()
+        clone.training_effects.close()
+        clone.training_effects = fresh.training_effects
+        clone.char = fresh
+        self.profile = profile
+        self.applied_profile = copy.deepcopy(profile)
+        self.outfit_revision += 1
+        clone.inv.refresh_gear(push=False)
+        getattr(self.store, '_battle_medicine_deadlines', {}).pop(clone.char_id, None)
+        for row in rows:
+            clone.inv.push_status(row, 0)
+        for ground in self.room.grounds.values():
+            ground.inventory_state()
+        for row in new_rows:
+            if row['slot'] == inventory.BAG:
+                clone.inv.push_status(row, 1)
+        clone.inv.push_look()
+        for slot in inventory.HAND_SLOTS:
+            row = next((r for r in new_rows if r['slot'] == slot), None)
+            oid = BigUInt(inventory.oid_of(row)) if row is not None else inventory.EMPTY
+            self.room.broadcast(('ss_obj_move', dict(id=clone.pid, obj=oid,
+                                                    to=slot, **{'from': slot})))
+        clone.send_player_info()
+        clone.push_stats()
+        clone.push_vitals()
+        clone.training_effects.send_list()
+        combat.Fighter.send_medicine_cooldown(clone.combat, 0)
+        clone.combat.ap = clone.combat.amax_sent = fresh.ap_ceiling
+        clone.combat.c_ap()
+        self.room.combat.push_vitals(clone.combat)
+        self.state(message)
 
     def change_location(self, location):
         training_party.relocate(self, location)
@@ -1192,11 +1356,11 @@ class Ground:
         else:
             self.timer = asyncio.get_running_loop().call_later(left, self.idle)
 
-    @staticmethod
-    def equipment_meta(profile, prefix):
+    def equipment_meta(self, profile, prefix):
         ids = list(profile['gear'])
         slots = profile_slots(profile)
         return {prefix + 'ids': ids,
+                prefix + 'types': [training_items.copy_type(t, self.rules.simulator_formulas) for t in ids],
                 prefix + 'labels': [item_catalogue()[t][2] for t in ids],
                 prefix + 'slots': [slots[t] if slots[t] != inventory.BAG else 0 for t in ids]}
 
@@ -1223,6 +1387,26 @@ class Ground:
             clone.send('tg', op='combat_stats', armour=values[0], critical=values[1],
                        anticritical=values[2], dodge=values[3])
 
+    def mob_label(self, type_id):
+        label = mob_catalogue().get(type_id, 'Выберите противника')
+        if self.rules.simulator_formulas:
+            table = training_formulas.data()
+            if str(type_id) in table['mobs']:
+                level = table['mob_records'][table['mobs'][str(type_id)]]['level']
+                label = label.rsplit(' · ', 1)[0] + ' · %d ур.' % level
+            else:
+                label += ' · исходные параметры моба'
+        return label
+
+    def opponent_summary(self):
+        gear = set(self.opponent['gear'])
+        selected = next((record for record in sets.SETS.values()
+                         if set(record['members'].values()) <= gear), None)
+        label = '%s (%s)' % (selected['name'], selected['variant']) if selected else 'Своя сборка'
+        guns = [t for t in self.opponent['gear'] if items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM)]
+        weapon = item_catalogue()[guns[0]][2] if guns else 'Без оружия'
+        return '%s · %d ур. · %s' % (label, max(self.opponent['skills']), weapon)
+
     def state(self, message=''):
         message = message or self.restore_notice
         self.restore_notice = ''
@@ -1243,8 +1427,10 @@ class Ground:
                sp=c.char.sp_max, ap=c.char.ap_ceiling,
                location=self.location, locations=list(LOCATIONS), location_labels=[Str(v[1]) for v in LOCATIONS.values()],
                spawn_point=self.spawn_point, spawn_labels=[Str(label) for label in SPAWN_LABELS],
+               mob_label=Str(self.mob_label(self.mob_type)),
+               enemy_preset=Str(self.opponent_summary()),
                distance=self.distance, stationary=int(self.stationary), mob_health=self.mob_health, mob_damage=self.mob_damage, enemy_healing=int(self.enemy_healing), heal_below=self.heal_below, heal_count=self.heal_count, selected_mob=self.mob_type, selected_mode=Str(self.mode),
-               rules=Str(self.rules.description()), rule_values=Str(self.rules.values()), armour=c.combat.armor(), regen=progression.AP_REGEN, owner=Str(self.owner.nick), arena_width=ARENA_WIDTH, arena_height=ARENA_HEIGHT, loaded=int(c in self.room.players), spec_max=progression.SPEC_MAX,
+               rules=Str(self.rules.description()), rule_values=Str(self.rules.values()), armour=c.combat.armor(), regen=progression.AP_REGEN, owner=Str(self.owner.nick), arena_width=c.loc.width, arena_height=c.loc.height, native_map=int(self.location == 59), loaded=int(c in self.room.players), spec_max=progression.SPEC_MAX,
                **self.equipment_meta(self.profile, 'gear_'),
                **self.equipment_meta(self.opponent, 'enemy_'),
                skills=self.profile['skills'], specs=self.profile['specs'],
@@ -1266,7 +1452,7 @@ class Ground:
             self.exit()
             return
         now = time.monotonic()
-        if op in ('catalogue', 'supply_list', 'supply_variants', 'supply_bag'):
+        if op in ('catalogue', 'supply_list', 'supply_variants', 'supply_bag', 'kit_preview'):
             if now - self.last_catalogue_request < 0.03:
                 raise ValueError('Дождитесь загрузки списка и повторите')
             self.last_catalogue_request = now
@@ -1287,10 +1473,23 @@ class Ground:
         if self.phase != 'ready':
             raise ValueError('Сначала завершите тренировку')
         self.require_post()
+        if op in ('profile_save', 'profile_delete'):
+            training_profiles.manage(self, op, p)
+            return
+        if op.startswith('kit_'):
+            training_presets.handle(self, op, p)
+            return
         if op.startswith('supply_'):
             training_supply.handle(self, op, p)
             return
-        if op == 'recover':
+        if op == 'reset_prepare':
+            self.require_player_reset()
+            nonce = secrets.token_hex(16)
+            self.reset_confirmation = (nonce, now + 60)
+            self.clone.send('tg', op='reset_confirm', token=Str(self.token), confirmation=Str(nonce))
+        elif op == 'reset_player':
+            self.reset_player(str(p.get('confirmation', '')))
+        elif op == 'recover':
             if self.context != 'player':
                 raise ValueError('Восстановление доступно у инструктора')
             self.clone.char.hp, self.clone.char.sp = self.clone.char.hp_max, self.clone.char.sp_max
@@ -1304,15 +1503,13 @@ class Ground:
             self.state('Тренировочная локация изменена')
         elif op == 'rules':
             try:
-                rules = training_rules.Rules.from_values(str(p.get('values', '')))
+                rules = training_profiles.resolve(str(p.get('values', '')), p.get('profile'), self.personal_profiles)
             except (ValueError, TypeError):
-                raise ValueError('Проверьте правила: множители от 0,01 до 10; добавка брони от 0 до 200.') from None
+                raise ValueError('Проверьте профиль и множители (0,01–10; добавка брони 0–200). Если версия устарела, снова откройте компьютер.') from None
             validate_profile(self.profile, rules)
             validate_profile(self.opponent, rules)
             self.require_terminal()
-            equipment_changed = self.clone.inv.switch_profile(rules.simulator_formulas)
-            self.rules = rules
-            self.configure_player(self.profile)
+            equipment_changed = self.configure_player(self.profile, rules=rules)
             if equipment_changed:
                 # Other clients also cache instance ids; update their live list
                 # before publishing the replacement clothes and weapons.
@@ -1330,7 +1527,6 @@ class Ground:
             self.clone.push_vitals()
             self.clone.combat.ap = self.clone.character().ap_ceiling
             self.clone.combat.c_ap()
-            self.save_settings()
             self.room.combat.push_vitals(self.clone.combat)
             self.state('Правила сессии применены и сохранены')
         elif op == 'spawn':
@@ -1350,7 +1546,7 @@ class Ground:
             self.opponent = self.fighter_preset(integer(p.get('set'), 1, 65535))
             self.mode = 'fighter'
             self.save_settings()
-            self.state('Боец собран: комплект, оружие и патроны. При желании замените снаряжение.')
+            self.state('Противник собран: комплект, подсумок, оружие и патроны. При желании замените снаряжение.')
         elif op == 'apply':
             who = p.get('who', 'player')
             if who not in ('player', 'enemy'):
@@ -1379,8 +1575,8 @@ class Ground:
                 if self.context == 'player':
                     self.configure_player(profile)
                 else:
-                    self.apply(self.clone, profile)
-                    self.profile = profile
+                    self.replace_player(profile, 'Пресет применён и сохранён')
+                    return
                 self.clone.send_player_info()
                 self.clone.push_stats()
                 self.clone.push_vitals()
@@ -1390,7 +1586,7 @@ class Ground:
             else:
                 self.opponent = profile
                 self.mode = 'fighter'
-            self.save_settings()
+                self.save_settings()
             self.state('Пресет применён и сохранён')
         elif op == 'start':
             self.require_terminal()
@@ -1416,7 +1612,7 @@ class Ground:
     def catalogue(self, p):
         cat = str(p.get('category', 'weapon'))
         page = integer(p.get('page', 0), 0, 10000)
-        level = integer(p.get('level', 0), 0, MAX_LEVEL)
+        level = integer(p.get('level', 0), 0, 40 if cat == 'mob' else MAX_LEVEL)
         query = str(p.get('query', '')).strip().casefold()[:48]
         wclass = integer(p.get('wclass', -1), -1, 6)
         upgrade = str(p.get('upgrade', 'all'))
@@ -1425,11 +1621,12 @@ class Ground:
         line = str(p.get('line', 'all'))
         if line not in ('all', 'A', 'G', 'P', 'C'):
             raise ValueError('Неизвестная версия предмета')
+        available_levels = []
         if cat == 'set':
             rows = [(t, '%s · %d ур. (%s)' % (v['name'], v['level'], v['variant']))
                     for t, v in sets.SETS.items() if v['variant'] in ('A', 'G')
                     and (line == 'all' or line == v['variant'])
-                    and (not level or v['level'] == level) and query in v['name'].casefold()
+                    and query in v['name'].casefold()
                     and all(member in item_catalogue() and training_items.available(member, self.rules.simulator_formulas)
                             for member in v['members'].values())]
         elif cat == 'mob':
@@ -1437,23 +1634,36 @@ class Ground:
             if group not in training_layout.MOB_GROUPS:
                 raise ValueError('Неизвестная категория противников')
             def mob_level(t):
-                if self.rules.simulator_formulas:
+                if self.rules.simulator_formulas and str(t) in training_formulas.data()['mobs']:
                     data = training_formulas.data()
                     return data['mob_records'][data['mobs'][str(t)]]['level']
                 return mobs.stats(t).level
-            rows = [(t, name.rsplit(' · ', 1)[0] + ' · %d ур.' % mob_level(t)) for t, name in mob_catalogue().items()
-                    if (group == 'all' or training_layout.mob_group(mobs.TYPES[str(t)]) == group)
-                    and (not level or mob_level(t) == level) and query in name.casefold()]
+            # Group/profile levels precede search and pagination: the menu must
+            # not lose choices just because the current page or search is empty.
+            candidates = {t: mob_level(t) for t in mob_catalogue()
+                          if group == 'all' or training_opponents.RECORDS[t]['group'] == group}
+            available_levels = sorted({value for value in candidates.values() if value > 0})
+            if level and level not in available_levels:
+                level, page = 0, 0
+            rows = [(t, self.mob_label(t)) for t, value in candidates.items()
+                    if (not level or value == level) and query in mob_catalogue()[t].casefold()]
         else:
             rows = [(t, entry[2]) for t, entry in item_catalogue().items()
-                    if (entry[0] == cat or cat == 'weapon' and entry[0] in ('special_weapon','experimental_weapon'))
+                    if t not in training_supply.ARCHIVE_SOURCES
+                    and (entry[0] == cat or cat == 'weapon' and entry[0] in ('special_weapon','experimental_weapon'))
                     and training_items.available(t, self.rules.simulator_formulas)
-                    and (not level or entry[1] == level)
                     and query in entry[2].casefold()
                     and (line == 'all' or (t in contraband() if line == 'C' else item_line(t) == line))
                     and (cat != 'weapon' or upgrade == 'all' or bool(training_display.upgrade(t)) == (upgrade == 'modified'))
                     and (cat != 'weapon' or wclass < 0 or
                          (6 if items.root_of(t) == items.COLD_ARM else training_display.weapon_class(t)) == wclass)]
+        if cat != 'mob':
+            def item_level(t):
+                return sets.SETS[t]['level'] if cat == 'set' else item_catalogue()[t][1]
+            available_levels = sorted({item_level(t) for t, _ in rows if item_level(t) > 0})
+            if level and level not in available_levels:
+                level, page = 0, 0
+            rows = [(t, label) for t, label in rows if not level or item_level(t) == level]
         rows.sort(key=lambda row: (mob_level(row[0]), row[1], row[0]) if cat == 'mob' else (row[1], row[0]))
         total = len(rows)
         rows = rows[page * PAGE_SIZE:(page + 1) * PAGE_SIZE]
@@ -1461,10 +1671,12 @@ class Ground:
                   if cat == 'set' else '' for t, _ in rows]
         icons = [next(iter(sets.SETS[t]['members'].values())) if cat == 'set' else t for t, _ in rows]
         self.clone.send('tg', op='catalogue', ids=[t for t, _ in rows], groups=groups, icons=icons,
+                        types=[training_items.copy_type(t, self.rules.simulator_formulas) if cat not in ('mob', 'set') else 0 for t, _ in rows],
                         context=Str(self.context), request_id=integer(p.get('request_id', 0), 0, 2**31-1),
-                        levels=[mobs.stats(t).level if cat == 'mob' else item_catalogue()[t][1] if t in item_catalogue() else sets.SETS[t]['level'] for t, _ in rows],
+                        levels=[mob_level(t) if cat == 'mob' else item_catalogue()[t][1] if t in item_catalogue() else sets.SETS[t]['level'] for t, _ in rows],
                         group_slots=[','.join(str(inventory.HEAD + items.params_of(m)['slot_type']) for m in sets.SETS[t]['members'].values()) if cat == 'set' else '' for t, _ in rows],
                         labels=[name for _, name in rows], total=total, page=page,
+                        available_levels=available_levels, selected_level=level,
                         slots=[0 if cat in ('mob', 'set') else inventory.PRIMARY if items.root_of(t) in (items.FIRE_ARM, items.COLD_ARM)
                                else inventory.HEAD + items.params_of(t)['slot_type']
                                if items.root_of(t) == items.WEAR and cat != 'mob' else 0 for t, _ in rows])
@@ -1507,9 +1719,9 @@ class Ground:
             mob = mobs.Mob(eid, self.mob_type, enemy_cell)
             mob.training_ground = self
             mob.stats = copy.copy(mob.stats)
-            if self.rules.simulator_formulas:
+            if self.rules.simulator_formulas and str(self.mob_type) in training_formulas.data()['mobs']:
                 training_formulas.configure_mob(mob, self)
-            else:
+            elif not self.rules.simulator_formulas and 1 <= mob.stats.level <= MAX_LEVEL:
                 training_mobs.configure(mob, self)
             mob.ap = mob.stats.ap_max
             mob.stats.aggro = max(100, mob.stats.aggro)
@@ -1533,7 +1745,10 @@ class Ground:
         self.started = time.monotonic()
         if mode == 'mob' and not self.stationary:
             self.room.combat.aggro(mob, self.clone.combat)
-        self.state('Противник вызван')
+        note = 'Противник вызван'
+        if mode == 'mob' and self.rules.simulator_formulas and str(self.mob_type) not in training_formulas.data()['mobs']:
+            note += '. Для этой цели нет профиля симулятора: параметры моба из основной игры.'
+        self.state(note)
 
     def enemy_turn(self):
         training_bot.turn(self)
@@ -1668,6 +1883,7 @@ class Ground:
             self.clear_target()
             self.room.leave(self.clone)
             self.room.grounds.pop(self.token, None)
+            self.room.owner_ids.pop(self.owner.pid, None)
             rc = self.room.combat
             if self.room.grounds:
                 self.room.ground = next(iter(self.room.grounds.values()))
@@ -1686,6 +1902,15 @@ class Ground:
             self.owner.send('tg', op='exit', active=0)
             self.owner.training_return = True
             self.owner.enter_location()
+            # The client can keep its clan inspector across location changes.
+            # Repair a missing roster from an older sandbox session as well.
+            module = __import__(self.owner.__class__.__module__)
+            manager = module.CLANS
+            member = manager.member(self.owner.char_id)
+            manager.fellow_self(self.owner, member)
+            if member is not None:
+                manager.send_roster(self.owner, member)
+                manager.send_standings(self.owner, member['clan_id'])
             training_party.refresh(self)
 
 
@@ -1796,9 +2021,14 @@ def resume(owner):
 
 def preload():
     training_rules.current()
+    training_profiles.catalogue()
     training_formulas.coefficients()
     training_effects.definitions()
     training_items.prepare(item_catalogue())
+    # Build both immutable catalogue indexes before accepting sockets, not on
+    # the first filter click or profile switch in the shared event loop.
+    training_supply.index(False)
+    training_supply.index(True)
     for source in item_catalogue():
         training_display.icon_source(source)
     mob_catalogue()

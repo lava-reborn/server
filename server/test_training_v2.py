@@ -53,7 +53,7 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
             matching = [post for post in layout.POSTS if post.line and
                         training_items.copy_type(source) in tg.training_shop.stock(post)]
             self.assertEqual(len(matching), 1, (source, label))
-            self.assertIn(category, tg.training_supply.STATIONS[matching[0].key])
+            self.assertIn(tg.training_supply.index()[source].category, tg.training_supply.STATIONS[matching[0].key])
         self.assertEqual(tg.item_catalogue()[1572][0], 'event_medicine')
         self.assertEqual(tg.item_catalogue()[5844][0], 'special_weapon')
         self.assertNotIn('set', {p.category for p in layout.POSTS})
@@ -68,6 +68,7 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((post.key,post.line,post.resource),('specialist','all',2391))
         rare=set(tg.training_shop.stock(post))
         expected={training_items.copy_type(source) for source,row in tg.item_catalogue().items() if row[0] in ('special_weapon','experimental_weapon')}
+        expected.update(training_items.copy_type(source) for source in (6542,31097,6228,3552))
         self.assertEqual(rare,expected)
         self.assertTrue(all(training_items.copy_type(source) in rare for source in tg.contraband() if source in tg.item_catalogue()))
         for ordinary in layout.POSTS:
@@ -190,6 +191,7 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
 
     async def test_medical_specializations_intellect_and_stamina_model(self):
         g=self.enter()
+        g.rules=tg.training_rules.Rules()  # Explicit internal v2 model, no longer the default menu profile.
         fighter=g.clone.combat
         self.assertEqual(fighter.healing_spec(dict(hcur=20,hmax=100)),8)
         self.assertEqual(fighter.healing_spec(dict(hcur=80,hmax=100)),9)
@@ -232,6 +234,7 @@ class TrainingV2(unittest.IsolatedAsyncioTestCase):
 
     async def test_humanoid_uses_A_weapon_of_own_level_and_animals_keep_natural_attack(self):
         g=self.enter()
+        g.rules=tg.training_rules.Rules()
         source=next(int(t) for t,info in tg.mobs.TYPES.items() if 12<=info.get('level',0)<=17 and info.get('role')=='mob' and info.get('weapon_class') in ('rifle','assault_rifle','pistol') and int(t) in tg.mob_catalogue())
         g.mob_type=source
         original=copy.deepcopy(tg.mobs.stats(source).__dict__)

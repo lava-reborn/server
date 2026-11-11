@@ -63,6 +63,40 @@ class TrainingAmmunition(unittest.IsolatedAsyncioTestCase):
             g.store.delete_item(gun['uniq']);g.store.delete_item(stack['uniq'])
         self.unchanged()
 
+    async def test_spas_all_upgrades_and_profiles_load_bb_and_swap_without_loss(self):
+        g = self.enter()
+        rounds = copies.copy_type(6168)  # 12 gauge armour piercing.
+        alternative = copies.copy_type(6108)
+        for source in range(26022, 26034):
+            for simulator in (False, True):
+                with self.subTest(source=source, simulator=simulator):
+                    gun = g.clone.inv.create(copies.copy_type(source, simulator), slot=inventory.PRIMARY)
+                    clip = items.params_of(gun['type_id'])['clip_size']
+                    stack = g.clone.inv.create(rounds, clip + 3)
+                    self.s.writer.frames.clear()
+                    with patch.object(combat.Fighter, 'schedule_action') as scheduled:
+                        g.clone.inv.use_load(dict(obj=inventory.oid_of(gun), target=inventory.oid_of(stack)))
+                        self.assertTrue(scheduled.called)
+                    g.clone.inv.reloaded(gun['uniq'])
+                    current = g.store.item(gun['uniq'])
+                    self.assertEqual((current['ammo_count'], current['ammo_type']), (clip, rounds))
+                    frames = [decode(frame[:-1]) for frame in self.s.writer.frames]
+                    sent = next(data for cmd, data in reversed(frames) if cmd == 'ss_di_firearm')
+                    self.assertEqual((sent['ammo_count'], sent['ammo_type']), (clip, rounds))
+                    before = [dict(row) for row in g.clone.inv.rows()]
+                    g.clone.inv.use_load(dict(obj=inventory.oid_of(gun), target=inventory.oid_of(stack)))
+                    self.assertEqual(decode(self.s.writer.frames[-1][:-1]), ('cmdAck', dict(res=inventory.RES_LOADED)))
+                    self.assertEqual([dict(row) for row in g.clone.inv.rows()], before)
+                    other = g.clone.inv.create(alternative, clip + 2)
+                    with patch.object(combat.Fighter, 'schedule_action'):
+                        g.clone.inv.use_load(dict(obj=inventory.oid_of(gun), target=inventory.oid_of(other)))
+                    g.clone.inv.reloaded(gun['uniq'])
+                    self.assertEqual(g.store.item(gun['uniq'])['ammo_type'], alternative)
+                    self.assertEqual(sum(row['count'] for row in g.clone.inv.rows() if row['type_id'] == rounds), clip + 3)
+                    for row in g.clone.inv.rows():
+                        g.store.delete_item(row['uniq'])
+        self.unchanged()
+
     async def test_incompatible_cartridges_are_still_refused_without_consumption(self):
         g=self.enter()
         gun=g.clone.inv.create(copies.copy_type(3728),slot=inventory.PRIMARY)

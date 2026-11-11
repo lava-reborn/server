@@ -37,8 +37,7 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         return session
 
     def take_exit(self, ground):
-        ground.clone.cmd_q_st(dict(mob=ground.terminal_id,
-            q_idx=quests.given_by(training.TERMINAL).index(training.EXIT_QUEST)))
+        ground.store.take_quest(ground.clone.char_id, training.EXIT_QUEST, {'obj': 1}, True)
         return next(row for row in ground.store.quests(ground.clone.char_id)
                     if row['type'] == training.EXIT_QUEST)
 
@@ -48,6 +47,25 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn(ground, training.ACTIVE)
         self.assertIsNone(self.s.training_ground)
 
+    async def test_retired_profile_is_restored_as_baseline_without_losing_tuning(self):
+        ground=self.enter()
+        self.suspend(ground)
+        saved=self.store.training_profile(self.s.char_id)
+        saved['rules']=dict(training.training_rules.Rules(health=2).as_dict(),revision='candidate-v2')
+        saved['exit_quest']=True  # Obsolete saved flag must not recreate the quest.
+        self.store.save_training_profile(self.s.char_id,saved)
+        self.assertTrue(training.resume(self.next_session()))
+        restored=self.s.training_ground
+        self.assertFalse(restored.rules.combat_v2)
+        self.assertEqual(restored.rules.health,2)
+        self.assertEqual(restored.profile,saved['player'])
+        self.assertFalse(restored.store.quests(restored.clone.char_id))
+        restored.clone.send_npc_info(restored.terminal_id)
+        _,packet=decode(self.s.writer.frames[-1][:-1])
+        self.assertEqual(packet['give_quests'],[])
+        self.assertEqual(packet['take_quests'],[])
+        self.unchanged()
+
     async def test_entry_records_presence_immediately_and_explicit_exit_clears_it(self):
         ground = self.enter()
         self.assertTrue(self.store.training_profile(self.s.char_id)['inside'])
@@ -56,7 +74,7 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(training.resume(self.next_session()))
         self.unchanged()
 
-    async def test_reconnect_restores_private_clone_at_computer_and_return_quest(self):
+    async def test_reconnect_discards_legacy_exit_quest_and_keeps_exit_button_available(self):
         ground = self.enter()
         old_quest = self.take_exit(ground)
         old_token = ground.token
@@ -69,17 +87,15 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(restored.phase, 'ready')
         self.assertEqual(restored.clone.pos, training.control_cell(restored.location))
         restored.clone.cmd_lenter({})
-        row = next(row for row in restored.store.quests(restored.clone.char_id)
-                   if row['type'] == training.EXIT_QUEST)
-        self.assertNotEqual(row['q_id'], old_quest['q_id'])
+        self.assertFalse(restored.store.quests(restored.clone.char_id))
         self.assertFalse(self.store.quests(session.char_id))
         with patch.object(session, 'enter_location') as returned:
-            restored.clone.cmd_q_co(dict(mob=restored.terminal_id, q_id=row['q_id']))
+            restored.request(dict(op='exit', token=restored.token))
         returned.assert_called_once_with()
         self.assertFalse(self.store.training_profile(session.char_id)['inside'])
         self.unchanged()
 
-    async def test_untaken_or_cancelled_exit_quest_is_available_after_reconnect(self):
+    async def test_exit_quest_stays_unavailable_after_reconnect(self):
         ground = self.enter()
         row = self.take_exit(ground)
         ground.clone.cmd_q_ca(dict(q_id=row['q_id']))
@@ -88,8 +104,9 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         restored = self.s.training_ground
         restored.clone.cmd_q_status(dict(q_type=training.EXIT_QUEST))
         command, params = decode(self.s.writer.frames[-1][:-1])
-        self.assertEqual((command, params['status']), ('q_status', 1))
-        self.take_exit(restored)
+        self.assertEqual((command, params['status']), ('q_status', 0))
+        with self.assertRaises(ValueError):
+            restored.clone.cmd_q_st(dict(mob=restored.terminal_id, q_idx=0))
         self.unchanged()
 
     async def test_logout_and_repeated_transport_close_suspend_instead_of_exit(self):
@@ -125,11 +142,11 @@ class TrainingResume(unittest.IsolatedAsyncioTestCase):
         first, second = [member.training_ground for member in members]
         self.suspend(first)
         parties.dissolve(group)
-        training_party.relocate(second, 106)
+        training_party.relocate(second, 59)
         self.assertTrue(training.resume(self.next_session()))
         restored = self.s.training_ground
         self.assertIs(restored.room, second.room)
-        self.assertEqual(restored.location, 106)
+        self.assertEqual(restored.location, 59)
         self.assertNotEqual(restored.clone.pos, second.clone.pos)
         self.assertEqual(len(restored.room.grounds), 2)
         self.unchanged()

@@ -62,8 +62,10 @@ class LegacyTraining(unittest.TestCase):
         self.assertEqual((afro/pack,gold),(10000,0))
         self.assertEqual(self.params(legacy.BATTERY)['cost'],0)
 
-    def test_six_supply_services_keep_free_approaches(self):
-        posts = [post for post in layout.POSTS if post.line]
+    def test_six_main_supply_services_and_separate_archive_keep_free_approaches(self):
+        posts = [post for post in layout.POSTS if post.line and post.key != 'archive']
+        archive = layout.BY_KEY['archive']
+        self.assertGreater(archive.y, max(post.y for post in posts))
         self.assertEqual(len(posts), 6)
         self.assertTrue(all(post.line == 'all' for post in posts))
         self.assertEqual(len({post.y for post in posts}), 1)
@@ -82,9 +84,11 @@ class LegacyTraining(unittest.TestCase):
         self.assertEqual(computer.x+instructor.x,min(p.x for p in vendors)+max(p.x for p in vendors))
         self.assertGreaterEqual(abs(computer.x-instructor.x),6)
         for location in training.LOCATIONS:
-            self.assertEqual(training.LOCATIONS[location][0],computer.cell(training.ARENA_WIDTH))
+            loc=training.arena_location(location)
+            computer=next(p for p in layout.posts_for(location) if p.key=='computer')
+            self.assertEqual(training.LOCATIONS[location][0],computer.cell(loc.width))
             self.assertTrue(training.progression.within_reach(training.control_cell(location),
-                computer.cell(training.ARENA_WIDTH),training.ARENA_WIDTH,training.ARENA_HEIGHT))
+                computer.cell(loc.width),loc.width,loc.height))
 
 
 if __name__ == '__main__':

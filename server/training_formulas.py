@@ -1,4 +1,4 @@
-"""Opt-in range equations from simulator c4f3018, rulesets/lava_fixed.py.
+"""Opt-in range equations from simulator 6b7b28d, rulesets/lava_fixed.py.
 
 The simulator profile uses each weapon's own source coefficient and A/G
 damage bases. Old sandbox P/G normalization and minute regen stay separate.
@@ -31,7 +31,7 @@ MOB_CRIT_FLOOR = 5.0
 LEVEL_SPREAD = .6
 LEVEL_DAMAGE = .12
 MIN_LEVEL_DAMAGE = .1
-GAP_FROM = 5
+GAP_MAX = 3
 
 
 @lru_cache(maxsize=1)
@@ -52,14 +52,13 @@ def data():
 def coefficients():
     raw = data()
     armour = {int(k): v for k, v in raw['armour_reference'].items()}
-    bonus = {int(k): v for k, v in raw['near_bonus'].items()}
-    gap = raw['gap_damage']
+    gaps = {int(k): {int(g): v for g, v in row.items()} for k, row in raw['gap_table'].items()}
     valid = lambda v: not isinstance(v, bool) and isinstance(v, (int, float)) and math.isfinite(v)
     if (set(armour) != set(range(1, 21)) or any(not valid(v) or v <= 0 for v in armour.values())
-            or any(k not in range(1, 21) or not valid(v) or not 0 <= v <= 4 for k, v in bonus.items())
-            or not valid(gap) or not 0 < gap <= 1):
+            or any(k not in range(1, 21) or any(g not in (1, 2, 3) or not valid(v) or not 0 < v <= 1
+                for g, v in row.items()) for k, row in gaps.items())):
         raise ValueError('Invalid simulator equation coefficients')
-    return MappingProxyType(armour), MappingProxyType(bonus), gap
+    return MappingProxyType(armour), MappingProxyType({k: MappingProxyType(row) for k, row in gaps.items()})
 
 
 @lru_cache(maxsize=1)
@@ -90,11 +89,11 @@ def damage_multiplier(character, row):
     power = 1
     if row is not None:
         source = training_items.profile_source(row['type_id'])
-        missing = max(0, inventory.item_level(source) - character.level)
+        missing = max(0, inventory.item_level(row['type_id']) - character.level)
         power, kind = weapon_reference(source)
         curve = data()['class_scale'].get(kind, {})
         own = curve.get(str(character.level), 1)
-        at_weapon = curve.get(str(min(20, inventory.item_level(source))), 1)
+        at_weapon = curve.get(str(min(20, inventory.item_level(row['type_id']))), 1)
         power *= min(own, at_weapon) if missing else own
     multiplier = power * (1 + DAMAGE_PER_INTELLECT * intellect(character)) * max(MIN_LEVEL_DAMAGE, 1 - LEVEL_DAMAGE * missing)
     return multiplier, 1 + LEVEL_SPREAD * missing
@@ -185,8 +184,8 @@ def split(shooter, target, damage, piercing, critical, stamina_left, stamina_dam
     if shooter.is_player and not target.is_player:
         player_level = level(shooter)
         gap = level(target) - player_level
-        _armour, bonus, gap_damage = coefficients()
-        factor = gap_damage if gap >= GAP_FROM else 1 + bonus.get(player_level, 0) * gap if gap > 0 else 1
+        factors = coefficients()[1].get(max(1, min(20, player_level)), {})
+        factor = factors.get(min(gap, GAP_MAX), 1) if gap >= 1 else 1
         damage, stamina_damage = max(1, int(damage * factor)), int(stamina_damage * factor)
     left = max(0, stamina_left)
     if critical:

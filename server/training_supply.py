@@ -12,13 +12,17 @@ import training_items as copies
 from protocol import Str
 
 PAGE_SIZE = 10
+# Archive-only entries: keep the registry and copy ids stable across updates.
+# They remain inspectable/obtainable, but never mix with functional equipment.
+ARCHIVE_SOURCES = frozenset((*range(4329, 4353), 1081, 1535, 1073, 1074))
 STATIONS = {
     'weapons': ('weapon',),
-    'armoury': ('armour', 'accessory'),
+    'armoury': ('armour',),
     'supplies': ('ammo', 'pouch'),
     'medical': ('medicine', 'event_medicine'),
     'boosts': ('buff',),
     'specialist': ('special_weapon', 'experimental_weapon'),
+    'archive': ('souvenir', 'unsupported', 'legacy'),
 }
 
 
@@ -39,13 +43,22 @@ def search_key(text):
     return re.sub(r'[^\w]+', '', text.casefold().replace('ё', 'е'))
 
 
-@lru_cache(maxsize=1)
-def index():
+@lru_cache(maxsize=2)
+def index(simulator=False):
     import training_ground as ground
     copies.prepare(ground.item_catalogue())
     out = {}
     for source, (category, level, name) in ground.item_catalogue().items():
-        root = items.root_of(copies.copy_type(source))
+        root = items.root_of(copies.copy_type(source, simulator=simulator))
+        if simulator:
+            level = inventory.item_level(copies.copy_type(source, simulator=True))
+        # Real zero-level melee collectibles have damage/bonuses and belong
+        # with special weapons, not with the discarded souvenir placeholders.
+        if source in ARCHIVE_SOURCES:
+            category = 'unsupported' if source in (1073, 1074) else 'legacy' if source == 1535 else 'souvenir'
+            name += ' · ' + ('Эффект не подключён' if category == 'unsupported' else 'Архив')
+        elif category == 'accessory' and root == items.COLD_ARM:
+            category = 'special_weapon'
         weapon = root in (items.FIRE_ARM, items.COLD_ARM)
         if root == items.AMMO:
             modifier = names.text(items.STRING_ID_OFFSET + source).partition('$')[2].strip()
@@ -87,7 +100,7 @@ def filtered(station, params, ground=None):
     detail = str(params.get('detail', 'all'))
     allowed = detail_sources(station, detail, ground)
     import training_ground as training
-    entries = index()
+    entries = index(bool(ground and ground.rules.simulator_formulas))
     return [entry for source in sources(station) if (entry := entries[source])
             and (not level or entry.level == level)
             and (wclass < 0 or entry.weapon_class == wclass)
@@ -173,15 +186,20 @@ def set_list(ground, params):
         raise ValueError('Неизвестная версия')
     query = search_key(str(params.get('query', ''))[:48])
     rows = [(key, row) for key, row in set_catalogue().items()
-            if (not level or row['level'] == level) and (line == 'all' or row['variant'] == line)
+            if (line == 'all' or row['variant'] == line)
             and query in search_key(row['name']) and all(copies.available(t, ground.rules.simulator_formulas)
                                                        for t in row['members'].values())]
+    available_levels = sorted({row['level'] for _, row in rows if row['level'] > 0})
+    if level and level not in available_levels:
+        level = 0
+    rows = [(key, row) for key, row in rows if not level or row['level'] == level]
     rows.sort(key=lambda r: (r[1]['level'], r[1]['name'], r[0]))
     page = min(integer(params.get('page', 0), 0, 10000), max(0, (len(rows)-1)//PAGE_SIZE))
     selected = rows[page*PAGE_SIZE:(page+1)*PAGE_SIZE]
     ground.clone.send('tg', op='supply_list', context=Str(ground.context), bundle=1,
                       request_id=integer(params.get('request_id', 0), 1, 2**31-1),
                       page=page, total=len(rows), ids=[key for key, _ in selected],
+                      available_levels=available_levels, selected_level=level,
                       labels=[Str('%s · %d ур. [%s]' % (row['name'], row['level'], row['variant'])) for _, row in selected])
 
 
@@ -195,8 +213,13 @@ def catalogue(ground, params):
         if ground.context != 'armoury':
             raise ValueError('Комплекты доступны у стойки брони')
         return set_list(ground, params)
-    rows = (e for e in filtered(ground.context, params, ground)
-            if copies.available(e.source, ground.rules.simulator_formulas))
+    level = integer(params.get('level', 0), 0, 20)
+    candidates = [e for e in filtered(ground.context, dict(params, level=0), ground)
+                  if copies.available(e.source, ground.rules.simulator_formulas)]
+    available_levels = sorted({e.level for e in candidates if e.level > 0})
+    if level and level not in available_levels:
+        level = 0
+    rows = (e for e in candidates if not level or e.level == level)
     groups = {}
     for entry in rows:
         key = model_key(entry)
@@ -209,6 +232,7 @@ def catalogue(ground, params):
     ground.clone.send('tg', op='supply_list', context=Str(ground.context),
                       request_id=integer(params.get('request_id', 0), 1, 2**31-1),
                       page=page, total=len(rows), ids=[e.source for e in selected],
+                      available_levels=available_levels, selected_level=level,
                       labels=[Str(e.name + ' [' + e.line + ']') for e in selected])
 
 
@@ -229,9 +253,10 @@ def variants(ground, params):
     source = integer(params.get('source'), 1, 65535)
     if source not in sources(ground.context) or not copies.available(source, ground.rules.simulator_formulas):
         raise ValueError('Предмет недоступен у этой стойки')
-    entry = index()[source]
-    rows = sorted((index()[t] for t in sources(ground.context)
-                   if model_key(index()[t]) == model_key(entry)
+    entries = index(ground.rules.simulator_formulas)
+    entry = entries[source]
+    rows = sorted((entries[t] for t in sources(ground.context)
+                   if model_key(entries[t]) == model_key(entry)
                    and copies.available(t, ground.rules.simulator_formulas)),
                   key=lambda e: (bool(e.upgrade), e.upgrade, e.source))
     ground.clone.send('tg', op='supply_variants', context=Str(ground.context),
@@ -270,6 +295,7 @@ def change(ground, params, returning=False):
         ground.clone.send('tg', op='supply_done', sequence=seq, message=Str('Запрос уже обработан'))
         return
     count = integer(params.get('count', 1), 1, 5000)
+    updates = []
     if returning:
         row = inv.find(params.get('source'))
         if row is None or row['slot'] != inventory.BAG or not copies.is_copy(row['type_id']):
@@ -285,9 +311,9 @@ def change(ground, params, returning=False):
                 ground.store.delete_item(row['uniq'])
         ground.supply_sequence = seq
         if left:
-            inv.push_di(ground.store.item(row['uniq']))
+            updates.append((inv.push_di, (ground.store.item(row['uniq']),)))
         else:
-            inv.push_status(row, 0)
+            updates.append((inv.push_status, (row, 0)))
     else:
         bundle = integer(params.get('bundle', 0), 0, 1)
         if bundle:
@@ -307,10 +333,13 @@ def change(ground, params, returning=False):
             created = inv.issue(copies.copy_type(source, simulator=ground.rules.simulator_formulas), count)
         ground.supply_sequence = seq
         for row in created:
-            inv.push_status(row, 1)
-            inv.push_di(row)
+            updates.append((inv.push_status, (row, 1)))
+            updates.append((inv.push_di, (row,)))
     ground.remember_outfit()
+    # Announce committed live identities before native item callbacks can run.
     ground.inventory_state()
+    for publish, args in updates:
+        publish(*args)
     ground.clone.send('tg', op='supply_done', sequence=seq,
                       message=Str('Предмет сдан' if returning else 'Снаряжение получено'))
 

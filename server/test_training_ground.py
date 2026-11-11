@@ -71,6 +71,48 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         self.g.clone.cmd_lenter({})
         return self.g
 
+    async def test_clan_roster_reads_owner_and_mutations_stay_blocked(self):
+        import clans
+        from types import SimpleNamespace
+        clan = self.store.clan_create(self.s.char_id, 'Range clan', 'rangeclan', '', None)
+        aid, _ = self.store.register('other-clan-member', 'test-only')
+        cid, _ = self.store.create_character(aid, 'ClanPeer', 0, '1')
+        self.store.clan_member_add(cid, clan, clans.R_CHAT, '')
+        manager = clans.Clans(self.store, SimpleNamespace(by_char={self.s.char_id:self.s}))
+        with patch.object(server, 'CLANS', manager):
+            g = self.enter()
+            self.s.writer.frames.clear()
+            g.clone.handle_training('gg_info', dict(det=1))
+            packets = [decode(f[:-1]) for f in self.s.writer.frames]
+            roster = next(p for name,p in packets if name=='gg_list' and p['res']==1)
+            self.assertEqual(set(roster['data']), {self.s.char_id,cid})
+            self.assertEqual(g.store.clan_roster(clan), [])
+            self.assertFalse(self.s.training_clan_read)
+            self.s.writer.frames.clear()
+            self.s.training_clan_read = True
+            self.s.send('userInfo_Player', id=0, gold=99999)
+            self.s.send('ss_ack', o_list=[])
+            self.s.training_clan_read = False
+            self.assertEqual(self.s.writer.frames, [])
+            with patch.object(self.s,'cmd_gg_info',side_effect=ValueError('read failed')):
+                with self.assertRaises(ValueError):
+                    g.clone.handle_training('gg_info',dict(det=1))
+            self.assertFalse(self.s.training_clan_read)
+            before = list(self.store.db._db.iterdump())
+            for cmd,params in [('apply',dict(action=0)), ('admit',dict()),
+                               ('head',dict()), ('gg_info',dict(det=3)), ('gg_info',dict(det=4))]:
+                self.s.writer.frames.clear()
+                g.clone.handle_training(cmd,params)
+                self.assertNotIn('gg_list',[decode(f[:-1])[0] for f in self.s.writer.frames])
+            self.assertEqual(list(self.store.db._db.iterdump()),before)
+            self.s.writer.frames.clear()
+            with patch.object(self.s,'enter_location'), patch.object(tg.training_party,'refresh'):
+                g.exit()
+            packets = [decode(f[:-1]) for f in self.s.writer.frames]
+            roster = next(p for name,p in packets if name=='gg_list' and p['res']==1)
+            self.assertEqual(set(roster['data']),{self.s.char_id,cid})
+            self.assertEqual(len(self.store.clan_roster(clan)),2)
+
     def unchanged(self):
         # Only the linked sandbox preset may persist; real items, skills,
         # currencies and quest progress must stay byte-for-byte unchanged.
@@ -110,16 +152,16 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         public = world.location(108)
         self.assertIsNot(g.clone.loc, public)
         self.assertFalse(g.clone.loc.spawns)
-        g.request(dict(op='location', token=g.token, location=106))
-        self.assertEqual(g.location, 106)
-        self.assertEqual(g.clone.pos, tg.control_cell(106))
+        g.request(dict(op='location', token=g.token, location=59))
+        self.assertEqual(g.location, 59)
+        self.assertEqual(g.clone.pos, tg.control_cell(59))
         self.assertEqual(g.room.npcs[g.terminal_id].type_id, tg.TERMINAL)
-        self.assertEqual(self.store.training_profile(self.s.char_id)['location'], 106)
+        self.assertEqual(self.store.training_profile(self.s.char_id)['location'], 59)
         g.last_request = 0
         g.clone.cmd_lenter({})
         with self.assertRaises(ValueError):
             g.request(dict(op='location', token=g.token, location=35))
-        self.assertEqual(g.location, 106)
+        self.assertEqual(g.location, 59)
         self.assertIs(world.location(108), public)
 
     async def test_three_spawn_points_are_free_reachable_and_ordered(self):
@@ -128,20 +170,76 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
             safe, arena, start = tg.geometry(location)
             terminal = tg.LOCATIONS[location][0]
             self.assertEqual(terminal % loc.width, loc.width // 2)
-            self.assertEqual(terminal // loc.width, tg.training_layout.BY_KEY['computer'].y)
+            self.assertEqual(terminal // loc.width, next(p.y for p in tg.training_layout.posts_for(location) if p.key == 'computer'))
             self.assertIn(tg.control_cell(location), safe)
             self.assertEqual(start % loc.width, loc.width // 2)
             self.assertGreater(start // loc.width, loc.height // 2)
             distances = []
             for cell in tg.ENEMY_SPAWNS[location]:
                 self.assertIn(cell, arena)
-                self.assertIsNone(combat.shot_wall(loc, start, cell))
-                distances.append(tg.mobs.hex_distance(start, cell, loc.width))
+                if location == tg.RANGE:
+                    self.assertIsNone(combat.shot_wall(loc, start, cell))
+                distances.append(tg.mobs.hex_distance(tg.control_cell(location), cell, loc.width))
             self.assertEqual(len(set(distances)), 3)
             self.assertEqual(distances, sorted(distances))
-            far = tg.ENEMY_SPAWNS[location][tg.DEFAULT_SPAWN]
-            self.assertGreaterEqual(far % loc.width, 3 * loc.width // 4)
-            self.assertLess(far // loc.width, loc.height // 4)
+            near = tg.ENEMY_SPAWNS[location][tg.DEFAULT_SPAWN]
+            self.assertGreater(near % loc.width, terminal % loc.width)
+            self.assertLess(near // loc.width, terminal // loc.width)
+            far = tg.ENEMY_SPAWNS[location][-1]
+            if location == tg.RANGE:
+                self.assertGreaterEqual(far % loc.width, 3 * loc.width // 4)
+                self.assertLess(far // loc.width, loc.height // 4)
+
+    async def test_halfa_arena_keeps_real_art_geometry_and_is_private(self):
+        import copy
+        original = world.location(59)
+        before = copy.deepcopy(vars(original))
+        g = self.enter()
+        self.s.writer.frames.clear()
+        g.change_location(59)
+        loc = g.room.loc
+        self.assertEqual((loc.width,loc.height),(64,128))
+        self.assertEqual(loc.obstacles,original.obstacles)
+        self.assertIsNot(loc.obstacles,original.obstacles)
+        self.assertEqual(loc.entries,[])
+        self.assertEqual(loc.spawns,[])
+        self.assertEqual(vars(original),before)
+        frames=[decode(frame[:-1]) for frame in self.s.writer.frames]
+        map_index=next(i for i,(cmd,p) in enumerate(frames) if cmd=='tg' and p.get('op')=='map')
+        call_index=next(i for i,(cmd,p) in enumerate(frames) if cmd=='lcall')
+        self.assertLess(map_index,call_index)
+        self.assertEqual(frames[map_index][1]['native_map'],1)
+        reachable={tg.control_cell(59)}
+        queue=list(reachable)
+        for cell in queue:
+            for n in progression.hex_neighbours(cell,loc.width,loc.height):
+                if n not in reachable and n not in loc.obstacles:
+                    reachable.add(n);queue.append(n)
+        for cell in tg.ENEMY_SPAWNS[59]:
+            self.assertIn(cell,reachable)
+        for npc in g.room.npcs.values():
+            self.assertIn(npc.cell,reachable)
+        g.clone.cmd_lenter({})
+        for mode in ('mob','fighter'):
+            g.start(mode)
+            g.finish('Проверка арены',force=True)
+            await asyncio.sleep(0)
+            self.assertEqual(g.phase,'ready')
+        g.change_location(tg.RANGE)
+        self.assertEqual(vars(original),before)
+        self.unchanged()
+
+    async def test_old_second_desert_migrates_to_halfa_without_losing_profile(self):
+        g=self.enter();g.save_settings()
+        saved=self.store.training_profile(self.s.char_id)
+        saved['location']=106
+        self.store.save_training_profile(self.s.char_id,saved)
+        restored=tg.Ground(self.s)
+        try:
+            self.assertEqual(restored.location,59)
+            self.assertEqual(restored.profile,g.profile)
+        finally:
+            restored.exit(notify=False)
 
     async def test_selected_spawn_is_saved_validated_and_used_in_both_fight_modes(self):
         g = self.enter()
@@ -232,7 +330,10 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         g = self.enter()
         q = quests.get(tg.EXIT_QUEST)
         self.assertFalse(self.s.quest_available(q))
-        g.clone.cmd_q_st(dict(mob=g.terminal_id, q_idx=quests.given_by(tg.TERMINAL).index(tg.EXIT_QUEST)))
+        with self.assertRaises(ValueError):
+            g.clone.cmd_q_st(dict(mob=g.terminal_id, q_idx=0))
+        # An already issued legacy row remains safely finishable.
+        g.store.take_quest(g.clone.char_id, tg.EXIT_QUEST, {'obj': 1}, True)
         row = g.store.quests(g.clone.char_id)[0]
         self.assertEqual(row['type'], tg.EXIT_QUEST)
         self.unchanged()
@@ -533,11 +634,11 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         expected = [p for p in layout.POSTS if not p.line or tg.training_shop.stock(p)]
         self.assertEqual(len(g.posts), len(expected))
         self.assertTrue(all(p.resource == 1006 for p in expected if p.category in ('ammo','pouch','armour','medicine','buff','event_medicine')))
-        self.assertEqual(len(expected), 8)
+        self.assertEqual(len(expected), 9)
         self.assertEqual(len({p.cell(g.clone.loc.width) for p in expected}), len(expected))
         for location in tg.LOCATIONS:
             loc=tg.arena_location(location)
-            for post in layout.POSTS:
+            for post in layout.posts_for(location):
                 self.assertNotIn(post.cell(loc.width),loc.obstacles)
                 self.assertIn(post.resource,world.mob_types())
                 self.assertIn(layout.NAME_IDS[post.key],names.ALL)
@@ -709,7 +810,7 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         for group in layout.MOB_GROUPS:
             if group=='all':
                 continue
-            ids=[t for t in tg.mob_catalogue() if layout.mob_group(tg.mobs.TYPES[str(t)])==group]
+            ids=[t for t in tg.mob_catalogue() if tg.training_opponents.RECORDS[t]['group']==group]
             seen.update(ids)
             g.catalogue(dict(category='mob',group=group))
             _,data=decode(self.s.writer.frames[-1][:-1])
@@ -751,7 +852,7 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
 
     async def test_item_ids_are_separate_and_outside_transfers_are_refused(self):
         g = self.enter()
-        g.clone.inv.create(26075)
+        g.clone.inv.create(tg.training_items.copy_type(26075))
         row = g.clone.inv.rows()[0]
         self.assertGreaterEqual(row['uniq'], 1 << 40)
         for command, p in (
@@ -803,13 +904,13 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
 
     async def test_dynamic_info_uses_the_real_training_row_not_virtual_mob_defaults(self):
         g = self.enter()
-        row = g.clone.inv.create(26075)
+        row = g.clone.inv.create(tg.training_items.copy_type(26075))
         g.clone.cmd_ss_get_di(dict(obj=inventory.oid_of(row)))
         cmd, p = decode(self.s.writer.frames[-1][:-1])
         self.assertEqual(cmd, 'ss_di_firearm')
         self.assertEqual(p['ammo_count'], 0)
         ammo = items.params_of(26075)['comp_array'][0]
-        row = g.clone.inv.create(ammo, 27)
+        row = g.clone.inv.create(tg.training_items.copy_type(ammo), 27)
         g.clone.cmd_ss_get_di(dict(obj=inventory.oid_of(row)))
         cmd, p = decode(self.s.writer.frames[-1][:-1])
         self.assertEqual(cmd, 'ss_di_heap')
@@ -870,8 +971,8 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
             self.assertIsNot(first.room, second.room)
             self.assertIsNot(first.store, second.store)
             self.assertNotEqual(first.token, second.token)
-            a = first.clone.inv.create(26075)
-            b = second.clone.inv.create(26075)
+            a = first.clone.inv.create(tg.training_items.copy_type(26075))
+            b = second.clone.inv.create(tg.training_items.copy_type(26075))
             self.assertNotEqual(a['uniq'], b['uniq'])
             first.store.delete_item(a['uniq'])
             self.assertIsNotNone(second.store.item(b['uniq']))
@@ -901,6 +1002,7 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
     async def test_target_spawns_on_the_loaded_map_and_aggros_from_far_corner(self):
         g = self.enter()
         self.s.writer.frames.clear()
+        g.spawn_point = 2
         g.start('mob')
         self.assertEqual(g.phase, 'fight')
         self.assertIn(g.clone, g.room.players)
@@ -922,7 +1024,7 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
     async def test_late_training_item_requests_keep_the_native_info_queue_in_sync(self):
         g = self.enter()
         ammo = items.params_of(26075)['comp_array'][0]
-        row = g.clone.inv.create(ammo, 27)
+        row = g.clone.inv.create(tg.training_items.copy_type(ammo), 27)
         oid = inventory.oid_of(row)
         g.exit(notify=False)
         self.s.cmd_ss_get_di(dict(obj=oid))
@@ -1009,7 +1111,7 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(first.clone.char.training_rules, first.rules)
             self.assertNotEqual(second.rules, first.rules)
             self.assertEqual(second.clone.char.hp_max, base_hp)
-            self.assertTrue(tg.training_rules.current().ammo_modifiers)
+            self.assertFalse(tg.training_rules.current().combat_v2)
             self.assertEqual(self.s.character().vitals(), ordinary)
             self.assertEqual(db_before, [line for line in self.store.db._db.iterdump()
                                         if not line.startswith('INSERT INTO "char_training_profiles"')])
@@ -1238,9 +1340,9 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         first, second = [member.training_ground for member in members]
         for ground in (first, second):
             ground.clone.cmd_lenter({})
-        first.change_location(106)
+        first.change_location(59)
         self.assertIs(first.room, second.room)
-        self.assertEqual((first.location, second.location), (106, 106))
+        self.assertEqual((first.location, second.location), (59, 59))
         self.assertNotEqual(first.clone.pos, second.clone.pos)
         first.clone.cmd_lenter({})
         second.clone.cmd_lenter({})

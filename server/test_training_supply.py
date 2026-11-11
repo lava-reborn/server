@@ -24,6 +24,68 @@ class TrainingSupply(unittest.IsolatedAsyncioTestCase):
         ground.request(dict(op=op, token=ground.token, **params))
         return decode(self.s.writer.frames[-1][:-1])[1]
 
+    async def test_archive_placeholders_keep_ids_and_are_issued_only_at_archive(self):
+        g = self.enter()
+        self.assertEqual(len(supply.ARCHIVE_SOURCES), 28)
+        for source in supply.ARCHIVE_SOURCES:
+            self.assertIn(source, tg.item_catalogue())
+            self.assertTrue(copies.is_copy(copies.copy_type(source)))
+            self.assertIn(source, supply.sources('archive'))
+        for source in (6542, 31097, 6228, 3552):
+            self.assertIn(source, supply.sources('specialist'))
+            self.assertNotIn(source, supply.sources('armoury'))
+        self.approach_shop(g, 'armoury')
+        before = list(g.clone.inv.rows())
+        with self.assertRaises(ValueError):
+            supply.change(g, dict(sequence=1, source=4329, count=1))
+        self.assertEqual(g.clone.inv.rows(), before)
+        self.approach_shop(g, 'archive')
+        supply.change(g, dict(sequence=1, source=4329, count=1))
+        self.assertTrue(any(copies.source_type(row['type_id'])==4329 for row in g.clone.inv.rows()))
+        self.unchanged()
+
+    async def test_available_levels_match_each_station_filter_and_profile(self):
+        from dataclasses import replace
+        g=self.enter()
+        for simulator in (False,True):
+            g.rules=replace(g.rules,simulator_formulas=simulator)
+            for station in supply.STATIONS:
+                g.context=station
+                for line in ('all','A','P','G','C'):
+                    params=dict(request_id=1,line=line)
+                    expected=sorted({e.level for e in supply.filtered(station,params,g)
+                                     if e.level>0 and copies.available(e.source,simulator)})
+                    supply.catalogue(g,params)
+                    _,packet=decode(self.s.writer.frames[-1][:-1])
+                    self.assertEqual(packet['available_levels'],expected,(station,line,simulator))
+                    if expected:
+                        supply.catalogue(g,dict(params,level=expected[-1]))
+                        _,packet=decode(self.s.writer.frames[-1][:-1])
+                        self.assertGreater(packet['total'],0)
+                        self.assertTrue(all(supply.index(simulator)[t].level==expected[-1] for t in packet['ids']))
+            g.context='armoury'
+            supply.catalogue(g,dict(request_id=1,category='set',line='G'))
+            _,packet=decode(self.s.writer.frames[-1][:-1])
+            expected=sorted({r['level'] for r in supply.set_catalogue().values()
+                             if r['variant']=='G' and all(copies.available(t,simulator) for t in r['members'].values())})
+            self.assertEqual(packet['available_levels'],expected)
+        self.unchanged()
+
+    async def test_supply_announces_live_spas_before_native_creation_and_dynamic_info(self):
+        g = self.enter()
+        self.approach_shop(g)
+        self.s.writer.frames.clear()
+        self.request(g, 'supply_get', source=26032, sequence=1, count=1)
+        frames = [decode(frame[:-1]) for frame in self.s.writer.frames]
+        live_index = next(i for i, (cmd, data) in enumerate(frames) if cmd == 'tg' and data.get('op') == 'inventory')
+        status_index = next(i for i, (cmd, data) in enumerate(frames) if cmd == 'ss_obj_status')
+        di_index = next(i for i, (cmd, data) in enumerate(frames) if cmd == 'ss_di_firearm')
+        self.assertLess(live_index, status_index)
+        self.assertLess(status_index, di_index)
+        oid = frames[di_index][1]['obj']
+        self.assertIn(oid, frames[live_index][1]['live_oids'])
+        self.unchanged()
+
     async def test_every_item_has_one_station_and_all_premium_variants_have_correct_class(self):
         self.enter()
         all_sources = [t for station in supply.STATIONS for t in supply.sources(station)]
@@ -210,9 +272,9 @@ class TrainingSupply(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(row.category == 'ammo' for row in rows))
         self.assertTrue(supply.filtered('supplies', dict(detail='w1'), g))
         self.assertEqual(supply.search_key('9 мм. НАТO'), supply.search_key('9мм НАТO'))
-        self.assertEqual(supply.index()[1535].category, 'accessory')
+        self.assertEqual(supply.index()[1535].category, 'legacy')
         self.assertNotIn(1535, supply.sources('medical'))
-        self.assertEqual(supply.index()[4329].category, 'accessory')
+        self.assertEqual(supply.index()[4329].category, 'souvenir')
         self.assertNotIn(4329, supply.sources('weapons'))
         self.assertTrue(all(row.category in ('medicine', 'event_medicine')
                             for row in supply.filtered('medical', dict(detail='battle'), g)))

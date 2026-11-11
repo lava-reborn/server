@@ -18,7 +18,7 @@ class TrainingBot(unittest.IsolatedAsyncioTestCase):
     enter = fixtures.TrainingGround.enter
     unchanged = fixtures.TrainingGround.unchanged
 
-    def fighter(self, healing=False, count=5):
+    def fighter(self, healing=False, count=5, spawn=None):
         ground = self.enter()
         source = 25055  # M60 A, three modes with different effective distances.
         ammo = items.params_of(source)['comp_array'][0]
@@ -27,6 +27,8 @@ class TrainingBot(unittest.IsolatedAsyncioTestCase):
         ground.opponent = training.validate_profile(profile)
         ground.enemy_healing = healing
         ground.heal_count = count
+        if spawn is not None:
+            ground.spawn_point = spawn
         ground.start('fighter')
         enemy = ground.enemy
         gun = enemy.inv.in_slot(inventory.PRIMARY)
@@ -55,7 +57,7 @@ class TrainingBot(unittest.IsolatedAsyncioTestCase):
             enemy.walk = None
 
     async def test_far_enemy_gets_a_bounded_multicell_route_not_single_step(self):
-        ground, enemy, _gun = self.fighter()
+        ground, enemy, _gun = self.fighter(spawn=2)
         with patch.object(enemy, 'move_in_location') as move:
             ground.enemy_turn()
         path = move.call_args.args[0]['path']

@@ -93,7 +93,8 @@ class Rules:
         return damage, stamina, reach
 
     def description(self):
-        profile = ('Симулятор c4f3018: параметры A/G-оружия, броня и бонусы комплектов, коэффициенты урона и мобов. '
+        import training_formulas
+        profile = ('Симулятор ' + training_formulas.data()['source_commit'][:7] + ': параметры A/G-оружия, броня и бонусы комплектов, коэффициенты урона и мобов. '
                    'Крит огнестрела игрока — только на оптимальной дистанции. Броня для винтовок и остального оружия считается по-разному. '
                    'P-варианты без аналога в симуляторе сохраняют параметры полигона. ' if self.simulator_formulas else '')
         return profile + ('Версия правил: %s. Множители: характеристики %s; HP %g; выносливость %g; '
@@ -110,3 +111,30 @@ class Rules:
 @lru_cache(maxsize=1)
 def current():
     return Rules.parse(json.loads(PATH.read_text(encoding='utf-8-sig')))
+
+
+@lru_cache(maxsize=1)
+def simulator_notes():
+    import training_formulas
+    snapshot = training_formulas.data()
+    pages = ['Симулятор: после правок · ' + snapshot['source_commit'][:7] +
+        '\nНовая таблица оружия, комплектов и мобов из main симулятора. Далее: сравнение с исходной моделью по справочнику симулятора.',
+        'Управление на полигоне остаётся игровым: режим стрельбы выбираете вы. Автовыбор режима для виртуального игрока на сайте не заменяет ваши хоткеи. '
+        'Точки появления, агрессия и действия противников сохраняют правила полигона. Это ручной бой, а не автоматический прогон сайта.',
+        'Выбор профиля пока не меняет бой. Нажмите «Применить правила» после просмотра. Профиль сохраняется для вашего тренировочного персонажа; '
+        'в совместной комнате другие участники выбирают его отдельно. Основная игра не меняется. '
+        'P-предметы без аналога в симуляторе сохраняют прежние параметры полигона.']
+    for row in snapshot['rule_changes']:
+        # A long set table is split by sentences/entries, not shrunk to tiny type.
+        title = row['what']
+        text = 'Было: ' + row['now'] + '\nСтало: ' + row['after']
+        lines, page = [], ''
+        for part in text.replace('; ', ';\n').split('\n'):
+            if page and len(page) + len(part) > 620:
+                lines.append(page)
+                page = ''
+            page += ('\n' if page else '') + part
+        if page:
+            lines.append(page)
+        pages.extend(title + '\n\n' + part for part in lines)
+    return tuple(pages)

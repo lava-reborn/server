@@ -1,5 +1,5 @@
 {
-  "revision": "candidate-v2",
+  "revision": "baseline-v1",
   "attributes": [
     1,
     1,
@@ -11,7 +11,7 @@
   "stamina": 1,
   "armour": 1,
   "spread": 1,
-  "combat_v2": true,
-  "ammo_modifiers": true,
-  "broken_armour": false
+  "combat_v2": false,
+  "ammo_modifiers": false,
+  "broken_armour": true
 }

@@ -4,6 +4,7 @@ import sys
 import movement
 import progression
 import rooms
+import storage
 
 
 def entry_available(owner):
@@ -35,9 +36,10 @@ def entrants(owner):
     return result
 
 
-def free_spawn(room, desired, excluded=None):
+def free_spawn(room, desired, excluded=None, reserved=()):
     """Include participants whose client has not acknowledged lenter yet."""
     blocked = movement.get(room).occupied(excluded)
+    blocked.update(reserved)
     blocked.update(ground.clone.pos for ground in room.grounds.values()
                    if ground.clone is not excluded)
     queue, seen = [desired], {desired}
@@ -101,7 +103,8 @@ def relocate(ground, location):
         raise ValueError('Неизвестная тренировочная локация')
     old = ground.room
     members = tuple(old.grounds.values())
-    if any(member.phase != 'ready' for member in members):
+    if any(member.phase != 'ready' or member.clone.combat.duels
+           or member.clone.combat.dead for member in members):
         raise ValueError('Перед сменой общей площадки завершите тренировки всех участников')
     training.geometry(location)
     loc = copy.copy(training.arena_location(location))
@@ -109,6 +112,28 @@ def relocate(ground, location):
     room = training.TrainingRoom(loc, rooms.IdAllocator(), {}, key=(location, old.key[1]))
     room.npcs.clear()
     room.ground, room.grounds, room.owner_ids = ground, {}, dict(old.owner_ids)
+    # Prepare geometry and all durable destinations before moving anyone.
+    # Party profiles share one main store, so one failed write rolls back all.
+    store = ground.owner.inv.store
+    if any(member.owner.inv.store is not store for member in members):
+        raise ValueError('Участники используют разные хранилища')
+    posts = {ground.post_ids[p.key]: p for p in training.training_layout.posts_for(location)
+             if not p.line or training.training_shop.stock(p)}
+    for eid, post in posts.items():
+        cell = post.cell(loc.width)
+        if cell in loc.obstacles:
+            raise ValueError('Стойка на новой площадке недоступна')
+        room.npcs[eid] = rooms.NPC(cell, post.resource, world.COMMONER)
+    positions = []
+    for member in members:
+        positions.append(free_spawn(room, training.control_cell(location), reserved=positions))
+    room.combat = training.TrainingCombat(room, ground.store)
+    try:
+        with storage.atomic(store.db):
+            for member in members:
+                member.save_settings(location=location)
+    except Exception as exc:
+        raise ValueError('Не удалось сохранить площадку; участники остаются на прежнем месте.') from exc
     if old.combat.timer:
         old.combat.timer.cancel()
     for member in members:
@@ -116,16 +141,13 @@ def relocate(ground, location):
         member.clone.combat.cancel_timers()
         movement.get(old).forget(member.clone)
     old.players.clear()
-    for member in members:
+    for member, position in zip(members, positions):
         member.room, member.location = room, location
         member.clone.room, member.clone.loc = room, loc
-        member.clone.pos = free_spawn(room, training.control_cell(location))
+        member.clone.pos = position
         room.grounds[member.token] = member
         member.context = 'computer'
-    ground.populate_posts()
     for member in members:
-        member.posts = ground.posts
-    room.combat = training.TrainingCombat(room, ground.store)
+        member.posts = posts
     for member in members:
-        member.save_settings()
         member.clone.enter_location()

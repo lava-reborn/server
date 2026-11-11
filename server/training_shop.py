@@ -1,5 +1,6 @@
 """Free equipment stalls backed only by a private training inventory."""
 from functools import lru_cache
+import logging
 
 import inventory
 import items
@@ -7,6 +8,8 @@ import progression
 import storage
 import training_items
 
+
+log = logging.getLogger(__name__)
 
 MAX_ROWS = 256
 MAX_PURCHASE = 50
@@ -23,6 +26,64 @@ def stock(post):
 
 
 class Inventory(inventory.Inventory):
+    def create(self, type_id, count=1, slot=inventory.BAG, char_id=None):
+        # All creation paths (including split/unload), not only the supplier,
+        # share the same private row and serial budget.
+        ground = self.sess.ground
+        if self.store is not ground.store or not training_items.is_copy(type_id):
+            raise ValueError('Предметы полигона создаются только в частном хранилище')
+        owner = char_id or self.char_id
+        size = self.store.db.execute(
+            'SELECT COUNT(*) AS n FROM items WHERE char_id=?', (owner,)).fetchone()['n']
+        sequence = self.store.db.execute(
+            "SELECT seq FROM sqlite_sequence WHERE name='items'").fetchone()
+        if size >= MAX_ROWS or (sequence and sequence['seq'] >= ground.serial_base + (1 << 20) - 1):
+            raise ValueError('Достигнут предел предметов полигона; сначала сдайте лишние вещи')
+        return super().create(type_id, count, slot, char_id)
+
+    def private_mutation(self, operation, params):
+        """Reuse native packets, but release them only after the private commit."""
+        original_send = self.sess.send
+        had_send = 'send' in self.sess.__dict__
+        frames = []
+        self.sess.send = lambda command, **fields: frames.append((command, fields))
+        failed = None
+        try:
+            with storage.atomic(self.store.db):
+                operation(params)
+        except Exception as exc:
+            failed = exc
+            if not isinstance(exc, ValueError):
+                log.exception('Private inventory operation failed for %s', self.char_id)
+        finally:
+            if had_send:
+                self.sess.send = original_send
+            else:
+                del self.sess.send
+        if isinstance(failed, storage.CommitError):
+            self.sess.close(force=True)
+        elif failed is not None:
+            self.ack(inventory.RES_REFUSED)
+        else:
+            for command, fields in frames:
+                original_send(command, **fields)
+
+    def ss_heap_c(self, params):
+        raw = params.get('num', 0)
+        try:
+            if isinstance(raw, bool):
+                raise ValueError('boolean count')
+            count = int(str(raw))
+            if count < 0:
+                raise ValueError('negative count')
+        except (ValueError, TypeError):
+            self.ack(inventory.RES_REFUSED)
+            return
+        self.private_mutation(super().ss_heap_c, dict(params, num=count))
+
+    def use_unload(self, params):
+        self.private_mutation(super().use_unload, params)
+
     def switch_profile(self, simulator):
         """Change only private copy identities; preserve every instance field.
 

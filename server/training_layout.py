@@ -1,5 +1,5 @@
 """Read-only equipment posts inside private ranges; existing game resources."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 
 @dataclass(frozen=True)
@@ -17,44 +17,30 @@ class Post:
         return self.y * width + self.x
 
 
-# Six catalogue services: variants and upgrades are selected in the window.
+# Catalogue services: variants and upgrades are selected in the window.
 POSTS = (
     Post('computer', 'Компьютер полигона', 1263, 36, 114, 'mob'),
-    Post('player', 'Инструктор · навыки и восстановление', 1997, 28, 114, 'skills'),
-    Post('weapons', 'Оружейник', 2514, 17, 128, 'weapon', line='all'),
-    Post('armoury', 'Броня', 1006, 23, 128, 'armour', line='all'),
-    Post('supplies', 'Боеприпасы и подсумки', 1006, 29, 128, 'ammo', line='all'),
-    Post('medical', 'Медицина', 1006, 35, 128, 'medicine', line='all'),
-    Post('boosts', 'Баффы', 1006, 41, 128, 'buff', line='all'),
-    Post('specialist', 'Особое оружие', 2391, 47, 128, 'special_weapon', line='all'),
+    Post('player', 'Инструктор · навыки и наборы', 1997, 28, 114, 'skills'),
+    Post('weapons', 'Оружейник', 2514, 20, 126, 'weapon', line='all'),
+    Post('armoury', 'Броня', 1006, 25, 126, 'armour', line='all'),
+    Post('supplies', 'Боеприпасы и подсумки', 1006, 30, 126, 'ammo', line='all'),
+    Post('medical', 'Медицина', 1006, 34, 126, 'medicine', line='all'),
+    Post('boosts', 'Баффы', 1006, 39, 126, 'buff', line='all'),
+    Post('specialist', 'Особое оружие', 2391, 44, 126, 'special_weapon', line='all'),
+    Post('archive', 'Архив предметов', 1006, 32, 133, 'souvenir', line='all'),
 )
 BY_KEY = {post.key: post for post in POSTS}
 NAME_BASE = 8_100_000
 NAMES = {NAME_BASE + index: post.title + '<br>Испытательный полигон'
          for index, post in enumerate(POSTS)}
 NAME_IDS = {post.key: NAME_BASE + index for index, post in enumerate(POSTS)}
-MOB_GROUPS = {
-    'all': 'Все противники', 'camps': 'Лагеря', 'mines': 'Шахты',
-    'bosses': 'Боссы', 'dogs': 'Собаки', 'crocodiles': 'Крокодилы',
-    'vagrants': 'Бродяги', 'animals': 'Другие животные', 'other': 'Другие противники',
-}
+# Categories belong to the isolated range, not the ordinary spawn tables.
+from training_opponents import GROUPS as MOB_GROUPS
 
+# The city arena is a private copy; its original NPCs/geometry are never edited.
+HALFA_POSTS = tuple(replace(post, x=post.x - 4,
+                           y=96 if post.key in ('computer', 'player') else 118 if post.key == 'archive' else 112)
+                   for post in POSTS)
 
-def mob_group(info):
-    name=info.get('name','').casefold()
-    resource=info.get('resource','').casefold()
-    if info.get('role')=='boss':
-        return 'bosses'
-    if 'miner' in name:
-        return 'mines'
-    if 'dog' in resource:
-        return 'dogs'
-    if 'crocodile' in resource:
-        return 'crocodiles'
-    if 'bich' in resource or 'bomj' in name:
-        return 'vagrants'
-    if info.get('role')=='animal':
-        return 'animals'
-    if name.partition('_')[0] in ('nc','na','lu','ja','mg','st','zd','jm','pc','pt'):
-        return 'camps'
-    return 'other'
+def posts_for(location):
+    return HALFA_POSTS if location == 59 else POSTS

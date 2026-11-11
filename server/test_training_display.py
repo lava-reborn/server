@@ -83,8 +83,8 @@ class TrainingDisplay(unittest.IsolatedAsyncioTestCase):
         from protocol import decode
         from unittest.mock import patch
         ground = self.enter()
-        ground.clone.cmd_q_st(dict(mob=ground.terminal_id,
-            q_idx=quests.given_by(training.TERMINAL).index(training.EXIT_QUEST)))
+        # Compatibility with a legacy in-flight quest; new issuance is disabled.
+        ground.store.take_quest(ground.clone.char_id, training.EXIT_QUEST, {'obj': 1}, True)
         row = ground.store.quests(ground.clone.char_id)[0]
         self.s.writer.frames.clear()
         with patch.object(self.s, 'enter_location'):
@@ -103,8 +103,8 @@ class TrainingDisplay(unittest.IsolatedAsyncioTestCase):
         from protocol import decode
         from unittest.mock import patch
         ground = self.enter()
-        ground.clone.cmd_q_st(dict(mob=ground.terminal_id,
-            q_idx=quests.given_by(training.TERMINAL).index(training.EXIT_QUEST)))
+        # Compatibility with a legacy in-flight quest; new issuance is disabled.
+        ground.store.take_quest(ground.clone.char_id, training.EXIT_QUEST, {'obj': 1}, True)
         row = ground.store.quests(ground.clone.char_id)[0]
         self.s.writer.frames.clear()
         with patch.object(self.store, 'save_training_profile', side_effect=OSError('disk unavailable')):

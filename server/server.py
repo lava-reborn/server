@@ -580,7 +580,8 @@ class Session:
             return
         if getattr(self, 'training_ground', None) is not None and _cmd[0] not in (
                 'userMsg', 'online', 'tg', 'shutdown', 'kickban', 'p_op', 'p_m') and not (
-                    _cmd[0] == 'cmdAck' and (getattr(self, 'training_chat', False) or getattr(self, 'training_party_control', False))):
+                    _cmd[0] == 'cmdAck' and (getattr(self, 'training_chat', False) or getattr(self, 'training_party_control', False))) and not (
+                    _cmd[0] in ('gg_list', 'cmdAck') and getattr(self, 'training_clan_read', False)):
             return  # Real background updates must not overwrite the training avatar.
         if getattr(self, 'training_ground', None) is not None and _cmd[0] in ('p_op', 'p_m'):
             params = training_ground.training_party.frame(self.training_ground, _cmd[0], params)

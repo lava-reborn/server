@@ -24,6 +24,8 @@ def main():
     from rulesets.lava_fixed import LavaFixed, GUN_NAMES, GUN_OF_MOB
     from rulesets.lava import LavaRules
     import items
+    import training_legacy
+    import training_ammo
     import training_ground as training
     reference, original = LavaFixed(), LavaRules()
     path = repo / 'data/training_simulator_formulas.json'
@@ -32,17 +34,20 @@ def main():
                 weapon_scale={str(k): v for k, v in reference.weapon_scale.items()},
                 class_scale={c: {str(k): v for k, v in rows.items()} for c, rows in reference.class_scale.items()},
                 armour_reference={str(i): reference.own_armor(i) for i in range(1, 21)},
-                near_bonus={str(k): v for k, v in reference.near_bonus.items()}, gap_damage=reference.gap_damage)
+                gap_table={str(k): {str(g): v for g, v in row.items()} for k, row in reference.gap_table.items()},
+                rule_changes=reference.rule_changes())
+    data.pop('near_bonus', None)
+    data.pop('gap_damage', None)
     records, shared, by_type = [], {}, {}
     for type_id in sorted(training.mob_catalogue()):
         fighter = reference.build(dict(kind='mob', id=type_id))
         mob = fighter.x['mob']
         cls = GUN_OF_MOB.get(mob['weapon_class'], mob['weapon_class'])
-        gun = reference.best_weapon(cls, max(1, min(20, mob['level'])), 5) if cls in GUN_NAMES else None
+        gun = LavaRules.best_weapon(reference, cls, max(1, min(20, mob['level'])), 5) if cls in GUN_NAMES else None
         gun = reference.new_guns.get(gun, gun)
         record = dict(level=mob['level'], hp_max=fighter.maxima['hp'], sp_max=fighter.maxima['sp'],
-            ap_max=fighter.ap_max, armor=mob['armor'], dodge=mob['dodge'], hit=mob['hit'],
-            crit_evade=mob['crit_evade'], crit=fighter.attack.data['crit'], spec=mob['spec'],
+            ap_max=fighter.ap_max, armor=fighter.x['armor'], dodge=mob['dodge'], hit=mob['hit'],
+            crit_evade=fighter.x['crit_evade'], crit=fighter.attack.data['crit'], spec=mob['spec'],
             ranged=mob['ranged'], range=fighter.attack.reach, shots=fighter.attack.projectiles,
             dmg_min=fighter.attack.data['dmin'], dmg_max=fighter.attack.data['dmax'],
             attack_ap=fighter.attack.ap, attack_time=fighter.attack.windup, gun=gun, weapon_class=cls,
@@ -71,6 +76,8 @@ def main():
     data['experimental_guns'] = {str(k): dict(base=v, name=reference.weapons[k]['name'],
         level=reference.need(reference.weapons[k]), data=reference.weapons[k]) for k, v in reference.new_guns.items()}
     available = set(training.item_catalogue()) | set(data['extra_sources'])
+    data['preserved_sources'] = sorted(training_legacy.CLASSIC | {training_ammo.ROCKET, training_ammo.CROSSBOW})
+    available -= set(data['preserved_sources'])
     damage = ('h_damage_min', 'h_damage_max', 'st_damage_min', 'st_damage_max')
     data['weapon_bases'] = {str(t): {k: row[k] for k in damage if k in row}
                           for t, row in reference.weapons.items() if t in available and not items.premium(t)}
@@ -79,7 +86,7 @@ def main():
     data['equipment'] = {}
     weapon_fields = set(damage) | {'fire_costs', 'fire_times', 'fire_mods', 'max_range',
         'opt_range', 'end_opt_range', 'target_size', 'clip_size', 'reload_cost', 'reload_time',
-        'strike_cost', 'strike_time'}
+        'strike_cost', 'strike_time', 'piercing', 'need_skills_m', 'need_skills', 'need_specs_m', 'need_specs'}
     for table in (reference.weapons, reference.melee, reference.wear):
         for t, row in table.items():
             if t >= 65536 or t not in available or t not in items.catalogue() or items.premium(t):

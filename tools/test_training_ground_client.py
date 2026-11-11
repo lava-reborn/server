@@ -8,6 +8,164 @@ import widescreen
 
 
 class TrainingClient(unittest.TestCase):
+    def test_direct_panel_entry_is_only_for_range_npc_with_single_service(self):
+        from avm_test import Arr
+        opened=[];choices=['support']
+        npc=dict(__tgTerminal=True,supportList=Arr([dict(__op='open',activate=lambda:opened.append('panel'))]),
+                 hasQuests=lambda:False)
+        env=dict(_global=dict(__tgActive=True),lol=dict(core=dict(
+            Master=dict(getInstance=lambda:dict(getPlayer=lambda id:npc)),
+            player=dict(NPCService=dict(getServiceList=lambda id:choices,
+                                       __tgOpenServiceOrig=lambda id:opened.append('native'))))))
+        funcs=self.helpers(env)
+        funcs['__tgOpenService'].invoke(None,[123]);self.assertEqual(opened,['panel'])
+        for scenario in ('outside','ordinary','quest','bank','multiple'):
+            env['_global']['__tgActive']=scenario!='outside'
+            npc['__tgTerminal']=scenario!='ordinary'
+            npc['hasQuests']=lambda:scenario=='quest'
+            choices[:]=['support','bank'] if scenario=='bank' else ['support']
+            npc['supportList']=Arr([dict(__op='open',activate=lambda:opened.append('panel'))]*(2 if scenario=='multiple' else 1))
+            funcs['__tgOpenService'].invoke(None,[123])
+            self.assertEqual(opened[-1],'native',scenario)
+
+    def test_native_arena_keeps_art_and_obstacles_but_never_public_exits(self):
+        from copy import deepcopy
+        original=dict(zones=[1],pvpEnabled=False,width=64,height=128,
+                      sprites=[7],bgDecorations=[8],obstacles=[9],libraryID='battleground1',back=dict(id='battleground_no_sh.jpg'))
+        env=dict(_global=dict(__tgActive=True,__tgNativeMap=True,__tgArenaWidth=64,__tgArenaHeight=128))
+        funcs=self.helpers(env);parser=dict(__tgParseOrig=lambda doc:deepcopy(original))
+        private=funcs['__tgParse'].invoke(parser,[None])
+        for key in ('sprites','bgDecorations','obstacles','libraryID','back'):
+            self.assertEqual(private[key],original[key])
+        self.assertEqual(private['zones'],[])
+        env['_global']['__tgActive']=False
+        self.assertEqual(funcs['__tgParse'].invoke(parser,[None]),original)
+
+    def test_range_notice_clears_without_closing_another_game_notice(self):
+        events = []
+        notice = dict(removeMovieClip=lambda: events.append('remove old'))
+        top = dict(content=notice, close=lambda: events.append('close owned'))
+        globals_ = dict(__tgNotice=notice)
+        funcs = self.helpers(dict(_global=globals_, lol=dict(core=dict(SceneShifter=dict(
+            _ref=dict(currentScene=dict(topWindow=top)))))))
+        funcs['__tgClearNotice'].invoke(None, [])
+        self.assertEqual(events, ['close owned'])
+        self.assertIsNone(globals_['__tgNotice'])
+        globals_['__tgNotice'] = notice
+        top['content'] = dict(other=True)
+        funcs['__tgClearNotice'].invoke(None, [])
+        self.assertEqual(events, ['close owned', 'remove old'])
+
+    def test_returned_fist_rejects_delayed_machinegun_counter(self):
+        values = []
+        env = dict(_global={}, lol=dict(core=dict(objects=dict(Item=dict(FIRE_ARM=1, HEAL_ITEM=2)))))
+        funcs = self.helpers(env)
+        equipment = dict(__tgManaged=True, primaryItem=dict(rootID=1))
+        panel = dict(equipment=equipment, item=dict(rootID=1),
+                     __tgWeaponAmountOrig=values.append)
+        funcs['__tgWeaponAmount'].invoke(panel, ['100/100(204)'])
+        equipment['primaryItem'] = dict(rootID=3)  # Fist after real snapshot.
+        funcs['__tgWeaponAmount'].invoke(panel, ['100/100(204)'])
+        self.assertEqual(values, ['100/100(204)', ''])
+
+    def test_return_counter_keeps_medicine_guns_and_ordinary_sessions(self):
+        values = []
+        funcs = self.helpers(dict(_global={}, lol=dict(core=dict(objects=dict(Item=dict(FIRE_ARM=1, HEAL_ITEM=2))))))
+        equipment = dict(__tgManaged=True)
+        panel = dict(equipment=equipment, __tgWeaponAmountOrig=values.append)
+        for root, value, expected in [(1, '7/10(50)', '7/10(50)'), (2, '3/20', '3/20'),
+                                      (4, 'stale', ''), (None, 'stale', '')]:
+            equipment['primaryItem'] = dict(rootID=root) if root else None
+            funcs['__tgWeaponAmount'].invoke(panel, [value])
+            self.assertEqual(values[-1], expected)
+        equipment['__tgManaged'] = False
+        funcs['__tgWeaponAmount'].invoke(panel, ['native'])
+        self.assertEqual(values[-1], 'native')
+
+    def test_fist_icon_clears_existing_counter_without_waiting_for_an_update(self):
+        events = []
+        funcs = self.helpers(dict(_global={}, lol=dict(core=dict(objects=dict(Item=dict(FIRE_ARM=1, HEAL_ITEM=2))))))
+        equipment = dict(__tgManaged=True, primaryItem=dict(rootID=3))
+        panel = dict(equipment=equipment, __tgWeaponIconOrig=lambda item: events.append('icon'),
+                     showAmount=lambda text: events.append(text))
+        funcs['__tgWeaponIcon'].invoke(panel, [equipment['primaryItem']])
+        self.assertEqual(events, ['icon', ''])
+        events.clear()
+        equipment['primaryItem'] = dict(rootID=1)
+        funcs['__tgWeaponIcon'].invoke(panel, [equipment['primaryItem']])
+        self.assertEqual(events, ['icon'])
+
+    def reset_ui(self):
+        sent, closed = [], []
+        query = dict(instance=None)
+        dialog = dict(addEventListener=lambda *args: None, removeEventListener=lambda *args: None)
+        def open_window(name):
+            query['instance'] = dict(content=dialog)
+            return query['instance']
+        def close_window(name):
+            closed.append(name)
+            query['instance'] = None
+        env = dict(_global=dict(__tgActive=True, __tgToken='session', __tgPanel=dict(status={}),
+                                __tgContext='computer'),
+                   lol=dict(core=dict(SceneShifter=dict(
+                       _ref=dict(UIPanels=dict(query=query)),
+                       openNewWindow=open_window, closeWindow=close_window))))
+        funcs = self.helpers(env)
+        def message(op):
+            data = dict(op=op)
+            data['addProp'] = lambda key, value: data.update({key: value})
+            return data
+        env['_global']['__tgSend'] = message
+        env['_global']['__tgTransmit'] = sent.append
+        return funcs, env['_global'], dialog, sent, closed
+
+    def test_kit_confirmation_is_private_context_bound_and_one_shot(self):
+        funcs, g, dialog, sent, closed = self.reset_ui()
+        g.update(__tgContext='player',__tgTab='kits',__tgKitLevel=12,__tgKitLine='G',__tgKitClass=1)
+        funcs['__tgKitClick'].invoke(None,['kit_prepare',''])
+        self.assertEqual(sent[-1]['op'],'kit_prepare')
+        funcs['__tgResetPrompt'].invoke(None,[dict(op='kit_confirm',token='session',confirmation='kit',title='12 G')])
+        self.assertIn('Применить набор',dialog['label'])
+        funcs['__tgResetAnswer'].invoke(None,[dict(target=dialog,success=True)])
+        funcs['__tgResetAnswer'].invoke(None,[dict(target=dialog,success=True)])
+        self.assertEqual([m['op'] for m in sent],['kit_prepare','kit_apply'])
+        self.assertEqual(sent[-1]['confirmation'],'@kit@')
+
+    def test_reset_requires_confirmation_and_cancel_sends_no_reset(self):
+        funcs, globals_, dialog, sent, closed = self.reset_ui()
+        funcs['__tgClick'].invoke(dict(__op='reset_prepare'), [])
+        funcs['__tgClick'].invoke(dict(__op='reset_prepare'), [])
+        self.assertEqual([m['op'] for m in sent], ['reset_prepare'])
+        funcs['__tgResetPrompt'].invoke(None, [dict(token='session', confirmation='nonce')])
+        self.assertIn('Отменить очистку нельзя', dialog['label'])
+        funcs['__tgResetAnswer'].invoke(None, [dict(target=dialog, success=False)])
+        self.assertEqual([m['op'] for m in sent], ['reset_prepare'])
+        self.assertEqual(closed, ['query'])
+
+    def test_reset_confirmation_sends_once_and_ignores_late_callbacks(self):
+        funcs, globals_, dialog, sent, closed = self.reset_ui()
+        globals_['__tgResetPending'] = True
+        funcs['__tgResetPrompt'].invoke(None, [dict(token='session', confirmation='nonce')])
+        funcs['__tgResetAnswer'].invoke(None, [dict(target=dialog, success=True)])
+        funcs['__tgResetAnswer'].invoke(None, [dict(target=dialog, success=True)])
+        self.assertEqual(len(sent), 1)
+        self.assertEqual(sent[0]['op'], 'reset_player')
+        self.assertEqual(sent[0]['confirmation'], '@nonce@')
+        self.assertEqual(globals_['__tgApplying'], 'player')
+
+    def test_reset_dialog_cannot_confirm_after_session_changes_or_window_closes(self):
+        funcs, globals_, dialog, sent, closed = self.reset_ui()
+        globals_['__tgResetPending'] = True
+        funcs['__tgResetPrompt'].invoke(None, [dict(token='session', confirmation='nonce')])
+        globals_['__tgToken'] = 'another-session'
+        funcs['__tgResetAnswer'].invoke(None, [dict(target=dialog, success=True)])
+        self.assertEqual(sent, [])
+        globals_['__tgResetPending'] = True
+        funcs['__tgResetClose'].invoke(None, [])
+        funcs['__tgResetPrompt'].invoke(None, [dict(token='another-session', confirmation='late')])
+        self.assertIsNone(globals_['__tgResetDialog'])
+        self.assertEqual(closed, ['query'])
+
     def test_simulator_preset_is_explicit_draft_and_keeps_profile_flag_on_numeric_edit(self):
         class Parts(dict):
             def __init__(self, parts):
@@ -19,11 +177,11 @@ class TrainingClient(unittest.TestCase):
         built = []
         sent = []
         values = '1,1,1,1,1,1,1,1,1,0,1,0,1,1'
-        env = dict(_global=dict(__tgPanel=dict(status=dict(text='')), __tgRuleDraftValues='old'), String=str)
+        env = dict(_global=dict(__tgPanel=dict(status=dict(text='')), __tgRuleDraftValues='old', __tgProfileValues=[None, None, values], __tgProfileTitles=['Исходный','Исправленный','Симулятор'], __tgProfileKeys=['base','candidate','sim']), String=str, Number=int, Boolean=bool)
         funcs = self.helpers(env)
         env['_global']['__tgBuild'] = lambda: built.append(True)
         env['_global']['__tgTransmit'] = lambda m: sent.append(m)
-        funcs['__tgClick'].invoke(dict(__op='rulespreset', __value=values), [])
+        funcs['__tgClick'].invoke(dict(__op='rulespreset', __value=2), [])
         self.assertEqual(env['_global']['__tgRuleDraftValues'], values)
         self.assertEqual(built, [True])
         self.assertEqual(sent, [])
@@ -36,8 +194,9 @@ class TrainingClient(unittest.TestCase):
         updated = str(env['_global']['__tgRuleDraftValues']).split(',')
         self.assertEqual(updated[7], '1.5')
         self.assertEqual(updated[10:], ['1', '0', '1', '1'])
-        self.assertIn('"Симулятор: после правок"', client.SOURCE)
-        self.assertIn('"rulespreset", "' + values + '"', client.SOURCE)
+        self.assertEqual(env['_global']['__tgProfileSelected'], 2)
+        self.assertTrue(env['_global']['__tgRuleDetails'])
+        self.assertIn('_global.__tgProfileValues[_global.__tgProfileSelected]', client.SOURCE)
 
     def test_free_quantity_apply_dispatches_even_when_displayed_price_is_zero(self):
         calls=[]
@@ -384,6 +543,40 @@ class TrainingClient(unittest.TestCase):
         funcs['__tgTradeError'].invoke(panel, [])
         self.assertEqual(calls, ['restore', 'money error'])
 
+    def test_return_button_tracks_visible_edges_across_resolution_changes(self):
+        stage = dict(width=950, height=650)
+        env = dict(_global={}, Stage=stage, Math=dict(round=round, max=max, min=min),
+                   lol=dict(core=dict(SceneShifter=dict(_ref=dict(minW=950, minH=650)))))
+        resize = self.helpers(env)['__tgHUDResize']
+        hud = dict(_x=9999, _y=9999)
+        for width, height in ((950, 650), (1920, 1080), (1280, 720),
+                              (800, 600), (3840, 2160), (1024, 768), (950, 650)):
+            with self.subTest(width=width, height=height):
+                stage.update(width=width, height=height)
+                resize.invoke(hud, [])
+                # Flash centers the original movie; screen coordinates differ
+                # from the root clip's coordinates after a window resize.
+                screen_x = hud['_x'] - (950 - width) / 2
+                screen_y = hud['_y'] - (650 - height) / 2
+                self.assertEqual(screen_x + 150, width - 16)
+                self.assertEqual(screen_y, 48)
+                self.assertGreaterEqual(screen_x, 8)
+                self.assertLessEqual(screen_y + 25, height - 8)
+
+    def test_return_button_is_below_reflash_and_reserves_online_popup_space(self):
+        stage=dict(width=1280,height=720)
+        root={}
+        ref=dict(xMin=1050,xMax=1125,yMin=6,yMax=35)
+        online=dict(xMin=903,xMax=975,yMin=0,yMax=28)
+        ui=dict(__rfButton=dict(getBounds=lambda target:ref),
+                __onlinePanel=dict(getBounds=lambda target:online))
+        env=dict(_root=root,_global={},Stage=stage,Math=dict(round=round,max=max,min=min),
+                 lol=dict(core=dict(SceneShifter=dict(_ref=dict(minW=1280,minH=720,currentScene=ui)))))
+        hud={};self.helpers(env)['__tgHUDResize'].invoke(hud,[])
+        self.assertEqual(hud['_y'],ref['yMax']+6)
+        self.assertGreaterEqual(hud['_x'],online['xMax']+20)
+        self.assertLessEqual(hud['_x']+150,1272)
+
     def test_center_and_clamp_use_original_movie_origin(self):
         env = dict(_global={}, Stage=dict(width=1920, height=1080),
                    Math=dict(round=round, max=max, min=min),
@@ -497,9 +690,9 @@ class TrainingClient(unittest.TestCase):
 
     def test_late_item_initialization_cannot_reinsert_retired_training_copy(self):
         calls, detached = [], []
-        item = dict(id='copy-old', typeID=54000, removeEventListener=lambda *args: detached.append(args))
+        item = dict(id='copy-old', typeID=54000, __tgEpoch=1, removeEventListener=lambda *args: detached.append(args))
         eq = dict(isGamer=True, __tgManaged=True, __tgBagUpdateOrig=calls.append)
-        env = dict(_global=dict(__tgActive=False, __tgCopies={54000:26075}, __tgLive={}), Boolean=bool)
+        env = dict(_global=dict(__tgActive=False, __tgEpoch=2, __tgCopies={54000:26075}, __tgLive={}), Boolean=bool)
         funcs = self.helpers(env)
         funcs['__tgBagItemUpdate'].invoke(eq, [dict(target=item)])
         self.assertEqual(calls, [])
@@ -510,6 +703,19 @@ class TrainingClient(unittest.TestCase):
         env['_global']['__tgLive']['copy-old'] = True
         funcs['__tgBagItemUpdate'].invoke(eq, [dict(target=item)])
         self.assertEqual(calls, [dict(target=item)])
+
+    def test_fresh_returned_ammo_stack_is_not_dropped_before_next_live_list(self):
+        calls = []
+        item = dict(id='new-ammo', typeID=54239, __tgEpoch=2,
+                    removeEventListener=lambda *args: None)
+        eq = dict(isGamer=True, __tgManaged=True, __tgBagUpdateOrig=calls.append)
+        env = dict(_global=dict(__tgActive=True, __tgEpoch=2, __tgCopies={54239:6168}, __tgLive={}), Boolean=bool)
+        funcs = self.helpers(env)
+        funcs['__tgBagItemUpdate'].invoke(eq, [dict(target=item)])
+        self.assertEqual(calls, [dict(target=item)])
+        item['__tgRetired'] = True
+        funcs['__tgBagItemUpdate'].invoke(eq, [dict(target=item)])
+        self.assertEqual(len(calls), 1)
 
     def test_ordinary_snapshot_after_training_does_not_rebuild_bag(self):
         from avm_test import Arr
@@ -556,11 +762,12 @@ class TrainingClient(unittest.TestCase):
         panel = dict(stopDrag=lambda: events.append('stop'), removeMovieClip=lambda: events.append('remove'))
         env = dict(_global=dict(__tgPanel=panel, __rfRepairKeys=lambda: events.append('keys')),
                    Stage=dict(removeListener=lambda p: events.append('stage')),
+                   Mouse=dict(removeListener=lambda p: events.append('mouse')),
                    lol=dict(core=dict(SceneShifter=dict(hotKeyManager=dict(removeFilter=lambda key: events.append(key)))),
                             gpui=dict(HintManager=dict(closeHint=lambda: events.append('hint')))))
         funcs = self.helpers(env)
         funcs['__tgClose'].invoke(None, [])
-        self.assertEqual(events, ['stop', 'stage', 'remove', 'tg', 'keys', 'hint'])
+        self.assertEqual(events, ['stop', 'stage', 'mouse', 'remove', 'tg', 'keys', 'hint'])
         self.assertIsNone(env['_global']['__tgPanel'])
 
     def test_whole_client_injection_builds_with_new_helpers(self):
@@ -624,6 +831,34 @@ class TrainingClient(unittest.TestCase):
         self.assertTrue(inspector['lockUpdate'])
         self.assertEqual(inspector['updateNPCList'],[])
         self.assertEqual(inspector['currentQuests'],{'old':'still needed by takeAck'})
+
+    def test_new_range_item_survives_di_before_inventory_list_and_retires_later(self):
+        from avm_test import Arr
+        deleted = []
+        gun = dict(id='gun', typeID=55361, ammo_count=0,
+                   removeEventListener=lambda *args: None)
+        factory = dict(callCount=0, callStack=Arr(),
+                       getProtoItem=lambda t: dict(removeEventListener=lambda *args: None))
+        globals_ = dict(__tgActive=True, __tgObjects=Arr([gun]), __tgLive={})
+        env = dict(_global=globals_, Boolean=bool,
+                   lol=dict(core=dict(objects=dict(ItemFactory=factory),
+                            Master=dict(getInstance=lambda: dict(gamer=dict(equipment={})))),
+                            utils=dict(StringCollector=dict(getInstance=lambda:dict(removeEventListener=lambda *args:None)))))
+        funcs = self.helpers(env)
+        globals_['__tgDeleteItem'] = deleted.append
+        funcs['__tgForgetItems'].invoke(None, [])
+        self.assertEqual(deleted, [])
+        self.assertIs(globals_['__tgObjects'][0], gun)
+        globals_['__tgLive'] = {'gun': True}
+        funcs['__tgRetireItems'].invoke(None, [])
+        gun['ammo_count'] = 9
+        funcs['__tgForgetItems'].invoke(None, [])
+        self.assertEqual(globals_['__tgObjects'][0]['ammo_count'], 9)
+        globals_['__tgLive'] = {}
+        funcs['__tgRetireItems'].invoke(None, [])
+        funcs['__tgForgetItems'].invoke(None, [])
+        self.assertEqual(deleted, ['gun'])
+        self.assertEqual(globals_['__tgObjects'], [])
 
     def test_cleanup_is_bounded_when_a_callback_adds_or_reenters_item_cleanup(self):
         from avm_test import Arr
