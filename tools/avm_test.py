@@ -110,6 +110,12 @@ def execute(code, env):
             value, key, obj = stack.pop(), stack.pop(), stack.pop()
             if isinstance(obj, dict):
                 obj[key] = value
+            elif isinstance(obj, list) and (str(key).isdigit() or
+                                           isinstance(key, float) and key >= 0 and key.is_integer()):
+                index = int(key)
+                if index >= len(obj):
+                    obj.extend([None] * (index + 1 - len(obj)))
+                obj[index] = value
             else:
                 setattr(obj, str(key), value)
         elif op == 0x3A:  # Delete

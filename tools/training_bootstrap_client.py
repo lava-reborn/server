@@ -45,7 +45,42 @@ def __tgMaybeDetach():
     _global.__tgLabels = {}
     _global.__tgPrices = {}
     _global.__tgUnbindSocket()
+    _global.__tgUnbindEvents()
     _global.__tgDetachHooks()
+
+def __tgBindEvents():
+    # LEventDispatcher captures handler functions at subscription time.
+    # Updating a prototype alone does not update these existing listeners.
+    _global.__tgUnbindEvents()
+    _global.__tgEventBindings = []
+    master = lol.core.Master.getInstance()
+    _global.__tgBindEvent("lenter", master, master.__tgEnterOrig, master.lenter)
+    attrs = master.gamer.attributes
+    _global.__tgBindEvent("rp_info", attrs, attrs.__tgStatsOrig, attrs.rp_info)
+
+def __tgBindEvent(event, target, previous, bound):
+    queue = lol.server.XMLConnection.getInstance()["__q_" + event]
+    if not queue or not previous or not bound:
+        return
+    i = 0
+    while i < len(queue):
+        row = queue[i]
+        if row[0] == target and row[1] == previous:
+            _global.__tgEventBindings.push({"row":row, "previous":previous, "bound":bound})
+            row[1] = bound
+        i = i + 1
+
+def __tgUnbindEvents():
+    bindings = _global.__tgEventBindings
+    if not bindings:
+        return
+    i = 0
+    while i < len(bindings):
+        binding = bindings[i]
+        if binding.row[1] == binding.bound:
+            binding.row[1] = binding.previous
+        i = i + 1
+    _global.__tgEventBindings = []
 
 def __tgBindSocket():
     connection = lol.server.XMLConnection.getInstance()

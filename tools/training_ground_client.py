@@ -2055,6 +2055,7 @@ def __tgInstall():
     _global.__tgRulesApplying = False
     _global.__tgReturnBagPending = False
     _global.__tgAttachHooks()
+    _global.__tgBindEvents()
     _global.__tgBindSocket()
 '''
 

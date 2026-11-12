@@ -1,4 +1,5 @@
 """Execute lazy installation, exact restoration and capability ordering in AVM1."""
+import math
 import unittest
 
 from avm_test import Arr, Function
@@ -8,7 +9,7 @@ import widescreen
 
 class Bootstrap(unittest.TestCase):
     def environment(self, bootstrap_only=False):
-        env = dict(_global={}, lol={}, Number=float, Boolean=bool,
+        env = dict(_global={}, lol={}, Number=float, Boolean=bool, Math=dict(floor=math.floor),
                    mx=dict(utils=dict(Delegate=dict(create=lambda target, method: method))))
         originals = []
         for path, method, keep, helper, static in client.HOOKS:
@@ -21,6 +22,7 @@ class Bootstrap(unittest.TestCase):
             node[method] = native
             originals.append((node, method, keep, helper, native))
         package = client.patches(widescreen.Asm, widescreen.UNDEF)
+        env['lol']['core']['Master']['getInstance'] = lambda: dict(gamer=dict(attributes={}))
         env['lol']['server']['XMLConnection']['getInstance'] = lambda: dict(connector=None)
         functions = {}
         for name, params, body in package['bootstrap' if bootstrap_only else 'globals']:
@@ -224,6 +226,100 @@ class Bootstrap(unittest.TestCase):
         self.assertIs(socket['onClose'], native)
         self.assertEqual(socket['onXML'], 'unchanged')
         self.assertIsNone(env['_global']['__tgSocketTarget'])
+
+    def test_captured_location_and_stats_listeners_are_rebound_and_restored_exactly(self):
+        env, f, _ = self.environment()
+        calls = []
+        location_native = lambda obj: calls.append(('location-native', obj))
+        stats_native = lambda obj: calls.append(('stats-native', obj))
+        location_bound = lambda obj: calls.append(('location-bound', obj))
+        stats_bound = lambda obj: calls.append(('stats-bound', obj))
+        attrs = dict(__tgStatsOrig=stats_native, rp_info=stats_bound)
+        master = dict(__tgEnterOrig=location_native, lenter=location_bound, gamer=dict(attributes=attrs))
+        foreign = dict(lenter=location_native)
+        location_row, stats_row = Arr([master, location_native]), Arr([attrs, stats_native])
+        untouched = Arr([foreign, location_native])
+        connection = dict(__q_lenter=Arr([untouched, location_row]), __q_rp_info=Arr([stats_row]))
+        env['lol']['core']['Master']['getInstance'] = lambda: master
+        env['lol']['server']['XMLConnection']['getInstance'] = lambda: connection
+        for _ in range(2):
+            f['__tgBindEvents'].invoke(None, [])
+            # Native LEventDispatcher calls the captured row function, not the prototype.
+            location_row[1]('location')
+            stats_row[1]('stats')
+            self.assertEqual(calls[-2:], [('location-bound', 'location'), ('stats-bound', 'stats')])
+            self.assertIs(untouched[1], location_native)
+            self.assertEqual(len(env['_global']['__tgEventBindings']), 2)
+            f['__tgUnbindEvents'].invoke(None, [])
+            self.assertIs(location_row[1], location_native)
+            self.assertIs(stats_row[1], stats_native)
+            self.assertIs(connection['__q_lenter'][0], untouched)
+            self.assertIs(connection['__q_lenter'][1], location_row)
+        f['__tgBindEvents'].invoke(None, [])
+        f['__tgBindEvents'].invoke(None, [])
+        self.assertEqual(len(env['_global']['__tgEventBindings']), 2)
+        later = lambda obj: 'later owner'
+        stats_row[1] = later
+        f['__tgUnbindEvents'].invoke(None, [])
+        self.assertIs(stats_row[1], later)
+        self.assertIs(location_row[1], location_native)
+
+    def test_captured_return_events_restore_inventory_and_specs_before_detaching(self):
+        for stats_first in (True, False):
+            with self.subTest(stats_first=stats_first):
+                env, f, _ = self.environment()
+                g, pending, requests, xp_messages = env['_global'], [], [], []
+                bag = dict(itemList=Arr([dict(id='training', removeEventListener=lambda *args: None)]))
+                real = dict(id='main-game')
+                equipment = dict(isGamer=True, id=0, __tgManaged=True, bag=bag,
+                                 slots_arr=Arr(), action_arr=Arr(), removeItem=lambda *args: None)
+                equipment['__tgEquipOrig'] = lambda obj: bag['itemList'].extend(obj['param']['o_list'])
+                equipment['ss_ack'] = lambda obj: f['__tgEquipWrapper'].invoke(equipment, [obj])
+                equipment['getStuff'] = lambda *args: f['__tgGetStuff'].invoke(equipment, args)
+                attrs = dict(__progressLoaded=True, medical_specs=[5, 5])
+
+                def stats(obj):
+                    if attrs['__progressLoaded']:
+                        xp_messages.append(obj)
+                    attrs['medical_specs'] = obj['param']['specs']
+                    attrs['__progressLoaded'] = True
+
+                attrs.update(__tgStatsOrig=stats, rp_info=lambda obj: f['__tgStatsWrapper'].invoke(attrs, [obj]))
+                master = dict(gamer=dict(equipment=equipment, attributes=attrs), __tgEnterOrig=lambda obj: None)
+                master['lenter'] = lambda obj: f['__tgEnterWrapper'].invoke(master, [obj])
+                location_row = Arr([master, master['__tgEnterOrig']])
+                stats_row = Arr([attrs, stats])
+                connection = dict(__q_lenter=Arr([location_row]), __q_rp_info=Arr([stats_row]),
+                                  Send=lambda message: requests.append(message) or True)
+                equipment['XMC'] = connection
+                env['lol']['core']['Master']['getInstance'] = lambda: master
+                env['lol']['server'].update(XMLConnection=dict(getInstance=lambda: connection),
+                    mess=dict(CSM_SSGet=lambda mask, target: dict(mask=mask, target=target)),
+                    XMLCCallStack=dict(addCall=lambda event, target, handler, data: pending.append((target, handler, data))))
+                g.update(__tgActive=False, __tgReturnEquipment=True, __tgReturnBagPending=True,
+                         __tgSnapshotPending=True, __tgEpoch=7, __tgObjects=Arr(), __rfRepairKeys=lambda: None)
+                f['__tgAttachHooks'].invoke(None, [])
+                f['__tgBindEvents'].invoke(None, [])
+                # Dispatch the subscriptions captured before range hooks existed.
+                location_row[1]({})
+                self.assertEqual(requests, [dict(mask=11, target=0)])
+                target, handler, data = pending[0]
+
+                def inventory():
+                    handler.invoke(target, [dict(data=data, param=dict(o_list=[real]))])
+
+                def progress():
+                    stats_row[1](dict(param=dict(specs=[3, 4])))
+
+                (progress if stats_first else inventory)()
+                self.assertTrue(g['__tgHooksActive'])
+                (inventory if stats_first else progress)()
+                self.assertEqual(bag['itemList'], [real])
+                self.assertEqual(attrs['medical_specs'], [3, 4])
+                self.assertEqual(xp_messages, [])
+                self.assertFalse(g['__tgHooksActive'])
+                self.assertIs(stats_row[1], stats)
+                self.assertIs(location_row[1], master['__tgEnterOrig'])
 
 
 if __name__ == '__main__':
