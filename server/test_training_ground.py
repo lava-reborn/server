@@ -525,19 +525,37 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         self.unchanged()
 
     async def test_every_training_item_has_shop_or_quest_source(self):
+        # Initialise the same metadata as server startup, even when this single
+        # scenario runs first. Other tests must not register its prototypes.
+        tg.preload()
+        catalogue = range_catalog.item_catalogue()
+        prototypes = range_items.prototype_rows()
         eligible, rewards = range_catalog.obtainable_sources()
-        extra = set(range_catalog.item_catalogue()) - eligible
+        extra = set(catalogue) - eligible
         self.assertTrue(extra)
-        self.assertTrue(all(t in items.catalogue() or t in range_items.PROTOTYPES for t in extra))
+        self.assertTrue(all(t in items.catalogue() or t in prototypes for t in extra))
         self.assertTrue(any(inventory.item_level(t) == 20 for t in extra))
         self.assertIn(26075, eligible)
         self.assertIn(7051, eligible)
         self.assertTrue(rewards)
-        for t in range_catalog.item_catalogue():
-            if items.acquisition_blocked(t):
-                self.assertGreater(range_catalog.item_catalogue()[t][1], 17)
-                self.assertLessEqual(inventory.item_level(t), 20)
-            self.assertFalse(items.retired(t))
+        for t, row in catalogue.items():
+            with self.subTest(type_id=t):
+                if t in prototypes:
+                    definition = prototypes[t]
+                    self.assertNotIn(t, items.catalogue())
+                    self.assertIn(definition['base'], items.catalogue())
+                    self.assertEqual(range_items.PROTOTYPES[t], definition)
+                    self.assertEqual(range_items.source_type(t), definition['base'])
+                    self.assertEqual(row[1], definition['level'])
+                    self.assertLessEqual(row[1], range_settings.MAX_LEVEL)
+                    self.assertTrue(items.acquisition_blocked(t))
+                    with self.assertRaises(ValueError):
+                        self.s.inv.create(t)
+                elif items.acquisition_blocked(t):
+                    self.assertGreater(row[1], 17)
+                    self.assertLessEqual(inventory.item_level(t), 20)
+                self.assertFalse(items.retired(t))
+        self.unchanged()
 
     async def test_completed_bert_course_keeps_certificate_one_off(self):
         import quests
