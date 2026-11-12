@@ -7,6 +7,14 @@ Ordinary catalogue scans (shop ladders, recipe generation and release tables)
 remain ordinary-only: private inventories supply their own authorised sources.
 Read helpers must not infer an extension by an id range or a variant letter.
 
+Template-aware entry points: items.root_of/static_info/params_of,
+items.battle_medicine/no_combat/stimulant_unavailable, inventory requirement
+and durability checks, and sets.record_of/item/frame/bonuses/string helpers.
+craft recipe/name lookup, gold_trade, auction valuation, repair_policy price
+ladders and combat.gold_item/death_losses are ordinary-only. A private mode
+must own or reject those operations; source_type is not permission to trade,
+repair, craft, drop or redeem a private copy against its real-world source.
+
 All registrations finish before names.document or the first cached wear lookup.
 The owning mode is responsible for authorising private inventory operations and
 implementing every effect capability it declares. Never import that mode here.

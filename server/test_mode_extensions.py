@@ -17,6 +17,7 @@ import item_templates
 import names
 import mode_extensions
 import sets
+import shop_bands
 import storage
 from testkit import run_cases, healing_fixture, start_healing, attack_fixture
 
@@ -70,6 +71,8 @@ class Templates(unittest.TestCase):
 
     def test_private_template_is_rejected_before_any_inventory_write(self):
         self.register()
+        self.assertTrue(items.acquisition_blocked(self.target))
+        self.assertFalse(items.acquisition_blocked(self.source))
         inv = inventory.Inventory.__new__(inventory.Inventory)
         inv.store = NS(create_item=lambda *args, **kw: self.fail('unexpected write'))
         with self.assertRaisesRegex(ValueError, 'Private equipment'):
@@ -403,6 +406,8 @@ class Registry(unittest.TestCase):
             'helm':dict(type=65530,armor_class=10,max_break_abs=100)})}}
         sets.register(doc,variants=sets.VARIANTS+('V',))
         self.assertEqual(inventory.armour_durability_ratio(65530,10),1)
+        with patch.object(shop_bands, 'wares', return_value={65530: ('sets', 10, 'extra', 0)}):
+            self.assertEqual(shop_bands._order(65530), (10, '99000', 0, 'extra'))
         with self.assertRaises(RuntimeError):sets.register({'sets':{}})
         with self.assertRaises(RuntimeError):item_templates.register({}, {},catalogue={},commands={})
 

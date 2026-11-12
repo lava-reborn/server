@@ -2686,18 +2686,6 @@ class RoomCombat:
     costs and broadcasts remain in the shared resolution code.
     """
 
-    def ranged_critical(self, shooter, target, weapon, optimal):
-        return optimal and roll(weapon.crit - target.crit_evade_ranged())
-
-    def melee_critical(self, attacker, target, chance):
-        return roll(chance)
-
-    def bullet_damage(self, shooter, target, weapon, damage, stamina_damage, critical, stamina_left):
-        return split_damage(damage, target.armor(), weapon.piercing, critical, stamina_left, stamina_damage)
-
-    def melee_damage(self, shooter, target, damage, critical, stamina_left):
-        return melee_split(damage, critical, stamina_left)
-
     def __init__(self, room, store):
         self.room = room
         self.store = store
@@ -2719,6 +2707,19 @@ class RoomCombat:
         self.heir = None
         self.timer = None
         self.ap_last = 0.0
+
+    # --- pure target-resolution policies ------------------------------------------
+    def ranged_critical(self, shooter, target, weapon, optimal):
+        return optimal and roll(weapon.crit - target.crit_evade_ranged())
+
+    def melee_critical(self, attacker, target, chance):
+        return roll(chance)
+
+    def bullet_damage(self, shooter, target, weapon, damage, stamina_damage, critical, stamina_left):
+        return split_damage(damage, target.armor(), weapon.piercing, critical, stamina_left, stamina_damage)
+
+    def melee_damage(self, attacker, target, damage, critical, stamina_left):
+        return melee_split(damage, critical, stamina_left)
 
     # --- who is here -------------------------------------------------------------
     def fighters(self):
