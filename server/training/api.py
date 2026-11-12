@@ -67,6 +67,9 @@ def handle(owner, command, params):
                 if now - getattr(owner, 'training_types_request', -float('inf')) >= 10:
                     owner.training_types_request = now
                     type_metadata.announce(owner, full=True)
+                    ground.state()
+                    if ground.phase == 'ready':
+                        ground.clone.enter_location()
         return True
     if command != 'tg' and ground is None:
         return False
