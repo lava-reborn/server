@@ -1,0 +1,253 @@
+{
+  "version": 1,
+  "why": "Range-only aliases, archived equipment and private layouts. Never modify public locations or source item records.",
+  "labels": {
+    "1569": {
+      "name": "Излучатель",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "1571": {
+      "name": "Излучатель · вариант II",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "1572": {
+      "name": "Лечебный излучатель",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "1547": {
+      "name": "Излучатель · холодное оружие",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "3485": {
+      "name": "Излучатель · дальность",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "6024": {
+      "name": "Излучатель · автомат",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "6214": {
+      "name": "Излучатель · пистолет (A)",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "6215": {
+      "name": "Излучатель · автомат (A)",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "7086": {
+      "name": "Излучатель · нож",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "36331": {
+      "name": "Излучатель · холодное оружие II",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    },
+    "41224": {
+      "name": "Излучатель · автомат (P)",
+      "why": "Recovered emitter variant; keep a human-readable model identity."
+    }
+  },
+  "extra_sources": [
+    1572
+  ],
+  "archive_sources": [
+    4329,
+    4330,
+    4331,
+    4332,
+    4333,
+    4334,
+    4335,
+    4336,
+    4337,
+    4338,
+    4339,
+    4340,
+    4341,
+    4342,
+    4343,
+    4344,
+    4345,
+    4346,
+    4347,
+    4348,
+    4349,
+    4350,
+    4351,
+    4352,
+    1081,
+    1535,
+    1073,
+    1074
+  ],
+  "map_aliases": {
+    "106": 59
+  },
+  "legacy_locations": [
+    78
+  ],
+  "default_mob": 11,
+  "locations": {
+    "108": {
+      "why": "Private enlarged desert; no public exits or spawns.",
+      "name": "Пустынный полигон",
+      "width": 72,
+      "height": 144,
+      "control": 8245,
+      "computer": 8244,
+      "fight_start": 5652,
+      "enemy_spawns": [
+        7100,
+        4724,
+        641
+      ],
+      "boundary": 100
+    },
+    "59": {
+      "why": "Private copy of Halfa arena 1; retain original obstacles and artwork.",
+      "name": "Арена №1 Вади-Хальфы",
+      "control": 6177,
+      "computer": 6176,
+      "fight_start": 5024,
+      "enemy_spawns": [
+        4392,
+        3372,
+        2286
+      ],
+      "boundary": 82,
+      "post_x_offset": -4,
+      "control_row": 96,
+      "stock_row": 112,
+      "archive_row": 118
+    }
+  },
+  "posts": [
+    {
+      "key": "computer",
+      "title": "Компьютер полигона",
+      "resource": 1263,
+      "x": 36,
+      "y": 114,
+      "category": "mob"
+    },
+    {
+      "key": "player",
+      "title": "Инструктор · навыки и наборы",
+      "resource": 1997,
+      "x": 28,
+      "y": 114,
+      "category": "skills"
+    },
+    {
+      "key": "weapons",
+      "title": "Оружейник",
+      "resource": 2514,
+      "x": 20,
+      "y": 126,
+      "category": "weapon",
+      "line": "all"
+    },
+    {
+      "key": "armoury",
+      "title": "Броня",
+      "resource": 1006,
+      "x": 25,
+      "y": 126,
+      "category": "armour",
+      "line": "all"
+    },
+    {
+      "key": "supplies",
+      "title": "Боеприпасы и подсумки",
+      "resource": 1006,
+      "x": 30,
+      "y": 126,
+      "category": "ammo",
+      "line": "all"
+    },
+    {
+      "key": "medical",
+      "title": "Медицина",
+      "resource": 1006,
+      "x": 34,
+      "y": 126,
+      "category": "medicine",
+      "line": "all"
+    },
+    {
+      "key": "boosts",
+      "title": "Баффы",
+      "resource": 1006,
+      "x": 39,
+      "y": 126,
+      "category": "buff",
+      "line": "all"
+    },
+    {
+      "key": "specialist",
+      "title": "Особое оружие",
+      "resource": 2391,
+      "x": 44,
+      "y": 126,
+      "category": "special_weapon",
+      "line": "all"
+    },
+    {
+      "key": "archive",
+      "title": "Архив предметов",
+      "resource": 1006,
+      "x": 32,
+      "y": 133,
+      "category": "souvenir",
+      "line": "all"
+    }
+  ],
+  "source_roots": {
+    "1073": 2,
+    "1074": 2,
+    "1081": 5,
+    "1535": 2,
+    "1547": 5,
+    "1569": 0,
+    "1571": 0,
+    "1572": 2,
+    "3485": 0,
+    "4329": 5,
+    "4330": 5,
+    "4331": 5,
+    "4332": 5,
+    "4333": 5,
+    "4334": 5,
+    "4335": 5,
+    "4336": 5,
+    "4337": 5,
+    "4338": 5,
+    "4339": 5,
+    "4340": 5,
+    "4341": 5,
+    "4342": 5,
+    "4343": 5,
+    "4344": 5,
+    "4345": 5,
+    "4346": 5,
+    "4347": 5,
+    "4348": 5,
+    "4349": 5,
+    "4350": 5,
+    "4351": 5,
+    "4352": 5,
+    "6024": 0,
+    "6214": 0,
+    "6215": 0,
+    "7086": 5,
+    "36331": 5,
+    "41224": 0
+  },
+  "resource_roots": {
+    "1263": 4,
+    "1997": 4,
+    "2514": 1,
+    "1006": 5,
+    "2391": 1
+  }
+}
