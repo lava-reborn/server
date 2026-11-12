@@ -96,18 +96,38 @@ class Startup(unittest.TestCase):
         self.assertIsNotNone(self.root['onEnterFrame'])
         self.assertEqual(self.root['nextPoll'], 0)
 
-    def test_real_artwork_build_is_small_and_keeps_game_frame_rate(self):
-        source = Path(os.environ.get('LAVA_RES', '')) / 'main.swf'
-        if not source.is_file():
-            self.skipTest('Original main.swf not provided')
+    def test_fixture_and_available_real_artwork_keep_game_frame_rate(self):
+        from swfgen import rect, tag
+
         with tempfile.TemporaryDirectory() as folder:
-            target = Path(folder) / 'startup.swf'
-            size, assets = preloader.build(source, target)
-            self.assertLess(size, 16384)
-            self.assertGreater(assets, 0)
-            body = zlib.decompress(target.read_bytes()[8:])
-            _, pos = preloader.read_rect(body, 0)
-            self.assertEqual(struct.unpack_from('<H', body, pos)[0], 25 * 256)
+            fixture = Path(folder) / 'fixture.swf'
+            # CI deliberately has no proprietary main.swf. Always exercise
+            # extraction/build with a real SWF structure; also use game art
+            # when installed locally. Never turn missing optional art into
+            # a skipped test (the suite reporter treats skips as failures).
+            library = tag(39, struct.pack('<HH', 1, 1) + tag(1, b'') + tag(0, b''))
+            library += tag(39, struct.pack('<HH', 2, 100) + tag(1, b'') * 100 + tag(0, b''))
+            children = b''.join(tag(26, b'\x22' + struct.pack('<HH', depth, cid) + name + b'\0')
+                                for depth, cid, name in ((1, 1, b'bg'), (2, 2, b'progressBar')))
+            library += tag(39, struct.pack('<HH', 3, 1) + children + tag(1, b'') + tag(0, b''))
+            library += tag(56, struct.pack('<HH', 1, 3) + b'preloaderPan\0')
+            payload = rect(0, 1280 * 20, 0, 800 * 20) + struct.pack('<HH', 25 * 256, 1)
+            payload += library + tag(1, b'') + tag(0, b'')
+            fixture.write_bytes(b'FWS\x08' + struct.pack('<I', len(payload) + 8) + payload)
+            real = Path(os.environ.get('LAVA_RES', '')) / 'main.swf'
+            sources = [fixture] + ([real] if real.is_file() else [])
+            for source in sources:
+                with self.subTest(source=source.name):
+                    target = Path(folder) / 'startup.swf'
+                    size, assets = preloader.build(source, target)
+                    self.assertLess(size, 16384)
+                    if source == fixture:
+                        self.assertEqual(assets, 2)
+                    else:
+                        self.assertGreater(assets, 0)
+                    body = zlib.decompress(target.read_bytes()[8:])
+                    _, pos = preloader.read_rect(body, 0)
+                    self.assertEqual(struct.unpack_from('<H', body, pos)[0], 25 * 256)
 
     def test_startup_http_does_not_release_game_before_ready(self):
         state = runtime.StartupState()
