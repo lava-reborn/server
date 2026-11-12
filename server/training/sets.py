@@ -75,15 +75,15 @@ def for_source(source, simulator=False):
     return result
 
 
-def register():
-    import items
+def document(copies, simulator_copies):
+    """Build metadata against local indexes, before the startup batch is published."""
     import sets
-    from training import items as copies
     documents = {}
     for key, record in records().items():
         simulator = bool(record.get('simulator'))
-        members = {slot: dict(type=copies.copy_type(source, simulator))
-                   for slot, source in record['members'].items() if source in copies.COPIES}
+        index = simulator_copies if simulator else copies
+        members = {slot: dict(type=index[source])
+                   for slot, source in record['members'].items() if source in index}
         if len(members) != len(record['members']):
             continue
         bonuses = {}
@@ -95,7 +95,7 @@ def register():
         documents[str(key)] = dict(name=record['name'], desc=record['desc'], family=record['family'],
                                    level=record['level'], variant=record['variant'], res=record['res'],
                                    members=members, bonus=bonuses)
-    sets.register({'sets': documents})
+    return {'sets': documents}
 
 
 def strings():

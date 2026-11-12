@@ -69,14 +69,8 @@ def register_sets_and_strings():
     global _REGISTERED
     if _REGISTERED:
         return
-    import names
-    from training import catalog, layout, opponents, sets as range_sets
+    from training import catalog
     prepare(catalog.item_catalogue())
-    range_sets.register()
-    strings = dict(opponents.NAMES)
-    strings.update(layout.NAMES)
-    strings.update(range_sets.strings())
-    names.register_strings(strings)
     _REGISTERED = True
 
 
@@ -244,8 +238,16 @@ def prepare(sources):
     sources_by_type.update(profile_sources)
     supported_effects = {target for target, source in sources_by_type.items()
                          if training_effects.definition(source) is not None}
-    item_templates.register(frames, sources_by_type, catalogue=table,
-                            commands=items.SI_COMMAND, effects=supported_effects)
+    import mode_extensions
+    import sets
+    from training import layout, opponents
+    strings = dict(opponents.NAMES)
+    strings.update(layout.NAMES)
+    strings.update(training_sets.strings())
+    mode_extensions.register(frames=frames, sources=sources_by_type,
+        set_document=training_sets.document(copies, simulator_copies), strings=strings,
+        catalogue=table, commands=items.SI_COMMAND, effects=supported_effects,
+        variants=sets.VARIANTS + ('P',))
     COPIES.update(copies)
     SIMULATOR_COPIES.update(simulator_copies)
     PROFILE_SOURCES.update(profile_sources)

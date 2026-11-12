@@ -5,9 +5,11 @@ import unittest
 from unittest.mock import patch
 
 import barter
+import combat
 import inventory
 from protocol import decode
-from training import character, items as copies, runtime, session as training
+from training import character, formulas, items as copies, runtime, session as training
+from training.rules import Rules
 import test_training_ground as fixtures
 
 
@@ -24,6 +26,36 @@ class Isolation(unittest.IsolatedAsyncioTestCase):
                     stats=copy.deepcopy(self.s.char.rows()), hp=self.s.char.hp, sp=self.s.char.sp,
                     money=self.s.inv.money(), ap=self.s.combat.ap,
                     location=(self.s.loc.id, self.s.pos, self.s.gx, self.s.gy, self.s.on_map))
+
+    async def test_declared_effect_capability_consumes_buffs_changes_stats_and_expires(self):
+        g = self.enter()
+        g.clone.cmd_lenter({})
+        before = self.main_state()
+        for simulator in ((False, True) if formulas.available() else (False,)):
+            with self.subTest(simulator=simulator):
+                g.rules = Rules(combat_v2=simulator, simulator_formulas=simulator)
+                g.configure_player(character.preset(20))
+                fighter = g.clone.combat
+                manager = g.clone.training_effects
+                base = g.clone.character().bonus_cp
+                row = g.clone.inv.create(copies.copy_type(3115, simulator))
+                uses = row['use_count']
+                fighter.ap = fighter.ap_max
+                with patch.object(combat.Fighter, 'schedule_action') as schedule:
+                    fighter.use_heal(dict(obj=inventory.oid_of(row)), inventory.USE_IDLE)
+                    self.assertTrue(schedule.called)
+                    args = schedule.call_args.args
+                args[4](*args[5:])
+                current = g.store.item(row['uniq'])
+                self.assertEqual(current['use_count'] if current else 0, uses - 1)
+                self.assertEqual(g.clone.character().bonus_cp, base + 10)
+                self.assertEqual(len(manager.active), 1)
+                active = next(iter(manager.active.values()))
+                active.deadline = asyncio.get_running_loop().time() - 1
+                manager.refresh()
+                self.assertFalse(manager.active)
+                self.assertEqual(g.clone.character().bonus_cp, base)
+                self.assertEqual(self.main_state(), before)
 
     async def test_main_mutation_commands_never_reach_owner_handlers_inside_range(self):
         g = self.enter()

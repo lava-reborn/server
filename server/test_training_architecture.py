@@ -64,8 +64,16 @@ assert names.ALL == before
 os.environ['LAVA_TRAINING_GROUND'] = '1'
 api.preload()
 from training import opponents
+import item_templates, sets
 assert all(names.ALL.get(key) == text for key, text in opponents.NAMES.items())
 assert all(names.ALL.get(key) == text for key, text in before.items())
+assert item_templates._SEALED and sets._SEALED and names._SEALED
+try:
+    names.register_strings({99999999: 'late'})
+except RuntimeError:
+    pass
+else:
+    raise AssertionError('late registration accepted')
 assert "<s id='8200011'>" in names.document()
 '''
         env = dict(os.environ, PYTHONPATH=str(SERVER), LAVA_TRAINING_GROUND='0',
