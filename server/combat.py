@@ -1454,7 +1454,7 @@ class Fighter:
         party = getattr(self.sess, "party", None)
         mine = party() if party is not None else None
         return bool(other.is_player and mine is not None
-                    and other.sess.char_id in mine.members)
+                    and getattr(other.sess, 'party_member_id', other.sess.char_id) in mine.members)
 
     def starts_war(self, target):
         return not (target is not None and target.is_player

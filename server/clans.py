@@ -672,7 +672,8 @@ class Clans:
             ack(IN_CLAN)
             return
         target = self.session_of(row["id"])
-        if target is None or target.active is None or target.combat.dead:
+        if (target is None or target.active is None or target.combat.dead
+                or getattr(target, 'training_ground', None) is not None):
             # Dead is as good as away: the client lets nothing but the
             # resurrection out while dead (FilterManager.createDSFilter),
             # so the answer could never come.
