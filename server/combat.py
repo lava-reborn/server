@@ -1726,6 +1726,7 @@ class Fighter:
         # sees the bullets fall short needs no words.
         cost = si["fire_costs"][mode]
         if rc.room.ws and self.ap < cost:
+            Fighter.settle_walk(self)
             self.refuse_no_ap()
             return
         ch = self.character()
@@ -1899,6 +1900,7 @@ class Fighter:
             dmin = si.get("h_damage_min", 1) + strength
             dmax = si.get("h_damage_max", 1) + strength
         if rc.room.ws and self.ap < cost:
+            Fighter.settle_walk(self)
             self.refuse_no_ap()
             return
         bounds = checked_melee(self.prepare_melee((max(1, dmin), max(1, dmax)), row))
