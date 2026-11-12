@@ -2,17 +2,28 @@
 from unittest.mock import patch
 
 from training import rules, runtime
-from test_training_isolation import Isolation
+import test_training_isolation as isolation
+import test_training_review as review
 
 
-class SimulatorIsolation(Isolation):
+def enable_simulator(case):
+    enabled = rules.Rules(revision='simulator-v1', simulator_formulas=True,
+                          ammo_modifiers=True)
+    selector = patch.object(rules, 'current', return_value=enabled)
+    selector.start()
+    case.addCleanup(selector.stop)
+
+
+class SimulatorReview(review.Review):
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        enabled = rules.Rules(revision='simulator-v1', simulator_formulas=True,
-                              ammo_modifiers=True)
-        selector = patch.object(rules, 'current', return_value=enabled)
-        selector.start()
-        self.addCleanup(selector.stop)
+        enable_simulator(self)
+
+
+class SimulatorIsolation(isolation.Isolation):
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        enable_simulator(self)
 
     def main_state(self):
         for ground in runtime.ACTIVE:
@@ -23,4 +34,4 @@ class SimulatorIsolation(Isolation):
 
 if __name__ == '__main__':
     from testkit import run_cases
-    run_cases(SimulatorIsolation)
+    run_cases(SimulatorIsolation, SimulatorReview)
