@@ -1842,13 +1842,23 @@ def __tgClearBag(equipment):
         equipment.removeItem(bag, old[i])
         i = i + 1
 
-def __tgBagItemUpdate(obj):
-    item = obj.target
-    if this.isGamer and this.__tgManaged:
+def __tgAcceptItem(equipment, item):
+    if item and equipment.isGamer and equipment.__tgManaged:
         copy = _global.__tgIsCopy(item)
         if copy != Boolean(_global.__tgActive) or (copy and not _global.__tgLive[item.id] and (item.__tgRetired or item.__tgEpoch != _global.__tgEpoch)):
-            item.removeEventListener("itemUpdate", this)
-            return
+            return False
+    return True
+
+def __tgAddItem(slot, item, index, checkSet):
+    # Previously captured native itemUpdate callbacks also pass through here.
+    if _global.__tgAcceptItem(this, item):
+        return this.__tgAddItemOrig(slot, item, index, checkSet)
+
+def __tgBagItemUpdate(obj):
+    item = obj.target
+    if not _global.__tgAcceptItem(this, item):
+        item.removeEventListener("itemUpdate", this)
+        return
     this.__tgBagUpdateOrig(obj)
 
 def __tgClearSlots(equipment, slots):
@@ -2078,6 +2088,7 @@ HOOKS = ((('services', 'HotKeyManager'), 'onKeyDown', '__tgKeysDownOrig', '__tgK
  (('gpui', 'ExtItemContainer'), 'attachBtn', '__tgInfoButtonOrig', '__tgInfoButton', False),
  (('gpui', 'ItemContainer'), 'showCost', '__tgShowCostOrig', '__tgShowCost', False),
  (('core', 'player', 'PersEquip'), 'itemUpdate', '__tgBagUpdateOrig', '__tgBagItemUpdate', False),
+ (('core', 'player', 'PersEquip'), 'addItem', '__tgAddItemOrig', '__tgAddItem', False),
  (('core', 'player', 'StuffManager'), 'getStuff', '__tgGetStuffOrig', '__tgGetStuff', False),
  (('core', 'Master'), 'lenter', '__tgEnterOrig', '__tgEnterWrapper', False),
  (('core', 'player', 'PersAttributes'), 'rp_info', '__tgStatsOrig', '__tgStatsWrapper', False),

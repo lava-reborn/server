@@ -593,6 +593,36 @@ class TrainingClient(unittest.TestCase):
         funcs['__tgBagItemUpdate'].invoke(eq, [dict(target=item)])
         self.assertEqual(calls, [dict(target=item)])
 
+    def test_captured_native_item_update_cannot_mix_real_and_training_inventories(self):
+        calls = []
+        env = dict(_global=dict(__tgActive=True, __tgEpoch=2,
+                               __tgCopies={54000:26075}, __tgLive={}), Boolean=bool)
+        funcs = self.helpers(env)
+        equipment = dict(isGamer=True, __tgManaged=True,
+                         __tgAddItemOrig=lambda *args: calls.append(args))
+        equipment['addItem'] = lambda *args: funcs['__tgAddItem'].invoke(equipment, args)
+        # The native event function was captured before the prototype was wrapped.
+        captured = lambda item: equipment['addItem']('bag', item, 3, False)
+        real = dict(id='main-item', typeID=26075)
+        training = dict(id='training-item', typeID=54000, __tgEpoch=2)
+        captured(real)
+        self.assertEqual(calls, [])
+        captured(training)
+        self.assertEqual(calls, [('bag', training, 3, False)])
+        env['_global']['__tgActive'] = False
+        captured(training)
+        self.assertEqual(len(calls), 1)
+        captured(real)
+        self.assertEqual(calls[-1], ('bag', real, 3, False))
+        equipment['isGamer'] = False
+        captured(training)  # Inspecting another character is unchanged.
+        self.assertEqual(calls[-1], ('bag', training, 3, False))
+        equipment.update(isGamer=True, __tgManaged=False)
+        captured(training)  # The private guard does not filter ordinary sessions.
+        self.assertEqual(len(calls), 4)
+        self.assertTrue(any(path == ('core', 'player', 'PersEquip') and method == 'addItem'
+                            for path, method, *_ in client.HOOKS))
+
     def test_fresh_returned_ammo_stack_is_not_dropped_before_next_live_list(self):
         calls = []
         item = dict(id='new-ammo', typeID=54239, __tgEpoch=2,
