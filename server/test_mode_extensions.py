@@ -182,11 +182,11 @@ class CombatDefaults(unittest.TestCase):
 import importlib.abc, sys
 class Block(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.startswith('training.') and fullname not in ('training.api', 'training.config'):
+        if fullname.startswith('training.') and fullname not in ('training.api', 'training.config', 'training.services'):
             raise AssertionError('feature import: ' + fullname)
 sys.meta_path.insert(0, Block())
 import accounts, combat, inventory, items, sets, names, server
-assert not any(n.startswith('training.') and n not in ('training.api', 'training.config') for n in sys.modules)
+assert not any(n.startswith('training.') and n not in ('training.api', 'training.config', 'training.services') for n in sys.modules)
 import item_templates
 assert not item_templates._FRAMES
 '''

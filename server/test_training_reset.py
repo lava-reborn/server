@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import battle_medicine
 import inventory
+import storage
 from protocol import decode
 from training import character as range_character
 from training import geometry as range_geometry
@@ -135,7 +136,7 @@ class TrainingReset(unittest.IsolatedAsyncioTestCase):
         saved = self.store.training_profile(self.s.char_id)
         real_items = [dict(r) for r in self.s.inv.rows()]
         nonce = self.prepare(g)
-        with patch.object(self.store, 'save_training_profile', side_effect=RuntimeError('write failed')) as write:
+        with patch.object(self.store, 'save_training_profile', side_effect=storage.CommitError('reply lost')) as write:
             with self.assertRaises(ValueError):
                 self.request(g, 'reset_player', confirmation=nonce)
         self.assertEqual(write.call_count, 1)

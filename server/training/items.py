@@ -3,6 +3,7 @@ import copy
 import json
 import math
 import item_templates
+import item_type_ids
 from pathlib import Path
 
 FIRST = 54000
@@ -130,8 +131,8 @@ def registered_ids(sources, catalogue):
     reserved = set(registry['reserved'])
     targets = list(ids.values())
     if (len(set(targets)) != len(targets) or set(targets) & reserved
-            or any(type(t) is not int or not FIRST <= t <= LAST or t in catalogue for t in targets)
-            or any(type(t) is not int or not FIRST <= t <= LAST or t in catalogue for t in reserved)):
+            or any(not item_type_ids.private(t) or t in catalogue for t in targets)
+            or any(not item_type_ids.private(t) or t in catalogue for t in reserved)):
         raise ValueError('Training type registry collision')
     missing = set(sources) - ids.keys()
     if missing:
@@ -146,13 +147,14 @@ def prepare(sources):
     table = items.catalogue()
     prototypes = prototype_rows()
     originals = sorted(set(sources) - set(prototypes))
-    if (any(t in table or t in range(FIRST, FIRST + len(originals)) for t in prototypes)
-            or max(prototypes, default=PROTOTYPE_FIRST) > LAST):
-        raise ValueError('Training prototype type range collision')
     overrides = json.loads(PATH.read_text(encoding='utf-8-sig')).get('items', {})
     if any(int(t) not in sources for t in overrides):
         raise ValueError('Unknown training override source')
     copies = registered_ids(originals, table)
+    reserved = set(json.loads((PATH.parent / 'training_item_ids.json').read_text(encoding='utf-8'))['reserved'])
+    if (set(prototypes) & set(copies.values()) or not set(prototypes) <= reserved
+            or any(t in table or not PROTOTYPE_FIRST <= t <= 61999 for t in prototypes)):
+        raise ValueError('Training prototype type range collision')
     frames = {}
     prices = {}
     for source, target in copies.items():
@@ -224,7 +226,7 @@ def prepare(sources):
         if params == old:
             continue
         target = SIMULATOR_FIRST + len(profile_sources)
-        if target >= PROTOTYPE_FIRST or target in table or target in frames:
+        if target > 59999 or target in table or target in frames:
             raise ValueError('Simulator type range collision')
         params['type'] = target
         frames[target] = command, params

@@ -26,6 +26,12 @@ def stock(post):
 
 
 class Inventory(inventory.Inventory):
+    def worn_rows(self):
+        slots = inventory.WEAR_SLOTS
+        return self.store.db.execute(
+            'SELECT type_id,brk FROM items WHERE char_id=? AND slot IN (%s)' %
+            ','.join('?' for _ in slots), (self.char_id, *slots)).fetchall()
+
     def validate_creation(self, type_id):
         if self.store is not self.sess.ground.store or not training_items.is_copy(type_id):
             raise ValueError('Предметы доступны только тренировочному клону')

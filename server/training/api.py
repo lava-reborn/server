@@ -1,6 +1,7 @@
 """Cheap main-game facade. Disabled sessions import no range implementation."""
 from protocol import Str
 from training.config import CLIENT_PROTOCOL, ENTRY_QUEST, EXIT_QUEST, SERIAL_BASE, enabled
+from training.services import install
 
 
 def compatible(owner):
@@ -50,8 +51,22 @@ def handle(owner, command, params):
     if command == 'tg' and params.get('op') == 'hello' and ground is None:
         version = str(params.get('version', ''))
         owner.training_protocol = CLIENT_PROTOCOL if version == str(CLIENT_PROTOCOL) else None
+        owner.training_types_version = params.get('types_version')
         owner.send('tg', op='hello', version=CLIENT_PROTOCOL,
                    available=int(enabled() and compatible(owner)))
+        return True
+    if command == 'tg' and params.get('op') in ('types_ack', 'types_request'):
+        if ground is not None and compatible(owner):
+            from training import type_metadata
+            if params['op'] == 'types_ack':
+                if params.get('version') == type_metadata.payload()['version']:
+                    owner.training_types_version = params['version']
+            else:
+                import time
+                now = time.monotonic()
+                if now - getattr(owner, 'training_types_request', -float('inf')) >= 10:
+                    owner.training_types_request = now
+                    type_metadata.announce(owner, full=True)
         return True
     if command != 'tg' and ground is None:
         return False
@@ -66,10 +81,7 @@ def handle(owner, command, params):
 
 _LIVE = frozenset(('userMsg', 'online', 'tg', 'shutdown', 'kickban', 'p_op', 'p_m',
                    'gg_struct', 'fellow', 'lsml', 'svml'))
-_REFRESH = frozenset(('gg_list',))
-_AVATAR = frozenset(('userInfo', 'userInfo_Player', 'hp', 'sp', 'c_ap', 'rp_info', 'money',
-                     'lcall', 'lenter', 'lch', 'userMove', 'breakMv', 'actionCancel',
-                     'ss_obj_move', 'ss_ack', 'ss_upd', 'ss_obj_status', 'medCooldown'))
+
 
 
 def outgoing(owner, command, params):
@@ -87,14 +99,8 @@ def outgoing(owner, command, params):
                        or getattr(owner, 'training_mail_read', False))
     if permitted_reply and command in ('cmdAck', 'gg_list'):
         return params
-    if command in _REFRESH:
-        ground.deferred_refresh.add(command)
-    elif command not in _AVATAR and not command.startswith(('q_di_', 'ss_di_', 'ss_si_')):
-        # Bounded diagnostics, not an unbounded queue of stale frames.
-        if command not in ground.deferred_events and len(ground.deferred_events) < 32:
-            ground.deferred_events.add(command)
-            import logging
-            logging.getLogger('lava').warning('Deferred main-avatar event during range: %s', command)
+    # Avatar frames are never replayed against private identities. Exit reloads
+    # the real inventory, wallet and social state from their authoritative stores.
     return None
 
 
@@ -102,3 +108,9 @@ def suspend(owner):
     ground = getattr(owner, 'training_ground', None)
     if ground is not None:
         ground.exit(notify=False, suspend=True)
+
+
+
+def returned(owner):
+    from training.events import returned as refresh
+    refresh(owner)

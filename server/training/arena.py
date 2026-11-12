@@ -10,6 +10,9 @@ import rooms
 from training import balance as training_balance, effects as training_effects, formulas as training_formulas
 from training.character import character
 
+V2_SURGERY = 8
+V2_FIRST_AID = 9
+
 
 class TrainingFighter(combat.Fighter):
     def prepare_weapon(self, weapon, ammo, row=None, mode=None):
@@ -41,7 +44,7 @@ class TrainingFighter(combat.Fighter):
 
     def healing_spec(self, vitals):
         if self.sess.ground.rules.combat_v2:
-            return 8 if vitals['hcur'] < 0.3 * vitals['hmax'] else 9
+            return V2_SURGERY if vitals['hcur'] < 0.3 * vitals['hmax'] else V2_FIRST_AID
         return combat.SPEC_SURGERY if vitals['hcur'] < 0.3 * vitals['hmax'] else combat.SPEC_FIRST_AID
 
     def use_heal(self, params, kind):
@@ -113,8 +116,7 @@ class TrainingFighter(combat.Fighter):
     def armor(self):
         rules = self.character().training_rules
         worn = sum((items.params_of(row['type_id']) or {}).get('armor_class', 0)
-                   for row in self.sess.inv.rows() if row['slot'] in inventory.WEAR_SLOTS
-                   and (rules.broken_armour or row['brk'] > 0))
+                   for row in self.sess.inv.worn_rows() if rules.broken_armour or row['brk'] > 0)
         effect = self.sess.training_effects.bonus['armor']
         return (progression.armor_class(self.character(), worn) + rules.effect_armour + effect) * rules.armour
 
@@ -143,6 +145,12 @@ class TrainingFighter(combat.Fighter):
 
 
 class TrainingCombat(combat.RoomCombat):
+    """Shared room policy; store belongs only to room/environment state.
+
+    Participant items, charges and medicine must use their actor.store; each
+    visitor has a different private database with possibly equal character ids.
+    Rewards, loot and persistent boss accounting are disabled in this class.
+    """
     def ranged_critical(self, shooter, target, weapon, optimal):
         if training_formulas.enabled(shooter):
             return training_formulas.ranged_critical(shooter, target, weapon, optimal)

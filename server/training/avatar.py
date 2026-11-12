@@ -1,5 +1,7 @@
 """Training range: avatar."""
 import inventory
+from functools import lru_cache
+from training import services
 import mail
 import mobs
 import progression
@@ -12,6 +14,7 @@ from training import layout as training_layout, opponents as training_opponents,
 from training.settings import EXIT_QUEST, PLAY_COMMANDS, READ_COMMANDS
 
 
+@lru_cache(maxsize=8)
 def clone_class(base):
     class Clone(base):
         """Only a whitelist of base handlers is reachable; persistence stays local."""
@@ -249,6 +252,11 @@ def clone_class(base):
                     self.send('cmdAck', res=0)
                     self.answer('Игровые команды недоступны в тренировке. Используйте компьютер полигона.')
                 else:
+                    if int(p.get('group', 0) or 0) == 0 and not ('group' not in p and p.get('to')):
+                        self.send('cmdAck', res=0)
+                        self.room.broadcast(('userMsg', dict(group=0, nick=Str(self.ground.owner.nick),
+                            entry=Str(str(p.get('entry') or '')), **{'from': self.pid})), exclude=self)
+                        return
                     owner = self.ground.owner
                     owner.training_chat = True
                     try:
@@ -298,7 +306,6 @@ def clone_class(base):
             if cmd == 'moveTo':
                 self.send('breakMv', id=0, pos=self.live_cell())
                 return
-            module = __import__(base.__module__)
-            if module.expects_ack(cmd, p):
+            if services.expects_ack(cmd, p):
                 self.send('cmdAck', res=inventory.RES_REFUSED)
     return Clone

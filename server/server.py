@@ -361,6 +361,7 @@ PARTIES = party.Parties(ONLINE)
 # Clans are in the database (clans.py), and this holds only what each
 # client has been told and the invitations still open.
 CLANS = clans.Clans(STORE, ONLINE, GMAP)
+training_ground.install(parties=lambda: PARTIES, clans=lambda: CLANS, expects_ack=expects_ack)
 
 log = logging.getLogger("lava")
 
@@ -492,6 +493,8 @@ class Session:
         # id of the teacher a training session is open with, or None
         self.training = None
         self.training_ground = None
+        self.training_resume_char = None
+        self.training_types_version = None
         # The rented vehicle as (type id, epoch second the rental ends), or
         # None on foot. Loaded with the character, written straight to the
         # characters table: Character.save does not carry these two columns,
@@ -1370,7 +1373,9 @@ class Session:
         # "online" to the roster holders. Also once a session.
         CLANS.online(self)
         # Check the linked range once per selected character, not per move/map.
-        if getattr(self, 'training_resume_char', None) != self.char_id:
+        if self.training_resume_char != self.char_id:
+            # One attempt per selected character/session, including a failed
+            # restore. Ordinary location changes must not retry a broken save.
             self.training_resume_char = self.char_id
             if training_ground.resume(self):
                 return
@@ -1484,6 +1489,7 @@ class Session:
             self.training_return = False
             self.combat.ap = min(getattr(self, 'training_return_ap', self.combat.ap), self.combat.ap_max)
             self.combat.c_ap()
+            training_ground.returned(self)
             self.push_stats()
             self.send_player_info()
             self.push_vitals()

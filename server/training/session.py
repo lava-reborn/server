@@ -1,6 +1,6 @@
 """Training range: session."""
 import accounts
-from training import checkpoints, content
+from training import checkpoints, content, services
 import asyncio
 import combat
 import copy
@@ -84,69 +84,19 @@ class Ground:
         self.spawn_point = DEFAULT_SPAWN
         self.location = RANGE
         self.mode = 'mob'
-        self.deferred_refresh, self.deferred_events = set(), set()
         saved = owner.inv.store.training_profile(owner.char_id)
-        self.personal_profiles = training_profiles.load_personal((saved or {}).get('personal_rules', []))
-        self.unavailable_rules = (saved or {}).get('unavailable_rules')
-        self.unavailable_presets = copy.deepcopy((saved or {}).get('unavailable_presets', {}))
-        if isinstance(saved, dict):
-            saved = copy.deepcopy(saved)
-            for who in ('player', 'opponent'):
-                raw = saved.get(who, {})
-                if isinstance(raw, dict) and any(int(t) not in item_catalogue() for t in raw.get('gear', {})):
-                    self.unavailable_presets[who] = raw
-                    saved[who] = preset(1)
-                    self.restore_notice = 'Часть снаряжения относится к недоступному профилю. Пресет сохранён отдельно.'
-        if saved is not None:
-            try:
-                if saved.get('version') != 1:
-                    raise ValueError('Unsupported training profile')
-                rules = training_rules.Rules.parse(saved.get('rules', self.rules.as_dict()))
-                if rules.simulator_formulas and not training_formulas.available():
-                    self.unavailable_rules = rules.as_dict()
-                    rules = training_rules.Rules.parse(dict(rules.as_dict(), simulator_formulas=False, combat_v2=False))
-                    self.restore_notice = 'Дополнительный профиль пока недоступен. Его настройки сохранены; включён исходный.'
-                if rules.simulator_formulas and any(
-                        not training_items.available(int(source), True)
-                        for who in ('player', 'opponent') for source in saved[who]['gear']):
-                    rules = training_rules.Rules.parse(dict(rules.as_dict(), simulator_formulas=False))
-                    self.restore_notice = ('Пресеты сохранены. В них есть предметы, исключённые из нового симулятора; '
-                                           'восстановлен прежний профиль полигона. Замените эти вещи для новых правил.')
-                restored_rules = training_profiles.restore(rules)
-                if restored_rules != rules:
-                    self.restore_notice = self.restore_notice + (' Промежуточный профиль удалён. Включён исходный профиль; '
-                                           'настройки персонажа и снаряжение сохранены.')
-                rules = restored_rules
-                player = validate_profile(saved['player'], rules)
-                opponent = validate_profile(saved['opponent'], rules)
-                location = integer(saved.get('location', RANGE), 1, 65535)
-                location = content.data()['map_aliases'].get(str(location), location)
-                if location in LEGACY_LOCATIONS:
-                    location = RANGE
-                if location not in LOCATIONS:
-                    raise ValueError('Unsupported training location')
-                mob_type = integer(saved.get('mob', self.mob_type), 1, 100000)
-                if mob_type not in mob_catalogue():
-                    mob_type = self.mob_type
-                    self.restore_notice = 'Прежняя цель удалена из каталога. Выберите нового противника.'
-                spawn_point = integer(saved.get('spawn_point', DEFAULT_SPAWN), 0, len(SPAWN_LABELS) - 1)
-                stationary = integer(saved.get('stationary', 0), 0, 1)
-                mob_health = integer(saved.get('mob_health', 100), 25, 300)
-                mob_damage = integer(saved.get('mob_damage', 100), 25, 300)
-                enemy_healing = integer(saved.get('enemy_healing', 0), 0, 1)
-                heal_below = integer(saved.get('heal_below', 50), 10, 90)
-                heal_count = integer(saved.get('heal_count', 5), 0, 30)
-                mode = saved.get('mode', 'mob')
-                if mode not in ('mob', 'fighter'):
-                    raise ValueError('Unsupported training mode')
-                self.enemy_healing, self.heal_below, self.heal_count = bool(enemy_healing), heal_below, heal_count
-                self.profile, self.opponent = player, opponent
-                self.rules = rules
-                self.mob_health, self.mob_damage = mob_health, mob_damage
-                self.location, self.mob_type = location, mob_type
-                self.spawn_point, self.stationary, self.mode = spawn_point, bool(stationary), mode
-            except (ValueError, TypeError, KeyError, AttributeError):
-                log.warning('Saved training profile unavailable for character %s', owner.char_id)
+        self.personal_profiles = ()
+        self.unavailable_rules = None
+        self.unavailable_presets = {}
+        try:
+            self.restore_settings(saved)
+        except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+            from training.restoration import archive
+            self.personal_profiles = ()
+            self.unavailable_rules = None
+            self.unavailable_presets = {'checkpoint': archive(saved)}
+            self.restore_notice = 'Прежние настройки повреждены или устарели и сохранены отдельно. Настройте клона заново.'
+            log.warning('Saved training profile unavailable for character %s', owner.char_id)
         self.context = 'computer'
         self.corpse_id = None
         self.corpse_timer = None
@@ -207,6 +157,73 @@ class Ground:
                 raise ValueError('Training post is blocked: ' + post.key)
             root = world.COMMONER
             self.room.npcs[eid] = rooms.NPC(cell, post.resource, root)
+
+    def restore_settings(self, saved):
+        if saved is None:
+            return
+        if not isinstance(saved, dict):
+            raise ValueError("Saved checkpoint must be an object")
+        if not isinstance(saved.get('personal_rules', []), list):
+            raise ValueError('Personal profiles must be a list')
+        self.personal_profiles = training_profiles.load_personal((saved or {}).get('personal_rules', []))
+        self.unavailable_rules = (saved or {}).get('unavailable_rules')
+        self.unavailable_presets = copy.deepcopy((saved or {}).get('unavailable_presets', {}))
+        if not isinstance(self.unavailable_presets, dict):
+            raise ValueError('Unavailable presets must be an object')
+        if isinstance(saved, dict):
+            saved = copy.deepcopy(saved)
+            for who in ('player', 'opponent'):
+                raw = saved.get(who, {})
+                if isinstance(raw, dict) and any(int(t) not in item_catalogue() for t in raw.get('gear', {})):
+                    self.unavailable_presets[who] = raw
+                    saved[who] = preset(1)
+                    self.restore_notice = 'Часть снаряжения относится к недоступному профилю. Пресет сохранён отдельно.'
+            if saved.get('version') != 1:
+                raise ValueError('Unsupported training profile')
+            rules = training_rules.Rules.parse(saved.get('rules', self.rules.as_dict()))
+            if rules.simulator_formulas and not training_formulas.available():
+                self.unavailable_rules = rules.as_dict()
+                rules = training_rules.Rules.parse(dict(rules.as_dict(), simulator_formulas=False, combat_v2=False))
+                self.restore_notice = 'Дополнительный профиль пока недоступен. Его настройки сохранены; включён исходный.'
+            if rules.simulator_formulas and any(
+                    not training_items.available(int(source), True)
+                    for who in ('player', 'opponent') for source in saved[who]['gear']):
+                rules = training_rules.Rules.parse(dict(rules.as_dict(), simulator_formulas=False))
+                self.restore_notice = ('Пресеты сохранены. В них есть предметы, исключённые из нового симулятора; '
+                                       'восстановлен прежний профиль полигона. Замените эти вещи для новых правил.')
+            restored_rules = training_profiles.restore(rules)
+            if restored_rules != rules:
+                self.restore_notice = self.restore_notice + (' Промежуточный профиль удалён. Включён исходный профиль; '
+                                       'настройки персонажа и снаряжение сохранены.')
+            rules = restored_rules
+            player = validate_profile(saved['player'], rules)
+            opponent = validate_profile(saved['opponent'], rules)
+            location = integer(saved.get('location', RANGE), 1, 65535)
+            location = content.data()['map_aliases'].get(str(location), location)
+            if location in LEGACY_LOCATIONS:
+                location = RANGE
+            if location not in LOCATIONS:
+                raise ValueError('Unsupported training location')
+            mob_type = integer(saved.get('mob', self.mob_type), 1, 100000)
+            if mob_type not in mob_catalogue():
+                mob_type = self.mob_type
+                self.restore_notice = 'Прежняя цель удалена из каталога. Выберите нового противника.'
+            spawn_point = integer(saved.get('spawn_point', DEFAULT_SPAWN), 0, len(SPAWN_LABELS) - 1)
+            stationary = integer(saved.get('stationary', 0), 0, 1)
+            mob_health = integer(saved.get('mob_health', 100), 25, 300)
+            mob_damage = integer(saved.get('mob_damage', 100), 25, 300)
+            enemy_healing = integer(saved.get('enemy_healing', 0), 0, 1)
+            heal_below = integer(saved.get('heal_below', 50), 10, 90)
+            heal_count = integer(saved.get('heal_count', 5), 0, 30)
+            mode = saved.get('mode', 'mob')
+            if mode not in ('mob', 'fighter'):
+                raise ValueError('Unsupported training mode')
+            self.enemy_healing, self.heal_below, self.heal_count = bool(enemy_healing), heal_below, heal_count
+            self.profile, self.opponent = player, opponent
+            self.rules = rules
+            self.mob_health, self.mob_damage = mob_health, mob_damage
+            self.location, self.mob_type = location, mob_type
+            self.spawn_point, self.stationary, self.mode = spawn_point, bool(stationary), mode
 
     def require_post(self):
         eid = self.post_ids[self.context]
@@ -612,7 +629,6 @@ class Ground:
             self.room.enter(self.enemy)
             self.enemy.combat.entered()
         else:
-            module = __import__(self.owner.__class__.__module__)
             eid = getattr(self, '_mob_entity_id', None)
             if eid is None:
                 self._mob_entity_id = eid = self.room.ids.npc()
@@ -842,12 +858,15 @@ class Ground:
             self.clone.send('tg', op='exit_pending')
             self.clone.send('cmdAck', res=0)
         self.dispose()
-        if notify and not self.owner.closed:
+        if notify:
+            self.return_owner()
+
+    def return_owner(self):
+        if not self.owner.closed:
             self.owner.send('tg', op='exit', active=0)
             self.owner.training_return = True
             self.owner.enter_location()
-            module = __import__(self.owner.__class__.__module__)
-            manager = module.CLANS
+            manager = services.clans()
             member = manager.member(self.owner.char_id)
             manager.fellow_self(self.owner, member)
             if member is not None:
@@ -901,6 +920,8 @@ def enter(owner, p):
     participants = training_party.entrants(owner)
     prepared = []
     activated = set()
+    presence_saved = False
+    presence_attempted = False
     try:
         for participant in participants:
             ground = Ground(participant)
@@ -910,28 +931,43 @@ def enter(owner, p):
         store = owner.inv.store
         if any(ground.owner.inv.store is not store for ground in prepared):
             raise ValueError('Участники используют разные хранилища')
+        presence_attempted = True
         save_presence(prepared)
+        presence_saved = True
         for ground in prepared:
             activated.add(ground)
             activate(ground, persist=False)
         training_party.refresh(prepared[0])
     except Exception as exc:
-        for ground in reversed(prepared):
-            if ground not in activated:
-                ground.dispose()
-                continue
+        uncertain = presence_attempted and checkpoints.uncertain(exc, owner.inv.store.db)
+        if presence_saved:
             try:
-                ground.exit()
+                # Everyone got inside=True, including visitors not yet activated.
+                # Clear all their memberships together before discarding clones.
+                with storage.atomic(owner.inv.store.db):
+                    for ground in prepared:
+                        ground.inside = False
+                        ground.save_settings()
             except Exception:
-                log.exception('Could not roll back range entry for %s', ground.owner.char_id)
-                ground.dispose()
+                log.exception('Could not roll back durable range memberships')
+                uncertain = True
+        for ground in reversed(prepared):
+            if uncertain:
+                ground.emergency('Не удалось подтвердить вход. Перезайдите для восстановления.')
+                continue
+            ground.dispose()
+            if ground in activated and not ground.owner.closed:
+                ground.return_owner()
         raise ValueError('Не удалось открыть полигон. Основные персонажи сохранены; повторите попытку.') from exc
+
 
 
 def activate(ground, persist=True):
     participant = ground.owner
     if persist:
         save_presence((ground,))
+    from training.events import inventory_snapshot
+    participant.training_inventory_before = inventory_snapshot(participant)
     training_party.cancel_invites(participant)
     participant.windows_gone()
     participant.cancel_passage()
@@ -943,13 +979,8 @@ def activate(ground, persist=True):
     participant.training_ground = ground
     ACTIVE.add(ground)
     ground.touch()
-    participant.send('tg', op='types', copies=list(training_items.SOURCES), sources=[training_items.profile_source(t) for t in training_items.SOURCES],
-                     lines=[item_line(source) for source in training_items.SOURCES.values()],
-                     icons=[training_display.icon_source(training_items.profile_source(t)) for t in training_items.SOURCES],
-                     costs=[training_items.REFERENCE_PRICES[training_items.profile_source(t)][0] for t in training_items.SOURCES],
-                     gold_costs=[training_items.REFERENCE_PRICES[training_items.profile_source(t)][1] for t in training_items.SOURCES],
-                     price_packs=[training_items.REFERENCE_PRICES[training_items.profile_source(t)][2] for t in training_items.SOURCES],
-                     labels=[item_catalogue()[training_items.profile_source(t)][2] for t in training_items.SOURCES])
+    from training.type_metadata import announce
+    announce(participant)
     ground.state()
     ground.clone.enter_location()
 

@@ -21,9 +21,13 @@ from training.catalog import contraband, item_catalogue, item_line, mob_catalogu
 from training.character import validate_profile
 from training.settings import MAX_ITEMS, MAX_LEVEL, PAGE_SIZE, SPAWN_LABELS
 from training.validation import integer
+from training import services
 
 
 log = logging.getLogger('lava')
+MUTATIONS = frozenset(('rules', 'spawn', 'fighterpreset', 'apply', 'profile_save',
+    'profile_delete', 'kit_apply', 'supply_get', 'supply_return', 'reset_player', 'start'))
+DURABLE = (MUTATIONS - {'supply_get', 'supply_return'}) | {'location'}
 
 
 def handle(owner, cmd, p):
@@ -44,12 +48,11 @@ def handle(owner, cmd, p):
         else:
             ground.touch()
             ground.clone.handle_training(cmd, p)
-    except (ValueError, TypeError, KeyError) as exc:
+    except ValueError as exc:
         if owner.closed:
             return True
         target = ground.clone if ground and not ground.closed else owner
-        module = __import__(owner.__class__.__module__)
-        if ground and cmd != 'tg' and module.expects_ack(cmd, p) and getattr(target, 'training_acks', 0) == acks:
+        if ground and cmd != 'tg' and services.expects_ack(cmd, p) and getattr(target, 'training_acks', 0) == acks:
             target.send('cmdAck', res=inventory.RES_REFUSED)
         target.send('tg', op='error', message=Str(str(exc)))
     except Exception:
@@ -75,17 +78,18 @@ def request(ground, p):
             raise ValueError('Дождитесь загрузки списка и повторите')
         ground.last_catalogue_request = now
     else:
-        if now - ground.last_request < 0.08:
+        if now - ground.last_request < (1.0 if op in DURABLE else 0.08):
             raise ValueError('Дождитесь ответа на предыдущее действие и повторите')
         ground.last_request = now
     ground.touch()
-    if op in ('rules', 'spawn', 'fighterpreset', 'apply', 'profile_save', 'profile_delete',
-              'kit_apply', 'supply_get', 'supply_return', 'reset_player', 'start'):
+    if op in MUTATIONS:
         if ground.phase != 'ready':
             raise ValueError('Сначала завершите тренировку')
         ground.require_post()
         from training.checkpoints import mutation
-        with mutation(ground):
+        metadata_only = (op in ('spawn', 'fighterpreset', 'profile_save', 'profile_delete')
+                         or op == 'apply' and p.get('who') == 'enemy')
+        with mutation(ground, database=not metadata_only):
             result = apply_request(ground, p, op, now)
             if op not in ('supply_get', 'supply_return'):
                 ground.save_settings()

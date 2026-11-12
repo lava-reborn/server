@@ -1,5 +1,5 @@
 """Party selects who shares a range; inventories remain per-character."""
-import sys
+from training import services
 from protocol import Str
 
 import movement
@@ -17,8 +17,7 @@ def entry_available(owner):
 
 
 def cancel_invites(owner):
-    module = sys.modules[owner.__class__.__module__]
-    directory = module.PARTIES
+    directory = services.parties()
     host = directory.invites.pop(owner.char_id, None)
     inviter = directory.session_of(host) if host is not None else None
     if inviter is not None:
@@ -26,17 +25,24 @@ def cancel_invites(owner):
     for guest, sender in tuple(directory.invites.items()):
         if sender == owner.char_id:
             directory.invites.pop(guest, None)
-    module.CLANS.drop_invite(owner.char_id, 'entered training range')
+    services.clans().drop_invite(owner.char_id, 'entered training range')
 
 
 def entrants(owner):
+    """Leader-directed group entry, as requested by the game rules.
+
+    Windows/routes are cancelled on entry; already paid/queued journeys are
+    refused before any participant is changed, so entry cannot eat their fare.
+    """
     if not entry_available(owner):
         raise ValueError('Отправиться на полигон с отрядом может только его командир')
     party = owner.party()
     result = [owner]
+    if owner.way is not None or owner.passage is not None or owner.arrival is not None:
+        raise ValueError('Сначала завершите или отмените поездку перед входом на полигон')
     if party is None:
         return result
-    directory = sys.modules[owner.__class__.__module__].PARTIES
+    directory = services.parties()
     for char_id in party.members:
         if char_id == owner.char_id:
             continue
@@ -47,7 +53,8 @@ def entrants(owner):
         if getattr(member, 'training_protocol', None) != CLIENT_PROTOCOL:
             raise ValueError('Участнику отряда %s нужно обновить клиент для полигона' % member.nick)
         if (member.closed or member.training_ground is not None or member.combat.dead
-                or member.combat.in_combat() or member.barter.deal is not None):
+                or member.combat.in_combat() or member.barter.deal is not None
+                or member.way is not None or member.passage is not None or member.arrival is not None):
             raise ValueError('Участник отряда %s пока не может отправиться на полигон' % member.nick)
         result.append(member)
     return result
@@ -106,7 +113,7 @@ def command(ground, params):
 
 
 def refresh(ground):
-    directory = sys.modules[ground.owner.__class__.__module__].PARTIES
+    directory = services.parties()
     party = ground.owner.party()
     if party is not None:
         directory.roster(party)

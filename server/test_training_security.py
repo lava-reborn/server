@@ -171,7 +171,7 @@ class TrainingSecurity(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(self.s.closed)
         self.assertIsNone(self.s.training_ground)
 
-    async def test_settings_write_failure_closes_clone_and_preserves_main_record(self):
+    async def test_settings_write_rejection_rolls_back_clone_without_disconnect(self):
         g = self.enter()
         g.clone.inv.create(training_items.copy_type(26022), slot=inventory.PRIMARY)
         g.remember_outfit()
@@ -182,8 +182,8 @@ class TrainingSecurity(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ValueError):
                 g.configure_player(range_character.preset(12))
         self.assertEqual(write.call_count, 1)
-        self.assertTrue(g.closed)
-        self.assertIsNone(self.s.training_ground)
+        self.assertFalse(g.closed)
+        self.assertIs(self.s.training_ground, g)
         self.assertEqual(saved, self.store.training_profile(self.s.char_id))
         self.assertEqual(real_items, [dict(r) for r in self.s.inv.rows()])
 
@@ -196,7 +196,7 @@ class TrainingSecurity(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ValueError):
                 g.request(dict(op='apply', token=g.token, who='player',
                                skills='0,12,0,0,0', specs=','.join(['-1'] * 15), gear=''))
-        self.assertTrue(g.closed)
+        self.assertFalse(g.closed)
         self.assertEqual(saved, self.store.training_profile(self.s.char_id))
         self.assertEqual(real_items, [dict(r) for r in self.s.inv.rows()])
         self.assertFalse(any(name == 'ss_obj_move' for name, fields in self.packets()))

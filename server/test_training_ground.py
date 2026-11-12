@@ -1398,6 +1398,10 @@ class TrainingGround(unittest.IsolatedAsyncioTestCase):
         members, parties, group = self.party_members(2)
         tg.enter(self.s, dict(npc=self.npc))
         first, second = [member.training_ground for member in members]
+        # Room policy may never look up participant items through an arbitrary
+        # visitor's store; actor.store is the only authoritative item owner.
+        from types import SimpleNamespace
+        first.room.combat.store = SimpleNamespace()
         for ground in (first, second):
             ground.clone.cmd_lenter({})
         self.assertTrue(combat.Fighter.allied(first.clone.combat, second.clone.combat))

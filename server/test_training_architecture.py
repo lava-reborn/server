@@ -34,6 +34,14 @@ def training_imports(path):
 
 
 class TrainingArchitecture(unittest.TestCase):
+    def test_package_does_not_discover_host_globals_by_dynamic_import_or_sys_modules(self):
+        for path in PACKAGE.rglob('*.py'):
+            for node in ast.walk(ast.parse(path.read_text(encoding='utf-8'))):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                    self.assertNotEqual(node.func.id, '__import__', str(path))
+                if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+                    self.assertNotEqual((node.value.id, node.attr), ('sys', 'modules'), str(path))
+
     def test_lower_layers_do_not_import_coordinator_or_dispatcher(self):
         for path in PACKAGE.glob('*.py'):
             if path.stem in ('api', 'session'):
