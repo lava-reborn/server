@@ -996,7 +996,13 @@ def activate(ground, persist=True):
 
 
 def resume(owner):
-    """Restore personal progress; ignore legacy shared-room tokens in solo mode."""
+    """Restore personal progress; ignore legacy shared-room tokens in solo mode.
+
+    In the dormant shared mode party membership selects visitors at entry,
+    not continued access. Only the server's durable checkpoint supplies that
+    room token, never a client command. Solo restoration keeps the personal
+    checkpoint but allocates a fresh room instead of rejoining another player.
+    """
     current = getattr(owner, 'training_ground', None)
     if current is not None:
         current.clone.enter_location()
