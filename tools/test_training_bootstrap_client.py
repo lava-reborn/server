@@ -8,6 +8,43 @@ import widescreen
 
 
 class Bootstrap(unittest.TestCase):
+    def test_display_metadata_reuses_only_matching_version_and_rebuilds_private_maps(self):
+        env, f, _ = self.environment(bootstrap_only=True)
+        sent = []
+        def message():
+            row = {}
+            row['addProp'] = lambda key, value: row.update({key: value})
+            return row
+        env['lol']['server']['mess'] = dict(CSMessage=message)
+        env['_global']['__tgTransmit'] = sent.append
+        conn = dict(__tgCompatible=True)
+        data = dict(op='types', version='revision-one', copies=Arr([54000]), sources=Arr([26075]),
+                    icons=Arr([26075]), lines=Arr(['G']), labels=Arr(['Weapon']),
+                    costs=Arr([0]), gold_costs=Arr([100]), price_packs=Arr([1]))
+        notify = lambda p: f['__tgBootstrapNotify'].invoke(conn, [dict(messID='tg', params=p)])
+        notify(data)
+        g = env['_global']
+        self.assertIs(g['__tgTypeCache'], data)
+        self.assertEqual(sent[-1]['op'], '@types_ack@')
+        g['__tgCopies'], g['__tgIcons'] = {}, {}
+        notify(dict(op='types_cached', version='revision-one'))
+        self.assertEqual(g['__tgCopies'][54000], 26075)
+        self.assertEqual(g['__tgLabels'][54000], 'Weapon')
+        notify(dict(op='types_cached', version='revision-two'))
+        self.assertEqual(sent[-1]['op'], '@types_request@')
+        self.assertIs(g['__tgTypeCache'], data)
+        g['__tgTypeCache'] = None
+        notify(dict(op='types_cached', version='revision-one'))
+        self.assertEqual(sent[-1]['op'], '@types_request@')
+
+    def test_login_advertises_only_the_single_cached_display_version(self):
+        env, f, conn, flag, sent = self.transport()
+        env['_global']['__tgTypeCache'] = dict(version='revision-one')
+        conn['Send'](dict(name='selPers'))
+        self.assertEqual(sent[0]['types_version'], '@revision-one@')
+        self.assertNotIn('gear', sent[0])
+        self.assertNotIn('items', sent[0])
+
     def environment(self, bootstrap_only=False):
         env = dict(_global={}, lol={}, Number=float, Boolean=bool, Math=dict(floor=math.floor),
                    mx=dict(utils=dict(Delegate=dict(create=lambda target, method: method))))

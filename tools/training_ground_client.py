@@ -1438,6 +1438,11 @@ def __tgNotifyWrapper(cmd):
             _global.__tgPanel.status.text = v.message
         return
     if v.op == "types":
+        _global.__tgCopies = {}
+        _global.__tgIcons = {}
+        _global.__tgLines = {}
+        _global.__tgLabels = {}
+        _global.__tgPrices = {}
         _global.__tgActive = True
         _global.__tgEpoch = _global.__tgEpoch + 1
         i = 0

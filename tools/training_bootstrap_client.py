@@ -16,6 +16,8 @@ def __tgHandshakeSend(mess):
         hello._name = "tg"
         hello.addProp("op", "@hello@")
         hello.addProp("version", 1)
+        if _global.__tgTypeCache and _global.__tgTypeCache.version:
+            hello.addProp("types_version", "@" + _global.__tgTypeCache.version + "@")
         _global.__tgTransmit(hello)
     return this.__tgHandshakeOrig(mess)
 
@@ -26,11 +28,31 @@ def __tgBootstrapNotify(cmd):
     if value.op == "hello":
         this.__tgCompatible = Number(value.version) == 1 and Boolean(value.available)
         return
+    if value.op == "types_cached":
+        cache = _global.__tgTypeCache
+        if not cache or cache.version != value.version:
+            request = new(lol.server.mess.CSMessage)
+            request._name = "tg"
+            request.addProp("op", "@types_request@")
+            _global.__tgTransmit(request)
+            return
+        value = cache
+        cmd = {"messID":"tg", "params":cache}
     if not _global.__tgHooksActive:
         if value.op != "types" or not this.__tgCompatible:
             return
         _global.__tgLoadFeature()
-    return _global.__tgNotifyWrapper.apply(this, [cmd])
+    result = _global.__tgNotifyWrapper.apply(this, [cmd])
+    if value.op == "types" and value.version:
+        # Only immutable display metadata survives the reversible hook teardown.
+        # Keep one version, never any private item instances or character state.
+        _global.__tgTypeCache = value
+        ack = new(lol.server.mess.CSMessage)
+        ack._name = "tg"
+        ack.addProp("op", "@types_ack@")
+        ack.addProp("version", "@" + value.version + "@")
+        _global.__tgTransmit(ack)
+    return result
 
 def __tgMaybeDetach():
     if not _global.__tgHooksActive or _global.__tgActive or _global.__tgReturnEquipment or _global.__tgSnapshotPending or _global.__tgReturnBagPending:
