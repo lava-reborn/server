@@ -177,7 +177,7 @@ class TrainingClient(unittest.TestCase):
         built = []
         sent = []
         values = '1,1,1,1,1,1,1,1,1,0,1,0,1,1'
-        env = dict(_global=dict(__tgPanel=dict(status=dict(text='')), __tgRuleDraftValues='old', __tgProfileValues=[None, None, values], __tgProfileTitles=['Исходный','Исправленный','Симулятор'], __tgProfileKeys=['base','candidate','sim']), String=str, Number=int, Boolean=bool)
+        env = dict(_global=dict(__tgPanel=dict(status=dict(text='')), __tgRuleDraftValues='old', __tgProfileValues=[None, None, values], __tgProfileTitles=['Исходный','Исправленный','Симулятор'], __tgProfileKeys=['base','candidate','sim']), String=str, Number=float, Boolean=bool, isNaN=lambda n: n != n)
         funcs = self.helpers(env)
         env['_global']['__tgBuild'] = lambda: built.append(True)
         env['_global']['__tgTransmit'] = lambda m: sent.append(m)
@@ -263,7 +263,7 @@ class TrainingClient(unittest.TestCase):
                      spawns=dict(removeMovieClip=lambda: events.append('closed')))
         funcs['__tgSpawnState'].invoke(None, [panel])
         self.assertEqual(panel['spawn']['caption']['text'], 'Средняя ▼')
-        self.assertEqual(panel['distanceInfo']['text'], 'Расстояние: около 14 гексов')
+        self.assertEqual(panel['distanceInfo']['text'], 'До точки появления: ~14 гексов')
         self.assertEqual(events, ['closed'])
         funcs['__tgSpawnState'].invoke(None, [{}])
 
@@ -447,35 +447,29 @@ class TrainingClient(unittest.TestCase):
                 # from the root clip's coordinates after a window resize.
                 screen_x = hud['_x'] - (950 - width) / 2
                 screen_y = hud['_y'] - (650 - height) / 2
-                self.assertEqual(screen_x + 150, width - 16)
-                self.assertEqual(screen_y, 44)
+                self.assertEqual(screen_x + 75, width / 2)
+                self.assertEqual(screen_y, 56)
                 self.assertGreaterEqual(screen_x, 8)
                 self.assertLessEqual(screen_y + 25, height - 8)
 
-    def test_return_button_sits_close_to_header_without_covering_minimap_or_online_popup(self):
+    def test_return_button_is_centered_below_upper_frame_without_covering_minimap(self):
         stage=dict(width=1280,height=720)
-        root={}
-        ref=dict(xMin=1050,xMax=1125,yMin=6,yMax=35)
-        online=dict(xMin=903,xMax=975,yMin=0,yMax=28)
+        header=dict(xMin=0,xMax=1280,yMin=0,yMax=54)
         minimap=dict(xMin=1110,xMax=1270,yMin=40,yMax=220)
-        ui=dict(__rfButton=dict(getBounds=lambda target:ref),
-                __onlinePanel=dict(getBounds=lambda target:online),
+        ui=dict(frame_top=dict(getBounds=lambda target:header),
                 miniMapMask=dict(getBounds=lambda target:minimap))
-        env=dict(_root=root,_global={},Stage=stage,Math=dict(round=round,max=max,min=min),
+        env=dict(_root={},_global={},Stage=stage,Math=dict(round=round,max=max,min=min),
                  lol=dict(core=dict(SceneShifter=dict(_ref=dict(minW=1280,minH=720,currentScene=ui)))))
         hud={};self.helpers(env)['__tgHUDResize'].invoke(hud,[])
-        self.assertEqual(hud['_y'],40)
-        self.assertLessEqual(hud['_x']+150,minimap['xMin']-6)
-        self.assertLessEqual(hud['_x']+150,1272)
-        online['yMax']=120  # Opening the online popup must not cover the button either.
-        self.helpers(env)['__tgHUDResize'].invoke(hud,[])
-        self.assertLessEqual(hud['_x']+150,online['xMin']-6)
-        self.assertEqual(hud['_y'],40)
+        self.assertEqual(hud['_x']+75,640)
+        self.assertEqual(hud['_y'],57)
+        self.assertLessEqual(hud['_x']+150,minimap['xMin'])
 
-    def test_return_button_reserves_the_minimap_column_across_resolutions_and_map_states(self):
+    def test_return_button_stays_centered_across_resolutions_and_map_states(self):
         stage=dict(width=950,height=650)
-        bounds={}
-        ui=dict(miniMapMask=dict(getBounds=lambda target:bounds))
+        bounds={};header={}
+        ui=dict(frame_top=dict(getBounds=lambda target:header),
+                miniMapMask=dict(getBounds=lambda target:bounds))
         env=dict(_root={},_global={},Stage=stage,Math=dict(round=round,max=max,min=min),
                  lol=dict(core=dict(SceneShifter=dict(_ref=dict(minW=950,minH=650,currentScene=ui)))))
         resize=self.helpers(env)['__tgHUDResize'];hud={}
@@ -486,10 +480,23 @@ class TrainingClient(unittest.TestCase):
                     ox,oy=(950-width)/2,(650-height)/2
                     bounds.update(xMin=ox+width-190,xMax=ox+width-10,yMin=oy+44,
                                   yMax=oy+(220 if opened else 60))
+                    header.update(xMin=ox,xMax=ox+width,yMin=oy,yMax=oy+54)
                     resize.invoke(hud,[])
-                    self.assertLessEqual(hud['_x']+150,bounds['xMin']-6)
-                    self.assertGreaterEqual(hud['_x']-ox,8)
-                    self.assertEqual(hud['_y']-oy,44)
+                    self.assertEqual(hud['_x']-ox+75,width/2)
+                    self.assertLessEqual(hud['_x']+150,bounds['xMin'])
+                    self.assertEqual(hud['_y']-oy,57)
+
+    def test_return_button_caption_is_uppercase_and_keeps_its_action(self):
+        calls=[]
+        hud=dict(getNextHighestDepth=lambda:1)
+        env=dict(_global={},_root=dict(createEmptyMovieClip=lambda *args:hud,getNextHighestDepth=lambda:1),
+                 Stage=dict(addListener=lambda *args:None))
+        funcs=self.helpers(env)
+        env['_global']['__tgButton']=lambda *args:calls.append(args)
+        env['_global']['__tgHUDResize']=lambda:None
+        funcs['__tgHUD'].invoke(None,['ready'])
+        self.assertEqual(calls[0][2],'К КОМПЬЮТЕРУ')
+        self.assertEqual(calls[0][-2:],('return',''))
 
     def test_center_and_clamp_use_original_movie_origin(self):
         env = dict(_global={}, Stage=dict(width=1920, height=1080),
@@ -558,14 +565,33 @@ class TrainingClient(unittest.TestCase):
 
     def test_return_refreshes_real_equipment_after_native_location_entry(self):
         calls = []
-        env = dict(_global=dict(__tgReturnEquipment=True, __rfRepairKeys=lambda: True))
+        env = dict(_global=dict(__tgReturnEquipment=True, __rfRepairKeys=lambda: True),
+                   lol=dict(core=dict(quests=dict(QuestInspector=dict(getInstance=lambda:
+                       dict(checkQStatus=lambda quest: calls.append(('status',quest))))))))
         funcs = self.helpers(env)
         owner = dict(__tgEnterOrig=lambda obj: calls.append('entered'),
                      gamer=dict(equipment=dict(getStuff=lambda *args: calls.append(args))))
         funcs['__tgEnterWrapper'].invoke(owner, [None])
         funcs['__tgEnterWrapper'].invoke(owner, [None])
-        self.assertEqual(calls, ['entered', (11, 0), 'entered'])
+        self.assertEqual(calls, ['entered', (11, 0), ('status',9301), 'entered'])
         self.assertFalse(env['_global']['__tgReturnEquipment'])
+
+    def test_range_return_invalidates_only_entry_quest_availability(self):
+        unrelated=dict(available=False)
+        entry=dict(available=False)
+        inspector=dict(checkedQuests={9301:True,793:True},closedQuest=9301,
+                       questCollection={9301:entry,793:unrelated},currentQuests={42:'ordinary quest'})
+        funcs=self.helpers(dict(_global={}))
+        funcs['__tgEntryQuestInvalidate'].invoke(None,[inspector])
+        self.assertIsNone(inspector['checkedQuests'][9301])
+        self.assertTrue(inspector['checkedQuests'][793])
+        self.assertIsNone(inspector['closedQuest'])
+        self.assertFalse(entry['available'])  # Only the server can grant access.
+        self.assertIs(inspector['questCollection'][793],unrelated)
+        self.assertEqual(inspector['currentQuests'],{42:'ordinary quest'})
+        inspector['closedQuest']=793
+        funcs['__tgEntryQuestInvalidate'].invoke(None,[inspector])
+        self.assertEqual(inspector['closedQuest'],793)
 
     def test_managed_full_bag_snapshot_replaces_old_rows_with_native_removal_events(self):
         import math

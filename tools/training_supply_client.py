@@ -36,8 +36,10 @@ def __tgSupplyBuild(p, W, H):
         p.all.caption.text = "Медицина ▼"
         p.all.hintTitle_str = "Категория: Медицина"
     if _global.__tgContext == "specialist":
-        labels = ["Контрабанда / коллекции", "Специальное / прототипы"]
-        values = ["special_weapon", "experimental_weapon"]
+        p.all.__op = "categorymenu"
+        p.all.caption.text = "Все категории ▼"
+        p.all.hintTitle_str = "Категория: Все категории"
+        _global.__tgUITextFit(p.all.caption)
     if _global.__tgContext == "archive":
         labels = ["Сувениры", "Неработающие эффекты", "Старые предметы"]
         values = ["souvenir", "unsupported", "legacy"]
@@ -260,6 +262,11 @@ def __tgSupplyMenu(kind):
         values = ["medicine", "event_medicine"]
         y = 157
         width = 210
+        if _global.__tgContext == "specialist":
+            labels = ["Все категории", "Контрабанда / коллекции", "Специальное / прототипы"]
+            values = ["all", "special_weapon", "experimental_weapon"]
+            y = 241
+            width = 260
     if kind == "detail":
         labels = ["Все предметы"]
         values = ["all"]
@@ -421,6 +428,7 @@ def __tgSupplyClick():
         _global.__tgSupplyCategory = value
         _global.__tgSupplyDetail = "all"
         _global.__tgSupplyLevel = 0
+        p.level.caption.text = "Уровень: все"
         p.all.caption.text = selectedLabel + " ▼"
         p.all.hintTitle_str = "Категория: " + selectedLabel
         p.detail.caption.text = "Фильтр: все"

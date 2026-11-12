@@ -7,6 +7,7 @@ def __tgMenusClose(p):
     while i < len(names):
         box = p[names[i]]
         if box:
+            box._visible = False
             box.removeMovieClip()
             p[names[i]] = None
         i = i + 1
@@ -23,6 +24,9 @@ def __tgMenuAnchor(p, key):
 
 def __tgMenuBox(p, name, key, x, y, w, h):
     box = p.createEmptyMovieClip(name, p.getNextHighestDepth())
+    # A previous assignment of undefined shadows Flash's automatic child name.
+    # Always bind the newly created clip explicitly, including on re-opening.
+    p[name] = box
     box.__tgStyled = True
     p.__menuKey = key
     x = Math.max(16, Math.min(x, p.__w - w - 16))

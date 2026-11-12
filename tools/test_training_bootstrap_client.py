@@ -298,10 +298,14 @@ class Bootstrap(unittest.TestCase):
                     XMLCCallStack=dict(addCall=lambda event, target, handler, data: pending.append((target, handler, data))))
                 g.update(__tgActive=False, __tgReturnEquipment=True, __tgReturnBagPending=True,
                          __tgSnapshotPending=True, __tgEpoch=7, __tgObjects=Arr(), __rfRepairKeys=lambda: None)
+                quest_requests=[]
+                env['lol']['core']['quests']=dict(QuestInspector=dict(getInstance=lambda:
+                    dict(checkQStatus=quest_requests.append)))
                 f['__tgAttachHooks'].invoke(None, [])
                 f['__tgBindEvents'].invoke(None, [])
                 # Dispatch the subscriptions captured before range hooks existed.
                 location_row[1]({})
+                self.assertEqual(quest_requests,[9301])
                 self.assertEqual(requests, [dict(mask=11, target=0)])
                 target, handler, data = pending[0]
 

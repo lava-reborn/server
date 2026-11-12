@@ -7,11 +7,17 @@ import unittest
 import training_ground_client as client, widescreen
 from avm_test import Function, Arr
 
+def number(value):
+    try:
+        return float(value) if value != '' else 0
+    except (ValueError, TypeError):
+        return float('nan')
+
 class ASArray(Arr):
     def join(self, sep): return ASString(sep.join(str(x) for x in self))
     def concat(self, other): return ASArray([*self, *other])
 class ASString(str):
-    def split(self, sep): return ASArray(super().split(sep))
+    def split(self, sep): return ASArray(ASString(part) for part in super().split(sep))
 
 class Clip(dict):
     def get(self, key, default=None):
@@ -27,12 +33,22 @@ class Clip(dict):
             getNextHighestDepth=lambda:len(self.children), stopDrag=lambda:None,
             swapDepths=lambda d:self.update(depth=d),
             getBounds=lambda target:dict(xMin=self.get("_x",0),yMin=self.get("_y",0),xMax=self.get("_x",0)+self.get("__width",self.get("_width",0)),yMax=self.get("_y",0)+self.get("__height",self.get("_height",0))),
-            removeMovieClip=lambda:None, beginFill=lambda *a:None,
+            removeMovieClip=self.remove, beginFill=lambda *a:None,
             beginBitmapFill=lambda *a:None, beginGradientFill=lambda *a:None, moveTo=lambda *a:None,
             lineTo=lambda *a:None, curveTo=lambda *a:None,
             lineStyle=lambda *a:None, endFill=lambda:None)
     def clip(self, name, depth):
-        c=Clip(name,self); self[name]=c; self.children.append(c); return c
+        c=Clip(name,self)
+        # Flash does not overwrite an explicit undefined property with a child alias.
+        if name not in self or self[name] is not None:
+            self[name]=c
+        self.children.append(c)
+        return c
+    def remove(self):
+        self['_visible']=False
+        parent=self.get('_parent')
+        if parent is not None:
+            parent.children[:]=[child for child in parent.children if child is not self]
     def field(self,name,depth,x,y,w,h):
         f=self.clip(name,depth)
         f.update(_x=x,_y=y,_width=w,_height=h,text='',kind='text',format={})
@@ -58,7 +74,7 @@ def environment(width=1004,height=710,tab='player',context='player',supply=False
     root=Clip()
     env=dict(_global=g,Stage=dict(width=width,height=height,addListener=lambda p:None,removeListener=lambda p:None),
       Mouse=dict(addListener=lambda p:None,removeListener=lambda p:None),
-      Math=dict(min=min,max=max,floor=math.floor,ceil=math.ceil,round=lambda x:math.floor(x+0.5)),Boolean=bool,Number=float,
+      Math=dict(min=min,max=max,floor=math.floor,ceil=math.ceil,round=lambda x:math.floor(x+0.5)),Boolean=bool,Number=number,isNaN=math.isnan,
       String=lambda x:ASString(str(int(x)) if isinstance(x,float) and x.is_integer() else str(x)),
       TextFormat=lambda:{},flash=dict(geom=dict(Matrix=lambda:dict(createGradientBox=lambda *a:None))),
       lol=dict(core=dict(SceneShifter=dict(linkWindow=root,hotKeyManager=dict(addFilter=lambda x:None)))))
@@ -72,6 +88,135 @@ def environment(width=1004,height=710,tab='player',context='player',supply=False
     return funcs,g,root
 
 class TrainingPrivateUI(unittest.TestCase):
+    def test_rule_percentages_round_trip_without_changing_formula_flags(self):
+        funcs,g,root=environment(tab='rules',context='computer')
+        original=ASString('1,1,1,1,1,1.23456789012345,1,0.81234567890123,1,0,1,0,1,1')
+        g['__tgRuleDraftValues']=original
+        funcs['__tgBuild'].invoke(None,[])
+        p=g['__tgPanel']
+        self.assertEqual(p['rule5']['text'],'123.4568')
+        self.assertEqual(p['rule7']['text'],'81.2346')
+        self.assertTrue(funcs['__tgRuleDraft'].invoke(None,[]))
+        self.assertEqual(g['__tgRuleDraftValues'],original)
+        p['rule5']['text']=ASString('125,5')
+        p['rule8']['text']=ASString('80')
+        p['rule9']['text']=ASString('20')
+        self.assertTrue(funcs['__tgRuleDraft'].invoke(None,[]))
+        values=g['__tgRuleDraftValues'].split(',')
+        self.assertEqual([float(values[i]) for i in (5,8,9)],[1.255,0.8,20])
+        self.assertEqual(values[7],original.split(',')[7])
+        self.assertEqual(values[10:],original.split(',')[10:])
+
+    def test_rule_sections_preserve_hidden_values_without_network_requests(self):
+        funcs,g,root=environment(tab='rules',context='computer')
+        funcs['__tgBuild'].invoke(None,[])
+        g['__tgTransmit']=lambda *args:self.fail('Editing rules used the network')
+        p=g['__tgPanel'];p['rule5']['text']=ASString('150')
+        funcs['__tgClick'].invoke(dict(__op='rulessection',__value='attributes'),[])
+        p=g['__tgPanel']
+        self.assertIn('rule0',p);self.assertNotIn('rule5',p)
+        p['rule2']['text']=ASString('120')
+        funcs['__tgClick'].invoke(dict(__op='rulessection',__value='main'),[])
+        p=g['__tgPanel']
+        self.assertEqual(p['rule5']['text'],'150')
+        self.assertEqual(float(g['__tgRuleDraftValues'].split(',')[2]),1.2)
+        self.assertIn('Отличий от основы: 2',p['personalHint']['text'])
+        p['rule8']['text']=ASString('75')
+        p['rule8']['onChanged'].invoke(p['rule8'],[])
+        self.assertEqual(float(g['__tgRuleDraftValues'].split(',')[8]),0.75)
+        self.assertIn('Отличий от основы: 3',p['personalHint']['text'])
+
+    def test_invalid_rule_input_cannot_apply_save_start_or_disappear_on_navigation(self):
+        for invalid in ('','0','1001','NaN','Infinity','-1'):
+            for op,value in (('rulesapply',''),('profileform','create'),('rulessection','attributes'),
+                             ('rulesinfo',''),('ruletoggle',10),('tab','result'),('start','')):
+                with self.subTest(invalid=invalid,op=op):
+                    funcs,g,root=environment(tab='rules',context='computer')
+                    funcs['__tgBuild'].invoke(None,[])
+                    p=g['__tgPanel'];before=g['__tgRuleDraftValues']
+                    p['rule5']['text']=ASString('125')
+                    p['rule8']['text']=ASString(invalid)
+                    g['__tgTransmit']=lambda *args:self.fail('Invalid rules were submitted')
+                    funcs['__tgClick'].invoke(dict(__op=op,__value=value),[])
+                    self.assertIs(g['__tgPanel'],p)
+                    self.assertEqual(g['__tgRuleDraftValues'],before)
+                    self.assertIn('Введите',p['status']['text'])
+
+    def test_rule_bounds_and_additive_armour_keep_server_units(self):
+        funcs,g,root=environment(tab='rules',context='computer')
+        funcs['__tgBuild'].invoke(None,[])
+        p=g['__tgPanel']
+        for hp,armour in (('1','0'),('1000','200')):
+            p['rule5']['text']=ASString(hp);p['rule9']['text']=ASString(armour)
+            self.assertTrue(funcs['__tgRuleDraft'].invoke(None,[]))
+            values=g['__tgRuleDraftValues'].split(',')
+            self.assertEqual(float(values[5]),float(hp)/100)
+            self.assertEqual(float(values[9]),float(armour))
+        p['rule9']['text']=ASString('201')
+        self.assertFalse(funcs['__tgRuleDraft'].invoke(None,[]))
+
+    def test_reset_uses_personal_profile_base_and_does_not_apply_or_mutate_catalogue(self):
+        funcs,g,root=environment(tab='rules',context='computer')
+        baseline=ASString('1,1,1,1,1,1,1,1,1,0,0,1,0')
+        simulator=g['__tgRuleDraftValues']
+        personal=ASString('1,1,1,1,1,2,1,1,1,0,0,1,1,1')
+        g.update(__tgProfileKeys=ASArray(['baseline-v1','simulator-v1','user-one']),
+            __tgProfileTitles=ASArray(['Исходный','Симулятор','Мои правила']),
+            __tgProfileBases=ASArray(['baseline-v1','simulator-v1','simulator-v1']),
+            __tgProfilePersonal=ASArray([0,0,1]),__tgProfileSelected=2,
+            __tgProfileValues=ASArray([baseline,simulator,personal]),__tgRuleDraftValues=personal)
+        funcs['__tgBuild'].invoke(None,[])
+        p=g['__tgPanel'];p['rule5']['text']=ASString('')
+        g['__tgTransmit']=lambda *args:self.fail('Reset applied rules to the server')
+        funcs['__tgClick'].invoke(dict(__op='rulesreset',__value=''),[])
+        self.assertEqual(g['__tgRuleDraftValues'],simulator)
+        self.assertEqual(g['__tgProfileValues'][2],personal)
+        self.assertEqual(g['__tgProfileSelected'],2)
+        self.assertIn('Отличий от основы: 0',g['__tgPanel']['personalHint']['text'])
+
+    def test_rule_sections_fit_and_explanations_scroll_in_existing_style(self):
+        for size in ((800,600),(1004,710),(1920,1080)):
+            for section in ('main','attributes','help'):
+                funcs,g,root=environment(*size,tab='rules',context='computer')
+                g['__tgRuleSection']=section
+                funcs['__tgBuild'].invoke(None,[])
+                p=g['__tgPanel'];boxes=[]
+                for c in p.children:
+                    if c.get('_visible',True) and (c.get('kind')=='text' or '__op' in c):
+                        box=(c['_name'],c['_x'],c['_y'],c.get('__width',c.get('_width',0)),c.get('__height',c.get('_height',0)))
+                        boxes.append(box)
+                        self.assertLessEqual(box[1]+box[3],p['__w'])
+                        self.assertLessEqual(box[2]+box[4],p['__h'])
+                for i,(name,x,y,w,h) in enumerate(boxes):
+                    for other,xx,yy,ww,hh in boxes[i+1:]:
+                        self.assertFalse(min(x+w,xx+ww)>max(x,xx) and min(y+h,yy+hh)>max(y,yy),(size,section,name,other))
+                if section=='help':
+                    f=p['ruleDescription'];f['maxscroll']=20
+                    funcs['__tgRuleScroll'].invoke(None,[5])
+                    self.assertEqual(f['scroll'],6)
+                    self.assertIn('Не меняют число пуль',f['text'])
+
+    def test_conditions_show_actual_location_and_preserve_input_when_switching_enemy_kind(self):
+        funcs,g,root=environment(tab='result',context='computer')
+        g.update(__tgLocations=[1,2],__tgLocation=2,__tgLocationLabels=['Пустыня','Арена №1'])
+        funcs['__tgBuild'].invoke(None,[])
+        p=g['__tgPanel']
+        self.assertEqual(p['location']['caption']['text'],'Площадка: Арена №1 ▼')
+        self.assertEqual(p['conditionTitle']['text'],'Параметры моба / босса')
+        self.assertIn('100%',p['scaleHint']['text'])
+        p['mobHealth']['text']='150';p['mobDamage']['text']='125'
+        funcs['__tgClick'].invoke(dict(__op='mode',__value=''),[])
+        p=g['__tgPanel']
+        self.assertIn('настроенного противника',p['conditionTitle']['text'])
+        self.assertFalse(p['mobHealth']['_visible'])
+        p['healBelow']['text']='40';p['healCount']['text']='10'
+        funcs['__tgClick'].invoke(dict(__op='mode',__value=''),[])
+        p=g['__tgPanel']
+        self.assertEqual(p['mobHealth']['text'],'150')
+        self.assertEqual(p['mobDamage']['text'],'125')
+        self.assertEqual(g['__tgHealBelow'],40)
+        self.assertEqual(g['__tgHealCount'],10)
+
     def test_profile_menu_selection_is_draft_and_description_has_no_overlaps(self):
         for width,height in ((800,600),(1004,710),(1280,720)):
             funcs,g,root=environment(width,height,tab='rules',context='computer')
@@ -134,6 +279,89 @@ class TrainingPrivateUI(unittest.TestCase):
         choices=[c for c in p['kitMenu'].children if '__op' in c]
         self.assertEqual(len(choices),7)
         self.assertEqual([c['__value']['value'] for c in choices],list(range(7)))
+
+    def test_every_popup_removes_its_display_clip_after_reopening(self):
+        # An explicit undefined member shadows the automatic Flash child alias.
+        # Checking only p[name] misses a visible, orphaned menu on the display list.
+        names = ('profiles', 'kitMenu', 'filtermenu', 'supplyOptions',
+                 'spawns', 'locations', 'choices')
+        for name in names:
+            with self.subTest(name=name):
+                funcs,g,root=environment()
+                funcs['__tgBuild'].invoke(None,[])
+                p=g['__tgPanel']
+                initial=len(p.children)
+                for cycle in range(4):
+                    box=funcs['__tgMenuBox'].invoke(None,[p,name,name,24,128,200,100])
+                    self.assertIs(p[name],box)
+                    self.assertTrue(box['_visible'])
+                    self.assertTrue(funcs['__tgMenuToggle'].invoke(None,[p,name]))
+                    self.assertFalse(box['_visible'])
+                    self.assertFalse(any(child is box for child in p.children))
+                    self.assertEqual(len(p.children),initial)
+                    self.assertIsNone(p[name])
+                    self.assertIsNone(p['__menuKey'])
+
+    def test_supply_selections_and_repeated_clicks_leave_no_visible_orphan(self):
+        for context in ('weapons','armoury','supplies','medical','specialist','boosts','archive'):
+            for kind in ('line','level','detail','category','variant'):
+                if kind=='category' and context not in ('medical','specialist'):
+                    continue
+                if kind=='level' and context in ('medical','boosts'):
+                    continue
+                if kind=='detail' and context in ('boosts','archive'):
+                    continue
+                with self.subTest(context=context,kind=kind):
+                    funcs,g,root=environment(800,600,'gear',context,True)
+                    funcs['__tgBuild'].invoke(None,[])
+                    p=g['__tgPanel'];p['__supplyLevels']=[1,12,20]
+                    p['__variants']={'variants':['Без улучшения','Урон и обойма']}
+                    requests=[]
+                    g['__tgSupplyRequest']=lambda:requests.append(1)
+                    g['__tgSupplyShow']=lambda value:requests.append(('variant',value))
+                    initial=len(p.children)
+                    for cycle in range(4):
+                        funcs['__tgSupplyMenu'].invoke(None,[kind])
+                        box=p['supplyOptions']
+                        if cycle % 2:
+                            button=next(c for c in box.children if '__op' in c)
+                            funcs['__tgSupplyClick'].invoke(button,[])
+                        else:
+                            funcs['__tgSupplyMenu'].invoke(None,[kind])
+                        self.assertFalse(box['_visible'])
+                        self.assertFalse(any(child is box for child in p.children))
+                        self.assertEqual(len(p.children),initial)
+                        self.assertIsNone(p['supplyOptions'])
+                        self.assertIsNone(p['__menuKey'])
+                    self.assertEqual(len(requests),2)
+
+    def test_specialist_categories_use_one_dropdown_and_keep_selected_caption(self):
+        funcs,g,root=environment(800,600,'gear','specialist',True)
+        funcs['__tgBuild'].invoke(None,[])
+        p=g['__tgPanel']
+        self.assertEqual(p['__categoryCount'],0)
+        self.assertNotIn('cat0',p)
+        self.assertEqual(p['all']['__op'],'categorymenu')
+        self.assertEqual(p['all']['caption']['text'],'Все категории ▼')
+        requests=[]
+        g['__tgSupplyRequest']=lambda:requests.append(g['__tgSupplyCategory'])
+        for index,value in enumerate(('all','special_weapon','experimental_weapon')):
+            p['all']['onRelease'].invoke(p['all'],[])
+            box=p['supplyOptions']
+            buttons=[c for c in box.children if '__op' in c]
+            self.assertEqual([b['__value'] for b in buttons],['all','special_weapon','experimental_weapon'])
+            button=buttons[index];label=button['__label']
+            g['__tgSupplyLevel']=20;g['__tgSupplyDetail']='modified'
+            funcs['__tgSupplyClick'].invoke(button,[])
+            self.assertEqual(g['__tgSupplyCategory'],value)
+            self.assertEqual(g['__tgSupplyDetail'],'all')
+            self.assertEqual(g['__tgSupplyLevel'],0)
+            self.assertEqual(p['level']['caption']['text'],'Уровень: все')
+            self.assertEqual(p['all']['caption']['text'],label+' ▼')
+            self.assertEqual(p['all']['hintTitle_str'],'Категория: '+label)
+            self.assertFalse(box['_visible'])
+            self.assertFalse(any(child is box for child in p.children))
+        self.assertEqual(requests,['all','special_weapon','experimental_weapon'])
 
     def test_all_popup_families_have_one_opaque_background_and_fit(self):
         for size in ((800,600),(1004,710),(1280,720)):

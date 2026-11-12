@@ -147,22 +147,11 @@ def __tgHUDResize():
     originX = Math.round((frame.minW - Stage.width) / 2)
     originY = Math.round((frame.minH - Stage.height) / 2)
     width = 150
-    x = originX + Stage.width - width - 16
-    y = originY + 44
-    if ui.__rfButton:
-        bounds = ui.__rfButton.getBounds(_root)
-        x = bounds.xMax - width
-        y = bounds.yMax + 2
-    # The mask stays fixed when the minimap opens/closes; reserve its column.
-    minimap = ui.miniMapMask or ui.miniMapPan
-    if minimap:
-        bounds = minimap.getBounds(_root)
-        x = Math.min(x, bounds.xMin - width - 6)
-        y = Math.max(y, bounds.yMin)
-    if ui.__onlinePanel:
-        bounds = ui.__onlinePanel.getBounds(_root)
-        if x < bounds.xMax + 6 and x + width > bounds.xMin - 6 and y < bounds.yMax + 2 and y + 25 > bounds.yMin:
-            x = Math.min(x, bounds.xMin - width - 6)
+    x = originX + (Stage.width - width) / 2
+    y = originY + 56
+    if ui.frame_top:
+        bounds = ui.frame_top.getBounds(_root)
+        y = bounds.yMax + 3
     this._x = Math.round(Math.max(originX + 8, Math.min(originX + Stage.width - width - 8, x)))
     this._y = Math.round(Math.max(originY + 8, Math.min(originY + Stage.height - 33, y)))
 
@@ -175,7 +164,7 @@ def __tgHUD(phase):
     hud = _root.createEmptyMovieClip("__tgHUDPanel", _root.getNextHighestDepth())
     _global.__tgHUDPanel = hud
     hud.__tgStyled = True
-    _global.__tgButton(hud, "main", "К компьютеру", 0, 0, 150, "return", "")
+    _global.__tgButton(hud, "main", "К КОМПЬЮТЕРУ", 0, 0, 150, "return", "")
     hud.onResize = _global.__tgHUDResize
     Stage.addListener(hud)
     hud.onResize()
@@ -468,47 +457,67 @@ def __tgBuild():
     if _global.__tgTab == "result":
         column = (W - 72) / 2
         right = 44 + column
-        _global.__tgButton(p, "location", "Площадка: выбрать ▼", 28, 103, column, "locations", "")
-        _global.__tgButton(p, "mode", "Цель: моб / босс · изменить", right, 103, column, "mode", "")
-        if _global.__tgMode == "fighter":
-            p.mode.caption.text = "Цель: настроенный боец · изменить"
-        _global.__tgText(p, "info", "Участников: " + String(_global.__tgParticipants) + ". Площадка общая; её смена переносит всех. Вещи и опыт в основную игру не переносятся.", 28, 136, W - 56, 36, False)
-        _global.__tgButton(p, "spawn", _global.__tgSpawnLabels[_global.__tgSpawnPoint] + " ▼", 28, 180, column, "spawns", "")
-        _global.__tgText(p, "distanceInfo", "До цели: около " + String(_global.__tgDistance) + " гексов", 28, 210, column, 22, False)
-        behaviour = "Активный противник · агро 100+"
-        if _global.__tgStationary:
-            behaviour = "Неподвижная мишень"
-        _global.__tgButton(p, "stationary", behaviour, right, 180, column, "stationary", "")
-        healing = "Боец: без лечения"
-        if _global.__tgEnemyHealing:
-            healing = "Боец: боевая медицина включена"
-        _global.__tgButton(p, "healing", healing, 28, 242, column, "enemyhealing", "")
-        _global.__tgText(p, "belowLabel", "Порог HP / Ст, %", right, 242, column - 80, 24, False)
-        _global.__tgText(p, "healBelow", String(_global.__tgHealBelow), W - 98, 242, 70, 24, True)
-        _global.__tgText(p, "countLabel", "Лечений за бой", 28, 276, column - 80, 24, False)
-        _global.__tgText(p, "healCount", String(_global.__tgHealCount), 28 + column - 70, 276, 70, 24, True)
-        _global.__tgText(p, "hpLabel", "HP / выносливость, %", right, 276, column - 80, 24, False)
-        _global.__tgText(p, "mobHealth", String(_global.__tgMobHealth), W - 98, 276, 70, 24, True)
-        _global.__tgText(p, "damageLabel", "Урон противника, %", 28, 310, column - 80, 24, False)
-        _global.__tgText(p, "mobDamage", String(_global.__tgMobDamage), 28 + column - 70, 310, 70, 24, True)
-        _global.__tgText(p, "scaleHint", "25–300%. 100% - исходный моб.", right, 310, column, 24, False)
-        chosen = _global.__tgMobName
-        if _global.__tgMode == "fighter":
-            chosen = _global.__tgEnemyPreset
+        location = "Выбрать площадку"
+        i = 0
+        while _global.__tgLocations and i < len(_global.__tgLocations):
+            if _global.__tgLocations[i] == _global.__tgLocation:
+                location = _global.__tgLocationLabels[i]
+            i = i + 1
+        _global.__tgButton(p, "location", "Площадка: " + location + " ▼", 28, 103, column, "locations", "")
+        _global.__tgButton(p, "mode", "Противник: моб / босс · сменить", right, 103, column, "mode", "")
         fighter = _global.__tgMode == "fighter"
+        if fighter:
+            p.mode.caption.text = "Противник: настроенный боец · сменить"
+            _global.__tgUITextFit(p.mode.caption)
+        _global.__tgText(p, "info", "Площадка общая: её смена переносит всех участников (" + String(_global.__tgParticipants) + ").", 28, 136, W - 56, 34, False)
+        _global.__tgButton(p, "spawn", _global.__tgSpawnLabels[_global.__tgSpawnPoint] + " ▼", 28, 180, column, "spawns", "")
+        p.spawn.hintTitle_str = "Где появится противник при следующем вызове."
+        _global.__tgText(p, "distanceInfo", "До точки появления: ~" + String(_global.__tgDistance) + " гексов", 28, 212, column, 24, False)
+        behaviour = "Поведение: атакует и двигается"
+        if _global.__tgStationary:
+            behaviour = "Поведение: неподвижная мишень"
+        _global.__tgButton(p, "stationary", behaviour, right, 180, column, "stationary", "")
+        title = "Параметры моба / босса"
+        if fighter:
+            title = "Боевая медицина настроенного противника"
+        _global.__tgText(p, "conditionTitle", title, 28, 244, W - 56, 24, False)
+        healing = "Лечение: выключено"
+        if _global.__tgEnemyHealing:
+            healing = "Лечение: включено"
+        _global.__tgButton(p, "healing", healing, 28, 276, column, "enemyhealing", "")
+        _global.__tgText(p, "belowLabel", "Порог HP / выносл., %", right, 276, column - 80, 24, False)
+        _global.__tgText(p, "healBelow", String(_global.__tgHealBelow), W - 98, 276, 70, 24, True)
+        _global.__tgText(p, "countLabel", "Применений за бой", 28, 308, column - 80, 24, False)
+        _global.__tgText(p, "healCount", String(_global.__tgHealCount), 28 + column - 70, 308, 70, 24, True)
+        _global.__tgText(p, "hpLabel", "HP и выносливость, %", 28, 276, column - 80, 24, False)
+        _global.__tgText(p, "mobHealth", String(_global.__tgMobHealth), 28 + column - 70, 276, 70, 24, True)
+        _global.__tgText(p, "damageLabel", "Урон моба / босса, %", right, 276, column - 80, 24, False)
+        _global.__tgText(p, "mobDamage", String(_global.__tgMobDamage), W - 98, 276, 70, 24, True)
+        _global.__tgText(p, "scaleHint", "100% — исходные параметры моба. Диапазон: 25–300%.", 28, 308, W - 56, 24, False)
+        _global.__tgText(p, "healingHint", "Порог: 10–90%. Лимит: 0–30 применений.", right, 308, column, 36, False)
+        chosen = _global.__tgMobName
+        if fighter:
+            chosen = _global.__tgEnemyPreset
         p.healing._visible = fighter
         p.belowLabel._visible = fighter and Boolean(_global.__tgEnemyHealing)
         p.healBelow._visible = p.belowLabel._visible
         p.countLabel._visible = p.belowLabel._visible
         p.healCount._visible = p.belowLabel._visible
+        p.healingHint._visible = p.belowLabel._visible
         p.hpLabel._visible = not fighter
         p.mobHealth._visible = not fighter
         p.damageLabel._visible = not fighter
         p.mobDamage._visible = not fighter
         p.scaleHint._visible = not fighter
-        if not fighter:
-            _global.__tgText(p, "healingHint", "Лечение настраивается для бойца, а не для моба.", 28, 242, W - 56, 24, False)
-        _global.__tgText(p, "targetSummary", "Противник: " + chosen, 28, 344, W - 56, 36, False)
+        p.mobHealth.restrict = "0-9"
+        p.mobDamage.restrict = "0-9"
+        p.healBelow.restrict = "0-9"
+        p.healCount.restrict = "0-9"
+        p.mobHealth.maxChars = 3
+        p.mobDamage.maxChars = 3
+        p.healBelow.maxChars = 2
+        p.healCount.maxChars = 2
+        _global.__tgText(p, "targetSummary", "Выбран противник: " + chosen, 28, 348, W - 56, 32, False)
         _global.__tgText(p, "report", _global.__tgReport, 28, 386, W - 56, Math.max(20, H - 510), False)
         return
     _global.__tgCatalogueControls(p, W, H)
@@ -609,33 +618,100 @@ def __tgRulesControls(p, W, H):
     if _global.__tgRuleDetails:
         _global.__tgRuleDescription(p, W, H)
         return
-    _global.__tgText(p, "ruleHint", "Множители действуют поверх выбранного профиля. ×1 - без изменения.", 28, 132, W - 56, 24, False)
-    values = _global.__tgRuleDraftValues.split(",")
-    labels = ["Сила ×", "Ловкость ×", "Телосложение ×", "Восприятие ×", "Интеллект ×", "Максимум HP ×", "Максимум выносливости ×", "Вся броня ×", "Разброс ×", "Добавка брони от эффекта"]
+    base = _global.__tgRuleBase()
+    p.__ruleBase = base
+    _global.__tgText(p, "ruleHint", "100% — без изменения. Меньше разброс — выше точность.", 28, 132, W - 56, 22, False)
+    sections = ["Основное", "Характеристики", "Пояснения"]
+    sectionKeys = ["main", "attributes", "help"]
+    section = _global.__tgRuleSection or "main"
+    width = (W - 68) / 3
     i = 0
-    cw = (W - 65) / 2
-    rulePitch = Math.min(29, Math.max(25, (H - 405) / 5))
-    ruleButtonsY = 160 + 5 * rulePitch + 6
-    while i < 10:
-        x = 28 + Math.floor(i / 5) * cw
-        y = 160 + (i % 5) * rulePitch
-        _global.__tgText(p, "ruleLabel" + String(i), labels[i], x, y, cw - 105, 24, False)
-        field = _global.__tgText(p, "rule" + String(i), values[i], x + cw - 95, y, 75, 24, True)
-        field.maxChars = 12
-        field.multiline = False
+    while i < 3:
+        b = _global.__tgButton(p, "ruleSection" + String(i), sections[i], 28 + i * (width + 6), 158, width, "rulessection", sectionKeys[i])
+        _global.__tgUISelect(b, section == sectionKeys[i])
         i = i + 1
-    ammo = "Множители патронов: выкл."
-    if values[10] == "1":
-        ammo = "Множители патронов: вкл."
-    broken = "Броня сломанных частей: не учитывать"
-    if values[11] == "1":
-        broken = "Броня сломанных частей: учитывать"
-    _global.__tgButton(p, "ammoRules", ammo, 28, ruleButtonsY, 300, "ruletoggle", 10)
-    _global.__tgButton(p, "brokenRules", broken, 340, ruleButtonsY, 320, "ruletoggle", 11)
-    _global.__tgButton(p, "applyRules", "Применить правила", 28, ruleButtonsY + 35, 190, "rulesapply", "")
-    _global.__tgButton(p, "rulesInfo", "Описание профиля", 230, ruleButtonsY + 35, 210, "rulesinfo", "")
+    values = _global.__tgRuleDraftValues.split(",")
+    if section == "help":
+        text = "Основное: запас HP и выносливости, величина брони и разброс. 80% разброса означает меньший разброс, а не 80% вероятности попадания.\\n\\nХарактеристики: масштабируют итоговые силу, ловкость, телосложение, восприятие и интеллект. Их влияние зависит от основы формул. Телосложение и запас HP могут усиливать друг друга.\\n\\nПараметры патронов: коэффициенты урона по HP, урона по выносливости цели и дальности из данных боеприпаса. Не меняют число пуль и расход ОД. Остальные свойства патронов определяются основой профиля.\\n\\nДополнительная броня прибавляется до процентного изменения брони. Это настройка правил, а не выдача баффа. Защита сломанной брони учитывается только при включённом переключателе.\\n\\nОбласть действия: настройки относятся к вашему тренировочному персонажу и связанным с ним противникам; обычные мобы используют доступные им параметры. Другие участники выбирают правила отдельно. Основная игра не меняется.\\n\\nСоздание копии и сохранение профиля не применяют правила к бою. После настройки нажмите «Применить правила». Сброс к основе также меняет только черновик."
+        _global.__tgText(p, "ruleHelpHint", "Прокрутите пояснения колёсиком мыши.", 28, 190, W - 56, 22, False)
+        f = _global.__tgText(p, "ruleDescription", text, 28, 218, W - 100, H - 435, False)
+        f.scroll = 1
+        _global.__tgButton(p, "ruleUp", "▲", W - 60, 218, 28, "rulescroll", 0 - 5)
+        _global.__tgButton(p, "ruleDown", "▼", W - 60, H - 242, 28, "rulescroll", 5)
+    else:
+        indices = [5, 6, 7, 8, 9]
+        labels = ["Запас здоровья, %", "Запас выносливости, %", "Значение брони, %", "Разброс оружия, %", "Доп. броня, ед."]
+        if section == "attributes":
+            indices = [0, 1, 2, 3, 4]
+            labels = ["Сила, %", "Ловкость, %", "Телосложение, %", "Восприятие, %", "Интеллект, %"]
+        i = 0
+        cw = (W - 68) / 2
+        while i < len(indices):
+            index = indices[i]
+            x = 28 + Math.floor(i / 3) * (cw + 12)
+            y = 194 + (i % 3) * 29
+            _global.__tgText(p, "ruleLabel" + String(index), labels[i], x, y, cw - 90, 24, False)
+            shown = String(Math.round(Number(values[index]) * 1000000) / 10000)
+            if index == 9:
+                shown = values[index]
+            field = _global.__tgText(p, "rule" + String(index), shown, x + cw - 80, y, 80, 24, True)
+            field.__rulePercent = index != 9
+            field.__ruleDisplay = shown
+            field.__ruleRaw = values[index]
+            field.__ruleIndex = index
+            field.maxChars = 18
+            field.restrict = "0-9.,"
+            field.multiline = False
+            field.onChanged = _global.__tgRuleChanged
+            i = i + 1
+        ammo = "Параметры патронов: не учитывать"
+        if values[10] == "1":
+            ammo = "Параметры патронов: учитывать"
+        broken = "Защита сломанной брони: нет"
+        if values[11] == "1":
+            broken = "Защита сломанной брони: да"
+        _global.__tgButton(p, "ammoRules", ammo, 28, H - 242, cw, "ruletoggle", 10)
+        _global.__tgButton(p, "brokenRules", broken, 40 + cw, H - 242, cw, "ruletoggle", 11)
+        p.ammoRules.hintTitle_str = "Учитывать коэффициенты урона по HP, урона по выносливости цели и дальности выбранных патронов."
+        p.brokenRules.hintTitle_str = "Включает или исключает защиту сломанных частей брони."
+    _global.__tgButton(p, "applyRules", "Применить правила", 28, H - 205, 190, "rulesapply", "")
+    _global.__tgButton(p, "rulesInfo", "Описание профиля", 230, H - 205, 200, "rulesinfo", "")
+    _global.__tgButton(p, "rulesReset", "Сбросить к основе", 442, H - 205, W - 470, "rulesreset", "")
+    _global.__tgUIEnable(p.rulesReset, base >= 0)
     _global.__tgPersonalButtons(p, W, H)
+    _global.__tgRuleSummary()
     return
+
+def __tgRuleBase():
+    selected = _global.__tgProfileSelected
+    key = _global.__tgProfileKeys[selected]
+    if _global.__tgProfilePersonal and _global.__tgProfilePersonal[selected]:
+        key = _global.__tgProfileBases[selected]
+    i = 0
+    while i < len(_global.__tgProfileKeys):
+        if _global.__tgProfileKeys[i] == key:
+            return i
+        i = i + 1
+    return 0 - 1
+
+def __tgRuleSummary():
+    p = _global.__tgPanel
+    if not p or not p.personalHint or p.__ruleBase == None or p.__ruleBase < 0:
+        return
+    values = _global.__tgRuleDraftValues.split(",")
+    base = _global.__tgProfileValues[p.__ruleBase].split(",")
+    count = 0
+    i = 0
+    while i < 12:
+        if Number(values[i]) != Number(base[i]):
+            count = count + 1
+        i = i + 1
+    p.personalHint.text = "Отличий от основы: " + String(count) + ". Сохранение профиля не применяет правила к бою."
+
+def __tgRuleChanged():
+    if _global.__tgRuleDraft():
+        _global.__tgRuleSummary()
+        _global.__tgPanel.status.text = "Черновик изменён. Для боя нажмите «Применить правила»."
 
 def __tgPersonalButtons(p, W, H):
     y = H - 165
@@ -656,7 +732,7 @@ def __tgPersonalForm(p, W, H):
     field = _global.__tgText(p, "profileName", _global.__tgPersonalName, 28, 216, W - 56, 28, not deleting)
     field.maxChars = 32
     field.restrict = "a-zA-Zа-яА-ЯёЁ0-9 _.()"
-    _global.__tgText(p, "personalInfo", "Сохраняются текущие множители и выбранная основа формул. Сохранение не применяет их к бою автоматически.", 28, 268, W - 56, 65, False)
+    _global.__tgText(p, "personalInfo", "Сохраняются настройки и выбранная основа формул. Сохранение не применяет их к бою автоматически.", 28, 268, W - 56, 65, False)
     if deleting:
         p.personalInfo.text = "Будет удалена только ваша запись в списке профилей. Персонаж, вещи и другие игроки не изменятся."
     _global.__tgButton(p, "personalConfirm", "Сохранить", 28, H - 170, 180, "profilecommit", "")
@@ -694,7 +770,7 @@ def __tgRuleDescription(p, W, H):
     field.scroll = 1
     _global.__tgButton(p, "ruleUp", "▲", W - 60, 172, 28, "rulescroll", 0 - 5)
     _global.__tgButton(p, "ruleDown", "▼", W - 60, H - 245, 28, "rulescroll", 5)
-    _global.__tgButton(p, "rulesInfo", "Настроить множители", 28, H - 205, 230, "rulesinfo", "")
+    _global.__tgButton(p, "rulesInfo", "Настроить правила", 28, H - 205, 230, "rulesinfo", "")
     _global.__tgButton(p, "applyRules", "Применить правила", 270, H - 205, 210, "rulesapply", "")
     _global.__tgPersonalButtons(p, W, H)
 
@@ -1004,7 +1080,8 @@ def __tgClick():
     if op == "profileform":
         if value != "create" and not _global.__tgProfilePersonal[_global.__tgProfileSelected]:
             return
-        _global.__tgRuleDraft()
+        if not _global.__tgRuleDraft():
+            return
         _global.__tgPersonalMode = value
         _global.__tgPersonalName = _global.__tgProfileTitles[_global.__tgProfileSelected]
         if value == "create":
@@ -1045,7 +1122,8 @@ def __tgClick():
         return
     if op == "rulesinfo":
         _global.__tgPersonalMode = None
-        _global.__tgRuleDraft()
+        if not _global.__tgRuleDraft():
+            return
         _global.__tgRuleDetails = not _global.__tgRuleDetails
         _global.__tgBuild()
         return
@@ -1063,8 +1141,22 @@ def __tgClick():
         _global.__tgRuleDraftValues = _global.__tgProfileValues[_global.__tgProfileSelected]
         _global.__tgBuild()
         return
+    if op == "rulessection":
+        if not _global.__tgRuleDraft():
+            return
+        _global.__tgRuleSection = value
+        _global.__tgBuild()
+        return
+    if op == "rulesreset":
+        base = _global.__tgRuleBase()
+        if base >= 0:
+            _global.__tgRuleDraftValues = _global.__tgProfileValues[base]
+            _global.__tgBuild()
+            _global.__tgPanel.status.text = "Восстановлены значения основы. Для боя нажмите «Применить правила»."
+        return
     if op == "ruletoggle":
-        _global.__tgRuleDraft()
+        if not _global.__tgRuleDraft():
+            return
         values = _global.__tgRuleDraftValues.split(",")
         values[Number(value)] = String(1 - Number(values[Number(value)]))
         _global.__tgRuleDraftValues = values.join(",")
@@ -1073,7 +1165,8 @@ def __tgClick():
     if op == "rulesapply":
         if not _global.__tgProfileAvailable(_global.__tgProfileSelected):
             return
-        _global.__tgRuleDraft()
+        if not _global.__tgRuleDraft():
+            return
         m = _global.__tgSend("rules")
         m.addProp("profile", "@" + _global.__tgProfileKeys[_global.__tgProfileSelected] + "@")
         m.addProp("values", "@" + _global.__tgRuleDraftValues + "@")
@@ -1156,6 +1249,8 @@ def __tgClick():
         _global.__tgBuild()
         return
     if op == "tab":
+        if _global.__tgTab == "rules" and not _global.__tgRuleDraft():
+            return
         _global.__tgEnemyLook = False
         _global.__tgDraft(_global.__tgTab)
         _global.__tgTab = value
@@ -1223,6 +1318,7 @@ def __tgClick():
         _global.__tgBuild()
         return
     if op == "mode":
+        _global.__tgDraft(_global.__tgTab)
         if _global.__tgMode == "mob":
             _global.__tgMode = "fighter"
         else:
@@ -1295,6 +1391,8 @@ def __tgClick():
         m.addProp("gear", "@" + draft.gear + "@")
         _global.__tgTransmit(m)
     if op == "start":
+        if _global.__tgTab == "rules" and not _global.__tgRuleDraft():
+            return
         _global.__tgDraft(_global.__tgTab)
         if _global.__tgRuleDraftValues != _global.__tgRuleValues:
             p.status.text = "Сначала примените правила во вкладке Правила."
@@ -1318,7 +1416,7 @@ def __tgSpawnState(panel):
     if not panel.spawn:
         return
     panel.spawn.caption.text = _global.__tgSpawnLabels[_global.__tgSpawnPoint] + " ▼"
-    panel.distanceInfo.text = "Расстояние: около " + String(_global.__tgDistance) + " гексов"
+    panel.distanceInfo.text = "До точки появления: ~" + String(_global.__tgDistance) + " гексов"
     if panel.spawns:
         _global.__tgMenusClose(panel)
 
@@ -1525,6 +1623,7 @@ def __tgNotifyWrapper(cmd):
         _global.__tgExitPending()
         inspector = lol.core.quests.QuestInspector.getInstance()
         inspector.clear()
+        _global.__tgEntryQuestInvalidate(inspector)
         inspector.quester = None
         inspector.lockUpdate = False
         _global.__tgEpoch = _global.__tgEpoch + 1
@@ -1544,6 +1643,14 @@ def __tgNotifyWrapper(cmd):
         _global.__tgPlayer = None
         _global.__tgEnemy = None
         _global.__tgClose()
+
+def __tgEntryQuestInvalidate(inspector):
+    # clear() only clears the journal; availability is cached separately.
+    # The next native NPC/status request must ask the real server again.
+    if inspector.checkedQuests:
+        inspector.checkedQuests[9301] = None
+    if inspector.closedQuest == 9301:
+        inspector.closedQuest = None
 
 def __tgExitPending():
     # Detach the native quest UI before its completion callback redraws it.
@@ -1609,6 +1716,8 @@ def __tgEnterWrapper(obj):
         _global.__tgReturnEquipment = False
         this.gamer.equipment.__tgReplaceNextBag = True
         this.gamer.equipment.getStuff(11, 0)
+        inspector = lol.core.quests.QuestInspector.getInstance()
+        inspector.checkQStatus(9301)
 
 def __tgMoveWrapper(cell, spliceNum):
     if not _global.__tgPanel:
@@ -1937,14 +2046,37 @@ def __tgConnectionCloseWrapper():
 
 def __tgRuleDraft():
     p = _global.__tgPanel
-    if not p or not p.rule0:
-        return
-    values = _global.__tgRuleDraftValues.split(",")
+    if not p or not _global.__tgRuleDraftValues or not (p.rule0 or p.rule5):
+        return True
+    values = None
     i = 0
     while i < 10:
-        values[i] = p["rule" + String(i)].text.split(",").join(".")
+        field = p["rule" + String(i)]
+        if field:
+            if not values:
+                values = _global.__tgRuleDraftValues.split(",")
+            text = field.text.split(",").join(".")
+            if field.__ruleDisplay != None and text == field.__ruleDisplay:
+                values[i] = field.__ruleRaw
+            else:
+                number = Number(text)
+                if field.__rulePercent:
+                    number = number / 100
+                minimum = 1 / 100
+                maximum = 10
+                if i == 9:
+                    minimum = 0
+                    maximum = 200
+                if text == "" or isNaN(number) or number < minimum or number > maximum:
+                    p.status.text = "Введите от 1 до 1000%. Для дополнительной брони — от 0 до 200 ед."
+                    return False
+                values[i] = text
+                if field.__rulePercent:
+                    values[i] = String(number)
         i = i + 1
-    _global.__tgRuleDraftValues = values.join(",")
+    if values:
+        _global.__tgRuleDraftValues = values.join(",")
+    return True
 
 def __tgPresetStore():
     suffix = ""
