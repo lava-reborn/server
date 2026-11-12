@@ -405,7 +405,7 @@ UNDEF = object()
 OPS = {
     "end": 0x00, "subtract": 0x0B, "multiply": 0x0C, "divide": 0x0D,
     "not": 0x12, "pop": 0x17,
-    "getvar": 0x1C, "gettime": 0x34, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
+    "getvar": 0x1C, "gettime": 0x34, "delete": 0x3A, "definelocal": 0x3C, "callfunc": 0x3D, "return": 0x3E,
     "add2": 0x47, "less2": 0x48, "equals2": 0x49, "getmember": 0x4E,
     "setmember": 0x4F, "callmethod": 0x52, "newmethod": 0x53,
     "modulo": 0x3F, "duplicate": 0x4C, "typeof": 0x44, "try": 0x8F, "initarray": 0x42, "initobject": 0x43, "newobject": 0x40,
@@ -3274,6 +3274,13 @@ def injected():
     for name, params, body in private_tabs["globals"]:
         a.var("_global").push(name).function(params, body).op("setmember")
     wraps += private_tabs["wraps"]
+    from training_ground_client import patches as training_patches
+    training = training_patches(Asm, UNDEF)
+    for name, params, body in training['bootstrap']:
+        a.var('_global').push(name).function(params, body).op('setmember')
+    # Only capability negotiation / tg dispatch live on ordinary sessions.
+    # Private model/UI wrappers are installed on the first accepted types frame.
+    wraps += training['wraps']
     from reflash_client import patches as reflash_patches
     reflash = reflash_patches(Asm, UNDEF)
     for name, params, body in reflash['globals']:
