@@ -44,18 +44,14 @@ def __tgMenuMouseDown():
     p = this
     if p != _global.__tgPanel or not p.__menuKey or _global.__tgResetDialog:
         return
-    x = p._xmouse
-    y = p._ymouse
     anchor = _global.__tgMenuAnchor(p, p.__menuKey)
-    if anchor and anchor._visible:
-        bounds = anchor.getBounds(p)
-        if x >= bounds.xMin and x <= bounds.xMax and y >= bounds.yMin and y <= bounds.yMax:
-            return
+    if _global.__tgMenuAnchorHit(anchor):
+        return
     names = ["profiles", "kitMenu", "filtermenu", "supplyOptions", "spawns", "locations", "choices"]
     i = 0
     while i < len(names):
         box = p[names[i]]
-        if box and x >= box.__menuX and x <= box.__menuX + box.__menuWidth and y >= box.__menuY and y <= box.__menuY + box.__menuHeight:
+        if box and box._xmouse >= box.__menuX and box._xmouse <= box.__menuX + box.__menuWidth and box._ymouse >= box.__menuY and box._ymouse <= box.__menuY + box.__menuHeight:
             return
         i = i + 1
     # The anchor's release toggles/replaces its menu itself. Closing it here
@@ -64,10 +60,17 @@ def __tgMenuMouseDown():
     i = 0
     while i < len(anchors):
         b = p[anchors[i]]
-        if b and b._visible and x >= b._x and x <= b._x + b.__width and y >= b._y and y <= b._y + b.__height:
+        if _global.__tgMenuAnchorHit(b):
             return
         i = i + 1
     _global.__tgMenusClose(p)
+
+def __tgMenuAnchorHit(b):
+    # Use the button's own mouse coordinates: parent bounds can change when
+    # a native window is moved/scaled or the dropdown raises its anchor.
+    if not b or not b._visible or b._xmouse == None or b._ymouse == None:
+        return False
+    return b._xmouse >= 0 and b._xmouse <= b.__width and b._ymouse >= 0 and b._ymouse <= b.__height
 
 def __tgMenuNoop():
     return

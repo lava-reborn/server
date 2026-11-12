@@ -14,6 +14,12 @@ class ASString(str):
     def split(self, sep): return ASArray(super().split(sep))
 
 class Clip(dict):
+    def get(self, key, default=None):
+        if key in ('_xmouse', '_ymouse') and key not in self:
+            parent = super().get('_parent')
+            return parent.get(key, 0) - super().get('_x' if key == '_xmouse' else '_y', 0) if parent is not None else 0
+        return super().get(key, default)
+
     def __init__(self, name='root', parent=None):
         super().__init__(_name=name, _parent=parent, _x=0, _y=0, _visible=True)
         self.children=[]
@@ -459,6 +465,23 @@ class TrainingPrivateUI(unittest.TestCase):
                     button['onRelease'].invoke(button,[])
                     self.assertEqual(p.get('__menuKey'),('supply:'+kind) if expected else None)
                 self.assertEqual(requests,[])
+
+    def test_supplier_filters_toggle_using_button_local_mouse_coordinates(self):
+        for context in ('specialist', 'weapons', 'armoury', 'supplies'):
+            for kind in ('detail', 'level', 'line'):
+                with self.subTest(context=context, kind=kind):
+                    funcs,g,root=environment(800,600,'gear',context,True)
+                    funcs['__tgBuild'].invoke(None,[])
+                    p=g['__tgPanel'];button=p[kind];requests=[]
+                    g['__tgSupplyRequest']=lambda:requests.append(1)
+                    # Model a raised/transformed anchor, independently of parent bounds.
+                    p['_xmouse']=-500;p['_ymouse']=-500
+                    button['_xmouse']=20;button['_ymouse']=12
+                    for expected in (True,False,True,False):
+                        funcs['__tgMenuMouseDown'].invoke(p,[])
+                        button['onRelease'].invoke(button,[])
+                        self.assertEqual(p.get('__menuKey'),('supply:'+kind) if expected else None)
+                    self.assertEqual(requests,[])
 
     def test_medical_escape_closes_list_then_panel(self):
         funcs,g,root=environment(tab='gear',context='medical',supply=True)

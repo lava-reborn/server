@@ -448,23 +448,48 @@ class TrainingClient(unittest.TestCase):
                 screen_x = hud['_x'] - (950 - width) / 2
                 screen_y = hud['_y'] - (650 - height) / 2
                 self.assertEqual(screen_x + 150, width - 16)
-                self.assertEqual(screen_y, 48)
+                self.assertEqual(screen_y, 44)
                 self.assertGreaterEqual(screen_x, 8)
                 self.assertLessEqual(screen_y + 25, height - 8)
 
-    def test_return_button_is_below_reflash_and_reserves_online_popup_space(self):
+    def test_return_button_sits_close_to_header_without_covering_minimap_or_online_popup(self):
         stage=dict(width=1280,height=720)
         root={}
         ref=dict(xMin=1050,xMax=1125,yMin=6,yMax=35)
         online=dict(xMin=903,xMax=975,yMin=0,yMax=28)
+        minimap=dict(xMin=1110,xMax=1270,yMin=40,yMax=220)
         ui=dict(__rfButton=dict(getBounds=lambda target:ref),
-                __onlinePanel=dict(getBounds=lambda target:online))
+                __onlinePanel=dict(getBounds=lambda target:online),
+                miniMapMask=dict(getBounds=lambda target:minimap))
         env=dict(_root=root,_global={},Stage=stage,Math=dict(round=round,max=max,min=min),
                  lol=dict(core=dict(SceneShifter=dict(_ref=dict(minW=1280,minH=720,currentScene=ui)))))
         hud={};self.helpers(env)['__tgHUDResize'].invoke(hud,[])
-        self.assertEqual(hud['_y'],ref['yMax']+6)
-        self.assertGreaterEqual(hud['_x'],online['xMax']+20)
+        self.assertEqual(hud['_y'],40)
+        self.assertLessEqual(hud['_x']+150,minimap['xMin']-6)
         self.assertLessEqual(hud['_x']+150,1272)
+        online['yMax']=120  # Opening the online popup must not cover the button either.
+        self.helpers(env)['__tgHUDResize'].invoke(hud,[])
+        self.assertLessEqual(hud['_x']+150,online['xMin']-6)
+        self.assertEqual(hud['_y'],40)
+
+    def test_return_button_reserves_the_minimap_column_across_resolutions_and_map_states(self):
+        stage=dict(width=950,height=650)
+        bounds={}
+        ui=dict(miniMapMask=dict(getBounds=lambda target:bounds))
+        env=dict(_root={},_global={},Stage=stage,Math=dict(round=round,max=max,min=min),
+                 lol=dict(core=dict(SceneShifter=dict(_ref=dict(minW=950,minH=650,currentScene=ui)))))
+        resize=self.helpers(env)['__tgHUDResize'];hud={}
+        for width,height in ((800,600),(950,650),(1280,720),(1920,1080),(3840,2160),(950,650)):
+            for opened in (False,True):
+                with self.subTest(width=width,height=height,opened=opened):
+                    stage.update(width=width,height=height)
+                    ox,oy=(950-width)/2,(650-height)/2
+                    bounds.update(xMin=ox+width-190,xMax=ox+width-10,yMin=oy+44,
+                                  yMax=oy+(220 if opened else 60))
+                    resize.invoke(hud,[])
+                    self.assertLessEqual(hud['_x']+150,bounds['xMin']-6)
+                    self.assertGreaterEqual(hud['_x']-ox,8)
+                    self.assertEqual(hud['_y']-oy,44)
 
     def test_center_and_clamp_use_original_movie_origin(self):
         env = dict(_global={}, Stage=dict(width=1920, height=1080),

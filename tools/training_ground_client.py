@@ -148,16 +148,21 @@ def __tgHUDResize():
     originY = Math.round((frame.minH - Stage.height) / 2)
     width = 150
     x = originX + Stage.width - width - 16
-    y = originY + 48
+    y = originY + 44
     if ui.__rfButton:
         bounds = ui.__rfButton.getBounds(_root)
         x = bounds.xMax - width
-        y = bounds.yMax + 6
-    # Reserve the popup's right edge even while it is closed: opening the
-    # online list must not cover or move the training return button.
+        y = bounds.yMax + 2
+    # The mask stays fixed when the minimap opens/closes; reserve its column.
+    minimap = ui.miniMapMask or ui.miniMapPan
+    if minimap:
+        bounds = minimap.getBounds(_root)
+        x = Math.min(x, bounds.xMin - width - 6)
+        y = Math.max(y, bounds.yMin)
     if ui.__onlinePanel:
         bounds = ui.__onlinePanel.getBounds(_root)
-        x = Math.max(x, bounds.xMax + 20)
+        if x < bounds.xMax + 6 and x + width > bounds.xMin - 6 and y < bounds.yMax + 2 and y + 25 > bounds.yMin:
+            x = Math.min(x, bounds.xMin - width - 6)
     this._x = Math.round(Math.max(originX + 8, Math.min(originX + Stage.width - width - 8, x)))
     this._y = Math.round(Math.max(originY + 8, Math.min(originY + Stage.height - 33, y)))
 
