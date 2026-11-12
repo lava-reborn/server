@@ -1377,7 +1377,7 @@ class Session:
             # One attempt per selected character/session, including a failed
             # restore. Ordinary location changes must not retry a broken save.
             self.training_resume_char = self.char_id
-            if training_ground.resume(self):
+            if training_ground.resume(self) or self.closed:
                 return
         # ie != 1 means the client must confirm with lenter;accept=1 once it
         # has finished loading the location's XML and artwork. ws is the

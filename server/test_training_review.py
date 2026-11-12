@@ -5,6 +5,8 @@ import unittest
 from unittest.mock import patch
 
 import inventory
+import battle_medicine
+import combat
 import item_type_ids
 import items
 import own_items
@@ -74,6 +76,26 @@ class Review(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(ground.profile, before)
             self.assertEqual([dict(row) for row in ground.clone.inv.rows()], old_items)
 
+    async def test_rejected_reset_preserves_effects_ap_cooldown_and_inventory(self):
+        ground = self.enter()
+        effects = ground.clone.training_effects
+        effects.add(3115)
+        fighter = ground.clone.combat
+        fighter.ap = 20
+        battle_medicine.start(ground.store, ground.clone.char_id, combat.now())
+        deadlines = dict(ground.store._battle_medicine_deadlines)
+        cp = ground.clone.char.bonus_cp
+        rows = [dict(row) for row in ground.clone.inv.rows()]
+        ground.reset_confirmation = ('test', time.monotonic() + 60)
+        with patch.object(self.store, 'save_training_profile', side_effect=ValueError('too large')):
+            with self.assertRaises(ValueError):
+                ground.reset_player('test')
+        self.assertIs(ground.clone.training_effects, effects)
+        self.assertEqual(ground.clone.char.bonus_cp, cp)
+        self.assertEqual(fighter.ap, 20)
+        self.assertEqual(ground.store._battle_medicine_deadlines, deadlines)
+        self.assertEqual([dict(row) for row in ground.clone.inv.rows()], rows)
+
     async def test_resume_failure_after_leaving_room_falls_back_once_to_normal_location(self):
         ground = self.enter()
         ground.exit(notify=False, suspend=True)
@@ -99,6 +121,34 @@ class Review(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ValueError):
                 ground.configure_player(session.preset(12))
         self.assertTrue(ground.closed)
+
+    async def test_uncertain_exit_and_resume_do_not_compensate_committed_records(self):
+        ground = self.enter()
+        save = self.store.save_training_profile
+        def committed_then_lost(*args):
+            save(*args)
+            raise storage.CommitError('reply lost')
+        with patch.object(self.store, 'save_training_profile', side_effect=committed_then_lost) as write:
+            with self.assertRaises(ValueError):
+                ground.exit()
+            self.assertEqual(write.call_count, 1)
+        self.assertTrue(self.s.closed)
+        self.assertFalse(self.store.training_profile(self.s.char_id)['inside'])
+
+        # A fresh transport may retry a saved membership. Simulate an uncertain
+        # commit during that activation and verify no old failure record is sent.
+        import server
+        owner = server.Session(fixtures.Writer(), 'resume-review')
+        owner.training_protocol = 1
+        owner.char_id, owner.active, owner.char = self.s.char_id, self.s.active, self.s.char
+        owner.loc, owner.pos = self.s.loc, self.s.pos
+        saved = self.store.training_profile(owner.char_id)
+        saved['inside'] = True
+        save(owner.char_id, saved)
+        with patch.object(self.store, 'save_training_profile', side_effect=committed_then_lost) as write:
+            self.assertFalse(session.resume(owner))
+            self.assertEqual(write.call_count, 1)
+        self.assertTrue(owner.closed)
 
     async def test_durable_rate_limit_precedes_snapshot_and_metadata_needs_no_database_backup(self):
         ground = self.enter()

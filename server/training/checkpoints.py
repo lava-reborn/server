@@ -53,6 +53,12 @@ def mutation(ground, *, database=True):
     snapshot = snapshot_database(ground) if database else None
     before = {key: copy.deepcopy(getattr(ground, key)) for key in FIELDS}
     old_character = ground.clone.char
+    old_effects = ground.clone.training_effects
+    active_effects = copy.deepcopy(old_effects.active)
+    ap, amax = ground.clone.combat.ap, ground.clone.combat.amax_sent
+    deadlines = getattr(ground.store, '_battle_medicine_deadlines', None)
+    saved_deadlines = dict(deadlines or {})
+    appearance = {key: dict(getattr(ground.clone.inv, key)) for key in ('shown', 'acked')}
     actors = ground.enemy, ground.enemy_cache, ground.mob_eid
     room_state = dict(ground.room.npcs), dict(ground.room.combat.mobs), dict(ground.room.players)
     old_phase = ground.phase
@@ -96,6 +102,21 @@ def mutation(ground, *, database=True):
                 if snapshot is not None:
                     restore_database(ground, snapshot)
                 ground.clone.char = old_character
+                effects_changed = (ground.clone.training_effects is not old_effects
+                                   or old_effects.active != active_effects)
+                if ground.clone.training_effects is not old_effects:
+                    ground.clone.training_effects.close()
+                if effects_changed:
+                    old_effects.close()
+                    old_effects.active = active_effects
+                ground.clone.training_effects = old_effects
+                ground.clone.combat.ap, ground.clone.combat.amax_sent = ap, amax
+                current_deadlines = getattr(ground.store, '_battle_medicine_deadlines', None)
+                if current_deadlines is not None:
+                    current_deadlines.clear()
+                    current_deadlines.update(saved_deadlines)
+                for key, value in appearance.items():
+                    setattr(ground.clone.inv, key, value)
                 ground.enemy, ground.enemy_cache, ground.mob_eid = actors
                 ground.phase = old_phase
                 for target, saved in zip((ground.room.npcs, ground.room.combat.mobs, ground.room.players), room_state):
@@ -103,6 +124,8 @@ def mutation(ground, *, database=True):
                     target.update(saved)
                 for key, value in before.items():
                     setattr(ground, key, value)
+                if effects_changed:
+                    old_effects.refresh()
                 ground.room.combat.sync_ws()
             except Exception:
                 log.exception('Could not recover private staging state for %s', ground.owner.char_id)

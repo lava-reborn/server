@@ -848,8 +848,13 @@ class Ground:
             self.remember_outfit()
             self.inside = bool(suspend)
             self.save_settings()
-        except Exception:
+        except Exception as exc:
             self.inside = previous_inside
+            if checkpoints.uncertain(exc, self.owner.inv.store.db):
+                self.emergency('Не удалось подтвердить выход. Перезайдите для восстановления.')
+                if not suspend:
+                    raise ValueError('Не удалось подтвердить выход с полигона') from exc
+                return
             if not suspend:
                 self.touch()
                 raise ValueError('Не удалось сохранить выход. Настройки сохранены ранее; повторите попытку.') from None
@@ -998,6 +1003,7 @@ def resume(owner):
         owner.say('Полигон временно недоступен. Его настройки сохранены; повторите вход в игру позже.')
         return False
     ground = None
+    activating = False
     try:
         ground = Ground(owner)
         visit = saved.get('room')
@@ -1010,11 +1016,17 @@ def resume(owner):
                     shared, control_cell(ground.location), excluded=ground.clone)
             else:
                 ground.room.key = (ground.location, visit)
+        activating = True
         activate(ground)
         training_party.refresh(ground)
         return True
-    except Exception:
+    except Exception as exc:
         log.exception('Could not resume training for character %s', owner.char_id)
+        if activating and checkpoints.uncertain(exc, owner.inv.store.db):
+            # Do not overwrite a possibly committed, migrated checkpoint with
+            # an old snapshot just to increment the failed-resume counter.
+            ground.emergency('Не удалось подтвердить восстановление. Повторите вход позже.')
+            return False
         if ground is not None:
             ground.dispose()
         failed = copy.deepcopy(saved)
