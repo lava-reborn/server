@@ -43,6 +43,10 @@ def restore(rules):
     if rules.combat_v2 and not rules.simulator_formulas:
         return replace(rules, combat_v2=False, ammo_modifiers=False,
                        broken_armour=True, revision='baseline-v1')
+    if rules.simulator_formulas and re.fullmatch(r'simulator-[0-9a-f]{7,40}', rules.revision):
+        from training import formulas
+        if formulas.available():
+            return replace(rules, revision=formulas.engine().KEY)
     return rules
 
 
@@ -119,7 +123,13 @@ def load_personal(raw):
     records = []
     for row in raw[:MAX_PERSONAL]:
         try:
-            rules = resolve(row['values'], row['base'])
+            base = row['base']
+            if isinstance(base, str) and re.fullmatch(r'simulator-[0-9a-f]{7,40}', base):
+                from training import formulas
+                values = Rules.from_values(row['values'])
+                if formulas.available() and values.simulator_formulas:
+                    base = formulas.engine().KEY
+            rules = resolve(row['values'], base)
             record = personal_record(row['key'], row['title'], rules)
             if all(p.key != record.key and p.title.casefold() != record.title.casefold() for p in records):
                 records.append(record)

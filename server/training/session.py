@@ -57,6 +57,10 @@ from training.settings import (
 from training.validation import integer
 
 
+from training.engines import install as install_engines
+
+install_engines()
+
 log = logging.getLogger('lava')
 
 

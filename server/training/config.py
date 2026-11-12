@@ -9,6 +9,17 @@ CLIENT_PROTOCOL = 1
 # expose an environment/client override in the current solo-only deployment.
 SHARED_ROOMS = False
 
+# Private protocol namespaces. Assigned item ids are frozen in
+# data/training_item_ids.json and checked against the ordinary catalogue.
+# 60000..60999 stays with ordinary designed equipment, never range copies.
+ITEM_FIRST, ITEM_LAST = 54000, 65535
+BASELINE_LAST = 56999
+SIMULATOR_FIRST, SIMULATOR_LAST = 57000, 59999
+PROTOTYPE_FIRST, PROTOTYPE_LAST = 61000, 61999
+SET_FIRST, SET_SIMULATOR_OFFSET = 80000, 1000
+EFFECT_FIRST = 90000
+PLAYER_ID_BASE = 100_000_000
+
 
 def enabled():
     return os.environ.get('LAVA_TRAINING_GROUND', '0') == '1'

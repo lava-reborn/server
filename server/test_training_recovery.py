@@ -272,10 +272,11 @@ class Recovery(unittest.IsolatedAsyncioTestCase):
         saved['player']['gear'] = {'61000': 1}
         expected = copy.deepcopy(saved['player'])
         self.store.save_training_profile(self.s.char_id, saved)
-        self.assertTrue(training.resume(self.s))
-        current = self.store.training_profile(self.s.char_id)
-        self.assertEqual(current['unavailable_presets']['player'], expected)
-        self.assertEqual(rules.Rules.parse(current['unavailable_rules']), rules.Rules.parse(saved['rules']))
+        with patch.object(formulas, 'available', return_value=False):
+            self.assertTrue(training.resume(self.s))
+            current = self.store.training_profile(self.s.char_id)
+            self.assertEqual(current['unavailable_presets']['player'], expected)
+            self.assertEqual(rules.Rules.parse(current['unavailable_rules']), rules.Rules.parse(saved['rules']))
         self.assertFalse(self.s.training_ground.rules.simulator_formulas)
         self.unchanged()
 
@@ -365,19 +366,24 @@ class ProfileAndContent(unittest.TestCase):
             copies.registered_ids([*sources, other], items.catalogue())
 
     def test_unavailable_personal_profile_survives_roundtrip_but_is_not_selectable(self):
-        raw = dict(key='user-0123456789abcdef', title='Saved test', base='simulator-6b7b28d',
+        raw = dict(key='user-0123456789abcdef', title='Saved test', base='simulator-v99',
                    values=rules.Rules(simulator_formulas=True).values())
         loaded = profiles.load_personal([raw])
         self.assertEqual(profiles.dump_personal(loaded), [raw])
         payload = profiles.payload(profiles.catalogue()[0].rules, loaded)
-        self.assertEqual(len(payload['profile_keys']), 1)
+        self.assertEqual(len(payload['profile_keys']), len(profiles.catalogue()))
         with self.assertRaises(ValueError):
             profiles.resolve(raw['values'], raw['key'], loaded)
 
     def test_reviewed_content_exists_without_simulator_snapshot(self):
-        self.assertFalse(formulas.available())
-        content.validate()
-        self.assertEqual([profile.key for profile in profiles.catalogue()], ['baseline-v1'])
+        try:
+            with patch.object(formulas, '_ENGINE', None):
+                profiles.catalogue.cache_clear()
+                self.assertFalse(formulas.available())
+                content.validate()
+                self.assertEqual([profile.key for profile in profiles.catalogue()], ['baseline-v1'])
+        finally:
+            profiles.catalogue.cache_clear()
 
 
 if __name__ == '__main__':
