@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import combat
 import inventory
+import progression
 import storage
 from training import items as training_items
 from training import shop as training_shop
@@ -27,6 +28,38 @@ class TrainingSecurity(unittest.IsolatedAsyncioTestCase):
 
     def packets(self):
         return [decode(frame[:-1]) for frame in self.s.writer.frames]
+
+    async def test_exit_restores_real_medical_specs_and_rejects_stale_clone_items(self):
+        self.s.char.set_spec(8, 3)
+        self.s.char.set_spec(9, 4)
+        self.s.char.spec[8][1], self.s.char.spec[9][1] = 123, 456
+        self.s.char.save(self.store)
+        real_specs = copy.deepcopy(self.s.char.spec)
+        real_items = [dict(row) for row in self.s.inv.rows()]
+        real_money = self.s.inv.money()
+        g = self.enter()
+        g.clone.char.set_spec(8, 5)
+        g.clone.char.set_spec(9, 5)
+        gun = g.clone.inv.create(training_items.copy_type(26075), slot=inventory.PRIMARY)
+        oid = inventory.oid_of(gun)
+        g.exit(notify=False)
+        self.assertIsNone(self.s.training_ground)
+        self.assertEqual(self.s.char.spec, real_specs)
+        self.assertEqual(progression.Character.load(self.store, self.s.char_id).spec, real_specs)
+        self.s.writer.frames.clear()
+        self.s.handle('rp_get_info', {})
+        packet = next(fields for name, fields in self.packets() if name == 'rp_info')
+        self.assertEqual(packet['a_specs'][8:10], [3, 4])
+        for destination in (inventory.BAG, inventory.BANK):
+            self.s.writer.frames.clear()
+            self.s.handle('ss_move', dict(obj=oid, to=destination, **{'from': inventory.PRIMARY}))
+            self.assertNotEqual(self.packets()[0][1]['res'], inventory.RES_OK)
+        self.s.writer.frames.clear()
+        self.s.handle('ss_use', dict(obj=oid, type=inventory.USE_MODE, mode=1))
+        self.assertNotEqual(self.packets()[0][1]['res'], inventory.RES_OK)
+        self.assertEqual([dict(row) for row in self.s.inv.rows()], real_items)
+        self.assertEqual(self.s.inv.money(), real_money)
+        self.assertIsNone(self.store.item(gun['uniq']))
 
     async def test_negative_fractional_boolean_and_foreign_stack_commands_are_rejected(self):
         g = self.enter()
