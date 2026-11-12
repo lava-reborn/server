@@ -8,7 +8,9 @@ found; a later owner of a method must never be overwritten by teardown.
 
 SOURCE = '''
 def __tgHandshakeSend(mess):
-    if mess.name == "actPlayer":
+    # Existing characters enter from selPers; only newborns use actPlayer.
+    # Negotiate before either command can restore a saved training session.
+    if mess.name == "selPers" or mess.name == "actPlayer":
         this.__tgCompatible = False
         hello = new(lol.server.mess.CSMessage)
         hello._name = "tg"

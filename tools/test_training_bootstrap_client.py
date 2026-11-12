@@ -140,17 +140,34 @@ class Bootstrap(unittest.TestCase):
         return env, f, conn, flag, sent
 
     def test_hello_is_sent_before_character_activation_and_other_commands_pass_unchanged(self):
+        for command in ('selPers', 'actPlayer'):
+            with self.subTest(command=command):
+                env, f, conn, flag, sent = self.transport()
+                conn['__tgCompatible'] = True
+                activate = dict(name=command, num=0)
+                self.assertTrue(conn['Send'](activate))
+                self.assertEqual(sent[0]['_name'], 'tg')
+                self.assertEqual((sent[0]['op'], sent[0]['version']), ('@hello@', 1))
+                self.assertIs(sent[1], activate)
+                self.assertFalse(conn['__tgCompatible'])
+                self.assertFalse(flag['tg'])
+                move = dict(name='moveTo')
+                self.assertTrue(conn['Send'](move))
+                self.assertEqual(len(sent), 3)
+                self.assertIs(sent[-1], move)
+
+    def test_existing_character_login_negotiates_once_before_selection(self):
         env, f, conn, flag, sent = self.transport()
-        activate = dict(name='actPlayer')
-        self.assertTrue(conn['Send'](activate))
-        self.assertEqual(sent[0]['_name'], 'tg')
-        self.assertEqual((sent[0]['op'], sent[0]['version']), ('@hello@', 1))
-        self.assertIs(sent[1], activate)
+        commands = [dict(name=name) for name in
+                    ('hello', 'login', 'selPers', 'lenter', 'gg_info', 'q_status')]
+        # This is the existing-character path: there is no actPlayer packet.
+        for command in commands:
+            self.assertTrue(conn['Send'](command))
+        self.assertEqual(sent[:2], commands[:2])
+        self.assertEqual(sent[2]['_name'], 'tg')
+        self.assertEqual(sent[2]['op'], '@hello@')
+        self.assertEqual(sent[3:], commands[2:])
         self.assertFalse(flag['tg'])
-        move = dict(name='moveTo')
-        self.assertTrue(conn['Send'](move))
-        self.assertEqual(len(sent), 3)
-        self.assertIs(sent[-1], move)
 
     def test_send_failure_restores_both_previous_filter_states(self):
         env, f, conn, flag, _ = self.transport()
