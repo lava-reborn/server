@@ -187,13 +187,34 @@ class Recovery(unittest.IsolatedAsyncioTestCase):
                     with patch.object(g, 'request', side_effect=RuntimeError('handler failed')):
                         self.assertTrue(commands.handle(self.s, 'tg', dict(op='spawn')))
                 else:
-                    g.last_activity = 0
+                    # monotonic() is relative to boot, not the Unix epoch.
+                    # A fresh CI host may have been up for less than the TTL.
+                    g.last_activity = training.time.monotonic() - training.IDLE_SECONDS - 1
+                    g.timer.cancel()  # The scheduled callback is being fired manually.
                     g.idle()
             self.assertTrue(g.closed)
             self.assertIsNone(g.timer)
             self.assertNotIn(g, runtime.ACTIVE)
             self.assertIsNone(self.s.training_ground)
             self.reconnect()
+
+    async def test_idle_deadline_handles_a_recently_booted_host(self):
+        g = self.enter()
+        g.timer.cancel()
+        g.last_activity = 100
+        # Keep the virtual clock scoped to these synchronous callbacks.
+        with patch.object(training.time, 'monotonic', return_value=110):
+            g.idle()
+        self.assertFalse(g.closed)
+        self.assertIsNotNone(g.timer)
+        g.timer.cancel()
+        with patch.object(training.time, 'monotonic', return_value=100 + training.IDLE_SECONDS):
+            g.idle()
+        self.assertTrue(g.closed)
+        self.assertIsNone(g.timer)
+        self.assertNotIn(g, runtime.ACTIVE)
+        self.assertFalse(self.store.training_profile(self.s.char_id)['inside'])
+        self.unchanged()
 
     async def test_local_npc_ids_are_reused_without_touching_global_allocator(self):
         with patch.object(server.ROOMS.ids, 'npc', side_effect=AssertionError('global allocation')):

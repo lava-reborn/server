@@ -53,6 +53,27 @@ class TrainingArchitecture(unittest.TestCase):
                         "assert not any(n.startswith('training.') for n in sys.modules)"],
                        check=True, timeout=10, env=env, capture_output=True)
 
+    def test_cold_optional_preload_registers_strings_only_when_enabled(self):
+        code = '''
+import os, sys, names
+from training import api
+before = dict(names.ALL)
+api.preload()
+assert 'training.session' not in sys.modules
+assert names.ALL == before
+os.environ['LAVA_TRAINING_GROUND'] = '1'
+api.preload()
+from training import opponents
+assert all(names.ALL.get(key) == text for key, text in opponents.NAMES.items())
+assert all(names.ALL.get(key) == text for key, text in before.items())
+assert "<s id='8200011'>" in names.document()
+'''
+        env = dict(os.environ, PYTHONPATH=str(SERVER), LAVA_TRAINING_GROUND='0',
+                   LAVA_DB=':memory:', LAVA_DB_URL='')
+        result = subprocess.run([sys.executable, '-B', '-c', code], env=env,
+                                capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_ordinary_session_events_are_unchanged_and_commands_fall_through(self):
         owner = NS(training_ground=None)
         for command in ('ss_obj_move', 'q_di_kill', 'hp', 'gg_list', 'cmdAck', 'p_m'):

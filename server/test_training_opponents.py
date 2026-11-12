@@ -1,4 +1,3 @@
-from training import profiles as installed_profiles
 """Small catalogue, lifecycle and isolation checks for player-facing targets."""
 import unittest
 import names
@@ -11,11 +10,18 @@ from training import formulas as range_formulas
 from training import settings as range_settings
 from training import session as tg
 from training import opponents as catalogue
+from training import profiles as installed_profiles
 from protocol import decode
 import test_training_ground as fixtures
 
 
 class Catalogue(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Production preloads optional strings before accepting connections.
+        # Do not depend on another suite having constructed a Ground first.
+        tg.preload()
+
     def test_reviewed_catalogue_has_names_groups_and_all_camp_bosses(self):
         choices = range_catalog.mob_catalogue()
         self.assertLess(len(choices), 300)
