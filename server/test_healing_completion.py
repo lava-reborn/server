@@ -19,6 +19,15 @@ import items  # noqa: E402
 import progression  # noqa: E402
 from testkit import run_cases  # noqa: E402
 
+
+class HealingActor(NS):
+    prepare_weapon = combat.Fighter.prepare_weapon
+    prepare_melee = combat.Fighter.prepare_melee
+    healing_spec = combat.Fighter.healing_spec
+    healing_multiplier = combat.Fighter.healing_multiplier
+    medicine_cooldown_seconds = combat.Fighter.medicine_cooldown_seconds
+
+
 class HealingCompletion(unittest.IsolatedAsyncioTestCase):
 
     def fixture(self, type_id=6043):
@@ -29,7 +38,7 @@ class HealingCompletion(unittest.IsolatedAsyncioTestCase):
         room = NS(ws=False, broadcast=lambda frame, **kw: events.append(frame))
         frames = []
         sess = NS(char_id=1, room=room, inv=NS(find=lambda _: row, push_status=lambda *a: None, wear_worn=lambda *a: None), answer=events.append, push_stats=lambda **k: None, push_vitals=lambda: None, send=lambda name, **p: frames.append((name, p)))
-        f = NS(sess=sess, rc=NS(room=room), ap=100, healing=None, dead=False, eid=1, damage_revision=0, character=lambda: ch, ack=events.append, store=NS(item=lambda _: row, delete_item=consumed.append))
+        f = HealingActor(sess=sess, rc=NS(room=room), ap=100, healing=None, dead=False, eid=1, damage_revision=0, character=lambda: ch, ack=events.append, store=NS(item=lambda _: row, delete_item=consumed.append))
         f.heal_now = lambda *args: combat.Fighter.heal_now(f, *args)
         f.c_ap = lambda: None
         f.frames = frames

@@ -1598,11 +1598,11 @@ def connect():
 
 
 class Store:
-    def __init__(self, path=None):
+    def __init__(self, path=None, *, db=None):
         global DB_PATH
         if path:
             DB_PATH = path
-        self.db = connect()
+        self.db = db if db is not None else connect()
         # (source, ref) a purse written now is booked under (money_ledger),
         # set around a command by its handler (booked_as); None books it
         # under LEDGER_OTHER. The game server is one thread: a command runs
@@ -2440,7 +2440,7 @@ class Store:
 
     def lock_quest_character(self, char_id):
         """Serialize this character's quest writes inside storage.atomic."""
-        lock = " FOR UPDATE" if storage.using_postgres() else ""
+        lock = " FOR UPDATE" if isinstance(self.db, storage.PostgresDB) else ""
         return self.db.execute("SELECT id FROM characters WHERE id = ?" + lock,
                                (char_id,)).fetchone() is not None
 

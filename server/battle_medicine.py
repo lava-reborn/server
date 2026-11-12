@@ -22,17 +22,20 @@ def remaining_ms(store, char_id, now):
     return min(int(COOLDOWN_SECONDS * 1000), max(1, math.ceil(remaining * 1000 - 1e-6)))
 
 
-def start(store, char_id, now):
+def start(store, char_id, now, duration=COOLDOWN_SECONDS):
+    duration = float(duration)
+    if not math.isfinite(duration) or not 0 < duration <= COOLDOWN_SECONDS:
+        raise ValueError("Invalid battle medicine cooldown")
     deadlines = getattr(store, '_battle_medicine_deadlines', None)
     if deadlines is None:
         deadlines = {}
         store._battle_medicine_deadlines = deadlines
-    deadline = now + COOLDOWN_SECONDS
+    deadline = now + duration
     deadlines[char_id] = deadline
 
     def expire():
         if deadlines.get(char_id) == deadline:
             deadlines.pop(char_id, None)
 
-    asyncio.get_running_loop().call_later(COOLDOWN_SECONDS, expire)
-    return int(COOLDOWN_SECONDS * 1000)
+    asyncio.get_running_loop().call_later(duration, expire)
+    return math.ceil(duration * 1000)

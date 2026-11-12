@@ -33,6 +33,7 @@ class Finisher:
     dead = False
     fire_now = combat.Fighter.fire_now
     strike_now = combat.Fighter.strike_now
+    prepare_melee = combat.Fighter.prepare_melee
     award_xp = combat.Fighter.award_xp
     credit_xp = combat.Fighter.credit_xp
     level = property(lambda self: self.ch.level)
@@ -78,6 +79,8 @@ async def exercise():
                 settle_xp=lambda mob: None, corpse_gone=lambda *a: None,
                 calm=lambda: None)
             rc.kill = lambda mob, player, **kw: combat.RoomCombat.kill(rc, mob, player, **kw)
+            rc.melee_critical = lambda *args: combat.RoomCombat.melee_critical(rc, *args)
+            rc.melee_damage = lambda *args: combat.RoomCombat.melee_damage(rc, *args)
             killer.rc = rc
 
             def burst(shooter, mob, cell, weapon, live, others, **timing):

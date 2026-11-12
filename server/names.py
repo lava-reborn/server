@@ -237,6 +237,19 @@ def text(string_id):
     return ALL.get(string_id, "#%d" % string_id)
 
 
+def register_strings(strings):
+    """Add feature strings before either process publishes its text preload."""
+    if _DOCUMENT is not None:
+        raise RuntimeError("Text preload has already been published")
+    values = dict(strings)
+    for key, value in values.items():
+        if type(key) is not int or key <= 0 or not isinstance(value, str):
+            raise ValueError("Invalid additional string")
+        if key in ALL and ALL[key] != value:
+            raise ValueError("Additional string overlaps an existing id")
+    ALL.update(values)
+
+
 _DOCUMENT = None
 
 
@@ -277,9 +290,9 @@ _SHA = None
 def document_bytes():
     """The table as the bytes the client reads, built once and kept.
 
-    Safe to cache for the life of the process, and that is not an assumption:
-    ALL is assembled at import out of res/ and data/, and nothing writes to it
-    afterwards. Measured rather than believed -- five processes under
+    Safe to cache for the life of the process: ALL is assembled at import
+    out of res/ and data/. Optional strings must be registered before the
+    first document is built; later registration is rejected. Five processes under
     PYTHONHASHSEED 0, 1, 12345 and random, on 3.11 and on the 3.12 of the
     container image, all produce the same 1 915 490 bytes and the same digest,
     because document() joins sorted(ALL.items()) and every key is an int.

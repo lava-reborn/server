@@ -84,6 +84,7 @@ import gold_trade
 import holdings
 import mortimer
 import items
+import item_templates
 import pace
 import progression
 import restore_policy
@@ -673,8 +674,8 @@ def armour_durability_ratio(type_id, base):
     No counterpart (belts and legacy clothing) means no durability correction.
     Catalogue data is immutable during a server run; no inventory/DB reads.
     """
-    type_id = setcraft.base_of(type_id)
-    current = sets.SETS.get(sets.set_of(type_id))
+    type_id = setcraft.base_of(item_templates.source_type(type_id))
+    current = sets.record_of(sets.set_of(type_id))
     if current is None:
         return 1.0
     slot = sets.slot_of(type_id)
@@ -725,6 +726,7 @@ def weapon_wear_references():
 
 @lru_cache(maxsize=4096)
 def weapon_durability_ratio(type_id, base):
+    type_id = item_templates.source_type(type_id)
     mod = craft.mod_of(type_id)
     type_id = mod[0] if mod else type_id
     params = items.params_of(type_id) or {}
@@ -1115,9 +1117,15 @@ class Inventory:
         bank, or a full storage would stop them buying a single round."""
         return sum(weight_of(r) for r in self.carried())
 
-    def create(self, type_id, count=1, slot=BAG, char_id=None):
+    def validate_creation(self, type_id):
+        """Private templates need an explicitly authorised inventory subclass."""
+        if item_templates.contains(type_id):
+            raise ValueError("Private equipment cannot enter an ordinary inventory")
         if items.acquisition_blocked(type_id):
             raise ValueError("Equipment above level %d is not released" % items.PLAYER_GEAR_MAX_LEVEL)
+
+    def create(self, type_id, count=1, slot=BAG, char_id=None):
+        self.validate_creation(type_id)
         f = new_fields(type_id, count)
         f["slot"] = slot
         root = f.pop("root")
