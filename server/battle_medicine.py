@@ -22,10 +22,21 @@ def remaining_ms(store, char_id, now):
     return min(int(COOLDOWN_SECONDS * 1000), max(1, math.ceil(remaining * 1000 - 1e-6)))
 
 
-def start(store, char_id, now, duration=COOLDOWN_SECONDS):
-    duration = float(duration)
+def validate_duration(duration):
+    """Validate extension output before the caller spends medicine or AP."""
+    if isinstance(duration, bool):
+        raise ValueError("Invalid battle medicine cooldown")
+    try:
+        duration = float(duration)
+    except (TypeError, ValueError):
+        raise ValueError("Invalid battle medicine cooldown") from None
     if not math.isfinite(duration) or not 0 < duration <= COOLDOWN_SECONDS:
         raise ValueError("Invalid battle medicine cooldown")
+    return duration
+
+
+def start(store, char_id, now, duration=COOLDOWN_SECONDS):
+    duration = validate_duration(duration)
     deadlines = getattr(store, '_battle_medicine_deadlines', None)
     if deadlines is None:
         deadlines = {}

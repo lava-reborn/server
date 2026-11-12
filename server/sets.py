@@ -266,15 +266,68 @@ SETS, SET_OF, ITEMS = _load()
 _EXTRA_SETS, _EXTRA_SET_OF, _EXTRA_ITEMS = {}, {}, {}
 
 
-def register(doc):
-    """Register additional sets at startup, without changing existing pieces."""
-    table, members, pieces = parse(doc, variants=VARIANTS + ("P",))
+_SEALED = False
+
+
+def seal():
+    global _SEALED
+    _SEALED = True
+
+
+def validate(doc, *, variants=VARIANTS, template_members=()):
+    """Validate a startup set batch; variants are explicitly owned by its mode."""
+    if _SEALED:
+        raise RuntimeError("Additional sets are sealed")
+    table, members, pieces = parse(doc, variants=variants)
     if (table.keys() & (SETS.keys() | _EXTRA_SETS.keys())
             or members.keys() & (SET_OF.keys() | _EXTRA_SET_OF.keys())):
         raise ValueError("Additional sets overlap existing types")
+    import item_templates
+    if members.keys() & item_templates._SOURCES.keys() - set(template_members):
+        raise ValueError("Set pieces overlap unrelated registered templates")
+    import items
+    if members.keys() & items.catalogue().keys():
+        raise ValueError("Additional set pieces overlap ordinary catalogue types")
+    return table, members, pieces
+
+
+def _publish(prepared):
+    table, members, pieces = prepared
     _EXTRA_SETS.update(table)
     _EXTRA_SET_OF.update(members)
     _EXTRA_ITEMS.update(pieces)
+
+
+def extension_strings(prepared):
+    """All set and member strings of a validated batch, before publication."""
+    import items
+    table, members, pieces = prepared
+    out = {}
+    for set_type, record in table.items():
+        out[NAME_ID_OFFSET + set_type] = record['name']
+        if record['desc']:
+            out[DESC_ID_OFFSET + set_type] = record['desc']
+        out.update({items.STRING_ID_OFFSET + t: text for t, text in record['names'].items()})
+        out.update({items.DESC_ID_OFFSET + t: text for t, text in record['descs'].items()})
+    return out
+
+
+def register(doc, *, variants=VARIANTS):
+    """Register sets and their strings together before startup is sealed.
+
+    Non-template pieces are supported; cached wear comparisons include these
+    sets. Private template members must be declared in mode_extensions.register.
+    """
+    import names
+    prepared = validate(doc, variants=variants)
+    text = names.validate_strings(extension_strings(prepared))
+    _publish(prepared)
+    names.ALL.update(text)
+
+
+def records():
+    """Ordinary and registered set records, without mutating the base table."""
+    return (*SETS.values(), *_EXTRA_SETS.values())
 
 
 def record_of(set_type):
@@ -322,13 +375,13 @@ def item_names():
     does (items.STRING_ID_OFFSET + type), and names.py puts them there, over
     the original's, since the owner named these by their icons.
     """
-    return {t: n for s in SETS.values() for t, n in s["names"].items()}
+    return {t: n for s in records() for t, n in s["names"].items()}
 
 
 def item_descs():
     """type_id -> the description the file gives a piece, cleaned; names.py
     puts it under items.DESC_ID_OFFSET + type, over the original's."""
-    return {t: d for s in SETS.values() for t, d in s["descs"].items()}
+    return {t: d for s in records() for t, d in s["descs"].items()}
 
 
 def described(type_id):

@@ -495,11 +495,13 @@ PLAYER_GEAR_MAX_LEVEL = 17
 
 
 def acquisition_blocked(type_id):
-    """Weapon/clothing above the released level cannot be newly obtained.
+    """Ordinary acquisition refuses private templates and unreleased equipment.
 
-    Medicine, ammunition, blueprints and other non-equipment are unaffected.
+    Ordinary medicine, ammunition, blueprints and non-equipment are unaffected.
     Keep this separate from out_of_game: it must not trigger confiscation.
     """
+    if item_templates.contains(type_id):
+        return True
     if root_of(type_id) not in (FIRE_ARM, COLD_ARM, WEAR):
         return False
     si = params_of(type_id) or {}

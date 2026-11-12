@@ -12,7 +12,8 @@
 #              checks the string table. On a pull request it also picks the
 #              suites the change touches (tools/suite.py --affected, by the
 #              impact map of the last main run; everything when there is no
-#              map or git cannot tell).
+#              map or git cannot tell). Dependent/release branches run every
+#              suite, so an inherited change cannot escape the impact filter.
 #   suite      on a push to main every server/, data/, tools/ and client/
 #              suite on SQLite, recording the impact map as it goes; on a
 #              pull request only the picked ones. In three shards side by
@@ -370,13 +371,20 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           LAVA_CI_PART: "1"
+          PR_BASE_REF: ${{ github.base_ref }}
         run: |
           if [ -s "$HOME/impact/impact_map.json" ]; then
             cp "$HOME/impact/impact_map.json" tools/impact_map.json
           else
             echo "no impact map yet: every suite"
           fi
-          python3 tools/suite.py --affected --list --base origin/main > "$RUNNER_TEMP/pick.txt"
+          # A dependent PR must validate the assembled stack, not a partial
+          # impact selection. This also covers release-branch acceptance.
+          if [ "$PR_BASE_REF" != "main" ]; then
+            python3 tools/suite.py --list > "$RUNNER_TEMP/pick.txt"
+          else
+            python3 tools/suite.py --affected --list --base origin/main > "$RUNNER_TEMP/pick.txt"
+          fi
           grep -vE '^(server|data|tools)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" || true
           picked=$(grep -E '^(server|data|tools)/test_[^/]*\.py$' "$RUNNER_TEMP/pick.txt" \
                    | xargs -rn1 basename | sed 's/[.]py$//' | grep -vx test_storage_pg | sort | paste -sd, -)

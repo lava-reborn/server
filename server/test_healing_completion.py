@@ -17,40 +17,16 @@ import combat  # noqa: E402
 import inventory  # noqa: E402
 import items  # noqa: E402
 import progression  # noqa: E402
-from testkit import run_cases  # noqa: E402
-
-
-class HealingActor(NS):
-    prepare_weapon = combat.Fighter.prepare_weapon
-    prepare_melee = combat.Fighter.prepare_melee
-    healing_spec = combat.Fighter.healing_spec
-    healing_multiplier = combat.Fighter.healing_multiplier
-    medicine_cooldown_seconds = combat.Fighter.medicine_cooldown_seconds
+from testkit import run_cases, healing_fixture, start_healing  # noqa: E402
 
 
 class HealingCompletion(unittest.IsolatedAsyncioTestCase):
 
     def fixture(self, type_id=6043):
-        row = dict(uniq=1, char_id=1, root=items.HEAL, type_id=type_id, use_count=1)
-        ch = progression.Character()
-        ch.hp = 30
-        events, consumed = ([], [])
-        room = NS(ws=False, broadcast=lambda frame, **kw: events.append(frame))
-        frames = []
-        sess = NS(char_id=1, room=room, inv=NS(find=lambda _: row, push_status=lambda *a: None, wear_worn=lambda *a: None), answer=events.append, push_stats=lambda **k: None, push_vitals=lambda: None, send=lambda name, **p: frames.append((name, p)))
-        f = HealingActor(sess=sess, rc=NS(room=room), ap=100, healing=None, dead=False, eid=1, damage_revision=0, character=lambda: ch, ack=events.append, store=NS(item=lambda _: row, delete_item=consumed.append))
-        f.heal_now = lambda *args: combat.Fighter.heal_now(f, *args)
-        f.c_ap = lambda: None
-        f.frames = frames
-        return (f, ch, room, consumed)
+        return healing_fixture(type_id)
 
     def start(self, f):
-        combat.Fighter.use_heal(f, dict(obj='1'), inventory.USE_IDLE)
-        self.assertIsNotNone(f.healing)
-        timer = f.healing
-        args = timer._args[-1]
-        timer.cancel()
-        return args
+        return start_healing(f)
 
     async def test_battle_medicine_costs_scale_once_and_peace_costs_stay_unchanged(self):
         battle_count=0

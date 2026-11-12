@@ -237,17 +237,30 @@ def text(string_id):
     return ALL.get(string_id, "#%d" % string_id)
 
 
-def register_strings(strings):
-    """Add feature strings before either process publishes its text preload."""
-    if _DOCUMENT is not None:
-        raise RuntimeError("Text preload has already been published")
+_SEALED = False
+
+
+def seal():
+    global _SEALED
+    _SEALED = True
+
+
+def validate_strings(strings):
+    """Check the whole batch without changing the published string table."""
+    if _SEALED or _DOCUMENT is not None:
+        raise RuntimeError("Text preload has already been published or sealed")
     values = dict(strings)
     for key, value in values.items():
         if type(key) is not int or key <= 0 or not isinstance(value, str):
             raise ValueError("Invalid additional string")
         if key in ALL and ALL[key] != value:
             raise ValueError("Additional string overlaps an existing id")
-    ALL.update(values)
+    return values
+
+
+def register_strings(strings):
+    """Add startup strings; never replace ids or change a published preload."""
+    ALL.update(validate_strings(strings))
 
 
 _DOCUMENT = None
@@ -261,6 +274,8 @@ def document():
     """
     global _DOCUMENT
     if _DOCUMENT is None:
+        import mode_extensions
+        mode_extensions.seal()
         _DOCUMENT = "".join(
             "<s id='%d'>%s</s>" % (i, _escape(n)) for i, n in sorted(ALL.items()))
     return _DOCUMENT

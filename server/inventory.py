@@ -674,13 +674,17 @@ def armour_durability_ratio(type_id, base):
     No counterpart (belts and legacy clothing) means no durability correction.
     Catalogue data is immutable during a server run; no inventory/DB reads.
     """
+    import mode_extensions
+    mode_extensions.seal()
     type_id = setcraft.base_of(item_templates.source_type(type_id))
     current = sets.record_of(sets.set_of(type_id))
     if current is None:
         return 1.0
     slot = sets.slot_of(type_id)
-    candidates = [s for s in sets.SETS.values()
+    candidates = [s for s in sets.records()
                   if s["variant"] == current["variant"] and slot in s["members"]]
+    if not candidates:
+        return 1.0
     lower = [s for s in candidates if s["level"] <= base]
     reference = (max(lower, key=lambda s: s["level"]) if lower
                  else min(candidates, key=lambda s: s["level"]))
@@ -726,6 +730,8 @@ def weapon_wear_references():
 
 @lru_cache(maxsize=4096)
 def weapon_durability_ratio(type_id, base):
+    import mode_extensions
+    mode_extensions.seal()
     type_id = item_templates.source_type(type_id)
     mod = craft.mod_of(type_id)
     type_id = mod[0] if mod else type_id

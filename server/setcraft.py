@@ -266,7 +266,8 @@ def _share(price, share):
 def _load_ladder():
     """The owner's rungs as the file writes them: set_type, level, variant,
     family and the five pieces, by level (data/sets.json; sets.py leaves
-    the level and the family out of its table)."""
+    the level and the family out of its table). This is the ordinary crafting
+    ladder only, not optional registered sets or private inventory recipes."""
     with io.open(sets.PATH, encoding="utf-8") as fh:
         raw = json.load(fh)["sets"]
     out = []

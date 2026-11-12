@@ -1584,8 +1584,8 @@ def seed_stats(db, char_id):
                (progression.START_AFRO, char_id))
 
 
-def connect():
-    db = storage.connect(DB_PATH)
+def connect(path=None):
+    db = storage.connect(DB_PATH if path is None else path)
     # Журнал и таймаут выставляет сам storage: два процесса держат эту
     # базу -- сервер игры и страница регистрации, -- и писатель не должен
     # запирать читателя на всю транзакцию. Схема одна на обе базы: для
@@ -1599,10 +1599,15 @@ def connect():
 
 class Store:
     def __init__(self, path=None, *, db=None):
-        global DB_PATH
-        if path:
-            DB_PATH = path
-        self.db = db if db is not None else connect()
+        """Use a local path or an already initialised borrowed connection.
+
+        The provider must supply an exclusively owned, migrated db= connection.
+        Store.close closes it too; Store does not reconnect, migrate or change
+        the process-wide default database.
+        """
+        if path is not None and db is not None:
+            raise ValueError("Choose a database path or a borrowed connection")
+        self.db = db if db is not None else (connect() if path is None else connect(path))
         # (source, ref) a purse written now is booked under (money_ledger),
         # set around a command by its handler (booked_as); None books it
         # under LEDGER_OTHER. The game server is one thread: a command runs
@@ -1819,7 +1824,7 @@ class Store:
             "SELECT c.*, a.login, a.banned FROM characters c"
             " JOIN accounts a ON a.id = c.account_id"
             " WHERE %s LIKE ? OR %s LIKE ?"
-            % (storage.lower("c.name"), storage.lower("a.login")) +
+            % (storage.lower("c.name", self.db), storage.lower("a.login", self.db)) +
             " ORDER BY c.name LIMIT ?", (like, like, limit)).fetchall()
 
     # --- who is in the game ----------------------------------------------
