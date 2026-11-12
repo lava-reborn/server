@@ -1050,6 +1050,8 @@ def preload():
     for source in item_catalogue():
         training_display.icon_source(source)
     mob_catalogue()
+    from training.type_metadata import payload
+    payload()  # Build once at startup, never on the first visitor's hot path.
     content.validate()
     for location in LOCATIONS:
         geometry(location)
