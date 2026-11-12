@@ -17,6 +17,17 @@ from avm_test import execute
 
 class Startup(unittest.TestCase):
 
+    def test_training_feature_requires_local_opt_in_marker(self):
+        with tempfile.TemporaryDirectory() as folder, patch.object(runtime, 'ROOT', Path(folder)), \
+                patch.dict(os.environ, {'LAVA_TRAINING_GROUND': '1', 'LAVA_DB_URL': 'do-not-use'}):
+            runtime.configure()
+            self.assertEqual(os.environ['LAVA_TRAINING_GROUND'], '0')
+            self.assertNotIn('LAVA_DB_URL', os.environ)
+            (Path(folder) / 'training.enabled').touch()
+            runtime.configure()
+            self.assertEqual(os.environ['LAVA_TRAINING_GROUND'], '1')
+            self.assertEqual(Path(os.environ['LAVA_DB']), Path(folder) / 'state/tester.sqlite')
+
     def env(self):
         self.frames, self.movies = ([], [])
         self.root = dict(pending=True, bar=dict(gotoAndStop=self.frames.append), label={}, loadMovie=self.movies.append)
@@ -173,4 +184,5 @@ class Startup(unittest.TestCase):
             self.assertEqual([n for n, p in progress], [5, 45, 65, 80, 100])
             self.assertEqual(map_cells.apply(None, object()), actual)
 if __name__ == '__main__':
-    unittest.main()
+    from testkit import run_cases
+    run_cases(Startup)

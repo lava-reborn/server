@@ -14,6 +14,9 @@ class Arr(list):
         self.append(value)
         return len(self)
 
+    def join(self, separator=","):
+        return separator.join("" if value is None else str(value) for value in self)
+
     def shift(self):
         return self.pop(0) if self else None
 
@@ -37,7 +40,7 @@ def get(obj, key):
     if isinstance(obj, list):
         if key == "length":
             return len(obj)
-        if isinstance(key, int) or str(key).isdigit():
+        if isinstance(key, int) or (isinstance(key, float) and key.is_integer()) or str(key).isdigit():
             return obj[int(key)] if 0 <= int(key) < len(obj) else None
     if isinstance(obj, str) and key == 'length':
         return len(obj)
@@ -109,6 +112,13 @@ def execute(code, env):
                 obj[key] = value
             else:
                 setattr(obj, str(key), value)
+        elif op == 0x3A:  # Delete
+            key, obj = stack.pop(), stack.pop()
+            if isinstance(obj, dict):
+                obj.pop(key, None)
+            elif hasattr(obj, str(key)):
+                delattr(obj, str(key))
+            stack.append(True)
         elif op == 0x3C:  # DefineLocal
             value, key = stack.pop(), stack.pop()
             env[key] = value
@@ -162,8 +172,9 @@ def execute(code, env):
                 if not flags & 1:
                     raise
                 execute(blocks[size:size + catch_size], env)
-            if flags & 2:
-                execute(blocks[size + catch_size:], env)
+            finally:
+                if flags & 2:
+                    execute(blocks[size + catch_size:], env)
         elif op == 0x49:  # Equals2
             b, a = stack.pop(), stack.pop()
             stack.append(a == b)
