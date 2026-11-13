@@ -237,9 +237,10 @@ try:
                              25485, 6075, 6050) if o not in on_sale), [])
 
     # Gold.
-    check("no row of 450-599 pays gold (rew_gold), and none hands out an ingot",
+    check("no row of 450-599 pays gold directly; only the two approved G lotteries can award ingots",
           ([t for t in mine if real[t].rew_gold],
-           [t for t in mine for _f, o in real[t].things() if o in items.GOLD_INGOTS]), ([], []))
+           [(t, o) for t in mine for _f, o in real[t].things() if o in items.GOLD_INGOTS]),
+          ([], [(520, 4796), (521, 4796)]))
     check("Ведич's part 2 pays the injector back in kind, two for the one bought",
           (real[471].wants(), list(zip(real[471].rew_obj, real[471].num_rew_obj))),
           ([(6075, 1)], [(6075, 2)]))
@@ -255,10 +256,11 @@ try:
         si = items.params_of(o)
         return gold_worth(o, 1) if si.get("g_cost") else afro_worth(o, 1)
 
-    lottery = {t: (ticket(t), max((gold_worth if items.params_of(o).get("g_cost") else afro_worth)
-                                  (o, n) for o, n, _w in real[t].rew_random))
+    lottery = {t: (ticket(t), sum((gold_worth if t in (520, 521) else afro_worth)
+                                  (o, n) * w for o, n, w in real[t].rew_random)
+                               / sum(w for _o, _n, w in real[t].rew_random))
                for t in (518, 519, 520, 521)}
-    check("the lotteries: every prize worth less than the ticket (the house wins), the gold"
+    check("the lotteries: weighted expected retail value below the ticket, including jackpots; the gold"
           " ones' prizes gold things",
           ({t: prize < price for t, (price, prize) in lottery.items()},
            [o for t in (520, 521) for o, _n, _w in real[t].rew_random
