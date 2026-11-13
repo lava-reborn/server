@@ -407,6 +407,8 @@ class _Seat(object):
 
     def __init__(self):
         self.sent = []
+        # Fanout tracks transport identity; send() below records these frames.
+        self.writer = object()
         self.pos, self.walk = 0, None
         self.combat = type("F", (), {"aim": None, "strike": None, "duels": {},
                                      "dead": False})()

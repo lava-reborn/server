@@ -865,7 +865,7 @@ try:
           " invitation, and the tickets to Абри and to Абу-Хамед and back",
           (shown.get(NUR, ("", {}))[1].get("give_quests"),
            shown.get(NUR, ("", {}))[1].get("type_list")),
-          ([276, TICKET_ABRI, 283, RIDE_BACK_WH, PRISON_RIDE, 636],
+          ([276, TICKET_ABRI, 283, RIDE_BACK_WH, PRISON_RIDE, 636, 18100],
            [TICKET_TO_ABRI, 1567, 1639]))
     check("  ..arrived beside Нур-ад-Дин's way back",
           first(arrival, "lenter").get("pos")

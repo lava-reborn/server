@@ -302,6 +302,7 @@ class _Seat(object):
 
     def __init__(self):
         self.sent = []
+        self.writer = object()  # Transport identity for the recording session.
         self.pos, self.walk = 0, None
         self.combat = type("F", (), {"aim": None, "strike": None, "duels": {},
                                      "dead": False})()
