@@ -45,6 +45,37 @@ class BizonMagazine(unittest.TestCase):
                 migration.normalize(self.store,self.cid,[row])
         self.assertEqual(self.inv.rows(),before)
 
+    def test_corrupt_magazine_is_preserved_without_blocking_valid_ones(self):
+        for fields in (dict(ammo_count=129), dict(ammo_type=6055), dict(root=items.TRASH)):
+            with self.subTest(fields=fields):
+                bad = self.loaded()
+                # root is intentionally immutable through Store.update_item;
+                # inject historical DB corruption only in this test fixture.
+                if 'root' in fields:
+                    self.store.db.execute('UPDATE items SET root=? WHERE uniq=?',
+                                          (fields['root'], bad['uniq']))
+                else:
+                    self.store.update_item(bad['uniq'], **fields)
+                bad = self.store.item(bad['uniq'])
+                good = self.loaded()
+                with patch.object(migration.log, 'error') as error:
+                    changed, added = migration.normalize(self.store, self.cid, [bad, good])
+                self.assertEqual(self.store.item(bad['uniq']), bad)
+                self.assertEqual(set(changed), {good['uniq']})
+                self.assertEqual(sum(r['count'] for r in added), 28)
+                self.assertEqual(error.call_args.args[1:], (bad['uniq'], self.cid))
+
+    def test_invalid_magazine_dynamic_info_does_not_close_inventory(self):
+        row = self.loaded()
+        self.store.update_item(row['uniq'], ammo_count=129)
+        before = self.inv.rows()
+        self.frames.clear()
+        with patch.object(migration.log, 'error') as error:
+            self.inv.ss_get_di(dict(obj=inventory.oid_of(row)))
+        error.assert_called_once()
+        self.assertEqual(self.inv.rows(), before)
+        self.assertEqual([p['ammo_count'] for c,p in self.frames if c=='ss_di_firearm'], [129])
+
     def test_locked_or_foreign_items_are_never_changed(self):
         row=self.loaded()
         self.assertEqual(migration.normalize(self.store,self.cid,[row],{row['uniq']}),({},[]))

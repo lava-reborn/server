@@ -4,12 +4,15 @@ Only entry and inventory reads invoke this; no shot/tick hook or global scan.
 Items outside the owner's inventory (auction/mail snapshots) are untouched
 until claimed. The excess stays with that owner and in the same storage.
 """
+import logging
+
 import inventory
 import items
 import storage
 
 BIZON_DAMAGE_CLIP_A = 26185
 CAPACITY = 100
+log = logging.getLogger('lava')
 
 
 def legacy(row):
@@ -32,8 +35,11 @@ def normalize(store, char_id, rows, locked=()):
             ammo = row['ammo_type']
             if (row['root'] != items.FIRE_ARM or ammo not in si.get('comp_array', [])
                     or items.root_of(ammo) != items.AMMO or row['ammo_count'] > 128):
-                # Corrupt rows require investigation, never truncation.
-                raise ValueError('Invalid legacy Bizon magazine %s' % row['uniq'])
+                # Preserve suspicious data for investigation, without locking
+                # the owner out of their character or blocking valid rows.
+                log.error('Invalid legacy Bizon magazine uniq=%s char_id=%s; unchanged',
+                          row['uniq'], char_id)
+                continue
             fields = inventory.new_fields(ammo, row['ammo_count'] - CAPACITY)
             root = fields.pop('root')
             # As with unloading, keep every round even when capacity is
