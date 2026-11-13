@@ -4747,20 +4747,13 @@ def broadcast_online_count():
     for sess in connected:
         if not sess.online_counter or sess.closed:
             continue
-        try:
-            if not sess.online_names:
-                sess.send("online", count=count)
-                continue
-            if names is None:
-                names = RawList(sorted((clans.list_safe(s.nick) for s in connected),
-                                       key=lambda n: (n.casefold(), n)))
-            sess.send("online", count=count, names=names)
-        except OSError:
-            # One stale recipient must not abort somebody else's login.
-            # Closing the transport wakes handle_client's finally. Do not
-            # call Session.close here: it recursively broadcasts presence.
-            log.info("  online recipient %s disconnected", sess.peer, exc_info=True)
-            sess.writer.close()
+        if not sess.online_names:
+            rooms.send_to(sess, "online", dict(count=count))
+            continue
+        if names is None:
+            names = RawList(sorted((clans.list_safe(s.nick) for s in connected),
+                                   key=lambda n: (n.casefold(), n)))
+        rooms.send_to(sess, "online", dict(count=count, names=names))
 
 
 def publish_online():

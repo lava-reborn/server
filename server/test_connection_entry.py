@@ -22,10 +22,11 @@ class Writer:
         self.frames = []
         self.closed = False
         self.fail_online = False
+        self.fail_command = None
 
     def write(self, data):
         command, params = decode(data[:-1].decode())
-        if self.fail_online and command == 'online':
+        if (self.fail_online and command == 'online') or command == self.fail_command:
             raise BrokenPipeError('injected stale recipient')
         self.frames.append((command, params))
 
@@ -51,6 +52,7 @@ class EntryFailures(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         for sess in self.sessions:
             sess.writer.fail_online = False
+            sess.writer.fail_command = None
         for sess in self.sessions:
             sess.close(force=True)
         for item in reversed(self.patches):
@@ -88,6 +90,30 @@ class EntryFailures(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(sess.closed)
         self.assertTrue(sess.writer.closed)
         self.assertEqual([name for name, _ in sess.writer.frames].count('cmdAck'), 1)
+
+    async def test_stale_party_member_cannot_abort_a_returning_members_entry(self):
+        stale,newcomer=(self.player(n) for n in ('PartyOld','PartyNew'))
+        stale.handle('actPlayer',{})
+        group=party.Party(stale.char_id)
+        group.members.append(newcomer.char_id)
+        server.PARTIES.by_char.update({stale.char_id:group,newcomer.char_id:group})
+        stale.writer.fail_command='p_op'
+        newcomer.handle('actPlayer',{})
+        self.assertEqual([c for c,p in newcomer.writer.frames].count('lcall'),1)
+        self.assertFalse(newcomer.closed)
+        self.assertTrue(stale.writer.closed)
+
+    async def test_stale_clan_roster_holder_cannot_abort_a_members_entry(self):
+        stale,newcomer=(self.player(n) for n in ('ClanOld','ClanNew'))
+        stale.handle('actPlayer',{})
+        clan_id=self.store.clan_create(stale.char_id,'EntryClan','entryclan','',None)
+        self.store.clan_member_add(newcomer.char_id,clan_id,clans.R_CHAT,'',0)
+        clans.view(stale).roster=clan_id
+        stale.writer.fail_command='gg_struct'
+        newcomer.handle('actPlayer',{})
+        self.assertEqual([c for c,p in newcomer.writer.frames].count('lcall'),1)
+        self.assertFalse(newcomer.closed)
+        self.assertTrue(stale.writer.closed)
 
     async def test_failed_character_load_does_not_overwrite_durable_position_or_purse(self):
         sess = self.player('Echo')

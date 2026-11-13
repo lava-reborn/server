@@ -7,6 +7,47 @@ from testkit import run_cases
 
 
 class RoomDelivery(unittest.TestCase):
+    def test_failed_socket_is_not_retried_but_a_resumed_socket_receives_frames(self):
+        sent=[]
+        first=NS(close=lambda:sent.append('closed'))
+        sess=NS(writer=first)
+        def fail(*a,**kw):
+            sent.append('write-failed')
+            raise BrokenPipeError('gone')
+        sess.send=fail
+        for _ in range(30):
+            self.assertFalse(rooms.send_to(sess,'faShot',dict(status=1)))
+        self.assertEqual(sent,['write-failed','closed'])
+        sess.writer=NS(close=lambda:None)
+        sess.send=lambda c,**p:sent.append(c)
+        self.assertTrue(rooms.send_to(sess,'online',dict(count=1)))
+        self.assertEqual(sent[-1],'online')
+        self.assertIsNone(sess._failed_fanout_writer)
+
+    def test_stale_map_viewer_does_not_stop_heartbeat_for_everyone(self):
+        frames,closed,armed=[],[],[]
+        class Seat:
+            closed=False
+            on_map=True
+            leg=None
+            def __init__(self,pid,broken=False):
+                self.pid,self.broken=pid,broken
+                self.writer=NS(close=lambda:closed.append(pid))
+            def current_pos(self):
+                return 0,0
+            def send(self,command,**params):
+                if self.broken:
+                    raise BrokenPipeError('stale map viewer')
+                frames.append((self.pid,command,params))
+        stale,healthy=Seat(1000001,True),Seat(1000002)
+        room=rooms.GlobalMapRoom(50)
+        room.seen={stale:set(),healthy:set()}
+        room._arm=lambda:armed.append(True)
+        room._tick()
+        self.assertTrue(armed)
+        self.assertTrue(any(pid==healthy.pid and c=='userMove' for pid,c,p in frames))
+        self.assertEqual(set(closed),{stale.pid})
+
     def test_one_broken_transport_does_not_truncate_viewer_frames(self):
         delivered, closed = [], []
         class Seat:
