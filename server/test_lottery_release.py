@@ -18,6 +18,7 @@ import inventory
 import items
 import progression
 import quests
+import rooms
 import server
 import world
 from test_quest_state import session
@@ -64,7 +65,7 @@ RULES = {  # ticket, price (hundredths for G), G-only, min/max level, location
     308:(1307,500,False,0,20,35), 309:(1333,50,True,0,20,102),
     518:(2646,1000,False,9,20,187), 519:(2647,1700,False,11,20,187),
     520:(2649,200,True,9,20,187), 521:(2650,250,True,11,20,187),
-    721:(2648,2400,False,12,20,49), 722:(2651,300,True,12,20,49),
+    721:(2648,2400,False,12,20,197), 722:(2651,300,True,12,20,103),
     916:(2652,3000,False,16,20,446), 917:(2653,3700,False,17,20,446),
     918:(3574,4730,False,19,20,446), 919:(2654,300,True,16,20,446),
     920:(2655,350,True,17,20,446), 921:(3575,450,True,19,20,446),
@@ -137,6 +138,14 @@ class LotteryRelease(unittest.TestCase):
                 self.assertEqual(len({t for t,_n,_w in q.rew_random}),len(expected))
                 self.assertTrue(q.repeatable and q.service)
                 self.assertFalse(q.rew_gold or q.rew_afro or q.rew_also or q.rew_obj)
+
+    def test_every_lottery_giver_is_present_in_its_actual_location(self):
+        for qtype, (_ticket,_price,_gold,_lo,_hi,loc) in RULES.items():
+            with self.subTest(quest=qtype, location=loc):
+                room = rooms.Room(world.location(loc), rooms.IdAllocator(), world.mob_types())
+                giver = quests.get(qtype).give[0]
+                self.assertIn(giver, [npc.type_id for npc in room.npcs.values()])
+                self.assertIn(qtype, quests.given_by(giver))
 
     def test_ticket_currency_price_levels_and_no_afro_to_gold_prize(self):
         for qtype,(ticket,price,gold,lo,hi,_loc) in RULES.items():
