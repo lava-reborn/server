@@ -144,8 +144,8 @@ def __icTradeInit():
     this.visavisBag_mc.__icPassiveShift = True
     this.__icTradeKeys = True
     keys = lol.core.SceneShifter.hotKeyManager
-    keys.addFilter("cancel")
-    keys.addEventListener(lol.services.HotKeyEvent.CANCEL, this, this.__icTradeEsc)
+    keys.addFilter("inventoryTrade")
+    keys.addEventListener("__icTradeEscape", this, this.__icTradeEsc)
 
 def __icTradeKill():
     this.__icDead = True
@@ -156,8 +156,8 @@ def __icTradeKill():
     this.onEnterFrame = None
     if this.__icTradeKeys:
         keys = lol.core.SceneShifter.hotKeyManager
-        keys.removeEventListener(lol.services.HotKeyEvent.CANCEL, this, this.__icTradeEsc)
-        keys.removeFilter("cancel")
+        keys.removeEventListener("__icTradeEscape", this, this.__icTradeEsc)
+        keys.removeFilter("inventoryTrade")
         this.__icTradeKeys = False
     return this.__icTradeKillOrig()
 
@@ -198,12 +198,17 @@ def __icEquipEsc():
         return this.__icEquipEscOrig()
 
 def __icTradeEsc():
-    if this.__icDead or not _global.__icEscapeFor("cancel") or _global.__icModal():
+    if this.__icDead or not _global.__icEscapeFor("inventoryTrade") or _global.__icModal():
         return
     if this.trade.__gcBusy or (this.ddOperation_arr and len(this.ddOperation_arr) > 0):
         return
     if not _global.__icCancelDrag(this):
         this.close()
+
+def __icFilter(name):
+    if name == "inventoryTrade":
+        return [lol.services.HotKeyEvent.CANCEL, lol.services.HotKeyEvent.CTRL, lol.services.HotKeyEvent.SHIFT]
+    return this.__icFilterOrig(name)
 
 def __icCheckKeys(suffix):
     if len(this.keyStack) != 1 or this.keyStack[0] != 27:
@@ -229,6 +234,8 @@ def __icDispatch(title):
                 context.handled = True
                 # Esc cancels even while a quantity/confirmation text field
                 # has focus. It never dispatches APPLY or restores game focus.
+                if context.filter == "inventoryTrade":
+                    return this.dispatchEvent({"type":"__icTradeEscape"})
                 return this.dispatchEvent({"type":title})
             i = i + 1
         return
@@ -298,5 +305,6 @@ def {helper}():
     for method, helper in (('checkHotKey', '__icCheckKeys'),
                            ('checkAndDispatch', '__icDispatch')):
         wraps.append((('services', 'HotKeyManager'), method, helper + 'Orig', *bodies[helper]))
+    wraps.append((('services', 'HotKeyFilter'), 'getFilter', '__icFilterOrig', *bodies['__icFilter']))
     shared = {'__icModal', '__icCanStart', '__icCancelDrag', '__icEscapeFor'}
     return dict(globals=[entry for entry in functions if entry[0] in shared], wraps=tuple(wraps))

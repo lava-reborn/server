@@ -20,7 +20,7 @@ class InventoryControls(unittest.TestCase):
             'queryWithCheckBox', 'alert', 'trade')}
         self.keys = dict(hotKeyFilter_arr=Arr(['equipment']),
                          checkFilter=lambda name: self.keys['hotKeyFilter_arr'][-1] == name)
-        self.events = dict(ESC='ESC', CANCEL='CANCEL', SHIFT_SELECT='shift')
+        self.events = dict(ESC='ESC', CANCEL='CANCEL', SHIFT_SELECT='shift', CTRL='ctrl', SHIFT='shift-key')
         self.env = dict(_global={}, String=str, Key=dict(isDown=lambda code: code == 16),
                         lol=dict(core=dict(SceneShifter=dict(_ref=dict(UIPanels=self.windows),
                                                             hotKeyManager=self.keys)),
@@ -166,6 +166,14 @@ class InventoryControls(unittest.TestCase):
         self.assertIsNone(bag['__icOwner'])
         self.assertIsNone(bag['__bkOwner'])
 
+    def test_trade_escape_has_its_own_filter_and_does_not_broadcast_cancel(self):
+        self.escape('inventoryTrade')
+        self.assertEqual(self.calls, ['__icTradeEscape'])
+        filters = dict(__icFilterOrig=lambda name: self.calls.append(name) or 'native')
+        self.assertEqual(self.call('HotKeyFilter', 'getFilter', filters, 'inventoryTrade'),
+                         ['CANCEL', 'ctrl', 'shift-key'])
+        self.assertEqual(self.call('HotKeyFilter', 'getFilter', filters, 'persInfo'), 'native')
+
     def escape(self, top, preferred=None, focus=True):
         self.keys.update(keyStack=Arr([27]), enabled=focus,
                          hotKeyFilter_arr=Arr([top]),
@@ -227,6 +235,8 @@ class InventoryControls(unittest.TestCase):
         self.assertEqual([entry[0] for entry in self.calls],
                          ['addFilter', 'addEventListener', 'removeEventListener', 'removeFilter'])
         self.assertIsNone(bag['__icOwner'])
+        self.assertEqual(self.calls[0][1], ('inventoryTrade',))
+        self.assertEqual(self.calls[-1][1], ('inventoryTrade',))
 
     def test_cancelled_equipment_warning_does_not_block_next_action(self):
         operation = dict(item='weapon')
@@ -281,7 +291,7 @@ class InventoryControls(unittest.TestCase):
         self.assertEqual(panel['__methodTable'], [])
 
     def test_trade_escape_does_not_discard_pending_ack(self):
-        self.keys['hotKeyFilter_arr'] = Arr(['cancel'])
+        self.keys['hotKeyFilter_arr'] = Arr(['inventoryTrade'])
         panel = dict(trade=dict(__gcBusy=True), close=lambda: self.fail('closed before ACK'))
         self.call('TradeInterface', '__icTradeEsc', panel)
 

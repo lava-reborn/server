@@ -38,6 +38,19 @@ def __inventoryProbe(url):
         stale = {"currSelectItem":{"item":{"id":"gone"}}, "sortList":[card], "selectItem_arr":[], "clearSelectList":_global.__probeNoop, "getNumFromSortList":lol.gpui.BagInterface.prototype.getNumFromSortList, "select":lol.gpui.BagInterface.prototype.select}
         lol.gpui.BagInterface.prototype.itemPressShift.apply(stale, [card])
         report.selected_current = stale.currSelectItem == card
+        keys = {"__proto__":lol.services.HotKeyManager.prototype, "hotKeyFilters":new(lol.services.HotKeyFilter), "__icEscape":{"filter":"inventoryTrade", "event":lol.services.HotKeyEvent.CANCEL, "handled":False}}
+        lol.events.LEventDispatcher.initialize(keys)
+        _root.tradeEscapes = 0
+        _root.otherEscapes = 0
+        keys.addEventListener("__icTradeEscape", _root, _global.__probeTradeEscape)
+        keys.addEventListener(lol.services.HotKeyEvent.CANCEL, _root, _global.__probeOtherEscape)
+        keys.checkAndDispatch(lol.services.HotKeyEvent.CANCEL)
+        keys.checkAndDispatch(lol.services.HotKeyEvent.ESC)
+        report.trade_escape = _root.tradeEscapes
+        report.other_escape = _root.otherEscapes
+        stats = keys.hotKeyFilters.getFilter("persInfo")
+        report.stats_cancel = _global.__probeContains(stats, lol.services.HotKeyEvent.CANCEL)
+        report.stats_toggle = _global.__probeContains(stats, lol.services.HotKeyEvent.PERS_INFO)
     report.sendAndLoad(url, report, "POST")
 
 def __probeProp(name):
@@ -49,6 +62,20 @@ def __probeNoop():
 def __probeSubmit():
     _root.nativeHits = _root.nativeHits + 1
     _root.destination = this.currDDOperation.toSlot.id
+
+def __probeTradeEscape(event):
+    _root.tradeEscapes = _root.tradeEscapes + 1
+
+def __probeOtherEscape(event):
+    _root.otherEscapes = _root.otherEscapes + 1
+
+def __probeContains(values, item):
+    i = 0
+    while i < len(values):
+        if values[i] == item:
+            return True
+        i = i + 1
+    return False
 '''
 
 
@@ -74,6 +101,10 @@ def main():
     check('native weapon equip selects the primary slot', row.get('destination'), 'primary')
     check('native Shift consumes the double-click flag', row.get('shift_cleared_click'), 'true')
     check('native filtered-out range anchor selects the current card safely', row.get('selected_current'), 'true')
+    check('native trade Escape reaches only its own recipient',
+          (row.get('trade_escape'), row.get('other_escape')), ('1', '0'))
+    check('native complete filter chain preserves stats cancellation and toggle',
+          (row.get('stats_cancel'), row.get('stats_toggle')), ('true', 'true'))
     if fails:
         print('\n'.join(fails))
         raise SystemExit(1)
