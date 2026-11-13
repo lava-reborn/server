@@ -836,6 +836,11 @@
    "exchang": 1,
    "drop_on_death": 1
   },
+  "4203": {
+   "_name": "Универсальный нож Взмах-3",
+   "_source": "Owner release 2026-11-13: academy quest 967 knives never drop on death; keep existing exchange, sale and quest flags.",
+   "drop_on_death": 0
+  },
   "7620": {
    "_name": "1 унция золота",
    "_source": "RECOVERED. The type: as 4796 above (texts.xml 7636/7637, data/build_orig_items.py rule 7d). Numbers: the wiki article 1 унция золота (its icon 1gold.png is named after no type, so data/items_wiki.json has no record): 'Вес 1 г', 'Допустимость обмена Да', 'Допустимость продажи Да', 'Базовая цена 1 G'; cashed in by Мортимер's 'Обналичить 1 унцию золота'. drop_on_death 1: loot, as 4796",
