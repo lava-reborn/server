@@ -287,7 +287,7 @@ class ActionRecoveryClient(unittest.TestCase):
         scene['__bfFinishMoveOrig']=lambda e:figure.update(behavior='stand')
         scene['__bfPositionOrig']=lambda e:figure.update(behavior='run')
         scene['placeWalker']=lambda f,x,y:f.update(_x=x,_y=y)
-        event=dict(walker=dict(id=0,x=40,y=50))
+        event=dict(walker=dict(id=0,x=40,y=50,__bfStoppingMove=True))
         self.call('__bfPosition',scene,event)
         self.call('__bfFinishMove',scene,event)
         self.assertEqual(figure['behavior'],'fire')
@@ -297,6 +297,18 @@ class ActionRecoveryClient(unittest.TestCase):
         self.assertEqual(figure['behavior'],'run')
         self.call('__bfFinishMove',scene,event)
         self.assertEqual(figure['behavior'],'stand')
+
+    def test_authoritative_new_movement_drops_stale_observer_firing_pose(self):
+        scene,figure=self.fx.scene()
+        self.call('__bfAim',scene,dict(aim=17,num_shots=1,seq=1))
+        self.call('__bfFire',scene,dict(gunnerID=17,access=True,seq=1))
+        figure['behavior']='fire'
+        scene['__bfPositionOrig']=lambda e:figure.update(behavior='run')
+        self.call('__bfPosition',scene,dict(walker=dict(id=17,x=40,y=50)))
+        self.assertEqual(figure['behavior'],'run')
+        self.assertEqual(figure['__bfBursts'],[])
+        self.assertEqual(self.fx.reported,[1])
+        self.assertEqual(self.fx.applied,[])
 
     def test_stop_after_swap_preserves_holster_and_draw_without_blocking_new_walk(self):
         for phase in ('arm_out','arm_in'):

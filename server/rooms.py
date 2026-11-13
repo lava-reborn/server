@@ -204,7 +204,14 @@ class Room:
                 continue
             out = fn(sess)
             if out:
-                sess.send(out[0], **out[1])
+                try:
+                    sess.send(out[0], **out[1])
+                except OSError:
+                    # The shot/move belongs to the room, not to this
+                    # recipient. Keep its remaining frames and recipients
+                    # intact; socket cleanup runs outside this broadcast.
+                    log.info("room recipient %s disconnected", sess.pid, exc_info=True)
+                    sess.writer.close()
 
     def snapshot_for(self, sess):
         """Everything already here, for someone who just arrived.

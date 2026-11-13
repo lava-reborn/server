@@ -137,9 +137,13 @@ def __bfFinishMove(obj):
 def __bfPosition(obj):
     walker = obj.walker
     figure = this.getWalker(walker.id)
-    if _global.__bfProtectedVisual(figure) or (walker.__bfStoppingMove and _global.__bfChangingWeapon(figure)):
+    if walker.__bfStoppingMove and (_global.__bfProtectedVisual(figure) or _global.__bfChangingWeapon(figure)):
         this.placeWalker(figure, walker.x, walker.y)
         return
+    if _global.__bfProtectedVisual(figure):
+        # A real new step supersedes delayed cosmetic firing on observers.
+        # An authoritative stop above only corrects the position.
+        _global.__bfVisualFlush(this, figure, False)
     this.__bfPositionOrig(obj)
 
 def __bfPanelSwap():
