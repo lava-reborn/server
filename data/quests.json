@@ -14847,7 +14847,7 @@
       "type": 18100,
       "kind": "del_obj",
       "obj": 0,
-      "name": "Поездка в Абри без билета",
+      "name": "Поездка в Абри за 100 афро",
       "give": [156],
       "take": [156],
       "level": 0,
@@ -14856,14 +14856,15 @@
       "rew_loc": 1,
       "loc": 48146394,
       "finish_loc": 48146394,
+      "cost_afro": 100,
       "rew_afro": 0,
       "rew_gold": 0,
       "q_type": 0,
       "own_texts": ["name", "start", "notfinish", "finish"],
-      "start": "Нур-ад-Дин предлагает отвезти вас с вокзала Донголы на портовый рынок Абри. Билет и оплата не требуются. Завершите задание, когда будете готовы отправиться.",
-      "notfinish": "Вернитесь к Нур-ад-Дину на вокзал Донголы, чтобы отправиться в Абри.",
-      "finish": "Поехали! Следующая остановка — портовый рынок Абри.",
-      "why": "DESIGNED: owner gameplay release 2026-11-13, free quest ride Dongola 49 to Abri 187. Existing ticket route 282 is retained. Explicit unused quest id, no rewards, fee or item consumption; standard quest-way guards apply."
+      "start": "Поездка с вокзала Донголы на портовый рынок Абри стоит 100 афро. Проездной не нужен. При завершении задания со счёта будет списано 100 афро.",
+      "notfinish": "Для поездки в Абри без проездного необходимо 100 афро. Вернитесь к Нур-ад-Дину на вокзал Донголы.",
+      "finish": "Поехали в Абри! Стоимость поездки — 100 афро, проездной не требуется.",
+      "why": "DESIGNED: owner gameplay release 2026-11-13, direct 100-afro ride Dongola 49 to Abri 187 without a pass, matching existing Abri fare and ticket 6547. Existing pass route 282 and paid reverse route 275 are retained. No reward or item consumption. Standard atomic quest fee, availability and unfulfilled-way refund apply."
     }
   ]
 }

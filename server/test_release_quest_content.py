@@ -151,29 +151,92 @@ class ReleaseQuests(unittest.TestCase):
         self.assertEqual(self.hand_in(qid),[server.RES_NO_SUCH])
         self.assertFalse(self.s.quest_available(quests.get(232)))
 
-    def test_free_dongola_abri_ride_needs_no_money_or_ticket_and_is_repeatable(self):
+    def test_paid_dongola_abri_ride_preserves_pass_and_charges_once_per_trip(self):
         self.at(49,156)
-        self.s.char.afro,self.s.char.gold=0,0
+        self.s.char.afro,self.s.char.gold=200,7
         self.s.char.save(self.store)
+        self.give(6547)
         before=self.s.inv.bag_pieces()
         q=quests.get(18100)
         self.assertTrue(q.service)
         self.assertEqual(q.loc,quests.get(282).loc)
         self.assertEqual(q.wants(),[])
-        self.assertFalse(q.has_fee or q.pays)
+        self.assertEqual((q.cost_afro,q.cost_gold,q.pays),(100,0,False))
         self.assertEqual(quests.get(282).wants(),[(6547,1)])
         self.assertEqual(travel.quest_way(self.s.loc,18100)['target_loc_id'],187)
-        for _ in range(2):
+        for remaining in (100,0):
             qid=self.take(18100,156)
+            self.assertEqual(self.store.money(self.cid),(remaining+100,7))
             self.assertEqual(self.hand_in(qid),[0])
+            self.assertEqual(self.store.money(self.cid),(remaining,7))
             self.assertEqual(self.hand_in(qid),[server.RES_NO_SUCH])
+            self.assertEqual(self.store.money(self.cid),(remaining,7))
         self.assertEqual(len(self.moves),2)
-        self.assertEqual(self.store.money(self.cid),(0,0))
         self.assertEqual(self.s.inv.bag_pieces(),before)
         exported=quests.strings()
         self.assertTrue(all(exported.get(key) for key in q.string_ids()))
+        self.assertIn('100 афро',exported[q.string_id(quests.START)])
 
-    def test_free_ride_cannot_be_taken_at_another_location_or_npc(self):
+    def test_paid_trip_refuses_insufficient_afro_even_with_a_pass(self):
+        self.at(49,156)
+        self.s.char.afro,self.s.char.gold=99,100
+        self.s.char.save(self.store)
+        self.give(6547)
+        before=self.s.inv.bag_pieces()
+        qid=self.take(18100,156)
+        self.assertEqual(self.hand_in(qid),[server.RES_NO_MONEY])
+        self.assertEqual(self.store.money(self.cid),(99,100))
+        self.assertEqual(self.s.inv.bag_pieces(),before)
+        self.assertIsNotNone(self.store.quest(qid))
+        self.assertEqual(self.moves,[])
+
+    def test_existing_pass_routes_still_take_only_the_requested_pass(self):
+        for loc,npc,qtype,ticket,target in ((49,156,282,6547,187),(187,1179,281,6546,49)):
+            with self.subTest(quest=qtype):
+                self.at(loc,npc)
+                self.s.char.afro,self.s.char.gold=0,0
+                self.s.char.save(self.store)
+                self.give(ticket)
+                qid=self.take(qtype,npc)
+                self.assertEqual(self.hand_in(qid),[0])
+                self.assertEqual(self.store.money(self.cid),(0,0))
+                self.assertNotIn(ticket,self.s.inv.bag_pieces())
+                self.assertEqual(travel.quest_way(self.s.loc,qtype)['target_loc_id'],target)
+
+    def test_abri_dongola_cash_route_still_charges_100_without_consuming_pass(self):
+        self.at(187,1179)
+        self.s.char.afro,self.s.char.gold=100,3
+        self.s.char.save(self.store)
+        self.give(6546)
+        q=quests.get(275)
+        self.assertEqual((q.cost_afro,q.cost_gold,q.wants()),(100,0,[]))
+        qid=self.take(275,1179)
+        self.assertEqual(self.hand_in(qid),[0])
+        self.assertEqual(self.store.money(self.cid),(0,3))
+        self.assertEqual(self.s.inv.bag_pieces().get(6546),1)
+        self.assertEqual(travel.quest_way(self.s.loc,275)['target_loc_id'],49)
+
+    def test_unfulfilled_paid_trip_returns_fare_once(self):
+        self.at(49,156)
+        self.s.char.afro,self.s.char.gold=100,3
+        self.s.char.save(self.store)
+        qid=self.take(18100,156)
+        self.s.way,self.s.way_quest=None,None
+        self.s.on_map=False
+        self.s.combat=NS(dead=False)
+        self.s.hold_line=lambda _verb:None
+        self.s.say=lambda _text:None
+        self.s.hand_in_way=server.Session.hand_in_way.__get__(self.s)
+        plan=travel.plan_quest_way(self.s.loc,18100,0,0)
+        # Precheck succeeds, but the destination becomes unavailable after commit.
+        with patch.object(travel,'plan_quest_way',side_effect=[plan,travel.Refused('unavailable')]):
+            self.assertEqual(self.hand_in(qid),[0])
+        self.assertEqual(self.store.money(self.cid),(100,3))
+        self.assertIsNone(self.store.quest(qid))
+        self.assertEqual(self.hand_in(qid),[server.RES_NO_SUCH])
+        self.assertEqual(self.store.money(self.cid),(100,3))
+
+    def test_paid_ride_cannot_be_taken_at_another_location_or_npc(self):
         self.at(187,156)
         self.s.cmd_q_st(dict(mob=1,q_idx=quests.given_by(156).index(18100)))
         self.assertEqual([p['res'] for c,p in self.frames if c=='cmdAck'],[server.RES_NOT_AVAILABLE])

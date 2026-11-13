@@ -1649,7 +1649,7 @@
     "quest": 18100,
     "cells": [[37, 46], [36, 47], [38, 47], [37, 48]],
     "target_loc_id": 187,
-    "why": "DESIGNED: owner gameplay release 2026-11-13, free quest ride from Nur-ad-Din at Dongola station to Abri port market; same safe boarding cells as ticket route 282."
+    "why": "DESIGNED: owner gameplay release 2026-11-13, direct 100-afro ride without a pass from Nur-ad-Din at Dongola station to Abri port market; same safe boarding cells as ticket route 282."
    },
    {
     "quest": 632,
