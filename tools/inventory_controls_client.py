@@ -35,7 +35,9 @@ def __icBagKill():
 
 def __icRelease():
     bag = this.__icBag
-    if Key.isDown(16) and (bag.__icOwner or bag.__bkOwner or bag.__icPassiveShift):
+    slot = this.__icSlot
+    owner = slot.__icEquipOwner
+    if Key.isDown(16) and (bag.__icOwner or bag.__bkOwner or bag.__icPassiveShift or (owner and slot.item_mc == this)):
         # The native release sends DOUBLE_CLICK before SHIFT_SELECT. A fast
         # Shift click must have exactly one route, including after a plain click.
         this.clickFlag = False
@@ -44,14 +46,18 @@ def __icRelease():
         this.clickTimer = None
         this.onMouseMove = None
         this.price_mc.onMouseMove = None
-        this.dispatch({"type":lol.gpui.ItemContainer.SHIFT_SELECT})
+        if owner and slot.item_mc == this:
+            owner.doubleClick({"target":slot, "item_mc":this})
+        else:
+            this.dispatch({"type":lol.gpui.ItemContainer.SHIFT_SELECT})
         lol.gpui.AnnotationManager.clear()
         return
     return this.__icReleaseOrig()
 
 def __icPress():
     bag = this.__icBag
-    if Key.isDown(16) and (bag.__icOwner or bag.__bkOwner or bag.__icPassiveShift):
+    slot = this.__icSlot
+    if Key.isDown(16) and (bag.__icOwner or bag.__bkOwner or bag.__icPassiveShift or (slot.__icEquipOwner and slot.item_mc == this)):
         this.onMouseMove = None
         return
     return this.__icPressOrig()
@@ -92,11 +98,37 @@ def __icEquipInit():
     this.__icDead = False
     this.__icEquipInitOrig()
     this.bag_mc.__icOwner = this
+    _global.__icBindEquipSlots(this, True)
 
 def __icEquipKill():
     this.__icDead = True
     this.bag_mc.__icOwner = None
+    _global.__icBindEquipSlots(this, False)
     return this.__icEquipKillOrig()
+
+def __icBindEquipSlots(owner, active):
+    outfit = owner.outfitInterface
+    slots = [outfit.prim_mc, outfit.sec_mc, outfit.head_mc, outfit.armor_mc, outfit.cam_mc, outfit.legs_mc, outfit.boots_mc, outfit.belt_mc]
+    i = 0
+    while i < len(slots):
+        slot = slots[i]
+        if slot:
+            if active:
+                slot.__icEquipOwner = owner
+                slot.item_mc.__icSlot = slot
+            else:
+                slot.item_mc.__icSlot = None
+                slot.__icEquipOwner = None
+        i = i + 1
+
+def __icSlotAdd(item):
+    this.__icSlotAddOrig(item)
+    if this.__icEquipOwner:
+        this.item_mc.__icSlot = this
+
+def __icSlotRemove():
+    this.item_mc.__icSlot = None
+    return this.__icSlotRemoveOrig()
 
 def __icEquipSend():
     operation = this.currDDOperation
@@ -116,26 +148,34 @@ def __icEquipDouble(obj):
     if not _global.__icCanStart(this, card):
         return
     root = card.item.rootID
-    if obj.target == this.bag_mc and (root == 0 or root == 5 or root == 3):
+    slot = None
+    if obj.target.__icEquipOwner == this and obj.target.item_mc == card:
+        # Removing equipment follows the same server-validated transfer as
+        # dragging to the bag, including after a premium entitlement expires.
+        slot = this.bag_mc
+    elif obj.target == this.bag_mc and (root == 0 or root == 5 or root == 3):
         # The old double-click branch can leave hand items without a target.
         # Item.as: firearm=0, cold arm=5, ammo=3. Wear=1 keeps its
         # native clothing slot; medicine=2 keeps native use-on-double-click.
         # Use the same DDOperation and validation/confirmation path as a drop
         # on the primary hand; do not send a command or move the card here.
         slot = this.outfitInterface.prim_mc
-        if not slot:
-            return
-        if not this.ddOperation_arr:
-            this.ddOperation_arr = []
-        op = new(lol.gpui.DDOperation)
-        op.setFrom(card.item, obj.target, card)
+    else:
+        return this.__icEquipDoubleOrig(obj)
+    if not slot:
+        return
+    if not this.ddOperation_arr:
+        this.ddOperation_arr = []
+    op = new(lol.gpui.DDOperation)
+    op.setFrom(card.item, obj.target, card)
+    if slot == this.bag_mc:
+        op.setTo(None, slot)
+    else:
         op.setTo(slot.item_mc.item, slot, slot.item_mc)
         if slot.item_mc:
             slot.item_mc.blockItem()
-        this.currDDOperation = op
-        this.sendTransferToServer()
-        return
-    return this.__icEquipDoubleOrig(obj)
+    this.currDDOperation = op
+    this.sendTransferToServer()
 
 def __icTradeInit():
     if this.__icDead:
@@ -263,6 +303,8 @@ def patches(Asm, undef):
         ('EquipInterface', 'doubleClick', '__icEquipDouble'),
         ('EquipInterface', 'sendTransferToServer', '__icEquipSend'),
         ('EquipInterface', 'warningAnswer', '__icWarningAnswer'),
+        ('SlotPan', 'addItem', '__icSlotAdd'),
+        ('SlotPan', 'removeItem', '__icSlotRemove'),
         ('TradeInterface', 'init', '__icTradeInit'),
         ('TradeInterface', 'kill', '__icTradeKill'),
         ('TradeInterface', '__icTradeEsc', '__icTradeEsc'),
@@ -308,5 +350,5 @@ def {helper}():
                            ('checkAndDispatch', '__icDispatch')):
         wraps.append((('services', 'HotKeyManager'), method, helper + 'Orig', *bodies[helper]))
     wraps.append((('services', 'HotKeyFilter'), 'getFilter', '__icFilterOrig', *bodies['__icFilter']))
-    shared = {'__icModal', '__icCanStart', '__icCancelDrag', '__icEscapeFor'}
+    shared = {'__icModal', '__icCanStart', '__icCancelDrag', '__icEscapeFor', '__icBindEquipSlots'}
     return dict(globals=[entry for entry in functions if entry[0] in shared], wraps=tuple(wraps))

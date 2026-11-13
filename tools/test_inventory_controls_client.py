@@ -85,6 +85,105 @@ class InventoryControls(unittest.TestCase):
         self.call('ItemContainer', 'onReleaseBg', card)
         self.assertEqual(self.calls, ['press', 'release'])
 
+    def test_shift_unequips_each_owned_slot_once_until_ack(self):
+        for slot_id in ('primary', 'secondary', 'head', 'armor', 'camouflage', 'legs', 'boots', 'belt'):
+            with self.subTest(slot=slot_id):
+                self.calls.clear()
+                panel, bag = self.owner()
+                card = self.card()
+                slot = dict(id=slot_id, item_mc=card, __icEquipOwner=panel)
+                card.update(__icSlot=slot, price_mc={},
+                            __icPressOrig=lambda: self.fail('Shift must not start dragging'),
+                            __icReleaseOrig=lambda: self.fail('Shift must not also double click'),
+                            dispatch=lambda event: self.fail('slot must not enter bag selection'))
+                def set_from(*args):
+                    self.calls.append(('from', args))
+                    card['blockFlag'] = True
+                operation = dict(setFrom=set_from, setTo=lambda *args: self.calls.append(('to', args)))
+                self.env['lol']['gpui']['DDOperation'] = lambda: operation
+                def submit():
+                    self.calls.append('server-validated-transfer')
+                    panel['ddOperation_arr'].append(panel['currDDOperation'])
+                    panel['currDDOperation'] = None
+                panel['sendTransferToServer'] = submit
+                self.call('ItemContainer', 'onPressBg', card)
+                self.call('ItemContainer', 'onReleaseBg', card)
+                self.call('ItemContainer', 'onReleaseBg', card)
+                self.assertEqual([c for c in self.calls if c == 'server-validated-transfer'],
+                                 ['server-validated-transfer'])
+                self.assertIn(('from', (card['item'], slot, card)), self.calls)
+                self.assertIn(('to', (None, bag)), self.calls)
+                self.assertFalse(card['clickFlag'])
+                self.assertIsNone(card['onMouseMove'])
+                self.assertEqual(len(panel['ddOperation_arr']), 1)
+                # Once acknowledged, another equipped item can be removed.
+                panel['ddOperation_arr'].clear()
+                card['blockFlag'] = False
+                self.call('ItemContainer', 'onReleaseBg', card)
+                self.assertEqual(self.calls.count('server-validated-transfer'), 2)
+
+    def test_equipment_slot_binding_follows_init_new_cards_remove_and_kill(self):
+        panel, bag = self.owner()
+        card = self.card()
+        slot = dict(item_mc=card)
+        panel.update(outfitInterface=dict(head_mc=slot),
+                     __icEquipInitOrig=lambda: self.calls.append('init'),
+                     __icEquipKillOrig=lambda: self.calls.append('kill'))
+        self.call('EquipInterface', 'init', panel)
+        self.assertIs(slot['__icEquipOwner'], panel)
+        self.assertIs(card['__icSlot'], slot)
+        slot['__icSlotRemoveOrig'] = lambda: self.calls.append('remove')
+        self.call('SlotPan', 'removeItem', slot)
+        self.assertIsNone(card['__icSlot'])
+        replacement = self.card()
+        slot['__icSlotAddOrig'] = lambda item: slot.update(item_mc=replacement)
+        self.call('SlotPan', 'addItem', slot, replacement['item'])
+        self.assertIs(replacement['__icSlot'], slot)
+        self.call('EquipInterface', 'kill', panel)
+        self.assertIsNone(slot['__icEquipOwner'])
+        self.assertIsNone(replacement['__icSlot'])
+        self.assertIsNone(bag['__icOwner'])
+        self.assertEqual(self.calls, ['init', 'remove', 'kill'])
+
+    def test_shift_slot_rejects_stale_cards_and_closed_busy_or_modal_owner(self):
+        for reason in ('stale', 'closed', 'pending', 'modal', 'unloaded'):
+            with self.subTest(reason=reason):
+                panel, bag = self.owner()
+                card = self.card()
+                slot = dict(item_mc=card, __icEquipOwner=panel)
+                card.update(__icSlot=slot, price_mc={},
+                            __icReleaseOrig=lambda: None)
+                if reason == 'stale':
+                    slot['item_mc'] = self.card()
+                if reason == 'closed':
+                    panel['__icDead'] = True
+                if reason == 'pending':
+                    panel['ddOperation_arr'] = Arr([{}])
+                if reason == 'modal':
+                    self.windows['exchange']['instance'] = dict(content={})
+                if reason == 'unloaded':
+                    card['item']['inited'] = False
+                self.call('ItemContainer', 'onReleaseBg', card)
+                self.assertNotIn('currDDOperation', panel)
+                self.windows['exchange']['instance'] = None
+
+    def test_unowned_slots_and_plain_equipment_clicks_remain_native(self):
+        panel, bag = self.owner()
+        card = self.card()
+        card.update(__icSlot=dict(item_mc=card),
+                    __icPressOrig=lambda: self.calls.append('press'),
+                    __icReleaseOrig=lambda: self.calls.append('release'))
+        self.call('ItemContainer', 'onPressBg', card)
+        self.call('ItemContainer', 'onReleaseBg', card)
+        self.env['Key']['isDown'] = lambda code: False
+        card['__icSlot']['__icEquipOwner'] = panel
+        self.call('ItemContainer', 'onPressBg', card)
+        self.call('ItemContainer', 'onReleaseBg', card)
+        self.assertEqual(self.calls, ['press', 'release', 'press', 'release'])
+        other_slot = dict(item_mc=self.card(), __icSlotAddOrig=lambda item: None)
+        self.call('SlotPan', 'addItem', other_slot, card['item'])
+        self.assertNotIn('__icSlot', other_slot['item_mc'])
+
     def test_shift_on_npc_stock_never_becomes_a_double_click_purchase(self):
         card = self.card()
         card.update(__icBag=dict(__icPassiveShift=True), price_mc={},

@@ -73,6 +73,62 @@ def __inventoryProbe(url):
         _root.destination = "missing"
         lol.gpui.BagInterface.prototype.shiftSelect.apply(bag, [{"target":card}])
         report.ammo_destination = _root.destination
+        # Exercise the real SlotPan.addItem -> ItemContainer release ->
+        # EquipInterface -> DDOperation chain, including repeat clicks while
+        # awaiting the server and detachment when the slot card is removed.
+        savedKey = Key.isDown
+        # Key.isDown is read-only in the projector. Replace it only in this
+        # isolated probe, restoring the real function before other checks.
+        ASSetPropFlags(Key, "isDown", 0, 7)
+        Key.isDown = _global.__probeShiftDown
+        report.unequip_slots = 0
+        report.unequip_single = True
+        report.unequip_detached = True
+        names = ["prim_mc", "sec_mc", "head_mc", "armor_mc", "cam_mc", "legs_mc", "boots_mc", "belt_mc"]
+        ids = ["primary", "secondary", "head", "armor", "camouflage", "legs", "boots", "belt"]
+        i = 0
+        while i < len(names):
+            owner.currDDOperation = None
+            slot = {"__proto__":lol.gpui.SlotPan.prototype, "id":ids[i], "typeOfList":"icon", "cont_mc":{"attachMovie":_global.__probeAttachSlot}, "dispatchEvent":_global.__probeNoop}
+            slot.__proto__ = lol.gpui.SlotPan.prototype
+            owner.outfitInterface[names[i]] = slot
+            _global.__icBindEquipSlots(owner, True)
+            _root.slotCard = {"__get__item":_global.__probeSlotGetItem, "__set__item":_global.__probeSetItem, "blockItem":_global.__probeBlock, "unblockItem":_global.__probeUnblock, "attachIcon":_global.__probeNoop, "kill":_global.__probeNoop, "removeMovieClip":_global.__probeNoop, "reload_btn":{}, "price_mc":{}}
+            _root.slotCard.__proto__ = lol.gpui.ItemContainer.prototype
+            lol.events.LEventDispatcher.initialize(_root.slotCard)
+            if i == 0:
+                item = new(lol.core.objects.FireArm, "0", 0, lol.core.objects.Item.FIRE_ARM)
+            elif i == 1:
+                item = new(lol.core.objects.MeleeWeapon, "0", 0, lol.core.objects.Item.COLD_ARM)
+            else:
+                item = new(lol.core.objects.Wear, "0", 0, lol.core.objects.Item.WEAR)
+            item.inited = True
+            item.getProp = _global.__probePremium
+            slot.addItem(item)
+            hits = _root.nativeHits
+            if i == 0:
+                report.unequip_binding = slot.__icEquipOwner == owner and _root.slotCard.__icSlot == slot
+                report.unequip_card = slot.item_mc == _root.slotCard
+                report.unequip_shift = Key.isDown(16)
+                report.unequip_item = _root.slotCard.item == item
+            lol.gpui.ItemContainer.prototype.onPressBg.apply(_root.slotCard, [])
+            lol.gpui.ItemContainer.prototype.onReleaseBg.apply(_root.slotCard, [])
+            if i == 0:
+                report.unequip_hits = _root.nativeHits
+                report.unequip_target = _root.destination
+                report.unequip_blocked = Boolean(_root.slotCard.blockFlag)
+            if _root.nativeHits == hits + 1 and _root.destination == "bag" and owner.currDDOperation.fromSlot == slot and owner.currDDOperation.fromItem == item and not _root.slotCard.clickFlag and not _root.slotCard.onMouseMove:
+                report.unequip_slots = Number(report.unequip_slots) + 1
+            lol.gpui.ItemContainer.prototype.onReleaseBg.apply(_root.slotCard, [])
+            if _root.nativeHits != hits + 1:
+                report.unequip_single = False
+            slot.removeItem()
+            if _root.slotCard.__icSlot:
+                report.unequip_detached = False
+            i = i + 1
+        _global.__icBindEquipSlots(owner, False)
+        report.unequip_released = not slot.__icEquipOwner
+        Key.isDown = savedKey
         # Exercise the actual native getNumFromSortList/selection path when
         # the old anchor was removed or hidden by a filter.
         stale = {"currSelectItem":{"item":{"id":"gone"}}, "sortList":[card], "selectItem_arr":[], "clearSelectList":_global.__probeNoop, "getNumFromSortList":lol.gpui.BagInterface.prototype.getNumFromSortList, "select":lol.gpui.BagInterface.prototype.select}
@@ -101,6 +157,29 @@ def __probeNoop():
 
 def __probeGetItem():
     return this.item
+
+def __probeSetItem(item):
+    this.__item = item
+
+def __probeSlotGetItem():
+    return this.__item
+
+def __probeAttachSlot(linkage, name, depth):
+    return _root.slotCard
+
+def __probeShiftDown(code):
+    return code == 16
+
+def __probeBlock():
+    this.blockFlag = True
+
+def __probeUnblock():
+    this.blockFlag = False
+
+def __probePremium(name):
+    if name == "premium":
+        return 2
+    return 0
 
 def __probeUseMedicine(item, slot):
     _root.healUses = _root.healUses + 1
@@ -151,6 +230,11 @@ def main():
           (row.get('medicine_uses'), row.get('medicine_pending')), ('1', 'false'))
     check('native Shift knife selects the primary slot', row.get('knife_destination'), 'primary')
     check('native Shift ammunition selects the weapon target', row.get('ammo_destination'), 'primary')
+    check('native Shift unequips all eight slots through normal transfer, even without premium',
+          row.get('unequip_slots'), '8')
+    check('native Shift repeat cannot submit an extra unequip before ACK', row.get('unequip_single'), 'true')
+    check('native slot removal detaches the retired card', row.get('unequip_detached'), 'true')
+    check('native equipment cleanup releases slot ownership', row.get('unequip_released'), 'true')
     check('native filtered-out range anchor selects the current card safely', row.get('selected_current'), 'true')
     check('native trade Escape reaches only its own recipient',
           (row.get('trade_escape'), row.get('other_escape')), ('1', '0'))
