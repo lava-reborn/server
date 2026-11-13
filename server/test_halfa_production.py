@@ -805,6 +805,44 @@ def arm(c):
     return gun
 
 
+def heal_if_needed(c):
+    """The raid controller uses its real medicine, not a database HP reset.
+
+    Looting and moving still expose it to ordinary damage. A dead controller
+    fails here instead of repeatedly asking the server to move a corpse.
+    """
+    if not getattr(c, 'fixture_medicine', None):
+        return []
+    out = testkit.wait_recovery(c)
+    hp, maximum = None, None
+    for cmd, p in c.seen:
+        if cmd == 'usrUp' and p.get('id') == 0:
+            hp, maximum = p.get('hcur', hp), p.get('hmax', maximum)
+        elif cmd == 'heal' and p.get('target') == 0:
+            hp = p.get('hp', hp)
+    assert hp is not None and maximum, ('raid controller has no HP snapshot', c.scene_pos)
+    assert hp > 0, ('raid controller died', c.scene_pos)
+    if hp >= maximum * 0.8:
+        return out
+    left = getattr(c, 'fixture_healed_at', 0) + 4.05 - time.monotonic()
+    if left > 0:
+        out += c.frames(left)
+    c.send('ss_use;type=2;obj=x%s;' % c.fixture_medicine)
+    got = c.until(lambda f: f[0] == 'cmdAck')
+    assert acks(got) == [0], ('raid medicine refused', acks(got))
+    if not named(got, 'heal'):
+        got += c.until(lambda f: f[0] == 'heal' or
+                       (f[0] == 'lch' and f[1].get('dead') == 0), 4)
+    got += c.frames(0.1)
+    assert named(got, 'heal'), ('raid medicine did not finish', c.scene_pos)
+    c.fixture_healed_at = time.monotonic()
+    c.fixture_medicine_uses -= 1
+    remaining = [p['use_count'] for p in named(got, 'ss_di_heal')
+                 if str(p['obj']) == c.fixture_medicine]
+    assert remaining == [c.fixture_medicine_uses], ('raid medicine charges', remaining)
+    return out + got
+
+
 def through(c, loc_id, side):
     """Walk onto a door or side of a location and take it: (acks, the lcall)."""
     loc = world.location(loc_id)
@@ -856,7 +894,7 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
     hostile = {e for e, t in types.items() if MT.get(t, (None,))[0] == world.MOB
                and mobs.stats(t).can_attack}
     reach = max([mobs.stats(types[e]).aggro for e in hostile] or [0]) + 0.5
-    out = []
+    out = heal_if_needed(c)
     where = dict(c.scene_cells)
     for eid in [e for e, t in types.items() if t == want and e not in done]:
         home = where.get(eid)
@@ -892,6 +930,7 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
                 continue
             out += testkit.clear_approach(c, in_sight, None, (), shot_range)
         pos = c.scene_pos
+        out += heal_if_needed(c)
         for _ in range(20):
             c.send("ss_use;type=16;obj=x%s;target=%s;" % (gun, entity(eid)))
             got_ = c.until(lambda f: f[0] == "ss_di_firearm"
@@ -907,7 +946,7 @@ def hunt(c, got, loc_id, gun, want, pos, done=()):
 def loot(c, fight, loc_id, pos, near, wary=frozenset()):
     """Open the bag nearest `near`, take all of it: the types it held."""
     loc = world.location(loc_id)
-    got = list(fight)
+    got = list(fight) + heal_if_needed(c)
     if not [p for p in named(got, "ss_loot") if p.get("s_status") == 1]:
         got += c.until(lambda f: f[0] == "ss_loot" and f[1].get("s_status") == 1, 6)
     bags = [p["hex"][0] for p in named(got, "ss_loot") if p.get("s_status") == 1]
@@ -1072,6 +1111,14 @@ try:
     got, q_raid = take(c, here, FRANK, RAID)
     check("  ..taken: nought of five miners", named(got, "q_di_kill_mobs")[0]["kill_num"], [0])
     gun = arm(c)
+    c.fixture_medicine, _ = give(c, 7100)  # twenty finite combat-injector doses
+    assert c.fixture_medicine, 'raid controller did not receive medicine'
+    c.fixture_medicine_uses = 20
+    # Flash asks for its own entity details on entry. The headless controller
+    # needs that initial HP snapshot too, before the first incoming hit.
+    c.send('getInfo;id=0;type=0;')
+    snapshot = c.until(lambda f: f[0] == 'usrUp' and f[1].get('id') == 0)
+    assert any(p.get('hcur', 0) > 0 for p in named(snapshot, 'usrUp') if p.get('id') == 0)
     arrival = goto(c, 154)
     check("the mine's first entrance stands its Ефрейторы, away from its door",
           len(inhabitants(arrival).get(CORPORAL, [])), 5)

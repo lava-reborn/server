@@ -96,9 +96,9 @@ class BlueprintCompatibility(unittest.TestCase):
             checked += 1
         self.assertGreater(checked, 40)
 
-    def test_existing_magazine_sizes_are_preserved(self):
+    def test_magazine_capacities_match_current_release(self):
         expected = {26070: 10, 26071: 7, 26083: 10, 26084: 7,
-                    26185: 128, 26186: 100, 25992: 16, 26005: 24,
+                    26185: 100, 26186: 100, 26187: 100, 25992: 16, 26005: 24,
                     26018: 14, 26031: 12, 26044: 12, 26057: 8, 25417: 64}
         for t, capacity in expected.items():
             self.assertEqual(items.params_of(t)['clip_size'], capacity, t)

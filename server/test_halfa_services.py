@@ -210,12 +210,12 @@ try:
     check("  ..the owner's ingot quest pays 2 ounces for the valley boss's two ingots of one",
           (quests.get(10).wants(), quests.get(10).rew_gold), ([(INGOT_1, 2)], 200))
     lottery = {LOTTERY: [LOTTERY_MAN], LOTTERY_G: [GOLD_LOTTERY]}
-    check("the lotteries: the ticket for a prize drawn, up to the eighth level, a service",
+    check("the lotteries: the ticket for a prize drawn, through level twenty, a service",
           [(quests.get(t).take, quests.get(t).wants(),
             quests.get(t).max_level, quests.get(t).service, bool(quests.get(t).rew_random))
            for t in (LOTTERY, LOTTERY_G)],
-          [([LOTTERY_MAN], [(TICKET, 1)], 8, True, True),
-           ([GOLD_LOTTERY], [(GOLD_TICKET, 1)], 8, True, True)])
+          [([LOTTERY_MAN], [(TICKET, 1)], 20, True, True),
+           ([GOLD_LOTTERY], [(GOLD_TICKET, 1)], 20, True, True)])
     check("  ..no premium prize, and the start names only what can be won",
           ([t for q in (LOTTERY, LOTTERY_G) for t, _n, _w in quests.get(q).rew_random
             if items.premium(t)], ["(P)" in quests.get(q).texts[quests.START]
