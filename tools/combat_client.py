@@ -180,6 +180,17 @@ def __bfAim(obj):
 
 def __bfFire(event):
     figure = this.getWalker(event.gunnerID)
+    if figure and event.shot and event.access:
+        # Delayed cosmetic playback must not follow figures to new cells.
+        event.__bfOrigin = {"x":figure._x, "y":figure._y - 50}
+        i = 0
+        while event.hits and i < len(event.hits):
+            hit = event.hits[i]
+            if hit.type == "target":
+                target = this.getWalker(hit.targetID)
+                if target:
+                    hit.__bfPoint = {"x":target._x, "y":target._y - 50}
+            i = i + 1
     if figure and figure.__bfSkipVisual:
         if event.access:
             this.addFireAckReport(event)
@@ -195,6 +206,29 @@ def __bfFire(event):
         this.__bfFireOrig(event)
     else:
         bundle.events.push(event)
+
+def __bfApplyFire(event):
+    if not event.__bfOrigin:
+        return this.__bfApplyFireOrig(event)
+    point = None
+    while len(event.hits) > 0:
+        hit = event.hits.shift()
+        if hit.type == "point":
+            point = this.hitPoint(hit)
+        elif hit.type == "wall":
+            point = this.hitWall(hit)
+        elif hit.type == "target":
+            point = this.hitTarget(hit)
+    if event.shot and point:
+        this.traceShot(event.gunnerID, point, event.__bfOrigin)
+
+def __bfTraceShot(gunnerID, point, origin):
+    if not origin:
+        return this.__bfTraceShotOrig(gunnerID, point)
+    if not point:
+        return
+    trace = new(lol.fx.ShotTrace)
+    trace.traceShot(this.helpers_mc, origin, {"x":point.x + Math.random() * 20 - 10, "y":point.y + Math.random() * 20 - 10})
 
 def __bfBurstFinal(obj):
     if obj.data != "fire" and obj.target.burstArr:
@@ -230,6 +264,8 @@ def patches(Asm, undef):
         (('core','location','CharInfo'), 'showStamina', '__bfStaminaOrig', '__bfStamina'),
         (('core','location','DisplayLocScene'), 'aim', '__bfAimOrig', '__bfAim'),
         (('core','location','DisplayLocScene'), 'fireAck', '__bfFireOrig', '__bfFire'),
+        (('core','location','DisplayLocScene'), 'applyFireAck', '__bfApplyFireOrig', '__bfApplyFire'),
+        (('core','location','DisplayLocScene'), 'traceShot', '__bfTraceShotOrig', '__bfTraceShot'),
         (('core','location','DisplayLocScene'), 'busrtFireAck', '__bfBurstFinalOrig', '__bfBurstFinal'),
         (('core','location','DisplayLocScene'), 'shotgunFireAck', '__bfShotgunFinalOrig', '__bfShotgunFinal'),
         (('core','location','DisplayLocScene'), 'dead', '__bfDeadOrig', '__bfDead'),

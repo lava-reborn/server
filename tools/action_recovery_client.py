@@ -110,12 +110,15 @@ def __bfNextSequence():
 
 def __bfHitTarget(event):
     figure = this.getWalker(event.targetID)
+    if not figure and event.__bfPoint:
+        return event.__bfPoint
     if figure and figure.behavior == "die":
-        return {"x":figure._x, "y":figure._y - 50}
+        return event.__bfPoint or {"x":figure._x, "y":figure._y - 50}
     if figure and figure.__bfBursts and len(figure.__bfBursts) > 0:
         if figure.__bfBursts[0].got > 0 and (figure.behavior == "fire" or figure.behavior == "fire_out"):
-            return {"x":figure._x, "y":figure._y - 50}
-    return this.__bfHitTargetOrig(event)
+            return event.__bfPoint or {"x":figure._x, "y":figure._y - 50}
+    point = this.__bfHitTargetOrig(event)
+    return event.__bfPoint or point
 
 def __bfProtectedVisual(figure):
     return figure and figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0 and (figure.behavior == "fire" or figure.behavior == "fire_out")

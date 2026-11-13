@@ -138,6 +138,30 @@ class CombatClient(unittest.TestCase):
             self.assertEqual(figure['burstArr'],[])
         self.assertEqual(self.applied,[])
 
+    def test_delayed_trace_keeps_the_shot_positions_instead_of_following_moving_figures(self):
+        scene,figure=self.scene()
+        figure.update(_x=100,_y=200)
+        target=dict(_x=400,_y=500)
+        scene['getWalker']=lambda eid:figure if eid==1 else target
+        event=dict(gunnerID=1,access=True,shot=True,seq=1,
+                   hits=Arr([dict(type='target',targetID=2)]))
+        self.call('__bfFire',scene,event)
+        self.assertEqual(event.get('__bfOrigin'),dict(x=100,y=150))
+        self.assertEqual(event['hits'][0].get('__bfPoint'),dict(x=400,y=450))
+        figure.update(_x=-20,_y=-20)
+        target.update(_x=800,_y=900)
+        traces=[]
+        self.env['lol']['fx']=dict(ShotTrace=lambda:dict(traceShot=lambda *args:traces.append(args)))
+        self.env['Math']['random']=lambda:.5
+        scene['helpers_mc']='helpers'
+        scene['__bfTraceShotOrig']=lambda *args:self.fail('late native coordinates')
+        scene['__bfApplyFireOrig']=lambda e:self.fail('lost captured event')
+        scene['hitTarget']=lambda hit:hit['__bfPoint']
+        scene['traceShot']=lambda *args:self.call('__bfTraceShot',scene,*args)
+        self.call('__bfApplyFire',scene,event)
+        self.assertEqual(traces,[('helpers',dict(x=100,y=150),dict(x=400,y=450))])
+        self.assertEqual(event['hits'],[])
+
 
 if __name__ == '__main__':
     run_cases(CombatClient)

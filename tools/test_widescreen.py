@@ -84,6 +84,7 @@ check("every HUD and frame branch lands inside its own function",
 WIRED = ("__requirementsReadOrig", "__questSendOrig", "__questFilterOrig",      # quest reads across transitions
          "__qwInitOrig", "__qwKillOrig", "__qwStatusOrig",  # passive NPC updates
          "__qwGetQuestOrig", "__qwTakeQuestOrig", "__qwGetAckOrig", "__qwTakeAckOrig",
+         "__bfApplyFireOrig", "__bfTraceShotOrig",
          "__itemFrameUpdateOrig", "__itemInfoAttachOrig",  # asynchronous item style
          "__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__repairGoldOrig", "__repairGetPropOrig",    # gold-only repairs
