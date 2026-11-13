@@ -627,6 +627,19 @@ class Session:
                 # A partially loaded character must not overwrite its durable
                 # position or state with this session's initial defaults.
                 self._failed_entry_before_presence = ONLINE.by_char.get(self.char_id) is not self
+                if cmd == 'lenter' and self.char_id:
+                    # Do not persist an unaccepted destination and trap the
+                    # next login there. Preserve character/money changes; only
+                    # the location falls back to the last completed entry.
+                    self._failed_location_entry = True
+                    try:
+                        safe = getattr(self, '_accepted_place', None)
+                        if safe is None:
+                            start = world.location(START_LOC)
+                            safe = (START_LOC, start.entry_cell(), GLOBAL_X, GLOBAL_Y, False)
+                        STORE.save_position(self.char_id, *safe)
+                    except Exception:
+                        log.exception('could not restore accepted location for %s', self.char_id)
                 self.close(force=True)
                 return
         if self.closed:
@@ -824,7 +837,8 @@ class Session:
             # The clan's roster holders hear "offline", seen_at is written,
             # an invitation to this character is off. Never raises.
             CLANS.offline(self)
-            if self.char_id and not getattr(self, "_failed_entry_before_presence", False):
+            if (self.char_id and not getattr(self, "_failed_entry_before_presence", False)
+                    and not getattr(self, '_failed_location_entry', False)):
                 STORE.save_position(self.char_id, self.loc.id, self.pos,
                                     self.gx, self.gy, self.on_map)
             if self.char and not getattr(self, "_failed_entry_before_presence", False):
@@ -896,6 +910,7 @@ class Session:
         this object, and it goes back to the database after each change
         that costs something and once more on the way out.
         """
+        self._accepted_place = None  # never reuse another selected character's checkpoint
         self.char = progression.Character.load(STORE, char_id)
         import magazine_migration
         legacy_guns = [dict(r) for r in STORE.db.execute(
@@ -1453,6 +1468,7 @@ class Session:
         # to read it in (Inventory.over_level_to_bag); once.
         for line in self.inv.taken_off_lines():
             self.say(line)
+        self._accepted_place = (self.loc.id, self.pos, self.gx, self.gy, self.on_map)
 
     def room_key(self):
         """Which room this location is, for us: see travel.room_key -- or the
@@ -1578,6 +1594,9 @@ class Session:
         """
         row = STORE.character(self.char_id) if self.char_id else None
         loc_id, gx, gy = travel.home(row, (START_LOC, GLOBAL_X, GLOBAL_Y))
+        # A failed resurrection arrival must not put the revived character
+        # back at the previous life's combat checkpoint.
+        self._accepted_place = None
         self.on_map = False
         self.cancel_travel()
         GMAP.leave(self)

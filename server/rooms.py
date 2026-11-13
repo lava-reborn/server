@@ -89,6 +89,12 @@ def send_to(sess, command, params):
     failed = getattr(sess, '_failed_fanout_writer', None)
     if failed is writer:
         return False
+    # asyncio usually absorbs a socket write error and closes its transport
+    # instead of raising from StreamWriter.write (notably on Linux).
+    closing = getattr(writer, 'is_closing', None)
+    if closing is not None and closing():
+        sess._failed_fanout_writer = writer
+        return False
     try:
         sess.send(command, **params)
     except OSError as exc:
