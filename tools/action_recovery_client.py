@@ -13,12 +13,23 @@ def __bfClearInput():
     _global.__bfObservedFigure = None
 
 def __bfWaiting():
-    if _global.__bfRecoveryUntil and getTimer() < _global.__bfRecoveryUntil:
-        return True
+    now = getTimer()
+    serverWaiting = _global.__bfRecoveryUntil and now < _global.__bfRecoveryUntil
     figure = _global.__bfOwnerFigure
     if figure and figure.behavior == "fire" and figure.onEnterFrame and figure.animationEnabled != False and figure.isActive != False and figure.is_default != True:
         if figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0:
-            return True
+            bundle = figure.__bfBursts[0]
+            observed = _global.__bfObservedFigure
+            if not observed or observed.figure != figure or observed.bundle != bundle or observed.frame != figure.currentFrameNumber or observed.got != bundle.got or now < observed.at:
+                observed = {"figure":figure, "bundle":bundle, "frame":figure.currentFrameNumber, "got":bundle.got, "at":now}
+                _global.__bfObservedFigure = observed
+            # Normal completion still releases immediately via nextSequence.
+            # Only a full second with NO frame/bullet progress may escape a
+            # broken visual wait, and never before the authoritative floor.
+            return serverWaiting or now - observed.at < 1000
+    _global.__bfObservedFigure = None
+    if serverWaiting:
+        return True
     return False
 
 def __bfDefer(owner, method, args):
@@ -28,6 +39,7 @@ def __bfDefer(owner, method, args):
             if figure.__bfBursts and len(figure.__bfBursts) > 0 and figure.__bfBursts[0].got > 0:
                 _global.__bfVisualFlush(figure.__bfScene, figure, False)
         _global.__bfPendingInput = None
+        _global.__bfObservedFigure = None
         if _global.__bfInputTimer:
             clearInterval(_global.__bfInputTimer)
         _global.__bfInputTimer = None
@@ -55,6 +67,7 @@ def __bfDrainInput():
     if _global.__bfWaiting():
         return
     _global.__bfPendingInput = None
+    _global.__bfObservedFigure = None
     clearInterval(_global.__bfInputTimer)
     _global.__bfInputTimer = None
     figure = _global.__bfOwnerFigure

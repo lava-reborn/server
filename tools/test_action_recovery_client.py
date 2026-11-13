@@ -28,6 +28,139 @@ class ActionRecoveryClient(unittest.TestCase):
     def call(self,name,target,*args):
         return self.fx.call(name,target,*args)
 
+    def stalled_shot(self):
+        scene,figure=self.fx.scene()
+        figure.update(id=0,behavior='fire',currentFrameNumber=0,
+                      animationEnabled=True,isActive=True,onEnterFrame=True,
+                      __bfScene=scene)
+        self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=1))
+        self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=1))
+        self.call('__bfRecovery',None,dict(param=dict(id=0,recovery_ms=120)))
+        return scene,figure
+
+    def test_stalled_firing_releases_last_move_once_after_server_floor(self):
+        _,figure=self.stalled_shot()
+        owner=dict(__bfRequestMoveOrig=lambda cell,splice:self.executed.append(cell))
+        self.call('__bfRequest0',owner,'old',None)
+        self.now=800
+        self.call('__bfRequest0',owner,'last',None)
+        self.now=1099
+        self.call('__bfDrainInput',None)
+        self.assertNotIn('last',self.executed)
+        self.now=1100
+        self.call('__bfDrainInput',None)
+        self.call('__bfDrainInput',None)
+        self.assertEqual(self.executed.count('last'),1)
+        self.assertNotIn('old',self.executed)
+        self.assertEqual(figure['__bfBursts'],[])
+        self.assertEqual(self.fx.reported,[1])
+        self.assertIsNone(self.global_['__bfInputTimer'])
+
+    def test_watchdog_does_not_cut_slow_but_progressing_firing(self):
+        _,figure=self.stalled_shot()
+        owner=dict(__bfRequestMoveOrig=lambda *args:self.executed.append('move'))
+        self.call('__bfRequest0',owner,'cell',None)
+        for now,frame in ((900,1),(1700,2),(2500,0),(3300,1)):
+            self.now=now
+            figure['currentFrameNumber']=frame
+            self.call('__bfDrainInput',None)
+            self.assertNotIn('move',self.executed)
+        figure['__bfNextSequenceOrig']=lambda:figure.update(behavior='fire_out')
+        self.call('__bfNextSequence',figure)
+        self.assertEqual(self.executed.count('move'),1)
+
+    def test_stall_timeout_never_bypasses_authoritative_recovery(self):
+        self.stalled_shot()
+        self.call('__bfRecovery',None,dict(param=dict(id=0,recovery_ms=3000)))
+        owner=dict(__bfRequestHealOrig=lambda med:self.executed.append('heal'))
+        self.call('__bfRequest4',owner,'med')
+        for now in (1100,3099):
+            self.now=now
+            self.call('__bfDrainInput',None)
+            self.assertNotIn('heal',self.executed)
+        self.now=3100
+        self.call('__bfDrainInput',None)
+        self.call('__bfDrainInput',None)
+        self.assertEqual(self.executed.count('heal'),1)
+
+    def test_received_bullets_restart_stall_observation(self):
+        scene,figure=self.stalled_shot()
+        self.call('__bfRequest4',dict(__bfRequestHealOrig=lambda med:self.executed.append('heal')),'med')
+        self.now=900
+        self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=2))
+        self.call('__bfDrainInput',None)
+        self.now=1100
+        self.call('__bfDrainInput',None)
+        self.assertNotIn('heal',self.executed)
+        self.now=1900
+        self.call('__bfDrainInput',None)
+        self.assertEqual(self.executed.count('heal'),1)
+
+    def test_death_and_location_change_discard_stalled_command(self):
+        for cleanup in ('death','location'):
+            with self.subTest(cleanup=cleanup):
+                self.call('__bfClearInput',None)
+                self.now=100
+                scene,_=self.stalled_shot()
+                before=len(self.executed)
+                self.call('__bfRequest4',dict(__bfRequestHealOrig=lambda med:self.executed.append('heal')),'med')
+                if cleanup=='death':
+                    self.call('__bfDead',scene,dict(dead=0))
+                else:
+                    self.master['currentLocation']={'other':True}
+                self.now=5000
+                self.call('__bfDrainInput',None)
+                self.assertNotIn('heal',self.executed[before:])
+                self.assertIsNone(self.global_['__bfPendingInput'])
+                self.assertIsNone(self.global_['__bfObservedFigure'])
+
+    def test_new_firing_bundle_gets_its_own_progress_deadline(self):
+        scene,figure=self.stalled_shot()
+        owner=dict(__bfRequestMoveOrig=lambda *args:self.executed.append('move'))
+        self.call('__bfRequest0',owner,'cell',None)
+        self.now=1000
+        self.call('__bfVisualFlush',None,scene,figure,False)
+        self.call('__bfAim',scene,dict(aim=0,num_shots=1,seq=2))
+        self.call('__bfFire',scene,dict(gunnerID=0,access=True,seq=2))
+        self.call('__bfDrainInput',None)
+        self.now=1100
+        self.call('__bfDrainInput',None)
+        self.assertNotIn('move',self.executed)
+        self.now=2000
+        self.call('__bfDrainInput',None)
+        self.assertEqual(self.executed.count('move'),1)
+        self.assertIsNone(self.global_['__bfObservedFigure'])
+
+    def test_stall_recovery_keeps_weapon_panel_inflight_guard(self):
+        self.stalled_shot()
+        panel,equip=self.panel()
+        self.call('__bfPanelSwap',panel)
+        self.now=1100
+        self.call('__bfDrainInput',None)
+        self.call('__bfDrainInput',None)
+        self.call('__bfPanelSwap',panel)
+        self.assertEqual(self.executed.count('swap-sent'),1)
+        self.assertEqual(equip['transferStack'],['pending'])
+        equip['transferStack'].shift()
+        panel['changeFlag']=True
+        self.call('__bfPanelSwap',panel)
+        self.assertEqual(self.executed.count('swap-sent'),2)
+
+    def test_stall_recovery_does_not_replay_nine_bullets_at_once(self):
+        _,figure,sounds,traces,_=self.fx.confirmed_volley(count=9)
+        figure.update(id=0,behavior='fire',currentFrameNumber=0,onEnterFrame=True)
+        self.global_['__bfOwnerFigure']=figure
+        owner=dict(__bfRequestMoveOrig=lambda *args:self.executed.append('move'))
+        self.call('__bfRequest0',owner,'cell',None)
+        self.now=1100
+        self.call('__bfDrainInput',None)
+        self.call('__bfDrainInput',None)
+        self.assertEqual(self.executed.count('move'),1)
+        self.assertEqual(len(traces),1)
+        self.assertEqual(len(sounds),1)
+        self.assertEqual(len(self.fx.reported),9)
+        self.assertEqual(figure['__bfBursts'],[])
+
     def test_stale_burst_in_standing_animation_does_not_block_weapon_switch(self):
         scene,figure=self.fx.scene()
         figure.update(id=0,animationEnabled=True,isActive=True,onEnterFrame=True,
