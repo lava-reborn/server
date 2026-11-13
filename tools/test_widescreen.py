@@ -91,6 +91,11 @@ WIRED = ("__requirementsReadOrig", "__questSendOrig", "__questFilterOrig",      
          "__siteExchangeInitOrig", "__siteExchangeGoldOrig",
          "__siteRegenInitOrig", "__siteRegenUpdOrig", "__siteRegenMoneyOrig",
          "__siteGoldMessageOrig",
+         "__siteLocalProfileOrig", "__siteGlobalProfileOrig",
+         "__siteHelpInitOrig", "__siteHelpSupportOrig", "__siteHelpFaqOrig",
+         "__siteLoginInitOrig", "__siteLostPasswordOrig", "__siteRegistrationOrig",
+         "__siteConnectionHelpOrig", "__siteLoginSupportOrig",
+         "__siteQuestTextOrig", "__siteContextOrig",
          "__progressInfoOrig", "__progress_increase_spec_level_func",
          "__onlineSendOrig", "__onlineNotifyOrig",     # online players
          "__wideCreateOrig", "__wideSceneOrig",        # library, location mask
