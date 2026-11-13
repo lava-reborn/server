@@ -48,6 +48,33 @@ def flash_parse(source):
 
 
 class ProfileWire(unittest.TestCase):
+    def test_both_search_windows_preserve_input_through_real_server_decoding(self):
+        from protocol import escape, decode
+        text = ASString('АК %26 @ "; next=value & <G> Привет')
+        for supply in (False,True):
+            funcs,g,root=environment(tab='gear',context='weapons',supply=supply)
+            sent=[]
+            def message():
+                row={}
+                row['addProp']=lambda key,value:row.update({key:value})
+                return row
+            env=funcs['__tgRequestList'].closure
+            env['lol']['server']=dict(XMLString=dict(escape=escape),mess=dict(CSMessage=message))
+            g.update(__tgPanel=dict(__supply=supply,query=dict(text=text),status={},previewTitle={},variantTitle={},price={}),
+                     __tgToken='test-token',__tgCatalogueRequest=0,__tgClass=-1,__tgLine='G',__tgPage=0,
+                     __tgUpgrade='all',__tgFilterLevel=0,__tgMobGroup='camps',__tgSupplyPage=0,
+                     __tgSupplyLevel=0,__tgSupplyLine=0,__tgSupplyClass=-1,__tgSupplyCategory='all',
+                     __tgSupplyDetail='all',__tgSupplyBag=False,__tgTransmit=sent.append)
+            for helper in ('__tgUIEnable','__tgUISupplySelection','__tgSupplyClear'):
+                g[helper]=lambda *args:None
+            funcs['__tgSupplyRequest' if supply else '__tgRequestList'].invoke(None,[])
+            props={k:v for k,v in sent[-1].items() if k not in ('_name','addProp')}
+            frame='tg'+''.join(';'+k+'='+str(v) for k,v in props.items())+';'
+            command,parsed=decode(frame)
+            self.assertEqual(command,'tg')
+            self.assertEqual(parsed['query'],text)
+            self.assertNotIn('next',parsed)
+
     def test_real_frame_keeps_default_and_all_profiles_after_description_lists(self):
         for index, profile in enumerate(training_profiles.catalogue()):
             payload = training_profiles.payload(profile.rules)

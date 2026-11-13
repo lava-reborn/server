@@ -8,6 +8,34 @@ import widescreen
 
 
 class Bootstrap(unittest.TestCase):
+    def test_connect_tracks_own_endpoint_and_keeps_native_transport_result(self):
+        env, f, _ = self.environment(bootstrap_only=True)
+        f['__tgConnect'].closure['String'] = str
+        calls = []
+        conn = dict(__tgCompatible=True, __tgConnectOrig=lambda host,port:calls.append((host,port)) or 'connected')
+        self.assertEqual(f['__tgConnect'].invoke(conn, ['server-one',7777]), 'connected')
+        self.assertEqual(env['_global']['__tgEndpoint'], 'server-one:7777')
+        self.assertFalse(conn['__tgCompatible'])
+        f['__tgConnect'].invoke(conn, ['server-two',8888])
+        self.assertEqual(env['_global']['__tgEndpoint'], 'server-two:8888')
+        self.assertEqual(calls, [('server-one',7777),('server-two',8888)])
+
+    def test_old_or_disabled_server_does_not_activate_private_client_hooks(self):
+        for available in (None, 0):
+            env, f, conn, flag, sent = self.transport()
+            received = []
+            conn['__tgNotifyOrig'] = received.append
+            activation = dict(name='selPers')
+            conn['Send'](activation)
+            self.assertIs(sent[-1], activation)
+            if available is not None:
+                f['__tgBootstrapNotify'].invoke(conn,[dict(messID='tg',params=dict(op='hello',version=1,available=available))])
+            packet = dict(messID='usrUp',params=dict(id=12))
+            f['__tgBootstrapNotify'].invoke(conn,[packet])
+            self.assertEqual(received,[packet])
+            self.assertFalse(conn['__tgCompatible'])
+            self.assertFalse(env['_global'].get('__tgHooksActive',False))
+            self.assertFalse(flag['tg'])
     def test_display_metadata_reuses_only_matching_version_and_rebuilds_private_maps(self):
         env, f, _ = self.environment(bootstrap_only=True)
         sent = []
@@ -66,10 +94,11 @@ class Bootstrap(unittest.TestCase):
             functions[name] = env['_global'][name] = Function(params, body.assemble(), env)
         return env, functions, originals
 
-    def test_only_two_transport_shims_are_eager_and_ui_helpers_stay_unallocated(self):
+    def test_only_three_transport_shims_are_eager_and_ui_helpers_stay_unallocated(self):
         env, f, originals = self.environment(bootstrap_only=True)
         package = client.patches(widescreen.Asm, widescreen.UNDEF)
         self.assertEqual([(path, method) for path, method, *_ in package['wraps']], [
+            (('server', 'XMLConnection'), 'connect'),
             (('server', 'XMLConnection'), 'Send'),
             (('server', 'XMLConnection'), 'sendNotification')])
         self.assertNotIn('__tgText', env['_global'])

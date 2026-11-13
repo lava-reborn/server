@@ -82,7 +82,8 @@ def main():
     ensure_tester_avatar(out / 'res')
     print('Building client with current patches...', flush=True)
     subprocess.run([sys.executable, '-B', str(ROOT / 'tools' / 'widescreen.py'),
-                    str(args.res / 'main.swf'), str(out / 'res' / 'main.swf')],
+                    str(args.res / 'main.swf'), str(out / 'res' / 'main.swf'),
+                    '--training' if args.training else '--no-training'],
                    cwd=ROOT, check=True)
     from tester_preloader import build as build_preloader
     build_preloader(out / 'res' / 'main.swf', out / 'res' / 'tester-start.swf')

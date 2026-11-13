@@ -88,6 +88,36 @@ def environment(width=1004,height=710,tab='player',context='player',supply=False
     return funcs,g,root
 
 class TrainingPrivateUI(unittest.TestCase):
+    def test_hud_reuses_button_and_resize_listener_across_state_updates(self):
+        funcs,g,root=environment()
+        stage=funcs['__tgHUD'].closure['Stage']
+        listeners=[]
+        stage['addListener']=listeners.append
+        g['__tgHUDResize']=lambda:None
+        # Layout/native-art rendering is exercised separately; keep identity here.
+        g['__tgButton']=lambda parent,*args:parent.clip('main',0)
+        funcs['__tgHUD'].closure['_root']=root
+        funcs['__tgHUD'].invoke(None,['ready'])
+        hud=g['__tgHUDPanel'];button=hud['main']
+        button['hovered']=True
+        funcs['__tgHUD'].invoke(None,['fighting'])
+        funcs['__tgHUD'].invoke(None,['ready'])
+        self.assertIs(g['__tgHUDPanel'],hud)
+        self.assertIs(hud['main'],button)
+        self.assertTrue(button['hovered'])
+        self.assertEqual(listeners,[hud])
+
+    def test_map_click_explains_block_and_original_movement_returns_after_close(self):
+        funcs,g,root=environment()
+        calls=[]
+        actor=dict(__tgMoveOrig=lambda *args:calls.append(args) or 'moving')
+        g['__tgPanel']=dict(status={})
+        funcs['__tgMoveWrapper'].invoke(actor,[123,0])
+        self.assertEqual(calls,[])
+        self.assertIn('Esc',g['__tgPanel']['status']['text'])
+        g['__tgPanel']=None
+        self.assertEqual(funcs['__tgMoveWrapper'].invoke(actor,[123,0]),'moving')
+        self.assertEqual(calls,[(123,0)])
     def test_rule_percentages_round_trip_without_changing_formula_flags(self):
         funcs,g,root=environment(tab='rules',context='computer')
         original=ASString('1,1,1,1,1,1.23456789012345,1,0.81234567890123,1,0,1,0,1,1')

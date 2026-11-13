@@ -277,6 +277,7 @@ opcode assembled from memory once sprayed the downloads folder with copies of
 main.swf.
 """
 import argparse
+import os
 from pathlib import Path
 import struct
 import sys
@@ -3010,7 +3011,12 @@ def fn_action_listener(original, remove=False):
     return a
 
 
-def injected():
+def training_enabled(training=None):
+    """Build-time opt-in; disabled clients contain no range code or hooks."""
+    return os.environ.get('LAVA_TRAINING_GROUND', '0') == '1' if training is None else training
+
+
+def injected(training=None):
     a = Asm()
     for name, fn, params in (
             ("__actionCancel", fn_action_cancel, ("obj",)),
@@ -3274,13 +3280,13 @@ def injected():
     for name, params, body in private_tabs["globals"]:
         a.var("_global").push(name).function(params, body).op("setmember")
     wraps += private_tabs["wraps"]
-    from training_ground_client import patches as training_patches
-    training = training_patches(Asm, UNDEF)
-    for name, params, body in training['bootstrap']:
-        a.var('_global').push(name).function(params, body).op('setmember')
-    # Only capability negotiation / tg dispatch live on ordinary sessions.
-    # Private model/UI wrappers are installed on the first accepted types frame.
-    wraps += training['wraps']
+    if training_enabled(training):
+        from training_ground_client import patches as training_patches
+        feature = training_patches(Asm, UNDEF)
+        for name, params, body in feature['bootstrap']:
+            a.var('_global').push(name).function(params, body).op('setmember')
+        # Private model/UI wrappers wait for an accepted types frame.
+        wraps += feature['wraps']
     from reflash_client import patches as reflash_patches
     reflash = reflash_patches(Asm, UNDEF)
     for name, params, body in reflash['globals']:
@@ -3494,7 +3500,7 @@ def online_art(tags):
     return [bitmap, export] + online_list_art(tags, used)
 
 
-def inject(tags):
+def inject(tags, training=None):
     """Put the DoAction before the first ShowFrame, replacing an earlier one."""
     tags = [t for t in tags if not (t[0] == 12 and MARK.encode() in t[1])]
     tags = without_online_art(tags)
@@ -3505,7 +3511,7 @@ def inject(tags):
     from reflash_art import artwork as reflash_artwork
     tags = reflash_artwork(tags)
     at = next(k for k, t in enumerate(tags) if t[0] == 1)
-    tags[at:at] = online_art(tags) + [(12, injected(), True)]
+    tags[at:at] = online_art(tags) + [(12, injected(training), True)]
     return tags
 
 
@@ -3528,15 +3534,15 @@ def disassemble(code):
     return out
 
 
-def verify(path, max_w, max_h):
+def verify(path, max_w, max_h, training=None):
     _, body = read_swf(path)
     tags = split_tags(body)
     mine = [t[1] for t in tags if t[0] == 12 and MARK.encode() in t[1]]
     if len(mine) != 1:
         raise SystemExit("verify: expected one injected DoAction, found %d" % len(mine))
-    if mine[0] != injected():
+    if mine[0] != injected(training):
         raise SystemExit("verify: the DoAction in the file is not the one assembled")
-    if inject(tags) != tags:
+    if inject(tags, training) != tags:
         raise SystemExit("verify: online artwork is missing, changed or duplicated")
     ops = disassemble(mine[0])
     unknown = [o for o in ops if o.startswith("0x")]
@@ -3561,6 +3567,8 @@ def main(argv=None):
                     help="layout ceiling, WxH (the client ships 1280x1024)")
     ap.add_argument("--check", action="store_true",
                     help="only report what the file already carries")
+    ap.add_argument('--training', action=argparse.BooleanOptionalAction, default=None,
+                    help='include the range client (default: LAVA_TRAINING_GROUND=1 only)')
     args = ap.parse_args(argv)
     max_w, max_h = (int(v) for v in args.max.lower().split("x"))
 
@@ -3576,9 +3584,9 @@ def main(argv=None):
         ap.error("an output path is needed")
 
     ceiling = patch_ceiling(tags, max_w, max_h)
-    tags = inject(tags)
+    tags = inject(tags, args.training)
     write_swf(args.dst, version, join_tags(body[:header_len(body)], tags))
-    count, size = verify(args.dst, max_w, max_h)
+    count, size = verify(args.dst, max_w, max_h, args.training)
     for name, (old, new_value) in sorted(ceiling.items()):
         print("%s: %d -> %d" % (name, old, new_value))
     print("frame tiling: %d actions, %d bytes, read back and matched" % (count, size))

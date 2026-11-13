@@ -269,8 +269,7 @@ class TrainingClient(unittest.TestCase):
 
     def test_local_presets_are_scoped_by_endpoint_character_and_slot(self):
         keys = []
-        env = dict(_global=dict(__tgLocalSlot=1, __hcEndpoint='local', __tgOwner='Tester12',
-                               __hcEncode=lambda value: value), String=str,
+        env = dict(_global=dict(__tgLocalSlot=1, __tgEndpoint='local', __tgOwner='Tester12'), String=str,
                    SharedObject=dict(getLocal=lambda key: keys.append(key)))
         funcs = self.helpers(env)
         funcs['__tgPresetStore'].invoke(None, [])
@@ -278,7 +277,7 @@ class TrainingClient(unittest.TestCase):
         funcs['__tgPresetStore'].invoke(None, [])
         env['_global']['__tgOwner'] = 'Tester13'
         funcs['__tgPresetStore'].invoke(None, [])
-        env['_global']['__hcEndpoint'] = 'other-server'
+        env['_global']['__tgEndpoint'] = 'other-server'
         funcs['__tgPresetStore'].invoke(None, [])
         self.assertEqual(len(set(keys)), 4)
         self.assertTrue(all(key.startswith('lavaTrainingPresets_v1_') for key in keys))
@@ -741,12 +740,80 @@ class TrainingClient(unittest.TestCase):
         self.assertIsNone(env['_global']['__tgPanel'])
 
     def test_whole_client_injection_builds_with_new_helpers(self):
-        payload = widescreen.injected()
+        payload = widescreen.injected(training=True)
         self.assertIn(b'__tgInstall', payload)
         self.assertIn(b'__tgForgetItems', payload)
         self.assertTrue('Компьютер полигона'.encode('utf-8') in payload, 'Sandbox title missing from injection')
         # A native DoAction is used; no browser or command-line UI dependency.
         self.assertNotIn(b'ExternalInterface', client.SOURCE.encode('utf-8'))
+
+    def test_build_flag_omits_all_range_bytecode_and_wrappers_by_default(self):
+        import os
+        from unittest.mock import patch
+        with patch.dict(os.environ, {}, clear=True):
+            ordinary = widescreen.injected()
+            enabled = widescreen.injected(training=True)
+            self.assertNotIn(b'__tg', ordinary)
+            self.assertIn(b'__tgHandshakeOrig', enabled)
+            self.assertIn(b'__tgConnectOrig', enabled)
+            self.assertIn(b'__tgLoadFeature', enabled)
+            with patch.dict(os.environ, LAVA_TRAINING_GROUND='1'):
+                self.assertEqual(widescreen.injected(), enabled)
+                self.assertEqual(widescreen.injected(training=False), ordinary)
+            with patch.dict(os.environ, LAVA_TRAINING_GROUND='0'):
+                self.assertEqual(widescreen.injected(), ordinary)
+
+    def test_panel_close_calls_real_keyboard_repair_and_preserves_other_filters(self):
+        import test_reflash_client as reflash
+        fixture = reflash.ReFlash()
+        fixture.setUp()
+        env = fixture.env
+        env.update(Stage=dict(removeListener=lambda p:None), Mouse=dict(removeListener=lambda p:None))
+        funcs = self.helpers(env)
+        g = env['_global']
+        g.update(__tgPanel=dict(stopDrag=lambda:None, removeMovieClip=lambda:None))
+        for name in ('__tgResetClose', '__tgMenusClose', '__tgReleaseRows', '__tgSupplyClear'):
+            g[name] = lambda *args:None
+        env['lol']['gpui'] = dict(HintManager=dict(closeHint=lambda:None))
+        fixture.keys['hotKeyFilter_arr'] = reflash.Arr(['chat', 'tg'])
+        fixture.keys['removeFilter'] = lambda key:fixture.keys['hotKeyFilter_arr'].remove(key)
+        fixture.modal = True  # Another native input window still owns its filter.
+        fixture.held.add(16)
+        funcs['__tgClose'].invoke(None, [])
+        self.assertIsNone(g['__tgPanel'])
+        self.assertEqual(fixture.keys['hotKeyFilter_arr'], ['chat'])
+        self.assertEqual(fixture.keys['keyStack'], [16])
+        self.assertEqual(fixture.keys['hotKeyArr'], {'custom':'unchanged'})
+        self.assertEqual([op for op, _ in fixture.key_listeners], ['remove', 'add'])
+
+    def test_preset_storage_is_independent_from_chat_and_separated_by_identity(self):
+        from test_training_ui_client import ASString
+        keys = []
+        env = dict(_global={}, String=lambda v:ASString(str(int(v)) if isinstance(v,float) else str(v)),
+                   SharedObject=dict(getLocal=lambda key:keys.append(key) or dict(data={})))
+        funcs = self.helpers(env)
+        g = env['_global']
+        # Missing connection/character must never open an undefined shared key.
+        self.assertIsNone(funcs['__tgPresetStore'].invoke(None, []))
+        g.update(__tgEndpoint=ASString('server-one:7777'))
+        self.assertIsNone(funcs['__tgPresetStore'].invoke(None, []))
+        g.update(__tgOwner=12, __tgLocalSlot=1)
+        funcs['__tgPresetStore'].invoke(None, [])
+        import chat_history
+        from avm_test import Function
+        old = next((args,body) for name,args,body in chat_history.patches(widescreen.Asm,widescreen.UNDEF)['globals'] if name=='__hcEncode')
+        old_key = Function(old[0],old[1].assemble(),env).invoke(None,[ASString('server-one:7777|12')])
+        self.assertEqual(keys[-1], 'lavaTrainingPresets_v1_'+old_key)
+        g['__tgOwner']=13
+        funcs['__tgPresetStore'].invoke(None, [])
+        g['__tgEndpoint']=ASString('server-two:7777')
+        funcs['__tgPresetStore'].invoke(None, [])
+        g['__tgLocalSlot']=2
+        funcs['__tgPresetStore'].invoke(None, [])
+        self.assertEqual(len(set(keys)),4)
+        self.assertTrue(keys[-1].endswith('_2'))
+        self.assertNotIn('__hcEndpoint',g)
+        self.assertNotIn('__hcEncode',g)
 
 
     def test_compiled_copy_guard_never_labels_normal_items_or_prototypes(self):

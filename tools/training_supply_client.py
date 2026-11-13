@@ -144,7 +144,7 @@ def __tgSupplyRequest():
     m.addProp("wclass", _global.__tgSupplyClass)
     m.addProp("category", "@" + _global.__tgSupplyCategory + "@")
     m.addProp("detail", "@" + _global.__tgSupplyDetail + "@")
-    m.addProp("query", "@" + p.query.text.split("@").join("") + "@")
+    m.addProp("query", "@" + lol.server.XMLString.escape(p.query.text) + "@")
     _global.__tgTransmit(m)
 
 def __tgSupplyList(v):

@@ -1,12 +1,19 @@
 """Capability handshake and reversible, lazy AVM1 hooks for the private range.
 
-Only Send/sendNotification are bootstrapped. The remaining hooks exist only
+Only connect/Send/sendNotification are bootstrapped in opted-in builds.
+The remaining hooks exist only
 from an accepted types packet until the ordinary equipment/stat snapshots
 have returned, or until the transport is closed. Restore the exact chain we
 found; a later owner of a method must never be overwritten by teardown.
 """
 
 SOURCE = '''
+def __tgConnect(host, port):
+    _global.__tgEndpoint = host + ":" + String(port)
+    _global.__tgOwner = None
+    this.__tgCompatible = False
+    return this.__tgConnectOrig(host, port)
+
 def __tgHandshakeSend(mess):
     # Existing characters enter from selPers; only newborns use actPlayer.
     # Negotiate before either command can restore a saved training session.

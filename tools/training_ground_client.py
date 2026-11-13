@@ -156,11 +156,10 @@ def __tgHUDResize():
     this._y = Math.round(Math.max(originY + 8, Math.min(originY + Stage.height - 33, y)))
 
 def __tgHUD(phase):
-    old = _global.__tgHUDPanel
-    if old:
-        Stage.removeListener(old)
-        Mouse.removeListener(old)
-        old.removeMovieClip()
+    hud = _global.__tgHUDPanel
+    if hud:
+        hud.onResize()
+        return
     hud = _root.createEmptyMovieClip("__tgHUDPanel", _root.getNextHighestDepth())
     _global.__tgHUDPanel = hud
     hud.__tgStyled = True
@@ -304,7 +303,7 @@ def __tgRequestList():
         level = 0
     m.addProp("level", level)
     _global.__tgFilterQuery = p.query.text
-    m.addProp("query", "@" + String(p.query.text.split("@").join("").split(";").join("").split("%").join("")) + "@")
+    m.addProp("query", "@" + lol.server.XMLString.escape(p.query.text) + "@")
     _global.__tgTransmit(m)
 
 def __tgLayout(p, center):
@@ -493,7 +492,7 @@ def __tgBuild():
         _global.__tgText(p, "mobHealth", String(_global.__tgMobHealth), 28 + column - 70, 276, 70, 24, True)
         _global.__tgText(p, "damageLabel", "Урон моба / босса, %", right, 276, column - 80, 24, False)
         _global.__tgText(p, "mobDamage", String(_global.__tgMobDamage), W - 98, 276, 70, 24, True)
-        _global.__tgText(p, "scaleHint", "100% — исходные параметры моба. Диапазон: 25–300%.", 28, 308, W - 56, 24, False)
+        _global.__tgText(p, "scaleHint", "100%: исходные параметры моба. Диапазон: 25-300%.", 28, 308, W - 56, 24, False)
         _global.__tgText(p, "healingHint", "Порог: 10–90%. Лимит: 0–30 применений.", right, 308, column, 36, False)
         chosen = _global.__tgMobName
         if fighter:
@@ -620,7 +619,7 @@ def __tgRulesControls(p, W, H):
         return
     base = _global.__tgRuleBase()
     p.__ruleBase = base
-    _global.__tgText(p, "ruleHint", "100% — без изменения. Меньше разброс — выше точность.", 28, 132, W - 56, 22, False)
+    _global.__tgText(p, "ruleHint", "100%: без изменения. Меньше разброс: выше точность.", 28, 132, W - 56, 22, False)
     sections = ["Основное", "Характеристики", "Пояснения"]
     sectionKeys = ["main", "attributes", "help"]
     section = _global.__tgRuleSection or "main"
@@ -1727,18 +1726,7 @@ def __tgEnterWrapper(obj):
 def __tgMoveWrapper(cell, spliceNum):
     if not _global.__tgPanel:
         return this.__tgMoveOrig(cell, spliceNum)
-
-
-
-
-
-
-
-
-
-
-
-
+    _global.__tgPanel.status.text = "Чтобы двигаться, закройте настройки: Esc или крестик."
 def __tgReferencePrice(item):
     price = _global.__tgPrices[item.typeID]
     value = 0
@@ -2073,7 +2061,7 @@ def __tgRuleDraft():
                     minimum = 0
                     maximum = 200
                 if text == "" or isNaN(number) or number < minimum or number > maximum:
-                    p.status.text = "Введите от 1 до 1000%. Для дополнительной брони — от 0 до 200 ед."
+                    p.status.text = "Введите от 1 до 1000%. Дополнительная броня: от 0 до 200 ед."
                     return False
                 values[i] = text
                 if field.__rulePercent:
@@ -2083,14 +2071,32 @@ def __tgRuleDraft():
         _global.__tgRuleDraftValues = values.join(",")
     return True
 
+def __tgPresetIdentity(text):
+    # Keep existing keys, but own the codec instead of depending on chat history.
+    h1 = 0
+    h2 = 7
+    i = 0
+    while i < len(text):
+        code = text.charCodeAt(i)
+        h1 = (h1 * 31 + code) % 2147483629
+        h2 = (h2 * 37 + code) % 2147483587
+        i = i + 1
+    return String(h1) + "_" + String(h2)
+
 def __tgPresetStore():
+    if not _global.__tgEndpoint or _global.__tgOwner == None:
+        return None
     suffix = ""
     if _global.__tgLocalSlot > 1:
         suffix = "_" + String(_global.__tgLocalSlot)
-    return SharedObject.getLocal("lavaTrainingPresets_v1_" + _global.__hcEncode(_global.__hcEndpoint + "|" + _global.__tgOwner) + suffix)
+    identity = _global.__tgEndpoint + "|" + _global.__tgOwner
+    return SharedObject.getLocal("lavaTrainingPresets_v1_" + _global.__tgPresetIdentity(identity) + suffix)
 
 def __tgSave():
     store = _global.__tgPresetStore()
+    if not store:
+        _global.__tgPanel.status.text = "Сначала подключитесь к серверу и выберите персонажа."
+        return
     p = _global.__tgPlayer
     e = _global.__tgEnemy
     store.data.player = {"skills":p.skills, "specs":p.specs, "gear":p.gear}
@@ -2105,6 +2111,9 @@ def __tgSave():
 
 def __tgLoad():
     store = _global.__tgPresetStore()
+    if not store:
+        _global.__tgPanel.status.text = "Сначала подключитесь к серверу и выберите персонажа."
+        return
     if not store.data.player or not store.data.enemy:
         _global.__tgPanel.status.text = "Сохранённого пресета нет."
         return
@@ -2259,6 +2268,7 @@ def patches(Asm, undef):
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
+        (('server','XMLConnection'), 'connect', '__tgConnectOrig', '__tgConnect'),
         (('server','XMLConnection'), 'Send', '__tgHandshakeOrig', '__tgHandshakeSend'),
         (('server','XMLConnection'), 'sendNotification', '__tgNotifyOrig', '__tgBootstrapNotify'),
     ):
@@ -2271,7 +2281,7 @@ def patches(Asm, undef):
     delete.var('lol').member('core', 'objects', 'ItemFactory', 'itemStore').var('oid')
     delete.op('delete').op('pop')
     functions.append(('__tgDeleteItem', ('oid',), delete))
-    bootstrap_names = frozenset(('__tgHandshakeSend', '__tgBootstrapNotify', '__tgTransmit'))
+    bootstrap_names = frozenset(('__tgConnect', '__tgHandshakeSend', '__tgBootstrapNotify', '__tgTransmit'))
     bootstrap = [row for row in functions if row[0] in bootstrap_names]
     private = [row for row in functions if row[0] not in bootstrap_names]
     loads = loader(Asm, private)
