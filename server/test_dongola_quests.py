@@ -445,13 +445,11 @@ try:
     check("  ..at the tickets' prices: 2400 afro and 3 G (the TRADE package's stalls)",
           {t: worth(ticket, 1, gold) for t, (ticket, _p, gold) in LOTTERIES.items()},
           {t: price for t, (_k, price, _g) in LOTTERIES.items()})
-    check("  ..open to the town's band 12-16, the stalls' whole band of buyers, and named for it:"
-          " a 15th or 16th who buys a ticket can play it (the original's «(13-14)» left them a"
-          " ticket no row took, the gold one lost whole)",
+    check("  ..lotteries stay open from level 12 through 20, independently of the shop band",
           ({t: (real[t].level, real[t].max_level, real[t].name) for t in LOTTERIES},
            tuple(shop_bands.band(50)), tuple(shop_bands.band(103))),
-          ({721: TOWN_BAND + ("Лотерея Донголы (12-16)",),
-            722: TOWN_BAND + ("Золотая Лотерея Донголы (12-16)",)}, TOWN_BAND, TOWN_BAND))
+          ({721: (12, 20, "Лотерея Донголы (от 12 ур.)"),
+            722: (12, 20, "Золотая Лотерея Донголы (от 12 ур.)")}, TOWN_BAND, TOWN_BAND))
     with open(os.path.join(ROOT, "data", "holdings.json"), encoding=ENC) as fh:
         sites = json.load(fh)["sites"]
     check("the warehouses: three sites of data/holdings.json, their boxes' rows 768-770 the"

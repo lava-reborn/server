@@ -232,8 +232,9 @@
     {
       "type": 308,
       "kind": "bring_l_obj",
-      "name": "Лотерея Вади-Хальфы (0-9)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и играй!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!",
+      "name": "Лотерея Вади-Хальфы (от 0 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и играй!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 0–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [662],
@@ -265,15 +266,16 @@
       "repeatable": 1,
       "service": true,
       "level": 0,
-      "max_level": 8,
+      "max_level": 20,
       "q_type": 0,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 309,
       "kind": "bring_l_obj",
-      "name": "Золотая Лотерея Вади-Хальфы (0-9)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: Зашифрованный чертеж 8-го уровня!<Br>Твоя удача у тебя в руках!",
+      "name": "Золотая Лотерея Вади-Хальфы (от 0 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: Зашифрованный чертеж 8-го уровня!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 0–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [711],
@@ -303,9 +305,9 @@
       "repeatable": 1,
       "service": true,
       "level": 0,
-      "max_level": 8,
+      "max_level": 20,
       "q_type": 0,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 320,
@@ -8722,8 +8724,9 @@
     {
       "type": 518,
       "kind": "bring_l_obj",
-      "name": "Лотерея Абри (9-10)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!",
+      "name": "Лотерея Абри (от 9 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 9–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [1172],
@@ -8756,17 +8759,18 @@
       "repeatable": 1,
       "service": true,
       "level": 9,
-      "max_level": 10,
+      "max_level": 20,
       "q_type": 0,
       "loc": 48006955,
       "finish_loc": 48006955,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 519,
       "kind": "bring_l_obj",
-      "name": "Лотерея Абри (11-12)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!",
+      "name": "Лотерея Абри (от 11 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 11–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [1172],
@@ -8799,17 +8803,18 @@
       "repeatable": 1,
       "service": true,
       "level": 11,
-      "max_level": 12,
+      "max_level": 20,
       "q_type": 0,
       "loc": 48006955,
       "finish_loc": 48006955,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 520,
       "kind": "bring_l_obj",
-      "name": "Золотая Лотерея Абри (9-10)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 5 унций золота!<Br>Твоя удача у тебя в руках!",
+      "name": "Золотая Лотерея Абри (от 9 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 5 унций золота!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 9–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [1171],
@@ -8839,17 +8844,18 @@
       "repeatable": 1,
       "service": true,
       "level": 9,
-      "max_level": 10,
+      "max_level": 20,
       "q_type": 0,
       "loc": 48006955,
       "finish_loc": 48006955,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 521,
       "kind": "bring_l_obj",
-      "name": "Золотая Лотерея Абри (11-12)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 5 унций золота!<Br>Твоя удача у тебя в руках!",
+      "name": "Золотая Лотерея Абри (от 11 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 5 унций золота!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 11–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [1171],
@@ -8879,11 +8885,11 @@
       "repeatable": 1,
       "service": true,
       "level": 11,
-      "max_level": 12,
+      "max_level": 20,
       "q_type": 0,
       "loc": 48006955,
       "finish_loc": 48006955,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 522,
@@ -11864,8 +11870,9 @@
     {
       "type": 721,
       "kind": "bring_l_obj",
-      "name": "Лотерея Донголы (12-16)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!",
+      "name": "Лотерея Донголы (от 12 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 12–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [663],
@@ -11900,17 +11907,18 @@
       "repeatable": 1,
       "service": true,
       "level": 12,
-      "max_level": 16,
+      "max_level": 20,
       "q_type": 0,
       "loc": 48154586,
       "finish_loc": 48154586,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 722,
       "kind": "bring_l_obj",
-      "name": "Золотая Лотерея Донголы (12-16)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 10 унций золота!<Br>Твоя удача у тебя в руках!",
+      "name": "Золотая Лотерея Донголы (от 12 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 10 унций золота!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 12–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [712],
@@ -11940,11 +11948,11 @@
       "repeatable": 1,
       "service": true,
       "level": 12,
-      "max_level": 16,
+      "max_level": 20,
       "q_type": 0,
       "loc": 48162780,
       "finish_loc": 48162780,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 725,
@@ -13570,8 +13578,9 @@
     {
       "type": 916,
       "kind": "bring_l_obj",
-      "name": "Лотерея Абу-Хамеда (16)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!",
+      "name": "Лотерея Абу-Хамеда (от 16 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 16–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [741],
@@ -13602,17 +13611,18 @@
       "repeatable": 1,
       "service": true,
       "level": 16,
-      "max_level": 16,
+      "max_level": 20,
       "q_type": 0,
       "loc": 50644921,
       "finish_loc": 50644921,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 917,
       "kind": "bring_l_obj",
-      "name": "Лотерея Абу-Хамеда (17-18)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!",
+      "name": "Лотерея Абу-Хамеда (от 17 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 17–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [741],
@@ -13643,17 +13653,18 @@
       "repeatable": 1,
       "service": true,
       "level": 17,
-      "max_level": 18,
+      "max_level": 20,
       "q_type": 0,
       "loc": 50644921,
       "finish_loc": 50644921,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 918,
       "kind": "bring_l_obj",
-      "name": "Лотерея Абу-Хамеда (19-20)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!",
+      "name": "Лотерея Абу-Хамеда (от 19 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценный приз!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 19–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [741],
@@ -13688,13 +13699,14 @@
       "q_type": 0,
       "loc": 50644921,
       "finish_loc": 50644921,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 919,
       "kind": "bring_l_obj",
-      "name": "Золотая Лотерея Абу-Хамеда (16)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 10 унций золота!<Br>Твоя удача у тебя в руках!",
+      "name": "Золотая Лотерея Абу-Хамеда (от 16 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 10 унций золота!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 16–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [742],
@@ -13724,17 +13736,18 @@
       "repeatable": 1,
       "service": true,
       "level": 16,
-      "max_level": 16,
+      "max_level": 20,
       "q_type": 0,
       "loc": 50644921,
       "finish_loc": 50644921,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 920,
       "kind": "bring_l_obj",
-      "name": "Золотая Лотерея Абу-Хамеда (17-18)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 15 унций золота!<Br>Твоя удача у тебя в руках!",
+      "name": "Золотая Лотерея Абу-Хамеда (от 17 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 15 унций золота!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 17–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [742],
@@ -13764,17 +13777,18 @@
       "repeatable": 1,
       "service": true,
       "level": 17,
-      "max_level": 18,
+      "max_level": 20,
       "q_type": 0,
       "loc": 50644921,
       "finish_loc": 50644921,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 921,
       "kind": "bring_l_obj",
-      "name": "Золотая Лотерея Абу-Хамеда (19-20)",
-      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 20 унций золота!<Br>Твоя удача у тебя в руках!",
+      "name": "Золотая Лотерея Абу-Хамеда (от 19 ур.)",
+      "own_texts": ["name", "start"],
+      "start": "Беспроигрышная лотерея!<Br>Только здесь и сейчас! Подходи, покупай билет и выигрывай!<Br>Ты сможешь выиграть ценные призы: медицинские принадлежности, экспансивные патроны различного калибра и главный приз: 20 унций золота!<Br>Твоя удача у тебя в руках!<Br><Br>Доступно персонажам 19–20-го уровня.",
       "notfinish": "Для игры в лотерею вам требуется купить билет!",
       "finish": "Получите ваш приз!",
       "give": [742],
@@ -13808,7 +13822,7 @@
       "q_type": 0,
       "loc": 50644921,
       "finish_loc": 50644921,
-      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Existing ticket prices, currency, NPCs, location, level bands and repeatability are unchanged. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
+      "why": "BALANCE 2026-11-13: approved Templier lottery workbook and quest patch, reconciled by item type and amount. One ticket pays exactly one equal-weight prize, which may be goods, a replacement ticket, an encrypted blueprint (309), or a gold ingot jackpot (520/521/722/919/920/921). Jackpot values for 920/921 are 15/20 G, matching patch and numeric workbook values. Ticket prices, currency, NPCs, locations, minimum levels and repeatability are unchanged. Maximum player level is 20, matching blueprint-service access. Reward and ticket consumption use the existing atomic quest_write path. No training, door, warehouse or range rows imported from the supplied snapshot."
     },
     {
       "type": 922,

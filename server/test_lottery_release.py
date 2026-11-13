@@ -61,13 +61,13 @@ EXPECTED = {
           (6155,460),(6158,460),(6159,460),(6157,460),(6162,460),(3575,1),(4797,2)],
 }
 RULES = {  # ticket, price (hundredths for G), G-only, min/max level, location
-    308:(1307,500,False,0,8,35), 309:(1333,50,True,0,8,102),
-    518:(2646,1000,False,9,10,187), 519:(2647,1700,False,11,12,187),
-    520:(2649,200,True,9,10,187), 521:(2650,250,True,11,12,187),
-    721:(2648,2400,False,12,16,49), 722:(2651,300,True,12,16,49),
-    916:(2652,3000,False,16,16,446), 917:(2653,3700,False,17,18,446),
-    918:(3574,4730,False,19,20,446), 919:(2654,300,True,16,16,446),
-    920:(2655,350,True,17,18,446), 921:(3575,450,True,19,20,446),
+    308:(1307,500,False,0,20,35), 309:(1333,50,True,0,20,102),
+    518:(2646,1000,False,9,20,187), 519:(2647,1700,False,11,20,187),
+    520:(2649,200,True,9,20,187), 521:(2650,250,True,11,20,187),
+    721:(2648,2400,False,12,20,49), 722:(2651,300,True,12,20,49),
+    916:(2652,3000,False,16,20,446), 917:(2653,3700,False,17,20,446),
+    918:(3574,4730,False,19,20,446), 919:(2654,300,True,16,20,446),
+    920:(2655,350,True,17,20,446), 921:(3575,450,True,19,20,446),
 }
 
 
@@ -96,9 +96,11 @@ class LotteryRelease(unittest.TestCase):
         self.frames = []
         self.s.send = lambda cmd, **p:self.frames.append((cmd,p))
 
-    def prepare(self, qtype, tickets=1):
+    def prepare(self, qtype, tickets=1, player_level=None):
         self.q = quests.get(qtype)
         ticket, _price, _gold, level, _max, loc = RULES[qtype]
+        if player_level is not None:
+            level = player_level
         for skill in self.s.char.skill:
             skill[0] = level
         self.s.char.recalc()
@@ -143,6 +145,8 @@ class LotteryRelease(unittest.TestCase):
                 si = items.params_of(ticket)
                 self.assertEqual(q.wants(),[(ticket,1)])
                 self.assertEqual((q.level,q.max_level),(lo,hi))
+                self.assertIn(f"{lo}\u201320", q.texts[1])
+                self.assertIn(f"{lo} \u0443\u0440.", q.texts[0])
                 self.assertEqual(inventory.buy_price(si,items.root_of(ticket),1,gold),price)
                 self.assertEqual(bool(si.get('g_cost')),gold)
                 if gold:
@@ -151,10 +155,10 @@ class LotteryRelease(unittest.TestCase):
                     self.assertTrue(all(not items.params_of(t).get('g_cost') and t not in items.GOLD_INGOTS
                                         for t,_n,_w in q.rew_random))
 
-    def test_availability_stays_inside_existing_level_bands(self):
+    def test_availability_preserves_minimum_and_extends_to_level_twenty(self):
         for qtype,(_ticket,_price,_gold,lo,hi,_loc) in RULES.items():
             q = quests.get(qtype)
-            for level in {lo,hi,hi+1} | ({lo-1} if lo else set()):
+            for level in {0, 8, 9, 16, 17, lo, hi, hi+1} | ({lo-1} if lo else set()):
                 with self.subTest(quest=qtype,level=level):
                     for skill in self.s.char.skill:
                         skill[0] = level
@@ -213,6 +217,33 @@ class LotteryRelease(unittest.TestCase):
                 self.complete(qid)
                 self.assertEqual(self.acks(),[server.RES_NO_SUCH])
                 self.assertEqual(self.store.items_of(self.cid),snapshot)
+
+    def test_halfa_lottery_is_offered_and_completed_at_level_sixteen(self):
+        for qtype in (308, 309):
+            with self.subTest(quest=qtype):
+                for row in self.store.items_of(self.cid):
+                    self.store.delete_item(row['uniq'])
+                qid = self.prepare(qtype, player_level=16)
+                self.s.cmd_q_status(dict(q_type=qtype))
+                status = [p for c,p in self.frames if c=='q_status'][-1]
+                self.assertEqual(status['status'], 1)
+                self.assertIn(qtype, quests.given_by(self.q.give[0]))
+                self.assertEqual(self.s.loc.id, RULES[qtype][-1])
+                expected = self.q.draw(PointRandom(0))
+                self.complete(qid)
+                self.assertEqual(self.acks(), [0])
+                self.assertEqual(self.s.inv.bag_pieces(), {expected[0]:expected[1]})
+
+    def test_all_pools_can_be_completed_at_level_twenty(self):
+        for qtype in RULES:
+            with self.subTest(quest=qtype):
+                for row in self.store.items_of(self.cid):
+                    self.store.delete_item(row['uniq'])
+                qid = self.prepare(qtype, player_level=20)
+                expected = self.q.draw(PointRandom(0))
+                self.complete(qid)
+                self.assertEqual(self.acks(), [0])
+                self.assertEqual(self.s.inv.bag_pieces(), {expected[0]:expected[1]})
 
     def test_without_ticket_cannot_roll(self):
         qid = self.prepare(520,tickets=0)
