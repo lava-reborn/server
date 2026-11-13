@@ -2,6 +2,14 @@
 from avm_codegen import Compiler
 
 SOURCE = '''
+def __bfRemotePrimary(obj):
+    # Native ss_obj_move constructs a type-0 firearm for an empty hand.
+    # Empty snapshots must use PersEquip's existing bare-fist fallback.
+    if not this.isGamer and obj.param.to == 512 and obj.param.obj == "0":
+        this.primaryItem = None
+        return
+    return this.__bfRemotePrimaryOrig(obj)
+
 def __bfTrainingClose(obj):
     if obj:
         if obj.target:
@@ -97,9 +105,46 @@ def __bfVisualStart(scene, figure, bundle):
         i = i + 1
     bundle.events = []
 
+def __bfAimSound(scene, aim):
+    if scene.master:
+        player = scene.master.getPlayer(aim)
+        if player and player.equipment:
+            item = player.equipment.primaryItem
+            if item and item.getProp:
+                weapon = item.getProp("weapon_type")
+                if weapon == 0:
+                    return lol.sound.SoundEvent.PISTOL_FIRE
+                if weapon == 1:
+                    return lol.sound.SoundEvent.SHOTGUN_FIRE
+                if weapon == 2:
+                    return lol.sound.SoundEvent.ASSAULT_FIRE
+                if weapon == 3:
+                    return lol.sound.SoundEvent.RIFLE_FIRE
+                if weapon == 4:
+                    return lol.sound.SoundEvent.MACHINEGUN_FIRE
+                if weapon == 5:
+                    return lol.sound.SoundEvent.SMG_FIRE
+    return None
+
+def __bfPresentInterrupted(scene, figure, event):
+    # A confirmed volley must not become completely invisible when the next
+    # authoritative action interrupts its first visual frame. Show at most
+    # one captured trace per unplayed volley, not its entire remaining burst.
+    bundle = event.__bfBundle
+    if not bundle or bundle.shown or event.__bfPresented or not event.shot or not event.access:
+        return
+    if figure.animationEnabled == False or figure.isActive == False or not event.hits or len(event.hits) == 0:
+        return
+    bundle.shown = True
+    scene.applyFireAck(event)
+    event.__bfPresented = True
+    if lol.sound and lol.sound.SoundManager:
+        sound = bundle.sound or lol.sound.SoundEvent.FIREARM_FIRE
+        lol.sound.SoundManager.getInstance().playEventSound(sound)
+
 def __bfVisualFlush(scene, figure, draw):
-    bursts = figure.__bfBursts
-    bullets = figure.burstArr
+    bursts = figure.__bfBursts or []
+    bullets = figure.burstArr or []
     figure.__bfBursts = []
     figure.burstArr = []
     figure.__bfIncoming = None
@@ -110,6 +155,8 @@ def __bfVisualFlush(scene, figure, draw):
     while i < len(bullets):
         if draw != False:
             scene.applyFireAck(bullets[i])
+        else:
+            _global.__bfPresentInterrupted(scene, figure, bullets[i])
         i = i + 1
     i = 0
     while i < len(bursts):
@@ -121,6 +168,8 @@ def __bfVisualFlush(scene, figure, draw):
                 scene.addFireAckReport(event)
                 if draw != False:
                     scene.applyFireAck(event)
+                else:
+                    _global.__bfPresentInterrupted(scene, figure, event)
             j = j + 1
         i = i + 1
     scene.showFireAckReport()
@@ -142,6 +191,10 @@ def __bfVisualFinal(obj):
     # finalFrame. Drop unplayed cosmetic traces without another visual cycle.
     bullets = figure.burstArr
     figure.burstArr = []
+    i = 0
+    while i < len(bullets):
+        _global.__bfPresentInterrupted(this, figure, bullets[i])
+        i = i + 1
     if len(bullets) > 0:
         this.showFireAckReport()
     figure.__bfBursts.shift()
@@ -171,7 +224,7 @@ def __bfAim(obj):
         figure.__bfBursts.shift()
     if len(figure.__bfBursts) >= 8:
         _global.__bfVisualFlush(this, figure, False)
-    bundle = {"aim":obj, "expected":Math.max(1, obj.num_shots), "got":0, "events":[], "active":False}
+    bundle = {"aim":obj, "expected":Math.max(1, obj.num_shots), "got":0, "events":[], "active":False, "shown":False, "sound":_global.__bfAimSound(this, obj.aim)}
     figure.__bfIncoming = bundle
     figure.__bfBursts.push(bundle)
     figure.addEventListener("finalFrame", this, _global.__bfVisualFinal)
@@ -201,6 +254,7 @@ def __bfFire(event):
         this.__bfFireOrig(event)
         return
     bundle = figure.__bfIncoming
+    event.__bfBundle = bundle
     bundle.got = bundle.got + 1
     if bundle.active:
         this.__bfFireOrig(event)
@@ -208,6 +262,12 @@ def __bfFire(event):
         bundle.events.push(event)
 
 def __bfApplyFire(event):
+    if event.shot:
+        if event.__bfPresented:
+            return
+        event.__bfPresented = True
+        if event.__bfBundle:
+            event.__bfBundle.shown = True
     if not event.__bfOrigin:
         return this.__bfApplyFireOrig(event)
     point = None
@@ -232,14 +292,12 @@ def __bfTraceShot(gunnerID, point, origin):
 
 def __bfBurstFinal(obj):
     if obj.data != "fire" and obj.target.burstArr:
-        obj.target.burstArr = []
-        this.showFireAckReport()
+        _global.__bfVisualFlush(this, obj.target, False)
     this.__bfBurstFinalOrig(obj)
 
 def __bfShotgunFinal(obj):
     if obj.data != "fire" and obj.target.burstArr:
-        obj.target.burstArr = []
-        this.showFireAckReport()
+        _global.__bfVisualFlush(this, obj.target, False)
     this.__bfShotgunFinalOrig(obj)
 
 def __bfDead(obj):
@@ -257,6 +315,7 @@ def patches(Asm, undef):
     bodies = {name: (params, body) for name, params, body in functions}
     wraps = []
     for path, method, keep, helper in (
+        (('core','player','PersEquip'), 'ss_obj_move', '__bfRemotePrimaryOrig', '__bfRemotePrimary'),
         (('core','player','Training'), 'close', '__bfTrainingCloseOrig', '__bfTrainingClose'),
         (('core','player','Gamer'), 'gotoLoot', '__bfLootGoOrig', '__bfLootGo'),
         (('core','player','Gamer'), 'createLoot', '__bfLootOpenOrig', '__bfLootOpen'),

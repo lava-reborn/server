@@ -1734,13 +1734,17 @@ class Inventory:
             # Only an accepted move changes the active weapon. An unrelated
             # bag/secondary move or a refused switch must preserve the aim.
             self.sess.combat.primary_changed()
-        # Meant for everyone else in the location, so they redraw this
-        # player's figure; PlayerRegister.ss_obj_move ignores it for
-        # Gamer.ID, so the sender's own copy is harmless. There is no room
-        # fan-out on the server yet; when there is, this is the frame to
-        # send to the rest of the room with the sender's entity id.
         self.send("ss_obj_move", id=0, obj=BigUInt(oid_of(row)), to=dst,
                   **{"from": src})
+        if PRIMARY in (src, dst) and self.sess.room is not None:
+            # A remote PersEquip only replaces the active hand when `to`
+            # names PRIMARY; replaying PRIMARY -> BAG would leave its old
+            # firearm visible. Publish the resulting hand, including empty,
+            # without another item query or an unsolicited ss_ack.
+            active = row if dst == PRIMARY else displaced
+            self.sess.room.broadcast(("ss_obj_move", dict(
+                id=self.sess.pid, obj=BigUInt(oid_of(active)) if active else EMPTY,
+                to=PRIMARY, **{"from": PRIMARY})), exclude=self.sess)
 
     # --- ss_use ------------------------------------------------------------
     def ss_use(self, p):
