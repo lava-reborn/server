@@ -70,6 +70,7 @@ def register_sets_and_strings():
     global _REGISTERED
     if _REGISTERED:
         return
+    # The shared TCP/HTTP bootstrap must run before catalogues are cached.
     from training.engines import install
     install()
     from training import catalog

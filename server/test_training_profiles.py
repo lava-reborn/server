@@ -11,6 +11,10 @@ import items
 from training.rules import Rules
 
 class Profiles(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        training_ground.preload()
+
     def test_catalogue_selectors_roundtrip_without_mutating_other_profiles(self):
         records=profiles.catalogue()
         self.assertEqual(len(records),2)

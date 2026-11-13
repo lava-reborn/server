@@ -57,10 +57,6 @@ from training.settings import (
 from training.validation import integer
 
 
-from training.engines import install as install_engines
-
-install_engines()
-
 log = logging.getLogger('lava')
 
 
@@ -1058,13 +1054,13 @@ def resume(owner):
 
 
 def preload():
+    # The same explicit catalogue preparation serves TCP and HTTP/text startup.
+    training_items.register_sets_and_strings()
     training_rules.current()
     training_profiles.catalogue()
     if training_formulas.available():
         training_formulas.engine().coefficients()
     training_effects.definitions()
-    training_items.prepare(item_catalogue())
-    training_items.register_sets_and_strings()
     # Build both immutable catalogue indexes before accepting sockets, not on
     # the first filter click or profile switch in the shared event loop.
     training_supply.index(False)

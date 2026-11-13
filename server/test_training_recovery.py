@@ -378,12 +378,12 @@ class ProfileAndContent(unittest.TestCase):
     def test_reviewed_content_exists_without_simulator_snapshot(self):
         try:
             with patch.object(formulas, '_ENGINE', None):
-                profiles.catalogue.cache_clear()
+                profiles._catalogue.cache_clear()
                 self.assertFalse(formulas.available())
                 content.validate()
                 self.assertEqual([profile.key for profile in profiles.catalogue()], ['baseline-v1'])
         finally:
-            profiles.catalogue.cache_clear()
+            profiles._catalogue.cache_clear()
 
 
 if __name__ == '__main__':

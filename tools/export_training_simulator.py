@@ -154,12 +154,18 @@ def main():
                         expected = reference.mitigate(attacker, attack, defender, (123, 11), critical)
                         cases.append([level, gap, kind, critical, left, expected.damage['hp'], expected.damage['sp']])
     data['parity_cases'] = cases
+    from training_simulator_parity import reference_cases
+    equation_cases = reference_cases(reference, data)
     if 'training.session' in sys.modules or 'server' in sys.modules:
         raise RuntimeError('Snapshot export imported the game session')
     encoded = encode_snapshot(data)
     temporary = path.with_name(path.name + '.tmp')
     temporary.write_text(encoded, encoding='utf-8')
     temporary.replace(path)
+    cases_path = path.with_name('training_simulator_cases.json')
+    temporary = cases_path.with_name(cases_path.name + '.tmp')
+    temporary.write_text(encode_snapshot(equation_cases), encoding='utf-8')
+    temporary.replace(cases_path)
     print('Frozen', revision, len(by_type), 'mobs,', len(data['equipment']), 'equipment records')
 
 

@@ -1,6 +1,10 @@
 """Stable engine/copy identities and lossless persisted profile upgrades."""
 import copy
 import json
+import os
+from pathlib import Path
+import subprocess
+import sys
 from dataclasses import replace
 from types import SimpleNamespace
 import unittest
@@ -17,6 +21,38 @@ class SimulatorMigrations(unittest.TestCase):
     def setUpClass(cls):
         session.preload()
 
+    def test_early_catalogue_and_session_import_do_not_hide_later_engine(self):
+        code = '''
+from dataclasses import replace
+from training import formulas, profiles
+from training.rules import Rules
+assert not formulas.available()
+assert [p.key for p in profiles.catalogue()] == ['baseline-v1']
+from training import session
+assert not formulas.available(), 'Importing the coordinator installed an engine'
+from training import catalog
+early_sources = set(catalog.item_catalogue())
+saved = dict(key='user-0123456789abcdef', title='Saved', base='simulator-1234567',
+             values=Rules(simulator_formulas=True, health=2).values())
+assert profiles.dump_personal(profiles.load_personal([saved])) == [saved]
+session.preload()
+assert [p.key for p in profiles.catalogue()] == ['baseline-v1', 'simulator-v1']
+assert early_sources <= set(catalog.item_catalogue())
+assert set(formulas.data()['extra_sources']) <= set(catalog.item_catalogue())
+assert profiles.catalogue() is profiles.catalogue()
+loaded, = profiles.load_personal([saved])
+assert loaded.saved is None and loaded.rules.health == 2
+assert profiles.dump_personal([loaded])[0]['base'] == 'simulator-v1'
+engine = formulas.engine()
+session.preload()
+assert formulas.engine() is engine
+'''
+        result = subprocess.run([sys.executable, '-B', '-c', code],
+                                env=dict(os.environ, PYTHONPATH=str(Path(__file__).parent),
+                                         LAVA_DB=':memory:', LAVA_DB_URL=''),
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_snapshot_commit_does_not_change_engine_or_personal_identity(self):
         base = profiles.catalogue()[1]
         record = profiles.personal_record('user-0123456789abcdef', 'My test',
@@ -25,7 +61,7 @@ class SimulatorMigrations(unittest.TestCase):
         changed = dict(engine.data(), source_commit='a' * 40)
         try:
             with patch.object(engine, 'data', return_value=changed):
-                profiles.catalogue.cache_clear()
+                profiles._catalogue.cache_clear()
                 rules.simulator_notes.cache_clear()
                 self.assertEqual(profiles.catalogue()[1].key, 'simulator-v1')
                 loaded = profiles.load_personal(stored)
@@ -33,7 +69,7 @@ class SimulatorMigrations(unittest.TestCase):
                 self.assertEqual(loaded[0].rules.health, 2)
                 self.assertEqual(loaded[0].rules.spread, .5)
         finally:
-            profiles.catalogue.cache_clear()
+            profiles._catalogue.cache_clear()
             rules.simulator_notes.cache_clear()
 
     def test_legacy_commit_keys_migrate_only_when_loading_owned_records(self):

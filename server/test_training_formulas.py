@@ -23,6 +23,10 @@ import test_training_ground as fixtures
 
 
 class SimulatorEquations(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        training.preload()
+
     def actor(self, level=12, armour=148, player=True, enabled=True):
         rules = Rules(simulator_formulas=enabled)
         return NS(is_player=player, character=lambda: NS(level=level), stats=NS(level=level),

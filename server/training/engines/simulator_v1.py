@@ -2,6 +2,8 @@
 
 The simulator profile uses each weapon's own source coefficient and A/G
 damage bases. Old sandbox P/G normalization and minute regen stay separate.
+The pinned source has no weapon_scale/class_scale overrides: both use x1.
+Nonempty calibration tables are exercised by source-generated CI fixtures.
 Mob copies use frozen source records and modes. Old profiles never use these values.
 No imported simulator engine, Monte Carlo work, database or per-hit file I/O.
 """
