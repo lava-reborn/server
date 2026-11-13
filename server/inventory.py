@@ -1121,6 +1121,26 @@ class Inventory:
         bank, or a full storage would stop them buying a single round."""
         return sum(weight_of(r) for r in self.carried())
 
+    def normalize_magazines(self, rows, notify=False):
+        """Conserve claimed legacy overflow before describing owned inventory."""
+        import magazine_migration
+        try:
+            changed, added = magazine_migration.normalize(self.store, self.char_id, rows, self.locked)
+        except storage.CommitError:
+            self.close_after_uncertain_commit()
+            return False
+        except Exception:
+            log.exception("Legacy magazine normalization failed for %s", self.char_id)
+            self.sess.close(force=True)
+            return False
+        if changed:
+            rows[:] = [changed.get(row['uniq'], row) for row in rows] + added
+            if notify:
+                for row in added:
+                    self.push_status(row, 1)
+                    self.push_di(row)
+        return True
+
     def create(self, type_id, count=1, slot=BAG, char_id=None):
         if items.acquisition_blocked(type_id):
             raise ValueError("Equipment above level %d is not released" % items.PLAYER_GEAR_MAX_LEVEL)
@@ -1589,6 +1609,8 @@ class Inventory:
         rows, look = None, 0
         if char_id:
             rows = self.rows(char_id)
+            if char_id == self.char_id and not self.normalize_magazines(rows):
+                return
             o_list = self.equipment_list(char_id, mask, rows)
             if mask & MASK_WEAR:
                 look = look_of(rows)
@@ -1636,6 +1658,11 @@ class Inventory:
         # with target=<id>, and that is the one DI the client pulls for
         # somebody else's item. Anything that exists is described.
         if row and (row["type_id"], row["root"]) == (type_id, root):
+            if row['char_id'] == self.char_id and row['slot'] != BANK:
+                owned = [row]
+                if not self.normalize_magazines(owned, notify=True):
+                    return
+                row = owned[0]
             self.push_di(row)
             return
         # An item on sale is no row in items: it lives in its lot, and is

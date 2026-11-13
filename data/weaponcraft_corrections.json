@@ -1,6 +1,10 @@
 {
  "_": "Confirmed malformed modification tables, applied after the wiki overlay. from_effect copies only named fields from the base gun with the existing craft.EFFECTS rule; from_base restores an unintended change. Literal values repair isolated typos using the A counterpart or the existing +10% damage rule. Source wiki data remains unchanged.",
  "items": {
+  "26185": {
+   "values": {"clip_size": 100},
+   "why": "Owner gameplay release 2026-11-13: Bizon damage+magazine capacity is 100 in A/P/G. Existing overfilled A instances preserve their excess rounds through magazine_migration."
+  },
   "25052": {
    "from_base": [
     "h_damage_min",

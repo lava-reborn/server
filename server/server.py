@@ -897,6 +897,11 @@ class Session:
         that costs something and once more on the way out.
         """
         self.char = progression.Character.load(STORE, char_id)
+        import magazine_migration
+        legacy_guns = [dict(r) for r in STORE.db.execute(
+            "SELECT * FROM items WHERE char_id=? AND type_id=? AND ammo_count>?",
+            (char_id, magazine_migration.BIZON_DAMAGE_CLIP_A, magazine_migration.CAPACITY)).fetchall()]
+        magazine_migration.normalize(STORE, char_id, legacy_guns)
         # Anything worn in a slot it does not fit (a row from before the
         # slot_type fix) goes back to the bag before the gear is counted,
         # and so does anything above the character's level (the level rule).
