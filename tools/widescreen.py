@@ -3331,6 +3331,8 @@ def injected():
     for name, params, body in inventory_controls['globals']:
         a.var('_global').push(name).function(params, body).op('setmember')
     wraps += inventory_controls['wraps']
+    from quest_window_client import patches as quest_window_patches
+    wraps += quest_window_patches(Asm, UNDEF)['wraps']
     from restore_price_client import patches as restore_patches
     restoration = restore_patches(Asm, UNDEF)
     for name, params, body in restoration["globals"]:

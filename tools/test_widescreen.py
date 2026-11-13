@@ -82,6 +82,8 @@ check("every HUD and frame branch lands inside its own function",
 # module defines is used, and every wrap leaves its saved original's name
 # in the injected code, which only a wired wrap puts there.
 WIRED = ("__requirementsReadOrig", "__questSendOrig", "__questFilterOrig",      # quest reads across transitions
+         "__qwInitOrig", "__qwKillOrig", "__qwStatusOrig",  # passive NPC updates
+         "__qwGetQuestOrig", "__qwTakeQuestOrig", "__qwGetAckOrig", "__qwTakeAckOrig",
          "__itemFrameUpdateOrig", "__itemInfoAttachOrig",  # asynchronous item style
          "__wideBoundXOrig", "__wideBoundYOrig",       # location camera
          "__repairGoldOrig", "__repairGetPropOrig",    # gold-only repairs
