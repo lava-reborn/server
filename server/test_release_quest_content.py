@@ -151,6 +151,34 @@ class ReleaseQuests(unittest.TestCase):
         self.assertEqual(self.hand_in(qid),[server.RES_NO_SUCH])
         self.assertFalse(self.s.quest_available(quests.get(232)))
 
+    def test_free_dongola_abri_ride_needs_no_money_or_ticket_and_is_repeatable(self):
+        self.at(49,156)
+        self.s.char.afro,self.s.char.gold=0,0
+        self.s.char.save(self.store)
+        before=self.s.inv.bag_pieces()
+        q=quests.get(18100)
+        self.assertTrue(q.service)
+        self.assertEqual(q.loc,quests.get(282).loc)
+        self.assertEqual(q.wants(),[])
+        self.assertFalse(q.has_fee or q.pays)
+        self.assertEqual(quests.get(282).wants(),[(6547,1)])
+        self.assertEqual(travel.quest_way(self.s.loc,18100)['target_loc_id'],187)
+        for _ in range(2):
+            qid=self.take(18100,156)
+            self.assertEqual(self.hand_in(qid),[0])
+            self.assertEqual(self.hand_in(qid),[server.RES_NO_SUCH])
+        self.assertEqual(len(self.moves),2)
+        self.assertEqual(self.store.money(self.cid),(0,0))
+        self.assertEqual(self.s.inv.bag_pieces(),before)
+        exported=quests.strings()
+        self.assertTrue(all(exported.get(key) for key in q.string_ids()))
+
+    def test_free_ride_cannot_be_taken_at_another_location_or_npc(self):
+        self.at(187,156)
+        self.s.cmd_q_st(dict(mob=1,q_idx=quests.given_by(156).index(18100)))
+        self.assertEqual([p['res'] for c,p in self.frames if c=='cmdAck'],[server.RES_NOT_AVAILABLE])
+        self.assertFalse(self.store.quests(self.cid))
+
 
 if __name__ == '__main__':
     run_cases(ReleaseQuests)
