@@ -362,8 +362,14 @@ try:
     check("the new market loses «Обмен G комплектов», the quarter its ingot exchange, the pier its New"
           " Year tree, the masters' camp its armour", {c: retexts.get(c) for c in TEXTS}, TEXTS)
     OTHERS = {(5883, 2035), (5882, 2036), (5921, 2011), (5920, 2010), (5921, 1982)}
-    check("  ..the other retexts over Донгола are the camps, factory and updated prison hours: no other",
-          sorted(set(retexts) - set(TEXTS)), sorted(OTHERS | {(5903, 1996)}))
+    warehouses = {(5913, 1976): 12, (5931, 2031): 16, (5883, 2060): 16}
+    check("  ..the other retexts over Донгола are camps, factory, prison hours and warehouse minimums: no other",
+          sorted(set(retexts) - set(TEXTS)), sorted(OTHERS | {(5903, 1996)} | set(warehouses)))
+    for cell, minimum in warehouses.items():
+        was = next(e['was'] for e in LABELS if (e['x'], e['y']) == cell and 'text' in e)
+        check("warehouse %s changes only its minimum-level wording" % (cell,),
+              retexts[cell], was.replace('игроками %d уровня' % minimum,
+                                        'игроками %d+ уровня' % minimum))
     check("  ..the camps say they are fought for gold, the chiefs' places that the chiefs come with it",
           {c: ("Сражение за золото в 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00" in retexts[c]
                or "В 00:00, 02:00, 04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00 и 22:00 часто кто-то приезжает с золотом." in retexts[c])
