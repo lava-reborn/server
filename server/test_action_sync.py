@@ -95,6 +95,56 @@ class ActionSync(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(s.pos, 10)
         self.assertEqual(f.ap, 97)
 
+    async def test_peaceful_players_can_cross_and_share_a_destination(self):
+        f, first, room, events, row = self.movement_session()
+        _, second, _, _, _ = self.movement_session()
+        second.char_id, second.room = 2, room
+        second.pos = 2
+        room.players[second] = True
+        room.loc.war = False
+        with self.clock(100):
+            first.move_in_location(dict(path=[0,1,2]))
+            second.move_in_location(dict(path=[2,1]))
+            self.assertEqual(first.walk[0],[0,1,2])
+            self.assertEqual(second.walk[0],[2,1])
+        with self.clock(100.21):
+            room.motion.advance()
+            self.assertEqual((first.live_cell(),second.live_cell()),(1,1))
+        with self.clock(100.41):
+            self.assertEqual(first.live_cell(),2)
+
+    async def test_peaceful_overlap_does_not_erase_npc_or_wall_blocks(self):
+        _, first, room, _, _ = self.movement_session()
+        _, second, _, _, _ = self.movement_session()
+        second.char_id, second.room = 2, room
+        second.pos = 2
+        room.players[second] = True
+        room.loc.war = False
+        room.npcs={1:NS(cell=2,root=server.world.TRADER)}
+        with self.clock(100):
+            self.assertIn(2,room.motion.occupied(first))
+            self.assertNotEqual(room.motion.free_cell(2,exclude=first),2)
+        room.npcs={}
+        mob=combat.mobs.Mob(99,1411,2)
+        room.combat.mobs={99:mob}
+        with self.clock(100):
+            self.assertIn(2,room.motion.occupied(first))
+        room.combat.mobs={}
+        room.loc.obstacles={2}
+        with self.clock(100):
+            self.assertNotEqual(room.motion.free_cell(2,exclude=first),2)
+
+    async def test_combat_location_still_blocks_players_without_active_fight_or_pvp(self):
+        _, first, room, _, _ = self.movement_session()
+        _, second, _, _, _ = self.movement_session()
+        second.char_id, second.room = 2, room
+        second.pos=2
+        room.players[second]=True
+        room.loc.war, room.loc.pvp, room.ws = True, False, False
+        with self.clock(100):
+            self.assertIn(2,room.motion.occupied(first))
+            self.assertNotEqual(room.motion.free_cell(2,exclude=first),2)
+
     async def test_different_remaining_route_to_same_destination_is_not_a_duplicate(self):
         f, s, room, events, row = self.movement_session()
         with self.clock(100):

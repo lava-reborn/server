@@ -1110,7 +1110,7 @@ class Session:
                 blocked = {n.cell for n in inhabitants if n.root != world.MOB}
                 blocked.update(m.cell for m in fight.mobs.values() if m.alive)
             for player in getattr(self.room, "players", ()):
-                if player is not self:
+                if player is not self and self.loc.war:
                     blocked.add(player.live_cell(now))
                     blocked.add(player.pos)
             blocked.discard(anchor)
@@ -2453,7 +2453,7 @@ class Session:
                           # One source, not two: the client draws prices
                           # with these and the server charges with the same.
                           pmod=inventory.PMOD, smod=inventory.SMOD,
-                          rmod=inventory.RMOD)
+                          rmod=inventory.repair_rmod(self.room.loc.id, type_id))
             if trophies.is_registrar(type_id):
                 # A trophy registrar sells and mends nothing: its only
                 # service is "regTrophy" (NPCService.openService) -- but

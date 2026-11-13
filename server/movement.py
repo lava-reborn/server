@@ -55,11 +55,17 @@ class Motion:
         for actor in self.actors():
             if actor is exclude:
                 continue
+            if self.passes_players(exclude) and actor in self.room.players:
+                continue
             out.add(self.cell(actor))
             state = self.walks.get(id(actor))
             if state and state.index + 1 < len(state.cells):
                 out.add(state.cells[state.index + 1])
         return out
+
+    def passes_players(self, actor):
+        """Only player/player overlap on a map that forbids firing."""
+        return actor is not None and not self.room.loc.war and not isinstance(actor, mobs.Mob)
 
     def free_cell(self, cell, exclude=None):
         blocked = self.occupied(exclude) | self.room.loc.obstacles
@@ -144,10 +150,15 @@ class Motion:
                             actor._completed_walk = actor.walk
                         actor.walk = None
                         self.walks.pop(id(actor), None)
-                occupied = {n.cell for n in self.room.npcs.values() if n.root != world.MOB}
+                fixed = {n.cell for n in self.room.npcs.values() if n.root != world.MOB}
+                occupied = set(fixed)
+                peaceful = not self.room.loc.war
+                nonplayers = set(fixed) if peaceful else occupied
                 claims = {}
                 for actor in self.actors():
                     occupied.add(self.cell(actor))
+                    if peaceful and actor not in self.room.players:
+                        nonplayers.add(self.cell(actor))
                     state = self.walks.get(id(actor))
                     if state and id(actor) not in due_ids:
                         claims[state.cells[state.index + 1]] = actor
@@ -155,7 +166,11 @@ class Motion:
                     if id(state.actor) not in self.walks:
                         continue
                     dest = state.cells[state.index + 1]
-                    if dest in occupied or dest in claims:
+                    pass_players = self.passes_players(state.actor)
+                    blocked = nonplayers if pass_players else occupied
+                    claimant = claims.get(dest)
+                    claimed = claimant is not None and not (pass_players and claimant in self.room.players)
+                    if dest in blocked or claimed:
                         self.stop(state)
                     else:
                         claims[dest] = state.actor
